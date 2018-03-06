@@ -1,0 +1,4 @@
+node_modules/
+dist/**
+!dist/index.d.ts
+dev/apollon.js

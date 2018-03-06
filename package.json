@@ -1,0 +1,46 @@
+{
+  "name": "apollon",
+  "version": "0.1.0",
+  "description": "A UML class diagram editor.",
+  "files": ["dist"],
+  "main": "dist/index.js",
+  "keywords": [],
+  "license": "MIT",
+  "author": {
+    "name": "Marius Schulz",
+    "email": "marius.schulz@tum.de",
+    "url": "https://blog.mariusschulz.com/"
+  },
+  "scripts": {
+    "start": "webpack-dev-server",
+    "build": "webpack -p",
+    "lint": "tslint --force --project tsconfig.json --format stylish"
+  },
+  "devDependencies": {
+    "@types/react": "^16.0.36",
+    "@types/react-dnd": "^2.0.34",
+    "@types/react-dnd-html5-backend": "^2.1.8",
+    "@types/react-dom": "^16.0.3",
+    "@types/react-redux": "^5.0.14",
+    "@types/webpack": "^3.8.5",
+    "@types/webpack-dev-server": "^2.9.2",
+    "prettier": "^1.10.2",
+    "ts-loader": "^3.5.0",
+    "tslint": "^5.9.1",
+    "typescript": "^2.7.1",
+    "webpack": "^3.11.0",
+    "webpack-dev-server": "^2.11.1"
+  },
+  "dependencies": {
+    "react": "^16.2.0",
+    "react-dnd": "^2.5.4",
+    "react-dnd-html5-backend": "^2.5.4",
+    "react-dom": "^16.2.0",
+    "react-redux": "^5.0.6",
+    "redux": "^3.7.2",
+    "redux-saga": "^0.16.0",
+    "reselect": "^3.0.1",
+    "styled-components": "^3.1.6",
+    "tslib": "^1.9.0"
+  }
+}

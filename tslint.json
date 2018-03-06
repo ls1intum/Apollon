@@ -1,0 +1,34 @@
+{
+    "extends": "tslint:latest",
+    "rules": {
+        "align": false,
+        "array-type": [true, "array"],
+        "arrow-parens": false,
+        "comment-format": false,
+        "curly": false,
+        "interface-name": [true, "never-prefix"],
+        "interface-over-type-literal": false,
+        "max-line-length": false,
+        "member-access": false,
+        "member-ordering": false,
+        "no-bitwise": false,
+        "no-console": false,
+        "no-string-literal": false,
+        "no-submodule-imports": [true, "redux-saga"],
+        "no-trailing-whitespace": false,
+        "no-this-assignment": [true, { "allow-destructuring": true }],
+        "no-unused-expression": [true, "allow-tagged-template"],
+        "no-unused-variable": true,
+        "object-literal-key-quotes": [true, "as-needed"],
+        "object-literal-sort-keys": false,
+        "only-arrow-functions": false,
+        "ordered-imports": false,
+        "semicolon": false,
+        "switch-default": false,
+        "trailing-comma": [true, {
+            "multiline": "never",
+            "singleline": "never"
+        }],
+        "variable-name": [true, "allow-leading-underscore", "allow-pascal-case", "check-format"]
+    }
+}
