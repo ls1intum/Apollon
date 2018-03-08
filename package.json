@@ -6,6 +6,7 @@
     "dist"
   ],
   "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "keywords": [],
   "license": "MIT",
   "author": {
