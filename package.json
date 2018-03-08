@@ -1,8 +1,10 @@
 {
   "name": "apollon",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A UML class diagram editor.",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "dist/index.js",
   "keywords": [],
   "license": "MIT",
