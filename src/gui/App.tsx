@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Provider, Store } from "react-redux";
-import { injectGlobal, ThemeProvider } from "styled-components";
+import styled, { injectGlobal, ThemeProvider } from "styled-components";
 import Editor from "./components/Editor";
 import KeyboardEventListener from "./events/KeyboardEventListener";
 import { createTheme, Theme } from "./theme";
@@ -8,6 +8,12 @@ import { createStore, ReduxState } from "../redux";
 import { ElementSelection } from "../uml";
 import { toggle } from "../utils/array";
 import { UUID } from "../uuid";
+
+const ApollonEditor = styled.div`
+    box-sizing: border-box;
+    height: 100%;
+    font-weight: 400;
+`;
 
 export default class App extends React.Component<Props, State> {
     theme: Theme;
@@ -146,7 +152,7 @@ export default class App extends React.Component<Props, State> {
         `;
 
         return (
-            <div className="apollon-editor" style={{ boxSizing: "border-box", height: "100%" }}>
+            <ApollonEditor className="apollon-editor">
                 <Provider store={this.store}>
                     <ThemeProvider theme={this.theme}>
                         <Editor
@@ -159,7 +165,7 @@ export default class App extends React.Component<Props, State> {
                         />
                     </ThemeProvider>
                 </Provider>
-            </div>
+            </ApollonEditor>
         );
     }
 }
