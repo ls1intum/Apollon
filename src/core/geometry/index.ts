@@ -1,3 +1,4 @@
+export * from "./boundingBox";
 export * from "./delta";
 export * from "./lines";
 export * from "./path";

@@ -1,7 +1,6 @@
-import { computeBoundingBox } from "./boundingBox";
 import { computeRelationshipPath } from "./relationship";
 import { Entity, Relationship, UMLModel } from "../../core/domain";
-import { Point, Rect, Size } from "../../core/geometry";
+import { computeBoundingBox, Point, Rect, Size } from "../../core/geometry";
 import { flatten, UUID } from "../../core/utils";
 
 export interface LayoutedDiagram {
