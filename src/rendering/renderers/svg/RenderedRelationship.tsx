@@ -2,11 +2,11 @@ import * as React from "react";
 import { getMarkerIdForRelationshipKind } from "./defs/RelationshipMarkers";
 import { SvgRenderOptions } from "./index";
 import RelationshipLabels from "./RelationshipLabels";
-import * as UML from "../../../core/domain";
+import { Relationship, RelationshipKind } from "../../../core/domain";
 import { Point } from "../../../core/geometry";
 import { assertNever } from "../../../core/utils";
 
-export default class Relationship extends React.Component<Props> {
+export default class RenderedRelationship extends React.Component<Props> {
     render() {
         const { relationship, path, renderOptions } = this.props;
 
@@ -38,17 +38,17 @@ export default class Relationship extends React.Component<Props> {
         );
     }
 }
-export function getSvgDasharrayForRelationshipKind(kind: UML.RelationshipKind): string | undefined {
+export function getSvgDasharrayForRelationshipKind(kind: RelationshipKind): string | undefined {
     switch (kind) {
-        case UML.RelationshipKind.Aggregation:
-        case UML.RelationshipKind.AssociationUnidirectional:
-        case UML.RelationshipKind.Composition:
-        case UML.RelationshipKind.Inheritance:
-        case UML.RelationshipKind.AssociationBidirectional:
+        case RelationshipKind.Aggregation:
+        case RelationshipKind.AssociationUnidirectional:
+        case RelationshipKind.Composition:
+        case RelationshipKind.Inheritance:
+        case RelationshipKind.AssociationBidirectional:
             return undefined;
 
-        case UML.RelationshipKind.Dependency:
-        case UML.RelationshipKind.Realization:
+        case RelationshipKind.Dependency:
+        case RelationshipKind.Realization:
             return "7, 7";
 
         default:
@@ -57,7 +57,7 @@ export function getSvgDasharrayForRelationshipKind(kind: UML.RelationshipKind): 
 }
 
 interface Props {
-    relationship: UML.Relationship;
+    relationship: Relationship;
     path: Point[];
     renderOptions: SvgRenderOptions;
 }

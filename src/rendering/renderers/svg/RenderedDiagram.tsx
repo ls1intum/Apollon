@@ -1,12 +1,12 @@
 import * as React from "react";
 import ClipPaths from "./defs/ClipPaths";
 import RelationshipMarkers from "./defs/RelationshipMarkers";
-import Entity from "./Entity";
 import { SvgRenderOptions } from "./index";
-import Relationship from "./Relationship";
+import RenderedEntity from "./RenderedEntity";
+import RenderedRelationship from "./RenderedRelationship";
 import { LayoutedDiagram } from "../../../rendering/layouters/diagram";
 
-export default class ClassDiagram extends React.Component<Props> {
+export default class RenderedDiagram extends React.Component<Props> {
     render() {
         const { layoutedDiagram, renderOptions } = this.props;
         const { entities, relationships, size } = layoutedDiagram;
@@ -28,7 +28,7 @@ export default class ClassDiagram extends React.Component<Props> {
                 <rect x="0" y="0" width={width} height={height} fill="white" />
 
                 {relationships.map(({ relationship, path }) => (
-                    <Relationship
+                    <RenderedRelationship
                         key={relationship.id}
                         relationship={relationship}
                         path={path}
@@ -37,7 +37,7 @@ export default class ClassDiagram extends React.Component<Props> {
                 ))}
 
                 {entities.map(entity => (
-                    <Entity key={entity.id} entity={entity} renderOptions={renderOptions} />
+                    <RenderedEntity key={entity.id} entity={entity} renderOptions={renderOptions} />
                 ))}
             </svg>
         );

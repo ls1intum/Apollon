@@ -1,7 +1,7 @@
 import * as React from "react";
 import { getEntityMemberClipPathId } from "./defs/ClipPaths";
 import { SvgRenderOptions } from "./index";
-import * as UML from "../../../core/domain";
+import { Entity, EntityKind, EntityMember } from "../../../core/domain";
 import {
     computeEntityHeaderHeight,
     ENTITY_BORDER_THICKNESS,
@@ -11,7 +11,7 @@ import {
     getEntityKindDescriptionOrNull
 } from "../../../rendering/layouters/entity";
 
-export default class Entity extends React.Component<Props> {
+export default class RenderedEntity extends React.Component<Props> {
     render() {
         const { entity, renderOptions } = this.props;
 
@@ -64,7 +64,7 @@ export default class Entity extends React.Component<Props> {
 
     renderClassName() {
         const { kind, name, size } = this.props.entity;
-        const fontStyle = kind === UML.EntityKind.AbstractClass ? "italic" : undefined;
+        const fontStyle = kind === EntityKind.AbstractClass ? "italic" : undefined;
 
         const x = size.width / 2;
 
@@ -144,7 +144,7 @@ export default class Entity extends React.Component<Props> {
         );
     }
 
-    renderMember(member: UML.EntityMember, index: number) {
+    renderMember(member: EntityMember, index: number) {
         const { entity, renderOptions } = this.props;
 
         if (!renderOptions.shouldRenderElement(member.id)) {
@@ -166,6 +166,6 @@ export default class Entity extends React.Component<Props> {
 }
 
 interface Props {
-    entity: UML.Entity;
+    entity: Entity;
     renderOptions: SvgRenderOptions;
 }

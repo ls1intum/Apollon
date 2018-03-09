@@ -7,7 +7,7 @@ import * as DragDrop from "../dnd";
 import { ZIndices } from "../zindices";
 import { getAllEntities } from "../../redux/selectors";
 import { ReduxState } from "../../redux/state";
-import * as UML from "../../../core/domain";
+import { Entity } from "../../../core/domain";
 import { Rect, Size, snapPointToGrid } from "../../../core/geometry";
 
 const LayerBase = styled.div`
@@ -163,7 +163,7 @@ interface DragDropProps {
 }
 
 interface StateProps {
-    entities: UML.Entity[];
+    entities: Entity[];
     canvasSize: Size;
     gridSize: number;
 }

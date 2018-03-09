@@ -1,10 +1,10 @@
 import * as React from "react";
 import { withTheme } from "styled-components";
 import { Theme } from "../../../theme";
-import * as UML from "../../../../core/domain";
+import { EditorMode, InteractiveElementsMode, LayoutedRelationship } from "../../../../core/domain";
 import { getMarkerIdForRelationshipKind } from "../../../../rendering/renderers/svg/defs/RelationshipMarkers";
-import { getSvgDasharrayForRelationshipKind } from "../../../../rendering/renderers/svg/Relationship";
 import RelationshipLabels from "../../../../rendering/renderers/svg/RelationshipLabels";
+import { getSvgDasharrayForRelationshipKind } from "../../../../rendering/renderers/svg/RenderedRelationship";
 
 class Relationship extends React.Component<Props, State> {
     state: State = {
@@ -15,7 +15,7 @@ class Relationship extends React.Component<Props, State> {
         e.stopPropagation();
 
         switch (this.props.editorMode) {
-            case UML.EditorMode.ModelingView:
+            case EditorMode.ModelingView:
                 if (e.shiftKey) {
                     this.props.onToggleSelection();
                 } else if (!this.props.isSelected) {
@@ -23,7 +23,7 @@ class Relationship extends React.Component<Props, State> {
                 }
                 break;
 
-            case UML.EditorMode.InteractiveElementsView:
+            case EditorMode.InteractiveElementsView:
                 this.props.onToggleInteractiveElements();
                 break;
         }
@@ -33,7 +33,7 @@ class Relationship extends React.Component<Props, State> {
         const { isInteractiveElement, interactiveElementsMode } = this.props;
 
         const visibility =
-            isInteractiveElement && interactiveElementsMode === UML.InteractiveElementsMode.Hidden
+            isInteractiveElement && interactiveElementsMode === InteractiveElementsMode.Hidden
                 ? "hidden"
                 : undefined;
 
@@ -79,7 +79,7 @@ class Relationship extends React.Component<Props, State> {
         const { editorMode, theme, isSelected, isInteractiveElement } = this.props;
         const { isMouseOver } = this.state;
 
-        if (editorMode === UML.EditorMode.InteractiveElementsView) {
+        if (editorMode === EditorMode.InteractiveElementsView) {
             if (isMouseOver) {
                 return theme.interactiveAreaHoverColor;
             }
@@ -98,14 +98,14 @@ class Relationship extends React.Component<Props, State> {
 export default withTheme(Relationship);
 
 interface Props {
-    relationship: UML.LayoutedRelationship;
-    editorMode: UML.EditorMode;
+    relationship: LayoutedRelationship;
+    editorMode: EditorMode;
     theme: Theme;
     isSelected: boolean;
     onSelect: () => void;
     onToggleSelection: () => void;
     isInteractiveElement: boolean;
-    interactiveElementsMode: UML.InteractiveElementsMode;
+    interactiveElementsMode: InteractiveElementsMode;
     onToggleInteractiveElements: () => void;
     openDetailsPopup: () => void;
 }

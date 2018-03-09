@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import ClassDiagram from "./ClassDiagram";
+import RenderedDiagram from "./RenderedDiagram";
 import { UUID } from "../../../core/utils";
 import { LayoutedDiagram } from "../../../rendering/layouters/diagram";
 
@@ -15,7 +15,7 @@ export function renderDiagram(
 ): string {
     // We'll use React to dynamically create SVG elements for the diagram
     const diagram = (
-        <ClassDiagram layoutedDiagram={layoutedDiagram} renderOptions={renderOptions} />
+        <RenderedDiagram layoutedDiagram={layoutedDiagram} renderOptions={renderOptions} />
     );
 
     // Render our React application into a <div>
