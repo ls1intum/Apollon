@@ -2,8 +2,8 @@ import * as React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import RelationshipDragPreview from "./RelationshipDragPreview";
+import { createRelationship, getAllEntities, ReduxState } from "../../redux";
 import { Point, RectEdge } from "../../../geometry";
-import { createRelationship, getAllEntities, ReduxState } from "../../../redux";
 import { EditorMode, ElementSelection, Entity, RelationshipKind } from "../../../uml";
 import { UUID } from "../../../uuid";
 
@@ -111,7 +111,8 @@ class RelationshipConnectors extends React.Component<Props, State> {
                                         passive: true
                                     });
 
-                                    const containerClientRect = e.currentTarget.parentElement!.getBoundingClientRect();
+                                    const containerClientRect = e.currentTarget
+                                        .parentElement!.getBoundingClientRect();
 
                                     this.setState({
                                         startConnector: [entity, connector],

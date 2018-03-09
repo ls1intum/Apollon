@@ -6,7 +6,7 @@ import {
     moveSelectedEntities
 } from "./handlers";
 import KeyCodes from "./keyCodes";
-import { ReduxAction, ReduxState, undo, redo } from "../../redux";
+import { redo, ReduxAction, ReduxState, undo } from "../redux";
 import { ElementSelection } from "../../uml";
 import { UUID } from "../../uuid";
 

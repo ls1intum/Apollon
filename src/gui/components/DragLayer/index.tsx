@@ -5,9 +5,9 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import * as DragDrop from "../dnd";
 import { ZIndices } from "../zindices";
+import { getAllEntities } from "../../redux/selectors";
+import { ReduxState } from "../../redux/state";
 import { Rect, Size, snapPointToGrid } from "../../../geometry";
-import { getAllEntities } from "../../../redux/selectors";
-import { ReduxState } from "../../../redux/state";
 import * as UML from "../../../uml";
 
 const LayerBase = styled.div`

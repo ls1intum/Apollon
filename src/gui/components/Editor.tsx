@@ -7,9 +7,9 @@ import CanvasContainer from "./Canvas/Container";
 import DragLayer from "./DragLayer";
 import Sidebar from "./Sidebar";
 import { ZIndices } from "./zindices";
+import { getAllEntities, getAllRelationships } from "../redux/selectors";
+import { ReduxState } from "../redux/state";
 import { computeDiagramBoundingBox, computeRelationshipPaths } from "../../layouting/diagram";
-import { getAllEntities, getAllRelationships } from "../../redux/selectors";
-import { ReduxState } from "../../redux/state";
 import {
     ClassDiagram,
     EditorMode,

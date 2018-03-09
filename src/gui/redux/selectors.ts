@@ -1,8 +1,8 @@
 import { createSelector } from "reselect";
 import { ReduxState } from "./state";
-import { computeRelationshipPath } from "../layouting/relationship";
-import { Entity, LayoutedRelationship, Relationship } from "../uml";
-import { UUID } from "../uuid";
+import { computeRelationshipPath } from "../../layouting/relationship";
+import { Entity, LayoutedRelationship, Relationship } from "../../uml";
+import { UUID } from "../../uuid";
 
 type LookupById<T> = { [id: string]: T };
 

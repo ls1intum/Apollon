@@ -1,8 +1,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import App from "./gui/App";
+import { ReduxState } from "./gui/redux";
 import { Theme } from "./gui/theme";
-import { ReduxState } from "./redux";
 
 export interface ApollonOptions {
     initialState: ReduxState | null;

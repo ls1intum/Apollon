@@ -2,7 +2,6 @@ import * as React from "react";
 import { connect } from "react-redux";
 import EntityDetails from "./EntityDetails";
 import Popup from "../Popup";
-import { Point } from "../../../../../geometry";
 import {
     createEntityAttribute,
     createEntityMethod,
@@ -11,7 +10,8 @@ import {
     updateEntityMember,
     updateEntityName,
     updateEntityRenderMode
-} from "../../../../../redux";
+} from "../../../../redux";
+import { Point } from "../../../../../geometry";
 import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../../../uml";
 import { UUID } from "../../../../../uuid";
 

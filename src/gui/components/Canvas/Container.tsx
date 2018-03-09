@@ -1,8 +1,8 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import Canvas from "./Canvas";
+import { ReduxState } from "../../redux/state";
 import { Size } from "../../../geometry";
-import { ReduxState } from "../../../redux/state";
 import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../uml";
 import { UUID } from "../../../uuid";
 

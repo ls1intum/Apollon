@@ -2,14 +2,14 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { withTheme } from "styled-components";
 import Button from "./Button";
-import { Theme } from "../../theme";
-import { layout, LayoutedDiagram } from "../../../layouting/diagram";
 import {
     getAllEntities,
     getAllInteractiveElementIds,
     getAllRelationships
-} from "../../../redux/selectors";
-import { ReduxState } from "../../../redux/state";
+} from "../../redux/selectors";
+import { ReduxState } from "../../redux/state";
+import { Theme } from "../../theme";
+import { layout, LayoutedDiagram } from "../../../layouting/diagram";
 import { renderDiagram, SvgRenderOptions } from "../../../rendering/svg";
 import { ClassDiagram, InteractiveElementsMode } from "../../../uml";
 import { UUID } from "../../../uuid";

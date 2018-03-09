@@ -6,7 +6,7 @@ import {
     moveEntities,
     ReduxAction,
     ReduxState
-} from "../../redux";
+} from "../redux";
 import { ElementSelection } from "../../uml";
 import { UUID } from "../../uuid";
 

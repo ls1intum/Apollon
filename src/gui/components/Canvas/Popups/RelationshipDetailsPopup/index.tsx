@@ -2,8 +2,8 @@ import * as React from "react";
 import { connect } from "react-redux";
 import RelationshipDetails from "./RelationshipDetails";
 import Popup from "../Popup";
+import { getAllEntities, ReduxState, updateRelationship } from "../../../../redux";
 import { Point } from "../../../../../geometry";
-import { getAllEntities, ReduxState, updateRelationship } from "../../../../../redux";
 import { Entity, LayoutedRelationship } from "../../../../../uml";
 
 class RelationshipDetailsPopup extends React.Component<Props> {

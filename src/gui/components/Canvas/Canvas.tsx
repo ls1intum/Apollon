@@ -10,7 +10,6 @@ import RelationshipConnectors from "./RelationshipConnectors";
 import Relationships from "./Relationships";
 import * as DragDrop from "../dnd";
 import { ZIndices } from "../zindices";
-import { Size, snapPointToGrid } from "../../../geometry";
 import {
     createEntity,
     getAllEntities,
@@ -20,7 +19,8 @@ import {
     ReduxState,
     toggleInteractiveElements,
     updateEntityWidth
-} from "../../../redux";
+} from "../../redux";
+import { Size, snapPointToGrid } from "../../../geometry";
 import * as UML from "../../../uml";
 import { UUID } from "../../../uuid";
 

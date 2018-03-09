@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import Button from "./Button";
-import { ReduxState } from "../../../redux/state";
+import { ReduxState } from "../../redux/state";
 
 const STATE_KEY = "state.v7";
 
