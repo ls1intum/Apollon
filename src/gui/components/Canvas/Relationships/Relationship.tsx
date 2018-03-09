@@ -1,7 +1,8 @@
 import * as React from "react";
 import { withTheme } from "styled-components";
 import { Theme } from "../../../theme";
-import { EditorMode, InteractiveElementsMode, LayoutedRelationship } from "../../../../core/domain";
+import { EditorMode, InteractiveElementsMode } from "../../../types";
+import { LayoutedRelationship } from "../../../../core/domain";
 import { getMarkerIdForRelationshipKind } from "../../../../rendering/renderers/svg/defs/RelationshipMarkers";
 import RelationshipLabels from "../../../../rendering/renderers/svg/RelationshipLabels";
 import { getSvgDasharrayForRelationshipKind } from "../../../../rendering/renderers/svg/RenderedRelationship";

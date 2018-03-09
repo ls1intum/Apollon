@@ -20,6 +20,7 @@ import {
     toggleInteractiveElements,
     updateEntityWidth
 } from "../../redux";
+import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../types";
 import * as UML from "../../../core/domain";
 import { Size, snapPointToGrid } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";
@@ -232,9 +233,9 @@ class Canvas extends React.Component<Props, State> {
 
 interface OwnProps {
     innerRef: (canvas: HTMLDivElement | null) => void;
-    editorMode: UML.EditorMode;
-    interactiveElementsRenderMode: UML.InteractiveElementsMode;
-    selection: UML.ElementSelection;
+    editorMode: EditorMode;
+    interactiveElementsRenderMode: InteractiveElementsMode;
+    selection: ElementSelection;
     selectEntity: (entityId: UUID) => void;
     selectRelationship: (relationshipId: UUID) => void;
     toggleEntitySelection: (entityId: UUID) => void;

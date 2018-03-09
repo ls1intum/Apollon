@@ -3,7 +3,8 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import RelationshipDragPreview from "./RelationshipDragPreview";
 import { createRelationship, getAllEntities, ReduxState } from "../../redux";
-import { EditorMode, ElementSelection, Entity, RelationshipKind } from "../../../core/domain";
+import { EditorMode, ElementSelection } from "../../types";
+import { Entity, RelationshipKind } from "../../../core/domain";
 import { Point, RectEdge } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";
 

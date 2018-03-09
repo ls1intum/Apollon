@@ -7,7 +7,7 @@ import {
 } from "./handlers";
 import KeyCodes from "./keyCodes";
 import { redo, ReduxAction, ReduxState, undo } from "../redux";
-import { ElementSelection } from "../../core/domain";
+import { ElementSelection } from "../types";
 import { UUID } from "../../core/utils";
 
 export default class KeyboardEventListener {

@@ -1,11 +1,7 @@
 import * as React from "react";
 import Relationship from "./Relationship";
-import {
-    EditorMode,
-    ElementSelection,
-    InteractiveElementsMode,
-    LayoutedRelationship
-} from "../../../../core/domain";
+import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
+import { LayoutedRelationship } from "../../../../core/domain";
 import { Size } from "../../../../core/geometry";
 import { UUID } from "../../../../core/utils";
 import RelationshipMarkers from "../../../../rendering/renderers/svg/defs/RelationshipMarkers";

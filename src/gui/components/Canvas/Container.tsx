@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import Canvas from "./Canvas";
 import { ReduxState } from "../../redux/state";
-import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../core/domain";
+import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../types";
 import { Size } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";
 

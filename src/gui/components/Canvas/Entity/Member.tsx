@@ -1,7 +1,8 @@
 import * as React from "react";
 import styled, { withTheme } from "styled-components";
 import { Theme } from "../../../theme";
-import { EditorMode, EntityMember, InteractiveElementsMode } from "../../../../core/domain";
+import { EditorMode, InteractiveElementsMode } from "../../../types";
+import { EntityMember } from "../../../../core/domain";
 import { UUID } from "../../../../core/utils";
 import {
     ENTITY_HORIZONTAL_PADDING,

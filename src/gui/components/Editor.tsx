@@ -9,14 +9,8 @@ import Sidebar from "./Sidebar";
 import { ZIndices } from "./zindices";
 import { getAllEntities, getAllRelationships } from "../redux/selectors";
 import { ReduxState } from "../redux/state";
-import {
-    EditorMode,
-    ElementSelection,
-    Entity,
-    InteractiveElementsMode,
-    Relationship,
-    UMLModel
-} from "../../core/domain";
+import { EditorMode, ElementSelection, InteractiveElementsMode } from "../types";
+import { Entity, Relationship, UMLModel } from "../../core/domain";
 import { UUID } from "../../core/utils";
 import {
     computeDiagramBoundingBox,

@@ -13,7 +13,8 @@ import Name from "./Name";
 import ResizeHandle from "./ResizeHandle";
 import * as DragDrop from "../../dnd";
 import { Theme } from "../../../theme";
-import * as UML from "../../../../core/domain";
+import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
+import { Entity } from "../../../../core/domain";
 import { UUID } from "../../../../core/utils";
 import {
     computeEntityHeight,
@@ -25,7 +26,7 @@ const MemberList = styled.div`
     padding: ${ENTITY_MEMBER_LIST_VERTICAL_PADDING}px 0;
 `;
 
-class Entity extends React.Component<Props, State> {
+class CanvasEntity extends React.Component<Props, State> {
     rootNode: HTMLDivElement | null = null;
 
     constructor(props: Props) {
@@ -93,14 +94,12 @@ class Entity extends React.Component<Props, State> {
 
         const containerStyle = this.computeContainerStyle();
 
-        const onMouseDown =
-            editorMode === UML.EditorMode.ModelingView ? this.onMouseDown : undefined;
+        const onMouseDown = editorMode === EditorMode.ModelingView ? this.onMouseDown : undefined;
 
-        const onMouseUp =
-            editorMode === UML.EditorMode.ModelingView ? this.props.onMouseUp : undefined;
+        const onMouseUp = editorMode === EditorMode.ModelingView ? this.props.onMouseUp : undefined;
 
         const onClick =
-            editorMode === UML.EditorMode.InteractiveElementsView
+            editorMode === EditorMode.InteractiveElementsView
                 ? this.toggleEntityInteractiveElement
                 : undefined;
 
@@ -178,9 +177,7 @@ class Entity extends React.Component<Props, State> {
             </div>
         );
 
-        return editorMode === UML.EditorMode.ModelingView
-            ? connectDragSource(entityDiv)
-            : entityDiv;
+        return editorMode === EditorMode.ModelingView ? connectDragSource(entityDiv) : entityDiv;
     }
 
     computeContainerStyle(): React.CSSProperties {
@@ -195,7 +192,7 @@ class Entity extends React.Component<Props, State> {
         const isInteractiveElement = interactiveElementIds.has(entity.id);
 
         const visibility =
-            isInteractiveElement && interactiveElementsMode === UML.InteractiveElementsMode.Hidden
+            isInteractiveElement && interactiveElementsMode === InteractiveElementsMode.Hidden
                 ? "hidden"
                 : undefined;
 
@@ -213,7 +210,7 @@ class Entity extends React.Component<Props, State> {
             border: "1px solid black",
             visibility,
             opacity: isDragging ? 0.35 : 1,
-            cursor: editorMode === UML.EditorMode.ModelingView ? "move" : "default",
+            cursor: editorMode === EditorMode.ModelingView ? "move" : "default",
             backgroundColor: "white",
             backgroundImage: this.computeContainerBackgroundImage(isInteractiveElement),
             boxShadow: this.computeContainerBoxShadow()
@@ -226,7 +223,7 @@ class Entity extends React.Component<Props, State> {
 
         let backgroundColor: string | null = null;
 
-        if (editorMode === UML.EditorMode.InteractiveElementsView) {
+        if (editorMode === EditorMode.InteractiveElementsView) {
             if (isInteractiveElement) {
                 backgroundColor = isMouseOverEntity
                     ? theme.interactiveAreaHoverColor
@@ -248,7 +245,7 @@ class Entity extends React.Component<Props, State> {
         const isSelected = selection.entityIds.includes(entity.id);
 
         switch (editorMode) {
-            case UML.EditorMode.ModelingView:
+            case EditorMode.ModelingView:
                 return isMouseOverEntity || isSelected || isDragging
                     ? `0 0 0 4px ${theme.highlightColor}`
                     : "none";
@@ -260,10 +257,10 @@ class Entity extends React.Component<Props, State> {
 }
 
 interface OwnProps {
-    entity: UML.Entity;
-    editorMode: UML.EditorMode;
-    interactiveElementsMode: UML.InteractiveElementsMode;
-    selection: UML.ElementSelection;
+    entity: Entity;
+    editorMode: EditorMode;
+    interactiveElementsMode: InteractiveElementsMode;
+    selection: ElementSelection;
     gridSize: number;
     updateEntityWidth: (newWidth: number) => void;
     openDetailsPopup: () => void;
@@ -298,7 +295,7 @@ const dragSourceSpec: DragSourceSpec<OwnProps> = {
     beginDrag(props, monitor, component): DragDrop.DragItem {
         props.onStartDragging();
 
-        const rootNode = (component as Entity).rootNode!;
+        const rootNode = (component as CanvasEntity).rootNode!;
         const { width, height } = rootNode.getBoundingClientRect();
 
         return {
@@ -322,4 +319,4 @@ export default (withTheme(DragSource(
     DragDrop.ItemTypes.ExistingEntities,
     dragSourceSpec,
     dragSourceCollector
-)(Entity as any) as any) as any) as React.ComponentClass<OwnProps>;
+)(CanvasEntity as any) as any) as any) as React.ComponentClass<OwnProps>;
