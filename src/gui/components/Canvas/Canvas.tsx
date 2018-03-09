@@ -22,7 +22,7 @@ import {
 } from "../../redux";
 import * as UML from "../../../core/domain";
 import { Size, snapPointToGrid } from "../../../core/geometry";
-import { UUID } from "../../../core/utils/uuid";
+import { UUID } from "../../../core/utils";
 
 const StyledCanvas = styled.div`
     width: ${(props: any) => props.width}px;

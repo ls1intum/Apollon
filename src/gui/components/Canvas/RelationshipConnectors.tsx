@@ -5,7 +5,7 @@ import RelationshipDragPreview from "./RelationshipDragPreview";
 import { createRelationship, getAllEntities, ReduxState } from "../../redux";
 import { EditorMode, ElementSelection, Entity, RelationshipKind } from "../../../core/domain";
 import { Point, RectEdge } from "../../../core/geometry";
-import { UUID } from "../../../core/utils/uuid";
+import { UUID } from "../../../core/utils";
 
 const connectorSize = 40;
 const connectorRadius = connectorSize / 2;

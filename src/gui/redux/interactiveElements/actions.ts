@@ -1,4 +1,4 @@
-import { UUID } from "../../../core/utils/uuid";
+import { UUID } from "../../../core/utils";
 
 export type InteractiveElementsAction = ToggleInteractiveElementsAction;
 

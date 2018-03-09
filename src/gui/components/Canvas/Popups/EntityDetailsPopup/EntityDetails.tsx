@@ -5,7 +5,7 @@ import EntityMethods from "./EntityMethods";
 import EntityNameInput from "./EntityNameInput";
 import { PopupSection } from "../PopupSection";
 import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../../../core/domain";
-import { UUID } from "../../../../../core/utils/uuid";
+import { UUID } from "../../../../../core/utils";
 
 export default class EntityDetails extends React.Component<Props> {
     render() {

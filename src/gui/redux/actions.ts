@@ -5,7 +5,7 @@ import { RelationshipsAction } from "./relationships/actions";
 import { UndoRedoAction } from "./undoRedo/actions";
 import { Entity } from "../../core/domain";
 import { Delta } from "../../core/geometry";
-import { newId } from "../../core/utils/uuid";
+import { newId } from "../../core/utils";
 
 export * from "./editor/actions";
 export * from "./entities/actions";

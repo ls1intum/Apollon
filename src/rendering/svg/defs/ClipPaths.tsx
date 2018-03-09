@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Entity } from "../../../core/domain";
-import { distinct } from "../../../core/utils/array";
+import { distinct } from "../../../core/utils";
 import {
     ENTITY_HORIZONTAL_PADDING,
     ENTITY_KIND_HEIGHT,

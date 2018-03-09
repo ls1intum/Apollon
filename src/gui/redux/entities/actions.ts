@@ -1,7 +1,6 @@
 import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../core/domain";
 import { Delta, Point } from "../../../core/geometry";
-import { assertNever } from "../../../core/utils/never";
-import { newId, UUID } from "../../../core/utils/uuid";
+import { assertNever, newId, UUID } from "../../../core/utils";
 import { computeEntityHeight, getDefaultEntityWidth } from "../../../layouting/entity";
 
 export type EntitiesAction =

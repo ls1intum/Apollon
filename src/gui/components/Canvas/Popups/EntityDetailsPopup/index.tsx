@@ -13,7 +13,7 @@ import {
 } from "../../../../redux";
 import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../../../core/domain";
 import { Point } from "../../../../../core/geometry";
-import { UUID } from "../../../../../core/utils/uuid";
+import { UUID } from "../../../../../core/utils";
 
 class EntityDetailsPopup extends React.Component<Props> {
     updateEntityKind = (kind: EntityKind) => {

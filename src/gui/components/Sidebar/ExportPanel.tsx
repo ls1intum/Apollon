@@ -10,7 +10,7 @@ import {
 import { ReduxState } from "../../redux/state";
 import { Theme } from "../../theme";
 import { InteractiveElementsMode, UMLModel } from "../../../core/domain";
-import { UUID } from "../../../core/utils/uuid";
+import { UUID } from "../../../core/utils";
 import { layout, LayoutedDiagram } from "../../../layouting/diagram";
 import { renderDiagram, SvgRenderOptions } from "../../../rendering/svg";
 

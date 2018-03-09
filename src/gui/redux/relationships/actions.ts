@@ -1,5 +1,5 @@
 import { Relationship, RelationshipEnd, RelationshipKind } from "../../../core/domain";
-import { newId, UUID } from "../../../core/utils/uuid";
+import { newId, UUID } from "../../../core/utils";
 
 export type RelationshipsAction =
     | CreateRelationshipAction

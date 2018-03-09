@@ -4,8 +4,7 @@ import EntityMemberLine from "./EntityMemberLine";
 import BlockInput from "../BlockInput";
 import KeyCodes from "../../../../events/keyCodes";
 import { EntityMember } from "../../../../../core/domain";
-import { sanitizeWhiteSpace } from "../../../../../core/utils/strings";
-import { newId, UUID } from "../../../../../core/utils/uuid";
+import { newId, sanitizeWhiteSpace, UUID } from "../../../../../core/utils";
 
 const Container = styled.div`
     margin-top: 10px;

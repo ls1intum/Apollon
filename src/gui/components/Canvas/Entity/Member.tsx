@@ -2,7 +2,7 @@ import * as React from "react";
 import styled, { withTheme } from "styled-components";
 import { Theme } from "../../../theme";
 import { EditorMode, EntityMember, InteractiveElementsMode } from "../../../../core/domain";
-import { UUID } from "../../../../core/utils/uuid";
+import { UUID } from "../../../../core/utils";
 import { ENTITY_HORIZONTAL_PADDING, ENTITY_MEMBER_HEIGHT } from "../../../../layouting/entity";
 
 const NameDisplay = styled.div`

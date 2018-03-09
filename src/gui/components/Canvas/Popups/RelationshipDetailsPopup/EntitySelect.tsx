@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Entity } from "../../../../../core/domain";
-import { UUID } from "../../../../../core/utils/uuid";
+import { UUID } from "../../../../../core/utils";
 
 export default class EntitySelect extends React.Component<Props> {
     onChange = (e: React.FormEvent<HTMLSelectElement>) => {

@@ -1,5 +1,5 @@
 import { Point } from "./point";
-import { assertNever } from "../utils/never";
+import { assertNever } from "../utils";
 
 export interface Rect {
     x: number;

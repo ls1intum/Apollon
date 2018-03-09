@@ -2,7 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import { Relationship, RelationshipEnd } from "../../core/domain";
 import { Delta, Point, RectEdge } from "../../core/geometry";
-import { assertNever } from "../../core/utils/never";
+import { assertNever } from "../../core/utils";
 
 const Text = styled.text`
     user-select: none;

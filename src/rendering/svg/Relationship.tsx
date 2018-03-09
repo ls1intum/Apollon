@@ -4,7 +4,7 @@ import { SvgRenderOptions } from "./index";
 import RelationshipLabels from "./RelationshipLabels";
 import * as UML from "../../core/domain";
 import { Point } from "../../core/geometry";
-import { assertNever } from "../../core/utils/never";
+import { assertNever } from "../../core/utils";
 
 export default class Relationship extends React.Component<Props> {
     render() {

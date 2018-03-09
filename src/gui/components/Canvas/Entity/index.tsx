@@ -14,7 +14,7 @@ import ResizeHandle from "./ResizeHandle";
 import * as DragDrop from "../../dnd";
 import { Theme } from "../../../theme";
 import * as UML from "../../../../core/domain";
-import { UUID } from "../../../../core/utils/uuid";
+import { UUID } from "../../../../core/utils";
 import {
     computeEntityHeight,
     ENTITY_MEMBER_LIST_VERTICAL_PADDING

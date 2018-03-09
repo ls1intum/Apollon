@@ -1,8 +1,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import ClassDiagram from "./ClassDiagram";
+import { UUID } from "../../core/utils";
 import { LayoutedDiagram } from "../../layouting/diagram";
-import { UUID } from "../../core/utils/uuid";
 
 export interface SvgRenderOptions {
     shouldRenderElement: (id: UUID) => boolean;

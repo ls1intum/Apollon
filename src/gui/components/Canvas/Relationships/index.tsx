@@ -7,7 +7,7 @@ import {
     LayoutedRelationship
 } from "../../../../core/domain";
 import { Size } from "../../../../core/geometry";
-import { UUID } from "../../../../core/utils/uuid";
+import { UUID } from "../../../../core/utils";
 import RelationshipMarkers from "../../../../rendering/svg/defs/RelationshipMarkers";
 
 export default class Relationships extends React.Component<Props> {

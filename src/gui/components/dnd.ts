@@ -1,6 +1,6 @@
 import { EntityKind } from "../../core/domain";
 import { Size } from "../../core/geometry";
-import { UUID } from "../../core/utils/uuid";
+import { UUID } from "../../core/utils";
 
 export const enum ItemTypes {
     NewEntity = "NEW_ENTITY",

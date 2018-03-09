@@ -4,7 +4,7 @@ import Canvas from "./Canvas";
 import { ReduxState } from "../../redux/state";
 import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../core/domain";
 import { Size } from "../../../core/geometry";
-import { UUID } from "../../../core/utils/uuid";
+import { UUID } from "../../../core/utils";
 
 class CanvasContainer extends React.Component<Props> {
     render() {
