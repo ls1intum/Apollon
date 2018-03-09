@@ -12,7 +12,7 @@ import { Theme } from "../../theme";
 import { InteractiveElementsMode, UMLModel } from "../../../core/domain";
 import { UUID } from "../../../core/utils";
 import { layout, LayoutedDiagram } from "../../../rendering/layouters/diagram";
-import { renderDiagram, SvgRenderOptions } from "../../../rendering/svg";
+import { renderDiagram, SvgRenderOptions } from "../../../rendering/renderers/svg";
 
 class ExportPanel extends React.Component<Props> {
     form: HTMLFormElement | null = null;

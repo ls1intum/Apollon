@@ -4,7 +4,7 @@ import RelationshipMarkers from "./defs/RelationshipMarkers";
 import Entity from "./Entity";
 import { SvgRenderOptions } from "./index";
 import Relationship from "./Relationship";
-import { LayoutedDiagram } from "../../rendering/layouters/diagram";
+import { LayoutedDiagram } from "../../../rendering/layouters/diagram";
 
 export default class ClassDiagram extends React.Component<Props> {
     render() {
