@@ -1,7 +1,7 @@
 const path = require("path");
 
 module.exports = {
-    entry: "./src/global.ts",
+    entry: "./src/gui/window.ts",
 
     output: {
         path: path.join(__dirname, "dev"),
