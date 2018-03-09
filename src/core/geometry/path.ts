@@ -2,36 +2,6 @@ import { Delta } from "./delta";
 import { areAlmostEqual } from "./math/floatingPoint";
 import { Point, pointsAreEqual } from "./point";
 
-export function computePathDeltas(path: Point[]): Delta[] {
-    const deltas: Delta[] = [];
-
-    for (let i = 0; i < path.length - 1; i++) {
-        const p = path[i];
-        const q = path[i + 1];
-
-        const dx = q.x - p.x;
-        const dy = q.y - p.y;
-
-        deltas.push({ dx, dy });
-    }
-
-    return deltas;
-}
-
-export function createPathFromDeltas(start: Point, deltas: Delta[]): Point[] {
-    const points = [start];
-    let current = start;
-
-    for (const { dx, dy } of deltas) {
-        const x = current.x + dx;
-        const y = current.y + dy;
-        current = { x, y };
-        points.push(current);
-    }
-
-    return points;
-}
-
 export function beautifyPath(path: Point[]): Point[] {
     if (path.length <= 1) {
         return path;
@@ -118,6 +88,36 @@ function mergeConsecutiveSameAxisDeltas(path: Point[]): Point[] {
     }
 
     return createPathFromDeltas(path[0], newDeltas);
+}
+
+function computePathDeltas(path: Point[]): Delta[] {
+    const deltas: Delta[] = [];
+
+    for (let i = 0; i < path.length - 1; i++) {
+        const p = path[i];
+        const q = path[i + 1];
+
+        const dx = q.x - p.x;
+        const dy = q.y - p.y;
+
+        deltas.push({ dx, dy });
+    }
+
+    return deltas;
+}
+
+function createPathFromDeltas(start: Point, deltas: Delta[]): Point[] {
+    const points = [start];
+    let current = start;
+
+    for (const { dx, dy } of deltas) {
+        const x = current.x + dx;
+        const y = current.y + dy;
+        current = { x, y };
+        points.push(current);
+    }
+
+    return points;
 }
 
 /**

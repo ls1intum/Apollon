@@ -84,30 +84,3 @@ export function getPointOnPaddedBox(
             return assertNever(edge);
     }
 }
-
-export function rectsIntersect(rect1: Rect, rect2: Rect): boolean {
-    return (
-        rect1.x < rect2.x + rect2.width &&
-        rect1.x + rect1.width > rect2.x &&
-        rect1.y < rect2.y + rect2.height &&
-        rect1.y + rect1.height > rect2.y
-    );
-}
-
-export function convertToRect(rect: ClientRect): Rect {
-    return {
-        x: rect.left,
-        y: rect.top,
-        width: rect.width,
-        height: rect.height
-    };
-}
-
-export function extendRect(rect: Rect, padding: number): Rect {
-    return {
-        x: rect.x - padding,
-        y: rect.y - padding,
-        width: rect.width + 2 * padding,
-        height: rect.height + 2 * padding
-    };
-}

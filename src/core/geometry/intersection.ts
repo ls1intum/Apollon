@@ -70,13 +70,13 @@ function lineSegmentsIntersect(p1: Point, q1: Point, p2: Point, q2: Point) {
     return false;
 }
 
-export const enum Orientation {
+const enum Orientation {
     Collinear,
     Clockwise,
     CounterClockwise
 }
 
-export function getOrientation(p: Point, q: Point, r: Point): Orientation {
+function getOrientation(p: Point, q: Point, r: Point): Orientation {
     const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
     if (isAlmostZero(val)) {
