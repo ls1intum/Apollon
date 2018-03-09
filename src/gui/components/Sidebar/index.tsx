@@ -5,7 +5,7 @@ import ExportPanel from "./ExportPanel";
 import InteractiveElementsPanel from "./InteractiveElementsPanel";
 import LocalStateForm from "./LocalStateForm";
 import Toolbox from "./Toolbox";
-import { EditorMode, Entity, InteractiveElementsMode, Relationship } from "../../../uml";
+import { EditorMode, Entity, InteractiveElementsMode, Relationship } from "../../../core/domain";
 
 const FlexContainer = styled.div`
     display: flex;

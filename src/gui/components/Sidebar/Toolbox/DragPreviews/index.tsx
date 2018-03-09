@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import EntityPreview from "./EntityPreview";
-import { EntityKind } from "../../../../../uml";
+import { EntityKind } from "../../../../../core/domain";
 
 const Container = styled.section`
     display: grid;

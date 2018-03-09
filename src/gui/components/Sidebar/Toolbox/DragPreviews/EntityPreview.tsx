@@ -9,9 +9,9 @@ import {
 import { getEmptyImage } from "react-dnd-html5-backend";
 import styled from "styled-components";
 import * as DragDrop from "../../../dnd";
+import { EntityKind } from "../../../../../core/domain";
+import { assertNever } from "../../../../../core/utils/never";
 import { computeEntityHeight, getDefaultEntityWidth } from "../../../../../layouting/entity";
-import { EntityKind } from "../../../../../uml";
-import { assertNever } from "../../../../../utils/never";
 
 const StyledEntityPreview: any = styled.div`
     width: 145px;

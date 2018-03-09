@@ -1,10 +1,10 @@
 import * as React from "react";
 import { withTheme } from "styled-components";
 import { Theme } from "../../../theme";
+import * as UML from "../../../../core/domain";
 import { getMarkerIdForRelationshipKind } from "../../../../rendering/svg/defs/RelationshipMarkers";
 import { getSvgDasharrayForRelationshipKind } from "../../../../rendering/svg/Relationship";
 import RelationshipLabels from "../../../../rendering/svg/RelationshipLabels";
-import * as UML from "../../../../uml";
 
 class Relationship extends React.Component<Props, State> {
     state: State = {

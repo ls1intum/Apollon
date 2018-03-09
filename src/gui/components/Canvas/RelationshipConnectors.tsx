@@ -3,9 +3,9 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import RelationshipDragPreview from "./RelationshipDragPreview";
 import { createRelationship, getAllEntities, ReduxState } from "../../redux";
-import { Point, RectEdge } from "../../../geometry";
-import { EditorMode, ElementSelection, Entity, RelationshipKind } from "../../../uml";
-import { UUID } from "../../../utils/uuid";
+import { EditorMode, ElementSelection, Entity, RelationshipKind } from "../../../core/domain";
+import { Point, RectEdge } from "../../../core/geometry";
+import { UUID } from "../../../core/utils/uuid";
 
 const connectorSize = 40;
 const connectorRadius = connectorSize / 2;

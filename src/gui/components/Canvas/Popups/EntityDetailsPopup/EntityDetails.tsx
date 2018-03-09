@@ -4,8 +4,8 @@ import EntityKindSelect from "./EntityKindSelect";
 import EntityMethods from "./EntityMethods";
 import EntityNameInput from "./EntityNameInput";
 import { PopupSection } from "../PopupSection";
-import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../../../uml";
-import { UUID } from "../../../../../utils/uuid";
+import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../../../core/domain";
+import { UUID } from "../../../../../core/utils/uuid";
 
 export default class EntityDetails extends React.Component<Props> {
     render() {

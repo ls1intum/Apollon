@@ -3,8 +3,8 @@ import { connect } from "react-redux";
 import RelationshipDetails from "./RelationshipDetails";
 import Popup from "../Popup";
 import { getAllEntities, ReduxState, updateRelationship } from "../../../../redux";
-import { Point } from "../../../../../geometry";
-import { Entity, LayoutedRelationship } from "../../../../../uml";
+import { Entity, LayoutedRelationship } from "../../../../../core/domain";
+import { Point } from "../../../../../core/geometry";
 
 class RelationshipDetailsPopup extends React.Component<Props> {
     render() {

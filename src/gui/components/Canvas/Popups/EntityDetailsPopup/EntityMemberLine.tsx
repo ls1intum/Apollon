@@ -3,8 +3,8 @@ import styled from "styled-components";
 import TrashCanIcon from "./TrashCanIcon";
 import BlockInput from "../BlockInput";
 import KeyCodes from "../../../../events/keyCodes";
-import { EntityMember } from "../../../../../uml";
-import { sanitizeWhiteSpace } from "../../../../../utils/strings";
+import { EntityMember } from "../../../../../core/domain";
+import { sanitizeWhiteSpace } from "../../../../../core/utils/strings";
 
 const FlexContainer = styled.div`
     display: flex;

@@ -1,14 +1,14 @@
 import * as React from "react";
 import Relationship from "./Relationship";
-import { Size } from "../../../../geometry";
-import RelationshipMarkers from "../../../../rendering/svg/defs/RelationshipMarkers";
 import {
     EditorMode,
     ElementSelection,
     InteractiveElementsMode,
     LayoutedRelationship
-} from "../../../../uml";
-import { UUID } from "../../../../utils/uuid";
+} from "../../../../core/domain";
+import { Size } from "../../../../core/geometry";
+import { UUID } from "../../../../core/utils/uuid";
+import RelationshipMarkers from "../../../../rendering/svg/defs/RelationshipMarkers";
 
 export default class Relationships extends React.Component<Props> {
     render() {

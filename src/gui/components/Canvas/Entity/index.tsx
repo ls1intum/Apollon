@@ -13,12 +13,12 @@ import Name from "./Name";
 import ResizeHandle from "./ResizeHandle";
 import * as DragDrop from "../../dnd";
 import { Theme } from "../../../theme";
+import * as UML from "../../../../core/domain";
+import { UUID } from "../../../../core/utils/uuid";
 import {
     computeEntityHeight,
     ENTITY_MEMBER_LIST_VERTICAL_PADDING
 } from "../../../../layouting/entity";
-import * as UML from "../../../../uml";
-import { UUID } from "../../../../utils/uuid";
 
 const MemberList = styled.div`
     border-top: 1px solid black;

@@ -5,9 +5,9 @@ import RectEdgeSelect from "./RectEdgeSelect";
 import BlockInput from "../BlockInput";
 import { PopupSectionHeading } from "../PopupSectionHeading";
 import KeyCodes from "../../../../events/keyCodes";
-import { RectEdge } from "../../../../../geometry";
-import { Entity, RelationshipEnd } from "../../../../../uml";
-import { UUID } from "../../../../../utils/uuid";
+import { Entity, RelationshipEnd } from "../../../../../core/domain";
+import { RectEdge } from "../../../../../core/geometry";
+import { UUID } from "../../../../../core/utils/uuid";
 
 const Th = styled.th`
     font-weight: normal;

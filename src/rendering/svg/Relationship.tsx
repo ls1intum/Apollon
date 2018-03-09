@@ -2,9 +2,9 @@ import * as React from "react";
 import { getMarkerIdForRelationshipKind } from "./defs/RelationshipMarkers";
 import { SvgRenderOptions } from "./index";
 import RelationshipLabels from "./RelationshipLabels";
-import { Point } from "../../geometry";
-import * as UML from "../../uml";
-import { assertNever } from "../../utils/never";
+import * as UML from "../../core/domain";
+import { Point } from "../../core/geometry";
+import { assertNever } from "../../core/utils/never";
 
 export default class Relationship extends React.Component<Props> {
     render() {

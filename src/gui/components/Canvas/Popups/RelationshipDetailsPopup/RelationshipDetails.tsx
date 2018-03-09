@@ -9,7 +9,7 @@ import {
     Relationship,
     RelationshipEnd,
     RelationshipKind
-} from "../../../../../uml";
+} from "../../../../../core/domain";
 
 export default class RelationshipDetails extends React.Component<Props> {
     updateRelationshipKind = (kind: RelationshipKind) => {

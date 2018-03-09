@@ -1,4 +1,5 @@
 import { isAlmostZero } from "./mathHelper";
+import { Point } from "./point";
 import {
     getBottomLeftCorner,
     getBottomRightCorner,
@@ -6,7 +7,6 @@ import {
     getTopRightCorner,
     Rect
 } from "./rect";
-import { Point } from "../geometry";
 
 export function lineSegmentIntersectsRect(p: Point, q: Point, rect: Rect) {
     if (lineSegmentLiesWithinRect(p, q, rect)) {

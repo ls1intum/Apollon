@@ -1,6 +1,7 @@
 import * as React from "react";
 import { getEntityMemberClipPathId } from "./defs/ClipPaths";
 import { SvgRenderOptions } from "./index";
+import * as UML from "../../core/domain";
 import {
     computeEntityHeaderHeight,
     ENTITY_BORDER_THICKNESS,
@@ -9,7 +10,6 @@ import {
     ENTITY_MEMBER_LIST_VERTICAL_PADDING,
     getEntityKindDescriptionOrNull
 } from "../../layouting/entity";
-import * as UML from "../../uml";
 
 export default class Entity extends React.Component<Props> {
     render() {

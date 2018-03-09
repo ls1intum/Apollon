@@ -3,9 +3,9 @@ import styled from "styled-components";
 import EntityMemberLine from "./EntityMemberLine";
 import BlockInput from "../BlockInput";
 import KeyCodes from "../../../../events/keyCodes";
-import { EntityMember } from "../../../../../uml";
-import { sanitizeWhiteSpace } from "../../../../../utils/strings";
-import { newId, UUID } from "../../../../../utils/uuid";
+import { EntityMember } from "../../../../../core/domain";
+import { sanitizeWhiteSpace } from "../../../../../core/utils/strings";
+import { newId, UUID } from "../../../../../core/utils/uuid";
 
 const Container = styled.div`
     margin-top: 10px;

@@ -1,5 +1,5 @@
-import { EntityKind, EntityRenderMode } from "../uml";
-import { assertNever } from "../utils/never";
+import { EntityKind, EntityRenderMode } from "../core/domain";
+import { assertNever } from "../core/utils/never";
 
 export const ENTITY_KIND_HEIGHT = 14;
 export const ENTITY_NAME_HEIGHT = 40;

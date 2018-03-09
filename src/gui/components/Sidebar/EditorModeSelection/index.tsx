@@ -1,6 +1,6 @@
 import * as React from "react";
 import SegmentedControl, { Segment } from "./SegmentedControl";
-import { EditorMode } from "../../../../uml";
+import { EditorMode } from "../../../../core/domain";
 
 export default class EditorModeSelection extends React.Component<Props> {
     segments: Segment[] = [

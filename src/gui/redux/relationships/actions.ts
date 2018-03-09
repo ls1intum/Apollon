@@ -1,5 +1,5 @@
-import { Relationship, RelationshipEnd, RelationshipKind } from "../../../uml";
-import { newId, UUID } from "../../../utils/uuid";
+import { Relationship, RelationshipEnd, RelationshipKind } from "../../../core/domain";
+import { newId, UUID } from "../../../core/utils/uuid";
 
 export type RelationshipsAction =
     | CreateRelationshipAction

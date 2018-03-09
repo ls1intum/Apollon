@@ -1,4 +1,4 @@
-import { Size } from "../../../geometry";
+import { Size } from "../../../core/geometry";
 
 export type EditorAction = ResizeCanvasAction;
 

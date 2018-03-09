@@ -1,5 +1,5 @@
 import * as React from "react";
-import { snapToGrid } from "../../../../geometry";
+import { snapToGrid } from "../../../../core/geometry";
 
 const resizeHandleStyle: React.CSSProperties = {
     position: "absolute",

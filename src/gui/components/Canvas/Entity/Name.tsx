@@ -1,11 +1,11 @@
 import * as React from "react";
 import styled from "styled-components";
+import * as UML from "../../../../core/domain";
 import {
     computeEntityHeaderHeight,
     ENTITY_HORIZONTAL_PADDING,
     getEntityKindDescriptionOrNull
 } from "../../../../layouting/entity";
-import * as UML from "../../../../uml";
 
 const Container = styled.div`
     display: flex;

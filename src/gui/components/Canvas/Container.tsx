@@ -2,9 +2,9 @@ import * as React from "react";
 import { connect } from "react-redux";
 import Canvas from "./Canvas";
 import { ReduxState } from "../../redux/state";
-import { Size } from "../../../geometry";
-import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../uml";
-import { UUID } from "../../../utils/uuid";
+import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../core/domain";
+import { Size } from "../../../core/geometry";
+import { UUID } from "../../../core/utils/uuid";
 
 class CanvasContainer extends React.Component<Props> {
     render() {

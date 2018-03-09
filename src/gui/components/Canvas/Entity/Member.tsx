@@ -1,9 +1,9 @@
 import * as React from "react";
 import styled, { withTheme } from "styled-components";
 import { Theme } from "../../../theme";
+import { EditorMode, EntityMember, InteractiveElementsMode } from "../../../../core/domain";
+import { UUID } from "../../../../core/utils/uuid";
 import { ENTITY_HORIZONTAL_PADDING, ENTITY_MEMBER_HEIGHT } from "../../../../layouting/entity";
-import { EditorMode, EntityMember, InteractiveElementsMode } from "../../../../uml";
-import { UUID } from "../../../../utils/uuid";
 
 const NameDisplay = styled.div`
     height: ${ENTITY_MEMBER_HEIGHT}px;

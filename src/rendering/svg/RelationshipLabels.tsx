@@ -1,8 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
-import { Delta, Point, RectEdge } from "../../geometry";
-import { Relationship, RelationshipEnd } from "../../uml";
-import { assertNever } from "../../utils/never";
+import { Relationship, RelationshipEnd } from "../../core/domain";
+import { Delta, Point, RectEdge } from "../../core/geometry";
+import { assertNever } from "../../core/utils/never";
 
 const Text = styled.text`
     user-select: none;

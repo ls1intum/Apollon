@@ -9,7 +9,6 @@ import Sidebar from "./Sidebar";
 import { ZIndices } from "./zindices";
 import { getAllEntities, getAllRelationships } from "../redux/selectors";
 import { ReduxState } from "../redux/state";
-import { computeDiagramBoundingBox, computeRelationshipPaths } from "../../layouting/diagram";
 import {
     EditorMode,
     ElementSelection,
@@ -17,8 +16,9 @@ import {
     InteractiveElementsMode,
     Relationship,
     UMLModel
-} from "../../uml";
-import { UUID } from "../../utils/uuid";
+} from "../../core/domain";
+import { UUID } from "../../core/utils/uuid";
+import { computeDiagramBoundingBox, computeRelationshipPaths } from "../../layouting/diagram";
 
 const SIDEBAR_WIDTH = 350;
 

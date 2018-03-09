@@ -3,9 +3,9 @@ import { EntitiesAction } from "./entities/actions";
 import { InteractiveElementsAction } from "./interactiveElements/actions";
 import { RelationshipsAction } from "./relationships/actions";
 import { UndoRedoAction } from "./undoRedo/actions";
-import { Delta } from "../../geometry";
-import { Entity } from "../../uml";
-import { newId } from "../../utils/uuid";
+import { Entity } from "../../core/domain";
+import { Delta } from "../../core/geometry";
+import { newId } from "../../core/utils/uuid";
 
 export * from "./editor/actions";
 export * from "./entities/actions";

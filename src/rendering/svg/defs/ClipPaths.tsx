@@ -1,11 +1,11 @@
 import * as React from "react";
+import { Entity } from "../../../core/domain";
+import { distinct } from "../../../core/utils/array";
 import {
     ENTITY_HORIZONTAL_PADDING,
     ENTITY_KIND_HEIGHT,
     ENTITY_NAME_HEIGHT
 } from "../../../layouting/entity";
-import { Entity } from "../../../uml";
-import { distinct } from "../../../utils/array";
 
 export default class ClipPaths extends React.Component<Props> {
     render() {

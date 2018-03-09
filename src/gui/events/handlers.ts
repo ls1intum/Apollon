@@ -7,8 +7,8 @@ import {
     ReduxAction,
     ReduxState
 } from "../redux";
-import { ElementSelection } from "../../uml";
-import { UUID } from "../../utils/uuid";
+import { ElementSelection } from "../../core/domain";
+import { UUID } from "../../core/utils/uuid";
 
 export function deleteSelectedElements(selection: ElementSelection): ReduxAction[] {
     const actions = [];

@@ -5,9 +5,9 @@ import Editor from "./components/Editor";
 import KeyboardEventListener from "./events/KeyboardEventListener";
 import { createStore, ReduxState } from "./redux";
 import { createTheme, Theme } from "./theme";
-import { ElementSelection } from "../uml";
-import { toggle } from "../utils/array";
-import { UUID } from "../utils/uuid";
+import { ElementSelection } from "../core/domain";
+import { toggle } from "../core/utils/array";
+import { UUID } from "../core/utils/uuid";
 
 const ApollonEditor = styled.div`
     box-sizing: border-box;

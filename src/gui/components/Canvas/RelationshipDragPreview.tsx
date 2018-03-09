@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Point } from "../../../geometry";
+import { Point } from "../../../core/geometry";
 
 export default class RelationshipDragPreview extends React.Component<Props> {
     render() {

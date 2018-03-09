@@ -1,8 +1,8 @@
 import * as React from "react";
 import EntityMemberList from "./EntityMemberList";
 import EntityMembersHeading from "./EntityMembersHeading";
-import { Entity, EntityMember, EntityRenderMode } from "../../../../../uml";
-import { UUID } from "../../../../../utils/uuid";
+import { Entity, EntityMember, EntityRenderMode } from "../../../../../core/domain";
+import { UUID } from "../../../../../core/utils/uuid";
 
 export default class EntityAttributes extends React.Component<Props> {
     handleShowAttributesChange = (showAttributes: boolean) => {

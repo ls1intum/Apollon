@@ -11,9 +11,9 @@ import {
     updateEntityName,
     updateEntityRenderMode
 } from "../../../../redux";
-import { Point } from "../../../../../geometry";
-import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../../../uml";
-import { UUID } from "../../../../../utils/uuid";
+import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../../../core/domain";
+import { Point } from "../../../../../core/geometry";
+import { UUID } from "../../../../../core/utils/uuid";
 
 class EntityDetailsPopup extends React.Component<Props> {
     updateEntityKind = (kind: EntityKind) => {

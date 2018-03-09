@@ -20,9 +20,9 @@ import {
     toggleInteractiveElements,
     updateEntityWidth
 } from "../../redux";
-import { Size, snapPointToGrid } from "../../../geometry";
-import * as UML from "../../../uml";
-import { UUID } from "../../../utils/uuid";
+import * as UML from "../../../core/domain";
+import { Size, snapPointToGrid } from "../../../core/geometry";
+import { UUID } from "../../../core/utils/uuid";
 
 const StyledCanvas = styled.div`
     width: ${(props: any) => props.width}px;

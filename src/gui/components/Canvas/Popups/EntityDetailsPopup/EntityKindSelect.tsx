@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
-import { EntityKind } from "../../../../../uml";
-import { assertNever } from "../../../../../utils/never";
+import { EntityKind } from "../../../../../core/domain";
+import { assertNever } from "../../../../../core/utils/never";
 
 const kinds: EntityKind[] = [
     EntityKind.AbstractClass,
