@@ -9,7 +9,7 @@ import {
     ENTITY_MEMBER_HEIGHT,
     ENTITY_MEMBER_LIST_VERTICAL_PADDING,
     getEntityKindDescriptionOrNull
-} from "../../layouting/entity";
+} from "../../rendering/layouters/entity";
 
 export default class Entity extends React.Component<Props> {
     render() {

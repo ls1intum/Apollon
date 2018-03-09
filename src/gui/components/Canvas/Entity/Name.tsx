@@ -5,7 +5,7 @@ import {
     computeEntityHeaderHeight,
     ENTITY_HORIZONTAL_PADDING,
     getEntityKindDescriptionOrNull
-} from "../../../../layouting/entity";
+} from "../../../../rendering/layouters/entity";
 
 const Container = styled.div`
     display: flex;

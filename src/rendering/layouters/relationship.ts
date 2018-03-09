@@ -10,8 +10,8 @@ import {
     Point,
     Rect,
     RectEdge
-} from "../core/geometry";
-import { assertNever } from "../core/utils";
+} from "../../core/geometry";
+import { assertNever } from "../../core/utils";
 
 export function computeRelationshipPath(
     sourceRect: Rect,

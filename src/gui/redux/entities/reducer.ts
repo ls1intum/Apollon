@@ -1,6 +1,6 @@
 import { ReduxAction } from "../actions";
 import { ReduxState } from "../state";
-import { computeEntityHeight } from "../../../layouting/entity";
+import { computeEntityHeight } from "../../../rendering/layouters/entity";
 
 type State = ReduxState["entities"];
 

@@ -18,7 +18,7 @@ import { UUID } from "../../../../core/utils";
 import {
     computeEntityHeight,
     ENTITY_MEMBER_LIST_VERTICAL_PADDING
-} from "../../../../layouting/entity";
+} from "../../../../rendering/layouters/entity";
 
 const MemberList = styled.div`
     border-top: 1px solid black;

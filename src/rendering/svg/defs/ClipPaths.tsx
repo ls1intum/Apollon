@@ -5,7 +5,7 @@ import {
     ENTITY_HORIZONTAL_PADDING,
     ENTITY_KIND_HEIGHT,
     ENTITY_NAME_HEIGHT
-} from "../../../layouting/entity";
+} from "../../../rendering/layouters/entity";
 
 export default class ClipPaths extends React.Component<Props> {
     render() {

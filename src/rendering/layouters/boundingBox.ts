@@ -1,4 +1,4 @@
-import { Point, Rect } from "../core/geometry";
+import { Point, Rect } from "../../core/geometry";
 
 export function computeBoundingBox(points: Point[]): Rect {
     if (points.length === 0) {

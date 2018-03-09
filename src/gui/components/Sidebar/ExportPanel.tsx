@@ -11,7 +11,7 @@ import { ReduxState } from "../../redux/state";
 import { Theme } from "../../theme";
 import { InteractiveElementsMode, UMLModel } from "../../../core/domain";
 import { UUID } from "../../../core/utils";
-import { layout, LayoutedDiagram } from "../../../layouting/diagram";
+import { layout, LayoutedDiagram } from "../../../rendering/layouters/diagram";
 import { renderDiagram, SvgRenderOptions } from "../../../rendering/svg";
 
 class ExportPanel extends React.Component<Props> {

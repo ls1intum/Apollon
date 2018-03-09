@@ -1,7 +1,7 @@
 import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../core/domain";
 import { Delta, Point } from "../../../core/geometry";
 import { assertNever, newId, UUID } from "../../../core/utils";
-import { computeEntityHeight, getDefaultEntityWidth } from "../../../layouting/entity";
+import { computeEntityHeight, getDefaultEntityWidth } from "../../../rendering/layouters/entity";
 
 export type EntitiesAction =
     | CreateEntityAction

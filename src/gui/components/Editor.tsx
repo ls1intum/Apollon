@@ -18,7 +18,10 @@ import {
     UMLModel
 } from "../../core/domain";
 import { UUID } from "../../core/utils";
-import { computeDiagramBoundingBox, computeRelationshipPaths } from "../../layouting/diagram";
+import {
+    computeDiagramBoundingBox,
+    computeRelationshipPaths
+} from "../../rendering/layouters/diagram";
 
 const SIDEBAR_WIDTH = 350;
 
