@@ -1,5 +1,5 @@
 import { Delta } from "./delta";
-import { areAlmostEqual } from "./mathHelper";
+import { areAlmostEqual } from "./math/floatingPoint";
 import { Point, pointsAreEqual } from "./point";
 
 export function computePathDeltas(path: Point[]): Delta[] {

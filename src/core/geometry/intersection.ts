@@ -1,4 +1,4 @@
-import { isAlmostZero } from "./mathHelper";
+import { isAlmostZero } from "./math/floatingPoint";
 import { Point } from "./point";
 import {
     getBottomLeftCorner,

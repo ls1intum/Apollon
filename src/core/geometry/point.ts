@@ -1,4 +1,4 @@
-import { isAlmostZero } from "./mathHelper";
+import { isAlmostZero } from "./math/floatingPoint";
 
 export interface Point {
     x: number;
