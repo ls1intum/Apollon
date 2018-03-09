@@ -46,22 +46,22 @@ function lineSegmentsIntersect(p1: Point, q1: Point, p2: Point, q2: Point) {
     }
 
     // Special Cases
-    // p1, q1 and p2 are colinear and p2 lies on segment p1q1
+    // p1, q1 and p2 are collinear and p2 lies on segment p1q1
     if (o1 === Orientation.Collinear && liesOnSegment(p1, p2, q1)) {
         return true;
     }
 
-    // p1, q1 and p2 are colinear and q2 lies on segment p1q1
+    // p1, q1 and p2 are collinear and q2 lies on segment p1q1
     if (o2 === Orientation.Collinear && liesOnSegment(p1, q2, q1)) {
         return true;
     }
 
-    // p2, q2 and p1 are colinear and p1 lies on segment p2q2
+    // p2, q2 and p1 are collinear and p1 lies on segment p2q2
     if (o3 === Orientation.Collinear && liesOnSegment(p2, p1, q2)) {
         return true;
     }
 
-    // p2, q2 and q1 are colinear and q1 lies on segment p2q2
+    // p2, q2 and q1 are collinear and q1 lies on segment p2q2
     if (o4 === Orientation.Collinear && liesOnSegment(p2, q1, q2)) {
         return true;
     }
@@ -87,7 +87,7 @@ function getOrientation(p: Point, q: Point, r: Point): Orientation {
 }
 
 /**
- * Given three colinear points p, q, r, checks if point q lies on line segment 'p-r'
+ * Given three collinear points p, q, r, checks if point q lies on line segment 'p-r'
  */
 function liesOnSegment(p: Point, q: Point, r: Point) {
     return (
