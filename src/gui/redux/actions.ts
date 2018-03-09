@@ -3,9 +3,6 @@ import { EntitiesAction } from "./entities/actions";
 import { InteractiveElementsAction } from "./interactiveElements/actions";
 import { RelationshipsAction } from "./relationships/actions";
 import { UndoRedoAction } from "./undoRedo/actions";
-import { Entity } from "../../core/domain";
-import { Delta } from "../../core/geometry";
-import { newId } from "../../core/utils";
 
 export * from "./editor/actions";
 export * from "./entities/actions";
@@ -18,28 +15,4 @@ export type ReduxAction =
     | EntitiesAction
     | InteractiveElementsAction
     | RelationshipsAction
-    | SelectionAction
     | UndoRedoAction;
-
-type SelectionAction = DuplicateSelectionAction;
-
-export interface DuplicateSelectionAction {
-    type: "DUPLICATE_SELECTION";
-    newEntities: Entity[];
-    offset: Delta;
-}
-
-export function duplicateSelection(entities: Entity[], offset: Delta): DuplicateSelectionAction {
-    return {
-        type: "DUPLICATE_SELECTION",
-        newEntities: entities.map<Entity>(entity => ({
-            ...entity,
-            id: newId(),
-            position: {
-                x: entity.position.x + offset.dx,
-                y: entity.position.y + offset.dy
-            }
-        })),
-        offset
-    };
-}

@@ -1,7 +1,7 @@
 import {
     deleteEntities,
     deleteRelationships,
-    duplicateSelection,
+    duplicateEntities,
     flipRelationships,
     moveEntities,
     ReduxAction,
@@ -39,7 +39,7 @@ export function duplicateSelectedEntities(
 
     const entities = selection.entityIds.map(id => state.entities.byId[id]);
 
-    return [duplicateSelection(entities, offset)];
+    return [duplicateEntities(entities, offset)];
 }
 
 export function flipSelectedRelationships(selection: ElementSelection): ReduxAction[] {

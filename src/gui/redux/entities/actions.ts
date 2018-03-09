@@ -5,6 +5,7 @@ import { computeEntityHeight, getDefaultEntityWidth } from "../../../rendering/l
 
 export type EntitiesAction =
     | CreateEntityAction
+    | DuplicateEntitiesAction
     | DeleteEntitiesAction
     | MoveEntitiesAction
     | UpdateEntityKindAction
@@ -19,6 +20,12 @@ export type EntitiesAction =
 export interface CreateEntityAction {
     type: "CREATE_ENTITY";
     entity: Entity;
+}
+
+export interface DuplicateEntitiesAction {
+    type: "DUPLICATE_ENTITIES";
+    newEntities: Entity[];
+    offset: Delta;
 }
 
 export interface DeleteEntitiesAction {
@@ -144,6 +151,21 @@ function getEntityDefaults(
         default:
             return assertNever(kind);
     }
+}
+
+export function duplicateEntities(entities: Entity[], offset: Delta): DuplicateEntitiesAction {
+    return {
+        type: "DUPLICATE_ENTITIES",
+        newEntities: entities.map<Entity>(entity => ({
+            ...entity,
+            id: newId(),
+            position: {
+                x: entity.position.x + offset.dx,
+                y: entity.position.y + offset.dy
+            }
+        })),
+        offset
+    };
 }
 
 export function deleteEntities(entityIds: UUID[]): DeleteEntitiesAction {

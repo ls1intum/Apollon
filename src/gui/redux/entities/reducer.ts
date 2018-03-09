@@ -21,7 +21,7 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
             };
         }
 
-        case "DUPLICATE_SELECTION": {
+        case "DUPLICATE_ENTITIES": {
             const allIds: State["allIds"] = [...state.allIds];
             const byId: State["byId"] = { ...state.byId };
             for (const entity of action.newEntities) {

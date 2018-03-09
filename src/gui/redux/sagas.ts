@@ -1,4 +1,4 @@
-import { DuplicateSelectionAction } from ".";
+import { DuplicateEntitiesAction } from ".";
 import { call, put, select, takeEvery } from "redux-saga/effects";
 import {
     CreateEntityAction,
@@ -12,8 +12,8 @@ import { Size, sizesAreEqual } from "../../core/geometry";
 import { UUID } from "../../core/utils";
 
 const CREATE_ENTITY: CreateEntityAction["type"] = "CREATE_ENTITY";
+const DUPLICATE_ENTITIES: DuplicateEntitiesAction["type"] = "DUPLICATE_ENTITIES";
 const MOVE_ENTITIES: MoveEntitiesAction["type"] = "MOVE_ENTITIES";
-const DUPLICATE_SELECTION: DuplicateSelectionAction["type"] = "DUPLICATE_SELECTION";
 
 export default function* mainSaga(selectEntities: (entityIds: UUID[]) => void) {
     yield takeEvery([MOVE_ENTITIES, CREATE_ENTITY], resizeCanvas);
@@ -22,7 +22,7 @@ export default function* mainSaga(selectEntities: (entityIds: UUID[]) => void) {
         yield call(selectEntities, [action.entity.id]);
     });
 
-    yield takeEvery(DUPLICATE_SELECTION, function*(action: DuplicateSelectionAction) {
+    yield takeEvery(DUPLICATE_ENTITIES, function*(action: DuplicateEntitiesAction) {
         const entityIds = action.newEntities.map(entity => entity.id);
         yield call(selectEntities, entityIds);
     });
