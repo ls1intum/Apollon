@@ -11,12 +11,12 @@ import { getAllEntities, getAllRelationships } from "../redux/selectors";
 import { ReduxState } from "../redux/state";
 import { computeDiagramBoundingBox, computeRelationshipPaths } from "../../layouting/diagram";
 import {
-    ClassDiagram,
     EditorMode,
     ElementSelection,
     Entity,
     InteractiveElementsMode,
-    Relationship
+    Relationship,
+    UMLModel
 } from "../../uml";
 import { UUID } from "../../uuid";
 
@@ -84,7 +84,7 @@ class Editor extends React.Component<Props, State> {
                 scrollHeight
             } = this.canvasScrollContainer;
 
-            const diagram: ClassDiagram = this.props;
+            const diagram: UMLModel = this.props;
 
             if (diagram.entities.length === 0) {
                 const left = Math.abs(scrollWidth - clientWidth) / 2;

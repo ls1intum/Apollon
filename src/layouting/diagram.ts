@@ -1,7 +1,7 @@
 import { computeBoundingBox } from "./boundingBox";
 import { computeRelationshipPath } from "./relationship";
 import { Point, Rect, Size } from "../geometry";
-import { ClassDiagram, Entity, Relationship } from "../uml";
+import { Entity, Relationship, UMLModel } from "../uml";
 import { flatten } from "../utils/array";
 import { UUID } from "../uuid";
 
@@ -16,7 +16,7 @@ export interface LayoutedRelationship {
     path: Point[];
 }
 
-export function layout(diagram: ClassDiagram, outerPadding: number): LayoutedDiagram {
+export function layout(diagram: UMLModel, outerPadding: number): LayoutedDiagram {
     const { entities, relationships } = diagram;
 
     const relationshipPaths = computeRelationshipPaths(diagram);
@@ -44,7 +44,7 @@ export function layout(diagram: ClassDiagram, outerPadding: number): LayoutedDia
 }
 
 export function computeDiagramBoundingBox(
-    diagram: ClassDiagram,
+    diagram: UMLModel,
     relationshipPaths: Map<UUID, Point[]>
 ): Rect {
     const { entities, relationships } = diagram;
@@ -71,7 +71,7 @@ function getEntityBoundingPoints(entity: Entity): Point[] {
     return [topLeftCorner, bottomRightCorner];
 }
 
-export function computeRelationshipPaths(diagram: ClassDiagram): Map<UUID, Point[]> {
+export function computeRelationshipPaths(diagram: UMLModel): Map<UUID, Point[]> {
     const relationshipPaths = diagram.relationships.map<[UUID, Point[]]>(relationship => {
         const source = diagram.entities.find(e => e.id === relationship.source.entityId)!;
         const target = diagram.entities.find(e => e.id === relationship.target.entityId)!;

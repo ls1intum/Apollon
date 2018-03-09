@@ -1,7 +1,7 @@
 import { Point, RectEdge, Size } from "./geometry";
 import { UUID } from "./uuid";
 
-export interface ClassDiagram {
+export interface UMLModel {
     entities: Entity[];
     relationships: Relationship[];
 }
