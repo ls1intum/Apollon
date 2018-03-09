@@ -1,5 +1,5 @@
 export * from "./delta";
-export * from "./intersection";
+export * from "./lines";
 export * from "./path";
 export * from "./point";
 export * from "./rect";
