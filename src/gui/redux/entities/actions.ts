@@ -2,7 +2,7 @@ import { Delta, Point } from "../../../geometry";
 import { computeEntityHeight, getDefaultEntityWidth } from "../../../layouting/entity";
 import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../uml";
 import { assertNever } from "../../../utils/never";
-import { newId, UUID } from "../../../uuid";
+import { newId, UUID } from "../../../utils/uuid";
 
 export type EntitiesAction =
     | CreateEntityAction

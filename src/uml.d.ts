@@ -1,5 +1,5 @@
 import { Point, RectEdge, Size } from "./geometry";
-import { UUID } from "./uuid";
+import { UUID } from "./utils/uuid";
 
 export interface UMLModel {
     entities: Entity[];

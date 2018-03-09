@@ -8,7 +8,7 @@ import {
     InteractiveElementsMode,
     LayoutedRelationship
 } from "../../../../uml";
-import { UUID } from "../../../../uuid";
+import { UUID } from "../../../../utils/uuid";
 
 export default class Relationships extends React.Component<Props> {
     render() {

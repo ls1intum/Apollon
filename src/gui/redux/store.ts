@@ -3,7 +3,7 @@ import { applyMiddleware, compose, createStore as reduxCreateStore, Store } from
 import createSagaMiddleware from "redux-saga";
 import { createRootReducer } from "./reducers";
 import mainSaga from "./sagas";
-import { UUID } from "../../uuid";
+import { UUID } from "../../utils/uuid";
 
 export function createStore(
     initialState: ReduxState | null,

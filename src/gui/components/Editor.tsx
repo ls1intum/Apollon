@@ -18,7 +18,7 @@ import {
     Relationship,
     UMLModel
 } from "../../uml";
-import { UUID } from "../../uuid";
+import { UUID } from "../../utils/uuid";
 
 const SIDEBAR_WIDTH = 350;
 

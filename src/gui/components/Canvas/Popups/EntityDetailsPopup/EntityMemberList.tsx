@@ -5,7 +5,7 @@ import BlockInput from "../BlockInput";
 import KeyCodes from "../../../../events/keyCodes";
 import { EntityMember } from "../../../../../uml";
 import { sanitizeWhiteSpace } from "../../../../../utils/strings";
-import { newId, UUID } from "../../../../../uuid";
+import { newId, UUID } from "../../../../../utils/uuid";
 
 const Container = styled.div`
     margin-top: 10px;

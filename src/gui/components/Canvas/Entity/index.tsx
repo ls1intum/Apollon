@@ -18,7 +18,7 @@ import {
     ENTITY_MEMBER_LIST_VERTICAL_PADDING
 } from "../../../../layouting/entity";
 import * as UML from "../../../../uml";
-import { UUID } from "../../../../uuid";
+import { UUID } from "../../../../utils/uuid";
 
 const MemberList = styled.div`
     border-top: 1px solid black;

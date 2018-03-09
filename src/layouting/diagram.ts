@@ -3,7 +3,7 @@ import { computeRelationshipPath } from "./relationship";
 import { Point, Rect, Size } from "../geometry";
 import { Entity, Relationship, UMLModel } from "../uml";
 import { flatten } from "../utils/array";
-import { UUID } from "../uuid";
+import { UUID } from "../utils/uuid";
 
 export interface LayoutedDiagram {
     size: Size;

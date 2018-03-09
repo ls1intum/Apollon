@@ -7,7 +7,7 @@ import { PopupSectionHeading } from "../PopupSectionHeading";
 import KeyCodes from "../../../../events/keyCodes";
 import { RectEdge } from "../../../../../geometry";
 import { Entity, RelationshipEnd } from "../../../../../uml";
-import { UUID } from "../../../../../uuid";
+import { UUID } from "../../../../../utils/uuid";
 
 const Th = styled.th`
     font-weight: normal;

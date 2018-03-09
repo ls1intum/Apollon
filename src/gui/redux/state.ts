@@ -1,6 +1,6 @@
 import { Size } from "../../geometry";
 import { Entity, Relationship } from "../../uml";
-import { UUID } from "../../uuid";
+import { UUID } from "../../utils/uuid";
 
 export interface ReduxState {
     entities: {

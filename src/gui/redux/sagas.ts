@@ -9,7 +9,7 @@ import { MIN_CANVAS_HEIGHT, MIN_CANVAS_WIDTH } from "./editor/reducer";
 import { getAllEntities } from "./selectors";
 import { ReduxState } from "./state";
 import { Size, sizesAreEqual } from "../../geometry";
-import { UUID } from "../../uuid";
+import { UUID } from "../../utils/uuid";
 
 const CREATE_ENTITY: CreateEntityAction["type"] = "CREATE_ENTITY";
 const MOVE_ENTITIES: MoveEntitiesAction["type"] = "MOVE_ENTITIES";

@@ -7,7 +7,7 @@ import { createStore, ReduxState } from "./redux";
 import { createTheme, Theme } from "./theme";
 import { ElementSelection } from "../uml";
 import { toggle } from "../utils/array";
-import { UUID } from "../uuid";
+import { UUID } from "../utils/uuid";
 
 const ApollonEditor = styled.div`
     box-sizing: border-box;

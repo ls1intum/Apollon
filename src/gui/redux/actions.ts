@@ -5,7 +5,7 @@ import { RelationshipsAction } from "./relationships/actions";
 import { UndoRedoAction } from "./undoRedo/actions";
 import { Delta } from "../../geometry";
 import { Entity } from "../../uml";
-import { newId } from "../../uuid";
+import { newId } from "../../utils/uuid";
 
 export * from "./editor/actions";
 export * from "./entities/actions";

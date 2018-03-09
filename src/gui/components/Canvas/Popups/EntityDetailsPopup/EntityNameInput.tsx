@@ -3,7 +3,7 @@ import BlockInput from "../BlockInput";
 import KeyCodes from "../../../../events/keyCodes";
 import { Entity, EntityKind } from "../../../../../uml";
 import { sanitizeWhiteSpace } from "../../../../../utils/strings";
-import { newId } from "../../../../../uuid";
+import { newId } from "../../../../../utils/uuid";
 
 export default class EntityNameInput extends React.Component<Props, State> {
     state: State;

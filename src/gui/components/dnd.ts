@@ -1,6 +1,6 @@
 import { Size } from "../../geometry";
 import { EntityKind } from "../../uml";
-import { UUID } from "../../uuid";
+import { UUID } from "../../utils/uuid";
 
 export const enum ItemTypes {
     NewEntity = "NEW_ENTITY",
