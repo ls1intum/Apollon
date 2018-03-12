@@ -100,13 +100,13 @@ class ExportPanel extends React.Component<Props> {
     }
 
     exportSVG() {
-        const layoutedDiagram = layout(this.props.diagram, 50);
+        const layoutedDiagram = layout(this.props.diagram, { outerPadding: 50 });
         const svgBlobURL = this.createSVGBlobURL(layoutedDiagram);
         this.downloadFile(svgBlobURL, "diagram.svg");
     }
 
     exportPNG() {
-        const layoutedDiagram = layout(this.props.diagram, 50);
+        const layoutedDiagram = layout(this.props.diagram, { outerPadding: 50 });
 
         const image = new Image();
         image.src = this.createSVGBlobURL(layoutedDiagram);

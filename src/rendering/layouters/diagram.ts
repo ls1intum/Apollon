@@ -14,8 +14,13 @@ export interface LayoutedRelationship {
     path: Point[];
 }
 
-export function layout(diagram: UMLModel, outerPadding: number): LayoutedDiagram {
+interface LayoutOptions {
+    outerPadding: number;
+}
+
+export function layout(diagram: UMLModel, layoutOptions: LayoutOptions): LayoutedDiagram {
     const { entities, relationships } = diagram;
+    const { outerPadding } = layoutOptions;
 
     const relationshipPaths = computeRelationshipPaths(diagram);
     const boundingBox = computeDiagramBoundingBox(diagram, relationshipPaths);
