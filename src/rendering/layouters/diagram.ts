@@ -18,7 +18,7 @@ interface LayoutOptions {
     outerPadding: number;
 }
 
-export function layout(diagram: UMLModel, layoutOptions: LayoutOptions): LayoutedDiagram {
+export function layoutDiagram(diagram: UMLModel, layoutOptions: LayoutOptions): LayoutedDiagram {
     const { entities, relationships } = diagram;
     const { outerPadding } = layoutOptions;
 

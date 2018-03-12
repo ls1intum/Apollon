@@ -12,7 +12,7 @@ import { Theme } from "../../theme";
 import { InteractiveElementsMode } from "../../types";
 import { UMLModel } from "../../../core/domain";
 import { UUID } from "../../../core/utils";
-import { layout, LayoutedDiagram } from "../../../rendering/layouters/diagram";
+import { layoutDiagram, LayoutedDiagram } from "../../../rendering/layouters/diagram";
 import { renderDiagram, SvgRenderOptions } from "../../../rendering/renderers/svg";
 
 class ExportPanel extends React.Component<Props> {
@@ -100,13 +100,13 @@ class ExportPanel extends React.Component<Props> {
     }
 
     exportSVG() {
-        const layoutedDiagram = layout(this.props.diagram, { outerPadding: 50 });
+        const layoutedDiagram = layoutDiagram(this.props.diagram, { outerPadding: 50 });
         const svgBlobURL = this.createSVGBlobURL(layoutedDiagram);
         this.downloadFile(svgBlobURL, "diagram.svg");
     }
 
     exportPNG() {
-        const layoutedDiagram = layout(this.props.diagram, { outerPadding: 50 });
+        const layoutedDiagram = layoutDiagram(this.props.diagram, { outerPadding: 50 });
 
         const image = new Image();
         image.src = this.createSVGBlobURL(layoutedDiagram);
