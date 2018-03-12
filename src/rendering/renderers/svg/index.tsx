@@ -4,14 +4,14 @@ import RenderedDiagram from "./RenderedDiagram";
 import { UUID } from "../../../core/utils";
 import { LayoutedDiagram } from "../../../rendering/layouters/diagram";
 
-export interface SvgRenderOptions {
+export interface RenderOptions {
     shouldRenderElement: (id: UUID) => boolean;
     fontFamily: string;
 }
 
 export function renderDiagram(
     layoutedDiagram: LayoutedDiagram,
-    renderOptions: SvgRenderOptions
+    renderOptions: RenderOptions
 ): string {
     // We'll use React to dynamically create SVG elements for the diagram
     const diagram = (

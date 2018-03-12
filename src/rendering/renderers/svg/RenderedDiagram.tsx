@@ -1,7 +1,7 @@
 import * as React from "react";
 import ClipPaths from "./defs/ClipPaths";
 import RelationshipMarkers from "./defs/RelationshipMarkers";
-import { SvgRenderOptions } from "./index";
+import { RenderOptions } from "./index";
 import RenderedEntity from "./RenderedEntity";
 import RenderedRelationship from "./RenderedRelationship";
 import { LayoutedDiagram } from "../../../rendering/layouters/diagram";
@@ -46,5 +46,5 @@ export default class RenderedDiagram extends React.Component<Props> {
 
 interface Props {
     layoutedDiagram: LayoutedDiagram;
-    renderOptions: SvgRenderOptions;
+    renderOptions: RenderOptions;
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { getEntityMemberClipPathId } from "./defs/ClipPaths";
-import { SvgRenderOptions } from "./index";
+import { RenderOptions } from "./index";
 import { Entity, EntityKind, EntityMember } from "../../../core/domain";
 import {
     computeEntityHeaderHeight,
@@ -167,5 +167,5 @@ export default class RenderedEntity extends React.Component<Props> {
 
 interface Props {
     entity: Entity;
-    renderOptions: SvgRenderOptions;
+    renderOptions: RenderOptions;
 }

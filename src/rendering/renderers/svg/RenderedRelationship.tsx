@@ -1,6 +1,6 @@
 import * as React from "react";
 import { getMarkerIdForRelationshipKind } from "./defs/RelationshipMarkers";
-import { SvgRenderOptions } from "./index";
+import { RenderOptions } from "./index";
 import RelationshipLabels from "./RelationshipLabels";
 import { Relationship, RelationshipKind } from "../../../core/domain";
 import { Point } from "../../../core/geometry";
@@ -59,5 +59,5 @@ export function getSvgDasharrayForRelationshipKind(kind: RelationshipKind): stri
 interface Props {
     relationship: Relationship;
     path: Point[];
-    renderOptions: SvgRenderOptions;
+    renderOptions: RenderOptions;
 }

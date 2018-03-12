@@ -13,7 +13,7 @@ import { InteractiveElementsMode } from "../../types";
 import { UMLModel } from "../../../core/domain";
 import { UUID } from "../../../core/utils";
 import { layoutDiagram, LayoutedDiagram } from "../../../rendering/layouters/diagram";
-import { renderDiagram, SvgRenderOptions } from "../../../rendering/renderers/svg";
+import { renderDiagram, RenderOptions } from "../../../rendering/renderers/svg";
 
 class ExportPanel extends React.Component<Props> {
     form: HTMLFormElement | null = null;
@@ -87,7 +87,7 @@ class ExportPanel extends React.Component<Props> {
     createSVGBlobURL(layoutedDiagram: LayoutedDiagram) {
         const { interactiveElementIds, interactiveElementsMode, theme } = this.props;
 
-        const renderOptions: SvgRenderOptions = {
+        const renderOptions: RenderOptions = {
             shouldRenderElement: (id: UUID) =>
                 interactiveElementsMode !== InteractiveElementsMode.Hidden ||
                 !interactiveElementIds.has(id),
