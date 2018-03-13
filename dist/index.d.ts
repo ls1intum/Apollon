@@ -1,16 +1,17 @@
 declare module "apollon" {
     export default class ApollonEditor {
         constructor(container: HTMLElement, options?: ApollonOptions);
+        getState(): State;
         destroy();
     }
 
     export interface ApollonOptions {
-        initialState?: InitialState | null;
+        initialState?: State | null;
         readOnly?: boolean;
         theme?: Partial<Theme>;
     }
 
-    export interface InitialState {
+    export interface State {
         entities: {
             byId: { [id: string]: Entity };
             allIds: string[];

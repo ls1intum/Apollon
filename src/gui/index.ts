@@ -13,6 +13,7 @@ export interface ApollonOptions {
 
 export default class ApollonEditor {
     private container: HTMLElement;
+    private app: App | null = null;
 
     constructor(container: HTMLElement, options: ApollonOptions = {}) {
         this.container = container;
@@ -20,8 +21,18 @@ export default class ApollonEditor {
 
         const apollonMode = readOnly ? ApollonMode.ReadOnly : ApollonMode.Editable;
 
-        const app = React.createElement(App, { initialState, apollonMode, theme });
+        const app = React.createElement(App, {
+            ref: ref => (this.app = ref),
+            initialState,
+            apollonMode,
+            theme
+        });
+
         ReactDOM.render(app, container);
+    }
+
+    getState() {
+        return this.app ? this.app.store.getState() : null;
     }
 
     destroy() {
