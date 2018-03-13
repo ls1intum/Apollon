@@ -1,10 +1,10 @@
 import * as React from "react";
 import styled from "styled-components";
 import EditorModeSelection from "./EditorModeSelection";
+import EntityPool from "./EntityPool";
 import ExportPanel from "./ExportPanel";
 import InteractiveElementsPanel from "./InteractiveElementsPanel";
 import LocalStateForm from "./LocalStateForm";
-import Toolbox from "./Toolbox";
 import { EditorMode, InteractiveElementsMode } from "../../types";
 import { Entity, Relationship } from "../../../core/domain";
 
@@ -48,7 +48,7 @@ export default class Sidebar extends React.Component<Props> {
     renderElements() {
         switch (this.props.editorMode) {
             case EditorMode.ModelingView:
-                return <Toolbox />;
+                return <EntityPool />;
 
             case EditorMode.InteractiveElementsView:
                 return (

@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import EntityPreview from "./EntityPreview";
-import { EntityKind } from "../../../../../core/domain";
+import { EntityKind } from "../../../../core/domain";
 
 const Container = styled.section`
     display: grid;
@@ -10,7 +10,7 @@ const Container = styled.section`
     grid-gap: 20px;
 `;
 
-export default class DragPreviews extends React.Component {
+export default class EntityPool extends React.Component {
     render() {
         return (
             <Container>
