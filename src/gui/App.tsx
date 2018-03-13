@@ -5,7 +5,7 @@ import Editor from "./components/Editor";
 import KeyboardEventListener from "./events/KeyboardEventListener";
 import { createStore, ReduxState } from "./redux";
 import { createTheme, Theme } from "./theme";
-import { ElementSelection } from "./types";
+import { ApollonMode, ElementSelection } from "./types";
 import { toggle, UUID } from "../core/utils";
 
 const ApollonEditor = styled.div`
@@ -17,7 +17,7 @@ const ApollonEditor = styled.div`
 export default class App extends React.Component<Props, State> {
     theme: Theme;
     store: Store<ReduxState>;
-    keyboardEventListener: KeyboardEventListener;
+    keyboardEventListener: KeyboardEventListener | null;
 
     state: State = {
         selection: {
@@ -32,7 +32,11 @@ export default class App extends React.Component<Props, State> {
         const store = createStore(props.initialState, this.selectEntities);
         this.store = store;
         this.theme = createTheme(props.theme);
-        this.keyboardEventListener = new KeyboardEventListener(store, this.selectElements);
+
+        this.keyboardEventListener =
+            props.apollonMode === ApollonMode.Editable
+                ? new KeyboardEventListener(store, this.selectElements)
+                : null;
 
         store.subscribe(() => {
             const storeState = store.getState();
@@ -57,7 +61,7 @@ export default class App extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
-        if (this.state.selection !== prevState.selection) {
+        if (this.state.selection !== prevState.selection && this.keyboardEventListener !== null) {
             this.keyboardEventListener.setSelection(this.state.selection);
         }
     }
@@ -126,15 +130,21 @@ export default class App extends React.Component<Props, State> {
     };
 
     onSelectionChange = (newSelection: ElementSelection) => {
-        this.keyboardEventListener.setSelection(newSelection);
+        if (this.keyboardEventListener !== null) {
+            this.keyboardEventListener.setSelection(newSelection);
+        }
     };
 
     componentDidMount() {
-        this.keyboardEventListener.startListening();
+        if (this.keyboardEventListener !== null) {
+            this.keyboardEventListener.startListening();
+        }
     }
 
     componentWillUnmount() {
-        this.keyboardEventListener.stopListening();
+        if (this.keyboardEventListener !== null) {
+            this.keyboardEventListener.stopListening();
+        }
     }
 
     render() {
@@ -155,6 +165,7 @@ export default class App extends React.Component<Props, State> {
                 <Provider store={this.store}>
                     <ThemeProvider theme={this.theme}>
                         <Editor
+                            apollonMode={this.props.apollonMode}
                             selection={this.state.selection}
                             selectEntity={this.selectEntity}
                             toggleEntitySelection={this.toggleEntitySelection}
@@ -171,6 +182,7 @@ export default class App extends React.Component<Props, State> {
 
 interface Props {
     initialState: ReduxState | null;
+    apollonMode: ApollonMode;
     theme: Partial<Theme>;
 }
 

@@ -6,6 +6,7 @@ declare module "apollon" {
 
     export interface ApollonOptions {
         initialState?: InitialState | null;
+        readOnly?: boolean;
         theme?: Partial<Theme>;
     }
 

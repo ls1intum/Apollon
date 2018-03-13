@@ -9,7 +9,7 @@ import Sidebar from "./Sidebar";
 import { ZIndices } from "./zindices";
 import { getAllEntities, getAllRelationships } from "../redux/selectors";
 import { ReduxState } from "../redux/state";
-import { EditorMode, ElementSelection, InteractiveElementsMode } from "../types";
+import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../types";
 import { Entity, Relationship, UMLModel } from "../../core/domain";
 import { UUID } from "../../core/utils";
 import {
@@ -33,7 +33,6 @@ const SidebarFlexItem = styled.div`
 `;
 
 const CanvasFlexItem = styled.div`
-    width: calc(100% - ${SIDEBAR_WIDTH}px);
     position: relative;
     overflow: scroll;
 `;
@@ -42,7 +41,6 @@ const OverlayDropShadow = styled.div`
     position: absolute;
     top: 0;
     left: 0;
-    right: ${SIDEBAR_WIDTH}px;
     bottom: 0;
     pointer-events: none;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
@@ -113,24 +111,27 @@ class Editor extends React.Component<Props, State> {
     }
 
     render() {
-        const { entityIds, relationshipIds } = this.props.selection;
+        const { apollonMode, entities, relationships, selection } = this.props;
+        const { entityIds, relationshipIds } = selection;
 
-        const selectedEntities = this.props.entities.filter(entity =>
-            entityIds.includes(entity.id)
-        );
+        const selectedEntities = entities.filter(entity => entityIds.includes(entity.id));
+        const selectedRelationships = relationships.filter(rel => relationshipIds.includes(rel.id));
 
-        const selectedRelationships = this.props.relationships.filter(relationship =>
-            relationshipIds.includes(relationship.id)
-        );
+        const canvasFlexItemWidth =
+            apollonMode === ApollonMode.ReadOnly ? "100%" : `calc(100% - ${SIDEBAR_WIDTH}px)`;
 
         return (
             <FlexContainer>
                 <CanvasFlexItem
                     innerRef={ref => (this.canvasScrollContainer = ref)}
-                    style={{ overflow: this.state.didScroll ? "scroll" : "hidden" }}
+                    style={{
+                        overflow: this.state.didScroll ? "scroll" : "hidden",
+                        width: canvasFlexItemWidth
+                    }}
                 >
                     <CanvasContainer
                         innerRef={ref => (this.canvas = ref)}
+                        apollonMode={apollonMode}
                         editorMode={this.state.editorMode}
                         interactiveElementsMode={this.state.interactiveElementsMode}
                         selection={this.props.selection}
@@ -142,28 +143,34 @@ class Editor extends React.Component<Props, State> {
                     />
                 </CanvasFlexItem>
 
-                <SidebarFlexItem>
-                    <Sidebar
-                        selectedEntities={selectedEntities}
-                        selectedRelationships={selectedRelationships}
-                        editorMode={this.state.editorMode}
-                        interactiveElementsMode={this.state.interactiveElementsMode}
-                        selectEditorMode={this.selectEditorMode}
-                        selectInteractiveElementsMode={this.selectInteractiveElementsMode}
-                    />
-                </SidebarFlexItem>
+                {apollonMode === ApollonMode.Editable && (
+                    <SidebarFlexItem>
+                        <Sidebar
+                            selectedEntities={selectedEntities}
+                            selectedRelationships={selectedRelationships}
+                            editorMode={this.state.editorMode}
+                            interactiveElementsMode={this.state.interactiveElementsMode}
+                            selectEditorMode={this.selectEditorMode}
+                            selectInteractiveElementsMode={this.selectInteractiveElementsMode}
+                        />
+                    </SidebarFlexItem>
+                )}
 
                 <DragLayer
                     canvas={this.canvas!}
                     canvasScrollContainer={this.canvasScrollContainer!}
                 />
-                <OverlayDropShadow />
+
+                <OverlayDropShadow
+                    style={{ right: apollonMode === ApollonMode.Editable ? SIDEBAR_WIDTH : 0 }}
+                />
             </FlexContainer>
         );
     }
 }
 
 interface OwnProps {
+    apollonMode: ApollonMode;
     selection: ElementSelection;
     selectEntity: (entityId: UUID) => void;
     selectRelationship: (relationshipId: UUID) => void;

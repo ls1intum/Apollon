@@ -5,6 +5,11 @@ export interface ElementSelection {
     relationshipIds: UUID[];
 }
 
+export const enum ApollonMode {
+    Editable = "EDITABLE",
+    ReadOnly = "READONLY"
+}
+
 export const enum EditorMode {
     ModelingView = "MODELING_VIEW",
     InteractiveElementsView = "INTERACTIVE_AREAS_VIEW"

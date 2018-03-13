@@ -13,7 +13,7 @@ import Name from "./Name";
 import ResizeHandle from "./ResizeHandle";
 import * as DragDrop from "../../dnd";
 import { Theme } from "../../../theme";
-import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
+import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
 import { Entity } from "../../../../core/domain";
 import { UUID } from "../../../../core/utils";
 import {
@@ -89,7 +89,14 @@ class CanvasEntity extends React.Component<Props, State> {
     };
 
     render() {
-        const { entity, connectDragSource, editorMode, interactiveElementIds } = this.props;
+        const {
+            entity,
+            connectDragSource,
+            apollonMode,
+            editorMode,
+            interactiveElementIds
+        } = this.props;
+
         const { attributes, methods, renderMode } = entity;
 
         const containerStyle = this.computeContainerStyle();
@@ -111,7 +118,9 @@ class CanvasEntity extends React.Component<Props, State> {
                 onMouseDown={onMouseDown}
                 onMouseUp={onMouseUp}
                 onClick={onClick}
-                onDoubleClick={this.props.openDetailsPopup}
+                onDoubleClick={
+                    apollonMode === ApollonMode.Editable ? this.props.openDetailsPopup : undefined
+                }
                 onMouseEnter={() => this.setState({ isMouseOverEntity: true })}
                 onMouseLeave={() => this.setState({ isMouseOverEntity: false })}
             >
@@ -167,13 +176,15 @@ class CanvasEntity extends React.Component<Props, State> {
                     </MemberList>
                 )}
 
-                <ResizeHandle
-                    initialWidth={entity.size.width}
-                    gridSize={this.props.gridSize}
-                    onResizeBegin={this.onResizeBegin}
-                    onResizeMove={this.onResizeMove}
-                    onResizeEnd={this.onResizeEnd}
-                />
+                {apollonMode === ApollonMode.Editable && (
+                    <ResizeHandle
+                        initialWidth={entity.size.width}
+                        gridSize={this.props.gridSize}
+                        onResizeBegin={this.onResizeBegin}
+                        onResizeMove={this.onResizeMove}
+                        onResizeEnd={this.onResizeEnd}
+                    />
+                )}
             </div>
         );
 
@@ -183,6 +194,7 @@ class CanvasEntity extends React.Component<Props, State> {
     computeContainerStyle(): React.CSSProperties {
         const {
             entity,
+            apollonMode,
             editorMode,
             isDragging,
             interactiveElementIds,
@@ -210,7 +222,10 @@ class CanvasEntity extends React.Component<Props, State> {
             border: "1px solid black",
             visibility,
             opacity: isDragging ? 0.35 : 1,
-            cursor: editorMode === EditorMode.ModelingView ? "move" : "default",
+            cursor:
+                apollonMode === ApollonMode.Editable && editorMode === EditorMode.ModelingView
+                    ? "move"
+                    : "default",
             backgroundColor: "white",
             backgroundImage: this.computeContainerBackgroundImage(isInteractiveElement),
             boxShadow: this.computeContainerBoxShadow()
@@ -258,6 +273,7 @@ class CanvasEntity extends React.Component<Props, State> {
 
 interface OwnProps {
     entity: Entity;
+    apollonMode: ApollonMode;
     editorMode: EditorMode;
     interactiveElementsMode: InteractiveElementsMode;
     selection: ElementSelection;
@@ -292,6 +308,9 @@ interface State {
 }
 
 const dragSourceSpec: DragSourceSpec<OwnProps> = {
+    canDrag(props) {
+        return props.apollonMode === ApollonMode.Editable;
+    },
     beginDrag(props, monitor, component): DragDrop.DragItem {
         props.onStartDragging();
 

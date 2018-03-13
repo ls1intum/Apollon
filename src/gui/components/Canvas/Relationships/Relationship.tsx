@@ -1,7 +1,7 @@
 import * as React from "react";
 import { withTheme } from "styled-components";
 import { Theme } from "../../../theme";
-import { EditorMode, InteractiveElementsMode } from "../../../types";
+import { ApollonMode, EditorMode, InteractiveElementsMode } from "../../../types";
 import { LayoutedRelationship } from "../../../../core/domain";
 import { getMarkerIdForRelationshipKind } from "../../../../rendering/renderers/svg/defs/RelationshipMarkers";
 import RelationshipLabels from "../../../../rendering/renderers/svg/RelationshipLabels";
@@ -31,7 +31,7 @@ class Relationship extends React.Component<Props, State> {
     };
 
     render() {
-        const { isInteractiveElement, interactiveElementsMode } = this.props;
+        const { apollonMode, isInteractiveElement, interactiveElementsMode } = this.props;
 
         const visibility =
             isInteractiveElement && interactiveElementsMode === InteractiveElementsMode.Hidden
@@ -48,6 +48,9 @@ class Relationship extends React.Component<Props, State> {
         const outlineStroke = this.computeOutlineStroke();
         const strokeDasharray = getSvgDasharrayForRelationshipKind(relationship.kind);
 
+        const onDoubleClick =
+            apollonMode === ApollonMode.Editable ? this.props.openDetailsPopup : undefined;
+
         return (
             <>
                 <RelationshipLabels relationship={relationship} relationshipPath={path} />
@@ -59,7 +62,7 @@ class Relationship extends React.Component<Props, State> {
                     onMouseDown={this.onMouseDown}
                     onMouseEnter={() => this.setState({ isMouseOver: true })}
                     onMouseLeave={() => this.setState({ isMouseOver: false })}
-                    onDoubleClick={this.props.openDetailsPopup}
+                    onDoubleClick={onDoubleClick}
                     style={{ visibility }}
                 />
                 <polyline
@@ -100,6 +103,7 @@ export default withTheme(Relationship);
 
 interface Props {
     relationship: LayoutedRelationship;
+    apollonMode: ApollonMode;
     editorMode: EditorMode;
     theme: Theme;
     isSelected: boolean;

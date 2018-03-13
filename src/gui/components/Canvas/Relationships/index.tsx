@@ -1,6 +1,6 @@
 import * as React from "react";
 import Relationship from "./Relationship";
-import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
+import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
 import { LayoutedRelationship } from "../../../../core/domain";
 import { Size } from "../../../../core/geometry";
 import { UUID } from "../../../../core/utils";
@@ -8,14 +8,7 @@ import RelationshipMarkers from "../../../../rendering/renderers/svg/defs/Relati
 
 export default class Relationships extends React.Component<Props> {
     render() {
-        const {
-            relationships,
-            canvasSize,
-            selection,
-            editorMode,
-            interactiveElementIds,
-            interactiveElementsMode
-        } = this.props;
+        const { relationships, canvasSize, selection, interactiveElementIds } = this.props;
 
         const style: React.CSSProperties = {
             position: "absolute",
@@ -40,8 +33,9 @@ export default class Relationships extends React.Component<Props> {
                         <Relationship
                             key={relationshipId}
                             relationship={relationship}
-                            editorMode={editorMode}
-                            interactiveElementsMode={interactiveElementsMode}
+                            apollonMode={this.props.apollonMode}
+                            editorMode={this.props.editorMode}
+                            interactiveElementsMode={this.props.interactiveElementsMode}
                             isSelected={selection.relationshipIds.includes(relationshipId)}
                             onSelect={() => {
                                 this.props.onSelectRelationship(relationshipId);
@@ -67,6 +61,7 @@ export default class Relationships extends React.Component<Props> {
 interface Props {
     relationships: LayoutedRelationship[];
     canvasSize: Size;
+    apollonMode: ApollonMode;
     editorMode: EditorMode;
     selection: ElementSelection;
     onSelectRelationship: (relationshipId: UUID) => void;

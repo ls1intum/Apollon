@@ -20,7 +20,7 @@ import {
     toggleInteractiveElements,
     updateEntityWidth
 } from "../../redux";
-import { EditorMode, ElementSelection, InteractiveElementsMode } from "../../types";
+import { EditorMode, ElementSelection, InteractiveElementsMode, ApollonMode } from "../../types";
 import * as UML from "../../../core/domain";
 import { Size, snapPointToGrid } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";
@@ -87,6 +87,7 @@ class Canvas extends React.Component<Props, State> {
             entities,
             relationships,
             connectDropTarget,
+            apollonMode,
             editorMode,
             interactiveElementsRenderMode
         } = this.props;
@@ -123,6 +124,8 @@ class Canvas extends React.Component<Props, State> {
                         <Relationships
                             relationships={relationships}
                             canvasSize={canvasSize}
+                            apollonMode={apollonMode}
+                            editorMode={editorMode}
                             selection={selection}
                             onSelectRelationship={this.selectRelationship}
                             onToggleRelationshipSelection={this.toggleRelationshipSelection}
@@ -134,27 +137,29 @@ class Canvas extends React.Component<Props, State> {
                                     }
                                 });
                             }}
-                            editorMode={editorMode}
                             interactiveElementIds={this.props.interactiveElementIds}
                             interactiveElementsMode={interactiveElementsRenderMode}
                             onToggleInteractiveElements={this.props.toggleInteractiveElements}
                         />
 
-                        <RelationshipConnectors
-                            editorMode={editorMode}
-                            selection={selection}
-                            selectRelationship={this.props.selectRelationship}
-                            showConnectors={
-                                this.state.doubleClickedElement.type === "none" &&
-                                !this.state.userIsHoldingEntity &&
-                                !this.state.userIsResizingEntity
-                            }
-                        />
+                        {apollonMode === ApollonMode.Editable && (
+                            <RelationshipConnectors
+                                editorMode={editorMode}
+                                selection={selection}
+                                selectRelationship={this.props.selectRelationship}
+                                showConnectors={
+                                    this.state.doubleClickedElement.type === "none" &&
+                                    !this.state.userIsHoldingEntity &&
+                                    !this.state.userIsResizingEntity
+                                }
+                            />
+                        )}
 
                         {entities.map(entity => (
                             <Entity
                                 key={entity.id}
                                 entity={entity}
+                                apollonMode={apollonMode}
                                 editorMode={editorMode}
                                 selection={selection}
                                 gridSize={gridSize}
@@ -233,6 +238,7 @@ class Canvas extends React.Component<Props, State> {
 
 interface OwnProps {
     innerRef: (canvas: HTMLDivElement | null) => void;
+    apollonMode: ApollonMode;
     editorMode: EditorMode;
     interactiveElementsRenderMode: InteractiveElementsMode;
     selection: ElementSelection;
