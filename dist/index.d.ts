@@ -1,6 +1,7 @@
 declare module "apollon" {
     export default class ApollonEditor {
         constructor(container: HTMLElement, options?: ApollonOptions);
+        destroy();
     }
 
     export interface ApollonOptions {

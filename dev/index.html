@@ -28,10 +28,8 @@
             const serializedState = window.localStorage.getItem("state.v7");
             const container = document.getElementById("apollon-react-app");
 
-            const editor = new ApollonEditor(container, {
-                initialState: serializedState === null
-                    ? null
-                    : JSON.parse(serializedState),
+            new ApollonEditor(container, {
+                initialState: serializedState === null ? null : JSON.parse(serializedState),
                 theme: {
                     fontFamily: "-apple-system, BlinkMacSystemFont, HelveticaNeue, Arial, sans-serif"
                 }
