@@ -28,9 +28,5 @@ export function renderDiagram(
     // Unmount the React application
     ReactDOM.unmountComponentAtNode(container);
 
-    // TODO: remove (only used for debugging)
-    return svg
-        .replace(/<(\/[a-z]+)></g, "<$1>\n    <")
-        .replace(/><(?!\/)/g, ">\n    <")
-        .replace("    </svg>", "</svg>");
+    return svg;
 }
