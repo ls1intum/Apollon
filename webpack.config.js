@@ -16,6 +16,11 @@ module.exports = {
         rules: [{ test: /\.tsx?/, use: "ts-loader" }]
     },
 
+    performance: {
+        maxEntrypointSize: 500000,
+        maxAssetSize: 500000
+    },
+
     devServer: {
         contentBase: path.join(__dirname, "dev"),
         port: 8000
