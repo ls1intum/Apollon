@@ -1,12 +1,11 @@
 declare module "apollon" {
     export default class ApollonEditor {
-        constructor(options?: ApollonOptions);
-        render(container: HTMLElement | null): void;
+        constructor(container: HTMLElement, options?: ApollonOptions);
     }
 
     export interface ApollonOptions {
         initialState?: InitialState | null;
-        theme: Partial<Theme>;
+        theme?: Partial<Theme>;
     }
 
     export interface InitialState {

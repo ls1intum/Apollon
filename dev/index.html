@@ -26,8 +26,9 @@
     <script>
         {
             const serializedState = window.localStorage.getItem("state.v7");
+            const container = document.getElementById("apollon-react-app");
 
-            const editor = new ApollonEditor({
+            const editor = new ApollonEditor(container, {
                 initialState: serializedState === null
                     ? null
                     : JSON.parse(serializedState),
@@ -35,9 +36,6 @@
                     fontFamily: "-apple-system, BlinkMacSystemFont, HelveticaNeue, Arial, sans-serif"
                 }
             });
-
-            const container = document.getElementById("apollon-react-app");
-            editor.render(container);
         }
     </script>
 </body>

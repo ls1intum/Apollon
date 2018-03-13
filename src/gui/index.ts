@@ -5,23 +5,13 @@ import { ReduxState } from "./redux";
 import { Theme } from "./theme";
 
 export interface ApollonOptions {
-    initialState: ReduxState | null;
-    theme: Partial<Theme>;
+    initialState?: ReduxState | null;
+    theme?: Partial<Theme>;
 }
 
 export default class ApollonEditor {
-    private readonly options: Partial<ApollonOptions>;
-
-    constructor(options: Partial<ApollonOptions> = {}) {
-        this.options = options;
-    }
-
-    render(container: HTMLElement | null) {
-        if (container === null) {
-            return;
-        }
-
-        const { initialState = null, theme = {} } = this.options;
+    constructor(container: HTMLElement, options: ApollonOptions = {}) {
+        const { initialState = null, theme = {} } = options;
 
         const app = React.createElement(App, { initialState, theme });
         ReactDOM.render(app, container);
