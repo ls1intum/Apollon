@@ -142,8 +142,21 @@ class ExportPanel extends React.Component<Props> {
 
     exportJSON() {
         const state = {
-            entities: getAllEntities(this.props.state),
-            relationships: getAllRelationships(this.props.state)
+            entities: getAllEntities(this.props.state).map(entity => ({
+                id: entity.id,
+                kind: entity.kind,
+                name: entity.name,
+                position: entity.position,
+                size: entity.size,
+                attributes: entity.attributes,
+                methods: entity.methods
+            })),
+            relationships: getAllRelationships(this.props.state).map(relationship => ({
+                id: relationship.id,
+                kind: relationship.kind,
+                source: relationship.source,
+                target: relationship.target
+            }))
         };
 
         const serializedState = JSON.stringify(state, null, 2);
