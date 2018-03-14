@@ -1,6 +1,6 @@
 {
   "name": "apollon",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A UML class diagram editor.",
   "files": [
     "dist"
