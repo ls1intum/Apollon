@@ -8,7 +8,7 @@ const Container = styled.div`
     user-select: none;
 `;
 
-const StyledSegment: any = styled.a`
+const StyledSegment: any = styled.button`
     display: block;
     text-align: center;
     padding: 5px 10px;
@@ -19,6 +19,9 @@ const StyledSegment: any = styled.a`
     background: ${(props: any) => (props.selected ? props.theme.primaryColor : "white")};
     color: ${(props: any) => (props.selected ? "white" : props.theme.primaryColor)} !important;
     text-decoration: none !important;
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
     font-weight: normal !important;
 
     :first-child {
@@ -46,7 +49,6 @@ export default class SegmentedControl extends React.Component<Props> {
             <Container>
                 {segments.map(segment => (
                     <StyledSegment
-                        href="#"
                         key={segment.id}
                         onClick={(e: any) => this.selectSegment(segment.id, e)}
                         selected={segment.id === selectedSegmentId}
