@@ -1,9 +1,10 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import App from "./App";
-import { ReduxState } from "./redux";
+import { getAllEntities, getAllRelationships, ReduxState } from "./redux";
 import { Theme } from "./theme";
 import { ApollonMode } from "./types";
+import { layoutDiagram, LayoutOptions } from "../rendering/layouters/diagram";
 
 export interface ApollonOptions {
     initialState?: ReduxState | null;
@@ -33,6 +34,19 @@ export default class ApollonEditor {
 
     getState() {
         return this.app ? this.app.store.getState() : null;
+    }
+
+    layoutDiagram(layoutOptions: LayoutOptions) {
+        const state = this.getState();
+
+        if (state === null) {
+            return null;
+        }
+
+        const entities = getAllEntities(state);
+        const relationships = getAllRelationships(state);
+
+        return layoutDiagram({ entities, relationships }, layoutOptions);
     }
 
     destroy() {

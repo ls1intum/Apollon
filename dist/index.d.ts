@@ -2,6 +2,7 @@ declare module "apollon" {
     export default class ApollonEditor {
         constructor(container: HTMLElement, options?: ApollonOptions);
         getState(): State;
+        layoutDiagram(layoutOptions: LayoutOptions): LayoutedDiagram;
         destroy();
     }
 
@@ -129,4 +130,37 @@ declare module "apollon" {
         | 700
         | 800
         | 900;
+
+    export interface LayoutedDiagram {
+        size: Size;
+        entities: LayoutedEntity[];
+        relationships: LayoutedRelationship[];
+    }
+
+    export interface LayoutedEntity {
+        id: string;
+        kind: EntityKind;
+        name: string;
+        position: Point;
+        size: Size;
+        attributes: LayoutedEntityMember[];
+        methods: LayoutedEntityMember[];
+        renderMode: EntityRenderMode;
+    }
+
+    export interface LayoutedEntityMember {
+        id: string;
+        name: string;
+        position: Point;
+        size: Size;
+    }
+
+    export interface LayoutedRelationship {
+        relationship: Relationship;
+        path: Point[];
+    }
+
+    export interface LayoutOptions {
+        outerPadding: number;
+    }
 }

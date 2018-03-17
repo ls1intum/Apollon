@@ -15,7 +15,7 @@ export interface LayoutedRelationship {
     path: Point[];
 }
 
-interface LayoutOptions {
+export interface LayoutOptions {
     outerPadding: number;
 }
 
