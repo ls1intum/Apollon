@@ -1,3 +1,4 @@
+import { LayoutedEntity, layoutEntity } from "./entity";
 import { computeRelationshipPath } from "./relationship";
 import { Entity, Relationship, UMLModel } from "../../core/domain";
 import { computeBoundingBox, Point, Rect, Size } from "../../core/geometry";
@@ -5,7 +6,7 @@ import { flatten, UUID } from "../../core/utils";
 
 export interface LayoutedDiagram {
     size: Size;
-    entities: Entity[];
+    entities: LayoutedEntity[];
     relationships: LayoutedRelationship[];
 }
 
@@ -35,7 +36,7 @@ export function layoutDiagram(diagram: UMLModel, layoutOptions: LayoutOptions): 
             width: boundingBox.width + 2 * outerPadding,
             height: boundingBox.height + 2 * outerPadding
         },
-        entities: entities.map(entity => ({
+        entities: entities.map(layoutEntity).map(entity => ({
             ...entity,
             position: translateWithinBoundingBox(entity.position)
         })),

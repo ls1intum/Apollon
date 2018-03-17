@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Entity } from "../../../../core/domain";
 import { distinct } from "../../../../core/utils";
 import {
     ENTITY_HORIZONTAL_PADDING,
     ENTITY_KIND_HEIGHT,
-    ENTITY_NAME_HEIGHT
+    ENTITY_NAME_HEIGHT,
+    LayoutedEntity
 } from "../../../../rendering/layouters/entity";
 
 export default class ClipPaths extends React.Component<Props> {
@@ -42,5 +42,5 @@ export function getEntityMemberClipPathId(width: number) {
 }
 
 interface Props {
-    entities: Entity[];
+    entities: LayoutedEntity[];
 }

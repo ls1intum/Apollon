@@ -1,5 +1,6 @@
-import { EntityKind, EntityRenderMode } from "../../core/domain";
-import { assertNever } from "../../core/utils";
+import { Entity, EntityKind, EntityRenderMode, EntityMember } from "../../core/domain";
+import { Point, Size } from "../../core/geometry";
+import { assertNever, UUID } from "../../core/utils";
 
 export const ENTITY_KIND_HEIGHT = 14;
 export const ENTITY_NAME_HEIGHT = 40;
@@ -8,6 +9,77 @@ export const ENTITY_HORIZONTAL_PADDING = 12;
 export const ENTITY_MEMBER_HEIGHT = 30;
 export const ENTITY_MEMBER_LIST_VERTICAL_PADDING = 5;
 export const ENTITY_BORDER_THICKNESS = 1;
+
+export interface LayoutedEntity {
+    id: UUID;
+    kind: EntityKind;
+    name: string;
+    position: Point;
+    size: Size;
+    attributes: LayoutedEntityMember[];
+    methods: LayoutedEntityMember[];
+    renderMode: EntityRenderMode;
+}
+
+export interface LayoutedEntityMember {
+    id: UUID;
+    name: string;
+    position: Point;
+    size: Size;
+}
+
+export function layoutEntity(entity: Entity): LayoutedEntity {
+    const { id, kind, name, position, size, attributes, methods, renderMode } = entity;
+    const height = computeEntityHeight(kind, attributes.length, methods.length, renderMode);
+
+    const attributeSectionHeight = renderMode.showAttributes
+        ? attributes.length * ENTITY_MEMBER_HEIGHT +
+          2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING +
+          ENTITY_BORDER_THICKNESS
+        : 0;
+
+    const headerHeight = computeEntityHeaderHeight(entity.kind);
+    const attributeOffsetY = headerHeight + 2 * ENTITY_BORDER_THICKNESS;
+    const methodOffsetY = attributeOffsetY + attributeSectionHeight;
+
+    return {
+        id,
+        kind,
+        name,
+        position,
+        size: {
+            width: size.width,
+            height
+        },
+        attributes: layoutEntityMembers(entity, attributes, attributeOffsetY),
+        methods: layoutEntityMembers(entity, methods, methodOffsetY),
+        renderMode
+    };
+}
+
+function layoutEntityMembers(
+    entity: Entity,
+    members: EntityMember[],
+    listPositionY: number
+): LayoutedEntityMember[] {
+    return members.map((member, index): LayoutedEntityMember => {
+        return {
+            id: member.id,
+            name: member.name,
+            position: {
+                x: 0,
+                y:
+                    listPositionY +
+                    ENTITY_MEMBER_LIST_VERTICAL_PADDING +
+                    index * ENTITY_MEMBER_HEIGHT
+            },
+            size: {
+                width: entity.size.width,
+                height: ENTITY_MEMBER_HEIGHT
+            }
+        };
+    });
+}
 
 export function getDefaultEntityWidth() {
     return 200;

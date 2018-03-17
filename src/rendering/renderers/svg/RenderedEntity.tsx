@@ -1,14 +1,15 @@
 import * as React from "react";
 import { getEntityMemberClipPathId } from "./defs/ClipPaths";
 import { RenderOptions } from "./index";
-import { Entity, EntityKind, EntityMember } from "../../../core/domain";
+import { EntityKind, EntityMember } from "../../../core/domain";
 import {
     computeEntityHeaderHeight,
     ENTITY_BORDER_THICKNESS,
     ENTITY_HORIZONTAL_PADDING,
     ENTITY_MEMBER_HEIGHT,
     ENTITY_MEMBER_LIST_VERTICAL_PADDING,
-    getEntityKindDescriptionOrNull
+    getEntityKindDescriptionOrNull,
+    LayoutedEntity
 } from "../../../rendering/layouters/entity";
 
 export default class RenderedEntity extends React.Component<Props> {
@@ -35,7 +36,6 @@ export default class RenderedEntity extends React.Component<Props> {
                     stroke="black"
                     strokeWidth="1"
                 />
-
                 {this.renderEntityKind()}
                 {this.renderClassName()}
                 {this.renderClassAttributes()}
@@ -166,6 +166,6 @@ export default class RenderedEntity extends React.Component<Props> {
 }
 
 interface Props {
-    entity: Entity;
+    entity: LayoutedEntity;
     renderOptions: RenderOptions;
 }
