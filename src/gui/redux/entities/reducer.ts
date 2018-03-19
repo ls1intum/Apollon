@@ -104,7 +104,7 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                 ...state,
                 byId: {
                     ...state.byId,
-                    [action.entityId]: {
+                    [entity.id]: {
                         ...entity,
                         size: {
                             width: entity.size.width,
@@ -115,6 +115,8 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                                 action.newRenderMode
                             )
                         },
+                        attributes: action.newRenderMode.showAttributes ? entity.attributes : [],
+                        methods: action.newRenderMode.showMethods ? entity.methods : [],
                         renderMode: action.newRenderMode
                     }
                 }
