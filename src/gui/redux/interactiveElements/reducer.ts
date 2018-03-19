@@ -23,11 +23,8 @@ export default function interactiveElementsReducer(
             };
         }
 
-        case "DELETE_ENTITIES":
-            return removeIdsFromAllIds(state, ...action.entityIds);
-
-        case "DELETE_RELATIONSHIPS":
-            return removeIdsFromAllIds(state, ...action.relationshipIds);
+        case "DELETE_ELEMENTS":
+            return removeIdsFromAllIds(state, ...action.entityIds, ...action.relationshipIds);
 
         case "DELETE_ENTITY_MEMBER":
             return removeIdsFromAllIds(state, action.memberId);

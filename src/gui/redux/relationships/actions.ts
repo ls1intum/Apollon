@@ -3,18 +3,12 @@ import { newId, UUID } from "../../../core/utils";
 
 export type RelationshipsAction =
     | CreateRelationshipAction
-    | DeleteRelationshipsAction
     | FlipRelationshipsAction
     | UpdateRelationshipAction;
 
 interface CreateRelationshipAction {
     type: "CREATE_RELATIONSHIP";
     relationship: Relationship;
-}
-
-interface DeleteRelationshipsAction {
-    type: "DELETE_RELATIONSHIPS";
-    relationshipIds: UUID[];
 }
 
 interface FlipRelationshipsAction {
@@ -41,13 +35,6 @@ export function createRelationship(
             target,
             straightLine: false
         }
-    };
-}
-
-export function deleteRelationships(relationshipIds: UUID[]): DeleteRelationshipsAction {
-    return {
-        type: "DELETE_RELATIONSHIPS",
-        relationshipIds
     };
 }
 

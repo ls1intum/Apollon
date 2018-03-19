@@ -19,20 +19,7 @@ export default function relationshipsReducer(state = initialState, action: Redux
                 }
             };
 
-        case "DELETE_RELATIONSHIPS": {
-            const { relationshipIds } = action;
-            if (relationshipIds.length === 0) {
-                return state;
-            }
-            const allIds = state.allIds.filter(id => !relationshipIds.includes(id));
-            const byId = { ...state.byId };
-            for (const entityId of relationshipIds) {
-                delete byId[entityId];
-            }
-            return { allIds, byId };
-        }
-
-        case "DELETE_ENTITIES": {
+        case "DELETE_ELEMENTS": {
             const deadRelationshipIds = new Set<number>();
             const allRelationships = state.allIds.map(id => state.byId[id]);
 
@@ -43,6 +30,10 @@ export default function relationshipsReducer(state = initialState, action: Redux
                         continue outer;
                     }
                 }
+            }
+
+            for (const id of action.relationshipIds) {
+                deadRelationshipIds.add(id);
             }
 
             if (deadRelationshipIds.size === 0) {

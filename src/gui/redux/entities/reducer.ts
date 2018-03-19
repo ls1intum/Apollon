@@ -121,7 +121,7 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
             };
         }
 
-        case "DELETE_ENTITIES": {
+        case "DELETE_ELEMENTS": {
             const { entityIds } = action;
             if (entityIds.length === 0) {
                 return state;

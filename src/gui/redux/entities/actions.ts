@@ -6,7 +6,6 @@ import { computeEntityHeight, getDefaultEntityWidth } from "../../../rendering/l
 export type EntitiesAction =
     | CreateEntityAction
     | DuplicateEntitiesAction
-    | DeleteEntitiesAction
     | MoveEntitiesAction
     | UpdateEntityKindAction
     | UpdateEntityNameAction
@@ -26,11 +25,6 @@ export interface DuplicateEntitiesAction {
     type: "DUPLICATE_ENTITIES";
     newEntities: Entity[];
     offset: Delta;
-}
-
-export interface DeleteEntitiesAction {
-    type: "DELETE_ENTITIES";
-    entityIds: UUID[];
 }
 
 export interface MoveEntitiesAction {
@@ -173,13 +167,6 @@ export function duplicateEntities(entities: Entity[], offset: Delta): DuplicateE
             }))
         })),
         offset
-    };
-}
-
-export function deleteEntities(entityIds: UUID[]): DeleteEntitiesAction {
-    return {
-        type: "DELETE_ENTITIES",
-        entityIds
     };
 }
 

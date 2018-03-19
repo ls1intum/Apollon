@@ -1,6 +1,5 @@
 import {
-    deleteEntities,
-    deleteRelationships,
+    deleteElements,
     duplicateEntities,
     flipRelationships,
     moveEntities,
@@ -11,17 +10,10 @@ import { ElementSelection } from "../types";
 import { UUID } from "../../core/utils";
 
 export function deleteSelectedElements(selection: ElementSelection): ReduxAction[] {
-    const actions = [];
-
-    if (selection.entityIds.length >= 1) {
-        actions.push(deleteEntities(selection.entityIds));
-    }
-
-    if (selection.relationshipIds.length >= 1) {
-        actions.push(deleteRelationships(selection.relationshipIds));
-    }
-
-    return actions;
+    const { entityIds, relationshipIds } = selection;
+    return entityIds.length === 0 && relationshipIds.length === 0
+        ? []
+        : [deleteElements(entityIds, relationshipIds)];
 }
 
 export function moveSelectedEntities(entityIds: UUID[], dx: number, dy: number): ReduxAction[] {
