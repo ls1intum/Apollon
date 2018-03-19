@@ -22,7 +22,6 @@ export interface Theme {
     highlightColor: string;
     highlightColorDarker: string;
     highlightBorderColor: string;
-    noDropZoneColor: string;
     interactiveAreaColor: string;
     interactiveAreaHoverColor: string;
     fontFamily: string;
@@ -36,7 +35,6 @@ const defaultTheme: Theme = {
     highlightColor: "rgba(0, 100, 255, 0.21)",
     highlightColorDarker: "rgba(0, 100, 255, 0.6)",
     highlightBorderColor: "rgba(0, 100, 255, 0.6)",
-    noDropZoneColor: "rgba(255, 0, 0, 0.21)",
     interactiveAreaColor: "rgba(0, 220, 0, 0.3)",
     interactiveAreaHoverColor: "rgba(0, 220, 0, 0.15)",
     fontFamily: "HelveticaNeue, Helvetica, Arial, Verdana, sans-serif",

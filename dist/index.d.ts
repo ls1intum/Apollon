@@ -105,7 +105,6 @@ declare module "apollon" {
         highlightColor: string;
         highlightColorDarker: string;
         highlightBorderColor: string;
-        noDropZoneColor: string;
         interactiveAreaColor: string;
         interactiveAreaHoverColor: string;
         fontFamily: string;
