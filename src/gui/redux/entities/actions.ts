@@ -162,7 +162,15 @@ export function duplicateEntities(entities: Entity[], offset: Delta): DuplicateE
             position: {
                 x: entity.position.x + offset.dx,
                 y: entity.position.y + offset.dy
-            }
+            },
+            attributes: entity.attributes.map(attribute => ({
+                ...attribute,
+                id: newId()
+            })),
+            methods: entity.methods.map(method => ({
+                ...method,
+                id: newId()
+            }))
         })),
         offset
     };
