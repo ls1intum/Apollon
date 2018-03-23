@@ -129,30 +129,10 @@ declare module "apollon" {
         | 800
         | 900;
 
-    export function layoutDiagram(layoutOptions: LayoutOptions): LayoutedDiagram;
-
-    export function renderDiagramToSVG(
-        layoutedDiagram: LayoutedDiagram,
-        renderOptions: RenderOptions
-    ): string;
-
-    export function renderEntityToSVG(
-        layoutedEntity: LayoutedEntity,
-        renderOptions: RenderOptions
-    ): string;
-
-    export function renderRelationshipToSVG(
-        layoutedRelationship: LayoutedRelationship,
-        renderOptions: RenderOptions
-    ): string;
+    export function layoutDiagram(state: State, layoutOptions: LayoutOptions): LayoutedDiagram;
 
     export interface LayoutOptions {
         outerPadding: number;
-    }
-
-    export interface RenderOptions {
-        shouldRenderElement: (id: string) => boolean;
-        fontFamily: string;
     }
 
     export interface LayoutedDiagram {
@@ -183,4 +163,29 @@ declare module "apollon" {
         relationship: Relationship;
         path: Point[];
     }
+
+    export interface RenderedSVG {
+        svg: string;
+        size: Size;
+    }
+
+    export interface RenderOptions {
+        shouldRenderElement: (id: string) => boolean;
+        fontFamily: string;
+    }
+
+    export function renderDiagramToSVG(
+        layoutedDiagram: LayoutedDiagram,
+        renderOptions: RenderOptions
+    ): RenderedSVG;
+
+    export function renderEntityToSVG(
+        layoutedEntity: LayoutedEntity,
+        renderOptions: RenderOptions
+    ): RenderedSVG;
+
+    export function renderRelationshipToSVG(
+        layoutedRelationship: LayoutedRelationship,
+        renderOptions: RenderOptions
+    ): RenderedSVG;
 }
