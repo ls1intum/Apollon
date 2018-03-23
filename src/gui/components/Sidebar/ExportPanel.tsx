@@ -13,7 +13,7 @@ import { InteractiveElementsMode } from "../../types";
 import { UMLModel } from "../../../core/domain";
 import { UUID } from "../../../core/utils";
 import { layoutDiagram, LayoutedDiagram } from "../../../rendering/layouters/diagram";
-import { renderDiagram, RenderOptions } from "../../../rendering/renderers/svg";
+import { renderDiagramToSVG, RenderOptions } from "../../../rendering/renderers/svg";
 
 class ExportPanel extends React.Component<Props> {
     form: HTMLFormElement | null = null;
@@ -94,7 +94,7 @@ class ExportPanel extends React.Component<Props> {
             fontFamily: theme.fontFamily
         };
 
-        const svg = renderDiagram(layoutedDiagram, renderOptions);
+        const svg = renderDiagramToSVG(layoutedDiagram, renderOptions);
         const svgBlob = new Blob([svg], { type: "image/svg+xml" });
         return URL.createObjectURL(svgBlob);
     }
