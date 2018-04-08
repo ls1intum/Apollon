@@ -31,6 +31,10 @@ export default class ApollonEditor {
         ReactDOM.render(app, container);
     }
 
+    getSelection() {
+        return this.app ? this.app.state.selection : null;
+    }
+
     getState() {
         return this.app ? this.app.store.getState() : null;
     }

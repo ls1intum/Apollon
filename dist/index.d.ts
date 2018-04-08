@@ -1,6 +1,7 @@
 declare module "apollon" {
     export default class ApollonEditor {
         constructor(container: HTMLElement, options?: ApollonOptions);
+        getSelection(): ElementSelection;
         getState(): State;
         destroy();
     }
@@ -9,6 +10,11 @@ declare module "apollon" {
         initialState?: State | null;
         readOnly?: boolean;
         theme?: Partial<Theme>;
+    }
+
+    export interface ElementSelection {
+        entityIds: string[];
+        relationshipIds: string[];
     }
 
     export interface State {
