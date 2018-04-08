@@ -5,7 +5,6 @@ import {
     flipSelectedRelationships,
     moveSelectedEntities
 } from "./handlers";
-import KeyCodes from "./keyCodes";
 import { redo, ReduxAction, ReduxState, undo } from "../redux";
 import { ElementSelection } from "../types";
 import { UUID } from "../../core/utils";
@@ -64,45 +63,50 @@ export default class KeyboardEventListener {
     private getActionsForKeyDownEvent(e: KeyboardEvent): ((() => void) | ReduxAction)[] {
         const state = this.store.getState();
 
-        switch (e.keyCode) {
-            case KeyCodes.ArrowLeft:
+        switch (e.key) {
+            case "ArrowLeft":
                 return moveSelectedEntities(this.selection.entityIds, -state.editor.gridSize, 0);
 
-            case KeyCodes.ArrowUp:
+            case "ArrowUp":
                 return moveSelectedEntities(this.selection.entityIds, 0, -state.editor.gridSize);
 
-            case KeyCodes.ArrowRight:
+            case "ArrowRight":
                 return moveSelectedEntities(this.selection.entityIds, state.editor.gridSize, 0);
 
-            case KeyCodes.ArrowDown:
+            case "ArrowDown":
                 return moveSelectedEntities(this.selection.entityIds, 0, state.editor.gridSize);
 
-            case KeyCodes.Backspace:
-            case KeyCodes.Delete:
+            case "Backspace":
+            case "Delete":
                 return deleteSelectedElements(this.selection);
 
-            case KeyCodes.Escape:
+            case "Escape":
                 return [() => this.selectElements([], [])];
-
-            case KeyCodes.A:
-                return [
-                    () => this.selectElements(state.entities.allIds, state.relationships.allIds)
-                ];
-
-            case KeyCodes.D:
-                return duplicateSelectedEntities(this.selection, state);
-
-            case KeyCodes.F:
-                return flipSelectedRelationships(this.selection);
-
-            case KeyCodes.Y:
-                return e.shiftKey ? [undo()] : [redo()];
-
-            case KeyCodes.Z:
-                return e.shiftKey ? [redo()] : [undo()];
-
-            default:
-                return [];
         }
+
+        // All plain-letter keys require the user to also press
+        // CTRL or CMD in order to trigger an action
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key) {
+                case "a":
+                    return [
+                        () => this.selectElements(state.entities.allIds, state.relationships.allIds)
+                    ];
+
+                case "d":
+                    return duplicateSelectedEntities(this.selection, state);
+
+                case "f":
+                    return flipSelectedRelationships(this.selection);
+
+                case "y":
+                    return e.shiftKey ? [undo()] : [redo()];
+
+                case "z":
+                    return e.shiftKey ? [redo()] : [undo()];
+            }
+        }
+
+        return [];
     }
 }
