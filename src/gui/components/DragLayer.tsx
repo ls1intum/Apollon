@@ -3,12 +3,12 @@ import { ClientOffset, DragLayer as DndDragLayer, DragLayerCollector } from "rea
 import * as ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import styled from "styled-components";
-import * as DragDrop from "../dnd";
-import { ZIndices } from "../zindices";
-import { getAllEntities } from "../../redux/selectors";
-import { ReduxState } from "../../redux/state";
-import { Entity } from "../../../core/domain";
-import { Rect, Size, snapPointToGrid } from "../../../core/geometry";
+import * as DragDrop from "./dnd";
+import { ZIndices } from "./zindices";
+import { getAllEntities } from "../redux/selectors";
+import { ReduxState } from "../redux/state";
+import { Entity } from "../../core/domain";
+import { Rect, Size, snapPointToGrid } from "../../core/geometry";
 
 const LayerBase = styled.div`
     position: fixed;
