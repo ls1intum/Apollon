@@ -143,11 +143,12 @@ class Editor extends React.Component<Props, State> {
                     />
                 </CanvasFlexItem>
 
-                {apollonMode === ApollonMode.Editable && (
+                {apollonMode !== ApollonMode.ReadOnly && (
                     <SidebarFlexItem>
                         <Sidebar
                             selectedEntities={selectedEntities}
                             selectedRelationships={selectedRelationships}
+                            apollonMode={this.props.apollonMode}
                             editorMode={this.state.editorMode}
                             interactiveElementsMode={this.state.interactiveElementsMode}
                             selectEditorMode={this.selectEditorMode}
@@ -162,7 +163,7 @@ class Editor extends React.Component<Props, State> {
                 />
 
                 <OverlayDropShadow
-                    style={{ right: apollonMode === ApollonMode.Editable ? SIDEBAR_WIDTH : 0 }}
+                    style={{ right: apollonMode === ApollonMode.ReadOnly ? 0 : SIDEBAR_WIDTH }}
                 />
             </FlexContainer>
         );

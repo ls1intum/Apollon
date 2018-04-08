@@ -10,7 +10,7 @@ declare module "apollon" {
 
     export interface ApollonOptions {
         initialState?: State | null;
-        readOnly?: boolean;
+        mode: "READ_ONLY" | "MODELING_ONLY" | "FULL";
         theme?: Partial<Theme>;
     }
 

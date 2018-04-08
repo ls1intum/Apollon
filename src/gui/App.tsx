@@ -37,7 +37,7 @@ export default class App extends React.Component<Props, State> {
         this.theme = createTheme(props.theme);
 
         this.keyboardEventListener =
-            props.apollonMode === ApollonMode.Editable
+            props.apollonMode !== ApollonMode.ReadOnly
                 ? new KeyboardEventListener(store, this.selectElements)
                 : null;
 

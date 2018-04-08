@@ -30,7 +30,7 @@
 
             new ApollonEditor(container, {
                 initialState: serializedState === null ? null : JSON.parse(serializedState),
-                readOnly: false,
+                mode: "MODELING_ONLY",
                 theme: {
                     fontFamily: "-apple-system, BlinkMacSystemFont, HelveticaNeue, Arial, sans-serif"
                 }

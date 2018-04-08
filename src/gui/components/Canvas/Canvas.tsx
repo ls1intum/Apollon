@@ -142,7 +142,7 @@ class Canvas extends React.Component<Props, State> {
                             onToggleInteractiveElements={this.props.toggleInteractiveElements}
                         />
 
-                        {apollonMode === ApollonMode.Editable && (
+                        {apollonMode !== ApollonMode.ReadOnly && (
                             <RelationshipConnectors
                                 editorMode={editorMode}
                                 selection={selection}

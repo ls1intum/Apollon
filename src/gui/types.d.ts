@@ -6,8 +6,9 @@ export interface ElementSelection {
 }
 
 export const enum ApollonMode {
-    Editable = "EDITABLE",
-    ReadOnly = "READONLY"
+    Full = "FULL",
+    ModelingOnly = "MODELING_ONLY",
+    ReadOnly = "READ_ONLY"
 }
 
 export const enum EditorMode {

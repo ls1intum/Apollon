@@ -7,7 +7,7 @@ import { ApollonMode, ElementSelection } from "./types";
 
 export interface ApollonOptions {
     initialState?: ReduxState | null;
-    readOnly?: boolean;
+    mode?: "READ_ONLY" | "MODELING_ONLY" | "FULL";
     theme?: Partial<Theme>;
 }
 
@@ -17,14 +17,12 @@ export default class ApollonEditor {
 
     constructor(container: HTMLElement, options: ApollonOptions = {}) {
         this.container = container;
-        const { initialState = null, readOnly = false, theme = {} } = options;
-
-        const apollonMode = readOnly ? ApollonMode.ReadOnly : ApollonMode.Editable;
+        const { initialState = null, mode = "FULL", theme = {} } = options;
 
         const app = React.createElement(App, {
             ref: ref => (this.app = ref),
             initialState,
-            apollonMode,
+            apollonMode: getApollonMode(mode),
             theme
         });
 
@@ -51,5 +49,23 @@ export default class ApollonEditor {
 
     destroy() {
         ReactDOM.unmountComponentAtNode(this.container);
+    }
+}
+
+function getApollonMode(mode: string) {
+    switch (mode) {
+        case "FULL":
+            return ApollonMode.Full;
+
+        case "READ_ONLY":
+            return ApollonMode.ReadOnly;
+
+        case "MODELING_ONLY":
+            return ApollonMode.ModelingOnly;
+
+        default:
+            throw Error(
+                "Please specify one of the following modes: 'FULL', 'READ_ONLY', or 'MODELING_ONLY'"
+            );
     }
 }

@@ -49,7 +49,7 @@ class Relationship extends React.Component<Props, State> {
         const strokeDasharray = getSvgDasharrayForRelationshipKind(relationship.kind);
 
         const onDoubleClick =
-            apollonMode === ApollonMode.Editable ? this.props.openDetailsPopup : undefined;
+            apollonMode === ApollonMode.ReadOnly ? undefined : this.props.openDetailsPopup;
 
         return (
             <>

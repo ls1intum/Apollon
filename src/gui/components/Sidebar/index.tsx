@@ -5,7 +5,7 @@ import EntityPool from "./EntityPool";
 import ExportPanel from "./ExportPanel";
 import InteractiveElementsPanel from "./InteractiveElementsPanel";
 import LocalStateForm from "./LocalStateForm";
-import { EditorMode, InteractiveElementsMode } from "../../types";
+import { ApollonMode, EditorMode, InteractiveElementsMode } from "../../types";
 import { Entity, Relationship } from "../../../core/domain";
 
 const FlexContainer = styled.div`
@@ -21,25 +21,26 @@ const FlexGrowItem = styled.div`
     flex-grow: 1;
 `;
 
-const Spacer = styled.div`
-    height: 30px;
-`;
-
 export default class Sidebar extends React.Component<Props> {
     render() {
         return (
             <FlexContainer>
-                <EditorModeSelection
-                    editorMode={this.props.editorMode}
-                    selectEditorMode={this.props.selectEditorMode}
-                />
+                <div style={{ height: 4 }} />
 
-                <Spacer />
+                {this.props.apollonMode === ApollonMode.Full && (
+                    <React.Fragment>
+                        <EditorModeSelection
+                            editorMode={this.props.editorMode}
+                            selectEditorMode={this.props.selectEditorMode}
+                        />
+                        <div style={{ height: 25 }} />
+                    </React.Fragment>
+                )}
 
                 <FlexGrowItem>{this.renderElements()}</FlexGrowItem>
 
                 <ExportPanel interactiveElementsMode={this.props.interactiveElementsMode} />
-                <Spacer />
+                <div style={{ height: 25 }} />
                 <LocalStateForm />
             </FlexContainer>
         );
@@ -67,6 +68,7 @@ export default class Sidebar extends React.Component<Props> {
 interface Props {
     selectedEntities: Entity[];
     selectedRelationships: Relationship[];
+    apollonMode: ApollonMode;
     editorMode: EditorMode;
     interactiveElementsMode: InteractiveElementsMode;
     selectEditorMode: (newMode: EditorMode) => void;
