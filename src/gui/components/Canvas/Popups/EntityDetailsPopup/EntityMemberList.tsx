@@ -2,7 +2,6 @@ import * as React from "react";
 import styled from "styled-components";
 import EntityMemberLine from "./EntityMemberLine";
 import BlockInput from "../BlockInput";
-import KeyCodes from "../../../../events/keyCodes";
 import { EntityMember } from "../../../../../core/domain";
 import { newId, sanitizeWhiteSpace, UUID } from "../../../../../core/utils";
 
@@ -70,9 +69,8 @@ export default class EntityMemberList extends React.Component<Props, State> {
                     onBlur={this.createNewMember}
                     onKeyDown={e => {
                         if (
-                            (this.state.newMemberName !== "" &&
-                                (e.keyCode === KeyCodes.Tab && !e.shiftKey)) ||
-                            e.keyCode === KeyCodes.Enter
+                            (this.state.newMemberName !== "" && (e.key === "Tab" && !e.shiftKey)) ||
+                            e.key === "Enter"
                         ) {
                             e.preventDefault();
 
@@ -85,7 +83,7 @@ export default class EntityMemberList extends React.Component<Props, State> {
                                     this.newMemberInput!.focus();
                                 }
                             });
-                        } else if (e.keyCode === KeyCodes.Escape) {
+                        } else if (e.key === "Escape") {
                             this.setState({ newMemberName: "" }, () => {
                                 if (this.newMemberInput !== null) {
                                     this.newMemberInput.blur();

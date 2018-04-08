@@ -1,6 +1,5 @@
 import * as React from "react";
 import BlockInput from "../BlockInput";
-import KeyCodes from "../../../../events/keyCodes";
 import { Entity, EntityKind } from "../../../../../core/domain";
 import { newId, sanitizeWhiteSpace } from "../../../../../core/utils";
 
@@ -42,9 +41,9 @@ export default class EntityNameInput extends React.Component<Props, State> {
                 }}
                 onChange={this.updateState}
                 onKeyUp={e => {
-                    if (e.keyCode === KeyCodes.Enter) {
+                    if (e.key === "Enter") {
                         this.input!.blur();
-                    } else if (e.keyCode === KeyCodes.Escape) {
+                    } else if (e.key === "Escape") {
                         this.setState({ name: this.props.entity.name }, () => {
                             this.input!.blur();
                         });

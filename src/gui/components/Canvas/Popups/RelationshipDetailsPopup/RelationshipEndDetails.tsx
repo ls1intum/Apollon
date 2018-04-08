@@ -4,7 +4,6 @@ import EntitySelect from "./EntitySelect";
 import RectEdgeSelect from "./RectEdgeSelect";
 import BlockInput from "../BlockInput";
 import { PopupSectionHeading } from "../PopupSectionHeading";
-import KeyCodes from "../../../../events/keyCodes";
 import { Entity, RelationshipEnd } from "../../../../../core/domain";
 import { RectEdge } from "../../../../../core/geometry";
 import { UUID } from "../../../../../core/utils";
@@ -113,7 +112,7 @@ export default class RelationshipEndDetails extends React.Component<Props, State
                                         });
                                     }}
                                     onKeyUp={e => {
-                                        if (e.keyCode === KeyCodes.Enter) {
+                                        if (e.key === "Enter") {
                                             e.currentTarget.blur();
                                         }
                                     }}
@@ -133,7 +132,7 @@ export default class RelationshipEndDetails extends React.Component<Props, State
                                         });
                                     }}
                                     onKeyUp={e => {
-                                        if (e.keyCode === KeyCodes.Enter) {
+                                        if (e.key === "Enter") {
                                             e.currentTarget.blur();
                                         }
                                     }}

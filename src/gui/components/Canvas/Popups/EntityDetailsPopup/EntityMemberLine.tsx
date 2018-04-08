@@ -2,7 +2,6 @@ import * as React from "react";
 import styled from "styled-components";
 import TrashCanIcon from "./TrashCanIcon";
 import BlockInput from "../BlockInput";
-import KeyCodes from "../../../../events/keyCodes";
 import { EntityMember } from "../../../../../core/domain";
 import { sanitizeWhiteSpace } from "../../../../../core/utils";
 
@@ -59,9 +58,9 @@ export default class EntityMemberInput extends React.Component<Props, State> {
                     onChange={this.updateState}
                     onBlur={this.updateMemberName}
                     onKeyUp={e => {
-                        if (e.keyCode === KeyCodes.Enter) {
+                        if (e.key === "Enter") {
                             this.input!.blur();
-                        } else if (e.keyCode === KeyCodes.Escape) {
+                        } else if (e.key === "Escape") {
                             this.setState({ name: this.props.member.name }, () => {
                                 this.input!.blur();
                             });
