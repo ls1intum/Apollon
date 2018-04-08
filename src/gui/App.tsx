@@ -19,6 +19,9 @@ export default class App extends React.Component<Props, State> {
     store: Store<ReduxState>;
     keyboardEventListener: KeyboardEventListener | null;
 
+    subscriptionId = 0;
+    selectionChangeSubscribers: Map<number, ((selection: ElementSelection) => void)>;
+
     state: State = {
         selection: {
             entityIds: [],
@@ -37,6 +40,8 @@ export default class App extends React.Component<Props, State> {
             props.apollonMode === ApollonMode.Editable
                 ? new KeyboardEventListener(store, this.selectElements)
                 : null;
+
+        this.selectionChangeSubscribers = new Map();
 
         store.subscribe(() => {
             const storeState = store.getState();
@@ -61,8 +66,17 @@ export default class App extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
-        if (this.state.selection !== prevState.selection && this.keyboardEventListener !== null) {
-            this.keyboardEventListener.setSelection(this.state.selection);
+        const newSelection = this.state.selection;
+
+        if (newSelection !== prevState.selection) {
+            if (this.keyboardEventListener !== null) {
+                this.keyboardEventListener.setSelection(newSelection);
+            }
+
+            // Call every subscriber with the new selection
+            this.selectionChangeSubscribers.forEach(subscriber => {
+                subscriber(newSelection);
+            });
         }
     }
 
@@ -129,12 +143,6 @@ export default class App extends React.Component<Props, State> {
         });
     };
 
-    onSelectionChange = (newSelection: ElementSelection) => {
-        if (this.keyboardEventListener !== null) {
-            this.keyboardEventListener.setSelection(newSelection);
-        }
-    };
-
     componentDidMount() {
         if (this.keyboardEventListener !== null) {
             this.keyboardEventListener.startListening();
@@ -177,6 +185,17 @@ export default class App extends React.Component<Props, State> {
                 </Provider>
             </ApollonEditor>
         );
+    }
+
+    subscribeToSelectionChange(callback: (selection: ElementSelection) => void) {
+        const subscriptionId = ++this.subscriptionId;
+        this.selectionChangeSubscribers.set(subscriptionId, callback);
+
+        return subscriptionId;
+    }
+
+    unsubscribeFromSelectionChange(subscriptionId: number) {
+        this.selectionChangeSubscribers.delete(subscriptionId);
     }
 }
 

@@ -2,6 +2,8 @@ declare module "apollon" {
     export default class ApollonEditor {
         constructor(container: HTMLElement, options?: ApollonOptions);
         getSelection(): ElementSelection;
+        subscribeToSelectionChange(callback: (selection: ElementSelection) => void): number | null;
+        unsubscribeFromSelectionChange(subscriptionId: number);
         getState(): State;
         destroy();
     }

@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom";
 import App from "./App";
 import { ReduxState } from "./redux";
 import { Theme } from "./theme";
-import { ApollonMode } from "./types";
+import { ApollonMode, ElementSelection } from "./types";
 
 export interface ApollonOptions {
     initialState?: ReduxState | null;
@@ -33,6 +33,16 @@ export default class ApollonEditor {
 
     getSelection() {
         return this.app ? this.app.state.selection : null;
+    }
+
+    subscribeToSelectionChange(callback: (selection: ElementSelection) => void): number | null {
+        return this.app ? this.app.subscribeToSelectionChange(callback) : null;
+    }
+
+    unsubscribeFromSelectionChange(subscriptionId: number) {
+        if (this.app !== null) {
+            this.app.unsubscribeFromSelectionChange(subscriptionId);
+        }
     }
 
     getState() {
