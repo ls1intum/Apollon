@@ -1,4 +1,4 @@
-declare module "apollon" {
+declare module "@ls1intum/apollon" {
     export default class ApollonEditor {
         constructor(container: HTMLElement, options?: ApollonOptions);
         getSelection(): ElementSelection;
