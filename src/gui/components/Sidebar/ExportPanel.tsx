@@ -94,7 +94,7 @@ class ExportPanel extends React.Component<Props> {
             fontFamily: theme.fontFamily
         };
 
-        const svg = renderDiagramToSVG(layoutedDiagram, renderOptions);
+        const { svg } = renderDiagramToSVG(layoutedDiagram, renderOptions);
         const svgBlob = new Blob([svg], { type: "image/svg+xml" });
         return URL.createObjectURL(svgBlob);
     }
