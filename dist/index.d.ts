@@ -171,7 +171,6 @@ declare module "@ls1intum/apollon" {
     export interface LayoutedRelationship {
         relationship: Relationship;
         path: Point[];
-        boundingBox: Point & Size;
     }
 
     export interface RenderedSVG {
