@@ -174,6 +174,7 @@ export default class App extends React.Component<Props, State> {
                     <ThemeProvider theme={this.theme}>
                         <Editor
                             apollonMode={this.props.apollonMode}
+                            debugModeEnabled={this.props.debugModeEnabled}
                             selection={this.state.selection}
                             selectEntity={this.selectEntity}
                             toggleEntitySelection={this.toggleEntitySelection}
@@ -202,6 +203,7 @@ export default class App extends React.Component<Props, State> {
 interface Props {
     initialState: ReduxState | null;
     apollonMode: ApollonMode;
+    debugModeEnabled: boolean;
     theme: Partial<Theme>;
 }
 

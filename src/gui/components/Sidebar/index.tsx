@@ -39,9 +39,13 @@ export default class Sidebar extends React.Component<Props> {
 
                 <FlexGrowItem>{this.renderElements()}</FlexGrowItem>
 
-                <ExportPanel interactiveElementsMode={this.props.interactiveElementsMode} />
-                <div style={{ height: 25 }} />
-                <LocalStateForm />
+                {this.props.debugModeEnabled && (
+                    <>
+                        <ExportPanel interactiveElementsMode={this.props.interactiveElementsMode} />
+                        <div style={{ height: 25 }} />
+                        <LocalStateForm />
+                    </>
+                )}
             </FlexContainer>
         );
     }
@@ -70,6 +74,7 @@ interface Props {
     selectedRelationships: Relationship[];
     apollonMode: ApollonMode;
     editorMode: EditorMode;
+    debugModeEnabled: boolean;
     interactiveElementsMode: InteractiveElementsMode;
     selectEditorMode: (newMode: EditorMode) => void;
     selectInteractiveElementsMode: (newMode: InteractiveElementsMode) => void;

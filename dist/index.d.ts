@@ -11,6 +11,7 @@ declare module "@ls1intum/apollon" {
     export interface ApollonOptions {
         initialState?: State | null;
         mode: "READ_ONLY" | "MODELING_ONLY" | "FULL";
+        debug?: boolean;
         theme?: Partial<Theme>;
     }
 

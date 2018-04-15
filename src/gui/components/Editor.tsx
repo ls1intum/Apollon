@@ -150,6 +150,7 @@ class Editor extends React.Component<Props, State> {
                             selectedRelationships={selectedRelationships}
                             apollonMode={this.props.apollonMode}
                             editorMode={this.state.editorMode}
+                            debugModeEnabled={this.props.debugModeEnabled}
                             interactiveElementsMode={this.state.interactiveElementsMode}
                             selectEditorMode={this.selectEditorMode}
                             selectInteractiveElementsMode={this.selectInteractiveElementsMode}
@@ -172,6 +173,7 @@ class Editor extends React.Component<Props, State> {
 
 interface OwnProps {
     apollonMode: ApollonMode;
+    debugModeEnabled: boolean;
     selection: ElementSelection;
     selectEntity: (entityId: UUID) => void;
     selectRelationship: (relationshipId: UUID) => void;

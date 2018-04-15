@@ -8,6 +8,7 @@ import { ApollonMode, ElementSelection } from "./types";
 export interface ApollonOptions {
     initialState?: ReduxState | null;
     mode?: "READ_ONLY" | "MODELING_ONLY" | "FULL";
+    debug?: boolean;
     theme?: Partial<Theme>;
 }
 
@@ -17,12 +18,13 @@ export default class ApollonEditor {
 
     constructor(container: HTMLElement, options: ApollonOptions = {}) {
         this.container = container;
-        const { initialState = null, mode = "FULL", theme = {} } = options;
+        const { initialState = null, mode = "FULL", debug = false, theme = {} } = options;
 
         const app = React.createElement(App, {
             ref: ref => (this.app = ref),
             initialState,
             apollonMode: getApollonMode(mode),
+            debugModeEnabled: debug,
             theme
         });
 
