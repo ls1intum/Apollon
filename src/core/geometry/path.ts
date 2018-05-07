@@ -1,6 +1,16 @@
 import { Delta } from "./delta";
 import { areAlmostEqual } from "./math/floatingPoint";
-import { Point, pointsAreEqual } from "./point";
+import { distanceBetweenPoints, Point, pointsAreEqual } from "./point";
+
+export function computePathLength(path: Point[]): number {
+    let pathLength = 0;
+
+    for (let i = 1; i < path.length; i++) {
+        pathLength += distanceBetweenPoints(path[i], path[i - 1]);
+    }
+
+    return pathLength;
+}
 
 export function beautifyPath(path: Point[]): Point[] {
     if (path.length <= 1) {

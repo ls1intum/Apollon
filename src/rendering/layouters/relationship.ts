@@ -1,13 +1,17 @@
 import {
     beautifyPath,
+    computePathLength,
+    findClosestPoint,
     getBottomLeftCorner,
     getBottomRightCorner,
+    getCorners,
     getPointOnPaddedBox,
     getTopLeftCorner,
     getTopRightCorner,
     lineSegmentIntersectsRect,
     padRect,
     Point,
+    pointsAreEqual,
     Rect,
     RectEdge
 } from "../../core/geometry";
@@ -22,8 +26,6 @@ export function computeRelationshipPath(
     targetEdgeOffset: number,
     straightLine: boolean
 ): Point[] {
-    const boxPadding = 40;
-
     const directPath = tryGetDirectPath(sourceRect, sourceEdge, targetRect, targetEdge);
 
     if (directPath !== null) {
@@ -37,81 +39,84 @@ export function computeRelationshipPath(
         return [startPointOnInnerEdge, endPointOnInnerEdge];
     }
 
+    const BOX_PADDING = 40;
+
     const startPointOnOuterEdge = getPointOnPaddedBox(
         sourceRect,
         sourceEdge,
         sourceEdgeOffset,
-        boxPadding
+        BOX_PADDING
     );
 
     const endPointOnOuterEdge = getPointOnPaddedBox(
         targetRect,
         targetEdge,
         targetEdgeOffset,
-        boxPadding
+        BOX_PADDING
     );
 
-    const paddedSourceRect = padRect(sourceRect, boxPadding);
-    const paddedTargetRect = padRect(targetRect, boxPadding);
+    const paddedSourceRect = padRect(sourceRect, BOX_PADDING);
+    const paddedTargetRect = padRect(targetRect, BOX_PADDING);
 
-    const paddedSourceRect1px = padRect(sourceRect, boxPadding - 1);
-    const paddedTargetRect1px = padRect(targetRect, boxPadding - 1);
+    const paddedSourceRect1px = padRect(sourceRect, BOX_PADDING - 1);
+    const paddedTargetRect1px = padRect(targetRect, BOX_PADDING - 1);
 
-    let currentStart: [Point, Direction] = [startPointOnOuterEdge, edgeToDirection(sourceEdge)];
-    let currentEnd: [Point, Direction] = [endPointOnOuterEdge, edgeToDirection(targetEdge)];
+    const sourceCorners = getCorners(paddedSourceRect);
+    const targetCorners = getCorners(paddedTargetRect);
 
-    const startCornerQueue = getCornerQueue(
+    const sourceCornerClosestToEndPoint = findClosestPoint(sourceCorners, endPointOnOuterEdge);
+    const targetCornerClosestToClosestSourceCorner = findClosestPoint(
+        targetCorners,
+        sourceCornerClosestToEndPoint
+    );
+
+    const sourceCornerQueue = findShortestCornerQueue(
+        paddedSourceRect,
         sourceEdge,
         startPointOnOuterEdge,
-        endPointOnOuterEdge,
-        paddedSourceRect,
-        paddedTargetRect
+        sourceCornerClosestToEndPoint
     );
 
-    const endCornerQueue = getCornerQueue(
+    const targetCornerQueue = findShortestCornerQueue(
+        paddedTargetRect,
         targetEdge,
         endPointOnOuterEdge,
-        startPointOnOuterEdge,
-        paddedTargetRect,
-        paddedSourceRect
+        targetCornerClosestToClosestSourceCorner
     );
 
-    let advanceNext: "start" | "end" = "start";
+    const pathFromStart = [startPointOnInnerEdge, startPointOnOuterEdge];
+    const pathFromEnd = [endPointOnInnerEdge, endPointOnOuterEdge];
 
-    const pointsFromStart = [startPointOnInnerEdge, startPointOnOuterEdge];
-    const pointsFromEnd = [endPointOnOuterEdge, endPointOnInnerEdge];
+    let currentStartPoint = startPointOnOuterEdge;
+    let currentEndPoint = endPointOnOuterEdge;
 
+    console.log("===");
     while (true) {
-        const [currentStartPoint, currentStartDirection] = currentStart;
-        const [currentEndPoint, currentEndDirection] = currentEnd;
-
         const pointsSeeEachOther =
             !lineSegmentIntersectsRect(currentStartPoint, currentEndPoint, paddedSourceRect1px) &&
             !lineSegmentIntersectsRect(currentStartPoint, currentEndPoint, paddedTargetRect1px);
+        console.log(pointsSeeEachOther);
 
         if (pointsSeeEachOther) {
-            const currentStartAxis = getAxis(currentStartDirection);
-            const currentEndAxis = getAxis(currentEndDirection);
+            const currentStartAxis = getAxis(pathFromStart);
+            const currentEndAxis = getAxis(pathFromEnd);
 
             if (currentStartAxis === "HORIZONTAL" && currentEndAxis === "HORIZONTAL") {
                 const middleX = (currentStartPoint.x + currentEndPoint.x) / 2;
-                pointsFromStart.push(
+                pathFromStart.push(
                     { x: middleX, y: currentStartPoint.y },
                     { x: middleX, y: currentEndPoint.y }
                 );
             } else if (currentStartAxis === "VERTICAL" && currentEndAxis === "VERTICAL") {
                 const middleY = (currentStartPoint.y + currentEndPoint.y) / 2;
-                pointsFromStart.push(
+                pathFromStart.push(
                     { x: currentStartPoint.x, y: middleY },
                     { x: currentEndPoint.x, y: middleY }
                 );
             } else if (currentStartAxis === "HORIZONTAL" && currentEndAxis === "VERTICAL") {
-                pointsFromStart.push({
-                    x: currentEndPoint.x,
-                    y: currentStartPoint.y
-                });
+                pathFromStart.push({ x: currentEndPoint.x, y: currentStartPoint.y });
             } else {
-                pointsFromStart.push({
+                pathFromStart.push({
                     x: currentStartPoint.x,
                     y: currentEndPoint.y
                 });
@@ -120,25 +125,18 @@ export function computeRelationshipPath(
             break;
         }
 
-        if (advanceNext === "start") {
-            const currentPoint = startCornerQueue.shift();
+        const nextSourceCorner = sourceCornerQueue.shift();
 
-            if (!currentPoint) {
-                return [
-                    startPointOnInnerEdge,
-                    startPointOnOuterEdge,
-                    endPointOnOuterEdge,
-                    endPointOnInnerEdge
-                ];
-            }
-
-            pointsFromStart.push(currentPoint[0]);
-            currentStart = currentPoint;
-            advanceNext = "end";
+        if (nextSourceCorner !== undefined) {
+            pathFromStart.push(nextSourceCorner);
+            currentStartPoint = nextSourceCorner;
         } else {
-            const currentPoint = endCornerQueue.shift();
+            const nextTargetCorner = targetCornerQueue.shift();
 
-            if (!currentPoint) {
+            if (nextTargetCorner !== undefined) {
+                pathFromEnd.push(nextTargetCorner);
+                currentEndPoint = nextTargetCorner;
+            } else {
                 return [
                     startPointOnInnerEdge,
                     startPointOnOuterEdge,
@@ -146,17 +144,79 @@ export function computeRelationshipPath(
                     endPointOnInnerEdge
                 ];
             }
-
-            pointsFromEnd.unshift(currentPoint[0]);
-            currentEnd = currentPoint;
-            advanceNext = "start";
         }
     }
 
-    const path = [...pointsFromStart, ...pointsFromEnd];
-    const beautifiedPath = beautifyPath(path);
+    const pathToEnd = pathFromEnd.reverse();
+    const path = [...pathFromStart, ...pathToEnd];
 
-    return beautifiedPath;
+    return beautifyPath(path);
+}
+
+function findShortestCornerQueue(
+    rect: Rect,
+    edge: RectEdge,
+    pointOnOuterEdge: Point,
+    destinationCorner: Point | null
+): Point[] {
+    let clockwiseCornerQueue: Point[];
+    let counterClockwiseCornerQueue: Point[];
+
+    const tl = getTopLeftCorner(rect);
+    const tr = getTopRightCorner(rect);
+    const bl = getBottomLeftCorner(rect);
+    const br = getBottomRightCorner(rect);
+
+    switch (edge) {
+        case "TOP":
+            clockwiseCornerQueue = [tr, br, bl, tl];
+            counterClockwiseCornerQueue = [tl, bl, br, tr];
+            break;
+
+        case "RIGHT":
+            clockwiseCornerQueue = [br, bl, tl, tr];
+            counterClockwiseCornerQueue = [tr, tl, bl, br];
+            break;
+
+        case "BOTTOM":
+            clockwiseCornerQueue = [bl, tl, tr, br];
+            counterClockwiseCornerQueue = [br, tr, tl, bl];
+            break;
+
+        case "LEFT":
+            clockwiseCornerQueue = [tl, tr, br, bl];
+            counterClockwiseCornerQueue = [bl, br, tr, tl];
+            break;
+
+        default:
+            throw Error("Unreachable code");
+    }
+
+    if (destinationCorner !== null) {
+        for (let i = 0; i < 4; i++) {
+            if (pointsAreEqual(clockwiseCornerQueue[i], destinationCorner)) {
+                clockwiseCornerQueue = clockwiseCornerQueue.slice(0, i + 1);
+                break;
+            }
+        }
+
+        for (let i = 0; i < 4; i++) {
+            if (pointsAreEqual(counterClockwiseCornerQueue[i], destinationCorner)) {
+                counterClockwiseCornerQueue = counterClockwiseCornerQueue.slice(0, i + 1);
+                break;
+            }
+        }
+    }
+
+    const clockwisePathLength = computePathLength([pointOnOuterEdge, ...clockwiseCornerQueue]);
+    const counterClockwisePathLength = computePathLength([
+        pointOnOuterEdge,
+        ...counterClockwiseCornerQueue
+    ]);
+
+    return clockwisePathLength < counterClockwisePathLength
+        ? clockwiseCornerQueue
+        : counterClockwiseCornerQueue;
 }
 
 function tryGetDirectPath(
@@ -238,67 +298,20 @@ function computeOverlap(
     return largerFrom <= smallerTo ? [largerFrom, smallerTo] : null;
 }
 
-type Direction = "UP" | "LEFT" | "RIGHT" | "DOWN";
+function getAxis(path: Point[]) {
+    const secondToLastPoint = path[path.length - 2];
+    const lastPoint = path[path.length - 1];
 
-function edgeToDirection(edge: RectEdge): Direction {
-    switch (edge) {
-        case "TOP":
-            return "UP";
+    const dx = lastPoint.x - secondToLastPoint.x;
+    const dy = lastPoint.y - secondToLastPoint.y;
 
-        case "LEFT":
-            return "LEFT";
-
-        case "RIGHT":
-            return "RIGHT";
-
-        case "BOTTOM":
-            return "DOWN";
-
-        default:
-            return assertNever(edge);
+    if (dx === 0 && dy !== 0) {
+        return "VERTICAL";
     }
-}
 
-function getAxis(direction: Direction) {
-    switch (direction) {
-        case "UP":
-        case "DOWN":
-            return "VERTICAL";
-
-        case "LEFT":
-        case "RIGHT":
-            return "HORIZONTAL";
-
-        default:
-            return assertNever(direction);
+    if (dx !== 0 && dy === 0) {
+        return "HORIZONTAL";
     }
-}
 
-function getCornerQueue(
-    edge: RectEdge,
-    thisStart: Point,
-    otherStart: Point,
-    thisRect: Rect,
-    otherRect: Rect
-): [Point, Direction][] {
-    const deltaX = thisStart.x - otherStart.x;
-    const deltaY = thisStart.y - otherStart.y;
-
-    const clockwise =
-        (edge === "TOP" && deltaX < 0) ||
-        (edge === "RIGHT" && deltaY < 0) ||
-        (edge === "BOTTOM" && deltaX >= 0) ||
-        (edge === "LEFT" && deltaY >= 0);
-
-    const corners: [Point, Direction][] = [
-        [getTopLeftCorner(thisRect), clockwise ? "UP" : "LEFT"],
-        [getTopRightCorner(thisRect), clockwise ? "RIGHT" : "UP"],
-        [getBottomRightCorner(thisRect), clockwise ? "DOWN" : "RIGHT"],
-        [getBottomLeftCorner(thisRect), clockwise ? "LEFT" : "DOWN"]
-    ];
-
-    const skip = ["left", "top", "right", "bottom"].indexOf(edge);
-    const rotatedCorners = [...corners.slice(skip), ...corners.slice(0, skip)];
-
-    return clockwise ? rotatedCorners : (rotatedCorners.reverse() as any);
+    return null;
 }

@@ -10,6 +10,15 @@ export interface Rect {
 
 export type RectEdge = "TOP" | "LEFT" | "RIGHT" | "BOTTOM";
 
+export function getCorners(rect: Rect): Point[] {
+    return [
+        getTopLeftCorner(rect),
+        getTopRightCorner(rect),
+        getBottomRightCorner(rect),
+        getBottomLeftCorner(rect)
+    ];
+}
+
 export function getTopLeftCorner(rect: Rect) {
     return {
         x: rect.x,
