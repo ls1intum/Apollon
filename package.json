@@ -18,8 +18,11 @@
     "start": "webpack-dev-server --mode development",
     "lint": "tslint --force --project tsconfig.json --format stylish",
     "clean": "(rm -r dist || true)",
-    "build-dev": "webpack --mode production",
-    "build-npm": "yarn clean && mkdir -p dist && cp ./src/index.d.ts ./dist/ && tsc -p ."
+    "build:dev": "webpack --mode production",
+    "build:npm": "yarn clean && mkdir -p dist && cp ./src/index.d.ts ./dist/ && tsc -p .",
+    "publish:patch": "yarn build:npm && npm version patch && npm publish",
+    "publish:minor": "yarn build:npm && npm version minor && npm publish",
+    "publish:major": "yarn build:npm && npm version major && npm publish"
   },
   "devDependencies": {
     "@types/react": "^16.0.40",
