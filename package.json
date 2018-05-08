@@ -16,8 +16,10 @@
   },
   "scripts": {
     "start": "webpack-dev-server --mode development",
-    "build": "webpack --mode production",
-    "lint": "tslint --force --project tsconfig.json --format stylish"
+    "lint": "tslint --force --project tsconfig.json --format stylish",
+    "clean": "(rm -r dist || true)",
+    "build-dev": "webpack --mode production",
+    "build-npm": "yarn clean && mkdir -p dist && cp ./src/index.d.ts ./dist/ && tsc -p ."
   },
   "devDependencies": {
     "@types/react": "^16.0.40",
@@ -25,8 +27,6 @@
     "@types/react-dnd-html5-backend": "^2.1.9",
     "@types/react-dom": "^16.0.4",
     "@types/react-redux": "^5.0.15",
-    "@types/webpack": "^4.1.0",
-    "@types/webpack-dev-server": "^2.9.4",
     "prettier": "^1.11.1",
     "ts-loader": "^4.0.1",
     "tslint": "^5.9.1",
