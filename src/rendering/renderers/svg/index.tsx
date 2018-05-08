@@ -73,17 +73,15 @@ export function renderRelationshipToSVG(
     let height = boundingBox.height;
 
     if (width < MIN_SIDE_LENGTH) {
-        const delta = MIN_SIDE_LENGTH - width;
         width = MIN_SIDE_LENGTH;
     }
 
     if (height < MIN_SIDE_LENGTH) {
-        const delta = MIN_SIDE_LENGTH - height;
         height = MIN_SIDE_LENGTH;
     }
 
-    const dx = -boundingBox.x + MIN_SIDE_LENGTH / 2;
-    const dy = -boundingBox.y + MIN_SIDE_LENGTH / 2;
+    const dx = -boundingBox.x - MIN_SIDE_LENGTH / 2;
+    const dy = -boundingBox.y - MIN_SIDE_LENGTH / 2;
 
     const svg = renderReactElementToString(
         <Svg width={width} height={height} fontFamily={renderOptions.fontFamily}>
