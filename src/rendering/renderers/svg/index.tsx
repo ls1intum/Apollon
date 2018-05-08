@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import RelationshipMarkers from "./defs/RelationshipMarkers";
 import RenderedDiagram from "./RenderedDiagram";
 import RenderedEntity from "./RenderedEntity";
 import RenderedRelationship from "./RenderedRelationship";
@@ -65,14 +66,31 @@ export function renderRelationshipToSVG(
     layoutedRelationship: LayoutedRelationship,
     renderOptions: RenderOptions
 ): RenderedSVG {
+    const MIN_SIDE_LENGTH = 30;
     const boundingBox = computeBoundingBox(layoutedRelationship.path);
 
-    const width = boundingBox.width + 15;
-    const height = boundingBox.height + 15;
+    let width = boundingBox.width;
+    let height = boundingBox.height;
+
+    if (width < MIN_SIDE_LENGTH) {
+        const delta = MIN_SIDE_LENGTH - width;
+        width = MIN_SIDE_LENGTH;
+    }
+
+    if (height < MIN_SIDE_LENGTH) {
+        const delta = MIN_SIDE_LENGTH - height;
+        height = MIN_SIDE_LENGTH;
+    }
+
+    const dx = -boundingBox.x + MIN_SIDE_LENGTH / 2;
+    const dy = -boundingBox.y + MIN_SIDE_LENGTH / 2;
 
     const svg = renderReactElementToString(
         <Svg width={width} height={height} fontFamily={renderOptions.fontFamily}>
-            <Translate dx={-boundingBox.x} dy={-boundingBox.y}>
+            <defs>
+                <RelationshipMarkers />
+            </defs>
+            <Translate dx={dx} dy={dy}>
                 <RenderedRelationship
                     relationship={layoutedRelationship.relationship}
                     path={layoutedRelationship.path}
