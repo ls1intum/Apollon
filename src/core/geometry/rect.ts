@@ -47,7 +47,7 @@ export function getBottomRightCorner(rect: Rect): Point {
     };
 }
 
-export function padRect(rect: Rect, padding: number): Rect {
+export function enlargeRect(rect: Rect, padding: number): Rect {
     return {
         x: rect.x - padding,
         y: rect.y - padding,
@@ -56,37 +56,32 @@ export function padRect(rect: Rect, padding: number): Rect {
     };
 }
 
-export function getPointOnPaddedBox(
-    rect: Rect,
-    edge: RectEdge,
-    offset: number,
-    padding = 0
-): Point {
+export function getPointOnRect(rect: Rect, edge: RectEdge, offset: number): Point {
     const { x, y, width, height } = rect;
 
     switch (edge) {
         case "LEFT":
             return {
-                x: x - padding,
+                x,
                 y: y + height * offset
             };
 
         case "RIGHT":
             return {
-                x: x + width + padding,
+                x: x + width,
                 y: y + height * offset
             };
 
         case "TOP":
             return {
                 x: x + width * offset,
-                y: y - padding
+                y
             };
 
         case "BOTTOM":
             return {
                 x: x + width * offset,
-                y: y + height + padding
+                y: y + height
             };
 
         default:

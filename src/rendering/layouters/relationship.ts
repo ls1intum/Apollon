@@ -1,15 +1,15 @@
 import {
     beautifyPath,
     computePathLength,
+    enlargeRect,
     findClosestPoint,
     getBottomLeftCorner,
     getBottomRightCorner,
     getCorners,
-    getPointOnPaddedBox,
+    getPointOnRect,
     getTopLeftCorner,
     getTopRightCorner,
     lineSegmentIntersectsRect,
-    padRect,
     Point,
     pointsAreEqual,
     Rect,
@@ -26,80 +26,90 @@ export function computeRelationshipPath(
     targetEdgeOffset: number,
     straightLine: boolean
 ): Point[] {
-    const directPath = tryGetDirectPath(sourceRect, sourceEdge, targetRect, targetEdge);
+    const straightPath = tryFindStraightPath(sourceRect, sourceEdge, targetRect, targetEdge);
 
-    if (directPath !== null) {
-        return directPath;
+    // If there is a straight path, return that one
+    if (straightPath !== null) {
+        return straightPath;
     }
 
-    const startPointOnInnerEdge = getPointOnPaddedBox(sourceRect, sourceEdge, sourceEdgeOffset);
-    const endPointOnInnerEdge = getPointOnPaddedBox(targetRect, targetEdge, targetEdgeOffset);
+    const startPointOnInnerEdge = getPointOnRect(sourceRect, sourceEdge, sourceEdgeOffset);
+    const endPointOnInnerEdge = getPointOnRect(targetRect, targetEdge, targetEdgeOffset);
 
+    // If the user forced this relationship path to be a straight line,
+    // directly connect the start and end points, even if that results in an angled line
     if (straightLine) {
         return [startPointOnInnerEdge, endPointOnInnerEdge];
     }
 
-    const BOX_PADDING = 40;
+    // Each entity has an invisible margin around it (the "crumple zone")
+    // in which we try not to place any segments of the relationship path
+    const ENTITY_MARGIN = 40;
 
-    const startPointOnOuterEdge = getPointOnPaddedBox(
-        sourceRect,
-        sourceEdge,
-        sourceEdgeOffset,
-        BOX_PADDING
+    // Compute an enlarged version of the source and target rectangles,
+    // taking into account the entity margin
+    const sourceMarginRect = enlargeRect(sourceRect, ENTITY_MARGIN);
+    const targetMarginRect = enlargeRect(targetRect, ENTITY_MARGIN);
+
+    // Do the same computation again, subtracting 1 from the margin so as
+    // to allow for path segments to be placed on the outline of the margin rectangle
+    const sourceMarginRect1px = enlargeRect(sourceRect, ENTITY_MARGIN - 1);
+    const targetMarginRect1px = enlargeRect(targetRect, ENTITY_MARGIN - 1);
+
+    // Calculate the exact position of the start and end points on their respective margin rectangle
+    const startPointOnMarginBox = getPointOnRect(sourceMarginRect, sourceEdge, sourceEdgeOffset);
+    const endPointOnMarginBox = getPointOnRect(targetMarginRect, targetEdge, targetEdgeOffset);
+
+    // Determine the source corner that's closest to the point
+    // on the margin box of the target entity
+    const sourceCornerClosestToEndPoint = findClosestPoint(
+        getCorners(sourceMarginRect),
+        endPointOnMarginBox
     );
 
-    const endPointOnOuterEdge = getPointOnPaddedBox(
-        targetRect,
-        targetEdge,
-        targetEdgeOffset,
-        BOX_PADDING
-    );
-
-    const paddedSourceRect = padRect(sourceRect, BOX_PADDING);
-    const paddedTargetRect = padRect(targetRect, BOX_PADDING);
-
-    const paddedSourceRect1px = padRect(sourceRect, BOX_PADDING - 1);
-    const paddedTargetRect1px = padRect(targetRect, BOX_PADDING - 1);
-
-    const sourceCorners = getCorners(paddedSourceRect);
-    const targetCorners = getCorners(paddedTargetRect);
-
-    const sourceCornerClosestToEndPoint = findClosestPoint(sourceCorners, endPointOnOuterEdge);
+    // Determine the target corner that's closest to the previously determined source corner
     const targetCornerClosestToClosestSourceCorner = findClosestPoint(
-        targetCorners,
+        getCorners(targetMarginRect),
         sourceCornerClosestToEndPoint
     );
 
-    const sourceCornerQueue = findShortestCornerQueue(
-        paddedSourceRect,
+    // Determine the corner queue for the source entity
+    const sourceCornerQueue = determineCornerQueue(
+        sourceMarginRect,
         sourceEdge,
-        startPointOnOuterEdge,
+        startPointOnMarginBox,
         sourceCornerClosestToEndPoint
     );
 
-    const targetCornerQueue = findShortestCornerQueue(
-        paddedTargetRect,
+    // Determine the corner queue for the target entity
+    const targetCornerQueue = determineCornerQueue(
+        targetMarginRect,
         targetEdge,
-        endPointOnOuterEdge,
+        endPointOnMarginBox,
         targetCornerClosestToClosestSourceCorner
     );
 
-    const pathFromStart = [startPointOnInnerEdge, startPointOnOuterEdge];
-    const pathFromEnd = [endPointOnInnerEdge, endPointOnOuterEdge];
+    // The relationship path can be partitioned into two segments:
+    // a prefix from the start point and a suffix to the end point
+    const pathFromStart = [startPointOnInnerEdge, startPointOnMarginBox];
+    const pathFromEnd = [endPointOnInnerEdge, endPointOnMarginBox];
 
-    let currentStartPoint = startPointOnOuterEdge;
-    let currentEndPoint = endPointOnOuterEdge;
+    // We build the relationship path up both from the start and the end
+    let currentStartPoint = startPointOnMarginBox;
+    let currentEndPoint = endPointOnMarginBox;
 
-    console.log("===");
     while (true) {
-        const pointsSeeEachOther =
-            !lineSegmentIntersectsRect(currentStartPoint, currentEndPoint, paddedSourceRect1px) &&
-            !lineSegmentIntersectsRect(currentStartPoint, currentEndPoint, paddedTargetRect1px);
-        console.log(pointsSeeEachOther);
+        const startAndEndPointCanBeConnected =
+            !lineSegmentIntersectsRect(currentStartPoint, currentEndPoint, sourceMarginRect1px) &&
+            !lineSegmentIntersectsRect(currentStartPoint, currentEndPoint, targetMarginRect1px);
 
-        if (pointsSeeEachOther) {
-            const currentStartAxis = getAxis(pathFromStart);
-            const currentEndAxis = getAxis(pathFromEnd);
+        // As soon as the current start and end points can be connected with a straight line
+        // without intersecting either entity rectangle, we add one or two more points to the relationship path,
+        // depending on the axes of the two start/end path segments and exit from the loop
+        if (startAndEndPointCanBeConnected) {
+            type PathSegment = [Point, Point];
+            const currentStartAxis = getAxisForPathSegment(pathFromStart.slice(-2) as PathSegment);
+            const currentEndAxis = getAxisForPathSegment(pathFromEnd.slice(-2) as PathSegment);
 
             if (currentStartAxis === "HORIZONTAL" && currentEndAxis === "HORIZONTAL") {
                 const middleX = (currentStartPoint.x + currentEndPoint.x) / 2;
@@ -122,38 +132,50 @@ export function computeRelationshipPath(
                 });
             }
 
+            // We're done here!
             break;
         }
 
+        // We got to this point because the start and end point can't (yet) see each other,
+        // thus advance to the next corner of the source entity
         const nextSourceCorner = sourceCornerQueue.shift();
 
         if (nextSourceCorner !== undefined) {
             pathFromStart.push(nextSourceCorner);
             currentStartPoint = nextSourceCorner;
         } else {
+            // The queue of source entity corners is already empty,
+            // thus advance to the next corner of the target entity
             const nextTargetCorner = targetCornerQueue.shift();
 
             if (nextTargetCorner !== undefined) {
                 pathFromEnd.push(nextTargetCorner);
                 currentEndPoint = nextTargetCorner;
             } else {
+                // We've emptied the corner queues of both entities, but the current start and end points
+                // still can't be connected with a straight line. This can happen if the two entities
+                // are placed closely enough to each other that their margin rectangles intersect.
+                // We return a simple (and usually angled) path in this case.
                 return [
                     startPointOnInnerEdge,
-                    startPointOnOuterEdge,
-                    endPointOnOuterEdge,
+                    startPointOnMarginBox,
+                    endPointOnMarginBox,
                     endPointOnInnerEdge
                 ];
             }
         }
     }
 
+    // Compose the entire path
     const pathToEnd = pathFromEnd.reverse();
     const path = [...pathFromStart, ...pathToEnd];
 
+    // Return a beautified version of the relationship path that reduces the number of corners
+    // in the relationship path, removes unnecessary points ("transit nodes"), etc.
     return beautifyPath(path);
 }
 
-function findShortestCornerQueue(
+function determineCornerQueue(
     rect: Rect,
     edge: RectEdge,
     pointOnOuterEdge: Point,
@@ -162,11 +184,14 @@ function findShortestCornerQueue(
     let clockwiseCornerQueue: Point[];
     let counterClockwiseCornerQueue: Point[];
 
+    // Get all corners of the rectangle
     const tl = getTopLeftCorner(rect);
     const tr = getTopRightCorner(rect);
     const bl = getBottomLeftCorner(rect);
     const br = getBottomRightCorner(rect);
 
+    // Determine the clockwise and counter-clickwise order of corners
+    // when starting at the selected edge of the rectangle
     switch (edge) {
         case "TOP":
             clockwiseCornerQueue = [tr, br, bl, tl];
@@ -192,6 +217,8 @@ function findShortestCornerQueue(
             throw Error("Unreachable code");
     }
 
+    // If we have a destination corner, shorten both corner queues
+    // to the prefix that ends with the destination corner
     if (destinationCorner !== null) {
         for (let i = 0; i < 4; i++) {
             if (pointsAreEqual(clockwiseCornerQueue[i], destinationCorner)) {
@@ -208,18 +235,20 @@ function findShortestCornerQueue(
         }
     }
 
+    // Compute the path length for both corner queues
     const clockwisePathLength = computePathLength([pointOnOuterEdge, ...clockwiseCornerQueue]);
     const counterClockwisePathLength = computePathLength([
         pointOnOuterEdge,
         ...counterClockwiseCornerQueue
     ]);
 
+    // Return the shorter corner queue
     return clockwisePathLength < counterClockwisePathLength
         ? clockwiseCornerQueue
         : counterClockwiseCornerQueue;
 }
 
-function tryGetDirectPath(
+function tryFindStraightPath(
     source: Rect,
     sourceEdge: RectEdge,
     target: Rect,
@@ -227,6 +256,11 @@ function tryGetDirectPath(
 ): Point[] | null {
     const OVERLAP_THRESHOLD = 40;
 
+    /*
+        #######           #######
+        # ~~~ # --------> # ~~~ #
+        #######           #######
+    */
     if (sourceEdge === "RIGHT" && targetEdge === "LEFT" && target.x >= source.x + source.width) {
         const overlapY = computeOverlap(
             [source.y, source.y + source.height],
@@ -241,6 +275,11 @@ function tryGetDirectPath(
         }
     }
 
+    /*
+        #######           #######
+        # ~~~ # <-------- # ~~~ #
+        #######           #######
+    */
     if (sourceEdge === "LEFT" && targetEdge === "RIGHT" && source.x >= target.x + target.width) {
         const overlapY = computeOverlap(
             [source.y, source.y + source.height],
@@ -255,6 +294,17 @@ function tryGetDirectPath(
         }
     }
 
+    /*
+        #######
+        # ~~~ #
+        #######
+           |
+           |
+           ∨
+        #######
+        # ~~~ #
+        #######
+    */
     if (sourceEdge === "BOTTOM" && targetEdge === "TOP" && target.y >= source.y + source.height) {
         const overlapX = computeOverlap(
             [source.x, source.x + source.width],
@@ -269,19 +319,28 @@ function tryGetDirectPath(
         }
     }
 
-    if (sourceEdge === "TOP" && targetEdge === "BOTTOM") {
-        if (source.y >= target.y + target.height) {
-            const overlapX = computeOverlap(
-                [source.x, source.x + source.width],
-                [target.x, target.x + target.width]
-            );
+    /*
+        #######
+        # ~~~ #
+        #######
+           ∧
+           |
+           |
+        #######
+        # ~~~ #
+        #######
+    */
+    if (sourceEdge === "TOP" && targetEdge === "BOTTOM" && source.y >= target.y + target.height) {
+        const overlapX = computeOverlap(
+            [source.x, source.x + source.width],
+            [target.x, target.x + target.width]
+        );
 
-            if (overlapX !== null && overlapX[1] - overlapX[0] >= OVERLAP_THRESHOLD) {
-                const middleX = (overlapX[0] + overlapX[1]) / 2;
-                const start: Point = { x: middleX, y: source.y };
-                const end: Point = { x: middleX, y: target.y + target.height };
-                return [start, end];
-            }
+        if (overlapX !== null && overlapX[1] - overlapX[0] >= OVERLAP_THRESHOLD) {
+            const middleX = (overlapX[0] + overlapX[1]) / 2;
+            const start: Point = { x: middleX, y: source.y };
+            const end: Point = { x: middleX, y: target.y + target.height };
+            return [start, end];
         }
     }
 
@@ -289,29 +348,34 @@ function tryGetDirectPath(
 }
 
 function computeOverlap(
-    [from1, to1]: [number, number],
-    [from2, to2]: [number, number]
+    range1: [number, number],
+    range2: [number, number]
 ): [number, number] | null {
+    const [from1, to1] = range1;
+    const [from2, to2] = range2;
+
     const largerFrom = Math.max(from1, from2);
     const smallerTo = Math.min(to1, to2);
 
     return largerFrom <= smallerTo ? [largerFrom, smallerTo] : null;
 }
 
-function getAxis(path: Point[]) {
-    const secondToLastPoint = path[path.length - 2];
-    const lastPoint = path[path.length - 1];
+function getAxisForPathSegment(pathSegment: [Point, Point]) {
+    // Determine dx and dy
+    const [p, q] = pathSegment;
+    const dx = q.x - p.x;
+    const dy = q.y - p.y;
 
-    const dx = lastPoint.x - secondToLastPoint.x;
-    const dy = lastPoint.y - secondToLastPoint.y;
-
+    // We have a vertical path segment if only dy is non-zero
     if (dx === 0 && dy !== 0) {
         return "VERTICAL";
     }
 
+    // We have a horizontal path segment if only dx is non-zero
     if (dx !== 0 && dy === 0) {
         return "HORIZONTAL";
     }
 
+    // We neither have a horizontal nor vertical path segment
     return null;
 }
