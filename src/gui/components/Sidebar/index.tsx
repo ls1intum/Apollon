@@ -14,6 +14,7 @@ const FlexContainer = styled.div`
     height: 100%;
     overflow: scroll;
     padding-left: 30px;
+    padding-right: 30px;
     background: white;
 `;
 

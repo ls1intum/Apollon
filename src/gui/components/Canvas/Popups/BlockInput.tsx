@@ -3,9 +3,9 @@ import styled from "styled-components";
 const BlockInput = styled.input`
     display: block;
     width: 100%;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-family: ${props => props.theme.fontFamily};
-    padding: 7px 9px;
+    padding: 5px 8px;
     border: 1px solid #ccc;
     border-radius: 3px;
 

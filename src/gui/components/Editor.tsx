@@ -17,7 +17,7 @@ import {
     computeRelationshipPaths
 } from "../../rendering/layouters/diagram";
 
-const SIDEBAR_WIDTH = 350;
+const SIDEBAR_WIDTH = 260;
 
 const FlexContainer = styled.div`
     width: 100%;

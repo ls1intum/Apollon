@@ -3,10 +3,10 @@ import { Point, Size } from "../../core/geometry";
 import { assertNever, UUID } from "../../core/utils";
 
 export const ENTITY_KIND_HEIGHT = 14;
-export const ENTITY_NAME_HEIGHT = 40;
+export const ENTITY_NAME_HEIGHT = 35;
 
-export const ENTITY_HORIZONTAL_PADDING = 12;
-export const ENTITY_MEMBER_HEIGHT = 30;
+export const ENTITY_HORIZONTAL_PADDING = 10;
+export const ENTITY_MEMBER_HEIGHT = 25;
 export const ENTITY_MEMBER_LIST_VERTICAL_PADDING = 5;
 export const ENTITY_BORDER_THICKNESS = 1;
 
