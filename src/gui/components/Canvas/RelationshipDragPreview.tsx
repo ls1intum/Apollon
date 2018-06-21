@@ -9,6 +9,7 @@ export default class RelationshipDragPreview extends React.Component<Props> {
         const path = [center, outer];
 
         if (mousePosition !== null) {
+            mousePosition.y -= window.scrollY;
             path.push(mousePosition);
         }
 
