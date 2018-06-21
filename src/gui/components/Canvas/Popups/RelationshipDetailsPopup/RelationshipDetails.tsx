@@ -38,7 +38,7 @@ export default class RelationshipDetails extends React.Component<Props> {
         return (
             <>
                 <PopupSection>
-                    <PopupSectionHeading>Relationship</PopupSectionHeading>
+                    <PopupSectionHeading>Association</PopupSectionHeading>
 
                     <RelationshipKindSelect
                         kind={relationship.relationship.kind}
