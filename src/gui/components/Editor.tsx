@@ -84,7 +84,12 @@ class Editor extends React.Component<Props, State> {
             if (diagram.entities.length === 0) {
                 const left = Math.abs(scrollWidth - clientWidth) / 2;
                 const top = Math.abs(scrollHeight - clientHeight) / 2;
-                this.canvasScrollContainer.scrollTo({ left, top });
+                if (typeof this.canvasScrollContainer.scrollTo !== "undefined") {
+                    this.canvasScrollContainer.scrollTo({ left, top });
+                } else {
+                    this.canvasScrollContainer.scrollLeft = left;
+                    this.canvasScrollContainer.scrollTop = top;
+                }
             } else {
                 const relationshipPaths = computeRelationshipPaths(diagram);
                 const boundingBox = computeDiagramBoundingBox(diagram, relationshipPaths);
@@ -101,7 +106,12 @@ class Editor extends React.Component<Props, State> {
                     boundingBox.y - PADDING_AROUND_DIAGRAM
                 );
 
-                this.canvasScrollContainer.scrollTo({ left, top });
+                if (typeof this.canvasScrollContainer.scrollTo !== "undefined") {
+                    this.canvasScrollContainer.scrollTo({ left, top });
+                } else {
+                    this.canvasScrollContainer.scrollLeft = left;
+                    this.canvasScrollContainer.scrollTop = top;
+                }
             }
 
             window.setTimeout(() => {
