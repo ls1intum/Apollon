@@ -263,8 +263,8 @@ function tryFindStraightPath(
     */
     if (sourceEdge === "RIGHT" && targetEdge === "LEFT" && target.x >= source.x + source.width) {
         const overlapY = computeOverlap(
-            [source.y, source.y + source.height],
-            [target.y, target.y + target.height]
+            [source.y, source.y + Math.max(OVERLAP_THRESHOLD, source.height)],
+            [target.y, target.y + Math.max(OVERLAP_THRESHOLD, target.height)]
         );
 
         if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
@@ -282,8 +282,8 @@ function tryFindStraightPath(
     */
     if (sourceEdge === "LEFT" && targetEdge === "RIGHT" && source.x >= target.x + target.width) {
         const overlapY = computeOverlap(
-            [source.y, source.y + source.height],
-            [target.y, target.y + target.height]
+            [source.y, source.y + Math.max(OVERLAP_THRESHOLD, source.height)],
+            [target.y, target.y + Math.max(OVERLAP_THRESHOLD, target.height)]
         );
 
         if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
