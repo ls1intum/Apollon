@@ -3,11 +3,17 @@ import { newId, UUID } from "../../../core/utils";
 
 export type RelationshipsAction =
     | CreateRelationshipAction
+    | FlipRelationshipAction
     | FlipRelationshipsAction
     | UpdateRelationshipAction;
 
 interface CreateRelationshipAction {
     type: "CREATE_RELATIONSHIP";
+    relationship: Relationship;
+}
+
+interface FlipRelationshipAction {
+    type: "FLIP_RELATIONSHIP";
     relationship: Relationship;
 }
 
@@ -35,6 +41,13 @@ export function createRelationship(
             target,
             straightLine: false
         }
+    };
+}
+
+export function flipRelationship(relationship: Relationship): FlipRelationshipAction {
+    return {
+        type: "FLIP_RELATIONSHIP",
+        relationship
     };
 }
 

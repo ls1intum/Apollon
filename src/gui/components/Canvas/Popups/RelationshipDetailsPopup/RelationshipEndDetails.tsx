@@ -72,6 +72,7 @@ export default class RelationshipEndDetails extends React.Component<Props, State
     componentWillReceiveProps(nextProps: Props) {
         this.setState({
             multiplicity: nextProps.relationshipEnd.multiplicity || "",
+            role: nextProps.relationshipEnd.role || "",
             edgeOffset: nextProps.relationshipEnd.edgeOffset
         });
     }
