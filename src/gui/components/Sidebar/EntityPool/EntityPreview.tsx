@@ -159,7 +159,7 @@ const dragSourceSpec: DragSourceSpec<OwnProps> = {
             type: DragDrop.ItemTypes.NewEntity,
             kind: props.kind,
             size: {
-                width: getDefaultEntityWidth(),
+                width: getDefaultEntityWidth(props.kind),
                 height: computeEntityHeight(props.kind, 1, 1, {
                     showAttributes: true,
                     showMethods: true

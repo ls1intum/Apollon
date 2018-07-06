@@ -92,7 +92,7 @@ export function createEntity(position: Point, kind: EntityKind): CreateEntityAct
             name,
             position,
             size: {
-                width: getDefaultEntityWidth(),
+                width: getDefaultEntityWidth(kind),
                 height: computeEntityHeight(kind, attributes.length, methods.length, renderMode)
             },
             attributes,

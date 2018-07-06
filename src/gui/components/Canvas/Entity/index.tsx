@@ -208,6 +208,9 @@ class CanvasEntity extends React.Component<Props, State> {
                 ? "hidden"
                 : undefined;
 
+        const hasContainer = entity.kind !== EntityKind.ActivityControlInitialNode
+            && entity.kind !== EntityKind.ActivityControlFinalNode;
+
         return {
             position: "absolute",
             left: entity.position.x,
@@ -219,16 +222,16 @@ class CanvasEntity extends React.Component<Props, State> {
                 entity.methods.length,
                 entity.renderMode
             ),
-            border: "1px solid black",
+            border: hasContainer && "1px solid black",
             visibility,
             opacity: isDragging ? 0.35 : 1,
             cursor:
                 apollonMode !== ApollonMode.ReadOnly && editorMode === EditorMode.ModelingView
                     ? "move"
                     : "default",
-            backgroundColor: "white",
-            backgroundImage: this.computeContainerBackgroundImage(isInteractiveElement),
-            boxShadow: this.computeContainerBoxShadow()
+            backgroundColor: hasContainer && "white",
+            backgroundImage: hasContainer && this.computeContainerBackgroundImage(isInteractiveElement),
+            boxShadow: hasContainer && this.computeContainerBoxShadow()
         };
     }
 

@@ -82,7 +82,11 @@ function layoutEntityMembers(
     });
 }
 
-export function getDefaultEntityWidth() {
+export function getDefaultEntityWidth(kind: EntityKind) {
+    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
+        return 35;
+    }
+
     return 200;
 }
 
