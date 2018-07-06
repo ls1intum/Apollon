@@ -38,12 +38,18 @@ export default class RelationshipDetails extends React.Component<Props> {
         return (
             <>
                 <PopupSection>
-                    <PopupSectionHeading>Association</PopupSectionHeading>
+                    {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
+                        <PopupSectionHeading>Association</PopupSectionHeading>
+                        ||
+                        <PopupSectionHeading>Control Flow</PopupSectionHeading>
+                    }
 
-                    <RelationshipKindSelect
-                        kind={relationship.relationship.kind}
-                        onRelationshipKindChange={this.updateRelationshipKind}
-                    />
+                    {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
+                        <RelationshipKindSelect
+                            kind={relationship.relationship.kind}
+                            onRelationshipKindChange={this.updateRelationshipKind}
+                        />
+                    }
 
                     {/* <LabeledCheckbox
                         label="Straight line"
