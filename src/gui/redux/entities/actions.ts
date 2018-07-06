@@ -142,6 +142,30 @@ function getEntityDefaults(
                 renderMode: { showAttributes: true, showMethods: true }
             };
 
+        case EntityKind.ActivityControlInitialNode:
+            return {
+                name: "",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
+        case EntityKind.ActivityControlFinalNode:
+            return {
+                name: "",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
+        case EntityKind.ActivityActionNode:
+            return {
+                name: "Action",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
         default:
             return assertNever(kind);
     }

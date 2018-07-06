@@ -107,6 +107,42 @@ class EntityPreview extends React.Component<Props> {
                     </>
                 );
 
+            case EntityKind.ActivityControlInitialNode:
+                return (
+                    <>
+                        <div>
+                            <Bold>
+                                <em>Initial Node</em>
+                            </Bold>
+                        </div>
+                        <div />
+                    </>
+                );
+
+            case EntityKind.ActivityControlFinalNode:
+                return (
+                    <>
+                        <div>
+                            <Bold>
+                                <em>Final Node</em>
+                            </Bold>
+                        </div>
+                        <div />
+                    </>
+                );
+
+            case EntityKind.ActivityActionNode:
+                return (
+                    <>
+                        <div>
+                            <Bold>
+                                <em>Action Node</em>
+                            </Bold>
+                        </div>
+                        <div />
+                    </>
+                );
+
             default:
                 return assertNever(kind);
         }

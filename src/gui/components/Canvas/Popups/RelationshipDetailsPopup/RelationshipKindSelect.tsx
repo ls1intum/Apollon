@@ -53,6 +53,9 @@ function stringifyRelationshipKind(kind: RelationshipKind): string {
         case RelationshipKind.Realization:
             return "Realization";
 
+        case RelationshipKind.ActivityControlFlow:
+            return "Control Flow";
+
         default:
             return assertNever(kind);
     }

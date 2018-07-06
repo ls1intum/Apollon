@@ -45,6 +45,7 @@ export function getSvgDasharrayForRelationshipKind(kind: RelationshipKind): stri
         case RelationshipKind.Composition:
         case RelationshipKind.Inheritance:
         case RelationshipKind.AssociationBidirectional:
+        case RelationshipKind.ActivityControlFlow:
             return undefined;
 
         case RelationshipKind.Dependency:

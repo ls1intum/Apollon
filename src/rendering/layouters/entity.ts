@@ -130,6 +130,9 @@ export function getEntityKindDescriptionOrNull(kind: EntityKind): string | null 
 
         case EntityKind.AbstractClass:
         case EntityKind.Class:
+        case EntityKind.ActivityControlInitialNode:
+        case EntityKind.ActivityControlFinalNode:
+        case EntityKind.ActivityActionNode:
             return null;
 
         default:
