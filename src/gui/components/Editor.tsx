@@ -141,6 +141,7 @@ class Editor extends React.Component<Props, State> {
                 >
                     <CanvasContainer
                         innerRef={ref => (this.canvas = ref)}
+                        diagramType={this.props.diagramType}
                         apollonMode={apollonMode}
                         editorMode={this.state.editorMode}
                         interactiveElementsMode={this.state.interactiveElementsMode}

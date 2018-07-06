@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import RelationshipDragPreview from "./RelationshipDragPreview";
 import { createRelationship, getAllEntities, ReduxState } from "../../redux";
-import { EditorMode, ElementSelection } from "../../types";
+import { DiagramType, EditorMode, ElementSelection } from "../../types";
 import { Entity, RelationshipKind } from "../../../core/domain";
 import { Point, RectEdge } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";
@@ -142,7 +142,9 @@ class RelationshipConnectors extends React.Component<Props, State> {
                                     this.setState({ startConnector: null });
 
                                     const action = this.props.createRelationship(
-                                        RelationshipKind.AssociationBidirectional,
+                                        this.props.diagramType === DiagramType.ClassDiagram
+                                            ? RelationshipKind.AssociationBidirectional
+                                            : RelationshipKind.ActivityControlFlow,
                                         {
                                             entityId: sourceEntity.id,
                                             multiplicity: null,
@@ -251,6 +253,7 @@ function computeConnectorPositions(entity: Entity): Connector[] {
 }
 
 interface OwnProps {
+    diagramType: DiagramType;
     editorMode: EditorMode;
     selection: ElementSelection;
     selectRelationship: (relationshipId: UUID) => void;
