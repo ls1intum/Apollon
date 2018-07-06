@@ -5,6 +5,11 @@ export interface ElementSelection {
     relationshipIds: UUID[];
 }
 
+export const enum DiagramType {
+    ClassDiagram = "CLASS_DIAGRAM",
+    ActivityDiagram = "ACTIVITY_DIAGRAM"
+}
+
 export const enum ApollonMode {
     Full = "FULL",
     ModelingOnly = "MODELING_ONLY",

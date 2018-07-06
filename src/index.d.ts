@@ -10,6 +10,7 @@ declare module "@ls1intum/apollon" {
 
     export interface ApollonOptions {
         initialState?: State | null;
+        diagramType: "CLASS" | "ACTIVITY";
         mode: "READ_ONLY" | "MODELING_ONLY" | "FULL";
         debug?: boolean;
         theme?: Partial<Theme>;

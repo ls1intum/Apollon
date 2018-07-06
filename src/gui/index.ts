@@ -3,10 +3,11 @@ import * as ReactDOM from "react-dom";
 import App from "./App";
 import { ReduxState } from "./redux";
 import { Theme } from "./theme";
-import { ApollonMode, ElementSelection } from "./types";
+import { DiagramType, ApollonMode, ElementSelection } from "./types";
 
 export interface ApollonOptions {
     initialState?: ReduxState | null;
+    diagramType?: "CLASS" | "ACTIVITY";
     mode?: "READ_ONLY" | "MODELING_ONLY" | "FULL";
     debug?: boolean;
     theme?: Partial<Theme>;
@@ -18,11 +19,12 @@ export default class ApollonEditor {
 
     constructor(container: HTMLElement, options: ApollonOptions = {}) {
         this.container = container;
-        const { initialState = null, mode = "FULL", debug = false, theme = {} } = options;
+        const { initialState = null, diagramType = null, mode = "FULL", debug = false, theme = {} } = options;
 
         const app = React.createElement(App, {
             ref: ref => (this.app = ref),
             initialState,
+            diagramType: getDiagramType(mode, diagramType),
             apollonMode: getApollonMode(mode),
             debugModeEnabled: debug,
             theme
@@ -51,6 +53,21 @@ export default class ApollonEditor {
 
     destroy() {
         ReactDOM.unmountComponentAtNode(this.container);
+    }
+}
+
+function getDiagramType(mode: string, diagramType: string | null) {
+    switch (diagramType) {
+        case "CLASS":
+            return DiagramType.ClassDiagram;
+
+        case "ACTIVITY":
+            return DiagramType.ActivityDiagram;
+
+        default:
+            throw Error(
+                "Please specify one of the following diagram types: 'CLASS', or 'ACTIVITY'"
+            );
     }
 }
 
@@ -114,7 +131,7 @@ if (!Array.prototype.includes) {
             if (sameValueZero(o[k], searchElement)) {
             return true;
             }
-            // c. Increase k by 1. 
+            // c. Increase k by 1.
             k++;
         }
 

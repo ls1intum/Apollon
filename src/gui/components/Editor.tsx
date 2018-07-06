@@ -9,7 +9,7 @@ import Sidebar from "./Sidebar";
 import { ZIndices } from "./zindices";
 import { getAllEntities, getAllRelationships } from "../redux/selectors";
 import { ReduxState } from "../redux/state";
-import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../types";
+import { DiagramType, ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../types";
 import { Entity, Relationship, UMLModel } from "../../core/domain";
 import { UUID } from "../../core/utils";
 import {
@@ -158,6 +158,7 @@ class Editor extends React.Component<Props, State> {
                         <Sidebar
                             selectedEntities={selectedEntities}
                             selectedRelationships={selectedRelationships}
+                            diagramType={this.props.diagramType}
                             apollonMode={this.props.apollonMode}
                             editorMode={this.state.editorMode}
                             debugModeEnabled={this.props.debugModeEnabled}
@@ -182,6 +183,7 @@ class Editor extends React.Component<Props, State> {
 }
 
 interface OwnProps {
+    diagramType: DiagramType;
     apollonMode: ApollonMode;
     debugModeEnabled: boolean;
     selection: ElementSelection;

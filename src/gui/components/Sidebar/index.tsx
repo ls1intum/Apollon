@@ -5,7 +5,7 @@ import EntityPool from "./EntityPool";
 import ExportPanel from "./ExportPanel";
 import InteractiveElementsPanel from "./InteractiveElementsPanel";
 import LocalStateForm from "./LocalStateForm";
-import { ApollonMode, EditorMode, InteractiveElementsMode } from "../../types";
+import { DiagramType, ApollonMode, EditorMode, InteractiveElementsMode } from "../../types";
 import { Entity, Relationship } from "../../../core/domain";
 
 const FlexContainer = styled.div`
@@ -73,6 +73,7 @@ export default class Sidebar extends React.Component<Props> {
 interface Props {
     selectedEntities: Entity[];
     selectedRelationships: Relationship[];
+    diagramType: DiagramType;
     apollonMode: ApollonMode;
     editorMode: EditorMode;
     debugModeEnabled: boolean;
