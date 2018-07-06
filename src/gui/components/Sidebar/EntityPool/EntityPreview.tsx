@@ -40,8 +40,15 @@ const StyledEntityPreview: any = styled.div`
     }
 `;
 
+const StyledActivityControlNode: any = styled.div`
+    width: 30px;
+    height: 30px;
+`;
+
 const Bold = styled.span`
     font-weight: bold;
+    margin-top: auto;
+    margin-bottom: auto;
 `;
 
 class EntityPreview extends React.Component<Props> {
@@ -53,9 +60,7 @@ class EntityPreview extends React.Component<Props> {
         const label = EntityPreview.getLabel(this.props.kind);
 
         return this.props.connectDragSource(
-            <div>
-                <StyledEntityPreview>{label}</StyledEntityPreview>
-            </div>
+            <div>{label}</div>
         );
     }
 
@@ -63,18 +68,18 @@ class EntityPreview extends React.Component<Props> {
         switch (kind) {
             case EntityKind.Class:
                 return (
-                    <>
+                    <StyledEntityPreview>
                         <div>
                             <Bold>Class</Bold>
                         </div>
                         <div />
                         <div />
-                    </>
+                    </StyledEntityPreview>
                 );
 
             case EntityKind.AbstractClass:
                 return (
-                    <>
+                    <StyledEntityPreview>
                         <div>
                             <Bold>
                                 <em>AbstractClass</em>
@@ -82,65 +87,52 @@ class EntityPreview extends React.Component<Props> {
                         </div>
                         <div />
                         <div />
-                    </>
+                    </StyledEntityPreview>
                 );
 
             case EntityKind.Enumeration:
                 return (
-                    <>
+                    <StyledEntityPreview>
                         <div>
                             <div style={{ fontSize: "85%" }}>&laquo;enumeration&raquo;</div>
                             <Bold>Enumeration</Bold>
                         </div>
                         <div />
-                    </>
+                    </StyledEntityPreview>
                 );
 
             case EntityKind.Interface:
                 return (
-                    <>
+                    <StyledEntityPreview>
                         <div>
                             <div style={{ fontSize: "85%" }}>&laquo;interface&raquo;</div>
                             <Bold>Interface</Bold>
                         </div>
                         <div />
-                    </>
+                    </StyledEntityPreview>
                 );
 
             case EntityKind.ActivityControlInitialNode:
                 return (
-                    <>
-                        <div>
-                            <Bold>
-                                <em>Initial Node</em>
-                            </Bold>
-                        </div>
-                        <div />
-                    </>
+                    <StyledActivityControlNode>
+                        ●
+                    </StyledActivityControlNode>
                 );
 
             case EntityKind.ActivityControlFinalNode:
                 return (
-                    <>
-                        <div>
-                            <Bold>
-                                <em>Final Node</em>
-                            </Bold>
-                        </div>
-                        <div />
-                    </>
+                    <StyledActivityControlNode>
+                        ◉
+                    </StyledActivityControlNode>
                 );
 
             case EntityKind.ActivityActionNode:
                 return (
-                    <>
-                        <div>
-                            <Bold>
-                                <em>Action Node</em>
-                            </Bold>
-                        </div>
-                        <div />
-                    </>
+                    <StyledEntityPreview>
+                        <Bold>
+                            <em>Action Node</em>
+                        </Bold>
+                    </StyledEntityPreview>
                 );
 
             default:

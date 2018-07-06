@@ -54,7 +54,7 @@ export default class Sidebar extends React.Component<Props> {
     renderElements() {
         switch (this.props.editorMode) {
             case EditorMode.ModelingView:
-                return <EntityPool />;
+                return <EntityPool diagramType={this.props.diagramType} />;
 
             case EditorMode.InteractiveElementsView:
                 return (
