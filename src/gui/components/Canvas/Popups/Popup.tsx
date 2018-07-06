@@ -6,7 +6,7 @@ import { Point } from "../../../../core/geometry";
 const Container = styled.div`
     width: 275px;
     max-height: 650px;
-    min-height: 85px;
+    min-height: 65px;
     overflow-y: scroll;
     border: 1px solid #d0d0d0;
     border-radius: 5px;

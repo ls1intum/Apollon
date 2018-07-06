@@ -123,7 +123,7 @@ class CanvasEntity extends React.Component<Props, State> {
                 onMouseUp={onMouseUp}
                 onClick={onClick}
                 onDoubleClick={
-                    apollonMode === ApollonMode.ReadOnly ? undefined : this.props.openDetailsPopup
+                    apollonMode === ApollonMode.ReadOnly || !hasContainer ? undefined : this.props.openDetailsPopup
                 }
                 onMouseEnter={() => this.setState({ isMouseOverEntity: true })}
                 onMouseLeave={() => this.setState({ isMouseOverEntity: false })}
