@@ -57,7 +57,10 @@ declare module "@ls1intum/apollon" {
         AbstractClass = "ABSTRACT_CLASS",
         Class = "CLASS",
         Enumeration = "ENUMERATION",
-        Interface = "INTERFACE"
+        Interface = "INTERFACE",
+        ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
+        ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
+        ActivityActionNode = "ACTIVITY_ACTION_NODE"
     }
 
     export interface EntityMember {
@@ -85,7 +88,8 @@ declare module "@ls1intum/apollon" {
         Inheritance = "INHERITANCE",
         Composition = "COMPOSITION",
         Dependency = "DEPENDENCY",
-        Realization = "REALIZATION"
+        Realization = "REALIZATION",
+        ActivityControlFlow = "ACTIVITY_CONTROL_FLOW"
     }
 
     export interface RelationshipEnd {
