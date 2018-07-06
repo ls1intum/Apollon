@@ -14,7 +14,7 @@ import ResizeHandle from "./ResizeHandle";
 import * as DragDrop from "../../dnd";
 import { Theme } from "../../../theme";
 import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
-import { Entity } from "../../../../core/domain";
+import { Entity, EntityKind } from "../../../../core/domain";
 import { UUID } from "../../../../core/utils";
 import {
     computeEntityHeight,

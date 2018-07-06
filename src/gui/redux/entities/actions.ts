@@ -144,7 +144,7 @@ function getEntityDefaults(
 
         case EntityKind.ActivityControlInitialNode:
             return {
-                name: "",
+                name: "●",
                 attributes: [],
                 methods: [],
                 renderMode: { showAttributes: false, showMethods: false }
@@ -152,7 +152,7 @@ function getEntityDefaults(
 
         case EntityKind.ActivityControlFinalNode:
             return {
-                name: "",
+                name: "◉",
                 attributes: [],
                 methods: [],
                 renderMode: { showAttributes: false, showMethods: false }
