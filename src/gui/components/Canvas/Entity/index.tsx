@@ -110,6 +110,10 @@ class CanvasEntity extends React.Component<Props, State> {
                 ? this.toggleEntityInteractiveElement
                 : undefined;
 
+
+        const hasContainer = entity.kind !== EntityKind.ActivityControlInitialNode
+            && entity.kind !== EntityKind.ActivityControlFinalNode;
+
         const entityDiv = (
             <div
                 ref={ref => (this.rootNode = ref)}
@@ -176,7 +180,7 @@ class CanvasEntity extends React.Component<Props, State> {
                     </MemberList>
                 )}
 
-                {apollonMode !== ApollonMode.ReadOnly && (
+                {apollonMode !== ApollonMode.ReadOnly && hasContainer && (
                     <ResizeHandle
                         initialWidth={entity.size.width}
                         gridSize={this.props.gridSize}
