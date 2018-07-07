@@ -57,6 +57,16 @@ export default class Popup extends React.Component<Props, State> {
             top: 30
         };
 
+        let debugOwner = (this as any)._reactInternalFiber._debugOwner;
+        while (typeof debugOwner.stateNode.canvasScrollContainer == "undefined") {
+            debugOwner = debugOwner._debugOwner;
+        }
+        const canvasScrollContainer = debugOwner.stateNode.canvasScrollContainer;
+        const canvasScrollContainerWidth = canvasScrollContainer.getBoundingClientRect().width;
+        if (canvasScrollContainer.scrollLeft + canvasScrollContainerWidth < this.props.position.x + 275) {
+            canvasScrollContainer.scrollLeft = this.props.position.x + 275 - canvasScrollContainerWidth;
+        }
+
         return (
             <div ref={ref => (this.div = ref)} style={popupStyle}>
                 <Container>{this.props.children}</Container>
