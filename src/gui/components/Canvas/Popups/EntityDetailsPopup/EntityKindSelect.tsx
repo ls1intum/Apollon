@@ -57,6 +57,9 @@ function stringifyEntityKind(kind: EntityKind): string {
         case EntityKind.ActivityActionNode:
             return "Action Node";
 
+        case EntityKind.ActivityObject:
+            return "Object";
+            
         default:
             return assertNever(kind);
     }

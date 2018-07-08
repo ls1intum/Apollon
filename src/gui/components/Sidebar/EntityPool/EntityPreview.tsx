@@ -115,14 +115,16 @@ class EntityPreview extends React.Component<Props> {
             case EntityKind.ActivityControlInitialNode:
                 return (
                     <StyledActivityControlNode>
-                        ●
+                        <div style={{ fontSize: "250%" }}>●</div>
+                        <div style={{ fontSize: "85%" }}>Startnode</div>
                     </StyledActivityControlNode>
                 );
 
             case EntityKind.ActivityControlFinalNode:
                 return (
                     <StyledActivityControlNode>
-                        ◉
+                        <div style={{ fontSize: "250%" }}>◉</div>
+                        <div style={{ fontSize: "85%" }}>Endnode</div>
                     </StyledActivityControlNode>
                 );
 
@@ -131,6 +133,15 @@ class EntityPreview extends React.Component<Props> {
                     <StyledEntityPreview>
                         <Bold>
                             <em>Action Node</em>
+                        </Bold>
+                    </StyledEntityPreview>
+                );
+
+            case EntityKind.ActivityObject:
+                return (
+                    <StyledEntityPreview>
+                        <Bold>
+                            <em>Object</em>
                         </Bold>
                     </StyledEntityPreview>
                 );

@@ -24,7 +24,8 @@ export const enum EntityKind {
     Interface = "INTERFACE",
     ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
     ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
-    ActivityActionNode = "ACTIVITY_ACTION_NODE"
+    ActivityActionNode = "ACTIVITY_ACTION_NODE",
+    ActivityObject = "ACTIVITY_OBJECT"
 }
 
 export interface EntityMember {

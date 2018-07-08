@@ -166,6 +166,13 @@ function getEntityDefaults(
                 renderMode: { showAttributes: false, showMethods: false }
             };
 
+        case EntityKind.ActivityObject:
+            return {
+                name: "Object",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
         default:
             return assertNever(kind);
     }
