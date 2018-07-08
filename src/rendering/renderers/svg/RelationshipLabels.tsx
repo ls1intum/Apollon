@@ -44,8 +44,13 @@ export default class RelationshipLabels extends React.Component<Props> {
         const x = position.x + offset.dx;
         const y = position.y + offset.dy;
 
+        const isIE = /*@cc_on!@*/false || !!(document as any).documentMode;
+        const isEdge = !isIE && !!(window as any).StyleMedia;
+        let dy = 0;
+        if (isIE || isEdge) dy = offset.dy;
+
         return (
-            <Text x={x} y={y} textAnchor={textAnchor} dominantBaseline={alignmentBaseline}>
+            <Text x={x} y={y} dy={dy} textAnchor={textAnchor} dominantBaseline={alignmentBaseline}>
                 {relationshipEnd.multiplicity}
             </Text>
         );
