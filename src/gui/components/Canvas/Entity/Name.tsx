@@ -34,12 +34,25 @@ export default class Name extends React.Component<Props> {
         const { entity, onMouseEnter, onMouseLeave } = this.props;
         const entityKindDescription = getEntityKindDescriptionOrNull(entity.kind);
 
+        let entityNameDisplayStyle: React.CSSProperties = {
+            width: entity.size.width - 2 * ENTITY_HORIZONTAL_PADDING,
+        };
+
+        if (entity.kind === UML.EntityKind.ActivityControlInitialNode
+            || entity.kind === UML.EntityKind.ActivityControlFinalNode) {
+            entityNameDisplayStyle = {
+                ...entityNameDisplayStyle,
+                fontSize: 40,
+                overflow: "visible",
+            }
+        }
+
         return (
             <Container
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
                 style={{
-                    height: computeEntityHeaderHeight(entity.kind)
+                    height: computeEntityHeaderHeight(entity.kind),
                 }}
             >
                 <div>
@@ -49,9 +62,7 @@ export default class Name extends React.Component<Props> {
 
                     <EntityNameDisplay
                         entityKind={entity.kind}
-                        style={{
-                            width: entity.size.width - 2 * ENTITY_HORIZONTAL_PADDING
-                        }}
+                        style={entityNameDisplayStyle}
                     >
                         {entity.name}
                     </EntityNameDisplay>
