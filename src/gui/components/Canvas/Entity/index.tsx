@@ -226,6 +226,7 @@ class CanvasEntity extends React.Component<Props, State> {
                 entity.methods.length,
                 entity.renderMode
             ),
+            borderRadius: entity.kind == EntityKind.ActivityActionNode ? 10 : 0,
             border: hasContainer && "1px solid black",
             visibility,
             opacity: isDragging ? 0.35 : 1,
