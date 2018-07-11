@@ -69,6 +69,25 @@ const StyledActivityMergeNode: any = styled.div`
     }
 `;
 
+const StyledActivityForkNode: any = styled.div`
+    position: relative;
+    width: 10px;
+    height: 50px;
+    line-height: 30px;
+    text-align: center;
+    margin: 5px;
+
+    &:before {
+        position: absolute;
+        content: '';
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        background: black;
+    }
+`;
+
 const Bold = styled.span`
     font-weight: bold;
     margin-top: auto;
@@ -174,10 +193,18 @@ class EntityPreview extends React.Component<Props> {
                 return (
                     <StyledActivityControlNode>
                         <StyledActivityMergeNode />
-                        <div style={{ fontSize: "85%" }}>Endnode</div>
+                        <div style={{ fontSize: "85%" }}>Merge Node</div>
                     </StyledActivityControlNode>
                 );
 
+
+            case EntityKind.ActivityForkNode:
+                return (
+                    <StyledActivityControlNode>
+                        <StyledActivityForkNode />
+                        <div style={{ fontSize: "85%" }}>Fork Node</div>
+                    </StyledActivityControlNode>
+                );
             default:
                 return assertNever(kind);
         }

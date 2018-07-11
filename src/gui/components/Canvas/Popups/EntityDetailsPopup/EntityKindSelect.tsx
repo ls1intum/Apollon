@@ -63,6 +63,9 @@ function stringifyEntityKind(kind: EntityKind): string {
         case EntityKind.ActivityMergeNode:
             return "Merge Node";
 
+        case EntityKind.ActivityForkNode:
+            return "Fork Node";
+
         default:
             return assertNever(kind);
     }

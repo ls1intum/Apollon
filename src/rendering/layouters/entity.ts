@@ -147,6 +147,7 @@ export function getEntityKindDescriptionOrNull(kind: EntityKind): string | null 
         case EntityKind.ActivityActionNode:
         case EntityKind.ActivityObject:
         case EntityKind.ActivityMergeNode:
+        case EntityKind.ActivityForkNode:
             return null;
 
         default:

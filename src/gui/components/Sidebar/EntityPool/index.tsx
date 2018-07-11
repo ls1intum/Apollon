@@ -31,6 +31,7 @@ export default class EntityPool extends React.Component<Props> {
                         <EntityPreview kind={EntityKind.ActivityActionNode} />
                         <EntityPreview kind={EntityKind.ActivityObject} />
                         <EntityPreview kind={EntityKind.ActivityMergeNode} />
+                        <EntityPreview kind={EntityKind.ActivityForkNode} />
                     </Container>
                 );
         }
