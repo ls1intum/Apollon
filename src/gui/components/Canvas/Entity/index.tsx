@@ -114,7 +114,8 @@ class CanvasEntity extends React.Component<Props, State> {
         const hasContainer = entity.kind !== EntityKind.ActivityControlInitialNode
             && entity.kind !== EntityKind.ActivityControlFinalNode;
 
-        const isNotRectangular = entity.kind === EntityKind.ActivityMergeNode;
+        const isNotRectangular = entity.kind === EntityKind.ActivityMergeNode
+            || entity.kind === EntityKind.ActivityForkNode;
 
         const entityDiv = (
             <div
@@ -239,6 +240,29 @@ class CanvasEntity extends React.Component<Props, State> {
                         ? "move"
                         : "default",
                 transform: "rotateX(45deg) rotateZ(45deg)",
+                zIndex: 8000
+            };
+        }
+
+        if (entity.kind === EntityKind.ActivityForkNode) {
+            return {
+                position: "absolute",
+                left: entity.position.x,
+                top: entity.position.y,
+                width: this.state.entityWidth,
+                height: computeEntityHeight(
+                    entity.kind,
+                    entity.attributes.length,
+                    entity.methods.length,
+                    entity.renderMode
+                ),
+                background: "black",
+                visibility,
+                opacity: isDragging ? 0.35 : 1,
+                cursor:
+                    apollonMode !== ApollonMode.ReadOnly && editorMode === EditorMode.ModelingView
+                        ? "move"
+                        : "default",
                 zIndex: 8000
             };
         }

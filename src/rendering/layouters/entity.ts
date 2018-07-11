@@ -86,6 +86,9 @@ export function getDefaultEntityWidth(kind: EntityKind) {
     if (kind === EntityKind.ActivityMergeNode) {
         return 35;
     }
+    if (kind === EntityKind.ActivityForkNode) {
+        return 20;
+    }
     if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
         return 50;
     }
@@ -99,6 +102,9 @@ export function computeEntityHeight(
     methodCount: number,
     renderMode: EntityRenderMode
 ) {
+    if (kind === EntityKind.ActivityForkNode) {
+        return 60;
+    }
     if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
         return 30;
     }

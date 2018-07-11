@@ -71,8 +71,8 @@ const StyledActivityMergeNode: any = styled.div`
 
 const StyledActivityForkNode: any = styled.div`
     position: relative;
-    width: 10px;
-    height: 50px;
+    width: 20px;
+    height: 60px;
     line-height: 30px;
     text-align: center;
     margin: 5px;
@@ -193,7 +193,7 @@ class EntityPreview extends React.Component<Props> {
                 return (
                     <StyledActivityControlNode>
                         <StyledActivityMergeNode />
-                        <div style={{ fontSize: "85%" }}>Merge Node</div>
+                        <div style={{ fontSize: "85%" }}>MergeNode</div>
                     </StyledActivityControlNode>
                 );
 
@@ -202,7 +202,7 @@ class EntityPreview extends React.Component<Props> {
                 return (
                     <StyledActivityControlNode>
                         <StyledActivityForkNode />
-                        <div style={{ fontSize: "85%" }}>Fork Node</div>
+                        <div style={{ fontSize: "85%" }}>ForkNode</div>
                     </StyledActivityControlNode>
                 );
             default:
