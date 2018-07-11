@@ -60,7 +60,10 @@ declare module "@ls1intum/apollon" {
         Interface = "INTERFACE",
         ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
         ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
-        ActivityActionNode = "ACTIVITY_ACTION_NODE"
+        ActivityActionNode = "ACTIVITY_ACTION_NODE",
+        ActivityObject = "ACTIVITY_OBJECT",
+        ActivityMergeNode = "ACTIVITY_MERGE_NODE",
+        ActivityForkNode = "ACTIVITY_FORK_NODE"
     }
 
     export interface EntityMember {
