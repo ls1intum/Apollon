@@ -11,6 +11,7 @@ const Container = styled.div`
     border: 1px solid #d0d0d0;
     border-radius: 5px;
     background: #efefef;
+    z-index: 9000;
 `;
 
 export default class Popup extends React.Component<Props, State> {
