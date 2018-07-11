@@ -5,6 +5,7 @@ import RectEdgeSelect from "./RectEdgeSelect";
 import BlockInput from "../BlockInput";
 import { PopupSectionHeading } from "../PopupSectionHeading";
 import { Entity, RelationshipEnd } from "../../../../../core/domain";
+import { DiagramType } from "../../../../../gui/types";
 import { RectEdge } from "../../../../../core/geometry";
 import { UUID } from "../../../../../core/utils";
 
@@ -101,26 +102,28 @@ export default class RelationshipEndDetails extends React.Component<Props, State
                                 />
                             </Td>
                         </tr>
-                        <tr>
-                            <Th>Multiplicity:</Th>
-                            <Td>
-                                <BlockInput
-                                    value={this.state.multiplicity}
-                                    onChange={e => {
-                                        this.setState({
-                                            multiplicity: e.currentTarget.value
-                                        });
-                                    }}
-                                    onKeyUp={e => {
-                                        if (e.key === "Enter") {
-                                            e.currentTarget.blur();
-                                        }
-                                    }}
-                                    onBlur={this.updateMultiplicity}
-                                    placeholder="0..*"
-                                />
-                            </Td>
-                        </tr>
+                        {this.props.diagramType === DiagramType.ClassDiagram &&
+                            <tr>
+                                <Th>Multiplicity:</Th>
+                                <Td>
+                                    <BlockInput
+                                        value={this.state.multiplicity}
+                                        onChange={e => {
+                                            this.setState({
+                                                multiplicity: e.currentTarget.value
+                                            });
+                                        }}
+                                        onKeyUp={e => {
+                                            if (e.key === "Enter") {
+                                                e.currentTarget.blur();
+                                            }
+                                        }}
+                                        onBlur={this.updateMultiplicity}
+                                        placeholder="0..*"
+                                    />
+                                </Td>
+                            </tr>
+                        }
                         <tr>
                             <Th>Role:</Th>
                             <Td>
@@ -168,6 +171,7 @@ export default class RelationshipEndDetails extends React.Component<Props, State
 }
 
 interface Props {
+    diagramType: DiagramType;
     heading: string;
     entity: Entity;
     entities: Entity[];

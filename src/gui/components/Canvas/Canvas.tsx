@@ -223,6 +223,7 @@ class Canvas extends React.Component<Props, State> {
                 return (
                     doubleClickedRelationship && (
                         <RelationshipDetailsPopup
+                            diagramType={this.props.diagramType}
                             relationship={doubleClickedRelationship}
                             onRequestClose={() => {
                                 this.setState({ doubleClickedElement: { type: "none" } });

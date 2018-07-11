@@ -10,6 +10,7 @@ import {
     RelationshipEnd,
     RelationshipKind
 } from "../../../../../core/domain";
+import { DiagramType } from "../../../../../gui/types";
 
 export default class RelationshipDetails extends React.Component<Props> {
     updateRelationshipKind = (kind: RelationshipKind) => {
@@ -66,6 +67,7 @@ export default class RelationshipDetails extends React.Component<Props> {
 
                 <PopupSection>
                     <RelationshipEndDetails
+                        diagramType={this.props.diagramType}
                         heading="Source"
                         entity={relationship.source}
                         entities={this.props.entities}
@@ -76,6 +78,7 @@ export default class RelationshipDetails extends React.Component<Props> {
 
                 <PopupSection>
                     <RelationshipEndDetails
+                        diagramType={this.props.diagramType}
                         heading="Target"
                         entity={relationship.target}
                         entities={this.props.entities}
@@ -89,6 +92,7 @@ export default class RelationshipDetails extends React.Component<Props> {
 }
 
 interface Props {
+    diagramType: DiagramType;
     entities: Entity[];
     relationship: LayoutedRelationship;
     updateRelationship: (relationship: Relationship) => void;
