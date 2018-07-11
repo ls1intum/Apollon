@@ -45,6 +45,10 @@ const StyledActivityControlNode: any = styled.div`
     height: 30px;
 `;
 
+const StyledActivityActionNode: any = styled(StyledEntityPreview)`
+    border-radius: 10px;
+`;
+
 const StyledActivityMergeNode: any = styled.div`
     position: relative;
     width: 30px;
@@ -150,11 +154,11 @@ class EntityPreview extends React.Component<Props> {
 
             case EntityKind.ActivityActionNode:
                 return (
-                    <StyledEntityPreview>
+                    <StyledActivityActionNode>
                         <Bold>
                             <em>Action Node</em>
                         </Bold>
-                    </StyledEntityPreview>
+                    </StyledActivityActionNode>
                 );
 
             case EntityKind.ActivityObject:
