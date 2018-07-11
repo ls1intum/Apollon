@@ -9,7 +9,8 @@ import { UUID } from "../../../../../core/utils";
 
 export default class EntityDetails extends React.Component<Props> {
     render() {
-        if (this.props.entity.kind === EntityKind.ActivityActionNode) {
+        if (this.props.entity.kind === EntityKind.ActivityActionNode
+            || this.props.entity.kind === EntityKind.ActivityObject) {
             return (
                 <PopupSection>
                     <EntityNameInput
