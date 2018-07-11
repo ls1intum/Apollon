@@ -52,6 +52,7 @@ class CanvasEntity extends React.Component<Props, State> {
     };
 
     toggleEntityInteractiveElement = () => {
+        console.log('toggleEntityInteractiveElement', this.state.isMouseOverEntityName);
         const { entity, interactiveElementIds } = this.props;
 
         // We don't want to react to clicks on this entity if the entity currently isn't interactive
@@ -128,8 +129,8 @@ class CanvasEntity extends React.Component<Props, State> {
                 onDoubleClick={
                     apollonMode === ApollonMode.ReadOnly || !hasContainer ? undefined : this.props.openDetailsPopup
                 }
-                onMouseEnter={() => this.setState({ isMouseOverEntity: true })}
-                onMouseLeave={() => this.setState({ isMouseOverEntity: false })}
+                onMouseEnter={() => {this.setState({ isMouseOverEntityName: true, isMouseOverEntity: true })}}
+                onMouseLeave={() => this.setState({ isMouseOverEntityName: false, isMouseOverEntity: false })}
             >
                 {!isNotRectangular &&
                     <Name
@@ -240,7 +241,8 @@ class CanvasEntity extends React.Component<Props, State> {
                         ? "move"
                         : "default",
                 transform: "rotateX(45deg) rotateZ(45deg)",
-                zIndex: 8000
+                zIndex: 8000,
+                backgroundImage: this.computeContainerBackgroundImage(isInteractiveElement),
             };
         }
 
