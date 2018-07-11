@@ -176,7 +176,7 @@ function getEntityDefaults(
 
         case EntityKind.ActivityMergeNode:
             return {
-                name: "",
+                name: "⬦",
                 attributes: [],
                 methods: [],
                 renderMode: { showAttributes: false, showMethods: false }
