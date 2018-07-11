@@ -23,28 +23,76 @@ export default class RenderedEntity extends React.Component<Props> {
         const { x, y } = entity.position;
         const { width, height } = entity.size;
 
-        const transform = `translate(${x} ${y})`;
+        let transform = `translate(${x} ${y})`;
 
-        return (
-            <g transform={transform}>
-                <rect
-                    x={0}
-                    y={0}
-                    width={width}
-                    height={height}
-                    fill="white"
-                    stroke="black"
-                    strokeWidth="1"
-                />
-                {this.renderEntityKind()}
-                {this.renderClassName()}
-                {this.renderClassAttributes()}
-                {this.renderClassMethods()}
-            </g>
-        );
+        switch (entity.kind) {
+            case EntityKind.ActivityControlInitialNode:
+            case EntityKind.ActivityControlFinalNode:
+                return (
+                    <g transform={transform}>
+                        <rect
+                            x={0}
+                            y={0}
+                            width={width}
+                            height={height}
+                            fillOpacity="0"
+                            strokeWidth="0"
+                        />
+                        {this.renderClassName(38)}
+                    </g>
+                );
+            case EntityKind.ActivityMergeNode:
+                transform = `translate(${x + 17.5} ${y + 1})`;
+                return (
+                    <g transform={transform}>
+                        <rect
+                            x={0}
+                            y={0}
+                            width={25}
+                            height={25}
+                            fill="white"
+                            stroke="black"
+                            strokeWidth="1"
+                            transform="rotate(45)"
+                        />
+                    </g>
+                );
+            case EntityKind.ActivityForkNode:
+                return (
+                    <g transform={transform}>
+                        <rect
+                            x={0}
+                            y={0}
+                            width={width}
+                            height={height}
+                            fill="black"
+                            stroke="black"
+                            strokeWidth="1"
+                        />
+                    </g>
+                );
+            default:
+                return (
+                    <g transform={transform}>
+                        <rect
+                            x={0}
+                            y={0}
+                            width={width}
+                            height={height}
+                            fill="white"
+                            stroke="black"
+                            strokeWidth="1"
+                        />
+                        {this.renderEntityKind()}
+                        {this.renderClassName()}
+                        {this.renderClassAttributes()}
+                        {this.renderClassMethods()}
+                    </g>
+                );
+        }
     }
 
-    renderEntityKind() {
+    renderEntityKind(fontSize: number = 13.6) {
         const { kind } = this.props.entity;
         const description = getEntityKindDescriptionOrNull(kind);
 
@@ -56,13 +104,13 @@ export default class RenderedEntity extends React.Component<Props> {
         const y = computeEntityHeaderHeight(kind) / 2 - 2;
 
         return (
-            <text x={x} y={y} dominantBaseline="baseline" textAnchor="middle" fontSize="13.6px">
+            <text x={x} y={y} dominantBaseline="baseline" textAnchor="middle" fontSize={`${fontSize}px`}>
                 {description}
             </text>
         );
     }
 
-    renderClassName() {
+    renderClassName(fontSize: number = 13.6) {
         const { kind, name, size } = this.props.entity;
         const fontStyle = kind === EntityKind.AbstractClass ? "italic" : undefined;
 
@@ -90,6 +138,7 @@ export default class RenderedEntity extends React.Component<Props> {
                 fontWeight="bold"
                 fontStyle={fontStyle}
                 clipPath={clipPath}
+                fontSize={`${fontSize}px`}
             >
                 {name}
             </text>
