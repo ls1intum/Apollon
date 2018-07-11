@@ -143,6 +143,7 @@ export function getEntityKindDescriptionOrNull(kind: EntityKind): string | null 
         case EntityKind.ActivityControlFinalNode:
         case EntityKind.ActivityActionNode:
         case EntityKind.ActivityObject:
+        case EntityKind.ActivityMergeNode:
             return null;
 
         default:

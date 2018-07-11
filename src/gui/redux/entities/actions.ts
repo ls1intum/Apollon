@@ -173,6 +173,14 @@ function getEntityDefaults(
                 methods: [],
                 renderMode: { showAttributes: false, showMethods: false }
             };
+
+        case EntityKind.ActivityMergeNode:
+            return {
+                name: "",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
         default:
             return assertNever(kind);
     }

@@ -45,6 +45,26 @@ const StyledActivityControlNode: any = styled.div`
     height: 30px;
 `;
 
+const StyledActivityMergeNode: any = styled.div`
+    position: relative;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    margin: 5px;
+
+    &:before {
+        position: absolute;
+        content: '';
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        transform: rotateX(45deg) rotateZ(45deg);
+        border: thin solid black;
+    }
+`;
+
 const Bold = styled.span`
     font-weight: bold;
     margin-top: auto;
@@ -144,6 +164,14 @@ class EntityPreview extends React.Component<Props> {
                             <em>Object</em>
                         </Bold>
                     </StyledEntityPreview>
+                );
+
+            case EntityKind.ActivityMergeNode:
+                return (
+                    <StyledActivityControlNode>
+                        <StyledActivityMergeNode />
+                        <div style={{ fontSize: "85%" }}>Endnode</div>
+                    </StyledActivityControlNode>
                 );
 
             default:
