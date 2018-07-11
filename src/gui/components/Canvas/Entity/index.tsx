@@ -130,7 +130,7 @@ class CanvasEntity extends React.Component<Props, State> {
                 onMouseEnter={() => this.setState({ isMouseOverEntity: true })}
                 onMouseLeave={() => this.setState({ isMouseOverEntity: false })}
             >
-                {isNotRectangular &&
+                {!isNotRectangular &&
                     <Name
                         entity={entity}
                         onMouseEnter={() => {
