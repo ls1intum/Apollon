@@ -22,7 +22,8 @@
     "build:npm": "yarn clean && mkdir -p dist && cp ./src/index.d.ts ./dist/ && tsc -p .",
     "publish:patch": "yarn build:npm && npm version patch && npm publish",
     "publish:minor": "yarn build:npm && npm version minor && npm publish",
-    "publish:major": "yarn build:npm && npm version major && npm publish"
+    "publish:major": "yarn build:npm && npm version major && npm publish",
+    "install": "yarn build:npm"
   },
   "devDependencies": {
     "@types/react": "^16.0.40",
