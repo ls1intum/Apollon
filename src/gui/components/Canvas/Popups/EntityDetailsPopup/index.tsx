@@ -53,7 +53,7 @@ class EntityDetailsPopup extends React.Component<Props> {
         };
 
         return (
-            <Popup position={position} onRequestClose={this.props.onRequestClose}>
+            <Popup position={position} onRequestClose={this.props.onRequestClose} canvasScrollContainer={this.props.canvasScrollContainer}>
                 <EntityDetails
                     entity={entity}
                     updateEntityKind={this.updateEntityKind}
@@ -72,6 +72,7 @@ class EntityDetailsPopup extends React.Component<Props> {
 interface OwnProps {
     entity: Entity;
     onRequestClose: () => void;
+    canvasScrollContainer: HTMLDivElement | null;
 }
 
 interface DispatchProps {
