@@ -22,8 +22,7 @@
     "build:npm": "yarn clean && mkdir -p dist && cp ./src/index.d.ts ./dist/ && tsc -p .",
     "publish:patch": "yarn build:npm && npm version patch && npm publish",
     "publish:minor": "yarn build:npm && npm version minor && npm publish",
-    "publish:major": "yarn build:npm && npm version major && npm publish",
-    "install": "yarn build:npm"
+    "publish:major": "yarn build:npm && npm version major && npm publish"
   },
   "devDependencies": {
     "@types/react": "^16.0.40",
@@ -34,6 +33,7 @@
     "prettier": "^1.11.1",
     "ts-loader": "^4.0.1",
     "tslint": "^5.9.1",
+    "typescript": "^2.7.2",
     "webpack": "^4.1.1",
     "webpack-cli": "^2.0.11",
     "webpack-dev-server": "^3.1.1"
@@ -48,7 +48,6 @@
     "redux-saga": "^0.16.0",
     "reselect": "^3.0.1",
     "styled-components": "^3.2.1",
-    "tslib": "^1.9.0",
-    "typescript": "^2.7.2"
+    "tslib": "^1.9.0"
   }
 }
