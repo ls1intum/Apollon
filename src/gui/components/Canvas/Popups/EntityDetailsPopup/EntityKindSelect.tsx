@@ -66,6 +66,9 @@ function stringifyEntityKind(kind: EntityKind): string {
         case EntityKind.ActivityForkNode:
             return "Fork Node";
 
+        case EntityKind.ActivityForkNodeHorizontal:
+            return "Fork Node";
+            
         default:
             return assertNever(kind);
     }

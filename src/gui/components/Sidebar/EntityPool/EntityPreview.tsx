@@ -88,6 +88,25 @@ const StyledActivityForkNode: any = styled.div`
     }
 `;
 
+const StyledActivityForkNodeHorizontal: any = styled.div`
+    position: relative;
+    width: 60px;
+    height: 20px;
+    line-height: 30px;
+    text-align: center;
+    margin: 5px;
+
+    &:before {
+        position: absolute;
+        content: '';
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        background: black;
+    }
+`;
+
 const Bold = styled.span`
     font-weight: bold;
     margin-top: auto;
@@ -159,7 +178,7 @@ class EntityPreview extends React.Component<Props> {
                 return (
                     <StyledActivityControlNode>
                         <div style={{ fontSize: "250%" }}>●</div>
-                        <div style={{ fontSize: "85%" }}>Startnode</div>
+                        <div style={{ fontSize: "85%" }}>Start</div>
                     </StyledActivityControlNode>
                 );
 
@@ -167,7 +186,7 @@ class EntityPreview extends React.Component<Props> {
                 return (
                     <StyledActivityControlNode>
                         <div style={{ fontSize: "250%" }}>◉</div>
-                        <div style={{ fontSize: "85%" }}>Endnode</div>
+                        <div style={{ fontSize: "85%" }}>End</div>
                     </StyledActivityControlNode>
                 );
 
@@ -175,7 +194,7 @@ class EntityPreview extends React.Component<Props> {
                 return (
                     <StyledActivityActionNode>
                         <Bold>
-                            <em>Action Node</em>
+                            <em>Action</em>
                         </Bold>
                     </StyledActivityActionNode>
                 );
@@ -193,7 +212,7 @@ class EntityPreview extends React.Component<Props> {
                 return (
                     <StyledActivityControlNode>
                         <StyledActivityMergeNode />
-                        <div style={{ fontSize: "85%" }}>MergeNode</div>
+                        <div style={{ fontSize: "85%" }}>Merge</div>
                     </StyledActivityControlNode>
                 );
 
@@ -202,9 +221,18 @@ class EntityPreview extends React.Component<Props> {
                 return (
                     <StyledActivityControlNode>
                         <StyledActivityForkNode />
-                        <div style={{ fontSize: "85%" }}>ForkNode</div>
+                        <div style={{ fontSize: "85%" }}>Fork</div>
                     </StyledActivityControlNode>
                 );
+            
+            case EntityKind.ActivityForkNodeHorizontal:
+                return (
+                    <StyledActivityControlNode>
+                        <StyledActivityForkNodeHorizontal />
+                        <div style={{ fontSize: "85%" }}>Fork Horizontal</div>
+                    </StyledActivityControlNode>
+                );
+
             default:
                 return assertNever(kind);
         }

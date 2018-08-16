@@ -71,6 +71,20 @@ export default class RenderedEntity extends React.Component<Props> {
                         />
                     </g>
                 );
+                case EntityKind.ActivityForkNodeHorizontal:
+                return (
+                    <g transform={transform}>
+                        <rect
+                            x={0}
+                            y={0}
+                            width={width}
+                            height={height}
+                            fill="black"
+                            stroke="black"
+                            strokeWidth="1"
+                        />
+                    </g>
+                );
             default:
                 return (
                     <g transform={transform}>

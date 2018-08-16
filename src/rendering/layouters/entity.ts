@@ -89,6 +89,9 @@ export function getDefaultEntityWidth(kind: EntityKind) {
     if (kind === EntityKind.ActivityForkNode) {
         return 20;
     }
+    if (kind === EntityKind.ActivityForkNodeHorizontal) {
+        return 60;
+    }
     if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
         return 50;
     }
@@ -104,6 +107,9 @@ export function computeEntityHeight(
 ) {
     if (kind === EntityKind.ActivityForkNode) {
         return 60;
+    }
+    if (kind === EntityKind.ActivityForkNodeHorizontal) {
+        return 20;
     }
     if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
         return 30;
@@ -154,6 +160,7 @@ export function getEntityKindDescriptionOrNull(kind: EntityKind): string | null 
         case EntityKind.ActivityObject:
         case EntityKind.ActivityMergeNode:
         case EntityKind.ActivityForkNode:
+        case EntityKind.ActivityForkNodeHorizontal:
             return null;
 
         default:
