@@ -111,12 +111,19 @@ class CanvasEntity extends React.Component<Props, State> {
                 ? this.toggleEntityInteractiveElement
                 : undefined;
 
+        const showName = entity.kind === EntityKind.ActivityActionNode
+            || entity.kind === EntityKind.ActivityObject;
 
-        const hasContainer = entity.kind !== EntityKind.ActivityControlInitialNode
-            && entity.kind !== EntityKind.ActivityControlFinalNode;
+        const showPopup = entity.kind !== EntityKind.ActivityControlInitialNode
+            && entity.kind !== EntityKind.ActivityControlFinalNode
+            && entity.kind !== EntityKind.ActivityForkNode
+            && entity.kind !== EntityKind.ActivityForkNodeHorizontal;
 
-        const isNotRectangular = entity.kind === EntityKind.ActivityMergeNode
-            || entity.kind === EntityKind.ActivityForkNode || entity.kind === EntityKind.ActivityForkNodeHorizontal;
+        const isResizeable = entity.kind !== EntityKind.ActivityControlInitialNode
+            && entity.kind !== EntityKind.ActivityControlFinalNode
+            && entity.kind !== EntityKind.ActivityForkNode
+            && entity.kind !== EntityKind.ActivityForkNodeHorizontal
+            && entity.kind !== EntityKind.ActivityMergeNode;
 
         const entityDiv = (
             <div
@@ -127,12 +134,12 @@ class CanvasEntity extends React.Component<Props, State> {
                 onMouseUp={onMouseUp}
                 onClick={onClick}
                 onDoubleClick={
-                    apollonMode === ApollonMode.ReadOnly || !hasContainer ? undefined : this.props.openDetailsPopup
+                    apollonMode === ApollonMode.ReadOnly || !showPopup ? undefined : this.props.openDetailsPopup
                 }
                 onMouseEnter={() => {this.setState({ isMouseOverEntityName: true, isMouseOverEntity: true })}}
                 onMouseLeave={() => this.setState({ isMouseOverEntityName: false, isMouseOverEntity: false })}
             >
-                {!isNotRectangular &&
+                {showName &&
                     <Name
                         entity={entity}
                         onMouseEnter={() => {
@@ -186,7 +193,7 @@ class CanvasEntity extends React.Component<Props, State> {
                     </MemberList>
                 )}
 
-                {apollonMode !== ApollonMode.ReadOnly && hasContainer && !isNotRectangular && (
+                {apollonMode !== ApollonMode.ReadOnly && isResizeable && (
                     <ResizeHandle
                         initialWidth={entity.size.width}
                         gridSize={this.props.gridSize}
