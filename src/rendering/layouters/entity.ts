@@ -117,6 +117,12 @@ export function computeEntityHeight(
     if (kind === EntityKind.ActivityForkNodeHorizontal) {
         return 20;
     }
+    if (kind === EntityKind.ActivityActionNode) {
+        return 2 * ENTITY_NAME_HEIGHT;
+    }
+    if (kind === EntityKind.ActivityObject) {
+        return ENTITY_NAME_HEIGHT;
+    }
 
     let height = 0;
 
@@ -144,6 +150,9 @@ export function computeEntityKindHeight(kind: EntityKind) {
 }
 
 export function computeEntityHeaderHeight(kind: EntityKind) {
+    if (kind === EntityKind.ActivityActionNode) {
+        return 2 * ENTITY_NAME_HEIGHT;
+    }
     return ENTITY_NAME_HEIGHT + computeEntityKindHeight(kind);
 }
 

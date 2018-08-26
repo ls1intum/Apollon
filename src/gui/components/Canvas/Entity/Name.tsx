@@ -16,8 +16,6 @@ const Container = styled.div`
 `;
 
 const EntityNameDisplay: any = styled.div`
-    text-overflow: ellipsis;
-    white-space: nowrap;
     overflow: hidden;
     user-select: none;
     font-weight: bold;
@@ -37,15 +35,6 @@ export default class Name extends React.Component<Props> {
         let entityNameDisplayStyle: React.CSSProperties = {
             width: entity.size.width - 2 * ENTITY_HORIZONTAL_PADDING,
         };
-
-        if (entity.kind === UML.EntityKind.ActivityControlInitialNode
-            || entity.kind === UML.EntityKind.ActivityControlFinalNode) {
-            entityNameDisplayStyle = {
-                ...entityNameDisplayStyle,
-                fontSize: 40,
-                overflow: "visible",
-            }
-        }
 
         return (
             <Container
