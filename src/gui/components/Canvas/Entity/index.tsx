@@ -118,6 +118,12 @@ class CanvasEntity extends React.Component<Props, State> {
             entity.kind === EntityKind.ActivityForkNode ||
             entity.kind === EntityKind.ActivityForkNodeHorizontal;
 
+        const hidePopup =
+            entity.kind === EntityKind.ActivityControlInitialNode ||
+            entity.kind === EntityKind.ActivityControlFinalNode ||
+            entity.kind === EntityKind.ActivityForkNode ||
+            entity.kind === EntityKind.ActivityForkNodeHorizontal;
+
         const entityDiv = (
             <div
                 ref={ref => (this.rootNode = ref)}
@@ -127,7 +133,7 @@ class CanvasEntity extends React.Component<Props, State> {
                 onMouseUp={onMouseUp}
                 onClick={onClick}
                 onDoubleClick={
-                    apollonMode === ApollonMode.ReadOnly || specialElement
+                    apollonMode === ApollonMode.ReadOnly || hidePopup
                         ? undefined
                         : this.props.openDetailsPopup
                 }
@@ -138,7 +144,7 @@ class CanvasEntity extends React.Component<Props, State> {
                     this.setState({ isMouseOverEntityName: false, isMouseOverEntity: false })
                 }
             >
-                {!specialElement && (
+                {!hidePopup && (
                     <Name
                         entity={entity}
                         onMouseEnter={() => {

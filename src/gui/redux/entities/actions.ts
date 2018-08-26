@@ -176,7 +176,7 @@ function getEntityDefaults(
 
         case EntityKind.ActivityMergeNode:
             return {
-                name: "⬦",
+                name: "Merge Decision",
                 attributes: [],
                 methods: [],
                 renderMode: { showAttributes: false, showMethods: false }
@@ -189,7 +189,7 @@ function getEntityDefaults(
                 methods: [],
                 renderMode: { showAttributes: false, showMethods: false }
             };
-        
+
         case EntityKind.ActivityForkNodeHorizontal:
             return {
                 name: "▮",

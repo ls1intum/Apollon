@@ -7,18 +7,28 @@ import {
     getEntityKindDescriptionOrNull
 } from "../../../../rendering/layouters/entity";
 
-const Container = styled.div`
+const Container: any = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     overflow: hidden;
+    font-weight: bold;
+
+    ${(props: any) => props.special && `
+        position: absolute;
+        top: 40px;
+        left: 50%;
+        width: 100px;
+        font-size: 70%;
+        font-weight: normal;
+        overflow: visible;
+    `}
 `;
 
 const EntityNameDisplay: any = styled.div`
     overflow: hidden;
     user-select: none;
-    font-weight: bold;
     font-style: ${(props: any) =>
         props.entityKind === UML.EntityKind.AbstractClass ? "italic" : "normal"};
 `;
@@ -31,9 +41,12 @@ export default class Name extends React.Component<Props> {
     render() {
         const { entity, onMouseEnter, onMouseLeave } = this.props;
         const entityKindDescription = getEntityKindDescriptionOrNull(entity.kind);
+        const special = entity.kind === UML.EntityKind.ActivityMergeNode;
 
-        let entityNameDisplayStyle: React.CSSProperties = {
+        let entityNameDisplayStyle: React.CSSProperties = !special ? {
             width: entity.size.width - 2 * ENTITY_HORIZONTAL_PADDING,
+        } : {
+            width: '100%'
         };
 
         return (
@@ -43,8 +56,9 @@ export default class Name extends React.Component<Props> {
                 style={{
                     height: computeEntityHeaderHeight(entity.kind),
                 }}
+                special={special}
             >
-                <div>
+                <>
                     {entityKindDescription && (
                         <EntityKindDisplay>{entityKindDescription}</EntityKindDisplay>
                     )}
@@ -55,7 +69,7 @@ export default class Name extends React.Component<Props> {
                     >
                         {entity.name}
                     </EntityNameDisplay>
-                </div>
+                </>
             </Container>
         );
     }
