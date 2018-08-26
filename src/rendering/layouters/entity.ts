@@ -83,17 +83,17 @@ function layoutEntityMembers(
 }
 
 export function getDefaultEntityWidth(kind: EntityKind) {
+    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
+        return 40;
+    }
     if (kind === EntityKind.ActivityMergeNode) {
-        return 35;
+        return 60;
     }
     if (kind === EntityKind.ActivityForkNode) {
         return 20;
     }
     if (kind === EntityKind.ActivityForkNodeHorizontal) {
         return 60;
-    }
-    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
-        return 50;
     }
 
     return 200;
@@ -105,14 +105,17 @@ export function computeEntityHeight(
     methodCount: number,
     renderMode: EntityRenderMode
 ) {
+    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
+        return 40;
+    }
+    if (kind === EntityKind.ActivityMergeNode) {
+        return 40;
+    }
     if (kind === EntityKind.ActivityForkNode) {
         return 60;
     }
     if (kind === EntityKind.ActivityForkNodeHorizontal) {
         return 20;
-    }
-    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
-        return 30;
     }
 
     let height = 0;
