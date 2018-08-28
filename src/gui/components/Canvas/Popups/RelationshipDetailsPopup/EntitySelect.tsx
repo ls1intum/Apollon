@@ -1,6 +1,11 @@
 import * as React from "react";
 import { Entity } from "../../../../../core/domain";
 import { UUID } from "../../../../../core/utils";
+import styled from "styled-components";
+
+const Select = styled.select`
+    max-width: 187px;
+`;
 
 export default class EntitySelect extends React.Component<Props> {
     onChange = (e: React.FormEvent<HTMLSelectElement>) => {
@@ -9,13 +14,13 @@ export default class EntitySelect extends React.Component<Props> {
 
     render() {
         return (
-            <select value={this.props.selectedEntityId} onChange={this.onChange}>
+            <Select value={this.props.selectedEntityId} onChange={this.onChange}>
                 {this.props.entities.map(entity => (
                     <option key={entity.id} value={entity.id}>
                         {entity.name}
                     </option>
                 ))}
-            </select>
+            </Select>
         );
     }
 }
