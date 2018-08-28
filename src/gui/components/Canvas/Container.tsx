@@ -33,6 +33,7 @@ class CanvasContainer extends React.Component<Props> {
                     toggleEntitySelection={this.props.toggleEntitySelection}
                     toggleRelationshipSelection={this.props.toggleRelationshipSelection}
                     unselectAllElements={this.props.unselectAllElements}
+                    canvasScrollContainer={this.props.canvasScrollContainer}
                 />
             </div>
         );
@@ -51,6 +52,7 @@ interface OwnProps {
     selectRelationship: (relationshipId: UUID) => void;
     toggleRelationshipSelection: (relationshipId: UUID) => void;
     unselectAllElements: () => void;
+    canvasScrollContainer: HTMLDivElement | null;
 }
 
 interface StateProps {

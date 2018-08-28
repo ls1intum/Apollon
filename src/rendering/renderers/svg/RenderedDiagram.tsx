@@ -21,7 +21,7 @@ export default class RenderedDiagram extends React.Component<Props> {
                 fontSize="16px"
             >
                 <defs>
-                    <RelationshipMarkers />
+                    <RelationshipMarkers onComponentDidMount={undefined} />
                     <ClipPaths entities={entities} />
                 </defs>
 

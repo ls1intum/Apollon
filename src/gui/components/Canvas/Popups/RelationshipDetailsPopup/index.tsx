@@ -22,7 +22,7 @@ class RelationshipDetailsPopup extends React.Component<Props> {
         };
 
         return (
-            <Popup position={position} onRequestClose={this.props.onRequestClose}>
+            <Popup position={position} onRequestClose={this.props.onRequestClose} canvasScrollContainer={this.props.canvasScrollContainer}>
                 <RelationshipDetails
                     diagramType={this.props.diagramType}
                     entities={this.props.entities}
@@ -38,6 +38,7 @@ interface OwnProps {
     diagramType: DiagramType;
     relationship: LayoutedRelationship;
     onRequestClose: () => void;
+    canvasScrollContainer: HTMLDivElement | null;
 }
 
 interface StateProps {

@@ -58,6 +58,14 @@ export default class Popup extends React.Component<Props, State> {
             top: 30
         };
 
+        const canvasScrollContainer = this.props.canvasScrollContainer;
+        if (canvasScrollContainer !== null) {
+            const canvasScrollContainerWidth = canvasScrollContainer.getBoundingClientRect().width;
+            if (canvasScrollContainer.scrollLeft + canvasScrollContainerWidth < this.props.position.x + 275) {
+                canvasScrollContainer.scrollLeft = this.props.position.x + 275 - canvasScrollContainerWidth;
+            }
+        }
+
         return (
             <div ref={ref => (this.div = ref)} style={popupStyle}>
                 <Container>{this.props.children}</Container>
@@ -78,6 +86,7 @@ interface Props {
     position: Point;
     onRequestClose: () => void;
     children: JSX.Element | JSX.Element[];
+    canvasScrollContainer: HTMLDivElement | null;
 }
 
 interface State {

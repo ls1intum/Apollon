@@ -211,6 +211,7 @@ class Canvas extends React.Component<Props, State> {
                         onRequestClose={() => {
                             this.setState({ doubleClickedElement: { type: "none" } });
                         }}
+                        canvasScrollContainer={this.props.canvasScrollContainer}
                     />
                 ) : null;
             }
@@ -228,6 +229,7 @@ class Canvas extends React.Component<Props, State> {
                             onRequestClose={() => {
                                 this.setState({ doubleClickedElement: { type: "none" } });
                             }}
+                            canvasScrollContainer={this.props.canvasScrollContainer}
                         />
                     )
                 );
@@ -251,6 +253,7 @@ interface OwnProps {
     toggleEntitySelection: (entityId: UUID) => void;
     toggleRelationshipSelection: (relationshipId: UUID) => void;
     unselectAllElements: () => void;
+    canvasScrollContainer: HTMLDivElement | null;
 }
 
 interface StateProps {

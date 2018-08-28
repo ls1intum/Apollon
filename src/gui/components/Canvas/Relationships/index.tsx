@@ -6,7 +6,15 @@ import { Size } from "../../../../core/geometry";
 import { UUID } from "../../../../core/utils";
 import RelationshipMarkers from "../../../../rendering/renderers/svg/defs/RelationshipMarkers";
 
-export default class Relationships extends React.Component<Props> {
+export default class Relationships extends React.Component<Props, State> {
+    state: State = {
+        displayRelationships: false
+    };
+
+    displayRelationships = () => {
+        this.setState({ displayRelationships: true });
+    };
+
     render() {
         const { relationships, canvasSize, selection, interactiveElementIds } = this.props;
 
@@ -24,10 +32,10 @@ export default class Relationships extends React.Component<Props> {
                 style={style}
             >
                 <defs>
-                    <RelationshipMarkers />
+                    <RelationshipMarkers onComponentDidMount={this.displayRelationships} />
                 </defs>
 
-                {relationships.map(relationship => {
+                {this.state.displayRelationships && relationships.map(relationship => {
                     const relationshipId = relationship.relationship.id;
                     return (
                         <Relationship
@@ -70,4 +78,8 @@ interface Props {
     interactiveElementIds: ReadonlySet<UUID>;
     interactiveElementsMode: InteractiveElementsMode;
     onToggleInteractiveElements: (...ids: UUID[]) => void;
+}
+
+interface State {
+    displayRelationships: boolean;
 }

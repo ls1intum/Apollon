@@ -151,6 +151,7 @@ class Editor extends React.Component<Props, State> {
                         toggleEntitySelection={this.props.toggleEntitySelection}
                         toggleRelationshipSelection={this.props.toggleRelationshipSelection}
                         unselectAllElements={this.props.unselectAllElements}
+                        canvasScrollContainer={this.canvasScrollContainer}
                     />
                 </CanvasFlexItem>
 
