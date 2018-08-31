@@ -58,7 +58,7 @@ export default class Name extends React.Component<Props> {
                 }}
                 special={special}
             >
-                <>
+                <div>
                     {entityKindDescription && (
                         <EntityKindDisplay>{entityKindDescription}</EntityKindDisplay>
                     )}
@@ -69,7 +69,7 @@ export default class Name extends React.Component<Props> {
                     >
                         {entity.name}
                     </EntityNameDisplay>
-                </>
+                </div>
             </Container>
         );
     }
