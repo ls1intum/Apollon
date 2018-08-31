@@ -52,7 +52,6 @@ class CanvasEntity extends React.Component<Props, State> {
     };
 
     toggleEntityInteractiveElement = () => {
-        console.log("toggleEntityInteractiveElement", this.state.isMouseOverEntityName);
         const { entity, interactiveElementIds } = this.props;
 
         // We don't want to react to clicks on this entity if the entity currently isn't interactive
@@ -236,8 +235,7 @@ class CanvasEntity extends React.Component<Props, State> {
         const hasContainer =
             entity.kind !== EntityKind.ActivityControlInitialNode &&
             entity.kind !== EntityKind.ActivityControlFinalNode &&
-            entity.kind !== EntityKind.ActivityMergeNode &&
-            entity.kind !== EntityKind.ActivityForkNode;
+            entity.kind !== EntityKind.ActivityMergeNode;
 
         const baseProperties: React.CSSProperties = {
             position: "absolute",
@@ -260,7 +258,10 @@ class CanvasEntity extends React.Component<Props, State> {
         };
 
         if (!hasContainer) {
-            return baseProperties;
+            return {
+                ...baseProperties,
+                filter: this.computeDropShadow()
+            };
         }
         return {
             ...baseProperties,
@@ -310,6 +311,22 @@ class CanvasEntity extends React.Component<Props, State> {
         }
     }
 
+    computeDropShadow() {
+        const { entity, isDragging, selection, theme, editorMode } = this.props;
+        const { isMouseOverEntity } = this.state;
+
+        const isSelected = selection.entityIds.includes(entity.id);
+
+        switch (editorMode) {
+            case EditorMode.ModelingView:
+                return isMouseOverEntity || isSelected || isDragging
+                    ? `drop-shadow(0 0 4px ${theme.highlightColorDarker})` : "none";
+
+            default:
+                return "none";
+        }
+    }
+
     computeChild() {
         const {
             entity,
@@ -353,7 +370,7 @@ class CanvasEntity extends React.Component<Props, State> {
                 <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none">
                     <polyline
                         points="50 0, 100 50, 50 100, 0 50, 50 0"
-                        fill="transparent"
+                        fill="white"
                         stroke={color}
                         strokeWidth="2"
                     />

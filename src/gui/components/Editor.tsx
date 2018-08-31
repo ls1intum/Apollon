@@ -136,7 +136,8 @@ class Editor extends React.Component<Props, State> {
                     innerRef={ref => (this.canvasScrollContainer = ref)}
                     style={{
                         overflow: this.state.didScroll ? "scroll" : "hidden",
-                        width: canvasFlexItemWidth
+                        width: canvasFlexItemWidth,
+                        lineHeight: 1
                     }}
                 >
                     <CanvasContainer
