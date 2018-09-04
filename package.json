@@ -1,6 +1,6 @@
 {
   "name": "@ls1intum/apollon",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A UML class diagram editor.",
   "files": [
     "dist"
