@@ -216,8 +216,8 @@ declare module "@ls1intum/apollon" {
         height: number;
     }
 
-    export const ENTITY_KIND_HEIGHT = 14;
-    export const ENTITY_NAME_HEIGHT = 35;
-    export const ENTITY_MEMBER_HEIGHT = 25;
-    export const ENTITY_MEMBER_LIST_VERTICAL_PADDING = 5;
+    export const ENTITY_KIND_HEIGHT;
+    export const ENTITY_NAME_HEIGHT;
+    export const ENTITY_MEMBER_HEIGHT;
+    export const ENTITY_MEMBER_LIST_VERTICAL_PADDING;
 }
