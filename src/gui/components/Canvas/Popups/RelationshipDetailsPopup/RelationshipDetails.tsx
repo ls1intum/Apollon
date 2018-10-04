@@ -1,6 +1,7 @@
 import * as React from "react";
 import RelationshipEndDetails from "./RelationshipEndDetails";
 import RelationshipKindSelect from "./RelationshipKindSelect";
+import RelationshipFlipIcon from './RelationshipFlipIcon';
 import { PopupSection } from "../PopupSection";
 import { PopupSectionHeading } from "../PopupSectionHeading";
 import {
@@ -34,16 +35,27 @@ export default class RelationshipDetails extends React.Component<Props> {
         });
     };
 
+    flipRelationship = () => {
+        this.props.flipRelationship(this.props.relationship.relationship);
+    };
+
     render() {
         const { relationship } = this.props;
         return (
             <>
                 <PopupSection>
                     {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
-                        <PopupSectionHeading>Association</PopupSectionHeading>
+                        <PopupSectionHeading>
+                            Association
+                          <RelationshipFlipIcon onClick={this.flipRelationship} />
+                        </PopupSectionHeading>
                         ||
                         <PopupSectionHeading>Control Flow</PopupSectionHeading>
                     }
+                    <PopupSectionHeading>
+                        Association
+                        <RelationshipFlipIcon onClick={this.flipRelationship} />
+                    </PopupSectionHeading>
 
                     {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
                         <RelationshipKindSelect
@@ -96,4 +108,5 @@ interface Props {
     entities: Entity[];
     relationship: LayoutedRelationship;
     updateRelationship: (relationship: Relationship) => void;
+    flipRelationship: (relationship: Relationship) => void;
 }

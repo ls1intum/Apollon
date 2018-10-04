@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import RelationshipDetails from "./RelationshipDetails";
 import Popup from "../Popup";
-import { getAllEntities, ReduxState, updateRelationship } from "../../../../redux";
+import { getAllEntities, ReduxState, updateRelationship, flipRelationship } from "../../../../redux";
 import { Entity, LayoutedRelationship } from "../../../../../core/domain";
 import { Point } from "../../../../../core/geometry";
 import { DiagramType } from "../../../../../gui/types";
@@ -28,6 +28,7 @@ class RelationshipDetailsPopup extends React.Component<Props> {
                     entities={this.props.entities}
                     relationship={this.props.relationship}
                     updateRelationship={this.props.updateRelationship}
+                    flipRelationship={this.props.flipRelationship}
                 />
             </Popup>
         );
@@ -47,6 +48,7 @@ interface StateProps {
 
 interface DispatchProps {
     updateRelationship: typeof updateRelationship;
+    flipRelationship: typeof flipRelationship;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -57,4 +59,4 @@ function mapStateToProps(state: ReduxState): StateProps {
     };
 }
 
-export default connect(mapStateToProps, { updateRelationship })(RelationshipDetailsPopup);
+export default connect(mapStateToProps, { updateRelationship, flipRelationship })(RelationshipDetailsPopup);
