@@ -52,11 +52,6 @@ export default class RelationshipDetails extends React.Component<Props> {
                         ||
                         <PopupSectionHeading>Control Flow</PopupSectionHeading>
                     }
-                    <PopupSectionHeading>
-                        Association
-                        <RelationshipFlipIcon onClick={this.flipRelationship} />
-                    </PopupSectionHeading>
-
                     {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
                         <RelationshipKindSelect
                             kind={relationship.relationship.kind}
