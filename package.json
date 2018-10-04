@@ -10,9 +10,9 @@
   "keywords": [],
   "license": "MIT",
   "author": {
-    "name": "Marius Schulz",
-    "email": "marius.schulz@tum.de",
-    "url": "https://blog.mariusschulz.com/"
+    "name": "LS1 TUM",
+    "email": "krusche@in.tum.de",
+    "url": "https://www1.in.tum.de"
   },
   "scripts": {
     "start": "webpack-dev-server --mode development",
@@ -25,28 +25,28 @@
     "publish:major": "yarn build:npm && npm version major && npm publish"
   },
   "devDependencies": {
-    "@types/react": "^16.0.40",
-    "@types/react-dnd": "^2.0.36",
-    "@types/react-dnd-html5-backend": "^2.1.9",
+    "@types/react": "^16.4.14",
+    "@types/react-dnd": "^3.0.2",
+    "@types/react-dnd-html5-backend": "^3.0.2",
     "@types/react-dom": "^16.0.4",
-    "@types/react-redux": "^5.0.15",
+    "@types/react-redux": "^6.0.9",
     "prettier": "^1.11.1",
-    "ts-loader": "^4.0.1",
+    "ts-loader": "^5.2.1",
     "tslint": "^5.9.1",
-    "typescript": "^2.7.2",
+    "typescript": "^3.1.1",
     "webpack": "^4.1.1",
-    "webpack-cli": "^2.0.11",
+    "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.1"
   },
   "dependencies": {
-    "react": "^16.2.0",
-    "react-dnd": "^2.5.4",
-    "react-dnd-html5-backend": "^2.5.4",
+    "react": "^16.5.2",
+    "react-dnd": "^5.0.0",
+    "react-dnd-html5-backend": "^5.0.1",
     "react-dom": "^16.2.0",
     "react-redux": "^5.0.7",
-    "redux": "^3.7.2",
+    "redux": "^4.0.0",
     "redux-saga": "^0.16.0",
-    "reselect": "^3.0.1",
+    "reselect": "^4.0.0",
     "styled-components": "^3.2.1",
     "tslib": "^1.9.0"
   }

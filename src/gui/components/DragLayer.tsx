@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ClientOffset, DragLayer as DndDragLayer, DragLayerCollector } from "react-dnd";
+import { DragLayer as DndDragLayer, DragLayerCollector, XYCoord } from "react-dnd";
 import * as ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import styled from "styled-components";
@@ -57,28 +57,32 @@ class DragLayer extends React.Component<Props> {
         const [dx, dy] = this.computeCanvasOffset();
 
         // Translate the item position so that it's relative to the canvas origin
-        const relativePositionOnCanvas = {
-            x: offsets.sourceClientOffset.x + dx,
-            y: offsets.sourceClientOffset.y + dy
-        };
+        const clientOffsetXYCoord = offsets.sourceClientOffset;
+        if (clientOffsetXYCoord != null) {
+            const relativePositionOnCanvas = {
+                x: clientOffsetXYCoord.x + dx,
+                y: clientOffsetXYCoord.y + dy
+            };
 
-        // Snap the item to the grid
-        const snappedRelativePositionOnCanvas = snapPointToGrid(
-            relativePositionOnCanvas,
-            this.props.gridSize
-        );
+            // Snap the item to the grid
+            const snappedRelativePositionOnCanvas = snapPointToGrid(
+                relativePositionOnCanvas,
+                this.props.gridSize
+            );
 
-        // Translate the item back to its position on the drag layer
-        const position = {
-            x: snappedRelativePositionOnCanvas.x - dx,
-            y: snappedRelativePositionOnCanvas.y - dy
-        };
+            // Translate the item back to its position on the drag layer
+            const position = {
+                x: snappedRelativePositionOnCanvas.x - dx,
+                y: snappedRelativePositionOnCanvas.y - dy
+            };
 
-        return (
-            <FixedDragItemLayer>
-                {this.renderDashedPreviewRectangles({ ...position, ...dragItem.size })}
-            </FixedDragItemLayer>
-        );
+            return (
+                <FixedDragItemLayer>
+                    {this.renderDashedPreviewRectangles({ ...position, ...dragItem.size })}
+                </FixedDragItemLayer>
+            );
+
+        }
     }
 
     computeCanvasOffset(): [number, number] {
@@ -91,29 +95,33 @@ class DragLayer extends React.Component<Props> {
         dragItem: DragDrop.ExistingEntitiesDragItem,
         dragItemOffsets: DragItemOffsets
     ) {
-        const delta = snapPointToGrid(
-            dragItemOffsets.differenceFromInitialOffset,
-            this.props.gridSize
-        );
-        const dragItemRects = dragItem.entityIds
-            .map(entityId => {
-                const entity = this.props.entities.find(e => e.id === entityId);
-                return entity
-                    ? {
-                          x: entity.position.x + delta.x,
-                          y: entity.position.y + delta.y,
-                          ...dragItem.size
-                      }
-                    : null;
-            })
-            .filter((x: Rect | null): x is Rect => x !== null);
+        const diffFromOffsetXYCoord = dragItemOffsets.differenceFromInitialOffset;
+        if (diffFromOffsetXYCoord != null) {
+            const delta = snapPointToGrid(
+                diffFromOffsetXYCoord,
+                this.props.gridSize
+            );
 
-        return ReactDOM.createPortal(
-            <AbsoluteDragItemLayer>
-                {this.renderDashedPreviewRectangles(...dragItemRects)}
-            </AbsoluteDragItemLayer>,
-            this.props.canvas
-        );
+            const dragItemRects = dragItem.entityIds
+                .map(entityId => {
+                    const entity = this.props.entities.find(e => e.id === entityId);
+                    return entity
+                        ? {
+                              x: entity.position.x + delta.x,
+                              y: entity.position.y + delta.y,
+                              ...dragItem.size
+                          }
+                        : null;
+                })
+                .filter((x: Rect | null): x is Rect => x !== null);
+
+            return ReactDOM.createPortal(
+                <AbsoluteDragItemLayer>
+                    {this.renderDashedPreviewRectangles(...dragItemRects)}
+                </AbsoluteDragItemLayer>,
+                this.props.canvas
+            );
+        }
     }
 
     renderDashedPreviewRectangles(...previewRectangles: Rect[]) {
@@ -153,8 +161,8 @@ interface OwnProps {
 }
 
 interface DragItemOffsets {
-    sourceClientOffset: ClientOffset;
-    differenceFromInitialOffset: ClientOffset;
+    sourceClientOffset: XYCoord | null;
+    differenceFromInitialOffset: XYCoord | null;
 }
 
 interface DragDropProps {
@@ -170,7 +178,7 @@ interface StateProps {
 
 type Props = OwnProps & DragDropProps & StateProps;
 
-const collect: DragLayerCollector = (monitor): DragDropProps => {
+const collect: DragLayerCollector<any, any> = (monitor): DragDropProps => {
     const dragItem = monitor.getItem() as DragDrop.DragItem | null;
     const sourceClientOffset = monitor.getSourceClientOffset();
     const differenceFromInitialOffset = monitor.getDifferenceFromInitialOffset();

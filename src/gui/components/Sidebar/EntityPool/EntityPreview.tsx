@@ -251,7 +251,7 @@ interface DragDropProps {
 
 type Props = OwnProps & DragDropProps;
 
-const dragSourceSpec: DragSourceSpec<OwnProps> = {
+const dragSourceSpec: DragSourceSpec<OwnProps, any> = {
     beginDrag(props): DragDrop.DragItem {
         return {
             type: DragDrop.ItemTypes.NewEntity,
@@ -267,7 +267,7 @@ const dragSourceSpec: DragSourceSpec<OwnProps> = {
     }
 };
 
-const dragSourceCollector: DragSourceCollector = (connector, monitor): DragDropProps => ({
+const dragSourceCollector: DragSourceCollector<any> = (connector, monitor): DragDropProps => ({
     connectDragPreview: connector.dragPreview(),
     connectDragSource: connector.dragSource(),
     isDragging: monitor.isDragging()

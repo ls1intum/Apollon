@@ -313,30 +313,37 @@ const dropTargetSpec: DropTargetSpec<Props> = {
         const item = monitor.getItem() as DragDrop.DragItem;
 
         if (item.type === DragDrop.ItemTypes.NewEntity) {
-            const { x, y } = monitor.getSourceClientOffset();
-            const canvasRect = canvas.getBoundingClientRect();
-            const positionOnCanvas = {
-                x: x - canvasRect.left,
-                y: y - canvasRect.top
-            };
-            const actualPosition = snapPointToGrid(positionOnCanvas, props.gridSize);
-            props.createEntity(actualPosition, item.kind);
+            const xyCoordOffset = monitor.getSourceClientOffset();
+            if (xyCoordOffset != null) {
+                const x = xyCoordOffset.x;
+                const y = xyCoordOffset.y;
+                const canvasRect = canvas.getBoundingClientRect();
+                const positionOnCanvas = {
+                    x: x - canvasRect.left,
+                    y: y - canvasRect.top
+                };
+                const actualPosition = snapPointToGrid(positionOnCanvas, props.gridSize);
+                props.createEntity(actualPosition, item.kind);
+            }
         } else if (item.type === DragDrop.ItemTypes.ExistingEntities) {
-            const snappedDifference = snapPointToGrid(
-                monitor.getDifferenceFromInitialOffset(),
-                props.gridSize
-            );
+            const diffFromOffset = monitor.getDifferenceFromInitialOffset();
+            if (diffFromOffset != null) {
+                const snappedDifference = snapPointToGrid(
+                    diffFromOffset,
+                    props.gridSize
+                );
 
-            const delta = { dx: snappedDifference.x, dy: snappedDifference.y };
+                const delta = { dx: snappedDifference.x, dy: snappedDifference.y };
 
-            if (delta.dx !== 0 || delta.dy !== 0) {
-                props.moveEntities(item.entityIds, delta);
+                if (delta.dx !== 0 || delta.dy !== 0) {
+                    props.moveEntities(item.entityIds, delta);
+                }
             }
         }
     }
 };
 
-const dropTargetCollector: DropTargetCollector = connector => ({
+const dropTargetCollector: DropTargetCollector<any> = connector => ({
     connectDropTarget: connector.dropTarget()
 });
 

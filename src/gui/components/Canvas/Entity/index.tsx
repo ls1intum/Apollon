@@ -265,7 +265,7 @@ class CanvasEntity extends React.Component<Props, State> {
         }
         return {
             ...baseProperties,
-            borderRadius: entity.kind == EntityKind.ActivityActionNode ? 10 : 0,
+            borderRadius: entity.kind === EntityKind.ActivityActionNode ? 10 : 0,
             border: "1px solid black",
             backgroundColor: "white",
             backgroundImage: this.computeContainerBackgroundImage(isInteractiveElement),
@@ -426,7 +426,7 @@ interface State {
     entityWidth: number;
 }
 
-const dragSourceSpec: DragSourceSpec<OwnProps> = {
+const dragSourceSpec: DragSourceSpec<OwnProps, any> = {
     canDrag(props) {
         return props.apollonMode !== ApollonMode.ReadOnly;
     },
@@ -447,7 +447,7 @@ const dragSourceSpec: DragSourceSpec<OwnProps> = {
     }
 };
 
-const dragSourceCollector: DragSourceCollector = (connector, monitor): DragDropProps => ({
+const dragSourceCollector: DragSourceCollector<any> = (connector, monitor): DragDropProps => ({
     connectDragPreview: connector.dragPreview(),
     connectDragSource: connector.dragSource(),
     isDragging: monitor.isDragging()

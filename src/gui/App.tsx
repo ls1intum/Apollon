@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Provider, Store } from "react-redux";
+import { Provider } from "react-redux";
 import styled, { injectGlobal, ThemeProvider } from "styled-components";
 import Editor from "./components/Editor";
 import KeyboardEventListener from "./events/KeyboardEventListener";
@@ -7,6 +7,7 @@ import { createStore, ReduxState } from "./redux";
 import { createTheme, Theme } from "./theme";
 import { DiagramType, ApollonMode, ElementSelection } from "./types";
 import { toggle, UUID } from "../core/utils";
+import { Store } from "redux";
 
 const ApollonEditor = styled.div`
     box-sizing: border-box;

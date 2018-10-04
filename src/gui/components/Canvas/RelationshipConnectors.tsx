@@ -81,9 +81,6 @@ class RelationshipConnectors extends React.Component<Props, State> {
             <div style={containerStyle} onMouseMoveCapture={onMouseMove}>
                 {entities.map(entity => {
                     const connectorPositions = computeConnectorPositions(entity);
-                    const [opacity, pointerEvents] = this.showEntityConnectors(entity)
-                        ? [1, "auto"]
-                        : [0, "none"];
 
                     return connectorPositions.map(connector => {
                         const connectorStyle: React.CSSProperties = {
@@ -95,8 +92,8 @@ class RelationshipConnectors extends React.Component<Props, State> {
                             borderRadius: connectorRadius,
                             overflow: "hidden",
                             transition: "opacity 100ms ease-in-out",
-                            opacity,
-                            pointerEvents
+                            opacity: this.showEntityConnectors(entity) ? 1 : 0,
+                            pointerEvents: this.showEntityConnectors(entity) ? "auto" : "none"
                         };
 
                         return (
