@@ -9,6 +9,19 @@ import { UUID } from "../../../../../core/utils";
 
 export default class EntityDetails extends React.Component<Props> {
     render() {
+        if (this.props.entity.kind === EntityKind.ActivityActionNode
+            || this.props.entity.kind === EntityKind.ActivityObject
+            || this.props.entity.kind === EntityKind.ActivityMergeNode) {
+            return (
+                <PopupSection>
+                    <EntityNameInput
+                        entity={this.props.entity}
+                        updateEntityName={this.props.updateEntityName}
+                    />
+                </PopupSection>
+            );
+        }
+
         return (
             <>
                 <PopupSection>

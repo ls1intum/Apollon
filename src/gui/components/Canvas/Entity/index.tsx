@@ -14,7 +14,7 @@ import ResizeHandle from "./ResizeHandle";
 import * as DragDrop from "../../dnd";
 import { Theme } from "../../../theme";
 import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
-import { Entity } from "../../../../core/domain";
+import { Entity, EntityKind } from "../../../../core/domain";
 import { UUID } from "../../../../core/utils";
 import {
     computeEntityHeight,
@@ -110,6 +110,19 @@ class CanvasEntity extends React.Component<Props, State> {
                 ? this.toggleEntityInteractiveElement
                 : undefined;
 
+        const specialElement =
+            entity.kind === EntityKind.ActivityControlInitialNode ||
+            entity.kind === EntityKind.ActivityControlFinalNode ||
+            entity.kind === EntityKind.ActivityMergeNode ||
+            entity.kind === EntityKind.ActivityForkNode ||
+            entity.kind === EntityKind.ActivityForkNodeHorizontal;
+
+        const hidePopup =
+            entity.kind === EntityKind.ActivityControlInitialNode ||
+            entity.kind === EntityKind.ActivityControlFinalNode ||
+            entity.kind === EntityKind.ActivityForkNode ||
+            entity.kind === EntityKind.ActivityForkNodeHorizontal;
+
         const entityDiv = (
             <div
                 ref={ref => (this.rootNode = ref)}
@@ -119,20 +132,28 @@ class CanvasEntity extends React.Component<Props, State> {
                 onMouseUp={onMouseUp}
                 onClick={onClick}
                 onDoubleClick={
-                    apollonMode === ApollonMode.ReadOnly ? undefined : this.props.openDetailsPopup
+                    apollonMode === ApollonMode.ReadOnly || hidePopup
+                        ? undefined
+                        : this.props.openDetailsPopup
                 }
-                onMouseEnter={() => this.setState({ isMouseOverEntity: true })}
-                onMouseLeave={() => this.setState({ isMouseOverEntity: false })}
+                onMouseEnter={() => {
+                    this.setState({ isMouseOverEntityName: true, isMouseOverEntity: true });
+                }}
+                onMouseLeave={() =>
+                    this.setState({ isMouseOverEntityName: false, isMouseOverEntity: false })
+                }
             >
-                <Name
-                    entity={entity}
-                    onMouseEnter={() => {
-                        this.setState({ isMouseOverEntityName: true });
-                    }}
-                    onMouseLeave={() => {
-                        this.setState({ isMouseOverEntityName: false });
-                    }}
-                />
+                {!hidePopup && (
+                    <Name
+                        entity={entity}
+                        onMouseEnter={() => {
+                            this.setState({ isMouseOverEntityName: true });
+                        }}
+                        onMouseLeave={() => {
+                            this.setState({ isMouseOverEntityName: false });
+                        }}
+                    />
+                )}
 
                 {renderMode.showAttributes && (
                     <MemberList>
@@ -176,15 +197,18 @@ class CanvasEntity extends React.Component<Props, State> {
                     </MemberList>
                 )}
 
-                {apollonMode !== ApollonMode.ReadOnly && (
-                    <ResizeHandle
-                        initialWidth={entity.size.width}
-                        gridSize={this.props.gridSize}
-                        onResizeBegin={this.onResizeBegin}
-                        onResizeMove={this.onResizeMove}
-                        onResizeEnd={this.onResizeEnd}
-                    />
-                )}
+                {apollonMode !== ApollonMode.ReadOnly &&
+                    !specialElement && (
+                        <ResizeHandle
+                            initialWidth={entity.size.width}
+                            gridSize={this.props.gridSize}
+                            onResizeBegin={this.onResizeBegin}
+                            onResizeMove={this.onResizeMove}
+                            onResizeEnd={this.onResizeEnd}
+                        />
+                    )}
+
+                {specialElement && this.computeChild()}
             </div>
         );
 
@@ -208,7 +232,12 @@ class CanvasEntity extends React.Component<Props, State> {
                 ? "hidden"
                 : undefined;
 
-        return {
+        const hasContainer =
+            entity.kind !== EntityKind.ActivityControlInitialNode &&
+            entity.kind !== EntityKind.ActivityControlFinalNode &&
+            entity.kind !== EntityKind.ActivityMergeNode;
+
+        const baseProperties: React.CSSProperties = {
             position: "absolute",
             left: entity.position.x,
             top: entity.position.y,
@@ -219,13 +248,25 @@ class CanvasEntity extends React.Component<Props, State> {
                 entity.methods.length,
                 entity.renderMode
             ),
-            border: "1px solid black",
             visibility,
             opacity: isDragging ? 0.35 : 1,
             cursor:
                 apollonMode !== ApollonMode.ReadOnly && editorMode === EditorMode.ModelingView
                     ? "move"
                     : "default",
+            zIndex: 8000
+        };
+
+        if (!hasContainer) {
+            return {
+                ...baseProperties,
+                filter: this.computeDropShadow()
+            };
+        }
+        return {
+            ...baseProperties,
+            borderRadius: entity.kind == EntityKind.ActivityActionNode ? 10 : 0,
+            border: "1px solid black",
             backgroundColor: "white",
             backgroundImage: this.computeContainerBackgroundImage(isInteractiveElement),
             boxShadow: this.computeContainerBoxShadow()
@@ -267,6 +308,84 @@ class CanvasEntity extends React.Component<Props, State> {
 
             default:
                 return "none";
+        }
+    }
+
+    computeDropShadow() {
+        const { entity, isDragging, selection, theme, editorMode } = this.props;
+        const { isMouseOverEntity } = this.state;
+
+        const isSelected = selection.entityIds.includes(entity.id);
+
+        switch (editorMode) {
+            case EditorMode.ModelingView:
+                return isMouseOverEntity || isSelected || isDragging
+                    ? `drop-shadow(0 0 4px ${theme.highlightColorDarker})` : "none";
+
+            default:
+                return "none";
+        }
+    }
+
+    computeChild() {
+        const {
+            entity,
+            apollonMode,
+            editorMode,
+            isDragging,
+            interactiveElementIds,
+            interactiveElementsMode
+        } = this.props;
+
+        const color =
+            editorMode === EditorMode.InteractiveElementsView &&
+            interactiveElementIds.has(entity.id)
+                ? "rgba(0, 220, 0, 0.3)"
+                : "black";
+
+        if (entity.kind === EntityKind.ActivityControlInitialNode) {
+            return (
+                <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none">
+                    <circle cx="50" cy="50" r="50" fill={color} />
+                </svg>
+            );
+        }
+        if (entity.kind === EntityKind.ActivityControlFinalNode) {
+            return (
+                <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none">
+                    <circle
+                        cx="50"
+                        cy="50"
+                        r="49"
+                        fill="transparent"
+                        stroke={color}
+                        strokeWidth="2"
+                    />
+                    <circle cx="50" cy="50" r="40" fill={color} />
+                </svg>
+            );
+        }
+        if (entity.kind === EntityKind.ActivityMergeNode) {
+            return (
+                <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none">
+                    <polyline
+                        points="50 0, 100 50, 50 100, 0 50, 50 0"
+                        fill="white"
+                        stroke={color}
+                        strokeWidth="2"
+                    />
+                </svg>
+            );
+        }
+        if (
+            entity.kind === EntityKind.ActivityForkNode ||
+            entity.kind === EntityKind.ActivityForkNodeHorizontal
+        ) {
+            return (
+                <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none">
+                    <rect x="0" y="0" width="100" height="100" fill={color} />
+                </svg>
+            );
         }
     }
 }

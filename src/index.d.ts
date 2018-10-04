@@ -10,6 +10,7 @@ declare module "@ls1intum/apollon" {
 
     export interface ApollonOptions {
         initialState?: State | null;
+        diagramType: "CLASS" | "ACTIVITY";
         mode: "READ_ONLY" | "MODELING_ONLY" | "FULL";
         debug?: boolean;
         theme?: Partial<Theme>;
@@ -56,7 +57,14 @@ declare module "@ls1intum/apollon" {
         AbstractClass = "ABSTRACT_CLASS",
         Class = "CLASS",
         Enumeration = "ENUMERATION",
-        Interface = "INTERFACE"
+        Interface = "INTERFACE",
+        ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
+        ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
+        ActivityActionNode = "ACTIVITY_ACTION_NODE",
+        ActivityObject = "ACTIVITY_OBJECT",
+        ActivityMergeNode = "ACTIVITY_MERGE_NODE",
+        ActivityForkNode = "ACTIVITY_FORK_NODE",
+        ActivityForkNodeHorizontal = "ACTIVITY_FORK_NODE_HORIZONTAL"
     }
 
     export interface EntityMember {
@@ -84,7 +92,8 @@ declare module "@ls1intum/apollon" {
         Inheritance = "INHERITANCE",
         Composition = "COMPOSITION",
         Dependency = "DEPENDENCY",
-        Realization = "REALIZATION"
+        Realization = "REALIZATION",
+        ActivityControlFlow = "ACTIVITY_CONTROL_FLOW"
     }
 
     export interface RelationshipEnd {
@@ -206,4 +215,9 @@ declare module "@ls1intum/apollon" {
         width: number;
         height: number;
     }
+
+    export const ENTITY_KIND_HEIGHT;
+    export const ENTITY_NAME_HEIGHT;
+    export const ENTITY_MEMBER_HEIGHT;
+    export const ENTITY_MEMBER_LIST_VERTICAL_PADDING;
 }

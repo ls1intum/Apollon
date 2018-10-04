@@ -92,7 +92,7 @@ export function createEntity(position: Point, kind: EntityKind): CreateEntityAct
             name,
             position,
             size: {
-                width: getDefaultEntityWidth(),
+                width: getDefaultEntityWidth(kind),
                 height: computeEntityHeight(kind, attributes.length, methods.length, renderMode)
             },
             attributes,
@@ -140,6 +140,62 @@ function getEntityDefaults(
                 attributes: [],
                 methods: [{ id: newId(), name: "method1()" }],
                 renderMode: { showAttributes: true, showMethods: true }
+            };
+
+        case EntityKind.ActivityControlInitialNode:
+            return {
+                name: "●",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
+        case EntityKind.ActivityControlFinalNode:
+            return {
+                name: "◉",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
+        case EntityKind.ActivityActionNode:
+            return {
+                name: "Action",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
+        case EntityKind.ActivityObject:
+            return {
+                name: "Object",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
+        case EntityKind.ActivityMergeNode:
+            return {
+                name: "Merge Decision",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
+        case EntityKind.ActivityForkNode:
+            return {
+                name: "▮",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
+            };
+
+        case EntityKind.ActivityForkNodeHorizontal:
+            return {
+                name: "▮",
+                attributes: [],
+                methods: [],
+                renderMode: { showAttributes: false, showMethods: false }
             };
 
         default:

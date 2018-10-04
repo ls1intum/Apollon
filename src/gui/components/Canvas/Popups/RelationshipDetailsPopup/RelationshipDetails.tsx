@@ -11,6 +11,7 @@ import {
     RelationshipEnd,
     RelationshipKind
 } from "../../../../../core/domain";
+import { DiagramType } from "../../../../../gui/types";
 
 export default class RelationshipDetails extends React.Component<Props> {
     updateRelationshipKind = (kind: RelationshipKind) => {
@@ -43,15 +44,20 @@ export default class RelationshipDetails extends React.Component<Props> {
         return (
             <>
                 <PopupSection>
-                    <PopupSectionHeading>
-                        Association
-                        <RelationshipFlipIcon onClick={this.flipRelationship} />
-                    </PopupSectionHeading>
-
-                    <RelationshipKindSelect
-                        kind={relationship.relationship.kind}
-                        onRelationshipKindChange={this.updateRelationshipKind}
-                    />
+                    {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
+                        <PopupSectionHeading>
+                            Association
+                          <RelationshipFlipIcon onClick={this.flipRelationship} />
+                        </PopupSectionHeading>
+                        ||
+                        <PopupSectionHeading>Control Flow</PopupSectionHeading>
+                    }
+                    {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
+                        <RelationshipKindSelect
+                            kind={relationship.relationship.kind}
+                            onRelationshipKindChange={this.updateRelationshipKind}
+                        />
+                    }
 
                     {/* <LabeledCheckbox
                         label="Straight line"
@@ -68,6 +74,7 @@ export default class RelationshipDetails extends React.Component<Props> {
 
                 <PopupSection>
                     <RelationshipEndDetails
+                        diagramType={this.props.diagramType}
                         heading="Source"
                         entity={relationship.source}
                         entities={this.props.entities}
@@ -78,6 +85,7 @@ export default class RelationshipDetails extends React.Component<Props> {
 
                 <PopupSection>
                     <RelationshipEndDetails
+                        diagramType={this.props.diagramType}
                         heading="Target"
                         entity={relationship.target}
                         entities={this.props.entities}
@@ -91,6 +99,7 @@ export default class RelationshipDetails extends React.Component<Props> {
 }
 
 interface Props {
+    diagramType: DiagramType;
     entities: Entity[];
     relationship: LayoutedRelationship;
     updateRelationship: (relationship: Relationship) => void;

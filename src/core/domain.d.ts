@@ -21,7 +21,14 @@ export const enum EntityKind {
     AbstractClass = "ABSTRACT_CLASS",
     Class = "CLASS",
     Enumeration = "ENUMERATION",
-    Interface = "INTERFACE"
+    Interface = "INTERFACE",
+    ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
+    ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
+    ActivityActionNode = "ACTIVITY_ACTION_NODE",
+    ActivityObject = "ACTIVITY_OBJECT",
+    ActivityMergeNode = "ACTIVITY_MERGE_NODE",
+    ActivityForkNode = "ACTIVITY_FORK_NODE",
+    ActivityForkNodeHorizontal = "ACTIVITY_FORK_NODE_HORIZONTAL"
 }
 
 export interface EntityMember {
@@ -49,7 +56,8 @@ export const enum RelationshipKind {
     Inheritance = "INHERITANCE",
     Composition = "COMPOSITION",
     Dependency = "DEPENDENCY",
-    Realization = "REALIZATION"
+    Realization = "REALIZATION",
+    ActivityControlFlow = "ACTIVITY_CONTROL_FLOW"
 }
 
 export interface RelationshipEnd {

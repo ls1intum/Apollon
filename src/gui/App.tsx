@@ -5,7 +5,7 @@ import Editor from "./components/Editor";
 import KeyboardEventListener from "./events/KeyboardEventListener";
 import { createStore, ReduxState } from "./redux";
 import { createTheme, Theme } from "./theme";
-import { ApollonMode, ElementSelection } from "./types";
+import { DiagramType, ApollonMode, ElementSelection } from "./types";
 import { toggle, UUID } from "../core/utils";
 
 const ApollonEditor = styled.div`
@@ -173,6 +173,7 @@ export default class App extends React.Component<Props, State> {
                 <Provider store={this.store}>
                     <ThemeProvider theme={this.theme}>
                         <Editor
+                            diagramType={this.props.diagramType}
                             apollonMode={this.props.apollonMode}
                             debugModeEnabled={this.props.debugModeEnabled}
                             selection={this.state.selection}
@@ -202,6 +203,7 @@ export default class App extends React.Component<Props, State> {
 
 interface Props {
     initialState: ReduxState | null;
+    diagramType: DiagramType;
     apollonMode: ApollonMode;
     debugModeEnabled: boolean;
     theme: Partial<Theme>;

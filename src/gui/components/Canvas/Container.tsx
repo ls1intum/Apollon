@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import Canvas from "./Canvas";
 import { ReduxState } from "../../redux/state";
-import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../types";
+import { DiagramType, ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../types";
 import { Size } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";
 
@@ -23,6 +23,7 @@ class CanvasContainer extends React.Component<Props> {
             <div style={style}>
                 <Canvas
                     innerRef={this.props.innerRef}
+                    diagramType={this.props.diagramType}
                     apollonMode={this.props.apollonMode}
                     editorMode={this.props.editorMode}
                     interactiveElementsRenderMode={this.props.interactiveElementsMode}
@@ -41,6 +42,7 @@ class CanvasContainer extends React.Component<Props> {
 
 interface OwnProps {
     innerRef: (canvas: HTMLDivElement | null) => void;
+    diagramType: DiagramType;
     apollonMode: ApollonMode;
     editorMode: EditorMode;
     interactiveElementsMode: InteractiveElementsMode;

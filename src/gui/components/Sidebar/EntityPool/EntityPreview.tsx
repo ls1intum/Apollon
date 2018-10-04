@@ -40,8 +40,77 @@ const StyledEntityPreview: any = styled.div`
     }
 `;
 
+const StyledActivityControlNode: any = styled.div`
+    width: 30px;
+    height: 30px;
+`;
+
+const StyledActivityActionNode: any = styled(StyledEntityPreview)`
+    border-radius: 10px;
+`;
+
+const StyledActivityMergeNode: any = styled.div`
+    position: relative;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    margin: 5px;
+
+    &:before {
+        position: absolute;
+        content: '';
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        transform: rotateX(45deg) rotateZ(45deg);
+        border: thin solid black;
+    }
+`;
+
+const StyledActivityForkNode: any = styled.div`
+    position: relative;
+    width: 20px;
+    height: 60px;
+    line-height: 30px;
+    text-align: center;
+    margin: 5px;
+
+    &:before {
+        position: absolute;
+        content: '';
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        background: black;
+    }
+`;
+
+const StyledActivityForkNodeHorizontal: any = styled.div`
+    position: relative;
+    width: 60px;
+    height: 20px;
+    line-height: 30px;
+    text-align: center;
+    margin: 5px;
+
+    &:before {
+        position: absolute;
+        content: '';
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        background: black;
+    }
+`;
+
 const Bold = styled.span`
     font-weight: bold;
+    margin-top: auto;
+    margin-bottom: auto;
 `;
 
 class EntityPreview extends React.Component<Props> {
@@ -53,9 +122,7 @@ class EntityPreview extends React.Component<Props> {
         const label = EntityPreview.getLabel(this.props.kind);
 
         return this.props.connectDragSource(
-            <div>
-                <StyledEntityPreview>{label}</StyledEntityPreview>
-            </div>
+            <div>{label}</div>
         );
     }
 
@@ -63,18 +130,18 @@ class EntityPreview extends React.Component<Props> {
         switch (kind) {
             case EntityKind.Class:
                 return (
-                    <>
+                    <StyledEntityPreview>
                         <div>
                             <Bold>Class</Bold>
                         </div>
                         <div />
                         <div />
-                    </>
+                    </StyledEntityPreview>
                 );
 
             case EntityKind.AbstractClass:
                 return (
-                    <>
+                    <StyledEntityPreview>
                         <div>
                             <Bold>
                                 <em>AbstractClass</em>
@@ -82,29 +149,88 @@ class EntityPreview extends React.Component<Props> {
                         </div>
                         <div />
                         <div />
-                    </>
+                    </StyledEntityPreview>
                 );
 
             case EntityKind.Enumeration:
                 return (
-                    <>
+                    <StyledEntityPreview>
                         <div>
                             <div style={{ fontSize: "85%" }}>&laquo;enumeration&raquo;</div>
                             <Bold>Enumeration</Bold>
                         </div>
                         <div />
-                    </>
+                    </StyledEntityPreview>
                 );
 
             case EntityKind.Interface:
                 return (
-                    <>
+                    <StyledEntityPreview>
                         <div>
                             <div style={{ fontSize: "85%" }}>&laquo;interface&raquo;</div>
                             <Bold>Interface</Bold>
                         </div>
                         <div />
-                    </>
+                    </StyledEntityPreview>
+                );
+
+            case EntityKind.ActivityControlInitialNode:
+                return (
+                    <StyledActivityControlNode>
+                        <div style={{ fontSize: "250%" }}>●</div>
+                        <div style={{ fontSize: "85%" }}>Start</div>
+                    </StyledActivityControlNode>
+                );
+
+            case EntityKind.ActivityControlFinalNode:
+                return (
+                    <StyledActivityControlNode>
+                        <div style={{ fontSize: "250%" }}>◉</div>
+                        <div style={{ fontSize: "85%" }}>End</div>
+                    </StyledActivityControlNode>
+                );
+
+            case EntityKind.ActivityActionNode:
+                return (
+                    <StyledActivityActionNode>
+                        <Bold>
+                            <em>Action</em>
+                        </Bold>
+                    </StyledActivityActionNode>
+                );
+
+            case EntityKind.ActivityObject:
+                return (
+                    <StyledEntityPreview>
+                        <Bold>
+                            <em>Object</em>
+                        </Bold>
+                    </StyledEntityPreview>
+                );
+
+            case EntityKind.ActivityMergeNode:
+                return (
+                    <StyledActivityControlNode>
+                        <StyledActivityMergeNode />
+                        <div style={{ fontSize: "85%" }}>Merge</div>
+                    </StyledActivityControlNode>
+                );
+
+
+            case EntityKind.ActivityForkNode:
+                return (
+                    <StyledActivityControlNode>
+                        <StyledActivityForkNode />
+                        <div style={{ fontSize: "85%" }}>Fork</div>
+                    </StyledActivityControlNode>
+                );
+            
+            case EntityKind.ActivityForkNodeHorizontal:
+                return (
+                    <StyledActivityControlNode>
+                        <StyledActivityForkNodeHorizontal />
+                        <div style={{ fontSize: "85%" }}>Fork Horizontal</div>
+                    </StyledActivityControlNode>
                 );
 
             default:
@@ -131,7 +257,7 @@ const dragSourceSpec: DragSourceSpec<OwnProps> = {
             type: DragDrop.ItemTypes.NewEntity,
             kind: props.kind,
             size: {
-                width: getDefaultEntityWidth(),
+                width: getDefaultEntityWidth(props.kind),
                 height: computeEntityHeight(props.kind, 1, 1, {
                     showAttributes: true,
                     showMethods: true

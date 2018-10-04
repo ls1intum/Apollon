@@ -48,6 +48,27 @@ function stringifyEntityKind(kind: EntityKind): string {
         case EntityKind.Interface:
             return "Interface";
 
+        case EntityKind.ActivityControlInitialNode:
+            return "Intial Node";
+
+        case EntityKind.ActivityControlFinalNode:
+            return "Final Node";
+
+        case EntityKind.ActivityActionNode:
+            return "Action Node";
+
+        case EntityKind.ActivityObject:
+            return "Object";
+
+        case EntityKind.ActivityMergeNode:
+            return "Merge Node";
+
+        case EntityKind.ActivityForkNode:
+            return "Fork Node";
+
+        case EntityKind.ActivityForkNodeHorizontal:
+            return "Fork Node";
+            
         default:
             return assertNever(kind);
     }

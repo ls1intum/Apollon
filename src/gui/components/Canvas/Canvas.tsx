@@ -20,7 +20,7 @@ import {
     toggleInteractiveElements,
     updateEntityWidth
 } from "../../redux";
-import { EditorMode, ElementSelection, InteractiveElementsMode, ApollonMode } from "../../types";
+import { DiagramType, EditorMode, ElementSelection, InteractiveElementsMode, ApollonMode } from "../../types";
 import * as UML from "../../../core/domain";
 import { Size, snapPointToGrid } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";
@@ -87,6 +87,7 @@ class Canvas extends React.Component<Props, State> {
             entities,
             relationships,
             connectDropTarget,
+            diagramType,
             apollonMode,
             editorMode,
             interactiveElementsRenderMode
@@ -144,6 +145,7 @@ class Canvas extends React.Component<Props, State> {
 
                         {apollonMode !== ApollonMode.ReadOnly && (
                             <RelationshipConnectors
+                                diagramType={diagramType}
                                 editorMode={editorMode}
                                 selection={selection}
                                 selectRelationship={this.props.selectRelationship}
@@ -222,6 +224,7 @@ class Canvas extends React.Component<Props, State> {
                 return (
                     doubleClickedRelationship && (
                         <RelationshipDetailsPopup
+                            diagramType={this.props.diagramType}
                             relationship={doubleClickedRelationship}
                             onRequestClose={() => {
                                 this.setState({ doubleClickedElement: { type: "none" } });
@@ -240,6 +243,7 @@ class Canvas extends React.Component<Props, State> {
 
 interface OwnProps {
     innerRef: (canvas: HTMLDivElement | null) => void;
+    diagramType: DiagramType;
     apollonMode: ApollonMode;
     editorMode: EditorMode;
     interactiveElementsRenderMode: InteractiveElementsMode;

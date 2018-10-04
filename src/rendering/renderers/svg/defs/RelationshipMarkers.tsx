@@ -77,6 +77,7 @@ export function getMarkerIdForRelationshipKind(
 
         case RelationshipKind.AssociationUnidirectional:
         case RelationshipKind.Dependency:
+        case RelationshipKind.ActivityControlFlow:
             return RelationshipKindMarker.Arrow;
 
         case RelationshipKind.Composition:
