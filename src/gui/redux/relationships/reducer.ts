@@ -50,6 +50,18 @@ export default function relationshipsReducer(state = initialState, action: Redux
             return { allIds, byId };
         }
 
+        case "FLIP_RELATIONSHIP": {
+            const relationship = action.relationship;
+            [relationship.source, relationship.target] = [relationship.target, relationship.source];
+            return {
+                ...state,
+                byId: {
+                    ...state.byId,
+                    [relationship.id]: relationship
+                }
+            };
+        }
+
         case "FLIP_RELATIONSHIPS": {
             const byId = { ...state.byId };
             for (const relationshipId of action.relationshipIds) {
