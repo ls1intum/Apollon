@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import Canvas from "./Canvas";
 import { ReduxState } from "../../redux/state";
-import { DiagramType, ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../types";
+import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "../../types";
 import { Size } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";
 

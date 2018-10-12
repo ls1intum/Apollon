@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom";
 import App from "./App";
 import { ReduxState } from "./redux";
 import { Theme } from "./theme";
-import { DiagramType, ApollonMode, ElementSelection } from "./types";
+import { ApollonMode, DiagramType, ElementSelection } from "./types";
 
 export interface ApollonOptions {
     initialState?: ReduxState | null;
@@ -92,7 +92,7 @@ function getApollonMode(mode: string) {
 // https://tc39.github.io/ecma262/#sec-array.prototype.includes
 if (!Array.prototype.includes) {
     Object.defineProperty(Array.prototype, "includes", {
-        value: function(searchElement: any, fromIndex: number) {
+        value(searchElement: any, fromIndex: number) {
 
         if (this == null) {
             throw new TypeError('"this" is null or not defined');
@@ -144,7 +144,7 @@ if (!Array.prototype.includes) {
   // https://tc39.github.io/ecma262/#sec-array.prototype.find
 if (!Array.prototype.find) {
     Object.defineProperty(Array.prototype, "find", {
-        value: function(predicate: any) {
+        value(predicate: any) {
         // 1. Let O be ? ToObject(this value).
         if (this == null) {
             throw new TypeError('"this" is null or not defined');

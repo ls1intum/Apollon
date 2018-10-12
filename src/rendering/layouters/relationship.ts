@@ -15,7 +15,6 @@ import {
     Rect,
     RectEdge
 } from "../../core/geometry";
-import { assertNever } from "../../core/utils";
 
 export function computeRelationshipPath(
     sourceRect: Rect,

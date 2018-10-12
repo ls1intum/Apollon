@@ -5,7 +5,7 @@ import Editor from "./components/Editor";
 import KeyboardEventListener from "./events/KeyboardEventListener";
 import { createStore, ReduxState } from "./redux";
 import { createTheme, Theme } from "./theme";
-import { DiagramType, ApollonMode, ElementSelection } from "./types";
+import { ApollonMode, DiagramType, ElementSelection } from "./types";
 import { toggle, UUID } from "../core/utils";
 import { Store } from "redux";
 

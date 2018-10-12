@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import RelationshipDetails from "./RelationshipDetails";
 import Popup from "../Popup";
-import { getAllEntities, ReduxState, updateRelationship, flipRelationship } from "../../../../redux";
+import { flipRelationship, getAllEntities, ReduxState, updateRelationship } from "../../../../redux";
 import { Entity, LayoutedRelationship } from "../../../../../core/domain";
 import { Point } from "../../../../../core/geometry";
 import { DiagramType } from "../../../../../gui/types";

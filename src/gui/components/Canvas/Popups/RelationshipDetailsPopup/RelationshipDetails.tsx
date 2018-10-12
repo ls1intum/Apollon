@@ -1,16 +1,10 @@
 import * as React from "react";
 import RelationshipEndDetails from "./RelationshipEndDetails";
 import RelationshipKindSelect from "./RelationshipKindSelect";
-import RelationshipFlipIcon from './RelationshipFlipIcon';
+import RelationshipFlipIcon from "./RelationshipFlipIcon";
 import { PopupSection } from "../PopupSection";
 import { PopupSectionHeading } from "../PopupSectionHeading";
-import {
-    Entity,
-    LayoutedRelationship,
-    Relationship,
-    RelationshipEnd,
-    RelationshipKind
-} from "../../../../../core/domain";
+import { Entity, LayoutedRelationship, Relationship, RelationshipEnd, RelationshipKind } from "../../../../../core/domain";
 import { DiagramType } from "../../../../../gui/types";
 
 export default class RelationshipDetails extends React.Component<Props> {

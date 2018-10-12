@@ -10,17 +10,8 @@ import RelationshipConnectors from "./RelationshipConnectors";
 import Relationships from "./Relationships";
 import * as DragDrop from "../dnd";
 import { ZIndices } from "../zindices";
-import {
-    createEntity,
-    getAllEntities,
-    getAllInteractiveElementIds,
-    getAllLayoutedRelationships,
-    moveEntities,
-    ReduxState,
-    toggleInteractiveElements,
-    updateEntityWidth
-} from "../../redux";
-import { DiagramType, EditorMode, ElementSelection, InteractiveElementsMode, ApollonMode } from "../../types";
+import { createEntity, getAllEntities, getAllInteractiveElementIds, getAllLayoutedRelationships, moveEntities, ReduxState, toggleInteractiveElements, updateEntityWidth } from "../../redux";
+import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "../../types";
 import * as UML from "../../../core/domain";
 import { Size, snapPointToGrid } from "../../../core/geometry";
 import { UUID } from "../../../core/utils";

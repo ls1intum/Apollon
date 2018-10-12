@@ -49,7 +49,7 @@ export default class Popup extends React.Component<Props, State> {
             transformOrigin: "left center",
             opacity: isVisible ? 1 : 0,
             filter: "drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2))",
-            zIndex: 9000,
+            zIndex: 9000
         };
 
         const popupArrowStyle: React.CSSProperties = {

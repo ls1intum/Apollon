@@ -4,10 +4,7 @@ import { Theme } from "../../../theme";
 import { EditorMode, InteractiveElementsMode } from "../../../types";
 import { EntityMember } from "../../../../core/domain";
 import { UUID } from "../../../../core/utils";
-import {
-    ENTITY_HORIZONTAL_PADDING,
-    ENTITY_MEMBER_HEIGHT
-} from "../../../../rendering/layouters/entity";
+import { ENTITY_HORIZONTAL_PADDING, ENTITY_MEMBER_HEIGHT } from "../../../../rendering/layouters/entity";
 
 const NameDisplay = styled.div`
     height: ${ENTITY_MEMBER_HEIGHT}px;

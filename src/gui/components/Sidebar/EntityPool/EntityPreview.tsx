@@ -1,11 +1,5 @@
 import * as React from "react";
-import {
-    ConnectDragPreview,
-    ConnectDragSource,
-    DragSource,
-    DragSourceCollector,
-    DragSourceSpec
-} from "react-dnd";
+import { ConnectDragPreview, ConnectDragSource, DragSource, DragSourceCollector, DragSourceSpec } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import styled from "styled-components";
 import * as DragDrop from "../../dnd";
@@ -215,7 +209,6 @@ class EntityPreview extends React.Component<Props> {
                         <div style={{ fontSize: "85%" }}>Merge</div>
                     </StyledActivityControlNode>
                 );
-
 
             case EntityKind.ActivityForkNode:
                 return (

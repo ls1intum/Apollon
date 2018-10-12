@@ -1,11 +1,5 @@
 import * as React from "react";
-import {
-    ConnectDragPreview,
-    ConnectDragSource,
-    DragSource,
-    DragSourceCollector,
-    DragSourceSpec
-} from "react-dnd";
+import { ConnectDragPreview, ConnectDragSource, DragSource, DragSourceCollector, DragSourceSpec } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import styled, { withTheme } from "styled-components";
 import Member from "./Member";
@@ -16,10 +10,7 @@ import { Theme } from "../../../theme";
 import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../../types";
 import { Entity, EntityKind } from "../../../../core/domain";
 import { UUID } from "../../../../core/utils";
-import {
-    computeEntityHeight,
-    ENTITY_MEMBER_LIST_VERTICAL_PADDING
-} from "../../../../rendering/layouters/entity";
+import { computeEntityHeight, ENTITY_MEMBER_LIST_VERTICAL_PADDING } from "../../../../rendering/layouters/entity";
 
 const MemberList = styled.div`
     border-top: 1px solid black;

@@ -7,6 +7,9 @@
         "moduleResolution": "node",
         "strict": true,
         "forceConsistentCasingInFileNames": true,
+        "removeComments": true,
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": false,
         "importHelpers": true,
         "jsx": "react",
         "lib": [

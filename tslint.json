@@ -18,7 +18,6 @@
         "no-trailing-whitespace": false,
         "no-this-assignment": [true, { "allow-destructuring": true }],
         "no-unused-expression": [true, "allow-tagged-template"],
-        "no-unused-variable": true,
         "object-literal-key-quotes": [true, "as-needed"],
         "object-literal-sort-keys": false,
         "only-arrow-functions": false,

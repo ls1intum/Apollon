@@ -1,10 +1,6 @@
 import { DuplicateEntitiesAction } from ".";
 import { call, put, select, takeEvery } from "redux-saga/effects";
-import {
-    CreateEntityAction,
-    MoveEntitiesAction,
-    resizeCanvas as createResizeCanvasAction
-} from "./actions";
+import { CreateEntityAction, MoveEntitiesAction, resizeCanvas as createResizeCanvasAction } from "./actions";
 import { MIN_CANVAS_HEIGHT, MIN_CANVAS_WIDTH } from "./editor/reducer";
 import { getAllEntities } from "./selectors";
 import { ReduxState } from "./state";

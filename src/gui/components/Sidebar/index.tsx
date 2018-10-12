@@ -5,7 +5,7 @@ import EntityPool from "./EntityPool";
 import ExportPanel from "./ExportPanel";
 import InteractiveElementsPanel from "./InteractiveElementsPanel";
 import LocalStateForm from "./LocalStateForm";
-import { DiagramType, ApollonMode, EditorMode, InteractiveElementsMode } from "../../types";
+import { ApollonMode, DiagramType, EditorMode, InteractiveElementsMode } from "../../types";
 import { Entity, Relationship } from "../../../core/domain";
 
 const FlexContainer = styled.div`

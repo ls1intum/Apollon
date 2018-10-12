@@ -1,11 +1,4 @@
-import {
-    deleteElements,
-    duplicateEntities,
-    flipRelationships,
-    moveEntities,
-    ReduxAction,
-    ReduxState
-} from "../redux";
+import { deleteElements, duplicateEntities, flipRelationships, moveEntities, ReduxAction, ReduxState } from "../redux";
 import { ElementSelection } from "../types";
 import { UUID } from "../../core/utils";
 

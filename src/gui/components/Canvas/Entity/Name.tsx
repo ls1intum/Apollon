@@ -1,11 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import * as UML from "../../../../core/domain";
-import {
-    computeEntityHeaderHeight,
-    ENTITY_HORIZONTAL_PADDING,
-    getEntityKindDescriptionOrNull
-} from "../../../../rendering/layouters/entity";
+import { computeEntityHeaderHeight, ENTITY_HORIZONTAL_PADDING, getEntityKindDescriptionOrNull } from "../../../../rendering/layouters/entity";
 
 const Container: any = styled.div`
     display: flex;
@@ -43,10 +39,10 @@ export default class Name extends React.Component<Props> {
         const entityKindDescription = getEntityKindDescriptionOrNull(entity.kind);
         const special = entity.kind === UML.EntityKind.ActivityMergeNode;
 
-        let entityNameDisplayStyle: React.CSSProperties = !special ? {
-            width: entity.size.width - 2 * ENTITY_HORIZONTAL_PADDING,
+        const entityNameDisplayStyle: React.CSSProperties = !special ? {
+            width: entity.size.width - 2 * ENTITY_HORIZONTAL_PADDING
         } : {
-            width: '100%'
+            width: "100%"
         };
 
         return (
@@ -54,7 +50,7 @@ export default class Name extends React.Component<Props> {
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
                 style={{
-                    height: computeEntityHeaderHeight(entity.kind),
+                    height: computeEntityHeaderHeight(entity.kind)
                 }}
                 special={special}
             >
