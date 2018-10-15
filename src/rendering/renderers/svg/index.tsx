@@ -66,7 +66,8 @@ export function renderRelationshipToSVG(
     layoutedRelationship: LayoutedRelationship,
     renderOptions: RenderOptions
 ): RenderedSVG {
-    const PADDING = 30;
+    const PADDING = 50;   // quick fix for horizontal associations so that multiplicities and associations are not cutted off
+    // TODO: take the text of multiplicity and role of both relationship ends into account when computing the bounding box of layouted relationships, otherwise they might be cut off
 
     const boundingBox = computeBoundingBox(layoutedRelationship.path);
 
