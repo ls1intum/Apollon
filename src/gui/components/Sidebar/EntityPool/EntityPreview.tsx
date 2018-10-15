@@ -36,7 +36,7 @@ const StyledEntityPreview: any = styled.div`
 
 const StyledActivityControlNode: any = styled.div`
     width: 100px;
-    height: 30px;
+    height: 100px;
 `;
 
 const StyledActivityActionNode: any = styled(StyledEntityPreview)`
@@ -46,7 +46,7 @@ const StyledActivityActionNode: any = styled(StyledEntityPreview)`
 const StyledActivityMergeNode: any = styled.div`
     position: relative;
     width: 40px;
-    height: 30px;
+    height: 40px;
     line-height: 30px;
     text-align: center;
     margin: 5px;

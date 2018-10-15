@@ -23,7 +23,8 @@ const Container: any = styled.div`
 `;
 
 const EntityNameDisplay: any = styled.div`
-    overflow: hidden;
+    overflow: ${(props: any) =>
+        props.entityKind === UML.EntityKind.ActivityMergeNode ? "visible" : "hidden"};
     user-select: none;
     font-style: ${(props: any) =>
         props.entityKind === UML.EntityKind.AbstractClass ? "italic" : "normal"};
