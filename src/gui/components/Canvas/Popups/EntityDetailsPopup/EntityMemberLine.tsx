@@ -51,7 +51,7 @@ export default class EntityMemberInput extends React.Component<Props, State> {
         return (
             <FlexContainer>
                 <BlockInput
-                    innerRef={ref => (this.input = ref)}
+                    ref={(ref: any) => (this.input = ref)}
                     type="text"
                     value={this.state.name}
                     onFocus={this.onFocus}

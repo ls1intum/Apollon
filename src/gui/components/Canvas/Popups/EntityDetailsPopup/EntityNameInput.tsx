@@ -32,7 +32,7 @@ export default class EntityNameInput extends React.Component<Props, State> {
 
         return (
             <BlockInput
-                innerRef={input => (this.input = input)}
+                ref={(input: any) => (this.input = input)}
                 id={this.inputId}
                 type="text"
                 value={this.state.name}

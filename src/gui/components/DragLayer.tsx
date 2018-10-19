@@ -29,7 +29,7 @@ const AbsoluteDragItemLayer = styled.div`
     z-index: ${ZIndices.DragItemLayer};
 `;
 
-const FixedDragItemLayer = LayerBase.extend`
+const FixedDragItemLayer = styled(LayerBase)`
     z-index: ${ZIndices.DragItemLayer};
 `;
 

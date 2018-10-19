@@ -9,7 +9,7 @@ const Container = styled.div`
     margin-top: 10px;
 `;
 
-const NewMemberInput = BlockInput.extend`
+const NewMemberInput = styled(BlockInput)`
     width: calc(100% - 32px);
 
     &:not(:focus) {
@@ -64,7 +64,7 @@ export default class EntityMemberList extends React.Component<Props, State> {
 
                 <NewMemberInput
                     value={this.state.newMemberName}
-                    innerRef={ref => (this.newMemberInput = ref)}
+                    ref={(ref: any) => (this.newMemberInput = ref)}
                     onChange={this.updateNewMemberName}
                     onBlur={this.createNewMember}
                     onKeyDown={e => {

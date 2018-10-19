@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Provider } from "react-redux";
-import styled, { injectGlobal, ThemeProvider } from "styled-components";
+import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import Editor from "./components/Editor";
 import KeyboardEventListener from "./events/KeyboardEventListener";
 import { createStore, ReduxState } from "./redux";
@@ -157,7 +157,7 @@ export default class App extends React.Component<Props, State> {
     }
 
     render() {
-        injectGlobal`
+        const GlobalStyle = createGlobalStyle`
             .apollon-editor * {
                 box-sizing: border-box;
             }
