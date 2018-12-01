@@ -28,10 +28,10 @@
     "@types/react": "16.7.6",
     "@types/react-dom": "16.0.9",
     "@types/react-redux": "6.0.10",
-    "prettier": "1.15.2",
+    "prettier": "1.15.3",
     "ts-loader": "5.3.1",
     "tslint": "5.11.0",
-    "typescript": "3.1.6",
+    "typescript": "3.2.1",
     "webpack": "4.26.1",
     "webpack-cli": "3.1.2",
     "webpack-dev-server": "3.1.10"
@@ -39,8 +39,8 @@
   "dependencies": {
     "@types/styled-components": "4.1.2",
     "react": "16.6.3",
-    "react-dnd": "7.0.0",
-    "react-dnd-html5-backend": "7.0.0",
+    "react-dnd": "7.0.1",
+    "react-dnd-html5-backend": "7.0.1",
     "react-dom": "16.6.3",
     "react-redux": "5.1.1",
     "redux": "4.0.1",
