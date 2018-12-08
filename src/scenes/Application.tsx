@@ -1,19 +1,15 @@
 import React, { createRef, RefObject } from 'react';
-import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
+import Store, { Props as StoreProps } from './../components/Store';
+import ReduxState from './../components/Store/state';
+import { Layout } from './styles';
+
+import { ThemeProvider } from "styled-components";
 import Editor from "./../gui/components/Editor";
 import KeyboardEventListener from "./../gui/events/KeyboardEventListener";
 import { createTheme, Theme } from "./../gui/theme";
 import { ApollonMode, DiagramType, ElementSelection } from "./../gui/types";
 import { toggle, UUID } from "../core/utils";
 
-import Store, { Props as StoreProps } from './../components/Store';
-import ReduxState from './../components/Store/state';
-
-const ApollonEditor = styled.div`
-    box-sizing: border-box;
-    height: 100%;
-    font-weight: 400;
-`;
 
 export default class App extends React.Component<Props, State> {
     store: RefObject<Store<StoreProps>> = createRef();
@@ -156,20 +152,8 @@ export default class App extends React.Component<Props, State> {
     }
 
     render() {
-        const GlobalStyle = createGlobalStyle`
-            .apollon-editor * {
-                box-sizing: border-box;
-            }
-
-            .apollon-editor h1, .apollon-editor h2 {
-                font-family: ${this.theme.headingFontFamily};
-                font-weight: ${this.theme.headingFontWeight};
-                margin-top: 0;
-            }
-        `;
-
         return (
-            <ApollonEditor className="apollon-editor">
+            <Layout>
                 <Store ref={this.store} initialState={this.props.initialState} selectEntities={this.selectEntities}>
                     <ThemeProvider theme={this.theme}>
                         <Editor
@@ -185,7 +169,7 @@ export default class App extends React.Component<Props, State> {
                         />
                     </ThemeProvider>
                 </Store>
-            </ApollonEditor>
+            </Layout>
         );
     }
 
