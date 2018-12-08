@@ -4,7 +4,7 @@ module.exports = {
     entry: "./src/gui/window.ts",
 
     output: {
-        path: path.join(__dirname, "dist"),
+        path: path.join(__dirname, "dev"),
         filename: "apollon.js"
     },
 
