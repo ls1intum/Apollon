@@ -162,13 +162,13 @@ export default class App extends React.Component<Props, State> {
 
   render() {
     return (
-      <Layout>
-        <Store
-          ref={this.store}
-          initialState={this.props.initialState}
-          selectEntities={this.selectEntities}
-        >
-          <Theme theme={this.props.theme}>
+      <Store
+        ref={this.store}
+        initialState={this.props.initialState}
+        selectEntities={this.selectEntities}
+      >
+        <Theme theme={this.props.theme}>
+          <Layout>
             <Editor
               diagramType={this.props.diagramType}
               apollonMode={this.props.apollonMode}
@@ -180,9 +180,9 @@ export default class App extends React.Component<Props, State> {
               toggleRelationshipSelection={this.toggleRelationshipSelection}
               unselectAllElements={this.unselectAllElements}
             />
-          </Theme>
-        </Store>
-      </Layout>
+          </Layout>
+        </Theme>
+      </Store>
     );
   }
 
