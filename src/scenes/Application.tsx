@@ -1,13 +1,13 @@
-import * as React from "react";
-import { Provider } from "react-redux";
+import React, { createRef, RefObject } from 'react';
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import Editor from "./../gui/components/Editor";
 import KeyboardEventListener from "./../gui/events/KeyboardEventListener";
-import { createStore, ReduxState } from "./../gui/redux";
 import { createTheme, Theme } from "./../gui/theme";
 import { ApollonMode, DiagramType, ElementSelection } from "./../gui/types";
 import { toggle, UUID } from "../core/utils";
-import { Store } from "redux";
+
+import Store, { Props as StoreProps } from './../components/Store';
+import ReduxState from './../components/Store/state';
 
 const ApollonEditor = styled.div`
     box-sizing: border-box;
@@ -16,9 +16,10 @@ const ApollonEditor = styled.div`
 `;
 
 export default class App extends React.Component<Props, State> {
+    store: RefObject<Store<StoreProps>> = createRef();
+
     theme: Theme;
-    store: Store<ReduxState>;
-    keyboardEventListener: KeyboardEventListener | null;
+    keyboardEventListener: KeyboardEventListener | null = null;
 
     subscriptionId = 0;
     selectionChangeSubscribers: Map<number, ((selection: ElementSelection) => void)>;
@@ -32,38 +33,8 @@ export default class App extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props);
-
-        const store = createStore(props.initialState, this.selectEntities);
-        this.store = store;
         this.theme = createTheme(props.theme);
-
-        this.keyboardEventListener =
-            props.apollonMode !== ApollonMode.ReadOnly
-                ? new KeyboardEventListener(store, this.selectElements)
-                : null;
-
         this.selectionChangeSubscribers = new Map();
-
-        store.subscribe(() => {
-            const storeState = store.getState();
-            const { selection } = this.state;
-
-            if (
-                selection.entityIds.some(id => !storeState.entities.allIds.includes(id)) ||
-                selection.relationshipIds.some(id => !storeState.relationships.allIds.includes(id))
-            ) {
-                this.setState(state => ({
-                    selection: {
-                        entityIds: state.selection.entityIds.filter(id =>
-                            storeState.entities.allIds.includes(id)
-                        ),
-                        relationshipIds: state.selection.relationshipIds.filter(id =>
-                            storeState.relationships.allIds.includes(id)
-                        )
-                    }
-                }));
-            }
-        });
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
@@ -145,6 +116,34 @@ export default class App extends React.Component<Props, State> {
     };
 
     componentDidMount() {
+        this.keyboardEventListener =
+        this.store.current && this.props.apollonMode !== ApollonMode.ReadOnly
+                ? new KeyboardEventListener(this.store.current.store, this.selectElements)
+                : null;
+
+
+        if (this.store.current) {
+            this.store.current.store.subscribe(() => {
+                const storeState = this.store.current!.store.getState();
+                const { selection } = this.state;
+
+                if (
+                    selection.entityIds.some(id => !storeState.entities.allIds.includes(id)) ||
+                    selection.relationshipIds.some(id => !storeState.relationships.allIds.includes(id))
+                ) {
+                    this.setState(state => ({
+                        selection: {
+                            entityIds: state.selection.entityIds.filter(id =>
+                                storeState.entities.allIds.includes(id)
+                            ),
+                            relationshipIds: state.selection.relationshipIds.filter(id =>
+                                storeState.relationships.allIds.includes(id)
+                            )
+                        }
+                    }));
+                }
+            });
+        }
         if (this.keyboardEventListener !== null) {
             this.keyboardEventListener.startListening();
         }
@@ -171,7 +170,7 @@ export default class App extends React.Component<Props, State> {
 
         return (
             <ApollonEditor className="apollon-editor">
-                <Provider store={this.store}>
+                <Store ref={this.store} initialState={this.props.initialState} selectEntities={this.selectEntities}>
                     <ThemeProvider theme={this.theme}>
                         <Editor
                             diagramType={this.props.diagramType}
@@ -185,7 +184,7 @@ export default class App extends React.Component<Props, State> {
                             unselectAllElements={this.unselectAllElements}
                         />
                     </ThemeProvider>
-                </Provider>
+                </Store>
             </ApollonEditor>
         );
     }
@@ -203,7 +202,7 @@ export default class App extends React.Component<Props, State> {
 }
 
 interface Props {
-    initialState: ReduxState | null;
+    initialState?: ReduxState;
     diagramType: DiagramType;
     apollonMode: ApollonMode;
     debugModeEnabled: boolean;

@@ -1,12 +1,12 @@
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import Application from './scenes/Application';
-import { ReduxState } from './gui/redux';
+import ReduxState from './components/Store/state';
 import { Theme } from './gui/theme';
 import { DiagramType, ApollonMode, ElementSelection } from './gui/types';
 
 export interface ApollonOptions {
-  initialState?: ReduxState | null;
+  initialState?: ReduxState;
   diagramType?: DiagramType;
   mode?: ApollonMode;
   debug?: boolean;
@@ -18,7 +18,7 @@ class Editor {
 
   constructor(public container: HTMLElement, options: ApollonOptions) {
     const {
-      initialState = null,
+      initialState,
       diagramType = DiagramType.ClassDiagram,
       mode = ApollonMode.Full,
       debug = false,
@@ -58,9 +58,11 @@ class Editor {
   }
 
   getState() {
-    return this.application.current
-      ? this.application.current.store.getState()
-      : null;
+    return (
+      this.application.current &&
+      this.application.current.store.current &&
+      this.application.current.store.current.store.getState()
+    );
   }
 
   destroy() {
