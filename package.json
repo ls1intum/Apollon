@@ -25,14 +25,14 @@
     "publish:major": "yarn build:npm && npm version major && npm publish"
   },
   "devDependencies": {
-    "@types/react": "16.7.6",
-    "@types/react-dom": "16.0.9",
-    "@types/react-redux": "6.0.10",
+    "@types/react": "16.7.13",
+    "@types/react-dom": "16.0.11",
+    "@types/react-redux": "6.0.11",
     "@types/uuid": "^3.4.4",
     "prettier": "1.15.3",
     "ts-loader": "5.3.1",
     "tslint": "5.11.0",
-    "typescript": "3.2.1",
+    "typescript": "3.2.2",
     "webpack": "4.27.1",
     "webpack-cli": "3.1.2",
     "webpack-dev-server": "3.1.10"
