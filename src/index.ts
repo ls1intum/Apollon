@@ -1,11 +1,11 @@
-import ApollonEditor from "./gui";
+import Editor from "./Editor";
 import { getAllEntities, getAllRelationships, ReduxState } from "./gui/redux";
 import * as DiagramLayouter from "./rendering/layouters/diagram";
 
 export { computeBoundingBox } from "./core/geometry/boundingBox";
 
 export * from "./gui";
-export default ApollonEditor;
+export default Editor;
 
 export function layoutDiagram(state: ReduxState, layoutOptions: DiagramLayouter.LayoutOptions) {
     const entities = getAllEntities(state);
