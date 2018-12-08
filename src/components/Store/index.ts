@@ -1,5 +1,4 @@
 import Store from './Store';
-import State from './State';
 
-export type State = State;
+export { default as State } from './State';
 export default Store;

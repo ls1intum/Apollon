@@ -1,5 +1,4 @@
 import Theme from './Theme';
-import Styles from './Styles';
 
-export type Styles = Styles;
+export { default as Styles } from './Styles';
 export default Theme;
