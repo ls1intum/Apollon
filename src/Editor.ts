@@ -1,6 +1,6 @@
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
-import App from './gui/App';
+import Application from './scenes/Application';
 import { ReduxState } from './gui/redux';
 import { Theme } from './gui/theme';
 import { DiagramType, ApollonMode, ElementSelection } from './gui/types';
@@ -14,7 +14,7 @@ export interface ApollonOptions {
 }
 
 class Editor {
-  public application: RefObject<App> = createRef();
+  public application: RefObject<Application> = createRef();
 
   constructor(public container: HTMLElement, options: ApollonOptions) {
     const {
@@ -25,7 +25,7 @@ class Editor {
       theme = {},
     } = options;
 
-    const app = createElement(App, {
+    const app = createElement(Application, {
       ref: this.application,
       initialState,
       diagramType,

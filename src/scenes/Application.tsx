@@ -1,11 +1,11 @@
 import * as React from "react";
 import { Provider } from "react-redux";
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
-import Editor from "./components/Editor";
-import KeyboardEventListener from "./events/KeyboardEventListener";
-import { createStore, ReduxState } from "./redux";
-import { createTheme, Theme } from "./theme";
-import { ApollonMode, DiagramType, ElementSelection } from "./types";
+import Editor from "./../gui/components/Editor";
+import KeyboardEventListener from "./../gui/events/KeyboardEventListener";
+import { createStore, ReduxState } from "./../gui/redux";
+import { createTheme, Theme } from "./../gui/theme";
+import { ApollonMode, DiagramType, ElementSelection } from "./../gui/types";
 import { toggle, UUID } from "../core/utils";
 import { Store } from "redux";
 
