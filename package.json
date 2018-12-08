@@ -15,6 +15,7 @@
     "url": "https://www1.in.tum.de"
   },
   "scripts": {
+    "prepare": "npm run build:npm",
     "start": "webpack-dev-server --mode development",
     "lint": "tslint --force --project tsconfig.json --format stylish",
     "clean": "(rm -r dist || true)",
