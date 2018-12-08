@@ -1,3 +1,3 @@
-import ApollonEditor from "./index";
+import ApollonEditor from "./../Editor";
 
 (window as any).ApollonEditor = ApollonEditor;

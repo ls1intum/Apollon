@@ -6,8 +6,8 @@ export interface ElementSelection {
 }
 
 export const enum DiagramType {
-    ClassDiagram = "CLASS_DIAGRAM",
-    ActivityDiagram = "ACTIVITY_DIAGRAM"
+    ClassDiagram = "CLASS",
+    ActivityDiagram = "ACTIVITY"
 }
 
 export const enum ApollonMode {

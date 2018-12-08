@@ -4,7 +4,7 @@ import * as DiagramLayouter from "./rendering/layouters/diagram";
 
 export { computeBoundingBox } from "./core/geometry/boundingBox";
 
-export * from "./gui";
+export * from "./Editor";
 export default Editor;
 
 export function layoutDiagram(state: ReduxState, layoutOptions: DiagramLayouter.LayoutOptions) {
