@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Apollon Editor</title>
+    <meta charset="utf-8" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #apollon-react-app {
+        box-sizing: border-box;
+        height: calc(100vh - 40px);
+        width: calc(100vw - 40px);
+        margin: 20px 0 0 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="apollon-react-app">Loading &hellip;</div>
+
+    <script src="apollon.js"></script>
+    <script>
+      {
+        const container = document.getElementById('apollon-react-app');
+        new ApollonEditor(container, {
+          initialState: JSON.parse(window.localStorage.getItem('state.v7')),
+          diagramType: 'CLASS',
+          mode: 'FULL',
+          debug: true,
+          theme: {
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, HelveticaNeue, Arial, sans-serif',
+          },
+        });
+      }
+    </script>
+  </body>
+</html>
