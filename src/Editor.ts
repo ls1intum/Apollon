@@ -1,7 +1,7 @@
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import Application from './scenes/Application';
-import ReduxState from './components/Store/state';
+import { State as ReduxState } from './components/Store';
 import { Theme } from './gui/theme';
 import { DiagramType, ApollonMode, ElementSelection } from './gui/types';
 
