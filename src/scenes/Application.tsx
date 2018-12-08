@@ -28,8 +28,26 @@ export default class App extends React.Component<Props, State> {
     this.state.subscribers = [this.subscribe];
   }
 
+  componentDidMount() {
+    this.keyboardEventListener =
+      this.store.current && this.props.apollonMode !== ApollonMode.ReadOnly
+        ? new KeyboardEventListener(this.store.current.store)
+        : null;
+
+    if (this.keyboardEventListener !== null) {
+      this.keyboardEventListener.startListening();
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.keyboardEventListener !== null) {
+      this.keyboardEventListener.stopListening();
+    }
+  }
+
   subscribe = (selection: ElementSelection) => {
-    console.log(selection);
+    this.keyboardEventListener &&
+      this.keyboardEventListener.setSelection(selection);
     this.setState({ selection });
   };
 

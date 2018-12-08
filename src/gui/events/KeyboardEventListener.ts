@@ -6,7 +6,7 @@ import { UUID } from "../../core/utils";
 
 export default class KeyboardEventListener {
     private store: Store<ReduxState>;
-    private selectElements: (entityIds: UUID[], relationshipIds: UUID[]) => void;
+    // private selectElements: (entityIds: UUID[], relationshipIds: UUID[]) => void;
 
     private selection: ElementSelection = {
         entityIds: [],
@@ -15,10 +15,10 @@ export default class KeyboardEventListener {
 
     constructor(
         store: Store<ReduxState>,
-        selectElements: (entityIds: UUID[], relationshipIds: UUID[]) => void
+        // selectElements: (entityIds: UUID[], relationshipIds: UUID[]) => void
     ) {
         this.store = store;
-        this.selectElements = selectElements;
+        // this.selectElements = selectElements;
     }
 
     startListening() {
@@ -75,18 +75,18 @@ export default class KeyboardEventListener {
             case "Delete":
                 return deleteSelectedElements(this.selection);
 
-            case "Escape":
-                return [() => this.selectElements([], [])];
+            // case "Escape":
+            //     return [() => this.selectElements([], [])];
         }
 
         // All plain-letter keys require the user to also press
         // CTRL or CMD in order to trigger an action
         if (e.ctrlKey || e.metaKey) {
             switch (e.key) {
-                case "a":
-                    return [
-                        () => this.selectElements(state.entities.allIds, state.relationships.allIds)
-                    ];
+                // case "a":
+                //     return [
+                //         () => this.selectElements(state.entities.allIds, state.relationships.allIds)
+                //     ];
 
                 case "d":
                     return duplicateSelectedEntities(this.selection, state);

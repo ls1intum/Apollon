@@ -1,6 +1,7 @@
 import { Entity, Relationship } from '../../core/domain';
 import { Size } from '../../core/geometry';
 import { UUID } from '../../core/utils';
+import { ElementState } from './../../domain/Element';
 
 type State = {
   entities: {
@@ -21,6 +22,8 @@ type State = {
     canvasSize: Size;
     gridSize: number;
   };
+
+  elements: ElementState;
 };
 
 export default State;

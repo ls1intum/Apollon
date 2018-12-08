@@ -1,6 +1,6 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { createStore, applyMiddleware, compose, combineReducers, Store as ReduxStore } from 'redux';
+import { createStore, applyMiddleware, compose, combineReducers, Store as ReduxStore, Reducer } from 'redux';
 import createSagaMiddleware from "redux-saga";
 import ReduxState from './State';
 import mainSaga from "./../../gui/redux/sagas";
@@ -11,6 +11,7 @@ import entitiesReducer from "./../../gui/redux/entities/reducer";
 import interactiveElementsReducer from "./../../gui/redux/interactiveElements/reducer";
 import relationshipsReducer from "./../../gui/redux/relationships/reducer";
 import { ElementReducer, Actions } from './../../domain/Element';
+import { withUndoRedo } from "./../../gui/redux/undoRedo";
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;
@@ -27,7 +28,7 @@ class Store extends React.Component<Props> {
     super(props);
 
     const sagaMiddleware = createSagaMiddleware();
-    const reducer = combineReducers(this.reducers);
+    const reducer = withUndoRedo(combineReducers<ReduxState>(this.reducers)) as Reducer<ReduxState>;
 
     const composeEnhancers: typeof compose =
         (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;

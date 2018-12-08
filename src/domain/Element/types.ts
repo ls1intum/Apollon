@@ -6,5 +6,7 @@ export const enum ActionTypes {
 }
 
 export interface ElementState {
-  readonly [id: string]: Element;
+  readonly [id: string]: {
+    selected: boolean;
+  };
 }

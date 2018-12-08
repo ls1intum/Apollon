@@ -1,4 +1,5 @@
-import { Reducer, ReduxAction, ReduxState } from ".";
+import { Reducer, ReduxAction } from ".";
+import { State as ReduxState } from './../../components/Store';
 
 const MAX_UNDO_STACK_SIZE = 25;
 
