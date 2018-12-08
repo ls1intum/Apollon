@@ -28,11 +28,6 @@ class CanvasContainer extends React.Component<Props> {
                     editorMode={this.props.editorMode}
                     interactiveElementsRenderMode={this.props.interactiveElementsMode}
                     selection={this.props.selection}
-                    selectEntity={this.props.selectEntity}
-                    selectRelationship={this.props.selectRelationship}
-                    toggleEntitySelection={this.props.toggleEntitySelection}
-                    toggleRelationshipSelection={this.props.toggleRelationshipSelection}
-                    unselectAllElements={this.props.unselectAllElements}
                     canvasScrollContainer={this.props.canvasScrollContainer}
                 />
             </div>
@@ -47,11 +42,6 @@ interface OwnProps {
     editorMode: EditorMode;
     interactiveElementsMode: InteractiveElementsMode;
     selection: ElementSelection;
-    selectEntity: (entityId: UUID) => void;
-    toggleEntitySelection: (entityId: UUID) => void;
-    selectRelationship: (relationshipId: UUID) => void;
-    toggleRelationshipSelection: (relationshipId: UUID) => void;
-    unselectAllElements: () => void;
     canvasScrollContainer: HTMLDivElement | null;
 }
 

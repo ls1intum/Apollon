@@ -144,11 +144,6 @@ class Editor extends React.Component<Props, State> {
                         editorMode={this.state.editorMode}
                         interactiveElementsMode={this.state.interactiveElementsMode}
                         selection={this.props.selection}
-                        selectEntity={this.props.selectEntity}
-                        selectRelationship={this.props.selectRelationship}
-                        toggleEntitySelection={this.props.toggleEntitySelection}
-                        toggleRelationshipSelection={this.props.toggleRelationshipSelection}
-                        unselectAllElements={this.props.unselectAllElements}
                         canvasScrollContainer={this.canvasScrollContainer}
                     />
                 </CanvasFlexItem>
@@ -187,11 +182,6 @@ interface OwnProps {
     apollonMode: ApollonMode;
     debugModeEnabled: boolean;
     selection: ElementSelection;
-    selectEntity: (entityId: UUID) => void;
-    selectRelationship: (relationshipId: UUID) => void;
-    toggleEntitySelection: (entityId: UUID) => void;
-    toggleRelationshipSelection: (relationshipId: UUID) => void;
-    unselectAllElements: () => void;
 }
 
 interface StateProps {

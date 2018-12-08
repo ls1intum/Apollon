@@ -51,21 +51,21 @@ class Canvas extends React.Component<Props, State> {
 
     selectEntity = (entityId: UUID, e: React.MouseEvent<HTMLDivElement>) => {
         this.onStartHoldEntity();
-        if (e.shiftKey) {
-            this.props.toggleEntitySelection(entityId);
-        } else if (!this.props.selection.entityIds.includes(entityId)) {
-            this.props.selectEntity(entityId);
-        }
+        // if (e.shiftKey) {
+        //     this.props.toggleEntitySelection(entityId);
+        // } else if (!this.props.selection.entityIds.includes(entityId)) {
+        //     this.props.selectEntity(entityId);
+        // }
     };
 
     selectRelationship = (relationshipId: UUID) => {
-        if (!this.props.selection.relationshipIds.includes(relationshipId)) {
-            this.props.selectRelationship(relationshipId);
-        }
+        // if (!this.props.selection.relationshipIds.includes(relationshipId)) {
+        //     this.props.selectRelationship(relationshipId);
+        // }
     };
 
     toggleRelationshipSelection = (relationshipId: UUID) => {
-        this.props.toggleRelationshipSelection(relationshipId);
+        // this.props.toggleRelationshipSelection(relationshipId);
     };
 
     onStartHoldEntity = () => this.setState({ userIsHoldingEntity: true });
@@ -103,7 +103,7 @@ class Canvas extends React.Component<Props, State> {
                 onMouseDown={() => {
                     const { entityIds, relationshipIds } = selection;
                     if (entityIds.length + relationshipIds.length > 0) {
-                        this.props.unselectAllElements();
+                        // this.props.unselectAllElements();
                     }
                 }}
             >
@@ -139,7 +139,6 @@ class Canvas extends React.Component<Props, State> {
                                 diagramType={diagramType}
                                 editorMode={editorMode}
                                 selection={selection}
-                                selectRelationship={this.props.selectRelationship}
                                 showConnectors={
                                     this.state.doubleClickedElement.type === "none" &&
                                     !this.state.userIsHoldingEntity &&
@@ -239,11 +238,6 @@ interface OwnProps {
     editorMode: EditorMode;
     interactiveElementsRenderMode: InteractiveElementsMode;
     selection: ElementSelection;
-    selectEntity: (entityId: UUID) => void;
-    selectRelationship: (relationshipId: UUID) => void;
-    toggleEntitySelection: (entityId: UUID) => void;
-    toggleRelationshipSelection: (relationshipId: UUID) => void;
-    unselectAllElements: () => void;
     canvasScrollContainer: HTMLDivElement | null;
 }
 

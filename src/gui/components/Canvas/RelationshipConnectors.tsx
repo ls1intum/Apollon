@@ -157,8 +157,6 @@ class RelationshipConnectors extends React.Component<Props, State> {
                                             edgeOffset: 0.5
                                         }
                                     );
-
-                                    this.props.selectRelationship((action as any).relationship.id);
                                 }}
                             >
                                 <StyledConnector
@@ -253,7 +251,6 @@ interface OwnProps {
     diagramType: DiagramType;
     editorMode: EditorMode;
     selection: ElementSelection;
-    selectRelationship: (relationshipId: UUID) => void;
     showConnectors: boolean;
 }
 

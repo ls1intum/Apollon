@@ -62,11 +62,6 @@ export default class App extends React.Component<Props, State> {
                 apollonMode={this.props.apollonMode}
                 debugModeEnabled={this.props.debugModeEnabled}
                 selection={this.state.selection}
-                selectEntity={() => {}}
-                toggleEntitySelection={() => {}}
-                selectRelationship={() => {}}
-                toggleRelationshipSelection={() => {}}
-                unselectAllElements={() => {}}
               />
             </Layout>
           </SelectionListener>
