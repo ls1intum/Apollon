@@ -1,14 +1,12 @@
 import React, { createRef, RefObject } from 'react';
 import Store, { State as ReduxState } from './../components/Store';
+import Theme, { Styles } from './../components/Theme';
 import { Layout } from './styles';
 
-import { ThemeProvider } from "styled-components";
-import Editor from "./../gui/components/Editor";
-import KeyboardEventListener from "./../gui/events/KeyboardEventListener";
-import { createTheme, Theme } from "./../gui/theme";
-import { ApollonMode, DiagramType, ElementSelection } from "./../gui/types";
-import { toggle, UUID } from "../core/utils";
-
+import Editor from './../gui/components/Editor';
+import KeyboardEventListener from './../gui/events/KeyboardEventListener';
+import { ApollonMode, DiagramType, ElementSelection } from './../gui/types';
+import { toggle, UUID } from '../core/utils';
 
 export default class App extends React.Component<Props, State> {
   store: RefObject<Store> = createRef();
@@ -170,7 +168,7 @@ export default class App extends React.Component<Props, State> {
           initialState={this.props.initialState}
           selectEntities={this.selectEntities}
         >
-          <ThemeProvider theme={this.theme}>
+          <Theme theme={this.props.theme}>
             <Editor
               diagramType={this.props.diagramType}
               apollonMode={this.props.apollonMode}
@@ -182,7 +180,7 @@ export default class App extends React.Component<Props, State> {
               toggleRelationshipSelection={this.toggleRelationshipSelection}
               unselectAllElements={this.unselectAllElements}
             />
-          </ThemeProvider>
+          </Theme>
         </Store>
       </Layout>
     );
@@ -201,13 +199,13 @@ export default class App extends React.Component<Props, State> {
 }
 
 interface Props {
-    initialState?: ReduxState;
-    diagramType: DiagramType;
-    apollonMode: ApollonMode;
-    debugModeEnabled: boolean;
-    theme: Partial<Theme>;
+  initialState?: ReduxState;
+  diagramType: DiagramType;
+  apollonMode: ApollonMode;
+  debugModeEnabled: boolean;
+  theme: Partial<Styles>;
 }
 
 interface State {
-    selection: ElementSelection;
+  selection: ElementSelection;
 }

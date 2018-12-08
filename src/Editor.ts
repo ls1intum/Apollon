@@ -2,7 +2,7 @@ import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import Application from './scenes/Application';
 import { State as ReduxState } from './components/Store';
-import { Theme } from './gui/theme';
+import { Styles } from './components/Theme';
 import { DiagramType, ApollonMode, ElementSelection } from './gui/types';
 
 export interface ApollonOptions {
@@ -10,7 +10,7 @@ export interface ApollonOptions {
   diagramType?: DiagramType;
   mode?: ApollonMode;
   debug?: boolean;
-  theme?: Partial<Theme>;
+  theme?: Partial<Styles>;
 }
 
 class Editor {
