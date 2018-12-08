@@ -1,4 +1,5 @@
 import * as React from "react";
+import { connect } from "react-redux";
 import { withTheme } from "styled-components";
 import { Theme } from "../../../theme";
 import { ApollonMode, EditorMode, InteractiveElementsMode } from "../../../types";
@@ -6,10 +7,29 @@ import { LayoutedRelationship } from "../../../../core/domain";
 import { getMarkerIdForRelationshipKind } from "../../../../rendering/renderers/svg/defs/RelationshipMarkers";
 import RelationshipLabels from "../../../../rendering/renderers/svg/RelationshipLabels";
 import { getSvgDasharrayForRelationshipKind } from "../../../../rendering/renderers/svg/RenderedRelationship";
+import { ElementRepository } from '../../../../domain/Element';
 
 class Relationship extends React.Component<Props, State> {
     state: State = {
-        isMouseOver: false
+        isMouseOver: false,
+        hover: false,
+        selected: false,
+    };
+
+    componentDidMount() {
+        document.addEventListener('mouseup', this.onMouseUp);
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener('mouseup', this.onMouseUp);
+    }
+
+    private onMouseOver = (event: React.MouseEvent) => {
+        this.setState({ hover: true });
+      };
+    
+    private onMouseLeave = (event: React.MouseEvent) => {
+        this.setState({ hover: false });
     };
 
     onMouseDown = (e: React.MouseEvent<SVGPolylineElement>) => {
@@ -17,11 +37,10 @@ class Relationship extends React.Component<Props, State> {
 
         switch (this.props.editorMode) {
             case EditorMode.ModelingView:
-                if (e.shiftKey) {
-                    this.props.onToggleSelection();
-                } else if (!this.props.isSelected) {
-                    this.props.onSelect();
-                }
+                this.setState(
+                    state => ({ selected: !this.state.selected }),
+                    () => this.state.selected ? this.props.select(this.props.relationship.relationship) : this.props.deselect(this.props.relationship.relationship)
+                );
                 break;
 
             case EditorMode.InteractiveElementsView:
@@ -29,6 +48,17 @@ class Relationship extends React.Component<Props, State> {
                 break;
         }
     };
+    
+    onMouseUp = (event: MouseEvent) => {
+        if (!event.shiftKey) {
+            if (!this.state.hover && this.state.selected) {
+                this.props.deselect(this.props.relationship.relationship)
+            }
+            this.setState((state, props) => ({
+                selected: state.hover,
+            }));
+        }
+    }
 
     render() {
         const { apollonMode, isInteractiveElement, interactiveElementsMode } = this.props;
@@ -60,8 +90,8 @@ class Relationship extends React.Component<Props, State> {
                     stroke={outlineStroke}
                     fill="none"
                     onMouseDown={this.onMouseDown}
-                    onMouseEnter={() => this.setState({ isMouseOver: true })}
-                    onMouseLeave={() => this.setState({ isMouseOver: false })}
+                    onMouseEnter={e => {this.onMouseOver(e); this.setState({ isMouseOver: true })}}
+                    onMouseLeave={e => {this.onMouseLeave(e); this.setState({ isMouseOver: false })}}
                     onDoubleClick={onDoubleClick}
                     style={{ visibility }}
                 />
@@ -99,9 +129,12 @@ class Relationship extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(Relationship);
+export default withTheme(connect(null, {
+    select: ElementRepository.select,
+    deselect: ElementRepository.deselect,
+})(Relationship));
 
-interface Props {
+interface OwnProps {
     relationship: LayoutedRelationship;
     apollonMode: ApollonMode;
     editorMode: EditorMode;
@@ -115,6 +148,15 @@ interface Props {
     openDetailsPopup: () => void;
 }
 
+interface DispatchProps {
+    select: typeof ElementRepository.select;
+    deselect: typeof ElementRepository.deselect;
+}
+
+type Props = OwnProps & DispatchProps;
+
 interface State {
     isMouseOver: boolean;
+    hover: boolean;
+    selected: boolean;
 }

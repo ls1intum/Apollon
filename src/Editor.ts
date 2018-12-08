@@ -46,15 +46,24 @@ class Editor {
   subscribeToSelectionChange(
     callback: (selection: ElementSelection) => void
   ): number | null {
-    return this.application.current
-      ? this.application.current.subscribeToSelectionChange(callback)
-      : null;
+    let i = -1;
+    this.application.current &&
+      this.application.current.setState(state => {
+        const subscribers = state.subscribers.slice();
+        i = subscribers.push(callback) - 1;
+        return { subscribers };
+      });
+
+    return i;
   }
 
   unsubscribeFromSelectionChange(subscriptionId: number) {
-    if (this.application.current !== null) {
-      this.application.current.unsubscribeFromSelectionChange(subscriptionId);
-    }
+    this.application.current &&
+      this.application.current.setState(state => {
+        const subscribers = state.subscribers.slice();
+        subscribers.splice(subscriptionId);
+        return { subscribers };
+      });
   }
 
   getState() {

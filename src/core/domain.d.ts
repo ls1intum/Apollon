@@ -6,8 +6,11 @@ export interface UMLModel {
     relationships: Relationship[];
 }
 
-export interface Entity {
+export interface Element {
     id: UUID;
+}
+
+export interface Entity extends Element {
     kind: EntityKind;
     name: string;
     position: Point;
@@ -41,8 +44,7 @@ export interface EntityRenderMode {
     showMethods: boolean;
 }
 
-export interface Relationship {
-    id: UUID;
+export interface Relationship extends Element {
     kind: RelationshipKind;
     source: RelationshipEnd;
     target: RelationshipEnd;

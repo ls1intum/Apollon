@@ -1,4 +1,5 @@
 import * as React from "react";
+import { connect } from "react-redux";
 import { ConnectDragPreview, ConnectDragSource, DragSource, DragSourceCollector, DragSourceSpec } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import styled, { withTheme } from "styled-components";
@@ -11,6 +12,7 @@ import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } fr
 import { Entity, EntityKind } from "../../../../core/domain";
 import { UUID } from "../../../../core/utils";
 import { computeEntityHeight, ENTITY_MEMBER_LIST_VERTICAL_PADDING } from "../../../../rendering/layouters/entity";
+import { ElementRepository } from '../../../../domain/Element';
 
 const MemberList = styled.div`
     border-top: 1px solid black;
@@ -25,22 +27,61 @@ class CanvasEntity extends React.Component<Props, State> {
         this.state = {
             isMouseOverEntity: false,
             isMouseOverEntityName: false,
-            entityWidth: props.entity.size.width
+            entityWidth: props.entity.size.width,
+            hover: false,
+            selected: false,
         };
     }
 
     componentDidMount() {
         this.props.connectDragPreview(getEmptyImage());
+        document.addEventListener('mouseup', this.onMouseUp);
     }
 
     componentWillReceiveProps(newProps: Props) {
         this.setState({ entityWidth: newProps.entity.size.width });
     }
 
+    componentWillUnmount() {
+        document.removeEventListener('mouseup', this.onMouseUp);
+    }
+
+    private onMouseOver = (event: React.MouseEvent) => {
+      this.setState({ hover: true });
+    };
+  
+    private onMouseLeave = (event: React.MouseEvent) => {
+      this.setState({ hover: false });
+    };
+
     onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         e.stopPropagation();
         this.props.onMouseDown(e);
+        if (e.shiftKey) {
+            this.setState(
+                state => ({ selected: !this.state.selected }),
+                () => this.state.selected ? this.props.select(this.props.entity) : this.props.deselect(this.props.entity)
+            );
+        } else {
+            if (!this.state.selected) {
+                this.props.select(this.props.entity)
+            }
+            this.setState({
+                selected: true,
+            });
+        }
     };
+
+    onMouseUp = (event: MouseEvent) => {
+        if (!event.shiftKey) {
+            if (!this.state.hover && this.state.selected) {
+                this.props.deselect(this.props.entity)
+            }
+            this.setState((state, props) => ({
+                selected: state.hover,
+            }));
+        }
+    }
 
     toggleEntityInteractiveElement = () => {
         const { entity, interactiveElementIds } = this.props;
@@ -127,12 +168,14 @@ class CanvasEntity extends React.Component<Props, State> {
                         ? undefined
                         : this.props.openDetailsPopup
                 }
-                onMouseEnter={() => {
+                onMouseOver={e => {
+                    this.onMouseOver(e);
                     this.setState({ isMouseOverEntityName: true, isMouseOverEntity: true });
                 }}
-                onMouseLeave={() =>
+                onMouseLeave={e => {
+                    this.onMouseLeave(e);
                     this.setState({ isMouseOverEntityName: false, isMouseOverEntity: false })
-                }
+                }}
             >
                 {!hidePopup && (
                     <Name
@@ -399,6 +442,11 @@ interface OwnProps {
     onToggleInteractiveElements: (...ids: UUID[]) => void;
 }
 
+interface DispatchProps {
+    select: typeof ElementRepository.select;
+    deselect: typeof ElementRepository.deselect;
+}
+
 interface DragDropProps {
     connectDragPreview: ConnectDragPreview;
     connectDragSource: ConnectDragSource;
@@ -409,12 +457,14 @@ interface ThemeProps {
     theme: Theme;
 }
 
-type Props = OwnProps & DragDropProps & ThemeProps;
+type Props = OwnProps & DragDropProps & ThemeProps & DispatchProps;
 
 interface State {
     isMouseOverEntity: boolean;
     isMouseOverEntityName: boolean;
     entityWidth: number;
+    hover: boolean;
+    selected: boolean;
 }
 
 const dragSourceSpec: DragSourceSpec<OwnProps, any> = {
@@ -444,8 +494,11 @@ const dragSourceCollector: DragSourceCollector<any> = (connector, monitor): Drag
     isDragging: monitor.isDragging()
 });
 
-export default (withTheme(DragSource(
+export default (withTheme(connect(null, {
+    select: ElementRepository.select,
+    deselect: ElementRepository.deselect,
+})(DragSource(
     DragDrop.ItemTypes.ExistingEntities,
     dragSourceSpec,
     dragSourceCollector
-)(CanvasEntity as any) as any) as any) as React.ComponentClass<OwnProps>;
+)(CanvasEntity as any) as any)) as any) as React.ComponentClass<OwnProps>;
