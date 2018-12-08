@@ -1,13 +1,10 @@
+import Element from './../domain/Element';
 import { Point, RectEdge, Size } from "./geometry";
 import { UUID } from "./utils";
 
 export interface UMLModel {
     entities: Entity[];
     relationships: Relationship[];
-}
-
-export interface Element {
-    id: UUID;
 }
 
 export interface Entity extends Element {
