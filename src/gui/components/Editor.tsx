@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
-import CanvasContainer from "./Canvas/Container";
+import CanvasContainer from "./../../components/Canvas/Container";
 import DragLayer from "./DragLayer";
 // import Sidebar from "./Sidebar";
 import { ZIndices } from "./zindices";
