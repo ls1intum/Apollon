@@ -20,7 +20,7 @@ export default function relationshipsReducer(state = initialState, action: Redux
             };
 
         case "DELETE_ELEMENTS": {
-            const deadRelationshipIds = new Set<number>();
+            const deadRelationshipIds = new Set<string>();
             const allRelationships = state.allIds.map(id => state.byId[id]);
 
             outer: for (const { id, source, target } of allRelationships) {

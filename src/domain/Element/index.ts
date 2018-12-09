@@ -1,7 +1,15 @@
-import { UUID } from './../../core/utils';
+import uuid from './../utils/uuid';
 
 interface Element {
-  id: UUID;
+  id: string;
+}
+
+abstract class Element {
+  public id: string;
+
+  constructor() {
+    this.id = uuid();
+  }
 }
 
 export default Element;

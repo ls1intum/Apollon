@@ -3,7 +3,7 @@ import styled, { withTheme } from "styled-components";
 import { Styles as Theme } from "./../Theme";
 import { EditorMode, InteractiveElementsMode } from "./../../gui/types";
 import { EntityMember } from "./../../core/domain";
-import { UUID } from "./../../core/utils";
+import { UUID } from './../../domain/utils/uuid';
 import { ENTITY_HORIZONTAL_PADDING, ENTITY_MEMBER_HEIGHT } from "./../../rendering/layouters/entity";
 
 const NameDisplay = styled.div`

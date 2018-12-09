@@ -1,7 +1,7 @@
 import { ReduxState } from ".";
 import { applyMiddleware, compose, createStore as reduxCreateStore, Store } from "redux";
 import { createRootReducer } from "./reducers";
-import { UUID } from "../../core/utils";
+import { UUID } from './../../domain/utils/uuid';
 
 export function createStore(
     initialState: ReduxState | null,

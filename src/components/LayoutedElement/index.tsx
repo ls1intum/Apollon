@@ -10,7 +10,7 @@ import * as DragDrop from "./../DragDrop/dnd";
 import { Styles as Theme } from "./../Theme";
 import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
 import { Entity, EntityKind } from "./../../core/domain";
-import { UUID } from "./../../core/utils";
+import { UUID } from './../../domain/utils/uuid';
 import { computeEntityHeight, ENTITY_MEMBER_LIST_VERTICAL_PADDING } from "./../../rendering/layouters/entity";
 import { ElementRepository } from './../../domain/Element';
 

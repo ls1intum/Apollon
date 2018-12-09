@@ -1,6 +1,7 @@
 import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../core/domain";
 import { Point, Size } from "../../core/geometry";
-import { assertNever, UUID } from "../../core/utils";
+import { assertNever } from "../../core/utils";
+import { UUID } from './../../domain/utils/uuid';
 
 export const ENTITY_KIND_HEIGHT = 14;
 export const ENTITY_NAME_HEIGHT = 35;

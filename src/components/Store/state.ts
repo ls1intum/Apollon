@@ -1,6 +1,6 @@
 import { Entity, Relationship } from '../../core/domain';
 import { Size } from '../../core/geometry';
-import { UUID } from '../../core/utils';
+import { UUID } from './../../domain/utils/uuid';
 import { ElementState } from './../../domain/Element';
 import { DiagramType, ApollonMode, EditorMode } from '../../gui/types';
 import { OptionsState } from './../../domain/Options';

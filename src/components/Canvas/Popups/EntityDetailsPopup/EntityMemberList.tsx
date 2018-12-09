@@ -3,7 +3,8 @@ import styled from "styled-components";
 import EntityMemberLine from "./EntityMemberLine";
 import BlockInput from "../BlockInput";
 import { EntityMember } from "./../../../../core/domain";
-import { newId, sanitizeWhiteSpace, UUID } from "./../../../../core/utils";
+import { sanitizeWhiteSpace } from "./../../../../core/utils";
+import newId, { UUID } from './../../../../domain/utils/uuid';
 
 const Container = styled.div`
     margin-top: 10px;

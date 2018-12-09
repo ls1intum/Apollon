@@ -7,7 +7,7 @@ import { PopupSectionHeading } from "../PopupSectionHeading";
 import { Entity, RelationshipEnd } from "./../../../../core/domain";
 import { DiagramType } from "./../../../../gui/types";
 import { RectEdge } from "./../../../../core/geometry";
-import { UUID } from "./../../../../core/utils";
+import { UUID } from './../../../../domain/utils/uuid';
 
 const Th = styled.th`
     font-weight: normal;

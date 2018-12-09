@@ -9,7 +9,7 @@ import Translate from "./Translate";
 import { LayoutedEntity } from "../../layouters/entity";
 import { LayoutedRelationship } from "../../../core/domain";
 import { computeBoundingBox, Size } from "../../../core/geometry";
-import { UUID } from "../../../core/utils";
+import { UUID } from './../../../domain/utils/uuid';
 import { LayoutedDiagram } from "../../../rendering/layouters/diagram";
 
 export interface RenderOptions {

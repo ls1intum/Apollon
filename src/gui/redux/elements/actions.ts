@@ -1,4 +1,4 @@
-import { UUID } from "../../../core/utils";
+import { UUID } from './../../../domain/utils/uuid';
 
 export type ElementsAction = DeleteElementsAction;
 

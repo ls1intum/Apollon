@@ -66,7 +66,6 @@ class Store extends React.Component<Props> {
 
 export interface Props {
   initialState?: ReduxState;
-  // selectEntities: (entityIds: UUID[]) => void;
 }
 
 export default Store;

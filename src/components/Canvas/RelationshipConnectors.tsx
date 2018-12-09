@@ -6,7 +6,7 @@ import { createRelationship, getAllEntities, ReduxState } from "./../../gui/redu
 import { DiagramType, EditorMode, ElementSelection } from "./../../gui/types";
 import { Entity, RelationshipKind } from "./../../core/domain";
 import { Point, RectEdge } from "./../../core/geometry";
-import { UUID } from "./../../core/utils";
+import { UUID } from './../../domain/utils/uuid';
 
 const connectorSize = 40;
 const connectorRadius = connectorSize / 2;

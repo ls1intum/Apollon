@@ -7,7 +7,7 @@ import { ReduxState } from "./../../gui/redux/state";
 import { Styles as Theme } from "./../Theme";
 import { InteractiveElementsMode } from "./../../gui/types";
 import { UMLModel } from "./../../core/domain";
-import { UUID } from "./../../core/utils";
+import { UUID } from './../../domain/utils/uuid';
 import { layoutDiagram, LayoutedDiagram } from "./../../rendering/layouters/diagram";
 import { renderDiagramToSVG, RenderOptions } from "./../../rendering/renderers/svg";
 

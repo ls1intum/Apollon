@@ -1,6 +1,6 @@
 import Element from './../domain/Element';
 import { Point, RectEdge, Size } from "./geometry";
-import { UUID } from "./utils";
+import { UUID } from './../domain/utils/uuid';
 
 export interface UMLModel {
     entities: Entity[];

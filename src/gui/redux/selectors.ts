@@ -1,7 +1,7 @@
 import { createSelector } from "reselect";
 import { ReduxState } from "./state";
 import { Entity, LayoutedRelationship, Relationship } from "../../core/domain";
-import { UUID } from "../../core/utils";
+import { UUID } from './../../domain/utils/uuid';
 import { computeRelationshipPath } from "../../rendering/layouters/relationship";
 
 type LookupById<T> = { [id: string]: T };

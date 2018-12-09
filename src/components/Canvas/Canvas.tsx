@@ -12,7 +12,7 @@ import { createEntity, getAllEntities, getAllInteractiveElementIds, getAllLayout
 import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
 import * as UML from "./../../core/domain";
 import { Size, snapPointToGrid } from "./../../core/geometry";
-import { UUID } from "./../../core/utils";
+import { UUID } from './../../domain/utils/uuid';
 import RelationshipMarkers from "./../../rendering/renderers/svg/defs/RelationshipMarkers";
 import Relationship from "./../LayoutedRelationship";
 
