@@ -7,7 +7,6 @@ import Grid from "./Grid";
 import EntityDetailsPopup from "./Popups/EntityDetailsPopup";
 import RelationshipDetailsPopup from "./Popups/RelationshipDetailsPopup";
 import RelationshipConnectors from "./RelationshipConnectors";
-import Relationships from "./Relationships";
 import * as DragDrop from "./../../gui/components/dnd";
 import { ZIndices } from "./../../gui/components/zindices";
 import { createEntity, getAllEntities, getAllInteractiveElementIds, getAllLayoutedRelationships, moveEntities, ReduxState, toggleInteractiveElements, updateEntityWidth } from "./../../gui/redux";
@@ -15,6 +14,8 @@ import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElem
 import * as UML from "./../../core/domain";
 import { Size, snapPointToGrid } from "./../../core/geometry";
 import { UUID } from "./../../core/utils";
+import RelationshipMarkers from "./../../rendering/renderers/svg/defs/RelationshipMarkers";
+import Relationship from "./../LayoutedRelationship";
 
 const StyledCanvas = styled.div`
     width: ${(props: any) => props.width}px;
@@ -46,26 +47,16 @@ class Canvas extends React.Component<Props, State> {
     state: State = {
         doubleClickedElement: { type: "none" },
         userIsHoldingEntity: false,
-        userIsResizingEntity: false
+        userIsResizingEntity: false,
+        displayRelationships: false,
+    };
+
+    displayRelationships = () => {
+        this.setState({ displayRelationships: true });
     };
 
     selectEntity = (entityId: UUID, e: React.MouseEvent<HTMLDivElement>) => {
         this.onStartHoldEntity();
-        // if (e.shiftKey) {
-        //     this.props.toggleEntitySelection(entityId);
-        // } else if (!this.props.selection.entityIds.includes(entityId)) {
-        //     this.props.selectEntity(entityId);
-        // }
-    };
-
-    selectRelationship = (relationshipId: UUID) => {
-        // if (!this.props.selection.relationshipIds.includes(relationshipId)) {
-        //     this.props.selectRelationship(relationshipId);
-        // }
-    };
-
-    toggleRelationshipSelection = (relationshipId: UUID) => {
-        // this.props.toggleRelationshipSelection(relationshipId);
     };
 
     onStartHoldEntity = () => this.setState({ userIsHoldingEntity: true });
@@ -93,6 +84,12 @@ class Canvas extends React.Component<Props, State> {
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)"
         };
 
+        const style: React.CSSProperties = {
+            position: "absolute",
+            top: 0,
+            left: 0
+        };
+
         return connectDropTarget(
             <div
                 ref={ref => {
@@ -113,26 +110,43 @@ class Canvas extends React.Component<Props, State> {
                     </GridLayer>
 
                     <CanvasObjectsLayer>
-                        <Relationships
-                            relationships={relationships}
-                            canvasSize={canvasSize}
-                            apollonMode={apollonMode}
-                            editorMode={editorMode}
-                            selection={selection}
-                            onSelectRelationship={this.selectRelationship}
-                            onToggleRelationshipSelection={this.toggleRelationshipSelection}
-                            openDetailsPopup={(relationshipId: UUID) => {
-                                this.setState({
-                                    doubleClickedElement: {
-                                        type: "relationship",
-                                        relationshipId
-                                    }
-                                });
-                            }}
-                            interactiveElementIds={this.props.interactiveElementIds}
-                            interactiveElementsMode={interactiveElementsRenderMode}
-                            onToggleInteractiveElements={this.props.toggleInteractiveElements}
-                        />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width={canvasSize.width}
+                            height={canvasSize.height}
+                            style={style}
+                        >
+                            <defs>
+                                <RelationshipMarkers onComponentDidMount={this.displayRelationships} />
+                            </defs>
+                            {this.state.displayRelationships && relationships.map(relationship => {
+                                const relationshipId = relationship.relationship.id;
+                                return (
+                                    <Relationship
+                                        key={relationshipId}
+                                        relationship={relationship}
+                                        apollonMode={this.props.apollonMode}
+                                        editorMode={this.props.editorMode}
+                                        interactiveElementsMode={interactiveElementsRenderMode}
+                                        isSelected={selection.relationshipIds.includes(relationshipId)}
+                                        onSelect={() => {}}
+                                        onToggleSelection={() => {}}
+                                        isInteractiveElement={this.props.interactiveElementIds.has(relationshipId)}
+                                        onToggleInteractiveElements={() => {
+                                            this.props.toggleInteractiveElements();
+                                        }}
+                                        openDetailsPopup={() => {
+                                            this.setState({
+                                                doubleClickedElement: {
+                                                    type: "relationship",
+                                                    relationshipId
+                                                }
+                                            });
+                                        }}
+                                    />
+                                );
+                            })}
+                        </svg>
 
                         {apollonMode !== ApollonMode.ReadOnly && (
                             <RelationshipConnectors
@@ -269,6 +283,7 @@ interface State {
         | { type: "none" };
     userIsHoldingEntity: boolean;
     userIsResizingEntity: boolean;
+    displayRelationships: boolean;
 }
 
 function mapStateToProps(state: ReduxState): StateProps {

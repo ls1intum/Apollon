@@ -1,15 +1,15 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { withTheme } from "styled-components";
-import { Theme } from "./../../../gui/theme";
-import { ApollonMode, EditorMode, InteractiveElementsMode } from "./../../../gui/types";
-import { LayoutedRelationship } from "./../../../core/domain";
-import { getMarkerIdForRelationshipKind } from "./../../../rendering/renderers/svg/defs/RelationshipMarkers";
-import RelationshipLabels from "./../../../rendering/renderers/svg/RelationshipLabels";
-import { getSvgDasharrayForRelationshipKind } from "./../../../rendering/renderers/svg/RenderedRelationship";
-import { ElementRepository } from './../../../domain/Element';
+import { Theme } from "./../../gui/theme";
+import { ApollonMode, EditorMode, InteractiveElementsMode } from "./../../gui/types";
+import { LayoutedRelationship as Relationship } from "./../../core/domain";
+import { getMarkerIdForRelationshipKind } from "./../../rendering/renderers/svg/defs/RelationshipMarkers";
+import RelationshipLabels from "./../../rendering/renderers/svg/RelationshipLabels";
+import { getSvgDasharrayForRelationshipKind } from "./../../rendering/renderers/svg/RenderedRelationship";
+import { ElementRepository } from './../../domain/Element';
 
-class Relationship extends React.Component<Props, State> {
+class LayoutedRelationship extends React.Component<Props, State> {
     state: State = {
         isMouseOver: false,
         hover: false,
@@ -132,10 +132,10 @@ class Relationship extends React.Component<Props, State> {
 export default withTheme(connect(null, {
     select: ElementRepository.select,
     deselect: ElementRepository.deselect,
-})(Relationship));
+})(LayoutedRelationship));
 
 interface OwnProps {
-    relationship: LayoutedRelationship;
+    relationship: Relationship;
     apollonMode: ApollonMode;
     editorMode: EditorMode;
     theme: Theme;
