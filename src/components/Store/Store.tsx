@@ -8,10 +8,7 @@ import {
   Store as ReduxStore,
   Reducer,
 } from 'redux';
-import createSagaMiddleware from 'redux-saga';
 import ReduxState from './State';
-import mainSaga from './../../gui/redux/sagas';
-import { UUID } from '../../core/utils';
 
 import editorReducer from './../../gui/redux/editor/reducer';
 import entitiesReducer from './../../gui/redux/entities/reducer';
@@ -19,7 +16,6 @@ import interactiveElementsReducer from './../../gui/redux/interactiveElements/re
 import relationshipsReducer from './../../gui/redux/relationships/reducer';
 import { ElementReducer, Actions } from './../../domain/Element';
 import { withUndoRedo } from './../../gui/redux/undoRedo';
-import { DiagramType, ApollonMode, EditorMode } from '../../gui/types';
 import { initialOptions, OptionsState } from './../../domain/Options';
 
 
@@ -52,7 +48,6 @@ class Store extends React.Component<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
 
-    const sagaMiddleware = createSagaMiddleware();
     const reducer = withUndoRedo(
       combineReducers<ReduxState, any>(this.reducers)
     ) as Reducer<ReduxState>;
@@ -60,9 +55,8 @@ class Store extends React.Component<Props> {
     const composeEnhancers: typeof compose =
       (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
-    const enhancer = composeEnhancers(applyMiddleware(sagaMiddleware));
+    const enhancer = composeEnhancers();
     this.store = createStore(reducer, props.initialState || {}, enhancer);
-    // sagaMiddleware.run(mainSaga, this.props.selectEntities);
   }
 
   render() {
