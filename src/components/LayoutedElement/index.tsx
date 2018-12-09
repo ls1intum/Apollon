@@ -6,7 +6,7 @@ import styled, { withTheme } from "styled-components";
 import Member from "./Member";
 import Name from "./Name";
 import ResizeHandle from "./ResizeHandle";
-import * as DragDrop from "./../../gui/components/dnd";
+import * as DragDrop from "./../DragDrop/dnd";
 import { Theme } from "./../../gui/theme";
 import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
 import { Entity, EntityKind } from "./../../core/domain";

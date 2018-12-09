@@ -2,7 +2,7 @@ import * as React from "react";
 import { ConnectDragPreview, ConnectDragSource, DragSource, DragSourceCollector, DragSourceSpec } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import styled from "styled-components";
-import * as DragDrop from "./../../../gui/components/dnd";
+import * as DragDrop from "./../../DragDrop/dnd";
 import { EntityKind } from "./../../../core/domain";
 import { assertNever } from "./../../../core/utils";
 import { computeEntityHeight, getDefaultEntityWidth } from "./../../../rendering/layouters/entity";

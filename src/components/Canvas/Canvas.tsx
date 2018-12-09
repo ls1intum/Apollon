@@ -7,7 +7,7 @@ import Grid from "./Grid";
 import EntityDetailsPopup from "./Popups/EntityDetailsPopup";
 import RelationshipDetailsPopup from "./Popups/RelationshipDetailsPopup";
 import RelationshipConnectors from "./RelationshipConnectors";
-import * as DragDrop from "./../../gui/components/dnd";
+import * as DragDrop from "./../DragDrop/dnd";
 import { createEntity, getAllEntities, getAllInteractiveElementIds, getAllLayoutedRelationships, moveEntities, ReduxState, toggleInteractiveElements, updateEntityWidth } from "./../../gui/redux";
 import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
 import * as UML from "./../../core/domain";

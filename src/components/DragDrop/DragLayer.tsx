@@ -4,8 +4,8 @@ import * as ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import * as DragDrop from "./dnd";
-import { getAllEntities } from "../redux/selectors";
-import { ReduxState } from "../redux/state";
+import { getAllEntities } from "./../../gui/redux/selectors";
+import { ReduxState } from "./../../gui/redux/state";
 import { Entity } from "../../core/domain";
 import { Rect, Size, snapPointToGrid } from "../../core/geometry";
 

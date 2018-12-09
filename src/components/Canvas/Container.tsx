@@ -5,7 +5,7 @@ import { State as ReduxState } from "./../Store";
 import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
 import { Size } from "./../../core/geometry";
 import { UUID } from "./../../core/utils";
-import DragLayer from "./../../gui/components/DragLayer";
+import DragLayer from "./../DragDrop/DragLayer";
 
 class CanvasContainer extends React.Component<Props> {
     public canvas: HTMLDivElement | null = null;
