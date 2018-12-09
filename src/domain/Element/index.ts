@@ -8,7 +8,7 @@ interface Element {
 
 abstract class Element {
   readonly id: string = uuid();
-  readonly futureKind: string = (<any>this).constructor.name;
+  readonly kind: string = (<any>this).constructor.name;
   bounds: Boundary = new Boundary(0, 0, 110, 80);
 
   selected: boolean = false;

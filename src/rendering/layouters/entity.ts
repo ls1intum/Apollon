@@ -13,7 +13,7 @@ export const ENTITY_BORDER_THICKNESS = 1;
 
 export interface LayoutedEntity {
     id: UUID;
-    kind: EntityKind;
+    kind: string;
     name: string;
     position: Point;
     size: Size;
@@ -100,7 +100,7 @@ export function getDefaultEntityWidth(kind: EntityKind) {
 }
 
 export function computeEntityHeight(
-    kind: EntityKind,
+    kind: string,
     attributeCount: number,
     methodCount: number,
     renderMode: EntityRenderMode
@@ -145,18 +145,18 @@ export function computeEntityHeight(
     return height;
 }
 
-export function computeEntityKindHeight(kind: EntityKind) {
+export function computeEntityKindHeight(kind: string) {
     return getEntityKindDescriptionOrNull(kind) === null ? 0 : ENTITY_KIND_HEIGHT;
 }
 
-export function computeEntityHeaderHeight(kind: EntityKind) {
+export function computeEntityHeaderHeight(kind: string) {
     if (kind === EntityKind.ActivityActionNode) {
         return 2 * ENTITY_NAME_HEIGHT;
     }
     return ENTITY_NAME_HEIGHT + computeEntityKindHeight(kind);
 }
 
-export function getEntityKindDescriptionOrNull(kind: EntityKind): string | null {
+export function getEntityKindDescriptionOrNull(kind: string): string | null {
     switch (kind) {
         case EntityKind.Enumeration:
             return "«enumeration»";
@@ -173,9 +173,7 @@ export function getEntityKindDescriptionOrNull(kind: EntityKind): string | null 
         case EntityKind.ActivityMergeNode:
         case EntityKind.ActivityForkNode:
         case EntityKind.ActivityForkNodeHorizontal:
-            return null;
-
         default:
-            return assertNever(kind);
+            return null;
     }
 }

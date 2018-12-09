@@ -75,6 +75,6 @@ function stringifyEntityKind(kind: EntityKind): string {
 }
 
 interface Props {
-    entityKind: EntityKind;
+    entityKind: string;
     updateEntityKind: (kind: EntityKind) => void;
 }

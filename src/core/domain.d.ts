@@ -8,7 +8,6 @@ export interface UMLModel {
 }
 
 export interface Entity extends Element {
-    kind: EntityKind;
     name: string;
     attributes: EntityMember[];
     methods: EntityMember[];
@@ -16,10 +15,10 @@ export interface Entity extends Element {
 }
 
 export const enum EntityKind {
-    AbstractClass = "ABSTRACT_CLASS",
-    Class = "CLASS",
-    Enumeration = "ENUMERATION",
-    Interface = "INTERFACE",
+    AbstractClass = "AbstractClass",
+    Class = "Class",
+    Enumeration = "Enumeration",
+    Interface = "Interface",
     ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
     ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
     ActivityActionNode = "ACTIVITY_ACTION_NODE",

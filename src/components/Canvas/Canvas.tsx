@@ -135,9 +135,7 @@ class Canvas extends React.Component<Props, State> {
                                         onSelect={() => {}}
                                         onToggleSelection={() => {}}
                                         isInteractiveElement={this.props.interactiveElementIds.has(relationshipId)}
-                                        onToggleInteractiveElements={() => {
-                                            this.props.toggleInteractiveElements();
-                                        }}
+                                        onToggleInteractiveElements={this.props.toggleInteractiveElements}
                                         openDetailsPopup={() => {
                                             this.setState({
                                                 doubleClickedElement: {
