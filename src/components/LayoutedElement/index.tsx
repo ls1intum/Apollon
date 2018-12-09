@@ -58,13 +58,17 @@ class CanvasEntity extends React.Component<Props, State> {
         e.stopPropagation();
         this.props.onMouseDown(e);
         if (e.shiftKey) {
+            const entity = this.props.entity;
+            entity.selected = !entity.selected;
             this.setState(
                 state => ({ selected: !this.state.selected }),
-                () => this.state.selected ? this.props.select(this.props.entity) : this.props.deselect(this.props.entity)
+                () => this.props.update(entity)
             );
         } else {
             if (!this.state.selected) {
-                this.props.select(this.props.entity)
+                const entity = this.props.entity;
+                entity.selected = true;
+                this.props.update(entity);
             }
             this.setState({
                 selected: true,
@@ -75,7 +79,9 @@ class CanvasEntity extends React.Component<Props, State> {
     onMouseUp = (event: MouseEvent) => {
         if (!event.shiftKey) {
             if (!this.state.hover && this.state.selected) {
-                this.props.deselect(this.props.entity)
+                const entity = this.props.entity;
+                entity.selected = false;
+                this.props.update(entity)
             }
             this.setState((state, props) => ({
                 selected: state.hover,
@@ -443,8 +449,7 @@ interface OwnProps {
 }
 
 interface DispatchProps {
-    select: typeof ElementRepository.select;
-    deselect: typeof ElementRepository.deselect;
+    update: typeof ElementRepository.update;
 }
 
 interface DragDropProps {
@@ -495,8 +500,7 @@ const dragSourceCollector: DragSourceCollector<any> = (connector, monitor): Drag
 });
 
 export default (withTheme(connect(null, {
-    select: ElementRepository.select,
-    deselect: ElementRepository.deselect,
+    update: ElementRepository.update,
 })(DragSource(
     DragDrop.ItemTypes.ExistingEntities,
     dragSourceSpec,

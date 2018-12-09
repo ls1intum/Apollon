@@ -10,15 +10,15 @@ const ElementReducer: Reducer<ElementState, Actions> = (
   action: Actions
 ): ElementState => {
   switch (action.type) {
-    case ActionTypes.SELECT:
+    case ActionTypes.CREATE:
       return {
         ...state,
-        [action.element.id]: { selected: true },
+        [action.element.id]: { ...action.element },
       };
-    case ActionTypes.DESELECT:
+    case ActionTypes.UPDATE:
       return {
         ...state,
-        [action.element.id]: { selected: false },
+        [action.element.id]: { ...action.element },
       };
   }
   return state;

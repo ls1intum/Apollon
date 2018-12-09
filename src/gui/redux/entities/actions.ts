@@ -90,8 +90,10 @@ export function createEntity(position: Point, kind: EntityKind): CreateEntityAct
         entity: {
             id: newId(),
             kind,
+            futureKind: 't',
             name,
             position,
+            selected: false,
             size: {
                 width: getDefaultEntityWidth(kind),
                 height: computeEntityHeight(kind, attributes.length, methods.length, renderMode)

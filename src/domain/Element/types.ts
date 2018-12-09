@@ -1,12 +1,10 @@
-import { Entity as Element } from './../../core/domain';
+import Element from '.';
 
 export const enum ActionTypes {
-  SELECT = '@@element/SELECT',
-  DESELECT = '@@element/DESELECT',
+  CREATE = '@@element/CREATE',
+  UPDATE = '@@element/UPDATE',
 }
 
 export interface ElementState {
-  readonly [id: string]: {
-    selected: boolean;
-  };
+  readonly [id: string]: Element
 }

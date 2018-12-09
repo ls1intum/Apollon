@@ -1,15 +1,15 @@
 import uuid from './../utils/uuid';
 
 interface Element {
-  id: string;
+  readonly id: string;
+  readonly futureKind: string;
 }
 
 abstract class Element {
-  public id: string;
+  readonly id: string = uuid();
+  readonly futureKind: string = (<any>this).constructor.name;
 
-  constructor() {
-    this.id = uuid();
-  }
+  selected: boolean = false;
 }
 
 export default Element;

@@ -15,6 +15,10 @@ import { Size, snapPointToGrid } from "./../../core/geometry";
 import { UUID } from './../../domain/utils/uuid';
 import RelationshipMarkers from "./../../rendering/renderers/svg/defs/RelationshipMarkers";
 import Relationship from "./../LayoutedRelationship";
+import Element, { ElementRepository } from './../../domain/Element';
+import { EntityKind } from '../..';
+import * as Plugins from '../../domain/plugins';
+import { computeEntityHeight, getDefaultEntityWidth } from "./../../rendering/layouters/entity";
 
 const StyledCanvas = styled.div`
     width: ${(props: any) => props.width}px;
@@ -263,6 +267,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
+    create: typeof ElementRepository.create,
     moveEntities: typeof moveEntities;
     createEntity: typeof createEntity;
     updateEntityWidth: typeof updateEntityWidth;
@@ -322,6 +327,21 @@ const dropTargetSpec: DropTargetSpec<Props> = {
                     y: y - canvasRect.top
                 };
                 const actualPosition = snapPointToGrid(positionOnCanvas, props.gridSize);
+
+                let clazz: string = 'Class';
+                switch (item.kind.toString()) {
+                    case EntityKind.Class:
+                        clazz = 'Class';
+                    case EntityKind.AbstractClass:
+                        clazz = 'AbstractClass';
+                    case EntityKind.Interface:
+                        clazz = 'Interface';
+                    case EntityKind.Enumeration:
+                        clazz = 'Enumeration';
+                }
+                const element = new ((Plugins as { [clazz: string]: any })[clazz])(item.kind, actualPosition, item.size);
+                props.create(element);
+
                 props.createEntity(actualPosition, item.kind);
             }
         } else if (item.type === DragDrop.ItemTypes.ExistingEntities) {
@@ -347,6 +367,7 @@ const dropTargetCollector: DropTargetCollector<any> = connector => ({
 });
 
 export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(mapStateToProps, {
+    create: ElementRepository.create,
     createEntity,
     moveEntities,
     updateEntityWidth,

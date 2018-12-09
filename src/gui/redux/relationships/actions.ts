@@ -36,6 +36,8 @@ export function createRelationship(
         type: "CREATE_RELATIONSHIP",
         relationship: {
             id: newId(),
+            futureKind: 't',
+            selected: false,
             kind,
             source,
             target,

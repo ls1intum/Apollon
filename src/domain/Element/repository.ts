@@ -13,11 +13,11 @@ const action = (type: ActionTypes, element: Element): Action<ActionTypes> => ({
   element,
 });
 
-export type Actions = Action<ActionTypes.SELECT> | Action<ActionTypes.DESELECT>;
+export type Actions = Action<ActionTypes.CREATE> | Action<ActionTypes.UPDATE>;
 
 class ElementRepository {
-  static select = (element: Element) => action(ActionTypes.SELECT, element);
-  static deselect = (element: Element) => action(ActionTypes.DESELECT, element);
+  static create = (element: Element) => action(ActionTypes.CREATE, element);
+  static update = (element: Element) => action(ActionTypes.UPDATE, element);
 }
 
 export default ElementRepository;

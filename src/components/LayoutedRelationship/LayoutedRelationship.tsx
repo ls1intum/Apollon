@@ -37,9 +37,15 @@ class LayoutedRelationship extends React.Component<Props, State> {
 
         switch (this.props.editorMode) {
             case EditorMode.ModelingView:
+                const relationship = this.props.relationship.relationship;
+                if (e.shiftKey) {
+                    relationship.selected = !relationship.selected
+                } else {
+                    relationship.selected = true;
+                }
                 this.setState(
-                    state => ({ selected: !this.state.selected }),
-                    () => this.state.selected ? this.props.select(this.props.relationship.relationship) : this.props.deselect(this.props.relationship.relationship)
+                    state => ({ selected: relationship.selected }),
+                    () => this.props.update(relationship)
                 );
                 break;
 
@@ -52,7 +58,9 @@ class LayoutedRelationship extends React.Component<Props, State> {
     onMouseUp = (event: MouseEvent) => {
         if (!event.shiftKey) {
             if (!this.state.hover && this.state.selected) {
-                this.props.deselect(this.props.relationship.relationship)
+                const relationship = this.props.relationship.relationship;
+                relationship.selected = false
+                this.props.update(relationship)
             }
             this.setState((state, props) => ({
                 selected: state.hover,
@@ -130,8 +138,7 @@ class LayoutedRelationship extends React.Component<Props, State> {
 }
 
 export default withTheme(connect(null, {
-    select: ElementRepository.select,
-    deselect: ElementRepository.deselect,
+    update: ElementRepository.update,
 })(LayoutedRelationship));
 
 interface OwnProps {
@@ -149,8 +156,7 @@ interface OwnProps {
 }
 
 interface DispatchProps {
-    select: typeof ElementRepository.select;
-    deselect: typeof ElementRepository.deselect;
+    update: typeof ElementRepository.update;
 }
 
 type Props = OwnProps & DispatchProps;
