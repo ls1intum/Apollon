@@ -1,6 +1,6 @@
 import * as React from "react";
 import styled, { withTheme } from "styled-components";
-import { Theme } from "./../../gui/theme";
+import { Styles as Theme } from "./../Theme";
 import { EditorMode, InteractiveElementsMode } from "./../../gui/types";
 import { EntityMember } from "./../../core/domain";
 import { UUID } from "./../../core/utils";

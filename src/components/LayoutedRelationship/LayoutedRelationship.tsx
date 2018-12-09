@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { withTheme } from "styled-components";
-import { Theme } from "./../../gui/theme";
+import { Styles as Theme } from "./../Theme";
 import { ApollonMode, EditorMode, InteractiveElementsMode } from "./../../gui/types";
 import { LayoutedRelationship as Relationship } from "./../../core/domain";
 import { getMarkerIdForRelationshipKind } from "./../../rendering/renderers/svg/defs/RelationshipMarkers";
