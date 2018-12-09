@@ -1,6 +1,6 @@
 import * as React from "react";
 import LabeledCheckbox from "./LabeledCheckbox";
-import { InteractiveElementsMode } from "./../../../gui/types";
+import { InteractiveElementsMode } from "../../../domain/Options/types";
 
 export default class InteractiveElementsPanel extends React.Component<Props> {
     highlightInteractiveElements = (shouldHighlight: boolean) => {

@@ -1,4 +1,4 @@
-import { UUID } from './../domain/utils/uuid';
+import { UUID } from '../utils/uuid';
 
 export interface ElementSelection {
     entityIds: UUID[];

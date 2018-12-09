@@ -1,4 +1,4 @@
-import { DiagramType, ApollonMode, EditorMode, InteractiveElementsMode } from '../../gui/types';
+import { DiagramType, ApollonMode, EditorMode, InteractiveElementsMode } from './types';
 import { Reducer } from 'react';
 
 export const initialOptions = {

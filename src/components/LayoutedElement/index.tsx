@@ -8,7 +8,7 @@ import Name from "./Name";
 import ResizeHandle from "./ResizeHandle";
 import * as DragDrop from "./../DragDrop/dnd";
 import { Styles as Theme } from "./../Theme";
-import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
+import { ApollonMode, EditorMode, ElementSelection, InteractiveElementsMode } from "../../domain/Options/types";
 import { Entity, EntityKind } from "./../../core/domain";
 import { UUID } from './../../domain/utils/uuid';
 import { computeEntityHeight, ENTITY_MEMBER_LIST_VERTICAL_PADDING } from "./../../rendering/layouters/entity";

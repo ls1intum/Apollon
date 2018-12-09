@@ -1,7 +1,7 @@
 import { Store } from "redux";
 import { deleteSelectedElements, duplicateSelectedEntities, flipSelectedRelationships, moveSelectedEntities } from "./handlers";
 import { redo, ReduxAction, ReduxState, undo } from "../redux";
-import { ElementSelection } from "../types";
+import { ElementSelection } from "../../domain/Options/types";
 import { UUID } from './../../domain/utils/uuid';
 
 export default class KeyboardEventListener {

@@ -5,7 +5,7 @@ import Popup from "../Popup";
 import { flipRelationship, getAllEntities, ReduxState, updateRelationship } from "./../../../../gui/redux";
 import { Entity, LayoutedRelationship } from "./../../../../core/domain";
 import { Point } from "./../../../../core/geometry";
-import { DiagramType } from "./../../../../gui/types";
+import { DiagramType } from "../../../../domain/Options/types";
 
 class RelationshipDetailsPopup extends React.Component<Props> {
     render() {

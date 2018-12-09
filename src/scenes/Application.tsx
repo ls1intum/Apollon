@@ -9,7 +9,7 @@ import { Layout } from './styles';
 import DragDrop from './../components/DragDrop';
 import Editor from './../components/Container';
 import KeyboardEventListener from './../gui/events/KeyboardEventListener';
-import { ApollonMode, ElementSelection } from './../gui/types';
+import { ApollonMode, ElementSelection } from '../domain/Options/types';
 
 class App extends React.Component<Props, State> {
   store: RefObject<Store> = createRef();

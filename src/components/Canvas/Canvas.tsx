@@ -9,7 +9,7 @@ import RelationshipDetailsPopup from "./Popups/RelationshipDetailsPopup";
 import RelationshipConnectors from "./RelationshipConnectors";
 import * as DragDrop from "./../DragDrop/dnd";
 import { createEntity, getAllEntities, getAllInteractiveElementIds, getAllLayoutedRelationships, moveEntities, ReduxState, toggleInteractiveElements, updateEntityWidth } from "./../../gui/redux";
-import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
+import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "../../domain/Options/types";
 import * as UML from "./../../core/domain";
 import { Size, snapPointToGrid } from "./../../core/geometry";
 import { UUID } from './../../domain/utils/uuid';

@@ -5,7 +5,7 @@ import RectEdgeSelect from "./RectEdgeSelect";
 import BlockInput from "../BlockInput";
 import { PopupSectionHeading } from "../PopupSectionHeading";
 import { Entity, RelationshipEnd } from "./../../../../core/domain";
-import { DiagramType } from "./../../../../gui/types";
+import { DiagramType } from "../../../../domain/Options/types";
 import { RectEdge } from "./../../../../core/geometry";
 import { UUID } from './../../../../domain/utils/uuid';
 

@@ -9,7 +9,7 @@ import {
   EditorMode,
   ElementSelection,
   InteractiveElementsMode,
-} from './gui/types';
+} from './domain/Options/types';
 
 export interface ApollonOptions {
   initialState?: Partial<ReduxState>;

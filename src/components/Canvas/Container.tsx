@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import Canvas from "./Canvas";
 import { State as ReduxState } from "./../Store";
-import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
+import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "../../domain/Options/types";
 import { Size } from "./../../core/geometry";
 import { UUID } from './../../domain/utils/uuid';
 import DragLayer from "./../DragDrop/DragLayer";

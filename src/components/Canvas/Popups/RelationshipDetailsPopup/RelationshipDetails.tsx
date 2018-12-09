@@ -5,7 +5,7 @@ import RelationshipFlipIcon from "./RelationshipFlipIcon";
 import { PopupSection } from "../PopupSection";
 import { PopupSectionHeading } from "../PopupSectionHeading";
 import { Entity, LayoutedRelationship, Relationship, RelationshipEnd, RelationshipKind } from "./../../../../core/domain";
-import { DiagramType } from "./../../../../gui/types";
+import { DiagramType } from "../../../../domain/Options/types";
 
 export default class RelationshipDetails extends React.Component<Props> {
     updateRelationshipKind = (kind: RelationshipKind) => {
