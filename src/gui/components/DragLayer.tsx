@@ -4,7 +4,6 @@ import * as ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import * as DragDrop from "./dnd";
-import { ZIndices } from "./zindices";
 import { getAllEntities } from "../redux/selectors";
 import { ReduxState } from "../redux/state";
 import { Entity } from "../../core/domain";
@@ -26,11 +25,11 @@ const AbsoluteDragItemLayer = styled.div`
     top: 0;
     width: 100%;
     height: 100%;
-    z-index: ${ZIndices.DragItemLayer};
+    z-index: 4;
 `;
 
 const FixedDragItemLayer = styled(LayerBase)`
-    z-index: ${ZIndices.DragItemLayer};
+    z-index: 4;
 `;
 
 class DragLayer extends React.Component<Props> {

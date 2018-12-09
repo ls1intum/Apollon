@@ -8,7 +8,6 @@ import EntityDetailsPopup from "./Popups/EntityDetailsPopup";
 import RelationshipDetailsPopup from "./Popups/RelationshipDetailsPopup";
 import RelationshipConnectors from "./RelationshipConnectors";
 import * as DragDrop from "./../../gui/components/dnd";
-import { ZIndices } from "./../../gui/components/zindices";
 import { createEntity, getAllEntities, getAllInteractiveElementIds, getAllLayoutedRelationships, moveEntities, ReduxState, toggleInteractiveElements, updateEntityWidth } from "./../../gui/redux";
 import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "./../../gui/types";
 import * as UML from "./../../core/domain";
@@ -29,7 +28,7 @@ const GridLayer = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: ${ZIndices.GridLayer};
+    z-index: 1;
 `;
 
 const CanvasObjectsLayer = styled.div`
@@ -38,7 +37,7 @@ const CanvasObjectsLayer = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: ${ZIndices.CanvasObjectsLayer};
+    z-index: 2;
 `;
 
 class Canvas extends React.Component<Props, State> {
