@@ -2,7 +2,7 @@ import * as React from "react";
 import { ConnectDropTarget, DropTarget, DropTargetCollector, DropTargetSpec } from "react-dnd";
 import { connect } from "react-redux";
 import styled from "styled-components";
-import Entity from "./Entity";
+import Entity from "./../LayoutedElement";
 import Grid from "./Grid";
 import EntityDetailsPopup from "./Popups/EntityDetailsPopup";
 import RelationshipDetailsPopup from "./Popups/RelationshipDetailsPopup";

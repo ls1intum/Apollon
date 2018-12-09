@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
-import * as UML from "./../../../core/domain";
-import { computeEntityHeaderHeight, ENTITY_HORIZONTAL_PADDING, getEntityKindDescriptionOrNull } from "./../../../rendering/layouters/entity";
+import * as UML from "./../../core/domain";
+import { computeEntityHeaderHeight, ENTITY_HORIZONTAL_PADDING, getEntityKindDescriptionOrNull } from "./../../rendering/layouters/entity";
 
 const Container: any = styled.div`
     display: flex;

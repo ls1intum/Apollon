@@ -1,10 +1,10 @@
 import * as React from "react";
 import styled, { withTheme } from "styled-components";
-import { Theme } from "./../../../gui/theme";
-import { EditorMode, InteractiveElementsMode } from "./../../../gui/types";
-import { EntityMember } from "./../../../core/domain";
-import { UUID } from "./../../../core/utils";
-import { ENTITY_HORIZONTAL_PADDING, ENTITY_MEMBER_HEIGHT } from "./../../../rendering/layouters/entity";
+import { Theme } from "./../../gui/theme";
+import { EditorMode, InteractiveElementsMode } from "./../../gui/types";
+import { EntityMember } from "./../../core/domain";
+import { UUID } from "./../../core/utils";
+import { ENTITY_HORIZONTAL_PADDING, ENTITY_MEMBER_HEIGHT } from "./../../rendering/layouters/entity";
 
 const NameDisplay = styled.div`
     height: ${ENTITY_MEMBER_HEIGHT}px;
