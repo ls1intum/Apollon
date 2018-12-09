@@ -3,10 +3,16 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import Application from './scenes/Application';
 import { State as ReduxState } from './components/Store';
 import { Styles } from './components/Theme';
-import { DiagramType, ApollonMode, ElementSelection } from './gui/types';
+import {
+  DiagramType,
+  ApollonMode,
+  EditorMode,
+  ElementSelection,
+  InteractiveElementsMode,
+} from './gui/types';
 
 export interface ApollonOptions {
-  initialState?: ReduxState;
+  initialState?: Partial<ReduxState>;
   diagramType?: DiagramType;
   mode?: ApollonMode;
   debug?: boolean;
@@ -16,21 +22,30 @@ export interface ApollonOptions {
 class Editor {
   public application: RefObject<Application> = createRef();
 
-  constructor(public container: HTMLElement, options: ApollonOptions) {
-    const {
-      initialState,
-      diagramType = DiagramType.ClassDiagram,
-      mode = ApollonMode.Full,
-      debug = false,
-      theme = {},
-    } = options;
+  constructor(
+    public container: HTMLElement,
+    { initialState, theme = {}, ...options }: ApollonOptions
+  ) {
+    const state: ReduxState = {
+      entities: { byId: {}, allIds: [] },
+      relationships: { byId: {}, allIds: [] },
+      interactiveElements: { allIds: [] },
+      editor: { canvasSize: { width: 1600, height: 800 }, gridSize: 10 },
+      elements: {},
+      ...initialState,
+      options: {
+        diagramType: DiagramType.ClassDiagram,
+        mode: ApollonMode.Full,
+        editorMode: EditorMode.ModelingView,
+        interactiveMode: InteractiveElementsMode.Highlighted,
+        debug: false,
+        ...options,
+      },
+    };
 
     const app = createElement(Application, {
       ref: this.application,
-      initialState,
-      diagramType,
-      apollonMode: mode,
-      debugModeEnabled: debug,
+      state,
       theme,
     });
 

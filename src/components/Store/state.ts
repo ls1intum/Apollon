@@ -2,6 +2,8 @@ import { Entity, Relationship } from '../../core/domain';
 import { Size } from '../../core/geometry';
 import { UUID } from '../../core/utils';
 import { ElementState } from './../../domain/Element';
+import { DiagramType, ApollonMode, EditorMode } from '../../gui/types';
+import { OptionsState } from './../../domain/Options';
 
 type State = {
   entities: {
@@ -24,6 +26,8 @@ type State = {
   };
 
   elements: ElementState;
+
+  options: OptionsState;
 };
 
 export default State;

@@ -1,6 +1,6 @@
 import * as React from "react";
 import SegmentedControl, { Segment } from "./SegmentedControl";
-import { EditorMode } from "../../../types";
+import { EditorMode } from "./../../../gui/types";
 
 export default class EditorModeSelection extends React.Component<Props> {
     segments: Segment[] = [

@@ -2,10 +2,10 @@ import * as React from "react";
 import { ConnectDragPreview, ConnectDragSource, DragSource, DragSourceCollector, DragSourceSpec } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import styled from "styled-components";
-import * as DragDrop from "../../dnd";
-import { EntityKind } from "../../../../core/domain";
-import { assertNever } from "../../../../core/utils";
-import { computeEntityHeight, getDefaultEntityWidth } from "../../../../rendering/layouters/entity";
+import * as DragDrop from "./../../../gui/components/dnd";
+import { EntityKind } from "./../../../core/domain";
+import { assertNever } from "./../../../core/utils";
+import { computeEntityHeight, getDefaultEntityWidth } from "./../../../rendering/layouters/entity";
 
 const StyledEntityPreview: any = styled.div`
     width: 145px;
@@ -16,16 +16,13 @@ const StyledEntityPreview: any = styled.div`
     cursor: move;
     user-select: none;
     text-align: center;
-
     :hover {
         box-shadow: ${(props: any) =>
             props.isDragging ? "none" : `0 0 0 4px ${props.theme.highlightColor};`};
     }
-
     > div {
         flex-grow: 1;
         border-top: 1px solid black;
-
         :first-child {
             padding: 10px;
             flex-grow: 0;
@@ -50,7 +47,6 @@ const StyledActivityMergeNode: any = styled.div`
     line-height: 30px;
     text-align: center;
     margin: 5px;
-
     &:before {
         position: absolute;
         content: '';
@@ -70,7 +66,6 @@ const StyledActivityForkNode: any = styled.div`
     line-height: 30px;
     text-align: center;
     margin: 5px;
-
     &:before {
         position: absolute;
         content: '';
@@ -89,7 +84,6 @@ const StyledActivityForkNodeHorizontal: any = styled.div`
     line-height: 30px;
     text-align: center;
     margin: 5px;
-
     &:before {
         position: absolute;
         content: '';

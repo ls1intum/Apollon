@@ -136,7 +136,7 @@ class CanvasEntity extends React.Component<Props, State> {
         const onMouseDown = editorMode === EditorMode.ModelingView ? this.onMouseDown : undefined;
 
         const onMouseUp = editorMode === EditorMode.ModelingView ? this.props.onMouseUp : undefined;
-
+    
         const onClick =
             editorMode === EditorMode.InteractiveElementsView
                 ? this.toggleEntityInteractiveElement

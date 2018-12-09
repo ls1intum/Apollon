@@ -1,8 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
 import EntityPreview from "./EntityPreview";
-import { EntityKind } from "../../../../core/domain";
-import { DiagramType } from "../../../types";
+import { EntityKind } from "./../../../core/domain";
+import { DiagramType } from "./../../../gui/types";
 
 const Container = styled.section`
     display: grid;

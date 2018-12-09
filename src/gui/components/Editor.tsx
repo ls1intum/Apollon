@@ -1,14 +1,12 @@
 import * as React from "react";
-import { DragDropContext } from "react-dnd";
-import HTML5Backend from "react-dnd-html5-backend";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import CanvasContainer from "./Canvas/Container";
 import DragLayer from "./DragLayer";
-import Sidebar from "./Sidebar";
+// import Sidebar from "./Sidebar";
 import { ZIndices } from "./zindices";
 import { getAllEntities, getAllRelationships } from "../redux/selectors";
-import { ReduxState } from "../redux/state";
+import { State as ReduxState } from "./../../components/Store";
 import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "../types";
 import { Entity, Relationship, UMLModel } from "../../core/domain";
 import { UUID } from "../../core/utils";
@@ -25,9 +23,9 @@ const FlexContainer = styled.div`
     position: relative;
 `;
 
-const SidebarFlexItem = styled.div`
-    width: ${SIDEBAR_WIDTH}px;
-`;
+// const SidebarFlexItem = styled.div`
+//     width: ${SIDEBAR_WIDTH}px;
+// `;
 
 const CanvasFlexItem = styled.div`
     position: relative;
@@ -51,16 +49,16 @@ class Editor extends React.Component<Props, State> {
 
     state: State = {
         didScroll: false,
-        editorMode: EditorMode.ModelingView,
-        interactiveElementsMode: InteractiveElementsMode.Highlighted
+        // editorMode: EditorMode.ModelingView,
+        // interactiveElementsMode: InteractiveElementsMode.Highlighted
     };
 
     selectEditorMode = (newMode: EditorMode) => {
-        this.setState({ editorMode: newMode });
+        // this.setState({ editorMode: newMode });
     };
 
     selectInteractiveElementsMode = (newMode: InteractiveElementsMode) => {
-        this.setState({ interactiveElementsMode: newMode });
+        // this.setState({ interactiveElementsMode: newMode });
     };
 
     componentDidMount() {
@@ -133,7 +131,7 @@ class Editor extends React.Component<Props, State> {
                     ref={(ref: any) => (this.canvasScrollContainer = ref)}
                     style={{
                         overflow: this.state.didScroll ? "scroll" : "hidden",
-                        width: canvasFlexItemWidth,
+                        width: "100%",
                         lineHeight: 1
                     }}
                 >
@@ -141,28 +139,12 @@ class Editor extends React.Component<Props, State> {
                         innerRef={ref => (this.canvas = ref)}
                         diagramType={this.props.diagramType}
                         apollonMode={apollonMode}
-                        editorMode={this.state.editorMode}
-                        interactiveElementsMode={this.state.interactiveElementsMode}
+                        editorMode={this.props.editorMode}
+                        interactiveElementsMode={this.props.interactiveElementsMode}
                         selection={this.props.selection}
                         canvasScrollContainer={this.canvasScrollContainer}
                     />
                 </CanvasFlexItem>
-
-                {apollonMode !== ApollonMode.ReadOnly && (
-                    <SidebarFlexItem>
-                        <Sidebar
-                            selectedEntities={selectedEntities}
-                            selectedRelationships={selectedRelationships}
-                            diagramType={this.props.diagramType}
-                            apollonMode={this.props.apollonMode}
-                            editorMode={this.state.editorMode}
-                            debugModeEnabled={this.props.debugModeEnabled}
-                            interactiveElementsMode={this.state.interactiveElementsMode}
-                            selectEditorMode={this.selectEditorMode}
-                            selectInteractiveElementsMode={this.selectInteractiveElementsMode}
-                        />
-                    </SidebarFlexItem>
-                )}
 
                 <DragLayer
                     canvas={this.canvas!}
@@ -170,7 +152,7 @@ class Editor extends React.Component<Props, State> {
                 />
 
                 <OverlayDropShadow
-                    style={{ right: apollonMode === ApollonMode.ReadOnly ? 0 : SIDEBAR_WIDTH }}
+                    style={{ right: 0 }}
                 />
             </FlexContainer>
         );
@@ -178,30 +160,35 @@ class Editor extends React.Component<Props, State> {
 }
 
 interface OwnProps {
-    diagramType: DiagramType;
-    apollonMode: ApollonMode;
-    debugModeEnabled: boolean;
     selection: ElementSelection;
 }
 
 interface StateProps {
     entities: Entity[];
     relationships: Relationship[];
+    diagramType: DiagramType;
+    apollonMode: ApollonMode;
+    editorMode: EditorMode;
+    interactiveElementsMode: InteractiveElementsMode;
+    debugModeEnabled: boolean;
 }
 
 type Props = OwnProps & StateProps;
 
 interface State {
     didScroll: boolean;
-    editorMode: EditorMode;
-    interactiveElementsMode: InteractiveElementsMode;
 }
 
 function mapStateToProps(state: ReduxState): StateProps {
     return {
         entities: getAllEntities(state),
-        relationships: getAllRelationships(state)
+        relationships: getAllRelationships(state),
+        diagramType: state.options.diagramType,
+        apollonMode: state.options.mode,
+        editorMode: state.options.editorMode,
+        interactiveElementsMode: state.options.interactiveMode,
+        debugModeEnabled: state.options.debug,
     };
 }
 
-export default DragDropContext(HTML5Backend)(connect(mapStateToProps)(Editor));
+export default connect(mapStateToProps)(Editor);

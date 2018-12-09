@@ -1,12 +1,13 @@
 import * as React from "react";
+import { connect } from 'react-redux';
 import styled from "styled-components";
 import EditorModeSelection from "./EditorModeSelection";
 import EntityPool from "./EntityPool";
 import ExportPanel from "./ExportPanel";
 import InteractiveElementsPanel from "./InteractiveElementsPanel";
 import LocalStateForm from "./LocalStateForm";
-import { ApollonMode, DiagramType, EditorMode, InteractiveElementsMode } from "../../types";
-import { Entity, Relationship } from "../../../core/domain";
+import { ApollonMode, DiagramType, EditorMode, InteractiveElementsMode } from "./../../gui/types";
+import { Entity, Relationship } from "./../../core/domain";
 
 const FlexContainer = styled.div`
     display: flex;
@@ -22,8 +23,9 @@ const FlexGrowItem = styled.div`
     flex-grow: 1;
 `;
 
-export default class Sidebar extends React.Component<Props> {
+class Sidebar extends React.Component<Props> {
     render() {
+        if (this.props.apollonMode === ApollonMode.ReadOnly) return null;
         return (
             <FlexContainer>
                 <div style={{ height: 4 }} />
@@ -71,8 +73,6 @@ export default class Sidebar extends React.Component<Props> {
 }
 
 interface Props {
-    selectedEntities: Entity[];
-    selectedRelationships: Relationship[];
     diagramType: DiagramType;
     apollonMode: ApollonMode;
     editorMode: EditorMode;
@@ -81,3 +81,18 @@ interface Props {
     selectEditorMode: (newMode: EditorMode) => void;
     selectInteractiveElementsMode: (newMode: InteractiveElementsMode) => void;
 }
+
+const mapStateToProps = (state: any) => ({
+    diagramType: state.options.diagramType,
+    apollonMode: state.options.mode,
+    editorMode: state.options.editorMode,
+    debugModeEnabled: state.options.debug,
+    interactiveElementsMode: state.options.interactiveMode,
+});
+
+const mapDispatchToProps = (dispatch: any) => ({
+    selectEditorMode: (editorMode: EditorMode) => dispatch({ type: '@@option/UPDATE', option: { key: 'editorMode', value: editorMode }}),
+    selectInteractiveElementsMode: (mode: InteractiveElementsMode) => dispatch({ type: '@@option/UPDATE', option: { key: 'interactiveMode', value: mode }}),
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(Sidebar);

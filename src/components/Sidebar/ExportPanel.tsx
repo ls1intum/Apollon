@@ -2,14 +2,14 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { withTheme } from "styled-components";
 import Button from "./Button";
-import { getAllEntities, getAllInteractiveElementIds, getAllRelationships } from "../../redux/selectors";
-import { ReduxState } from "../../redux/state";
-import { Theme } from "../../theme";
-import { InteractiveElementsMode } from "../../types";
-import { UMLModel } from "../../../core/domain";
-import { UUID } from "../../../core/utils";
-import { layoutDiagram, LayoutedDiagram } from "../../../rendering/layouters/diagram";
-import { renderDiagramToSVG, RenderOptions } from "../../../rendering/renderers/svg";
+import { getAllEntities, getAllInteractiveElementIds, getAllRelationships } from "./../../gui/redux/selectors";
+import { ReduxState } from "./../../gui/redux/state";
+import { Styles as Theme } from "./../Theme";
+import { InteractiveElementsMode } from "./../../gui/types";
+import { UMLModel } from "./../../core/domain";
+import { UUID } from "./../../core/utils";
+import { layoutDiagram, LayoutedDiagram } from "./../../rendering/layouters/diagram";
+import { renderDiagramToSVG, RenderOptions } from "./../../rendering/renderers/svg";
 
 class ExportPanel extends React.Component<Props> {
     form: HTMLFormElement | null = null;
