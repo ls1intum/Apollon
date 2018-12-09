@@ -1,22 +1,4 @@
-type CSSWideKeyword = 'initial' | 'inherit' | 'unset';
-
-type FontWeight =
-  | CSSWideKeyword
-  | 'normal'
-  | 'bold'
-  | 'bolder'
-  | 'lighter'
-  | 100
-  | 200
-  | 300
-  | 400
-  | 500
-  | 600
-  | 700
-  | 800
-  | 900;
-
-interface Theme {
+interface Styles {
   primaryColor: string;
   borderColor: string;
   highlightColor: string;
@@ -26,10 +8,10 @@ interface Theme {
   interactiveAreaHoverColor: string;
   fontFamily: string;
   headingFontFamily: string;
-  headingFontWeight: FontWeight;
+  headingFontWeight: number;
 }
 
-export const defaultTheme: Theme = {
+export const defaults: Styles = {
   primaryColor: '#2A8FBD',
   borderColor: '#AAAAAA',
   highlightColor: 'rgba(0, 100, 255, 0.21)',
@@ -43,4 +25,4 @@ export const defaultTheme: Theme = {
   headingFontWeight: 300,
 };
 
-export default Theme;
+export default Styles;

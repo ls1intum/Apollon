@@ -57,7 +57,7 @@ class App extends React.Component<Props, State> {
   render() {
     return (
       <Store ref={this.store} initialState={this.props.state}>
-        <Theme theme={this.props.theme}>
+        <Theme styles={this.props.styles}>
           <SelectionListener subscribers={this.state.subscribers}>
             <DragDrop>
               <Layout>
@@ -74,7 +74,7 @@ class App extends React.Component<Props, State> {
 
 interface Props {
   state: ReduxState;
-  theme: Partial<Styles>;
+  styles: Partial<Styles>;
 }
 
 interface State {

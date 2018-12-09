@@ -1,17 +1,12 @@
 import React, { Component } from 'react';
 import { ThemeProvider } from 'styled-components';
-import Styles, { defaultTheme } from './Styles';
+import Styles, { defaults } from './Styles';
 
 class Theme extends Component<Props> {
-  public theme: Styles;
-
-  constructor(props: Readonly<Props>) {
-    super(props);
-    this.theme = {
-      ...defaultTheme,
-      ...props.theme,
-    };
-  }
+  public theme: Styles = {
+    ...defaults,
+    ...this.props.styles,
+  };
 
   render() {
     return (
@@ -22,7 +17,7 @@ class Theme extends Component<Props> {
 
 interface Props {
   children?: React.ReactChild;
-  theme: Partial<Styles>;
+  styles: Partial<Styles>;
 }
 
 export default Theme;

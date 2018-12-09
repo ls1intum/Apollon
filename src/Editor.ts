@@ -46,7 +46,7 @@ class Editor {
     const app = createElement(Application, {
       ref: this.application,
       state,
-      theme,
+      styles: theme,
     });
 
     render(app, container);
