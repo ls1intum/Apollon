@@ -2,11 +2,12 @@ import React, { createRef, RefObject } from 'react';
 import Store, { State as ReduxState } from './../components/Store';
 import Theme, { Styles } from './../components/Theme';
 import SelectionListener from './../components/SelectionListener/SelectionListener';
+import CanvasContainer from './../components/Canvas/Container';
 import Sidebar from './../components/Sidebar';
 import { Layout } from './styles';
 
 import DragDrop from './../components/DragDrop';
-import Editor from './../gui/components/Editor';
+import Editor from './../components/Container';
 import KeyboardEventListener from './../gui/events/KeyboardEventListener';
 import { ApollonMode, ElementSelection } from './../gui/types';
 
@@ -60,7 +61,7 @@ class App extends React.Component<Props, State> {
           <SelectionListener subscribers={this.state.subscribers}>
             <DragDrop>
               <Layout>
-                <Editor selection={this.state.selection} />
+                <Editor><CanvasContainer /></Editor>
                 <Sidebar />
               </Layout>
             </DragDrop>

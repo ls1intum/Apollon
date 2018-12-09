@@ -54,7 +54,7 @@ class DragLayer extends React.Component<Props> {
     }
 
     renderNewEntityDragPreview(dragItem: DragDrop.NewEntityDragItem, offsets: DragItemOffsets) {
-        const [dx, dy] = this.computeCanvasOffset();
+        const [dx, dy] = [0, 0];
 
         // Translate the item position so that it's relative to the canvas origin
         const clientOffsetXYCoord = offsets.sourceClientOffset;
@@ -83,12 +83,6 @@ class DragLayer extends React.Component<Props> {
             );
 
         }
-    }
-
-    computeCanvasOffset(): [number, number] {
-        const { canvasScrollContainer } = this.props;
-        const { left, top } = canvasScrollContainer.getBoundingClientRect();
-        return [canvasScrollContainer.scrollLeft + left, canvasScrollContainer.scrollTop + top];
     }
 
     renderExistingEntitiesDragPreviews(
@@ -157,7 +151,6 @@ class DragLayer extends React.Component<Props> {
 
 interface OwnProps {
     canvas: HTMLElement;
-    canvasScrollContainer: HTMLElement;
 }
 
 interface DragItemOffsets {
