@@ -33,8 +33,8 @@ export const getAllLayoutedRelationships = createSelector<
         const source = entities.find(entity => entity.id === relationship.source.entityId)!;
         const target = entities.find(entity => entity.id === relationship.target.entityId)!;
 
-        const sourceRect = { ...source.position, ...source.size };
-        const targetRect = { ...target.position, ...target.size };
+        const sourceRect = { ...source.bounds };
+        const targetRect = { ...target.bounds };
 
         const path = computeRelationshipPath(
             sourceRect,

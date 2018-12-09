@@ -217,8 +217,7 @@ interface Connector {
 }
 
 function computeConnectorPositions(entity: Entity): Connector[] {
-    const { width, height } = entity.size;
-    const { x, y } = entity.position;
+    const { x, y, width, height } = entity.bounds;
 
     const centerX = x + width / 2;
     const centerY = y + height / 2;

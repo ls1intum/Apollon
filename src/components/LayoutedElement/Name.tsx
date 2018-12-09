@@ -41,7 +41,7 @@ export default class Name extends React.Component<Props> {
         const special = entity.kind === UML.EntityKind.ActivityMergeNode;
 
         const entityNameDisplayStyle: React.CSSProperties = !special ? {
-            width: entity.size.width - 2 * ENTITY_HORIZONTAL_PADDING
+            width: entity.bounds.width - 2 * ENTITY_HORIZONTAL_PADDING
         } : {
             width: "100%"
         };

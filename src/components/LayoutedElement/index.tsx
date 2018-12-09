@@ -27,7 +27,7 @@ class CanvasEntity extends React.Component<Props, State> {
         this.state = {
             isMouseOverEntity: false,
             isMouseOverEntityName: false,
-            entityWidth: props.entity.size.width,
+            entityWidth: props.entity.bounds.width,
             hover: false,
             selected: false,
         };
@@ -39,7 +39,7 @@ class CanvasEntity extends React.Component<Props, State> {
     }
 
     componentWillReceiveProps(newProps: Props) {
-        this.setState({ entityWidth: newProps.entity.size.width });
+        this.setState({ entityWidth: newProps.entity.bounds.width });
     }
 
     componentWillUnmount() {
@@ -112,12 +112,12 @@ class CanvasEntity extends React.Component<Props, State> {
 
     onResizeMove = (dx: number) => {
         this.setState({
-            entityWidth: Math.max(this.props.entity.size.width + dx, 100)
+            entityWidth: Math.max(this.props.entity.bounds.width + dx, 100)
         });
     };
 
     onResizeEnd = (dx: number) => {
-        const newWidth = Math.max(this.props.entity.size.width + dx, 100);
+        const newWidth = Math.max(this.props.entity.bounds.width + dx, 100);
         this.setState({ entityWidth: newWidth });
         this.props.onChangeIsResizing(false);
 
@@ -240,7 +240,7 @@ class CanvasEntity extends React.Component<Props, State> {
                 {apollonMode !== ApollonMode.ReadOnly &&
                     !specialElement && (
                         <ResizeHandle
-                            initialWidth={entity.size.width}
+                            initialWidth={entity.bounds.width}
                             gridSize={this.props.gridSize}
                             onResizeBegin={this.onResizeBegin}
                             onResizeMove={this.onResizeMove}
@@ -279,8 +279,8 @@ class CanvasEntity extends React.Component<Props, State> {
 
         const baseProperties: React.CSSProperties = {
             position: "absolute",
-            left: entity.position.x,
-            top: entity.position.y,
+            left: entity.bounds.x,
+            top: entity.bounds.y,
             width: this.state.entityWidth,
             height: computeEntityHeight(
                 entity.kind,

@@ -100,8 +100,8 @@ class DragLayer extends React.Component<Props> {
                     const entity = this.props.entities.find(e => e.id === entityId);
                     return entity
                         ? {
-                              x: entity.position.x + delta.x,
-                              y: entity.position.y + delta.y,
+                              x: entity.bounds.x + delta.x,
+                              y: entity.bounds.y + delta.y,
                               ...dragItem.size
                           }
                         : null;

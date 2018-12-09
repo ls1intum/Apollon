@@ -332,14 +332,19 @@ const dropTargetSpec: DropTargetSpec<Props> = {
                 switch (item.kind.toString()) {
                     case EntityKind.Class:
                         clazz = 'Class';
+                        break;
                     case EntityKind.AbstractClass:
                         clazz = 'AbstractClass';
+                        break;
                     case EntityKind.Interface:
                         clazz = 'Interface';
+                        break;
                     case EntityKind.Enumeration:
                         clazz = 'Enumeration';
+                        break;
                 }
                 const element = new ((Plugins as { [clazz: string]: any })[clazz])(item.kind, actualPosition, item.size);
+                element.bounds = { ...actualPosition, ...item.size };
                 props.create(element);
 
                 props.createEntity(actualPosition, item.kind);

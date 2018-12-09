@@ -30,7 +30,7 @@ export interface LayoutedEntityMember {
 }
 
 export function layoutEntity(entity: Entity): LayoutedEntity {
-    const { id, kind, name, position, size, attributes, methods, renderMode } = entity;
+    const { id, kind, name, bounds, attributes, methods, renderMode } = entity;
     const height = computeEntityHeight(kind, attributes.length, methods.length, renderMode);
 
     const attributeSectionHeight = renderMode.showAttributes
@@ -47,9 +47,9 @@ export function layoutEntity(entity: Entity): LayoutedEntity {
         id,
         kind,
         name,
-        position,
+        position: { x: bounds.x, y: bounds.y },
         size: {
-            width: size.width,
+            width: bounds.width,
             height
         },
         attributes: layoutEntityMembers(entity, attributes, attributeOffsetY),
@@ -75,7 +75,7 @@ function layoutEntityMembers(
                     index * ENTITY_MEMBER_HEIGHT
             },
             size: {
-                width: entity.size.width,
+                width: entity.bounds.width,
                 height: ENTITY_MEMBER_HEIGHT
             }
         };

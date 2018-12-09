@@ -10,8 +10,6 @@ export interface UMLModel {
 export interface Entity extends Element {
     kind: EntityKind;
     name: string;
-    position: Point;
-    size: Size;
     attributes: EntityMember[];
     methods: EntityMember[];
     renderMode: EntityRenderMode;

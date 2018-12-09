@@ -63,8 +63,7 @@ export function computeDiagramBoundingBox(
 }
 
 function getEntityBoundingPoints(entity: Entity): Point[] {
-    const { x, y } = entity.position;
-    const { width, height } = entity.size;
+    const { x, y, width, height } = entity.bounds;
 
     const topLeftCorner: Point = { x, y };
 
@@ -81,8 +80,8 @@ export function computeRelationshipPaths(diagram: UMLModel): Map<UUID, Point[]> 
         const source = diagram.entities.find(e => e.id === relationship.source.entityId)!;
         const target = diagram.entities.find(e => e.id === relationship.target.entityId)!;
 
-        const sourceRect = { ...source.position, ...source.size };
-        const targetRect = { ...target.position, ...target.size };
+        const sourceRect = { ...source.bounds };
+        const targetRect = { ...target.bounds };
 
         const relationshipPath = computeRelationshipPath(
             sourceRect,

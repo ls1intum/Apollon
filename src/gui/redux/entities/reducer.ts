@@ -37,9 +37,10 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                 const entity = byId[entityId];
                 byId[entity.id] = {
                     ...entity,
-                    position: {
-                        x: entity.position.x + action.offset.dx,
-                        y: entity.position.y + action.offset.dy
+                    bounds: {
+                        ...entity.bounds,
+                        x: entity.bounds.x + action.offset.dx,
+                        y: entity.bounds.y + action.offset.dy
                     }
                 };
             }
@@ -55,8 +56,9 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                     [action.entityId]: {
                         ...entity,
                         kind: action.newKind,
-                        size: {
-                            width: entity.size.width,
+                        bounds: {
+                            ...entity.bounds,
+                            width: entity.bounds.width,
                             height: computeEntityHeight(
                                 action.newKind,
                                 entity.attributes.length,
@@ -89,9 +91,10 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                     ...state.byId,
                     [action.entityId]: {
                         ...entity,
-                        size: {
+                        bounds: {
+                            ...entity.bounds,
                             width: action.newWidth,
-                            height: entity.size.height
+                            height: entity.bounds.height
                         }
                     }
                 }
@@ -106,8 +109,9 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                     ...state.byId,
                     [entity.id]: {
                         ...entity,
-                        size: {
-                            width: entity.size.width,
+                        bounds: {
+                            ...entity.bounds,
+                            width: entity.bounds.width,
                             height: computeEntityHeight(
                                 entity.kind,
                                 entity.attributes.length,
@@ -145,8 +149,9 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                     ...state.byId,
                     [action.entityId]: {
                         ...entity,
-                        size: {
-                            width: entity.size.width,
+                        bounds: {
+                            ...entity.bounds,
+                            width: entity.bounds.width,
                             height: computeEntityHeight(
                                 entity.kind,
                                 attributes.length,
@@ -169,8 +174,9 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                     ...state.byId,
                     [action.entityId]: {
                         ...entity,
-                        size: {
-                            width: entity.size.width,
+                        bounds: {
+                            ...entity.bounds,
+                            width: entity.bounds.width,
                             height: computeEntityHeight(
                                 entity.kind,
                                 entity.attributes.length,
@@ -216,8 +222,9 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
                     ...state.byId,
                     [action.entityId]: {
                         ...entity,
-                        size: {
-                            width: entity.size.width,
+                        bounds: {
+                            ...entity.bounds,
+                            width: entity.bounds.width,
                             height: computeEntityHeight(
                                 entity.kind,
                                 attributes.length,

@@ -40,8 +40,8 @@ class EntityDetailsPopup extends React.Component<Props> {
         const { entity } = this.props;
 
         const position: Point = {
-            x: entity.position.x + entity.size.width + 22,
-            y: entity.position.y - 20
+            x: entity.bounds.x + entity.bounds.width + 22,
+            y: entity.bounds.y - 20
         };
 
         return (

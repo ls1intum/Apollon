@@ -84,20 +84,20 @@ interface UpdateEntityMemberAction {
 
 export function createEntity(position: Point, kind: EntityKind): CreateEntityAction {
     const { name, attributes, methods, renderMode } = getEntityDefaults(kind);
+    const size = {
+        width: getDefaultEntityWidth(kind),
+        height: computeEntityHeight(kind, attributes.length, methods.length, renderMode)
+    };
 
     return {
         type: "CREATE_ENTITY",
         entity: {
             id: newId(),
+            bounds: { ...position, ...size },
             kind,
             futureKind: 't',
             name,
-            position,
             selected: false,
-            size: {
-                width: getDefaultEntityWidth(kind),
-                height: computeEntityHeight(kind, attributes.length, methods.length, renderMode)
-            },
             attributes,
             methods,
             renderMode
@@ -212,9 +212,10 @@ export function duplicateEntities(entities: Entity[], offset: Delta): DuplicateE
         newEntities: entities.map<Entity>(entity => ({
             ...entity,
             id: newId(),
-            position: {
-                x: entity.position.x + offset.dx,
-                y: entity.position.y + offset.dy
+            bounds: {
+                ...entity.bounds,
+                x: entity.bounds.x + offset.dx,
+                y: entity.bounds.y + offset.dy
             },
             attributes: entity.attributes.map(attribute => ({
                 ...attribute,

@@ -38,6 +38,7 @@ export function createRelationship(
             id: newId(),
             futureKind: 't',
             selected: false,
+            bounds: { x: 0, y: 0, width: 0, height: 0 },
             kind,
             source,
             target,

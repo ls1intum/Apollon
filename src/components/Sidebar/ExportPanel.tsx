@@ -142,8 +142,7 @@ class ExportPanel extends React.Component<Props> {
                 id: entity.id,
                 kind: entity.kind,
                 name: entity.name,
-                position: entity.position,
-                size: entity.size,
+                bounds: entity.bounds,
                 attributes: entity.attributes,
                 methods: entity.methods
             })),
