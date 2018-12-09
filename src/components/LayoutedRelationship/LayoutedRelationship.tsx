@@ -8,6 +8,7 @@ import { getMarkerIdForRelationshipKind } from "./../../rendering/renderers/svg/
 import RelationshipLabels from "./../../rendering/renderers/svg/RelationshipLabels";
 import { getSvgDasharrayForRelationshipKind } from "./../../rendering/renderers/svg/RenderedRelationship";
 import { ElementRepository } from './../../domain/Element';
+import { UUID } from '../../domain/utils/uuid';
 
 class LayoutedRelationship extends React.Component<Props, State> {
     state: State = {
@@ -50,7 +51,7 @@ class LayoutedRelationship extends React.Component<Props, State> {
                 break;
 
             case EditorMode.InteractiveElementsView:
-                this.props.onToggleInteractiveElements();
+                this.props.onToggleInteractiveElements(this.props.relationship.relationship.id);
                 break;
         }
     };
@@ -151,7 +152,7 @@ interface OwnProps {
     onToggleSelection: () => void;
     isInteractiveElement: boolean;
     interactiveElementsMode: InteractiveElementsMode;
-    onToggleInteractiveElements: () => void;
+    onToggleInteractiveElements: (...ids: UUID[]) => void;
     openDetailsPopup: () => void;
 }
 
