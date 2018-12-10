@@ -8,7 +8,7 @@ import EntityDetailsPopup from "./Popups/EntityDetailsPopup";
 import RelationshipDetailsPopup from "./Popups/RelationshipDetailsPopup";
 import RelationshipConnectors from "./RelationshipConnectors";
 import * as DragDrop from "./../DragDrop/dnd";
-import { createEntity, getAllEntities, getAllInteractiveElementIds, getAllLayoutedRelationships, moveEntities, ReduxState, toggleInteractiveElements, updateEntityWidth } from "./../../gui/redux";
+import { createEntity, getAllEntities, getAllInteractiveElementIds, getAllLayoutedRelationships, moveEntities, toggleInteractiveElements, updateEntityWidth } from "./../../gui/redux";
 import { ApollonMode, DiagramType, EditorMode, ElementSelection, InteractiveElementsMode } from "../../domain/Options/types";
 import * as UML from "./../../core/domain";
 import { Size, snapPointToGrid } from "./../../core/geometry";
@@ -19,6 +19,8 @@ import Element, { ElementRepository } from './../../domain/Element';
 import { EntityKind } from '../..';
 import * as Plugins from '../../domain/plugins';
 import { computeEntityHeight, getDefaultEntityWidth } from "./../../rendering/layouters/entity";
+
+import { State as ReduxState } from './../Store';
 
 const StyledCanvas = styled.div`
     width: ${(props: any) => props.width}px;
@@ -49,21 +51,12 @@ class Canvas extends React.Component<Props, State> {
 
     state: State = {
         doubleClickedElement: { type: "none" },
-        userIsHoldingEntity: false,
-        userIsResizingEntity: false,
         displayRelationships: false,
     };
 
     displayRelationships = () => {
         this.setState({ displayRelationships: true });
     };
-
-    selectEntity = (entityId: UUID, e: React.MouseEvent<HTMLDivElement>) => {
-        this.onStartHoldEntity();
-    };
-
-    onStartHoldEntity = () => this.setState({ userIsHoldingEntity: true });
-    onStopHoldEntity = () => this.setState({ userIsHoldingEntity: false });
 
     render() {
         const {
@@ -75,7 +68,7 @@ class Canvas extends React.Component<Props, State> {
             diagramType,
             apollonMode,
             editorMode,
-            interactiveElementsRenderMode
+            interactiveElementsMode
         } = this.props;
 
         const { selection } = this.props;
@@ -130,7 +123,7 @@ class Canvas extends React.Component<Props, State> {
                                         relationship={relationship}
                                         apollonMode={this.props.apollonMode}
                                         editorMode={this.props.editorMode}
-                                        interactiveElementsMode={interactiveElementsRenderMode}
+                                        interactiveElementsMode={interactiveElementsMode}
                                         isSelected={selection.relationshipIds.includes(relationshipId)}
                                         onSelect={() => {}}
                                         onToggleSelection={() => {}}
@@ -147,6 +140,21 @@ class Canvas extends React.Component<Props, State> {
                                     />
                                 );
                             })}
+
+                            {entities.map(entity => (this.props.interactiveElementsMode !== InteractiveElementsMode.Hidden || !this.props.interactiveElementIds.has(entity.id)) && (
+                                <Entity
+                                    key={entity.id}
+                                    entity={entity}
+                                    openDetailsPopup={() => {
+                                        this.setState({
+                                            doubleClickedElement: {
+                                                type: "entity",
+                                                entityId: entity.id
+                                            }
+                                        });
+                                    }}
+                                />
+                            ))}
                         </svg>
 
                         {apollonMode !== ApollonMode.ReadOnly && (
@@ -155,44 +163,10 @@ class Canvas extends React.Component<Props, State> {
                                 editorMode={editorMode}
                                 selection={selection}
                                 showConnectors={
-                                    this.state.doubleClickedElement.type === "none" &&
-                                    !this.state.userIsHoldingEntity &&
-                                    !this.state.userIsResizingEntity
+                                    this.state.doubleClickedElement.type === "none"
                                 }
                             />
                         )}
-
-                        {entities.map(entity => (
-                            <Entity
-                                key={entity.id}
-                                entity={entity}
-                                apollonMode={apollonMode}
-                                editorMode={editorMode}
-                                selection={selection}
-                                gridSize={gridSize}
-                                updateEntityWidth={newWidth =>
-                                    this.props.updateEntityWidth(entity.id, newWidth)
-                                }
-                                openDetailsPopup={() => {
-                                    this.setState({
-                                        doubleClickedElement: {
-                                            type: "entity",
-                                            entityId: entity.id
-                                        }
-                                    });
-                                }}
-                                onChangeIsResizing={isResizing =>
-                                    this.setState({ userIsResizingEntity: isResizing })
-                                }
-                                onMouseDown={e => this.selectEntity(entity.id, e)}
-                                onMouseUp={this.onStopHoldEntity}
-                                onStartDragging={this.onStartHoldEntity}
-                                onEndDragging={this.onStopHoldEntity}
-                                interactiveElementIds={this.props.interactiveElementIds}
-                                interactiveElementsMode={interactiveElementsRenderMode}
-                                onToggleInteractiveElements={this.props.toggleInteractiveElements}
-                            />
-                        ))}
 
                         {this.renderDetailsPopup()}
                     </CanvasObjectsLayer>
@@ -251,7 +225,6 @@ interface OwnProps {
     diagramType: DiagramType;
     apollonMode: ApollonMode;
     editorMode: EditorMode;
-    interactiveElementsRenderMode: InteractiveElementsMode;
     selection: ElementSelection;
     canvasScrollContainer: HTMLDivElement | null;
 }
@@ -261,6 +234,7 @@ interface StateProps {
     relationships: UML.LayoutedRelationship[];
     canvasSize: Size;
     gridSize: number;
+    interactiveElementsMode: InteractiveElementsMode;
     interactiveElementIds: ReadonlySet<UUID>;
 }
 
@@ -283,8 +257,6 @@ interface State {
         | { type: "entity"; entityId: UUID }
         | { type: "relationship"; relationshipId: UUID }
         | { type: "none" };
-    userIsHoldingEntity: boolean;
-    userIsResizingEntity: boolean;
     displayRelationships: boolean;
 }
 
@@ -294,6 +266,7 @@ function mapStateToProps(state: ReduxState): StateProps {
         relationships: getAllLayoutedRelationships(state),
         canvasSize: state.editor.canvasSize,
         gridSize: state.editor.gridSize,
+        interactiveElementsMode: state.options.interactiveMode,
         interactiveElementIds: getAllInteractiveElementIds(state)
     };
 }

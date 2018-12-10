@@ -31,7 +31,6 @@ class CanvasContainer extends React.Component<Props> {
                     diagramType={this.props.diagramType}
                     apollonMode={this.props.apollonMode}
                     editorMode={this.props.editorMode}
-                    interactiveElementsRenderMode={this.props.interactiveElementsMode}
                     selection={this.props.selection}
                     canvasScrollContainer={this.canvasScrollContainer}
                 />
