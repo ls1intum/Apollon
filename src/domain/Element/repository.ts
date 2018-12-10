@@ -6,10 +6,10 @@ import * as Plugins from './../plugins';
 
 interface Action<T extends ActionTypes> extends ReduxAction<T> {
   type: T;
-  element: Element;
+  element: Exclude<Element, 'render'>;
 }
 
-const action = (type: ActionTypes, element: Element): Action<ActionTypes> => ({
+const action = (type: ActionTypes, element: Exclude<Element, 'render'>): Action<ActionTypes> => ({
   type,
   element,
 });

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Relationship, RelationshipEnd, RelationshipKind } from "../../../core/domain";
 import newId, { UUID } from './../../../domain/utils/uuid';
 
@@ -42,7 +43,8 @@ export function createRelationship(
             kind,
             source,
             target,
-            straightLine: false
+            straightLine: false,
+            render: () => <></>,
         }
     };
 }

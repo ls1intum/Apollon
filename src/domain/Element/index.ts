@@ -12,6 +12,8 @@ abstract class Element {
   bounds: Boundary = new Boundary(0, 0, 110, 80);
 
   selected: boolean = false;
+
+  public abstract render(): JSX.Element;
 }
 
 export default Element;

@@ -1,4 +1,5 @@
 import Element from '.';
+import Omit from '../utils/Omit';
 
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',
@@ -6,5 +7,5 @@ export const enum ActionTypes {
 }
 
 export interface ElementState {
-  readonly [id: string]: Element
+  readonly [id: string]: Omit<Element, 'render'>;
 }

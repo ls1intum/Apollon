@@ -1,3 +1,4 @@
+import React from 'react';
 import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../../core/domain";
 import { Delta, Point } from "../../../core/geometry";
 import { assertNever } from "../../../core/utils";
@@ -107,7 +108,8 @@ export function createEntity(position: Point, kind: EntityKind): CreateEntityAct
             selected: false,
             attributes,
             methods,
-            renderMode
+            renderMode,
+            render: () => <></>,
         }
     };
 }

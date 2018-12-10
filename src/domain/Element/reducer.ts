@@ -1,7 +1,6 @@
 import { Reducer } from 'redux';
 import { ElementState, ActionTypes } from './types';
 import { Actions } from './repository';
-import Element from '.';
 
 const initialState: ElementState = {};
 
