@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import PopupArrowIcon from "./PopupArrowIcon";
-import { Point } from "./../../../core/geometry";
+import { Point } from "./../../core/geometry";
 
 const Container = styled.div`
     width: 275px;

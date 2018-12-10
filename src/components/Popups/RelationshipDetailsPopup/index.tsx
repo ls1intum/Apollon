@@ -2,10 +2,10 @@ import * as React from "react";
 import { connect } from "react-redux";
 import RelationshipDetails from "./RelationshipDetails";
 import Popup from "../Popup";
-import { flipRelationship, getAllEntities, ReduxState, updateRelationship } from "./../../../../gui/redux";
-import { Entity, LayoutedRelationship } from "./../../../../core/domain";
-import { Point } from "./../../../../core/geometry";
-import { DiagramType } from "../../../../domain/Options/types";
+import { flipRelationship, getAllEntities, ReduxState, updateRelationship } from "./../../../gui/redux";
+import { Entity, LayoutedRelationship } from "./../../../core/domain";
+import { Point } from "./../../../core/geometry";
+import { DiagramType } from "./../../../domain/Options/types";
 
 class RelationshipDetailsPopup extends React.Component<Props> {
     render() {

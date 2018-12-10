@@ -1,6 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
-import newId from "./../../../../domain/utils/uuid";
+import newId from "./../../../domain/utils/uuid";
 
 const FlexContainer = styled.div`
     display: flex;

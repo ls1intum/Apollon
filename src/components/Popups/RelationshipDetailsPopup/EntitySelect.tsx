@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Entity } from "./../../../../core/domain";
-import { UUID } from './../../../../domain/utils/uuid';
+import { Entity } from "./../../../core/domain";
+import { UUID } from './../../../domain/utils/uuid';
 import styled from "styled-components";
 
 const Select = styled.select`

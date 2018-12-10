@@ -1,6 +1,6 @@
 import * as React from "react";
-import { RelationshipKind } from "./../../../../core/domain";
-import { assertNever } from "./../../../../core/utils";
+import { RelationshipKind } from "./../../../core/domain";
+import { assertNever } from "./../../../core/utils";
 
 const kinds: RelationshipKind[] = [
     RelationshipKind.Aggregation,
