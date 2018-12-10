@@ -1,7 +1,8 @@
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
-import Application from './scenes/Application';
+import { Store } from 'redux';
 import { State as ReduxState } from './components/Store';
+import Application from './scenes/Application';
 import { Styles } from './components/Theme';
 import {
   DiagramType,
@@ -20,7 +21,9 @@ export interface ApollonOptions {
 }
 
 class Editor {
-  public application: RefObject<Application> = createRef();
+  private application: RefObject<Application> = createRef();
+
+  private store: Store<ReduxState> | null = null;
 
   constructor(
     public container: HTMLElement,
@@ -49,8 +52,15 @@ class Editor {
       styles: theme,
     });
 
-    render(app, container);
+    render(app, container, this.componentDidMount);
   }
+
+  componentDidMount = () => {
+    this.store =
+      this.application.current &&
+      this.application.current.store.current &&
+      this.application.current.store.current.store;
+  };
 
   getSelection() {
     return this.application.current
@@ -82,11 +92,15 @@ class Editor {
   }
 
   getState() {
-    return (
-      this.application.current &&
-      this.application.current.store.current &&
-      this.application.current.store.current.store.getState()
-    );
+    if (!this.store) return;
+
+    const state = this.store.getState();
+    return {
+      entities: state.entities,
+      relationships: state.relationships,
+      interactiveElements: state.interactiveElements,
+      editor: state.editor,
+    };
   }
 
   destroy() {
