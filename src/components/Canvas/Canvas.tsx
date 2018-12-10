@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { ConnectDropTarget, DropTarget, DropTargetCollector, DropTargetSpec } from "react-dnd";
 import { connect } from "react-redux";
 import styled from "styled-components";
@@ -18,7 +18,6 @@ import Relationship from "./../LayoutedRelationship";
 import Element, { ElementRepository } from './../../domain/Element';
 import { EntityKind } from '../..';
 import * as Plugins from '../../domain/plugins';
-import { computeEntityHeight, getDefaultEntityWidth } from "./../../rendering/layouters/entity";
 
 import { State as ReduxState } from './../Store';
 
@@ -47,7 +46,9 @@ const CanvasObjectsLayer = styled.div`
 `;
 
 class Canvas extends React.Component<Props, State> {
-    canvas: HTMLDivElement | null = null;
+    // canvas: HTMLDivElement | null = null;
+
+    container: HTMLDivElement | null = null;
 
     state: State = {
         doubleClickedElement: { type: "none" },
@@ -88,10 +89,7 @@ class Canvas extends React.Component<Props, State> {
 
         return connectDropTarget(
             <div
-                ref={ref => {
-                    this.canvas = ref;
-                    this.props.innerRef(ref);
-                }}
+                ref={ref => this.container = ref}
                 style={canvasStyles}
                 onMouseDown={() => {
                     const { entityIds, relationshipIds } = selection;
@@ -190,7 +188,7 @@ class Canvas extends React.Component<Props, State> {
                         onRequestClose={() => {
                             this.setState({ doubleClickedElement: { type: "none" } });
                         }}
-                        canvasScrollContainer={this.props.canvasScrollContainer}
+                        canvasScrollContainer={this.container!.parentElement! as HTMLDivElement}
                     />
                 ) : null;
             }
@@ -208,7 +206,7 @@ class Canvas extends React.Component<Props, State> {
                             onRequestClose={() => {
                                 this.setState({ doubleClickedElement: { type: "none" } });
                             }}
-                            canvasScrollContainer={this.props.canvasScrollContainer}
+                            canvasScrollContainer={this.container!.parentElement! as HTMLDivElement}
                         />
                     )
                 );
@@ -221,12 +219,6 @@ class Canvas extends React.Component<Props, State> {
 }
 
 interface OwnProps {
-    innerRef: (canvas: HTMLDivElement | null) => void;
-    diagramType: DiagramType;
-    apollonMode: ApollonMode;
-    editorMode: EditorMode;
-    selection: ElementSelection;
-    canvasScrollContainer: HTMLDivElement | null;
 }
 
 interface StateProps {
@@ -236,6 +228,10 @@ interface StateProps {
     gridSize: number;
     interactiveElementsMode: InteractiveElementsMode;
     interactiveElementIds: ReadonlySet<UUID>;
+    diagramType: DiagramType;
+    apollonMode: ApollonMode;
+    editorMode: EditorMode;
+    selection: ElementSelection;
 }
 
 interface DispatchProps {
@@ -267,7 +263,14 @@ function mapStateToProps(state: ReduxState): StateProps {
         canvasSize: state.editor.canvasSize,
         gridSize: state.editor.gridSize,
         interactiveElementsMode: state.options.interactiveMode,
-        interactiveElementIds: getAllInteractiveElementIds(state)
+        interactiveElementIds: getAllInteractiveElementIds(state),
+        diagramType: state.options.diagramType,
+        apollonMode: state.options.mode,
+        editorMode: state.options.editorMode,
+        selection: {
+            entityIds: Object.keys(state.elements).filter(k => state.elements[k].selected).filter(s => Object.keys(state.entities.byId).includes(s)) as UUID[],
+            relationshipIds: Object.keys(state.elements).filter(k => state.elements[k].selected).filter(s => Object.keys(state.relationships.byId).includes(s)) as UUID[],
+        },
     };
 }
 
@@ -278,9 +281,9 @@ const dropTargetSpec: DropTargetSpec<Props> = {
             return;
         }
 
-        const { canvas } = component as Canvas;
+        const { container } = component as Canvas;
 
-        if (canvas === null) {
+        if (container === null) {
             // Should never happen, but let's be defensive
             return;
         }
@@ -292,7 +295,7 @@ const dropTargetSpec: DropTargetSpec<Props> = {
             if (xyCoordOffset != null) {
                 const x = xyCoordOffset.x;
                 const y = xyCoordOffset.y;
-                const canvasRect = canvas.getBoundingClientRect();
+                const canvasRect = container.getBoundingClientRect();
                 const positionOnCanvas = {
                     x: x - canvasRect.left,
                     y: y - canvasRect.top
