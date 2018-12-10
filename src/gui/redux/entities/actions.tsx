@@ -4,6 +4,7 @@ import { Delta, Point } from "../../../core/geometry";
 import { assertNever } from "../../../core/utils";
 import newId, { UUID } from './../../../domain/utils/uuid';
 import { computeEntityHeight, getDefaultEntityWidth } from "../../../rendering/layouters/entity";
+import * as Plugins from './../../../domain/plugins';
 
 export type EntitiesAction =
     | CreateEntityAction
@@ -109,7 +110,7 @@ export function createEntity(position: Point, kind: EntityKind): CreateEntityAct
             attributes,
             methods,
             renderMode,
-            render: () => <></>,
+            render: (new (Plugins as any)[kind]).render,
         }
     };
 }

@@ -2,8 +2,6 @@ import React, { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { withTheme } from 'styled-components';
-import Member from './Member';
-import Name from './Name';
 import { Styles as Theme } from './../Theme';
 import {
   ApollonMode,
@@ -12,10 +10,6 @@ import {
 } from '../../domain/Options/types';
 import { Entity } from './../../core/domain';
 import { UUID } from './../../domain/utils/uuid';
-import {
-  computeEntityHeaderHeight,
-  ENTITY_MEMBER_HEIGHT,
-} from './../../rendering/layouters/entity';
 import { ElementRepository } from './../../domain/Element';
 
 import { State as ReduxState } from './../Store';
@@ -189,8 +183,6 @@ class CanvasEntity extends Component<Props, State> {
         ? this.toggleEntityInteractiveElement
         : undefined;
 
-    let childY = computeEntityHeaderHeight(entity.kind) + 8;
-
     const { x, y, width, height } = this.state.bounds;
 
     return (
@@ -211,72 +203,16 @@ class CanvasEntity extends Component<Props, State> {
             : this.props.openDetailsPopup
         }
       >
-        <rect
-          x={0}
-          y={0}
-          width={width}
-          height={height}
-          fill={
-            this.props.editorMode === EditorMode.InteractiveElementsView &&
-            (this.state.hover ||
-              interactiveElementIds.has(this.props.entity.id))
-              ? this.props.theme.interactiveAreaColor
-              : 'white'
-          }
-          stroke="black"
-        />
-        <Name entity={entity} />
-
-        {renderMode.showAttributes && (
-          <>
-            {attributes.map(attribute => {
-              const y = childY;
-              childY += ENTITY_MEMBER_HEIGHT;
-              return (
-                <Member
-                  y={y}
-                  key={attribute.id}
-                  entity={entity}
-                  member={attribute}
-                  editorMode={editorMode}
-                  interactiveElementsMode={this.props.interactiveElementsMode}
-                  canBeMadeInteractive={
-                    !this.props.interactiveElementIds.has(entity.id)
-                  }
-                  isInteractiveElement={interactiveElementIds.has(attribute.id)}
-                  onToggleInteractiveElements={() => {
-                    this.props.onToggleInteractiveElements(attribute.id);
-                  }}
-                />
-              );
-            })}
-          </>
-        )}
-
-        {renderMode.showMethods && (
-          <>
-            {methods.map(method => {
-              const y = childY;
-              childY += ENTITY_MEMBER_HEIGHT;
-              return (
-                <Member
-                  y={y}
-                  key={method.id}
-                  entity={entity}
-                  member={method}
-                  editorMode={editorMode}
-                  interactiveElementsMode={this.props.interactiveElementsMode}
-                  canBeMadeInteractive={
-                    !this.props.interactiveElementIds.has(entity.id)
-                  }
-                  isInteractiveElement={interactiveElementIds.has(method.id)}
-                  onToggleInteractiveElements={() => {
-                    this.props.onToggleInteractiveElements(method.id);
-                  }}
-                />
-              );
-            })}
-          </>
+        {React.cloneElement(
+          entity.render({
+            hover: this.state.hover,
+            editorMode,
+            interactiveElementsMode: this.props.interactiveElementsMode,
+            interactiveElementIds,
+            theme: this.props.theme,
+            toggleInteractiveElements: this.props.onToggleInteractiveElements,
+          }),
+          {}
         )}
         {this.props.apollonMode !== ApollonMode.ReadOnly &&
           this.props.editorMode === EditorMode.ModelingView &&
@@ -297,7 +233,7 @@ class CanvasEntity extends Component<Props, State> {
     const moving = this.state.moving;
 
     return {
-      opacity: moving ? 0.35 : 1,
+      opacity: apollonMode !== ApollonMode.ReadOnly && moving ? 0.35 : 1,
       cursor:
         apollonMode !== ApollonMode.ReadOnly &&
         editorMode === EditorMode.ModelingView

@@ -13,7 +13,7 @@ abstract class Element {
 
   selected: boolean = false;
 
-  public abstract render(): JSX.Element;
+  public abstract render(options: any): JSX.Element;
 }
 
 export default Element;

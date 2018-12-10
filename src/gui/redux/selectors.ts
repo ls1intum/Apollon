@@ -3,13 +3,14 @@ import { ReduxState } from "./state";
 import { Entity, LayoutedRelationship, Relationship } from "../../core/domain";
 import { UUID } from './../../domain/utils/uuid';
 import { computeRelationshipPath } from "../../rendering/layouters/relationship";
+import * as Plugins from './../../domain/plugins';
 
 type LookupById<T> = { [id: string]: T };
 
 export const getAllEntities = createSelector<ReduxState, UUID[], LookupById<Entity>, Entity[]>(
     state => state.entities.allIds,
     state => state.entities.byId,
-    (allIds, byId) => allIds.map(id => byId[id])
+    (allIds, byId) => allIds.map(id => byId[id]).map(e => Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype))
 );
 
 export const getAllRelationships = createSelector<

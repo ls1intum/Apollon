@@ -12,7 +12,7 @@ export interface Entity extends Element {
     attributes: EntityMember[];
     methods: EntityMember[];
     renderMode: EntityRenderMode;
-    render(): JSX.Element;
+    render(options: any): JSX.Element;
 }
 
 export const enum EntityKind {

@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import { withTheme } from 'styled-components';
-import { Styles as Theme } from './../Theme';
+import { Styles as Theme } from './../../../components/Theme';
 import {
   EditorMode,
   InteractiveElementsMode,
-} from '../../domain/Options/types';
-import { EntityMember, Entity } from './../../core/domain';
-import { ENTITY_MEMBER_HEIGHT } from './../../rendering/layouters/entity';
+} from './../../Options/types';
+import { EntityMember, Entity } from './../../../core/domain';
+import { ENTITY_MEMBER_HEIGHT } from './../../../rendering/layouters/entity';
 
 class Member extends Component<Props, State> {
   state: State = {

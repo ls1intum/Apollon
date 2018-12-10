@@ -126,20 +126,20 @@ export function computeEntityHeight(
 
     let height = 0;
 
-    height += ENTITY_BORDER_THICKNESS;
+    // height += ENTITY_BORDER_THICKNESS;
     height += computeEntityHeaderHeight(kind);
-    height += ENTITY_BORDER_THICKNESS;
+    // height += ENTITY_BORDER_THICKNESS;
 
     if (renderMode.showAttributes) {
-        height += 2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING;
+        // height += 2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING;
         height += attributeCount * ENTITY_MEMBER_HEIGHT;
-        height += ENTITY_BORDER_THICKNESS;
+        // height += ENTITY_BORDER_THICKNESS;
     }
 
     if (renderMode.showMethods) {
-        height += 2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING;
+        // height += 2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING;
         height += methodCount * ENTITY_MEMBER_HEIGHT;
-        height += ENTITY_BORDER_THICKNESS;
+        // height += ENTITY_BORDER_THICKNESS;
     }
 
     return height;
