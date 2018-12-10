@@ -7,6 +7,7 @@ import { computeEntityHeight, getDefaultEntityWidth } from "../../../rendering/l
 export type EntitiesAction =
     | CreateEntityAction
     | DuplicateEntitiesAction
+    | MoveEntityAction
     | MoveEntitiesAction
     | UpdateEntityKindAction
     | UpdateEntityNameAction
@@ -26,6 +27,12 @@ export interface DuplicateEntitiesAction {
     type: "DUPLICATE_ENTITIES";
     newEntities: Entity[];
     offset: Delta;
+}
+
+export interface MoveEntityAction {
+    type: "MOVE_ENTITY";
+    entityId: UUID;
+    position: { x: number, y: number };
 }
 
 export interface MoveEntitiesAction {
@@ -227,6 +234,14 @@ export function duplicateEntities(entities: Entity[], offset: Delta): DuplicateE
             }))
         })),
         offset
+    };
+}
+
+export function moveEntity(entityId: UUID, position: { x: number, y: number }): MoveEntityAction {
+    return {
+        type: "MOVE_ENTITY",
+        entityId,
+        position
     };
 }
 

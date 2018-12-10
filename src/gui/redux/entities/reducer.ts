@@ -31,6 +31,20 @@ export default function entitiesReducer(state = initialState, action: ReduxActio
             return { allIds, byId };
         }
 
+        case "MOVE_ENTITY": {
+            const byId: State["byId"] = { ...state.byId };
+            const entity = byId[action.entityId];
+            byId[entity.id] = {
+                ...entity,
+                bounds: {
+                    ...entity.bounds,
+                    x: action.position.x,
+                    y: action.position.y
+                }
+            };
+            return { ...state, byId };
+        }
+
         case "MOVE_ENTITIES": {
             const byId: State["byId"] = { ...state.byId };
             for (const entityId of action.entityIds) {
