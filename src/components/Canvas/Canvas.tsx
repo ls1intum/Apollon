@@ -139,7 +139,7 @@ class Canvas extends React.Component<Props, State> {
                                 );
                             })}
 
-                            {entities.map(entity => (this.props.interactiveElementsMode !== InteractiveElementsMode.Hidden || !this.props.interactiveElementIds.has(entity.id)) && (
+                            {entities.map(entity => (this.props.editorMode === EditorMode.ModelingView || this.props.interactiveElementsMode !== InteractiveElementsMode.Hidden || !this.props.interactiveElementIds.has(entity.id)) && (
                                 <Entity
                                     key={entity.id}
                                     entity={entity}

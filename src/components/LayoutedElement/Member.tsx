@@ -27,10 +27,9 @@ class Member extends Component<Props, State> {
     } = this.props;
 
     const visibility =
-      isInteractiveElement &&
-      interactiveElementsMode === InteractiveElementsMode.Hidden
-        ? 'hidden'
-        : undefined;
+      editorMode === EditorMode.ModelingView || interactiveElementsMode !== InteractiveElementsMode.Hidden || !isInteractiveElement
+        ? undefined
+        : 'hidden';
 
     const onClick =
       editorMode === EditorMode.InteractiveElementsView && canBeMadeInteractive

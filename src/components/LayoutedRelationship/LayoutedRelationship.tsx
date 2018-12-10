@@ -70,12 +70,12 @@ class LayoutedRelationship extends React.Component<Props, State> {
     }
 
     render() {
-        const { apollonMode, isInteractiveElement, interactiveElementsMode } = this.props;
+        const { apollonMode, editorMode, isInteractiveElement, interactiveElementsMode } = this.props;
 
         const visibility =
-            isInteractiveElement && interactiveElementsMode === InteractiveElementsMode.Hidden
-                ? "hidden"
-                : undefined;
+            editorMode === EditorMode.ModelingView || interactiveElementsMode !== InteractiveElementsMode.Hidden || !isInteractiveElement
+                ? undefined
+                : 'hidden';
 
         const { relationship, path } = this.props.relationship;
 
