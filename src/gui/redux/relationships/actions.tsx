@@ -37,7 +37,7 @@ export function createRelationship(
         type: "CREATE_RELATIONSHIP",
         relationship: {
             id: newId(),
-            futureKind: 't',
+            name: 'Relationship',
             selected: false,
             bounds: { x: 0, y: 0, width: 0, height: 0 },
             kind,

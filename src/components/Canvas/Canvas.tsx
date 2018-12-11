@@ -19,6 +19,7 @@ import {
   InteractiveElementsMode,
 } from '../../domain/Options/types';
 import * as UML from './../../core/domain';
+import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';
 import Relationship from './../LayoutedRelationship';
@@ -186,7 +187,7 @@ class Canvas extends React.Component<Props, State> {
 interface OwnProps {}
 
 interface StateProps {
-  entities: UML.Entity[];
+  entities: Element[];
   relationships: UML.LayoutedRelationship[];
   canvasSize: { width: number; height: number };
   gridSize: number;

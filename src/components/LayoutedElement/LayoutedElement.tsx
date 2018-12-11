@@ -8,7 +8,7 @@ import {
   EditorMode,
   InteractiveElementsMode,
 } from '../../domain/Options/types';
-import { Entity } from './../../core/domain';
+import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import { ElementRepository } from './../../domain/Element';
 
@@ -71,8 +71,9 @@ class CanvasEntity extends Component<Props, State> {
   private onMouseDown = (event: React.MouseEvent) => {
     let bounds = event.currentTarget.getBoundingClientRect();
 
-    const element: Entity = {
+    const element: Element = {
       ...this.props.entity,
+      render: (options: any) => (<></>),
       selected: event.shiftKey ? !this.state.selected : true,
     };
 
@@ -89,8 +90,9 @@ class CanvasEntity extends Component<Props, State> {
       const x = event.layerX - this.state.offset!.x;
       const y = event.layerY - this.state.offset!.y;
 
-      const element: Entity = {
+      const element: Element = {
         ...this.props.entity,
+        render: (options: any) => (<></>),
         bounds: {
           ...this.props.entity.bounds,
           x: Math.ceil(x / 10) * 10,
@@ -110,8 +112,9 @@ class CanvasEntity extends Component<Props, State> {
       const x = event.layerX;
       const y = event.layerY;
 
-      const element: Entity = {
+      const element: Element = {
         ...this.props.entity,
+        render: (options: any) => (<></>),
         bounds: {
           ...this.props.entity.bounds,
           width: Math.max(x - this.props.entity.bounds.x, 100),
@@ -126,8 +129,9 @@ class CanvasEntity extends Component<Props, State> {
   };
 
   private onMouseUp = (event: MouseEvent) => {
-    const element: Entity = {
+    const element: Element = {
       ...this.props.entity,
+      render: (options: any) => (<></>),
       selected: event.shiftKey ? this.state.selected : this.state.hover,
     };
 
@@ -143,8 +147,8 @@ class CanvasEntity extends Component<Props, State> {
     const { entity, interactiveElementIds } = this.props;
 
     const interactiveMemberIdsOfEntity = [
-      ...entity.attributes.map(attr => attr.id),
-      ...entity.methods.map(method => method.id),
+      // ...entity.attributes.map(attr => attr.id),
+      // ...entity.methods.map(method => method.id),
     ].filter(id => interactiveElementIds.has(id));
 
     this.props.onToggleInteractiveElements(
@@ -170,8 +174,6 @@ class CanvasEntity extends Component<Props, State> {
       editorMode,
       interactiveElementIds,
     } = this.props;
-
-    const { attributes, methods, renderMode } = entity;
 
     const containerStyle = this.computeContainerStyle();
 
@@ -244,7 +246,7 @@ class CanvasEntity extends Component<Props, State> {
 }
 
 interface OwnProps {
-  entity: Entity;
+  entity: Element;
   openDetailsPopup: () => void;
 }
 

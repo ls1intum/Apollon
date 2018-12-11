@@ -4,7 +4,8 @@ import EntitySelect from "./EntitySelect";
 import RectEdgeSelect from "./RectEdgeSelect";
 import BlockInput from "../BlockInput";
 import { PopupSectionHeading } from "../PopupSectionHeading";
-import { Entity, RelationshipEnd } from "./../../../core/domain";
+import { RelationshipEnd } from "./../../../core/domain";
+import Element from './../../../domain/Element';
 import { DiagramType } from "../../../domain/Options/types";
 import { RectEdge } from "./../../../core/geometry";
 import { UUID } from './../../../domain/utils/uuid';
@@ -174,8 +175,8 @@ export default class RelationshipEndDetails extends React.Component<Props, State
 interface Props {
     diagramType: DiagramType;
     heading: string;
-    entity: Entity;
-    entities: Entity[];
+    entity: Element;
+    entities: Element[];
     relationshipEnd: RelationshipEnd;
     updateRelationshipEnd: (relationshipEnd: RelationshipEnd) => void;
 }

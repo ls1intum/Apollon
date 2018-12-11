@@ -6,7 +6,7 @@ import styled from "styled-components";
 import * as DragDrop from "./dnd";
 import { getAllEntities } from "./../../gui/redux/selectors";
 import { ReduxState } from "./../../gui/redux/state";
-import { Entity } from "../../core/domain";
+import Element from "../../domain/Element";
 import { Rect, Size, snapPointToGrid } from "../../core/geometry";
 
 const LayerBase = styled.div`
@@ -163,7 +163,7 @@ interface DragDropProps {
 }
 
 interface StateProps {
-    entities: Entity[];
+    entities: Element[];
     canvasSize: Size;
     gridSize: number;
 }

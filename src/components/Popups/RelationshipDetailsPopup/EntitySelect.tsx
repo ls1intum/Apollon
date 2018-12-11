@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Entity } from "./../../../core/domain";
+import Element from "./../../../domain/Element";
 import { UUID } from './../../../domain/utils/uuid';
 import styled from "styled-components";
 
@@ -26,7 +26,7 @@ export default class EntitySelect extends React.Component<Props> {
 }
 
 interface Props {
-    entities: Entity[];
+    entities: Element[];
     selectedEntityId: UUID;
     onSelectedEntityIdChange: (entityId: UUID) => void;
 }

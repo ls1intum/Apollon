@@ -1,6 +1,7 @@
 import { LayoutedEntity, layoutEntity } from "./entity";
 import { computeRelationshipPath } from "./relationship";
-import { Entity, Relationship, UMLModel } from "../../core/domain";
+import { Relationship, UMLModel } from "../../core/domain";
+import Element from './../../domain/Element';
 import { computeBoundingBox, Point, Rect, Size } from "../../core/geometry";
 import { flatten } from "../../core/utils";
 import { UUID } from './../../domain/utils/uuid';
@@ -62,7 +63,7 @@ export function computeDiagramBoundingBox(
     return computeBoundingBox(points);
 }
 
-function getEntityBoundingPoints(entity: Entity): Point[] {
+function getEntityBoundingPoints(entity: Element): Point[] {
     const { x, y, width, height } = entity.bounds;
 
     const topLeftCorner: Point = { x, y };

@@ -11,7 +11,7 @@ import * as DragDrop from './../DragDrop/dnd';
 import { snapPointToGrid } from './../../core/geometry';
 import { createEntity, moveEntities } from './../../gui/redux';
 import { State as ReduxState } from './../Store';
-import { ElementRepository } from '../../domain/Element';
+import Element, { ElementRepository } from '../../domain/Element';
 import { EntityKind } from '../../core/domain';
 import * as Plugins from './../../domain/plugins';
 
@@ -92,15 +92,14 @@ const dropTargetSpec: DropTargetSpec<Props> = {
             clazz = 'Enumeration';
             break;
         }
-        const element = new (Plugins as { [clazz: string]: any })[clazz](
+        const element: Element = new (Plugins as { [clazz: string]: any })[clazz](
           item.kind,
           actualPosition,
           item.size
         );
         element.bounds = { ...actualPosition, ...item.size };
         props.create(element);
-
-        props.createEntity(element.id, actualPosition, item.kind);
+        props.createEntity(element);
       }
     } else if (item.type === DragDrop.ItemTypes.ExistingEntities) {
       const diffFromOffset = monitor.getDifferenceFromInitialOffset();

@@ -1,10 +1,11 @@
-import { Entity, Relationship } from "../../core/domain";
+import { Relationship } from "../../core/domain";
+import Element from './../../domain/Element';
 import { Size } from "../../core/geometry";
 import { UUID } from './../../domain/utils/uuid';
 
 export interface ReduxState {
     entities: {
-        byId: { [id: string]: Entity };
+        byId: { [id: string]: Element };
         allIds: UUID[];
     };
 

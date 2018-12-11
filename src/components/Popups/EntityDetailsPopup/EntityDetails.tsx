@@ -4,7 +4,8 @@ import EntityKindSelect from "./EntityKindSelect";
 import EntityMethods from "./EntityMethods";
 import EntityNameInput from "./EntityNameInput";
 import { PopupSection } from "../PopupSection";
-import { Entity, EntityKind, EntityRenderMode } from "./../../../core/domain";
+import { EntityKind, EntityRenderMode } from "./../../../core/domain";
+import Element from './../../../domain/Element';
 import { UUID } from './../../../domain/utils/uuid';
 import { EntityMember } from '../../../domain/plugins/class/Member';
 
@@ -61,7 +62,7 @@ export default class EntityDetails extends React.Component<Props> {
 }
 
 interface Props {
-    entity: Entity;
+    entity: Element;
     updateEntityKind: (kind: EntityKind) => void;
     updateEntityName: (name: string) => void;
     updateEntityRenderMode: (renderMode: EntityRenderMode) => void;

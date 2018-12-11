@@ -1,5 +1,6 @@
 import React from 'react';
-import { Entity, EntityKind, EntityRenderMode } from "../../../core/domain";
+import { EntityKind, EntityRenderMode } from "../../../core/domain";
+import Element from './../../../domain/Element';
 import { Delta, Point } from "../../../core/geometry";
 import { assertNever } from "../../../core/utils";
 import newId, { UUID } from './../../../domain/utils/uuid';
@@ -23,12 +24,12 @@ export type EntitiesAction =
 
 export interface CreateEntityAction {
     type: "CREATE_ENTITY";
-    entity: Entity;
+    entity: Element;
 }
 
 export interface DuplicateEntitiesAction {
     type: "DUPLICATE_ENTITIES";
-    newEntities: Entity[];
+    newEntities: Element[];
     offset: Delta;
 }
 
@@ -92,135 +93,53 @@ interface UpdateEntityMemberAction {
     member: EntityMember;
 }
 
-export function createEntity(id: string, position: Point, kind: EntityKind): CreateEntityAction {
-    const { name, attributes, methods, renderMode } = getEntityDefaults(kind);
+export function createEntity(entity: Element): CreateEntityAction {
+    const { kind } = entity;
+    let renderMode = { showAttributes: false, showMethods: false };
+    let attributes: EntityMember[] = [];
+    let methods: EntityMember[] = [];
+    let element;
+    switch (entity.kind) {
+        case EntityKind.Class:
+            element = entity as Plugins.Class;
+            renderMode = element.renderMode;
+            attributes = element.attributes;
+            methods = element.methods;
+            break;
+        case EntityKind.AbstractClass:
+            element = entity as Plugins.AbstractClass;
+            renderMode = element.renderMode;
+            attributes = element.attributes;
+            methods = element.methods;
+            break;
+        case EntityKind.Interface:
+            element = entity as Plugins.Interface;
+            renderMode = element.renderMode;
+            attributes = element.attributes;
+            methods = element.methods;
+            break
+        case EntityKind.Enumeration:
+            element = entity as Plugins.Enumeration;
+            renderMode = element.renderMode;
+            attributes = element.attributes;
+            break;
+    }
+
     const size = {
-        width: getDefaultEntityWidth(kind),
+        width: getDefaultEntityWidth(kind as EntityKind),
         height: computeEntityHeight(kind, attributes.length, methods.length, renderMode)
     };
 
     return {
         type: "CREATE_ENTITY",
-        entity: {
-            id: id,
-            bounds: { ...position, ...size },
-            kind,
-            futureKind: 't',
-            name,
-            selected: false,
-            attributes,
-            methods,
-            renderMode,
-            render: (new (Plugins as any)[kind]).render,
-        }
+        entity: { ...entity, bounds: { ...entity.bounds, ...size }, render: (options: any) => (<></>),},
     };
 }
 
-function getEntityDefaults(
-    kind: EntityKind
-): Pick<Entity, "name" | "attributes" | "methods" | "renderMode"> {
-    switch (kind) {
-        case EntityKind.AbstractClass:
-            return {
-                name: "AbstractClass",
-                attributes: [{ id: newId(), name: "attribute1" }],
-                methods: [{ id: newId(), name: "method1()" }],
-                renderMode: { showAttributes: true, showMethods: true }
-            };
-
-        case EntityKind.Class:
-            return {
-                name: "Class",
-                attributes: [{ id: newId(), name: "attribute1" }],
-                methods: [{ id: newId(), name: "method1()" }],
-                renderMode: { showAttributes: true, showMethods: true }
-            };
-
-        case EntityKind.Enumeration:
-            return {
-                name: "Enumeration",
-                attributes: [
-                    { id: newId(), name: "Case1" },
-                    { id: newId(), name: "Case2" },
-                    { id: newId(), name: "Case3" }
-                ],
-                methods: [],
-                renderMode: { showAttributes: true, showMethods: false }
-            };
-
-        case EntityKind.Interface:
-            return {
-                name: "Interface",
-                attributes: [],
-                methods: [{ id: newId(), name: "method1()" }],
-                renderMode: { showAttributes: true, showMethods: true }
-            };
-
-        case EntityKind.ActivityControlInitialNode:
-            return {
-                name: "●",
-                attributes: [],
-                methods: [],
-                renderMode: { showAttributes: false, showMethods: false }
-            };
-
-        case EntityKind.ActivityControlFinalNode:
-            return {
-                name: "◉",
-                attributes: [],
-                methods: [],
-                renderMode: { showAttributes: false, showMethods: false }
-            };
-
-        case EntityKind.ActivityActionNode:
-            return {
-                name: "Action",
-                attributes: [],
-                methods: [],
-                renderMode: { showAttributes: false, showMethods: false }
-            };
-
-        case EntityKind.ActivityObject:
-            return {
-                name: "Object",
-                attributes: [],
-                methods: [],
-                renderMode: { showAttributes: false, showMethods: false }
-            };
-
-        case EntityKind.ActivityMergeNode:
-            return {
-                name: "Merge Decision",
-                attributes: [],
-                methods: [],
-                renderMode: { showAttributes: false, showMethods: false }
-            };
-
-        case EntityKind.ActivityForkNode:
-            return {
-                name: "▮",
-                attributes: [],
-                methods: [],
-                renderMode: { showAttributes: false, showMethods: false }
-            };
-
-        case EntityKind.ActivityForkNodeHorizontal:
-            return {
-                name: "▮",
-                attributes: [],
-                methods: [],
-                renderMode: { showAttributes: false, showMethods: false }
-            };
-
-        default:
-            return assertNever(kind);
-    }
-}
-
-export function duplicateEntities(entities: Entity[], offset: Delta): DuplicateEntitiesAction {
+export function duplicateEntities(entities: Element[], offset: Delta): DuplicateEntitiesAction {
     return {
         type: "DUPLICATE_ENTITIES",
-        newEntities: entities.map<Entity>(entity => ({
+        newEntities: entities.map<Element>(entity => ({
             ...entity,
             id: newId(),
             bounds: {
@@ -228,14 +147,15 @@ export function duplicateEntities(entities: Entity[], offset: Delta): DuplicateE
                 x: entity.bounds.x + offset.dx,
                 y: entity.bounds.y + offset.dy
             },
-            attributes: entity.attributes.map(attribute => ({
-                ...attribute,
-                id: newId()
-            })),
-            methods: entity.methods.map(method => ({
-                ...method,
-                id: newId()
-            }))
+            // attributes: entity.attributes.map(attribute => ({
+            //     ...attribute,
+            //     id: newId()
+            // })),
+            // methods: entity.methods.map(method => ({
+            //     ...method,
+            //     id: newId()
+            // })),
+            render: (options: any) => (<></>),
         })),
         offset
     };

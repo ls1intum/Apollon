@@ -1,8 +1,9 @@
-import { Entity, EntityKind, EntityRenderMode } from "../../core/domain";
+import { EntityKind, EntityRenderMode } from "../../core/domain";
 import { Point, Size } from "../../core/geometry";
-import { assertNever } from "../../core/utils";
+import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import { EntityMember } from '../../domain/plugins/class/Member';
+import * as Plugins from './../../domain/plugins';
 
 export const ENTITY_KIND_HEIGHT = 14;
 export const ENTITY_NAME_HEIGHT = 35;
@@ -30,8 +31,39 @@ export interface LayoutedEntityMember {
     size: Size;
 }
 
-export function layoutEntity(entity: Entity): LayoutedEntity {
-    const { id, kind, name, bounds, attributes, methods, renderMode } = entity;
+export function layoutEntity(entity: Element): LayoutedEntity {
+    const { id, kind, name, bounds } = entity;
+
+    let renderMode = { showAttributes: false, showMethods: false };
+    let attributes: EntityMember[] = [];
+    let methods: EntityMember[] = [];
+    let element;
+    switch (entity.kind) {
+        case EntityKind.Class:
+            element = entity as Plugins.Class;
+            renderMode = element.renderMode;
+            attributes = element.attributes;
+            methods = element.methods;
+            break;
+        case EntityKind.AbstractClass:
+            element = entity as Plugins.AbstractClass;
+            renderMode = element.renderMode;
+            attributes = element.attributes;
+            methods = element.methods;
+            break;
+        case EntityKind.Interface:
+            element = entity as Plugins.Interface;
+            renderMode = element.renderMode;
+            attributes = element.attributes;
+            methods = element.methods;
+            break
+        case EntityKind.Enumeration:
+            element = entity as Plugins.Enumeration;
+            renderMode = element.renderMode;
+            attributes = element.attributes;
+            break;
+    }
+
     const height = computeEntityHeight(kind, attributes.length, methods.length, renderMode);
 
     const attributeSectionHeight = renderMode.showAttributes
@@ -60,7 +92,7 @@ export function layoutEntity(entity: Entity): LayoutedEntity {
 }
 
 function layoutEntityMembers(
-    entity: Entity,
+    entity: Element,
     members: EntityMember[],
     listPositionY: number
 ): LayoutedEntityMember[] {

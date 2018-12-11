@@ -3,7 +3,7 @@ import Boundary from './../geo/Boundary';
 
 interface Element {
   readonly id: string;
-  readonly futureKind: string;
+  readonly kind: string;
 }
 
 abstract class Element {
@@ -12,6 +12,8 @@ abstract class Element {
   bounds: Boundary = new Boundary(0, 0, 110, 80);
 
   selected: boolean = false;
+
+  constructor(public name: string) {}
 
   public abstract render(options: any): JSX.Element;
 }

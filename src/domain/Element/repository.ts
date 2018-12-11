@@ -21,10 +21,10 @@ class ElementRepository {
 
   static read = (state: State): any => {
     const elements = Object.values(state.elements).filter(
-      e => e.futureKind !== 't'
+      e => e.kind !== 't'
     );
     return elements.map(e =>
-      Object.setPrototypeOf(e, (<any>Plugins)[e.futureKind].prototype)
+      Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype)
     );
   };
 

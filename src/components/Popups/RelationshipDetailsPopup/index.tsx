@@ -3,7 +3,8 @@ import { connect } from "react-redux";
 import RelationshipDetails from "./RelationshipDetails";
 import Popup from "../Popup";
 import { flipRelationship, getAllEntities, ReduxState, updateRelationship } from "./../../../gui/redux";
-import { Entity, LayoutedRelationship } from "./../../../core/domain";
+import { LayoutedRelationship } from "./../../../core/domain";
+import Element from './../../../domain/Element';
 import { Point } from "./../../../core/geometry";
 import { DiagramType } from "./../../../domain/Options/types";
 
@@ -43,7 +44,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-    entities: Entity[];
+    entities: Element[];
 }
 
 interface DispatchProps {

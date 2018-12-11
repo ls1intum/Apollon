@@ -4,7 +4,8 @@ import styled from "styled-components";
 import RelationshipDragPreview from "./RelationshipDragPreview";
 import { createRelationship, getAllEntities, ReduxState } from "./../../gui/redux";
 import { DiagramType, EditorMode, ElementSelection } from "../../domain/Options/types";
-import { Entity, RelationshipKind } from "./../../core/domain";
+import { RelationshipKind } from "./../../core/domain";
+import Element from './../../domain/Element';
 import { Point, RectEdge } from "./../../core/geometry";
 import { UUID } from './../../domain/utils/uuid';
 
@@ -181,7 +182,7 @@ class RelationshipConnectors extends React.Component<Props, State> {
         );
     }
 
-    showEntityConnectors(entity: Entity): boolean {
+    showEntityConnectors(entity: Element): boolean {
         if (!this.props.showConnectors) {
             return false;
         }
@@ -216,7 +217,7 @@ interface Connector {
     outer: Point;
 }
 
-function computeConnectorPositions(entity: Entity): Connector[] {
+function computeConnectorPositions(entity: Element): Connector[] {
     const { x, y, width, height } = entity.bounds;
 
     const centerX = x + width / 2;
@@ -254,7 +255,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-    entities: Entity[];
+    entities: Element[];
 }
 
 interface DispatchProps {
@@ -265,7 +266,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
     mousePosition: Point | null;
-    startConnector: [Entity, Connector] | null;
+    startConnector: [Element, Connector] | null;
 }
 
 function mapStateToProps(state: ReduxState): StateProps {

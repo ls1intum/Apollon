@@ -5,7 +5,7 @@ import {
   EditorMode,
   InteractiveElementsMode,
 } from './../../Options/types';
-import { Entity } from './../../../core/domain';
+import Element from './../../Element';
 import { ENTITY_MEMBER_HEIGHT } from './../../../rendering/layouters/entity';
 
 export interface EntityMember {
@@ -77,7 +77,7 @@ class Member extends Component<Props, State> {
 
 interface Props {
   y: number;
-  entity: Entity;
+  entity: Element;
   member: EntityMember;
   theme: Theme;
   editorMode: EditorMode;

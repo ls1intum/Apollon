@@ -1,16 +1,21 @@
 import { createSelector } from "reselect";
 import { ReduxState } from "./state";
-import { Entity, LayoutedRelationship, Relationship } from "../../core/domain";
+import { LayoutedRelationship, Relationship } from "../../core/domain";
+import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import { computeRelationshipPath } from "../../rendering/layouters/relationship";
 import * as Plugins from './../../domain/plugins';
 
 type LookupById<T> = { [id: string]: T };
 
-export const getAllEntities = createSelector<ReduxState, UUID[], LookupById<Entity>, Entity[]>(
+export const getAllEntities = createSelector<ReduxState, UUID[], LookupById<Element>, Element[]>(
     state => state.entities.allIds,
     state => state.entities.byId,
-    (allIds, byId) => allIds.map(id => byId[id]).map(e => Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype))
+    (allIds, byId) => allIds.map(id => byId[id]).map(e => {
+        const t = Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype)
+        t.render = (new (<any>Plugins)[e.kind]).render;
+        return t
+    })
 );
 
 export const getAllRelationships = createSelector<
@@ -26,7 +31,7 @@ export const getAllRelationships = createSelector<
 
 export const getAllLayoutedRelationships = createSelector<
     ReduxState,
-    Entity[],
+    Element[],
     Relationship[],
     LayoutedRelationship[]
 >(getAllEntities, getAllRelationships, (entities, relationships) =>

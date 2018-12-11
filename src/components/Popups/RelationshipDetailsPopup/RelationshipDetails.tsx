@@ -4,7 +4,8 @@ import RelationshipKindSelect from "./RelationshipKindSelect";
 import RelationshipFlipIcon from "./RelationshipFlipIcon";
 import { PopupSection } from "../PopupSection";
 import { PopupSectionHeading } from "../PopupSectionHeading";
-import { Entity, LayoutedRelationship, Relationship, RelationshipEnd, RelationshipKind } from "./../../../core/domain";
+import { LayoutedRelationship, Relationship, RelationshipEnd, RelationshipKind } from "./../../../core/domain";
+import Element from './../../../domain/Element';
 import { DiagramType } from "./../../../domain/Options/types";
 
 export default class RelationshipDetails extends React.Component<Props> {
@@ -94,7 +95,7 @@ export default class RelationshipDetails extends React.Component<Props> {
 
 interface Props {
     diagramType: DiagramType;
-    entities: Entity[];
+    entities: Element[];
     relationship: LayoutedRelationship;
     updateRelationship: (relationship: Relationship) => void;
     flipRelationship: (relationship: Relationship) => void;

@@ -4,16 +4,8 @@ import { UUID } from './../domain/utils/uuid';
 import { EntityMember } from '../domain/plugins/class/Member';
 
 export interface UMLModel {
-    entities: Entity[];
+    entities: Element[];
     relationships: Relationship[];
-}
-
-export interface Entity extends Element {
-    name: string;
-    attributes: EntityMember[];
-    methods: EntityMember[];
-    renderMode: EntityRenderMode;
-    render(options: any): JSX.Element;
 }
 
 export const enum EntityKind {
@@ -64,7 +56,7 @@ export interface RelationshipEnd {
 
 export interface LayoutedRelationship {
     relationship: Relationship;
-    source: Entity;
-    target: Entity;
+    source: Element;
+    target: Element;
     path: Point[];
 }

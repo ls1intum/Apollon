@@ -1,30 +1,18 @@
 import React from 'react';
-import { Entity, EntityKind } from './../../../core/domain';
+import { EntityRenderMode } from './../../../core/domain';
 import { Point, Size } from '../../../core/geometry';
 import Element from './../../Element';
 import Member, { EntityMember } from './/Member';
 import { EditorMode } from '../../Options/types';
-import styled from 'styled-components';
+import uuid from '../../utils/uuid';
 
-const EntityNameDisplay: any = styled.tspan`
-  overflow: visible;
-  user-select: none;
-  font-style: ${(props: any) =>
-    props.entityKind === EntityKind.AbstractClass ? 'italic' : 'normal'};
-`;
-
-const EntityKindDisplay = styled.tspan`
-  font-size: 85%;
-`;
-
-class Interface extends Element implements Entity {
-  kind = EntityKind.Class;
-  attributes = [];
-  methods = [];
-  renderMode = { showAttributes: true, showMethods: true };
+class Interface extends Element {
+  attributes: EntityMember[] = [];
+  methods: EntityMember[] = [{ id: uuid(), name: "method1()" }];
+  renderMode: EntityRenderMode = { showAttributes: false, showMethods: true };
 
   constructor(public name: string, public position: Point, public size: Size) {
-    super();
+    super(name);
   }
 
   public render(options: any): JSX.Element {
@@ -37,7 +25,7 @@ class Interface extends Element implements Entity {
     const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements } = options;
     
     return (
-      <svg width={width} height={height} style={{ overflow: 'visible' }}>
+      <svg id={`interface-${this.id}`} width={width} height={height} style={{ overflow: 'visible' }}>
         <rect width="100%" height="100%" fill="#ffffff" stroke="#000000" />
         <rect width={width} height={height} stroke="black" fill={
             editorMode === EditorMode.InteractiveElementsView &&

@@ -1,18 +1,18 @@
 import React from 'react';
-import { Entity, EntityKind } from './../../../core/domain';
+import { EntityRenderMode } from './../../../core/domain';
 import { Point, Size } from '../../../core/geometry';
 import Element from './../../Element';
 import Member, { EntityMember } from './/Member';
 import { EditorMode } from '../../Options/types';
+import uuid from './../../utils/uuid';
 
-class Class extends Element implements Entity {
-  kind = EntityKind.Class;
-  attributes = [];
-  methods = [];
-  renderMode = { showAttributes: true, showMethods: true };
+class Class extends Element {
+  attributes: EntityMember[] = [{ id: uuid(), name: "attribute1" }];
+  methods: EntityMember[] = [{ id: uuid(), name: "method1()" }];
+  renderMode: EntityRenderMode = { showAttributes: true, showMethods: true };
 
-  constructor(public name: string, public position: Point, public size: Size) {
-    super();
+  constructor(public name: string = 'Class', public position: Point, public size: Size) {
+    super(name);
   }
 
   public render(options: any): JSX.Element {
@@ -24,7 +24,7 @@ class Class extends Element implements Entity {
     const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements } = options;
 
     return (
-      <svg width={width} height={height} style={{ overflow: 'visible' }}>
+      <svg id={`class-${this.id}`} width={width} height={height} style={{ overflow: 'visible' }}>
         <rect width="100%" height="100%" fill="#ffffff" stroke="#000000" />
         <rect width={width} height={height} stroke="black" fill={
             editorMode === EditorMode.InteractiveElementsView &&
