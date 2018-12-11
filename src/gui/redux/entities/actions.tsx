@@ -92,7 +92,7 @@ interface UpdateEntityMemberAction {
     member: EntityMember;
 }
 
-export function createEntity(position: Point, kind: EntityKind): CreateEntityAction {
+export function createEntity(id: string, position: Point, kind: EntityKind): CreateEntityAction {
     const { name, attributes, methods, renderMode } = getEntityDefaults(kind);
     const size = {
         width: getDefaultEntityWidth(kind),
@@ -102,7 +102,7 @@ export function createEntity(position: Point, kind: EntityKind): CreateEntityAct
     return {
         type: "CREATE_ENTITY",
         entity: {
-            id: newId(),
+            id: id,
             bounds: { ...position, ...size },
             kind,
             futureKind: 't',

@@ -100,7 +100,7 @@ const dropTargetSpec: DropTargetSpec<Props> = {
         element.bounds = { ...actualPosition, ...item.size };
         props.create(element);
 
-        props.createEntity(actualPosition, item.kind);
+        props.createEntity(element.id, actualPosition, item.kind);
       }
     } else if (item.type === DragDrop.ItemTypes.ExistingEntities) {
       const diffFromOffset = monitor.getDifferenceFromInitialOffset();
