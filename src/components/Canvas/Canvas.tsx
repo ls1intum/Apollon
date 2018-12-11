@@ -1,25 +1,15 @@
-import React from 'react';
-import {
-  ConnectDropTarget,
-  DropTarget,
-  DropTargetCollector,
-  DropTargetSpec,
-} from 'react-dnd';
+import React, { createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
 import Entity from './../LayoutedElement';
 import Grid from './Grid';
 import EntityDetailsPopup from './../Popups/EntityDetailsPopup';
 import RelationshipDetailsPopup from './../Popups/RelationshipDetailsPopup';
 import RelationshipConnectors from './RelationshipConnectors';
-import * as DragDrop from './../DragDrop/dnd';
 import {
-  createEntity,
   getAllEntities,
   getAllInteractiveElementIds,
   getAllLayoutedRelationships,
-  moveEntities,
   toggleInteractiveElements,
-  updateEntityWidth,
 } from './../../gui/redux';
 import {
   ApollonMode,
@@ -29,18 +19,15 @@ import {
   InteractiveElementsMode,
 } from '../../domain/Options/types';
 import * as UML from './../../core/domain';
-import { Size, snapPointToGrid } from './../../core/geometry';
 import { UUID } from './../../domain/utils/uuid';
 import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';
 import Relationship from './../LayoutedRelationship';
-import Element, { ElementRepository } from './../../domain/Element';
-import { EntityKind } from '../..';
-import * as Plugins from '../../domain/plugins';
+import Droppable from './../DragDrop/Droppable';
 
 import { State as ReduxState } from './../Store';
 
 class Canvas extends React.Component<Props, State> {
-  container: HTMLDivElement | null = null;
+  container: RefObject<HTMLDivElement> = createRef();
 
   state: State = {
     doubleClickedElement: { type: 'none' },
@@ -57,7 +44,6 @@ class Canvas extends React.Component<Props, State> {
       gridSize,
       entities,
       relationships,
-      connectDropTarget,
       diagramType,
       apollonMode,
       editorMode,
@@ -67,81 +53,83 @@ class Canvas extends React.Component<Props, State> {
 
     const { selection } = this.props;
 
-    return connectDropTarget(
-      <div ref={ref => (this.container = ref)}>
-        <Grid grid={gridSize} width={width} height={height}>
-          <svg width={canvasSize.width} height={canvasSize.height}>
-            <defs>
-              <RelationshipMarkers
-                onComponentDidMount={this.displayRelationships}
+    return (
+      <div ref={this.container}>
+        <Droppable container={this.container}>
+          <Grid grid={gridSize} width={width} height={height}>
+            <svg width={canvasSize.width} height={canvasSize.height}>
+              <defs>
+                <RelationshipMarkers
+                  onComponentDidMount={this.displayRelationships}
+                />
+              </defs>
+              {this.state.displayRelationships &&
+                relationships.map(relationship => {
+                  const relationshipId = relationship.relationship.id;
+                  return (
+                    <Relationship
+                      key={relationshipId}
+                      relationship={relationship}
+                      apollonMode={this.props.apollonMode}
+                      editorMode={this.props.editorMode}
+                      interactiveElementsMode={interactiveElementsMode}
+                      isSelected={selection.relationshipIds.includes(
+                        relationshipId
+                      )}
+                      onSelect={() => {}}
+                      onToggleSelection={() => {}}
+                      isInteractiveElement={this.props.interactiveElementIds.has(
+                        relationshipId
+                      )}
+                      onToggleInteractiveElements={
+                        this.props.toggleInteractiveElements
+                      }
+                      openDetailsPopup={() => {
+                        this.setState({
+                          doubleClickedElement: {
+                            type: 'relationship',
+                            relationshipId,
+                          },
+                        });
+                      }}
+                    />
+                  );
+                })}
+
+              {entities.map(
+                entity =>
+                  (this.props.editorMode === EditorMode.ModelingView ||
+                    this.props.interactiveElementsMode !==
+                      InteractiveElementsMode.Hidden ||
+                    !this.props.interactiveElementIds.has(entity.id)) && (
+                    <Entity
+                      key={entity.id}
+                      entity={entity}
+                      openDetailsPopup={() => {
+                        this.setState({
+                          doubleClickedElement: {
+                            type: 'entity',
+                            entityId: entity.id,
+                          },
+                        });
+                      }}
+                    />
+                  )
+              )}
+            </svg>
+
+            {apollonMode !== ApollonMode.ReadOnly && (
+              <RelationshipConnectors
+                diagramType={diagramType}
+                editorMode={editorMode}
+                selection={selection}
+                showConnectors={this.state.doubleClickedElement.type === 'none'}
               />
-            </defs>
-            {this.state.displayRelationships &&
-              relationships.map(relationship => {
-                const relationshipId = relationship.relationship.id;
-                return (
-                  <Relationship
-                    key={relationshipId}
-                    relationship={relationship}
-                    apollonMode={this.props.apollonMode}
-                    editorMode={this.props.editorMode}
-                    interactiveElementsMode={interactiveElementsMode}
-                    isSelected={selection.relationshipIds.includes(
-                      relationshipId
-                    )}
-                    onSelect={() => {}}
-                    onToggleSelection={() => {}}
-                    isInteractiveElement={this.props.interactiveElementIds.has(
-                      relationshipId
-                    )}
-                    onToggleInteractiveElements={
-                      this.props.toggleInteractiveElements
-                    }
-                    openDetailsPopup={() => {
-                      this.setState({
-                        doubleClickedElement: {
-                          type: 'relationship',
-                          relationshipId,
-                        },
-                      });
-                    }}
-                  />
-                );
-              })}
-
-            {entities.map(
-              entity =>
-                (this.props.editorMode === EditorMode.ModelingView ||
-                  this.props.interactiveElementsMode !==
-                    InteractiveElementsMode.Hidden ||
-                  !this.props.interactiveElementIds.has(entity.id)) && (
-                  <Entity
-                    key={entity.id}
-                    entity={entity}
-                    openDetailsPopup={() => {
-                      this.setState({
-                        doubleClickedElement: {
-                          type: 'entity',
-                          entityId: entity.id,
-                        },
-                      });
-                    }}
-                  />
-                )
             )}
-          </svg>
 
-          {apollonMode !== ApollonMode.ReadOnly && (
-            <RelationshipConnectors
-              diagramType={diagramType}
-              editorMode={editorMode}
-              selection={selection}
-              showConnectors={this.state.doubleClickedElement.type === 'none'}
-            />
-          )}
-
-          {this.renderDetailsPopup()}
-        </Grid>
+            {this.renderDetailsPopup()}
+          </Grid>
+        </Droppable>
       </div>
     );
   }
@@ -162,7 +150,7 @@ class Canvas extends React.Component<Props, State> {
               this.setState({ doubleClickedElement: { type: 'none' } });
             }}
             canvasScrollContainer={
-              this.container!.parentElement! as HTMLDivElement
+              this.container.current!.parentElement! as HTMLDivElement
             }
           />
         ) : null;
@@ -182,7 +170,7 @@ class Canvas extends React.Component<Props, State> {
                 this.setState({ doubleClickedElement: { type: 'none' } });
               }}
               canvasScrollContainer={
-                this.container!.parentElement! as HTMLDivElement
+                this.container.current!.parentElement! as HTMLDivElement
               }
             />
           )
@@ -200,7 +188,7 @@ interface OwnProps {}
 interface StateProps {
   entities: UML.Entity[];
   relationships: UML.LayoutedRelationship[];
-  canvasSize: Size;
+  canvasSize: { width: number; height: number };
   gridSize: number;
   interactiveElementsMode: InteractiveElementsMode;
   interactiveElementIds: ReadonlySet<UUID>;
@@ -211,18 +199,10 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  create: typeof ElementRepository.create;
-  moveEntities: typeof moveEntities;
-  createEntity: typeof createEntity;
-  updateEntityWidth: typeof updateEntityWidth;
   toggleInteractiveElements: typeof toggleInteractiveElements;
 }
 
-interface DragDropProps {
-  connectDropTarget: ConnectDropTarget;
-}
-
-type Props = OwnProps & StateProps & DispatchProps & DragDropProps;
+type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
   doubleClickedElement:
@@ -256,95 +236,9 @@ function mapStateToProps(state: ReduxState): StateProps {
   };
 }
 
-const dropTargetSpec: DropTargetSpec<Props> = {
-  drop(props, monitor, component) {
-    if (monitor === undefined || component === undefined) {
-      // Should never happen, but let's be defensive
-      return;
-    }
-
-    const { container } = component as Canvas;
-
-    if (container === null) {
-      // Should never happen, but let's be defensive
-      return;
-    }
-
-    const item = monitor.getItem() as DragDrop.DragItem;
-
-    if (item.type === DragDrop.ItemTypes.NewEntity) {
-      const xyCoordOffset = monitor.getSourceClientOffset();
-      if (xyCoordOffset != null) {
-        const x = xyCoordOffset.x;
-        const y = xyCoordOffset.y;
-        const canvasRect = container.getBoundingClientRect();
-        const positionOnCanvas = {
-          x: x - canvasRect.left,
-          y: y - canvasRect.top,
-        };
-        const actualPosition = snapPointToGrid(
-          positionOnCanvas,
-          props.gridSize
-        );
-
-        let clazz: string = 'Class';
-        switch (item.kind.toString()) {
-          case EntityKind.Class:
-            clazz = 'Class';
-            break;
-          case EntityKind.AbstractClass:
-            clazz = 'AbstractClass';
-            break;
-          case EntityKind.Interface:
-            clazz = 'Interface';
-            break;
-          case EntityKind.Enumeration:
-            clazz = 'Enumeration';
-            break;
-        }
-        const element = new (Plugins as { [clazz: string]: any })[clazz](
-          item.kind,
-          actualPosition,
-          item.size
-        );
-        element.bounds = { ...actualPosition, ...item.size };
-        props.create(element);
-
-        props.createEntity(actualPosition, item.kind);
-      }
-    } else if (item.type === DragDrop.ItemTypes.ExistingEntities) {
-      const diffFromOffset = monitor.getDifferenceFromInitialOffset();
-      if (diffFromOffset != null) {
-        const snappedDifference = snapPointToGrid(
-          diffFromOffset,
-          props.gridSize
-        );
-
-        const delta = { dx: snappedDifference.x, dy: snappedDifference.y };
-
-        if (delta.dx !== 0 || delta.dy !== 0) {
-          props.moveEntities(item.entityIds, delta);
-        }
-      }
-    }
-  },
-};
-
-const dropTargetCollector: DropTargetCollector<any> = connector => ({
-  connectDropTarget: connector.dropTarget(),
-});
-
 export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   mapStateToProps,
   {
-    create: ElementRepository.create,
-    createEntity,
-    moveEntities,
-    updateEntityWidth,
     toggleInteractiveElements,
   }
-)(DropTarget(
-  [DragDrop.ItemTypes.NewEntity, DragDrop.ItemTypes.ExistingEntities],
-  dropTargetSpec,
-  dropTargetCollector
-)(Canvas) as any);
+)(Canvas);
