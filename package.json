@@ -23,7 +23,7 @@
     "publish:patch": "yarn build:npm && npm version patch && npm publish",
     "publish:minor": "yarn build:npm && npm version minor && npm publish",
     "publish:major": "yarn build:npm && npm version major && npm publish",
-    "prepare": "yarn run build:npm"
+    "postinstall": "yarn run build:npm"
   },
   "devDependencies": {
     "@types/react": "16.7.13",
