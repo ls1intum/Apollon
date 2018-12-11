@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, RefObject } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { withTheme } from 'styled-components';
@@ -48,6 +48,7 @@ class CanvasEntity extends Component<Props, State> {
       document.addEventListener('mousemove', this.onMouseMove);
     }
     document.addEventListener('mouseup', this.onMouseUp);
+    this.props.container.current && this.props.container.current.addEventListener('mouseup', this.unselect);
   }
 
   componentWillUnmount() {
@@ -58,6 +59,7 @@ class CanvasEntity extends Component<Props, State> {
       document.removeEventListener('mousemove', this.onMouseMove);
     }
     document.removeEventListener('mouseup', this.onMouseUp);
+    this.props.container.current && this.props.container.current.removeEventListener('mouseup', this.unselect);
   }
 
   private onMouseOver = (event: React.MouseEvent) => {
@@ -129,19 +131,23 @@ class CanvasEntity extends Component<Props, State> {
   };
 
   private onMouseUp = (event: MouseEvent) => {
+    this.setState({
+      moving: false,
+      resizing: false,
+    });
+  };
+
+  private unselect = (event: MouseEvent) => {
     const element: Element = {
       ...this.props.entity,
       render: (options: any) => (<></>),
       selected: event.shiftKey ? this.state.selected : this.state.hover,
     };
-
     this.setState({
-      moving: false,
       selected: element.selected,
-      resizing: false,
     });
     this.props.update(element);
-  };
+  }
 
   toggleEntityInteractiveElement = () => {
     const { entity, interactiveElementIds } = this.props;
@@ -216,14 +222,18 @@ class CanvasEntity extends Component<Props, State> {
           }),
           {}
         )}
-        {this.props.apollonMode !== ApollonMode.ReadOnly &&
-          this.props.editorMode === EditorMode.ModelingView &&
+        {this.props.editorMode === EditorMode.ModelingView &&
           this.state.selected && (
-            <g transform="translate(-9, -9)">
-              <ResizeHandler
-                direction={Direction.SE}
-                onMouseDown={this.startResize(Direction.SE)}
-              />
+            <g>
+              <rect x={-3} y={-3} width={width + 6} height={height + 6} fill="none" stroke={this.props.theme.highlightColor} strokeWidth={5} />
+              {this.props.apollonMode !== ApollonMode.ReadOnly && (
+                <g transform="translate(-9, -9)">
+                  <ResizeHandler
+                    direction={Direction.SE}
+                    onMouseDown={this.startResize(Direction.SE)}
+                  />
+                </g>
+              )}
             </g>
           )}
       </svg>
@@ -247,6 +257,7 @@ class CanvasEntity extends Component<Props, State> {
 
 interface OwnProps {
   entity: Element;
+  container: RefObject<HTMLDivElement>;
   openDetailsPopup: () => void;
 }
 

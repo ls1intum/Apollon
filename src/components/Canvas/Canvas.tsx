@@ -71,6 +71,7 @@ class Canvas extends React.Component<Props, State> {
                     <Relationship
                       key={relationshipId}
                       relationship={relationship}
+                      container={this.container}
                       apollonMode={this.props.apollonMode}
                       editorMode={this.props.editorMode}
                       interactiveElementsMode={interactiveElementsMode}
@@ -106,6 +107,7 @@ class Canvas extends React.Component<Props, State> {
                     <Entity
                       key={entity.id}
                       entity={entity}
+                      container={this.container}
                       openDetailsPopup={() => {
                         this.setState({
                           doubleClickedElement: {

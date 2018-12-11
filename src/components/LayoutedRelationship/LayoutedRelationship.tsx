@@ -18,11 +18,11 @@ class LayoutedRelationship extends React.Component<Props, State> {
     };
 
     componentDidMount() {
-        document.addEventListener('mouseup', this.onMouseUp);
+        this.props.container.current && this.props.container.current.addEventListener('mouseup', this.onMouseUp);
     }
 
     componentWillUnmount() {
-        document.removeEventListener('mouseup', this.onMouseUp);
+        this.props.container.current && this.props.container.current.removeEventListener('mouseup', this.onMouseUp);
     }
 
     private onMouseOver = (event: React.MouseEvent) => {
@@ -144,6 +144,7 @@ export default withTheme(connect(null, {
 
 interface OwnProps {
     relationship: Relationship;
+    container: React.RefObject<HTMLDivElement>;
     apollonMode: ApollonMode;
     editorMode: EditorMode;
     theme: Theme;
