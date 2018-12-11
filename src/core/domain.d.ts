@@ -1,6 +1,7 @@
 import Element from './../domain/Element';
 import { Point, RectEdge, Size } from "./geometry";
 import { UUID } from './../domain/utils/uuid';
+import { EntityMember } from '../domain/plugins/class/Member';
 
 export interface UMLModel {
     entities: Entity[];
@@ -27,11 +28,6 @@ export const enum EntityKind {
     ActivityMergeNode = "ACTIVITY_MERGE_NODE",
     ActivityForkNode = "ACTIVITY_FORK_NODE",
     ActivityForkNodeHorizontal = "ACTIVITY_FORK_NODE_HORIZONTAL"
-}
-
-export interface EntityMember {
-    id: UUID;
-    name: string;
 }
 
 export interface EntityRenderMode {

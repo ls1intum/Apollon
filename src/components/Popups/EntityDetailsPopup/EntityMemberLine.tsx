@@ -2,7 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import TrashCanIcon from "./TrashCanIcon";
 import BlockInput from "../BlockInput";
-import { EntityMember } from "./../../../core/domain";
+import { EntityMember } from "./../../../domain/plugins/class/Member";
 import { sanitizeWhiteSpace } from "./../../../core/utils";
 
 const FlexContainer = styled.div`

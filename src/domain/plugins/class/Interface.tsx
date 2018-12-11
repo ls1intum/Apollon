@@ -1,8 +1,8 @@
 import React from 'react';
-import { Entity, EntityKind, EntityMember } from './../../../core/domain';
+import { Entity, EntityKind } from './../../../core/domain';
 import { Point, Size } from '../../../core/geometry';
 import Element from './../../Element';
-import Member from './/Member';
+import Member, { EntityMember } from './/Member';
 import { EditorMode } from '../../Options/types';
 import styled from 'styled-components';
 

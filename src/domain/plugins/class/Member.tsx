@@ -5,8 +5,13 @@ import {
   EditorMode,
   InteractiveElementsMode,
 } from './../../Options/types';
-import { EntityMember, Entity } from './../../../core/domain';
+import { Entity } from './../../../core/domain';
 import { ENTITY_MEMBER_HEIGHT } from './../../../rendering/layouters/entity';
+
+export interface EntityMember {
+    id: string;
+    name: string;
+}
 
 class Member extends Component<Props, State> {
   state: State = {

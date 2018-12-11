@@ -3,9 +3,10 @@ import { connect } from "react-redux";
 import EntityDetails from "./EntityDetails";
 import Popup from "../Popup";
 import { createEntityAttribute, createEntityMethod, deleteEntityMember, updateEntityKind, updateEntityMember, updateEntityName, updateEntityRenderMode } from "./../../../gui/redux";
-import { Entity, EntityKind, EntityMember, EntityRenderMode } from "./../../../core/domain";
+import { Entity, EntityKind, EntityRenderMode } from "./../../../core/domain";
 import { Point } from "./../../../core/geometry";
 import { UUID } from './../../../domain/utils/uuid';
+import { EntityMember } from '../../../domain/plugins/class/Member';
 
 class EntityDetailsPopup extends React.Component<Props> {
     updateEntityKind = (kind: EntityKind) => {

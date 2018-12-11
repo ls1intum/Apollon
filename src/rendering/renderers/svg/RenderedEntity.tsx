@@ -1,7 +1,7 @@
 import * as React from "react";
 import { getEntityMemberClipPathId } from "./defs/ClipPaths";
 import { RenderOptions } from "./index";
-import { EntityKind, EntityMember } from "../../../core/domain";
+import { EntityKind } from "../../../core/domain";
 import {
     computeEntityHeaderHeight,
     ENTITY_BORDER_THICKNESS,
@@ -11,6 +11,7 @@ import {
     getEntityKindDescriptionOrNull,
     LayoutedEntity
 } from "../../../rendering/layouters/entity";
+import { EntityMember } from '../../../domain/plugins/class/Member';
 
 export default class RenderedEntity extends React.Component<Props> {
     render() {

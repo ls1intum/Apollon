@@ -2,9 +2,9 @@ import * as React from "react";
 import styled from "styled-components";
 import EntityMemberLine from "./EntityMemberLine";
 import BlockInput from "../BlockInput";
-import { EntityMember } from "./../../../core/domain";
 import { sanitizeWhiteSpace } from "./../../../core/utils";
 import newId, { UUID } from './../../../domain/utils/uuid';
+import { EntityMember } from '../../../domain/plugins/class/Member';
 
 const Container = styled.div`
     margin-top: 10px;
