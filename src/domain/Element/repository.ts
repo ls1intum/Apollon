@@ -9,26 +9,39 @@ interface Action<T extends ActionTypes> extends ReduxAction<T> {
   element: Exclude<Element, 'render'>;
 }
 
-const action = (type: ActionTypes, element: Exclude<Element, 'render'>): Action<ActionTypes> => ({
+const action = (
+  type: ActionTypes,
+  element: Exclude<Element, 'render'>
+): Action<ActionTypes> => ({
   type,
   element,
 });
 
-export type Actions = Action<ActionTypes.CREATE> | Action<ActionTypes.UPDATE>;
+export type Actions =
+  | Action<ActionTypes.CREATE>
+  | Action<ActionTypes.UPDATE>
+  | Action<ActionTypes.DELETE>;
 
 class ElementRepository {
   static create = (element: Element) => action(ActionTypes.CREATE, element);
 
   static read = (state: State): any => {
     const elements = Object.values(state.elements).filter(
-      e => e.kind !== 't'
+      e => e.name !== 'Relationship'
     );
-    return elements.map(e =>
-      Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype)
-    );
+    return elements.map(e => {
+      const element = Object.setPrototypeOf(
+        e,
+        (<any>Plugins)[e.kind].prototype
+      );
+      element.render = new (<any>Plugins)[e.kind]().render;
+      return element;
+    });
   };
 
   static update = (element: Element) => action(ActionTypes.UPDATE, element);
+
+  static delete = (element: Element) => action(ActionTypes.DELETE, element);
 }
 
 export default ElementRepository;

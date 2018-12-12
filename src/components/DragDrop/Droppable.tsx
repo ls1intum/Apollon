@@ -97,7 +97,7 @@ const dropTargetSpec: DropTargetSpec<Props> = {
           actualPosition,
           item.size
         );
-        element.bounds = { ...actualPosition, ...item.size };
+        element.bounds = { ...element.bounds, ...actualPosition };
         props.create(element);
         props.createEntity(element);
       }

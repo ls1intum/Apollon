@@ -17,7 +17,7 @@ export class SelectionListener extends Component<Props> {
 
     const selection: ElementSelection = {
       entityIds: currentSelection.filter(s =>
-        this.props.entities.includes(s)
+        !this.props.relationships.includes(s)
       ) as UUID[],
       relationshipIds: currentSelection.filter(s =>
         this.props.relationships.includes(s)
@@ -40,7 +40,6 @@ interface OwnProps {
 
 interface StateProps {
   elements: any;
-  entities: string[];
   relationships: string[];
 }
 
@@ -48,7 +47,6 @@ type Props = OwnProps & StateProps;
 
 const mapStateToProps = (state: any) => ({
   elements: state.elements,
-  entities: Object.keys(state.entities.byId),
   relationships: Object.keys(state.relationships.byId),
 });
 

@@ -9,13 +9,13 @@ interface Element {
 abstract class Element {
   readonly id: string = uuid();
   readonly kind: string = (<any>this).constructor.name;
-  bounds: Boundary = new Boundary(0, 0, 110, 80);
+  bounds: Boundary = new Boundary(0, 0, 200, 80);
 
   selected: boolean = false;
 
   constructor(public name: string) {}
 
-  public abstract render(options: any): JSX.Element;
+  public abstract render?(options: any): JSX.Element;
 }
 
 export default Element;

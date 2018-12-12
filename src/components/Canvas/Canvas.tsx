@@ -19,7 +19,7 @@ import {
   InteractiveElementsMode,
 } from '../../domain/Options/types';
 import * as UML from './../../core/domain';
-import Element from './../../domain/Element';
+import Element, { ElementRepository } from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';
 import Relationship from './../LayoutedRelationship';
@@ -35,15 +35,32 @@ class Canvas extends React.Component<Props, State> {
     displayRelationships: false,
   };
 
+  componentDidMount() {
+    this.container.current && this.container.current.addEventListener('keydown', this.handleKeyDownEvent);
+  }
+
+  componentWillUnmount() {
+    this.container.current && this.container.current.removeEventListener('keydown', this.handleKeyDownEvent);
+  }
+
   displayRelationships = () => {
     this.setState({ displayRelationships: true });
   };
+
+  private handleKeyDownEvent = (event: KeyboardEvent) => {
+    switch (event.key) {
+      case "Backspace":
+      case "Delete":
+        this.props.elements.filter(e => e.selected).forEach(this.props.delete);
+        break
+    }
+  }
 
   render() {
     const {
       canvasSize,
       gridSize,
-      entities,
+      elements,
       relationships,
       diagramType,
       apollonMode,
@@ -55,7 +72,7 @@ class Canvas extends React.Component<Props, State> {
     const { selection } = this.props;
 
     return (
-      <div ref={this.container}>
+      <div ref={this.container} tabIndex={0}>
         <Droppable container={this.container}>
           <Grid grid={gridSize} width={width} height={height}>
             <svg width={canvasSize.width} height={canvasSize.height}>
@@ -98,21 +115,21 @@ class Canvas extends React.Component<Props, State> {
                   );
                 })}
 
-              {entities.map(
-                entity =>
+              {elements.map(
+                element =>
                   (this.props.editorMode === EditorMode.ModelingView ||
                     this.props.interactiveElementsMode !==
                       InteractiveElementsMode.Hidden ||
-                    !this.props.interactiveElementIds.has(entity.id)) && (
+                    !this.props.interactiveElementIds.has(element.id)) && (
                     <Entity
-                      key={entity.id}
-                      entity={entity}
+                      key={element.id}
+                      entity={element}
                       container={this.container}
                       openDetailsPopup={() => {
                         this.setState({
                           doubleClickedElement: {
                             type: 'entity',
-                            entityId: entity.id,
+                            entityId: element.id,
                           },
                         });
                       }}
@@ -142,8 +159,8 @@ class Canvas extends React.Component<Props, State> {
 
     switch (doubleClickedElement.type) {
       case 'entity': {
-        const doubleClickedEntity = this.props.entities.find(
-          entity => entity.id === doubleClickedElement.entityId
+        const doubleClickedEntity = this.props.elements.find(
+          element => element.id === doubleClickedElement.entityId
         );
 
         return doubleClickedEntity ? (
@@ -189,7 +206,7 @@ class Canvas extends React.Component<Props, State> {
 interface OwnProps {}
 
 interface StateProps {
-  entities: Element[];
+  elements: Element[];
   relationships: UML.LayoutedRelationship[];
   canvasSize: { width: number; height: number };
   gridSize: number;
@@ -203,6 +220,7 @@ interface StateProps {
 
 interface DispatchProps {
   toggleInteractiveElements: typeof toggleInteractiveElements;
+  delete: typeof ElementRepository.delete,
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -217,7 +235,7 @@ interface State {
 
 function mapStateToProps(state: ReduxState): StateProps {
   return {
-    entities: getAllEntities(state),
+    elements: ElementRepository.read(state),
     relationships: getAllLayoutedRelationships(state),
     canvasSize: state.editor.canvasSize,
     gridSize: state.editor.gridSize,
@@ -243,5 +261,6 @@ export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   mapStateToProps,
   {
     toggleInteractiveElements,
+    delete: ElementRepository.delete,
   }
 )(Canvas);

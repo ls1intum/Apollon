@@ -19,6 +19,10 @@ const ElementReducer: Reducer<ElementState, Actions> = (
         ...state,
         [action.element.id]: { ...action.element },
       };
+    case ActionTypes.DELETE:
+      return Object.keys(state)
+        .filter(key => key !== action.element.id)
+        .reduce((acc, key) => ({ ...acc, [key]: state[key] }), {});
   }
   return state;
 };

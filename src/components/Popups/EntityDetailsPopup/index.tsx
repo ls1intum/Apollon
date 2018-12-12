@@ -4,10 +4,12 @@ import EntityDetails from "./EntityDetails";
 import Popup from "../Popup";
 import { createEntityAttribute, createEntityMethod, deleteEntityMember, updateEntityKind, updateEntityMember, updateEntityName, updateEntityRenderMode } from "./../../../gui/redux";
 import { EntityKind, EntityRenderMode } from "./../../../core/domain";
-import Element from './../../../domain/Element';
 import { Point } from "./../../../core/geometry";
 import { UUID } from './../../../domain/utils/uuid';
 import { EntityMember } from '../../../domain/plugins/class/Member';
+import Element, { ElementRepository } from './../../../domain/Element';
+import * as Plugins from './../../../domain/plugins';
+import { computeEntityHeight } from "../../../rendering/layouters/entity";
 
 class EntityDetailsPopup extends React.Component<Props> {
     updateEntityKind = (kind: EntityKind) => {
@@ -15,26 +17,290 @@ class EntityDetailsPopup extends React.Component<Props> {
     };
 
     updateEntityName = (name: string) => {
+        const element: Element = {
+            ...this.props.entity,
+            name,
+        };
+        this.props.update(element);
+
         this.props.updateEntityName(this.props.entity.id, name);
     };
 
     updateEntityRenderMode = (renderMode: EntityRenderMode) => {
+        let element: any;
+        switch (this.props.entity.kind) {
+            case EntityKind.Class:
+                element = this.props.entity as Plugins.Class;
+                element.renderMode = renderMode;
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.AbstractClass:
+                element = this.props.entity as Plugins.AbstractClass;
+                element.renderMode = renderMode;
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Interface:
+                element = this.props.entity as Plugins.Interface;
+                element.renderMode = renderMode;
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Enumeration:
+                element = this.props.entity as Plugins.Enumeration;
+                element.renderMode = renderMode;
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    0,
+                    element.renderMode
+                )
+                break;
+        }
+        this.props.update(element);
+
         this.props.updateEntityRenderMode(this.props.entity.id, renderMode);
     };
 
     createEntityAttribute = (attribute: EntityMember) => {
+        let element: any;
+        switch (this.props.entity.kind) {
+            case EntityKind.Class:
+                element = this.props.entity as Plugins.Class;
+                element.attributes = [...element.attributes, attribute];
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.AbstractClass:
+                element = this.props.entity as Plugins.AbstractClass;
+                element.attributes = [...element.attributes, attribute];
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Interface:
+                element = this.props.entity as Plugins.Interface;
+                element.attributes = [...element.attributes, attribute];
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Enumeration:
+                element = this.props.entity as Plugins.Enumeration;
+                element.attributes = [...element.attributes, attribute];
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    0,
+                    element.renderMode
+                )
+                break;
+        }
+        this.props.update(element);
+
         this.props.createEntityAttribute(this.props.entity.id, attribute);
     };
 
     createEntityMethod = (method: EntityMember) => {
+        let element: any;
+        switch (this.props.entity.kind) {
+            case EntityKind.Class:
+                element = this.props.entity as Plugins.Class;
+                element.methods = [...element.methods, method];
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.AbstractClass:
+                element = this.props.entity as Plugins.AbstractClass;
+                element.methods = [...element.methods, method];
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Interface:
+                element = this.props.entity as Plugins.Interface;
+                element.methods = [...element.methods, method];
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Enumeration:
+                element = this.props.entity as Plugins.Enumeration;
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    0,
+                    element.renderMode
+                )
+                break;
+        }
+        this.props.update(element);
+
         this.props.createEntityMethod(this.props.entity.id, method);
     };
 
     updateEntityMember = (member: EntityMember) => {
+        let element: any;
+        switch (this.props.entity.kind) {
+            case EntityKind.Class:
+                element = this.props.entity as Plugins.Class;
+                element.attributes = element.attributes.map(
+                    (attr: EntityMember) => (attr.id === member.id ? member : attr)
+                );
+                element.methods = element.methods.map(
+                    (method: EntityMember) => (method.id === member.id ? member : method)
+                );
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.AbstractClass:
+                element = this.props.entity as Plugins.AbstractClass;
+                element.attributes = element.attributes.map(
+                    (attr: EntityMember) => (attr.id === member.id ? member : attr)
+                );
+                element.methods = element.methods.map(
+                    (method: EntityMember) => (method.id === member.id ? member : method)
+                );
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Interface:
+                element = this.props.entity as Plugins.Interface;
+                element.attributes = element.attributes.map(
+                    (attr: EntityMember) => (attr.id === member.id ? member : attr)
+                );
+                element.methods = element.methods.map(
+                    (method: EntityMember) => (method.id === member.id ? member : method)
+                );
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Enumeration:
+                element = this.props.entity as Plugins.Enumeration;
+                element.attributes = element.attributes.map(
+                    (attr: EntityMember) => (attr.id === member.id ? member : attr)
+                );
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    0,
+                    element.renderMode
+                )
+                break;
+        }
+        this.props.update(element);
+
         this.props.updateEntityMember(this.props.entity.id, member);
     };
 
     deleteEntityMember = (memberId: UUID) => {
+        let element: any;
+        switch (this.props.entity.kind) {
+            case EntityKind.Class:
+                element = this.props.entity as Plugins.Class;
+                element.attributes = element.attributes.filter(
+                    (attr: EntityMember) => (attr.id !== memberId)
+                );
+                element.methods = element.methods.filter(
+                    (method: EntityMember) => (method.id !== memberId)
+                );
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.AbstractClass:
+                element = this.props.entity as Plugins.AbstractClass;
+                element.attributes = element.attributes.filter(
+                    (attr: EntityMember) => (attr.id !== memberId)
+                );
+                element.methods = element.methods.filter(
+                    (method: EntityMember) => (method.id !== memberId)
+                );
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Interface:
+                element = this.props.entity as Plugins.Interface;
+                element.attributes = element.attributes.filter(
+                    (attr: EntityMember) => (attr.id !== memberId)
+                );
+                element.methods = element.methods.filter(
+                    (method: EntityMember) => (method.id !== memberId)
+                );
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    element.methods.length,
+                    element.renderMode
+                )
+                break;
+            case EntityKind.Enumeration:
+                element = this.props.entity as Plugins.Enumeration;
+                element.attributes = element.attributes.filter(
+                    (attr: EntityMember) => (attr.id !== memberId)
+                );
+                element.bounds.height = computeEntityHeight(
+                    element.kind,
+                    element.attributes.length,
+                    0,
+                    element.renderMode
+                )
+                break;
+        }
+        this.props.update(element);
+
         this.props.deleteEntityMember(this.props.entity.id, memberId);
     };
 
@@ -70,6 +336,7 @@ interface OwnProps {
 }
 
 interface DispatchProps {
+    update: typeof ElementRepository.update;
     updateEntityKind: typeof updateEntityKind;
     updateEntityName: typeof updateEntityName;
     updateEntityRenderMode: typeof updateEntityRenderMode;
@@ -82,6 +349,7 @@ interface DispatchProps {
 type Props = OwnProps & DispatchProps;
 
 export default connect(null, {
+    update: ElementRepository.update,
     updateEntityKind,
     updateEntityName,
     updateEntityRenderMode,

@@ -9,28 +9,27 @@ import * as Plugins from './../../../domain/plugins';
 
 export default class EntityMethods extends React.Component<Props> {
     handleShowMethodsChange = (showMethods: boolean) => {
-        let renderMode = { showAttributes: false, showMethods: false };
-        let element;
+        let element: any = {};
         switch (this.props.entity.kind) {
             case EntityKind.Class:
                 element = this.props.entity as Plugins.Class;
-                renderMode = element.renderMode;
+                element.renderMode.showMethods = showMethods;
                 break;
             case EntityKind.AbstractClass:
                 element = this.props.entity as Plugins.AbstractClass;
-                renderMode = element.renderMode;
+                element.renderMode.showMethods = showMethods;
                 break;
             case EntityKind.Interface:
                 element = this.props.entity as Plugins.Interface;
-                renderMode = element.renderMode;
+                element.renderMode.showMethods = showMethods;
                 break;
             case EntityKind.Enumeration:
                 element = this.props.entity as Plugins.Enumeration;
-                renderMode = element.renderMode;
+                element.renderMode.showMethods = showMethods;
                 break;
         }
         this.props.updateEntityRenderMode({
-            ...renderMode,
+            ...element.renderMode,
             showMethods
         });
     };

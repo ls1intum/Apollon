@@ -5,10 +5,12 @@ import Element from './../../Element';
 import Member, { EntityMember } from './/Member';
 import { EditorMode } from '../../Options/types';
 import uuid from '../../utils/uuid';
+import Boundary from '../../geo/Boundary';
 
 class Enumeration extends Element {
   attributes: EntityMember[] = [{ id: uuid(), name: "Case1" }, { id: uuid(), name: "Case2" }, { id: uuid(), name: "Case3" }];
   renderMode: EntityRenderMode = { showAttributes: true, showMethods: false };
+  bounds: Boundary = { ...this.bounds, height: 124 }
 
   constructor(public name: string = 'Enumeration', public position: Point, public size: Size) {
     super(name);

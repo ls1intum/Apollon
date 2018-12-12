@@ -5,11 +5,13 @@ import Element from './../../Element';
 import Member, { EntityMember } from './/Member';
 import { EditorMode } from '../../Options/types';
 import uuid from '../../utils/uuid';
+import Boundary from '../../geo/Boundary';
 
 class Interface extends Element {
   attributes: EntityMember[] = [];
   methods: EntityMember[] = [{ id: uuid(), name: "method1()" }];
   renderMode: EntityRenderMode = { showAttributes: false, showMethods: true };
+  bounds: Boundary = { ...this.bounds, height: 74 }
 
   constructor(public name: string, public position: Point, public size: Size) {
     super(name);

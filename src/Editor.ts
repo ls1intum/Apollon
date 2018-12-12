@@ -96,7 +96,10 @@ class Editor {
 
     const state = this.store.getState();
     return {
-      entities: state.entities,
+      entities: {
+        byId: Object.keys(state.elements),
+        allIds: { ...state.elements },
+      },
       relationships: state.relationships,
       interactiveElements: state.interactiveElements,
       editor: state.editor,

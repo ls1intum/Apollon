@@ -5,11 +5,13 @@ import Element from './../../Element';
 import Member, { EntityMember } from './/Member';
 import { EditorMode } from '../../Options/types';
 import uuid from './../../utils/uuid';
+import Boundary from '../../geo/Boundary';
 
 class Class extends Element {
   attributes: EntityMember[] = [{ id: uuid(), name: "attribute1" }];
   methods: EntityMember[] = [{ id: uuid(), name: "method1()" }];
   renderMode: EntityRenderMode = { showAttributes: true, showMethods: true };
+  bounds: Boundary = { ...this.bounds, height: 85 }
 
   constructor(public name: string = 'Class', public position: Point, public size: Size) {
     super(name);

@@ -211,7 +211,7 @@ class CanvasEntity extends Component<Props, State> {
             : this.props.openDetailsPopup
         }
       >
-        {React.cloneElement(
+        {entity.render && React.cloneElement(
           entity.render({
             hover: this.state.hover,
             editorMode,
