@@ -1,5 +1,5 @@
 import { ReduxAction } from "../actions";
-import { ReduxState } from "../state";
+import { State as ReduxState } from './../../../components/Store';
 
 export const MIN_CANVAS_WIDTH = 3000;
 export const MIN_CANVAS_HEIGHT = 3000;

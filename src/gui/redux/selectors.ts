@@ -1,5 +1,5 @@
 import { createSelector } from "reselect";
-import { ReduxState } from "./state";
+import { State as ReduxState } from "./../../components/Store";
 import { LayoutedRelationship, Relationship } from "../../core/domain";
 import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
@@ -9,8 +9,8 @@ import * as Plugins from './../../domain/plugins';
 type LookupById<T> = { [id: string]: T };
 
 export const getAllEntities = createSelector<ReduxState, UUID[], LookupById<Element>, Element[]>(
-    state => state.entities.allIds,
-    state => state.entities.byId,
+    state => Object.keys(state.elements).filter(id => state.elements[id].name !== 'Relationship'),
+    state => Object.keys(state.elements).filter(id => state.elements[id].name !== 'Relationship').reduce((o: any, id) => { o[id] = state.elements[id]; return o }, {}),
     (allIds, byId) => allIds.map(id => byId[id]).map(e => {
         const t = Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype)
         t.render = (new (<any>Plugins)[e.kind]).render;

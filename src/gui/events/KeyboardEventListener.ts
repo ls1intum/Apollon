@@ -1,8 +1,8 @@
 import { Store } from "redux";
 import { deleteSelectedElements, duplicateSelectedEntities, flipSelectedRelationships, moveSelectedEntities } from "./handlers";
-import { redo, ReduxAction, ReduxState, undo } from "../redux";
+import { redo, ReduxAction, undo } from "../redux";
 import { ElementSelection } from "../../domain/Options/types";
-import { UUID } from './../../domain/utils/uuid';
+import { State as ReduxState } from './../../components/Store';
 
 export default class KeyboardEventListener {
     private store: Store<ReduxState>;

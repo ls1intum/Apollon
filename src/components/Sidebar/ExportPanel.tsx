@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { withTheme } from "styled-components";
 import Button from "./Button";
 import { getAllEntities, getAllInteractiveElementIds, getAllRelationships } from "./../../gui/redux/selectors";
-import { ReduxState } from "./../../gui/redux/state";
+import { State as ReduxState } from "./../Store";
 import { Styles as Theme } from "./../Theme";
 import { InteractiveElementsMode } from "../../domain/Options/types";
 import { UMLModel } from "./../../core/domain";
@@ -183,6 +183,7 @@ type Props = OwnProps & StateProps & ThemeProps;
 
 function mapStateToProps(state: ReduxState) {
     return {
+        // TODO
         diagram: {
             entities: getAllEntities(state),
             relationships: getAllRelationships(state)

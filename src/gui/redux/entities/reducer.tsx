@@ -1,6 +1,6 @@
 import React from 'react';
 import { ReduxAction } from "../actions";
-import { ReduxState } from "../state";
+import { State as ReduxState } from "./../../../components/Store";
 import { computeEntityHeight } from "../../../rendering/layouters/entity";
 import { EntityKind } from '../../../core/domain';
 import * as Plugins from './../../../domain/plugins';

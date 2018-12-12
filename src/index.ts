@@ -1,6 +1,7 @@
 import Editor from "./Editor";
-import { getAllEntities, getAllRelationships, ReduxState } from "./gui/redux";
+import { getAllEntities, getAllRelationships } from "./gui/redux";
 import * as DiagramLayouter from "./rendering/layouters/diagram";
+import { State as ReduxState } from './components/Store';
 
 export { computeBoundingBox } from "./core/geometry/boundingBox";
 

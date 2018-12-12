@@ -1,4 +1,5 @@
-import { ReduxAction, ReduxState } from "../";
+import { ReduxAction } from "../";
+import { State as ReduxState } from './../../../components/Store';
 import { UUID } from './../../../domain/utils/uuid';
 
 type State = ReduxState["interactiveElements"];

@@ -1,4 +1,5 @@
-import { deleteElements, duplicateEntities, flipRelationships, moveEntities, ReduxAction, ReduxState } from "../redux";
+import { deleteElements, duplicateEntities, flipRelationships, moveEntities, ReduxAction } from "../redux";
+import { State as ReduxState } from './../../components/Store';
 import { ElementSelection } from "../../domain/Options/types";
 import { UUID } from './../../domain/utils/uuid';
 

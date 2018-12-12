@@ -34,8 +34,8 @@ class Editor {
       relationships: { byId: {}, allIds: [] },
       interactiveElements: { allIds: [] },
       editor: { canvasSize: { width: 1600, height: 800 }, gridSize: 10 },
-      elements: {},
       ...initialState,
+      elements: initialState && initialState.entities && initialState.entities.byId || {},
       options: {
         diagramType: DiagramType.ClassDiagram,
         mode: ApollonMode.Full,
@@ -97,12 +97,13 @@ class Editor {
     const state = this.store.getState();
     return {
       entities: {
-        byId: Object.keys(state.elements),
-        allIds: { ...state.elements },
+        allIds: Object.keys(state.elements).filter(id => state.elements[id].name !== 'Relationship'),
+        byId: Object.keys(state.elements).filter(id => state.elements[id].name !== 'Relationship').reduce((o: any, id) => { o[id] = state.elements[id]; return o }, {}),
       },
       relationships: state.relationships,
       interactiveElements: state.interactiveElements,
       editor: state.editor,
+      elements: state.elements,
     };
   }
 

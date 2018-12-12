@@ -1,5 +1,5 @@
 import { ReduxAction } from "../actions";
-import { ReduxState } from "../state";
+import { State as ReduxState } from "./../../../components/Store";
 
 type State = ReduxState["relationships"];
 
