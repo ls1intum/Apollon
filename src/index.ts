@@ -1,5 +1,6 @@
 import Editor from "./Editor";
-import { getAllEntities, getAllRelationships } from "./gui/redux";
+import { ElementRepository } from './domain/Element';
+import { getAllRelationships } from "./gui/redux";
 import * as DiagramLayouter from "./rendering/layouters/diagram";
 import { State as ReduxState } from './components/Store';
 
@@ -9,7 +10,7 @@ export * from "./Editor";
 export default Editor;
 
 export function layoutDiagram(state: ReduxState, layoutOptions: DiagramLayouter.LayoutOptions) {
-    const entities = getAllEntities(state);
+    const entities = ElementRepository.read(state);
     const relationships = getAllRelationships(state);
 
     return DiagramLayouter.layoutDiagram({ entities, relationships }, layoutOptions);

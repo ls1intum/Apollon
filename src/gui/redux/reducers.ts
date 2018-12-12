@@ -9,7 +9,7 @@ import { withUndoRedo } from "./undoRedo";
 import { ElementReducer } from './../../domain/Element';
 
 export type Reducer<S> = (state: S, action: ReduxAction) => S;
-// type ReducerMapObject = { [TKey in keyof ReduxState]: Reducer<ReduxState[TKey] | undefined> };
+type ReducerMapObject = { [TKey in keyof ReduxState]: Reducer<ReduxState[TKey] | undefined> };
 
 export function createRootReducer() {
     const mapping: any = {

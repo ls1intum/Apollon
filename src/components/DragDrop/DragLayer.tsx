@@ -4,9 +4,8 @@ import * as ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import * as DragDrop from "./dnd";
-import { getAllEntities } from "./../../gui/redux/selectors";
 import { State as ReduxState } from "./../Store";
-import Element from "../../domain/Element";
+import Element, { ElementRepository } from "../../domain/Element";
 import { Rect, Size, snapPointToGrid } from "../../core/geometry";
 
 const LayerBase = styled.div`
@@ -189,8 +188,7 @@ const collect: DragLayerCollector<any, any> = (monitor): DragDropProps => {
 
 function mapStateToProps(state: ReduxState): StateProps {
     return {
-        // TODO
-        entities: getAllEntities(state),
+        entities: ElementRepository.read(state),
         canvasSize: state.editor.canvasSize,
         gridSize: state.editor.gridSize
     };

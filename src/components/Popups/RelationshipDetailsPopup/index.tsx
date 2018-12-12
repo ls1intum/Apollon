@@ -2,9 +2,9 @@ import * as React from "react";
 import { connect } from "react-redux";
 import RelationshipDetails from "./RelationshipDetails";
 import Popup from "../Popup";
-import { flipRelationship, getAllEntities, updateRelationship } from "./../../../gui/redux";
+import { flipRelationship, updateRelationship } from "./../../../gui/redux";
 import { LayoutedRelationship } from "./../../../core/domain";
-import Element from './../../../domain/Element';
+import Element, { ElementRepository } from './../../../domain/Element';
 import { Point } from "./../../../core/geometry";
 import { DiagramType } from "./../../../domain/Options/types";
 import { State as ReduxState } from './../../Store';
@@ -57,8 +57,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 function mapStateToProps(state: ReduxState): StateProps {
     return {
-        // TODO
-        entities: getAllEntities(state)
+        entities: ElementRepository.read(state)
     };
 }
 

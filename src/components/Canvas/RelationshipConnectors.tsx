@@ -2,10 +2,10 @@ import * as React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import RelationshipDragPreview from "./RelationshipDragPreview";
-import { createRelationship, getAllEntities } from "./../../gui/redux";
+import { createRelationship } from "./../../gui/redux";
 import { DiagramType, EditorMode, ElementSelection } from "../../domain/Options/types";
 import { RelationshipKind } from "./../../core/domain";
-import Element from './../../domain/Element';
+import Element, { ElementRepository } from './../../domain/Element';
 import { Point, RectEdge } from "./../../core/geometry";
 import { State as ReduxState } from './../Store';
 import { UUID } from './../../domain/utils/uuid';
@@ -272,8 +272,7 @@ interface State {
 
 function mapStateToProps(state: ReduxState): StateProps {
     return {
-        // TODO
-        entities: getAllEntities(state)
+        entities: ElementRepository.read(state)
     };
 }
 

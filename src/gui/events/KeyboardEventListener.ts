@@ -1,5 +1,5 @@
 import { Store } from "redux";
-import { deleteSelectedElements, duplicateSelectedEntities, flipSelectedRelationships, moveSelectedEntities } from "./handlers";
+// import { deleteSelectedElements, duplicateSelectedEntities, flipSelectedRelationships, moveSelectedEntities } from "./handlers";
 import { redo, ReduxAction, undo } from "../redux";
 import { ElementSelection } from "../../domain/Options/types";
 import { State as ReduxState } from './../../components/Store';
@@ -60,20 +60,20 @@ export default class KeyboardEventListener {
 
         switch (e.key) {
             case "ArrowLeft":
-                return moveSelectedEntities(this.selection.entityIds, -state.editor.gridSize, 0);
+                // return moveSelectedEntities(this.selection.entityIds, -state.editor.gridSize, 0);
 
             case "ArrowUp":
-                return moveSelectedEntities(this.selection.entityIds, 0, -state.editor.gridSize);
+                // return moveSelectedEntities(this.selection.entityIds, 0, -state.editor.gridSize);
 
             case "ArrowRight":
-                return moveSelectedEntities(this.selection.entityIds, state.editor.gridSize, 0);
+                // return moveSelectedEntities(this.selection.entityIds, state.editor.gridSize, 0);
 
             case "ArrowDown":
-                return moveSelectedEntities(this.selection.entityIds, 0, state.editor.gridSize);
+                // return moveSelectedEntities(this.selection.entityIds, 0, state.editor.gridSize);
 
             case "Backspace":
             case "Delete":
-                return deleteSelectedElements(this.selection);
+                // return deleteSelectedElements(this.selection);
 
             // case "Escape":
             //     return [() => this.selectElements([], [])];
@@ -89,10 +89,10 @@ export default class KeyboardEventListener {
                 //     ];
 
                 case "d":
-                    return duplicateSelectedEntities(this.selection, state);
+                    // return duplicateSelectedEntities(this.selection, state);
 
                 case "f":
-                    return flipSelectedRelationships(this.selection);
+                    // return flipSelectedRelationships(this.selection);
 
                 case "y":
                     return e.shiftKey ? [undo()] : [redo()];

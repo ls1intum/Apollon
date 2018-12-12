@@ -1,22 +1,11 @@
 import { createSelector } from "reselect";
 import { State as ReduxState } from "./../../components/Store";
 import { LayoutedRelationship, Relationship } from "../../core/domain";
-import Element from './../../domain/Element';
+import Element, { ElementRepository } from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import { computeRelationshipPath } from "../../rendering/layouters/relationship";
-import * as Plugins from './../../domain/plugins';
 
 type LookupById<T> = { [id: string]: T };
-
-export const getAllEntities = createSelector<ReduxState, UUID[], LookupById<Element>, Element[]>(
-    state => Object.keys(state.elements).filter(id => state.elements[id].name !== 'Relationship'),
-    state => Object.keys(state.elements).filter(id => state.elements[id].name !== 'Relationship').reduce((o: any, id) => { o[id] = state.elements[id]; return o }, {}),
-    (allIds, byId) => allIds.map(id => byId[id]).map(e => {
-        const t = Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype)
-        t.render = (new (<any>Plugins)[e.kind]).render;
-        return t
-    })
-);
 
 export const getAllRelationships = createSelector<
     ReduxState,
@@ -34,7 +23,7 @@ export const getAllLayoutedRelationships = createSelector<
     Element[],
     Relationship[],
     LayoutedRelationship[]
->(getAllEntities, getAllRelationships, (entities, relationships) =>
+>(ElementRepository.read, getAllRelationships, (entities, relationships) =>
     relationships.map<LayoutedRelationship>(relationship => {
         const source = entities.find(entity => entity.id === relationship.source.entityId)!;
         const target = entities.find(entity => entity.id === relationship.target.entityId)!;

@@ -25,7 +25,7 @@ export type Actions =
 class ElementRepository {
   static create = (element: Element) => action(ActionTypes.CREATE, element);
 
-  static read = (state: State): any => {
+  static read = (state: State): Element[] => {
     const elements = Object.values(state.elements).filter(
       e => e.name !== 'Relationship'
     );

@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { withTheme } from "styled-components";
 import Button from "./Button";
-import { getAllEntities, getAllInteractiveElementIds, getAllRelationships } from "./../../gui/redux/selectors";
+import { getAllInteractiveElementIds, getAllRelationships } from "./../../gui/redux/selectors";
 import { State as ReduxState } from "./../Store";
 import { Styles as Theme } from "./../Theme";
 import { InteractiveElementsMode } from "../../domain/Options/types";
@@ -10,6 +10,7 @@ import { UMLModel } from "./../../core/domain";
 import { UUID } from './../../domain/utils/uuid';
 import { layoutDiagram, LayoutedDiagram } from "./../../rendering/layouters/diagram";
 import { renderDiagramToSVG, RenderOptions } from "./../../rendering/renderers/svg";
+import { ElementRepository } from '../../domain/Element';
 
 class ExportPanel extends React.Component<Props> {
     form: HTMLFormElement | null = null;
@@ -138,7 +139,7 @@ class ExportPanel extends React.Component<Props> {
 
     exportJSON() {
         const state = {
-            entities: getAllEntities(this.props.state).map(entity => ({
+            entities: ElementRepository.read(this.props.state).map(entity => ({
                 ...entity
             })),
             relationships: getAllRelationships(this.props.state).map(relationship => ({
@@ -183,9 +184,8 @@ type Props = OwnProps & StateProps & ThemeProps;
 
 function mapStateToProps(state: ReduxState) {
     return {
-        // TODO
         diagram: {
-            entities: getAllEntities(state),
+            entities: ElementRepository.read(state),
             relationships: getAllRelationships(state)
         },
         interactiveElementIds: getAllInteractiveElementIds(state),

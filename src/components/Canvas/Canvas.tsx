@@ -6,7 +6,6 @@ import EntityDetailsPopup from './../Popups/EntityDetailsPopup';
 import RelationshipDetailsPopup from './../Popups/RelationshipDetailsPopup';
 import RelationshipConnectors from './RelationshipConnectors';
 import {
-  getAllEntities,
   getAllInteractiveElementIds,
   getAllLayoutedRelationships,
   toggleInteractiveElements,
