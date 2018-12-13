@@ -11,7 +11,6 @@ import {
 import ReduxState from './State';
 
 import editorReducer from './../../gui/redux/editor/reducer';
-import entitiesReducer from './../../gui/redux/entities/reducer';
 import interactiveElementsReducer from './../../gui/redux/interactiveElements/reducer';
 import relationshipsReducer from './../../gui/redux/relationships/reducer';
 import { ElementReducer, Actions } from './../../domain/Element';
@@ -37,7 +36,6 @@ class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;
 
   private reducers = {
-    entities: entitiesReducer,
     relationships: relationshipsReducer,
     interactiveElements: interactiveElementsReducer,
     editor: editorReducer,

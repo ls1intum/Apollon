@@ -1,5 +1,4 @@
 import { isAlmostZero } from "./math/floatingPoint";
-import { XYCoord } from "react-dnd";
 
 export interface Point {
     x: number;
@@ -17,7 +16,7 @@ export function snapToGrid(position: number, gridSize: number): number {
     return Math.round(position / gridSize) * gridSize;
 }
 
-export function snapPointToGrid(p: Point | XYCoord, gridSize: number): Point {
+export function snapPointToGrid(p: Point, gridSize: number): Point {
     return {
         x: snapToGrid(p.x, gridSize),
         y: snapToGrid(p.y, gridSize)

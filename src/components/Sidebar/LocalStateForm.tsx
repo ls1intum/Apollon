@@ -7,7 +7,17 @@ const STATE_KEY = "state.v7";
 
 class LocalStateForm extends React.Component<Props> {
     persistState = () => {
-        const serializedState = JSON.stringify(this.props.state);
+        const state = {
+            entities: {
+              allIds: Object.keys(this.props.state.elements).filter(id => this.props.state.elements[id].name !== 'Relationship'),
+              byId: Object.keys(this.props.state.elements).filter(id => this.props.state.elements[id].name !== 'Relationship').reduce((o: any, id) => { o[id] = this.props.state.elements[id]; return o }, {}),
+            },
+            relationships: this.props.state.relationships,
+            interactiveElements: this.props.state.interactiveElements,
+            editor: this.props.state.editor,
+            elements: this.props.state.elements,
+          };
+        const serializedState = JSON.stringify(state);
         localStorage.setItem(STATE_KEY, serializedState);
     };
 

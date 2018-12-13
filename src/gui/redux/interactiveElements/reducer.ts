@@ -1,6 +1,5 @@
 import { ReduxAction } from "../";
 import { State as ReduxState } from './../../../components/Store';
-import { UUID } from './../../../domain/utils/uuid';
 
 type State = ReduxState["interactiveElements"];
 
@@ -24,20 +23,7 @@ export default function interactiveElementsReducer(
             };
         }
 
-        case "DELETE_ELEMENTS":
-            return removeIdsFromAllIds(state, ...action.entityIds, ...action.relationshipIds);
-
-        case "DELETE_ENTITY_MEMBER":
-            return removeIdsFromAllIds(state, action.memberId);
-
         default:
             return state;
     }
-}
-
-function removeIdsFromAllIds(state: State, ...idsToRemove: UUID[]): State {
-    return {
-        ...state,
-        allIds: state.allIds.filter(id => !idsToRemove.includes(id))
-    };
 }

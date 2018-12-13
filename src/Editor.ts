@@ -11,9 +11,33 @@ import {
   ElementSelection,
   InteractiveElementsMode,
 } from './domain/Options/types';
+import { Relationship } from './core/domain';
+import { ElementState } from './domain/Element';
+import { OptionsState } from './domain/Options';
+import Element from './domain/Element';
+
+interface ExternalState {
+  entities: {
+    byId: { [id: string]: Element };
+    allIds: string[];
+  };
+  relationships: {
+    byId: { [id: string]: Relationship };
+    allIds: string[];
+  };
+  interactiveElements: {
+    allIds: string[];
+  };
+  editor: {
+    canvasSize: { width: number, height: number};
+    gridSize: number;
+  };
+  elements: ElementState;
+  options: OptionsState;
+}
 
 export interface ApollonOptions {
-  initialState?: Partial<ReduxState>;
+  initialState?: Partial<ExternalState>;
   diagramType?: DiagramType;
   mode?: ApollonMode;
   debug?: boolean;
@@ -29,13 +53,13 @@ class Editor {
     public container: HTMLElement,
     { initialState, theme = {}, ...options }: ApollonOptions
   ) {
+    const { entities = { byId: {} }, ...rest } = initialState || {};
     const state: ReduxState = {
-      entities: { byId: {}, allIds: [] },
       relationships: { byId: {}, allIds: [] },
       interactiveElements: { allIds: [] },
       editor: { canvasSize: { width: 1600, height: 800 }, gridSize: 10 },
-      ...initialState,
-      elements: initialState && initialState.entities && initialState.entities.byId || {},
+      ...rest,
+      elements: entities.byId,
       options: {
         diagramType: DiagramType.ClassDiagram,
         mode: ApollonMode.Full,

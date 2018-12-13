@@ -246,7 +246,7 @@ function mapStateToProps(state: ReduxState): StateProps {
     selection: {
       entityIds: Object.keys(state.elements)
         .filter(k => state.elements[k].selected)
-        .filter(s => Object.keys(state.entities.byId).includes(s)) as UUID[],
+        .filter(s => !Object.keys(state.relationships.byId).includes(s)) as UUID[],
       relationshipIds: Object.keys(state.elements)
         .filter(k => state.elements[k].selected)
         .filter(s =>

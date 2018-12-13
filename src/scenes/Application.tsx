@@ -51,8 +51,6 @@ class App extends React.Component<Props, State> {
   }
 
   subscribe = (selection: ElementSelection) => {
-    this.keyboardEventListener &&
-      this.keyboardEventListener.setSelection(selection);
     this.setState({ selection });
   };
 

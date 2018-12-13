@@ -9,7 +9,6 @@ import {
 } from 'react-dnd';
 import * as DragDrop from './../DragDrop/dnd';
 import { snapPointToGrid } from './../../core/geometry';
-import { createEntity, moveEntities } from './../../gui/redux';
 import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from '../../domain/Element';
 import { EntityKind } from '../../core/domain';
@@ -32,8 +31,6 @@ interface StateProps {
 
 interface DispatchProps {
   create: typeof ElementRepository.create;
-  moveEntities: typeof moveEntities;
-  createEntity: typeof createEntity;
 }
 
 interface DragDropProps {
@@ -99,21 +96,6 @@ const dropTargetSpec: DropTargetSpec<Props> = {
         );
         element.bounds = { ...element.bounds, ...actualPosition };
         props.create(element);
-        props.createEntity(element);
-      }
-    } else if (item.type === DragDrop.ItemTypes.ExistingEntities) {
-      const diffFromOffset = monitor.getDifferenceFromInitialOffset();
-      if (diffFromOffset != null) {
-        const snappedDifference = snapPointToGrid(
-          diffFromOffset,
-          props.gridSize
-        );
-
-        const delta = { dx: snappedDifference.x, dy: snappedDifference.y };
-
-        if (delta.dx !== 0 || delta.dy !== 0) {
-          props.moveEntities(item.entityIds, delta);
-        }
       }
     }
   },
@@ -128,8 +110,6 @@ export default compose<ComponentClass<OwnProps>>(
     mapStateToProps,
     {
       create: ElementRepository.create,
-      createEntity,
-      moveEntities,
     }
   ),
   DropTarget<Props>(

@@ -19,21 +19,15 @@ export default function relationshipsReducer(state = initialState, action: Redux
                 }
             };
 
-        case "DELETE_ELEMENTS": {
+        case "@@element/DELETE": {
             const deadRelationshipIds = new Set<string>();
             const allRelationships = state.allIds.map(id => state.byId[id]);
 
-            outer: for (const { id, source, target } of allRelationships) {
-                for (const entityId of action.entityIds) {
-                    if (source.entityId === entityId || target.entityId === entityId) {
-                        deadRelationshipIds.add(id);
-                        continue outer;
-                    }
+            for (const { id, source, target } of allRelationships) {
+                if (source.entityId === action.element.id || target.entityId === action.element.id) {
+                    deadRelationshipIds.add(id);
+                    continue;
                 }
-            }
-
-            for (const id of action.relationshipIds) {
-                deadRelationshipIds.add(id);
             }
 
             if (deadRelationshipIds.size === 0) {

@@ -2,7 +2,6 @@ import * as React from "react";
 import { connect } from "react-redux";
 import EntityDetails from "./EntityDetails";
 import Popup from "../Popup";
-import { createEntityAttribute, createEntityMethod, deleteEntityMember, updateEntityKind, updateEntityMember, updateEntityName, updateEntityRenderMode } from "./../../../gui/redux";
 import { EntityKind, EntityRenderMode } from "./../../../core/domain";
 import { Point } from "./../../../core/geometry";
 import { UUID } from './../../../domain/utils/uuid';
@@ -12,9 +11,6 @@ import * as Plugins from './../../../domain/plugins';
 import { computeEntityHeight } from "../../../rendering/layouters/entity";
 
 class EntityDetailsPopup extends React.Component<Props> {
-    updateEntityKind = (kind: EntityKind) => {
-        this.props.updateEntityKind(this.props.entity.id, kind);
-    };
 
     updateEntityName = (name: string) => {
         const element: Element = {
@@ -22,8 +18,6 @@ class EntityDetailsPopup extends React.Component<Props> {
             name,
         };
         this.props.update(element);
-
-        this.props.updateEntityName(this.props.entity.id, name);
     };
 
     updateEntityRenderMode = (renderMode: EntityRenderMode) => {
@@ -71,8 +65,6 @@ class EntityDetailsPopup extends React.Component<Props> {
                 break;
         }
         this.props.update(element);
-
-        this.props.updateEntityRenderMode(this.props.entity.id, renderMode);
     };
 
     createEntityAttribute = (attribute: EntityMember) => {
@@ -120,8 +112,6 @@ class EntityDetailsPopup extends React.Component<Props> {
                 break;
         }
         this.props.update(element);
-
-        this.props.createEntityAttribute(this.props.entity.id, attribute);
     };
 
     createEntityMethod = (method: EntityMember) => {
@@ -168,8 +158,6 @@ class EntityDetailsPopup extends React.Component<Props> {
                 break;
         }
         this.props.update(element);
-
-        this.props.createEntityMethod(this.props.entity.id, method);
     };
 
     updateEntityMember = (member: EntityMember) => {
@@ -234,8 +222,6 @@ class EntityDetailsPopup extends React.Component<Props> {
                 break;
         }
         this.props.update(element);
-
-        this.props.updateEntityMember(this.props.entity.id, member);
     };
 
     deleteEntityMember = (memberId: UUID) => {
@@ -300,8 +286,6 @@ class EntityDetailsPopup extends React.Component<Props> {
                 break;
         }
         this.props.update(element);
-
-        this.props.deleteEntityMember(this.props.entity.id, memberId);
     };
 
     render() {
@@ -316,7 +300,6 @@ class EntityDetailsPopup extends React.Component<Props> {
             <Popup position={position} onRequestClose={this.props.onRequestClose} canvasScrollContainer={this.props.canvasScrollContainer}>
                 <EntityDetails
                     entity={entity}
-                    updateEntityKind={this.updateEntityKind}
                     updateEntityName={this.updateEntityName}
                     updateEntityRenderMode={this.updateEntityRenderMode}
                     createEntityAttribute={this.createEntityAttribute}
@@ -337,24 +320,10 @@ interface OwnProps {
 
 interface DispatchProps {
     update: typeof ElementRepository.update;
-    updateEntityKind: typeof updateEntityKind;
-    updateEntityName: typeof updateEntityName;
-    updateEntityRenderMode: typeof updateEntityRenderMode;
-    createEntityAttribute: typeof createEntityAttribute;
-    createEntityMethod: typeof createEntityMethod;
-    updateEntityMember: typeof updateEntityMember;
-    deleteEntityMember: typeof deleteEntityMember;
 }
 
 type Props = OwnProps & DispatchProps;
 
 export default connect(null, {
     update: ElementRepository.update,
-    updateEntityKind,
-    updateEntityName,
-    updateEntityRenderMode,
-    createEntityAttribute,
-    createEntityMethod,
-    updateEntityMember,
-    deleteEntityMember
 })(EntityDetailsPopup);

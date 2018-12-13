@@ -14,10 +14,8 @@ import { ElementRepository } from './../../domain/Element';
 
 import { State as ReduxState } from './../Store';
 import {
-  moveEntity,
   getAllInteractiveElementIds,
   toggleInteractiveElements,
-  updateEntityWidth,
 } from './../../gui/redux';
 
 import ResizeHandler, { Direction } from './ResizeHandler';
@@ -105,10 +103,6 @@ class CanvasEntity extends Component<Props, State> {
         bounds: element.bounds,
       });
       this.props.update(element);
-      this.props.moveEntity(element.id, {
-        x: element.bounds.x,
-        y: element.bounds.y,
-      });
     }
     if (this.state.resizing) {
       const x = event.layerX;
@@ -126,7 +120,6 @@ class CanvasEntity extends Component<Props, State> {
         bounds: element.bounds,
       });
       this.props.update(element);
-      this.props.updateEntityWidth(element.id, element.bounds.width);
     }
   };
 
@@ -271,9 +264,7 @@ interface StateProps {
 
 interface DispatchProps {
   update: typeof ElementRepository.update;
-  moveEntity: typeof moveEntity;
   onToggleInteractiveElements: (...ids: UUID[]) => void;
-  updateEntityWidth: typeof updateEntityWidth;
 }
 
 interface ThemeProps {
@@ -308,9 +299,7 @@ export default compose<ComponentClass<OwnProps>>(
     mapStateToProps,
     {
       update: ElementRepository.update,
-      moveEntity,
       onToggleInteractiveElements: toggleInteractiveElements,
-      updateEntityWidth,
     }
   )
 )(CanvasEntity);

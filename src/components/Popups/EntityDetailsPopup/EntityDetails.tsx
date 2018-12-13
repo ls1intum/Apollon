@@ -1,6 +1,5 @@
 import * as React from "react";
 import EntityAttributes from "./EntityAttributes";
-import EntityKindSelect from "./EntityKindSelect";
 import EntityMethods from "./EntityMethods";
 import EntityNameInput from "./EntityNameInput";
 import { PopupSection } from "../PopupSection";
@@ -31,10 +30,6 @@ export default class EntityDetails extends React.Component<Props> {
                         entity={this.props.entity}
                         updateEntityName={this.props.updateEntityName}
                     />
-                    <EntityKindSelect
-                        entityKind={this.props.entity.kind}
-                        updateEntityKind={this.props.updateEntityKind}
-                    />
                 </PopupSection>
 
                 <PopupSection>
@@ -63,7 +58,6 @@ export default class EntityDetails extends React.Component<Props> {
 
 interface Props {
     entity: Element;
-    updateEntityKind: (kind: EntityKind) => void;
     updateEntityName: (name: string) => void;
     updateEntityRenderMode: (renderMode: EntityRenderMode) => void;
     createEntityAttribute: (attribute: EntityMember) => void;
