@@ -246,7 +246,7 @@ class CanvasEntity extends Component<Props, State> {
               )}
             </g>
           )}
-        {this.props.editorMode === EditorMode.ModelingView && (
+        {this.props.editorMode === EditorMode.ModelingView && this.props.apollonMode !== ApollonMode.ReadOnly && (
           <g>
             <Port element={entity} show={this.state.hover} rectEdge="TOP" />
             <Port element={entity} show={this.state.hover} rectEdge="RIGHT" />
