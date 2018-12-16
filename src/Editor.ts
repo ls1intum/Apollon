@@ -64,8 +64,8 @@ class Editor {
       interactiveElements: { allIds: [] },
       editor: {
         ...EditorService.initialState,
-        ...options,
         ...editor,
+        ...options,
       },
       ...rest,
       elements: entities.byId,
@@ -138,7 +138,6 @@ class Editor {
       },
       relationships: state.relationships,
       interactiveElements: state.interactiveElements,
-      editor: state.editor,
       elements: state.elements,
     };
   }

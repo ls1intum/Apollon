@@ -10,9 +10,9 @@ import { EntityMember } from '../../../domain/plugins/class/Member';
 
 export default class EntityDetails extends React.Component<Props> {
     render() {
-        if (this.props.entity.kind === EntityKind.ActivityActionNode
-            || this.props.entity.kind === EntityKind.ActivityObject
-            || this.props.entity.kind === EntityKind.ActivityMergeNode) {
+        if (this.props.entity.kind === EntityKind.ActionNode
+            || this.props.entity.kind === EntityKind.ObjectNode
+            || this.props.entity.kind === EntityKind.MergeNode) {
             return (
                 <PopupSection>
                     <EntityNameInput

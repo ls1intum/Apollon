@@ -74,22 +74,7 @@ const dropTargetSpec: DropTargetSpec<Props> = {
           props.gridSize
         );
 
-        let clazz: string = 'Class';
-        switch (item.kind.toString()) {
-          case EntityKind.Class:
-            clazz = 'Class';
-            break;
-          case EntityKind.AbstractClass:
-            clazz = 'AbstractClass';
-            break;
-          case EntityKind.Interface:
-            clazz = 'Interface';
-            break;
-          case EntityKind.Enumeration:
-            clazz = 'Enumeration';
-            break;
-        }
-        const element: Element = new (Plugins as { [clazz: string]: any })[clazz](
+        const element: Element = new (Plugins as { [clazz: string]: any })[item.kind](
           item.kind,
           actualPosition,
           item.size

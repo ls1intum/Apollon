@@ -34,9 +34,34 @@
       <main id="apollon"></main>
       <aside class="sidebar">
         <section>
+          <h>Diagram Type</h>
+          <form onsubmit="changeDiagramType(event)">
+            <label htmlFor="ChangeDiagramTypeClass">
+              <input
+                type="radio"
+                id="ChangeDiagramTypeClass"
+                name="diagramType"
+                value="CLASS"
+                checked
+              />
+              Class Diagram
+            </label>
+            <label htmlFor="ChangeDiagramTypeActivity">
+              <input
+                type="radio"
+                id="ChangeDiagramTypeActivity"
+                name="diagramType"
+                value="ACTIVITY"
+              />
+              Activity Diagram
+            </label>
+            <div><button type="submit">Change</button></div>
+          </form>
+        </section>
+        <section>
           <h>Export</h>
           <form onsubmit="exportData(event)">
-            <div style="display: 'flex'; align-items: 'center'">
+            <label htmlFor="ExportFileTypeSVG">
               <input
                 type="radio"
                 id="ExportFileTypeSVG"
@@ -44,19 +69,17 @@
                 value="svg"
                 checked
               />
-              &nbsp; <label htmlFor="ExportFileTypeSVG"> SVG </label>
-            </div>
-            <div
-              style="display: 'flex'; align-items: 'center'; margin-bottom: 2"
-            >
+              SVG
+            </label>
+            <label htmlFor="ExportFileTypePNG">
               <input
                 type="radio"
                 id="ExportFileTypePNG"
                 name="fileType"
                 value="png"
               />
-              &nbsp; <label htmlFor="ExportFileTypePNG"> PNG </label>
-            </div>
+              PNG
+            </label>
             <div><button type="submit">Export</button></div>
           </form>
         </section>
@@ -104,13 +127,24 @@
           options.initialState = undefined;
         }
 
+        function changeDiagramType(event) {
+          event.preventDefault();
+          const diagramType = event.target.elements.diagramType.value;
+          options.diagramType = diagramType;
+          unmount()
+          mount()
+        }
+
         function exportData(event) {
           event.preventDefault();
           const fileType = event.target.elements.fileType.value;
           const state = editor.getState();
-          const layoutedDiagram = ApollonEditor.layoutDiagram(editor.getState(), {
-            outerPadding: 50,
-          });
+          const layoutedDiagram = ApollonEditor.layoutDiagram(
+            editor.getState(),
+            {
+              outerPadding: 50,
+            }
+          );
           const svgBlobURL = createSVGBlobURL(layoutedDiagram);
 
           if (fileType === 'png') {
@@ -128,13 +162,17 @@
               canvas.height = height * scale;
 
               const context = canvas.getContext('2d');
-              context.fillRect(100,100,100,100);
+              context.fillRect(100, 100, 100, 100);
               context.scale(scale, scale);
               context.drawImage(image, 0, 0);
 
               const fileUrl = canvas.toDataURL('image/png');
               var win = window.open();
-              win.document.write('<iframe src="' + fileUrl  + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+              win.document.write(
+                '<iframe src="' +
+                  fileUrl +
+                  '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>'
+              );
             };
 
             image.onerror = error => {

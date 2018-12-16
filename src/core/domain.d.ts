@@ -13,13 +13,12 @@ export const enum EntityKind {
     Class = "Class",
     Enumeration = "Enumeration",
     Interface = "Interface",
-    ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
-    ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
-    ActivityActionNode = "ACTIVITY_ACTION_NODE",
-    ActivityObject = "ACTIVITY_OBJECT",
-    ActivityMergeNode = "ACTIVITY_MERGE_NODE",
-    ActivityForkNode = "ACTIVITY_FORK_NODE",
-    ActivityForkNodeHorizontal = "ACTIVITY_FORK_NODE_HORIZONTAL"
+    InitialNode = "InitialNode",
+    FinalNode = "FinalNode",
+    ActionNode = "ActionNode",
+    ObjectNode = "ObjectNode",
+    MergeNode = "MergeNode",
+    ForkNode = "ForkNode",
 }
 
 export interface EntityRenderMode {
