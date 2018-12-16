@@ -16,7 +16,7 @@ import {
   EditorMode,
   InteractiveElementsMode,
 } from '../../services/EditorService';
-import { ElementSelection } from '../SelectionListener/types';
+import { ElementSelection } from '../../Editor';
 import * as UML from './../../core/domain';
 import Element, { ElementRepository } from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';

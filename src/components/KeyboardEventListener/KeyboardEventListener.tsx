@@ -5,7 +5,6 @@ import { redo, undo } from './../../gui/redux';
 
 class KeyboardEventListener extends Component<Props> {
   componentDidMount() {
-    console.log('componentDidMount');
     document.addEventListener('keydown', this.handleKeyDownEvent);
   }
 

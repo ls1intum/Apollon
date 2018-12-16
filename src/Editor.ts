@@ -4,17 +4,18 @@ import { Store } from 'redux';
 import { State as ReduxState } from './components/Store';
 import Application from './scenes/Application';
 import { Styles } from './components/Theme';
-import {
+import EditorService, {
   DiagramType,
   ApollonMode,
-  EditorMode,
-  InteractiveElementsMode,
 } from './services/EditorService';
-import { ElementSelection } from './components/SelectionListener/types';
 import { Relationship } from './core/domain';
 import { ElementState } from './domain/Element';
-import { EditorState } from './services/EditorService';
 import Element from './domain/Element';
+
+export interface ElementSelection {
+  entityIds: string[];
+  relationshipIds: string[];
+}
 
 interface ExternalState {
   entities: {
@@ -47,27 +48,23 @@ class Editor {
   private application: RefObject<Application> = createRef();
 
   private store: Store<ReduxState> | null = null;
+  private selection: ElementSelection = { entityIds: [], relationshipIds: [] };
+  private subscribers: Array<(selection: ElementSelection) => void> = [];
 
   constructor(
     public container: HTMLElement,
     { initialState, theme = {}, ...options }: ApollonOptions
   ) {
-    const { entities = { byId: {} }, editor = {}, ...rest } = initialState || {};
-    const editorState: EditorState = {
-      gridSize: 10,
-      canvasSize: { width: 1600, height: 800 },
-      diagramType: DiagramType.ClassDiagram,
-      mode: ApollonMode.Full,
-      editorMode: EditorMode.ModelingView,
-      interactiveMode: InteractiveElementsMode.Highlighted,
-      debug: false,
-      ...options,
-      ...editor,
-    };
+    const { entities = { byId: {} }, editor = {}, ...rest } =
+      initialState || {};
     const state: Partial<ReduxState> = {
       relationships: { byId: {}, allIds: [] },
       interactiveElements: { allIds: [] },
-      editor: editorState,
+      editor: {
+        ...EditorService.initialState,
+        ...options,
+        ...editor,
+      },
       ...rest,
       elements: entities.byId,
     };
@@ -81,40 +78,44 @@ class Editor {
     render(app, container, this.componentDidMount);
   }
 
-  componentDidMount = () => {
+  private componentDidMount = () => {
     this.store =
       this.application.current &&
       this.application.current.store.current &&
       this.application.current.store.current.store;
+    this.store && this.store.subscribe(this.onDispatch);
   };
 
-  getSelection() {
-    return this.application.current
-      ? this.application.current.state.selection
-      : null;
+  private onDispatch = () => {
+    if (!this.store) return;
+    const { elements } = this.store.getState();
+    const selection: ElementSelection = {
+      entityIds: Object.keys(elements).filter(
+        id => elements[id].selected && elements[id].name !== 'Relationship'
+      ),
+      relationshipIds: Object.keys(elements).filter(
+        id => elements[id].selected && elements[id].name === 'Relationship'
+      ),
+    };
+
+    if (JSON.stringify(this.selection) === JSON.stringify(selection)) return;
+
+    this.subscribers.forEach(subscriber => subscriber(selection));
+    this.selection = selection;
+  };
+
+  getSelection(): ElementSelection {
+    return this.selection;
   }
 
   subscribeToSelectionChange(
     callback: (selection: ElementSelection) => void
-  ): number | null {
-    let i = -1;
-    this.application.current &&
-      this.application.current.setState(state => {
-        const subscribers = state.subscribers.slice();
-        i = subscribers.push(callback) - 1;
-        return { subscribers };
-      });
-
-    return i;
+  ): number {
+    return this.subscribers.push(callback) - 1;
   }
 
   unsubscribeFromSelectionChange(subscriptionId: number) {
-    this.application.current &&
-      this.application.current.setState(state => {
-        const subscribers = state.subscribers.slice();
-        subscribers.splice(subscriptionId);
-        return { subscribers };
-      });
+    this.subscribers.splice(subscriptionId);
   }
 
   getState() {

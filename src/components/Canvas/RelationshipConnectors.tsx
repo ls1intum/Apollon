@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import RelationshipDragPreview from "./RelationshipDragPreview";
 import { createRelationship } from "./../../gui/redux";
-import { ElementSelection } from "../SelectionListener/types";
+import { ElementSelection } from "../../Editor";
 import { DiagramType, EditorMode } from './../../services/EditorService';
 import { RelationshipKind } from "./../../core/domain";
 import Element, { ElementRepository } from './../../domain/Element';
