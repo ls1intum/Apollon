@@ -14,9 +14,9 @@ import {
   ApollonMode,
   DiagramType,
   EditorMode,
-  ElementSelection,
   InteractiveElementsMode,
-} from '../../domain/Options/types';
+} from '../../services/EditorService';
+import { ElementSelection } from '../SelectionListener/types';
 import * as UML from './../../core/domain';
 import Element, { ElementRepository } from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
@@ -35,11 +35,19 @@ class Canvas extends React.Component<Props, State> {
   };
 
   componentDidMount() {
-    this.container.current && this.container.current.addEventListener('keydown', this.handleKeyDownEvent);
+    this.container.current &&
+      this.container.current.addEventListener(
+        'keydown',
+        this.handleKeyDownEvent
+      );
   }
 
   componentWillUnmount() {
-    this.container.current && this.container.current.removeEventListener('keydown', this.handleKeyDownEvent);
+    this.container.current &&
+      this.container.current.removeEventListener(
+        'keydown',
+        this.handleKeyDownEvent
+      );
   }
 
   displayRelationships = () => {
@@ -48,12 +56,12 @@ class Canvas extends React.Component<Props, State> {
 
   private handleKeyDownEvent = (event: KeyboardEvent) => {
     switch (event.key) {
-      case "Backspace":
-      case "Delete":
+      case 'Backspace':
+      case 'Delete':
         this.props.elements.filter(e => e.selected).forEach(this.props.delete);
-        break
+        break;
     }
-  }
+  };
 
   render() {
     const {
@@ -219,7 +227,7 @@ interface StateProps {
 
 interface DispatchProps {
   toggleInteractiveElements: typeof toggleInteractiveElements;
-  delete: typeof ElementRepository.delete,
+  delete: typeof ElementRepository.delete;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -238,15 +246,17 @@ function mapStateToProps(state: ReduxState): StateProps {
     relationships: getAllLayoutedRelationships(state),
     canvasSize: state.editor.canvasSize,
     gridSize: state.editor.gridSize,
-    interactiveElementsMode: state.options.interactiveMode,
+    interactiveElementsMode: state.editor.interactiveMode,
     interactiveElementIds: getAllInteractiveElementIds(state),
-    diagramType: state.options.diagramType,
-    apollonMode: state.options.mode,
-    editorMode: state.options.editorMode,
+    diagramType: state.editor.diagramType,
+    apollonMode: state.editor.mode,
+    editorMode: state.editor.editorMode,
     selection: {
       entityIds: Object.keys(state.elements)
         .filter(k => state.elements[k].selected)
-        .filter(s => !Object.keys(state.relationships.byId).includes(s)) as UUID[],
+        .filter(
+          s => !Object.keys(state.relationships.byId).includes(s)
+        ) as UUID[],
       relationshipIds: Object.keys(state.elements)
         .filter(k => state.elements[k].selected)
         .filter(s =>

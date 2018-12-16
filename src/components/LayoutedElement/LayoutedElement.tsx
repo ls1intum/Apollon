@@ -7,7 +7,7 @@ import {
   ApollonMode,
   EditorMode,
   InteractiveElementsMode,
-} from '../../domain/Options/types';
+} from './../../services/EditorService';
 import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import { ElementRepository } from './../../domain/Element';
@@ -285,9 +285,9 @@ interface State {
 
 function mapStateToProps(state: ReduxState): StateProps {
   return {
-    editorMode: state.options.editorMode,
-    apollonMode: state.options.mode,
-    interactiveElementsMode: state.options.interactiveMode,
+    editorMode: state.editor.editorMode,
+    apollonMode: state.editor.mode,
+    interactiveElementsMode: state.editor.interactiveMode,
     gridSize: state.editor.gridSize,
     interactiveElementIds: getAllInteractiveElementIds(state),
   };

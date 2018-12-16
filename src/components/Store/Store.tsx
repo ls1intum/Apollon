@@ -10,27 +10,11 @@ import {
 } from 'redux';
 import ReduxState from './State';
 
-import editorReducer from './../../gui/redux/editor/reducer';
+import EditorService from './../../services/EditorService';
 import interactiveElementsReducer from './../../gui/redux/interactiveElements/reducer';
 import relationshipsReducer from './../../gui/redux/relationships/reducer';
-import { ElementReducer, Actions } from './../../domain/Element';
+import { ElementReducer } from './../../domain/Element';
 import { withUndoRedo } from './../../gui/redux/undoRedo';
-import { initialOptions, OptionsState } from './../../domain/Options';
-
-
-const OptionsReducer: Reducer<OptionsState, any> = (
-  state = initialOptions,
-  action
-) => {
-  switch (action.type) {
-    case '@@option/UPDATE':
-      return {
-        ...state,
-        [action.option.key]: action.option.value,
-      };
-  }
-  return state;
-};
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;
@@ -38,9 +22,8 @@ class Store extends React.Component<Props> {
   private reducers = {
     relationships: relationshipsReducer,
     interactiveElements: interactiveElementsReducer,
-    editor: editorReducer,
+    editor: EditorService.reducer,
     elements: ElementReducer,
-    options: OptionsReducer,
   };
 
   constructor(props: Readonly<Props>) {
@@ -63,7 +46,7 @@ class Store extends React.Component<Props> {
 }
 
 export interface Props {
-  initialState?: ReduxState;
+  initialState?: Partial<ReduxState>;
 }
 
 export default Store;

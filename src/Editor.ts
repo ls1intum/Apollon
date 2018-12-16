@@ -8,12 +8,12 @@ import {
   DiagramType,
   ApollonMode,
   EditorMode,
-  ElementSelection,
   InteractiveElementsMode,
-} from './domain/Options/types';
+} from './services/EditorService';
+import { ElementSelection } from './components/SelectionListener/types';
 import { Relationship } from './core/domain';
 import { ElementState } from './domain/Element';
-import { OptionsState } from './domain/Options';
+import { EditorState } from './services/EditorService';
 import Element from './domain/Element';
 
 interface ExternalState {
@@ -29,11 +29,10 @@ interface ExternalState {
     allIds: string[];
   };
   editor: {
-    canvasSize: { width: number, height: number};
+    canvasSize: { width: number; height: number };
     gridSize: number;
   };
   elements: ElementState;
-  options: OptionsState;
 }
 
 export interface ApollonOptions {
@@ -53,21 +52,24 @@ class Editor {
     public container: HTMLElement,
     { initialState, theme = {}, ...options }: ApollonOptions
   ) {
-    const { entities = { byId: {} }, ...rest } = initialState || {};
-    const state: ReduxState = {
+    const { entities = { byId: {} }, editor = {}, ...rest } = initialState || {};
+    const editorState: EditorState = {
+      gridSize: 10,
+      canvasSize: { width: 1600, height: 800 },
+      diagramType: DiagramType.ClassDiagram,
+      mode: ApollonMode.Full,
+      editorMode: EditorMode.ModelingView,
+      interactiveMode: InteractiveElementsMode.Highlighted,
+      debug: false,
+      ...options,
+      ...editor,
+    };
+    const state: Partial<ReduxState> = {
       relationships: { byId: {}, allIds: [] },
       interactiveElements: { allIds: [] },
-      editor: { canvasSize: { width: 1600, height: 800 }, gridSize: 10 },
+      editor: editorState,
       ...rest,
       elements: entities.byId,
-      options: {
-        diagramType: DiagramType.ClassDiagram,
-        mode: ApollonMode.Full,
-        editorMode: EditorMode.ModelingView,
-        interactiveMode: InteractiveElementsMode.Highlighted,
-        debug: false,
-        ...options,
-      },
     };
 
     const app = createElement(Application, {
@@ -121,8 +123,15 @@ class Editor {
     const state = this.store.getState();
     return {
       entities: {
-        allIds: Object.keys(state.elements).filter(id => state.elements[id].name !== 'Relationship'),
-        byId: Object.keys(state.elements).filter(id => state.elements[id].name !== 'Relationship').reduce((o: any, id) => { o[id] = state.elements[id]; return o }, {}),
+        allIds: Object.keys(state.elements).filter(
+          id => state.elements[id].name !== 'Relationship'
+        ),
+        byId: Object.keys(state.elements)
+          .filter(id => state.elements[id].name !== 'Relationship')
+          .reduce((o: any, id) => {
+            o[id] = state.elements[id];
+            return o;
+          }, {}),
       },
       relationships: state.relationships,
       interactiveElements: state.interactiveElements,

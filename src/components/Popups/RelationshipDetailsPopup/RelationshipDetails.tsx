@@ -6,7 +6,7 @@ import { PopupSection } from "../PopupSection";
 import { PopupSectionHeading } from "../PopupSectionHeading";
 import { LayoutedRelationship, Relationship, RelationshipEnd, RelationshipKind } from "./../../../core/domain";
 import Element from './../../../domain/Element';
-import { DiagramType } from "./../../../domain/Options/types";
+import { DiagramType } from "./../../../services/EditorService";
 
 export default class RelationshipDetails extends React.Component<Props> {
     updateRelationshipKind = (kind: RelationshipKind) => {

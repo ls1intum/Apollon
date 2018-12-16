@@ -6,7 +6,7 @@ import { flipRelationship, updateRelationship } from "./../../../gui/redux";
 import { LayoutedRelationship } from "./../../../core/domain";
 import Element, { ElementRepository } from './../../../domain/Element';
 import { Point } from "./../../../core/geometry";
-import { DiagramType } from "./../../../domain/Options/types";
+import { DiagramType } from "./../../../services/EditorService";
 import { State as ReduxState } from './../../Store';
 
 class RelationshipDetailsPopup extends React.Component<Props> {

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { ElementSelection } from '../../domain/Options/types';
+import { ElementSelection } from './types';
 import { UUID } from './../../domain/utils/uuid';
 
 export class SelectionListener extends Component<Props> {

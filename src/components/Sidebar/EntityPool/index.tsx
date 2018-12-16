@@ -2,7 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import EntityPreview from "./EntityPreview";
 import { EntityKind } from "./../../../core/domain";
-import { DiagramType } from "../../../domain/Options/types";
+import { DiagramType } from "../../../services/EditorService";
 
 const Container = styled.section`
     display: grid;

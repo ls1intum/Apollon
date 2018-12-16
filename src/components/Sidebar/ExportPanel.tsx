@@ -5,7 +5,7 @@ import Button from "./Button";
 import { getAllInteractiveElementIds, getAllRelationships } from "./../../gui/redux/selectors";
 import { State as ReduxState } from "./../Store";
 import { Styles as Theme } from "./../Theme";
-import { InteractiveElementsMode } from "../../domain/Options/types";
+import { InteractiveElementsMode } from "../../services/EditorService";
 import { UMLModel } from "./../../core/domain";
 import { UUID } from './../../domain/utils/uuid';
 import { layoutDiagram, LayoutedDiagram } from "./../../rendering/layouters/diagram";

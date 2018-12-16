@@ -4,7 +4,7 @@ import { Styles as Theme } from './../../../components/Theme';
 import {
   EditorMode,
   InteractiveElementsMode,
-} from './../../Options/types';
+} from './../../../services/EditorService';
 import Element from './../../Element';
 import { ENTITY_MEMBER_HEIGHT } from './../../../rendering/layouters/entity';
 

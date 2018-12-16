@@ -1,8 +1,7 @@
 import { Relationship } from '../../core/domain';
-import { Size } from '../../core/geometry';
 import { UUID } from './../../domain/utils/uuid';
 import { ElementState } from './../../domain/Element';
-import { OptionsState } from './../../domain/Options';
+import { EditorState } from './../../services/EditorService';
 
 type State = {
   relationships: {
@@ -14,14 +13,9 @@ type State = {
     allIds: UUID[];
   };
 
-  editor: {
-    canvasSize: Size;
-    gridSize: number;
-  };
-
   elements: ElementState;
 
-  options: OptionsState;
+  editor: EditorState;
 };
 
 export default State;

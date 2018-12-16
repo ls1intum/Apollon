@@ -6,7 +6,8 @@ import EntityPool from "./EntityPool";
 import ExportPanel from "./ExportPanel";
 import InteractiveElementsPanel from "./InteractiveElementsPanel";
 import LocalStateForm from "./LocalStateForm";
-import { ApollonMode, DiagramType, EditorMode, InteractiveElementsMode } from "../../domain/Options/types";
+import { State as ReduxState } from './../Store';
+import EditorService, { ApollonMode, DiagramType, EditorMode, InteractiveElementsMode } from "../../services/EditorService";
 
 const FlexContainer = styled.div`
     display: flex;
@@ -81,17 +82,17 @@ interface Props {
     selectInteractiveElementsMode: (newMode: InteractiveElementsMode) => void;
 }
 
-const mapStateToProps = (state: any) => ({
-    diagramType: state.options.diagramType,
-    apollonMode: state.options.mode,
-    editorMode: state.options.editorMode,
-    debugModeEnabled: state.options.debug,
-    interactiveElementsMode: state.options.interactiveMode,
+const mapStateToProps = (state: ReduxState) => ({
+    diagramType: state.editor.diagramType,
+    apollonMode: state.editor.mode,
+    editorMode: state.editor.editorMode,
+    debugModeEnabled: state.editor.debug,
+    interactiveElementsMode: state.editor.interactiveMode,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    selectEditorMode: (editorMode: EditorMode) => dispatch({ type: '@@option/UPDATE', option: { key: 'editorMode', value: editorMode }}),
-    selectInteractiveElementsMode: (mode: InteractiveElementsMode) => dispatch({ type: '@@option/UPDATE', option: { key: 'interactiveMode', value: mode }}),
+    selectEditorMode: (editorMode: EditorMode) => dispatch(EditorService.update({ editorMode })),
+    selectInteractiveElementsMode: (interactiveMode: InteractiveElementsMode) => dispatch(EditorService.update({ interactiveMode })),
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(Sidebar);

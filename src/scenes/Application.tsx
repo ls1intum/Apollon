@@ -9,7 +9,7 @@ import { Layout } from './styles';
 import DragDrop from './../components/DragDrop';
 import Editor from './../components/Container';
 import KeyboardEventListener from './../components/KeyboardEventListener';
-import { ApollonMode, ElementSelection } from '../domain/Options/types';
+import { ElementSelection } from '../components/SelectionListener/types';
 import DragLayer from "./../components/DragDrop/DragLayer";
 
 class App extends React.Component<Props, State> {
@@ -56,7 +56,7 @@ class App extends React.Component<Props, State> {
 }
 
 interface Props {
-  state: ReduxState;
+  state: Partial<ReduxState>;
   styles: Partial<Styles>;
 }
 

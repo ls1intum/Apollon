@@ -3,7 +3,7 @@ import { EntityRenderMode } from './../../../core/domain';
 import { Point, Size } from '../../../core/geometry';
 import Element from './../../Element';
 import Member, { EntityMember } from './/Member';
-import { EditorMode } from '../../Options/types';
+import { EditorMode } from '../../../services/EditorService';
 import uuid from './../../utils/uuid';
 import Boundary from '../../geo/Boundary';
 

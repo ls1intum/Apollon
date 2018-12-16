@@ -3,12 +3,12 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import RelationshipDragPreview from "./RelationshipDragPreview";
 import { createRelationship } from "./../../gui/redux";
-import { DiagramType, EditorMode, ElementSelection } from "../../domain/Options/types";
+import { ElementSelection } from "../SelectionListener/types";
+import { DiagramType, EditorMode } from './../../services/EditorService';
 import { RelationshipKind } from "./../../core/domain";
 import Element, { ElementRepository } from './../../domain/Element';
 import { Point, RectEdge } from "./../../core/geometry";
 import { State as ReduxState } from './../Store';
-import { UUID } from './../../domain/utils/uuid';
 
 const connectorSize = 40;
 const connectorRadius = connectorSize / 2;
