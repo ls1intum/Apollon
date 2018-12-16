@@ -19,6 +19,8 @@ import {
 } from './../../gui/redux';
 
 import ResizeHandler, { Direction } from './ResizeHandler';
+import Port from './Port';
+import { element } from 'prop-types';
 
 class CanvasEntity extends Component<Props, State> {
   state: State = {
@@ -46,7 +48,8 @@ class CanvasEntity extends Component<Props, State> {
       document.addEventListener('mousemove', this.onMouseMove);
     }
     document.addEventListener('mouseup', this.onMouseUp);
-    this.props.container.current && this.props.container.current.addEventListener('mouseup', this.unselect);
+    this.props.container.current &&
+      this.props.container.current.addEventListener('mouseup', this.unselect);
   }
 
   componentWillUnmount() {
@@ -57,7 +60,11 @@ class CanvasEntity extends Component<Props, State> {
       document.removeEventListener('mousemove', this.onMouseMove);
     }
     document.removeEventListener('mouseup', this.onMouseUp);
-    this.props.container.current && this.props.container.current.removeEventListener('mouseup', this.unselect);
+    this.props.container.current &&
+      this.props.container.current.removeEventListener(
+        'mouseup',
+        this.unselect
+      );
   }
 
   private onMouseOver = (event: React.MouseEvent) => {
@@ -73,7 +80,7 @@ class CanvasEntity extends Component<Props, State> {
 
     const element: Element = {
       ...this.props.entity,
-      render: (options: any) => (<></>),
+      render: (options: any) => <></>,
       selected: event.shiftKey ? !this.state.selected : true,
     };
 
@@ -92,7 +99,7 @@ class CanvasEntity extends Component<Props, State> {
 
       const element: Element = {
         ...this.props.entity,
-        render: (options: any) => (<></>),
+        render: (options: any) => <></>,
         bounds: {
           ...this.props.entity.bounds,
           x: Math.ceil(x / 10) * 10,
@@ -110,7 +117,7 @@ class CanvasEntity extends Component<Props, State> {
 
       const element: Element = {
         ...this.props.entity,
-        render: (options: any) => (<></>),
+        render: (options: any) => <></>,
         bounds: {
           ...this.props.entity.bounds,
           width: Math.max(x - this.props.entity.bounds.x, 100),
@@ -133,14 +140,14 @@ class CanvasEntity extends Component<Props, State> {
   private unselect = (event: MouseEvent) => {
     const element: Element = {
       ...this.props.entity,
-      render: (options: any) => (<></>),
+      render: (options: any) => <></>,
       selected: event.shiftKey ? this.state.selected : this.state.hover,
     };
     this.setState({
       selected: element.selected,
     });
     this.props.update(element);
-  }
+  };
 
   toggleEntityInteractiveElement = () => {
     const { entity, interactiveElementIds } = this.props;
@@ -203,22 +210,32 @@ class CanvasEntity extends Component<Props, State> {
             ? undefined
             : this.props.openDetailsPopup
         }
+        pointerEvents="all"
       >
-        {entity.render && React.cloneElement(
-          entity.render({
-            hover: this.state.hover,
-            editorMode,
-            interactiveElementsMode: this.props.interactiveElementsMode,
-            interactiveElementIds,
-            theme: this.props.theme,
-            toggleInteractiveElements: this.props.onToggleInteractiveElements,
-          }),
-          {}
-        )}
+        {entity.render &&
+          React.cloneElement(
+            entity.render({
+              hover: this.state.hover,
+              editorMode,
+              interactiveElementsMode: this.props.interactiveElementsMode,
+              interactiveElementIds,
+              theme: this.props.theme,
+              toggleInteractiveElements: this.props.onToggleInteractiveElements,
+            }),
+            {}
+          )}
         {this.props.editorMode === EditorMode.ModelingView &&
           this.state.selected && (
             <g>
-              <rect x={-3} y={-3} width={width + 6} height={height + 6} fill="none" stroke={this.props.theme.highlightColor} strokeWidth={5} />
+              <rect
+                x={-3}
+                y={-3}
+                width={width + 6}
+                height={height + 6}
+                fill="none"
+                stroke={this.props.theme.highlightColor}
+                strokeWidth={5}
+              />
               {this.props.apollonMode !== ApollonMode.ReadOnly && (
                 <g transform="translate(-9, -9)">
                   <ResizeHandler
@@ -229,6 +246,14 @@ class CanvasEntity extends Component<Props, State> {
               )}
             </g>
           )}
+        {this.props.editorMode === EditorMode.ModelingView && (
+          <g>
+            <Port element={entity} show={this.state.hover} rectEdge="TOP" />
+            <Port element={entity} show={this.state.hover} rectEdge="RIGHT" />
+            <Port element={entity} show={this.state.hover} rectEdge="BOTTOM" />
+            <Port element={entity} show={this.state.hover} rectEdge="LEFT" />
+          </g>
+        )}
       </svg>
     );
   }

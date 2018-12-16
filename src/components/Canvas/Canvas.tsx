@@ -4,7 +4,6 @@ import Entity from './../LayoutedElement';
 import Grid from './Grid';
 import EntityDetailsPopup from './../Popups/EntityDetailsPopup';
 import RelationshipDetailsPopup from './../Popups/RelationshipDetailsPopup';
-import RelationshipConnectors from './RelationshipConnectors';
 import {
   getAllInteractiveElementIds,
   getAllLayoutedRelationships,
@@ -25,6 +24,7 @@ import Relationship from './../LayoutedRelationship';
 import Droppable from './../DragDrop/Droppable';
 
 import { State as ReduxState } from './../Store';
+import RelationshipProvider from '../LayoutedRelationship/RelationshipLayer';
 
 class Canvas extends React.Component<Props, State> {
   container: RefObject<HTMLDivElement> = createRef();
@@ -82,77 +82,70 @@ class Canvas extends React.Component<Props, State> {
       <div ref={this.container} tabIndex={0}>
         <Droppable container={this.container}>
           <Grid grid={gridSize} width={width} height={height}>
-            <svg width={canvasSize.width} height={canvasSize.height}>
-              <defs>
-                <RelationshipMarkers
-                  onComponentDidMount={this.displayRelationships}
-                />
-              </defs>
-              {this.state.displayRelationships &&
-                relationships.map(relationship => {
-                  const relationshipId = relationship.relationship.id;
-                  return (
-                    <Relationship
-                      key={relationshipId}
-                      relationship={relationship}
-                      container={this.container}
-                      apollonMode={this.props.apollonMode}
-                      editorMode={this.props.editorMode}
-                      interactiveElementsMode={interactiveElementsMode}
-                      isSelected={selection.relationshipIds.includes(
-                        relationshipId
-                      )}
-                      onSelect={() => {}}
-                      onToggleSelection={() => {}}
-                      isInteractiveElement={this.props.interactiveElementIds.has(
-                        relationshipId
-                      )}
-                      onToggleInteractiveElements={
-                        this.props.toggleInteractiveElements
-                      }
-                      openDetailsPopup={() => {
-                        this.setState({
-                          doubleClickedElement: {
-                            type: 'relationship',
-                            relationshipId,
-                          },
-                        });
-                      }}
-                    />
-                  );
-                })}
+            <RelationshipProvider>
+              <svg width={canvasSize.width} height={canvasSize.height}>
+                <defs>
+                  <RelationshipMarkers
+                    onComponentDidMount={this.displayRelationships}
+                  />
+                </defs>
+                {this.state.displayRelationships &&
+                  relationships.map(relationship => {
+                    const relationshipId = relationship.relationship.id;
+                    return (
+                      <Relationship
+                        key={relationshipId}
+                        relationship={relationship}
+                        container={this.container}
+                        apollonMode={this.props.apollonMode}
+                        editorMode={this.props.editorMode}
+                        interactiveElementsMode={interactiveElementsMode}
+                        isSelected={selection.relationshipIds.includes(
+                          relationshipId
+                        )}
+                        onSelect={() => {}}
+                        onToggleSelection={() => {}}
+                        isInteractiveElement={this.props.interactiveElementIds.has(
+                          relationshipId
+                        )}
+                        onToggleInteractiveElements={
+                          this.props.toggleInteractiveElements
+                        }
+                        openDetailsPopup={() => {
+                          this.setState({
+                            doubleClickedElement: {
+                              type: 'relationship',
+                              relationshipId,
+                            },
+                          });
+                        }}
+                      />
+                    );
+                  })}
 
-              {elements.map(
-                element =>
-                  (this.props.editorMode === EditorMode.ModelingView ||
-                    this.props.interactiveElementsMode !==
-                      InteractiveElementsMode.Hidden ||
-                    !this.props.interactiveElementIds.has(element.id)) && (
-                    <Entity
-                      key={element.id}
-                      entity={element}
-                      container={this.container}
-                      openDetailsPopup={() => {
-                        this.setState({
-                          doubleClickedElement: {
-                            type: 'entity',
-                            entityId: element.id,
-                          },
-                        });
-                      }}
-                    />
-                  )
-              )}
-            </svg>
-
-            {apollonMode !== ApollonMode.ReadOnly && (
-              <RelationshipConnectors
-                diagramType={diagramType}
-                editorMode={editorMode}
-                selection={selection}
-                showConnectors={this.state.doubleClickedElement.type === 'none'}
-              />
-            )}
+                {elements.map(
+                  element =>
+                    (this.props.editorMode === EditorMode.ModelingView ||
+                      this.props.interactiveElementsMode !==
+                        InteractiveElementsMode.Hidden ||
+                      !this.props.interactiveElementIds.has(element.id)) && (
+                      <Entity
+                        key={element.id}
+                        entity={element}
+                        container={this.container}
+                        openDetailsPopup={() => {
+                          this.setState({
+                            doubleClickedElement: {
+                              type: 'entity',
+                              entityId: element.id,
+                            },
+                          });
+                        }}
+                      />
+                    )
+                )}
+              </svg>
+            </RelationshipProvider>
 
             {this.renderDetailsPopup()}
           </Grid>
