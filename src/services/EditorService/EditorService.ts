@@ -26,7 +26,6 @@ class EditorService {
     mode: ApollonMode.Full,
     editorMode: EditorMode.ModelingView,
     interactiveMode: InteractiveElementsMode.Highlighted,
-    debug: false,
   };
 
   static update = (options: Partial<EditorState>) => ({

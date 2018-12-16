@@ -9,8 +9,11 @@ import EditorService, {
   ApollonMode,
 } from './services/EditorService';
 import { Relationship } from './core/domain';
-import { ElementState } from './domain/Element';
+import { ElementState, ElementRepository } from './domain/Element';
 import Element from './domain/Element';
+import { getAllRelationships } from './gui/redux';
+import * as DiagramLayouter from './rendering/layouters/diagram';
+import { renderDiagramToSVG, RenderOptions, RenderedSVG } from './rendering/renderers/svg';
 
 export interface ElementSelection {
   entityIds: string[];
@@ -40,7 +43,6 @@ export interface ApollonOptions {
   initialState?: Partial<ExternalState>;
   diagramType?: DiagramType;
   mode?: ApollonMode;
-  debug?: boolean;
   theme?: Partial<Styles>;
 }
 
@@ -143,6 +145,26 @@ class Editor {
 
   destroy() {
     unmountComponentAtNode(this.container);
+  }
+
+  static layoutDiagram(
+    state: ReduxState,
+    layoutOptions: DiagramLayouter.LayoutOptions
+  ) {
+    const entities = ElementRepository.read(state);
+    const relationships = getAllRelationships(state);
+
+    return DiagramLayouter.layoutDiagram(
+      { entities, relationships },
+      layoutOptions
+    );
+  }
+
+  static renderDiagramToSVG(
+    layoutedDiagram: DiagramLayouter.LayoutedDiagram,
+    renderOptions: RenderOptions
+  ): RenderedSVG {
+    return renderDiagramToSVG(layoutedDiagram, renderOptions);
   }
 }
 

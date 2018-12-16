@@ -33,5 +33,4 @@ export interface EditorState {
   readonly mode: ApollonMode;
   readonly editorMode: EditorMode;
   readonly interactiveMode: InteractiveElementsMode;
-  readonly debug: boolean;
 }
