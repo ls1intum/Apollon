@@ -46,6 +46,7 @@
               />
               Class Diagram
             </label>
+            <br />
             <label htmlFor="ChangeDiagramTypeActivity">
               <input
                 type="radio"
@@ -54,6 +55,42 @@
                 value="ACTIVITY"
               />
               Activity Diagram
+            </label>
+            <div><button type="submit">Change</button></div>
+          </form>
+        </section>
+        <section>
+          <h>Mode</h>
+          <form onsubmit="changeMode(event)">
+            <label htmlFor="ChangeModeFull">
+              <input
+                type="radio"
+                id="ChangeModeFull"
+                name="mode"
+                value="FULL"
+                checked
+              />
+              Full Mode
+            </label>
+            <br />
+            <label htmlFor="ChangeModeModelingOnly">
+              <input
+                type="radio"
+                id="ChangeModeModelingOnly"
+                name="mode"
+                value="MODELING_ONLY"
+              />
+              Modeling Only Mode
+            </label>
+            <br />
+            <label htmlFor="ChangeModeReadOnly">
+              <input
+                type="radio"
+                id="ChangeModeReadOnly"
+                name="mode"
+                value="READ_ONLY"
+              />
+              Read Only Mode
             </label>
             <div><button type="submit">Change</button></div>
           </form>
@@ -71,6 +108,7 @@
               />
               SVG
             </label>
+            <br />
             <label htmlFor="ExportFileTypePNG">
               <input
                 type="radio"
@@ -127,12 +165,20 @@
           options.initialState = undefined;
         }
 
+        function changeMode(event) {
+          event.preventDefault();
+          const mode = event.target.elements.mode.value;
+          options.mode = mode;
+          unmount();
+          mount();
+        }
+
         function changeDiagramType(event) {
           event.preventDefault();
           const diagramType = event.target.elements.diagramType.value;
           options.diagramType = diagramType;
-          unmount()
-          mount()
+          unmount();
+          mount();
         }
 
         function exportData(event) {

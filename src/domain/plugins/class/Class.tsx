@@ -23,7 +23,7 @@ class Class extends Element {
     const memberHeight = 25;
     let currentY = headerHeight - memberHeight;
 
-    const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements } = options;
+    const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements, ...rest } = options;
 
     return (
       <svg id={`class-${this.id}`} width={width} height={height} style={{ overflow: 'visible' }}>

@@ -131,7 +131,7 @@ class Canvas extends React.Component<Props, State> {
                       !this.props.interactiveElementIds.has(element.id)) && (
                       <Entity
                         key={element.id}
-                        entity={element}
+                        element={element}
                         container={this.container}
                         openDetailsPopup={() => {
                           this.setState({

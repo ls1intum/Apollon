@@ -26,9 +26,11 @@
     "prepare": "yarn run build:npm"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.119",
     "@types/react": "16.7.13",
     "@types/react-dom": "16.0.11",
     "@types/react-redux": "6.0.11",
+    "@types/styled-components": "4.1.3",
     "@types/uuid": "^3.4.4",
     "prettier": "1.15.3",
     "ts-loader": "5.3.1",
@@ -39,7 +41,7 @@
     "webpack-dev-server": "3.1.10"
   },
   "dependencies": {
-    "@types/styled-components": "4.1.3",
+    "lodash": "^4.17.11",
     "react": "16.6.3",
     "react-dnd": "7.0.2",
     "react-dnd-html5-backend": "7.0.2",

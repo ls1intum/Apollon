@@ -24,7 +24,7 @@ class Enumeration extends Element {
     const entityKindDescription = '«enumeration»';
 
     const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements } = options;
-    
+
     return (
       <svg id={`enumeration-${this.id}`} width={width} height={height} style={{ overflow: 'visible' }}>
         <rect width="100%" height="100%" fill="#ffffff" stroke="#000000" />
