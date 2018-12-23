@@ -54,7 +54,6 @@ class RelationshipProvider extends Component<Props, State> {
   };
 
   private onMouseDown = (connector: Connector) => (event: React.MouseEvent) => {
-    console.log('onMouseDown', connector);
     event.stopPropagation();
 
     window.removeEventListener('mouseup', this.onWindowMouseUp);
@@ -65,17 +64,26 @@ class RelationshipProvider extends Component<Props, State> {
 
     const containerClientRect = event.currentTarget.parentElement!.getBoundingClientRect();
 
+    let x = connector.center.x;
+    let y = connector.center.y;
+
+    let owner = connector.element.owner;
+    while (owner) {
+      x += owner.bounds.x;
+      y += owner.bounds.y;
+      owner = owner.owner;
+    }
+
+    connector.center.x = x;
+    connector.center.y = y;
+
     this.setState({
       startConnector: connector,
-      mousePosition: {
-        x: event.pageX - containerClientRect.left,
-        y: event.pageY - containerClientRect.top,
-      },
+      mousePosition: { x: event.pageX - containerClientRect.left, y: event.pageY - containerClientRect.top },
     });
   };
 
   private onMouseUp = (connector: Connector) => (event: React.MouseEvent) => {
-    console.log('onMouseUp', connector);
     const { startConnector } = this.state;
     if (startConnector === null) {
       // Shouldn't happen

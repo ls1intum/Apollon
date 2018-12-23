@@ -13,9 +13,10 @@ abstract class Element {
 
   selected: boolean = false;
 
-  constructor(public name: string) {}
+  owner: Element | null = null;
+  ownedElements: Element[] = [];
 
-  public abstract render?(options: any): JSX.Element;
+  constructor(public name: string) {}
 }
 
 export default Element;

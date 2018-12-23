@@ -11,18 +11,18 @@ import * as DragDrop from './../DragDrop/dnd';
 import { snapPointToGrid } from './../../core/geometry';
 import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from '../../domain/Element';
-import { EntityKind } from '../../core/domain';
 import * as Plugins from './../../domain/plugins';
 
 class Droppable extends Component<Props> {
   render() {
     const { children, connectDropTarget } = this.props;
-    return connectDropTarget(<div>{children}</div>);
+    return connectDropTarget(<g>{children}</g>);
   }
 }
 
 interface OwnProps {
   container: RefObject<HTMLDivElement>;
+  element: Element;
 }
 
 interface StateProps {
@@ -31,6 +31,7 @@ interface StateProps {
 
 interface DispatchProps {
   create: typeof ElementRepository.create;
+  update: typeof ElementRepository.update;
 }
 
 interface DragDropProps {
@@ -65,18 +66,29 @@ const dropTargetSpec: DropTargetSpec<Props> = {
         const x = xyCoordOffset.x;
         const y = xyCoordOffset.y;
         const canvasRect = current.getBoundingClientRect();
-        const positionOnCanvas = {
+        let positionOnCanvas = {
           x: x - canvasRect.left,
           y: y - canvasRect.top,
         };
+
+        const element: Element = new (Plugins as { [clazz: string]: any })[item.kind]();
+        element.owner = props.element;
+        props.element.ownedElements.push(element);
+
+        let owner: Element | null = element.owner;
+        while (owner) {
+          positionOnCanvas.x -= owner.bounds.x;
+          positionOnCanvas.y -= owner.bounds.y;
+          owner = owner.owner;
+        }
+
         const actualPosition = snapPointToGrid(
           positionOnCanvas,
           props.gridSize
         );
-
-        const element: Element = new (Plugins as { [clazz: string]: any })[item.kind]();
         element.bounds = { ...element.bounds, ...actualPosition };
         props.create(element);
+        props.update(props.element);
       }
     }
   },
@@ -91,6 +103,7 @@ export default compose<ComponentClass<OwnProps>>(
     mapStateToProps,
     {
       create: ElementRepository.create,
+      update: ElementRepository.update,
     }
   ),
   DropTarget<Props>(

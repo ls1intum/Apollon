@@ -1,81 +1,67 @@
-import React from 'react';
-import { EntityRenderMode } from './../../../core/domain';
-import { Point, Size } from '../../../core/geometry';
+import React, { Component } from 'react';
+import styled from 'styled-components';
 import Element from './../../Element';
-import Member, { EntityMember } from './/Member';
-import { EditorMode } from '../../../services/EditorService';
-import uuid from '../../utils/uuid';
 import Boundary from '../../geo/Boundary';
+import Attribute from './Attribute';
 
 class Enumeration extends Element {
-  attributes: EntityMember[] = [{ id: uuid(), name: "Case1" }, { id: uuid(), name: "Case2" }, { id: uuid(), name: "Case3" }];
-  renderMode: EntityRenderMode = { showAttributes: true, showMethods: false };
-  bounds: Boundary = { ...this.bounds, height: 124 }
+  bounds: Boundary = { ...this.bounds, height: 140 };
 
-  constructor(public name: string = 'Enumeration', public position: Point, public size: Size) {
+  constructor(public name: string = 'Enumeration') {
     super(name);
+
+    const attribute1 = new Attribute('Case1');
+    attribute1.bounds.y = 50;
+    attribute1.owner = this;
+    const attribute2 = new Attribute('Case2');
+    attribute2.bounds.y = 80;
+    attribute2.owner = this;
+    const attribute3 = new Attribute('Case3');
+    attribute3.bounds.y = 110;
+    attribute3.owner = this;
+    this.ownedElements = [attribute1, attribute2, attribute3];
   }
+}
 
-  public render(options: any): JSX.Element {
-    const { width, height } = this.bounds;
-    const headerHeight = 35 + 14;
-    const memberHeight = 25;
-    let currentY = headerHeight - memberHeight;
-    const entityKindDescription = '«enumeration»';
+const Background = styled.rect``;
 
-    const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements } = options;
+const Container = styled.svg`
+  overflow: visible;
 
+  ${Background} {
+    fill: ${({ theme }) => theme.background || 'white'};
+  }
+`;
+
+export class EnumerationComponent extends Component<Props> {
+  render() {
+    const { element, children } = this.props;
+    const { width, height } = element.bounds;
     return (
-      <svg id={`enumeration-${this.id}`} width={width} height={height} style={{ overflow: 'visible' }}>
-        <rect width="100%" height="100%" fill="#ffffff" stroke="#000000" />
-        <rect width={width} height={height} stroke="black" fill={
-            editorMode === EditorMode.InteractiveElementsView &&
-            (hover ||
-              interactiveElementIds.has(this.id))
-              ? theme.interactiveAreaColor
-              : 'white'
-          }
-        />
-        <svg width={width} height={headerHeight}>
-          <rect width="100%" height="100%" fill="none" />
+      <Container width={width} height={height}>
+        <Background width={width} height={height} stroke="black" />
+        <svg width={width} height={50}>
           <g transform="translate(0, -1)">
-            <rect x="0" y="100%" width="100%" height="1" fill="black" />
+            <rect y="100%" width="100%" height="1" fill="black" />
           </g>
           <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle">
             <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
-              {entityKindDescription}
+              «enumeration»
             </tspan>
             <tspan x="50%" dy={18} textAnchor="middle">
-              {this.name}
+              {element.name}
             </tspan>
           </text>
         </svg>
 
-        {this.renderMode.showAttributes &&
-          this.attributes.map((attribute: EntityMember) => {
-            currentY += memberHeight;
-            return (
-              <Member
-                y={currentY}
-                key={attribute.id}
-                entity={this}
-                member={attribute}
-                editorMode={editorMode}
-                interactiveElementsMode={interactiveElementsMode}
-                canBeMadeInteractive={
-                  !interactiveElementIds.has(this.id)
-                }
-                isInteractiveElement={interactiveElementIds.has(attribute.id)}
-                onToggleInteractiveElements={() => {
-                  toggleInteractiveElements(attribute.id);
-                }}
-              />
-            );
-          })
-        }
-      </svg>
+        {children}
+      </Container>
     );
   }
+}
+
+interface Props {
+  element: Enumeration;
 }
 
 export default Enumeration;

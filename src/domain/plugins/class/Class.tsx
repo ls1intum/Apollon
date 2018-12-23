@@ -1,101 +1,61 @@
-import React from 'react';
-import { EntityRenderMode } from './../../../core/domain';
-import { Point, Size } from '../../../core/geometry';
+import React, { Component } from 'react';
+import styled from 'styled-components';
 import Element from './../../Element';
-import Member, { EntityMember } from './/Member';
-import { EditorMode } from '../../../services/EditorService';
-import uuid from './../../utils/uuid';
 import Boundary from '../../geo/Boundary';
+import Attribute from './Attribute';
 
 class Class extends Element {
-  attributes: EntityMember[] = [{ id: uuid(), name: "attribute1" }];
-  methods: EntityMember[] = [{ id: uuid(), name: "method1()" }];
-  renderMode: EntityRenderMode = { showAttributes: true, showMethods: true };
-  bounds: Boundary = { ...this.bounds, height: 85 }
+  bounds: Boundary = { ...this.bounds, height: 95 };
+  isAbstract: boolean = false;
 
-  constructor(public name: string = 'Class', public position: Point, public size: Size) {
+  constructor(public name: string = 'Class') {
     super(name);
+
+    const attribute1 = new Attribute('Case1');
+    attribute1.bounds.y = 35;
+    attribute1.owner = this;
+    const method1 = new Attribute('Case2');
+    method1.bounds.y = 65;
+    method1.owner = this;
+    this.ownedElements = [attribute1, method1];
   }
+}
 
-  public render(options: any): JSX.Element {
-    const { width, height } = this.bounds;
-    const headerHeight = 35;
-    const memberHeight = 25;
-    let currentY = headerHeight - memberHeight;
+const Background = styled.rect``;
 
-    const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements, ...rest } = options;
+const Container = styled.svg`
+  overflow: visible;
 
+  ${Background} {
+    fill: ${({ theme }) => theme.background || 'white'};
+  }
+`;
+
+export class ClassComponent extends Component<Props> {
+  render() {
+    const { element, children } = this.props;
+    const { width, height } = element.bounds;
     return (
-      <svg id={`class-${this.id}`} width={width} height={height} style={{ overflow: 'visible' }}>
-        <rect width="100%" height="100%" fill="#ffffff" stroke="#000000" />
-        <rect width={width} height={height} stroke="black" fill={
-            editorMode === EditorMode.InteractiveElementsView &&
-            (hover ||
-              interactiveElementIds.has(this.id))
-              ? theme.interactiveAreaColor
-              : 'white'
-          }
-        />
-        <svg width={width} height={headerHeight}>
-          <rect width="100%" height="100%" fill="none" />
+      <Container width={width} height={height}>
+        <Background width={width} height={height} stroke="black" />
+        <svg width={width} height={35}>
           <g transform="translate(0, -1)">
             <rect x="0" y="100%" width="100%" height="1" fill="black" />
           </g>
-          <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="black">
-            {this.name}
+          <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontStyle={element.isAbstract ? 'italic' : 'normal'}>
+            {element.name}
           </text>
         </svg>
+        <rect x="0" y={64} width="100%" height="1" fill="black" />
 
-        {this.renderMode.showAttributes &&
-          this.attributes.map((attribute: EntityMember) => {
-            currentY += memberHeight;
-            return (
-              <Member
-                y={currentY}
-                key={attribute.id}
-                entity={this}
-                member={attribute}
-                editorMode={editorMode}
-                interactiveElementsMode={interactiveElementsMode}
-                canBeMadeInteractive={
-                  !interactiveElementIds.has(this.id)
-                }
-                isInteractiveElement={interactiveElementIds.has(attribute.id)}
-                onToggleInteractiveElements={() => {
-                  toggleInteractiveElements(attribute.id);
-                }}
-              />
-            );
-          })
-        }
-
-        <rect x="0" y={currentY + memberHeight - 1} width="100%" height="1" fill="black" />
-
-        {this.renderMode.showMethods && 
-          this.methods.map((method: EntityMember) => {
-            currentY += memberHeight;
-            return (
-              <Member
-                y={currentY}
-                key={method.id}
-                entity={this}
-                member={method}
-                editorMode={editorMode}
-                interactiveElementsMode={interactiveElementsMode}
-                canBeMadeInteractive={
-                  !interactiveElementIds.has(this.id)
-                }
-                isInteractiveElement={interactiveElementIds.has(method.id)}
-                onToggleInteractiveElements={() => {
-                  toggleInteractiveElements(method.id);
-                }}
-              />
-            );
-          })
-        }
-      </svg>
+        {children}
+      </Container>
     );
   }
+}
+
+interface Props {
+  element: Class;
 }
 
 export default Class;

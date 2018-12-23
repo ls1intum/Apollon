@@ -31,7 +31,6 @@ export interface Relationship extends Element {
     source: RelationshipEnd;
     target: RelationshipEnd;
     straightLine: boolean;
-    render(): JSX.Element;
 }
 
 export const enum RelationshipKind {

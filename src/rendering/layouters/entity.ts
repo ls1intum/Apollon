@@ -37,32 +37,6 @@ export function layoutEntity(entity: Element): LayoutedEntity {
     let renderMode = { showAttributes: false, showMethods: false };
     let attributes: EntityMember[] = [];
     let methods: EntityMember[] = [];
-    let element;
-    switch (entity.kind) {
-        case EntityKind.Class:
-            element = entity as Plugins.Class;
-            renderMode = element.renderMode;
-            attributes = element.attributes;
-            methods = element.methods;
-            break;
-        case EntityKind.AbstractClass:
-            element = entity as Plugins.AbstractClass;
-            renderMode = element.renderMode;
-            attributes = element.attributes;
-            methods = element.methods;
-            break;
-        case EntityKind.Interface:
-            element = entity as Plugins.Interface;
-            renderMode = element.renderMode;
-            attributes = element.attributes;
-            methods = element.methods;
-            break
-        case EntityKind.Enumeration:
-            element = entity as Plugins.Enumeration;
-            renderMode = element.renderMode;
-            attributes = element.attributes;
-            break;
-    }
 
     const height = computeEntityHeight(kind, attributes.length, methods.length, renderMode);
 

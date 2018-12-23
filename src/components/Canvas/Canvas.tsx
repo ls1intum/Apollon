@@ -58,7 +58,11 @@ class Canvas extends React.Component<Props, State> {
     switch (event.key) {
       case 'Backspace':
       case 'Delete':
-        this.props.elements.filter(e => e.selected).forEach(this.props.delete);
+        const find = (e: Element[]): Element[] => {
+          const t: Element[] = e.reduce<Element[]>((o, e) => [...o, ...find(e.ownedElements)], []);
+          return [...e, ...t];
+        }
+        find(this.props.elements).filter(e => e.selected).forEach(this.props.delete);
         break;
     }
   };
@@ -69,9 +73,6 @@ class Canvas extends React.Component<Props, State> {
       gridSize,
       elements,
       relationships,
-      diagramType,
-      apollonMode,
-      editorMode,
       interactiveElementsMode,
     } = this.props;
     const { width, height } = canvasSize;
@@ -83,12 +84,30 @@ class Canvas extends React.Component<Props, State> {
         <Droppable container={this.container}>
           <Grid grid={gridSize} width={width} height={height}>
             <RelationshipProvider>
-              <svg width={canvasSize.width} height={canvasSize.height}>
+              <svg width={width} height={height}>
                 <defs>
                   <RelationshipMarkers
                     onComponentDidMount={this.displayRelationships}
                   />
                 </defs>
+
+                {elements.map(
+                  element => (
+                      <Entity
+                        key={element.id}
+                        element={element}
+                        container={this.container}
+                        openDetailsPopup={(id: string) => {
+                          this.setState({
+                            doubleClickedElement: {
+                              type: 'entity',
+                              entityId: id,
+                            },
+                          });
+                        }}
+                      />
+                    )
+                )}
                 {this.state.displayRelationships &&
                   relationships.map(relationship => {
                     const relationshipId = relationship.relationship.id;
@@ -122,28 +141,6 @@ class Canvas extends React.Component<Props, State> {
                       />
                     );
                   })}
-
-                {elements.map(
-                  element =>
-                    (this.props.editorMode === EditorMode.ModelingView ||
-                      this.props.interactiveElementsMode !==
-                        InteractiveElementsMode.Hidden ||
-                      !this.props.interactiveElementIds.has(element.id)) && (
-                      <Entity
-                        key={element.id}
-                        element={element}
-                        container={this.container}
-                        openDetailsPopup={() => {
-                          this.setState({
-                            doubleClickedElement: {
-                              type: 'entity',
-                              entityId: element.id,
-                            },
-                          });
-                        }}
-                      />
-                    )
-                )}
               </svg>
             </RelationshipProvider>
 
@@ -159,9 +156,16 @@ class Canvas extends React.Component<Props, State> {
 
     switch (doubleClickedElement.type) {
       case 'entity': {
-        const doubleClickedEntity = this.props.elements.find(
-          element => element.id === doubleClickedElement.entityId
-        );
+        const find = (elements: Element[], id: string): Element | null => {
+            if (!elements.length) return null;
+
+            const element = elements.find(e => e.id === id);
+            if (element) return element;
+
+            const children = elements.reduce<Element[]>((a, e) => [ ...a, ...e.ownedElements], []);
+            return find(children, id);
+        }
+        const doubleClickedEntity = find(this.props.elements, doubleClickedElement.entityId);
 
         return doubleClickedEntity ? (
           <EntityDetailsPopup

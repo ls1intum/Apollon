@@ -22,7 +22,7 @@ export interface ElementSelection {
 
 interface ExternalState {
   entities: {
-    byId: { [id: string]: Element };
+    byId: ElementState;
     allIds: string[];
   };
   relationships: {

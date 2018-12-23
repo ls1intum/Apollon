@@ -18,13 +18,15 @@ import Draggable from './../DragDrop/Draggable';
 import { EntityKind } from '../../core/domain';
 
 class Sidebar extends Component<Props> {
-  elements: { [key: string]: Element } = Object.entries(Plugins).reduce(
-    (o, [k, v]) => ({
-      ...o,
-      [k]: new v(k, { x: 0, y: 0 }, { width: 110, height: 80 }),
-    }),
-    {}
-  );
+  elements: { [key: string]: Element } = Object.entries(Plugins)
+    .filter(([k, v]) => !k.includes('Component'))
+    .reduce(
+      (o, [k, v]: [string, any]) => ({
+        ...o,
+        [k]: new v(),
+      }),
+      {}
+    );
 
   selectEditorMode = (mode: EditorMode) => () =>
     this.props.selectEditorMode({ editorMode: mode });
@@ -67,7 +69,9 @@ class Sidebar extends Component<Props> {
               onClick={this.selectEditorMode(
                 EditorMode.InteractiveElementsView
               )}
-              selected={this.props.editorMode === EditorMode.InteractiveElementsView}
+              selected={
+                this.props.editorMode === EditorMode.InteractiveElementsView
+              }
             >
               Interactive Areas
             </EditorModeSelectionSegment>
@@ -76,11 +80,14 @@ class Sidebar extends Component<Props> {
         {
           {
             [EditorMode.ModelingView]: Object.entries(this.elements).map(
-              ([k, v]) => (
-                <Draggable key={k} kind={k as EntityKind}>
-                  {v.render && v.render(options)}
-                </Draggable>
-              )
+              ([k, v]) => {
+                const Component = (Plugins as any)[`${v.kind}Component`];
+                return (
+                  <Draggable key={k} kind={k as EntityKind}>
+                    <Component element={v} options={options} />
+                  </Draggable>
+                );
+              }
             ),
             [EditorMode.InteractiveElementsView]: (
               <label htmlFor="toggleInteractiveElementsMode">

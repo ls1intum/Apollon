@@ -44,7 +44,8 @@ export function createRelationship(
             source,
             target,
             straightLine: false,
-            render: () => <></>,
+            owner: null,
+            ownedElements: [],
         }
     };
 }

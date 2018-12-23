@@ -7,6 +7,11 @@ export const enum ActionTypes {
   DELETE = '@@element/DELETE',
 }
 
+export interface E extends Omit<Element, 'ownedElements' | 'owner'> {
+  ownedElements: string[];
+  owner: string | null;
+}
+
 export interface ElementState {
-  readonly [id: string]: Omit<Element, 'render'>;
+  readonly [id: string]: E;
 }

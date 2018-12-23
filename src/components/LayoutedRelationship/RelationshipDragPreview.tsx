@@ -6,7 +6,7 @@ export default class RelationshipDragPreview extends React.Component<Props> {
         const { connectorPosition, mousePosition } = this.props;
         const { center, outer } = connectorPosition;
 
-        const path = [center, outer];
+        const path = [center];
 
         if (mousePosition !== null) {
             mousePosition.y -= window.pageYOffset;
