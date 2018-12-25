@@ -1,9 +1,8 @@
-import { EntityKind, EntityRenderMode } from "../../core/domain";
-import { Point, Size } from "../../core/geometry";
+import { EntityKind } from "../../domain/Element";
+import { Point, Size } from "../../domain/geo";
 import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import { EntityMember } from '../../domain/plugins/class/Member';
-import * as Plugins from './../../domain/plugins';
 
 export const ENTITY_KIND_HEIGHT = 14;
 export const ENTITY_NAME_HEIGHT = 35;
@@ -21,7 +20,7 @@ export interface LayoutedEntity {
     size: Size;
     attributes: LayoutedEntityMember[];
     methods: LayoutedEntityMember[];
-    renderMode: EntityRenderMode;
+    renderMode: any;
 }
 
 export interface LayoutedEntityMember {
@@ -107,7 +106,7 @@ export function computeEntityHeight(
     kind: string,
     attributeCount: number,
     methodCount: number,
-    renderMode: EntityRenderMode
+    renderMode: any
 ) {
     if (kind === EntityKind.InitialNode || kind === EntityKind.FinalNode) {
         return 40;

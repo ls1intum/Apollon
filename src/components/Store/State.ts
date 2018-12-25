@@ -1,4 +1,4 @@
-import { Relationship } from '../../core/domain';
+import { Relationship } from '../../domain/Relationship';
 import { UUID } from './../../domain/utils/uuid';
 import { ElementState } from './../../domain/Element';
 import { EditorState } from './../../services/EditorService';

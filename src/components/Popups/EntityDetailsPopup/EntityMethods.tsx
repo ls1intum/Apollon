@@ -1,7 +1,6 @@
 import * as React from "react";
 import EntityMemberList from "./EntityMemberList";
 import EntityMembersHeading from "./EntityMembersHeading";
-import { EntityRenderMode, EntityKind } from "./../../../core/domain";
 import Element from './../../../domain/Element';
 import { UUID } from './../../../domain/utils/uuid';
 import { EntityMember } from '../../../domain/plugins/class/Member';
@@ -45,7 +44,7 @@ export default class EntityMethods extends React.Component<Props> {
 
 interface Props {
     entity: Element;
-    updateEntityRenderMode: (renderMode: EntityRenderMode) => void;
+    updateEntityRenderMode: (renderMode: any) => void;
     createEntityMethod: (method: EntityMember) => void;
     updateEntityMethod: (method: EntityMember) => void;
     deleteEntityMethod: (memberId: UUID) => void;

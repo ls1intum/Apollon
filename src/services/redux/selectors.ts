@@ -1,6 +1,6 @@
 import { createSelector } from "reselect";
 import { State as ReduxState } from "./../../components/Store";
-import { LayoutedRelationship, Relationship } from "../../core/domain";
+import { LayoutedRelationship, Relationship } from "../../domain/Relationship";
 import Element, { ElementRepository } from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import { computeRelationshipPath } from "../../rendering/layouters/relationship";

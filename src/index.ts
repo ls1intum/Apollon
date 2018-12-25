@@ -1,10 +1,10 @@
 import Editor from "./Editor";
 import { ElementRepository } from './domain/Element';
-import { getAllRelationships } from "./gui/redux";
+import { getAllRelationships } from "./services/redux";
 import * as DiagramLayouter from "./rendering/layouters/diagram";
 import { State as ReduxState } from './components/Store';
 
-export { computeBoundingBox } from "./core/geometry/boundingBox";
+export { computeBoundingBox } from "./domain/geo/boundingBox";
 
 export * from "./Editor";
 export default Editor;

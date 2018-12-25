@@ -1,5 +1,6 @@
-import { ReduxAction } from "../actions";
-import { State as ReduxState } from "./../../../components/Store";
+import { Actions } from './../Element';
+import { RelationshipsAction } from "./actions";
+import { State as ReduxState } from "../../components/Store";
 
 type State = ReduxState["relationships"];
 
@@ -8,7 +9,7 @@ const initialState: State = {
     byId: {}
 };
 
-export default function relationshipsReducer(state = initialState, action: ReduxAction): State {
+export default function relationshipsReducer(state = initialState, action: RelationshipsAction | Actions): State {
     switch (action.type) {
         case "CREATE_RELATIONSHIP":
             return {

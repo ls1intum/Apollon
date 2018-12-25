@@ -1,8 +1,8 @@
 import * as React from "react";
 import BlockInput from "../BlockInput";
-import { EntityKind } from "./../../../core/domain";
+import { EntityKind } from "./../../../domain/Element";
 import Element from "./../../../domain/Element";
-import { sanitizeWhiteSpace } from "./../../../core/utils";
+import { sanitizeWhiteSpace } from "../../../domain/utils";
 import newId from './../../../domain/utils/uuid';
 
 export default class EntityNameInput extends React.Component<Props, State> {

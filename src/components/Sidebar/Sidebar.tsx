@@ -15,7 +15,7 @@ import EditorService, {
 import * as Plugins from './../../domain/plugins';
 import Element from '../../domain/Element';
 import Draggable from './../DragDrop/Draggable';
-import { EntityKind } from '../../core/domain';
+import { EntityKind } from '../../domain/Element';
 
 class Sidebar extends Component<Props> {
   elements: { [key: string]: Element } = Object.entries(Plugins)

@@ -19,7 +19,7 @@ import { State as ReduxState } from './../Store';
 import {
   getAllInteractiveElementIds,
   toggleInteractiveElements,
-} from './../../gui/redux';
+} from './../../services/redux';
 
 import ResizeHandler, { Direction } from './ResizeHandler';
 import Port from './Port';

@@ -2,9 +2,9 @@ import * as React from "react";
 import { getMarkerIdForRelationshipKind } from "./defs/RelationshipMarkers";
 import { RenderOptions } from "./index";
 import RelationshipLabels from "./RelationshipLabels";
-import { Relationship, RelationshipKind } from "../../../core/domain";
-import { Point } from "../../../core/geometry";
-import { assertNever } from "../../../core/utils";
+import { Relationship, RelationshipKind } from "../../../domain/Relationship";
+import { Point } from "../../../domain/geo";
+import { assertNever } from "../../../domain/utils";
 
 export default class RenderedRelationship extends React.Component<Props> {
     render() {

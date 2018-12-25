@@ -14,7 +14,7 @@ import {
     pointsAreEqual,
     Rect,
     RectEdge
-} from "../../core/geometry";
+} from "../../domain/geo";
 
 export function computeRelationshipPath(
     sourceRect: Rect,

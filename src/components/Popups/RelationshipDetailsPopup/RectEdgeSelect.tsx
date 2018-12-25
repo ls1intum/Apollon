@@ -1,5 +1,5 @@
 import * as React from "react";
-import { RectEdge } from "./../../../core/geometry";
+import { RectEdge } from "../../../domain/geo";
 
 export default class RectEdgeSelect extends React.Component<Props> {
     onChange = (e: React.FormEvent<HTMLSelectElement>) => {

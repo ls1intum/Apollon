@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
-import { RectEdge, Point } from '../../core/geometry';
+import { RectEdge, Point } from '../../domain/geo';
 import { DiagramType } from '../../services/EditorService';
-import { createRelationship } from '../../gui/redux';
+import { createRelationship } from '../../domain/Relationship/actions';
 import Element from '../../domain/Element';
-import { RelationshipKind } from '../../core/domain';
+import { RelationshipKind } from '../../domain/Relationship';
 import RelationshipDragPreview from './RelationshipDragPreview';
 
 export interface Connector {

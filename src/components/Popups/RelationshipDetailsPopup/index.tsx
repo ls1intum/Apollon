@@ -2,10 +2,10 @@ import * as React from "react";
 import { connect } from "react-redux";
 import RelationshipDetails from "./RelationshipDetails";
 import Popup from "../Popup";
-import { flipRelationship, updateRelationship } from "./../../../gui/redux";
-import { LayoutedRelationship } from "./../../../core/domain";
+import { flipRelationship, updateRelationship } from "./../../../domain/Relationship/actions";
+import { LayoutedRelationship } from "./../../../domain/Relationship";
 import Element, { ElementRepository } from './../../../domain/Element';
-import { Point } from "./../../../core/geometry";
+import { Point } from "../../../domain/geo";
 import { DiagramType } from "./../../../services/EditorService";
 import { State as ReduxState } from './../../Store';
 

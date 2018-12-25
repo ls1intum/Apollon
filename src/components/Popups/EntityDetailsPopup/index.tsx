@@ -2,8 +2,8 @@ import * as React from "react";
 import { connect } from "react-redux";
 import EntityDetails from "./EntityDetails";
 import Popup from "../Popup";
-import { EntityKind, EntityRenderMode } from "./../../../core/domain";
-import { Point } from "./../../../core/geometry";
+import { EntityKind } from "./../../../domain/Element";
+import { Point } from "../../../domain/geo";
 import { UUID } from './../../../domain/utils/uuid';
 import { EntityMember } from '../../../domain/plugins/class/Member';
 import Element, { ElementRepository } from './../../../domain/Element';
@@ -20,7 +20,7 @@ class EntityDetailsPopup extends React.Component<Props> {
         this.props.update(element);
     };
 
-    updateEntityRenderMode = (renderMode: EntityRenderMode) => {
+    updateEntityRenderMode = (renderMode: any) => {
         let element: any;
         switch (this.props.entity.kind) {
             case EntityKind.Class:

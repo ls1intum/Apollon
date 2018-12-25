@@ -3,7 +3,7 @@ import styled from "styled-components";
 import TrashCanIcon from "./TrashCanIcon";
 import BlockInput from "../BlockInput";
 import { EntityMember } from "./../../../domain/plugins/class/Member";
-import { sanitizeWhiteSpace } from "./../../../core/utils";
+import { sanitizeWhiteSpace } from "../../../domain/utils";
 
 const FlexContainer = styled.div`
     display: flex;

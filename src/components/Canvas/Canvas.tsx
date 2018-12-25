@@ -8,7 +8,7 @@ import {
   getAllInteractiveElementIds,
   getAllLayoutedRelationships,
   toggleInteractiveElements,
-} from './../../gui/redux';
+} from './../../services/redux';
 import {
   ApollonMode,
   DiagramType,
@@ -16,7 +16,7 @@ import {
   InteractiveElementsMode,
 } from '../../services/EditorService';
 import { ElementSelection } from '../../Editor';
-import * as UML from './../../core/domain';
+import * as UML from './../../domain/Relationship';
 import Element, { ElementRepository } from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
 import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';

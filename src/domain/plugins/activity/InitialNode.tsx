@@ -1,5 +1,5 @@
 import React from 'react';
-import { Point, Size } from '../../../core/geometry';
+import { Point, Size } from '../../geo';
 import Element from './../../Element';
 import Boundary from '../../geo/Boundary';
 import { EditorMode } from '../../../services/EditorService';

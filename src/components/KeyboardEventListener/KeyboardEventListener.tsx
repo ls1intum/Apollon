@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Store as ReduxStore } from 'redux';
 import { connect } from 'react-redux';
-import { redo, undo } from './../../gui/redux';
+import { redo, undo } from './../../services/redux';
 
 class KeyboardEventListener extends Component<Props> {
   componentDidMount() {

@@ -4,7 +4,7 @@ import RelationshipKindSelect from "./RelationshipKindSelect";
 import RelationshipFlipIcon from "./RelationshipFlipIcon";
 import { PopupSection } from "../PopupSection";
 import { PopupSectionHeading } from "../PopupSectionHeading";
-import { LayoutedRelationship, Relationship, RelationshipEnd, RelationshipKind } from "./../../../core/domain";
+import { LayoutedRelationship, Relationship, RelationshipEnd, RelationshipKind } from "./../../../domain/Relationship";
 import Element from './../../../domain/Element';
 import { DiagramType } from "./../../../services/EditorService";
 

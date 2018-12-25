@@ -1,10 +1,15 @@
 import { LayoutedEntity, layoutEntity } from "./entity";
 import { computeRelationshipPath } from "./relationship";
-import { Relationship, UMLModel } from "../../core/domain";
+import { Relationship } from "../../domain/Relationship";
 import Element from './../../domain/Element';
-import { computeBoundingBox, Point, Rect, Size } from "../../core/geometry";
-import { flatten } from "../../core/utils";
+import { computeBoundingBox, Point, Rect, Size } from "../../domain/geo";
+import { flatten } from "../../domain/utils";
 import { UUID } from './../../domain/utils/uuid';
+
+export interface UMLModel {
+    entities: Element[];
+    relationships: Relationship[];
+}
 
 export interface LayoutedDiagram {
     size: Size;

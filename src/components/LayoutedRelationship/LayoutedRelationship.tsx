@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { withTheme } from "styled-components";
 import { Styles as Theme } from "./../Theme";
 import { ApollonMode, EditorMode, InteractiveElementsMode } from "../../services/EditorService";
-import { LayoutedRelationship as Relationship } from "./../../core/domain";
+import { LayoutedRelationship as Relationship } from "./../../domain/Relationship";
 import { getMarkerIdForRelationshipKind } from "./../../rendering/renderers/svg/defs/RelationshipMarkers";
 import RelationshipLabels from "./../../rendering/renderers/svg/RelationshipLabels";
 import { getSvgDasharrayForRelationshipKind } from "./../../rendering/renderers/svg/RenderedRelationship";

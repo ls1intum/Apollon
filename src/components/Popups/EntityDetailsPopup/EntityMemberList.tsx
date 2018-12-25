@@ -2,7 +2,7 @@ import * as React from "react";
 import styled from "styled-components";
 import EntityMemberLine from "./EntityMemberLine";
 import BlockInput from "../BlockInput";
-import { sanitizeWhiteSpace } from "./../../../core/utils";
+import { sanitizeWhiteSpace } from "../../../domain/utils";
 import newId, { UUID } from './../../../domain/utils/uuid';
 import { EntityMember } from '../../../domain/plugins/class/Member';
 

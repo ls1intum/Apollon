@@ -1,5 +1,5 @@
-import { EntityKind } from "../../core/domain";
-import { Size } from "../../core/geometry";
+import { EntityKind } from "../../domain/Element";
+import { Size } from "../../domain/geo";
 import { UUID } from './../../domain/utils/uuid';
 
 export const enum ItemTypes {

@@ -7,7 +7,7 @@ import {
   DragSource,
 } from 'react-dnd';
 import * as DragDrop from './dnd';
-import { EntityKind } from '../../core/domain';
+import { EntityKind } from '../../domain/Element';
 
 class Draggable extends Component<Props> {
   render() {

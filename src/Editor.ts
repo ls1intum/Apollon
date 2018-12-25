@@ -8,10 +8,9 @@ import EditorService, {
   DiagramType,
   ApollonMode,
 } from './services/EditorService';
-import { Relationship } from './core/domain';
+import { Relationship } from './domain/Relationship';
 import { ElementState, ElementRepository } from './domain/Element';
-import Element from './domain/Element';
-import { getAllRelationships } from './gui/redux';
+import { getAllRelationships } from './services/redux';
 import * as DiagramLayouter from './rendering/layouters/diagram';
 import { renderDiagramToSVG, RenderOptions, RenderedSVG } from './rendering/renderers/svg';
 

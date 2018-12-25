@@ -6,7 +6,7 @@ import styled from "styled-components";
 import * as DragDrop from "./dnd";
 import { State as ReduxState } from "./../Store";
 import Element, { ElementRepository } from "../../domain/Element";
-import { Rect, Size, snapPointToGrid } from "../../core/geometry";
+import { Rect, Size, snapPointToGrid } from "../../domain/geo";
 
 const LayerBase = styled.div`
     position: fixed;

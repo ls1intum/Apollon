@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { createRelationship } from './../../gui/redux';
+import { createRelationship } from './../../domain/Relationship/actions';
 import Element from '../../domain/Element';
 import { DiagramType } from '../../services/EditorService';
 import { Consumer, Connector } from '../LayoutedRelationship/RelationshipLayer';
-import { RectEdge } from '../../core/geometry';
+import { RectEdge } from '../../domain/geo';
 
 const connectorRadius = 20;
 

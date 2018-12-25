@@ -1,7 +1,7 @@
 import * as React from "react";
 import { getEntityMemberClipPathId } from "./defs/ClipPaths";
 import { RenderOptions } from "./index";
-import { EntityKind } from "../../../core/domain";
+import { EntityKind } from "../../../domain/Element";
 import {
     computeEntityHeaderHeight,
     ENTITY_BORDER_THICKNESS,

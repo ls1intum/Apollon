@@ -8,10 +8,9 @@ import {
   DropTargetSpec,
 } from 'react-dnd';
 import * as DragDrop from './../DragDrop/dnd';
-import { snapPointToGrid } from './../../core/geometry';
+import { snapPointToGrid } from '../../domain/geo';
 import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from '../../domain/Element';
-import { EntityKind } from '../../core/domain';
 import * as Plugins from './../../domain/plugins';
 
 class Droppable extends Component<Props> {

@@ -11,10 +11,10 @@ import {
 import ReduxState from './State';
 
 import EditorService from './../../services/EditorService';
-import interactiveElementsReducer from './../../gui/redux/interactiveElements/reducer';
-import relationshipsReducer from './../../gui/redux/relationships/reducer';
+import interactiveElementsReducer from './../../services/redux/interactiveElements/reducer';
+import relationshipsReducer from '../../domain/Relationship/reducer';
 import { ElementReducer } from './../../domain/Element';
-import { withUndoRedo } from './../../gui/redux/undoRedo';
+import { withUndoRedo } from './../../services/redux/undoRedo';
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;

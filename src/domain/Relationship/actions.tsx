@@ -1,6 +1,5 @@
-import React from 'react';
-import { Relationship, RelationshipEnd, RelationshipKind } from "../../../core/domain";
-import newId, { UUID } from './../../../domain/utils/uuid';
+import { Relationship, RelationshipEnd, RelationshipKind } from ".";
+import newId, { UUID } from '../utils/uuid';
 
 export type RelationshipsAction =
     | CreateRelationshipAction

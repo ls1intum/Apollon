@@ -1,12 +1,9 @@
 import * as React from "react";
 import EntityMemberList from "./EntityMemberList";
 import EntityMembersHeading from "./EntityMembersHeading";
-import { EntityRenderMode } from "./../../../core/domain";
 import Element from './../../../domain/Element';
 import { UUID } from './../../../domain/utils/uuid';
 import { EntityMember } from '../../../domain/plugins/class/Member';
-import * as Plugins from './../../../domain/plugins';
-import { EntityKind } from './../../../core/domain';
 
 export default class EntityAttributes extends React.Component<Props> {
     handleShowAttributesChange = (showAttributes: boolean) => {
@@ -46,7 +43,7 @@ export default class EntityAttributes extends React.Component<Props> {
 
 interface Props {
     entity: Element;
-    updateEntityRenderMode: (renderMode: EntityRenderMode) => void;
+    updateEntityRenderMode: (renderMode: any) => void;
     createEntityAttribute: (attribute: EntityMember) => void;
     updateEntityAttribute: (attribute: EntityMember) => void;
     deleteEntityAttribute: (memberId: UUID) => void;
