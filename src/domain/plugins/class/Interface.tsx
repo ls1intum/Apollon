@@ -1,25 +1,25 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import Element from './../../Element';
+import Container from './../../Container';
 import Boundary from '../../geo/Boundary';
 import Attribute from './Attribute';
 
-class Interface extends Element {
+class Interface extends Container {
   bounds: Boundary = { ...this.bounds, height: 80 };
 
   constructor(public name: string = 'Interface') {
     super(name);
 
-    const method1 = new Attribute('method1()');
-    method1.bounds.y = 50;
-    method1.owner = this;
-    this.ownedElements = [method1];
+    // const method1 = new Attribute('method1()');
+    // method1.bounds.y = 50;
+    // method1.owner = this.id;
+    // this.ownedElements = [method1];
   }
 }
 
 const Background = styled.rect``;
 
-const Container = styled.svg`
+const StyledContainer = styled.svg`
   overflow: visible;
 
   ${Background} {
@@ -32,7 +32,7 @@ export class InterfaceComponent extends Component<Props> {
     const { element, children } = this.props;
     const { width, height } = element.bounds;
     return (
-      <Container width={width} height={height}>
+      <StyledContainer width={width} height={height}>
         <Background width={width} height={height} stroke="black" />
         <svg width={width} height={50}>
           <g transform="translate(0, -1)">
@@ -50,7 +50,7 @@ export class InterfaceComponent extends Component<Props> {
         <rect x="0" y={49} width="100%" height="1" fill="black" />
 
         {children}
-      </Container>
+      </StyledContainer>
     );
   }
 }

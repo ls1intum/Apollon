@@ -7,7 +7,7 @@ export type RelationshipsAction =
     | FlipRelationshipsAction
     | UpdateRelationshipAction;
 
-interface CreateRelationshipAction {
+export interface CreateRelationshipAction {
     type: "CREATE_RELATIONSHIP";
     relationship: Relationship;
 }
@@ -44,7 +44,6 @@ export function createRelationship(
             target,
             straightLine: false,
             owner: null,
-            ownedElements: [],
         }
     };
 }

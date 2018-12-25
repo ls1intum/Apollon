@@ -11,6 +11,7 @@ import * as DragDrop from './../DragDrop/dnd';
 import { snapPointToGrid } from '../../domain/geo';
 import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from '../../domain/Element';
+import Container from '../../domain/Container';
 import * as Plugins from './../../domain/plugins';
 
 class Droppable extends Component<Props> {
@@ -72,15 +73,15 @@ const dropTargetSpec: DropTargetSpec<Props> = {
         };
 
         const element: Element = new (Plugins as { [clazz: string]: any })[item.kind]();
-        element.owner = props.element;
-        props.element.ownedElements.push(element);
+        element.owner = props.element.id;
+        (props.element as Container).ownedElements.push(element.id);
 
-        let owner: Element | null = element.owner;
-        while (owner) {
-          positionOnCanvas.x -= owner.bounds.x;
-          positionOnCanvas.y -= owner.bounds.y;
-          owner = owner.owner;
-        }
+        // let owner: Element | null = element.owner;
+        // while (owner) {
+        //   positionOnCanvas.x -= owner.bounds.x;
+        //   positionOnCanvas.y -= owner.bounds.y;
+        //   owner = owner.owner;
+        // }
 
         const actualPosition = snapPointToGrid(
           positionOnCanvas,

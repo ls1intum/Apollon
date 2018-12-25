@@ -236,12 +236,12 @@ class EntityDetailsPopup extends React.Component<Props> {
             y: entity.bounds.y - 20
         };
 
-        let owner = entity.owner;
-        while (owner) {
-            position.x += owner.bounds.x;
-            position.y += owner.bounds.y;
-            owner = owner.owner;
-        }
+        // let owner = entity.owner;
+        // while (owner) {
+        //     position.x += owner.bounds.x;
+        //     position.y += owner.bounds.y;
+        //     owner = owner.owner;
+        // }
 
         return (
             <Popup position={position} onRequestClose={this.props.onRequestClose} canvasScrollContainer={this.props.canvasScrollContainer}>

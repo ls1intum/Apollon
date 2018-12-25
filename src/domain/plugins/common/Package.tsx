@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import Element from './../../Element';
+import Container from './../../Container';
 
-class Package extends Element {
+class Package extends Container {
   constructor(public name: string = 'Package') {
     super(name);
   }
@@ -10,7 +10,7 @@ class Package extends Element {
 
 const Background = styled(({ component, ...props }) => React.cloneElement(component, props))``;
 
-const Container = styled.svg`
+const StyledContainer = styled.svg`
   overflow: visible;
 
   ${Background} {
@@ -23,11 +23,11 @@ export class PackageComponent extends Component<Props> {
     const { element, children } = this.props;
     const { width, height } = element.bounds;
     return (
-      <Container width={width} height={height}>
+      <StyledContainer width={width} height={height}>
         <Background component={<path />} d={`M 0 10 V 0 H 40 V 10`} fill="#ffffff" stroke="#000000" />
         <Background component={<rect />} y="10" width="100%" height={height - 10} stroke="#000000" />
         {children}
-      </Container>
+      </StyledContainer>
     );
   }
 }

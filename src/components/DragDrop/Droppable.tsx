@@ -74,6 +74,7 @@ const dropTargetSpec: DropTargetSpec<Props> = {
         );
 
         const element: Element = new (Plugins as { [clazz: string]: any })[item.kind]();
+        // const elements = [...element.ownedElements, element]
         element.bounds = { ...element.bounds, ...actualPosition };
         props.create(element);
       }

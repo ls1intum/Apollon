@@ -14,6 +14,7 @@ import EditorService from './../../services/EditorService';
 import interactiveElementsReducer from './../../services/redux/interactiveElements/reducer';
 import relationshipsReducer from '../../domain/Relationship/reducer';
 import { ElementReducer } from './../../domain/Element';
+import { DiagramReducer } from './../../domain/Diagram';
 import { withUndoRedo } from './../../services/redux/undoRedo';
 
 class Store extends React.Component<Props> {
@@ -24,6 +25,7 @@ class Store extends React.Component<Props> {
     interactiveElements: interactiveElementsReducer,
     editor: EditorService.reducer,
     elements: ElementReducer,
+    diagram: DiagramReducer,
   };
 
   constructor(props: Readonly<Props>) {

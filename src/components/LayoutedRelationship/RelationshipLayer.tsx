@@ -67,12 +67,12 @@ class RelationshipProvider extends Component<Props, State> {
     let x = connector.center.x;
     let y = connector.center.y;
 
-    let owner = connector.element.owner;
-    while (owner) {
-      x += owner.bounds.x;
-      y += owner.bounds.y;
-      owner = owner.owner;
-    }
+    // let owner = connector.element.owner;
+    // while (owner) {
+    //   x += owner.bounds.x;
+    //   y += owner.bounds.y;
+    //   owner = owner.owner;
+    // }
 
     connector.center.x = x;
     connector.center.y = y;

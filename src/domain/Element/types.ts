@@ -1,5 +1,4 @@
 import Element from '.';
-import Omit from '../utils/Omit';
 
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',
@@ -7,11 +6,6 @@ export const enum ActionTypes {
   DELETE = '@@element/DELETE',
 }
 
-export interface E extends Omit<Element, 'ownedElements' | 'owner'> {
-  ownedElements: string[];
-  owner: string | null;
-}
-
 export interface ElementState {
-  readonly [id: string]: E;
+  readonly [id: string]: Element;
 }

@@ -5,7 +5,7 @@ interface ContainerProps {
   moving: boolean;
 }
 
-export const Container = styled.svg.attrs({
+export const StyledContainer = styled.svg.attrs({
   pointerEvents: 'all',
 })<ContainerProps>`
   cursor: ${({ movable }) => (movable ? 'move' : 'default')};

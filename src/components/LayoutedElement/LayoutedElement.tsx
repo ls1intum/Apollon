@@ -20,21 +20,24 @@ import {
   getAllInteractiveElementIds,
   toggleInteractiveElements,
 } from './../../services/redux';
+import Container from './../../domain/Container';
 
 import ResizeHandler, { Direction } from './ResizeHandler';
 import Port from './Port';
 import Droppable from './Droppable';
 
 import * as Plugins from './../../domain/plugins';
-import { Container } from './styles';
+import { StyledContainer } from './styles';
+import { PopupContext } from '../Popups/PopupLayer';
 
 class LayoutedElement extends Component<Props, State> {
   state: State = {
+    element: this.props.getById(this.props.element),
     hover: false,
     selected: false,
     moving: false,
     resizing: false,
-    bounds: { ...this.props.element.bounds },
+    // bounds: { ...this.props.element.bounds },
     features: this.getFeatures(this.props),
   };
 
@@ -101,28 +104,23 @@ class LayoutedElement extends Component<Props, State> {
     this.toggleEntityInteractiveElement();
   };
 
-  private onDoubleClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    this.props.openDetailsPopup(this.props.element.id);
-  };
-
   private onMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
     const bounds = event.currentTarget.firstElementChild!.getBoundingClientRect();
     const element: Element = {
-      ...this.props.element,
+      ...this.state.element,
       selected: event.shiftKey ? !this.state.selected : true,
     };
 
     let x = event.clientX - bounds.left;
     let y = event.clientY - bounds.top;
 
-    let owner = this.props.element.owner;
-    while (owner) {
-      x += owner.bounds.x;
-      y += owner.bounds.y;
-      owner = owner.owner;
-    }
+    // let owner = this.state.element.owner;
+    // while (owner) {
+    //   x += owner.bounds.x;
+    //   y += owner.bounds.y;
+    //   owner = owner.owner;
+    // }
 
     this.setState({
       selected: element.selected,
@@ -139,7 +137,7 @@ class LayoutedElement extends Component<Props, State> {
     )
       return;
     if (this.state.moving && this.state.offset) {
-      const { bounds } = this.state;
+      const { bounds } = this.state.element;
       let x = event.layerX - this.state.offset.x;
       let y = event.layerY - this.state.offset.y;
 
@@ -148,16 +146,15 @@ class LayoutedElement extends Component<Props, State> {
       if (bounds.x === x && bounds.y == y) return;
 
       const element: Element = {
-        ...this.props.element,
+        ...this.state.element,
         bounds: { ...bounds, x, y },
       };
-      this.setState({
-        bounds: element.bounds,
-      });
+      this.setState({ element });
       this.throttled_update(element);
     }
     if (this.state.resizing) {
-      const { bounds, offset } = this.state;
+      const { offset } = this.state;
+      const { bounds } = this.state.element;
       let width = event.layerX - bounds.x;
       let height = event.layerY - bounds.y;
 
@@ -170,12 +167,10 @@ class LayoutedElement extends Component<Props, State> {
       height = Math.round(height / 10) * 10;
 
       const element: Element = {
-        ...this.props.element,
+        ...this.state.element,
         bounds: { ...bounds, width, height },
       };
-      this.setState({
-        bounds: element.bounds,
-      });
+      this.setState({ element });
       this.throttled_update(element);
     }
   };
@@ -192,7 +187,7 @@ class LayoutedElement extends Component<Props, State> {
   private unselect = (event: MouseEvent) => {
     if (!this.state.selected || this.state.hover || event.shiftKey) return;
     const element: Element = {
-      ...this.props.element,
+      ...this.state.element,
       selected: false,
     };
     this.setState({
@@ -207,12 +202,12 @@ class LayoutedElement extends Component<Props, State> {
     let x = 0;
     let y = 0;
 
-    let owner = this.props.element.owner;
-    while (owner) {
-      x += owner.bounds.x;
-      y += owner.bounds.y;
-      owner = owner.owner;
-    }
+    // let owner = this.state.element.owner;
+    // while (owner) {
+    //   x += owner.bounds.x;
+    //   y += owner.bounds.y;
+    //   owner = owner.owner;
+    // }
 
     this.setState({
       selected: true,
@@ -225,7 +220,7 @@ class LayoutedElement extends Component<Props, State> {
   private throttled_update = throttled(this.props.update, 100);
 
   toggleEntityInteractiveElement = () => {
-    const { element: entity, interactiveElementIds } = this.props;
+    const { element, interactiveElementIds } = this.props;
 
     const interactiveMemberIdsOfEntity = [
       // ...entity.attributes.map(attr => attr.id),
@@ -233,20 +228,20 @@ class LayoutedElement extends Component<Props, State> {
     ].filter(id => interactiveElementIds.has(id));
 
     this.props.onToggleInteractiveElements(
-      entity.id,
+      element,
       ...interactiveMemberIdsOfEntity
     );
   };
 
-  render() {
+  render() { console.log('render LayoutedElement', this.state.element.name);
     const {
-      element,
       editorMode,
       interactiveElementsMode,
       interactiveElementIds,
     } = this.props;
+    const { element } = this.state;
 
-    const { width, height } = this.state.bounds;
+    const { width, height } = element.bounds;
 
     const { features } = this.state;
 
@@ -254,107 +249,131 @@ class LayoutedElement extends Component<Props, State> {
 
     return (
       <Droppable element={element} container={this.props.container}>
-        <Container
-          {...this.state.bounds}
-          onMouseOver={
-            (features.elementIsHoverable && this.onMouseOver) || undefined
-          }
-          onMouseOut={
-            (features.elementIsHoverable && this.onMouseLeave) || undefined
-          }
-          onMouseDown={
-            (features.elementIsSelectable && this.onMouseDown) || undefined
-          }
-          onClick={
-            (features.elementIsInteractable && this.onClick) || undefined
-          }
-          onDoubleClick={
-            (features.elementIsEditable && this.onDoubleClick) || undefined
-          }
-          movable={this.state.features.elementIsMovable}
-          moving={this.state.moving}
-        >
-          {features.elementIsSelectable && this.state.selected && (
-            <g>
-              <rect
-                x={-3}
-                y={-3}
-                width={width + 6}
-                height={height + 6}
-                fill="none"
-                stroke={this.props.theme.highlightColor}
-                strokeWidth={5}
-              />
-            </g>
-          )}
-          <ThemeProvider
-            theme={{
-              background:
-                editorMode === EditorMode.InteractiveElementsView
-                  ? interactiveElementIds.has(element.id)
-                    ? this.props.theme.interactiveAreaColor
-                    : this.state.hover
-                    ? this.props.theme.interactiveAreaHoverColor
-                    : undefined
-                  : undefined,
-            }}
-          >
-            {(!(
-              editorMode === EditorMode.InteractiveElementsView &&
-              interactiveElementsMode === InteractiveElementsMode.Hidden &&
-              interactiveElementIds.has(element.id)
-            ) && (
-              <Component element={element}>
-                {element.ownedElements.map((child: Element) => {
-                  return (
-                    <ComposeLayoutedElement
-                      key={child.id}
-                      element={child}
-                      container={this.props.container}
-                      openDetailsPopup={this.props.openDetailsPopup}
+        <PopupContext.Consumer>
+          {context =>
+            context && (
+              <StyledContainer
+                {...element.bounds}
+                onMouseOver={
+                  (features.elementIsHoverable && this.onMouseOver) || undefined
+                }
+                onMouseOut={
+                  (features.elementIsHoverable && this.onMouseLeave) ||
+                  undefined
+                }
+                onMouseDown={
+                  (features.elementIsSelectable && this.onMouseDown) ||
+                  undefined
+                }
+                onClick={
+                  (features.elementIsInteractable && this.onClick) || undefined
+                }
+                onDoubleClick={
+                  (features.elementIsEditable &&
+                    ((event: React.MouseEvent) => {
+                      event.stopPropagation();
+                      context.showElement(element);
+                    })) ||
+                  undefined
+                }
+                movable={this.state.features.elementIsMovable}
+                moving={this.state.moving}
+              >
+                {features.elementIsSelectable && this.state.selected && (
+                  <g>
+                    <rect
+                      x={-3}
+                      y={-3}
+                      width={width + 6}
+                      height={height + 6}
+                      fill="none"
+                      stroke={this.props.theme.highlightColor}
+                      strokeWidth={5}
                     />
-                  );
-                })}
-              </Component>
-            )) || <></>}
-          </ThemeProvider>
-          {features.elementIsResizable && this.state.selected && (
-            <g transform="translate(-9, -9)">
-              <ResizeHandler
-                direction={Direction.SE}
-                onMouseDown={this.startResize(Direction.SE)}
-              />
-            </g>
-          )}
-          {features.elementHasPorts && (
-            <g>
-              <Port element={element} show={this.state.hover} rectEdge="TOP" />
-              <Port
-                element={element}
-                show={this.state.hover}
-                rectEdge="RIGHT"
-              />
-              <Port
-                element={element}
-                show={this.state.hover}
-                rectEdge="BOTTOM"
-              />
-              <Port element={element} show={this.state.hover} rectEdge="LEFT" />
-            </g>
-          )}
-        </Container>
+                  </g>
+                )}
+                <ThemeProvider
+                  theme={{
+                    background:
+                      editorMode === EditorMode.InteractiveElementsView
+                        ? interactiveElementIds.has(element.id)
+                          ? this.props.theme.interactiveAreaColor
+                          : this.state.hover
+                          ? this.props.theme.interactiveAreaHoverColor
+                          : undefined
+                        : undefined,
+                  }}
+                >
+                  {(!(
+                    editorMode === EditorMode.InteractiveElementsView &&
+                    interactiveElementsMode ===
+                      InteractiveElementsMode.Hidden &&
+                    interactiveElementIds.has(element.id)
+                  ) && (
+                    <Component element={element}>
+                      {'ownedElements' in element &&
+                        (element as Container).ownedElements.map(
+                          (child: string) => {
+                            return (
+                              <ComposeLayoutedElement
+                                key={child}
+                                element={child}
+                                container={this.props.container}
+                              />
+                            );
+                          }
+                        )}
+                    </Component>
+                  )) || <></>}
+                </ThemeProvider>
+                {features.elementIsResizable && this.state.selected && (
+                  <g transform="translate(-9, -9)">
+                    <ResizeHandler
+                      direction={Direction.SE}
+                      onMouseDown={this.startResize(Direction.SE)}
+                    />
+                  </g>
+                )}
+                {features.elementHasPorts && (
+                  <g>
+                    <Port
+                      element={element}
+                      show={this.state.hover}
+                      rectEdge="TOP"
+                    />
+                    <Port
+                      element={element}
+                      show={this.state.hover}
+                      rectEdge="RIGHT"
+                    />
+                    <Port
+                      element={element}
+                      show={this.state.hover}
+                      rectEdge="BOTTOM"
+                    />
+                    <Port
+                      element={element}
+                      show={this.state.hover}
+                      rectEdge="LEFT"
+                    />
+                  </g>
+                )}
+              </StyledContainer>
+            )
+          }
+        </PopupContext.Consumer>
       </Droppable>
     );
   }
 }
 
 interface OwnProps {
-  element: Element;
+  element: string;
   container: RefObject<HTMLDivElement>;
-  openDetailsPopup: (id: string) => void;
 }
 
 interface StateProps {
+  getById: (id: string) => Element;
   editorMode: EditorMode;
   apollonMode: ApollonMode;
   interactiveElementsMode: InteractiveElementsMode;
@@ -373,18 +392,20 @@ interface ThemeProps {
 type Props = OwnProps & StateProps & ThemeProps & DispatchProps;
 
 interface State {
+  element: Element;
   hover: boolean;
   selected: boolean;
   moving: boolean;
   direction?: Direction;
   resizing: boolean;
-  bounds: { x: number; y: number; width: number; height: number };
+  // bounds: { x: number; y: number; width: number; height: number };
   offset?: { x: number; y: number };
   features: { [feature: string]: boolean };
 }
 
 function mapStateToProps(state: ReduxState): StateProps {
   return {
+    getById: (id: string) => ElementRepository.getById(state, id),
     editorMode: state.editor.editorMode,
     apollonMode: state.editor.mode,
     interactiveElementsMode: state.editor.interactiveMode,

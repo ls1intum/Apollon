@@ -18,6 +18,11 @@ export const getAllRelationships = createSelector<
     (allIds, byId) => allIds.map(id => byId[id])
 );
 
+export const getbyId = (state: ReduxState, id: string): LayoutedRelationship => {
+    const relationships = getAllLayoutedRelationships(state);
+    return relationships.find(r => r.relationship.id === id)!;
+}
+
 export const getAllLayoutedRelationships = createSelector<
     ReduxState,
     Element[],
@@ -25,17 +30,17 @@ export const getAllLayoutedRelationships = createSelector<
     LayoutedRelationship[]
 >(ElementRepository.read, getAllRelationships, (entities, relationships) =>
     relationships.map<LayoutedRelationship>(relationship => {
-        const find = (elements: Element[], id: string): Element | null => {
-            if (!elements.length) return null;
+        // const find = (elements: Element[], id: string): Element | null => {
+        //     if (!elements.length) return null;
 
-            const element = elements.find(e => e.id === id);
-            if (element) return element;
+        //     const element = elements.find(e => e.id === id);
+        //     if (element) return element;
 
-            const children = elements.reduce<Element[]>((a, e) => [ ...a, ...e.ownedElements], []);
-            return find(children, id);
-        }
-        const source = find(entities, relationship.source.entityId);
-        const target = find(entities, relationship.target.entityId);
+        //     const children = elements.reduce<Element[]>((a, e) => [ ...a, ...e.ownedElements], []);
+        //     return find(children, id);
+        // }
+        const source = entities.find(e => e.id === relationship.source.entityId);
+        const target = entities.find(e => e.id === relationship.target.entityId);
 
         if (!source || !target) {
             return {
@@ -49,18 +54,18 @@ export const getAllLayoutedRelationships = createSelector<
         const sourceRect = { ...source.bounds };
         const targetRect = { ...target.bounds };
 
-        let owner = source.owner;
-        while (owner) {
-          sourceRect.x += owner.bounds.x;
-          sourceRect.y += owner.bounds.y;
-          owner = owner.owner;
-        }
-        owner = target.owner;
-        while (owner) {
-          targetRect.x += owner.bounds.x;
-          targetRect.y += owner.bounds.y;
-          owner = owner.owner;
-        }
+        // let owner = source.owner;
+        // while (owner) {
+        //   sourceRect.x += owner.bounds.x;
+        //   sourceRect.y += owner.bounds.y;
+        //   owner = owner.owner;
+        // }
+        // owner = target.owner;
+        // while (owner) {
+        //   targetRect.x += owner.bounds.x;
+        //   targetRect.y += owner.bounds.y;
+        //   owner = owner.owner;
+        // }
 
         const path = computeRelationshipPath(
             sourceRect,

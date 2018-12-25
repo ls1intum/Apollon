@@ -80,7 +80,7 @@ export function renderRelationshipToSVG(
     const svg = renderReactElementToString(
         <Svg width={width} height={height} fontFamily={renderOptions.fontFamily}>
             <defs>
-                <RelationshipMarkers onComponentDidMount={undefined} />
+                <RelationshipMarkers />
             </defs>
             <Translate dx={dx} dy={dy}>
                 <RenderedRelationship

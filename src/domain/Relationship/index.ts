@@ -9,6 +9,9 @@ export interface Relationship extends Element {
   target: RelationshipEnd;
   straightLine: boolean;
 }
+export class Relationship {}
+
+export default Relationship
 
 export const enum RelationshipKind {
   Aggregation = "AGGREGATION",
