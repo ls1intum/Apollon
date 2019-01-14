@@ -40,7 +40,7 @@ export class EnumerationComponent extends Component<Props> {
     return (
       <StyledContainer width={width} height={height}>
         <Background width={width} height={height} stroke="black" />
-        <svg width={width} height={50}>
+        <svg width={width} height={50} style={{ pointerEvents: 'none' }}>
           <g transform="translate(0, -1)">
             <rect y="100%" width="100%" height="1" fill="black" />
           </g>

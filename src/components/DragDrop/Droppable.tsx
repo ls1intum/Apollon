@@ -10,8 +10,10 @@ import {
 import * as DragDrop from './../DragDrop/dnd';
 import { snapPointToGrid } from '../../domain/geo';
 import { State as ReduxState } from './../Store';
-import Element, { ElementRepository } from '../../domain/Element';
+import Element, { ElementRepository, EntityKind } from '../../domain/Element';
 import * as Plugins from './../../domain/plugins';
+import Attribute from './../../domain/plugins/class/Attribute';
+import Container from '../../domain/Container';
 
 class Droppable extends Component<Props> {
   render() {
@@ -73,7 +75,36 @@ const dropTargetSpec: DropTargetSpec<Props> = {
           props.gridSize
         );
 
-        const element: Element = new (Plugins as { [clazz: string]: any })[item.kind]();
+        let elements: Element[] = [];
+        switch (item.kind) {
+          case EntityKind.Enumeration:
+            const enumInstance: Container = new (Plugins as { [clazz: string]: any })[
+              item.kind
+            ]();
+            enumInstance.bounds = { ...enumInstance.bounds, ...actualPosition };
+            const attr1 = new Attribute('Case1');
+            attr1.bounds.y = 50;
+            attr1.owner = enumInstance.id;
+            const attr2 = new Attribute('Case2');
+            attr2.bounds.y = 80;
+            attr2.owner = enumInstance.id;
+            const attr3 = new Attribute('Case3');
+            attr3.bounds.y = 110;
+            attr3.owner = enumInstance.id;
+            enumInstance.ownedElements = [attr1.id, attr2.id, attr3.id];
+            elements = [attr1, attr2, attr3, enumInstance];
+            break;
+        }
+
+        if (elements.length) {
+          console.log('new elements', elements);
+          elements.map(props.create);
+          return
+        }
+
+        const element: Element = new (Plugins as { [clazz: string]: any })[
+          item.kind
+        ]();
         // const elements = [...element.ownedElements, element]
         element.bounds = { ...element.bounds, ...actualPosition };
         props.create(element);

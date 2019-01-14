@@ -1,3 +1,3 @@
-type Omit<T, K extends keyof T> = { [P in Exclude<keyof T, K>]: T[P] };
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 export default Omit;

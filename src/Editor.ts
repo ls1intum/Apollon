@@ -13,6 +13,7 @@ import { ElementState, ElementRepository } from './domain/Element';
 import { getAllRelationships } from './services/redux';
 import * as DiagramLayouter from './rendering/layouters/diagram';
 import { renderDiagramToSVG, RenderOptions, RenderedSVG } from './rendering/renderers/svg';
+import { DiagramState } from './domain/Diagram';
 
 export interface ElementSelection {
   entityIds: string[];
@@ -36,6 +37,7 @@ interface ExternalState {
     gridSize: number;
   };
   elements: ElementState;
+  diagram: DiagramState;
 }
 
 export interface ApollonOptions {
@@ -138,6 +140,7 @@ class Editor {
       relationships: state.relationships,
       interactiveElements: state.interactiveElements,
       elements: state.elements,
+      diagram: state.diagram,
     };
   }
 
