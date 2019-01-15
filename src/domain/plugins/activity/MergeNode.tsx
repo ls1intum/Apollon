@@ -1,35 +1,31 @@
-import React from 'react';
-import { Point, Size } from '../../geo';
+import React, { SFC } from 'react';
 import Element from './../../Element';
-import Boundary from '../../geo/Boundary';
-import { EditorMode } from '../../../services/EditorService';
 
 class MergeNode extends Element {
-  bounds: Boundary = { ...this.bounds, height: 60 }
-
-  constructor(public name: string = 'ActionNode', public position: Point, public size: Size) {
+  constructor(public name: string = 'Condition') {
     super(name);
+    this.bounds = { ...this.bounds, height: 60 };
   }
+}
 
-  public render(options: any): JSX.Element {
-    const { width, height } = this.bounds;
+export const MergeNodeComponent: SFC<Props> = ({ element }) => (
+  <g>
+    <polyline
+      points={`${element.bounds.width / 2} 0, ${element.bounds.width} ${element
+        .bounds.height / 2}, ${element.bounds.width / 2} ${
+        element.bounds.height
+      }, 0 ${element.bounds.height / 2}, ${element.bounds.width / 2} 0`}
+      stroke="black"
+      fill="white"
+    />
+    <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle">
+      {element.name}
+    </text>
+  </g>
+);
 
-    const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements } = options;
-
-    return (
-      <svg id={`class-${this.id}`} width={width} height={height} style={{ overflow: 'visible' }}>
-        <rect width="100%" height="100%" fill="none" stroke="none" />
-        <polyline points={`${width / 2} 0, ${width} ${height / 2}, ${width / 2} ${height}, 0 ${height / 2}, ${width / 2} 0`} stroke="black" fill={
-            editorMode === EditorMode.InteractiveElementsView &&
-            (hover ||
-              interactiveElementIds.has(this.id))
-              ? theme.interactiveAreaColor
-              : 'white'
-          }
-        />
-      </svg>
-    );
-  }
+interface Props {
+  element: MergeNode;
 }
 
 export default MergeNode;

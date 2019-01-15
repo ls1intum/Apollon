@@ -1,10 +1,10 @@
 import { Reducer } from 'redux';
 import Diagram from './Diagram';
-import { DiagramState } from './DiagramTypes';
+import { DiagramType, DiagramState } from './DiagramTypes';
 import { Actions, ActionTypes } from './../Element';
 import { CreateRelationshipAction } from './../Relationship/actions'
 
-const initialState: DiagramState = new Diagram();
+const initialState: DiagramState = new Diagram(DiagramType.ActivityDiagram);
 
 const ElementReducer: Reducer<DiagramState, Actions | CreateRelationshipAction> = (
   state: DiagramState = initialState,

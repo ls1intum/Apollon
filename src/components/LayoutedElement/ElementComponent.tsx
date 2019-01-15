@@ -14,6 +14,16 @@ const Svg = styled.svg.attrs({
 })<SvgProps>`
   overflow: visible;
   opacity: ${({ moving }) => (moving ? 0.35 : 1)};
+
+  & text {
+    cursor: default;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+    font-family: ${props => props.theme.fontFamily};
+  }
 `;
 
 class ElementComponent extends Component<Props> {

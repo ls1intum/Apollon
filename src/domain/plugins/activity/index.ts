@@ -1,6 +1,6 @@
-export { default as InitialNode } from './InitialNode';
-export { default as FinalNode } from './FinalNode';
-export { default as ActionNode } from './ActionNode';
-export { default as ObjectNode } from './ObjectNode';
-export { default as MergeNode } from './MergeNode';
-export { default as ForkNode } from './ForkNode';
+export { default as InitialNode, InitialNodeComponent } from './InitialNode';
+export { default as FinalNode, FinalNodeComponent } from './FinalNode';
+export { default as ActionNode, ActionNodeComponent } from './ActionNode';
+export { default as ObjectNode, ObjectNodeComponent } from './ObjectNode';
+export { default as MergeNode, MergeNodeComponent } from './MergeNode';
+export { default as ForkNode, ForkNodeComponent } from './ForkNode';

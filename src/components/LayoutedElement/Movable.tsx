@@ -35,8 +35,8 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
         if (!this.props.element.selected) return;
         const node = findDOMNode(this) as HTMLElement;
         const bounds = node.getBoundingClientRect();
-        let x = event.layerX - bounds.left;
-        let y = event.layerY - bounds.top;
+        let x = event.clientX - bounds.left - this.props.canvas.current!.parentElement!.parentElement!.getBoundingClientRect().left;
+        let y = event.clientY - bounds.top - this.props.canvas.current!.parentElement!.parentElement!.getBoundingClientRect().top;
 
         let ownerID = this.props.element.owner;
         while (ownerID) {

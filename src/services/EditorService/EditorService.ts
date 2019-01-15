@@ -1,7 +1,6 @@
 import { Reducer, Action as ReduxAction } from 'redux';
 import {
   ActionTypes,
-  DiagramType,
   ApollonMode,
   EditorMode,
   InteractiveElementsMode,
@@ -22,7 +21,6 @@ class EditorService {
       width: 1600,
       height: 800,
     },
-    diagramType: DiagramType.ClassDiagram,
     mode: ApollonMode.Full,
     editorMode: EditorMode.ModelingView,
     interactiveMode: InteractiveElementsMode.Highlighted,

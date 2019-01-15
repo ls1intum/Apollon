@@ -42,7 +42,6 @@
                 id="ChangeDiagramTypeClass"
                 name="diagramType"
                 value="CLASS"
-                checked
               />
               Class Diagram
             </label>
@@ -53,6 +52,7 @@
                 id="ChangeDiagramTypeActivity"
                 name="diagramType"
                 value="ACTIVITY"
+                checked
               />
               Activity Diagram
             </label>
@@ -137,7 +137,7 @@
         let editor;
         let options = {
           initialState: JSON.parse(window.localStorage.getItem('apollon')),
-          diagramType: 'CLASS',
+          diagramType: 'ACTIVITY',
           mode: 'FULL',
           theme: {
             fontFamily:

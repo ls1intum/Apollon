@@ -1,5 +1,6 @@
 import Container from './../Container';
 import Boundary from './../geo/Boundary';
+import { DiagramType } from './DiagramTypes';
 
 class Diagram extends Container {
   bounds: Boundary = {
@@ -11,7 +12,7 @@ class Diagram extends Container {
   ownedElements: string[] = [];
   ownedRelationships: string[] = [];
 
-  constructor() {
+  constructor(public type: DiagramType) {
     super('');
   }
 }

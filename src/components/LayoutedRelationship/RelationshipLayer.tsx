@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import { RectEdge, Point } from '../../domain/geo';
-import { DiagramType } from '../../services/EditorService';
+import { DiagramType } from './../../domain/Diagram';
 import { createRelationship } from '../../domain/Relationship/actions';
 import Element from '../../domain/Element';
 import { RelationshipKind } from '../../domain/Relationship';
@@ -161,7 +161,7 @@ interface State {
 }
 
 const mapStateToProps = (state: ReduxState) => ({
-  diagramType: state.editor.diagramType,
+  diagramType: state.diagram.type,
 });
 
 export default connect(

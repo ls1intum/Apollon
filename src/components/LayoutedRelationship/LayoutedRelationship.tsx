@@ -40,6 +40,12 @@ class LayoutedRelationship extends React.Component<Props, State> {
       );
   }
 
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    if (prevProps !== this.props) {
+      this.state.relationship = this.props.getById(this.props.relationship);
+    }
+  }
+
   private onMouseOver = (event: React.MouseEvent) => {
     this.setState({ hover: true });
   };

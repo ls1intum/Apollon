@@ -7,25 +7,6 @@ import { Consumer } from './../Connectable/ConnectContext';
 
 const connectable = (WrappedComponent: typeof ElementComponent) => {
   class Selectable extends Component<Props, State> {
-    ports: Port[] = [
-      {
-        element: this.props.element,
-        location: 'N',
-      },
-      {
-        element: this.props.element,
-        location: 'E',
-      },
-      {
-        element: this.props.element,
-        location: 'S',
-      },
-      {
-        element: this.props.element,
-        location: 'W',
-      },
-    ];
-
     private calculatePath(port: Port): string {
       const { x, y, width, height } = this.props.element.bounds;
       switch (port.location) {
@@ -44,6 +25,24 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
 
     render() {
       const { element } = this.props;
+      const ports: Port[] = [
+        {
+          element: element,
+          location: 'N',
+        },
+        {
+          element: element,
+          location: 'E',
+        },
+        {
+          element: element,
+          location: 'S',
+        },
+        {
+          element: element,
+          location: 'W',
+        },
+      ];
       return (
         <WrappedComponent {...this.props}>
           {this.props.children}
@@ -52,7 +51,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
               return (
                 context &&
                 (element.selected || context.isDragging) &&
-                this.ports.map(port => (
+                ports.map(port => (
                   <path
                     key={port.location}
                     d={this.calculatePath(port)}

@@ -6,7 +6,7 @@ import BlockInput from "../BlockInput";
 import { PopupSectionHeading } from "../PopupSectionHeading";
 import { RelationshipEnd } from "./../../../domain/Relationship";
 import Element from './../../../domain/Element';
-import { DiagramType } from "../../../services/EditorService";
+import { DiagramType } from "./../../../domain/Diagram";
 import { RectEdge } from "../../../domain/geo";
 import { UUID } from './../../../domain/utils/uuid';
 

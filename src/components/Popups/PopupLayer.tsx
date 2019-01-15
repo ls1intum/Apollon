@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Element from './../../domain/Element';
 import { LayoutedRelationship } from './../../domain/Relationship';
 import { State as ReduxState } from './../Store';
-import { DiagramType } from '../../services/EditorService';
+import { DiagramType } from './../../domain/Diagram';
 import EntityDetailsPopup from './EntityDetailsPopup';
 import RelationshipDetailsPopup from './RelationshipDetailsPopup';
 
@@ -87,7 +87,7 @@ interface State {
 
 function mapStateToProps(state: ReduxState): StateProps {
   return {
-    diagramType: state.editor.diagramType,
+    diagramType: state.diagram.type,
   };
 }
 

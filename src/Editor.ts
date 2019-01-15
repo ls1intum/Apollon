@@ -5,7 +5,6 @@ import { State as ReduxState } from './components/Store';
 import Application from './scenes/Application';
 import { Styles } from './components/Theme';
 import EditorService, {
-  DiagramType,
   ApollonMode,
 } from './services/EditorService';
 import { Relationship } from './domain/Relationship';
@@ -13,7 +12,7 @@ import { ElementState, ElementRepository } from './domain/Element';
 import { getAllRelationships } from './services/redux';
 import * as DiagramLayouter from './rendering/layouters/diagram';
 import { renderDiagramToSVG, RenderOptions, RenderedSVG } from './rendering/renderers/svg';
-import { DiagramState } from './domain/Diagram';
+import Diagram, { DiagramType, DiagramState } from './domain/Diagram';
 
 export interface ElementSelection {
   entityIds: string[];
@@ -42,7 +41,7 @@ interface ExternalState {
 
 export interface ApollonOptions {
   initialState?: Partial<ExternalState>;
-  diagramType?: DiagramType;
+  diagramType: DiagramType;
   mode?: ApollonMode;
   theme?: Partial<Styles>;
 }
@@ -58,8 +57,9 @@ class Editor {
     public container: HTMLElement,
     { initialState, theme = {}, ...options }: ApollonOptions
   ) {
-    const { entities = { byId: {} }, editor = {}, ...rest } =
+    const { entities = { byId: {} }, editor = {}, diagram = new Diagram(options.diagramType), ...rest } =
       initialState || {};
+
     const state: Partial<ReduxState> = {
       relationships: { byId: {}, allIds: [] },
       interactiveElements: { allIds: [] },
@@ -70,6 +70,7 @@ class Editor {
       },
       ...rest,
       elements: entities.byId,
+      diagram,
     };
 
     const app = createElement(Application, {

@@ -1,36 +1,35 @@
-import React from 'react';
-import { Point, Size } from '../../geo';
+import React, { SFC } from 'react';
 import Element from './../../Element';
-import Boundary from '../../geo/Boundary';
-import { EditorMode } from '../../../services/EditorService';
 
 class FinalNode extends Element {
-  bounds: Boundary = { ...this.bounds, width: 45, height: 45 }
-
-  constructor(public name: string = 'ActionNode', public position: Point, public size: Size) {
+  constructor(public name: string = '') {
     super(name);
+    this.bounds = { ...this.bounds, width: 45, height: 45 };
   }
+}
 
-  public render(options: any): JSX.Element {
-    const { width, height } = { ...this.bounds };
+export const FinalNodeComponent: SFC<Props> = ({ element }) => (
+  <g>
+    <circle
+      cx="50%"
+      cy="50%"
+      r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5}
+      stroke="black"
+      fill="white"
+      strokeWidth="5"
+    />
+    <circle
+      cx="50%"
+      cy="50%"
+      r={Math.min(element.bounds.width, element.bounds.height) / 2 - 7.5}
+      stroke="none"
+      fill="black"
+    />
+  </g>
+);
 
-    const { editorMode, hover, interactiveElementIds, interactiveElementsMode, theme, toggleInteractiveElements } = options;
-
-    return (
-      <svg id={`class-${this.id}`} width={width} height={height} style={{ overflow: 'visible' }}>
-        <rect width="100%" height="100%" fill="none" stroke="none" />
-        <circle cx={width / 2} cy={height / 2} r={Math.min(width, height) / 2 - 7.5} stroke="none" fill={
-            editorMode === EditorMode.InteractiveElementsView &&
-            (hover ||
-              interactiveElementIds.has(this.id))
-              ? theme.interactiveAreaColor
-              : 'black'
-          }
-        />
-        <circle cx={width / 2} cy={height / 2} r={Math.min(width, height) / 2 - 2.5} stroke="black" fill="none" strokeWidth="5" />
-      </svg>
-    );
-  }
+interface Props {
+  element: FinalNode;
 }
 
 export default FinalNode;

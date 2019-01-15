@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, createRef } from 'react';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import {
@@ -10,14 +10,37 @@ import EditorService, {
   ApollonMode,
   EditorMode,
   InteractiveElementsMode,
-  DiagramType,
 } from './../../services/EditorService';
+import { DiagramType } from './../../domain/Diagram';
 import * as Plugins from './../../domain/plugins';
 import Element from '../../domain/Element';
 import Draggable from './../DragDrop/Draggable';
 import { EntityKind } from '../../domain/Element';
 
+import ElementComponent from './../LayoutedElement/ElementComponent';
+import InitialNode from './../../domain/plugins/activity/InitialNode';
+import FinalNode from './../../domain/plugins/activity/FinalNode';
+import ActionNode from './../../domain/plugins/activity/ActionNode';
+import ObjectNode from './../../domain/plugins/activity/ObjectNode';
+import MergeNode from './../../domain/plugins/activity/MergeNode';
+import ForkNode from './../../domain/plugins/activity/ForkNode';
+
 class Sidebar extends Component<Props> {
+  get previews(): Element[] {
+    switch (this.props.diagramType) {
+      case DiagramType.ActivityDiagram:
+        return [
+          new InitialNode(),
+          new FinalNode(),
+          new ActionNode(),
+          new ObjectNode(),
+          new MergeNode(),
+          new ForkNode(),
+        ];
+    }
+    return [];
+  }
+
   elements: { [key: string]: Element } = Object.entries(Plugins)
     .filter(([k, v]) => !k.includes('Component'))
     .reduce(
@@ -79,16 +102,11 @@ class Sidebar extends Component<Props> {
         )}
         {
           {
-            [EditorMode.ModelingView]: Object.entries(this.elements).map(
-              ([k, v]) => {
-                const Component = (Plugins as any)[`${v.kind}Component`];
-                return (
-                  <Draggable key={k} kind={k as EntityKind}>
-                    <Component element={v} options={options} />
-                  </Draggable>
-                );
-              }
-            ),
+            [EditorMode.ModelingView]: this.previews.map((element, index) => (
+              <Draggable key={index} kind={element.kind as EntityKind}>
+                <ElementComponent element={element} canvas={createRef()} />
+              </Draggable>
+            )),
             [EditorMode.InteractiveElementsView]: (
               <label htmlFor="toggleInteractiveElementsMode">
                 <input
@@ -124,7 +142,7 @@ interface DispatchProps {
 type Props = StateProps & DispatchProps;
 
 const mapStateToProps = (state: ReduxState) => ({
-  diagramType: state.editor.diagramType,
+  diagramType: state.diagram.type,
   apollonMode: state.editor.mode,
   editorMode: state.editor.editorMode,
   interactiveElementsMode: state.editor.interactiveMode,
