@@ -9,8 +9,6 @@ import DragDrop from './../components/DragDrop';
 import Editor from './../components/Container';
 import KeyboardEventListener from './../components/KeyboardEventListener';
 import DragLayer from './../components/DragDrop/DragLayer';
-import PopupLayer from './../components/Popups/PopupLayer';
-import RelationshipProvider from './../components/LayoutedRelationship/RelationshipLayer';
 
 class App extends React.Component<Props> {
   store: RefObject<Store> = createRef();
@@ -24,11 +22,7 @@ class App extends React.Component<Props> {
             <KeyboardEventListener>
               <Layout>
                 <Editor ref={this.container}>
-                  <PopupLayer container={this.container.current!}>
-                    <RelationshipProvider>
-                      <Canvas />
-                    </RelationshipProvider>
-                  </PopupLayer>
+                  <Canvas />
                 </Editor>
                 <Sidebar />
                 <DragLayer canvas={this.container.current!} />

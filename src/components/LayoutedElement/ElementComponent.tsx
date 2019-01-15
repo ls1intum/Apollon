@@ -39,25 +39,25 @@ class ElementComponent extends Component<Props> {
     const { element } = this.props;
     const Component = (Plugins as any)[`${element.kind}Component`];
     return (
-      <Svg
-        {...element.bounds}
-        moving={this.props.moving}
-        filter={
-          this.props.hovered || this.props.selected ? 'url(#highlight)' : ''
-        }
-      >
-        <Component element={element}>
-          {'ownedElements' in element &&
-            (element as Container).ownedElements.map((child: string) => {
-              return (
-                <LayoutedElement
-                  key={child}
-                  element={child}
-                  canvas={this.props.canvas}
-                />
-              );
-            })}
-        </Component>
+      <Svg {...element.bounds} moving={this.props.moving}>
+        <g
+          filter={
+            this.props.hovered || this.props.selected ? 'url(#highlight)' : ''
+          }
+        >
+          <Component element={element}>
+            {'ownedElements' in element &&
+              (element as Container).ownedElements.map((child: string) => {
+                return (
+                  <LayoutedElement
+                    key={child}
+                    element={child}
+                    canvas={this.props.canvas}
+                  />
+                );
+              })}
+          </Component>
+        </g>
         {this.props.children}
       </Svg>
     );

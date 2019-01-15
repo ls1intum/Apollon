@@ -1,9 +1,17 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import styled from 'styled-components';
 import Port from './../../domain/Port';
 import { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { Consumer } from './../Connectable/ConnectContext';
+
+const HovarablePath = styled.path`
+  cursor: crosshair;
+  &:hover {
+    fill: rgba(0, 100, 255, 0.6);
+  }
+`;
 
 const connectable = (WrappedComponent: typeof ElementComponent) => {
   class Selectable extends Component<Props, State> {
@@ -52,12 +60,12 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
                 context &&
                 (element.selected || context.isDragging) &&
                 ports.map(port => (
-                  <path
+                  <HovarablePath
                     key={port.location}
                     d={this.calculatePath(port)}
                     width={10}
                     height={10}
-                    fill="rgba(0, 100, 255, 0.21)"
+                    fill="rgba(0, 100, 255, 0.2)"
                     onMouseDown={context.onStartConnect(port)}
                     onMouseUp={context.onEndConnect(port)}
                   />

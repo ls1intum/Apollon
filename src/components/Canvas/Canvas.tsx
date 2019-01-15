@@ -22,12 +22,21 @@ class Canvas extends Component<Props> {
             <svg width={1600} height={800}>
               <defs>
                 <RelationshipMarkers />
-                <filter id="highlight">
-                  <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
+                <filter id="highlight" filterUnits="userSpaceOnUse">
+                  <feFlood floodColor="rgba(0, 100, 255, 0.2)" result="color" />
+                  <feMorphology
+                    operator="dilate"
+                    radius="4"
+                    in="SourceAlpha"
+                    result="mask"
+                  />
+                  <feComposite
+                    in="color"
+                    in2="mask"
+                    operator="in"
+                    result="outline"
+                  />
+                  <feBlend in="SourceGraphic" in2="outline" mode="normal" />
                 </filter>
               </defs>
 

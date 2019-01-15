@@ -131,9 +131,9 @@ class LayoutedRelationship extends React.Component<Props, State> {
     );
 
     return (
-      <PopupContext.Consumer>
-        {context =>
-          context && (
+      // <PopupContext.Consumer>
+      //   {context =>
+      //     context && (
             <>
               <RelationshipLabels
                 relationship={relationship}
@@ -153,11 +153,11 @@ class LayoutedRelationship extends React.Component<Props, State> {
                   this.onMouseLeave(e);
                   this.setState({ isMouseOver: false });
                 }}
-                onDoubleClick={
-                  apollonMode === ApollonMode.ReadOnly
-                    ? undefined
-                    : () => context.showRelationship(this.state.relationship)
-                }
+                // onDoubleClick={
+                //   apollonMode === ApollonMode.ReadOnly
+                //     ? undefined
+                //     : () => context.showRelationship(this.state.relationship)
+                // }
                 style={{ visibility }}
               />
               <polyline
@@ -171,9 +171,9 @@ class LayoutedRelationship extends React.Component<Props, State> {
                 style={{ visibility }}
               />
             </>
-          )
-        }
-      </PopupContext.Consumer>
+      //     )
+      //   }
+      // </PopupContext.Consumer>
     );
   }
 
