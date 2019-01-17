@@ -134,8 +134,8 @@
     <script src="apollon.js"></script>
     <script>
       {
-        let editor;
-        let options = {
+        var editor;
+        var options = {
           initialState: JSON.parse(window.localStorage.getItem('apollon')),
           diagramType: 'ACTIVITY',
           mode: 'FULL',
@@ -144,7 +144,8 @@
               '-apple-system, BlinkMacSystemFont, HelveticaNeue, Arial, sans-serif',
           },
         };
-        const container = document.getElementById('apollon');
+        var container = document.getElementById('apollon');
+        console.log(container);
 
         function mount() {
           editor = new ApollonEditor(container, options);
@@ -155,7 +156,7 @@
         }
 
         function saveState() {
-          const state = editor.getState();
+          var state = editor.getState();
           localStorage.setItem('apollon', JSON.stringify(state));
           options.initialState = state;
         }
@@ -167,7 +168,7 @@
 
         function changeMode(event) {
           event.preventDefault();
-          const mode = event.target.elements.mode.value;
+          var mode = event.target.elements.mode.value;
           options.mode = mode;
           unmount();
           mount();
@@ -175,7 +176,7 @@
 
         function changeDiagramType(event) {
           event.preventDefault();
-          const diagramType = event.target.elements.diagramType.value;
+          var diagramType = event.target.elements.diagramType.value;
           options.diagramType = diagramType;
           unmount();
           mount();
@@ -183,36 +184,36 @@
 
         function exportData(event) {
           event.preventDefault();
-          const fileType = event.target.elements.fileType.value;
-          const state = editor.getState();
-          const layoutedDiagram = ApollonEditor.layoutDiagram(
+          var fileType = event.target.elements.fileType.value;
+          var state = editor.getState();
+          var layoutedDiagram = ApollonEditor.layoutDiagram(
             editor.getState(),
             {
               outerPadding: 50,
             }
           );
-          const svgBlobURL = createSVGBlobURL(layoutedDiagram);
+          var svgBlobURL = createSVGBlobURL(layoutedDiagram);
 
           if (fileType === 'png') {
-            const image = new Image();
+            var image = new Image();
             image.src = svgBlobURL;
 
             image.onload = () => {
-              const canvas = document.createElement('canvas');
-              const { width, height } = layoutedDiagram.size;
+              var canvas = document.createElement('canvas');
+              var { width, height } = layoutedDiagram.size;
               canvas.style.width = `${width}px`;
               canvas.style.height = `${height}px`;
 
-              const scale = 3;
+              var scale = 3;
               canvas.width = width * scale;
               canvas.height = height * scale;
 
-              const context = canvas.getContext('2d');
+              var context = canvas.getContext('2d');
               context.fillRect(100, 100, 100, 100);
               context.scale(scale, scale);
               context.drawImage(image, 0, 0);
 
-              const fileUrl = canvas.toDataURL('image/png');
+              var fileUrl = canvas.toDataURL('image/png');
               var win = window.open();
               win.document.write(
                 '<iframe src="' +
@@ -231,16 +232,16 @@
         }
 
         function createSVGBlobURL(layoutedDiagram) {
-          const renderOptions = {
+          var renderOptions = {
             shouldRenderElement: id => true,
             fontFamily: options.theme.fontFamily,
           };
 
-          const { svg } = ApollonEditor.renderDiagramToSVG(
+          var { svg } = ApollonEditor.renderDiagramToSVG(
             layoutedDiagram,
             renderOptions
           );
-          const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
+          var svgBlob = new Blob([svg], { type: 'image/svg+xml' });
           return URL.createObjectURL(svgBlob);
         }
 

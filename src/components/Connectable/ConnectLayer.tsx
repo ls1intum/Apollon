@@ -1,19 +1,17 @@
-import React, { Component } from 'react';
+import React, { Component, RefObject } from 'react';
 import { connect } from 'react-redux';
 import ConnectContext, { Provider } from './ConnectContext';
 import Port from './../../domain/Port';
-import { Point } from './../../domain/geo';
 import { createRelationship } from '../../domain/Relationship/actions';
 import { RelationshipKind, RectEdge } from '../../domain/Relationship';
+import RelationshipPreview from './RelationshipPreview';
 
 class ConnectLayer extends Component<Props, State> {
   state: State = {
     start: null,
-    position: null,
   };
 
   private onStartConnect = (port: Port) => (event: React.MouseEvent) => {
-    document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('mouseup', this.cancel, {
       once: true,
       passive: true,
@@ -21,10 +19,6 @@ class ConnectLayer extends Component<Props, State> {
 
     this.setState({
       start: port,
-      position: {
-        x: event.nativeEvent.layerX,
-        y: event.nativeEvent.layerY,
-      },
     });
   };
 
@@ -65,70 +59,7 @@ class ConnectLayer extends Component<Props, State> {
   };
 
   private cancel = (event: MouseEvent) => {
-    document.removeEventListener('mousemove', this.onMouseMove);
     this.setState({ start: null });
-  };
-
-  private calculatePath = (): Point[] => {
-    const path: Point[] = [];
-    if (this.state.start) {
-      const { element, location } = this.state.start;
-      switch (location) {
-        case 'N':
-          path.push({
-            x: element.bounds.x + element.bounds.width / 2,
-            y: element.bounds.y,
-          });
-          path.push({
-            x: element.bounds.x + element.bounds.width / 2,
-            y: element.bounds.y - 20,
-          });
-          break;
-        case 'E':
-          path.push({
-            x: element.bounds.x + element.bounds.width,
-            y: element.bounds.y + element.bounds.height / 2,
-          });
-          path.push({
-            x: element.bounds.x + element.bounds.width + 20,
-            y: element.bounds.y + element.bounds.height / 2,
-          });
-          break;
-        case 'S':
-          path.push({
-            x: element.bounds.x + element.bounds.width / 2,
-            y: element.bounds.y + element.bounds.height,
-          });
-          path.push({
-            x: element.bounds.x + element.bounds.width / 2,
-            y: element.bounds.y + element.bounds.height + 20,
-          });
-          break;
-        case 'W':
-          path.push({
-            x: element.bounds.x,
-            y: element.bounds.y + element.bounds.height / 2,
-          });
-          path.push({
-            x: element.bounds.x - 20,
-            y: element.bounds.y + element.bounds.height / 2,
-          });
-          break;
-      }
-    }
-    if (this.state.position) {
-      path.push(this.state.position);
-    }
-    return path;
-  };
-
-  private onMouseMove = (event: MouseEvent) => {
-    this.setState({
-      position: {
-        x: event.layerX,
-        y: event.layerY,
-      },
-    });
   };
 
   render() {
@@ -137,35 +68,30 @@ class ConnectLayer extends Component<Props, State> {
       onStartConnect: this.onStartConnect,
       onEndConnect: this.onEndConnect,
     };
-    const points = this.calculatePath()
-      .map(p => `${p.x} ${p.y}`)
-      .join(', ');
     return (
       <Provider value={context}>
         {this.props.children}
-        {this.state.start && (
-          <polyline
-            points={points}
-            fill="none"
-            stroke="black"
-            strokeWidth="1"
-            strokeDasharray="5,5"
-          />
-        )}
+        <RelationshipPreview
+          port={this.state.start}
+          canvas={this.props.canvas}
+        />
       </Provider>
     );
   }
+}
+
+interface OwnProps {
+  canvas: RefObject<HTMLDivElement>;
 }
 
 interface DispatchProps {
   create: typeof createRelationship;
 }
 
-type Props = DispatchProps;
+type Props = OwnProps & DispatchProps;
 
 interface State {
   start: Port | null;
-  position: Point | null;
 }
 
 export default connect(

@@ -6,16 +6,36 @@ import { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { Consumer } from './../Connectable/ConnectContext';
 
-const HovarablePath = styled.path`
+const Path = styled.path`
   cursor: crosshair;
-  &:hover {
-    fill: rgba(0, 100, 255, 0.6);
+`;
+
+const Group = styled.g`
+  &:hover ${Path}, &.hover ${Path} {
+    fill-opacity: 0.6;
   }
 `;
 
 const connectable = (WrappedComponent: typeof ElementComponent) => {
   class Selectable extends Component<Props, State> {
-    private calculatePath(port: Port): string {
+    private calculateInvisiblePath(port: Port): string {
+      const { x, y, width, height } = this.props.element.bounds;
+      switch (port.location) {
+        case 'N':
+          return `M ${width / 2} ${height / 2} L 0 0 L ${width} 0 Z`;
+        case 'E':
+          return `M ${width / 2} ${height /
+            2} L ${width} 0 L ${width} ${height} Z`;
+        case 'S':
+          return `M ${width / 2} ${height /
+            2} L 0 ${height} L ${width} ${height} Z`;
+        case 'W':
+          return `M ${width / 2} ${height / 2} L 0 0 L 0 ${height} Z`;
+      }
+      return '';
+    }
+
+    private calculateVisiblePath(port: Port): string {
       const { x, y, width, height } = this.props.element.bounds;
       switch (port.location) {
         case 'N':
@@ -30,6 +50,14 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
           return `M 0 ${height / 2 - 20} A 10 10 0 0 0 0 ${height / 2 + 20}`;
       }
     }
+
+    private onMouseEnter = (event: React.MouseEvent) => {
+      event.currentTarget.classList.add('hover');
+    };
+
+    private onMouseLeave = (event: React.MouseEvent) => {
+      event.currentTarget.classList.remove('hover');
+    };
 
     render() {
       const { element } = this.props;
@@ -55,23 +83,30 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
         <WrappedComponent {...this.props}>
           {this.props.children}
           <Consumer
-            children={context => {
-              return (
-                context &&
-                (element.selected || context.isDragging) &&
-                ports.map(port => (
-                  <HovarablePath
-                    key={port.location}
-                    d={this.calculatePath(port)}
+            children={context =>
+              context &&
+              (element.selected || context.isDragging) &&
+              ports.map(port => (
+                <Group
+                  key={port.location}
+                  onMouseDown={context.onStartConnect(port)}
+                  onMouseUp={context.onEndConnect(port)}
+                  onMouseEnter={this.onMouseEnter}
+                  onMouseLeave={this.onMouseLeave}
+                >
+                  {context.isDragging && (
+                    <path d={this.calculateInvisiblePath(port)} fill="none" />
+                  )}
+                  <Path
+                    d={this.calculateVisiblePath(port)}
                     width={10}
                     height={10}
-                    fill="rgba(0, 100, 255, 0.2)"
-                    onMouseDown={context.onStartConnect(port)}
-                    onMouseUp={context.onEndConnect(port)}
+                    fill="#0064ff"
+                    fillOpacity="0.2"
                   />
-                ))
-              );
-            }}
+                </Group>
+              ))
+            }
           />
         </WrappedComponent>
       );

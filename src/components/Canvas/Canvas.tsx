@@ -23,7 +23,11 @@ class Canvas extends Component<Props> {
               <defs>
                 <RelationshipMarkers />
                 <filter id="highlight" filterUnits="userSpaceOnUse">
-                  <feFlood floodColor="rgba(0, 100, 255, 0.2)" result="color" />
+                  <feFlood
+                    floodColor="#0064ff"
+                    floodOpacity="0.2"
+                    result="color"
+                  />
                   <feMorphology
                     operator="dilate"
                     radius="4"
@@ -40,7 +44,7 @@ class Canvas extends Component<Props> {
                 </filter>
               </defs>
 
-              <ConnectLayer>
+              <ConnectLayer canvas={this.canvas}>
                 {elements.map(element => (
                   <LayoutedElement
                     key={element}

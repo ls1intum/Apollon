@@ -31,12 +31,14 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
 
     private onMouseDown = (event: MouseEvent) => {
       if (event.which !== 1) return;
+      const target = event.currentTarget as HTMLElement;
       window.setTimeout(() => {
         if (!this.props.element.selected) return;
-        const node = findDOMNode(this) as HTMLElement;
-        const bounds = node.getBoundingClientRect();
-        let x = event.clientX - bounds.left - this.props.canvas.current!.parentElement!.getBoundingClientRect().left;
-        let y = event.clientY - bounds.top - this.props.canvas.current!.parentElement!.getBoundingClientRect().top;
+        const container = this.props.canvas.current!.parentElement!;
+        const bounds = container.getBoundingClientRect();
+        const rect = target!.getBoundingClientRect();
+        let x = event.clientX - rect.left + bounds.left - container.scrollLeft;
+        let y = event.clientY - rect.top + bounds.top - container.scrollTop;
 
         let ownerID = this.props.element.owner;
         while (ownerID) {
@@ -54,8 +56,8 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
 
     private onMouseMove = (event: MouseEvent) => {
       if (!this.state.movable) return;
-      let x = event.layerX - this.state.offset.x;
-      let y = event.layerY - this.state.offset.y;
+      let x = event.clientX - this.state.offset.x;
+      let y = event.clientY - this.state.offset.y;
 
       if (!this.state.moving) {
         const { position } = this.state;
