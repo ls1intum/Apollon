@@ -25,7 +25,7 @@ export type Actions =
 class ElementRepository {
   static create = (element: Element) => action(ActionTypes.CREATE, element);
 
-  static getById = (state: State, id: string): Element => {
+  static getById = (state: State) => (id: string): Element => {
     const element = state.elements[id];
     return Object.setPrototypeOf(
       element,

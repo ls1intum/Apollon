@@ -423,7 +423,7 @@ interface State {
 
 function mapStateToProps(state: ReduxState): StateProps {
   return {
-    getById: (id: string) => ElementRepository.getById(state, id),
+    getById: ElementRepository.getById(state),
     editorMode: state.editor.editorMode,
     apollonMode: state.editor.mode,
     interactiveElementsMode: state.editor.interactiveMode,

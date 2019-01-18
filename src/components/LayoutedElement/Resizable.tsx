@@ -1,8 +1,10 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
+import { compose } from 'redux';
+import { withCanvas, CanvasContext } from '../Canvas';
 
 const resizable = (WrappedComponent: typeof ElementComponent) => {
   class Resizable extends Component<Props, State> {
@@ -29,32 +31,28 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
 
     private onMouseDown = (event: React.MouseEvent) => {
       if (event.nativeEvent.which !== 1) return;
-      let x = 0;
-      let y = 0;
+      const offset = this.props.coordinateSystem.offset();
+      offset.x = this.props.element.bounds.x + offset.x;
+      offset.y = this.props.element.bounds.y + offset.y;
 
       let ownerID = this.props.element.owner;
       while (ownerID) {
         const owner = this.props.getById(ownerID);
-        x += owner.bounds.x;
-        y += owner.bounds.y;
+        offset.x += owner.bounds.x;
+        offset.y += owner.bounds.y;
         ownerID = owner.owner;
       }
 
-      this.setState({ resizing: true, offset: { x, y } });
+      this.setState({ resizing: true, offset });
       document.addEventListener('mousemove', this.onMouseMove);
       document.addEventListener('mouseup', this.onMouseUp);
     };
 
     private onMouseMove = (event: MouseEvent) => {
-      let width =
-        event.layerX - this.props.element.bounds.x - this.state.offset.x;
-      let height =
-        event.layerY - this.props.element.bounds.y - this.state.offset.y;
-
-      width = Math.round(width / 10) * 10;
-      height = Math.round(height / 10) * 10;
-
-      this.resize(width, height);
+      const width = event.clientX - this.state.offset.x;
+      const height = event.clientY - this.state.offset.y;
+      const { x, y } = this.props.coordinateSystem.screenToPoint(width, height);
+      this.resize(x, y);
     };
 
     private onMouseUp = (event: MouseEvent) => {
@@ -89,20 +87,23 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
     update: typeof ElementRepository.update;
   }
 
-  type Props = OwnProps & StateProps & DispatchProps;
+  interface State {
+    resizing: boolean;
+    size: { width: number; height: number };
+    offset: { x: number; y: number };
+  }
 
-  return connect(
-    (state: ReduxState): StateProps => ({
-      getById: (id: string) => ElementRepository.getById(state, id),
-    }),
-    { update: ElementRepository.update }
+  type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
+
+  return compose<ComponentClass<OwnProps>>(
+    withCanvas,
+    connect(
+      (state: ReduxState): StateProps => ({
+        getById: ElementRepository.getById(state),
+      }),
+      { update: ElementRepository.update }
+    )
   )(Resizable);
 };
-
-interface State {
-  resizing: boolean;
-  size: { width: number; height: number };
-  offset: { x: number; y: number };
-}
 
 export default resizable;

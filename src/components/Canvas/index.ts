@@ -1,3 +1,2 @@
-import Canvas from './Canvas';
-
-export default Canvas;
+export { withCanvas, CanvasContext } from './CanvasContext';
+export { default } from './Canvas';

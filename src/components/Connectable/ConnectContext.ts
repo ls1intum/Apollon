@@ -7,8 +7,9 @@ interface ConnectContext {
   onEndConnect: (port: Port) => (event: MouseEvent) => void;
 }
 
-export const { Consumer, Provider } = createContext<ConnectContext | null>(
-  null
-);
+export const {
+  Consumer: ConnectConsumer,
+  Provider: ConnectProvider,
+} = createContext<ConnectContext | null>(null);
 
 export default ConnectContext;

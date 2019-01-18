@@ -1,9 +1,11 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
+import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
 import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
+import { withCanvas, CanvasContext } from './../Canvas';
 
 const moveable = (WrappedComponent: typeof ElementComponent) => {
   class Moveable extends Component<Props, State> {
@@ -34,21 +36,20 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
       const target = event.currentTarget as HTMLElement;
       window.setTimeout(() => {
         if (!this.props.element.selected) return;
-        const container = this.props.canvas.current!.parentElement!;
-        const bounds = container.getBoundingClientRect();
         const rect = target!.getBoundingClientRect();
-        let x = event.clientX - rect.left + bounds.left - container.scrollLeft;
-        let y = event.clientY - rect.top + bounds.top - container.scrollTop;
+        const offset = this.props.coordinateSystem.offset();
+        offset.x = event.clientX - rect.left + offset.x;
+        offset.y = event.clientY - rect.top + offset.y;
 
         let ownerID = this.props.element.owner;
         while (ownerID) {
           const owner = this.props.getById(ownerID);
-          x += owner.bounds.x;
-          y += owner.bounds.y;
+          offset.x += owner.bounds.x;
+          offset.y += owner.bounds.y;
           ownerID = owner.owner;
         }
 
-        this.setState({ movable: true, offset: { x, y } });
+        this.setState({ movable: true, offset });
         document.addEventListener('mousemove', this.onMouseMove);
         document.addEventListener('mouseup', this.onMouseUp);
       }, 0);
@@ -65,9 +66,8 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
           this.setState({ moving: true });
         }
       } else {
-        x = Math.round(x / 10) * 10;
-        y = Math.round(y / 10) * 10;
-        this.move(x, y);
+        const { x: px, y: py } = this.props.coordinateSystem.screenToPoint(x, y);
+        this.move(px, py);
       }
     };
 
@@ -102,21 +102,24 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
     update: typeof ElementRepository.update;
   }
 
-  type Props = OwnProps & StateProps & DispatchProps;
+  type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
-  return connect(
-    (state: ReduxState): StateProps => ({
-      getById: (id: string) => ElementRepository.getById(state, id),
-    }),
-    { update: ElementRepository.update }
+  interface State {
+    movable: boolean;
+    moving: boolean;
+    position: { x: number; y: number };
+    offset: { x: number; y: number };
+  }
+
+  return compose<ComponentClass<OwnProps>>(
+    withCanvas,
+    connect(
+      (state: ReduxState): StateProps => ({
+        getById: ElementRepository.getById(state),
+      }),
+      { update: ElementRepository.update }
+    )
   )(Moveable);
 };
-
-interface State {
-  movable: boolean;
-  moving: boolean;
-  position: { x: number; y: number };
-  offset: { x: number; y: number };
-}
 
 export default moveable;

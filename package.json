@@ -26,6 +26,7 @@
     "prepare": "yarn run build:npm"
   },
   "devDependencies": {
+    "@types/hoist-non-react-statics": "^3.0.1",
     "@types/lodash": "^4.14.119",
     "@types/react": "16.7.13",
     "@types/react-dom": "16.0.11",
@@ -41,6 +42,7 @@
     "webpack-dev-server": "3.1.10"
   },
   "dependencies": {
+    "hoist-non-react-statics": "^3.2.1",
     "lodash": "^4.17.11",
     "normalizr": "^3.3.0",
     "react": "16.6.3",

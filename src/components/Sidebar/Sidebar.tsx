@@ -24,6 +24,7 @@ import ActionNode from './../../domain/plugins/activity/ActionNode';
 import ObjectNode from './../../domain/plugins/activity/ObjectNode';
 import MergeNode from './../../domain/plugins/activity/MergeNode';
 import ForkNode from './../../domain/plugins/activity/ForkNode';
+import { CanvasProvider } from '../Canvas/CanvasContext';
 
 class Sidebar extends Component<Props> {
   get previews(): Element[] {
@@ -102,11 +103,15 @@ class Sidebar extends Component<Props> {
         )}
         {
           {
-            [EditorMode.ModelingView]: this.previews.map((element, index) => (
-              <Draggable key={index} kind={element.kind as EntityKind}>
-                <ElementComponent element={element} canvas={createRef()} />
-              </Draggable>
-            )),
+            [EditorMode.ModelingView]: (
+              <CanvasProvider value={null}>
+                {this.previews.map((element, index) => (
+                  <Draggable key={index} kind={element.kind as EntityKind}>
+                    <ElementComponent element={element} />
+                  </Draggable>
+                ))}
+              </CanvasProvider>
+            ),
             [EditorMode.InteractiveElementsView]: (
               <label htmlFor="toggleInteractiveElementsMode">
                 <input

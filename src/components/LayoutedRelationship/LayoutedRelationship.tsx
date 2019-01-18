@@ -18,6 +18,7 @@ import { UUID } from '../../domain/utils/uuid';
 import { PopupContext } from '../Popups/PopupLayer';
 import { ElementSelection } from '../../Editor';
 import { getAllInteractiveElementIds, toggleInteractiveElements, getbyId } from '../../services/redux';
+import { withCanvas, CanvasContext } from '../Canvas';
 
 class LayoutedRelationship extends React.Component<Props, State> {
   state: State = {
@@ -120,7 +121,7 @@ class LayoutedRelationship extends React.Component<Props, State> {
 
     const { relationship, path } = this.state.relationship;
 
-    const polylinePoints = path.map(point => `${point.x} ${point.y}`).join(',');
+    const polylinePoints = path.map(p => this.props.coordinateSystem.pointToScreen(p.x, p.y)).map(point => `${point.x} ${point.y}`).join(',');
 
     const markerId = getMarkerIdForRelationshipKind(relationship.kind);
     const markerEnd = markerId === null ? undefined : `url(#${markerId})`;
@@ -222,7 +223,7 @@ interface DispatchProps {
   update: typeof ElementRepository.update;
 }
 
-type Props = OwnProps & ThemeProps & StateProps & DispatchProps;
+type Props = OwnProps & ThemeProps & StateProps & DispatchProps & CanvasContext;
 
 interface State {
   relationship: Relationship;
@@ -250,6 +251,7 @@ const mapStateToProps = (state: ReduxState): StateProps => ({
 });
 
 export default compose<ComponentClass<OwnProps>>(
+  withCanvas,
   withTheme,
   connect(
     mapStateToProps,

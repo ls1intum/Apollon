@@ -1,8 +1,10 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
+import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
+import { withCanvas, CanvasContext } from './../Canvas';
 
 const selectable = (WrappedComponent: typeof ElementComponent) => {
   class Selectable extends Component<Props, State> {
@@ -47,19 +49,15 @@ const selectable = (WrappedComponent: typeof ElementComponent) => {
     };
 
     componentDidMount() {
-      const { canvas } = this.props;
       const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('mousedown', this.onMouseDown);
-      canvas.current &&
-        canvas.current.addEventListener('mousedown', this.deselect, true);
+      this.props.canvas.addEventListener('mousedown', this.deselect, true);
     }
 
     componentWillUnmount() {
-      const { canvas } = this.props;
       const node = findDOMNode(this) as HTMLElement;
       node.removeEventListener('mousedown', this.onMouseDown);
-      canvas.current &&
-        canvas.current.removeEventListener('mousedown', this.deselect, true);
+      this.props.canvas.removeEventListener('mousedown', this.deselect, true);
     }
 
     render() {
@@ -69,20 +67,23 @@ const selectable = (WrappedComponent: typeof ElementComponent) => {
     }
   }
 
-  return connect(
-    null,
-    { update: ElementRepository.update }
+  interface DispatchProps {
+    update: typeof ElementRepository.update;
+  }
+
+  type Props = OwnProps & DispatchProps & CanvasContext;
+
+  interface State {
+    selected: boolean;
+  }
+
+  return compose<ComponentClass<OwnProps>>(
+    withCanvas,
+    connect(
+      null,
+      { update: ElementRepository.update }
+    )
   )(Selectable);
 };
-
-interface DispatchProps {
-  update: typeof ElementRepository.update;
-}
-
-type Props = OwnProps & DispatchProps;
-
-interface State {
-  selected: boolean;
-}
 
 export default selectable;

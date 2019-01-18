@@ -4,6 +4,9 @@ import Element from './../../domain/Element';
 import * as Plugins from './../../domain/plugins';
 import Container from '../../domain/Container';
 import LayoutedElement from './LayoutedElement';
+import { withCanvas } from './../Canvas';
+import CoordinateSystem from '../Canvas/CoordinateSystem';
+import { CanvasConsumer } from '../Canvas/CanvasContext';
 
 interface SvgProps {
   moving: boolean;
@@ -35,38 +38,45 @@ class ElementComponent extends Component<Props> {
   };
 
   render() {
-    // console.log(this.props);
     const { element } = this.props;
     const Component = (Plugins as any)[`${element.kind}Component`];
     return (
-      <Svg {...element.bounds} moving={this.props.moving}>
-        <g
-          filter={
-            this.props.hovered || this.props.selected ? 'url(#highlight)' : ''
+      <CanvasConsumer
+        children={context => {
+          let bounds = element.bounds;
+          if (context) {
+            bounds = {
+              ...bounds,
+              ...context.coordinateSystem.pointToScreen(bounds.x, bounds.y),
+            };
           }
-        >
-          <Component element={element}>
-            {'ownedElements' in element &&
-              (element as Container).ownedElements.map((child: string) => {
-                return (
-                  <LayoutedElement
-                    key={child}
-                    element={child}
-                    canvas={this.props.canvas}
-                  />
-                );
-              })}
-          </Component>
-        </g>
-        {this.props.children}
-      </Svg>
+          return (
+            <Svg {...bounds} moving={this.props.moving}>
+              <g
+                filter={
+                  this.props.hovered || this.props.selected
+                    ? 'url(#highlight)'
+                    : ''
+                }
+              >
+                <Component element={element}>
+                  {element instanceof Container &&
+                    element.ownedElements.map((child: string) => {
+                      return <LayoutedElement key={child} element={child} />;
+                    })}
+                </Component>
+              </g>
+              {this.props.children}
+            </Svg>
+          );
+        }}
+      />
     );
   }
 }
 
 export interface OwnProps {
   element: Element;
-  canvas: RefObject<HTMLDivElement>;
   hovered: boolean;
   selected: boolean;
   moving: boolean;

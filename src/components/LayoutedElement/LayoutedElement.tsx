@@ -1,4 +1,4 @@
-import React, { Component, RefObject } from 'react';
+import React, { Component } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
@@ -35,13 +35,12 @@ class LayoutedElement extends Component<Props> {
   render() {
     const Component = this.component;
     const element: Element = this.props.getById(this.props.element);
-    return <Component element={element} canvas={this.props.canvas} />;
+    return <Component element={element} />;
   }
 }
 
 interface OwnProps {
   element: string;
-  canvas: RefObject<HTMLDivElement>;
 }
 
 interface StateProps {
@@ -53,7 +52,7 @@ interface StateProps {
 type Props = OwnProps & StateProps;
 
 const mapStateToProps = (state: ReduxState): StateProps => ({
-  getById: (id: string) => ElementRepository.getById(state, id),
+  getById: ElementRepository.getById(state),
   editorMode: state.editor.editorMode,
   apollonMode: state.editor.mode,
 });

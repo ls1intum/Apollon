@@ -1,21 +1,23 @@
-import React, { Component, RefObject } from 'react';
+import React, { Component } from 'react';
 import { Point } from './../../domain/geo';
 import Port from './../../domain/Port';
+import { withCanvas, CanvasContext } from '../Canvas';
 
 class RelationshipPreview extends Component<Props, State> {
   state: State = {
+    offset: { x: 0, y: 0 },
     position: null,
   };
 
   private onMouseMove = (event: MouseEvent) => {
-    const container = this.props.canvas.current!.parentElement!;
-    const bounds = container.getBoundingClientRect();
-    this.setState({
-      position: {
-        x: event.clientX - bounds.left + container.scrollLeft,
-        y: event.clientY - bounds.top + container.scrollTop,
-      },
-    });
+    let { x, y } = this.props.coordinateSystem.screenToPoint(
+      event.clientX,
+      event.clientY,
+      false
+    );
+    x -= this.state.offset.x;
+    y -= this.state.offset.y;
+    this.setState({ position: { x, y } });
   };
 
   private calculatePath = (): Point[] => {
@@ -75,16 +77,19 @@ class RelationshipPreview extends Component<Props, State> {
     if (prevProps.port === this.props.port) return;
 
     if (this.props.port) {
+      const offset = this.props.coordinateSystem.offset();
+      this.setState({ offset });
       document.addEventListener('mousemove', this.onMouseMove);
     } else {
       document.removeEventListener('mousemove', this.onMouseMove);
-      this.setState({ position: null });
+      this.setState({ position: null, offset: { x: 0, y: 0 } });
     }
   }
 
   render() {
     if (!this.props.port) return null;
     const points = this.calculatePath()
+      .map(p => this.props.coordinateSystem.pointToScreen(p.x, p.y))
       .map(p => `${p.x} ${p.y}`)
       .join(', ');
     return (
@@ -102,13 +107,13 @@ class RelationshipPreview extends Component<Props, State> {
 
 interface OwnProps {
   port: Port | null;
-  canvas: RefObject<HTMLDivElement>;
 }
 
-type Props = OwnProps;
+type Props = OwnProps & CanvasContext;
 
 interface State {
+  offset: Point;
   position: Point | null;
 }
 
-export default RelationshipPreview;
+export default withCanvas(RelationshipPreview);

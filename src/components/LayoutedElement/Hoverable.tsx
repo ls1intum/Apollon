@@ -3,7 +3,7 @@ import { findDOMNode } from 'react-dom';
 import ElementComponent, { OwnProps } from './ElementComponent';
 
 const hoverable = (WrappedComponent: typeof ElementComponent) => {
-  return class Hoverable extends Component<OwnProps, State> {
+  class Hoverable extends Component<Props, State> {
     state: State = {
       hovered: false,
     };
@@ -27,11 +27,15 @@ const hoverable = (WrappedComponent: typeof ElementComponent) => {
     render() {
       return <WrappedComponent {...this.props} hovered={this.state.hovered} />;
     }
-  };
-};
+  }
 
-interface State {
-  hovered: boolean;
-}
+  type Props = OwnProps;
+
+  interface State {
+    hovered: boolean;
+  }
+
+  return Hoverable;
+};
 
 export default hoverable;

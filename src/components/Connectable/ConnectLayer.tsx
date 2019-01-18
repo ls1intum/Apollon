@@ -1,6 +1,6 @@
-import React, { Component, RefObject } from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import ConnectContext, { Provider } from './ConnectContext';
+import ConnectContext, { ConnectProvider } from './ConnectContext';
 import Port from './../../domain/Port';
 import { createRelationship } from '../../domain/Relationship/actions';
 import { RelationshipKind, RectEdge } from '../../domain/Relationship';
@@ -69,20 +69,15 @@ class ConnectLayer extends Component<Props, State> {
       onEndConnect: this.onEndConnect,
     };
     return (
-      <Provider value={context}>
+      <ConnectProvider value={context}>
         {this.props.children}
-        <RelationshipPreview
-          port={this.state.start}
-          canvas={this.props.canvas}
-        />
-      </Provider>
+        <RelationshipPreview port={this.state.start} />
+      </ConnectProvider>
     );
   }
 }
 
-interface OwnProps {
-  canvas: RefObject<HTMLDivElement>;
-}
+interface OwnProps {}
 
 interface DispatchProps {
   create: typeof createRelationship;

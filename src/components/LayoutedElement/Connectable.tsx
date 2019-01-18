@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
+import { compose } from 'redux';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import Port from './../../domain/Port';
 import { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
-import { Consumer } from './../Connectable/ConnectContext';
+import { ConnectConsumer } from './../Connectable/ConnectContext';
 
 const Path = styled.path`
   cursor: crosshair;
@@ -19,7 +20,7 @@ const Group = styled.g`
 const connectable = (WrappedComponent: typeof ElementComponent) => {
   class Selectable extends Component<Props, State> {
     private calculateInvisiblePath(port: Port): string {
-      const { x, y, width, height } = this.props.element.bounds;
+      const { width, height } = this.props.element.bounds;
       switch (port.location) {
         case 'N':
           return `M ${width / 2} ${height / 2} L 0 0 L ${width} 0 Z`;
@@ -36,7 +37,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
     }
 
     private calculateVisiblePath(port: Port): string {
-      const { x, y, width, height } = this.props.element.bounds;
+      const { width, height } = this.props.element.bounds;
       switch (port.location) {
         case 'N':
           return `M ${width / 2 - 20} 0 A 10 10 0 0 1 ${width / 2 + 20} 0`;
@@ -82,7 +83,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       return (
         <WrappedComponent {...this.props}>
           {this.props.children}
-          <Consumer
+          <ConnectConsumer
             children={context =>
               context &&
               (element.selected || context.isDragging) &&
@@ -119,9 +120,11 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
 
   type Props = OwnProps & DispatchProps;
 
-  return connect(
-    null,
-    { update: ElementRepository.update }
+  return compose<ComponentClass<OwnProps>>(
+    connect(
+      null,
+      { update: ElementRepository.update }
+    )
   )(Selectable);
 };
 
