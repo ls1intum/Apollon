@@ -44,7 +44,7 @@ class ElementComponent extends Component<Props> {
       <CanvasConsumer
         children={context => {
           let bounds = element.bounds;
-          if (context) {
+          if (context && element.owner === null) {
             bounds = {
               ...bounds,
               ...context.coordinateSystem.pointToScreen(bounds.x, bounds.y),

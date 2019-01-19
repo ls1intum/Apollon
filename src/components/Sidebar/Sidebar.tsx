@@ -14,13 +14,12 @@ import EditorService, {
 import { DiagramType } from './../../domain/Diagram';
 import * as Plugins from './../../domain/plugins';
 import Element, { ElementRepository } from '../../domain/Element';
-// import Draggable from './../DragDrop/Draggable';
-import { EntityKind } from '../../domain/Element';
 
 import { Draggable, DropEvent } from './../Draggable';
 
 import ElementComponent from './../LayoutedElement/ElementComponent';
 import Class from './../../domain/plugins/class/Class';
+import Attribute from './../../domain/plugins/class/Attribute';
 import InitialNode from './../../domain/plugins/activity/InitialNode';
 import FinalNode from './../../domain/plugins/activity/FinalNode';
 import ActionNode from './../../domain/plugins/activity/ActionNode';
@@ -75,6 +74,16 @@ class Sidebar extends Component<Props> {
   };
 
   onDrop = (element: Element) => (event: DropEvent) => {
+    switch (element.kind) {
+      case "Class":
+        const newElement = new Class();
+        newElement.bounds = { ...newElement.bounds, ...event.position };
+
+        const attribute = newElement.addAttribute();
+        const method = newElement.addMethod();
+        [newElement, attribute, method].map(this.props.create);
+        return;
+    }
     const Clazz = element.constructor.prototype.constructor;
     const newElement = new Clazz(element.name);
     if (event.position) {
