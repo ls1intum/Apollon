@@ -13,11 +13,14 @@ import EditorService, {
 } from './../../services/EditorService';
 import { DiagramType } from './../../domain/Diagram';
 import * as Plugins from './../../domain/plugins';
-import Element from '../../domain/Element';
-import Draggable from './../DragDrop/Draggable';
+import Element, { ElementRepository } from '../../domain/Element';
+// import Draggable from './../DragDrop/Draggable';
 import { EntityKind } from '../../domain/Element';
 
+import { Draggable, DropEvent } from './../Draggable';
+
 import ElementComponent from './../LayoutedElement/ElementComponent';
+import Class from './../../domain/plugins/class/Class';
 import InitialNode from './../../domain/plugins/activity/InitialNode';
 import FinalNode from './../../domain/plugins/activity/FinalNode';
 import ActionNode from './../../domain/plugins/activity/ActionNode';
@@ -29,6 +32,8 @@ import { CanvasProvider } from '../Canvas/CanvasContext';
 class Sidebar extends Component<Props> {
   get previews(): Element[] {
     switch (this.props.diagramType) {
+      case DiagramType.ClassDiagram:
+        return [new Class()];
       case DiagramType.ActivityDiagram:
         return [
           new InitialNode(),
@@ -69,6 +74,16 @@ class Sidebar extends Component<Props> {
     this.selectInteractiveElementsMode(interactiveElementsMode);
   };
 
+  onDrop = (element: Element) => (event: DropEvent) => {
+    const Clazz = element.constructor.prototype.constructor;
+    const newElement = new Clazz(element.name);
+    if (event.position) {
+      newElement.bounds.x = event.position.x;
+      newElement.bounds.y = event.position.y;
+    }
+    this.props.create(newElement);
+  }
+
   render() {
     const options = {
       editorMode: EditorMode.ModelingView,
@@ -106,8 +121,10 @@ class Sidebar extends Component<Props> {
             [EditorMode.ModelingView]: (
               <CanvasProvider value={null}>
                 {this.previews.map((element, index) => (
-                  <Draggable key={index} kind={element.kind as EntityKind}>
-                    <ElementComponent element={element} />
+                  <Draggable key={index} onDrop={this.onDrop(element)}>
+                    <div>
+                      <ElementComponent element={element} />
+                    </div>
                   </Draggable>
                 ))}
               </CanvasProvider>
@@ -141,6 +158,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
+  create: typeof ElementRepository.create;
   selectEditorMode: typeof EditorService.update;
 }
 
@@ -156,6 +174,7 @@ const mapStateToProps = (state: ReduxState) => ({
 export default connect(
   mapStateToProps,
   {
+    create: ElementRepository.create,
     selectEditorMode: EditorService.update,
   }
 )(Sidebar);

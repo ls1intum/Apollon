@@ -9,7 +9,7 @@ import LayoutedElement from './../LayoutedElement/LayoutedElement';
 import LayoutedRelationship from './../LayoutedRelationship';
 
 import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';
-import Droppable from './../DragDrop/Droppable';
+import { Droppable } from './../Draggable';
 import Diagram from '../../domain/Diagram';
 
 class Canvas extends Component<Props, State> {
@@ -46,7 +46,7 @@ class Canvas extends Component<Props, State> {
     return (
       <div ref={this.canvas} tabIndex={0}>
         <CanvasProvider value={context}>
-          <Droppable container={this.canvas}>
+          <Droppable>
             <Grid
               grid={10}
               width={diagram.bounds.width}

@@ -5,10 +5,9 @@ import Canvas from './../components/Canvas';
 import Sidebar from './../components/Sidebar';
 import { Layout } from './styles';
 
-import DragDrop from './../components/DragDrop';
 import Editor from './../components/Container';
 import KeyboardEventListener from './../components/KeyboardEventListener';
-import DragLayer from './../components/DragDrop/DragLayer';
+import { DragLayer } from './../components/Draggable';
 
 class App extends React.Component<Props> {
   store: RefObject<Store> = createRef();
@@ -18,17 +17,17 @@ class App extends React.Component<Props> {
     return (
       <Store ref={this.store} initialState={this.props.state}>
         <Theme styles={this.props.styles}>
-          <DragDrop>
+          <DragLayer>
             <KeyboardEventListener>
               <Layout>
                 <Editor ref={this.container}>
                   <Canvas />
                 </Editor>
                 <Sidebar />
-                <DragLayer canvas={this.container.current!} />
+                {/* <DragLayer canvas={this.container.current!} /> */}
               </Layout>
             </KeyboardEventListener>
-          </DragDrop>
+          </DragLayer>
         </Theme>
       </Store>
     );

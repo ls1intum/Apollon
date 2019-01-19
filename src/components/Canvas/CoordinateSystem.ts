@@ -17,8 +17,10 @@ class CoordinateSystem {
 
   offset() {
     const bounds = this.container.getBoundingClientRect();
-    const x = bounds.left - this.container.scrollLeft;
-    const y = bounds.top - this.container.scrollTop;
+    let x = bounds.left - this.container.scrollLeft;
+    let y = bounds.top - this.container.scrollTop;
+    x = Math.round(x / 10) * 10;
+    y = Math.round(y / 10) * 10;
     return { x, y };
   }
 
