@@ -25,10 +25,11 @@ class DragLayer extends React.Component<Props, State> {
     document.removeEventListener('mouseup', this.cancel);
   }
 
-  onMouseDown = (element: Draggable) => (event: React.MouseEvent) => {
+  onMouseDown = (element: Draggable) => (event: MouseEvent) => {
     if (event.button != 0) return;
 
-    let bounds = event.currentTarget.getBoundingClientRect();
+    const node = event.currentTarget as HTMLElement;
+    const bounds = node.getBoundingClientRect();
     const offset = {
       x: event.clientX - bounds.left,
       y: event.clientY - bounds.top,
@@ -54,20 +55,24 @@ class DragLayer extends React.Component<Props, State> {
     });
   };
 
-  onMouseUp = (element: Droppable) => (event: React.MouseEvent) => {
-    if (!this.state.dragging) return;
+  onMouseUp = (element: Droppable) => (event: MouseEvent) => {
+    if (!this.state.dragging || !this.state.element) return;
+    event.stopPropagation();
 
     const customEvent: DropEvent = {
       position: {
         x: event.clientX - this.state.offset.x,
         y: event.clientY - this.state.offset.y,
       },
-      element: this.state.element!,
-    }
-    element && element.onDrop(customEvent);
+      element: this.state.element,
+      action: null,
+    };
+    this.state.element.onDrop(customEvent);
+    element.onDrop(customEvent);
+    this.cancel();
   };
 
-  cancel = (event: MouseEvent) => {
+  cancel = () => {
     this.setState({
       focused: false,
       dragging: false,

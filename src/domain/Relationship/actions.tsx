@@ -1,5 +1,6 @@
 import { Relationship, RelationshipEnd, RelationshipKind } from ".";
 import newId, { UUID } from '../utils/uuid';
+import { AnyAction } from 'redux';
 
 export type RelationshipsAction =
     | CreateRelationshipAction
@@ -7,22 +8,22 @@ export type RelationshipsAction =
     | FlipRelationshipsAction
     | UpdateRelationshipAction;
 
-export interface CreateRelationshipAction {
+export interface CreateRelationshipAction extends AnyAction {
     type: "CREATE_RELATIONSHIP";
     relationship: Relationship;
 }
 
-interface FlipRelationshipAction {
+interface FlipRelationshipAction extends AnyAction {
     type: "FLIP_RELATIONSHIP";
     relationship: Relationship;
 }
 
-interface FlipRelationshipsAction {
+interface FlipRelationshipsAction extends AnyAction {
     type: "FLIP_RELATIONSHIPS";
     relationshipIds: UUID[];
 }
 
-interface UpdateRelationshipAction {
+interface UpdateRelationshipAction extends AnyAction {
     type: "UPDATE_RELATIONSHIPS";
     relationship: Relationship;
 }

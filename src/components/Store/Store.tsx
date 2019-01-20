@@ -7,15 +7,21 @@ import {
   combineReducers,
   Store as ReduxStore,
   Reducer,
+  AnyAction,
 } from 'redux';
 import ReduxState from './State';
+import reduceReducers from 'reduce-reducers';
 
 import EditorService from './../../services/EditorService';
 import interactiveElementsReducer from './../../services/redux/interactiveElements/reducer';
 import relationshipsReducer from '../../domain/Relationship/reducer';
-import { ElementReducer } from './../../domain/Element';
+import { ElementReducer, ElementState } from './../../domain/Element';
+import { ContainerReducer } from './../../domain/Container';
 import { DiagramReducer } from './../../domain/Diagram';
 import { withUndoRedo } from './../../services/redux/undoRedo';
+
+console.log(ElementReducer);
+console.log(ContainerReducer);
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;
@@ -24,7 +30,10 @@ class Store extends React.Component<Props> {
     relationships: relationshipsReducer,
     interactiveElements: interactiveElementsReducer,
     editor: EditorService.reducer,
-    elements: ElementReducer,
+    elements: reduceReducers(ElementReducer, ContainerReducer) as Reducer<
+      ElementState,
+      AnyAction
+    >,
     diagram: DiagramReducer,
   };
 
@@ -32,7 +41,7 @@ class Store extends React.Component<Props> {
     super(props);
 
     const reducer = withUndoRedo(
-      combineReducers<ReduxState, any>(this.reducers)
+      combineReducers<ReduxState>(this.reducers)
     ) as Reducer<ReduxState>;
 
     const composeEnhancers: typeof compose =

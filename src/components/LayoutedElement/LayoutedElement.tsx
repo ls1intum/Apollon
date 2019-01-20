@@ -11,6 +11,7 @@ import selectable from './Selectable';
 import movable from './Movable';
 import resizable from './Resizable';
 import connectable from './Connectable';
+import droppable from './Droppable';
 import { EditorMode, ApollonMode } from '../../services/EditorService';
 
 class LayoutedElement extends Component<Props> {
@@ -26,7 +27,7 @@ class LayoutedElement extends Component<Props> {
     if (apollonMode === ApollonMode.ReadOnly) {
       decorators = [selectable];
     } else {
-      decorators = [connectable, resizable, movable, selectable, hoverable];
+      decorators = [droppable, connectable, resizable, movable, selectable, hoverable];
     }
 
     return compose<typeof ElementComponent>(...decorators)(ElementComponent);

@@ -1,27 +1,30 @@
 import React from 'react';
+import { findDOMNode } from 'react-dom';
 import DropEvent from './DropEvent';
-import { withCanvas, CanvasContext } from './../Canvas';
-import { Consumer } from './Context';
+import { Consumer, Context } from './Context';
 
 export class Droppable extends React.Component<Props> {
-  onDrop = (event: DropEvent) => {
-    const offset = this.props.coordinateSystem.offset();
-    const position = this.props.coordinateSystem.screenToPoint(event.position.x, event.position.y);
-    event.position = { x: position.x - offset.x, y: position.y - offset.y };
+  context: Context | null = null;
 
-    event.element && event.element.onDrop(event);
-    this.props.onDrop && this.props.onDrop(event);
-  };
+  onDrop = (event: DropEvent) => this.props.onDrop && this.props.onDrop(event);
+
+  componentDidMount() {
+    const node = findDOMNode(this) as HTMLElement;
+    node.addEventListener('mouseup', this.context!.onMouseUp(this));
+  }
+
+  componentWillUnmount() {
+    const node = findDOMNode(this) as HTMLElement;
+    node.removeEventListener('mouseup', this.context!.onMouseUp(this));
+  }
 
   render() {
     return (
       <Consumer
-        children={context =>
-          context &&
-          React.cloneElement(this.props.children, {
-            onMouseUp: context.onMouseUp(this),
-          })
-        }
+        children={context => {
+          this.context = context;
+          return context && this.props.children;
+        }}
       />
     );
   }
@@ -32,6 +35,6 @@ interface OwnProps {
   onDrop?: (event: DropEvent) => void;
 }
 
-type Props = OwnProps & CanvasContext;
+type Props = OwnProps;
 
-export default withCanvas(Droppable);
+export default Droppable;

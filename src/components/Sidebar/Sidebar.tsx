@@ -18,7 +18,9 @@ import Element, { ElementRepository } from '../../domain/Element';
 import { Draggable, DropEvent } from './../Draggable';
 
 import ElementComponent from './../LayoutedElement/ElementComponent';
+import Package from './../../domain/plugins/common/Package';
 import Class from './../../domain/plugins/class/Class';
+import Enumeration from './../../domain/plugins/class/Enumeration';
 import Attribute from './../../domain/plugins/class/Attribute';
 import InitialNode from './../../domain/plugins/activity/InitialNode';
 import FinalNode from './../../domain/plugins/activity/FinalNode';
@@ -27,24 +29,35 @@ import ObjectNode from './../../domain/plugins/activity/ObjectNode';
 import MergeNode from './../../domain/plugins/activity/MergeNode';
 import ForkNode from './../../domain/plugins/activity/ForkNode';
 import { CanvasProvider } from '../Canvas/CanvasContext';
+import { Method } from './../../domain/plugins';
+import { ContainerRepository } from '../../domain/Container';
 
-class Sidebar extends Component<Props> {
-  get previews(): Element[] {
+class Sidebar extends Component<Props, State> {
+  state: State = {
+    previews: [],
+  };
+
+  private refresh = () => {
     switch (this.props.diagramType) {
       case DiagramType.ClassDiagram:
-        return [new Class()];
+        this.setState({
+          previews: [new Package(), new Class(), new Enumeration()],
+        });
+        break;
       case DiagramType.ActivityDiagram:
-        return [
-          new InitialNode(),
-          new FinalNode(),
-          new ActionNode(),
-          new ObjectNode(),
-          new MergeNode(),
-          new ForkNode(),
-        ];
+        this.setState({
+          previews: [
+            new InitialNode(),
+            new FinalNode(),
+            new ActionNode(),
+            new ObjectNode(),
+            new MergeNode(),
+            new ForkNode(),
+          ],
+        });
+        break;
     }
-    return [];
-  }
+  };
 
   elements: { [key: string]: Element } = Object.entries(Plugins)
     .filter(([k, v]) => !k.includes('Component'))
@@ -74,23 +87,30 @@ class Sidebar extends Component<Props> {
   };
 
   onDrop = (element: Element) => (event: DropEvent) => {
+    event.action = {
+      type: 'CREATE',
+      element,
+    };
+    this.refresh();
     switch (element.kind) {
       case "Class":
-        const newElement = new Class();
-        newElement.bounds = { ...newElement.bounds, ...event.position };
-
-        const attribute = newElement.addAttribute();
-        const method = newElement.addMethod();
-        [newElement, attribute, method].map(this.props.create);
+        const classElement = element as Class;
+        const method = classElement.addMethod(new Method());
+        const attribute = classElement.addAttribute(new Attribute());
+        const attribute1 = classElement.addAttribute(new Attribute());
+        [attribute, attribute1, method].map(this.props.create);
         return;
+      case 'Enumeration':
+        const enumeration = element as Enumeration;
+        console.log('Add childs to enum', enumeration);
+        const enum1 = new Attribute('Case1');
+        this.props.addElement(enumeration, enum1);
+        break;
     }
-    const Clazz = element.constructor.prototype.constructor;
-    const newElement = new Clazz(element.name);
-    if (event.position) {
-      newElement.bounds.x = event.position.x;
-      newElement.bounds.y = event.position.y;
-    }
-    this.props.create(newElement);
+  };
+
+  componentDidMount() {
+    this.refresh();
   }
 
   render() {
@@ -129,7 +149,7 @@ class Sidebar extends Component<Props> {
           {
             [EditorMode.ModelingView]: (
               <CanvasProvider value={null}>
-                {this.previews.map((element, index) => (
+                {this.state.previews.map((element, index) => (
                   <Draggable key={index} onDrop={this.onDrop(element)}>
                     <div>
                       <ElementComponent element={element} />
@@ -168,10 +188,15 @@ interface StateProps {
 
 interface DispatchProps {
   create: typeof ElementRepository.create;
+  addElement: typeof ContainerRepository.addElement;
   selectEditorMode: typeof EditorService.update;
 }
 
 type Props = StateProps & DispatchProps;
+
+interface State {
+  previews: Element[];
+}
 
 const mapStateToProps = (state: ReduxState) => ({
   diagramType: state.diagram.type,
@@ -184,6 +209,7 @@ export default connect(
   mapStateToProps,
   {
     create: ElementRepository.create,
+    addElement: ContainerRepository.addElement,
     selectEditorMode: EditorService.update,
   }
 )(Sidebar);

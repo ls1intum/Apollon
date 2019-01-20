@@ -5,32 +5,63 @@ import Container from './../../Container';
 import Method, { MethodComponent } from './Method';
 import Attribute, { AttributeComponent } from './Attribute';
 import Element, { ElementRepository } from '../../Element';
+import Boundary from '../../geo/Boundary';
+
+interface ChildPosition {
+  id: string;
+  kind: string;
+  bounds: Boundary;
+}
+
+const HEADER_HEIGHT = 35;
 
 class Class extends Container {
   isAbstract: boolean = false;
+  childPosition: ChildPosition[] = [];
 
   constructor(public name: string = 'Class') {
     super(name);
-    this.bounds = { ...this.bounds, height: 36 };
+    this.bounds = { ...this.bounds, height: HEADER_HEIGHT };
   }
 
-  addAttribute(name?: string): Attribute {
-    const attribute = new Attribute(name);
-    attribute.owner = this.id;
-    this.ownedElements.push(attribute.id);
+  addAttribute(attribute: Attribute): Attribute {
+    const index = this.childPosition.reduce<number>((prev, cur) => {
+      if (cur.kind === 'Attribute') {
+        return prev + 1;
+      }
+      return prev;
+    }, 0);
+    console.log(attribute, index)
     this.bounds.height += attribute.bounds.height;
-    attribute.bounds.y =
-      (this.ownedElements.length - 1) * attribute.bounds.height + 35;
+    attribute.bounds.y = HEADER_HEIGHT + index * attribute.bounds.height;
+    attribute.owner = this.id;
+    this.ownedElements.splice(index, 0, attribute.id);
+    this.childPosition.splice(index, 0, {
+      id: attribute.id,
+      kind: attribute.kind,
+      bounds: attribute.bounds,
+    });
+    console.log(this.childPosition);
     return attribute;
   }
 
-  addMethod(name?: string): Method {
-    const method = new Method(name);
+  addMethod(method: Method): Method {
+    const index = this.childPosition.reduce<number>((prev, cur) => {
+      if (cur.kind === 'Attribute' || cur.kind === 'Method') {
+        return prev + 1;
+      }
+      return prev;
+    }, 0);
+    console.log(method, index)
     method.owner = this.id;
-    this.ownedElements.push(method.id);
     this.bounds.height += method.bounds.height;
-    method.bounds.y =
-      (this.ownedElements.length - 1) * method.bounds.height + 36;
+    method.bounds.y = HEADER_HEIGHT + index * method.bounds.height;
+    this.ownedElements.splice(index, 0, method.id);
+    this.childPosition.splice(index, 0, {
+      id: method.id,
+      kind: method.kind,
+      bounds: method.bounds,
+    });
     return method;
   }
 }
@@ -61,10 +92,11 @@ const UnconnectedClassComponent: SFC<Props> = ({
           <rect x="0" y="100%" width="100%" height="1" fill="black" />
         </g>
       </svg>
-      {ownedElements.filter(e => e instanceof Attribute).map(e => {
+      {children}
+      {/* {ownedElements.filter(e => e instanceof Attribute).map(e => {
         currentY += e.bounds.height;
         return (
-          <svg {...e.bounds} key={e.id}>
+          <svg {...e.bounds} y={currentY - e.bounds.height} key={e.id}>
             <AttributeComponent element={e} />
           </svg>
         );
@@ -73,11 +105,11 @@ const UnconnectedClassComponent: SFC<Props> = ({
       {ownedElements.filter(e => e instanceof Method).map(e => {
         currentY += e.bounds.height;
         return (
-          <svg {...e.bounds} key={e.id}>
+          <svg {...e.bounds} y={currentY - e.bounds.height} key={e.id}>
             <MethodComponent element={e} />
           </svg>
         );
-      })}
+      })} */}
     </g>
   );
 };

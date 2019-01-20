@@ -9,8 +9,9 @@ import LayoutedElement from './../LayoutedElement/LayoutedElement';
 import LayoutedRelationship from './../LayoutedRelationship';
 
 import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';
-import { Droppable } from './../Draggable';
+import { Droppable, DropEvent } from './../Draggable';
 import Diagram from '../../domain/Diagram';
+import Element, { ElementRepository } from '../../domain/Element';
 
 class Canvas extends Component<Props, State> {
   state: State = {
@@ -36,6 +37,20 @@ class Canvas extends Component<Props, State> {
     );
   };
 
+  onDrop = (event: DropEvent) => {
+    if (!event.action) return;
+    const element = event.action.element;
+    const offset = this.coordinateSystem.offset();
+    const position = this.coordinateSystem.screenToPoint(
+      event.position.x,
+      event.position.y
+    );
+    element.bounds.x = position.x - offset.x;
+    element.bounds.y = position.y - offset.y;
+
+    this.props.create(element);
+  };
+
   render() {
     const { diagram } = this.props;
     const context: CanvasContext = {
@@ -46,7 +61,7 @@ class Canvas extends Component<Props, State> {
     return (
       <div ref={this.canvas} tabIndex={0}>
         <CanvasProvider value={context}>
-          <Droppable>
+          <Droppable onDrop={this.onDrop}>
             <Grid
               grid={10}
               width={diagram.bounds.width}
@@ -106,7 +121,9 @@ interface StateProps {
   diagram: Diagram;
 }
 
-interface DispatchProps {}
+interface DispatchProps {
+  create: typeof ElementRepository.create;
+}
 
 type Props = OwnProps & StateProps & DispatchProps;
 
@@ -117,5 +134,8 @@ interface State {
 export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   (state: ReduxState): StateProps => ({
     diagram: state.diagram,
-  })
+  }),
+  {
+    create: ElementRepository.create,
+  }
 )(Canvas);

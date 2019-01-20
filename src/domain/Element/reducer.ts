@@ -1,5 +1,5 @@
 import Element from '.';
-import { Reducer } from 'redux';
+import { Reducer, AnyAction } from 'redux';
 import { ElementState, ActionTypes } from './types';
 import { Actions } from './repository';
 
@@ -9,9 +9,9 @@ const initialState: ElementState = {};
 //   return [e, ...e.ownedElements.reduce<Element[]>((r, k) => [...r, ...flatten(k)], [])];
 // };
 
-const ElementReducer: Reducer<ElementState, Actions> = (
+const ElementReducer: Reducer<ElementState, AnyAction> = (
   state: ElementState = initialState,
-  action: Actions
+  action: AnyAction
 ): ElementState => {
   let elements: ElementState;
   switch (action.type) {

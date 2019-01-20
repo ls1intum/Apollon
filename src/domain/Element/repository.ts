@@ -1,17 +1,17 @@
-import { Action as ReduxAction } from 'redux';
+import { Action as ReduxAction, AnyAction } from 'redux';
 import { State } from './../../components/Store';
 import { ActionTypes, ElementState } from './types';
 import Element from '.';
 import * as Plugins from './../plugins';
 
-interface Action<T extends ActionTypes> extends ReduxAction<T> {
+interface Action<T extends ActionTypes> extends AnyAction {
   type: T;
-  element: Exclude<Element, 'render'>;
+  element: Element;
 }
 
 const action = (
   type: ActionTypes,
-  element: Exclude<Element, 'render'>
+  element: Element
 ): Action<ActionTypes> => ({
   type,
   element,
