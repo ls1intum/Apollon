@@ -12,6 +12,7 @@ import movable from './Movable';
 import resizable from './Resizable';
 import connectable from './Connectable';
 import droppable from './Droppable';
+import editable from './Editable';
 import { EditorMode, ApollonMode } from '../../services/EditorService';
 import { Attribute, Method } from '../../domain/plugins';
 
@@ -29,6 +30,7 @@ class LayoutedElement extends Component<Props> {
     if (apollonMode === ApollonMode.ReadOnly) {
       decorators = [selectable];
     } else {
+      if (features.isEditable) decorators.push(editable);
       if (features.isDroppable) decorators.push(droppable);
       if (features.isConnectable) decorators.push(connectable);
       if (features.isResizable) decorators.push(resizable);

@@ -13,6 +13,7 @@ import { Droppable, DropEvent } from './../Draggable';
 import Diagram, { DiagramRepository } from '../../domain/Diagram';
 import { ElementRepository } from '../../domain/Element';
 import KeyboardEventListener from './KeyboardEventListener';
+import PopupLayer from './../Popup';
 
 class Canvas extends Component<Props, State> {
   state: State = {
@@ -68,29 +69,31 @@ class Canvas extends Component<Props, State> {
               width={diagram.bounds.width}
               height={diagram.bounds.height}
             >
-              {this.state.isMounted && (
-                <>
-                  <KeyboardEventListener />
-                  <svg width="100%" height="100%">
-                    <defs>
-                      <RelationshipMarkers />
-                    </defs>
+              <PopupLayer>
+                {this.state.isMounted && (
+                  <>
+                    <KeyboardEventListener />
+                    <svg width="100%" height="100%">
+                      <defs>
+                        <RelationshipMarkers />
+                      </defs>
 
-                    <ConnectLayer>
-                      {diagram.ownedElements.map(element => (
-                        <LayoutedElement key={element} element={element} />
-                      ))}
-                      {diagram.ownedRelationships.map(relationship => (
-                        <LayoutedRelationship
-                          key={relationship}
-                          relationship={relationship}
-                          container={this.canvas}
-                        />
-                      ))}
-                    </ConnectLayer>
-                  </svg>
-                </>
-              )}
+                      <ConnectLayer>
+                        {diagram.ownedElements.map(element => (
+                          <LayoutedElement key={element} element={element} />
+                        ))}
+                        {diagram.ownedRelationships.map(relationship => (
+                          <LayoutedRelationship
+                            key={relationship}
+                            relationship={relationship}
+                            container={this.canvas}
+                          />
+                        ))}
+                      </ConnectLayer>
+                    </svg>
+                  </>
+                )}
+              </PopupLayer>
             </Grid>
           </Droppable>
         </CanvasProvider>

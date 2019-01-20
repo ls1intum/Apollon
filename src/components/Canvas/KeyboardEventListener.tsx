@@ -45,11 +45,11 @@ class KeyboardEventListener extends Component<Props> {
   };
 
   componentDidMount() {
-    this.props.canvas.addEventListener('keydown', this.eventListener);
+    this.props.canvas.addEventListener('keyup', this.eventListener);
   }
 
   componentWillUnmount() {
-    this.props.canvas.removeEventListener('keydown', this.eventListener);
+    this.props.canvas.removeEventListener('keyup', this.eventListener);
   }
 
   render() {

@@ -9,7 +9,6 @@ import { DragLayer } from './../components/Draggable';
 
 class App extends React.Component<Props> {
   store: RefObject<Store> = createRef();
-  container: RefObject<HTMLDivElement> = createRef();
 
   render() {
     return (
@@ -17,7 +16,7 @@ class App extends React.Component<Props> {
         <Theme styles={this.props.styles}>
           <DragLayer>
             <Layout>
-              <Editor ref={this.container}>
+              <Editor>
                 <Canvas />
               </Editor>
               <Sidebar />

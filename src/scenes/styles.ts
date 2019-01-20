@@ -6,6 +6,7 @@ export const Layout = styled.div`
   height: 100%;
   box-sizing: border-box;
   user-select: none;
+  position: relative;
 
   *,
   *:before,

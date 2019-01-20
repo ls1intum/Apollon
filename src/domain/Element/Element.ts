@@ -8,10 +8,11 @@ abstract class Element {
   static isResizable = true;
   static isConnectable = true;
   static isDroppable = false;
+  static isEditable = true;
 
   readonly id: string = uuid();
   readonly kind: string = (<any>this).constructor.name;
-  bounds: Boundary = new Boundary(0, 0, 200, 80);
+  bounds: Boundary = new Boundary(0, 0, 200, 100);
 
   selected: boolean = false;
 

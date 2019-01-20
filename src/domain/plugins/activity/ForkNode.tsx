@@ -2,6 +2,8 @@ import React, { SFC } from 'react';
 import Element from './../../Element';
 
 class ForkNode extends Element {
+  static isEditable = false;
+
   constructor(public name: string = '') {
     super(name);
     this.bounds = { ...this.bounds, width: 20, height: 60 };

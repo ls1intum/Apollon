@@ -7,6 +7,7 @@ class Member extends Element {
   static isMovable = false;
   static isResizable = false;
   static isConnectable = false;
+  static isEditable = false;
 
   constructor(public name: string = '') {
     super(name);
