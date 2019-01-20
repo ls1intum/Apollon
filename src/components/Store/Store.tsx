@@ -20,9 +20,6 @@ import { ContainerReducer } from './../../domain/Container';
 import { DiagramReducer } from './../../domain/Diagram';
 import { withUndoRedo } from './../../services/redux/undoRedo';
 
-console.log(ElementReducer);
-console.log(ContainerReducer);
-
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;
 

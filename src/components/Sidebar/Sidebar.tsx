@@ -20,6 +20,7 @@ import { Draggable, DropEvent } from './../Draggable';
 import ElementComponent from './../LayoutedElement/ElementComponent';
 import Package from './../../domain/plugins/common/Package';
 import Class from './../../domain/plugins/class/Class';
+import Interface from './../../domain/plugins/class/Interface';
 import Enumeration from './../../domain/plugins/class/Enumeration';
 import Attribute from './../../domain/plugins/class/Attribute';
 import InitialNode from './../../domain/plugins/activity/InitialNode';
@@ -41,7 +42,7 @@ class Sidebar extends Component<Props, State> {
     switch (this.props.diagramType) {
       case DiagramType.ClassDiagram:
         this.setState({
-          previews: [new Package(), new Class(), new Enumeration()],
+          previews: [new Package(), new Class(), new Class('AbstractClass', true), new Interface(), new Enumeration()],
         });
         break;
       case DiagramType.ActivityDiagram:
@@ -92,21 +93,27 @@ class Sidebar extends Component<Props, State> {
       element,
     };
     this.refresh();
-    switch (element.kind) {
-      case "Class":
-        const classElement = element as Class;
-        const method = classElement.addMethod(new Method());
-        const attribute = classElement.addAttribute(new Attribute());
-        const attribute1 = classElement.addAttribute(new Attribute());
-        [attribute, attribute1, method].map(this.props.create);
-        return;
-      case 'Enumeration':
-        const enumeration = element as Enumeration;
-        console.log('Add childs to enum', enumeration);
-        const enum1 = new Attribute('Case1');
-        this.props.addElement(enumeration, enum1);
-        break;
-    }
+
+    setTimeout(() => {
+      switch (element.kind) {
+        case 'Class':
+          const classElement = element as Class;
+          this.props.addElement(classElement, new Method('+ method()'));
+          this.props.addElement(classElement, new Attribute('+ attribute: Type'));
+          return;
+        case 'Interface':
+          const interfaceElement = element as Interface;
+          this.props.addElement(interfaceElement, new Method('+ method()'));
+          this.props.addElement(interfaceElement, new Attribute('+ attribute: Type'));
+          return;
+        case 'Enumeration':
+          const enumeration = element as Enumeration;
+          this.props.addElement(enumeration, new Attribute('Case1'));
+          this.props.addElement(enumeration, new Attribute('Case2'));
+          this.props.addElement(enumeration, new Attribute('Case3'));
+          break;
+      }
+    }, 0);
   };
 
   componentDidMount() {

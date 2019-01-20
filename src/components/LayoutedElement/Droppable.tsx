@@ -3,8 +3,7 @@ import { compose } from 'redux';
 import { connect } from 'react-redux';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { Droppable as DragDroppable, DropEvent } from './../Draggable';
-import Element, { ElementRepository } from '../../domain/Element';
-import Container from '../../domain/Container';
+import Container, { ContainerRepository } from '../../domain/Container';
 import { withCanvas, CanvasContext } from './../Canvas';
 
 const droppable = (WrappedComponent: typeof ElementComponent) => {
@@ -20,11 +19,8 @@ const droppable = (WrappedComponent: typeof ElementComponent) => {
       );
       element.bounds.x = position.x - offset.x - container.bounds.x;
       element.bounds.y = position.y - offset.y - container.bounds.y;
-      element.owner = container.id;
-      container.ownedElements.push(element.id);
 
-      this.props.create(element);
-      this.props.update(container);
+      this.props.addElement(container, element);
     };
 
     render() {
@@ -37,8 +33,7 @@ const droppable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface DispatchProps {
-    create: typeof ElementRepository.create;
-    update: typeof ElementRepository.update;
+    addElement: typeof ContainerRepository.addElement;
   }
 
   type Props = OwnProps & DispatchProps & CanvasContext;
@@ -48,8 +43,7 @@ const droppable = (WrappedComponent: typeof ElementComponent) => {
     connect(
       null,
       {
-        create: ElementRepository.create,
-        update: ElementRepository.update,
+        addElement: ContainerRepository.addElement,
       }
     )
   )(Droppable);

@@ -1,4 +1,5 @@
 import Diagram from './Diagram';
+import Omit from '../utils/Omit';
 
 export const enum DiagramType {
   ClassDiagram = 'CLASS',
@@ -7,4 +8,4 @@ export const enum DiagramType {
 
 export const enum ActionTypes {}
 
-export interface DiagramState extends Diagram {}
+export interface DiagramState extends Omit<Diagram, 'addElement'> {}

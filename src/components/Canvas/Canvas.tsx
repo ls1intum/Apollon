@@ -10,7 +10,7 @@ import LayoutedRelationship from './../LayoutedRelationship';
 
 import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';
 import { Droppable, DropEvent } from './../Draggable';
-import Diagram from '../../domain/Diagram';
+import Diagram, { DiagramRepository } from '../../domain/Diagram';
 import Element, { ElementRepository } from '../../domain/Element';
 
 class Canvas extends Component<Props, State> {
@@ -133,7 +133,7 @@ interface State {
 
 export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   (state: ReduxState): StateProps => ({
-    diagram: state.diagram,
+    diagram: DiagramRepository.read(state),
   }),
   {
     create: ElementRepository.create,
