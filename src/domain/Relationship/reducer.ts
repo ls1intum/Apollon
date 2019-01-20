@@ -20,30 +20,33 @@ export default function relationshipsReducer(state = initialState, action: Relat
                 }
             };
 
-        case "@@element/DELETE": {
-            const deadRelationshipIds = new Set<string>();
-            const allRelationships = state.allIds.map(id => state.byId[id]);
+        // case "@@element/DELETE": {
+            // const deadRelationshipIds = new Set<string>();
+            // const allRelationships = state.allIds.map(id => state.byId[id]);
 
-            for (const { id, source, target } of allRelationships) {
-                if (source.entityId === action.element.id || target.entityId === action.element.id) {
-                    deadRelationshipIds.add(id);
-                    continue;
-                }
-            }
+            // for (const { id, source, target } of allRelationships) {
+            //     if (source.entityId === action.element.id || target.entityId === action.element.id || id === action.element.id) {
+            //         deadRelationshipIds.add(id);
+            //         continue;
+            //     }
+            // }
+            // console.log('deadRelationshipIds', deadRelationshipIds);
 
-            if (deadRelationshipIds.size === 0) {
-                return state;
-            }
+            // if (deadRelationshipIds.size === 0) {
+            //     return state;
+            // }
 
-            const allIds = state.allIds.filter(id => !deadRelationshipIds.has(id));
-            const byId = { ...state.byId };
+            // const allIds = state.allIds.filter(id => !deadRelationshipIds.has(id));
+            // const byId = { ...state.byId };
 
-            deadRelationshipIds.forEach(id => {
-                delete byId[id];
-            });
+            // deadRelationshipIds.forEach(id => {
+            //     delete byId[id];
+            // });
 
-            return { allIds, byId };
-        }
+            // console.log('byId', byId);
+
+            // return { allIds, byId };
+        // }
 
         case "FLIP_RELATIONSHIP": {
             const relationship = action.relationship;

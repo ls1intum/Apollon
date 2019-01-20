@@ -17,6 +17,13 @@ const ElementReducer: Reducer<DiagramState, Actions | CreateRelationshipAction> 
         ...state,
         ownedElements: [...state.ownedElements, action.element.id],
       };
+    case ActionTypes.DELETE:
+      if (action.element.owner) break;
+      return {
+        ...state,
+        ownedElements: state.ownedElements.filter(id => id !== action.element.id),
+        ownedRelationships: state.ownedRelationships.filter(id => id !== action.element.id),
+      };
     case "CREATE_RELATIONSHIP":
       return {
         ...state,

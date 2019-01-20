@@ -12,7 +12,7 @@ export type Actions = Action<any>;
 class DiagramRepository {
   static read = (state: State): Diagram => {
     const diagram: DiagramState = state.diagram;
-    return Object.setPrototypeOf(diagram, Diagram);
+    return Object.setPrototypeOf(diagram, Diagram.prototype);
   };
 }
 

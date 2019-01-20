@@ -1,12 +1,10 @@
 import React, { createRef, RefObject } from 'react';
 import Store, { State as ReduxState } from './../components/Store';
 import Theme, { Styles } from './../components/Theme';
+import { Layout } from './styles';
+import Editor from './../components/Container';
 import Canvas from './../components/Canvas';
 import Sidebar from './../components/Sidebar';
-import { Layout } from './styles';
-
-import Editor from './../components/Container';
-import KeyboardEventListener from './../components/KeyboardEventListener';
 import { DragLayer } from './../components/Draggable';
 
 class App extends React.Component<Props> {
@@ -18,15 +16,12 @@ class App extends React.Component<Props> {
       <Store ref={this.store} initialState={this.props.state}>
         <Theme styles={this.props.styles}>
           <DragLayer>
-            <KeyboardEventListener>
-              <Layout>
-                <Editor ref={this.container}>
-                  <Canvas />
-                </Editor>
-                <Sidebar />
-                {/* <DragLayer canvas={this.container.current!} /> */}
-              </Layout>
-            </KeyboardEventListener>
+            <Layout>
+              <Editor ref={this.container}>
+                <Canvas />
+              </Editor>
+              <Sidebar />
+            </Layout>
           </DragLayer>
         </Theme>
       </Store>

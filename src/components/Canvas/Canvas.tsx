@@ -11,7 +11,8 @@ import LayoutedRelationship from './../LayoutedRelationship';
 import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';
 import { Droppable, DropEvent } from './../Draggable';
 import Diagram, { DiagramRepository } from '../../domain/Diagram';
-import Element, { ElementRepository } from '../../domain/Element';
+import { ElementRepository } from '../../domain/Element';
+import KeyboardEventListener from './KeyboardEventListener';
 
 class Canvas extends Component<Props, State> {
   state: State = {
@@ -68,44 +69,51 @@ class Canvas extends Component<Props, State> {
               height={diagram.bounds.height}
             >
               {this.state.isMounted && (
-                <svg width="100%" height="100%">
-                  <defs>
-                    <RelationshipMarkers />
-                    <filter id="highlight" filterUnits="userSpaceOnUse">
-                      <feFlood
-                        floodColor="#0064ff"
-                        floodOpacity="0.2"
-                        result="color"
-                      />
-                      <feMorphology
-                        operator="dilate"
-                        radius="4"
-                        in="SourceAlpha"
-                        result="mask"
-                      />
-                      <feComposite
-                        in="color"
-                        in2="mask"
-                        operator="in"
-                        result="outline"
-                      />
-                      <feBlend in="SourceGraphic" in2="outline" mode="normal" />
-                    </filter>
-                  </defs>
+                <>
+                  <KeyboardEventListener />
+                  <svg width="100%" height="100%">
+                    <defs>
+                      <RelationshipMarkers />
+                      <filter id="highlight" filterUnits="userSpaceOnUse">
+                        <feFlood
+                          floodColor="#0064ff"
+                          floodOpacity="0.2"
+                          result="color"
+                        />
+                        <feMorphology
+                          operator="dilate"
+                          radius="4"
+                          in="SourceAlpha"
+                          result="mask"
+                        />
+                        <feComposite
+                          in="color"
+                          in2="mask"
+                          operator="in"
+                          result="outline"
+                        />
+                        <feBlend
+                          in="SourceGraphic"
+                          in2="outline"
+                          mode="normal"
+                        />
+                      </filter>
+                    </defs>
 
-                  <ConnectLayer>
-                    {diagram.ownedElements.map(element => (
-                      <LayoutedElement key={element} element={element} />
-                    ))}
-                    {diagram.ownedRelationships.map(relationship => (
-                      <LayoutedRelationship
-                        key={relationship}
-                        relationship={relationship}
-                        container={this.canvas}
-                      />
-                    ))}
-                  </ConnectLayer>
-                </svg>
+                    <ConnectLayer>
+                      {diagram.ownedElements.map(element => (
+                        <LayoutedElement key={element} element={element} />
+                      ))}
+                      {diagram.ownedRelationships.map(relationship => (
+                        <LayoutedRelationship
+                          key={relationship}
+                          relationship={relationship}
+                          container={this.canvas}
+                        />
+                      ))}
+                    </ConnectLayer>
+                  </svg>
+                </>
               )}
             </Grid>
           </Droppable>

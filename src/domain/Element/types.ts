@@ -1,4 +1,6 @@
 import Element from '.';
+import Diagram from '../Diagram';
+import Omit from '../utils/Omit';
 
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',

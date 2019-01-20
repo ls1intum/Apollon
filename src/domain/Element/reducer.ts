@@ -2,6 +2,7 @@ import Element from '.';
 import { Reducer, AnyAction } from 'redux';
 import { ElementState, ActionTypes } from './types';
 import { Actions } from './repository';
+import Container from '../Container';
 
 const initialState: ElementState = {};
 
@@ -25,24 +26,35 @@ const ElementReducer: Reducer<ElementState, AnyAction> = (
       };
     case ActionTypes.UPDATE:
       // elements = flatten(action.element).reduce<ElementState>((r, k) => ({ ...r, [k.id]: { ...k, owner: k.owner && k.owner.id, ownedElements: k.ownedElements.map(e => e.id), }}), {});
-    
+
       return {
         ...state,
         // ...elements,
         [action.element.id]: { ...action.element },
       };
     case ActionTypes.DELETE:
-      // const find = (id: string): string[] => {
-      //   const t = state[id].ownedElements.reduce<string[]>((o, e) => [...o, ...find(e)], []);
-      //   return [id, ...t];
-      // }
-      // const toDelete: string[] = find(action.element.id);
-      // return Object.keys(state)
-      //   .filter(key => !toDelete.includes(key))
-      //   .reduce<ElementState>((acc, key) => ({ ...acc, [key]: {
-      //     ...state[key],
-      //     ownedElements: state[key].ownedElements.filter(e => !toDelete.includes(e)),
-      //   }}), {});
+      const remove = (state: ElementState, ids: string[]): ElementState => {
+        if (!ids.length) return state;
+        const result: { [id: string]: Element } = {};
+        let children: string[] = [];
+        for (const id in state) {
+          const e: Element = state[id];
+          if (ids.includes(id)) {
+            if ('ownedElements' in e) {
+              const c = e as Container;
+              children = children.concat(c.ownedElements);
+            }
+          } else {
+            if ('ownedElements' in e) {
+              const c = e as Container;
+              c.ownedElements = c.ownedElements.filter(id => !ids.includes(id));
+            }
+            result[id] = state[id];
+          }
+        }
+        return remove(result, children);
+      };
+      return remove(state, [action.element.id]);
   }
   return state;
 };
