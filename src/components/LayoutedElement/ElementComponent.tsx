@@ -52,20 +52,12 @@ class ElementComponent extends Component<Props> {
           }
           return (
             <Svg {...bounds} moving={this.props.moving}>
-              <g
-                filter={
-                  this.props.hovered || this.props.selected
-                    ? 'url(#highlight)'
-                    : ''
-                }
-              >
-                <Component element={element}>
-                  {element instanceof Container &&
-                    element.ownedElements.map((child: string) => {
-                      return <LayoutedElement key={child} element={child} />;
-                    })}
-                </Component>
-              </g>
+              <Component element={element}>
+                {element instanceof Container &&
+                  element.ownedElements.map((child: string) => {
+                    return <LayoutedElement key={child} element={child} />;
+                  })}
+              </Component>
               {this.props.children}
             </Svg>
           );

@@ -74,30 +74,6 @@ class Canvas extends Component<Props, State> {
                   <svg width="100%" height="100%">
                     <defs>
                       <RelationshipMarkers />
-                      <filter id="highlight" filterUnits="userSpaceOnUse">
-                        <feFlood
-                          floodColor="#0064ff"
-                          floodOpacity="0.2"
-                          result="color"
-                        />
-                        <feMorphology
-                          operator="dilate"
-                          radius="4"
-                          in="SourceAlpha"
-                          result="mask"
-                        />
-                        <feComposite
-                          in="color"
-                          in2="mask"
-                          operator="in"
-                          result="outline"
-                        />
-                        <feBlend
-                          in="SourceGraphic"
-                          in2="outline"
-                          mode="normal"
-                        />
-                      </filter>
                     </defs>
 
                     <ConnectLayer>
