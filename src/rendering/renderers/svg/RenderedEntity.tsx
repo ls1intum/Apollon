@@ -11,7 +11,11 @@ import {
     getEntityKindDescriptionOrNull,
     LayoutedEntity
 } from "../../../rendering/layouters/entity";
-import { EntityMember } from '../../../domain/plugins/class/Member';
+
+interface EntityMember {
+    id: string;
+    name: string;
+}
 
 export default class RenderedEntity extends React.Component<Props> {
     render() {

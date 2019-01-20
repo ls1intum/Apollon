@@ -2,7 +2,6 @@ import * as React from "react";
 import styled from "styled-components";
 import TrashCanIcon from "./TrashCanIcon";
 import BlockInput from "../BlockInput";
-import { EntityMember } from "./../../../domain/plugins/class/Member";
 import { sanitizeWhiteSpace } from "../../../domain/utils";
 
 const FlexContainer = styled.div`
@@ -88,7 +87,9 @@ export default class EntityMemberInput extends React.Component<Props, State> {
 }
 
 interface Props {
-    member: EntityMember;
+    member: {
+        name: string;
+    };
     updateMemberName: (newName: string) => void;
     deleteMember: () => void;
     deleteMemberButtonTitle: "Delete attribute" | "Delete method";

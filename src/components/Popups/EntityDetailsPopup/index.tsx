@@ -5,10 +5,14 @@ import Popup from "../Popup";
 import { EntityKind } from "./../../../domain/Element";
 import { Point } from "../../../domain/geo";
 import { UUID } from './../../../domain/utils/uuid';
-import { EntityMember } from '../../../domain/plugins/class/Member';
 import Element, { ElementRepository } from './../../../domain/Element';
 import * as Plugins from './../../../domain/plugins';
 import { computeEntityHeight } from "../../../rendering/layouters/entity";
+
+interface EntityMember {
+    id: string;
+    name: string;
+}
 
 class EntityDetailsPopup extends React.Component<Props> {
 

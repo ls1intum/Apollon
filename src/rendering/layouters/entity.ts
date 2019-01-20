@@ -2,7 +2,11 @@ import { EntityKind } from "../../domain/Element";
 import { Point, Size } from "../../domain/geo";
 import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
-import { EntityMember } from '../../domain/plugins/class/Member';
+
+interface EntityMember {
+    id: string;
+    name: string;
+}
 
 export const ENTITY_KIND_HEIGHT = 14;
 export const ENTITY_NAME_HEIGHT = 35;

@@ -3,8 +3,11 @@ import EntityMemberList from "./EntityMemberList";
 import EntityMembersHeading from "./EntityMembersHeading";
 import Element from './../../../domain/Element';
 import { UUID } from './../../../domain/utils/uuid';
-import { EntityMember } from '../../../domain/plugins/class/Member';
-import * as Plugins from './../../../domain/plugins';
+
+interface EntityMember {
+    id: string;
+    name: string;
+}
 
 export default class EntityMethods extends React.Component<Props> {
     handleShowMethodsChange = (showMethods: boolean) => {

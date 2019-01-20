@@ -1,6 +1,8 @@
 import Element from './../Element';
 
 abstract class Container extends Element {
+  static isDroppable = true;
+
   ownedElements: string[] = [];
 
   addElement(newElement: Element, currentElements: Element[]): Element[] {

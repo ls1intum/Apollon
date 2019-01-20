@@ -6,7 +6,11 @@ import { PopupSection } from "../PopupSection";
 import { EntityKind } from "./../../../domain/Element";
 import Element from './../../../domain/Element';
 import { UUID } from './../../../domain/utils/uuid';
-import { EntityMember } from '../../../domain/plugins/class/Member';
+
+interface EntityMember {
+    id: string;
+    name: string;
+}
 
 export default class EntityDetails extends React.Component<Props> {
     render() {

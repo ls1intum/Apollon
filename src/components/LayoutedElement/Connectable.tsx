@@ -21,17 +21,18 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
   class Selectable extends Component<Props, State> {
     private calculateInvisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
+      const r = 20;
+      const cirlce = `m ${-r}, 0 a ${r},${r} 0 1,0 ${r *
+        2},0 a ${r},${r} 0 1,0 ${-r * 2},0 `;
       switch (port.location) {
         case 'N':
-          return `M ${width / 2} ${height / 2} L 0 0 L ${width} 0 Z`;
+          return `M ${width / 2} 0 ${cirlce}`;
         case 'E':
-          return `M ${width / 2} ${height /
-            2} L ${width} 0 L ${width} ${height} Z`;
+          return `M ${width} ${height / 2} ${cirlce}`;
         case 'S':
-          return `M ${width / 2} ${height /
-            2} L 0 ${height} L ${width} ${height} Z`;
+          return `M ${width / 2} ${height} ${cirlce}`;
         case 'W':
-          return `M ${width / 2} ${height / 2} L 0 0 L 0 ${height} Z`;
+          return `M 0 ${height / 2} ${cirlce}`;
       }
       return '';
     }

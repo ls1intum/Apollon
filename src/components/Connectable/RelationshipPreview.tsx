@@ -1,4 +1,8 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
+import { compose } from 'redux';
+import { connect } from 'react-redux';
+import { State as ReduxState } from './../Store';
+import Element, { ElementRepository } from './../../domain/Element';
 import { Point } from './../../domain/geo';
 import Port from './../../domain/Port';
 import { withCanvas, CanvasContext } from '../Canvas';
@@ -21,7 +25,7 @@ class RelationshipPreview extends Component<Props, State> {
   };
 
   private calculatePath = (): Point[] => {
-    const path: Point[] = [];
+    let path: Point[] = [];
     if (this.props.port) {
       const { element, location } = this.props.port;
       switch (location) {
@@ -66,6 +70,16 @@ class RelationshipPreview extends Component<Props, State> {
           });
           break;
       }
+
+      let ownerID = element.owner;
+      while (ownerID) {
+        const owner = this.props.getById(ownerID);
+        path = path.map(({ x, y }) => ({
+          x: x + owner.bounds.x,
+          y: y + owner.bounds.y,
+        }));
+        ownerID = owner.owner;
+      }
     }
     if (this.state.position) {
       path.push(this.state.position);
@@ -109,11 +123,22 @@ interface OwnProps {
   port: Port | null;
 }
 
-type Props = OwnProps & CanvasContext;
+interface StateProps {
+  getById: (id: string) => Element;
+}
+
+type Props = OwnProps & StateProps & CanvasContext;
 
 interface State {
   offset: Point;
   position: Point | null;
 }
 
-export default withCanvas(RelationshipPreview);
+export default compose<ComponentClass<OwnProps>>(
+  withCanvas,
+  connect(
+    (state: ReduxState): StateProps => ({
+      getById: ElementRepository.getById(state),
+    })
+  )
+)(RelationshipPreview);

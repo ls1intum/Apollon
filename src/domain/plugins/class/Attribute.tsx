@@ -1,23 +1,11 @@
-import React, { SFC } from 'react';
-import Element from './../../Element';
+import Member, { MemberComponent } from './Member';
 
-class Attribute extends Element {
+class Attribute extends Member {
   constructor(public name: string = ' + attribute : Type') {
     super(name);
-    this.bounds = { ...this.bounds, height: 30 };
   }
 }
 
-export const AttributeComponent: SFC<Props> = ({ element }) => (
-  <g>
-    <text x={20} y="50%" dominantBaseline="middle">
-      {element.name}
-    </text>
-  </g>
-);
-
-interface Props {
-  element: Attribute;
-}
+export const AttributeComponent = MemberComponent;
 
 export default Attribute;

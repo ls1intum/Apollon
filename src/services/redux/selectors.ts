@@ -54,18 +54,18 @@ export const getAllLayoutedRelationships = createSelector<
         const sourceRect = { ...source.bounds };
         const targetRect = { ...target.bounds };
 
-        // let owner = source.owner;
-        // while (owner) {
-        //   sourceRect.x += owner.bounds.x;
-        //   sourceRect.y += owner.bounds.y;
-        //   owner = owner.owner;
-        // }
-        // owner = target.owner;
-        // while (owner) {
-        //   targetRect.x += owner.bounds.x;
-        //   targetRect.y += owner.bounds.y;
-        //   owner = owner.owner;
-        // }
+        let owner = entities.find(e => e.id === source.owner);
+        while (owner) {
+          sourceRect.x += owner.bounds.x;
+          sourceRect.y += owner.bounds.y;
+          owner = entities.find(e => e.id === owner!.owner);
+        }
+        owner = entities.find(e => e.id === target.owner);
+        while (owner) {
+          targetRect.x += owner.bounds.x;
+          targetRect.y += owner.bounds.y;
+          owner = entities.find(e => e.id === owner!.owner);
+        }
 
         const path = computeRelationshipPath(
             sourceRect,

@@ -4,7 +4,6 @@ import EntityMemberLine from "./EntityMemberLine";
 import BlockInput from "../BlockInput";
 import { sanitizeWhiteSpace } from "../../../domain/utils";
 import newId, { UUID } from './../../../domain/utils/uuid';
-import { EntityMember } from '../../../domain/plugins/class/Member';
 
 const Container = styled.div`
     margin-top: 10px;
@@ -97,6 +96,11 @@ export default class EntityMemberList extends React.Component<Props, State> {
             </Container>
         );
     }
+}
+
+interface EntityMember {
+    id: string;
+    name: string;
 }
 
 interface Props {
