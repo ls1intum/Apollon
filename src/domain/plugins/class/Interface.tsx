@@ -4,7 +4,7 @@ import Container from './../../Container';
 import Method from './Method';
 import Attribute from './Attribute';
 
-const HEADER_HEIGHT = 50;
+const HEADER_HEIGHT = 49;
 
 class Interface extends Container {
   deviderPosition: number = 0;

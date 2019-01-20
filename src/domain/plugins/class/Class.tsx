@@ -4,7 +4,7 @@ import Container from './../../Container';
 import Method from './Method';
 import Attribute from './Attribute';
 
-const HEADER_HEIGHT = 40;
+const HEADER_HEIGHT = 39;
 
 class Class extends Container {
   deviderPosition: number = HEADER_HEIGHT + 30;
