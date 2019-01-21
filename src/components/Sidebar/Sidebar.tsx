@@ -98,13 +98,13 @@ class Sidebar extends Component<Props, State> {
       switch (element.kind) {
         case 'Class':
           const classElement = element as Class;
-          this.props.addElement(classElement, new Method('+ method()'));
           this.props.addElement(classElement, new Attribute('+ attribute: Type'));
+          this.props.addElement(classElement, new Method('+ method()'));
           return;
         case 'Interface':
           const interfaceElement = element as Interface;
-          this.props.addElement(interfaceElement, new Method('+ method()'));
           this.props.addElement(interfaceElement, new Attribute('+ attribute: Type'));
+          this.props.addElement(interfaceElement, new Method('+ method()'));
           return;
         case 'Enumeration':
           const enumeration = element as Enumeration;

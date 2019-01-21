@@ -12,13 +12,12 @@ class Package extends Container {
 
 export const PackageComponent: SFC<Props> = ({ element, children }) => (
   <g>
-    <path d={`M 0 10 V 0 H 40 V 10`} fill="#ffffff" stroke="#000000" />
+    <path d={`M 0 10 V 0 H 40 V 10`} stroke="black" />
     <rect
       y="10"
       width="100%"
       height={element.bounds.height - 10}
-      stroke="#000000"
-      fill="#ffffff"
+      stroke="black"
     />
     {children}
   </g>

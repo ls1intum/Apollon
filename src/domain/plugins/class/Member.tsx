@@ -17,6 +17,7 @@ class Member extends Element {
 
 export const MemberComponent: SFC<Props> = ({ element }) => (
   <g>
+    <rect width="100%" height="100%" />
     <text x={20} y="50%" dominantBaseline="middle">
       {element.name}
     </text>

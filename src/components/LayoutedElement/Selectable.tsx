@@ -9,7 +9,7 @@ import { withCanvas, CanvasContext } from './../Canvas';
 const selectable = (WrappedComponent: typeof ElementComponent) => {
   class Selectable extends Component<Props, State> {
     state: State = {
-      selected: false,
+      selected: this.props.element.selected,
     };
 
     timeout: number | null = null;

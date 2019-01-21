@@ -13,8 +13,8 @@ import resizable from './Resizable';
 import connectable from './Connectable';
 import droppable from './Droppable';
 import editable from './Editable';
+import interactable from './Interactable';
 import { EditorMode, ApollonMode } from '../../services/EditorService';
-import { Attribute, Method } from '../../domain/plugins';
 
 class LayoutedElement extends Component<Props> {
   component: typeof ElementComponent = this.composeComponent();
@@ -26,10 +26,13 @@ class LayoutedElement extends Component<Props> {
     ) => React.ComponentClass<ComponentProps>;
     let decorators: DecoratorType[] = [];
 
-    const features = this.props.getById(this.props.element).constructor as any;
     if (apollonMode === ApollonMode.ReadOnly) {
       decorators = [selectable];
+    } else if (editorMode === EditorMode.InteractiveElementsView) {
+      decorators = [interactable];
     } else {
+      const features = this.props.getById(this.props.element)
+        .constructor as any;
       if (features.isEditable) decorators.push(editable);
       if (features.isDroppable) decorators.push(droppable);
       if (features.isConnectable) decorators.push(connectable);
@@ -40,6 +43,13 @@ class LayoutedElement extends Component<Props> {
     }
 
     return compose<typeof ElementComponent>(...decorators)(ElementComponent);
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.editorMode !== this.props.editorMode) {
+      this.component = this.composeComponent();
+      this.forceUpdate();
+    }
   }
 
   render() {

@@ -4,7 +4,7 @@ import Container from './../../Container';
 import Method from './Method';
 import Attribute from './Attribute';
 
-const HEADER_HEIGHT = 49;
+const HEADER_HEIGHT = 50;
 
 class Interface extends Container {
   deviderPosition: number = 0;
@@ -25,7 +25,6 @@ class Interface extends Container {
       y += child.bounds.height;
     }
     this.deviderPosition = y;
-    y += 1;
     for (const child of methods) {
       child.bounds.y = y;
       y += child.bounds.height;
@@ -39,7 +38,7 @@ class Interface extends Container {
 export const InterfaceComponent: SFC<Props> = ({ element, children }) => {
   return (
     <g>
-      <rect width="100%" height="100%" stroke="black" fill="white" />
+      <rect width="100%" height="100%" />
       <svg height={HEADER_HEIGHT}>
         <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle">
           <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
@@ -49,17 +48,22 @@ export const InterfaceComponent: SFC<Props> = ({ element, children }) => {
             {element.name}
           </tspan>
         </text>
-        <g transform="translate(0, -1)">
-          <rect x="0" y="100%" width="100%" height="1" fill="black" />
-        </g>
       </svg>
       {children}
       <rect
-        x="0"
-        y={element.deviderPosition}
         width="100%"
-        height="1"
-        fill="black"
+        height="100%"
+        stroke="black"
+        fill="none"
+        pointerEvents="none"
+      />
+      <path
+        d={`M 0 ${HEADER_HEIGHT} H ${element.bounds.width}`}
+        stroke="black"
+      />
+      <path
+        d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`}
+        stroke="black"
       />
     </g>
   );

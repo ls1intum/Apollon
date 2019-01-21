@@ -45,6 +45,7 @@ export function createRelationship(
             target,
             straightLine: false,
             owner: null,
+            interactive: false,
         }
     };
 }

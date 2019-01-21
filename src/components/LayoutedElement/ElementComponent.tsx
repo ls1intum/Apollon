@@ -1,22 +1,31 @@
-import React, { Component, RefObject } from 'react';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import styled from 'styled-components';
+import { State as ReduxState } from './../Store';
 import Element from './../../domain/Element';
 import * as Plugins from './../../domain/plugins';
 import Container from '../../domain/Container';
 import LayoutedElement from './LayoutedElement';
-import { withCanvas } from './../Canvas';
-import CoordinateSystem from '../Canvas/CoordinateSystem';
 import { CanvasConsumer } from '../Canvas/CanvasContext';
+import { EditorMode } from '../../services/EditorService';
 
 interface SvgProps {
+  hidden: boolean;
   moving: boolean;
+  isRoot: boolean;
+  interactable: boolean;
+  interactive: boolean;
 }
 
 const Svg = styled.svg.attrs({
   pointerEvents: 'fill',
 })<SvgProps>`
   overflow: visible;
-  opacity: ${({ moving }) => (moving ? 0.35 : 1)};
+  opacity: ${({ moving, hidden }) => (hidden ? 0 : moving ? 0.35 : 1)};
+  fill: ${({ interactable, isRoot, theme }) =>
+    interactable ? theme.interactiveAreaColor : isRoot ? 'white' : 'none'};
+
+  pointer-events: ${({ interactive }) => (interactive ? 'fill' : 'none')};
 
   & text {
     cursor: default;
@@ -26,20 +35,36 @@ const Svg = styled.svg.attrs({
     user-select: none;
     pointer-events: none;
     font-family: ${props => props.theme.fontFamily};
+    fill: black;
   }
 `;
 
 class ElementComponent extends Component<Props> {
   static defaultProps = {
+    hidden: false,
     hovered: false,
     selected: false,
     moving: false,
     resizing: false,
+    interactable: false,
   };
 
   render() {
     const { element } = this.props;
     const Component = (Plugins as any)[`${element.kind}Component`];
+    const features = element.constructor as any;
+
+    const interactive =
+      (this.props.editorMode === EditorMode.ModelingView &&
+        (features.isSelectable ||
+          features.isDroppable ||
+          features.isResizable ||
+          features.isMovable ||
+          features.isSelectable ||
+          features.isHoverable)) ||
+      (this.props.editorMode === EditorMode.InteractiveElementsView &&
+        features.isInteractable);
+
     return (
       <CanvasConsumer
         children={context => {
@@ -51,7 +76,14 @@ class ElementComponent extends Component<Props> {
             };
           }
           return (
-            <Svg {...bounds} moving={this.props.moving}>
+            <Svg
+              {...bounds}
+              moving={this.props.moving}
+              isRoot={this.props.element.owner === null}
+              interactable={this.props.interactable}
+              hidden={this.props.hidden}
+              interactive={interactive}
+            >
               <Component element={element}>
                 {element instanceof Container &&
                   element.ownedElements.map((child: string) => {
@@ -69,12 +101,22 @@ class ElementComponent extends Component<Props> {
 
 export interface OwnProps {
   element: Element;
+  hidden: boolean;
   hovered: boolean;
   selected: boolean;
   moving: boolean;
   resizing: boolean;
+  interactable: boolean;
 }
 
-type Props = OwnProps;
+interface StateProps {
+  editorMode: EditorMode;
+}
 
-export default ElementComponent;
+type Props = OwnProps & StateProps;
+
+export default connect(
+  (state: ReduxState): StateProps => ({
+    editorMode: state.editor.editorMode,
+  })
+)(ElementComponent);

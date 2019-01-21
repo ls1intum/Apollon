@@ -16,7 +16,6 @@ export const MergeNodeComponent: SFC<Props> = ({ element }) => (
         element.bounds.height
       }, 0 ${element.bounds.height / 2}, ${element.bounds.width / 2} 0`}
       stroke="black"
-      fill="white"
     />
     <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle">
       {element.name}
