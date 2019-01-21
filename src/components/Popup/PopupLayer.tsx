@@ -50,7 +50,6 @@ class PopupLayer extends Component<{}, State> {
             <Popup element={this.state.element} />
           </div>
         )}
-        }
       </PopupProvider>
     );
   }
