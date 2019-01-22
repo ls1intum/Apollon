@@ -5,6 +5,8 @@ import Element from '../../Element';
 const HEADER_HEIGHT = 50;
 
 class Enumeration extends Container {
+  static isDroppable = false;
+  
   constructor(public name: string = 'Enumeration') {
     super(name);
     this.bounds = { ...this.bounds, height: 100 };

@@ -7,6 +7,8 @@ import Attribute from './Attribute';
 const HEADER_HEIGHT = 50;
 
 class Interface extends Container {
+  static isDroppable = false;
+
   deviderPosition: number = 0;
 
   constructor(public name: string = 'Interface') {

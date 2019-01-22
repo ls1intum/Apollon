@@ -7,6 +7,8 @@ import Attribute from './Attribute';
 const HEADER_HEIGHT = 40;
 
 class Class extends Container {
+  static isDroppable = false;
+
   deviderPosition: number = HEADER_HEIGHT + 30;
 
   constructor(
