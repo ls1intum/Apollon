@@ -21,6 +21,24 @@ class Enumeration extends Container {
     parent.bounds.height = y;
     return [parent, ...children];
   }
+
+  removeElement(
+    removedElement: Element,
+    currentElements: Element[]
+  ): Element[] {
+    let [parent, ...children] = super.removeElement(
+      removedElement,
+      currentElements
+    );
+
+    let y = HEADER_HEIGHT;
+    for (const child of children) {
+      child.bounds.y = y;
+      y += child.bounds.height;
+    }
+    parent.bounds.height = y;
+    return [parent, ...children];
+  }
 }
 
 export const EnumerationComponent: SFC<Props> = ({ element, children }) => (

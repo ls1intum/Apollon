@@ -24,6 +24,8 @@ export type Actions = Action<ActionTypes.ADD_ELEMENT>;
 class ContainerRepository {
   static addElement = (parent: Container, child: Element) =>
     action(ActionTypes.ADD_ELEMENT, parent, child);
+  static removeElement = (parent: Container, child: Element) =>
+    action(ActionTypes.REMOVE_ELEMENT, parent, child);
 }
 
 export default ContainerRepository;

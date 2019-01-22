@@ -33,6 +33,32 @@ class Interface extends Container {
     parent.bounds.height = y;
     return [parent, ...children];
   }
+
+  removeElement(
+    removedElement: Element,
+    currentElements: Element[]
+  ): Element[] {
+    let [parent, ...children] = super.removeElement(
+      removedElement,
+      currentElements
+    );
+    const attributes = children.filter(c => c instanceof Attribute);
+    const methods = children.filter(c => c instanceof Method);
+
+    let y = HEADER_HEIGHT;
+    for (const child of attributes) {
+      child.bounds.y = y;
+      y += child.bounds.height;
+    }
+    this.deviderPosition = y;
+    for (const child of methods) {
+      child.bounds.y = y;
+      y += child.bounds.height;
+    }
+
+    parent.bounds.height = y;
+    return [parent, ...attributes, ...methods];
+  }
 }
 
 export const InterfaceComponent: SFC<Props> = ({ element, children }) => {

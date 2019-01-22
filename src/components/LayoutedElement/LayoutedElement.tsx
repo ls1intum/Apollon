@@ -16,7 +16,11 @@ import editable from './Editable';
 import interactable from './Interactable';
 import { EditorMode, ApollonMode } from '../../services/EditorService';
 
-class LayoutedElement extends Component<Props> {
+class LayoutedElement extends Component<Props, State> {
+  state: State = {
+    element: this.props.getById(this.props.element),
+  };
+
   component: typeof ElementComponent = this.composeComponent();
 
   private composeComponent(): typeof ElementComponent {
@@ -45,7 +49,7 @@ class LayoutedElement extends Component<Props> {
     return compose<typeof ElementComponent>(...decorators)(ElementComponent);
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: Props, prevState: State) {
     if (prevProps.editorMode !== this.props.editorMode) {
       this.component = this.composeComponent();
       this.forceUpdate();
@@ -54,7 +58,7 @@ class LayoutedElement extends Component<Props> {
 
   render() {
     const Component = this.component;
-    const element: Element = this.props.getById(this.props.element);
+    const element = this.props.getById(this.props.element);
     return <Component element={element} />;
   }
 }
@@ -70,6 +74,10 @@ interface StateProps {
 }
 
 type Props = OwnProps & StateProps;
+
+interface State {
+  element: Element;
+}
 
 const mapStateToProps = (state: ReduxState): StateProps => ({
   getById: ElementRepository.getById(state),

@@ -26,7 +26,7 @@ class ElementRepository {
   static create = (element: Element) => action(ActionTypes.CREATE, element);
 
   static getById = (state: State) => (id: string): Element => {
-    const element = state.elements[id];
+    const element = { ...state.elements[id] };
     return Object.setPrototypeOf(
       element,
       (<any>Plugins)[element.kind].prototype

@@ -8,6 +8,8 @@ export const Layout = styled.div`
   user-select: none;
   position: relative;
 
+  font-family: ${({ theme }) => theme.fontFamily};
+
   *,
   *:before,
   *:after {

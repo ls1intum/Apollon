@@ -1,11 +1,12 @@
 import React, { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { Container } from './styles';
+import { Container, Arrow, Content, Item } from './styles';
 import Element, { ElementRepository } from '../../domain/Element';
 import { Point } from '../../domain/geo';
 import { withCanvas, CanvasContext } from '../Canvas';
 import NameField from './NameField';
+import * as Plugins from './plugins';
 
 export class Popup extends Component<Props> {
   private calculatePosition = (): Point => {
@@ -21,9 +22,21 @@ export class Popup extends Component<Props> {
 
   render() {
     const position = this.calculatePosition();
+    const Component = (Plugins as any)[
+      `${this.props.element.kind}PopupComponent`
+    ];
     return (
       <Container {...position}>
-        <NameField initial={this.props.element.name} onSave={this.onSaveName} />
+        <Content>
+          <Item>
+            <NameField
+              initial={this.props.element.name}
+              onSave={this.onSaveName}
+            />
+          </Item>
+          {Component && <Component element={this.props.element} />}
+        </Content>
+        <Arrow />
       </Container>
     );
   }

@@ -3,12 +3,60 @@ import { Point } from '../../domain/geo';
 
 export const Container = styled.div<Point>`
   position: absolute;
-  left: ${({ x }) => x}px;
+  left: ${({ x }) => x + 21}px;
   top: ${({ y }) => y}px;
-  width: 250px;
-  padding: 5px;
-  background: white;
-  border: 1px solid black;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
+`;
+
+export const Content = styled.div`
+  width: 275px;
+  max-height: 650px;
+  overflow-y: scroll;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+  background: #efefef;
+  padding: 10px;
+`;
+
+export const Item = styled.section`
+  margin-bottom: 8px;
+`;
+
+export const Arrow = styled.div`
+  position: absolute;
+  top: 9px;
+  left: -21px;
+
+  &:after,
+  &:before {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+  }
+
+  &:after {
+    top: 1px;
+    left: 2px;
+    border-color: transparent #efefef transparent transparent;
+    border-width: 10px;
+  }
+
+  &:before {
+    top: 0px;
+    border-color: transparent #d0d0d0 transparent transparent;
+    border-width: 11px;
+  }
+`;
+
+export const Header = styled.strong`
+  display: block;
+  font-family: HelveticaNeue-Medium;
+  font-weight: normal;
+  margin-bottom: 7px;
 `;
 
 export const Input = styled.input`
@@ -18,4 +66,31 @@ export const Input = styled.input`
   padding: 5px 8px;
   border: 1px solid #ccc;
   border-radius: 3px;
+`;
+
+export const ExistingMember = styled.div`
+  display: flex;
+  align-items: baseline;
+
+  & ${Input} {
+    margin-right: 5px;
+  }
+`;
+
+export const NewMember = styled.div`
+  & ${Input}:not(:focus) {
+    border-style: dashed;
+  }
+
+  & ${Input}:not(:focus):not(:hover) {
+    background: rgba(255, 255, 255, 0.5);
+  }
+`;
+
+export const Label = styled.label`
+  user-select: none;
+  font-weight: bold;
+  & span {
+    margin-left: 5px;
+  }
 `;
