@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { Relationship, RelationshipEnd } from "../../../domain/Relationship";
 import { Delta, Point, RectEdge } from "../../../domain/geo";
 import { assertNever } from "../../../domain/utils";
+import CoordinateSystem from '../../../components/Canvas/CoordinateSystem';
 
 const Text = styled.text`
     user-select: none;
@@ -41,8 +42,14 @@ export default class RelationshipLabels extends React.Component<Props> {
             "BOTTOM"
         );
 
-        const x = position.x + offset.dx;
-        const y = position.y + offset.dy;
+        let x = position.x + offset.dx;
+        let y = position.y + offset.dy;
+
+        if (this.props.coordinateSystem) {
+            const screen = this.props.coordinateSystem.pointToScreen(position.x + offset.dx, position.y + offset.dy);
+            x = screen.x;
+            y = screen.y;
+        }
 
         const isIE = /*@cc_on!@*/false || !!(document as any).documentMode;
         const isEdge = !isIE && !!(window as any).StyleMedia;
@@ -68,8 +75,14 @@ export default class RelationshipLabels extends React.Component<Props> {
             "TOP"
         );
 
-        const x = position.x + offset.dx;
-        const y = position.y + offset.dy;
+        let x = position.x + offset.dx;
+        let y = position.y + offset.dy;
+
+        if (this.props.coordinateSystem) {
+            const screen = this.props.coordinateSystem.pointToScreen(position.x + offset.dx, position.y + offset.dy);
+            x = screen.x;
+            y = screen.y;
+        }
 
         return (
             <Text x={x} y={y} textAnchor={textAnchor} alignmentBaseline={alignmentBaseline}>
@@ -143,4 +156,5 @@ export default class RelationshipLabels extends React.Component<Props> {
 interface Props {
     relationship: Relationship;
     relationshipPath: Point[];
+    coordinateSystem?: CoordinateSystem;
 }

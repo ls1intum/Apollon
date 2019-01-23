@@ -15,10 +15,14 @@ import RelationshipLabels from './../../rendering/renderers/svg/RelationshipLabe
 import { getSvgDasharrayForRelationshipKind } from './../../rendering/renderers/svg/RenderedRelationship';
 import { ElementRepository } from './../../domain/Element';
 import { UUID } from '../../domain/utils/uuid';
-import { PopupContext } from '../Popups/PopupLayer';
 import { ElementSelection } from '../../Editor';
-import { getAllInteractiveElementIds, toggleInteractiveElements, getbyId } from '../../services/redux';
+import {
+  getAllInteractiveElementIds,
+  toggleInteractiveElements,
+  getbyId,
+} from '../../services/redux';
 import { withCanvas, CanvasContext } from '../Canvas';
+import { PopupConsumer, withPopup, PopupContext } from '../Popup/PopupContext';
 
 class LayoutedRelationship extends React.Component<Props, State> {
   state: State = {
@@ -41,11 +45,21 @@ class LayoutedRelationship extends React.Component<Props, State> {
       );
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
-    if (prevProps !== this.props) {
-      this.state.relationship = this.props.getById(this.props.relationship);
+  componentDidUpdate(prevProps: Props) {
+      const rel = this.props.getById(this.props.relationship);
+      if (this.state.relationship !== rel) {
+        this.setState({ relationship: rel }, () =>
+          this.props.updateRelationship(rel)
+        );
+      }
     }
-  }
+
+  // componentDidUpdate(prevProps: Props, prevState: State) {
+  //   if (prevProps !== this.props) {
+  //     console.log('update')
+  //     this.state.relationship = this.props.getById(this.props.relationship);
+  //   }
+  // }
 
   private onMouseOver = (event: React.MouseEvent) => {
     this.setState({ hover: true });
@@ -106,11 +120,7 @@ class LayoutedRelationship extends React.Component<Props, State> {
   };
 
   render() {
-    const {
-      apollonMode,
-      editorMode,
-      interactiveElementsMode,
-    } = this.props;
+    const { apollonMode, editorMode, interactiveElementsMode } = this.props;
 
     const visibility =
       editorMode === EditorMode.ModelingView ||
@@ -121,7 +131,10 @@ class LayoutedRelationship extends React.Component<Props, State> {
 
     const { relationship, path } = this.state.relationship;
 
-    const polylinePoints = path.map(p => this.props.coordinateSystem.pointToScreen(p.x, p.y)).map(point => `${point.x} ${point.y}`).join(',');
+    const polylinePoints = path
+      .map(p => this.props.coordinateSystem.pointToScreen(p.x, p.y))
+      .map(point => `${point.x} ${point.y}`)
+      .join(',');
 
     const markerId = getMarkerIdForRelationshipKind(relationship.kind);
     const markerEnd = markerId === null ? undefined : `url(#${markerId})`;
@@ -132,13 +145,14 @@ class LayoutedRelationship extends React.Component<Props, State> {
     );
 
     return (
-      // <PopupContext.Consumer>
-      //   {context =>
-      //     context && (
+      <PopupConsumer>
+        {context =>
+          context && (
             <>
               <RelationshipLabels
                 relationship={relationship}
                 relationshipPath={path}
+                coordinateSystem={this.props.coordinateSystem}
               />
               <polyline
                 points={polylinePoints}
@@ -154,11 +168,11 @@ class LayoutedRelationship extends React.Component<Props, State> {
                   this.onMouseLeave(e);
                   this.setState({ isMouseOver: false });
                 }}
-                // onDoubleClick={
-                //   apollonMode === ApollonMode.ReadOnly
-                //     ? undefined
-                //     : () => context.showRelationship(this.state.relationship)
-                // }
+                onDoubleClick={
+                  apollonMode === ApollonMode.ReadOnly
+                    ? undefined
+                    : () => context.showRelationshipPopup(this.state.relationship)
+                }
                 style={{ visibility }}
               />
               <polyline
@@ -172,9 +186,9 @@ class LayoutedRelationship extends React.Component<Props, State> {
                 style={{ visibility }}
               />
             </>
-      //     )
-      //   }
-      // </PopupContext.Consumer>
+          )
+        }
+      </PopupConsumer>
     );
   }
 
@@ -223,7 +237,7 @@ interface DispatchProps {
   update: typeof ElementRepository.update;
 }
 
-type Props = OwnProps & ThemeProps & StateProps & DispatchProps & CanvasContext;
+type Props = OwnProps & ThemeProps & StateProps & DispatchProps & CanvasContext & PopupContext;
 
 interface State {
   relationship: Relationship;
@@ -253,6 +267,7 @@ const mapStateToProps = (state: ReduxState): StateProps => ({
 export default compose<ComponentClass<OwnProps>>(
   withCanvas,
   withTheme,
+  withPopup,
   connect(
     mapStateToProps,
     {

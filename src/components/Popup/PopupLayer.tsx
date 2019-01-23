@@ -2,16 +2,23 @@ import React, { Component } from 'react';
 import PopupContext, { PopupProvider } from './PopupContext';
 import Popup from './Popup';
 import Element from '../../domain/Element';
+import { LayoutedRelationship } from '../../domain/Relationship';
+import RelationshipPopup from './RelationshipPopup';
 
 class PopupLayer extends Component<{}, State> {
   popup: React.RefObject<HTMLDivElement> = React.createRef();
 
   state: State = {
     element: null,
+    relationship: null,
   };
 
   private showPopup = (element: Element) => {
     this.setState({ element });
+  };
+
+  private showRelationshipPopup = (relationship: LayoutedRelationship) => {
+    this.setState({ relationship });
   };
 
   private update = (element: Element) => {
@@ -20,12 +27,18 @@ class PopupLayer extends Component<{}, State> {
     }
   };
 
+  private updateRelationship = (relationship: LayoutedRelationship) => {
+    if (this.state.relationship) {
+      this.setState({ relationship });
+    }
+  };
+
   private cancel = (event: MouseEvent) => {
     if (!this.popup.current) return;
     const popup = this.popup.current as HTMLElement;
     const target = event.target as HTMLElement;
     if (!popup.contains(target)) {
-      this.setState({ element: null });
+      this.setState({ element: null, relationship: null });
     }
   };
 
@@ -40,7 +53,9 @@ class PopupLayer extends Component<{}, State> {
   render() {
     const context: PopupContext = {
       showPopup: this.showPopup,
+      showRelationshipPopup: this.showRelationshipPopup,
       update: this.update,
+      updateRelationship: this.updateRelationship,
     };
     return (
       <PopupProvider value={context}>
@@ -50,6 +65,11 @@ class PopupLayer extends Component<{}, State> {
             <Popup element={this.state.element} />
           </div>
         )}
+        {this.state.relationship && (
+          <div ref={this.popup}>
+            <RelationshipPopup element={this.state.relationship} />
+          </div>
+        )}
       </PopupProvider>
     );
   }
@@ -57,6 +77,7 @@ class PopupLayer extends Component<{}, State> {
 
 interface State {
   element: Element | null;
+  relationship: LayoutedRelationship | null;
 }
 
 export default PopupLayer;
