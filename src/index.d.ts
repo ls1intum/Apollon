@@ -51,6 +51,13 @@ declare module "@ls1intum/apollon" {
         attributes: EntityMember[];
         methods: EntityMember[];
         renderMode: EntityRenderMode;
+        bounds: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        };
+        ownedElements: string[];
     }
 
     export const enum EntityKind {
