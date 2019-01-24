@@ -139,7 +139,9 @@ class Editor {
           }, {}),
       },
       relationships: state.relationships,
-      interactiveElements: state.interactiveElements,
+      interactiveElements: {
+        allIds: [...state.interactiveElements.allIds, ...Object.values(state.elements).filter(e => e.interactive).map(e => e.id)],
+      },
       elements: state.elements,
       diagram: state.diagram,
     };

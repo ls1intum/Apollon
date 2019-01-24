@@ -11,7 +11,11 @@ export default class Svg extends React.Component<Props> {
                 height={height}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
+                fill="white"
             >
+                <defs>
+                <style>{`text { fill: black }`}</style>
+                </defs>
                 {children}
             </svg>
         );

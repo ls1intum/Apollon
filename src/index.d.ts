@@ -162,7 +162,7 @@ declare module "@ls1intum/apollon" {
 
     export interface LayoutedDiagram {
         size: Size;
-        entities: LayoutedEntity[];
+        entities: Entity[];
         relationships: LayoutedRelationship[];
     }
 
@@ -205,7 +205,7 @@ declare module "@ls1intum/apollon" {
     ): RenderedSVG;
 
     export function renderEntityToSVG(
-        layoutedEntity: LayoutedEntity,
+        layoutedEntity: Entity,
         renderOptions: RenderOptions
     ): RenderedSVG;
 

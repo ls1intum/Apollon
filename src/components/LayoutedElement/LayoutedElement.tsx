@@ -59,7 +59,18 @@ class LayoutedElement extends Component<Props, State> {
   render() {
     const Component = this.component;
     const element = this.props.getById(this.props.element);
-    return <Component element={element} />;
+    const features = element.constructor as any;
+    const interactive =
+      (this.props.editorMode === EditorMode.ModelingView &&
+        (features.isSelectable ||
+          features.isDroppable ||
+          features.isResizable ||
+          features.isMovable ||
+          features.isSelectable ||
+          features.isHoverable)) ||
+      (this.props.editorMode === EditorMode.InteractiveElementsView &&
+        features.isInteractable);
+    return <Component element={element} interactive={interactive} />;
   }
 }
 

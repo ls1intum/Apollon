@@ -41,6 +41,7 @@ const Svg = styled.svg.attrs({
 
 class ElementComponent extends Component<Props> {
   static defaultProps = {
+    interactive: false,
     hidden: false,
     hovered: false,
     selected: false,
@@ -52,18 +53,18 @@ class ElementComponent extends Component<Props> {
   render() {
     const { element } = this.props;
     const Component = (Plugins as any)[`${element.kind}Component`];
-    const features = element.constructor as any;
-
-    const interactive =
-      (this.props.editorMode === EditorMode.ModelingView &&
-        (features.isSelectable ||
-          features.isDroppable ||
-          features.isResizable ||
-          features.isMovable ||
-          features.isSelectable ||
-          features.isHoverable)) ||
-      (this.props.editorMode === EditorMode.InteractiveElementsView &&
-        features.isInteractable);
+  
+    // const features = element.constructor as any;
+    // const interactive =
+    //   (this.props.editorMode === EditorMode.ModelingView &&
+    //     (features.isSelectable ||
+    //       features.isDroppable ||
+    //       features.isResizable ||
+    //       features.isMovable ||
+    //       features.isSelectable ||
+    //       features.isHoverable)) ||
+    //   (this.props.editorMode === EditorMode.InteractiveElementsView &&
+    //     features.isInteractable);
 
     return (
       <CanvasConsumer
@@ -82,7 +83,7 @@ class ElementComponent extends Component<Props> {
               isRoot={this.props.element.owner === null}
               interactable={this.props.interactable}
               hidden={this.props.hidden}
-              interactive={interactive}
+              interactive={this.props.interactive}
             >
               <Component element={element}>
                 {element instanceof Container &&
@@ -101,6 +102,7 @@ class ElementComponent extends Component<Props> {
 
 export interface OwnProps {
   element: Element;
+  interactive: boolean;
   hidden: boolean;
   hovered: boolean;
   selected: boolean;
@@ -109,14 +111,15 @@ export interface OwnProps {
   interactable: boolean;
 }
 
-interface StateProps {
-  editorMode: EditorMode;
-}
+// interface StateProps {
+//   editorMode: EditorMode;
+// }
 
-type Props = OwnProps & StateProps;
+type Props = OwnProps; // & StateProps;
 
-export default connect(
-  (state: ReduxState): StateProps => ({
-    editorMode: state.editor.editorMode,
-  })
-)(ElementComponent);
+export default ElementComponent;
+// connect(
+//   (state: ReduxState): StateProps => ({
+//     editorMode: state.editor.editorMode,
+//   })
+// )(ElementComponent);

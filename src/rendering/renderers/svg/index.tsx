@@ -11,6 +11,8 @@ import { LayoutedRelationship } from "../../../domain/Relationship";
 import { computeBoundingBox, Size } from "../../../domain/geo";
 import { UUID } from './../../../domain/utils/uuid';
 import { LayoutedDiagram } from "../../../rendering/layouters/diagram";
+import Element from '../../../domain/Element';
+import ElementComponent from '../../../components/LayoutedElement/ElementComponent';
 
 export interface RenderOptions {
     shouldRenderElement: (id: UUID) => boolean;
@@ -37,18 +39,18 @@ export function renderDiagramToSVG(
 }
 
 export function renderEntityToSVG(
-    layoutedEntity: LayoutedEntity,
+    layoutedEntity: Element,
     renderOptions: RenderOptions
 ): RenderedSVG {
-    const { position, size } = layoutedEntity;
+    let { x, y, width, height } = layoutedEntity.bounds;
 
-    const width = size.width + 2;
-    const height = size.height + 2;
+    width = width + 2;
+    height = height + 2;
 
     const svg = renderReactElementToString(
         <Svg width={width} height={height} fontFamily={renderOptions.fontFamily}>
-            <Translate dx={-position.x + 1} dy={-position.y + 1}>
-                <RenderedEntity entity={layoutedEntity} renderOptions={renderOptions} />
+            <Translate dx={-x + 1} dy={-y + 1}>
+                <ElementComponent element={layoutedEntity} />
             </Translate>
         </Svg>
     );
