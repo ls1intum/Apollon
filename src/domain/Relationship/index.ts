@@ -1,5 +1,6 @@
 import Element from './../Element';
 import { Point } from '../geo';
+import { RelationshipKind } from '../../services/Interface/ExternalState';
 
 export type RectEdge = "TOP" | "LEFT" | "RIGHT" | "BOTTOM";
 
@@ -13,16 +14,7 @@ export class Relationship {}
 
 export default Relationship
 
-export const enum RelationshipKind {
-  Aggregation = "AGGREGATION",
-  AssociationBidirectional = "ASSOCIATION_BIDIRECTIONAL",
-  AssociationUnidirectional = "ASSOCIATION_UNIDIRECTIONAL",
-  Inheritance = "INHERITANCE",
-  Composition = "COMPOSITION",
-  Dependency = "DEPENDENCY",
-  Realization = "REALIZATION",
-  ActivityControlFlow = "ACTIVITY_CONTROL_FLOW"
-}
+export { RelationshipKind } from '../../services/Interface/ExternalState';
 
 export interface RelationshipEnd {
   entityId: string;

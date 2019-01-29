@@ -20,10 +20,6 @@ export const enum InteractiveElementsMode {
 
 export interface EditorState {
   readonly gridSize: number;
-  readonly canvasSize: {
-    width: number;
-    height: number;
-  };
   readonly mode: ApollonMode;
   readonly editorMode: EditorMode;
   readonly interactiveMode: InteractiveElementsMode;

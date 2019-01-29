@@ -1,20 +1,11 @@
 import Editor from "./Editor";
-import { ElementRepository } from './domain/Element';
-import { getAllRelationships } from "./services/redux";
-import * as DiagramLayouter from "./rendering/layouters/diagram";
-import { State as ReduxState } from './components/Store';
 
 export { computeBoundingBox } from "./domain/geo/boundingBox";
 
 export * from "./Editor";
 export default Editor;
 
-export function layoutDiagram(state: ReduxState, layoutOptions: DiagramLayouter.LayoutOptions) {
-    const entities = ElementRepository.read(state);
-    const relationships = getAllRelationships(state);
-
-    return DiagramLayouter.layoutDiagram({ entities, relationships }, layoutOptions);
-}
+export const layoutDiagram = Editor.layoutDiagram;
 
 export {
     renderDiagramToSVG,

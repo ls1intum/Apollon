@@ -56,7 +56,7 @@ class Store extends React.Component<Props> {
 }
 
 export interface Props {
-  initialState?: Partial<ReduxState>;
+  initialState: ReduxState | null;
 }
 
 export default Store;

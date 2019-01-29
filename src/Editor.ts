@@ -6,41 +6,29 @@ import Application from './scenes/Application';
 import { Styles } from './components/Theme';
 import EditorService, {
   ApollonMode,
+  InteractiveElementsMode,
+  EditorMode,
 } from './services/EditorService';
-import { Relationship } from './domain/Relationship';
-import { ElementState, ElementRepository } from './domain/Element';
-import { getAllRelationships } from './services/redux';
 import * as DiagramLayouter from './rendering/layouters/diagram';
-import { renderDiagramToSVG, RenderOptions, RenderedSVG } from './rendering/renderers/svg';
-import Diagram, { DiagramType, DiagramState } from './domain/Diagram';
+import {
+  renderDiagramToSVG,
+  RenderOptions,
+  RenderedSVG,
+} from './rendering/renderers/svg';
+import { DiagramType } from './domain/Diagram';
+import { ExternalState, Entity, Relationship } from './services/Interface/ExternalState';
+import {
+  mapInternalToExternalState,
+  mapExternalToInternalState,
+} from './services/Interface/Interface';
 
 export interface ElementSelection {
   entityIds: string[];
   relationshipIds: string[];
 }
 
-interface ExternalState {
-  entities: {
-    byId: ElementState;
-    allIds: string[];
-  };
-  relationships: {
-    byId: { [id: string]: Relationship };
-    allIds: string[];
-  };
-  interactiveElements: {
-    allIds: string[];
-  };
-  editor: {
-    canvasSize: { width: number; height: number };
-    gridSize: number;
-  };
-  elements: ElementState;
-  diagram: DiagramState;
-}
-
 export interface ApollonOptions {
-  initialState?: Partial<ExternalState>;
+  initialState?: ExternalState;
   diagramType: DiagramType;
   mode?: ApollonMode;
   theme?: Partial<Styles>;
@@ -57,21 +45,13 @@ class Editor {
     public container: HTMLElement,
     { initialState, theme = {}, ...options }: ApollonOptions
   ) {
-    const { entities = { byId: {} }, editor = {}, diagram = new Diagram(options.diagramType), ...rest } =
-      initialState || {};
-
-    const state: Partial<ReduxState> = {
-      relationships: { byId: {}, allIds: [] },
-      interactiveElements: { allIds: [] },
-      editor: {
-        ...EditorService.initialState,
-        ...editor,
-        ...options,
-      },
-      ...rest,
-      elements: entities.byId,
-      diagram,
-    };
+    const state: ReduxState = mapExternalToInternalState(
+      initialState,
+      options.diagramType,
+      EditorMode.ModelingView,
+      InteractiveElementsMode.Highlighted,
+      options.mode || ApollonMode.Full
+    );
 
     const app = createElement(Application, {
       ref: this.application,
@@ -122,29 +102,11 @@ class Editor {
     this.subscribers.splice(subscriptionId);
   }
 
-  getState() {
-    if (!this.store) return;
+  getState(): ExternalState | null {
+    if (!this.store) return null;
 
     const state = this.store.getState();
-    return {
-      entities: {
-        allIds: Object.keys(state.elements).filter(
-          id => state.elements[id].name !== 'Relationship'
-        ),
-        byId: Object.keys(state.elements)
-          .filter(id => state.elements[id].name !== 'Relationship')
-          .reduce((o: any, id) => {
-            o[id] = state.elements[id];
-            return o;
-          }, {}),
-      },
-      relationships: state.relationships,
-      interactiveElements: {
-        allIds: [...state.interactiveElements.allIds, ...Object.values(state.elements).filter(e => e.interactive).map(e => e.id)],
-      },
-      elements: state.elements,
-      diagram: state.diagram,
-    };
+    return mapInternalToExternalState(state);
   }
 
   destroy() {
@@ -152,11 +114,12 @@ class Editor {
   }
 
   static layoutDiagram(
-    state: ReduxState,
+    state: ExternalState,
     layoutOptions: DiagramLayouter.LayoutOptions
-  ) {
-    const entities = ElementRepository.read(state);
-    const relationships = getAllRelationships(state);
+  ): DiagramLayouter.LayoutedDiagram {
+    console.log(state, layoutOptions);
+    const entities: Entity[] = Object.values(state.entities.byId);
+    const relationships: Relationship[] = Object.values(state.relationships.byId);
 
     return DiagramLayouter.layoutDiagram(
       { entities, relationships },

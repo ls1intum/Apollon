@@ -42,7 +42,13 @@ class Sidebar extends Component<Props, State> {
     switch (this.props.diagramType) {
       case DiagramType.ClassDiagram:
         this.setState({
-          previews: [new Package(), new Class(), new Class('AbstractClass', true), new Interface(), new Enumeration()],
+          previews: [
+            // new Package(),
+            new Class(),
+            new Class('AbstractClass', true),
+            new Interface(),
+            new Enumeration(),
+          ],
         });
         break;
       case DiagramType.ActivityDiagram:
@@ -98,12 +104,18 @@ class Sidebar extends Component<Props, State> {
       switch (element.kind) {
         case 'Class':
           const classElement = element as Class;
-          this.props.addElement(classElement, new Attribute('+ attribute: Type'));
+          this.props.addElement(
+            classElement,
+            new Attribute('+ attribute: Type')
+          );
           this.props.addElement(classElement, new Method('+ method()'));
           return;
         case 'Interface':
           const interfaceElement = element as Interface;
-          this.props.addElement(interfaceElement, new Attribute('+ attribute: Type'));
+          this.props.addElement(
+            interfaceElement,
+            new Attribute('+ attribute: Type')
+          );
           this.props.addElement(interfaceElement, new Method('+ method()'));
           return;
         case 'Enumeration':

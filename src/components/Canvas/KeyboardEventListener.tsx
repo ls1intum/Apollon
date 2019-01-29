@@ -23,17 +23,17 @@ class KeyboardEventListener extends Component<Props> {
           let result = [...es];
           for (const e of es) {
             result = [
-              ...result,
               ...this.props.relationships.filter(
                 r => r.source.entityId === e.id || r.target.entityId === e.id
               ),
+              ...result,
             ];
             if (e instanceof Container) {
               result = [
-                ...result,
                 ...rec(
                   e.ownedElements.map(id => elements.find(e => e.id === id)!)
                 ),
+                ...result,
               ];
             }
           }

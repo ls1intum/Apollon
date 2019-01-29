@@ -29,7 +29,7 @@ class App extends React.Component<Props> {
 }
 
 interface Props {
-  state: Partial<ReduxState>;
+  state: ReduxState | null;
   styles: Partial<Styles>;
 }
 

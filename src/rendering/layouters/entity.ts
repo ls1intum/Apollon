@@ -2,6 +2,7 @@ import { EntityKind } from "../../domain/Element";
 import { Point, Size } from "../../domain/geo";
 import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';
+import { Entity } from '../../services/Interface/ExternalState';
 
 interface EntityMember {
     id: string;
@@ -34,13 +35,8 @@ export interface LayoutedEntityMember {
     size: Size;
 }
 
-export function layoutEntity(entity: Element): LayoutedEntity {
-    const { id, kind, name, bounds } = entity;
-
-    let renderMode = { showAttributes: false, showMethods: false };
-    let attributes: EntityMember[] = [];
-    let methods: EntityMember[] = [];
-
+export function layoutEntity(entity: Entity): LayoutedEntity {
+    const { id, kind, name, position, size, attributes, methods, renderMode } = entity;
     const height = computeEntityHeight(kind, attributes.length, methods.length, renderMode);
 
     const attributeSectionHeight = renderMode.showAttributes
@@ -57,9 +53,9 @@ export function layoutEntity(entity: Element): LayoutedEntity {
         id,
         kind,
         name,
-        position: { x: bounds.x, y: bounds.y },
+        position,
         size: {
-            width: bounds.width,
+            width: size.width,
             height
         },
         attributes: layoutEntityMembers(entity, attributes, attributeOffsetY),
@@ -69,7 +65,7 @@ export function layoutEntity(entity: Element): LayoutedEntity {
 }
 
 function layoutEntityMembers(
-    entity: Element,
+    entity: Entity,
     members: EntityMember[],
     listPositionY: number
 ): LayoutedEntityMember[] {
@@ -85,7 +81,7 @@ function layoutEntityMembers(
                     index * ENTITY_MEMBER_HEIGHT
             },
             size: {
-                width: entity.bounds.width,
+                width: entity.size.width,
                 height: ENTITY_MEMBER_HEIGHT
             }
         };
