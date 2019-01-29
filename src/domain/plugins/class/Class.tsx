@@ -77,6 +77,7 @@ export const ClassComponent: SFC<Props> = ({ element, children }) => {
           dominantBaseline="middle"
           textAnchor="middle"
           fontStyle={element.isAbstract ? 'italic' : 'normal'}
+          fontWeight="bold"
         >
           {element.name}
         </text>
