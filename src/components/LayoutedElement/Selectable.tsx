@@ -61,8 +61,25 @@ const selectable = (WrappedComponent: typeof ElementComponent) => {
     }
 
     render() {
+      const { bounds } = this.props.element;
+      const strokeWidth = 5;
       return (
-        <WrappedComponent {...this.props} selected={this.state.selected} />
+        <WrappedComponent {...this.props} selected={this.state.selected}>
+        {this.props.children}
+        {this.state.selected && (
+          <rect
+            x={-strokeWidth / 2}
+            y={-strokeWidth / 2}
+            width={bounds.width + strokeWidth}
+            height={bounds.height + strokeWidth}
+            fill="none"
+            stroke="#0064ff"
+            strokeOpacity="0.2"
+            strokeWidth={strokeWidth}
+            pointerEvents="none"
+          />
+        )}
+      </WrappedComponent>
       );
     }
   }
