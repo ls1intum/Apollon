@@ -22,13 +22,16 @@ class PopupLayer extends Component<{}, State> {
   };
 
   private update = (element: Element) => {
-    if (this.state.element) {
+    if (this.state.element && this.state.element.id === element.id) {
       this.setState({ element });
     }
   };
 
   private updateRelationship = (relationship: LayoutedRelationship) => {
-    if (this.state.relationship) {
+    if (
+      this.state.relationship &&
+      this.state.relationship.relationship.id === relationship.relationship.id
+    ) {
       this.setState({ relationship });
     }
   };
