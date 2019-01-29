@@ -8,6 +8,7 @@ const HEADER_HEIGHT = 50;
 
 class Interface extends Container {
   static isDroppable = false;
+  static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'WIDTH';
 
   deviderPosition: number = 0;
 

@@ -5,7 +5,7 @@ class Member extends Element {
   static isHoverable = false;
   static isSelectable = false;
   static isMovable = false;
-  static isResizable = false;
+  static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'NONE';
   static isConnectable = false;
   static isDroppable = false;
   static isEditable = false;

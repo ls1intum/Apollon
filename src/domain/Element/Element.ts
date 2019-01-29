@@ -5,7 +5,7 @@ abstract class Element {
   static isHoverable = true;
   static isSelectable = true;
   static isMovable = true;
-  static isResizable = true;
+  static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'BOTH';
   static isConnectable = true;
   static isDroppable = false;
   static isEditable = true;

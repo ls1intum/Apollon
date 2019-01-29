@@ -6,6 +6,7 @@ const HEADER_HEIGHT = 50;
 
 class Enumeration extends Container {
   static isDroppable = false;
+  static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'WIDTH';
 
   constructor(public name: string = 'Enumeration') {
     super(name);

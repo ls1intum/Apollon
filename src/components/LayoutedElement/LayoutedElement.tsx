@@ -64,7 +64,7 @@ class LayoutedElement extends Component<Props, State> {
       (this.props.editorMode === EditorMode.ModelingView &&
         (features.isSelectable ||
           features.isDroppable ||
-          features.isResizable ||
+          features.isResizable !== 'NONE' ||
           features.isMovable ||
           features.isSelectable ||
           features.isHoverable)) ||

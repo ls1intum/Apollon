@@ -8,6 +8,7 @@ const HEADER_HEIGHT = 40;
 
 class Class extends Container {
   static isDroppable = false;
+  static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'WIDTH';
 
   deviderPosition: number = HEADER_HEIGHT + 30;
 
