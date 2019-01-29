@@ -7,6 +7,10 @@ export const Container = styled.aside`
   overflow-x: hidden;
 `;
 
+export const Preview = styled.div`
+  margin: 1em;
+`;
+
 export const EditorModeSelection = styled.div`
   display: flex;
   border-radius: 3px;

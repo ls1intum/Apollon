@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import {
   Container,
+  Preview,
   EditorModeSelection,
   EditorModeSelectionSegment,
 } from './styles';
@@ -133,14 +134,6 @@ class Sidebar extends Component<Props, State> {
   }
 
   render() {
-    const options = {
-      editorMode: EditorMode.ModelingView,
-      hover: false,
-      interactiveElementIds: new Set(),
-      interactiveElementsMode: InteractiveElementsMode.Highlighted,
-      theme: {},
-      toggleInteractiveElements: () => {},
-    };
     if (this.props.apollonMode === ApollonMode.ReadOnly) return null;
     return (
       <Container>
@@ -170,9 +163,9 @@ class Sidebar extends Component<Props, State> {
               <CanvasProvider value={null}>
                 {this.state.previews.map((element, index) => (
                   <Draggable key={index} onDrop={this.onDrop(element)}>
-                    <div>
+                    <Preview>
                       <ElementComponent element={element} />
-                    </div>
+                    </Preview>
                   </Draggable>
                 ))}
               </CanvasProvider>
