@@ -9,12 +9,12 @@ interface EntityMember {
     name: string;
 }
 
-export const ENTITY_KIND_HEIGHT = 14;
-export const ENTITY_NAME_HEIGHT = 35;
+export const ENTITY_KIND_HEIGHT = 10;
+export const ENTITY_NAME_HEIGHT = 40;
 
 export const ENTITY_HORIZONTAL_PADDING = 10;
-export const ENTITY_MEMBER_HEIGHT = 25;
-export const ENTITY_MEMBER_LIST_VERTICAL_PADDING = 5;
+export const ENTITY_MEMBER_HEIGHT = 30;
+export const ENTITY_MEMBER_LIST_VERTICAL_PADDING = 0;
 export const ENTITY_BORDER_THICKNESS = 1;
 
 export interface LayoutedEntity {
@@ -126,20 +126,20 @@ export function computeEntityHeight(
 
     let height = 0;
 
-    // height += ENTITY_BORDER_THICKNESS;
+    height += ENTITY_BORDER_THICKNESS;
     height += computeEntityHeaderHeight(kind);
-    // height += ENTITY_BORDER_THICKNESS;
+    height += ENTITY_BORDER_THICKNESS;
 
     if (renderMode.showAttributes) {
-        // height += 2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING;
+        height += 2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING;
         height += attributeCount * ENTITY_MEMBER_HEIGHT;
-        // height += ENTITY_BORDER_THICKNESS;
+        height += ENTITY_BORDER_THICKNESS;
     }
 
     if (renderMode.showMethods) {
-        // height += 2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING;
+        height += 2 * ENTITY_MEMBER_LIST_VERTICAL_PADDING;
         height += methodCount * ENTITY_MEMBER_HEIGHT;
-        // height += ENTITY_BORDER_THICKNESS;
+        height += ENTITY_BORDER_THICKNESS;
     }
 
     return height;
