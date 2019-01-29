@@ -9,8 +9,8 @@ const Ghost = styled.div.attrs<GhostProps>(({ x, y }) => ({
   style: { left: x + 'px', top: y + 'px' },
 }))<GhostProps>`
   position: absolute;
-  width: 110px;
-  height: 80px;
+  width: 200px;
+  height: 100px;
   line-height: 80px;
   text-align: center;
   border: thin dashed blue;

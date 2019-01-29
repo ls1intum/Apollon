@@ -1,5 +1,5 @@
 import React from 'react';
-import { findDOMNode } from 'react-dom';
+import { findDOMNode, createPortal } from 'react-dom';
 import { Provider as ContextProvider, Context } from './Context';
 import Draggable from './Draggable';
 import DropEvent from './DropEvent';
@@ -30,12 +30,9 @@ class DragLayer extends React.Component<Props, State> {
 
     const node = event.currentTarget as HTMLElement;
     const bounds = node.getBoundingClientRect();
-    const container = findDOMNode(this) as HTMLElement;
-    const bodyRect = document.body.getBoundingClientRect();
-    const elemRect = container.getBoundingClientRect();
     const offset = {
-      x: event.clientX - bounds.left + (elemRect.left - bodyRect.left),
-      y: event.clientY - bounds.top + (elemRect.top - bodyRect.top),
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
     };
 
     this.setState({
@@ -80,6 +77,8 @@ class DragLayer extends React.Component<Props, State> {
       focused: false,
       dragging: false,
       element: null,
+      offset: { x: 0, y: 0 },
+      position: { x: 0, y: 0 },
     });
   };
 
@@ -89,12 +88,13 @@ class DragLayer extends React.Component<Props, State> {
       onMouseUp: this.onMouseUp,
     };
     let { x, y } = this.state.position;
-    // x -= this.state.offset.x;
-    // y -= this.state.offset.y;
     return (
       <ContextProvider value={context}>
         {this.props.children}
-        {this.state.dragging && <Ghost x={x} y={y} />}
+        {createPortal(
+          this.state.dragging && <Ghost x={x} y={y} />,
+          document.body
+        )}
       </ContextProvider>
     );
   }
