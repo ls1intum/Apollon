@@ -20,17 +20,17 @@ export interface Entity {
 }
 
 export const enum EntityKind {
-  Package = 'Package',
-  AbstractClass = 'AbstractClass',
-  Class = 'Class',
-  Enumeration = 'Enumeration',
-  Interface = 'Interface',
-  InitialNode = 'InitialNode',
-  FinalNode = 'FinalNode',
-  ActionNode = 'ActionNode',
-  ObjectNode = 'ObjectNode',
-  MergeNode = 'MergeNode',
-  ForkNode = 'ForkNode',
+  AbstractClass = "ABSTRACT_CLASS",
+  Class = "CLASS",
+  Enumeration = "ENUMERATION",
+  Interface = "INTERFACE",
+  ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
+  ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
+  ActivityActionNode = "ACTIVITY_ACTION_NODE",
+  ActivityObject = "ACTIVITY_OBJECT",
+  ActivityMergeNode = "ACTIVITY_MERGE_NODE",
+  ActivityForkNode = "ACTIVITY_FORK_NODE",
+  ActivityForkNodeHorizontal = "ACTIVITY_FORK_NODE_HORIZONTAL"
 }
 
 export interface EntityMember {

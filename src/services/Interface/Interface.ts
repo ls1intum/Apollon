@@ -37,7 +37,7 @@ export const mapInternalToExternalState = (
       )
       .map<Entity>(id => ({
         id: state.elements[id].id,
-        kind: state.elements[id].kind as EntityKind,
+        kind: mapInternalToExternalKind(state.elements[id].kind) as EntityKind,
         name: state.elements[id].name,
         position: {
           x: state.elements[id].bounds.x + state.diagram.bounds.width / 2,
@@ -150,9 +150,10 @@ export const mapExternalToInternalState = (
   elements: state
     ? state.entities.allIds
         .reduce<Element[]>((o: Element[], id: string) => {
+          const kind = mapExternalToInternalKind(state.entities.byId[id].kind);
           let current: Element[] = [];
           let element = {
-            ...new (Plugins as any)[state.entities.byId[id].kind](
+            ...new (Plugins as any)[kind](
               state.entities.byId[id].name
             ),
             id,
@@ -236,3 +237,35 @@ export const mapExternalToInternalState = (
     }),
   },
 });
+
+const mapInternalToExternalKind = (kind: string): string => {
+  switch (kind) {
+    case 'Class': return 'CLASS';
+    case 'AbstractClass': return 'ABSTRACT_CLASS';
+    case 'Enumeration': return 'ENUMERATION';
+    case 'Interface': return 'INTERFACE';
+    case 'InitialNode': return 'ACTIVITY_CONTROL_INITIAL_NODE';
+    case 'FinalNode': return 'ACTIVITY_CONTROL_FINAL_NODE';
+    case 'ActionNode': return 'ACTIVITY_ACTION_NODE';
+    case 'ObjectNode': return 'ACTIVITY_OBJECT';
+    case 'MergeNode': return 'ACTIVITY_MERGE_NODE';
+    case 'ForkNode': return 'ACTIVITY_FORK_NODE';
+    default: return '';
+  }
+}
+
+const mapExternalToInternalKind = (kind: string): string => {
+  switch (kind) {
+    case 'CLASS': return 'Class';
+    case 'ABSTRACT_CLASS': return 'AbstractClass';
+    case 'ENUMERATION': return 'Enumeration';
+    case 'INTERFACE': return 'Interface';
+    case 'ACTIVITY_CONTROL_INITIAL_NODE': return 'InitialNode';
+    case 'ACTIVITY_CONTROL_FINAL_NODE': return 'FinalNode';
+    case 'ACTIVITY_ACTION_NODE': return 'ActionNode';
+    case 'ACTIVITY_OBJECT': return 'ObjectNode';
+    case 'ACTIVITY_MERGE_NODE': return 'MergeNode';
+    case 'ACTIVITY_FORK_NODE': return 'ForkNode';
+    default: return '';
+  }
+}
