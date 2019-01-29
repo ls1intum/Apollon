@@ -2,6 +2,8 @@ import React, { SFC } from 'react';
 import Element from './../../Element';
 
 class ForkNode extends Element {
+  readonly kind: string = 'ForkNode';
+
   static isEditable = false;
 
   constructor(public name: string = '') {

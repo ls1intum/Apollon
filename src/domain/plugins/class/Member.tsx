@@ -1,7 +1,7 @@
 import React, { SFC } from 'react';
 import Element from './../../Element';
 
-class Member extends Element {
+abstract class Member extends Element {
   static isHoverable = false;
   static isSelectable = false;
   static isMovable = false;

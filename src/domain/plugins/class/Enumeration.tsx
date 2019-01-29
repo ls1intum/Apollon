@@ -5,6 +5,8 @@ import Element from '../../Element';
 const HEADER_HEIGHT = 50;
 
 class Enumeration extends Container {
+  readonly kind: string = 'Enumeration';
+
   static isDroppable = false;
   static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'WIDTH';
 

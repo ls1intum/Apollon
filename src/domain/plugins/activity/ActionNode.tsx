@@ -2,6 +2,8 @@ import React, { SFC } from 'react';
 import Element from './../../Element';
 
 class ActionNode extends Element {
+  readonly kind: string = 'ActionNode';
+
   constructor(public name: string = 'ActionNode') {
     super(name);
   }

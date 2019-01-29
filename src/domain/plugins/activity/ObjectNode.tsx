@@ -2,6 +2,8 @@ import React, { SFC } from 'react';
 import Element from './../../Element';
 
 class ObjectNode extends Element {
+  readonly kind: string = 'ObjectNode';
+
   constructor(public name: string = 'ObjectNode') {
     super(name);
   }

@@ -7,6 +7,8 @@ import Attribute from './Attribute';
 const HEADER_HEIGHT = 50;
 
 class Interface extends Container {
+  readonly kind: string = 'Interface';
+
   static isDroppable = false;
   static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'WIDTH';
 

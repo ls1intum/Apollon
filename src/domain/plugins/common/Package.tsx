@@ -2,6 +2,8 @@ import React, { SFC } from 'react';
 import Container from './../../Container';
 
 class Package extends Container {
+  readonly kind: string = 'Package';
+
   static isConnectable = false;
   static isEditable = false;
 

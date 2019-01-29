@@ -2,6 +2,8 @@ import React, { SFC } from 'react';
 import Element from './../../Element';
 
 class FinalNode extends Element {
+  readonly kind: string = 'FinalNode';
+
   static isEditable = false;
 
   constructor(public name: string = '') {

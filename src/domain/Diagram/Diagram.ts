@@ -4,6 +4,8 @@ import { DiagramType } from './DiagramTypes';
 import Element from '../Element';
 
 class Diagram extends Container {
+  readonly kind: string = 'Diagram';
+
   bounds: Boundary = {
     ...this.bounds,
     width: 1600,

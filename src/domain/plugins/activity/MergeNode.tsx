@@ -2,6 +2,8 @@ import React, { SFC } from 'react';
 import Element from './../../Element';
 
 class MergeNode extends Element {
+  readonly kind: string = 'MergeNode';
+
   constructor(public name: string = 'Condition') {
     super(name);
     this.bounds = { ...this.bounds, height: 60 };

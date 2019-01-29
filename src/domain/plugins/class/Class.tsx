@@ -7,6 +7,8 @@ import Attribute from './Attribute';
 const HEADER_HEIGHT = 40;
 
 class Class extends Container {
+  readonly kind: string = 'Class';
+
   static isDroppable = false;
   static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'WIDTH';
 

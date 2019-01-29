@@ -12,7 +12,7 @@ abstract class Element {
   static isInteractable = true;
 
   readonly id: string = uuid();
-  readonly kind: string = (<any>this).constructor.name;
+  abstract readonly kind: string;
   bounds: Boundary = new Boundary(0, 0, 200, 100);
 
   selected: boolean = false;

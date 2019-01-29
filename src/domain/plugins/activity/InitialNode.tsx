@@ -2,6 +2,8 @@ import React, { SFC } from 'react';
 import Element from './../../Element';
 
 class InitialNode extends Element {
+  readonly kind: string = 'InitialNode';
+
   static isEditable = false;
 
   constructor(public name: string = '') {
