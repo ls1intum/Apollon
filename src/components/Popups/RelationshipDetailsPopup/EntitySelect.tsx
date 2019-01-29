@@ -15,7 +15,7 @@ export default class EntitySelect extends React.Component<Props> {
     render() {
         return (
             <Select value={this.props.selectedEntityId} onChange={this.onChange}>
-                {this.props.entities.map(entity => (
+                {this.props.entities.filter(e => (e.constructor as any).isConnectable).map(entity => (
                     <option key={entity.id} value={entity.id}>
                         {entity.name}
                     </option>
