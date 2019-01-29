@@ -15,7 +15,7 @@ class App extends React.Component<Props> {
       <Store ref={this.store} initialState={this.props.state}>
         <Theme styles={this.props.styles}>
           <DragLayer>
-            <Layout>
+            <Layout className="apollon-editor">
               <Editor>
                 <Canvas />
               </Editor>
