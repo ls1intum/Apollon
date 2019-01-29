@@ -7,11 +7,11 @@ import { RenderOptions } from './index';
 import RenderedRelationship from './RenderedRelationship';
 import { LayoutedDiagram } from '../../../rendering/layouters/diagram';
 import ElementComponent from '../../../components/LayoutedElement/ElementComponent';
-import Relationship from '../../../domain/Relationship';
 import { LayoutedEntity } from '../../layouters/entity';
 import Element from '../../../domain/Element';
 import Container from '../../../domain/Container';
 import { Attribute, Method } from './../../../domain/plugins';
+import { mapExternalToInternalKind } from '../../../services/Interface/Interface';
 
 export default class RenderedDiagram extends React.Component<Props> {
   render() {
@@ -48,8 +48,9 @@ export default class RenderedDiagram extends React.Component<Props> {
         {entities
           .reduce<Element[]>((o: Element[], entity: LayoutedEntity) => {
             let current: Element[] = [];
+            const kind = mapExternalToInternalKind(entity.kind);
             let element = {
-              ...new (Plugins as any)[entity.kind](entity.name),
+              ...new (Plugins as any)[kind](entity.name),
               id: entity.id,
               bounds: {
                 x: entity.position.x,

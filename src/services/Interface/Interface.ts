@@ -238,7 +238,7 @@ export const mapExternalToInternalState = (
   },
 });
 
-const mapInternalToExternalKind = (kind: string): string => {
+export const mapInternalToExternalKind = (kind: string): string => {
   switch (kind) {
     case 'Class': return 'CLASS';
     case 'AbstractClass': return 'ABSTRACT_CLASS';
@@ -254,7 +254,7 @@ const mapInternalToExternalKind = (kind: string): string => {
   }
 }
 
-const mapExternalToInternalKind = (kind: string): string => {
+export const mapExternalToInternalKind = (kind: string): string => {
   switch (kind) {
     case 'CLASS': return 'Class';
     case 'ABSTRACT_CLASS': return 'AbstractClass';

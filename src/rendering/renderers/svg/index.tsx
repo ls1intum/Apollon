@@ -16,6 +16,7 @@ import ElementComponent from '../../../components/LayoutedElement/ElementCompone
 import * as Plugins from './../../../domain/plugins';
 import Container from '../../../domain/Container';
 import { Attribute, Method } from './../../../domain/plugins';
+import { mapExternalToInternalKind } from '../../../services/Interface/Interface';
 
 export interface RenderOptions {
   shouldRenderElement: (id: UUID) => boolean;
@@ -49,8 +50,9 @@ export function renderEntityToSVG(
   renderOptions: RenderOptions
 ): RenderedSVG {
   let current: Element[] = [];
+  const kind = mapExternalToInternalKind(entity.kind);
   let element = {
-    ...new (Plugins as any)[entity.kind](entity.name),
+    ...new (Plugins as any)[kind](entity.name),
     id: entity.id,
     bounds: {
       x: entity.position.x,

@@ -117,7 +117,6 @@ class Editor {
     state: ExternalState,
     layoutOptions: DiagramLayouter.LayoutOptions
   ): DiagramLayouter.LayoutedDiagram {
-    console.log(state, layoutOptions);
     const entities: Entity[] = Object.values(state.entities.byId);
     const relationships: Relationship[] = Object.values(state.relationships.byId);
 
