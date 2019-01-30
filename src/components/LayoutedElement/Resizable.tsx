@@ -19,7 +19,8 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
 
     private resize = (width: number, height: number) => {
       let { size } = this.state;
-      const isResizeable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = (this.props.element.constructor as any).isResizable;
+      const isResizeable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = (this.props
+        .element.constructor as any).isResizable;
       if (isResizeable === 'HEIGHT' || isResizeable === 'NONE') {
         width = size.width;
       }
@@ -35,7 +36,6 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
         bounds: { ...this.props.element.bounds, width, height },
       };
       this.props.update(element);
-      this.setState({ size: { width, height } });
     };
 
     private onMouseDown = (event: React.MouseEvent) => {
@@ -69,6 +69,16 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
       document.removeEventListener('mousemove', this.onMouseMove);
       document.removeEventListener('mouseup', this.onMouseUp);
     };
+
+    componentDidUpdate() {
+      const { width, height } = this.props.element.bounds;
+      if (
+        width !== this.state.size.width ||
+        height !== this.state.size.height
+      ) {
+        this.setState({ size: { width, height } });
+      }
+    }
 
     render() {
       return (
