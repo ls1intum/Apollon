@@ -6,6 +6,7 @@ import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { InteractiveElementsMode } from '../../services/EditorService';
+import Container from '../../domain/Container';
 
 const interactable = (WrappedComponent: typeof ElementComponent) => {
   class Interactable extends Component<Props, State> {
@@ -15,16 +16,32 @@ const interactable = (WrappedComponent: typeof ElementComponent) => {
 
     private toggle = (event: MouseEvent) => {
       event.stopPropagation();
-      this.setState(
-        state => ({ interactive: !state.interactive }),
-        () => {
-          const element: Element = {
-            ...this.props.element,
-            interactive: this.state.interactive,
-          };
-          this.props.update(element);
+      let elementsToToggle = [this.props.element];
+      for (const interactiveElement of this.props.interactiveElements) {
+        if (
+          interactiveElement instanceof Container &&
+          interactiveElement.ownedElements.includes(this.props.element.id)
+        ) {
+          elementsToToggle = [interactiveElement];
         }
-      );
+        if (interactiveElement.owner === this.props.element.id) {
+          elementsToToggle = [this.props.element];
+          if (this.props.element instanceof Container) {
+            const children = this.props.element.ownedElements
+              .filter(id =>
+                this.props.interactiveElements.map(e => e.id).includes(id)
+              )
+              .map<Element>(
+                id => this.props.interactiveElements.find(e => e.id === id)!
+              );
+            elementsToToggle = [...elementsToToggle, ...children];
+          }
+        }
+      }
+      console.log(this.props.element, this.props.interactiveElements);
+      elementsToToggle
+        .map<Element>(e => ({ ...e, interactive: !e.interactive }))
+        .forEach(this.props.update);
     };
 
     componentDidMount() {
@@ -35,6 +52,12 @@ const interactable = (WrappedComponent: typeof ElementComponent) => {
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
       node.removeEventListener('click', this.toggle);
+    }
+
+    componentDidUpdate() {
+      if (this.props.element.interactive !== this.state.interactive) {
+        this.setState({ interactive: this.props.element.interactive });
+      }
     }
 
     render() {
@@ -53,6 +76,7 @@ const interactable = (WrappedComponent: typeof ElementComponent) => {
 
   interface StateProps {
     mode: InteractiveElementsMode;
+    interactiveElements: Element[];
   }
 
   interface DispatchProps {
@@ -69,6 +93,9 @@ const interactable = (WrappedComponent: typeof ElementComponent) => {
     connect(
       (state: ReduxState): StateProps => ({
         mode: state.editor.interactiveMode,
+        interactiveElements: Object.values(state.elements).filter(
+          e => state.elements[e.id].interactive
+        ),
       }),
       { update: ElementRepository.update }
     )
