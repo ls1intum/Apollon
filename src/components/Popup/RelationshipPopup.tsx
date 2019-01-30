@@ -6,8 +6,6 @@ import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from '../../domain/Element';
 import { Point } from '../../domain/geo';
 import { withCanvas, CanvasContext } from '../Canvas';
-import NameField from './NameField';
-import * as Plugins from './plugins';
 import Relationship, { LayoutedRelationship } from '../../domain/Relationship';
 import RelationshipDetails from '../Popups/RelationshipDetailsPopup/RelationshipDetails';
 import {
@@ -18,8 +16,9 @@ import { DiagramType } from '../../domain/Diagram';
 
 export class Popup extends Component<Props> {
   private calculatePosition = (): Point => {
-    let { x, y, height } = this.props.element.target.bounds;
-    return this.props.coordinateSystem.pointToScreen(x, y + height / 2);
+    const { path } = this.props.element;
+    const targetPoint = path[path.length - 2];
+    return this.props.coordinateSystem.pointToScreen(targetPoint.x, targetPoint.y - 20);
   };
 
   private update = (relationship: Relationship) => {
