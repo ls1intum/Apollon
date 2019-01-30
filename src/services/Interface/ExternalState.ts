@@ -72,6 +72,8 @@ export interface RelationshipEnd {
 export type RectEdge = 'TOP' | 'LEFT' | 'RIGHT' | 'BOTTOM';
 
 export interface ExternalState {
+  version: string,
+
   entities: {
     byId: { [id: string]: Entity };
     allIds: string[];

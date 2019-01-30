@@ -34,6 +34,8 @@ import { LayoutedEntity } from '../../rendering/layouters/entity';
 export const mapInternalToExternalState = (
   state: ReduxState
 ): ExternalState => ({
+  version: '1.0',
+
   entities: {
     allIds: Object.keys(state.elements).filter(
       id =>
