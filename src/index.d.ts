@@ -22,6 +22,8 @@ declare module "@ls1intum/apollon" {
     }
 
     export interface State {
+        version: string;
+
         entities: {
             byId: { [id: string]: Entity };
             allIds: string[];
