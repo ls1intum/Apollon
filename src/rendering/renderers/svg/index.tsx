@@ -2,7 +2,6 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import RelationshipMarkers from './defs/RelationshipMarkers';
 import RenderedDiagram from './RenderedDiagram';
-import RenderedEntity from './RenderedEntity';
 import RenderedRelationship from './RenderedRelationship';
 import Svg from './Svg';
 import Translate from './Translate';
@@ -13,10 +12,7 @@ import { UUID } from './../../../domain/utils/uuid';
 import { LayoutedDiagram } from '../../../rendering/layouters/diagram';
 import Element from '../../../domain/Element';
 import ElementComponent from '../../../components/LayoutedElement/ElementComponent';
-import * as Plugins from './../../../domain/plugins';
-import Container from '../../../domain/Container';
-import { Attribute, Method } from './../../../domain/plugins';
-import { mapExternalToInternalKind } from '../../../services/Interface/Interface';
+import { layoutedEntityToElements } from '../../../services/Interface/Interface';
 
 export interface RenderOptions {
   shouldRenderElement: (id: UUID) => boolean;
@@ -49,67 +45,8 @@ export function renderEntityToSVG(
   entity: LayoutedEntity,
   renderOptions: RenderOptions
 ): RenderedSVG {
-  let current: Element[] = [];
-  const kind = mapExternalToInternalKind(entity.kind);
-  let element = {
-    ...new (Plugins as any)[kind](entity.name),
-    id: entity.id,
-    bounds: {
-      x: entity.position.x,
-      y: entity.position.y,
-      width: entity.size.width,
-      height: entity.size.height,
-    },
-    selected: false,
-    interactive: false,
-    owner: null,
-  };
-  element = Object.setPrototypeOf(
-    element,
-    (Plugins as any)[element.kind].prototype
-  );
-  if (
-    ['Class', 'AbstractClass', 'Enumeration', 'Interface'].includes(
-      element.kind
-    )
-  ) {
-    const container = element as Container;
-    for (const a of entity.attributes) {
-      const attr: Attribute = Object.setPrototypeOf(
-        {
-          ...new Attribute(a.name),
-          id: a.id,
-        },
-        Attribute.prototype
-      );
-      let [parent, ...children] = container.addElement(attr, current);
-      element = parent;
-      current = children;
-    }
-    for (const m of entity.methods) {
-      const method: Method = Object.setPrototypeOf(
-        {
-          ...new Method(m.name),
-          id: m.id,
-        },
-        Method.prototype
-      );
-      let [parent, ...children] = container.addElement(method, current);
-      element = parent;
-      current = children;
-    }
-    container.ownedElements = [];
-    current = current.map(c => ({
-      ...c,
-      bounds: {
-        ...c.bounds,
-        x: c.bounds.x + container.bounds.x,
-        y: c.bounds.y + container.bounds.y,
-      },
-    }));
-  }
-  const elements = [element, ...current];
-  let { x, y, width, height } = element.bounds;
+  const elements: Element[] = layoutedEntityToElements(entity);
+  let { x, y, width, height } = elements[0].bounds;
 
   width = width + 2;
   height = height + 2;
@@ -117,9 +54,11 @@ export function renderEntityToSVG(
   const svg = renderReactElementToString(
     <Svg width={width} height={height} fontFamily={renderOptions.fontFamily}>
       <Translate dx={-x + 1} dy={-y + 1}>
-        {elements.map(e => (
-          <ElementComponent key={e.id} element={e} />
-        ))}
+        {elements
+          .filter(e => renderOptions.shouldRenderElement(e.id))
+          .map(e => (
+            <ElementComponent key={e.id} element={e} />
+          ))}
       </Translate>
     </Svg>
   );

@@ -16,7 +16,20 @@ import {
 import Diagram, { DiagramType } from '../../domain/Diagram';
 import Element from '../../domain/Element';
 import * as Plugins from './../../domain/plugins';
-import { Attribute, Method } from './../../domain/plugins';
+import {
+  Attribute,
+  Method,
+  Class,
+  Enumeration,
+  Interface,
+  InitialNode,
+  FinalNode,
+  ActionNode,
+  ObjectNode,
+  MergeNode,
+  ForkNode,
+} from './../../domain/plugins';
+import { LayoutedEntity } from '../../rendering/layouters/entity';
 
 export const mapInternalToExternalState = (
   state: ReduxState
@@ -35,61 +48,22 @@ export const mapInternalToExternalState = (
           state.elements[id].kind !== 'Attribute' &&
           state.elements[id].kind !== 'Method'
       )
-      .map<Entity>(id => ({
-        id: state.elements[id].id,
-        kind: mapInternalToExternalKind(state.elements[id].kind) as EntityKind,
-        name: state.elements[id].name,
-        position: {
-          x: state.elements[id].bounds.x + state.diagram.bounds.width / 2,
-          y: state.elements[id].bounds.y + state.diagram.bounds.height / 2,
-        },
-        size: {
-          width: state.elements[id].bounds.width,
-          height: state.elements[id].bounds.height,
-        },
-        attributes:
-          'ownedElements' in state.elements[id]
-            ? (state.elements[id] as Container).ownedElements
-                .filter(id => state.elements[id].kind === 'Attribute')
-                .map<EntityMember>((id: string) => ({
-                  id,
-                  name: state.elements[id].name,
-                }))
-            : [],
-        methods:
-          'ownedElements' in state.elements[id]
-            ? (state.elements[id] as Container).ownedElements
-                .filter(id => state.elements[id].kind === 'Method')
-                .map<EntityMember>((id: string) => ({
-                  id,
-                  name: state.elements[id].name,
-                }))
-            : [],
-        renderMode: {
-          showAttributes: true,
-          showMethods: true,
-        },
-      }))
-      .reduce(
-        (o: { [id: string]: Entity }, e: Entity) => ({ ...o, [e.id]: e }),
-        {}
-      ),
+      .map<Entity>(id => elementToEntity(state.elements[id], state.elements))
+      .map<Entity>(e => {
+        e.position = {
+          x: e.position.x + state.diagram.bounds.width / 2,
+          y: e.position.y + state.diagram.bounds.height / 2,
+        };
+        return e;
+      })
+      .reduce<{ [id: string]: Entity }>((o, e) => ({ ...o, [e.id]: e }), {}),
   },
 
   relationships: {
     allIds: state.relationships.allIds,
     byId: Object.keys(state.relationships.byId)
       .map<ExternalRelationship>(id => state.relationships.byId[id])
-      .reduce(
-        (
-          o: { [id: string]: ExternalRelationship },
-          r: ExternalRelationship
-        ) => ({
-          ...o,
-          [r.id]: r,
-        }),
-        {}
-      ),
+      .reduce<{ [id: string]: ExternalRelationship }>((o, r) => ({ ...o, [r.id]: r }), {}),
   },
 
   interactiveElements: {
@@ -149,72 +123,19 @@ export const mapExternalToInternalState = (
 
   elements: state
     ? state.entities.allIds
-        .reduce<Element[]>((o: Element[], id: string) => {
-          const kind = mapExternalToInternalKind(state.entities.byId[id].kind);
-          let current: Element[] = [];
-          let element = {
-            ...new (Plugins as any)[kind](
-              state.entities.byId[id].name
-            ),
-            id,
-            bounds: {
-              x:
-                state.entities.byId[id].position.x -
-                state.editor.canvasSize.width / 2,
-              y:
-                state.entities.byId[id].position.y -
-                state.editor.canvasSize.height / 2,
-              ...state.entities.byId[id].size,
-            },
-            selected: false,
-            interactive: state.interactiveElements.allIds.includes(id),
-          };
-          element = Object.setPrototypeOf(
-            element,
-            (<any>Plugins)[element.kind].prototype
-          );
-          if (
-            ['Class', 'AbstractClass', 'Enumeration', 'Interface'].includes(
-              element.kind
-            )
-          ) {
-            const container = element as Container;
-            for (const a of state.entities.byId[id].attributes) {
-              const attr: Attribute = Object.setPrototypeOf(
-                {
-                  ...new Attribute(a.name),
-                  id: a.id,
-                  interactive: state.interactiveElements.allIds.includes(a.id),
-                },
-                Attribute.prototype
-              );
-              let [parent, ...children] = container.addElement(attr, current);
-              element = parent;
-              current = children;
-            }
-            for (const m of state.entities.byId[id].methods) {
-              const method: Method = Object.setPrototypeOf(
-                {
-                  ...new Method(m.name),
-                  id: m.id,
-                  interactive: state.interactiveElements.allIds.includes(m.id),
-                },
-                Method.prototype
-              );
-              let [parent, ...children] = container.addElement(method, current);
-              element = parent;
-              current = children;
-            }
+        .reduce<Element[]>((xs, id) => [...xs, ...entityToElements(state.entities.byId[id])], [])
+        .map<Element>(e => {
+          e.interactive = state.interactiveElements.allIds.includes(e.id);
+          if (e.owner === null) {
+            e.bounds = {
+              ...e.bounds,
+              x: e.bounds.x - state.editor.canvasSize.width / 2,
+              y: e.bounds.y - state.editor.canvasSize.height / 2,
+            };
           }
-          return [...o, element, ...current];
-        }, [])
-        .reduce(
-          (o: { [id: string]: Element }, e: Element) => ({
-            ...o,
-            [e.id]: e,
-          }),
-          {}
-        )
+          return e;
+        })
+        .reduce<{ [id: string]: Element }>((o, e) => ({ ...o, [e.id]: e }), {})
     : {},
 
   editor: {
@@ -238,34 +159,138 @@ export const mapExternalToInternalState = (
   },
 });
 
-export const mapInternalToExternalKind = (kind: string): string => {
-  switch (kind) {
-    case 'Class': return 'CLASS';
-    case 'AbstractClass': return 'ABSTRACT_CLASS';
-    case 'Enumeration': return 'ENUMERATION';
-    case 'Interface': return 'INTERFACE';
-    case 'InitialNode': return 'ACTIVITY_CONTROL_INITIAL_NODE';
-    case 'FinalNode': return 'ACTIVITY_CONTROL_FINAL_NODE';
-    case 'ActionNode': return 'ACTIVITY_ACTION_NODE';
-    case 'ObjectNode': return 'ACTIVITY_OBJECT';
-    case 'MergeNode': return 'ACTIVITY_MERGE_NODE';
-    case 'ForkNode': return 'ACTIVITY_FORK_NODE';
-    default: return '';
-  }
-}
+export const elementToEntity = (element: Element, elements: { [id: string]: Element }): Entity => {
+  let kind: string = '';
 
-export const mapExternalToInternalKind = (kind: string): string => {
-  switch (kind) {
-    case 'CLASS': return 'Class';
-    case 'ABSTRACT_CLASS': return 'AbstractClass';
-    case 'ENUMERATION': return 'Enumeration';
-    case 'INTERFACE': return 'Interface';
-    case 'ACTIVITY_CONTROL_INITIAL_NODE': return 'InitialNode';
-    case 'ACTIVITY_CONTROL_FINAL_NODE': return 'FinalNode';
-    case 'ACTIVITY_ACTION_NODE': return 'ActionNode';
-    case 'ACTIVITY_OBJECT': return 'ObjectNode';
-    case 'ACTIVITY_MERGE_NODE': return 'MergeNode';
-    case 'ACTIVITY_FORK_NODE': return 'ForkNode';
-    default: return '';
+  if (element instanceof Class) {
+    kind = element.isAbstract ? 'ABSTRACT_CLASS' : 'CLASS';
+  } else if (element instanceof Enumeration) {
+    kind = 'ENUMERATION';
+  } else if (element instanceof Interface) {
+    kind = 'INTERFACE';
+  } else if (element instanceof InitialNode) {
+    kind = 'ACTIVITY_CONTROL_INITIAL_NODE';
+  } else if (element instanceof FinalNode) {
+    kind = 'ACTIVITY_CONTROL_FINAL_NODE';
+  } else if (element instanceof ActionNode) {
+    kind = 'ACTIVITY_ACTION_NODE';
+  } else if (element instanceof ObjectNode) {
+    kind = 'ACTIVITY_OBJECT';
+  } else if (element instanceof MergeNode) {
+    kind = 'ACTIVITY_MERGE_NODE';
+  } else if (element instanceof ForkNode) {
+    kind = 'ACTIVITY_FORK_NODE';
   }
+
+  const entity: Entity = {
+    id: element.id,
+    kind: kind as EntityKind,
+    name: element.name,
+    position: { x: element.bounds.x, y: element.bounds.y },
+    size: { width: element.bounds.width, height: element.bounds.height },
+    attributes: [],
+    methods: [],
+    renderMode: {
+      showAttributes: true,
+      showMethods: true,
+    },
+  };
+  if (element instanceof Container) {
+    entity.attributes = element.ownedElements
+      .filter(id => elements[id] instanceof Attribute)
+      .map<EntityMember>(id => ({ id, name: elements[id].name }));
+    entity.methods = element.ownedElements
+      .filter(id => elements[id] instanceof Method)
+      .map<EntityMember>(id => ({ id, name: elements[id].name }));
+  }
+  return entity;
+};
+
+export const entityToElements = (entity: Entity): Element[] => {
+  let init: Element;
+  switch (entity.kind) {
+    case 'CLASS':
+      init = new Class(entity.name, false);
+      break;
+    case 'ABSTRACT_CLASS':
+      init = new Class(entity.name, true);
+      break;
+    case 'ENUMERATION':
+      init = new Enumeration(entity.name);
+      break;
+    case 'INTERFACE':
+      init = new Interface(entity.name);
+      break;
+    case 'ACTIVITY_CONTROL_INITIAL_NODE':
+      init = new InitialNode(entity.name);
+      break;
+    case 'ACTIVITY_CONTROL_FINAL_NODE':
+      init = new FinalNode(entity.name);
+      break;
+    case 'ACTIVITY_ACTION_NODE':
+      init = new ActionNode(entity.name);
+      break;
+    case 'ACTIVITY_OBJECT':
+      init = new ObjectNode(entity.name);
+      break;
+    case 'ACTIVITY_MERGE_NODE':
+      init = new MergeNode(entity.name);
+      break;
+    case 'ACTIVITY_FORK_NODE':
+      init = new ForkNode(entity.name);
+      break;
+    default:
+      return [];
+  }
+  let element: Element = {
+    ...init,
+    id: entity.id,
+    bounds: { ...entity.position, ...entity.size },
+    selected: false,
+  };
+
+  element = Object.setPrototypeOf(element, init.constructor.prototype);
+  let current: Element[] = [];
+  if (element instanceof Container) {
+    for (const member of entity.attributes) {
+      const attribute = Object.setPrototypeOf(
+        { ...new Attribute(member.name), id: member.id },
+        Attribute.prototype
+      );
+      let [parent, ...children] = (element as Container).addElement(
+        attribute,
+        current
+      );
+      element = parent;
+      current = children;
+    }
+    for (const member of entity.methods) {
+      const method = Object.setPrototypeOf(
+        { ...new Method(member.name), id: member.id },
+        Method.prototype
+      );
+      let [parent, ...children] = (element as Container).addElement(
+        method,
+        current
+      );
+      element = parent;
+      current = children;
+    }
+  }
+  return [element, ...current];
+};
+
+export const layoutedEntityToElements = (layoutedEntity: LayoutedEntity): Element[] => {
+  const entity: Entity = layoutedEntity as Entity;
+  let [element, ...children] = entityToElements(entity);
+  if (element instanceof Container) element.ownedElements = [];
+  children = children.map(c => ({
+    ...c,
+    bounds: {
+      ...c.bounds,
+      x: c.bounds.x + element.bounds.x,
+      y: c.bounds.y + element.bounds.y,
+    },
+  }));
+  return [element, ...children];
 }
