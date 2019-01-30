@@ -54,11 +54,10 @@ export function renderEntityToSVG(
   const svg = renderReactElementToString(
     <Svg width={width} height={height} fontFamily={renderOptions.fontFamily}>
       <Translate dx={-x + 1} dy={-y + 1}>
-        {elements
-          .filter(e => renderOptions.shouldRenderElement(e.id))
-          .map(e => (
-            <ElementComponent key={e.id} element={e} />
-          ))}
+        {renderOptions.shouldRenderElement(elements[0].id) &&
+          elements
+            .filter(e => renderOptions.shouldRenderElement(e.id))
+            .map(e => <ElementComponent key={e.id} element={e} />)}
       </Translate>
     </Svg>
   );

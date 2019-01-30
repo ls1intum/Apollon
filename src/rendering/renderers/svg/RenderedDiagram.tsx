@@ -42,6 +42,7 @@ export default class RenderedDiagram extends React.Component<Props> {
         ))}
 
         {entities
+          .filter(e => renderOptions.shouldRenderElement(e.id))
           .reduce<Element[]>((xs, entity) => [...xs, ...layoutedEntityToElements(entity)], [])
           .filter(e => renderOptions.shouldRenderElement(e.id))
           .map(element => {
