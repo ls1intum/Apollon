@@ -1,5 +1,5 @@
 import * as React from "react";
-import { distinct } from "../../../../core/utils";
+import { distinct } from "../../../../domain/utils";
 import { ENTITY_HORIZONTAL_PADDING, ENTITY_KIND_HEIGHT, ENTITY_NAME_HEIGHT, LayoutedEntity } from "../../../../rendering/layouters/entity";
 
 export default class ClipPaths extends React.Component<Props> {

@@ -1,22 +1,18 @@
 {
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "target": "es5",
-        "module": "es2015",
-        "moduleResolution": "node",
-        "strict": true,
-        "forceConsistentCasingInFileNames": true,
-        "removeComments": true,
-        "noImplicitAny": true,
-        "suppressImplicitAnyIndexErrors": false,
-        "importHelpers": true,
-        "jsx": "react",
-        "lib": [
-            "dom",
-            "es2015",
-            "es2016.array.include",
-            "es2017.object"
-        ]
-    }
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "lib": ["es2017", "dom"],
+    "jsx": "react",
+    "rootDir": "./src",
+    "outDir": "./dist/",
+    "strict": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "removeComments": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true
+  }
 }

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { getEntityMemberClipPathId } from "./defs/ClipPaths";
 import { RenderOptions } from "./index";
-import { EntityKind, EntityMember } from "../../../core/domain";
+import { EntityKind } from "../../../domain/Element";
 import {
     computeEntityHeaderHeight,
     ENTITY_BORDER_THICKNESS,
@@ -11,6 +11,11 @@ import {
     getEntityKindDescriptionOrNull,
     LayoutedEntity
 } from "../../../rendering/layouters/entity";
+
+interface EntityMember {
+    id: string;
+    name: string;
+}
 
 export default class RenderedEntity extends React.Component<Props> {
     render() {
@@ -26,8 +31,8 @@ export default class RenderedEntity extends React.Component<Props> {
         let transform = `translate(${x} ${y})`;
 
         switch (entity.kind) {
-            case EntityKind.ActivityControlInitialNode:
-            case EntityKind.ActivityControlFinalNode:
+            case EntityKind.InitialNode:
+            case EntityKind.FinalNode:
                 return (
                     <g transform={transform}>
                         <rect
@@ -41,7 +46,7 @@ export default class RenderedEntity extends React.Component<Props> {
                         {this.renderClassName(38)}
                     </g>
                 );
-            case EntityKind.ActivityMergeNode:
+            case EntityKind.MergeNode:
                 transform = `translate(${x + 17.5} ${y + 1})`;
                 return (
                     <g transform={transform}>
@@ -57,21 +62,7 @@ export default class RenderedEntity extends React.Component<Props> {
                         />
                     </g>
                 );
-            case EntityKind.ActivityForkNode:
-                return (
-                    <g transform={transform}>
-                        <rect
-                            x={0}
-                            y={0}
-                            width={width}
-                            height={height}
-                            fill="black"
-                            stroke="black"
-                            strokeWidth="1"
-                        />
-                    </g>
-                );
-                case EntityKind.ActivityForkNodeHorizontal:
+            case EntityKind.ForkNode:
                 return (
                     <g transform={transform}>
                         <rect

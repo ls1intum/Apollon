@@ -1,12 +1,8 @@
 import * as React from "react";
-import { RelationshipKind } from "../../../../core/domain";
-import { assertNever } from "../../../../core/utils";
+import { RelationshipKind } from "../../../../domain/Relationship";
+import { assertNever } from "../../../../domain/utils";
 
-export default class RelationshipMarkers extends React.Component<Props> {
-    componentDidMount() {
-        this.props.onComponentDidMount && this.props.onComponentDidMount()
-    }
-
+export default class RelationshipMarkers extends React.Component {
     render() {
         return (
             <>
@@ -100,8 +96,4 @@ export const enum RelationshipKindMarker {
     Rhombus = "RelationshipKind_Rhombus",
     RhombusFilled = "RelationshipKind_RhombusFilled",
     Triangle = "RelationshipKind_Triangle"
-}
-
-interface Props {
-    onComponentDidMount: Function | undefined;
 }

@@ -52,4 +52,4 @@ Launch the webpack-dev-server:
 yarn start
 ```
 
-The webpack-dev-server is now listening on [http://localhost:8000](http://localhost:8000). If you change a TypeScript file, webpack will automatically compile the code, bundle the application, and refresh the page in your browser.
+The webpack-dev-server is now listening on [http://localhost:8888](http://localhost:8888). If you change a TypeScript file, webpack will automatically compile the code, bundle the application, and refresh the page in your browser.

@@ -22,6 +22,8 @@ declare module "@ls1intum/apollon" {
     }
 
     export interface State {
+        version: string;
+
         entities: {
             byId: { [id: string]: Entity };
             allIds: string[];
@@ -198,7 +200,7 @@ declare module "@ls1intum/apollon" {
     ): RenderedSVG;
 
     export function renderEntityToSVG(
-        layoutedEntity: LayoutedEntity,
+        layoutedEntity: Entity,
         renderOptions: RenderOptions
     ): RenderedSVG;
 

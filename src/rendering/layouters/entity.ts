@@ -1,24 +1,31 @@
-import { Entity, EntityKind, EntityMember, EntityRenderMode } from "../../core/domain";
-import { Point, Size } from "../../core/geometry";
-import { assertNever, UUID } from "../../core/utils";
+import { EntityKind } from "../../domain/Element";
+import { Point, Size } from "../../domain/geo";
+import Element from './../../domain/Element';
+import { UUID } from './../../domain/utils/uuid';
+import { Entity } from '../../services/Interface/ExternalState';
 
-export const ENTITY_KIND_HEIGHT = 14;
-export const ENTITY_NAME_HEIGHT = 35;
+interface EntityMember {
+    id: string;
+    name: string;
+}
+
+export const ENTITY_KIND_HEIGHT = 10;
+export const ENTITY_NAME_HEIGHT = 40;
 
 export const ENTITY_HORIZONTAL_PADDING = 10;
-export const ENTITY_MEMBER_HEIGHT = 25;
-export const ENTITY_MEMBER_LIST_VERTICAL_PADDING = 5;
+export const ENTITY_MEMBER_HEIGHT = 30;
+export const ENTITY_MEMBER_LIST_VERTICAL_PADDING = 0;
 export const ENTITY_BORDER_THICKNESS = 1;
 
 export interface LayoutedEntity {
     id: UUID;
-    kind: EntityKind;
+    kind: string;
     name: string;
     position: Point;
     size: Size;
     attributes: LayoutedEntityMember[];
     methods: LayoutedEntityMember[];
-    renderMode: EntityRenderMode;
+    renderMode: any;
 }
 
 export interface LayoutedEntityMember {
@@ -82,44 +89,38 @@ function layoutEntityMembers(
 }
 
 export function getDefaultEntityWidth(kind: EntityKind) {
-    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
+    if (kind === EntityKind.InitialNode || kind === EntityKind.FinalNode) {
         return 40;
     }
-    if (kind === EntityKind.ActivityMergeNode) {
+    if (kind === EntityKind.MergeNode) {
         return 60;
     }
-    if (kind === EntityKind.ActivityForkNode) {
+    if (kind === EntityKind.ForkNode) {
         return 20;
-    }
-    if (kind === EntityKind.ActivityForkNodeHorizontal) {
-        return 60;
     }
 
     return 200;
 }
 
 export function computeEntityHeight(
-    kind: EntityKind,
+    kind: string,
     attributeCount: number,
     methodCount: number,
-    renderMode: EntityRenderMode
+    renderMode: any
 ) {
-    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
+    if (kind === EntityKind.InitialNode || kind === EntityKind.FinalNode) {
         return 40;
     }
-    if (kind === EntityKind.ActivityMergeNode) {
+    if (kind === EntityKind.MergeNode) {
         return 40;
     }
-    if (kind === EntityKind.ActivityForkNode) {
+    if (kind === EntityKind.ForkNode) {
         return 60;
     }
-    if (kind === EntityKind.ActivityForkNodeHorizontal) {
-        return 20;
-    }
-    if (kind === EntityKind.ActivityActionNode) {
+    if (kind === EntityKind.ActionNode) {
         return 2 * ENTITY_NAME_HEIGHT;
     }
-    if (kind === EntityKind.ActivityObject) {
+    if (kind === EntityKind.ObjectNode) {
         return ENTITY_NAME_HEIGHT;
     }
 
@@ -144,18 +145,18 @@ export function computeEntityHeight(
     return height;
 }
 
-export function computeEntityKindHeight(kind: EntityKind) {
+export function computeEntityKindHeight(kind: string) {
     return getEntityKindDescriptionOrNull(kind) === null ? 0 : ENTITY_KIND_HEIGHT;
 }
 
-export function computeEntityHeaderHeight(kind: EntityKind) {
-    if (kind === EntityKind.ActivityActionNode) {
+export function computeEntityHeaderHeight(kind: string) {
+    if (kind === EntityKind.ActionNode) {
         return 2 * ENTITY_NAME_HEIGHT;
     }
     return ENTITY_NAME_HEIGHT + computeEntityKindHeight(kind);
 }
 
-export function getEntityKindDescriptionOrNull(kind: EntityKind): string | null {
+export function getEntityKindDescriptionOrNull(kind: string): string | null {
     switch (kind) {
         case EntityKind.Enumeration:
             return "«enumeration»";
@@ -165,16 +166,13 @@ export function getEntityKindDescriptionOrNull(kind: EntityKind): string | null 
 
         case EntityKind.AbstractClass:
         case EntityKind.Class:
-        case EntityKind.ActivityControlInitialNode:
-        case EntityKind.ActivityControlFinalNode:
-        case EntityKind.ActivityActionNode:
-        case EntityKind.ActivityObject:
-        case EntityKind.ActivityMergeNode:
-        case EntityKind.ActivityForkNode:
-        case EntityKind.ActivityForkNodeHorizontal:
-            return null;
-
+        case EntityKind.InitialNode:
+        case EntityKind.FinalNode:
+        case EntityKind.ActionNode:
+        case EntityKind.ObjectNode:
+        case EntityKind.MergeNode:
+        case EntityKind.ForkNode:
         default:
-            return assertNever(kind);
+            return null;
     }
 }
