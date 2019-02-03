@@ -6,7 +6,7 @@ import { PopupSection } from "../PopupSection";
 import { PopupSectionHeading } from "../PopupSectionHeading";
 import { LayoutedRelationship, Relationship, RelationshipEnd, RelationshipKind } from "./../../../domain/Relationship";
 import Element from './../../../domain/Element';
-import { DiagramType } from "./../../../domain/Diagram";
+import Diagram, { DiagramType } from "./../../../domain/Diagram";
 
 export default class RelationshipDetails extends React.Component<Props> {
     updateRelationshipKind = (kind: RelationshipKind) => {
@@ -39,7 +39,7 @@ export default class RelationshipDetails extends React.Component<Props> {
         return (
             <>
                 <PopupSection>
-                    {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
+                    {this.props.diagramType !== DiagramType.ActivityDiagram &&
                         <PopupSectionHeading>
                             Association
                           <RelationshipFlipIcon onClick={this.flipRelationship} />
@@ -47,7 +47,7 @@ export default class RelationshipDetails extends React.Component<Props> {
                         ||
                         <PopupSectionHeading>Control Flow</PopupSectionHeading>
                     }
-                    {relationship.relationship.kind !== RelationshipKind.ActivityControlFlow &&
+                    {this.props.diagramType !== DiagramType.ActivityDiagram &&
                         <RelationshipKindSelect
                             kind={relationship.relationship.kind}
                             onRelationshipKindChange={this.updateRelationshipKind}
