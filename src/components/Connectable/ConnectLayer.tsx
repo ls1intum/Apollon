@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { State as ReduxState } from './../Store';
 import ConnectContext, { ConnectProvider } from './ConnectContext';
 import Port from './../../domain/Port';
 import { createRelationship } from '../../domain/Relationship/actions';
 import { RelationshipKind, RectEdge } from '../../domain/Relationship';
 import RelationshipPreview from './RelationshipPreview';
+import { DiagramType } from '../../domain/Diagram';
 
 class ConnectLayer extends Component<Props, State> {
   state: State = {
@@ -40,7 +42,9 @@ class ConnectLayer extends Component<Props, State> {
       }
     };
     this.props.create(
-      RelationshipKind.AssociationBidirectional,
+      this.props.diagramType === DiagramType.ClassDiagram
+        ? RelationshipKind.AssociationBidirectional
+        : RelationshipKind.ActivityControlFlow,
       {
         entityId: start.element.id,
         multiplicity: null,
@@ -79,17 +83,23 @@ class ConnectLayer extends Component<Props, State> {
 
 interface OwnProps {}
 
+interface StateProps {
+  diagramType: DiagramType;
+}
+
 interface DispatchProps {
   create: typeof createRelationship;
 }
 
-type Props = OwnProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
   start: Port | null;
 }
 
 export default connect(
-  null,
+  (state: ReduxState): StateProps => ({
+    diagramType: state.diagram.type,
+  }),
   { create: createRelationship }
 )(ConnectLayer);

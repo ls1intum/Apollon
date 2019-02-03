@@ -32,7 +32,7 @@ export class Popup extends Component<Props> {
       <Container {...position}>
         <Content style={{ padding: 0 }}>
           <RelationshipDetails
-            diagramType={DiagramType.ClassDiagram}
+            diagramType={this.props.diagramType}
             entities={this.props.entities}
             relationship={this.props.element}
             updateRelationship={this.update}
@@ -51,6 +51,7 @@ interface OwnProps {
 
 interface StateProps {
   entities: Element[];
+  diagramType: DiagramType;
 }
 
 interface DispatchProps {
@@ -65,6 +66,7 @@ export default compose<ComponentClass<OwnProps>>(
   connect(
     (state: ReduxState): StateProps => ({
       entities: ElementRepository.read(state),
+      diagramType: state.diagram.type,
     }),
     { updateRelationship, flipRelationship }
   )
