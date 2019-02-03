@@ -9,7 +9,7 @@ class Diagram extends Container {
   bounds: Boundary = {
     ...this.bounds,
     width: 1600,
-    height: 800,
+    height: 1600,
   };
 
   ownedElements: string[] = [];

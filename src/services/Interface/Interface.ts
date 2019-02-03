@@ -154,8 +154,8 @@ export const mapExternalToInternalState = (
       bounds: {
         x: 0,
         y: 0,
-        width: state.editor.canvasSize.width,
-        height: state.editor.canvasSize.height,
+        width: Math.max(state.editor.canvasSize.width, 1600),
+        height: Math.max(state.editor.canvasSize.height, 1600),
       },
     }),
   },
