@@ -39,10 +39,18 @@ class Enumeration extends Container {
     let y = HEADER_HEIGHT;
     for (const child of children) {
       child.bounds.y = y;
+      child.bounds.width = this.bounds.width;
       y += child.bounds.height;
     }
     parent.bounds.height = y;
     return [parent, ...children];
+  }
+
+  resizeElement(children: Element[]): Element[] {
+    return children.map(child => {
+      child.bounds.width = this.bounds.width;
+      return child;
+    });
   }
 }
 

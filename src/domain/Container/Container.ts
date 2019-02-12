@@ -16,6 +16,10 @@ abstract class Container extends Element {
     const children = currentElements.filter(e => e.id !== removedElement.id);
     return [this, ...children];
   }
+
+  resizeElement(children: Element[]): Element[] {
+    return children;
+  }
 }
 
 export default Container;

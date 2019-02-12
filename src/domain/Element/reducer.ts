@@ -32,6 +32,18 @@ const ElementReducer: Reducer<ElementState, AnyAction> = (
         // ...elements,
         [action.element.id]: { ...action.element },
       };
+
+    case ActionTypes.RESIZE:
+      return {
+        ...state,
+        [action.id]: {
+          ...state[action.id],
+          bounds: {
+            ...state[action.id].bounds,
+            ...action.size,
+          },
+        },
+      };
     case ActionTypes.DELETE:
       const remove = (state: ElementState, ids: string[]): ElementState => {
         if (!ids.length) return state;

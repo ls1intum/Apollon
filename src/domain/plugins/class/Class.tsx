@@ -30,11 +30,13 @@ class Class extends Container {
     let y = HEADER_HEIGHT;
     for (const child of attributes) {
       child.bounds.y = y;
+      child.bounds.width = this.bounds.width;
       y += child.bounds.height;
     }
     this.deviderPosition = y;
     for (const child of methods) {
       child.bounds.y = y;
+      child.bounds.width = this.bounds.width;
       y += child.bounds.height;
     }
 
@@ -66,6 +68,13 @@ class Class extends Container {
 
     parent.bounds.height = y;
     return [parent, ...attributes, ...methods];
+  }
+
+  resizeElement(children: Element[]): Element[] {
+    return children.map(child => {
+      child.bounds.width = this.bounds.width;
+      return child;
+    });
   }
 }
 

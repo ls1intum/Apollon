@@ -8,4 +8,4 @@ export const enum DiagramType {
 
 export const enum ActionTypes {}
 
-export interface DiagramState extends Omit<Diagram, 'addElement' | 'removeElement'> {}
+export interface DiagramState extends Omit<Diagram, 'addElement' | 'removeElement' | 'resizeElement'> {}

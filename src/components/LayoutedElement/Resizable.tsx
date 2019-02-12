@@ -35,7 +35,7 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
         ...this.props.element,
         bounds: { ...this.props.element.bounds, width, height },
       };
-      this.props.update(element);
+      this.props.resize(element.id, { width, height });
     };
 
     private onMouseDown = (event: React.MouseEvent) => {
@@ -103,7 +103,7 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface DispatchProps {
-    update: typeof ElementRepository.update;
+    resize: typeof ElementRepository.resize;
   }
 
   interface State {
@@ -118,9 +118,9 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
     withCanvas,
     connect(
       (state: ReduxState): StateProps => ({
-        getById: ElementRepository.getById(state),
+        getById: ElementRepository.getById(state.elements),
       }),
-      { update: ElementRepository.update }
+      { resize: ElementRepository.resize }
     )
   )(Resizable);
 };
