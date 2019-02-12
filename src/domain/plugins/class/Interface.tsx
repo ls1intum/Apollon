@@ -20,34 +20,8 @@ class Interface extends Container {
     this.bounds = { ...this.bounds, height: 100 };
   }
 
-  addElement(newElement: Element, currentElements: Element[]): Element[] {
-    let [parent, ...children] = super.addElement(newElement, currentElements);
-    const attributes = children.filter(c => c instanceof Attribute);
-    const methods = children.filter(c => c instanceof Method);
-
-    let y = HEADER_HEIGHT;
-    for (const child of attributes) {
-      child.bounds.y = y;
-      y += child.bounds.height;
-    }
-    this.deviderPosition = y;
-    for (const child of methods) {
-      child.bounds.y = y;
-      y += child.bounds.height;
-    }
-
-    parent.bounds.height = y;
-    return [parent, ...children];
-  }
-
-  removeElement(
-    removedElement: Element,
-    currentElements: Element[]
-  ): Element[] {
-    let [parent, ...children] = super.removeElement(
-      removedElement,
-      currentElements
-    );
+  render(elements: Element[]): Element[] {
+    let [parent, ...children] = super.render(elements);
     const attributes = children.filter(c => c instanceof Attribute);
     const methods = children.filter(c => c instanceof Method);
 
@@ -66,6 +40,22 @@ class Interface extends Container {
 
     parent.bounds.height = y;
     return [parent, ...attributes, ...methods];
+  }
+
+  addElement(newElement: Element, currentElements: Element[]): Element[] {
+    let [parent, ...children] = super.addElement(newElement, currentElements);
+    return this.render(children);
+  }
+
+  removeElement(
+    removedElement: Element,
+    currentElements: Element[]
+  ): Element[] {
+    let [parent, ...children] = super.removeElement(
+      removedElement,
+      currentElements
+    );
+    return this.render(children);
   }
 
   resizeElement(children: Element[]): Element[] {

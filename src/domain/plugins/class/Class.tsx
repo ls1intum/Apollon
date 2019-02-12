@@ -23,8 +23,8 @@ class Class extends Container {
     this.bounds = { ...this.bounds, height: 100 };
   }
 
-  addElement(newElement: Element, currentElements: Element[]): Element[] {
-    let [parent, ...children] = super.addElement(newElement, currentElements);
+  render(elements: Element[]): Element[] {
+    let [parent, ...children] = super.render(elements);
     const attributes = children.filter(c => c instanceof Attribute);
     const methods = children.filter(c => c instanceof Method);
 
@@ -45,6 +45,11 @@ class Class extends Container {
     return [parent, ...attributes, ...methods];
   }
 
+  addElement(newElement: Element, currentElements: Element[]): Element[] {
+    let [parent, ...children] = super.addElement(newElement, currentElements);
+    return this.render(children);
+  }
+
   removeElement(
     removedElement: Element,
     currentElements: Element[]
@@ -53,22 +58,7 @@ class Class extends Container {
       removedElement,
       currentElements
     );
-    const attributes = children.filter(c => c instanceof Attribute);
-    const methods = children.filter(c => c instanceof Method);
-
-    let y = HEADER_HEIGHT;
-    for (const child of attributes) {
-      child.bounds.y = y;
-      y += child.bounds.height;
-    }
-    this.deviderPosition = y;
-    for (const child of methods) {
-      child.bounds.y = y;
-      y += child.bounds.height;
-    }
-
-    parent.bounds.height = y;
-    return [parent, ...attributes, ...methods];
+    return this.render(children);
   }
 
   resizeElement(children: Element[]): Element[] {

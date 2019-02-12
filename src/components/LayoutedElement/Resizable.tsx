@@ -21,14 +21,14 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
       let { size } = this.state;
       const isResizeable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = (this.props
         .element.constructor as any).isResizable;
+      width = Math.max(100, width);
+      height = Math.max(50, height);
       if (isResizeable === 'HEIGHT' || isResizeable === 'NONE') {
         width = size.width;
       }
       if (isResizeable === 'WIDTH' || isResizeable === 'NONE') {
         height = size.height;
       }
-      width = Math.max(100, width);
-      height = Math.max(50, height);
       if (size.width === width && size.height === height) return;
 
       const element: Element = {

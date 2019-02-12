@@ -5,6 +5,10 @@ abstract class Container extends Element {
 
   ownedElements: string[] = [];
 
+  render(children: Element[]): Element[] {
+    return [this, ...children];
+  }
+
   addElement(newElement: Element, currentElements: Element[]): Element[] {
     this.ownedElements.push(newElement.id);
     newElement.owner = this.id;
