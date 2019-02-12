@@ -21,21 +21,21 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
       let { size } = this.state;
       const isResizeable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = (this.props
         .element.constructor as any).isResizable;
+      width = Math.max(100, width);
+      height = Math.max(50, height);
       if (isResizeable === 'HEIGHT' || isResizeable === 'NONE') {
         width = size.width;
       }
       if (isResizeable === 'WIDTH' || isResizeable === 'NONE') {
         height = size.height;
       }
-      width = Math.max(100, width);
-      height = Math.max(50, height);
       if (size.width === width && size.height === height) return;
 
       const element: Element = {
         ...this.props.element,
         bounds: { ...this.props.element.bounds, width, height },
       };
-      this.props.update(element);
+      this.props.resize(element.id, { width, height });
     };
 
     private onMouseDown = (event: React.MouseEvent) => {
@@ -103,7 +103,7 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface DispatchProps {
-    update: typeof ElementRepository.update;
+    resize: typeof ElementRepository.resize;
   }
 
   interface State {
@@ -118,9 +118,9 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
     withCanvas,
     connect(
       (state: ReduxState): StateProps => ({
-        getById: ElementRepository.getById(state),
+        getById: ElementRepository.getById(state.elements),
       }),
-      { update: ElementRepository.update }
+      { resize: ElementRepository.resize }
     )
   )(Resizable);
 };

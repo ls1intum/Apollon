@@ -9,12 +9,19 @@ interface Action<T extends ActionTypes> extends AnyAction {
   element: Element;
 }
 
-const action = (
-  type: ActionTypes,
-  element: Element
-): Action<ActionTypes> => ({
+const action = (type: ActionTypes, element: Element): Action<ActionTypes> => ({
   type,
   element,
+});
+
+const resizeAction = (
+  type: ActionTypes,
+  id: string,
+  size: { width: number; height: number }
+): AnyAction => ({
+  type,
+  id,
+  size,
 });
 
 export type Actions =
@@ -25,13 +32,13 @@ export type Actions =
 class ElementRepository {
   static create = (element: Element) => action(ActionTypes.CREATE, element);
 
-  static getById = (state: State) => (id: string): Element => {
-    const element = { ...state.elements[id] };
+  static getById = (state: ElementState) => (id: string): Element => {
+    const element = { ...state[id] };
     return Object.setPrototypeOf(
       element,
       (<any>Plugins)[element.kind].prototype
     );
-  }
+  };
 
   static read = (state: State): Element[] => {
     const elements = Object.keys(state.elements).reduce<ElementState>(
@@ -98,6 +105,9 @@ class ElementRepository {
   };
 
   static update = (element: Element) => action(ActionTypes.UPDATE, element);
+
+  static resize = (id: string, size: { width: number; height: number }) =>
+    resizeAction(ActionTypes.RESIZE, id, size);
 
   static delete = (element: Element) => action(ActionTypes.DELETE, element);
 }

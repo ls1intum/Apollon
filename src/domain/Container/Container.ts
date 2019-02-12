@@ -5,6 +5,10 @@ abstract class Container extends Element {
 
   ownedElements: string[] = [];
 
+  render(children: Element[]): Element[] {
+    return [this, ...children];
+  }
+
   addElement(newElement: Element, currentElements: Element[]): Element[] {
     this.ownedElements.push(newElement.id);
     newElement.owner = this.id;
@@ -14,6 +18,10 @@ abstract class Container extends Element {
   removeElement(removedElement: Element, currentElements: Element[]): Element[] {
     this.ownedElements = this.ownedElements.filter(id => id !== removedElement.id);
     const children = currentElements.filter(e => e.id !== removedElement.id);
+    return [this, ...children];
+  }
+
+  resizeElement(children: Element[]): Element[] {
     return [this, ...children];
   }
 }

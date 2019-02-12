@@ -14,6 +14,22 @@ abstract class Member extends Element {
     super(name);
     this.bounds = { ...this.bounds, height: 30 };
   }
+
+  static calculateWidth = (value: string): number => {
+    const root = document.body.getElementsByClassName('apollon-editor')[0];
+    if (!root) return 0;
+    
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.style.visibility = 'none';
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.appendChild(document.createTextNode(value));
+    svg.appendChild(text);
+    
+    root.appendChild(svg);
+    const width = text.getComputedTextLength();
+    root.removeChild(svg);
+    return width + 2 * 10;
+    }
 }
 
 export const MemberComponent: SFC<Props> = ({ element }) => (

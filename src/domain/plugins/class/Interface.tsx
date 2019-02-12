@@ -1,6 +1,7 @@
 import React, { SFC } from 'react';
 import Element from '../../Element';
 import Container from './../../Container';
+import Member from './Member';
 import Method from './Method';
 import Attribute from './Attribute';
 
@@ -19,24 +20,31 @@ class Interface extends Container {
     this.bounds = { ...this.bounds, height: 100 };
   }
 
-  addElement(newElement: Element, currentElements: Element[]): Element[] {
-    let [parent, ...children] = super.addElement(newElement, currentElements);
+  render(elements: Element[]): Element[] {
+    let [parent, ...children] = super.render(elements);
     const attributes = children.filter(c => c instanceof Attribute);
     const methods = children.filter(c => c instanceof Method);
 
     let y = HEADER_HEIGHT;
     for (const child of attributes) {
       child.bounds.y = y;
+      child.bounds.width = this.bounds.width;
       y += child.bounds.height;
     }
     this.deviderPosition = y;
     for (const child of methods) {
       child.bounds.y = y;
+      child.bounds.width = this.bounds.width;
       y += child.bounds.height;
     }
 
     parent.bounds.height = y;
-    return [parent, ...children];
+    return [parent, ...attributes, ...methods];
+  }
+
+  addElement(newElement: Element, currentElements: Element[]): Element[] {
+    let [parent, ...children] = super.addElement(newElement, currentElements);
+    return this.render(children);
   }
 
   removeElement(
@@ -47,22 +55,22 @@ class Interface extends Container {
       removedElement,
       currentElements
     );
-    const attributes = children.filter(c => c instanceof Attribute);
-    const methods = children.filter(c => c instanceof Method);
+    return this.render(children);
+  }
 
-    let y = HEADER_HEIGHT;
-    for (const child of attributes) {
-      child.bounds.y = y;
-      y += child.bounds.height;
-    }
-    this.deviderPosition = y;
-    for (const child of methods) {
-      child.bounds.y = y;
-      y += child.bounds.height;
-    }
-
-    parent.bounds.height = y;
-    return [parent, ...attributes, ...methods];
+  resizeElement(children: Element[]): Element[] {
+    const minWidth = children.reduce(
+      (width, child) => Math.max(width, Member.calculateWidth(child.name)),
+      100
+    );
+    this.bounds.width = Math.max(this.bounds.width, minWidth);
+    return [
+      this,
+      ...children.map(child => {
+        child.bounds.width = this.bounds.width;
+        return child;
+      }),
+    ];
   }
 }
 

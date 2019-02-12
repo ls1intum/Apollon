@@ -1,5 +1,6 @@
 import React, { SFC } from 'react';
 import Container from './../../Container';
+import Member from './Member';
 import Element from '../../Element';
 
 const HEADER_HEIGHT = 50;
@@ -15,16 +16,21 @@ class Enumeration extends Container {
     this.bounds = { ...this.bounds, height: 100 };
   }
 
-  addElement(newElement: Element, currentElements: Element[]): Element[] {
-    let [parent, ...children] = super.addElement(newElement, currentElements);
-
+  render(elements: Element[]): Element[] {
+    let [parent, ...children] = super.render(elements);
     let y = HEADER_HEIGHT;
     for (const child of children) {
       child.bounds.y = y;
+      child.bounds.width = this.bounds.width;
       y += child.bounds.height;
     }
     parent.bounds.height = y;
     return [parent, ...children];
+  }
+
+  addElement(newElement: Element, currentElements: Element[]): Element[] {
+    let [parent, ...children] = super.addElement(newElement, currentElements);
+    return this.render(children);
   }
 
   removeElement(
@@ -35,14 +41,22 @@ class Enumeration extends Container {
       removedElement,
       currentElements
     );
+    return this.render(children);
+  }
 
-    let y = HEADER_HEIGHT;
-    for (const child of children) {
-      child.bounds.y = y;
-      y += child.bounds.height;
-    }
-    parent.bounds.height = y;
-    return [parent, ...children];
+  resizeElement(children: Element[]): Element[] {
+    const minWidth = children.reduce(
+      (width, child) => Math.max(width, Member.calculateWidth(child.name)),
+      100
+    );
+    this.bounds.width = Math.max(this.bounds.width, minWidth);
+    return [
+      this,
+      ...children.map(child => {
+        child.bounds.width = this.bounds.width;
+        return child;
+      }),
+    ];
   }
 }
 

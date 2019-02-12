@@ -73,11 +73,11 @@ export default connect(
   (state: ReduxState): StateProps => ({
     readAttributes: (ownedElements: string[]) =>
       ownedElements
-        .map<Element>(ElementRepository.getById(state))
+        .map<Element>(ElementRepository.getById(state.elements))
         .filter(e => e instanceof Attribute),
     readMethods: (ownedElements: string[]) =>
       ownedElements
-        .map<Element>(ElementRepository.getById(state))
+        .map<Element>(ElementRepository.getById(state.elements))
         .filter(e => e instanceof Method),
   }),
   {

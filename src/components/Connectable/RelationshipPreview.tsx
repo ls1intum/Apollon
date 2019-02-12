@@ -138,7 +138,7 @@ export default compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect(
     (state: ReduxState): StateProps => ({
-      getById: ElementRepository.getById(state),
+      getById: ElementRepository.getById(state.elements),
     })
   )
 )(RelationshipPreview);

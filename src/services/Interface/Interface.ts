@@ -254,6 +254,7 @@ export const entityToElements = (entity: Entity): Element[] => {
   element = Object.setPrototypeOf(element, init.constructor.prototype);
   let current: Element[] = [];
   if (element instanceof Container) {
+    [element, ...current] = element.render([]);
     for (const member of entity.attributes) {
       const attribute = Object.setPrototypeOf(
         { ...new Attribute(member.name), id: member.id },

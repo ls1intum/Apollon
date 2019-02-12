@@ -5,6 +5,7 @@ import Omit from '../utils/Omit';
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',
   UPDATE = '@@element/UPDATE',
+  RESIZE = '@@element/RESIZE',
   DELETE = '@@element/DELETE',
 }
 

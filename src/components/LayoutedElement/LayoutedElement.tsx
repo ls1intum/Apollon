@@ -91,7 +91,7 @@ interface State {
 }
 
 const mapStateToProps = (state: ReduxState): StateProps => ({
-  getById: ElementRepository.getById(state),
+  getById: ElementRepository.getById(state.elements),
   editorMode: state.editor.editorMode,
   apollonMode: state.editor.mode,
 });
