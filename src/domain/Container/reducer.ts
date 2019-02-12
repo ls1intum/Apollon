@@ -45,7 +45,6 @@ const ContainerReducer: Reducer<ElementState, AnyAction> = (
       if (element instanceof Container) {
         children = element.ownedElements.map(e => state[e]);
         children = element.resizeElement(children);
-        console.log(children);
         dict = children.reduce(
           (o: { [id: string]: Element }, e: Element) => ({ ...o, [e.id]: e }),
           {}

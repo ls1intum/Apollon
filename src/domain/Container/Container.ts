@@ -18,7 +18,7 @@ abstract class Container extends Element {
   }
 
   resizeElement(children: Element[]): Element[] {
-    return children;
+    return [this, ...children];
   }
 }
 

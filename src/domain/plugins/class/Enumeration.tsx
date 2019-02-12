@@ -1,5 +1,6 @@
 import React, { SFC } from 'react';
 import Container from './../../Container';
+import Member from './Member';
 import Element from '../../Element';
 
 const HEADER_HEIGHT = 50;
@@ -47,10 +48,18 @@ class Enumeration extends Container {
   }
 
   resizeElement(children: Element[]): Element[] {
-    return children.map(child => {
-      child.bounds.width = this.bounds.width;
-      return child;
-    });
+    const minWidth = children.reduce(
+      (width, child) => Math.max(width, Member.calculateWidth(child.name)),
+      100
+    );
+    this.bounds.width = Math.max(this.bounds.width, minWidth);
+    return [
+      this,
+      ...children.map(child => {
+        child.bounds.width = this.bounds.width;
+        return child;
+      }),
+    ];
   }
 }
 
