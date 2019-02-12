@@ -1,4 +1,4 @@
-import Element from '.';
+import Element, { ElementRepository } from '.';
 import { Reducer, AnyAction } from 'redux';
 import { ElementState, ActionTypes } from './types';
 import { Actions } from './repository';
@@ -14,6 +14,8 @@ const ElementReducer: Reducer<ElementState, AnyAction> = (
   state: ElementState = initialState,
   action: AnyAction
 ): ElementState => {
+  let parent: Container;
+  let children: Element[];
   let elements: ElementState;
   switch (action.type) {
     case ActionTypes.CREATE:
@@ -26,7 +28,22 @@ const ElementReducer: Reducer<ElementState, AnyAction> = (
       };
     case ActionTypes.UPDATE:
       // elements = flatten(action.element).reduce<ElementState>((r, k) => ({ ...r, [k.id]: { ...k, owner: k.owner && k.owner.id, ownedElements: k.ownedElements.map(e => e.id), }}), {});
-
+      if (action.element.owner) {
+        elements = { ...state, [action.element.id]: { ...action.element } };
+        parent = ElementRepository.getById(elements)(
+          action.element.owner
+        ) as Container;
+        children = parent.ownedElements.map(e => elements[e]);
+        children = parent.resizeElement(children);
+        elements = children.reduce(
+          (o: { [id: string]: Element }, e: Element) => ({ ...o, [e.id]: e }),
+          {}
+        );
+        return {
+          ...state,
+          ...elements,
+        };
+      }
       return {
         ...state,
         // ...elements,
