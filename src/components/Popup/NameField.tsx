@@ -48,6 +48,10 @@ class NameField extends Component<Props, State> {
     }
   };
 
+  componentWillUnmount() {
+    this.onBlur();
+  }
+
   render() {
     return (
       <Input
