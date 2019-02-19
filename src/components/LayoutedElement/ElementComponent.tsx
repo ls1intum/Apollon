@@ -78,6 +78,7 @@ class ElementComponent extends Component<Props> {
           }
           return (
             <Svg
+              id={element.id}
               {...bounds}
               moving={this.props.moving}
               isRoot={this.props.element.owner === null}
