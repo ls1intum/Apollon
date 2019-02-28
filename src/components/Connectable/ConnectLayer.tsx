@@ -3,8 +3,11 @@ import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import ConnectContext, { ConnectProvider } from './ConnectContext';
 import Port from './../../domain/Port';
-import { createRelationship } from '../../domain/Relationship/actions';
-import { RelationshipKind, RectEdge } from '../../domain/Relationship';
+import Relationship, {
+  RelationshipRepository,
+  RelationshipKind,
+  RectEdge,
+} from '../../domain/Relationship';
 import RelationshipPreview from './RelationshipPreview';
 import { DiagramType } from '../../domain/Diagram';
 
@@ -41,25 +44,50 @@ class ConnectLayer extends Component<Props, State> {
           return 'LEFT';
       }
     };
-    this.props.create(
-      this.props.diagramType === DiagramType.ClassDiagram
-        ? RelationshipKind.AssociationBidirectional
-        : RelationshipKind.ActivityControlFlow,
-      {
-        entityId: start.element.id,
-        multiplicity: null,
-        role: null,
-        edge: edge(start.location),
-        edgeOffset: 0.5,
-      },
-      {
-        entityId: port.element.id,
-        multiplicity: null,
-        role: null,
-        edge: edge(port.location),
-        edgeOffset: 0.5,
-      }
-    );
+
+    const relationship = new Relationship('Relationship', start, port);
+    this.props.create(relationship)
+    // const relationship: Relationship = {
+    //   name: 'Relationship',
+    //   kind:
+    //     this.props.diagramType === DiagramType.ClassDiagram
+    //       ? RelationshipKind.AssociationBidirectional
+    //       : RelationshipKind.ActivityControlFlow,
+    //   source: {
+    //     entityId: start.element.id,
+    //     multiplicity: null,
+    //     role: null,
+    //     edge: edge(start.location),
+    //     edgeOffset: 0.5,
+    //   },
+    //   target: {
+    //     entityId: port.element.id,
+    //     multiplicity: null,
+    //     role: null,
+    //     edge: edge(port.location),
+    //     edgeOffset: 0.5,
+    //   },
+    //   straightLine: false,
+    // };
+    // this.props.create(
+    //   this.props.diagramType === DiagramType.ClassDiagram
+    //     ? RelationshipKind.AssociationBidirectional
+    //     : RelationshipKind.ActivityControlFlow,
+    //   {
+    //     entityId: start.element.id,
+    //     multiplicity: null,
+    //     role: null,
+    //     edge: edge(start.location),
+    //     edgeOffset: 0.5,
+    //   },
+    //   {
+    //     entityId: port.element.id,
+    //     multiplicity: null,
+    //     role: null,
+    //     edge: edge(port.location),
+    //     edgeOffset: 0.5,
+    //   }
+    // );
   };
 
   private cancel = (event: MouseEvent) => {
@@ -88,7 +116,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  create: typeof createRelationship;
+  create: typeof RelationshipRepository.create;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -101,5 +129,5 @@ export default connect(
   (state: ReduxState): StateProps => ({
     diagramType: state.diagram.type,
   }),
-  { create: createRelationship }
+  { create: RelationshipRepository.create }
 )(ConnectLayer);

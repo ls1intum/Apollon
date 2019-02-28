@@ -1,7 +1,7 @@
 import { Reducer, AnyAction } from 'redux';
 import { ActionTypes } from './types';
 import { Actions } from './repository';
-import Element, { ElementState, ElementRepository, ActionTypes as ElementActionTypes } from './../Element';
+import Element, { ElementState, ElementRepository, ElementActionTypes } from './../Element';
 import Container from './Container';
 
 const initialState: ElementState = {};
@@ -29,17 +29,18 @@ const ContainerReducer: Reducer<ElementState, AnyAction> = (
         ...dict,
       };
     case ActionTypes.REMOVE_ELEMENT:
-      parent = state[action.parent.id] as Container;
-      children = parent.ownedElements.map(e => state[e]);
-      elements = action.parent.removeElement(action.child, children);
-      dict = elements.reduce(
-        (o: { [id: string]: Element }, e: Element) => ({ ...o, [e.id]: e }),
-        {}
-      );
-      return {
-        ...state,
-        ...dict,
-      };
+      // parent = state[action.parent.id] as Container;
+      // children = parent.ownedElements.map(e => state[e]);
+      // elements = action.parent.removeElement(action.child, children);
+      // dict = elements.reduce(
+      //   (o: { [id: string]: Element }, e: Element) => ({ ...o, [e.id]: e }),
+      //   {}
+      // );
+      // return {
+      //   ...state,
+      //   ...dict,
+      // };
+      return state;
     case ElementActionTypes.RESIZE:
       element = ElementRepository.getById(state)(action.id);
       if (element instanceof Container) {

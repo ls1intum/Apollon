@@ -92,11 +92,11 @@ export function renderRelationshipToSVG(
         <RelationshipMarkers />
       </defs>
       <Translate dx={dx} dy={dy}>
-        <RenderedRelationship
+        {/* <RenderedRelationship
           relationship={layoutedRelationship.relationship}
           path={layoutedRelationship.path}
           renderOptions={renderOptions}
-        />
+        /> */}
       </Translate>
     </Svg>
   );

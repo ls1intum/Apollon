@@ -27,7 +27,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
         ...this.props.element,
         bounds: { ...this.props.element.bounds, x, y },
       };
-      this.props.update(element);
+      this.props.move(element.id, { x, y });
       this.setState({ position: { x, y } });
     };
 
@@ -99,7 +99,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface DispatchProps {
-    update: typeof ElementRepository.update;
+    move: typeof ElementRepository.move;
   }
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -117,7 +117,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
       (state: ReduxState): StateProps => ({
         getById: ElementRepository.getById(state.elements),
       }),
-      { update: ElementRepository.update }
+      { move: ElementRepository.move }
     )
   )(Moveable);
 };

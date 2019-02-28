@@ -43,7 +43,6 @@ class ElementComponent extends Component<Props> {
   static defaultProps = {
     interactive: false,
     hidden: false,
-    hovered: false,
     selected: false,
     moving: false,
     resizing: false,
@@ -53,7 +52,9 @@ class ElementComponent extends Component<Props> {
   render() {
     const { element } = this.props;
     const Component = (Plugins as any)[`${element.kind}Component`];
-  
+
+    const strokeWidth = 5;
+
     // const features = element.constructor as any;
     // const interactive =
     //   (this.props.editorMode === EditorMode.ModelingView &&
@@ -92,6 +93,19 @@ class ElementComponent extends Component<Props> {
                   })}
               </Component>
               {this.props.children}
+              {(element.hovered || element.selected) && (
+                <rect
+                  x={-strokeWidth / 2}
+                  y={-strokeWidth / 2}
+                  width={bounds.width + strokeWidth}
+                  height={bounds.height + strokeWidth}
+                  fill="none"
+                  stroke="#0064ff"
+                  strokeOpacity="0.2"
+                  strokeWidth={strokeWidth}
+                  pointerEvents="none"
+                />
+              )}
             </Svg>
           );
         }}
@@ -104,8 +118,6 @@ export interface OwnProps {
   element: Element;
   interactive: boolean;
   hidden: boolean;
-  hovered: boolean;
-  selected: boolean;
   moving: boolean;
   resizing: boolean;
   interactable: boolean;

@@ -1,39 +1,53 @@
-import { Action as ReduxAction, AnyAction } from 'redux';
-import { State } from './../../components/Store';
-import { ActionTypes, ElementState } from './types';
+import { ActionCreator } from 'redux';
+import { State } from '../../components/Store';
+import {
+  ActionTypes,
+  State as ElementState,
+  HoverAction,
+  LeaveAction,
+  CreateAction,
+  UpdateAction,
+  MoveAction,
+  ResizeAction,
+  DeleteAction,
+  SelectAction,
+  DeselectAction,
+} from './types';
 import Element from '.';
-import * as Plugins from './../plugins';
+import * as Plugins from '../plugins';
 
-interface Action<T extends ActionTypes> extends AnyAction {
-  type: T;
-  element: Element;
-}
+class Repository {
+  static create = (element: Element): CreateAction => ({
+    type: ActionTypes.CREATE,
+    payload: { element },
+  });
 
-const action = (type: ActionTypes, element: Element): Action<ActionTypes> => ({
-  type,
-  element,
-});
+  static hover = (id: string, internal: boolean = false): HoverAction => ({
+    type: ActionTypes.HOVER,
+    payload: { id, internal },
+  });
 
-const resizeAction = (
-  type: ActionTypes,
-  id: string,
-  size: { width: number; height: number }
-): AnyAction => ({
-  type,
-  id,
-  size,
-});
+  static leave = (id: string, internal: boolean = false): LeaveAction => ({
+    type: ActionTypes.LEAVE,
+    payload: { id, internal },
+  });
 
-export type Actions =
-  | Action<ActionTypes.CREATE>
-  | Action<ActionTypes.UPDATE>
-  | Action<ActionTypes.DELETE>;
+  static select = (
+    id: string | null,
+    toggle: boolean = false
+  ): SelectAction => ({
+    type: ActionTypes.SELECT,
+    payload: { id, toggle },
+  });
 
-class ElementRepository {
-  static create = (element: Element) => action(ActionTypes.CREATE, element);
+  static deselect = (id: string): DeselectAction => ({
+    type: ActionTypes.DESELECT,
+    payload: { id },
+  });
 
   static getById = (state: ElementState) => (id: string): Element => {
     const element = { ...state[id] };
+    if (!Object.keys(element).length) return element;
     return Object.setPrototypeOf(
       element,
       (<any>Plugins)[element.kind].prototype
@@ -43,56 +57,12 @@ class ElementRepository {
   static read = (state: State): Element[] => {
     const elements = Object.keys(state.elements).reduce<ElementState>(
       (r, e) => {
-        if (state.elements[e].name !== 'Relationship')
+        if (state.elements[e].base !== 'Relationship')
           return { ...r, [e]: state.elements[e] };
         return r;
       },
       {}
     );
-
-    // type T = { [id: string]: Element };
-
-    // const extend = (elements: ElementState, current: ElementState = elements, owner: Element[] = []): T => {
-    //   let result: T = {};
-    //   for (const id in current) {
-    //     const element = elements[id];
-    //     const currentOwner = owner[owner.length - 1];
-    //     if (element.owner === (currentOwner && currentOwner.id || null)) {
-    //       if (element.ownedElements.length) {
-    //         let update: Element = {
-    //           ...element,
-    //           ownedElements: [],
-    //           owner: currentOwner || null,
-    //         };
-    //         const nextOwner: Element[] = [ ...owner, update ];
-    //         const elementState: ElementState = element.ownedElements.reduce<ElementState>((o, k) => ({ ...o, [k]: elements[k]}), {});
-    //         const res: T = extend(elements, elementState, nextOwner);
-    //         update.ownedElements = Object.values(res);
-    //         result = {
-    //           ...result,
-    //           [update.id]: update,
-    //         }
-    //       } else {
-    //         const update: Element = {
-    //           ...element,
-    //           ownedElements: [],
-    //           owner: currentOwner || null,
-    //         };
-    //         result = {
-    //           ...result,
-    //           [update.id]: update,
-    //         }
-    //       }
-    //     }
-    //   }
-
-    //   return result;
-    // };
-
-    // const t = extend(elements);
-    // const p = Object.keys(t)
-    //   .filter(k => t[k].owner === null)
-    //   .reduce<T>((o, k) => ({ ...o, [k]: t[k] }), {});
 
     return Object.values(elements).map((e: Element) => {
       const element = Object.setPrototypeOf(
@@ -104,12 +74,31 @@ class ElementRepository {
     });
   };
 
-  static update = (element: Element) => action(ActionTypes.UPDATE, element);
+  static update: ActionCreator<UpdateAction> = (element: Element) => ({
+    type: ActionTypes.UPDATE,
+    payload: { element },
+  });
 
-  static resize = (id: string, size: { width: number; height: number }) =>
-    resizeAction(ActionTypes.RESIZE, id, size);
+  static move: ActionCreator<MoveAction> = (
+    id: string,
+    position: { x: number; y: number }
+  ) => ({
+    type: ActionTypes.MOVE,
+    payload: { id, position },
+  });
 
-  static delete = (element: Element) => action(ActionTypes.DELETE, element);
+  static resize: ActionCreator<ResizeAction> = (
+    id: string,
+    size: { width: number; height: number }
+  ) => ({
+    type: ActionTypes.RESIZE,
+    payload: { id, size },
+  });
+
+  static delete: ActionCreator<DeleteAction> = (id: string) => ({
+    type: ActionTypes.DELETE,
+    payload: { id },
+  });
 }
 
-export default ElementRepository;
+export default Repository;

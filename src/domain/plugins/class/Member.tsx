@@ -2,8 +2,8 @@ import React, { SFC } from 'react';
 import Element from './../../Element';
 
 abstract class Member extends Element {
-  static isHoverable = false;
-  static isSelectable = false;
+  static isHoverable = true;
+  static isSelectable = true;
   static isMovable = false;
   static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'NONE';
   static isConnectable = false;

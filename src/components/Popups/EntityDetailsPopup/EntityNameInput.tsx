@@ -1,6 +1,6 @@
 import * as React from "react";
 import BlockInput from "../BlockInput";
-import { EntityKind } from "./../../../domain/Element";
+import { EntityKind } from "./../../../index";
 import Element from "./../../../domain/Element";
 import { sanitizeWhiteSpace } from "../../../domain/utils";
 import newId from './../../../domain/utils/uuid';

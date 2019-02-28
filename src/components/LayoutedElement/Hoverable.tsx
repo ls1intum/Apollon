@@ -1,16 +1,13 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
 import ElementComponent, { OwnProps } from './ElementComponent';
+import { ElementRepository } from '../../domain/Element';
 
 const hoverable = (WrappedComponent: typeof ElementComponent) => {
-  class Hoverable extends Component<Props, State> {
-    state: State = {
-      hovered: false,
-    };
-
-    private enter = () => this.setState({ hovered: true });
-
-    private leave = () => this.setState({ hovered: false });
+  class Hoverable extends Component<Props> {
+    private enter = () => this.props.hover(this.props.element.id);
+    private leave = () => this.props.leave(this.props.element.id);
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
@@ -25,36 +22,23 @@ const hoverable = (WrappedComponent: typeof ElementComponent) => {
     }
 
     render() {
-      const { bounds } = this.props.element;
-      const strokeWidth = 5;
-      return (
-        <WrappedComponent {...this.props} hovered={this.state.hovered}>
-          {this.props.children}
-          {this.state.hovered && (
-            <rect
-              x={-strokeWidth / 2}
-              y={-strokeWidth / 2}
-              width={bounds.width + strokeWidth}
-              height={bounds.height + strokeWidth}
-              fill="none"
-              stroke="#0064ff"
-              strokeOpacity="0.2"
-              strokeWidth={strokeWidth}
-              pointerEvents="none"
-            />
-          )}
-        </WrappedComponent>
-      );
+      return <WrappedComponent {...this.props} />;
     }
   }
 
-  type Props = OwnProps;
+  interface StateProps {}
 
-  interface State {
-    hovered: boolean;
+  interface DispatchProps {
+    hover: typeof ElementRepository.hover;
+    leave: typeof ElementRepository.leave;
   }
 
-  return Hoverable;
+  type Props = OwnProps & StateProps & DispatchProps;
+
+  return connect<StateProps, DispatchProps, OwnProps>(
+    null,
+    { hover: ElementRepository.hover, leave: ElementRepository.leave }
+  )(Hoverable);
 };
 
 export default hoverable;

@@ -3,7 +3,7 @@ import EntityAttributes from "./EntityAttributes";
 import EntityMethods from "./EntityMethods";
 import EntityNameInput from "./EntityNameInput";
 import { PopupSection } from "../PopupSection";
-import { EntityKind } from "./../../../domain/Element";
+import { EntityKind } from "./../../../index";
 import Element from './../../../domain/Element';
 import { UUID } from './../../../domain/utils/uuid';
 

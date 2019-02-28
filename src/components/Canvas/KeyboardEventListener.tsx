@@ -14,32 +14,33 @@ class KeyboardEventListener extends Component<Props> {
       case 'Backspace':
       case 'Delete':
         const elements: Element[] = [
-          ...this.props.elements,
-          ...this.props.relationships,
+          // ...this.props.elements,
+          // ...this.props.relationships,
         ];
-        const selection = elements.filter(e => e.selected);
+        const selection = elements.filter(e => e.selected).map(e => e.id);
+        selection.forEach(this.props.delete);
 
-        const rec = (es: Element[]): Element[] => {
-          let result = [...es];
-          for (const e of es) {
-            result = [
-              ...this.props.relationships.filter(
-                r => r.source.entityId === e.id || r.target.entityId === e.id
-              ),
-              ...result,
-            ];
-            if (e instanceof Container) {
-              result = [
-                ...rec(
-                  e.ownedElements.map(id => elements.find(e => e.id === id)!)
-                ),
-                ...result,
-              ];
-            }
-          }
-          return result;
-        };
-        rec(selection).forEach(this.props.delete);
+        // const rec = (es: Element[]): Element[] => {
+        //   let result = [...es];
+        //   for (const e of es) {
+        //     result = [
+        //       ...this.props.relationships.filter(
+        //         r => r.source.entityId === e.id || r.target.entityId === e.id
+        //       ),
+        //       ...result,
+        //     ];
+        //     if (e instanceof Container) {
+        //       result = [
+        //         ...rec(
+        //           e.ownedElements.map(id => elements.find(e => e.id === id)!)
+        //         ),
+        //         ...result,
+        //       ];
+        //     }
+        //   }
+        //   return result;
+        // };
+        // rec(selection).forEach(this.props.delete);
         break;
     }
   };
@@ -60,8 +61,8 @@ class KeyboardEventListener extends Component<Props> {
 interface OwnProps {}
 
 interface StateProps {
-  elements: Element[];
-  relationships: Relationship[];
+  // elements: Element[];
+  // relationships: Relationship[];
 }
 
 interface DispatchProps {
@@ -73,10 +74,11 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 export default compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect(
-    (state: ReduxState): StateProps => ({
-      elements: ElementRepository.read(state),
-      relationships: getAllRelationships(state),
-    }),
+    // (state: ReduxState): StateProps => ({
+    //   elements: ElementRepository.read(state),
+    //   relationships: getAllRelationships(state),
+    // }),
+    null,
     {
       delete: ElementRepository.delete,
     }

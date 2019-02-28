@@ -9,6 +9,7 @@ import Element from './../../../domain/Element';
 import { DiagramType } from "./../../../domain/Diagram";
 import { RectEdge } from "../../../domain/geo";
 import { UUID } from './../../../domain/utils/uuid';
+import Port from '../../../domain/Port';
 
 const Th = styled.th`
     font-weight: normal;
@@ -24,59 +25,59 @@ export default class RelationshipEndDetails extends React.Component<Props, State
     constructor(props: Props) {
         super(props);
         this.state = {
-            multiplicity: props.relationshipEnd.multiplicity || "",
-            role: props.relationshipEnd.role || "",
-            edgeOffset: props.relationshipEnd.edgeOffset
+            multiplicity: '', // props.relationshipEnd.multiplicity || "",
+            role: '', // props.relationshipEnd.role || "",
+            edgeOffset: 0.5, // props.relationshipEnd.edgeOffset
         };
     }
 
     updateEntityId = (entityId: UUID) => {
-        this.props.updateRelationshipEnd({
-            ...this.props.relationshipEnd,
-            entityId
-        });
+        // this.props.updateRelationshipEnd({
+        //     ...this.props.relationshipEnd,
+        //     entityId
+        // });
     };
 
     updateMultiplicity = (e: React.FormEvent<HTMLInputElement>) => {
-        const multiplicity = e.currentTarget.value.trim() || null;
-        if (multiplicity !== this.props.relationshipEnd.multiplicity) {
-            this.props.updateRelationshipEnd({
-                ...this.props.relationshipEnd,
-                multiplicity
-            });
-        }
+        // const multiplicity = e.currentTarget.value.trim() || null;
+        // if (multiplicity !== this.props.relationshipEnd.multiplicity) {
+        //     this.props.updateRelationshipEnd({
+        //         ...this.props.relationshipEnd,
+        //         multiplicity
+        //     });
+        // }
     };
 
     updateRole = (e: React.FormEvent<HTMLInputElement>) => {
-        const role = e.currentTarget.value.trim() || null;
-        if (role !== this.props.relationshipEnd.role) {
-            this.props.updateRelationshipEnd({
-                ...this.props.relationshipEnd,
-                role
-            });
-        }
+        // const role = e.currentTarget.value.trim() || null;
+        // if (role !== this.props.relationshipEnd.role) {
+        //     this.props.updateRelationshipEnd({
+        //         ...this.props.relationshipEnd,
+        //         role
+        //     });
+        // }
     };
 
     updateRectEdge = (edge: RectEdge) => {
-        this.props.updateRelationshipEnd({
-            ...this.props.relationshipEnd,
-            edge
-        });
+        // this.props.updateRelationshipEnd({
+        //     ...this.props.relationshipEnd,
+        //     edge
+        // });
     };
 
     updateRectEdgeOffset = () => {
-        this.props.updateRelationshipEnd({
-            ...this.props.relationshipEnd,
-            edgeOffset: this.state.edgeOffset
-        });
+        // this.props.updateRelationshipEnd({
+        //     ...this.props.relationshipEnd,
+        //     edgeOffset: this.state.edgeOffset
+        // });
     };
 
     componentWillReceiveProps(nextProps: Props) {
-        this.setState({
-            multiplicity: nextProps.relationshipEnd.multiplicity || "",
-            role: nextProps.relationshipEnd.role || "",
-            edgeOffset: nextProps.relationshipEnd.edgeOffset
-        });
+        // this.setState({
+        //     multiplicity: nextProps.relationshipEnd.multiplicity || "",
+        //     role: nextProps.relationshipEnd.role || "",
+        //     edgeOffset: nextProps.relationshipEnd.edgeOffset
+        // });
     }
 
     render() {
@@ -90,7 +91,7 @@ export default class RelationshipEndDetails extends React.Component<Props, State
                             <Td>
                                 <EntitySelect
                                     entities={this.props.entities}
-                                    selectedEntityId={this.props.relationshipEnd.entityId}
+                                    selectedEntityId={this.props.relationshipEnd.element.id}
                                     onSelectedEntityIdChange={this.updateEntityId}
                                 />
                             </Td>
@@ -98,10 +99,10 @@ export default class RelationshipEndDetails extends React.Component<Props, State
                         <tr>
                             <Th>Edge:</Th>
                             <Td>
-                                <RectEdgeSelect
+                                {/* <RectEdgeSelect
                                     edge={this.props.relationshipEnd.edge}
                                     onRectEdgeChange={this.updateRectEdge}
-                                />
+                                /> */}
                             </Td>
                         </tr>
                         {this.props.diagramType === DiagramType.ClassDiagram &&
@@ -177,7 +178,7 @@ interface Props {
     heading: string;
     entity: Element;
     entities: Element[];
-    relationshipEnd: RelationshipEnd;
+    relationshipEnd: Port;
     updateRelationshipEnd: (relationshipEnd: RelationshipEnd) => void;
 }
 
