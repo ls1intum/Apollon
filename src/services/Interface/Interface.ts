@@ -323,7 +323,7 @@ export const relationshipToExternal = (
     id: relationship.id,
     kind: RelationshipKind.AssociationUnidirectional,
     source: {
-      entityId: relationship.source.element.id,
+      entityId: relationship.source.element,
       multiplicity: null,
       role: null,
       edge:
@@ -337,7 +337,7 @@ export const relationshipToExternal = (
       edgeOffset: 0.5,
     },
     target: {
-      entityId: relationship.target.element.id,
+      entityId: relationship.target.element,
       multiplicity: null,
       role: null,
       edge:
@@ -359,7 +359,7 @@ export const externalToRelationship = (
   elements: Element[]
 ): Relationship => {
   const source: Port = {
-    element: elements.find(e => e.id === external.source.entityId)!,
+    element: external.source.entityId,
     location:
       external.source.edge === 'TOP'
         ? 'N'
@@ -370,7 +370,7 @@ export const externalToRelationship = (
         : 'W',
   };
   const target: Port = {
-    element: elements.find(e => e.id === external.target.entityId)!,
+    element: external.target.entityId,
     location:
       external.target.edge === 'TOP'
         ? 'N'
@@ -384,8 +384,9 @@ export const externalToRelationship = (
   let start: { x: number; y: number } = { x: 0, y: 0 };
   let end: { x: number; y: number } = { x: 0, y: 0 };
 
+  const sourceElement = elements.find(e => e.id === source.element)!;
   {
-    let { x, y, width, height } = source.element.bounds;
+    let { x, y, width, height } = sourceElement.bounds;
     switch (source.location) {
       case 'N':
         start = { x: x + width / 2, y };
@@ -401,8 +402,9 @@ export const externalToRelationship = (
         break;
     }
   }
+  const targetElement = elements.find(e => e.id === target.element)!;
   {
-    let { x, y, width, height } = target.element.bounds;
+    let { x, y, width, height } = targetElement.bounds;
     switch (target.location) {
       case 'N':
         end = { x: x + width / 2, y };
@@ -425,6 +427,6 @@ export const externalToRelationship = (
     selected: false,
     interactive: false,
     path: [start, end],
-  };
+  } as Relationship;
   return relationship;
 };

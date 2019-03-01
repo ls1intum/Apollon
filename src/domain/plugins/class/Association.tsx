@@ -11,27 +11,18 @@ class Association extends Relationship {
   }
 }
 
-export const AssociationComponent: SFC<Props> = ({ element }) => (
-  <CanvasConsumer
-    children={context => {
-      const path =
-        (context &&
-          element.path
-            .map(point =>
-              context.coordinateSystem.pointToScreen(point.x, point.y)
-            )
-            .map(point => `${point.x} ${point.y}`)
-            .join(',')) ||
-        '';
-      return (
-        <polyline points={path} stroke="black" fill="none" strokeWidth={1} />
-      );
-    }}
+export const AssociationComponent: SFC<Props> = ({ element, path }) => (
+  <polyline
+    points={path.map(point => `${point.x} ${point.y}`).join(',')}
+    stroke="black"
+    fill="none"
+    strokeWidth={1}
   />
 );
 
 interface Props {
   element: Association;
+  path: { x: number; y: number }[];
 }
 
 export default Association;

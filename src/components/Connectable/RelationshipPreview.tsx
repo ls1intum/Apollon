@@ -27,7 +27,8 @@ class RelationshipPreview extends Component<Props, State> {
   private calculatePath = (): Point[] => {
     let path: Point[] = [];
     if (this.props.port) {
-      const { element, location } = this.props.port;
+      const { element: id, location } = this.props.port;
+      const element = this.props.getById(id);
       switch (location) {
         case 'N':
           path.push({

@@ -55,10 +55,10 @@ export const getAllLayoutedRelationships = createSelector<
       //     return find(children, id);
       // }
       const source = entities.find(
-        e => e.id === relationship.source.element.id
+        e => e.id === relationship.source.element
       );
       const target = entities.find(
-        e => e.id === relationship.target.element.id
+        e => e.id === relationship.target.element
       );
 
       if (!source || !target) {

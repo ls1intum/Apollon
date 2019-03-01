@@ -10,14 +10,20 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
       const { payload } = action;
       return {
         ...state,
-        [payload.relationship.id]: { ...payload.relationship },
+        [payload.relationship.id]: {
+          ...payload.relationship,
+          bounds: payload.relationship.bounds,
+        },
       };
     }
-    case ActionTypes.RECALC: {
+    case ActionTypes.REDRAW: {
       const { payload } = action;
       return {
         ...state,
-        [payload.id]: { ...state[payload.id], path: payload.path },
+        [payload.id]: {
+          ...state[payload.id],
+          path: payload.path,
+        },
       };
     }
     default:

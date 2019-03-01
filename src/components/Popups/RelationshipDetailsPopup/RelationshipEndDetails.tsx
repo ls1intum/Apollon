@@ -91,7 +91,7 @@ export default class RelationshipEndDetails extends React.Component<Props, State
                             <Td>
                                 <EntitySelect
                                     entities={this.props.entities}
-                                    selectedEntityId={this.props.relationshipEnd.element.id}
+                                    selectedEntityId={this.props.relationshipEnd.element}
                                     onSelectedEntityIdChange={this.updateEntityId}
                                 />
                             </Td>

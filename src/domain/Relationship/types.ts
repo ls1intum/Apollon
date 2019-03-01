@@ -3,7 +3,7 @@ import Relationship from './Relationship';
 
 export const enum ActionTypes {
   CREATE = '@@relationship/CREATE',
-  RECALC = '@@relationship/RECALC',
+  REDRAW = '@@relationship/REDRAW',
 }
 
 export interface CreateAction extends ReduxAction<ActionTypes.CREATE> {
@@ -12,11 +12,11 @@ export interface CreateAction extends ReduxAction<ActionTypes.CREATE> {
   };
 }
 
-export interface RecalcAction extends ReduxAction<ActionTypes.RECALC> {
+export interface RedrawAction extends ReduxAction<ActionTypes.REDRAW> {
   payload: {
     id: string;
     path: { x: number; y: number }[];
   };
 }
 
-export type Actions = CreateAction | RecalcAction;
+export type Actions = CreateAction | RedrawAction;

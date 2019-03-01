@@ -67,15 +67,15 @@ class Sidebar extends Component<Props, State> {
     }
   };
 
-  elements: { [key: string]: Element } = Object.entries(Plugins)
-    .filter(([k, v]) => !k.includes('Component'))
-    .reduce(
-      (o, [k, v]: [string, any]) => ({
-        ...o,
-        [k]: new v(),
-      }),
-      {}
-    );
+  // elements: { [key: string]: Element } = Object.entries(Plugins)
+  //   .filter(([k, v]) => !k.includes('Component'))
+  //   .reduce(
+  //     (o, [k, v]: [string, any]) => ({
+  //       ...o,
+  //       [k]: new v(),
+  //     }),
+  //     {}
+  //   );
 
   selectEditorMode = (mode: EditorMode) => () =>
     this.props.selectEditorMode({ editorMode: mode });

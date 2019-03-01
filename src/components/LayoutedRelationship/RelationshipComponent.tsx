@@ -20,24 +20,37 @@ class RelationshipComponent extends Component<Props> {
     return (
       <CanvasConsumer
         children={context => {
-          const path =
-            (context &&
-              element.path
-                .map(point =>
-                  context.coordinateSystem.pointToScreen(point.x, point.y)
-                )
-                .map(point => `${point.x} ${point.y}`)
-                .join(',')) ||
-            '';
+          let bounds = element.bounds;
+          let path = element.path;
+          if (context && element.owner === null) {
+            bounds = {
+              ...bounds,
+              ...context.coordinateSystem.pointToScreen(bounds.x, bounds.y),
+            };
+            path = path.map(point =>
+              context.coordinateSystem.pointToScreen(
+                point.x - bounds.x,
+                point.y - bounds.y
+              )
+            );
+          }
+
+          const points = path.map(point => `${point.x} ${point.y}`).join(',');
+
           return (
-            <svg pointerEvents="all">
-              <Component element={element} />
+            <svg
+              {...bounds}
+              pointerEvents="all"
+              style={{ overflow: 'visible' }}
+            >
               <polyline
-                points={path}
-                stroke="black"
+                points={points}
+                stroke="#0064ff"
+                strokeOpacity={element.hovered || element.selected ? 0.2 : 0}
                 fill="none"
-                strokeWidth={1}
+                strokeWidth={15}
               />
+              <Component path={path} element={element} />
             </svg>
           );
         }}
