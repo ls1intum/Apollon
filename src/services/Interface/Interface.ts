@@ -28,6 +28,7 @@ import {
   ObjectNode,
   MergeNode,
   ForkNode,
+  Association,
 } from './../../domain/plugins';
 import { LayoutedEntity } from '../../rendering/layouters/entity';
 import Port from '../../domain/Port';
@@ -417,7 +418,7 @@ export const externalToRelationship = (
         break;
     }
   }
-  const rel = new Relationship('Relationship', source, target);
+  const rel = new Association('Relationship', source, target);
   const relationship: Relationship = {
     ...rel,
     id: external.id,

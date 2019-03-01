@@ -1,7 +1,7 @@
 import Element from './../Element';
 import Port from '../Port';
 
-class Relationship extends Element {
+abstract class Relationship extends Element {
   readonly base: string = 'Relationship';
   kind = 'Relationship';
 

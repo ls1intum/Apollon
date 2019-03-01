@@ -10,6 +10,7 @@ import Relationship, {
 } from '../../domain/Relationship';
 import RelationshipPreview from './RelationshipPreview';
 import { DiagramType } from '../../domain/Diagram';
+import { Association } from '../../domain/plugins';
 
 class ConnectLayer extends Component<Props, State> {
   state: State = {
@@ -45,7 +46,7 @@ class ConnectLayer extends Component<Props, State> {
       }
     };
 
-    const relationship = new Relationship('Relationship', start, port);
+    const relationship = new Association('Relationship', start, port);
     this.props.create(relationship)
     // const relationship: Relationship = {
     //   name: 'Relationship',

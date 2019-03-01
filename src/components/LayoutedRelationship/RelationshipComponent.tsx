@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { CanvasConsumer } from '../Canvas/CanvasContext';
 import Relationship from '../../domain/Relationship';
+import * as Plugins from './../../domain/plugins';
 
 class RelationshipComponent extends Component<Props> {
   static defaultProps = {
@@ -14,6 +15,7 @@ class RelationshipComponent extends Component<Props> {
 
   render() {
     const { element } = this.props;
+    const Component = (Plugins as any)[`${element.kind}Component`];
 
     return (
       <CanvasConsumer
@@ -29,12 +31,7 @@ class RelationshipComponent extends Component<Props> {
             '';
           return (
             <svg pointerEvents="all">
-              <polyline
-                points={path}
-                stroke={element.hovered || element.selected ? 'rgba(0, 100, 255, 0.21)' : 'none'}
-                fill="none"
-                strokeWidth={15}
-              />
+              <Component element={element} />
               <polyline
                 points={path}
                 stroke="black"
