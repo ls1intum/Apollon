@@ -9,6 +9,7 @@ import RelationshipComponent from './RelationshipComponent';
 import { OwnProps as ComponentProps } from './../LayoutedElement/ElementComponent';
 import hoverable from './../LayoutedElement/Hoverable';
 import selectable from './../LayoutedElement/Selectable';
+import editable from './../LayoutedElement/Editable';
 import Element, { ElementRepository } from '../../domain/Element';
 
 class LayoutedRelationship extends Component<Props> {
@@ -18,7 +19,7 @@ class LayoutedRelationship extends Component<Props> {
     type DecoratorType = (
       Component: typeof RelationshipComponent
     ) => React.ComponentClass<ComponentProps>;
-    const decorators: DecoratorType[] = [selectable, hoverable];
+    const decorators: DecoratorType[] = [editable, selectable, hoverable];
     return compose<typeof RelationshipComponent>(...decorators)(
       RelationshipComponent
     );
