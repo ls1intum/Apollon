@@ -35,14 +35,13 @@ const selectable = (WrappedComponent: typeof ElementComponent) => {
 
   interface DispatchProps {
     select: typeof ElementRepository.select;
-    deselect: typeof ElementRepository.deselect;
   }
 
   type Props = OwnProps & StateProps & DispatchProps;
 
   return connect<StateProps, DispatchProps, OwnProps>(
     null,
-    { select: ElementRepository.select, deselect: ElementRepository.deselect }
+    { select: ElementRepository.select }
   )(Selectable);
 };
 

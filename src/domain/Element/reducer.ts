@@ -37,13 +37,6 @@ const Reducer: Reducer<State, Actions> = (
         },
       };
     }
-    case ActionTypes.DESELECT: {
-      const { payload } = action;
-      return {
-        ...state,
-        [payload.id]: { ...state[payload.id], selected: false },
-      };
-    }
     case ActionTypes.UPDATE: {
       // if (action.element.owner) {
       //   elements = { ...state, [action.element.id]: { ...action.element } };

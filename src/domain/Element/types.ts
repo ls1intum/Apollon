@@ -7,7 +7,6 @@ export const enum ActionTypes {
   HOVER = '@@element/HOVER',
   LEAVE = '@@element/LEAVE',
   SELECT = '@@element/SELECT',
-  DESELECT = '@@element/DESELECT',
 
   UPDATE = '@@element/UPDATE',
   RESIZE = '@@element/RESIZE',
@@ -39,12 +38,6 @@ export interface SelectAction extends Action<ActionTypes.SELECT> {
   payload: {
     id: string | null;
     toggle: boolean;
-  };
-}
-
-export interface DeselectAction extends Action<ActionTypes.DESELECT> {
-  payload: {
-    id: string;
   };
 }
 
@@ -85,7 +78,6 @@ export type Actions =
   | DeepReadonly<HoverAction>
   | DeepReadonly<LeaveAction>
   | DeepReadonly<SelectAction>
-  | DeepReadonly<DeselectAction>
 
   | DeepReadonly<UpdateAction>
   | DeepReadonly<MoveAction>

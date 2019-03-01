@@ -11,7 +11,6 @@ import {
   ResizeAction,
   DeleteAction,
   SelectAction,
-  DeselectAction,
 } from './types';
 import Element from '.';
 import * as Plugins from '../plugins';
@@ -38,11 +37,6 @@ class Repository {
   ): SelectAction => ({
     type: ActionTypes.SELECT,
     payload: { id, toggle },
-  });
-
-  static deselect = (id: string): DeselectAction => ({
-    type: ActionTypes.DESELECT,
-    payload: { id },
   });
 
   static getById = (state: ElementState) => (id: string): Element => {
