@@ -7,9 +7,9 @@ export const enum ActionTypes {
   HOVER = '@@element/HOVER',
   LEAVE = '@@element/LEAVE',
   SELECT = '@@element/SELECT',
+  RESIZE = '@@element/RESIZE',
 
   UPDATE = '@@element/UPDATE',
-  RESIZE = '@@element/RESIZE',
   MOVE = '@@element/MOVE',
   DELETE = '@@element/DELETE',
 }
@@ -41,6 +41,16 @@ export interface SelectAction extends Action<ActionTypes.SELECT> {
   };
 }
 
+export interface ResizeAction extends Action<ActionTypes.RESIZE> {
+  payload: {
+    id: string;
+    size: {
+      width: number;
+      height: number;
+    };
+  };
+}
+
 export interface UpdateAction extends Action<ActionTypes.UPDATE> {
   payload: {
     element: Element;
@@ -57,16 +67,6 @@ export interface MoveAction extends Action<ActionTypes.MOVE> {
   };
 }
 
-export interface ResizeAction extends Action<ActionTypes.RESIZE> {
-  payload: {
-    id: string;
-    size: {
-      width: number;
-      height: number;
-    };
-  };
-}
-
 export interface DeleteAction extends Action<ActionTypes.DELETE> {
   payload: {
     id: string;
@@ -78,10 +78,10 @@ export type Actions =
   | DeepReadonly<HoverAction>
   | DeepReadonly<LeaveAction>
   | DeepReadonly<SelectAction>
+  | DeepReadonly<ResizeAction>
 
   | DeepReadonly<UpdateAction>
   | DeepReadonly<MoveAction>
-  | DeepReadonly<ResizeAction>
   | DeepReadonly<DeleteAction>;
 
 export interface State {

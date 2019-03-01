@@ -1,21 +1,34 @@
-import { take, put, all, select } from 'redux-saga/effects';
+import { takeLatest, all, put, select } from 'redux-saga/effects';
+import { State } from './../../components/Store';
 import Container from './Container';
-import Element, { ElementRepository } from '../Element';
+import { ElementRepository, ElementActionTypes } from '../Element';
+import { ResizeAction, DeleteAction } from '../Element/types';
 
 function* saga() {
-  while (true) {
-    yield handleDelete();
-  }
+  yield takeLatest(ElementActionTypes.RESIZE, handleElementResize);
+  yield takeLatest(ElementActionTypes.DELETE, handleDelete);
 }
 
-function* handleDelete() {
-  const { element }: { element: Element } = yield take('@@element/DELETE');
+function* handleDelete({ payload }: DeleteAction) {
   const elements = yield select(state => state.elements);
+  const element = ElementRepository.getById(elements)(payload.id);
   if (element instanceof Container) {
     for (const id of element.ownedElements) {
       const child = ElementRepository.getById(elements)(id);
       yield put({ type: '@@element/DELETE', element: child });
     }
+  }
+}
+
+function* handleElementResize({ payload }: ResizeAction) {
+  const { elements }: State = yield select();
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (element instanceof Container) {
+    const children = element.ownedElements.map(
+      ElementRepository.getById(elements)
+    );
+    const updates = element.resizeElement(children);
+    yield all(updates.map(element => ElementRepository.update(element)));
   }
 }
 

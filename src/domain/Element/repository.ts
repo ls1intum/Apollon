@@ -39,6 +39,14 @@ class Repository {
     payload: { id, toggle },
   });
 
+  static resize: ActionCreator<ResizeAction> = (
+    id: string,
+    size: { width: number; height: number }
+  ) => ({
+    type: ActionTypes.RESIZE,
+    payload: { id, size },
+  });
+
   static getById = (state: ElementState) => (id: string): Element => {
     const element = { ...state[id] };
     if (!Object.keys(element).length) return element;
@@ -79,14 +87,6 @@ class Repository {
   ) => ({
     type: ActionTypes.MOVE,
     payload: { id, position },
-  });
-
-  static resize: ActionCreator<ResizeAction> = (
-    id: string,
-    size: { width: number; height: number }
-  ) => ({
-    type: ActionTypes.RESIZE,
-    payload: { id, size },
   });
 
   static delete: ActionCreator<DeleteAction> = (id: string) => ({

@@ -8,6 +8,7 @@ import { MoveAction } from '../Element/types';
 function* saga() {
   yield takeLatest(ActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
+  yield takeLatest(ElementActionTypes.RESIZE, handleElementMove);
 }
 function* handleElementCreation({ payload }: CreateAction) {
   yield recalc(payload.relationship.id);

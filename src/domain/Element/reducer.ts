@@ -37,6 +37,19 @@ const Reducer: Reducer<State, Actions> = (
         },
       };
     }
+    case ActionTypes.RESIZE: {
+      const { payload } = action;
+      return {
+        ...state,
+        [payload.id]: {
+          ...state[payload.id],
+          bounds: {
+            ...state[payload.id].bounds,
+            ...payload.size,
+          },
+        },
+      };
+    }
     case ActionTypes.UPDATE: {
       // if (action.element.owner) {
       //   elements = { ...state, [action.element.id]: { ...action.element } };
@@ -62,19 +75,6 @@ const Reducer: Reducer<State, Actions> = (
           bounds: {
             ...state[payload.id].bounds,
             ...payload.position,
-          },
-        },
-      };
-    }
-    case ActionTypes.RESIZE: {
-      const { payload } = action;
-      return {
-        ...state,
-        [payload.id]: {
-          ...state[payload.id],
-          bounds: {
-            ...state[payload.id].bounds,
-            ...payload.size,
           },
         },
       };
