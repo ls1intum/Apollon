@@ -11,46 +11,34 @@ import Container from '../../domain/Container';
 class KeyboardEventListener extends Component<Props> {
   private eventListener = (event: KeyboardEvent) => {
     switch (event.key) {
+      case 'ArrowUp':
+        event.preventDefault();
+        this.props.move(null, { x: 0, y: -10 });
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        this.props.move(null, { x: 10, y: 0 });
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.props.move(null, { x: 0, y: 10 });
+        break;
+      case 'ArrowLeft':
+        event.preventDefault();
+        this.props.move(null, { x: -10, y: 0 });
+        break;
       case 'Backspace':
       case 'Delete':
-        const elements: Element[] = [
-          // ...this.props.elements,
-          // ...this.props.relationships,
-        ];
-        const selection = elements.filter(e => e.selected).map(e => e.id);
-        selection.forEach(this.props.delete);
-
-        // const rec = (es: Element[]): Element[] => {
-        //   let result = [...es];
-        //   for (const e of es) {
-        //     result = [
-        //       ...this.props.relationships.filter(
-        //         r => r.source.entityId === e.id || r.target.entityId === e.id
-        //       ),
-        //       ...result,
-        //     ];
-        //     if (e instanceof Container) {
-        //       result = [
-        //         ...rec(
-        //           e.ownedElements.map(id => elements.find(e => e.id === id)!)
-        //         ),
-        //         ...result,
-        //       ];
-        //     }
-        //   }
-        //   return result;
-        // };
-        // rec(selection).forEach(this.props.delete);
         break;
     }
   };
 
   componentDidMount() {
-    this.props.canvas.addEventListener('keyup', this.eventListener);
+    this.props.canvas.addEventListener('keydown', this.eventListener);
   }
 
   componentWillUnmount() {
-    this.props.canvas.removeEventListener('keyup', this.eventListener);
+    this.props.canvas.removeEventListener('keydown', this.eventListener);
   }
 
   render() {
@@ -60,12 +48,10 @@ class KeyboardEventListener extends Component<Props> {
 
 interface OwnProps {}
 
-interface StateProps {
-  // elements: Element[];
-  // relationships: Relationship[];
-}
+interface StateProps {}
 
 interface DispatchProps {
+  move: typeof ElementRepository.move;
   delete: typeof ElementRepository.delete;
 }
 
@@ -73,13 +59,10 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
 export default compose<ComponentClass<OwnProps>>(
   withCanvas,
-  connect(
-    // (state: ReduxState): StateProps => ({
-    //   elements: ElementRepository.read(state),
-    //   relationships: getAllRelationships(state),
-    // }),
+  connect<StateProps, DispatchProps, OwnProps>(
     null,
     {
+      move: ElementRepository.move,
       delete: ElementRepository.delete,
     }
   )
