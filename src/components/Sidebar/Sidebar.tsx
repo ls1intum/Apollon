@@ -44,7 +44,7 @@ class Sidebar extends Component<Props, State> {
       case DiagramType.ClassDiagram:
         this.setState({
           previews: [
-            // new Package(),
+            new Package(),
             new Class(),
             new Class('AbstractClass', true),
             new Interface(),

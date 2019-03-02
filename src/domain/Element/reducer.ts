@@ -51,30 +51,20 @@ const Reducer: Reducer<State, Actions> = (
       };
     }
     case ActionTypes.UPDATE: {
-      // if (action.element.owner) {
-      //   elements = { ...state, [action.element.id]: { ...action.element } };
-      //   parent = ElementRepository.getById(elements)(
-      //     action.element.owner
-      //   ) as Container;
-      //   children = parent.ownedElements.map(e => elements[e]);
-      //   children = parent.resizeElement(children);
-      //   elements = children.reduce(
-      //     (o: { [id: string]: Element }, e: Element) => ({ ...o, [e.id]: e }),
-      //     {}
-      //   );
-      // }
       const { payload } = action;
       return { ...state, [payload.element.id]: { ...payload.element } };
     }
     case ActionTypes.MOVE: {
       const { payload } = action;
+      if (!payload.id) return state;
       return {
         ...state,
         [payload.id]: {
           ...state[payload.id],
           bounds: {
             ...state[payload.id].bounds,
-            ...payload.position,
+            x: state[payload.id].bounds.x + payload.delta.x,
+            y: state[payload.id].bounds.y + payload.delta.y,
           },
         },
       };

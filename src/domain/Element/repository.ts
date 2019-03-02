@@ -47,6 +47,14 @@ class Repository {
     payload: { id, size },
   });
 
+  static move: ActionCreator<MoveAction> = (
+    id: string | null,
+    delta: { x: number; y: number },
+  ) => ({
+    type: ActionTypes.MOVE,
+    payload: { id, delta },
+  });
+
   static getById = (state: ElementState) => (id: string): Element => {
     const element = { ...state[id] };
     if (!Object.keys(element).length) return element;
@@ -66,27 +74,31 @@ class Repository {
       {}
     );
 
-    return Object.values(elements).map((e: Element) => {
-      const element = Object.setPrototypeOf(
-        e,
-        (<any>Plugins)[e.kind].prototype
-      );
-      element.render = new (<any>Plugins)[e.kind]().render;
-      return element;
-    });
+    return Object.values(elements).map((e: Element) =>
+      Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype)
+    );
+  };
+
+  static parse = (state: State): ElementState => {
+    return Object.values(state.elements).reduce<ElementState>(
+      (result, element) => {
+        if (element.base === 'Relationship') return result;
+
+        return {
+          ...result,
+          [element.id]: Object.setPrototypeOf(
+            element,
+            (<any>Plugins)[element.kind].prototype
+          ),
+        };
+      },
+      {}
+    );
   };
 
   static update: ActionCreator<UpdateAction> = (element: Element) => ({
     type: ActionTypes.UPDATE,
     payload: { element },
-  });
-
-  static move: ActionCreator<MoveAction> = (
-    id: string,
-    position: { x: number; y: number }
-  ) => ({
-    type: ActionTypes.MOVE,
-    payload: { id, position },
   });
 
   static delete: ActionCreator<DeleteAction> = (id: string) => ({

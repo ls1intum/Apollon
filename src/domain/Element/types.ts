@@ -59,8 +59,8 @@ export interface UpdateAction extends Action<ActionTypes.UPDATE> {
 
 export interface MoveAction extends Action<ActionTypes.MOVE> {
   payload: {
-    id: string;
-    position: {
+    id: string | null;
+    delta: {
       x: number;
       y: number;
     };
