@@ -10,19 +10,37 @@ import { OwnProps as ComponentProps } from './../LayoutedElement/ElementComponen
 import hoverable from './../LayoutedElement/Hoverable';
 import selectable from './../LayoutedElement/Selectable';
 import editable from './../LayoutedElement/Editable';
+import interactable from './../LayoutedElement/Interactable';
 import Element, { ElementRepository } from '../../domain/Element';
+import { EditorMode, ApollonMode } from '../../services/EditorService';
 
 class LayoutedRelationship extends Component<Props> {
   component: typeof RelationshipComponent = this.composeComponent();
 
   private composeComponent(): typeof RelationshipComponent {
+    const { editorMode, apollonMode } = this.props;
     type DecoratorType = (
       Component: typeof RelationshipComponent
     ) => React.ComponentClass<ComponentProps>;
-    const decorators: DecoratorType[] = [editable, selectable, hoverable];
+    let decorators: DecoratorType[] = [];
+
+    if (apollonMode === ApollonMode.ReadOnly) {
+      decorators = [selectable];
+    } else if (editorMode === EditorMode.InteractiveElementsView) {
+      decorators = [interactable];
+    } else {
+      decorators = [editable, selectable, hoverable];
+    }
     return compose<typeof RelationshipComponent>(...decorators)(
       RelationshipComponent
     );
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.editorMode !== this.props.editorMode) {
+      this.component = this.composeComponent();
+      this.forceUpdate();
+    }
   }
 
   render() {
@@ -41,6 +59,8 @@ interface OwnProps {
 interface StateProps {
   getElementById: (id: string) => Element;
   getById: (id: string) => Relationship;
+  editorMode: EditorMode;
+  apollonMode: ApollonMode;
 }
 
 type Props = OwnProps & StateProps;
@@ -49,5 +69,7 @@ export default connect(
   (state: ReduxState): StateProps => ({
     getElementById: ElementRepository.getById(state.elements),
     getById: RelationshipRepository.getById(state.elements),
+    editorMode: state.editor.editorMode,
+    apollonMode: state.editor.mode,
   })
 )(LayoutedRelationship);

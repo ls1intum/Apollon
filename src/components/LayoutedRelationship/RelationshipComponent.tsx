@@ -41,12 +41,15 @@ class RelationshipComponent extends Component<Props> {
             <svg
               {...bounds}
               pointerEvents="all"
-              style={{ overflow: 'visible' }}
+              style={{
+                overflow: 'visible',
+                opacity: this.props.hidden ? 0 : 1,
+              }}
             >
               <polyline
                 points={points}
-                stroke="#0064ff"
-                strokeOpacity={element.hovered || element.selected ? 0.2 : 0}
+                stroke={!this.props.interactable ? '#0064ff' : '#00dc00'}
+                strokeOpacity={(element.hovered || element.selected || this.props.interactable) ? 0.2 : 0}
                 fill="none"
                 strokeWidth={15}
               />
