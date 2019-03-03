@@ -71,6 +71,7 @@ const Reducer: Reducer<State, Actions> = (
     }
     case ActionTypes.DELETE: {
       const { payload } = action;
+      if (!payload.id) return state;
       const { [payload.id]: _, ...newState } = state;
       return newState;
     }

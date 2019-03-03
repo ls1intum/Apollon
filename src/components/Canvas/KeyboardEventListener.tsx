@@ -29,6 +29,8 @@ class KeyboardEventListener extends Component<Props> {
         break;
       case 'Backspace':
       case 'Delete':
+        event.preventDefault();
+        this.props.delete(null);
         break;
     }
   };

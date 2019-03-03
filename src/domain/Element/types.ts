@@ -9,7 +9,6 @@ export const enum ActionTypes {
   SELECT = '@@element/SELECT',
   RESIZE = '@@element/RESIZE',
   MOVE = '@@element/MOVE',
-
   UPDATE = '@@element/UPDATE',
   DELETE = '@@element/DELETE',
 }
@@ -69,7 +68,7 @@ export interface UpdateAction extends Action<ActionTypes.UPDATE> {
 
 export interface DeleteAction extends Action<ActionTypes.DELETE> {
   payload: {
-    id: string;
+    id: string | null;
   };
 }
 

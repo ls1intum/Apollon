@@ -49,7 +49,7 @@ class Repository {
 
   static move: ActionCreator<MoveAction> = (
     id: string | null,
-    delta: { x: number; y: number },
+    delta: { x: number; y: number }
   ) => ({
     type: ActionTypes.MOVE,
     payload: { id, delta },
@@ -101,7 +101,7 @@ class Repository {
     payload: { element },
   });
 
-  static delete: ActionCreator<DeleteAction> = (id: string) => ({
+  static delete = (id: string | null): DeleteAction => ({
     type: ActionTypes.DELETE,
     payload: { id },
   });
