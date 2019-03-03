@@ -27,9 +27,10 @@ export class Popup extends Component<Props> {
 
   render() {
     const position = this.calculatePosition();
-    const Component = (Plugins as any)[
-      `${this.props.element.kind}PopupComponent`
-    ];
+    const Component =
+      this.props.element.base === 'Relationship'
+        ? Plugins.AssociationPopup
+        : (Plugins as any)[`${this.props.element.kind}PopupComponent`];
     return (
       <Container {...position}>
         <Content>

@@ -28,7 +28,13 @@ import {
   ObjectNode,
   MergeNode,
   ForkNode,
-  Association,
+  BidirectionalAssociation,
+  UnidirectionalAssociation,
+  Aggregation,
+  Composition,
+  Dependency,
+  Inheritance,
+  Realization,
 } from './../../domain/plugins';
 import { LayoutedEntity } from '../../rendering/layouters/entity';
 import Port from '../../domain/Port';
@@ -319,9 +325,25 @@ export const layoutedEntityToElements = (
 export const relationshipToExternal = (
   relationship: Relationship
 ): ExternalRelationship => {
+  let kind = RelationshipKind.AssociationBidirectional;
+  if (relationship.kind === 'Aggregation') {
+    kind = RelationshipKind.Aggregation;
+  } else if (relationship.kind === 'BidirectionalAssociation') {
+    kind = RelationshipKind.AssociationBidirectional;
+  } else if (relationship.kind === 'UnidirectionalAssociation') {
+    kind = RelationshipKind.AssociationUnidirectional;
+  } else if (relationship.kind === 'Composition') {
+    kind = RelationshipKind.Composition;
+  } else if (relationship.kind === 'Dependency') {
+    kind = RelationshipKind.Dependency;
+  } else if (relationship.kind === 'Inheritance') {
+    kind = RelationshipKind.Inheritance;
+  } else if (relationship.kind === 'Realization') {
+    kind = RelationshipKind.Realization;
+  }
   return {
     id: relationship.id,
-    kind: RelationshipKind.AssociationUnidirectional,
+    kind,
     source: {
       entityId: relationship.source.element,
       multiplicity: null,
@@ -420,9 +442,36 @@ export const externalToRelationship = (
         break;
     }
   }
-  const rel = new Association('Relationship', source, target);
+  let init: Relationship = new BidirectionalAssociation(
+    'Association',
+    source,
+    target
+  );
+  switch (external.kind) {
+    case RelationshipKind.Aggregation:
+      init = new Aggregation('Association', source, target);
+      break;
+    case RelationshipKind.AssociationBidirectional:
+      init = new BidirectionalAssociation('Association', source, target);
+      break;
+    case RelationshipKind.AssociationUnidirectional:
+      init = new UnidirectionalAssociation('Association', source, target);
+      break;
+    case RelationshipKind.Composition:
+      init = new Composition('Association', source, target);
+      break;
+    case RelationshipKind.Dependency:
+      init = new Dependency('Association', source, target);
+      break;
+    case RelationshipKind.Inheritance:
+      init = new Inheritance('Association', source, target);
+      break;
+    case RelationshipKind.Realization:
+      init = new Realization('Association', source, target);
+      break;
+  }
   const relationship: Relationship = {
-    ...rel,
+    ...init,
     id: external.id,
     selected: false,
     interactive: false,

@@ -1,9 +1,9 @@
 import React, { SFC } from 'react';
 import Relationship from '../../Relationship';
-import { CanvasConsumer } from '../../../components/Canvas/CanvasContext';
 import Port from '../../Port';
+import { RelationshipKindMarker } from '../../../rendering/renderers/svg/defs/RelationshipMarkers';
 
-class Association extends Relationship {
+abstract class Association extends Relationship {
   readonly kind: string = 'Association';
 
   constructor(name: string, source: Port, target: Port) {
@@ -11,13 +11,20 @@ class Association extends Relationship {
   }
 }
 
-export const AssociationComponent: SFC<Props> = ({ element, path }) => (
-  <polyline
-    points={path.map(point => `${point.x} ${point.y}`).join(',')}
-    stroke="black"
-    fill="none"
-    strokeWidth={1}
-  />
+export const AssociationComponent = (
+  marker: RelationshipKindMarker | null,
+  dashed = false
+): SFC<Props> => ({ element, path }) => (
+  <g>
+    <polyline
+      points={path.map(point => `${point.x} ${point.y}`).join(',')}
+      stroke="black"
+      fill="none"
+      strokeWidth={1}
+      markerEnd={marker ? `url(#${marker})` : undefined}
+      strokeDasharray={dashed ? '7, 7' : undefined}
+    />
+  </g>
 );
 
 interface Props {

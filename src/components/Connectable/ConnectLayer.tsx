@@ -10,7 +10,7 @@ import Relationship, {
 } from '../../domain/Relationship';
 import RelationshipPreview from './RelationshipPreview';
 import { DiagramType } from '../../domain/Diagram';
-import { Association } from '../../domain/plugins';
+import BidirectionalAssociation from '../../domain/plugins/class/BidirectionalAssociation';
 
 class ConnectLayer extends Component<Props, State> {
   state: State = {
@@ -46,7 +46,7 @@ class ConnectLayer extends Component<Props, State> {
       }
     };
 
-    const relationship = new Association('Relationship', start, port);
+    const relationship = new BidirectionalAssociation('Association', start, port);
     this.props.create(relationship)
     // const relationship: Relationship = {
     //   name: 'Relationship',
