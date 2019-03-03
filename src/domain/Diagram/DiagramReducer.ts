@@ -17,9 +17,7 @@ const ElementReducer: Reducer<DiagramState, AnyAction> = (
     case '@@diagram/DELETE':
       return {
         ...state,
-        ownedElements: state.ownedElements.filter(
-          id => id !== action.id
-        ),
+        ownedElements: state.ownedElements.filter(id => id !== action.id),
         ownedRelationships: state.ownedRelationships.filter(
           id => id !== action.id
         ),
@@ -32,7 +30,13 @@ const ElementReducer: Reducer<DiagramState, AnyAction> = (
           action.payload.relationship.id,
         ],
       };
-      break;
+    case '@@element/DELETE':
+      return {
+        ...state,
+        ownedRelationships: state.ownedRelationships.filter(
+          id => id !== action.id
+        ),
+      };
   }
   return state;
 };
