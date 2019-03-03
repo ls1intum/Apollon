@@ -15,16 +15,13 @@ import reduceReducers from 'reduce-reducers';
 
 import EditorService from './../../services/EditorService';
 import interactiveElementsReducer from './../../services/redux/interactiveElements/reducer';
-import { ElementReducer } from './../../domain/Element';
-import { ContainerReducer } from './../../domain/Container';
-import { DiagramReducer } from './../../domain/Diagram';
-import { withUndoRedo } from './../../services/redux/undoRedo';
+// import { withUndoRedo } from './../../services/redux/undoRedo';
 
 import { all, fork } from 'redux-saga/effects';
-import { ElementSaga } from './../../domain/Element';
+import { ElementReducer, ElementSaga } from './../../domain/Element';
 import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
-import { saga as saga2 } from './../../domain/Container';
-import { saga as saga3 } from './../../domain/Diagram';
+import { ContainerReducer, ContainerSaga } from './../../domain/Container';
+import { DiagramReducer, saga as saga3 } from './../../domain/Diagram';
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;
@@ -34,15 +31,17 @@ class Store extends React.Component<Props> {
     editor: EditorService.reducer,
     diagram: DiagramReducer,
     // relationships: RelationshipReducer,
-    elements: reduceReducers(ElementReducer as any, RelationshipReducer as any, ContainerReducer) as any,
+    elements: reduceReducers(ElementReducer as any, RelationshipReducer as any, ContainerReducer as any) as any,
   };
 
   constructor(props: Readonly<Props>) {
     super(props);
 
-    const reducer = withUndoRedo(
-      combineReducers<ReduxState>(this.reducers)
-    ) as Reducer<ReduxState>;
+    // const reducer = withUndoRedo(
+    //   combineReducers<ReduxState>(this.reducers)
+    // ) as Reducer<ReduxState>;
+
+    const reducer = combineReducers<ReduxState>(this.reducers);
 
     const sagaMiddleware = createSagaMiddleware();
 
@@ -53,7 +52,7 @@ class Store extends React.Component<Props> {
     this.store = createStore(reducer, props.initialState || {}, enhancer);
 
     function* rootSaga() {
-      yield all([ElementSaga, RelationshipSaga, saga2, saga3].map(fork));
+      yield all([ElementSaga, RelationshipSaga, ContainerSaga, saga3].map(fork));
     }
 
     sagaMiddleware.run(rootSaga);

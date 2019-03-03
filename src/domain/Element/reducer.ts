@@ -50,10 +50,6 @@ const Reducer: Reducer<State, Actions> = (
         },
       };
     }
-    case ActionTypes.UPDATE: {
-      const { payload } = action;
-      return { ...state, [payload.element.id]: { ...payload.element } };
-    }
     case ActionTypes.MOVE: {
       const { payload } = action;
       if (!payload.id) return state;
@@ -68,6 +64,10 @@ const Reducer: Reducer<State, Actions> = (
           },
         },
       };
+    }
+    case ActionTypes.UPDATE: {
+      const { payload } = action;
+      return { ...state, [payload.element.id]: { ...payload.element } };
     }
     case ActionTypes.DELETE: {
       const { payload } = action;

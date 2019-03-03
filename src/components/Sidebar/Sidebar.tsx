@@ -13,7 +13,6 @@ import EditorService, {
   InteractiveElementsMode,
 } from './../../services/EditorService';
 import { DiagramType } from './../../domain/Diagram';
-import * as Plugins from './../../domain/plugins';
 import Element, { ElementRepository } from '../../domain/Element';
 
 import { Draggable, DropEvent } from './../Draggable';
@@ -32,7 +31,6 @@ import MergeNode from './../../domain/plugins/activity/MergeNode';
 import ForkNode from './../../domain/plugins/activity/ForkNode';
 import { CanvasProvider } from '../Canvas/CanvasContext';
 import { Method } from './../../domain/plugins';
-import { ContainerRepository } from '../../domain/Container';
 
 class Sidebar extends Component<Props, State> {
   state: State = {
@@ -67,16 +65,6 @@ class Sidebar extends Component<Props, State> {
     }
   };
 
-  // elements: { [key: string]: Element } = Object.entries(Plugins)
-  //   .filter(([k, v]) => !k.includes('Component'))
-  //   .reduce(
-  //     (o, [k, v]: [string, any]) => ({
-  //       ...o,
-  //       [k]: new v(),
-  //     }),
-  //     {}
-  //   );
-
   selectEditorMode = (mode: EditorMode) => () =>
     this.props.selectEditorMode({ editorMode: mode });
 
@@ -104,27 +92,27 @@ class Sidebar extends Component<Props, State> {
     setTimeout(() => {
       switch (element.kind) {
         case 'Class':
-          const classElement = element as Class;
-          this.props.addElement(
-            classElement,
-            new Attribute('+ attribute: Type')
-          );
-          this.props.addElement(classElement, new Method('+ method()'));
-          return;
-        case 'Interface':
-          const interfaceElement = element as Interface;
-          this.props.addElement(
-            interfaceElement,
-            new Attribute('+ attribute: Type')
-          );
-          this.props.addElement(interfaceElement, new Method('+ method()'));
-          return;
-        case 'Enumeration':
-          const enumeration = element as Enumeration;
-          this.props.addElement(enumeration, new Attribute('Case1'));
-          this.props.addElement(enumeration, new Attribute('Case2'));
-          this.props.addElement(enumeration, new Attribute('Case3'));
+        case 'Interface': {
+          [
+            new Attribute('+ attribute: Type'),
+            new Method('+ method()'),
+          ].forEach(member => {
+            member.owner = element.id;
+            this.props.create(member);
+          });
           break;
+        }
+        case 'Enumeration': {
+          [
+            new Attribute('Case1'),
+            new Attribute('Case2'),
+            new Attribute('Case3'),
+          ].forEach(member => {
+            member.owner = element.id;
+            this.props.create(member);
+          });
+          break;
+        }
       }
     }, 0);
   };
@@ -200,7 +188,6 @@ interface StateProps {
 
 interface DispatchProps {
   create: typeof ElementRepository.create;
-  addElement: typeof ContainerRepository.addElement;
   selectEditorMode: typeof EditorService.update;
 }
 
@@ -221,7 +208,6 @@ export default connect(
   mapStateToProps,
   {
     create: ElementRepository.create,
-    addElement: ContainerRepository.addElement,
     selectEditorMode: EditorService.update,
   }
 )(Sidebar);
