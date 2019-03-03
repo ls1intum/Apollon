@@ -39,9 +39,9 @@ function* recalc(id: string) {
   const source = elements[relationship.source.element];
   const target = elements[relationship.target.element];
 
-  const start = Port.position(source, relationship.source.location);
-  const end = Port.position(target, relationship.target.location);
-  const path = [start, end];
+  const { point: start, offset: startOffset } = Port.position(source, relationship.source.location);
+  const { point: end, offset: endOffset } = Port.position(target, relationship.target.location);
+  const path = [start, startOffset, endOffset, end];
 
   yield put<RedrawAction>({
     type: ActionTypes.REDRAW,

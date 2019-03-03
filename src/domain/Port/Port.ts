@@ -9,17 +9,30 @@ class Port {
   static position(
     element: Element,
     location: Port['location']
-  ): { x: number; y: number } {
+  ): { point: { x: number; y: number }; offset: { x: number; y: number } } {
     let { x, y, width, height } = element.bounds;
+    const offset = 20;
     switch (location) {
       case 'N':
-        return { x: x + width / 2, y };
+        return {
+          point: { x: x + width / 2, y },
+          offset: { x: x + width / 2, y: y - offset },
+        };
       case 'E':
-        return { x: x + width, y: y + height / 2 };
+        return {
+          point: { x: x + width, y: y + height / 2 },
+          offset: { x: x + width + offset, y: y + height / 2 },
+        };
       case 'S':
-        return { x: x + width / 2, y: y + height };
+        return {
+          point: { x: x + width / 2, y: y + height },
+          offset: { x: x + width / 2, y: y + height + offset },
+        };
       case 'W':
-        return { x, y: y + height / 2 };
+        return {
+          point: { x, y: y + height / 2 },
+          offset: { x: x - offset, y: y + height / 2 },
+        };
     }
   }
 }

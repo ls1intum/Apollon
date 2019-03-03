@@ -403,45 +403,11 @@ export const externalToRelationship = (
         : 'W',
   };
 
-  let start: { x: number; y: number } = { x: 0, y: 0 };
-  let end: { x: number; y: number } = { x: 0, y: 0 };
-
   const sourceElement = elements.find(e => e.id === source.element)!;
-  {
-    let { x, y, width, height } = sourceElement.bounds;
-    switch (source.location) {
-      case 'N':
-        start = { x: x + width / 2, y };
-        break;
-      case 'E':
-        start = { x: x + width, y: y + height / 2 };
-        break;
-      case 'S':
-        start = { x: x + width / 2, y: y + height };
-        break;
-      case 'W':
-        start = { x, y: y + height / 2 };
-        break;
-    }
-  }
   const targetElement = elements.find(e => e.id === target.element)!;
-  {
-    let { x, y, width, height } = targetElement.bounds;
-    switch (target.location) {
-      case 'N':
-        end = { x: x + width / 2, y };
-        break;
-      case 'E':
-        end = { x: x + width, y: y + height / 2 };
-        break;
-      case 'S':
-        end = { x: x + width / 2, y: y + height };
-        break;
-      case 'W':
-        end = { x, y: y + height / 2 };
-        break;
-    }
-  }
+  const { point: start, offset: startOffset } = Port.position(sourceElement, source.location);
+  const { point: end, offset: endOffset } = Port.position(targetElement, target.location);
+
   let init: Relationship = new BidirectionalAssociation(
     'Association',
     source,
@@ -475,7 +441,7 @@ export const externalToRelationship = (
     id: external.id,
     selected: false,
     interactive: false,
-    path: [start, end],
+    path: [start, startOffset, endOffset, end],
   } as Relationship;
   return relationship;
 };
