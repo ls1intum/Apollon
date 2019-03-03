@@ -3,6 +3,7 @@ import Element from './../Element';
 abstract class Container extends Element {
   static isDroppable = true;
 
+  base = 'Container';
   ownedElements: string[] = [];
 
   render(children: Element[]): Element[] {
@@ -15,9 +16,9 @@ abstract class Container extends Element {
     return [this, ...currentElements, newElement];
   }
 
-  removeElement(removedElement: Element, currentElements: Element[]): Element[] {
-    this.ownedElements = this.ownedElements.filter(id => id !== removedElement.id);
-    const children = currentElements.filter(e => e.id !== removedElement.id);
+  removeElement(removedElement: string, currentElements: Element[]): Element[] {
+    this.ownedElements = this.ownedElements.filter(id => id !== removedElement);
+    const children = currentElements.filter(e => e.id !== removedElement);
     return [this, ...children];
   }
 

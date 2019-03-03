@@ -6,6 +6,7 @@ import {
   LeaveAction,
   SelectAction,
   MoveAction,
+  DeleteAction,
 } from './types';
 import Element from './Element';
 import Repository from './repository';
@@ -18,6 +19,7 @@ function* saga() {
   yield takeLatest(ActionTypes.LEAVE, handleElementLeave);
   yield takeLatest(ActionTypes.SELECT, handleElementSelect);
   yield takeLatest(ActionTypes.MOVE, handleElementMove);
+  yield takeLatest(ActionTypes.DELETE, handleElementDelete);
 }
 
 function* handleElementHover({ payload }: HoverAction) {
@@ -58,6 +60,7 @@ function* handleElementMove({ payload }: MoveAction) {
 
     return container.ownedElements.reduce<Element[]>((result, id) => {
       const element = elements[id];
+      if (!element) return result;
       if (element.selected) return [...result, element];
       if (element instanceof Container)
         return [...result, ...getSelection(element)];
@@ -68,6 +71,18 @@ function* handleElementMove({ payload }: MoveAction) {
     getSelection(diagram).map(element =>
       put(Repository.move(element.id, payload.delta, true))
     )
+  );
+}
+
+function* handleElementDelete({ payload }: DeleteAction) {
+  if (payload.id) return;
+
+  const { elements }: State = yield select();
+  const selection = Object.values(elements).filter(
+    element => element.selected && element.id !== payload.id
+  );
+  yield all(
+    selection.map(element => put(ElementRepository.delete(element.id)))
   );
 }
 

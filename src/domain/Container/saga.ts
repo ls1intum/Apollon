@@ -8,8 +8,7 @@ function* saga() {
   yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.CREATE, handleChildAdd);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementResize);
-  yield takeLatest(ElementActionTypes.DELETE, handleRecursiveDelete);
-  yield takeLatest(ElementActionTypes.DELETE, handleSelectionDelete);
+  yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
 }
 
 function* handleElementCreation({ payload }: CreateAction) {
@@ -34,26 +33,29 @@ function* handleChildAdd({ payload }: CreateAction) {
   }
 }
 
-function* handleRecursiveDelete({ payload }: DeleteAction) {
-  if (!payload.id) return;
+function* handleElementDelete({ payload }: DeleteAction) {
+  const elementId = payload.id;
+  if (!elementId) return;
 
   const { elements }: State = yield select();
   const children = Object.keys(elements).filter(
-    id => elements[id].owner === payload.id
+    id => elements[id].owner === elementId
   );
   yield all(children.map(id => put(ElementRepository.delete(id))));
-}
 
-function* handleSelectionDelete({ payload }: DeleteAction) {
-  if (payload.id) return;
+  const parent = Object.keys(elements)
+    .filter(id => elements[id].base === 'Container')
+    .map<Container>(id => ElementRepository.getById(elements)(id) as Container)
+    .find(element => element.ownedElements.includes(elementId));
 
-  const { elements }: State = yield select();
-  const selection = Object.values(elements).filter(
-    element => element.selected && element.id !== payload.id
-  );
-  yield all(
-    selection.map(element => put(ElementRepository.delete(element.id)))
-  );
+  if (parent) {
+    const children = parent.ownedElements
+      .filter(id => id !== payload.id)
+      .map(ElementRepository.getById(elements));
+
+    const updates = parent.removeElement(elementId, children);
+    yield all(updates.map(element => put(ElementRepository.update(element))));
+  }
 }
 
 function* handleElementResize({ payload }: ResizeAction) {

@@ -8,7 +8,6 @@ import { Class } from '../../../domain/plugins';
 import NameField from './../NameField';
 import { Item, Header, Label, ExistingMember, NewMember } from './../styles';
 import Member from '../../../domain/plugins/class/Member';
-import { ContainerRepository } from '../../../domain/Container';
 
 const EnumerationPopup: SFC<Props> = ({
   element,
@@ -16,7 +15,7 @@ const EnumerationPopup: SFC<Props> = ({
   readMethods,
   update,
   createElement,
-  removeElement,
+  deleteElement,
 }) => {
   const attributes = readAttributes(element.ownedElements);
   const methods = readMethods(element.ownedElements);
@@ -36,7 +35,7 @@ const EnumerationPopup: SFC<Props> = ({
   };
 
   const remove = (member: Member) => () => {
-    removeElement(element, member);
+    deleteElement(member.id);
   };
 
   return (
@@ -69,7 +68,7 @@ interface StateProps {
 interface DispatchProps {
   update: typeof ElementRepository.update;
   createElement: typeof ElementRepository.create;
-  removeElement: typeof ContainerRepository.removeElement;
+  deleteElement: typeof ElementRepository.delete;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -88,6 +87,6 @@ export default connect(
   {
     update: ElementRepository.update,
     createElement: ElementRepository.create,
-    removeElement: ContainerRepository.removeElement,
+    deleteElement: ElementRepository.delete,
   }
 )(EnumerationPopup);
