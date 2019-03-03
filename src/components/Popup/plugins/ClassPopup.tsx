@@ -15,7 +15,7 @@ const ClassPopup: SFC<Props> = ({
   readAttributes,
   readMethods,
   update,
-  addElement,
+  createElement,
   removeElement,
 }) => {
   const attributes = readAttributes(element.ownedElements);
@@ -27,8 +27,13 @@ const ClassPopup: SFC<Props> = ({
   const save = (member: Member) => (value: string) =>
     update({ ...member, name: value });
 
-  const create = (Type: typeof Attribute | typeof Method) => (value: string) =>
-    addElement(element, new Type(value));
+  const create = (Type: typeof Attribute | typeof Method) => (
+    value: string
+  ) => {
+    const child = new Type(value);
+    child.owner = element.id;
+    createElement(child);
+  };
 
   const remove = (member: Member) => () => {
     removeElement(element, member);
@@ -85,7 +90,7 @@ interface StateProps {
 
 interface DispatchProps {
   update: typeof ElementRepository.update;
-  addElement: typeof ContainerRepository.addElement;
+  createElement: typeof ElementRepository.create;
   removeElement: typeof ContainerRepository.removeElement;
 }
 
@@ -104,7 +109,7 @@ export default connect(
   }),
   {
     update: ElementRepository.update,
-    addElement: ContainerRepository.addElement,
+    createElement: ElementRepository.create,
     removeElement: ContainerRepository.removeElement,
   }
 )(ClassPopup);
