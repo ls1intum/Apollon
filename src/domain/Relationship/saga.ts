@@ -1,15 +1,17 @@
-import { take, takeLatest, put, select } from 'redux-saga/effects';
+import { takeLatest, put, all, select } from 'redux-saga/effects';
 import { State } from './../../components/Store';
 import { ElementRepository, ElementActionTypes } from './../Element';
 import RelationshipRepository from './repository';
 import { RedrawAction, ActionTypes, CreateAction } from './types';
-import { MoveAction } from '../Element/types';
+import { MoveAction, DeleteAction } from '../Element/types';
 import Port from '../Port';
+import Relationship from '.';
 
 function* saga() {
   yield takeLatest(ActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementMove);
+  yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
 }
 
 function* handleElementCreation({ payload }: CreateAction) {
@@ -45,6 +47,28 @@ function* recalc(id: string) {
     type: ActionTypes.REDRAW,
     payload: { id: relationship.id, path },
   });
+}
+
+function* handleElementDelete({ payload }: DeleteAction) {
+  if (!payload.id) return;
+  console.log('delete', payload.id);
+
+  const { elements }: State = yield select();
+  const relationships = Object.values(elements)
+    .filter(element => element.base === 'Relationship')
+    .map<Relationship>(element =>
+      RelationshipRepository.getById(elements)(element.id)
+    )
+    .filter(
+      relationship =>
+        relationship.source.element === payload.id ||
+        relationship.target.element === payload.id
+    );
+  yield all(
+    relationships.map(relationship =>
+      put(ElementRepository.delete(relationship.id))
+    )
+  );
 }
 
 export default saga;
