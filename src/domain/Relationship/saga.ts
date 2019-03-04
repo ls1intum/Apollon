@@ -51,7 +51,6 @@ function* recalc(id: string) {
 
 function* handleElementDelete({ payload }: DeleteAction) {
   if (!payload.id) return;
-  console.log('delete', payload.id);
 
   const { elements }: State = yield select();
   const relationships = Object.values(elements)

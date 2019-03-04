@@ -47,7 +47,9 @@ class LayoutedRelationship extends Component<Props> {
     const relationship = this.props.getById(this.props.relationship);
     if (!Object.keys(relationship).length) return null;
     const source = this.props.getElementById(relationship.source.element);
+    if (!Object.keys(source).length) return null;
     const target = this.props.getElementById(relationship.target.element);
+    if (!Object.keys(target).length) return null;
     const Component = this.component;
     return <Component element={relationship} source={source} target={target} />;
   }
