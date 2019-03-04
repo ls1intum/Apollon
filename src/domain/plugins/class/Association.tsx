@@ -2,6 +2,7 @@ import React, { SFC } from 'react';
 import Relationship from '../../Relationship';
 import Port from '../../Port';
 import { RelationshipKindMarker } from '../../../rendering/renderers/svg/defs/RelationshipMarkers';
+import RelationshipLabels from './RelationshipLabels';
 
 abstract class Association extends Relationship {
   readonly kind: string = 'Association';
@@ -16,6 +17,10 @@ export const AssociationComponent = (
   dashed = false
 ): SFC<Props> => ({ element, path }) => (
   <g>
+    <RelationshipLabels
+      relationship={element}
+      relationshipPath={path}
+    />
     <polyline
       points={path.map(point => `${point.x} ${point.y}`).join(',')}
       stroke="black"

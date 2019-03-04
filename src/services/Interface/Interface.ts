@@ -346,8 +346,8 @@ export const relationshipToExternal = (
     kind,
     source: {
       entityId: relationship.source.element,
-      multiplicity: null,
-      role: null,
+      multiplicity: relationship.sourceMultiplicity,
+      role: relationship.sourceRole,
       edge:
         relationship.source.location === 'N'
           ? 'TOP'
@@ -360,8 +360,8 @@ export const relationshipToExternal = (
     },
     target: {
       entityId: relationship.target.element,
-      multiplicity: null,
-      role: null,
+      multiplicity: relationship.targetMultiplicity,
+      role: relationship.targetRole,
       edge:
         relationship.target.location === 'N'
           ? 'TOP'
@@ -442,6 +442,10 @@ export const externalToRelationship = (
     selected: false,
     interactive: false,
     path: [start, startOffset, endOffset, end],
+    sourceMultiplicity: external.source.multiplicity,
+    sourceRole: external.source.role,
+    targetMultiplicity: external.target.multiplicity,
+    targetRole: external.target.role,
   } as Relationship;
   return relationship;
 };

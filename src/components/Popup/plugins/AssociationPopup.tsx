@@ -3,12 +3,25 @@ import { connect } from 'react-redux';
 import AssociationSwitch from './AssociationSwitch';
 import Relationship from '../../../domain/Relationship';
 import { DiagramState, DiagramType } from '../../../domain/Diagram';
+import RelationshipEnd from './RelationshipEnd';
 import { State } from '../../Store';
 
 const AssociationPopup: SFC<Props> = ({ element, diagram }) => (
   <div>
     {diagram.type === DiagramType.ClassDiagram && (
-      <AssociationSwitch relationship={element} />
+      <>
+        <AssociationSwitch relationship={element} />
+        <div>
+          <hr />
+          <b><small>Source</small></b><br />
+          <RelationshipEnd relationship={element} end="source" />
+        </div>
+        <div>
+          <hr />
+          <b><small>Target</small></b><br />
+          <RelationshipEnd relationship={element} end="target" />
+        </div>
+      </>
     )}
   </div>
 );

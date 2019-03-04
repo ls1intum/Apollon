@@ -6,6 +6,11 @@ abstract class Relationship extends Element {
   readonly base: string = 'Relationship';
   kind = 'Relationship';
 
+  sourceRole: string = '';
+  sourceMultiplicity: string = '';
+  targetRole: string = '';
+  targetMultiplicity: string = '';
+
   get bounds(): Boundary {
     const x = Math.min(...this.path.map(point => point.x));
     const y = Math.min(...this.path.map(point => point.y));
