@@ -1,0 +1,23 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+.container {
+  display: flex;
+  height: calc(100vh - 40px);
+  width: calc(100vw - 40px);
+  margin: 20px;
+}
+main {
+  box-sizing: border-box;
+  width: calc(100% - 200px);
+}
+aside.sidebar {
+  width: 200px;
+  margin: 5px;
+}
+.switch {
+  display: flex;
+  border-radius: 3px;
+}

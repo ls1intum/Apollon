@@ -29,7 +29,7 @@ To unmount the editor instance, call its `destroy()` method:
 editor.destroy();
 ```
 
-For a complete overview of the API, please refer to the [dist/index.d.ts](https://github.com/ls1intum/Apollon/blob/master/dist/index.d.ts) file.
+For a complete overview of the API, please refer to the [lib/index.d.ts](https://github.com/ls1intum/Apollon/blob/master/lib/index.d.ts) file.
 
 ## Development Setup
 

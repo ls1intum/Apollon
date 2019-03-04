@@ -3,31 +3,7 @@
   <head>
     <title>Apollon Editor</title>
     <meta charset="utf-8" />
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-      }
-      .container {
-        display: flex;
-        height: calc(100vh - 40px);
-        width: calc(100vw - 40px);
-        margin: 20px;
-      }
-      main {
-        box-sizing: border-box;
-        width: calc(100% - 200px);
-      }
-      aside.sidebar {
-        width: 200px;
-        margin: 5px;
-      }
-      .switch {
-        display: flex;
-        border-radius: 3px;
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
   </head>
   <body>
     <div class="container">
@@ -131,7 +107,7 @@
       </aside>
     </div>
 
-    <script src="apollon.js"></script>
+    <script src="index.js"></script>
     <script>
       {
         var editor;
@@ -146,11 +122,11 @@
         };
         var container = document.getElementById('apollon');
 
-        function mount() {
+        function initialize(container, options) {
           editor = new ApollonEditor(container, options);
         }
 
-        function unmount() {
+        function deinitialize() {
           editor.destroy();
         }
 
@@ -169,28 +145,25 @@
           event.preventDefault();
           var mode = event.target.elements.mode.value;
           options.mode = mode;
-          unmount();
-          mount();
+          deinitialize();
+          initialize(container, options);
         }
 
         function changeDiagramType(event) {
           event.preventDefault();
           var diagramType = event.target.elements.diagramType.value;
           options.diagramType = diagramType;
-          unmount();
-          mount();
+          deinitialize();
+          initialize(container, options);
         }
 
         function exportData(event) {
           event.preventDefault();
           var fileType = event.target.elements.fileType.value;
           var state = editor.getState();
-          var layoutedDiagram = ApollonEditor.layoutDiagram(
-            state,
-            {
-              outerPadding: 50,
-            }
-          );
+          var layoutedDiagram = ApollonEditor.layoutDiagram(state, {
+            outerPadding: 50,
+          });
           var svgBlobURL = createSVGBlobURL(layoutedDiagram);
 
           if (fileType === 'png') {
@@ -244,7 +217,7 @@
           return URL.createObjectURL(svgBlob);
         }
 
-        mount();
+        initialize(container, options);
       }
     </script>
   </body>

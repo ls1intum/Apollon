@@ -1,5 +1,3 @@
 node_modules/
-dist/**
-!dist/index.d.ts
-dev/apollon.js
-/.idea
+lib/*
+!lib/index.d.ts
