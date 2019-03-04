@@ -11,8 +11,8 @@ const RelationshipEnd: SFC<Props> = ({
   getById,
   update,
 }) => {
-  const multiplicity: string = (relationship as any)[`${end}Multiplicity`];
-  const role: string = (relationship as any)[`${end}Role`];
+  const multiplicity: string = (relationship as any)[`${end}Multiplicity`] || '';
+  const role: string = (relationship as any)[`${end}Role`] || '';
   const element = getById(relationship[end].element);
   const targets = elements.filter(e => (e.constructor as any).isConnectable);
 
