@@ -68,25 +68,25 @@ export default class RelationshipDetails extends React.Component<Props> {
                 </PopupSection>
 
                 <PopupSection>
-                    <RelationshipEndDetails
+                    {/* <RelationshipEndDetails
                         diagramType={this.props.diagramType}
                         heading="Source"
                         entity={relationship.source}
                         entities={this.props.entities}
                         relationshipEnd={relationship.relationship.source}
                         updateRelationshipEnd={this.updateRelationshipSource}
-                    />
+                    /> */}
                 </PopupSection>
 
                 <PopupSection>
-                    <RelationshipEndDetails
+                    {/* <RelationshipEndDetails
                         diagramType={this.props.diagramType}
                         heading="Target"
                         entity={relationship.target}
                         entities={this.props.entities}
                         relationshipEnd={relationship.relationship.target}
                         updateRelationshipEnd={this.updateRelationshipTarget}
-                    />
+                    /> */}
                 </PopupSection>
             </>
         );

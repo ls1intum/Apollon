@@ -1,6 +1,6 @@
 import Element from './../Element';
 import { Point } from '../geo';
-import { RelationshipKind } from '../../services/Interface/ExternalState';
+import { Relationship as ExternalRelationship, RelationshipKind } from '../../services/Interface/ExternalState';
 
 export type RectEdge = 'TOP' | 'LEFT' | 'RIGHT' | 'BOTTOM';
 
@@ -31,7 +31,7 @@ export interface RelationshipEnd {
 }
 
 export interface LayoutedRelationship {
-  relationship: Relationship;
+  relationship: ExternalRelationship;
   source: Element;
   target: Element;
   path: Point[];

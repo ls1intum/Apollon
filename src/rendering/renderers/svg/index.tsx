@@ -6,13 +6,23 @@ import RenderedRelationship from './RenderedRelationship';
 import Svg from './Svg';
 import Translate from './Translate';
 import { LayoutedEntity } from '../../layouters/entity';
-import { LayoutedRelationship } from '../../../domain/Relationship';
+import {
+  LayoutedRelationship,
+  RelationshipKind,
+} from '../../../domain/Relationship';
 import { computeBoundingBox, Size } from '../../../domain/geo';
 import { UUID } from './../../../domain/utils/uuid';
 import { LayoutedDiagram } from '../../../rendering/layouters/diagram';
 import Element from '../../../domain/Element';
 import ElementComponent from '../../../components/LayoutedElement/ElementComponent';
-import { layoutedEntityToElements } from '../../../services/Interface/Interface';
+import {
+  layoutedEntityToElements,
+  externalToRelationship,
+} from '../../../services/Interface/Interface';
+import * as Plugins from './../../../domain/plugins';
+import Association, {
+  AssociationComponent,
+} from '../../../domain/plugins/class/Association';
 
 export interface RenderOptions {
   shouldRenderElement: (id: UUID) => boolean;
@@ -86,17 +96,51 @@ export function renderRelationshipToSVG(
   const dx = -boundingBox.x + PADDING / 2;
   const dy = -boundingBox.y + PADDING / 2;
 
+  let kind = 'BidirectionalAssociation';
+  if (layoutedRelationship.relationship.kind === RelationshipKind.Aggregation) {
+    kind = 'Aggregation';
+  } else if (
+    layoutedRelationship.relationship.kind ===
+    RelationshipKind.AssociationBidirectional
+  ) {
+    kind = 'BidirectionalAssociation';
+  } else if (
+    layoutedRelationship.relationship.kind ===
+    RelationshipKind.AssociationUnidirectional
+  ) {
+    kind = 'UnidirectionalAssociation';
+  } else if (
+    layoutedRelationship.relationship.kind === RelationshipKind.Composition
+  ) {
+    kind = 'Composition';
+  } else if (
+    layoutedRelationship.relationship.kind === RelationshipKind.Dependency
+  ) {
+    kind = 'Dependency';
+  } else if (
+    layoutedRelationship.relationship.kind === RelationshipKind.Inheritance
+  ) {
+    kind = 'Inheritance';
+  } else if (
+    layoutedRelationship.relationship.kind === RelationshipKind.Realization
+  ) {
+    kind = 'Realization';
+  }
+
+  const Component = (Plugins as any)[`${kind}Component`];
+  const relationship = externalToRelationship(
+    { ...layoutedRelationship.relationship, straightLine: false },
+    [],
+    layoutedRelationship.path
+  );
+
   const svg = renderReactElementToString(
     <Svg width={width} height={height} fontFamily={renderOptions.fontFamily}>
       <defs>
         <RelationshipMarkers />
       </defs>
       <Translate dx={dx} dy={dy}>
-        {/* <RenderedRelationship
-          relationship={layoutedRelationship.relationship}
-          path={layoutedRelationship.path}
-          renderOptions={renderOptions}
-        /> */}
+        <Component element={relationship} path={layoutedRelationship.path} />
       </Translate>
     </Svg>
   );
