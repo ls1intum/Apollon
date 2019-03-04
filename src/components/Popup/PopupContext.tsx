@@ -1,5 +1,4 @@
 import React, { SFC, createContext, ComponentType } from 'react';
-import hoistStatics from 'hoist-non-react-statics';
 import Element from '../../domain/Element';
 import { LayoutedRelationship } from '../../domain/Relationship';
 
@@ -25,8 +24,7 @@ export const withPopup = <Props extends object>(
   );
 
   C.displayName = `withPopup(${Component.displayName || Component.name})`;
-
-  return hoistStatics(C, Component);
+  return C;
 };
 
 export default PopupContext;

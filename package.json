@@ -23,12 +23,9 @@
     "build": "yarn clean && yarn typings && tsc -p .",
     "clean": "rm -rf lib",
     "typings": "mkdir -p lib && cp src/index.d.ts lib",
-    "prepare": "yarn run build"
+    "prepare": "yarn build"
   },
   "dependencies": {
-    "hoist-non-react-statics": "3.3.0",
-    "lodash": "4.17.11",
-    "normalizr": "3.3.0",
     "react": "16.7.0",
     "react-dom": "16.7.0",
     "react-redux": "6.0.0",
@@ -40,15 +37,12 @@
     "uuid": "3.3.2"
   },
   "devDependencies": {
-    "@types/hoist-non-react-statics": "3.0.1",
-    "@types/lodash": "4.14.120",
     "@types/react": "16.7.22",
     "@types/react-dom": "16.0.11",
     "@types/react-redux": "7.0.1",
     "@types/reduce-reducers": "0.1.3",
     "@types/styled-components": "4.1.6",
     "@types/uuid": "3.4.4",
-    "prettier": "1.16.3",
     "ts-loader": "5.3.3",
     "tslint": "5.12.1",
     "typescript": "3.3.1",

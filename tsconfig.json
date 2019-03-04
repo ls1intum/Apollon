@@ -6,6 +6,7 @@
     "lib": ["es2017", "dom"],
     "jsx": "react",
     "outDir": "lib",
+    "skipLibCheck": true,
     "importHelpers": true,
     "esModuleInterop": true,
     "strict": true,
