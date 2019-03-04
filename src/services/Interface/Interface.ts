@@ -148,6 +148,12 @@ export const mapExternalToInternalState = (
                 Object.values(elements)
               )
             )
+            .map<Relationship>(relationship => {
+              relationship.interactive = state.interactiveElements.allIds.includes(
+                relationship.id
+              );
+              return relationship;
+            })
             .reduce(
               (o: { [id: string]: Relationship }, r: Relationship) => ({
                 ...o,
@@ -405,8 +411,14 @@ export const externalToRelationship = (
 
   const sourceElement = elements.find(e => e.id === source.element)!;
   const targetElement = elements.find(e => e.id === target.element)!;
-  const { point: start, offset: startOffset } = Port.position(sourceElement, source.location);
-  const { point: end, offset: endOffset } = Port.position(targetElement, target.location);
+  const { point: start, offset: startOffset } = Port.position(
+    sourceElement,
+    source.location
+  );
+  const { point: end, offset: endOffset } = Port.position(
+    targetElement,
+    target.location
+  );
 
   let init: Relationship = new BidirectionalAssociation(
     'Association',
