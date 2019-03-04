@@ -7,9 +7,13 @@ import Element, { ElementRepository } from '../../domain/Element';
 import { getAllRelationships } from '../../services/redux';
 import Relationship from '../../domain/Relationship';
 import Container from '../../domain/Container';
+import PopupLayer from '../Popup';
 
 class KeyboardEventListener extends Component<Props> {
   private eventListener = (event: KeyboardEvent) => {
+    if (this.props.popup.current && this.props.popup.current.state.element)
+      return;
+
     switch (event.key) {
       case 'ArrowUp':
         event.preventDefault();
@@ -48,7 +52,9 @@ class KeyboardEventListener extends Component<Props> {
   }
 }
 
-interface OwnProps {}
+interface OwnProps {
+  popup: React.RefObject<PopupLayer>;
+}
 
 interface StateProps {}
 

@@ -21,6 +21,7 @@ class Canvas extends Component<Props, State> {
   };
   canvas: RefObject<HTMLDivElement> = createRef();
   layer: RefObject<SVGSVGElement> = createRef();
+  popup: RefObject<PopupLayer> = createRef();
 
   coordinateSystem = new CoordinateSystem(
     this.canvas,
@@ -76,10 +77,10 @@ class Canvas extends Component<Props, State> {
               width={diagram.bounds.width}
               height={diagram.bounds.height}
             >
-              <PopupLayer>
+              <PopupLayer ref={this.popup}>
                 {this.state.isMounted && (
                   <>
-                    <KeyboardEventListener />
+                    <KeyboardEventListener popup={this.popup} />
                     <svg width="100%" height="100%" ref={this.layer}>
                       <defs>
                         <RelationshipMarkers />
