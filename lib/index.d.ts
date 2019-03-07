@@ -3,9 +3,11 @@ declare module "@ls1intum/apollon" {
         constructor(container: HTMLElement, options?: ApollonOptions);
         getSelection(): ElementSelection;
         subscribeToSelectionChange(callback: (selection: ElementSelection) => void): number | null;
-        unsubscribeFromSelectionChange(subscriptionId: number);
+        unsubscribeFromSelectionChange(subscriptionId: number): void;
         getState(): State;
-        destroy();
+        destroy(): void;
+        static layoutDiagram(state: State, layoutOptions: LayoutOptions): LayoutedDiagram;
+        static renderDiagramToSVG(layoutedDiagram: LayoutedDiagram,renderOptions: RenderOptions): RenderedSVG;
     }
 
     export interface ApollonOptions {
@@ -218,8 +220,8 @@ declare module "@ls1intum/apollon" {
         height: number;
     }
 
-    export const ENTITY_KIND_HEIGHT;
-    export const ENTITY_NAME_HEIGHT;
-    export const ENTITY_MEMBER_HEIGHT;
-    export const ENTITY_MEMBER_LIST_VERTICAL_PADDING;
+    export const ENTITY_KIND_HEIGHT: number;
+    export const ENTITY_NAME_HEIGHT: number;
+    export const ENTITY_MEMBER_HEIGHT: number;
+    export const ENTITY_MEMBER_LIST_VERTICAL_PADDING: number;
 }

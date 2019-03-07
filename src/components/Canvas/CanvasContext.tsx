@@ -1,5 +1,4 @@
 import React, { SFC, createContext, ComponentType } from 'react';
-import hoistStatics from 'hoist-non-react-statics';
 import CoordinateSystem from './CoordinateSystem';
 
 export interface CanvasContext {
@@ -22,8 +21,7 @@ export const withCanvas = <Props extends object>(
   );
 
   C.displayName = `withCanvas(${Component.displayName || Component.name})`;
-
-  return hoistStatics(C, Component);
+  return C;
 };
 
 export default CanvasContext;

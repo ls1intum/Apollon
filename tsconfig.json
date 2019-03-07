@@ -2,18 +2,17 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
+    "moduleResolution": "node",
     "lib": ["es2017", "dom"],
     "jsx": "react",
-    "rootDir": "./src",
-    "outDir": "./dist/",
-    "strict": true,
-    "moduleResolution": "node",
+    "outDir": "lib",
+    "skipLibCheck": true,
     "importHelpers": true,
     "esModuleInterop": true,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "removeComments": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
     "downlevelIteration": true
-  }
+  },
+  "include": ["src/**/*.ts"]
 }
