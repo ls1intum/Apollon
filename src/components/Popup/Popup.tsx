@@ -3,7 +3,6 @@ import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { Container, Arrow, Content, Item } from './styles';
 import Element, { ElementRepository } from '../../domain/Element';
-import Relationship from '../../domain/Relationship';
 import { Point } from '../../domain/geo';
 import { withCanvas, CanvasContext } from '../Canvas';
 import NameField from './NameField';

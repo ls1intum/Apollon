@@ -27,19 +27,16 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
         const { x, y, width, height } = this.props.element.bounds;
         position = { x: x + width, y };
       }
-      console.log(position, this.props.element);
       this.props.showPopup(this.state.element, position);
     };
 
     componentDidMount() {
-      const node = (findDOMNode(this) as HTMLElement)
-        .firstElementChild as HTMLElement;
+      const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('dblclick', this.edit);
     }
 
     componentWillUnmount() {
-      const node = (findDOMNode(this) as HTMLElement)
-        .firstElementChild as HTMLElement;
+      const node = findDOMNode(this) as HTMLElement;
       node.removeEventListener('dblclick', this.edit);
     }
 
