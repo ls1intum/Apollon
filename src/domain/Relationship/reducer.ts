@@ -1,82 +1,109 @@
-import { Actions } from './../Element';
-import { RelationshipsAction } from "./actions";
-import { State as ReduxState } from "../../components/Store";
+import { Reducer } from 'redux';
+import { Actions, ActionTypes } from './types';
+import { State } from '../Element/types';
 
-type State = ReduxState["relationships"];
+const initialState: State = {};
 
-const initialState: State = {
-    allIds: [],
-    byId: {}
+const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
+  switch (action.type) {
+    case ActionTypes.CREATE: {
+      const { payload } = action;
+      return {
+        ...state,
+        [payload.relationship.id]: {
+          ...payload.relationship,
+          bounds: payload.relationship.bounds,
+        },
+      };
+    }
+    case ActionTypes.REDRAW: {
+      const { payload } = action;
+      return {
+        ...state,
+        [payload.id]: {
+          ...state[payload.id],
+          path: payload.path,
+        },
+      };
+    }
+    default:
+      return state;
+  }
 };
 
-export default function relationshipsReducer(state = initialState, action: RelationshipsAction | Actions): State {
-    switch (action.type) {
-        case "CREATE_RELATIONSHIP":
-            return {
-                allIds: [...state.allIds, action.relationship.id],
-                byId: {
-                    ...state.byId,
-                    [action.relationship.id]: action.relationship
-                }
-            };
+export default Reducer;
 
-        case "@@element/DELETE": {
-            const deadRelationshipIds = new Set<string>();
-            const allRelationships = state.allIds.map(id => state.byId[id]);
+// export default function relationshipsReducer(
+//   state = initialState,
+//   action: Actions
+// ): State {
+//   switch (action.type) {
+// case "CREATE_RELATIONSHIP":
+//     return {
+//         allIds: [...state.allIds, action.relationship.id],
+//         byId: {
+//             ...state.byId,
+//             [action.relationship.id]: action.relationship
+//         }
+//     };
 
-            for (const { id, source, target } of allRelationships) {
-                if (source.entityId === action.element.id || target.entityId === action.element.id || id === action.element.id) {
-                    deadRelationshipIds.add(id);
-                    continue;
-                }
-            }
+// case "@@element/DELETE": {
+//     const deadRelationshipIds = new Set<string>();
+//     const allRelationships = Object.state.map(id => state.byId[id]);
 
-            if (deadRelationshipIds.size === 0) {
-                return state;
-            }
+//     for (const { id, source, target } of allRelationships) {
+//         if (source.entityId === action.payload.id || target.entityId === action.payload.id || id === action.payload.id) {
+//             deadRelationshipIds.add(id);
+//             continue;
+//         }
+//     }
 
-            const allIds = state.allIds.filter(id => !deadRelationshipIds.has(id));
-            const byId = { ...state.byId };
+//     if (deadRelationshipIds.size === 0) {
+//         return state;
+//     }
 
-            deadRelationshipIds.forEach(id => {
-                delete byId[id];
-            });
+//     const allIds = state.allIds.filter(id => !deadRelationshipIds.has(id));
+//     const byId = { ...state.byId };
 
-            return { allIds, byId };
-        }
+//     deadRelationshipIds.forEach(id => {
+//         delete byId[id];
+//     });
 
-        case "FLIP_RELATIONSHIP": {
-            const relationship = action.relationship;
-            [relationship.source, relationship.target] = [relationship.target, relationship.source];
-            return {
-                ...state,
-                byId: {
-                    ...state.byId,
-                    [relationship.id]: relationship
-                }
-            };
-        }
+//     return { allIds, byId };
+// }
 
-        case "FLIP_RELATIONSHIPS": {
-            const byId = { ...state.byId };
-            for (const relationshipId of action.relationshipIds) {
-                const rel = { ...byId[relationshipId] };
-                [rel.source, rel.target] = [rel.target, rel.source];
-                byId[relationshipId] = rel;
-            }
-            return { ...state, byId };
-        }
+// case "FLIP_RELATIONSHIP": {
+//     const relationship = action.relationship;
+//     [relationship.source, relationship.target] = [relationship.target, relationship.source];
+//     return {
+//         ...state,
+//         byId: {
+//             ...state.byId,
+//             [relationship.id]: relationship
+//         }
+//     };
+// }
 
-        case "UPDATE_RELATIONSHIPS":
-            return {
-                ...state,
-                byId: {
-                    ...state.byId,
-                    [action.relationship.id]: action.relationship
-                }
-            };
+// case "FLIP_RELATIONSHIPS": {
+//     const byId = { ...state.byId };
+//     for (const relationshipId of action.relationshipIds) {
+//         const rel = { ...byId[relationshipId] };
+//         [rel.source, rel.target] = [rel.target, rel.source];
+//         byId[relationshipId] = rel;
+//     }
+//     return { ...state, byId };
+// }
 
-        default:
-            return state;
-    }
-}
+// case "UPDATE_RELATIONSHIPS":
+//     return {
+//         ...state,
+//         byId: {
+//             ...state.byId,
+//             [action.relationship.id]: action.relationship
+//         }
+//     };
+
+//     default:
+//       return state;
+//   }
+// }

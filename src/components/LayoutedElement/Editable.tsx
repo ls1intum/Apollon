@@ -4,6 +4,8 @@ import { compose } from 'redux';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withPopup, PopupContext } from '../Popup';
 import Element from '../../domain/Element';
+import Relationship from '../../domain/Relationship';
+import { Point } from '../../domain/geo';
 
 const editable = (WrappedComponent: typeof ElementComponent) => {
   class Editable extends Component<Props, State> {
@@ -13,18 +15,28 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
 
     private edit = (event: MouseEvent) => {
       event.stopPropagation();
-      this.props.showPopup(this.state.element);
+      let position = { x: 0, y: 0 };
+      if (this.props.element instanceof Relationship) {
+        const path = (this.props as any)['path'] as Point[];
+        const targetPoint = path[path.length - 2];
+        position = {
+          x: targetPoint.x,
+          y: targetPoint.y - 20,
+        };
+      } else {
+        const { x, y, width, height } = this.props.element.bounds;
+        position = { x: x + width, y };
+      }
+      this.props.showPopup(this.state.element, position);
     };
 
     componentDidMount() {
-      const node = (findDOMNode(this) as HTMLElement)
-        .firstElementChild as HTMLElement;
+      const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('dblclick', this.edit);
     }
 
     componentWillUnmount() {
-      const node = (findDOMNode(this) as HTMLElement)
-        .firstElementChild as HTMLElement;
+      const node = findDOMNode(this) as HTMLElement;
       node.removeEventListener('dblclick', this.edit);
     }
 

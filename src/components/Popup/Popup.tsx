@@ -10,8 +10,8 @@ import * as Plugins from './plugins';
 
 export class Popup extends Component<Props> {
   private calculatePosition = (): Point => {
-    let { x, y, width } = this.props.element.bounds;
-    return this.props.coordinateSystem.pointToScreen(x + width, y);
+    const position = this.props.position;
+    return this.props.coordinateSystem.pointToScreen(position.x, position.y);
   };
 
   private onSaveName = (value: string) => {
@@ -22,9 +22,10 @@ export class Popup extends Component<Props> {
 
   render() {
     const position = this.calculatePosition();
-    const Component = (Plugins as any)[
-      `${this.props.element.kind}PopupComponent`
-    ];
+    const Component =
+      this.props.element.base === 'Relationship'
+        ? Plugins.AssociationPopup
+        : (Plugins as any)[`${this.props.element.kind}PopupComponent`];
     return (
       <Container {...position}>
         <Content>
@@ -44,6 +45,10 @@ export class Popup extends Component<Props> {
 
 interface OwnProps {
   element: Element;
+  position: {
+    x: number;
+    y: number;
+  };
 }
 
 interface DispatchProps {

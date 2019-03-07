@@ -12,23 +12,17 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
     state: State = {
       movable: false,
       moving: false,
-      position: {
-        x: this.props.element.bounds.x,
-        y: this.props.element.bounds.y,
-      },
       offset: { x: 0, y: 0 },
     };
 
     private move = (x: number, y: number) => {
-      const { position } = this.state;
-      if (position.x === x && position.y === y) return;
+      const { bounds } = this.props.element;
+      if (bounds.x === x && bounds.y === y) return;
 
-      const element: Element = {
-        ...this.props.element,
-        bounds: { ...this.props.element.bounds, x, y },
-      };
-      this.props.update(element);
-      this.setState({ position: { x, y } });
+      this.props.move(null, {
+        x: x - this.props.element.bounds.x,
+        y: y - this.props.element.bounds.y,
+      });
     };
 
     private onMouseDown = (event: MouseEvent) => {
@@ -36,10 +30,10 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
       const target = event.currentTarget as HTMLElement;
       window.setTimeout(() => {
         if (!this.props.element.selected) return;
-        const rect = target!.getBoundingClientRect();
+        const rect = target.getBoundingClientRect();
         const offset = this.props.coordinateSystem.offset();
-        offset.x = event.clientX - rect.left + offset.x;
-        offset.y = event.clientY - rect.top + offset.y;
+        offset.x += event.clientX - rect.left;
+        offset.y += event.clientY - rect.top;
 
         let ownerID = this.props.element.owner;
         while (ownerID) {
@@ -57,21 +51,21 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
 
     private onMouseMove = (event: MouseEvent) => {
       if (!this.state.movable) return;
-      let x = event.clientX - this.state.offset.x;
-      let y = event.clientY - this.state.offset.y;
+      const x = event.clientX - this.state.offset.x;
+      const y = event.clientY - this.state.offset.y;
 
       if (!this.state.moving) {
-        const { position } = this.state;
-        if (Math.abs(position.x - x) > 5 || Math.abs(position.y - y) > 5) {
+        const { bounds } = this.props.element;
+        if (Math.abs(bounds.x - x) > 5 || Math.abs(bounds.y - y) > 5) {
           this.setState({ moving: true });
         }
       } else {
-        const { x: px, y: py } = this.props.coordinateSystem.screenToPoint(x, y);
-        this.move(px, py);
+        const point = this.props.coordinateSystem.screenToPoint(x, y);
+        this.move(point.x, point.y);
       }
     };
 
-    private onMouseUp = (event: MouseEvent) => {
+    private onMouseUp = () => {
       this.setState({ movable: false, moving: false, offset: { x: 0, y: 0 } });
       document.removeEventListener('mousemove', this.onMouseMove);
       document.removeEventListener('mouseup', this.onMouseUp);
@@ -99,7 +93,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface DispatchProps {
-    update: typeof ElementRepository.update;
+    move: typeof ElementRepository.move;
   }
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -107,17 +101,14 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
   interface State {
     movable: boolean;
     moving: boolean;
-    position: { x: number; y: number };
     offset: { x: number; y: number };
   }
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
-    connect(
-      (state: ReduxState): StateProps => ({
-        getById: ElementRepository.getById(state.elements),
-      }),
-      { update: ElementRepository.update }
+    connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+      state => ({ getById: ElementRepository.getById(state.elements) }),
+      { move: ElementRepository.move }
     )
   )(Moveable);
 };

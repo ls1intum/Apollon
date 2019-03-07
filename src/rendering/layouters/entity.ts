@@ -1,4 +1,4 @@
-import { EntityKind } from "../../domain/Element";
+import { EntityKind } from "../../";
 import { Point, Size } from "../../domain/geo";
 import Element from './../../domain/Element';
 import { UUID } from './../../domain/utils/uuid';

@@ -5,6 +5,7 @@ import {
   EntityKind,
   EntityMember,
   Relationship as ExternalRelationship,
+  RelationshipKind,
 } from './ExternalState';
 import Container from '../../domain/Container';
 import Relationship from '../../domain/Relationship';
@@ -14,8 +15,7 @@ import {
   ApollonMode,
 } from '../EditorService';
 import Diagram, { DiagramType } from '../../domain/Diagram';
-import Element from '../../domain/Element';
-import * as Plugins from './../../domain/plugins';
+import Element, { ElementRepository } from '../../domain/Element';
 import {
   Attribute,
   Method,
@@ -28,63 +28,80 @@ import {
   ObjectNode,
   MergeNode,
   ForkNode,
+  BidirectionalAssociation,
+  UnidirectionalAssociation,
+  Aggregation,
+  Composition,
+  Dependency,
+  Inheritance,
+  Realization,
 } from './../../domain/plugins';
 import { LayoutedEntity } from '../../rendering/layouters/entity';
+import Port from '../../domain/Port';
+import { Point } from '../../domain/geo';
 
 export const mapInternalToExternalState = (
   state: ReduxState
-): ExternalState => ({
-  version: '1.0',
+): ExternalState => {
+  const elements: Element[] = ElementRepository.read(state);
+  const result = {
+    version: '1.0',
 
-  entities: {
-    allIds: Object.keys(state.elements).filter(
-      id =>
-        state.elements[id].name !== 'Relationship' &&
-        state.elements[id].kind !== 'Attribute' &&
-        state.elements[id].kind !== 'Method'
-    ),
-    byId: Object.keys(state.elements)
-      .filter(
-        id =>
-          state.elements[id].name !== 'Relationship' &&
-          state.elements[id].kind !== 'Attribute' &&
-          state.elements[id].kind !== 'Method'
-      )
-      .map<Entity>(id => elementToEntity(state.elements[id], state.elements))
-      .map<Entity>(e => {
-        e.position = {
-          x: e.position.x + state.diagram.bounds.width / 2,
-          y: e.position.y + state.diagram.bounds.height / 2,
-        };
-        return e;
-      })
-      .reduce<{ [id: string]: Entity }>((o, e) => ({ ...o, [e.id]: e }), {}),
-  },
-
-  relationships: {
-    allIds: state.relationships.allIds,
-    byId: Object.keys(state.relationships.byId)
-      .map<ExternalRelationship>(id => state.relationships.byId[id])
-      .reduce<{ [id: string]: ExternalRelationship }>((o, r) => ({ ...o, [r.id]: r }), {}),
-  },
-
-  interactiveElements: {
-    allIds: [
-      ...state.interactiveElements.allIds,
-      ...Object.values(state.elements)
-        .filter(e => e.interactive)
-        .map(e => e.id),
-    ],
-  },
-
-  editor: {
-    canvasSize: {
-      width: state.diagram.bounds.width,
-      height: state.diagram.bounds.height,
+    entities: {
+      allIds: elements
+        .filter(
+          element => element.kind !== 'Attribute' && element.kind !== 'Method'
+        )
+        .map(element => element.id),
+      byId: elements
+        .filter(
+          element => element.kind !== 'Attribute' && element.kind !== 'Method'
+        )
+        .map<Entity>(element => elementToEntity(element, state.elements))
+        .map<Entity>(e => {
+          e.position = {
+            x: e.position.x + state.diagram.bounds.width / 2,
+            y: e.position.y + state.diagram.bounds.height / 2,
+          };
+          return e;
+        })
+        .reduce<{ [id: string]: Entity }>((o, e) => ({ ...o, [e.id]: e }), {}),
     },
-    gridSize: state.editor.gridSize,
-  },
-});
+
+    relationships: {
+      allIds: Object.keys(state.elements).filter(
+        id => state.elements[id].base === 'Relationship'
+      ),
+      byId: Object.keys(state.elements)
+        .filter(id => state.elements[id].base === 'Relationship')
+        .map<ExternalRelationship>(id =>
+          relationshipToExternal(state.elements[id] as Relationship)
+        )
+        .reduce<{ [id: string]: ExternalRelationship }>(
+          (o, r) => ({ ...o, [r.id]: r }),
+          {}
+        ),
+    },
+
+    interactiveElements: {
+      allIds: [
+        ...state.interactiveElements.allIds,
+        ...Object.values(state.elements)
+          .filter(e => e.interactive)
+          .map(e => e.id),
+      ],
+    },
+
+    editor: {
+      canvasSize: {
+        width: state.diagram.bounds.width,
+        height: state.diagram.bounds.height,
+      },
+      gridSize: state.editor.gridSize,
+    },
+  };
+  return result;
+};
 
 export const mapExternalToInternalState = (
   state: ExternalState | undefined,
@@ -92,40 +109,13 @@ export const mapExternalToInternalState = (
   editorMode: EditorMode = EditorMode.ModelingView,
   interactiveMode: InteractiveElementsMode = InteractiveElementsMode.Highlighted,
   mode: ApollonMode = ApollonMode.ReadOnly
-): ReduxState => ({
-  relationships: {
-    allIds: state ? state.relationships.allIds : [],
-    byId: state
-      ? Object.keys(state.relationships.byId)
-          .map<Relationship>(id => ({
-            ...state.relationships.byId[id],
-            name: 'Relationship',
-            bounds: { x: 0, y: 0, width: 0, height: 0 },
-            selected: false,
-            interactive: false,
-            owner: null,
-          }))
-          .reduce(
-            (o: { [id: string]: Relationship }, r: Relationship) => ({
-              ...o,
-              [r.id]: r,
-            }),
-            {}
-          )
-      : {},
-  },
-
-  interactiveElements: {
-    allIds: state
-      ? state.interactiveElements.allIds.filter(
-          id => id in state.relationships.byId
-        )
-      : [],
-  },
-
-  elements: state
+): ReduxState => {
+  const elements = state
     ? state.entities.allIds
-        .reduce<Element[]>((xs, id) => [...xs, ...entityToElements(state.entities.byId[id])], [])
+        .reduce<Element[]>(
+          (xs, id) => [...xs, ...entityToElements(state.entities.byId[id])],
+          []
+        )
         .map<Element>(e => {
           e.interactive = state.interactiveElements.allIds.includes(e.id);
           if (e.owner === null) {
@@ -138,30 +128,69 @@ export const mapExternalToInternalState = (
           return e;
         })
         .reduce<{ [id: string]: Element }>((o, e) => ({ ...o, [e.id]: e }), {})
-    : {},
+    : {};
 
-  editor: {
-    gridSize: state ? state.editor.gridSize : 10,
-    editorMode,
-    interactiveMode,
-    mode,
-  },
-  diagram: {
-    ...new Diagram(type),
-    ...(state && {
-      ownedElements: state.entities.allIds,
-      ownedRelationships: state.relationships.allIds,
-      bounds: {
-        x: 0,
-        y: 0,
-        width: Math.max(state.editor.canvasSize.width, 1600),
-        height: Math.max(state.editor.canvasSize.height, 1600),
-      },
-    }),
-  },
-});
+  return {
+    interactiveElements: {
+      allIds: state
+        ? state.interactiveElements.allIds.filter(
+            id => id in state.relationships.byId
+          )
+        : [],
+    },
 
-export const elementToEntity = (element: Element, elements: { [id: string]: Element }): Entity => {
+    elements: {
+      ...elements,
+      ...(state
+        ? Object.keys(state.relationships.byId)
+            .map<Relationship>(id =>
+              externalToRelationship(
+                state.relationships.byId[id],
+                Object.values(elements)
+              )
+            )
+            .map<Relationship>(relationship => {
+              relationship.interactive = state.interactiveElements.allIds.includes(
+                relationship.id
+              );
+              return relationship;
+            })
+            .reduce(
+              (o: { [id: string]: Relationship }, r: Relationship) => ({
+                ...o,
+                [r.id]: r,
+              }),
+              {}
+            )
+        : {}),
+    },
+
+    editor: {
+      gridSize: state ? state.editor.gridSize : 10,
+      editorMode,
+      interactiveMode,
+      mode,
+    },
+    diagram: {
+      ...new Diagram(type),
+      ...(state && {
+        ownedElements: state.entities.allIds,
+        ownedRelationships: state.relationships.allIds,
+        bounds: {
+          x: 0,
+          y: 0,
+          width: Math.max(state.editor.canvasSize.width, 1600),
+          height: Math.max(state.editor.canvasSize.height, 1600),
+        },
+      }),
+    },
+  };
+};
+
+export const elementToEntity = (
+  element: Element,
+  elements: { [id: string]: Element }
+): Entity => {
   let kind: string = '';
 
   if (element instanceof Class) {
@@ -283,7 +312,9 @@ export const entityToElements = (entity: Entity): Element[] => {
   return [element, ...current];
 };
 
-export const layoutedEntityToElements = (layoutedEntity: LayoutedEntity): Element[] => {
+export const layoutedEntityToElements = (
+  layoutedEntity: LayoutedEntity
+): Element[] => {
   const entity: Entity = layoutedEntity as Entity;
   let [element, ...children] = entityToElements(entity);
   if (element instanceof Container) element.ownedElements = [];
@@ -296,4 +327,142 @@ export const layoutedEntityToElements = (layoutedEntity: LayoutedEntity): Elemen
     },
   }));
   return [element, ...children];
-}
+};
+
+export const relationshipToExternal = (
+  relationship: Relationship
+): ExternalRelationship => {
+  let kind = RelationshipKind.AssociationBidirectional;
+  if (relationship.kind === 'Aggregation') {
+    kind = RelationshipKind.Aggregation;
+  } else if (relationship.kind === 'BidirectionalAssociation') {
+    kind = RelationshipKind.AssociationBidirectional;
+  } else if (relationship.kind === 'UnidirectionalAssociation') {
+    kind = RelationshipKind.AssociationUnidirectional;
+  } else if (relationship.kind === 'Composition') {
+    kind = RelationshipKind.Composition;
+  } else if (relationship.kind === 'Dependency') {
+    kind = RelationshipKind.Dependency;
+  } else if (relationship.kind === 'Inheritance') {
+    kind = RelationshipKind.Inheritance;
+  } else if (relationship.kind === 'Realization') {
+    kind = RelationshipKind.Realization;
+  }
+  return {
+    id: relationship.id,
+    kind,
+    source: {
+      entityId: relationship.source.element,
+      multiplicity: relationship.sourceMultiplicity,
+      role: relationship.sourceRole,
+      edge:
+        relationship.source.location === 'N'
+          ? 'TOP'
+          : relationship.source.location === 'E'
+          ? 'RIGHT'
+          : relationship.source.location === 'S'
+          ? 'BOTTOM'
+          : 'LEFT',
+      edgeOffset: 0.5,
+    },
+    target: {
+      entityId: relationship.target.element,
+      multiplicity: relationship.targetMultiplicity,
+      role: relationship.targetRole,
+      edge:
+        relationship.target.location === 'N'
+          ? 'TOP'
+          : relationship.target.location === 'E'
+          ? 'RIGHT'
+          : relationship.target.location === 'S'
+          ? 'BOTTOM'
+          : 'LEFT',
+      edgeOffset: 0.5,
+    },
+    straightLine: false,
+  };
+};
+
+export const externalToRelationship = (
+  external: ExternalRelationship,
+  elements: Element[],
+  path: Point[] | null = null,
+): Relationship => {
+  const source: Port = {
+    element: external.source.entityId,
+    location:
+      external.source.edge === 'TOP'
+        ? 'N'
+        : external.source.edge === 'RIGHT'
+        ? 'E'
+        : external.source.edge === 'BOTTOM'
+        ? 'S'
+        : 'W',
+  };
+  const target: Port = {
+    element: external.target.entityId,
+    location:
+      external.target.edge === 'TOP'
+        ? 'N'
+        : external.target.edge === 'RIGHT'
+        ? 'E'
+        : external.target.edge === 'BOTTOM'
+        ? 'S'
+        : 'W',
+  };
+
+  if (!path) {
+    const sourceElement = elements.find(e => e.id === source.element)!;
+    const targetElement = elements.find(e => e.id === target.element)!;
+    const { point: start, offset: startOffset } = Port.position(
+      sourceElement,
+      source.location
+    );
+    const { point: end, offset: endOffset } = Port.position(
+      targetElement,
+      target.location
+    );
+    path = [start, startOffset, endOffset, end];
+  }
+
+  let init: Relationship = new BidirectionalAssociation(
+    'Association',
+    source,
+    target
+  );
+  switch (external.kind) {
+    case RelationshipKind.Aggregation:
+      init = new Aggregation('Association', source, target);
+      break;
+    case RelationshipKind.AssociationBidirectional:
+      init = new BidirectionalAssociation('Association', source, target);
+      break;
+    case RelationshipKind.AssociationUnidirectional:
+      init = new UnidirectionalAssociation('Association', source, target);
+      break;
+    case RelationshipKind.Composition:
+      init = new Composition('Association', source, target);
+      break;
+    case RelationshipKind.Dependency:
+      init = new Dependency('Association', source, target);
+      break;
+    case RelationshipKind.Inheritance:
+      init = new Inheritance('Association', source, target);
+      break;
+    case RelationshipKind.Realization:
+      init = new Realization('Association', source, target);
+      break;
+  }
+  const relationship: Relationship = {
+    ...init,
+    id: external.id,
+    selected: false,
+    interactive: false,
+    path,
+    sourceMultiplicity: external.source.multiplicity,
+    sourceRole: external.source.role,
+    targetMultiplicity: external.target.multiplicity,
+    targetRole: external.target.role,
+  } as Relationship;
+  return relationship;
+};

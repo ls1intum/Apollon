@@ -20,6 +20,9 @@ class Canvas extends Component<Props, State> {
     isMounted: false,
   };
   canvas: RefObject<HTMLDivElement> = createRef();
+  layer: RefObject<SVGSVGElement> = createRef();
+  popup: RefObject<PopupLayer> = createRef();
+
   coordinateSystem = new CoordinateSystem(
     this.canvas,
     this.props.diagram.bounds.width,
@@ -53,6 +56,11 @@ class Canvas extends Component<Props, State> {
     this.props.create(element);
   };
 
+  private deselectAll = (event: React.MouseEvent) => {
+    if (event.target !== this.layer.current || event.shiftKey) return;
+    this.props.select(null);
+  };
+
   render() {
     const { diagram } = this.props;
     const context: CanvasContext = {
@@ -61,7 +69,7 @@ class Canvas extends Component<Props, State> {
     };
 
     return (
-      <div ref={this.canvas} tabIndex={0}>
+      <div ref={this.canvas} tabIndex={0} onMouseDown={this.deselectAll}>
         <CanvasProvider value={context}>
           <Droppable onDrop={this.onDrop}>
             <Grid
@@ -69,11 +77,11 @@ class Canvas extends Component<Props, State> {
               width={diagram.bounds.width}
               height={diagram.bounds.height}
             >
-              <PopupLayer>
+              <PopupLayer ref={this.popup}>
                 {this.state.isMounted && (
                   <>
-                    <KeyboardEventListener />
-                    <svg width="100%" height="100%">
+                    <KeyboardEventListener popup={this.popup} />
+                    <svg width="100%" height="100%" ref={this.layer}>
                       <defs>
                         <RelationshipMarkers />
                       </defs>
@@ -110,6 +118,7 @@ interface StateProps {
 
 interface DispatchProps {
   create: typeof ElementRepository.create;
+  select: typeof ElementRepository.select;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -124,5 +133,6 @@ export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   }),
   {
     create: ElementRepository.create,
+    select: ElementRepository.select,
   }
 )(Canvas);

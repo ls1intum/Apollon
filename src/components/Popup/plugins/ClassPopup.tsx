@@ -8,15 +8,14 @@ import { Class } from '../../../domain/plugins';
 import NameField from './../NameField';
 import { Item, Header, Label, ExistingMember, NewMember } from './../styles';
 import Member from '../../../domain/plugins/class/Member';
-import { ContainerRepository } from '../../../domain/Container';
 
 const ClassPopup: SFC<Props> = ({
   element,
   readAttributes,
   readMethods,
   update,
-  addElement,
-  removeElement,
+  createElement,
+  deleteElement,
 }) => {
   const attributes = readAttributes(element.ownedElements);
   const methods = readMethods(element.ownedElements);
@@ -27,11 +26,16 @@ const ClassPopup: SFC<Props> = ({
   const save = (member: Member) => (value: string) =>
     update({ ...member, name: value });
 
-  const create = (Type: typeof Attribute | typeof Method) => (value: string) =>
-    addElement(element, new Type(value));
+  const create = (Type: typeof Attribute | typeof Method) => (
+    value: string
+  ) => {
+    const child = new Type(value);
+    child.owner = element.id;
+    createElement(child);
+  };
 
   const remove = (member: Member) => () => {
-    removeElement(element, member);
+    deleteElement(member.id);
   };
 
   return (
@@ -85,8 +89,8 @@ interface StateProps {
 
 interface DispatchProps {
   update: typeof ElementRepository.update;
-  addElement: typeof ContainerRepository.addElement;
-  removeElement: typeof ContainerRepository.removeElement;
+  createElement: typeof ElementRepository.create;
+  deleteElement: typeof ElementRepository.delete;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -104,7 +108,7 @@ export default connect(
   }),
   {
     update: ElementRepository.update,
-    addElement: ContainerRepository.addElement,
-    removeElement: ContainerRepository.removeElement,
+    createElement: ElementRepository.create,
+    deleteElement: ElementRepository.delete,
   }
 )(ClassPopup);

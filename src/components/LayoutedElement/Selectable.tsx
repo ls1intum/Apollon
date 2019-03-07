@@ -1,105 +1,47 @@
-import React, { Component, ComponentClass } from 'react';
-import { compose } from 'redux';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
-import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
-import { withCanvas, CanvasContext } from './../Canvas';
+import { ElementRepository } from '../../domain/Element';
 
 const selectable = (WrappedComponent: typeof ElementComponent) => {
-  class Selectable extends Component<Props, State> {
-    state: State = {
-      selected: this.props.element.selected,
-    };
-
-    timeout: number | null = null;
-
-    private select = () => {
-      if (this.timeout) window.clearTimeout(this.timeout);
-      if (this.state.selected) return;
-      const element: Element = { ...this.props.element, selected: true };
-      this.props.update(element);
-      this.setState({ selected: true });
-    };
-
-    private deselect = () => {
-      if (!this.state.selected) return;
-
-      this.timeout = window.setTimeout(() => {
-        const element: Element = { ...this.props.element, selected: false };
-        this.props.update(element);
-        this.setState({ selected: false });
-      }, 0);
-    };
-
-    private onMouseDown = (event: MouseEvent) => {
-      if (event.which !== 1) return;
-      const node = findDOMNode(this) as HTMLElement;
-      const nodeListOfHovered = node.querySelectorAll('svg:hover');
-      const hovered =
-        !nodeListOfHovered.length ||
-        (nodeListOfHovered.length &&
-          nodeListOfHovered[nodeListOfHovered.length - 1].parentElement &&
-          nodeListOfHovered[nodeListOfHovered.length - 1].parentElement ===
-            node);
-
-      if (hovered) {
-        this.select();
-      }
+  class Selectable extends Component<Props> {
+    private select = (event: MouseEvent) => {
+      if (
+        event.which !== 1 ||
+        !this.props.element.hovered ||
+        (this.props.element.selected && !event.shiftKey)
+      )
+        return;
+      this.props.select(this.props.element.id, event.shiftKey);
     };
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('mousedown', this.onMouseDown);
-      this.props.canvas.addEventListener('mousedown', this.deselect, true);
+      node.addEventListener('mousedown', this.select);
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.removeEventListener('mousedown', this.onMouseDown);
-      this.props.canvas.removeEventListener('mousedown', this.deselect, true);
+      node.removeEventListener('mousedown', this.select);
     }
 
     render() {
-      const { bounds } = this.props.element;
-      const strokeWidth = 5;
-      return (
-        <WrappedComponent {...this.props} selected={this.state.selected}>
-        {this.props.children}
-        {this.state.selected && (
-          <rect
-            x={-strokeWidth / 2}
-            y={-strokeWidth / 2}
-            width={bounds.width + strokeWidth}
-            height={bounds.height + strokeWidth}
-            fill="none"
-            stroke="#0064ff"
-            strokeOpacity="0.2"
-            strokeWidth={strokeWidth}
-            pointerEvents="none"
-          />
-        )}
-      </WrappedComponent>
-      );
+      return <WrappedComponent {...this.props} />;
     }
   }
 
+  interface StateProps {}
+
   interface DispatchProps {
-    update: typeof ElementRepository.update;
+    select: typeof ElementRepository.select;
   }
 
-  type Props = OwnProps & DispatchProps & CanvasContext;
+  type Props = OwnProps & StateProps & DispatchProps;
 
-  interface State {
-    selected: boolean;
-  }
-
-  return compose<ComponentClass<OwnProps>>(
-    withCanvas,
-    connect(
-      null,
-      { update: ElementRepository.update }
-    )
+  return connect<StateProps, DispatchProps, OwnProps>(
+    null,
+    { select: ElementRepository.select }
   )(Selectable);
 };
 
