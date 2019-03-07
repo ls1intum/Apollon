@@ -13,6 +13,8 @@ import editable from './../LayoutedElement/Editable';
 import interactable from './../LayoutedElement/Interactable';
 import Element, { ElementRepository } from '../../domain/Element';
 import { EditorMode, ApollonMode } from '../../services/EditorService';
+import { Rect, RectEdge, Point } from '../../domain/geo';
+import { computeRelationshipPath } from '../../rendering/layouters/relationship';
 
 class LayoutedRelationship extends Component<Props> {
   component: typeof RelationshipComponent = this.composeComponent();
@@ -36,6 +38,41 @@ class LayoutedRelationship extends Component<Props> {
     );
   }
 
+  private composePath = (relationship: Relationship): Point[] => {
+    const source = this.props.getElementById(relationship.source.element);
+    if (!Object.keys(source).length) return [];
+    const sourceRect: Rect = source.bounds;
+    const sourceEdge: RectEdge =
+      relationship.source.location === 'N'
+        ? 'TOP'
+        : relationship.source.location === 'E'
+        ? 'RIGHT'
+        : relationship.source.location === 'S'
+        ? 'BOTTOM'
+        : 'LEFT';
+    const target = this.props.getElementById(relationship.target.element);
+    if (!Object.keys(target).length) return [];
+    const targetRect: Rect = target.bounds;
+    const targetEdge: RectEdge =
+      relationship.target.location === 'N'
+        ? 'TOP'
+        : relationship.target.location === 'E'
+        ? 'RIGHT'
+        : relationship.target.location === 'S'
+        ? 'BOTTOM'
+        : 'LEFT';
+
+    return computeRelationshipPath(
+      sourceRect,
+      sourceEdge,
+      0.5,
+      targetRect,
+      targetEdge,
+      0.5,
+      false
+    );
+  };
+
   componentDidUpdate(prevProps: Props) {
     if (prevProps.editorMode !== this.props.editorMode) {
       this.component = this.composeComponent();
@@ -45,13 +82,9 @@ class LayoutedRelationship extends Component<Props> {
 
   render() {
     const relationship = this.props.getById(this.props.relationship);
-    if (!Object.keys(relationship).length) return null;
-    const source = this.props.getElementById(relationship.source.element);
-    if (!Object.keys(source).length) return null;
-    const target = this.props.getElementById(relationship.target.element);
-    if (!Object.keys(target).length) return null;
+    const path = this.composePath(relationship);
     const Component = this.component;
-    return <Component element={relationship} source={source} target={target} />;
+    return <Component element={relationship} path={path} />;
   }
 }
 

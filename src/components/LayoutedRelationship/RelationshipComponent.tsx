@@ -2,9 +2,7 @@ import React, { Component } from 'react';
 import { CanvasConsumer } from '../Canvas/CanvasContext';
 import Relationship from '../../domain/Relationship';
 import * as Plugins from './../../domain/plugins';
-import { Rect, RectEdge } from '../../domain/geo';
-import Element from '../../domain/Element';
-import { computeRelationshipPath } from '../../rendering/layouters/relationship';
+import { Point } from '../../domain/geo';
 
 class RelationshipComponent extends Component<Props> {
   static defaultProps = {
@@ -16,38 +14,8 @@ class RelationshipComponent extends Component<Props> {
     interactable: false,
   };
 
-  private composePath = () => {
-    const sourceRect: Rect = this.props.source.bounds;
-    const sourceEdge: RectEdge =
-      this.props.element.source.location === 'N'
-        ? 'TOP'
-        : this.props.element.source.location === 'E'
-        ? 'RIGHT'
-        : this.props.element.source.location === 'S'
-        ? 'BOTTOM'
-        : 'LEFT';
-    const targetRect: Rect = this.props.target.bounds;
-    const targetEdge: RectEdge =
-      this.props.element.target.location === 'N'
-        ? 'TOP'
-        : this.props.element.target.location === 'E'
-        ? 'RIGHT'
-        : this.props.element.target.location === 'S'
-        ? 'BOTTOM'
-        : 'LEFT';
-
-    return computeRelationshipPath(
-      sourceRect,
-      sourceEdge,
-      0.5,
-      targetRect,
-      targetEdge,
-      0.5,
-      false
-    );
-  };
-
   render() {
+    let { path } = this.props;
     const { element } = this.props;
     const Component = (Plugins as any)[`${element.kind}Component`];
 
@@ -55,7 +23,6 @@ class RelationshipComponent extends Component<Props> {
       <CanvasConsumer
         children={context => {
           let bounds = element.bounds;
-          let path = this.composePath(); //element.path;
           if (context && element.owner === null) {
             bounds = {
               ...bounds,
@@ -102,8 +69,7 @@ class RelationshipComponent extends Component<Props> {
 
 export interface OwnProps {
   element: Relationship;
-  source: Element;
-  target: Element;
+  path: Point[];
   interactive: boolean;
   hidden: boolean;
   moving: boolean;
