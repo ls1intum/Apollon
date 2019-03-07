@@ -5,9 +5,9 @@
   "keywords": [],
   "homepage": "https://github.com/ls1intum/apollon#readme",
   "bugs": "https://github.com/ls1intum/apollon/issues",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "author": {
-    "name": "Dr. Stephan Krusche",
+    "name": "Stephan Krusche",
     "email": "krusche@in.tum.de",
     "url": "https://www1.in.tum.de/krusche"
   },
@@ -23,7 +23,10 @@
     "build": "yarn clean && yarn typings && tsc -p .",
     "clean": "rm -rf lib",
     "typings": "mkdir -p lib && cp src/index.d.ts lib",
-    "prepare": "yarn build"
+    "prepare": "yarn build",
+    "publish:patch": "yarn build && npm version patch && npm publish",
+    "publish:minor": "yarn build && npm version minor && npm publish",
+    "publish:major": "yarn build && npm version major && npm publish"    
   },
   "dependencies": {
     "react": "16.8.4",
