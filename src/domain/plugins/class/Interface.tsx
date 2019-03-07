@@ -48,7 +48,7 @@ class Interface extends Container {
   }
 
   removeElement(
-    removedElement: Element,
+    removedElement: string,
     currentElements: Element[]
   ): Element[] {
     let [parent, ...children] = super.removeElement(

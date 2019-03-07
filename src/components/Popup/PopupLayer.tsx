@@ -10,11 +10,12 @@ class PopupLayer extends Component<{}, State> {
 
   state: State = {
     element: null,
+    position: { x: 0, y: 0 },
     relationship: null,
   };
 
-  private showPopup = (element: Element) => {
-    this.setState({ element });
+  private showPopup = (element: Element, position: { x: number; y: number }) => {
+    this.setState({ element, position });
   };
 
   private showRelationshipPopup = (relationship: LayoutedRelationship) => {
@@ -65,7 +66,7 @@ class PopupLayer extends Component<{}, State> {
         {this.props.children}
         {this.state.element && (
           <div ref={this.popup}>
-            <Popup element={this.state.element} />
+            <Popup element={this.state.element} position={this.state.position} />
           </div>
         )}
         {this.state.relationship && (
@@ -80,6 +81,7 @@ class PopupLayer extends Component<{}, State> {
 
 interface State {
   element: Element | null;
+  position: { x: number; y: number };
   relationship: LayoutedRelationship | null;
 }
 

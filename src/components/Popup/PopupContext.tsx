@@ -3,7 +3,7 @@ import Element from '../../domain/Element';
 import { LayoutedRelationship } from '../../domain/Relationship';
 
 export interface PopupContext {
-  showPopup: (element: Element) => void;
+  showPopup: (element: Element, position: { x: number; y: number }) => void;
   showRelationshipPopup: (element: LayoutedRelationship) => void;
   update: (element: Element) => void;
   updateRelationship: (element: LayoutedRelationship) => void;

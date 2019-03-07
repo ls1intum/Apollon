@@ -1,26 +1,36 @@
 import React, { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
+import { State as ReduxState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { Droppable as DragDroppable, DropEvent } from './../Draggable';
-import Container, { ContainerRepository } from '../../domain/Container';
 import { withCanvas, CanvasContext } from './../Canvas';
+import Element, { ElementRepository } from '../../domain/Element';
+import { ContainerRepository } from '../../domain/Container';
 
 const droppable = (WrappedComponent: typeof ElementComponent) => {
   class Droppable extends Component<Props> {
     onDrop = (event: DropEvent) => {
       if (!event.action) return;
-      const container = this.props.element as Container;
       const element = event.action.element;
+      element.owner = this.props.element.id;
       const offset = this.props.coordinateSystem.offset();
       const position = this.props.coordinateSystem.screenToPoint(
         event.position.x,
         event.position.y
       );
-      element.bounds.x = position.x - offset.x - container.bounds.x;
-      element.bounds.y = position.y - offset.y - container.bounds.y;
+      element.bounds.x = position.x - offset.x;
+      element.bounds.y = position.y - offset.y;
 
-      this.props.addElement(container, element);
+      let ownerID: string | null = this.props.element.id;
+      while (ownerID) {
+        const owner: Element = this.props.getById(ownerID);
+        element.bounds.x -= owner.bounds.x;
+        element.bounds.y -= owner.bounds.y;
+        ownerID = owner.owner;
+      }
+
+      this.props.create(element);
     };
 
     render() {
@@ -32,19 +42,21 @@ const droppable = (WrappedComponent: typeof ElementComponent) => {
     }
   }
 
-  interface DispatchProps {
-    addElement: typeof ContainerRepository.addElement;
+  interface StateProps {
+    getById: (id: string) => Element;
   }
 
-  type Props = OwnProps & DispatchProps & CanvasContext;
+  interface DispatchProps {
+    create: typeof ElementRepository.create;
+  }
+
+  type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
-    connect(
-      null,
-      {
-        addElement: ContainerRepository.addElement,
-      }
+    connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+      state => ({ getById: ElementRepository.getById(state.elements) }),
+      { create: ElementRepository.create }
     )
   )(Droppable);
 };

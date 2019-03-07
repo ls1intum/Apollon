@@ -8,10 +8,6 @@ import { Point } from '../../domain/geo';
 import { withCanvas, CanvasContext } from '../Canvas';
 import Relationship, { LayoutedRelationship } from '../../domain/Relationship';
 import RelationshipDetails from '../Popups/RelationshipDetailsPopup/RelationshipDetails';
-import {
-  updateRelationship,
-  flipRelationship,
-} from '../../domain/Relationship/actions';
 import { DiagramType } from '../../domain/Diagram';
 
 export class Popup extends Component<Props> {
@@ -22,8 +18,8 @@ export class Popup extends Component<Props> {
   };
 
   private update = (relationship: Relationship) => {
-    this.props.updateRelationship(relationship);
-    this.forceUpdate();
+    // this.props.updateRelationship(relationship);
+    // this.forceUpdate();
   };
 
   render() {
@@ -35,8 +31,8 @@ export class Popup extends Component<Props> {
             diagramType={this.props.diagramType}
             entities={this.props.entities}
             relationship={this.props.element}
-            updateRelationship={this.update}
-            flipRelationship={this.props.flipRelationship}
+            // updateRelationship={this.update}
+            // flipRelationship={this.props.flipRelationship}
           />
         </Content>
         <Arrow />
@@ -55,8 +51,8 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  updateRelationship: typeof updateRelationship;
-  flipRelationship: typeof flipRelationship;
+  // updateRelationship: typeof updateRelationship;
+  // flipRelationship: typeof flipRelationship;
 }
 
 type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -68,6 +64,6 @@ export default compose<ComponentClass<OwnProps>>(
       entities: ElementRepository.read(state),
       diagramType: state.diagram.type,
     }),
-    { updateRelationship, flipRelationship }
+    // { updateRelationship, flipRelationship }
   )
 )(Popup);

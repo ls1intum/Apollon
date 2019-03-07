@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import EntityDetails from "./EntityDetails";
 import Popup from "../Popup";
-import { EntityKind } from "./../../../domain/Element";
+import { EntityKind } from "./../../../index";
 import { Point } from "../../../domain/geo";
 import { UUID } from './../../../domain/utils/uuid';
 import Element, { ElementRepository } from './../../../domain/Element';

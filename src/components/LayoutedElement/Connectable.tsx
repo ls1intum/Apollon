@@ -65,19 +65,19 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       const { element } = this.props;
       const ports: Port[] = [
         {
-          element: element,
+          element: element.id,
           location: 'N',
         },
         {
-          element: element,
+          element: element.id,
           location: 'E',
         },
         {
-          element: element,
+          element: element.id,
           location: 'S',
         },
         {
-          element: element,
+          element: element.id,
           location: 'W',
         },
       ];

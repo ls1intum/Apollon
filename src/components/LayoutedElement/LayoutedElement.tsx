@@ -70,6 +70,7 @@ class LayoutedElement extends Component<Props, State> {
           features.isHoverable)) ||
       (this.props.editorMode === EditorMode.InteractiveElementsView &&
         features.isInteractable);
+    if (!Object.keys(element).length) return null;
     return <Component element={element} interactive={interactive} />;
   }
 }
