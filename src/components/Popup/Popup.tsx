@@ -14,7 +14,13 @@ export class Popup extends Component<Props> {
     const { x, y, width, height } = this.props.element.bounds;
     let position = { x: x + width, y };
     if (this.props.element instanceof Relationship) {
-      position = { x: x + width / 2, y: y + height / 2 - 20 };
+      const targetPoint = this.props.element.path[
+        this.props.element.path.length - 2
+      ];
+      position = {
+        x: targetPoint.x,
+        y: targetPoint.y - 20.
+      };
     }
     return this.props.coordinateSystem.pointToScreen(position.x, position.y);
   };
