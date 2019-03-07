@@ -26,9 +26,9 @@
     "prepare": "yarn build"
   },
   "dependencies": {
-    "react": "16.7.0",
-    "react-dom": "16.7.0",
-    "react-redux": "6.0.0",
+    "react": "16.8.4",
+    "react-dom": "16.8.4",
+    "react-redux": "6.0.1",
     "reduce-reducers": "0.4.3",
     "redux": "4.0.1",
     "redux-saga": "1.0.2",
@@ -38,19 +38,19 @@
     "uuid": "3.3.2"
   },
   "devDependencies": {
-    "@types/react": "16.7.22",
-    "@types/react-dom": "16.0.11",
-    "@types/react-redux": "7.0.1",
+    "@types/react": "16.8.7",
+    "@types/react-dom": "16.8.2",
+    "@types/react-redux": "7.0.2",
     "@types/reduce-reducers": "0.3.0",
-    "@types/styled-components": "4.1.6",
+    "@types/styled-components": "4.1.12",
     "@types/uuid": "3.4.4",
     "prettier": "1.16.4",
-    "ts-essentials": "2.0.2",
+    "ts-essentials": "2.0.3",
     "ts-loader": "5.3.3",
-    "tslint": "5.12.1",
-    "typescript": "3.3.1",
-    "webpack": "4.29.0",
-    "webpack-cli": "3.2.1",
-    "webpack-dev-server": "3.1.14"
+    "tslint": "5.13.1",
+    "typescript": "3.3.3333",
+    "webpack": "4.29.6",
+    "webpack-cli": "3.2.3",
+    "webpack-dev-server": "3.2.1"
   }
 }
