@@ -74,7 +74,7 @@ class RelationshipComponent extends Component<Props> {
           return (
             <svg
               {...bounds}
-              pointerEvents="all"
+              pointerEvents="stroke"
               style={{
                 overflow: 'visible',
                 opacity: this.props.hidden ? 0 : 1,
