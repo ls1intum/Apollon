@@ -11,17 +11,7 @@ import * as Plugins from './plugins';
 
 export class Popup extends Component<Props> {
   private calculatePosition = (): Point => {
-    const { x, y, width, height } = this.props.element.bounds;
-    let position = { x: x + width, y };
-    if (this.props.element instanceof Relationship) {
-      const targetPoint = this.props.element.path[
-        this.props.element.path.length - 2
-      ];
-      position = {
-        x: targetPoint.x,
-        y: targetPoint.y - 20.
-      };
-    }
+    const position = this.props.position;
     return this.props.coordinateSystem.pointToScreen(position.x, position.y);
   };
 
@@ -56,6 +46,10 @@ export class Popup extends Component<Props> {
 
 interface OwnProps {
   element: Element;
+  position: {
+    x: number;
+    y: number;
+  };
 }
 
 interface DispatchProps {
