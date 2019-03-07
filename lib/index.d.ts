@@ -6,6 +6,8 @@ declare module "@ls1intum/apollon" {
         unsubscribeFromSelectionChange(subscriptionId: number): void;
         getState(): State;
         destroy(): void;
+        static layoutDiagram(state: State, layoutOptions: LayoutOptions): LayoutedDiagram;
+        static renderDiagramToSVG(layoutedDiagram: LayoutedDiagram,renderOptions: RenderOptions): RenderedSVG;
     }
 
     export interface ApollonOptions {

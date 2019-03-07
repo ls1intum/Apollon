@@ -17,197 +17,38 @@
         <section>
           <h class="header">Diagram Type</h>
           <div class="dropdown">
-            <select name="diagramType" onChange="exports.onChange(event)">
+            <select name="diagramType" onchange="exports.onChange(event)">
               <option value="CLASS">Class Diagram</option>
               <option value="ACTIVITY">Activity Diagram</option>
             </select>
           </div>
         </section>
         <section>
-          <h>Mode</h>
-          <form onsubmit="changeMode(event)">
-            <label htmlFor="ChangeModeFull">
-              <input
-                type="radio"
-                id="ChangeModeFull"
-                name="mode"
-                value="FULL"
-                checked
-              />
-              Full Mode
-            </label>
-            <br />
-            <label htmlFor="ChangeModeModelingOnly">
-              <input
-                type="radio"
-                id="ChangeModeModelingOnly"
-                name="mode"
-                value="MODELING_ONLY"
-              />
-              Modeling Only Mode
-            </label>
-            <br />
-            <label htmlFor="ChangeModeReadOnly">
-              <input
-                type="radio"
-                id="ChangeModeReadOnly"
-                name="mode"
-                value="READ_ONLY"
-              />
-              Read Only Mode
-            </label>
-            <div><button type="submit">Change</button></div>
-          </form>
+          <h class="header">Mode</h>
+          <div class="dropdown">
+            <select name="mode" onchange="exports.onChange(event)">
+              <option value="FULL">Full Mode</option>
+              <option value="MODELING_ONLY">Modeling Only Mode</option>
+              <option value="READ_ONLY">Read Only Mode</option>
+            </select>
+          </div>
         </section>
         <section>
-          <h>Export</h>
-          <form onsubmit="exportData(event)">
-            <label htmlFor="ExportFileTypeSVG">
-              <input
-                type="radio"
-                id="ExportFileTypeSVG"
-                name="fileType"
-                value="svg"
-                checked
-              />
-              SVG
-            </label>
-            <br />
-            <label htmlFor="ExportFileTypePNG">
-              <input
-                type="radio"
-                id="ExportFileTypePNG"
-                name="fileType"
-                value="png"
-              />
-              PNG
-            </label>
-            <div><button type="submit">Export</button></div>
-          </form>
-        </section>
-        <section>
-          <h>Local State</h>
+          <h class="header">Export</h>
           <div class="switch">
-            <button onclick="saveState()">Save</button>
-            <button onclick="clearState()">Clear</button>
+            <button onclick="exports.draw(event)">All</button>
+          </div>
+        </section>
+        <section>
+          <h class="header">State</h>
+          <div class="switch">
+            <button onclick="exports.save(event)">Save</button>
+            <button onclick="exports.clear(event)">Clear</button>
           </div>
         </section>
       </aside>
     </div>
 
     <script src="index.js"></script>
-    <script>
-      {
-        // console.log(exports);
-        // var editor;
-        // var options = {
-        //   initialState: JSON.parse(window.localStorage.getItem('apollon')),
-        //   diagramType: 'CLASS',
-        //   mode: 'FULL',
-        //   theme: {
-        //     fontFamily:
-        //       '-apple-system, BlinkMacSystemFont, HelveticaNeue, Arial, sans-serif',
-        //   },
-        // };
-        // var container = document.getElementById('apollon');
-
-        // function initialize(container, options) {
-        //   editor = new ApollonEditor(container, options);
-        // }
-
-        // function deinitialize() {
-        //   editor.destroy();
-        // }
-
-        // function saveState() {
-        //   var state = editor.getState();
-        //   localStorage.setItem('apollon', JSON.stringify(state));
-        //   options.initialState = state;
-        // }
-
-        // function clearState() {
-        //   localStorage.removeItem('apollon');
-        //   options.initialState = undefined;
-        // }
-
-        // function changeMode(event) {
-        //   event.preventDefault();
-        //   var mode = event.target.elements.mode.value;
-        //   options.mode = mode;
-        //   deinitialize();
-        //   initialize(container, options);
-        // }
-
-        // function changeDiagramType(event) {
-        //   event.preventDefault();
-        //   var diagramType = event.target.elements.diagramType.value;
-        //   options.diagramType = diagramType;
-        //   deinitialize();
-        //   initialize(container, options);
-        // }
-
-        // function exportData(event) {
-        //   event.preventDefault();
-        //   var fileType = event.target.elements.fileType.value;
-        //   var state = editor.getState();
-        //   var layoutedDiagram = ApollonEditor.layoutDiagram(state, {
-        //     outerPadding: 50,
-        //   });
-        //   var svgBlobURL = createSVGBlobURL(layoutedDiagram);
-
-        //   if (fileType === 'png') {
-        //     var image = new Image();
-        //     image.src = svgBlobURL;
-
-        //     image.onload = () => {
-        //       var canvas = document.createElement('canvas');
-        //       var { width, height } = layoutedDiagram.size;
-        //       canvas.style.width = `${width}px`;
-        //       canvas.style.height = `${height}px`;
-
-        //       var scale = 3;
-        //       canvas.width = width * scale;
-        //       canvas.height = height * scale;
-
-        //       var context = canvas.getContext('2d');
-        //       context.fillRect(100, 100, 100, 100);
-        //       context.scale(scale, scale);
-        //       context.drawImage(image, 0, 0);
-
-        //       var fileUrl = canvas.toDataURL('image/png');
-        //       var win = window.open();
-        //       win.document.write(
-        //         '<iframe src="' +
-        //           fileUrl +
-        //           '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>'
-        //       );
-        //     };
-
-        //     image.onerror = error => {
-        //       alert(error);
-        //       console.error(error);
-        //     };
-        //   } else {
-        //     window.open(svgBlobURL);
-        //   }
-        // }
-
-        // function createSVGBlobURL(layoutedDiagram) {
-        //   var renderOptions = {
-        //     shouldRenderElement: id => true,
-        //     fontFamily: options.theme.fontFamily,
-        //   };
-
-        //   var { svg } = ApollonEditor.renderDiagramToSVG(
-        //     layoutedDiagram,
-        //     renderOptions
-        //   );
-        //   var svgBlob = new Blob([svg], { type: 'image/svg+xml' });
-        //   return URL.createObjectURL(svgBlob);
-        // }
-
-        // initialize(container, options);
-      }
-    </script>
   </body>
 </html>
