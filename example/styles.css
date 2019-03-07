@@ -1,8 +1,3 @@
-html,
-body {
-  margin: 0;
-  padding: 0;
-}
 .container {
   display: flex;
   height: calc(100vh - 40px);
@@ -10,7 +5,6 @@ body {
   margin: 20px;
 }
 main {
-  box-sizing: border-box;
   width: calc(100% - 200px);
 }
 aside.sidebar {
@@ -20,4 +14,56 @@ aside.sidebar {
 .switch {
   display: flex;
   border-radius: 3px;
+}
+
+/**
+ * Header
+ */
+.header {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/**
+ * Dropdown
+ */
+.dropdown {
+  position: relative;
+}
+.dropdown select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: none;
+  border-radius: 0;
+  font-size: 1em;
+  width: 100%;
+}
+.dropdown select {
+  width: 100%;
+  background: white;
+  color: #212529;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0.375rem 0.75rem;
+  margin: 0;
+  line-height: 1.5;
+  border-radius: 0.25rem;
+}
+.dropdown::before {
+  content: '▾';
+  font-size: 1rem;
+  position: absolute;
+  right: 0.75rem;
+  line-height: 1.5;
+  top: 0.375rem;
+  pointer-events: none;
+}
+.dropdown select::-ms-expand {
+  display: none;
+}
+.dropdown select:focus::-ms-value {
+  background-color: transparent;
 }
