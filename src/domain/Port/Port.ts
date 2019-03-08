@@ -11,7 +11,7 @@ class Port {
     location: Port['location']
   ): { point: { x: number; y: number }; offset: { x: number; y: number } } {
     let { x, y, width, height } = element.bounds;
-    const offset = 20;
+    const offset = 40;
     switch (location) {
       case 'N':
         return {

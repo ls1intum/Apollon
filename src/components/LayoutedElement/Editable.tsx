@@ -17,11 +17,12 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
       event.stopPropagation();
       let position = { x: 0, y: 0 };
       if (this.props.element instanceof Relationship) {
+        const { bounds } = this.props.element;
         const path = (this.props as any)['path'] as Point[];
         const targetPoint = path[path.length - 2];
         position = {
-          x: targetPoint.x,
-          y: targetPoint.y - 20,
+          x: targetPoint.x + bounds.x,
+          y: targetPoint.y + bounds.y - 20,
         };
       } else {
         const { x, y, width, height } = this.props.element.bounds;

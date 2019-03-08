@@ -3,7 +3,9 @@ import Port from './../../domain/Port';
 
 interface ConnectContext {
   isDragging: boolean;
-  onStartConnect: (port: Port) => (event: MouseEvent) => void;
+  onStartConnect: (
+    port: Port
+  ) => (event: MouseEvent) => Promise<{ source: Port; target: Port }>;
   onEndConnect: (port: Port) => (event: MouseEvent) => void;
 }
 

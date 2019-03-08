@@ -15,16 +15,22 @@ import BidirectionalAssociation from '../../domain/plugins/class/BidirectionalAs
 class ConnectLayer extends Component<Props, State> {
   state: State = {
     start: null,
+    resolve: () => {},
+    reject: () => {},
   };
 
-  private onStartConnect = (port: Port) => (event: React.MouseEvent) => {
+  private onStartConnect = (port: Port) => (event: React.MouseEvent): Promise<{ source: Port; target: Port }> => {
     document.addEventListener('mouseup', this.cancel, {
       once: true,
       passive: true,
     });
 
-    this.setState({
-      start: port,
+    return new Promise<{ source: Port; target: Port }>((resolve, reject) => {
+      this.setState({
+        start: port,
+        resolve,
+        reject,
+      });
     });
   };
 
@@ -33,21 +39,13 @@ class ConnectLayer extends Component<Props, State> {
 
     if (!start || start === port) return;
 
-    const edge = (location: Port['location']): RectEdge => {
-      switch (location) {
-        case 'N':
-          return 'TOP';
-        case 'E':
-          return 'RIGHT';
-        case 'S':
-          return 'BOTTOM';
-        case 'W':
-          return 'LEFT';
-      }
-    };
-
-    const relationship = new BidirectionalAssociation('Association', start, port);
-    this.props.create(relationship)
+    // const relationship = new BidirectionalAssociation(
+    //   'Association',
+    //   start,
+    //   port
+    // );
+    this.state.resolve({ source: start, target: port });
+    // this.props.create(relationship);
     // const relationship: Relationship = {
     //   name: 'Relationship',
     //   kind:
@@ -92,7 +90,8 @@ class ConnectLayer extends Component<Props, State> {
   };
 
   private cancel = (event: MouseEvent) => {
-    this.setState({ start: null });
+    this.state.reject();
+    this.setState({ start: null, resolve: () => {}, reject: () => {} });
   };
 
   render() {
@@ -124,6 +123,8 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
   start: Port | null;
+  resolve: (value?: { source: Port; target: Port }) => void;
+  reject: (reason?: any) => void;
 }
 
 export default connect(

@@ -26,6 +26,17 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
         },
       };
     }
+    case ActionTypes.CONNECT: {
+      const { payload } = action;
+      return {
+        ...state,
+        [payload.id]: {
+          ...state[payload.id],
+          ...(payload.source && { source: payload.source }),
+          ...(payload.target && { target: payload.target }),
+        },
+      };
+    }
     default:
       return state;
   }
