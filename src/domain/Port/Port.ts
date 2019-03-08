@@ -1,4 +1,4 @@
-import Element from './../Element';
+import Boundary from '../geo/Boundary';
 
 interface Port {
   element: string;
@@ -7,10 +7,10 @@ interface Port {
 
 class Port {
   static position(
-    element: Element,
+    bounds: Boundary,
     location: Port['location']
   ): { point: { x: number; y: number }; offset: { x: number; y: number } } {
-    let { x, y, width, height } = element.bounds;
+    let { x, y, width, height } = bounds;
     const offset = 40;
     switch (location) {
       case 'N':

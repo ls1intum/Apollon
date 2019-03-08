@@ -18,6 +18,7 @@ export interface RedrawAction extends ReduxAction<ActionTypes.REDRAW> {
   payload: {
     id: string;
     path: { x: number; y: number }[];
+    bounds: { x: number; y: number; width: number; height: number };
   };
 }
 

@@ -61,7 +61,7 @@ const reconnectable = (WrappedComponent: typeof RelationshipComponent) => {
     };
 
     render() {
-      const { path } = this.props;
+      const { path } = this.props.element;
       const handleStart = this.composePath(path[0], path[1]);
       const handleEnd = this.composePath(
         path[path.length - 1],

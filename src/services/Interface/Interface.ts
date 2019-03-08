@@ -415,11 +415,11 @@ export const externalToRelationship = (
     const sourceElement = elements.find(e => e.id === source.element)!;
     const targetElement = elements.find(e => e.id === target.element)!;
     const { point: start, offset: startOffset } = Port.position(
-      sourceElement,
+      sourceElement.bounds,
       source.location
     );
     const { point: end, offset: endOffset } = Port.position(
-      targetElement,
+      targetElement.bounds,
       target.location
     );
     path = [start, startOffset, endOffset, end];

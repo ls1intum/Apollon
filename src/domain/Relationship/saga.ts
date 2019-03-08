@@ -1,6 +1,6 @@
 import { takeLatest, put, all, select } from 'redux-saga/effects';
 import { State } from './../../components/Store';
-import { ElementRepository, ElementActionTypes } from './../Element';
+import Element, { ElementRepository, ElementActionTypes } from './../Element';
 import RelationshipRepository from './repository';
 import {
   RedrawAction,
@@ -11,6 +11,7 @@ import {
 import { MoveAction, DeleteAction } from '../Element/types';
 import Port from '../Port';
 import Relationship from '.';
+import Boundary from '../geo/Boundary';
 
 function* saga() {
   yield takeLatest(ActionTypes.CREATE, handleRelationshipCreation);
@@ -46,8 +47,27 @@ function* recalc(id: string) {
   const { elements }: State = yield select();
   const relationship = RelationshipRepository.getById(elements)(id);
 
-  const source = elements[relationship.source.element];
-  const target = elements[relationship.target.element];
+  let current: Element = elements[relationship.source.element];
+  let source: Boundary = { ...current.bounds };
+  while (current.owner) {
+    current = elements[current.owner];
+    source = {
+      ...source,
+      x: source.x + current.bounds.x,
+      y: source.y + current.bounds.y,
+    };
+  }
+
+  current = elements[relationship.target.element];
+  let target: Boundary = { ...current.bounds };
+  while (current.owner) {
+    current = elements[current.owner];
+    target = {
+      ...target,
+      x: target.x + current.bounds.x,
+      y: target.y + current.bounds.y,
+    };
+  }
 
   const { point: start, offset: startOffset } = Port.position(
     source,
@@ -57,11 +77,19 @@ function* recalc(id: string) {
     target,
     relationship.target.location
   );
-  const path = [start, startOffset, endOffset, end];
+  let path = [start, startOffset, endOffset, end];
+
+  const x = Math.min(...path.map(point => point.x));
+  const y = Math.min(...path.map(point => point.y));
+  const width = Math.max(...path.map(point => point.x)) - x;
+  const height = Math.max(...path.map(point => point.y)) - y;
+  const bounds = { x, y, width, height };
+
+  path = path.map(point => ({ x: point.x - x, y: point.y - y }));
 
   yield put<RedrawAction>({
     type: ActionTypes.REDRAW,
-    payload: { id: relationship.id, path },
+    payload: { id: relationship.id, path, bounds },
   });
 }
 

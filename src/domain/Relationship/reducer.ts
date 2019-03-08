@@ -23,6 +23,7 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
         [payload.id]: {
           ...state[payload.id],
           path: payload.path,
+          bounds: payload.bounds,
         },
       };
     }
