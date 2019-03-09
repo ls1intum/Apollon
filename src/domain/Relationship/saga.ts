@@ -30,15 +30,28 @@ function* handleRelationshipConnect({ payload }: ConnectAction) {
 }
 
 function* handleElementMove({ payload }: MoveAction) {
+  if (!payload.id) return;
+
   const { elements }: State = yield select();
-  for (const id in elements) {
-    const relationship = RelationshipRepository.getById(elements)(id);
-    if (relationship.base !== 'Relationship') continue;
-    if (
-      relationship.source.element === payload.id ||
-      relationship.target.element === payload.id
-    ) {
-      yield recalc(relationship.id);
+  const relationships = RelationshipRepository.read(elements);
+
+  loop: for (const relationship of relationships) {
+    let source: string | null = relationship.source.element;
+    while (source) {
+      if (source === payload.id) {
+        yield recalc(relationship.id);
+        continue loop;
+      }
+      source = elements[source].owner;
+    }
+    let target: string | null = relationship.target.element;
+    console.log('check target', target);
+    while (target) {
+      if (target === payload.id) {
+        yield recalc(relationship.id);
+        continue loop;
+      }
+      target = elements[target].owner;
     }
   }
 }

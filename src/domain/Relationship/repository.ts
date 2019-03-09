@@ -25,6 +25,16 @@ class Repository {
     if (!Object.keys(relationship).length) return relationship as Relationship;
     return Object.setPrototypeOf(relationship, Relationship.prototype);
   };
+
+  static read = (state: State): Relationship[] => {
+    return Object.values(state)
+      .filter(element => element.base === 'Relationship')
+      .map(relationship =>
+        Repository.getById({ [relationship.id]: state[relationship.id] })(
+          relationship.id
+        )
+      );
+  };
 }
 
 export default Repository;
