@@ -68,7 +68,10 @@ declare module "@ls1intum/apollon" {
         ActivityObject = "ObjectNode",
         ActivityMergeNode = "MergeNode",
         ActivityForkNode = "ForkNode",
-        ActivityForkNodeHorizontal = "ForkNodeHorizontal"
+        ActivityForkNodeHorizontal = "ForkNodeHorizontal",
+        UseCase = 'UseCase',
+        Actor = 'Actor',
+        System = 'System',
     }
 
     export interface EntityMember {

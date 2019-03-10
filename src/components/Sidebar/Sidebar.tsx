@@ -30,7 +30,7 @@ import ObjectNode from './../../domain/plugins/activity/ObjectNode';
 import MergeNode from './../../domain/plugins/activity/MergeNode';
 import ForkNode from './../../domain/plugins/activity/ForkNode';
 import { CanvasProvider } from '../Canvas/CanvasContext';
-import { Method } from './../../domain/plugins';
+import { Method, UseCase, Actor, System } from './../../domain/plugins';
 
 class Sidebar extends Component<Props, State> {
   state: State = {
@@ -62,6 +62,10 @@ class Sidebar extends Component<Props, State> {
           ],
         });
         break;
+      case DiagramType.UseCaseDiagram:
+        this.setState({
+          previews: [new UseCase('UseCase'), new Actor('Actor'), new System('System')],
+        })
     }
   };
 

@@ -6,7 +6,7 @@ import { ApollonMode } from '../src/services/EditorService';
 const container = document.getElementById('apollon')!;
 let options: ApollonOptions = {
   initialState: JSON.parse(window.localStorage.getItem('apollon')!),
-  diagramType: DiagramType.ClassDiagram,
+  diagramType: DiagramType.UseCaseDiagram, // DiagramType.ClassDiagram,
   mode: ApollonMode.Full,
   theme: {
     fontFamily:

@@ -31,6 +31,9 @@ export enum EntityKind {
   ActivityMergeNode = 'ACTIVITY_MERGE_NODE',
   ActivityForkNode = 'ACTIVITY_FORK_NODE',
   ActivityForkNodeHorizontal = 'ACTIVITY_FORK_NODE_HORIZONTAL',
+  UseCase = 'UseCase',
+  Actor = 'Actor',
+  System = 'System',
 }
 
 export interface EntityMember {

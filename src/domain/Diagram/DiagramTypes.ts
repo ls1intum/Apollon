@@ -4,6 +4,7 @@ import Omit from '../utils/Omit';
 export const enum DiagramType {
   ClassDiagram = 'CLASS',
   ActivityDiagram = 'ACTIVITY',
+  UseCaseDiagram = 'USECASE',
 }
 
 export const enum ActionTypes {}
