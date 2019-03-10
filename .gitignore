@@ -1,3 +1,6 @@
 node_modules/
 lib/*
 !lib/index.d.ts
+dist
+dev
+.idea
