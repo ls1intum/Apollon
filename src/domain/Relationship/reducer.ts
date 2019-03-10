@@ -6,16 +6,6 @@ const initialState: State = {};
 
 const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
   switch (action.type) {
-    case ActionTypes.CREATE: {
-      const { payload } = action;
-      return {
-        ...state,
-        [payload.relationship.id]: {
-          ...payload.relationship,
-          bounds: payload.relationship.bounds,
-        },
-      };
-    }
     case ActionTypes.REDRAW: {
       const { payload } = action;
       return {

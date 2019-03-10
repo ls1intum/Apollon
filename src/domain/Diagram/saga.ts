@@ -2,33 +2,31 @@ import { take, takeLatest, put, select } from 'redux-saga/effects';
 import { State } from './../../components/Store';
 import { AnyAction } from 'redux';
 import { ElementActionTypes } from '../Element';
-import { RelationshipActionTypes } from '../Relationship';
+import Relationship, { RelationshipActionTypes } from '../Relationship';
 import {
   CreateAction as ElementCreateAction,
   SelectAction,
 } from '../Element/types';
-import { CreateAction as RelationshipCreateAction } from '../Relationship/types';
 import { AddElementAction, ActionTypes, AddRelationshipAction } from './types';
 
 function* saga() {
   yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
-  yield takeLatest(RelationshipActionTypes.CREATE, handleRelationshipCreation);
   yield takeLatest(ElementActionTypes.SELECT, handleElementSelection);
 }
 
 function* handleElementCreation({ payload }: ElementCreateAction) {
-  if (payload.element.owner) return;
-  yield put<AddElementAction>({
-    type: ActionTypes.ADD_ELEMENT,
-    payload: { id: payload.element.id },
-  });
-}
-
-function* handleRelationshipCreation({ payload }: RelationshipCreateAction) {
-  yield put<AddRelationshipAction>({
-    type: ActionTypes.ADD_RELATIONSHIP,
-    payload: { id: payload.relationship.id },
-  });
+  if (payload.element instanceof Relationship) {
+    yield put<AddRelationshipAction>({
+      type: ActionTypes.ADD_RELATIONSHIP,
+      payload: { id: payload.element.id },
+    });
+  } else {
+    if (payload.element.owner) return;
+    yield put<AddElementAction>({
+      type: ActionTypes.ADD_ELEMENT,
+      payload: { id: payload.element.id },
+    });
+  }
 }
 
 function* handleElementSelection({ payload }: SelectAction) {

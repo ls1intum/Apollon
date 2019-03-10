@@ -131,7 +131,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface DispatchProps {
-    create: typeof RelationshipRepository.create;
+    create: typeof ElementRepository.create;
   }
 
   type Props = OwnProps & DispatchProps;
@@ -139,7 +139,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
   return compose<ComponentClass<OwnProps>>(
     connect(
       null,
-      { create: RelationshipRepository.create }
+      { create: ElementRepository.create }
     )
   )(Selectable);
 };

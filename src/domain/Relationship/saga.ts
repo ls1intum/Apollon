@@ -2,19 +2,14 @@ import { takeLatest, put, all, select } from 'redux-saga/effects';
 import { State } from './../../components/Store';
 import Element, { ElementRepository, ElementActionTypes } from './../Element';
 import RelationshipRepository from './repository';
-import {
-  RedrawAction,
-  ActionTypes,
-  CreateAction,
-  ConnectAction,
-} from './types';
-import { MoveAction, DeleteAction } from '../Element/types';
+import { RedrawAction, ActionTypes, ConnectAction } from './types';
+import { MoveAction, DeleteAction, CreateAction } from '../Element/types';
 import Port from '../Port';
 import Relationship from '.';
 import Boundary from '../geo/Boundary';
 
 function* saga() {
-  yield takeLatest(ActionTypes.CREATE, handleRelationshipCreation);
+  yield takeLatest(ElementActionTypes.CREATE, handleRelationshipCreation);
   yield takeLatest(ActionTypes.CONNECT, handleRelationshipConnect);
   yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementMove);
@@ -22,7 +17,8 @@ function* saga() {
 }
 
 function* handleRelationshipCreation({ payload }: CreateAction) {
-  yield recalc(payload.relationship.id);
+  if (!(payload.element instanceof Relationship)) return;
+  yield recalc(payload.element.id);
 }
 
 function* handleRelationshipConnect({ payload }: ConnectAction) {

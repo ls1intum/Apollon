@@ -19,7 +19,9 @@ class ConnectLayer extends Component<Props, State> {
     reject: () => {},
   };
 
-  private onStartConnect = (port: Port) => (event: React.MouseEvent): Promise<{ source: Port; target: Port }> => {
+  private onStartConnect = (port: Port) => (
+    event: React.MouseEvent
+  ): Promise<{ source: Port; target: Port }> => {
     document.addEventListener('mouseup', this.cancel, {
       once: true,
       passive: true,
@@ -115,9 +117,7 @@ interface StateProps {
   diagramType: DiagramType;
 }
 
-interface DispatchProps {
-  create: typeof RelationshipRepository.create;
-}
+interface DispatchProps {}
 
 type Props = OwnProps & StateProps & DispatchProps;
 
@@ -130,6 +130,5 @@ interface State {
 export default connect(
   (state: ReduxState): StateProps => ({
     diagramType: state.diagram.type,
-  }),
-  { create: RelationshipRepository.create }
+  })
 )(ConnectLayer);
