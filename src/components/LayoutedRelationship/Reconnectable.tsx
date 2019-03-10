@@ -82,6 +82,7 @@ const reconnectable = (WrappedComponent: typeof RelationshipComponent) => {
                       y2={handleStart[1].y}
                       strokeWidth={15}
                       onMouseDown={this.onMouseDown('target', context)}
+                      style={{ cursor: 'move' }}
                     />
                     <line
                       x1={handleEnd[0].x}
@@ -90,6 +91,7 @@ const reconnectable = (WrappedComponent: typeof RelationshipComponent) => {
                       y2={handleEnd[1].y}
                       strokeWidth={15}
                       onMouseDown={this.onMouseDown('source', context)}
+                      style={{ cursor: 'move' }}
                     />
                   </g>
                 </WrappedComponent>
