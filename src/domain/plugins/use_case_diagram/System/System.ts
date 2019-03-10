@@ -1,8 +1,8 @@
 import Container from '../../../Container';
-import { EntityKind } from '../../../../services/Interface/ExternalState';
+import { ElementKind } from '..';
 
 class System extends Container {
-  kind = EntityKind.System;
+  kind = ElementKind.System;
 }
 
 export default System;

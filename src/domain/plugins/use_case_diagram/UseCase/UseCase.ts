@@ -1,8 +1,8 @@
 import Element from '../../../Element';
-import { EntityKind } from '../../../../services/Interface/ExternalState';
+import { ElementKind } from '..';
 
 class UseCase extends Element {
-  kind = EntityKind.UseCase;
+  kind = ElementKind.UseCase;
 }
 
 export default UseCase;

@@ -1,9 +1,9 @@
 import Element from '../../../Element';
-import { EntityKind } from '../../../../services/Interface/ExternalState';
 import Boundary from '../../../geo/Boundary';
+import { ElementKind } from '..';
 
 class Actor extends Element {
-  kind = EntityKind.Actor;
+  kind = ElementKind.Actor;
   bounds: Boundary = { ...this.bounds, width: 90, height: 140 }
 }
 

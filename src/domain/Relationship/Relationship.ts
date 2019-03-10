@@ -4,7 +4,6 @@ import Boundary from '../geo/Boundary';
 
 abstract class Relationship extends Element {
   readonly base: string = 'Relationship';
-  kind = 'Relationship';
 
   sourceRole: string = '';
   sourceMultiplicity: string = '';
