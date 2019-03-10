@@ -1,4 +1,4 @@
-import { Reducer, AnyAction } from 'redux';
+import { Reducer } from 'redux';
 import Diagram from './Diagram';
 import { DiagramType, State, Actions, ActionTypes } from './types';
 

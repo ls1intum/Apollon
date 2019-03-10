@@ -35,7 +35,7 @@ const reconnectable = (WrappedComponent: typeof RelationshipComponent) => {
 
     private start = () => {
       this.setState({ isReconnecting: true });
-    }
+    };
 
     private onMouseDown = (
       position: 'source' | 'target',

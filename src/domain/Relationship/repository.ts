@@ -1,17 +1,9 @@
-import { ActionCreator } from 'redux';
 import Relationship from './Relationship';
-import { CreateAction, ActionTypes, ConnectAction } from './types';
+import { ActionTypes, ConnectAction } from './types';
 import { State } from '../Element/types';
 import Port from '../Port';
 
 class Repository {
-  static create: ActionCreator<CreateAction> = (
-    relationship: Relationship
-  ) => ({
-    type: ActionTypes.CREATE,
-    payload: { relationship },
-  });
-
   static connect = (
     id: string,
     { source, target }: { source?: Port; target?: Port }

@@ -1,16 +1,7 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
 import ConnectContext, { ConnectProvider } from './ConnectContext';
-import Port from './../../domain/Port';
-import Relationship, {
-  RelationshipRepository,
-  RelationshipKind,
-  RectEdge,
-} from '../../domain/Relationship';
+import Port, { Connection } from './../../domain/Port';
 import RelationshipPreview from './RelationshipPreview';
-import { DiagramType } from '../../domain/Diagram';
-import BidirectionalAssociation from '../../domain/plugins/class/BidirectionalAssociation';
 
 class ConnectLayer extends Component<Props, State> {
   state: State = {
@@ -19,79 +10,26 @@ class ConnectLayer extends Component<Props, State> {
     reject: () => {},
   };
 
-  private onStartConnect = (port: Port) => (
-    event: React.MouseEvent
-  ): Promise<{ source: Port; target: Port }> => {
+  private onStartConnect = (port: Port) => (): Promise<Connection> => {
     document.addEventListener('mouseup', this.cancel, {
       once: true,
       passive: true,
     });
 
-    return new Promise<{ source: Port; target: Port }>((resolve, reject) => {
-      this.setState({
-        start: port,
-        resolve,
-        reject,
-      });
-    });
+    return new Promise<Connection>((resolve, reject) =>
+      this.setState({ start: port, resolve, reject })
+    );
   };
 
-  private onEndConnect = (port: Port) => (event: React.MouseEvent) => {
+  private onEndConnect = (port: Port) => () => {
     const { start } = this.state;
 
     if (!start || start === port) return;
 
-    // const relationship = new BidirectionalAssociation(
-    //   'Association',
-    //   start,
-    //   port
-    // );
     this.state.resolve({ source: start, target: port });
-    // this.props.create(relationship);
-    // const relationship: Relationship = {
-    //   name: 'Relationship',
-    //   kind:
-    //     this.props.diagramType === DiagramType.ClassDiagram
-    //       ? RelationshipKind.AssociationBidirectional
-    //       : RelationshipKind.ActivityControlFlow,
-    //   source: {
-    //     entityId: start.element.id,
-    //     multiplicity: null,
-    //     role: null,
-    //     edge: edge(start.location),
-    //     edgeOffset: 0.5,
-    //   },
-    //   target: {
-    //     entityId: port.element.id,
-    //     multiplicity: null,
-    //     role: null,
-    //     edge: edge(port.location),
-    //     edgeOffset: 0.5,
-    //   },
-    //   straightLine: false,
-    // };
-    // this.props.create(
-    //   this.props.diagramType === DiagramType.ClassDiagram
-    //     ? RelationshipKind.AssociationBidirectional
-    //     : RelationshipKind.ActivityControlFlow,
-    //   {
-    //     entityId: start.element.id,
-    //     multiplicity: null,
-    //     role: null,
-    //     edge: edge(start.location),
-    //     edgeOffset: 0.5,
-    //   },
-    //   {
-    //     entityId: port.element.id,
-    //     multiplicity: null,
-    //     role: null,
-    //     edge: edge(port.location),
-    //     edgeOffset: 0.5,
-    //   }
-    // );
   };
 
-  private cancel = (event: MouseEvent) => {
+  private cancel = () => {
     this.state.reject();
     this.setState({ start: null, resolve: () => {}, reject: () => {} });
   };
@@ -111,24 +49,12 @@ class ConnectLayer extends Component<Props, State> {
   }
 }
 
-interface OwnProps {}
-
-interface StateProps {
-  diagramType: DiagramType;
-}
-
-interface DispatchProps {}
-
-type Props = OwnProps & StateProps & DispatchProps;
+interface Props {}
 
 interface State {
   start: Port | null;
-  resolve: (value?: { source: Port; target: Port }) => void;
+  resolve: (value?: Connection) => void;
   reject: (reason?: any) => void;
 }
 
-export default connect(
-  (state: ReduxState): StateProps => ({
-    diagramType: state.diagram.type,
-  })
-)(ConnectLayer);
+export default ConnectLayer;

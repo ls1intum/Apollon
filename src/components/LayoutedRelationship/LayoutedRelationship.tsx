@@ -15,7 +15,6 @@ import selectable from './../LayoutedElement/Selectable';
 import editable from './../LayoutedElement/Editable';
 import interactable from './../LayoutedElement/Interactable';
 import reconnectable from './Reconnectable';
-import Element, { ElementRepository } from '../../domain/Element';
 import { EditorMode, ApollonMode } from '../../services/EditorService';
 
 class LayoutedRelationship extends Component<Props> {
@@ -66,17 +65,17 @@ interface OwnProps {
 }
 
 interface StateProps {
-  getElementById: (id: string) => Element;
   getById: (id: string) => Relationship;
   editorMode: EditorMode;
   apollonMode: ApollonMode;
 }
 
-type Props = OwnProps & StateProps;
+interface DispatchProps {}
 
-export default connect(
-  (state: ReduxState): StateProps => ({
-    getElementById: ElementRepository.getById(state.elements),
+type Props = OwnProps & StateProps & DispatchProps;
+
+export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+  state => ({
     getById: RelationshipRepository.getById(state.elements),
     editorMode: state.editor.editorMode,
     apollonMode: state.editor.mode,

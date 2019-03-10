@@ -4,14 +4,6 @@ import { Relationship as ExternalRelationship, RelationshipKind } from '../../se
 
 export type RectEdge = 'TOP' | 'LEFT' | 'RIGHT' | 'BOTTOM';
 
-// export interface Relationship extends Element {
-//   kind: RelationshipKind;
-//   source: RelationshipEnd;
-//   target: RelationshipEnd;
-//   straightLine: boolean;
-// }
-// export class Relationship {}
-
 import Relationship from './Relationship';
 
 export default Relationship;

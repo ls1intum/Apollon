@@ -1,18 +1,13 @@
 import React, { Component } from 'react';
 import Relationship from '../../domain/Relationship';
-import * as Plugins from './../../domain/plugins';
-import { Point } from '../../domain/geo';
-import Boundary from '../../domain/geo/Boundary';
 import { CanvasConsumer } from '../Canvas/CanvasContext';
+import * as Plugins from './../../domain/plugins';
 
 class RelationshipComponent extends Component<Props> {
   static defaultProps = {
     disabled: false,
     interactive: false,
     hidden: false,
-    selected: false,
-    moving: false,
-    resizing: false,
     interactable: false,
   };
 
@@ -42,12 +37,6 @@ class RelationshipComponent extends Component<Props> {
                 opacity: this.props.hidden ? 0 : 1,
               }}
             >
-              <rect
-                width={bounds.width}
-                height={bounds.height}
-                fill="red"
-                fillOpacity={0.3}
-              />
               <polyline
                 points={points}
                 stroke={!this.props.interactable ? '#0064ff' : '#00dc00'}
@@ -74,8 +63,6 @@ export interface OwnProps {
   disabled: boolean;
   interactive: boolean;
   hidden: boolean;
-  moving: boolean;
-  resizing: boolean;
   interactable: boolean;
 }
 
