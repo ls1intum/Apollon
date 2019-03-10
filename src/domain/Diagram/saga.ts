@@ -1,17 +1,24 @@
-import { take, takeLatest, put, select } from 'redux-saga/effects';
+import { takeLatest, put, select } from 'redux-saga/effects';
 import { State } from './../../components/Store';
-import { AnyAction } from 'redux';
 import { ElementActionTypes } from '../Element';
-import Relationship, { RelationshipActionTypes } from '../Relationship';
+import Relationship from '../Relationship';
 import {
   CreateAction as ElementCreateAction,
   SelectAction,
+  DeleteAction,
 } from '../Element/types';
-import { AddElementAction, ActionTypes, AddRelationshipAction } from './types';
+import {
+  AddElementAction,
+  ActionTypes,
+  AddRelationshipAction,
+  DeleteElementAction,
+  DeleteRelationshipAction,
+} from './types';
 
 function* saga() {
   yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.SELECT, handleElementSelection);
+  yield takeLatest(ElementActionTypes.DELETE, handleElementDeletion);
 }
 
 function* handleElementCreation({ payload }: ElementCreateAction) {
@@ -47,9 +54,22 @@ function* handleElementSelection({ payload }: SelectAction) {
   }
 }
 
-function* handleDelete() {
-  const action: AnyAction = yield take('@@element/DELETE');
-  yield put({ type: '@@diagram/DELETE', id: action.payload.id });
+function* handleElementDeletion({ payload }: DeleteAction) {
+  if (!payload.id) return;
+
+  const { diagram }: State = yield select();
+
+  if (diagram.ownedElements.includes(payload.id)) {
+    yield put<DeleteElementAction>({
+      type: ActionTypes.DELETE_ELEMENT,
+      payload: { id: payload.id },
+    });
+  } else if (diagram.ownedRelationships.includes(payload.id)) {
+    yield put<DeleteRelationshipAction>({
+      type: ActionTypes.DELETE_RELATIONSHIP,
+      payload: { id: payload.id },
+    });
+  }
 }
 
 export default saga;
