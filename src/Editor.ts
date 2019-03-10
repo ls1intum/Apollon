@@ -75,10 +75,10 @@ class Editor {
     const { elements } = this.store.getState();
     const selection: ElementSelection = {
       entityIds: Object.keys(elements).filter(
-        id => elements[id].selected && elements[id].name !== 'Relationship'
+        id => elements[id].selected && elements[id].base !== 'Relationship'
       ),
       relationshipIds: Object.keys(elements).filter(
-        id => elements[id].selected && elements[id].name === 'Relationship'
+        id => elements[id].selected && elements[id].base === 'Relationship'
       ),
     };
 

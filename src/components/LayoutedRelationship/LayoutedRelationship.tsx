@@ -27,7 +27,7 @@ class LayoutedRelationship extends Component<Props> {
     let decorators: DecoratorType[] = [];
 
     if (apollonMode === ApollonMode.ReadOnly) {
-      decorators = [selectable];
+      decorators = [selectable, hoverable];
     } else if (editorMode === EditorMode.InteractiveElementsView) {
       decorators = [interactable];
     } else {

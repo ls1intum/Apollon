@@ -31,7 +31,7 @@ class LayoutedElement extends Component<Props, State> {
     let decorators: DecoratorType[] = [];
 
     if (apollonMode === ApollonMode.ReadOnly) {
-      decorators = [selectable];
+      decorators = [selectable, hoverable];
     } else if (editorMode === EditorMode.InteractiveElementsView) {
       decorators = [interactable];
     } else {
