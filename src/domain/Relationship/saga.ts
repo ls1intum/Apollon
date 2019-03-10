@@ -1,4 +1,4 @@
-import { takeLatest, put, all, select } from 'redux-saga/effects';
+import { takeLatest, takeEvery, put, all, select } from 'redux-saga/effects';
 import { State } from './../../components/Store';
 import Element, { ElementRepository, ElementActionTypes } from './../Element';
 import RelationshipRepository from './repository';
@@ -11,7 +11,7 @@ import Boundary from '../geo/Boundary';
 function* saga() {
   yield takeLatest(ElementActionTypes.CREATE, handleRelationshipCreation);
   yield takeLatest(ActionTypes.CONNECT, handleRelationshipConnect);
-  yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
+  yield takeEvery(ElementActionTypes.MOVE, handleElementMove);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementMove);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
 }
