@@ -4,7 +4,7 @@ import Element, { ElementRepository, ElementActionTypes } from './../Element';
 import RelationshipRepository from './repository';
 import { RedrawAction, ActionTypes, ConnectAction } from './types';
 import { MoveAction, DeleteAction, CreateAction } from '../Element/types';
-import Port from '../Port';
+import Port, { Connection } from '../Port';
 import Relationship from '.';
 import Boundary from '../geo/Boundary';
 
@@ -77,15 +77,11 @@ function* recalc(id: string) {
     };
   }
 
-  const { point: start, offset: startOffset } = Port.position(
-    source,
-    relationship.source.location
+  let path = Connection.computePath(
+    { bounds: source, location: relationship.source.location },
+    { bounds: target, location: relationship.target.location },
+    { isStraight: false }
   );
-  const { point: end, offset: endOffset } = Port.position(
-    target,
-    relationship.target.location
-  );
-  let path = [start, startOffset, endOffset, end];
 
   const x = Math.min(...path.map(point => point.x));
   const y = Math.min(...path.map(point => point.y));
