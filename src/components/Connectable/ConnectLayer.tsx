@@ -24,7 +24,11 @@ class ConnectLayer extends Component<Props, State> {
   private onEndConnect = (port: Port) => () => {
     const { start } = this.state;
 
-    if (!start || start === port) return;
+    if (
+      !start ||
+      (start.element === port.element && start.location === port.location)
+    )
+      return;
 
     this.state.resolve({ source: start, target: port });
   };
