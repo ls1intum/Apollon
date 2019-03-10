@@ -45,7 +45,6 @@ function* handleElementMove({ payload }: MoveAction) {
       source = elements[source].owner;
     }
     let target: string | null = relationship.target.element;
-    console.log('check target', target);
     while (target) {
       if (target === payload.id) {
         yield recalc(relationship.id);

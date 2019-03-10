@@ -35,12 +35,19 @@ class RelationshipComponent extends Component<Props> {
           return (
             <svg
               {...bounds}
+              id={element.id}
               pointerEvents={disabled ? 'none' : 'stroke'}
               style={{
                 overflow: 'visible',
                 opacity: this.props.hidden ? 0 : 1,
               }}
             >
+              <rect
+                width={bounds.width}
+                height={bounds.height}
+                fill="red"
+                fillOpacity={0.3}
+              />
               <polyline
                 points={points}
                 stroke={!this.props.interactable ? '#0064ff' : '#00dc00'}

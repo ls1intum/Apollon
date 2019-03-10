@@ -15,7 +15,7 @@ export type RectEdge = 'TOP' | 'LEFT' | 'RIGHT' | 'BOTTOM';
 import Relationship from './Relationship';
 
 export default Relationship;
-export { ActionTypes as ElementActionTypes } from './types';
+export { ActionTypes as RelationshipActionTypes } from './types';
 export { default as RelationshipRepository } from './repository';
 export { default as RelationshipReducer } from './reducer';
 export { default as RelationshipSaga } from './saga';
