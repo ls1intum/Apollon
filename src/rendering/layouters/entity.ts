@@ -89,13 +89,13 @@ function layoutEntityMembers(
 }
 
 export function getDefaultEntityWidth(kind: EntityKind) {
-    if (kind === EntityKind.InitialNode || kind === EntityKind.FinalNode) {
+    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
         return 40;
     }
-    if (kind === EntityKind.MergeNode) {
+    if (kind === EntityKind.ActivityMergeNode) {
         return 60;
     }
-    if (kind === EntityKind.ForkNode) {
+    if (kind === EntityKind.ActivityForkNode) {
         return 20;
     }
 
@@ -108,19 +108,19 @@ export function computeEntityHeight(
     methodCount: number,
     renderMode: any
 ) {
-    if (kind === EntityKind.InitialNode || kind === EntityKind.FinalNode) {
+    if (kind === EntityKind.ActivityControlInitialNode || kind === EntityKind.ActivityControlFinalNode) {
         return 40;
     }
-    if (kind === EntityKind.MergeNode) {
+    if (kind === EntityKind.ActivityMergeNode) {
         return 40;
     }
-    if (kind === EntityKind.ForkNode) {
+    if (kind === EntityKind.ActivityForkNode) {
         return 60;
     }
-    if (kind === EntityKind.ActionNode) {
+    if (kind === EntityKind.ActivityActionNode) {
         return 2 * ENTITY_NAME_HEIGHT;
     }
-    if (kind === EntityKind.ObjectNode) {
+    if (kind === EntityKind.ActivityObject) {
         return ENTITY_NAME_HEIGHT;
     }
 
@@ -150,7 +150,7 @@ export function computeEntityKindHeight(kind: string) {
 }
 
 export function computeEntityHeaderHeight(kind: string) {
-    if (kind === EntityKind.ActionNode) {
+    if (kind === EntityKind.ActivityActionNode) {
         return 2 * ENTITY_NAME_HEIGHT;
     }
     return ENTITY_NAME_HEIGHT + computeEntityKindHeight(kind);
@@ -166,12 +166,12 @@ export function getEntityKindDescriptionOrNull(kind: string): string | null {
 
         case EntityKind.AbstractClass:
         case EntityKind.Class:
-        case EntityKind.InitialNode:
-        case EntityKind.FinalNode:
-        case EntityKind.ActionNode:
-        case EntityKind.ObjectNode:
-        case EntityKind.MergeNode:
-        case EntityKind.ForkNode:
+        case EntityKind.ActivityControlInitialNode:
+        case EntityKind.ActivityControlFinalNode:
+        case EntityKind.ActivityActionNode:
+        case EntityKind.ActivityObject:
+        case EntityKind.ActivityMergeNode:
+        case EntityKind.ActivityForkNode:
         default:
             return null;
     }

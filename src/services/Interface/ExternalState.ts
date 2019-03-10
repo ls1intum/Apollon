@@ -19,18 +19,18 @@ export interface Entity {
   renderMode: EntityRenderMode;
 }
 
-export const enum EntityKind {
-  AbstractClass = "ABSTRACT_CLASS",
-  Class = "CLASS",
-  Enumeration = "ENUMERATION",
-  Interface = "INTERFACE",
-  ActivityControlInitialNode = "ACTIVITY_CONTROL_INITIAL_NODE",
-  ActivityControlFinalNode = "ACTIVITY_CONTROL_FINAL_NODE",
-  ActivityActionNode = "ACTIVITY_ACTION_NODE",
-  ActivityObject = "ACTIVITY_OBJECT",
-  ActivityMergeNode = "ACTIVITY_MERGE_NODE",
-  ActivityForkNode = "ACTIVITY_FORK_NODE",
-  ActivityForkNodeHorizontal = "ACTIVITY_FORK_NODE_HORIZONTAL"
+export enum EntityKind {
+  AbstractClass = 'ABSTRACT_CLASS',
+  Class = 'CLASS',
+  Enumeration = 'ENUMERATION',
+  Interface = 'INTERFACE',
+  ActivityControlInitialNode = 'ACTIVITY_CONTROL_INITIAL_NODE',
+  ActivityControlFinalNode = 'ACTIVITY_CONTROL_FINAL_NODE',
+  ActivityActionNode = 'ACTIVITY_ACTION_NODE',
+  ActivityObject = 'ACTIVITY_OBJECT',
+  ActivityMergeNode = 'ACTIVITY_MERGE_NODE',
+  ActivityForkNode = 'ACTIVITY_FORK_NODE',
+  ActivityForkNodeHorizontal = 'ACTIVITY_FORK_NODE_HORIZONTAL',
 }
 
 export interface EntityMember {
@@ -51,7 +51,7 @@ export interface Relationship {
   straightLine: boolean;
 }
 
-export const enum RelationshipKind {
+export enum RelationshipKind {
   Aggregation = 'AGGREGATION',
   AssociationBidirectional = 'ASSOCIATION_BIDIRECTIONAL',
   AssociationUnidirectional = 'ASSOCIATION_UNIDIRECTIONAL',
@@ -72,7 +72,7 @@ export interface RelationshipEnd {
 export type RectEdge = 'TOP' | 'LEFT' | 'RIGHT' | 'BOTTOM';
 
 export interface ExternalState {
-  version: string,
+  version: string;
 
   entities: {
     byId: { [id: string]: Entity };
