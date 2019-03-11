@@ -25,7 +25,8 @@ const Svg = styled.svg.attrs({
   fill: ${({ interactable, isRoot, theme }) =>
     interactable ? theme.interactiveAreaColor : isRoot ? 'white' : 'none'};
 
-  pointer-events: ${({ interactive }) => (interactive ? 'fill' : 'none')};
+  pointer-events: ${({ interactive, moving }) =>
+    interactive && !moving ? 'fill' : 'none'};
 
   & text {
     cursor: default;

@@ -6,6 +6,7 @@ import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withCanvas, CanvasContext } from './../Canvas';
+import { ContainerRepository } from '../../domain/Container';
 
 const moveable = (WrappedComponent: typeof ElementComponent) => {
   class Moveable extends Component<Props, State> {
@@ -23,6 +24,14 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
         x: x - this.props.element.bounds.x,
         y: y - this.props.element.bounds.y,
       });
+    };
+
+    private checkOwner = () => {
+      const target = this.props.target ? this.props.target.id : null;
+      const { owner } = this.props.element;
+      if (owner === target) return;
+
+      this.props.setOwner(this.props.element.id, target);
     };
 
     private onMouseDown = (event: MouseEvent) => {
@@ -69,6 +78,8 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
       this.setState({ movable: false, moving: false, offset: { x: 0, y: 0 } });
       document.removeEventListener('mousemove', this.onMouseMove);
       document.removeEventListener('mouseup', this.onMouseUp);
+
+      this.checkOwner();
     };
 
     componentDidMount() {
@@ -90,10 +101,12 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
 
   interface StateProps {
     getById: (id: string) => Element;
+    target: Element | undefined;
   }
 
   interface DispatchProps {
     move: typeof ElementRepository.move;
+    setOwner: typeof ContainerRepository.setOwner;
   }
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -107,8 +120,11 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
     connect<StateProps, DispatchProps, OwnProps, ReduxState>(
-      state => ({ getById: ElementRepository.getById(state.elements) }),
-      { move: ElementRepository.move }
+      state => ({
+        getById: ElementRepository.getById(state.elements),
+        target: Object.values(state.elements).find(element => element.hovered),
+      }),
+      { move: ElementRepository.move, setOwner: ContainerRepository.setOwner }
     )
   )(Moveable);
 };

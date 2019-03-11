@@ -1,7 +1,5 @@
 import { take, takeLatest, put, select } from 'redux-saga/effects';
 import { AnyAction } from 'redux';
-import { ContainerActionTypes } from '../Container';
-import { AddChildAction } from '../Container/types';
 import { ElementActionTypes } from '../Element';
 import { CreateAction } from '../Element/types';
 

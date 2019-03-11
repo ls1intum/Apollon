@@ -2,13 +2,67 @@ import { takeLatest, all, put, select } from 'redux-saga/effects';
 import { State } from './../../components/Store';
 import Container from './Container';
 import { ElementRepository, ElementActionTypes } from '../Element';
-import { ResizeAction, DeleteAction, CreateAction } from '../Element/types';
+import {
+  ResizeAction,
+  DeleteAction,
+  CreateAction,
+  MoveAction,
+} from '../Element/types';
+import {
+  ActionTypes,
+  ChangeOwnerAction,
+  AppendChildAction,
+  RemoveChildAction,
+} from './types';
 
 function* saga() {
+  yield takeLatest(ActionTypes.CHANGE_OWNER, handleOwnerChange);
   yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.CREATE, handleChildAdd);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementResize);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
+}
+
+function* handleOwnerChange({ payload }: ChangeOwnerAction) {
+  const { elements }: State = yield select();
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (element.owner) {
+    yield put<RemoveChildAction>({
+      type: ActionTypes.REMOVE_CHILD,
+      payload: { id: element.id, owner: element.owner },
+    });
+    // TODO: Move to diagram saga
+    yield put({ type: '@@diagram/CREATE', element: { id: element.id } });
+
+    let ownerID: string | null = element.owner;
+    let position = { x: 0, y: 0 };
+    while (ownerID) {
+      const owner = ElementRepository.getById(elements)(ownerID);
+      position.x += owner.bounds.x;
+      position.y += owner.bounds.y;
+      ownerID = owner.owner;
+    }
+    yield put<MoveAction>(ElementRepository.move(element.id, position));
+  }
+
+  if (payload.owner) {
+    // TODO: Move to diagram saga
+    yield put({ type: '@@diagram/DELETE', id: element.id });
+    yield put<AppendChildAction>({
+      type: ActionTypes.APPEND_CHILD,
+      payload: { id: element.id, owner: payload.owner },
+    });
+
+    let ownerID: string | null = payload.owner;
+    let position = { x: 0, y: 0 };
+    while (ownerID) {
+      const owner = ElementRepository.getById(elements)(ownerID);
+      position.x -= owner.bounds.x;
+      position.y -= owner.bounds.y;
+      ownerID = owner.owner;
+    }
+    yield put<MoveAction>(ElementRepository.move(element.id, position));
+  }
 }
 
 function* handleElementCreation({ payload }: CreateAction) {

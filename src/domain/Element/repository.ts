@@ -47,10 +47,10 @@ class Repository {
     payload: { id, size },
   });
 
-  static move: ActionCreator<MoveAction> = (
+  static move = (
     id: string | null,
     delta: { x: number; y: number }
-  ) => ({
+  ): MoveAction => ({
     type: ActionTypes.MOVE,
     payload: { id, delta },
   });
