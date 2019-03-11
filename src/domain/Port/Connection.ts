@@ -31,13 +31,15 @@ class Connection {
       return straightPath;
     }
 
-    const startPoint = Port.position(source.bounds, source.location);
-    const endPoint = Port.position(target.bounds, target.location);
+    const startPointOnInnerEdge = Port.position(source.bounds, source.location)
+      .point;
+    const endPointOnInnerEdge = Port.position(target.bounds, target.location)
+      .point;
 
     // If the user forced this relationship path to be a straight line,
     // directly connect the start and end points, even if that results in an angled line
     if (options.isStraight) {
-      return [startPoint.point, endPoint.point];
+      return [startPointOnInnerEdge, endPointOnInnerEdge];
     }
 
     // Each entity has an invisible margin around it (the "crumple zone")
@@ -70,17 +72,15 @@ class Connection {
     const startPointOnMarginBox = Port.position(
       sourceMarginRect,
       source.location
-    );
-    const endPointOnMarginBox = Port.position(
-      targetMarginRect,
-      target.location
-    );
+    ).point;
+    const endPointOnMarginBox = Port.position(targetMarginRect, target.location)
+      .point;
 
     // Determine the source corner that's closest to the point
     // on the margin box of the target entity
     const sourceCornerClosestToEndPoint = Connection.findClosestPoint(
       Connection.getCorners(sourceMarginRect),
-      endPointOnMarginBox.point
+      endPointOnMarginBox
     );
 
     // Determine the target corner that's closest to the previously determined source corner
@@ -93,7 +93,7 @@ class Connection {
     const sourceCornerQueue = Connection.determineCornerQueue(
       sourceMarginRect,
       source.location,
-      startPointOnMarginBox.point,
+      startPointOnMarginBox,
       sourceCornerClosestToEndPoint
     );
 
@@ -101,14 +101,14 @@ class Connection {
     const targetCornerQueue = Connection.determineCornerQueue(
       targetMarginRect,
       target.location,
-      endPointOnMarginBox.point,
+      endPointOnMarginBox,
       targetCornerClosestToClosestSourceCorner
     );
 
     // The relationship path can be partitioned into two segments:
     // a prefix from the start point and a suffix to the end point
-    const pathFromStart = [startPoint.point, startPointOnMarginBox.point];
-    const pathFromEnd = [endPoint.point, endPointOnMarginBox.point];
+    const pathFromStart = [startPointOnInnerEdge, startPointOnMarginBox];
+    const pathFromEnd = [endPointOnInnerEdge, endPointOnMarginBox];
 
     // We build the relationship path up both from the start and the end
     let currentStartPoint = startPointOnMarginBox;
@@ -117,13 +117,13 @@ class Connection {
     while (true) {
       const startAndEndPointCanBeConnected =
         !Connection.lineSegmentIntersectsRect(
-          currentStartPoint.point,
-          currentEndPoint.point,
+          currentStartPoint,
+          currentEndPoint,
           sourceMarginRect1px
         ) &&
         !Connection.lineSegmentIntersectsRect(
-          currentStartPoint.point,
-          currentEndPoint.point,
+          currentStartPoint,
+          currentEndPoint,
           targetMarginRect1px
         );
 
@@ -143,34 +143,29 @@ class Connection {
           currentStartAxis === 'HORIZONTAL' &&
           currentEndAxis === 'HORIZONTAL'
         ) {
-          const middleX =
-            (currentStartPoint.point.x + currentEndPoint.point.x) / 2;
+          const middleX = (currentStartPoint.x + currentEndPoint.x) / 2;
           pathFromStart.push(
-            { x: middleX, y: currentStartPoint.point.y },
-            { x: middleX, y: currentEndPoint.point.y }
+            { x: middleX, y: currentStartPoint.y },
+            { x: middleX, y: currentEndPoint.y }
           );
         } else if (
           currentStartAxis === 'VERTICAL' &&
           currentEndAxis === 'VERTICAL'
         ) {
-          const middleY =
-            (currentStartPoint.point.y + currentEndPoint.point.y) / 2;
+          const middleY = (currentStartPoint.y + currentEndPoint.y) / 2;
           pathFromStart.push(
-            { x: currentStartPoint.point.x, y: middleY },
-            { x: currentEndPoint.point.x, y: middleY }
+            { x: currentStartPoint.x, y: middleY },
+            { x: currentEndPoint.x, y: middleY }
           );
         } else if (
           currentStartAxis === 'HORIZONTAL' &&
           currentEndAxis === 'VERTICAL'
         ) {
-          pathFromStart.push({
-            x: currentEndPoint.point.x,
-            y: currentStartPoint.point.y,
-          });
+          pathFromStart.push({ x: currentEndPoint.x, y: currentStartPoint.y });
         } else {
           pathFromStart.push({
-            x: currentStartPoint.point.x,
-            y: currentEndPoint.point.y,
+            x: currentStartPoint.x,
+            y: currentEndPoint.y,
           });
         }
 
@@ -184,7 +179,7 @@ class Connection {
 
       if (nextSourceCorner !== undefined) {
         pathFromStart.push(nextSourceCorner);
-        currentStartPoint.point = nextSourceCorner;
+        currentStartPoint = nextSourceCorner;
       } else {
         // The queue of source entity corners is already empty,
         // thus advance to the next corner of the target entity
@@ -192,17 +187,17 @@ class Connection {
 
         if (nextTargetCorner !== undefined) {
           pathFromEnd.push(nextTargetCorner);
-          currentEndPoint.point = nextTargetCorner;
+          currentEndPoint = nextTargetCorner;
         } else {
           // We've emptied the corner queues of both entities, but the current start and end points
           // still can't be connected with a straight line. This can happen if the two entities
           // are placed closely enough to each other that their margin rectangles intersect.
           // We return a simple (and usually angled) path in this case.
           return [
-            startPoint.point,
-            startPointOnMarginBox.point,
-            endPointOnMarginBox.point,
-            endPoint.point,
+            startPointOnInnerEdge,
+            startPointOnMarginBox,
+            endPointOnMarginBox,
+            endPointOnInnerEdge,
           ];
         }
       }
