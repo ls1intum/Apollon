@@ -79,6 +79,13 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       } catch (error) {}
     };
 
+    private onMouseUp = (port: Port, context: ConnectContext) => async (
+      event: React.MouseEvent
+    ) => {
+      this.onMouseLeave(event);
+      context.onEndConnect(port);
+    };
+
     render() {
       const { element } = this.props;
       const ports: Port[] = [
@@ -109,7 +116,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
                 <Group
                   key={port.location}
                   onMouseDown={this.onMouseDown(port, context)}
-                  onMouseUp={context.onEndConnect(port)}
+                  onMouseUp={this.onMouseUp(port, context)}
                   onMouseEnter={this.onMouseEnter}
                   onMouseLeave={this.onMouseLeave}
                   style={{
