@@ -83,7 +83,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       event: React.MouseEvent
     ) => {
       this.onMouseLeave(event);
-      context.onEndConnect(port);
+      context.onEndConnect(port)(event);
     };
 
     render() {
