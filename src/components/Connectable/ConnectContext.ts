@@ -1,9 +1,9 @@
 import { MouseEvent, createContext } from 'react';
-import Port from './../../domain/Port';
+import Port, { Connection } from './../../domain/Port';
 
 interface ConnectContext {
   isDragging: boolean;
-  onStartConnect: (port: Port) => (event: MouseEvent) => void;
+  onStartConnect: (port: Port) => (event: MouseEvent) => Promise<Connection>;
   onEndConnect: (port: Port) => (event: MouseEvent) => void;
 }
 

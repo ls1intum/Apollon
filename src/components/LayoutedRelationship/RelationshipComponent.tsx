@@ -1,47 +1,37 @@
 import React, { Component } from 'react';
-import { CanvasConsumer } from '../Canvas/CanvasContext';
 import Relationship from '../../domain/Relationship';
+import { CanvasConsumer } from '../Canvas/CanvasContext';
 import * as Plugins from './../../domain/plugins';
-import { Point } from '../../domain/geo';
 
 class RelationshipComponent extends Component<Props> {
   static defaultProps = {
+    disabled: false,
     interactive: false,
     hidden: false,
-    selected: false,
-    moving: false,
-    resizing: false,
     interactable: false,
   };
 
   render() {
-    let { path } = this.props;
-    const { element } = this.props;
+    const { element, disabled } = this.props;
     const Component = (Plugins as any)[`${element.kind}Component`];
+    const points = element.path.map(point => `${point.x} ${point.y}`).join(',');
 
     return (
       <CanvasConsumer
         children={context => {
           let bounds = element.bounds;
+          let path = element.path;
           if (context && element.owner === null) {
             bounds = {
               ...bounds,
               ...context.coordinateSystem.pointToScreen(bounds.x, bounds.y),
             };
-            path = path.map(point =>
-              context.coordinateSystem.pointToScreen(
-                point.x - bounds.x,
-                point.y - bounds.y
-              )
-            );
           }
-
-          const points = path.map(point => `${point.x} ${point.y}`).join(',');
-
           return (
             <svg
               {...bounds}
-              pointerEvents="stroke"
+              id={element.id}
+              pointerEvents={disabled ? 'none' : 'stroke'}
               style={{
                 overflow: 'visible',
                 opacity: this.props.hidden ? 0 : 1,
@@ -59,6 +49,7 @@ class RelationshipComponent extends Component<Props> {
                 strokeWidth={15}
               />
               <Component path={path} element={element} />
+              {this.props.children}
             </svg>
           );
         }}
@@ -69,11 +60,9 @@ class RelationshipComponent extends Component<Props> {
 
 export interface OwnProps {
   element: Relationship;
-  path: Point[];
+  disabled: boolean;
   interactive: boolean;
   hidden: boolean;
-  moving: boolean;
-  resizing: boolean;
   interactable: boolean;
 }
 

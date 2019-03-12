@@ -5,7 +5,10 @@ import styled from 'styled-components';
 import Port from './../../domain/Port';
 import { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
-import { ConnectConsumer } from './../Connectable/ConnectContext';
+import ConnectContext, {
+  ConnectConsumer,
+} from './../Connectable/ConnectContext';
+import { BidirectionalAssociation } from '../../domain/plugins';
 
 const Path = styled.path`
   cursor: crosshair;
@@ -18,7 +21,7 @@ const Group = styled.g`
 `;
 
 const connectable = (WrappedComponent: typeof ElementComponent) => {
-  class Selectable extends Component<Props, State> {
+  class Connectable extends Component<Props> {
     private calculateInvisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
       const r = 20;
@@ -61,6 +64,28 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       event.currentTarget.classList.remove('hover');
     };
 
+    private onMouseDown = (port: Port, context: ConnectContext) => async (
+      event: React.MouseEvent
+    ) => {
+      try {
+        const endpoints = await context.onStartConnect(port)(event);
+
+        const relationship = new BidirectionalAssociation(
+          'Association',
+          endpoints.source,
+          endpoints.target
+        );
+        this.props.create(relationship);
+      } catch (error) {}
+    };
+
+    private onMouseUp = (port: Port, context: ConnectContext) => async (
+      event: React.MouseEvent
+    ) => {
+      this.onMouseLeave(event);
+      context.onEndConnect(port)(event);
+    };
+
     render() {
       const { element } = this.props;
       const ports: Port[] = [
@@ -87,14 +112,17 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
           <ConnectConsumer
             children={context =>
               context &&
-              (element.selected || context.isDragging) &&
               ports.map(port => (
                 <Group
                   key={port.location}
-                  onMouseDown={context.onStartConnect(port)}
-                  onMouseUp={context.onEndConnect(port)}
+                  onMouseDown={this.onMouseDown(port, context)}
+                  onMouseUp={this.onMouseUp(port, context)}
                   onMouseEnter={this.onMouseEnter}
                   onMouseLeave={this.onMouseLeave}
+                  style={{
+                    display:
+                      element.selected || context.isDragging ? 'block' : 'none',
+                  }}
                 >
                   {context.isDragging && (
                     <path d={this.calculateInvisiblePath(port)} fill="none" />
@@ -115,20 +143,18 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
     }
   }
 
+  interface StateProps {}
+
   interface DispatchProps {
-    update: typeof ElementRepository.update;
+    create: typeof ElementRepository.create;
   }
 
   type Props = OwnProps & DispatchProps;
 
-  return compose<ComponentClass<OwnProps>>(
-    connect(
-      null,
-      { update: ElementRepository.update }
-    )
-  )(Selectable);
+  return connect<StateProps, DispatchProps, OwnProps>(
+    null,
+    { create: ElementRepository.create }
+  )(Connectable);
 };
-
-interface State {}
 
 export default connectable;

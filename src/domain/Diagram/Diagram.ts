@@ -1,6 +1,6 @@
 import Container from './../Container';
 import Boundary from './../geo/Boundary';
-import { DiagramType } from './DiagramTypes';
+import { DiagramType } from './types';
 
 class Diagram extends Container {
   readonly kind: string = 'Diagram';

@@ -1,33 +1,52 @@
-import { takeLatest, put, all, select } from 'redux-saga/effects';
+import { takeLatest, takeEvery, put, all, select } from 'redux-saga/effects';
 import { State } from './../../components/Store';
-import { ElementRepository, ElementActionTypes } from './../Element';
+import Element, { ElementRepository, ElementActionTypes } from './../Element';
 import RelationshipRepository from './repository';
-import { RedrawAction, ActionTypes, CreateAction } from './types';
-import { MoveAction, DeleteAction } from '../Element/types';
-import Port from '../Port';
+import { RedrawAction, ActionTypes, ConnectAction } from './types';
+import { MoveAction, DeleteAction, CreateAction } from '../Element/types';
+import Port, { Connection } from '../Port';
 import Relationship from '.';
+import Boundary from '../geo/Boundary';
 
 function* saga() {
-  yield takeLatest(ActionTypes.CREATE, handleElementCreation);
-  yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
+  yield takeLatest(ElementActionTypes.CREATE, handleRelationshipCreation);
+  yield takeLatest(ActionTypes.CONNECT, handleRelationshipConnect);
+  yield takeEvery(ElementActionTypes.MOVE, handleElementMove);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementMove);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
 }
 
-function* handleElementCreation({ payload }: CreateAction) {
-  yield recalc(payload.relationship.id);
+function* handleRelationshipCreation({ payload }: CreateAction) {
+  if (!(payload.element instanceof Relationship)) return;
+  yield recalc(payload.element.id);
+}
+
+function* handleRelationshipConnect({ payload }: ConnectAction) {
+  yield recalc(payload.id);
 }
 
 function* handleElementMove({ payload }: MoveAction) {
+  if (!payload.id) return;
+
   const { elements }: State = yield select();
-  for (const id in elements) {
-    const relationship = RelationshipRepository.getById(elements)(id);
-    if (relationship.base !== 'Relationship') continue;
-    if (
-      relationship.source.element === payload.id ||
-      relationship.target.element === payload.id
-    ) {
-      yield recalc(relationship.id);
+  const relationships = RelationshipRepository.read(elements);
+
+  loop: for (const relationship of relationships) {
+    let source: string | null = relationship.source.element;
+    while (source) {
+      if (source === payload.id) {
+        yield recalc(relationship.id);
+        continue loop;
+      }
+      source = elements[source].owner;
+    }
+    let target: string | null = relationship.target.element;
+    while (target) {
+      if (target === payload.id) {
+        yield recalc(relationship.id);
+        continue loop;
+      }
+      target = elements[target].owner;
     }
   }
 }
@@ -36,16 +55,45 @@ function* recalc(id: string) {
   const { elements }: State = yield select();
   const relationship = RelationshipRepository.getById(elements)(id);
 
-  const source = elements[relationship.source.element];
-  const target = elements[relationship.target.element];
+  let current: Element = elements[relationship.source.element];
+  let source: Boundary = { ...current.bounds };
+  while (current.owner) {
+    current = elements[current.owner];
+    source = {
+      ...source,
+      x: source.x + current.bounds.x,
+      y: source.y + current.bounds.y,
+    };
+  }
 
-  const { point: start, offset: startOffset } = Port.position(source, relationship.source.location);
-  const { point: end, offset: endOffset } = Port.position(target, relationship.target.location);
-  const path = [start, startOffset, endOffset, end];
+  current = elements[relationship.target.element];
+  let target: Boundary = { ...current.bounds };
+  while (current.owner) {
+    current = elements[current.owner];
+    target = {
+      ...target,
+      x: target.x + current.bounds.x,
+      y: target.y + current.bounds.y,
+    };
+  }
+
+  let path = Connection.computePath(
+    { bounds: source, location: relationship.source.location },
+    { bounds: target, location: relationship.target.location },
+    { isStraight: false }
+  );
+
+  const x = Math.min(...path.map(point => point.x));
+  const y = Math.min(...path.map(point => point.y));
+  const width = Math.max(...path.map(point => point.x)) - x;
+  const height = Math.max(...path.map(point => point.y)) - y;
+  const bounds = { x, y, width, height };
+
+  path = path.map(point => ({ x: point.x - x, y: point.y - y }));
 
   yield put<RedrawAction>({
     type: ActionTypes.REDRAW,
-    payload: { id: relationship.id, path },
+    payload: { id: relationship.id, path, bounds },
   });
 }
 

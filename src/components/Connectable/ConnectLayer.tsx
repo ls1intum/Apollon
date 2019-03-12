@@ -1,98 +1,41 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
 import ConnectContext, { ConnectProvider } from './ConnectContext';
-import Port from './../../domain/Port';
-import Relationship, {
-  RelationshipRepository,
-  RelationshipKind,
-  RectEdge,
-} from '../../domain/Relationship';
+import Port, { Connection } from './../../domain/Port';
 import RelationshipPreview from './RelationshipPreview';
-import { DiagramType } from '../../domain/Diagram';
-import BidirectionalAssociation from '../../domain/plugins/class/BidirectionalAssociation';
 
 class ConnectLayer extends Component<Props, State> {
   state: State = {
     start: null,
+    resolve: () => {},
+    reject: () => {},
   };
 
-  private onStartConnect = (port: Port) => (event: React.MouseEvent) => {
+  private onStartConnect = (port: Port) => (): Promise<Connection> => {
     document.addEventListener('mouseup', this.cancel, {
       once: true,
       passive: true,
     });
 
-    this.setState({
-      start: port,
-    });
+    return new Promise<Connection>((resolve, reject) =>
+      this.setState({ start: port, resolve, reject })
+    );
   };
 
-  private onEndConnect = (port: Port) => (event: React.MouseEvent) => {
+  private onEndConnect = (port: Port) => () => {
     const { start } = this.state;
 
-    if (!start || start === port) return;
+    if (
+      !start ||
+      (start.element === port.element && start.location === port.location)
+    )
+      return;
 
-    const edge = (location: Port['location']): RectEdge => {
-      switch (location) {
-        case 'N':
-          return 'TOP';
-        case 'E':
-          return 'RIGHT';
-        case 'S':
-          return 'BOTTOM';
-        case 'W':
-          return 'LEFT';
-      }
-    };
-
-    const relationship = new BidirectionalAssociation('Association', start, port);
-    this.props.create(relationship)
-    // const relationship: Relationship = {
-    //   name: 'Relationship',
-    //   kind:
-    //     this.props.diagramType === DiagramType.ClassDiagram
-    //       ? RelationshipKind.AssociationBidirectional
-    //       : RelationshipKind.ActivityControlFlow,
-    //   source: {
-    //     entityId: start.element.id,
-    //     multiplicity: null,
-    //     role: null,
-    //     edge: edge(start.location),
-    //     edgeOffset: 0.5,
-    //   },
-    //   target: {
-    //     entityId: port.element.id,
-    //     multiplicity: null,
-    //     role: null,
-    //     edge: edge(port.location),
-    //     edgeOffset: 0.5,
-    //   },
-    //   straightLine: false,
-    // };
-    // this.props.create(
-    //   this.props.diagramType === DiagramType.ClassDiagram
-    //     ? RelationshipKind.AssociationBidirectional
-    //     : RelationshipKind.ActivityControlFlow,
-    //   {
-    //     entityId: start.element.id,
-    //     multiplicity: null,
-    //     role: null,
-    //     edge: edge(start.location),
-    //     edgeOffset: 0.5,
-    //   },
-    //   {
-    //     entityId: port.element.id,
-    //     multiplicity: null,
-    //     role: null,
-    //     edge: edge(port.location),
-    //     edgeOffset: 0.5,
-    //   }
-    // );
+    this.state.resolve({ source: start, target: port });
   };
 
-  private cancel = (event: MouseEvent) => {
-    this.setState({ start: null });
+  private cancel = () => {
+    this.state.reject();
+    this.setState({ start: null, resolve: () => {}, reject: () => {} });
   };
 
   render() {
@@ -110,25 +53,12 @@ class ConnectLayer extends Component<Props, State> {
   }
 }
 
-interface OwnProps {}
-
-interface StateProps {
-  diagramType: DiagramType;
-}
-
-interface DispatchProps {
-  create: typeof RelationshipRepository.create;
-}
-
-type Props = OwnProps & StateProps & DispatchProps;
+interface Props {}
 
 interface State {
   start: Port | null;
+  resolve: (value?: Connection) => void;
+  reject: (reason?: any) => void;
 }
 
-export default connect(
-  (state: ReduxState): StateProps => ({
-    diagramType: state.diagram.type,
-  }),
-  { create: RelationshipRepository.create }
-)(ConnectLayer);
+export default ConnectLayer;
