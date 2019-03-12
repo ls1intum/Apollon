@@ -2,6 +2,10 @@ import Element from './../Element';
 import Port from '../Port';
 
 abstract class Relationship extends Element {
+  static features = {
+    straight: false,
+  };
+
   readonly base: string = 'Relationship';
 
   sourceRole: string = '';

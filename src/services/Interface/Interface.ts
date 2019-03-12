@@ -412,17 +412,6 @@ export const externalToRelationship = (
         : 'W',
   };
 
-  if (!path) {
-    const sourceElement = elements.find(e => e.id === source.element)!;
-    const targetElement = elements.find(e => e.id === target.element)!;
-
-    path = Connection.computePath(
-      { bounds: sourceElement.bounds, location: source.location },
-      { bounds: targetElement.bounds, location: target.location },
-      { isStraight: false }
-    );
-  }
-
   let init: Relationship = new BidirectionalAssociation(
     'Association',
     source,
@@ -451,6 +440,20 @@ export const externalToRelationship = (
       init = new Realization('Association', source, target);
       break;
   }
+
+  if (!path) {
+    const sourceElement = elements.find(e => e.id === source.element)!;
+    const targetElement = elements.find(e => e.id === target.element)!;
+
+    const { straight } = (init.constructor as typeof Relationship).features;
+
+    path = Connection.computePath(
+      { bounds: sourceElement.bounds, location: source.location },
+      { bounds: targetElement.bounds, location: target.location },
+      { isStraight: straight }
+    );
+  }
+
   const relationship: Relationship = {
     ...init,
     id: external.id,

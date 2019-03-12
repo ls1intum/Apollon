@@ -77,10 +77,14 @@ function* recalc(id: string) {
     };
   }
 
+  const {
+    straight,
+  } = (relationship.constructor as typeof Relationship).features;
+
   let path = Connection.computePath(
     { bounds: source, location: relationship.source.location },
     { bounds: target, location: relationship.target.location },
-    { isStraight: false }
+    { isStraight: straight }
   );
 
   const x = Math.min(...path.map(point => point.x));
