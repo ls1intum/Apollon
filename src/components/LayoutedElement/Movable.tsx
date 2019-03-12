@@ -26,12 +26,12 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
       });
     };
 
-    private checkOwner = () => {
+    private checkOwnership = () => {
       const target = this.props.target ? this.props.target.id : null;
-      const { owner } = this.props.element;
+      const { id, owner } = this.props.element;
       if (owner === target) return;
 
-      this.props.setOwner(this.props.element.id, target);
+      this.props.changeOwner(id, target);
     };
 
     private onMouseDown = (event: MouseEvent) => {
@@ -75,11 +75,11 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
     };
 
     private onMouseUp = () => {
+      const { moving } = this.state;
       this.setState({ movable: false, moving: false, offset: { x: 0, y: 0 } });
       document.removeEventListener('mousemove', this.onMouseMove);
       document.removeEventListener('mouseup', this.onMouseUp);
-
-      this.checkOwner();
+      if (moving) this.checkOwnership();
     };
 
     componentDidMount() {
@@ -106,7 +106,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
 
   interface DispatchProps {
     move: typeof ElementRepository.move;
-    setOwner: typeof ContainerRepository.setOwner;
+    changeOwner: typeof ContainerRepository.changeOwner;
   }
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -124,7 +124,10 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
         getById: ElementRepository.getById(state.elements),
         target: Object.values(state.elements).find(element => element.hovered),
       }),
-      { move: ElementRepository.move, setOwner: ContainerRepository.setOwner }
+      {
+        move: ElementRepository.move,
+        changeOwner: ContainerRepository.changeOwner,
+      }
     )
   )(Moveable);
 };

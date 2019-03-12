@@ -1,7 +1,10 @@
 import { ActionTypes, ChangeOwnerAction } from './types';
 
 class Repository {
-  static setOwner = (id: string, owner: string | null): ChangeOwnerAction => ({
+  static changeOwner = (
+    id: string,
+    owner: string | null
+  ): ChangeOwnerAction => ({
     type: ActionTypes.CHANGE_OWNER,
     payload: { id, owner },
   });

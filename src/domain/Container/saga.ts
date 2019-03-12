@@ -26,13 +26,12 @@ function* saga() {
 function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   const { elements }: State = yield select();
   const element = ElementRepository.getById(elements)(payload.id);
+
   if (element.owner) {
     yield put<RemoveChildAction>({
       type: ActionTypes.REMOVE_CHILD,
       payload: { id: element.id, owner: element.owner },
     });
-    // TODO: Move to diagram saga
-    yield put({ type: '@@diagram/CREATE', element: { id: element.id } });
 
     let ownerID: string | null = element.owner;
     let position = { x: 0, y: 0 };
@@ -42,17 +41,15 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
       position.y += owner.bounds.y;
       ownerID = owner.owner;
     }
+
     yield put<MoveAction>(ElementRepository.move(element.id, position));
   }
 
   if (payload.owner) {
-    // TODO: Move to diagram saga
-    yield put({ type: '@@diagram/DELETE', id: element.id });
     yield put<AppendChildAction>({
       type: ActionTypes.APPEND_CHILD,
       payload: { id: element.id, owner: payload.owner },
     });
-
     let ownerID: string | null = payload.owner;
     let position = { x: 0, y: 0 };
     while (ownerID) {
@@ -61,6 +58,7 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
       position.y -= owner.bounds.y;
       ownerID = owner.owner;
     }
+
     yield put<MoveAction>(ElementRepository.move(element.id, position));
   }
 }
