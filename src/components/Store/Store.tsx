@@ -21,7 +21,7 @@ import { all, fork } from 'redux-saga/effects';
 import { ElementReducer, ElementSaga } from './../../domain/Element';
 import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
 import { ContainerReducer, ContainerSaga } from './../../domain/Container';
-import { DiagramReducer, saga as saga3 } from './../../domain/Diagram';
+import { DiagramReducer, DiagramSaga } from './../../domain/Diagram';
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;
@@ -52,7 +52,7 @@ class Store extends React.Component<Props> {
     this.store = createStore(reducer, props.initialState || {}, enhancer);
 
     function* rootSaga() {
-      yield all([ElementSaga, RelationshipSaga, ContainerSaga, saga3].map(fork));
+      yield all([ElementSaga, RelationshipSaga, ContainerSaga, DiagramSaga].map(fork));
     }
 
     sagaMiddleware.run(rootSaga);

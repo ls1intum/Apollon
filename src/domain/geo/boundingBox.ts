@@ -2,7 +2,7 @@ import { Point, Rect } from ".";
 
 export function computeBoundingBox(points: Point[]): Rect {
     if (points.length === 0) {
-        throw Error("Can't compute bounding box of empty point array");
+        return { x: 0, y: 0, width: 0, height: 0 };
     }
 
     const firstPoint = points[0];

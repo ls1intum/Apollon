@@ -37,8 +37,9 @@ import {
   Realization,
 } from './../../domain/plugins';
 import { LayoutedEntity } from '../../rendering/layouters/entity';
-import Port from '../../domain/Port';
+import Port, { Connection } from '../../domain/Port';
 import { Point } from '../../domain/geo';
+import Boundary from '../../domain/geo/Boundary';
 
 export const mapInternalToExternalState = (
   state: ReduxState
@@ -386,7 +387,7 @@ export const relationshipToExternal = (
 export const externalToRelationship = (
   external: ExternalRelationship,
   elements: Element[],
-  path: Point[] | null = null,
+  path: Point[] | null = null
 ): Relationship => {
   const source: Port = {
     element: external.source.entityId,
@@ -414,15 +415,12 @@ export const externalToRelationship = (
   if (!path) {
     const sourceElement = elements.find(e => e.id === source.element)!;
     const targetElement = elements.find(e => e.id === target.element)!;
-    const { point: start, offset: startOffset } = Port.position(
-      sourceElement,
-      source.location
+
+    path = Connection.computePath(
+      { bounds: sourceElement.bounds, location: source.location },
+      { bounds: targetElement.bounds, location: target.location },
+      { isStraight: false }
     );
-    const { point: end, offset: endOffset } = Port.position(
-      targetElement,
-      target.location
-    );
-    path = [start, startOffset, endOffset, end];
   }
 
   let init: Relationship = new BidirectionalAssociation(

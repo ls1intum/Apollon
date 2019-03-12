@@ -69,7 +69,7 @@ function* handleElementMove({ payload }: MoveAction) {
   };
   yield all(
     getSelection(diagram).map(element =>
-      put(Repository.move(element.id, payload.delta, true))
+      put(Repository.move(element.id, payload.delta))
     )
   );
 }

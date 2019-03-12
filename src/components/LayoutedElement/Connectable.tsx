@@ -1,11 +1,17 @@
-import React, { Component, ComponentClass } from 'react';
-import { compose } from 'redux';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { State as ReduxState } from './../Store';
 import styled from 'styled-components';
 import Port from './../../domain/Port';
 import { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
-import { ConnectConsumer } from './../Connectable/ConnectContext';
+import ConnectContext, {
+  ConnectConsumer,
+} from './../Connectable/ConnectContext';
+import { BidirectionalAssociation } from '../../domain/plugins';
+import * as Plugins from './../../domain/plugins';
+import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
+import { DiagramType } from '../../domain/Diagram';
 
 const Path = styled.path`
   cursor: crosshair;
@@ -18,7 +24,7 @@ const Group = styled.g`
 `;
 
 const connectable = (WrappedComponent: typeof ElementComponent) => {
-  class Selectable extends Component<Props, State> {
+  class Connectable extends Component<Props> {
     private calculateInvisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
       const r = 20;
@@ -61,6 +67,30 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       event.currentTarget.classList.remove('hover');
     };
 
+    private onMouseDown = (port: Port, context: ConnectContext) => async (
+      event: React.MouseEvent
+    ) => {
+      try {
+        const endpoints = await context.onStartConnect(port)(event);
+
+        const Relationship =
+          Plugins[DefaultRelationshipKind[this.props.diagramType]];
+        const relationship = new Relationship(
+          'Association',
+          endpoints.source,
+          endpoints.target
+        );
+        this.props.create(relationship);
+      } catch (error) {}
+    };
+
+    private onMouseUp = (port: Port, context: ConnectContext) => async (
+      event: React.MouseEvent
+    ) => {
+      this.onMouseLeave(event);
+      context.onEndConnect(port)(event);
+    };
+
     render() {
       const { element } = this.props;
       const ports: Port[] = [
@@ -87,14 +117,17 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
           <ConnectConsumer
             children={context =>
               context &&
-              (element.selected || context.isDragging) &&
               ports.map(port => (
                 <Group
                   key={port.location}
-                  onMouseDown={context.onStartConnect(port)}
-                  onMouseUp={context.onEndConnect(port)}
+                  onMouseDown={this.onMouseDown(port, context)}
+                  onMouseUp={this.onMouseUp(port, context)}
                   onMouseEnter={this.onMouseEnter}
                   onMouseLeave={this.onMouseLeave}
+                  style={{
+                    display:
+                      element.selected || context.isDragging ? 'block' : 'none',
+                  }}
                 >
                   {context.isDragging && (
                     <path d={this.calculateInvisiblePath(port)} fill="none" />
@@ -115,20 +148,20 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
     }
   }
 
-  interface DispatchProps {
-    update: typeof ElementRepository.update;
+  interface StateProps {
+    diagramType: DiagramType;
   }
 
-  type Props = OwnProps & DispatchProps;
+  interface DispatchProps {
+    create: typeof ElementRepository.create;
+  }
 
-  return compose<ComponentClass<OwnProps>>(
-    connect(
-      null,
-      { update: ElementRepository.update }
-    )
-  )(Selectable);
+  type Props = OwnProps & StateProps & DispatchProps;
+
+  return connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+    state => ({ diagramType: state.diagram.type }),
+    { create: ElementRepository.create }
+  )(Connectable);
 };
-
-interface State {}
 
 export default connectable;

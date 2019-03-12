@@ -37,37 +37,6 @@ const RelationshipEnd: SFC<Props> = ({
     <table>
       <tbody>
         <tr>
-          <td>Entity:</td>
-          <td>
-            <select
-              name="element"
-              value={element.id}
-              onChange={onChangeSelect}
-            >
-              {targets.map(target => (
-                <option key={target.id} value={target.id}>
-                  {target.name}
-                </option>
-              ))}
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>Edge:</td>
-          <td>
-            <select
-              name="location"
-              value={relationship[end].location}
-              onChange={onChangeSelect}
-            >
-              <option value="N">Top</option>
-              <option value="W">Left</option>
-              <option value="E">Right</option>
-              <option value="S">Bottom</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
           <td>Multiplicity:</td>
           <td>
             <input
