@@ -6,10 +6,12 @@ const RelationshipKind = {
   ...UseCaseRelationshipKind,
 };
 
-export const DefaultRelationshipKind = {
-  [DiagramType.ClassDiagram]: 'BidirectionalAssociation' as UseCaseRelationshipKind,
-  [DiagramType.ActivityDiagram]: 'BidirectionalAssociation' as UseCaseRelationshipKind,
-  [DiagramType.UseCaseDiagram]: UseCaseRelationshipKind.UseCaseAssociation,
+export const DefaultRelationshipKind: {
+  [type in DiagramType]: RelationshipKind
+} = {
+  [DiagramType.ClassDiagram]: 'BidirectionalAssociation' as RelationshipKind,
+  [DiagramType.ActivityDiagram]: 'BidirectionalAssociation' as RelationshipKind,
+  [DiagramType.UseCaseDiagram]: UseCaseRelationshipKind.UseCaseInclude,
 };
 
 export default RelationshipKind;

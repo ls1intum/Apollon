@@ -6,4 +6,6 @@ export enum ElementKind {
 
 export enum RelationshipKind {
   UseCaseAssociation = 'UseCaseAssociation',
+  UseCaseInheritance = 'UseCaseInheritance',
+  UseCaseInclude = 'UseCaseInclude',
 }

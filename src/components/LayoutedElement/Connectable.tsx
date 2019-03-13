@@ -8,7 +8,6 @@ import ElementComponent, { OwnProps } from './ElementComponent';
 import ConnectContext, {
   ConnectConsumer,
 } from './../Connectable/ConnectContext';
-import { BidirectionalAssociation } from '../../domain/plugins';
 import * as Plugins from './../../domain/plugins';
 import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
 import { DiagramType } from '../../domain/Diagram';

@@ -5,3 +5,5 @@ export * from './use_case_diagram/UseCase';
 export * from './use_case_diagram/Actor';
 export * from './use_case_diagram/System';
 export * from './use_case_diagram/UseCaseAssociation';
+export * from './use_case_diagram/UseCaseInheritance';
+export * from './use_case_diagram/UseCaseInclude';
