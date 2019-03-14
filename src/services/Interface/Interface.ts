@@ -17,24 +17,16 @@ import {
 import Diagram, { DiagramType } from '../../domain/Diagram';
 import Element, { ElementRepository } from '../../domain/Element';
 import {
-  Attribute,
-  Method,
+  ClassAttribute as Attribute,
+  ClassMethod as Method,
   Class,
-  Enumeration,
-  Interface,
   InitialNode,
   FinalNode,
   ActionNode,
   ObjectNode,
   MergeNode,
   ForkNode,
-  BidirectionalAssociation,
-  UnidirectionalAssociation,
-  Aggregation,
-  Composition,
-  Dependency,
-  Inheritance,
-  Realization,
+  ClassAssociation,
 } from './../../domain/plugins';
 import { LayoutedEntity } from '../../rendering/layouters/entity';
 import Port, { Connection } from '../../domain/Port';
@@ -195,11 +187,13 @@ export const elementToEntity = (
   let kind: string = '';
 
   if (element instanceof Class) {
-    kind = element.isAbstract ? 'ABSTRACT_CLASS' : 'CLASS';
-  } else if (element instanceof Enumeration) {
-    kind = 'ENUMERATION';
-  } else if (element instanceof Interface) {
-    kind = 'INTERFACE';
+    kind = element.isAbstract
+      ? 'ABSTRACT_CLASS'
+      : element.isInterface
+      ? 'INTERFACE'
+      : element.isEnumeration
+      ? 'ENUMERATION'
+      : 'CLASS';
   } else if (element instanceof InitialNode) {
     kind = 'ACTIVITY_CONTROL_INITIAL_NODE';
   } else if (element instanceof FinalNode) {
@@ -242,16 +236,22 @@ export const entityToElements = (entity: Entity): Element[] => {
   let init: Element;
   switch (entity.kind) {
     case 'CLASS':
-      init = new Class(entity.name, false);
+      // init = new Class(entity.name, false);
+      init = new Class(entity.name);
       break;
     case 'ABSTRACT_CLASS':
-      init = new Class(entity.name, true);
+      // init = new Class(entity.name, true);
+      init = new Class(entity.name);
+      (init as Class).classifier = Class.types.Abstract;
       break;
     case 'ENUMERATION':
-      init = new Enumeration(entity.name);
+      init = new Class(entity.name);
+      (init as Class).classifier = Class.types.Enumeration;
       break;
     case 'INTERFACE':
-      init = new Interface(entity.name);
+      // init = new Interface(entity.name);
+      init = new Class(entity.name);
+      (init as Class).classifier = Class.types.Interface;
       break;
     case 'ACTIVITY_CONTROL_INITIAL_NODE':
       init = new InitialNode(entity.name);
@@ -412,32 +412,68 @@ export const externalToRelationship = (
         : 'W',
   };
 
-  let init: Relationship = new BidirectionalAssociation(
+  let init: Relationship = new ClassAssociation(
     'Association',
     source,
-    target
+    target,
+    ClassAssociation.types.BidirectionalAssociation
   );
   switch (external.kind) {
     case RelationshipKind.Aggregation:
-      init = new Aggregation('Association', source, target);
+      init = new ClassAssociation(
+        'Association',
+        source,
+        target,
+        ClassAssociation.types.Aggregation
+      );
       break;
     case RelationshipKind.AssociationBidirectional:
-      init = new BidirectionalAssociation('Association', source, target);
+      init = new ClassAssociation(
+        'Association',
+        source,
+        target,
+        ClassAssociation.types.BidirectionalAssociation
+      );
       break;
     case RelationshipKind.AssociationUnidirectional:
-      init = new UnidirectionalAssociation('Association', source, target);
+      init = new ClassAssociation(
+        'Association',
+        source,
+        target,
+        ClassAssociation.types.UnidirectionalAssociation
+      );
       break;
     case RelationshipKind.Composition:
-      init = new Composition('Association', source, target);
+      init = new ClassAssociation(
+        'Association',
+        source,
+        target,
+        ClassAssociation.types.Composition
+      );
       break;
     case RelationshipKind.Dependency:
-      init = new Dependency('Association', source, target);
+      init = new ClassAssociation(
+        'Association',
+        source,
+        target,
+        ClassAssociation.types.Dependency
+      );
       break;
     case RelationshipKind.Inheritance:
-      init = new Inheritance('Association', source, target);
+      init = new ClassAssociation(
+        'Association',
+        source,
+        target,
+        ClassAssociation.types.Inheritance
+      );
       break;
     case RelationshipKind.Realization:
-      init = new Realization('Association', source, target);
+      init = new ClassAssociation(
+        'Association',
+        source,
+        target,
+        ClassAssociation.types.Realization
+      );
       break;
   }
 

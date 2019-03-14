@@ -20,9 +20,6 @@ import {
   externalToRelationship,
 } from '../../../services/Interface/Interface';
 import * as Plugins from './../../../domain/plugins';
-import Association, {
-  AssociationComponent,
-} from '../../../domain/plugins/class/Association';
 
 export interface RenderOptions {
   shouldRenderElement: (id: UUID) => boolean;

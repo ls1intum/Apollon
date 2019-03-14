@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Relationship from '../../../domain/Relationship';
 import { ElementRepository } from '../../../domain/Element';
+import { ClassAssociation } from '../../../domain/plugins';
+import Relationship from '../../../domain/Relationship';
 
 const kinds: { [kind: string]: string } = {
   Aggregation: 'Aggregation',
@@ -18,15 +19,15 @@ class AssociationSwitch extends Component<Props> {
     const { value } = event.currentTarget;
     const relationship = {
       ...this.props.relationship,
-      kind: value,
+      type: value,
     };
     this.props.update(relationship);
   };
 
   render() {
-    const { relationship } = this.props;
+    const relationship = this.props.relationship as ClassAssociation;
     return (
-      <select value={relationship.kind} onChange={this.onChange}>
+      <select value={relationship.type} onChange={this.onChange}>
         {Object.keys(kinds).map(kind => (
           <option key={kind} value={kind}>
             {kinds[kind]}

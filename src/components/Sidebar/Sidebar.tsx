@@ -18,11 +18,6 @@ import Element, { ElementRepository } from '../../domain/Element';
 import { Draggable, DropEvent } from './../Draggable';
 
 import ElementComponent from './../LayoutedElement/ElementComponent';
-import Package from './../../domain/plugins/common/Package';
-import Class from './../../domain/plugins/class/Class';
-import Interface from './../../domain/plugins/class/Interface';
-import Enumeration from './../../domain/plugins/class/Enumeration';
-import Attribute from './../../domain/plugins/class/Attribute';
 import InitialNode from './../../domain/plugins/activity/InitialNode';
 import FinalNode from './../../domain/plugins/activity/FinalNode';
 import ActionNode from './../../domain/plugins/activity/ActionNode';
@@ -31,10 +26,12 @@ import MergeNode from './../../domain/plugins/activity/MergeNode';
 import ForkNode from './../../domain/plugins/activity/ForkNode';
 import { CanvasProvider } from '../Canvas/CanvasContext';
 import {
-  Method,
   UseCase,
   UseCaseActor,
   UseCaseSystem,
+  Class,
+  ClassAttribute,
+  ClassMethod,
 } from './../../domain/plugins';
 
 class Sidebar extends Component<Props, State> {
@@ -48,10 +45,10 @@ class Sidebar extends Component<Props, State> {
         this.setState({
           previews: [
             // new Package(),
-            new Class(),
-            new Class('AbstractClass', true),
-            new Interface(),
-            new Enumeration(),
+            new Class('Class'),
+            new Class('AbstractClass', Class.types.Abstract),
+            new Class('Interface', Class.types.Interface),
+            new Class('Enumeration', Class.types.Enumeration),
           ],
         });
         break;
@@ -104,26 +101,27 @@ class Sidebar extends Component<Props, State> {
 
     setTimeout(() => {
       switch (element.kind) {
-        case 'Class':
-        case 'Interface': {
-          [
-            new Attribute('+ attribute: Type'),
-            new Method('+ method()'),
-          ].forEach(member => {
-            member.owner = element.id;
-            this.props.create(member);
-          });
-          break;
-        }
-        case 'Enumeration': {
-          [
-            new Attribute('Case1'),
-            new Attribute('Case2'),
-            new Attribute('Case3'),
-          ].forEach(member => {
-            member.owner = element.id;
-            this.props.create(member);
-          });
+        case 'Class': {
+          const e = element as Class;
+          if (e.isEnumeration) {
+            [
+              new ClassAttribute('Case1'),
+              new ClassAttribute('Case2'),
+              new ClassAttribute('Case3'),
+            ].forEach(member => {
+              member.owner = element.id;
+              this.props.create(member);
+            });
+            return;
+          } else {
+            [
+              new ClassAttribute('+ attribute: Type'),
+              new ClassMethod('+ method()'),
+            ].forEach(member => {
+              member.owner = element.id;
+              this.props.create(member);
+            });
+          }
           break;
         }
       }

@@ -1,7 +1,9 @@
+import { ElementKind as ClassElementKind } from './ClassDiagram';
 import { ElementKind as UseCaseElementKind } from './UseCaseDiagram';
 
-type ElementKind = UseCaseElementKind;
+type ElementKind = ClassElementKind | UseCaseElementKind;
 const ElementKind = {
+  ...ClassElementKind,
   ...UseCaseElementKind,
 };
 
