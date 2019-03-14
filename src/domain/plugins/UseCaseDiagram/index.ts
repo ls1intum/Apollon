@@ -1,11 +1,13 @@
+export const DiagramType = 'UseCaseDiagram';
+
 export enum ElementKind {
   UseCase = 'UseCase',
-  Actor = 'Actor',
-  System = 'System',
+  UseCaseActor = 'UseCaseActor',
+  UseCaseSystem = 'UseCaseSystem',
 }
 
 export enum RelationshipKind {
   UseCaseAssociation = 'UseCaseAssociation',
-  UseCaseInheritance = 'UseCaseInheritance',
+  UseCaseGeneralization = 'UseCaseGeneralization',
   UseCaseInclude = 'UseCaseInclude',
 }

@@ -1,7 +1,7 @@
 import React, { SFC } from 'react';
-import Actor from './Actor';
+import UseCaseActor from './UseCaseActor';
 
-const ActorComponent: SFC<Props> = ({ element }) => (
+const UseCaseActorComponent: SFC<Props> = ({ element }) => (
   <g>
     <rect width="100%" height="100%" fill="none" />
     <g stroke="black" strokeWidth={2}>
@@ -24,7 +24,7 @@ const ActorComponent: SFC<Props> = ({ element }) => (
 );
 
 interface Props {
-  element: Actor;
+  element: UseCaseActor;
 }
 
-export default ActorComponent;
+export default UseCaseActorComponent;

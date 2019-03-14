@@ -2,9 +2,9 @@ import Element from '../../../Element';
 import Boundary from '../../../geo/Boundary';
 import { ElementKind } from '..';
 
-class Actor extends Element {
-  kind = ElementKind.Actor;
+class UseCaseActor extends Element {
+  kind = ElementKind.UseCaseActor;
   bounds: Boundary = { ...this.bounds, width: 90, height: 140 }
 }
 
-export default Actor;
+export default UseCaseActor;

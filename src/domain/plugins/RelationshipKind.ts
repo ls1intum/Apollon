@@ -1,4 +1,4 @@
-import { RelationshipKind as UseCaseRelationshipKind } from './use_case_diagram';
+import { RelationshipKind as UseCaseRelationshipKind } from './UseCaseDiagram';
 import { DiagramType } from '../Diagram';
 
 type RelationshipKind = UseCaseRelationshipKind;

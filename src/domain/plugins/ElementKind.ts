@@ -1,4 +1,4 @@
-import { ElementKind as UseCaseElementKind } from './use_case_diagram';
+import { ElementKind as UseCaseElementKind } from './UseCaseDiagram';
 
 type ElementKind = UseCaseElementKind;
 const ElementKind = {

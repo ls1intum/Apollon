@@ -1,7 +1,7 @@
 import React, { SFC } from 'react';
-import System from './System';
+import UseCaseSystem from './UseCaseSystem';
 
-const SystemComponent: SFC<Props> = ({ element, children }) => (
+const UseCaseSystemComponent: SFC<Props> = ({ element, children }) => (
   <g>
     <rect width="100%" height="100%" stroke="black" />
     <text x="50%" y={16} textAnchor="middle" fontWeight="bold">
@@ -12,7 +12,7 @@ const SystemComponent: SFC<Props> = ({ element, children }) => (
 );
 
 interface Props {
-  element: System;
+  element: UseCaseSystem;
 }
 
-export default SystemComponent;
+export default UseCaseSystemComponent;

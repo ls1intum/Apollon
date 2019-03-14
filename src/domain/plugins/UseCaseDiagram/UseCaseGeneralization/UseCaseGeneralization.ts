@@ -1,10 +1,10 @@
 import Relationship from '../../../Relationship';
 import { RelationshipKind } from '..';
 
-class UseCaseInheritance extends Relationship {
+class UseCaseGeneralization extends Relationship {
   static features = { ...Relationship.features, straight: true };
 
-  kind = RelationshipKind.UseCaseInheritance;
+  kind = RelationshipKind.UseCaseGeneralization;
 }
 
-export default UseCaseInheritance;
+export default UseCaseGeneralization;

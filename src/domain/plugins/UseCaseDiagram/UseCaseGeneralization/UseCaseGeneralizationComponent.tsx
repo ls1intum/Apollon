@@ -1,7 +1,7 @@
 import React, { SFC } from 'react';
-import UseCaseInheritance from './UseCaseInheritance';
+import UseCaseGeneralization from './UseCaseGeneralization';
 
-const UseCaseInheritanceComponent: SFC<Props> = ({ element }) => (
+const UseCaseGeneralizationComponent: SFC<Props> = ({ element }) => (
   <g>
     <polyline
       points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
@@ -14,7 +14,7 @@ const UseCaseInheritanceComponent: SFC<Props> = ({ element }) => (
 );
 
 interface Props {
-  element: UseCaseInheritance;
+  element: UseCaseGeneralization;
 }
 
-export default UseCaseInheritanceComponent;
+export default UseCaseGeneralizationComponent;
