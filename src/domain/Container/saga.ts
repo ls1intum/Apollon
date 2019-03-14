@@ -3,9 +3,9 @@ import { State } from './../../components/Store';
 import Container from './Container';
 import { ElementRepository, ElementActionTypes } from '../Element';
 import {
+  CreateAction,
   ResizeAction,
   DeleteAction,
-  CreateAction,
   MoveAction,
 } from '../Element/types';
 import {
@@ -121,7 +121,7 @@ function* handleElementResize({ payload }: ResizeAction) {
       ElementRepository.getById(elements)
     );
     const updates = element.resizeElement(children);
-    yield all(updates.map(element => ElementRepository.update(element)));
+    yield all(updates.map(element => put(ElementRepository.update(element))));
   }
 }
 

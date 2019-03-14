@@ -1,6 +1,5 @@
 import { Action } from 'redux';
 import Element from '.';
-import { DeepReadonly } from 'ts-essentials';
 
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',
@@ -43,7 +42,7 @@ export interface SelectAction extends Action<ActionTypes.SELECT> {
 export interface ResizeAction extends Action<ActionTypes.RESIZE> {
   payload: {
     id: string;
-    size: {
+    delta: {
       width: number;
       height: number;
     };
@@ -73,15 +72,14 @@ export interface DeleteAction extends Action<ActionTypes.DELETE> {
 }
 
 export type Actions =
-  | DeepReadonly<CreateAction>
-  | DeepReadonly<HoverAction>
-  | DeepReadonly<LeaveAction>
-  | DeepReadonly<SelectAction>
-  | DeepReadonly<ResizeAction>
-  | DeepReadonly<MoveAction>
-
-  | DeepReadonly<UpdateAction>
-  | DeepReadonly<DeleteAction>;
+  | CreateAction
+  | HoverAction
+  | LeaveAction
+  | SelectAction
+  | ResizeAction
+  | MoveAction
+  | UpdateAction
+  | DeleteAction;
 
 export interface State {
   readonly [id: string]: Element;

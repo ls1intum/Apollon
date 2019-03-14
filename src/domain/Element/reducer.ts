@@ -45,7 +45,8 @@ const Reducer: Reducer<State, Actions> = (
           ...state[payload.id],
           bounds: {
             ...state[payload.id].bounds,
-            ...payload.size,
+            width: state[payload.id].bounds.width + payload.delta.width,
+            height: state[payload.id].bounds.height + payload.delta.height,
           },
         },
       };

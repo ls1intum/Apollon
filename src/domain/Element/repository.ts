@@ -41,10 +41,10 @@ class Repository {
 
   static resize: ActionCreator<ResizeAction> = (
     id: string,
-    size: { width: number; height: number }
+    delta: { width: number; height: number }
   ) => ({
     type: ActionTypes.RESIZE,
-    payload: { id, size },
+    payload: { id, delta },
   });
 
   static move = (

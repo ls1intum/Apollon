@@ -10,29 +10,27 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
   class Resizable extends Component<Props, State> {
     state: State = {
       resizing: false,
-      size: {
-        width: this.props.element.bounds.width,
-        height: this.props.element.bounds.height,
-      },
       offset: { x: 0, y: 0 },
     };
 
     private resize = (width: number, height: number) => {
-      let { size } = this.state;
+      let { bounds } = this.props.element;
       const { resizable } = (this.props.element
         .constructor as typeof Element).features;
-      width = Math.max(100, width);
-      height = Math.max(50, height);
-      console.log(this.props.element.name, resizable, width, height);
+      width = Math.max(0, width);
+      height = Math.max(0, height);
       if (resizable === 'HEIGHT' || resizable === 'NONE') {
-        width = size.width;
+        width = bounds.width;
       }
       if (resizable === 'WIDTH' || resizable === 'NONE') {
-        height = size.height;
+        height = bounds.height;
       }
-      if (size.width === width && size.height === height) return;
+      if (bounds.width === width && bounds.height === height) return;
 
-      this.props.resize(this.props.element.id, { width, height });
+      this.props.resize(this.props.element.id, {
+        width: width - this.props.element.bounds.width,
+        height: height - this.props.element.bounds.height,
+      });
     };
 
     private onMouseDown = (event: React.MouseEvent) => {
@@ -67,19 +65,9 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
       document.removeEventListener('mouseup', this.onMouseUp);
     };
 
-    componentDidUpdate() {
-      const { width, height } = this.props.element.bounds;
-      if (
-        width !== this.state.size.width ||
-        height !== this.state.size.height
-      ) {
-        this.setState({ size: { width, height } });
-      }
-    }
-
     render() {
       return (
-        <WrappedComponent {...this.props} resizing={this.state.resizing}>
+        <WrappedComponent {...this.props}>
           {this.props.children}
           <rect
             x={this.props.element.bounds.width - 10}
@@ -105,7 +93,6 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
 
   interface State {
     resizing: boolean;
-    size: { width: number; height: number };
     offset: { x: number; y: number };
   }
 
@@ -113,8 +100,8 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
-    connect(
-      (state: ReduxState): StateProps => ({
+    connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+      state => ({
         getById: ElementRepository.getById(state.elements),
       }),
       { resize: ElementRepository.resize }
