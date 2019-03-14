@@ -29,6 +29,8 @@ function* saga() {
 function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   const { elements }: State = yield select();
   const element = ElementRepository.getById(elements)(payload.id);
+  const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
+  if (owner && !(owner.constructor as any).isDroppable) return;
 
   if (!element.owner) {
     yield put<DeleteElementAction>({
