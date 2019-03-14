@@ -24,45 +24,46 @@ function* saga() {
 }
 
 function* handleOwnerChange({ payload }: ChangeOwnerAction) {
-  const { elements }: State = yield select();
-  const element = ElementRepository.getById(elements)(payload.id);
-  const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
-  if (owner && !(owner.constructor as any).isDroppable) return;
+  // const { elements }: State = yield select();
+  // const element = ElementRepository.getById(elements)(payload.id);
+  // const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
+  // if (owner && !(owner.constructor as any).isDroppable) return;
 
-  if (element.owner) {
-    yield put<RemoveChildAction>({
-      type: ActionTypes.REMOVE_CHILD,
-      payload: { id: element.id, owner: element.owner },
-    });
+  // if (element.owner) {
+  //   yield put<RemoveChildAction>({
+  //     type: ActionTypes.REMOVE_CHILD,
+  //     payload: { id: element.id, owner: element.owner },
+  //   });
 
-    let ownerID: string | null = element.owner;
-    let position = { x: 0, y: 0 };
-    while (ownerID) {
-      const owner = ElementRepository.getById(elements)(ownerID);
-      position.x += owner.bounds.x;
-      position.y += owner.bounds.y;
-      ownerID = owner.owner;
-    }
+  //   let ownerID: string | null = element.owner;
+  //   let position = { x: 0, y: 0 };
+  //   while (ownerID) {
+  //     const owner = ElementRepository.getById(elements)(ownerID);
+  //     position.x += owner.bounds.x;
+  //     position.y += owner.bounds.y;
+  //     ownerID = owner.owner;
+  //   }
 
-    yield put<MoveAction>(ElementRepository.move(element.id, position));
-  }
+  //   yield put<MoveAction>(ElementRepository.move(element.id, position));
+  // }
 
-  if (payload.owner) {
-    yield put<AppendChildAction>({
-      type: ActionTypes.APPEND_CHILD,
-      payload: { id: element.id, owner: payload.owner },
-    });
-    let ownerID: string | null = payload.owner;
-    let position = { x: 0, y: 0 };
-    while (ownerID) {
-      const owner = ElementRepository.getById(elements)(ownerID);
-      position.x -= owner.bounds.x;
-      position.y -= owner.bounds.y;
-      ownerID = owner.owner;
-    }
+  // if (payload.owner) {
+  //   yield put<AppendChildAction>({
+  //     type: ActionTypes.APPEND_CHILD,
+  //     payload: { id: element.id, owner: payload.owner },
+  //   });
+  //   let ownerID: string | null = payload.owner;
+  //   let position = { x: 0, y: 0 };
+  //   while (ownerID) {
+  //     const owner = ElementRepository.getById(elements)(ownerID);
+  //     position.x -= owner.bounds.x;
+  //     position.y -= owner.bounds.y;
+  //     ownerID = owner.owner;
+  //   }
 
-    yield put<MoveAction>(ElementRepository.move(element.id, position));
-  }
+  //   yield put<MoveAction>(ElementRepository.move(element.id, position));
+  // }
+  yield null;
 }
 
 function* handleElementCreation({ payload }: CreateAction) {

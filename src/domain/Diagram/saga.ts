@@ -27,24 +27,25 @@ function* saga() {
 }
 
 function* handleOwnerChange({ payload }: ChangeOwnerAction) {
-  const { elements }: State = yield select();
-  const element = ElementRepository.getById(elements)(payload.id);
-  const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
-  if (owner && !(owner.constructor as any).isDroppable) return;
+  // const { elements }: State = yield select();
+  // const element = ElementRepository.getById(elements)(payload.id);
+  // const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
+  // if (owner && !(owner.constructor as any).isDroppable) return;
 
-  if (!element.owner) {
-    yield put<DeleteElementAction>({
-      type: ActionTypes.DELETE_ELEMENT,
-      payload: { id: element.id },
-    });
-  }
+  // if (!element.owner) {
+  //   yield put<DeleteElementAction>({
+  //     type: ActionTypes.DELETE_ELEMENT,
+  //     payload: { id: element.id },
+  //   });
+  // }
 
-  if (!payload.owner) {
-    yield put<AddElementAction>({
-      type: ActionTypes.ADD_ELEMENT,
-      payload: { id: element.id },
-    });
-  }
+  // if (!payload.owner) {
+  //   yield put<AddElementAction>({
+  //     type: ActionTypes.ADD_ELEMENT,
+  //     payload: { id: element.id },
+  //   });
+  // }
+  yield null;
 }
 
 function* handleElementCreation({ payload }: ElementCreateAction) {
