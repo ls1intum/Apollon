@@ -15,6 +15,8 @@ enum AssociationType {
 class ClassAssociation extends Relationship {
   kind = RelationshipKind.ClassAssociation;
 
+  multiplicity = { source: '*', target: '1' };
+
   static get types() {
     return AssociationType;
   }
@@ -23,7 +25,7 @@ class ClassAssociation extends Relationship {
     name: string,
     source: Port,
     target: Port,
-    public type: AssociationType = AssociationType.BidirectionalAssociation
+    public type: AssociationType = AssociationType.Realization
   ) {
     super(name, source, target);
   }
