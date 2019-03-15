@@ -7,13 +7,14 @@ import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withCanvas, CanvasContext } from './../Canvas';
 import { ContainerRepository } from '../../domain/Container';
+import Point from '../../domain/geometry/Point';
 
 const moveable = (WrappedComponent: typeof ElementComponent) => {
   class Moveable extends Component<Props, State> {
     state: State = {
       movable: false,
       moving: false,
-      offset: { x: 0, y: 0 },
+      offset: new Point(),
     };
 
     private move = (x: number, y: number) => {
@@ -44,13 +45,9 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
         offset.x += event.clientX - rect.left;
         offset.y += event.clientY - rect.top;
 
-        let ownerID = this.props.element.owner;
-        while (ownerID) {
-          const owner = this.props.getById(ownerID);
-          offset.x += owner.bounds.x;
-          offset.y += owner.bounds.y;
-          ownerID = owner.owner;
-        }
+        const position = this.props.getAbsolutePosition(this.props.element.id);
+        offset.x += position.x - this.props.element.bounds.x;
+        offset.y += position.y - this.props.element.bounds.y;
 
         this.setState({ movable: true, offset });
         document.addEventListener('mousemove', this.onMouseMove);
@@ -76,7 +73,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
 
     private onMouseUp = () => {
       const { moving } = this.state;
-      this.setState({ movable: false, moving: false, offset: { x: 0, y: 0 } });
+      this.setState({ movable: false, moving: false, offset: new Point() });
       document.removeEventListener('mousemove', this.onMouseMove);
       document.removeEventListener('mouseup', this.onMouseUp);
       if (moving) this.checkOwnership();
@@ -100,7 +97,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface StateProps {
-    getById: (id: string) => Element;
+    getAbsolutePosition: (id: string) => Point;
     target: Element | undefined;
   }
 
@@ -114,14 +111,16 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
   interface State {
     movable: boolean;
     moving: boolean;
-    offset: { x: number; y: number };
+    offset: Point;
   }
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
     connect<StateProps, DispatchProps, OwnProps, ReduxState>(
       state => ({
-        getById: ElementRepository.getById(state.elements),
+        getAbsolutePosition: ElementRepository.getAbsolutePosition(
+          state.elements
+        ),
         target: Object.values(state.elements).find(element => element.hovered),
       }),
       {

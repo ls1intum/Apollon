@@ -53,8 +53,8 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
     private onMouseMove = (event: MouseEvent) => {
       const width = event.clientX - this.state.offset.x;
       const height = event.clientY - this.state.offset.y;
-      const { x, y } = this.props.coordinateSystem.screenToPoint(width, height);
-      this.resize(x, y);
+      const point = this.props.coordinateSystem.screenToPoint(width, height);
+      this.resize(point.x, point.y);
     };
 
     private onMouseUp = () => {

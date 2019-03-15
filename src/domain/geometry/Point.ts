@@ -12,7 +12,6 @@ class Point {
   add(x: number, y: number): Point;
   add(x: Point): Point;
   add(x: number | Point, y?: number): Point {
-    console.log(x, x instanceof Point);
     if (x instanceof Point) {
       return new Point(this.x + x.x, this.y + x.y);
     }
