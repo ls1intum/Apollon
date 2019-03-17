@@ -16,6 +16,8 @@ export interface Entity {
   size: Size;
   attributes: EntityMember[];
   methods: EntityMember[];
+  owner: string | null;
+  ownedElements: string[];
   renderMode: EntityRenderMode;
 }
 

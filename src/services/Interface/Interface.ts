@@ -36,11 +36,15 @@ import {
   ClassDependency,
   ClassInheritance,
   ClassRealization,
+  UseCaseAssociation,
+  UseCaseGeneralization,
+  UseCaseInclude,
 } from '../../domain/plugins';
-import { Point } from '../../domain/geo';
 import Port, { Connection } from '../../domain/Port';
 import ClassMember from '../../domain/plugins/ClassDiagram/ClassMember/ClassMember';
 import ClassAssociation from '../../domain/plugins/ClassDiagram/ClassAssociation/ClassAssociation';
+import Boundary from '../../domain/geo/Boundary';
+import Point from '../../domain/geometry/Point';
 
 export const mapInternalToExternalState = (
   state: ReduxState
@@ -59,10 +63,12 @@ export const mapInternalToExternalState = (
         .filter(e => !(e instanceof ClassMember))
         .map<Entity>(element => elementToExternal(element, state.elements))
         .map<Entity>(e => {
-          e.position = {
-            x: e.position.x + state.diagram.bounds.width / 2,
-            y: e.position.y + state.diagram.bounds.height / 2,
-          };
+          if (e.owner === null) {
+            e.position = {
+              x: e.position.x + state.diagram.bounds.width / 2,
+              y: e.position.y + state.diagram.bounds.height / 2,
+            };
+          }
           return e;
         })
         .reduce<{ [id: string]: Entity }>((o, e) => ({ ...o, [e.id]: e }), {}),
@@ -158,7 +164,9 @@ export const mapExternalToInternalState = (
     diagram: {
       ...new Diagram(type),
       ...(state && {
-        ownedElements: state.entities.allIds,
+        ownedElements: Object.values(elements)
+          .filter(e => !e.owner)
+          .map(e => e.id),
         ownedRelationships: state.relationships.allIds,
         bounds: {
           x: 0,
@@ -209,6 +217,8 @@ export const elementToExternal = (
     size: { width: element.bounds.width, height: element.bounds.height },
     attributes: [],
     methods: [],
+    owner: element.owner,
+    ownedElements: [],
     renderMode: {
       showAttributes: true,
       showMethods: true,
@@ -221,6 +231,9 @@ export const elementToExternal = (
     entity.methods = element.ownedElements
       .filter(id => elements[id] instanceof ClassMethod)
       .map<EntityMember>(id => ({ id, name: elements[id].name }));
+    entity.ownedElements = element.ownedElements.filter(
+      id => !(elements[id] instanceof ClassMember)
+    );
   }
   return entity;
 };
@@ -254,11 +267,17 @@ export const entityToElements = (entity: Entity): Element[] => {
     id: entity.id,
     bounds: { ...entity.position, ...entity.size },
     selected: false,
+    owner: entity.owner,
   };
 
   element = Object.setPrototypeOf(element, init.constructor.prototype);
   let current: Element[] = [];
   if (element instanceof Container) {
+    element.ownedElements = entity.ownedElements.filter(
+      id =>
+        !entity.attributes.map(a => a.id).includes(id) &&
+        !entity.methods.map(a => a.id).includes(id)
+    );
     [element, ...current] = element.render([]);
     for (const member of entity.attributes) {
       const attribute = Object.setPrototypeOf(
@@ -439,19 +458,48 @@ export const externalToRelationship = (
     case ExternalRelationshipKind.ClassRealization:
       init = new ClassRealization('Association', source, target);
       break;
+    case ExternalRelationshipKind.UseCaseAssociation:
+      init = new UseCaseAssociation('Association', source, target);
+      break;
+    case ExternalRelationshipKind.UseCaseGeneralization:
+      init = new UseCaseGeneralization('Association', source, target);
+      break;
+    case ExternalRelationshipKind.UseCaseInclude:
+      init = new UseCaseInclude('Association', source, target);
+      break;
   }
 
   if (!path) {
-    const sourceElement = elements.find(e => e.id === source.element)!;
-    const targetElement = elements.find(e => e.id === target.element)!;
+    let current: Element = elements.find(e => e.id === source.element)!;
+    let sourceRect: Boundary = { ...current.bounds };
+    while (current.owner) {
+      current = elements.find(e => e.id === current.owner)!;
+      sourceRect = {
+        ...sourceRect,
+        x: sourceRect.x + current.bounds.x,
+        y: sourceRect.y + current.bounds.y,
+      };
+    }
+
+    current = elements.find(e => e.id === target.element)!;
+    let targetRect: Boundary = { ...current.bounds };
+    while (current.owner) {
+      current = elements.find(e => e.id === current.owner)!;
+      targetRect = {
+        ...targetRect,
+        x: targetRect.x + current.bounds.x,
+        y: targetRect.y + current.bounds.y,
+      };
+    }
 
     const { straight } = (init.constructor as typeof Relationship).features;
 
-    path = Connection.computePath(
-      { bounds: sourceElement.bounds, location: source.location },
-      { bounds: targetElement.bounds, location: target.location },
+    const points = Connection.computePath(
+      { bounds: sourceRect, location: source.location },
+      { bounds: targetRect, location: target.location },
       { isStraight: straight }
     );
+    path = points.map(point => new Point(point.x, point.y));
   }
 
   const relationship: Relationship = {
