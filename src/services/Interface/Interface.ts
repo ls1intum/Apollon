@@ -39,6 +39,13 @@ import {
   UseCaseAssociation,
   UseCaseGeneralization,
   UseCaseInclude,
+  ActivityActionNode,
+  ActivityFinalNode,
+  ActivityForkNode,
+  ActivityInitialNode,
+  ActivityMergeNode,
+  ActivityObjectNode,
+  ActivityControlFlow,
 } from '../../domain/plugins';
 import Port, { Connection } from '../../domain/Port';
 import ClassMember from '../../domain/plugins/ClassDiagram/ClassMember/ClassMember';
@@ -196,6 +203,18 @@ export const elementToExternal = (
         return EntityKind.Interface;
       case ElementKind.Enumeration:
         return EntityKind.Enumeration;
+      case ElementKind.ActivityActionNode:
+        return EntityKind.ActivityActionNode;
+      case ElementKind.ActivityFinalNode:
+        return EntityKind.ActivityFinalNode;
+      case ElementKind.ActivityForkNode:
+        return EntityKind.ActivityForkNode;
+      case ElementKind.ActivityInitialNode:
+        return EntityKind.ActivityInitialNode;
+      case ElementKind.ActivityMergeNode:
+        return EntityKind.ActivityMergeNode;
+      case ElementKind.ActivityObjectNode:
+        return EntityKind.ActivityObjectNode;
       case ElementKind.UseCase:
         return EntityKind.UseCase;
       case ElementKind.UseCaseActor:
@@ -249,6 +268,18 @@ export const entityToElements = (entity: Entity): Element[] => {
         return new Interface(entity.name);
       case EntityKind.Enumeration:
         return new Enumeration(entity.name);
+      case EntityKind.ActivityActionNode:
+        return new ActivityActionNode(entity.name);
+      case EntityKind.ActivityFinalNode:
+        return new ActivityFinalNode(entity.name);
+      case EntityKind.ActivityForkNode:
+        return new ActivityForkNode(entity.name);
+      case EntityKind.ActivityInitialNode:
+        return new ActivityInitialNode(entity.name);
+      case EntityKind.ActivityMergeNode:
+        return new ActivityMergeNode(entity.name);
+      case EntityKind.ActivityObjectNode:
+        return new ActivityObjectNode(entity.name);
       case EntityKind.UseCase:
         return new UseCase(entity.name);
       case EntityKind.UseCaseActor:
@@ -341,6 +372,8 @@ export const relationshipToExternal = (
         return ExternalRelationshipKind.ClassInheritance;
       case RelationshipKind.ClassRealization:
         return ExternalRelationshipKind.ClassRealization;
+      case RelationshipKind.ActivityControlFlow:
+        return ExternalRelationshipKind.ActivityControlFlow;
       case RelationshipKind.ClassUnidirectional:
         return ExternalRelationshipKind.ClassUnidirectional;
       case RelationshipKind.UseCaseAssociation:
@@ -457,6 +490,9 @@ export const externalToRelationship = (
       break;
     case ExternalRelationshipKind.ClassRealization:
       init = new ClassRealization('Association', source, target);
+      break;
+    case ExternalRelationshipKind.ActivityControlFlow:
+      init = new ActivityControlFlow('Association', source, target);
       break;
     case ExternalRelationshipKind.UseCaseAssociation:
       init = new UseCaseAssociation('Association', source, target);

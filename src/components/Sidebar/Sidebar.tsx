@@ -29,6 +29,12 @@ import {
   AbstractClass,
   Interface,
   Enumeration,
+  ActivityInitialNode,
+  ActivityFinalNode,
+  ActivityActionNode,
+  ActivityObjectNode,
+  ActivityMergeNode,
+  ActivityForkNode,
 } from './../../domain/plugins';
 
 class Sidebar extends Component<Props, State> {
@@ -49,18 +55,18 @@ class Sidebar extends Component<Props, State> {
           ],
         });
         break;
-      // case DiagramType.ActivityDiagram:
-      //   this.setState({
-      //     previews: [
-      //       new InitialNode(),
-      //       new FinalNode(),
-      //       new ActionNode(),
-      //       new ObjectNode(),
-      //       new MergeNode(),
-      //       new ForkNode(),
-      //     ],
-      //   });
-      //   break;
+      case DiagramType.ActivityDiagram:
+        this.setState({
+          previews: [
+            new ActivityInitialNode(''),
+            new ActivityFinalNode(''),
+            new ActivityActionNode('ActionNode'),
+            new ActivityObjectNode('ObjectNode'),
+            new ActivityMergeNode('Condition'),
+            new ActivityForkNode(''),
+          ],
+        });
+        break;
       case DiagramType.UseCaseDiagram:
         this.setState({
           previews: [
