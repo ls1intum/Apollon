@@ -538,12 +538,20 @@ export const externalToRelationship = (
     path = points.map(point => new Point(point.x, point.y));
   }
 
+  const x = Math.min(...path.map(point => point.x));
+  const y = Math.min(...path.map(point => point.y));
+  const width = Math.max(...path.map(point => point.x)) - x;
+  const height = Math.max(...path.map(point => point.y)) - y;
+  const bounds = { x, y, width, height };
+  path = path.map(point => new Point(point.x - x, point.y - y));
+
   const relationship: Relationship = {
     ...init,
     id: external.id,
     selected: false,
     interactive: false,
     path,
+    bounds,
     sourceMultiplicity: external.source.multiplicity,
     sourceRole: external.source.role,
     targetMultiplicity: external.target.multiplicity,

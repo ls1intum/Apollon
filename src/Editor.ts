@@ -9,22 +9,27 @@ import {
   InteractiveElementsMode,
   EditorMode,
 } from './services/EditorService';
-// import * as DiagramLayouter from './rendering/layouters/diagram';
-// import {
-//   renderDiagramToSVG,
-//   RenderOptions,
-//   RenderedSVG,
-// } from './rendering/renderers/svg';
+import * as DiagramLayouter from './rendering/layouters/diagram';
+import {
+  renderDiagramToSVG,
+  RenderOptions,
+  RenderedSVG,
+  renderEntityToSVG,
+  renderRelationshipToSVG,
+} from './rendering/renderers/svg';
 import { DiagramType } from './domain/Diagram';
 import {
   ExternalState,
-//   Entity,
-//   Relationship,
+  Entity,
+  Relationship,
 } from './services/Interface/ExternalState';
 import {
   mapInternalToExternalState,
   mapExternalToInternalState,
+  externalToRelationship,
+  entityToElements,
 } from './services/Interface/Interface';
+import Element from './domain/Element';
 
 export interface ElementSelection {
   entityIds: string[];
@@ -117,27 +122,41 @@ class Editor {
     unmountComponentAtNode(this.container);
   }
 
-  // static layoutDiagram(
-  //   state: ExternalState,
-  //   layoutOptions: DiagramLayouter.LayoutOptions
-  // ): DiagramLayouter.LayoutedDiagram {
-  //   const entities: Entity[] = Object.values(state.entities.byId);
-  //   const relationships: Relationship[] = Object.values(
-  //     state.relationships.byId
-  //   );
+  static layoutDiagram(
+    state: ExternalState,
+    layoutOptions: DiagramLayouter.LayoutOptions
+  ): DiagramLayouter.LayoutedDiagram {
+    const entities: Entity[] = Object.values(state.entities.byId);
+    const relationships: Relationship[] = Object.values(
+      state.relationships.byId
+    );
 
-  //   return DiagramLayouter.layoutDiagram(
-  //     { entities, relationships },
-  //     layoutOptions
-  //   );
-  // }
+    return DiagramLayouter.layoutDiagram(
+      { entities, relationships },
+      layoutOptions
+    );
+  }
 
-  // static renderDiagramToSVG(
-  //   layoutedDiagram: DiagramLayouter.LayoutedDiagram,
-  //   renderOptions: RenderOptions
-  // ): RenderedSVG {
-  //   return renderDiagramToSVG(layoutedDiagram, renderOptions);
-  // }
+  static renderDiagramToSVG(
+    layoutedDiagram: DiagramLayouter.LayoutedDiagram,
+    renderOptions: RenderOptions
+  ): RenderedSVG {
+    return renderDiagramToSVG(layoutedDiagram, renderOptions);
+  }
+
+  static renderEntityToSVG(
+    layoutedEntity: DiagramLayouter.LayoutedEntity,
+    renderOptions: RenderOptions
+  ): RenderedSVG {
+    return renderEntityToSVG(layoutedEntity, renderOptions);
+  }
+
+  static renderRelationshipToSVG(
+    layoutedRelationship: DiagramLayouter.LayoutedRelationship,
+    renderOptions: RenderOptions
+  ): RenderedSVG {
+    return renderRelationshipToSVG(layoutedRelationship, renderOptions);
+  }
 }
 
 export default Editor;
