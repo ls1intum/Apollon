@@ -8,7 +8,6 @@ import ConnectLayer from '../Connectable/ConnectLayer';
 import LayoutedElement from './../LayoutedElement/LayoutedElement';
 import LayoutedRelationship from './../LayoutedRelationship';
 
-import RelationshipMarkers from './../../rendering/renderers/svg/defs/RelationshipMarkers';
 import { Droppable, DropEvent } from './../Draggable';
 import Diagram, { DiagramRepository } from '../../domain/Diagram';
 import { ElementRepository } from '../../domain/Element';
@@ -82,10 +81,6 @@ class Canvas extends Component<Props, State> {
                   <>
                     <KeyboardEventListener popup={this.popup} />
                     <svg width="100%" height="100%" ref={this.layer}>
-                      <defs>
-                        <RelationshipMarkers />
-                      </defs>
-
                       <ConnectLayer>
                         {diagram.ownedElements.map(element => (
                           <LayoutedElement key={element} element={element} />

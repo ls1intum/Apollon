@@ -1,5 +1,3 @@
-export const DiagramType = 'UseCaseDiagram';
-
 export enum ElementKind {
   UseCase = 'UseCase',
   UseCaseActor = 'UseCaseActor',

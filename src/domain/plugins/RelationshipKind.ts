@@ -1,9 +1,15 @@
+import { RelationshipKind as CommonRelationshipKind } from './Common';
 import { RelationshipKind as ClassRelationshipKind } from './ClassDiagram';
 import { RelationshipKind as UseCaseRelationshipKind } from './UseCaseDiagram';
-import { DiagramType } from '../Diagram';
+import DiagramType from './DiagramType';
 
-type RelationshipKind = ClassRelationshipKind | UseCaseRelationshipKind;
+type RelationshipKind =
+  | CommonRelationshipKind
+  | ClassRelationshipKind
+  | UseCaseRelationshipKind;
+
 const RelationshipKind = {
+  ...CommonRelationshipKind,
   ...ClassRelationshipKind,
   ...UseCaseRelationshipKind,
 };
@@ -11,8 +17,8 @@ const RelationshipKind = {
 export const DefaultRelationshipKind: {
   [type in DiagramType]: RelationshipKind
 } = {
-  [DiagramType.ClassDiagram]: ClassRelationshipKind.ClassAssociation,
-  [DiagramType.ActivityDiagram]: 'BidirectionalAssociation' as RelationshipKind,
+  [DiagramType.ClassDiagram]:
+    ClassRelationshipKind.ClassBidirectional,
   [DiagramType.UseCaseDiagram]: UseCaseRelationshipKind.UseCaseAssociation,
 };
 

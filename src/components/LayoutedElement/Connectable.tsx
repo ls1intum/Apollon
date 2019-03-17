@@ -73,7 +73,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
         const endpoints = await context.onStartConnect(port)(event);
 
         const Relationship =
-          Plugins[DefaultRelationshipKind[this.props.diagramType]];
+          (Plugins as any)[DefaultRelationshipKind[this.props.diagramType]];
         const relationship = new Relationship(
           'Association',
           endpoints.source,

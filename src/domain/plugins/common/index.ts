@@ -1,1 +1,6 @@
-export { default as Package, PackageComponent } from './Package';
+export enum ElementKind {
+  Diagram = 'Diagram',
+  Package = 'Package',
+}
+
+export enum RelationshipKind {}

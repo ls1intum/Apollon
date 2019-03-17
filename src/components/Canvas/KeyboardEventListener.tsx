@@ -1,12 +1,8 @@
 import { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
 import CanvasContext, { withCanvas } from './CanvasContext';
-import Element, { ElementRepository } from '../../domain/Element';
-import { getAllRelationships } from '../../services/redux';
-import Relationship from '../../domain/Relationship';
-import Container from '../../domain/Container';
+import { ElementRepository } from '../../domain/Element';
 import PopupLayer from '../Popup';
 
 class KeyboardEventListener extends Component<Props> {

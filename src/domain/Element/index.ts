@@ -1,4 +1,5 @@
 export { default } from './Element';
+export { default as ElementKind } from './../plugins/ElementKind';
 export {
   ActionTypes as ElementActionTypes,
   State as ElementState,

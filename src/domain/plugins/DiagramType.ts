@@ -1,9 +1,6 @@
-import { DiagramType as ClassDiagramType } from './ClassDiagram';
-import { DiagramType as UseCaseDiagramType } from './UseCaseDiagram';
-
-const DiagramType = {
-  [ClassDiagramType]: ClassDiagramType,
-  [UseCaseDiagramType]: UseCaseDiagramType,
-};
+const enum DiagramType {
+  ClassDiagram = 'ClassDiagram',
+  UseCaseDiagram = 'UseCaseDiagram',
+}
 
 export default DiagramType;

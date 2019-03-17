@@ -5,52 +5,59 @@ import {
   EntityKind,
   EntityMember,
   Relationship as ExternalRelationship,
-  RelationshipKind,
+  RelationshipKind as ExternalRelationshipKind,
 } from './ExternalState';
-import Container from '../../domain/Container';
-import Relationship from '../../domain/Relationship';
 import {
   EditorMode,
   InteractiveElementsMode,
   ApollonMode,
 } from '../EditorService';
 import Diagram, { DiagramType } from '../../domain/Diagram';
-import Element, { ElementRepository } from '../../domain/Element';
+import Element, { ElementKind, ElementRepository } from '../../domain/Element';
+import Container from '../../domain/Container';
+import Relationship, {
+  RelationshipKind,
+  RelationshipRepository,
+} from '../../domain/Relationship';
 import {
-  ClassAttribute as Attribute,
-  ClassMethod as Method,
   Class,
-  InitialNode,
-  FinalNode,
-  ActionNode,
-  ObjectNode,
-  MergeNode,
-  ForkNode,
-  ClassAssociation,
-} from './../../domain/plugins';
-import { LayoutedEntity } from '../../rendering/layouters/entity';
-import Port, { Connection } from '../../domain/Port';
+  ClassAttribute,
+  ClassMethod,
+  UseCase,
+  UseCaseActor,
+  UseCaseSystem,
+  AbstractClass,
+  Interface,
+  Enumeration,
+  ClassBidirectional,
+  ClassAggregation,
+  ClassComposition,
+  ClassUnidirectional,
+  ClassDependency,
+  ClassInheritance,
+  ClassRealization,
+} from '../../domain/plugins';
 import { Point } from '../../domain/geo';
-import Boundary from '../../domain/geo/Boundary';
+import Port, { Connection } from '../../domain/Port';
+import ClassMember from '../../domain/plugins/ClassDiagram/ClassMember/ClassMember';
+import ClassAssociation from '../../domain/plugins/ClassDiagram/ClassAssociation/ClassAssociation';
 
 export const mapInternalToExternalState = (
   state: ReduxState
 ): ExternalState => {
   const elements: Element[] = ElementRepository.read(state);
-  const result = {
+  const relationships: Relationship[] = RelationshipRepository.read(
+    state.elements
+  );
+
+  const external = {
     version: '1.0',
 
     entities: {
-      allIds: elements
-        .filter(
-          element => element.kind !== 'Attribute' && element.kind !== 'Method'
-        )
-        .map(element => element.id),
+      allIds: elements.filter(e => !(e instanceof ClassMember)).map(e => e.id),
       byId: elements
-        .filter(
-          element => element.kind !== 'Attribute' && element.kind !== 'Method'
-        )
-        .map<Entity>(element => elementToEntity(element, state.elements))
+        .filter(e => !(e instanceof ClassMember))
+        .map<Entity>(element => elementToExternal(element, state.elements))
         .map<Entity>(e => {
           e.position = {
             x: e.position.x + state.diagram.bounds.width / 2,
@@ -62,14 +69,9 @@ export const mapInternalToExternalState = (
     },
 
     relationships: {
-      allIds: Object.keys(state.elements).filter(
-        id => state.elements[id].base === 'Relationship'
-      ),
-      byId: Object.keys(state.elements)
-        .filter(id => state.elements[id].base === 'Relationship')
-        .map<ExternalRelationship>(id =>
-          relationshipToExternal(state.elements[id] as Relationship)
-        )
+      allIds: relationships.map(e => e.id),
+      byId: relationships
+        .map<ExternalRelationship>(r => relationshipToExternal(r))
         .reduce<{ [id: string]: ExternalRelationship }>(
           (o, r) => ({ ...o, [r.id]: r }),
           {}
@@ -78,10 +80,8 @@ export const mapInternalToExternalState = (
 
     interactiveElements: {
       allIds: [
-        ...state.interactiveElements.allIds,
-        ...Object.values(state.elements)
-          .filter(e => e.interactive)
-          .map(e => e.id),
+        ...elements.filter(e => e.interactive).map(e => e.id),
+        ...relationships.filter(r => r.interactive).map(r => r.id),
       ],
     },
 
@@ -93,7 +93,8 @@ export const mapInternalToExternalState = (
       gridSize: state.editor.gridSize,
     },
   };
-  return result;
+
+  return external;
 };
 
 export const mapExternalToInternalState = (
@@ -123,47 +124,37 @@ export const mapExternalToInternalState = (
         .reduce<{ [id: string]: Element }>((o, e) => ({ ...o, [e.id]: e }), {})
     : {};
 
-  return {
-    interactiveElements: {
-      allIds: state
-        ? state.interactiveElements.allIds.filter(
-            id => id in state.relationships.byId
+  const relationships = state
+    ? Object.keys(state.relationships.byId)
+        .map<Relationship>(id =>
+          externalToRelationship(
+            state.relationships.byId[id],
+            Object.values(elements)
           )
-        : [],
-    },
+        )
+        .map<Relationship>(relationship => {
+          relationship.interactive = state.interactiveElements.allIds.includes(
+            relationship.id
+          );
+          return relationship;
+        })
+        .reduce(
+          (o: { [id: string]: Relationship }, r: Relationship) => ({
+            ...o,
+            [r.id]: r,
+          }),
+          {}
+        )
+    : {};
 
-    elements: {
-      ...elements,
-      ...(state
-        ? Object.keys(state.relationships.byId)
-            .map<Relationship>(id =>
-              externalToRelationship(
-                state.relationships.byId[id],
-                Object.values(elements)
-              )
-            )
-            .map<Relationship>(relationship => {
-              relationship.interactive = state.interactiveElements.allIds.includes(
-                relationship.id
-              );
-              return relationship;
-            })
-            .reduce(
-              (o: { [id: string]: Relationship }, r: Relationship) => ({
-                ...o,
-                [r.id]: r,
-              }),
-              {}
-            )
-        : {}),
-    },
-
+  const internal = {
     editor: {
       gridSize: state ? state.editor.gridSize : 10,
       editorMode,
       interactiveMode,
       mode,
     },
+
     diagram: {
       ...new Diagram(type),
       ...(state && {
@@ -177,35 +168,37 @@ export const mapExternalToInternalState = (
         },
       }),
     },
+    elements: { ...elements, ...relationships },
   };
+
+  return internal;
 };
 
-export const elementToEntity = (
+export const elementToExternal = (
   element: Element,
   elements: { [id: string]: Element }
 ): Entity => {
-  let kind: string = '';
+  const kind = ((element: Element) => {
+    switch (element.kind) {
+      case ElementKind.Class:
+        return EntityKind.Class;
+      case ElementKind.AbstractClass:
+        return EntityKind.AbstractClass;
+      case ElementKind.Interface:
+        return EntityKind.Interface;
+      case ElementKind.Enumeration:
+        return EntityKind.Enumeration;
+      case ElementKind.UseCase:
+        return EntityKind.UseCase;
+      case ElementKind.UseCaseActor:
+        return EntityKind.UseCaseActor;
+      case ElementKind.UseCaseSystem:
+        return EntityKind.UseCaseSystem;
+    }
+  })(element);
 
-  if (element instanceof Class) {
-    kind = element.isAbstract
-      ? 'ABSTRACT_CLASS'
-      : element.isInterface
-      ? 'INTERFACE'
-      : element.isEnumeration
-      ? 'ENUMERATION'
-      : 'CLASS';
-  } else if (element instanceof InitialNode) {
-    kind = 'ACTIVITY_CONTROL_INITIAL_NODE';
-  } else if (element instanceof FinalNode) {
-    kind = 'ACTIVITY_CONTROL_FINAL_NODE';
-  } else if (element instanceof ActionNode) {
-    kind = 'ACTIVITY_ACTION_NODE';
-  } else if (element instanceof ObjectNode) {
-    kind = 'ACTIVITY_OBJECT';
-  } else if (element instanceof MergeNode) {
-    kind = 'ACTIVITY_MERGE_NODE';
-  } else if (element instanceof ForkNode) {
-    kind = 'ACTIVITY_FORK_NODE';
+  if (!kind) {
+    throw new Error(`Don't know how to export ${element.kind}`);
   }
 
   const entity: Entity = {
@@ -223,57 +216,39 @@ export const elementToEntity = (
   };
   if (element instanceof Container) {
     entity.attributes = element.ownedElements
-      .filter(id => elements[id] instanceof Attribute)
+      .filter(id => elements[id] instanceof ClassAttribute)
       .map<EntityMember>(id => ({ id, name: elements[id].name }));
     entity.methods = element.ownedElements
-      .filter(id => elements[id] instanceof Method)
+      .filter(id => elements[id] instanceof ClassMethod)
       .map<EntityMember>(id => ({ id, name: elements[id].name }));
   }
   return entity;
 };
 
 export const entityToElements = (entity: Entity): Element[] => {
-  let init: Element;
-  switch (entity.kind) {
-    case 'CLASS':
-      // init = new Class(entity.name, false);
-      init = new Class(entity.name);
-      break;
-    case 'ABSTRACT_CLASS':
-      // init = new Class(entity.name, true);
-      init = new Class(entity.name);
-      (init as Class).classifier = Class.types.Abstract;
-      break;
-    case 'ENUMERATION':
-      init = new Class(entity.name);
-      (init as Class).classifier = Class.types.Enumeration;
-      break;
-    case 'INTERFACE':
-      // init = new Interface(entity.name);
-      init = new Class(entity.name);
-      (init as Class).classifier = Class.types.Interface;
-      break;
-    case 'ACTIVITY_CONTROL_INITIAL_NODE':
-      init = new InitialNode(entity.name);
-      break;
-    case 'ACTIVITY_CONTROL_FINAL_NODE':
-      init = new FinalNode(entity.name);
-      break;
-    case 'ACTIVITY_ACTION_NODE':
-      init = new ActionNode(entity.name);
-      break;
-    case 'ACTIVITY_OBJECT':
-      init = new ObjectNode(entity.name);
-      break;
-    case 'ACTIVITY_MERGE_NODE':
-      init = new MergeNode(entity.name);
-      break;
-    case 'ACTIVITY_FORK_NODE':
-      init = new ForkNode(entity.name);
-      break;
-    default:
-      return [];
+  const init = ((entity: Entity) => {
+    switch (entity.kind) {
+      case EntityKind.Class:
+        return new Class(entity.name);
+      case EntityKind.AbstractClass:
+        return new AbstractClass(entity.name);
+      case EntityKind.Interface:
+        return new Interface(entity.name);
+      case EntityKind.Enumeration:
+        return new Enumeration(entity.name);
+      case EntityKind.UseCase:
+        return new UseCase(entity.name);
+      case EntityKind.UseCaseActor:
+        return new UseCaseActor(entity.name);
+      case EntityKind.UseCaseSystem:
+        return new UseCaseSystem(entity.name);
+    }
+  })(entity);
+
+  if (!init) {
+    throw new Error(`Don't know how to import ${entity.kind}`);
   }
+
   let element: Element = {
     ...init,
     id: entity.id,
@@ -287,8 +262,8 @@ export const entityToElements = (entity: Entity): Element[] => {
     [element, ...current] = element.render([]);
     for (const member of entity.attributes) {
       const attribute = Object.setPrototypeOf(
-        { ...new Attribute(member.name), id: member.id },
-        Attribute.prototype
+        { ...new ClassAttribute(member.name), id: member.id },
+        ClassAttribute.prototype
       );
       let [parent, ...children] = (element as Container).addElement(
         attribute,
@@ -299,8 +274,8 @@ export const entityToElements = (entity: Entity): Element[] => {
     }
     for (const member of entity.methods) {
       const method = Object.setPrototypeOf(
-        { ...new Method(member.name), id: member.id },
-        Method.prototype
+        { ...new ClassMethod(member.name), id: member.id },
+        ClassMethod.prototype
       );
       let [parent, ...children] = (element as Container).addElement(
         method,
@@ -313,49 +288,68 @@ export const entityToElements = (entity: Entity): Element[] => {
   return [element, ...current];
 };
 
-export const layoutedEntityToElements = (
-  layoutedEntity: LayoutedEntity
-): Element[] => {
-  const entity: Entity = layoutedEntity as Entity;
-  let [element, ...children] = entityToElements(entity);
-  if (element instanceof Container) element.ownedElements = [];
-  children = children.map(c => ({
-    ...c,
-    bounds: {
-      ...c.bounds,
-      x: c.bounds.x + element.bounds.x,
-      y: c.bounds.y + element.bounds.y,
-    },
-  }));
-  return [element, ...children];
-};
+// export const layoutedEntityToElements = (
+//   layoutedEntity: LayoutedEntity
+// ): Element[] => {
+//   const entity: Entity = layoutedEntity as Entity;
+//   let [element, ...children] = entityToElements(entity);
+//   if (element instanceof Container) element.ownedElements = [];
+//   children = children.map(c => ({
+//     ...c,
+//     bounds: {
+//       ...c.bounds,
+//       x: c.bounds.x + element.bounds.x,
+//       y: c.bounds.y + element.bounds.y,
+//     },
+//   }));
+//   return [element, ...children];
+// };
 
 export const relationshipToExternal = (
   relationship: Relationship
 ): ExternalRelationship => {
-  let kind = RelationshipKind.AssociationBidirectional;
-  if (relationship.kind === 'Aggregation') {
-    kind = RelationshipKind.Aggregation;
-  } else if (relationship.kind === 'BidirectionalAssociation') {
-    kind = RelationshipKind.AssociationBidirectional;
-  } else if (relationship.kind === 'UnidirectionalAssociation') {
-    kind = RelationshipKind.AssociationUnidirectional;
-  } else if (relationship.kind === 'Composition') {
-    kind = RelationshipKind.Composition;
-  } else if (relationship.kind === 'Dependency') {
-    kind = RelationshipKind.Dependency;
-  } else if (relationship.kind === 'Inheritance') {
-    kind = RelationshipKind.Inheritance;
-  } else if (relationship.kind === 'Realization') {
-    kind = RelationshipKind.Realization;
+  const kind = ((relationship: Relationship) => {
+    switch (relationship.kind) {
+      case RelationshipKind.ClassAggregation:
+        return ExternalRelationshipKind.ClassAggregation;
+      case RelationshipKind.ClassBidirectional:
+        return ExternalRelationshipKind.ClassBidirectional;
+      case RelationshipKind.ClassComposition:
+        return ExternalRelationshipKind.ClassComposition;
+      case RelationshipKind.ClassDependency:
+        return ExternalRelationshipKind.ClassDependency;
+      case RelationshipKind.ClassInheritance:
+        return ExternalRelationshipKind.ClassInheritance;
+      case RelationshipKind.ClassRealization:
+        return ExternalRelationshipKind.ClassRealization;
+      case RelationshipKind.ClassUnidirectional:
+        return ExternalRelationshipKind.ClassUnidirectional;
+      case RelationshipKind.UseCaseAssociation:
+        return ExternalRelationshipKind.UseCaseAssociation;
+      case RelationshipKind.UseCaseGeneralization:
+        return ExternalRelationshipKind.UseCaseGeneralization;
+      case RelationshipKind.UseCaseInclude:
+        return ExternalRelationshipKind.UseCaseInclude;
+    }
+  })(relationship);
+
+  if (!kind) {
+    throw new Error(`Don't know how to export ${relationship.kind}`);
   }
+
   return {
     id: relationship.id,
     kind,
     source: {
       entityId: relationship.source.element,
-      multiplicity: relationship.sourceMultiplicity,
-      role: relationship.sourceRole,
+      multiplicity:
+        relationship instanceof ClassAssociation
+          ? relationship.multiplicity.source
+          : '',
+      role:
+        relationship instanceof ClassAssociation
+          ? relationship.role.source
+          : '',
       edge:
         relationship.source.location === 'N'
           ? 'TOP'
@@ -368,8 +362,14 @@ export const relationshipToExternal = (
     },
     target: {
       entityId: relationship.target.element,
-      multiplicity: relationship.targetMultiplicity,
-      role: relationship.targetRole,
+      multiplicity:
+        relationship instanceof ClassAssociation
+          ? relationship.multiplicity.target
+          : '',
+      role:
+        relationship instanceof ClassAssociation
+          ? relationship.role.target
+          : '',
       edge:
         relationship.target.location === 'N'
           ? 'TOP'
@@ -412,68 +412,32 @@ export const externalToRelationship = (
         : 'W',
   };
 
-  let init: Relationship = new ClassAssociation(
+  let init: Relationship = new ClassBidirectional(
     'Association',
     source,
-    target,
-    ClassAssociation.types.BidirectionalAssociation
+    target
   );
   switch (external.kind) {
-    case RelationshipKind.Aggregation:
-      init = new ClassAssociation(
-        'Association',
-        source,
-        target,
-        ClassAssociation.types.Aggregation
-      );
+    case ExternalRelationshipKind.ClassAggregation:
+      init = new ClassAggregation('Association', source, target);
       break;
-    case RelationshipKind.AssociationBidirectional:
-      init = new ClassAssociation(
-        'Association',
-        source,
-        target,
-        ClassAssociation.types.BidirectionalAssociation
-      );
+    case ExternalRelationshipKind.ClassBidirectional:
+      init = new ClassBidirectional('Association', source, target);
       break;
-    case RelationshipKind.AssociationUnidirectional:
-      init = new ClassAssociation(
-        'Association',
-        source,
-        target,
-        ClassAssociation.types.UnidirectionalAssociation
-      );
+    case ExternalRelationshipKind.ClassUnidirectional:
+      init = new ClassUnidirectional('Association', source, target);
       break;
-    case RelationshipKind.Composition:
-      init = new ClassAssociation(
-        'Association',
-        source,
-        target,
-        ClassAssociation.types.Composition
-      );
+    case ExternalRelationshipKind.ClassComposition:
+      init = new ClassComposition('Association', source, target);
       break;
-    case RelationshipKind.Dependency:
-      init = new ClassAssociation(
-        'Association',
-        source,
-        target,
-        ClassAssociation.types.Dependency
-      );
+    case ExternalRelationshipKind.ClassDependency:
+      init = new ClassDependency('Association', source, target);
       break;
-    case RelationshipKind.Inheritance:
-      init = new ClassAssociation(
-        'Association',
-        source,
-        target,
-        ClassAssociation.types.Inheritance
-      );
+    case ExternalRelationshipKind.ClassInheritance:
+      init = new ClassInheritance('Association', source, target);
       break;
-    case RelationshipKind.Realization:
-      init = new ClassAssociation(
-        'Association',
-        source,
-        target,
-        ClassAssociation.types.Realization
-      );
+    case ExternalRelationshipKind.ClassRealization:
+      init = new ClassRealization('Association', source, target);
       break;
   }
 

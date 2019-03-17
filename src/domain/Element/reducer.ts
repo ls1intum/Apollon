@@ -3,10 +3,7 @@ import { State, ActionTypes, Actions } from './types';
 
 const initialState: State = {};
 
-const Reducer: Reducer<State, Actions> = (
-  state: State = initialState,
-  action: Actions
-): State => {
+const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
   switch (action.type) {
     case ActionTypes.CREATE: {
       const { payload } = action;

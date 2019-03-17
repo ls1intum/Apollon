@@ -1,5 +1,7 @@
 import uuid from './../utils/uuid';
 import Boundary from './../geo/Boundary';
+import ElementKind from './../plugins/ElementKind';
+import { RelationshipKind } from '../Relationship';
 
 abstract class Element {
   static features = {
@@ -14,7 +16,7 @@ abstract class Element {
 
   readonly id: string = uuid();
   readonly base: string = 'Element';
-  abstract readonly kind: string;
+  abstract readonly kind: ElementKind | RelationshipKind;
   bounds: Boundary = new Boundary(0, 0, 200, 100);
 
   hovered: boolean = false;

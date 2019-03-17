@@ -2,30 +2,92 @@ import React, { SFC } from 'react';
 import ClassAssociation from './ClassAssociation';
 import Point from '../../../geometry/Point';
 import Port from '../../../Port';
+import { RelationshipKind } from '..';
+
+const Marker = {
+  Arrow: (id: string) => (
+    <marker
+      id={id}
+      viewBox="0 0 30 30"
+      markerWidth="22"
+      markerHeight="30"
+      refX="30"
+      refY="15"
+      orient="auto"
+      markerUnits="strokeWidth"
+      strokeDasharray="1,0"
+    >
+      <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
+    </marker>
+  ),
+  Rhombus: (id: string) => (
+    <marker
+      id={id}
+      viewBox="0 0 30 30"
+      markerWidth="30"
+      markerHeight="30"
+      refX="30"
+      refY="15"
+      orient="auto"
+      markerUnits="strokeWidth"
+    >
+      <path d="M0,15 L15,22 L30,15 L15,8 z" fill="white" stroke="black" />
+    </marker>
+  ),
+  RhombusFilled: (id: string) => (
+    <marker
+      id={id}
+      viewBox="0 0 30 30"
+      markerWidth="30"
+      markerHeight="30"
+      refX="30"
+      refY="15"
+      orient="auto"
+      markerUnits="strokeWidth"
+    >
+      <path d="M0,15 L15,22 L30,15 L15,8 z" fill="black" />
+    </marker>
+  ),
+  Triangle: (id: string) => (
+    <marker
+      id={id}
+      viewBox="0 0 30 30"
+      markerWidth="22"
+      markerHeight="30"
+      refX="30"
+      refY="15"
+      orient="auto"
+      markerUnits="strokeWidth"
+      strokeDasharray="1,0"
+    >
+      <path d="M0,1 L0,29 L30,15 z" fill="white" stroke="black" />
+    </marker>
+  ),
+};
 
 const ClassAssociationComponent: SFC<Props> = ({ element }) => {
   const marker = (type => {
     switch (type) {
-      case ClassAssociation.types.Dependency:
-      case ClassAssociation.types.UnidirectionalAssociation:
-        return 'url(#RelationshipKind_Arrow)';
-      case ClassAssociation.types.Aggregation:
-        return 'url(#RelationshipKind_Rhombus)';
-      case ClassAssociation.types.Composition:
-        return 'url(#RelationshipKind_RhombusFilled)';
-      case ClassAssociation.types.Inheritance:
-      case ClassAssociation.types.Realization:
-        return 'url(#RelationshipKind_Triangle)';
+      case RelationshipKind.ClassDependency:
+      case RelationshipKind.ClassUnidirectional:
+        return Marker.Arrow;
+      case RelationshipKind.ClassAggregation:
+        return Marker.Rhombus;
+      case RelationshipKind.ClassComposition:
+        return Marker.RhombusFilled;
+      case RelationshipKind.ClassInheritance:
+      case RelationshipKind.ClassRealization:
+        return Marker.Triangle;
     }
-  })(element.type);
+  })(element.kind);
 
   const stroke = (type => {
     switch (type) {
-      case ClassAssociation.types.Dependency:
-      case ClassAssociation.types.Realization:
+      case RelationshipKind.ClassDependency:
+      case RelationshipKind.ClassRealization:
         return 7;
     }
-  })(element.type);
+  })(element.kind);
 
   const computeTextPosition = (
     path: Point[],
@@ -73,15 +135,17 @@ const ClassAssociationComponent: SFC<Props> = ({ element }) => {
   const path = element.path.map(point => new Point(point.x, point.y));
   const source: Point = computeTextPosition(path);
   const target: Point = computeTextPosition(path.reverse(), !!marker);
+  const id = `marker-${element.id}`;
 
   return (
     <g>
+      {marker && marker(id)}
       <polyline
         points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
         stroke="black"
         fill="none"
         strokeWidth={1}
-        markerEnd={marker}
+        markerEnd={`url(#${id})`}
         strokeDasharray={stroke}
       />
       <text

@@ -19,21 +19,21 @@ export interface Entity {
   renderMode: EntityRenderMode;
 }
 
-export enum EntityKind {
-  AbstractClass = 'ABSTRACT_CLASS',
-  Class = 'CLASS',
-  Enumeration = 'ENUMERATION',
-  Interface = 'INTERFACE',
-  ActivityControlInitialNode = 'ACTIVITY_CONTROL_INITIAL_NODE',
-  ActivityControlFinalNode = 'ACTIVITY_CONTROL_FINAL_NODE',
-  ActivityActionNode = 'ACTIVITY_ACTION_NODE',
-  ActivityObject = 'ACTIVITY_OBJECT',
-  ActivityMergeNode = 'ACTIVITY_MERGE_NODE',
-  ActivityForkNode = 'ACTIVITY_FORK_NODE',
-  ActivityForkNodeHorizontal = 'ACTIVITY_FORK_NODE_HORIZONTAL',
+export const enum EntityKind {
+  AbstractClass = 'AbstractClass',
+  Class = 'Class',
+  Enumeration = 'Enumeration',
+  Interface = 'Interface',
+  ActivityControlInitialNode = 'InitialNode',
+  ActivityControlFinalNode = 'FinalNode',
+  ActivityActionNode = 'ActionNode',
+  ActivityObject = 'ObjectNode',
+  ActivityMergeNode = 'MergeNode',
+  ActivityForkNode = 'ForkNode',
+  ActivityForkNodeHorizontal = 'ForkNodeHorizontal',
   UseCase = 'UseCase',
-  Actor = 'Actor',
-  System = 'System',
+  UseCaseActor = 'Actor',
+  UseCaseSystem = 'System',
 }
 
 export interface EntityMember {
@@ -55,14 +55,17 @@ export interface Relationship {
 }
 
 export enum RelationshipKind {
-  Aggregation = 'AGGREGATION',
-  AssociationBidirectional = 'ASSOCIATION_BIDIRECTIONAL',
-  AssociationUnidirectional = 'ASSOCIATION_UNIDIRECTIONAL',
-  Inheritance = 'INHERITANCE',
-  Composition = 'COMPOSITION',
-  Dependency = 'DEPENDENCY',
-  Realization = 'REALIZATION',
+  ClassAggregation = 'AGGREGATION',
+  ClassBidirectional = 'ASSOCIATION_BIDIRECTIONAL',
+  ClassUnidirectional = 'ASSOCIATION_UNIDIRECTIONAL',
+  ClassInheritance = 'INHERITANCE',
+  ClassComposition = 'COMPOSITION',
+  ClassDependency = 'DEPENDENCY',
+  ClassRealization = 'REALIZATION',
   ActivityControlFlow = 'ACTIVITY_CONTROL_FLOW',
+  UseCaseAssociation = 'USE_CASE_ASSOCIATION',
+  UseCaseGeneralization = 'USE_CASE_GENERALIZATION',
+  UseCaseInclude = 'USE_CASE_INCLUDE',
 }
 
 export interface RelationshipEnd {

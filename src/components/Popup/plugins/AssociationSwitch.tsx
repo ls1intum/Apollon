@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { ElementRepository } from '../../../domain/Element';
-import { ClassAssociation } from '../../../domain/plugins';
 import Relationship from '../../../domain/Relationship';
 
 const kinds: { [kind: string]: string } = {
@@ -25,15 +24,15 @@ class AssociationSwitch extends Component<Props> {
   };
 
   render() {
-    const relationship = this.props.relationship as ClassAssociation;
-    return (
-      <select value={relationship.type} onChange={this.onChange}>
-        {Object.keys(kinds).map(kind => (
-          <option key={kind} value={kind}>
-            {kinds[kind]}
-          </option>
-        ))}
-      </select>
+    // const relationship = this.props.relationship as ClassAssociation;
+    return ( null 
+      // <select value={relationship.type} onChange={this.onChange}>
+      //   {Object.keys(kinds).map(kind => (
+      //     <option key={kind} value={kind}>
+      //       {kinds[kind]}
+      //     </option>
+      //   ))}
+      // </select>
     );
   }
 }
