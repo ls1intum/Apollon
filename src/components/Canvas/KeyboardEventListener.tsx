@@ -1,12 +1,16 @@
 import { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
+import { State as ReduxState } from './../Store';
 import CanvasContext, { withCanvas } from './CanvasContext';
 import { ElementRepository } from '../../domain/Element';
 import PopupLayer from '../Popup';
+import { ApollonMode } from '../../services/EditorService';
 
 class KeyboardEventListener extends Component<Props> {
   private eventListener = (event: KeyboardEvent) => {
+    if (this.props.mode === ApollonMode.ReadOnly) return;
+
     if (this.props.popup.current && this.props.popup.current.state.element)
       return;
 
@@ -52,7 +56,9 @@ interface OwnProps {
   popup: React.RefObject<PopupLayer>;
 }
 
-interface StateProps {}
+interface StateProps {
+  mode: ApollonMode;
+}
 
 interface DispatchProps {
   move: typeof ElementRepository.move;
@@ -63,8 +69,8 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
 export default compose<ComponentClass<OwnProps>>(
   withCanvas,
-  connect<StateProps, DispatchProps, OwnProps>(
-    null,
+  connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+    state => ({ mode: state.editor.mode }),
     {
       move: ElementRepository.move,
       delete: ElementRepository.delete,
