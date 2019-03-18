@@ -11,6 +11,7 @@ export const enum ActionTypes {
   MOVE = '@@element/MOVE',
   UPDATE = '@@element/UPDATE',
   CHANGE = '@@element/CHANGE',
+  RENAME = '@@element/RENAME',
   DELETE = '@@element/DELETE',
 }
 
@@ -68,6 +69,13 @@ export interface ChangeAction extends Action<ActionTypes.CHANGE> {
   };
 }
 
+export interface RenameAction extends Action<ActionTypes.RENAME> {
+  payload: {
+    id: string;
+    name: string;
+  };
+}
+
 export interface UpdateAction extends Action<ActionTypes.UPDATE> {
   payload: {
     element: Element;
@@ -88,6 +96,7 @@ export type Actions =
   | ResizeAction
   | MoveAction
   | ChangeAction
+  | RenameAction
   | UpdateAction
   | DeleteAction;
 

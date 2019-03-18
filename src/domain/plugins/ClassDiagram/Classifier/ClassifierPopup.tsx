@@ -1,5 +1,6 @@
 import React, { SFC } from 'react';
 import { connect } from 'react-redux';
+import styled from 'styled-components';
 import { State as ReduxState } from './../../../../components/Store';
 import Classifier from './Classifier';
 import { ElementKind } from '..';
@@ -11,9 +12,29 @@ import {
   SwitchItem,
   TextField,
   Section,
+  Divider,
+  Header,
+  Trashcan,
 } from '../../../../components/Popup/Controls';
 
-const ClassifierComponent: SFC<Props> = ({ element, getById, change }) => {
+const Flex = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const Trash = styled(Trashcan).attrs({ width: 20 })`
+  margin-left: 0.5rem;
+`;
+
+const ClassifierComponent: SFC<Props> = ({
+  element,
+  getById,
+  create,
+  change,
+  rename,
+  remove,
+}) => {
   const toggle = (kind: ElementKind) => () => {
     change(element.id, element.kind === kind ? ElementKind.Class : kind);
   };
@@ -26,9 +47,10 @@ const ClassifierComponent: SFC<Props> = ({ element, getById, change }) => {
     <div>
       <Section>
         <TextField
-          initial={element.name}
-          onSave={value => console.log(value)}
+          value={element.name}
+          onChange={value => rename(element.id, value)}
         />
+        <Divider />
       </Section>
       <Section>
         <Switch>
@@ -51,25 +73,51 @@ const ClassifierComponent: SFC<Props> = ({ element, getById, change }) => {
             Enum
           </SwitchItem>
         </Switch>
+        <Divider />
       </Section>
       <Section>
+        <Header>Attributes</Header>
         {attributes.map(attribute => (
-          <TextField
-            key={attribute.id}
-            initial={attribute.name}
-            onSave={value => console.log(value)}
-          />
+          <Flex key={attribute.id}>
+            <TextField
+              value={attribute.name}
+              onChange={value => rename(attribute.id, value)}
+            />
+            <Trash onClick={() => remove(attribute.id)} />
+          </Flex>
         ))}
+        <TextField
+          value=""
+          onCreate={value => {
+            const newElement = new ClassAttribute(value);
+            newElement.owner = element.id;
+            create(newElement);
+          }}
+        />
       </Section>
-      <Section>
-        {methods.map(method => (
+      {!element.isEnumeration && (
+        <Section>
+          <Divider />
+          <Header>Methods</Header>
+          {methods.map(method => (
+            <Flex key={method.id}>
+              <TextField
+                value={method.name}
+                onChange={value => rename(method.id, value)}
+              />
+              <Trash onClick={() => remove(method.id)} />
+            </Flex>
+          ))}
           <TextField
-            key={method.id}
-            initial={method.name}
-            onSave={value => console.log(value)}
+            value=""
+            onCreate={value => {
+              const newElement = new ClassMethod(value);
+              newElement.owner = element.id;
+              create(newElement);
+            }}
           />
-        ))}
-      </Section>
+        </Section>
+      )}
     </div>
   );
 };
@@ -83,12 +131,20 @@ interface StateProps {
 }
 
 interface DispatchProps {
+  create: typeof ElementRepository.create;
   change: typeof ElementRepository.change;
+  rename: typeof ElementRepository.rename;
+  remove: typeof ElementRepository.delete;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
 
 export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   state => ({ getById: ElementRepository.getById(state.elements) }),
-  { change: ElementRepository.change }
+  {
+    create: ElementRepository.create,
+    change: ElementRepository.change,
+    rename: ElementRepository.rename,
+    remove: ElementRepository.delete,
+  }
 )(ClassifierComponent);

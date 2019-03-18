@@ -10,61 +10,41 @@ export const Input = styled.input`
   border-radius: 3px;
 `;
 
-class NameField extends Component<Props, State> {
-  static defaultProps = {
-    clearOnSave: false,
+class TextField extends Component<Props, State> {
+  state = {
+    value: this.props.value,
   };
 
-  input: React.RefObject<HTMLInputElement> = React.createRef();
-
-  state: State = {
-    initial: this.sanitizeWhiteSpace(this.props.initial),
-    value: this.sanitizeWhiteSpace(this.props.initial),
+  private onChange = ({ currentTarget }: React.FormEvent<HTMLInputElement>) => {
+    const { value } = currentTarget;
+    this.setState({ value });
+    this.props.onChange && this.props.onChange(value);
   };
 
-  private sanitizeWhiteSpace(input: string) {
-    return input.trim().replace(/\s+/g, ' ');
-  }
-
-  private onChange = (event: React.FormEvent<HTMLInputElement>) => {
-    this.setState({ value: event.currentTarget.value });
-  };
-
-  private onKeyUp = (event: React.KeyboardEvent) => {
-    if (!this.input.current) return;
-    switch (event.key) {
+  private onKeyUp = ({
+    key,
+    currentTarget,
+  }: React.KeyboardEvent<HTMLInputElement>) => {
+    switch (key) {
       case 'Enter':
-        this.input.current.blur();
+        currentTarget.blur();
         break;
       case 'Escape':
-        this.setState(
-          state => ({ value: state.initial }),
-          () => this.input.current!.blur()
-        );
+        this.setState({ value: this.props.value }, () => currentTarget.blur());
         break;
     }
   };
 
-  private onBlur = () => {
-    if (!this.input.current) return;
-    const value = this.sanitizeWhiteSpace(this.state.value);
-    if (value !== this.state.initial) {
-      this.props.onSave(value);
-    }
-    this.setState({ initial: value });
-    if (this.props.clearOnSave) {
-      this.setState({ initial: '', value: '' });
-    }
+  private onBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const { value } = event.currentTarget;
+    if (!value) return;
+    this.props.onCreate && this.props.onCreate(value);
+    this.setState({ value: this.props.value });
   };
-
-  componentWillUnmount() {
-    this.onBlur();
-  }
 
   render() {
     return (
       <Input
-        ref={this.input}
         type="text"
         autoComplete="off"
         value={this.state.value}
@@ -76,17 +56,14 @@ class NameField extends Component<Props, State> {
   }
 }
 
-interface OwnProps {
-  initial: string;
-  onSave: (value: string) => void;
-  clearOnSave: boolean;
+interface Props {
+  value: string;
+  onChange?: (value: string) => void;
+  onCreate?: (value: string) => void;
 }
 
-type Props = OwnProps;
-
 interface State {
-  initial: string;
   value: string;
 }
 
-export default NameField;
+export default TextField;

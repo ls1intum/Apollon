@@ -12,6 +12,7 @@ import {
   DeleteAction,
   SelectAction,
   ChangeAction,
+  RenameAction,
 } from './types';
 import Element from '.';
 import * as Plugins from '../plugins';
@@ -109,9 +110,17 @@ class Repository {
     );
   };
 
-  static change: ActionCreator<ChangeAction> = (id: string, kind: ElementKind) => ({
+  static change: ActionCreator<ChangeAction> = (
+    id: string,
+    kind: ElementKind
+  ) => ({
     type: ActionTypes.CHANGE,
     payload: { id, kind },
+  });
+
+  static rename: ActionCreator<RenameAction> = (id: string, name: string) => ({
+    type: ActionTypes.RENAME,
+    payload: { id, name },
   });
 
   static update: ActionCreator<UpdateAction> = (element: Element) => ({
