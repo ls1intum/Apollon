@@ -1,15 +1,6 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 
-export const Input = styled.input`
-  display: block;
-  width: 100%;
-  font-size: 0.9rem;
-  padding: 5px 8px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-`;
-
 class TextField extends Component<Props, State> {
   state = {
     value: this.props.value,
@@ -18,7 +9,7 @@ class TextField extends Component<Props, State> {
   private onChange = ({ currentTarget }: React.FormEvent<HTMLInputElement>) => {
     const { value } = currentTarget;
     this.setState({ value });
-    this.props.onChange && this.props.onChange(value);
+    this.props.onUpdate && this.props.onUpdate(value);
   };
 
   private onKeyUp = ({
@@ -43,8 +34,10 @@ class TextField extends Component<Props, State> {
   };
 
   render() {
+    const { value, onUpdate, onCreate, ...props } = this.props;
     return (
-      <Input
+      <input
+        {...props}
         type="text"
         autoComplete="off"
         value={this.state.value}
@@ -56,14 +49,21 @@ class TextField extends Component<Props, State> {
   }
 }
 
-interface Props {
+interface Props extends React.HTMLProps<HTMLInputElement> {
   value: string;
-  onChange?: (value: string) => void;
   onCreate?: (value: string) => void;
+  onUpdate?: (value: string) => void;
 }
 
 interface State {
   value: string;
 }
 
-export default TextField;
+export default styled(TextField)`
+  display: block;
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+`;
