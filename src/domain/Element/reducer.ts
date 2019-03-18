@@ -3,10 +3,7 @@ import { State, ActionTypes, Actions } from './types';
 
 const initialState: State = {};
 
-const Reducer: Reducer<State, Actions> = (
-  state: State = initialState,
-  action: Actions
-): State => {
+const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
   switch (action.type) {
     case ActionTypes.CREATE: {
       const { payload } = action;
@@ -45,7 +42,8 @@ const Reducer: Reducer<State, Actions> = (
           ...state[payload.id],
           bounds: {
             ...state[payload.id].bounds,
-            ...payload.size,
+            width: state[payload.id].bounds.width + payload.delta.width,
+            height: state[payload.id].bounds.height + payload.delta.height,
           },
         },
       };

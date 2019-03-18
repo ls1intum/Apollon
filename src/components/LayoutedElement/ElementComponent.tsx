@@ -25,7 +25,8 @@ const Svg = styled.svg.attrs({
   fill: ${({ interactable, isRoot, theme }) =>
     interactable ? theme.interactiveAreaColor : isRoot ? 'white' : 'none'};
 
-  pointer-events: ${({ interactive }) => (interactive ? 'fill' : 'none')};
+  pointer-events: ${({ interactive, moving }) =>
+    interactive && !moving ? 'fill' : 'none'};
 
   & text {
     cursor: default;
@@ -45,7 +46,6 @@ class ElementComponent extends Component<Props> {
     hidden: false,
     selected: false,
     moving: false,
-    resizing: false,
     interactable: false,
   };
 
@@ -54,19 +54,6 @@ class ElementComponent extends Component<Props> {
     const Component = (Plugins as any)[`${element.kind}Component`];
 
     const strokeWidth = 5;
-
-    // const features = element.constructor as any;
-    // const interactive =
-    //   (this.props.editorMode === EditorMode.ModelingView &&
-    //     (features.isSelectable ||
-    //       features.isDroppable ||
-    //       features.isResizable ||
-    //       features.isMovable ||
-    //       features.isSelectable ||
-    //       features.isHoverable)) ||
-    //   (this.props.editorMode === EditorMode.InteractiveElementsView &&
-    //     features.isInteractable);
-
     return (
       <CanvasConsumer
         children={context => {
@@ -120,7 +107,6 @@ export interface OwnProps {
   interactive: boolean;
   hidden: boolean;
   moving: boolean;
-  resizing: boolean;
   interactable: boolean;
 }
 

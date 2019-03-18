@@ -1,10 +1,10 @@
 import * as React from "react";
 import styled from "styled-components";
-import { RelationshipEnd } from "../../../domain/Relationship";
 import { Delta, Point, RectEdge } from "../../../domain/geo";
 import { assertNever } from "../../../domain/utils";
 import CoordinateSystem from '../../../components/Canvas/CoordinateSystem';
 import { Relationship } from '../../../services/Interface/ExternalState';
+import { RelationshipEnd } from '../../layouters/relationship';
 
 const Text = styled.text`
     user-select: none;

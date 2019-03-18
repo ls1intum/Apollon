@@ -1,0 +1,14 @@
+import React, { SFC } from 'react';
+import ActivityForkNode from './ActivityForkNode';
+
+const ActivityForkNodeComponent: SFC<Props> = ({ element }) => (
+  <g>
+    <rect width="100%" height="100%" stroke="none" fill="black" />
+  </g>
+);
+
+interface Props {
+  element: ActivityForkNode;
+}
+
+export default ActivityForkNodeComponent;

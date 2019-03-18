@@ -14,6 +14,7 @@ import {
 } from './types';
 import Element from '.';
 import * as Plugins from '../plugins';
+import Point from '../geometry/Point';
 
 class Repository {
   static create = (element: Element): CreateAction => ({
@@ -41,19 +42,29 @@ class Repository {
 
   static resize: ActionCreator<ResizeAction> = (
     id: string,
-    size: { width: number; height: number }
+    delta: { width: number; height: number }
   ) => ({
     type: ActionTypes.RESIZE,
-    payload: { id, size },
+    payload: { id, delta },
   });
 
-  static move: ActionCreator<MoveAction> = (
+  static move = (
     id: string | null,
     delta: { x: number; y: number }
-  ) => ({
+  ): MoveAction => ({
     type: ActionTypes.MOVE,
     payload: { id, delta },
   });
+
+  static getAbsolutePosition = (state: ElementState) => (id: string): Point => {
+    let element = state[id];
+    let position = new Point(element.bounds.x, element.bounds.y);
+    while (element.owner) {
+      element = state[element.owner];
+      position = position.add(element.bounds.x, element.bounds.y);
+    }
+    return position;
+  };
 
   static getById = (state: ElementState) => (id: string): Element => {
     const element = { ...state[id] };

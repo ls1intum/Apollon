@@ -1,15 +1,30 @@
-import { DeepReadonly } from 'ts-essentials';
 import { Action } from 'redux';
 
 export const enum ActionTypes {
-  ADD_CHILD = '@@container/ADD_CHILD',
+  CHANGE_OWNER = '@@container/CHANGE_OWNER',
+  APPEND_CHILD = '@@container/APPEND_CHILD',
+  REMOVE_CHILD = '@@container/REMOVE_CHILD',
 }
 
-export interface AddChildAction extends Action<ActionTypes.ADD_CHILD> {
+export interface ChangeOwnerAction extends Action<ActionTypes.CHANGE_OWNER> {
   payload: {
-    parent: string;
-    child: string;
+    id: string;
+    owner: string | null;
   };
 }
 
-export type Actions = DeepReadonly<AddChildAction>;
+export interface AppendChildAction extends Action<ActionTypes.APPEND_CHILD> {
+  payload: {
+    id: string;
+    owner: string;
+  };
+}
+
+export interface RemoveChildAction extends Action<ActionTypes.REMOVE_CHILD> {
+  payload: {
+    id: string;
+    owner: string;
+  };
+}
+
+export type Actions = ChangeOwnerAction | AppendChildAction | RemoveChildAction;

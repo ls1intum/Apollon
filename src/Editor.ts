@@ -4,7 +4,7 @@ import { Store } from 'redux';
 import { State as ReduxState } from './components/Store';
 import Application from './scenes/Application';
 import { Styles } from './components/Theme';
-import EditorService, {
+import {
   ApollonMode,
   InteractiveElementsMode,
   EditorMode,
@@ -14,13 +14,22 @@ import {
   renderDiagramToSVG,
   RenderOptions,
   RenderedSVG,
+  renderEntityToSVG,
+  renderRelationshipToSVG,
 } from './rendering/renderers/svg';
 import { DiagramType } from './domain/Diagram';
-import { ExternalState, Entity, Relationship } from './services/Interface/ExternalState';
+import {
+  ExternalState,
+  Entity,
+  Relationship,
+} from './services/Interface/ExternalState';
 import {
   mapInternalToExternalState,
   mapExternalToInternalState,
+  externalToRelationship,
+  entityToElements,
 } from './services/Interface/Interface';
+import Element from './domain/Element';
 
 export interface ElementSelection {
   entityIds: string[];
@@ -118,7 +127,9 @@ class Editor {
     layoutOptions: DiagramLayouter.LayoutOptions
   ): DiagramLayouter.LayoutedDiagram {
     const entities: Entity[] = Object.values(state.entities.byId);
-    const relationships: Relationship[] = Object.values(state.relationships.byId);
+    const relationships: Relationship[] = Object.values(
+      state.relationships.byId
+    );
 
     return DiagramLayouter.layoutDiagram(
       { entities, relationships },
@@ -131,6 +142,20 @@ class Editor {
     renderOptions: RenderOptions
   ): RenderedSVG {
     return renderDiagramToSVG(layoutedDiagram, renderOptions);
+  }
+
+  static renderEntityToSVG(
+    layoutedEntity: DiagramLayouter.LayoutedEntity,
+    renderOptions: RenderOptions
+  ): RenderedSVG {
+    return renderEntityToSVG(layoutedEntity, renderOptions);
+  }
+
+  static renderRelationshipToSVG(
+    layoutedRelationship: DiagramLayouter.LayoutedRelationship,
+    renderOptions: RenderOptions
+  ): RenderedSVG {
+    return renderRelationshipToSVG(layoutedRelationship, renderOptions);
   }
 }
 

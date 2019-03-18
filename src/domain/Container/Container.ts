@@ -1,7 +1,7 @@
 import Element from './../Element';
 
 abstract class Container extends Element {
-  static isDroppable = true;
+  static features = { ...Element.features, droppable: true };
 
   base = 'Container';
   ownedElements: string[] = [];

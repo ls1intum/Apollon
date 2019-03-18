@@ -16,21 +16,25 @@ export interface Entity {
   size: Size;
   attributes: EntityMember[];
   methods: EntityMember[];
+  owner: string | null;
+  ownedElements: string[];
   renderMode: EntityRenderMode;
 }
 
-export enum EntityKind {
-  AbstractClass = 'ABSTRACT_CLASS',
-  Class = 'CLASS',
-  Enumeration = 'ENUMERATION',
-  Interface = 'INTERFACE',
-  ActivityControlInitialNode = 'ACTIVITY_CONTROL_INITIAL_NODE',
-  ActivityControlFinalNode = 'ACTIVITY_CONTROL_FINAL_NODE',
-  ActivityActionNode = 'ACTIVITY_ACTION_NODE',
-  ActivityObject = 'ACTIVITY_OBJECT',
-  ActivityMergeNode = 'ACTIVITY_MERGE_NODE',
-  ActivityForkNode = 'ACTIVITY_FORK_NODE',
-  ActivityForkNodeHorizontal = 'ACTIVITY_FORK_NODE_HORIZONTAL',
+export const enum EntityKind {
+  AbstractClass = 'AbstractClass',
+  Class = 'Class',
+  Enumeration = 'Enumeration',
+  Interface = 'Interface',
+  ActivityInitialNode = 'ActivityInitialNode',
+  ActivityFinalNode = 'ActivityFinalNode',
+  ActivityActionNode = 'ActivityActionNode',
+  ActivityObjectNode = 'ActivityObjectNode',
+  ActivityMergeNode = 'ActivityMergeNode',
+  ActivityForkNode = 'ActivityForkNode',
+  UseCase = 'UseCase',
+  UseCaseActor = 'UseCaseActor',
+  UseCaseSystem = 'UseCaseSystem',
 }
 
 export interface EntityMember {
@@ -52,14 +56,17 @@ export interface Relationship {
 }
 
 export enum RelationshipKind {
-  Aggregation = 'AGGREGATION',
-  AssociationBidirectional = 'ASSOCIATION_BIDIRECTIONAL',
-  AssociationUnidirectional = 'ASSOCIATION_UNIDIRECTIONAL',
-  Inheritance = 'INHERITANCE',
-  Composition = 'COMPOSITION',
-  Dependency = 'DEPENDENCY',
-  Realization = 'REALIZATION',
+  ClassAggregation = 'AGGREGATION',
+  ClassBidirectional = 'ASSOCIATION_BIDIRECTIONAL',
+  ClassUnidirectional = 'ASSOCIATION_UNIDIRECTIONAL',
+  ClassInheritance = 'INHERITANCE',
+  ClassComposition = 'COMPOSITION',
+  ClassDependency = 'DEPENDENCY',
+  ClassRealization = 'REALIZATION',
   ActivityControlFlow = 'ACTIVITY_CONTROL_FLOW',
+  UseCaseAssociation = 'USE_CASE_ASSOCIATION',
+  UseCaseGeneralization = 'USE_CASE_GENERALIZATION',
+  UseCaseInclude = 'USE_CASE_INCLUDE',
 }
 
 export interface RelationshipEnd {

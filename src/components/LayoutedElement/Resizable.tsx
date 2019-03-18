@@ -1,56 +1,49 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import styled from 'styled-components';
 import { State as ReduxState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { compose } from 'redux';
 import { withCanvas, CanvasContext } from '../Canvas';
+import Point from '../../domain/geometry/Point';
+
+const Handler = styled.rect`
+  width: 15px;
+  height: 15px;
+  fill: none;
+  cursor: nwse-resize;
+`;
 
 const resizable = (WrappedComponent: typeof ElementComponent) => {
   class Resizable extends Component<Props, State> {
     state: State = {
       resizing: false,
-      size: {
-        width: this.props.element.bounds.width,
-        height: this.props.element.bounds.height,
-      },
-      offset: { x: 0, y: 0 },
+      offset: new Point(),
     };
 
     private resize = (width: number, height: number) => {
-      let { size } = this.state;
-      const isResizeable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = (this.props
-        .element.constructor as any).isResizable;
-      width = Math.max(100, width);
-      height = Math.max(50, height);
-      if (isResizeable === 'HEIGHT' || isResizeable === 'NONE') {
-        width = size.width;
-      }
-      if (isResizeable === 'WIDTH' || isResizeable === 'NONE') {
-        height = size.height;
-      }
-      if (size.width === width && size.height === height) return;
+      const { features } = this.props.element.constructor as typeof Element;
+      const { id, bounds } = this.props.element;
 
-      const element: Element = {
-        ...this.props.element,
-        bounds: { ...this.props.element.bounds, width, height },
-      };
-      this.props.resize(element.id, { width, height });
+      width = Math.max(0, width);
+      height = Math.max(0, height);
+
+      if (features.resizable === 'HEIGHT') width = bounds.width;
+      if (features.resizable === 'WIDTH') height = bounds.height;
+      if (bounds.width === width && bounds.height === height) return;
+
+      this.props.resize(id, {
+        width: width - bounds.width,
+        height: height - bounds.height,
+      });
     };
 
     private onMouseDown = (event: React.MouseEvent) => {
       if (event.nativeEvent.which !== 1) return;
-      const offset = this.props.coordinateSystem.offset();
-      offset.x = this.props.element.bounds.x + offset.x;
-      offset.y = this.props.element.bounds.y + offset.y;
 
-      let ownerID = this.props.element.owner;
-      while (ownerID) {
-        const owner = this.props.getById(ownerID);
-        offset.x += owner.bounds.x;
-        offset.y += owner.bounds.y;
-        ownerID = owner.owner;
-      }
+      const position = this.props.getAbsolutePosition(this.props.element.id);
+      const offset = position.add(this.props.coordinateSystem.offset());
 
       this.setState({ resizing: true, offset });
       document.addEventListener('mousemove', this.onMouseMove);
@@ -60,46 +53,29 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
     private onMouseMove = (event: MouseEvent) => {
       const width = event.clientX - this.state.offset.x;
       const height = event.clientY - this.state.offset.y;
-      const { x, y } = this.props.coordinateSystem.screenToPoint(width, height);
-      this.resize(x, y);
+      const point = this.props.coordinateSystem.screenToPoint(width, height);
+      this.resize(point.x, point.y);
     };
 
-    private onMouseUp = (event: MouseEvent) => {
-      this.setState({ resizing: false, offset: { x: 0, y: 0 } });
+    private onMouseUp = () => {
+      this.setState({ resizing: false, offset: new Point() });
       document.removeEventListener('mousemove', this.onMouseMove);
       document.removeEventListener('mouseup', this.onMouseUp);
     };
 
-    componentDidUpdate() {
-      const { width, height } = this.props.element.bounds;
-      if (
-        width !== this.state.size.width ||
-        height !== this.state.size.height
-      ) {
-        this.setState({ size: { width, height } });
-      }
-    }
-
     render() {
+      const { width: x, height: y } = this.props.element.bounds;
       return (
-        <WrappedComponent {...this.props} resizing={this.state.resizing}>
+        <WrappedComponent {...this.props}>
           {this.props.children}
-          <rect
-            x={this.props.element.bounds.width - 10}
-            y={this.props.element.bounds.height - 10}
-            width={15}
-            height={15}
-            style={{ cursor: 'nwse-resize' }}
-            fill="none"
-            onMouseDown={this.onMouseDown}
-          />
+          <Handler x={x - 10} y={y - 10} onMouseDown={this.onMouseDown} />
         </WrappedComponent>
       );
     }
   }
 
   interface StateProps {
-    getById: (id: string) => Element;
+    getAbsolutePosition: (id: string) => Point;
   }
 
   interface DispatchProps {
@@ -108,17 +84,18 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
 
   interface State {
     resizing: boolean;
-    size: { width: number; height: number };
-    offset: { x: number; y: number };
+    offset: Point;
   }
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
-    connect(
-      (state: ReduxState): StateProps => ({
-        getById: ElementRepository.getById(state.elements),
+    connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+      state => ({
+        getAbsolutePosition: ElementRepository.getAbsolutePosition(
+          state.elements
+        ),
       }),
       { resize: ElementRepository.resize }
     )

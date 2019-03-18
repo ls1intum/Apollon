@@ -1,7 +1,7 @@
-import Apollon, { ApollonOptions } from '../src';
-import { RenderOptions } from '../src/rendering/renderers/svg';
+import Apollon, { ApollonOptions, exportDiagram } from '../src';
 import { DiagramType } from '../src/domain/Diagram';
 import { ApollonMode } from '../src/services/EditorService';
+import { RenderOptions } from '../src/rendering/Renderer';
 
 const container = document.getElementById('apollon')!;
 let options: ApollonOptions = {
@@ -46,17 +46,11 @@ export const draw = () => {
   const state = editor.getState();
   if (!state || !state.entities.allIds.length) return;
 
-  const layoutedDiagram = Apollon.layoutDiagram(state, {
-    outerPadding: 50,
-  });
-
   const renderOptions: RenderOptions = {
     shouldRenderElement: (id: string) => true,
-    fontFamily:
-      '-apple-system, BlinkMacSystemFont, HelveticaNeue, Arial, sans-serif',
   };
 
-  const { svg } = Apollon.renderDiagramToSVG(layoutedDiagram, renderOptions);
+  const { svg } = exportDiagram(state, renderOptions);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

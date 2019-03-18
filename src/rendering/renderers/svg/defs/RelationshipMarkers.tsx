@@ -1,6 +1,5 @@
 import * as React from "react";
 import { RelationshipKind } from "../../../../domain/Relationship";
-import { assertNever } from "../../../../domain/utils";
 
 export default class RelationshipMarkers extends React.Component {
     render() {
@@ -68,26 +67,25 @@ export function getMarkerIdForRelationshipKind(
     kind: RelationshipKind
 ): RelationshipKindMarker | null {
     switch (kind) {
-        case RelationshipKind.Aggregation:
+        case RelationshipKind.ClassAggregation:
             return RelationshipKindMarker.Rhombus;
 
-        case RelationshipKind.AssociationUnidirectional:
-        case RelationshipKind.Dependency:
+        case RelationshipKind.ClassUnidirectional:
+        case RelationshipKind.ClassDependency:
         case RelationshipKind.ActivityControlFlow:
+        case RelationshipKind.UseCaseInclude:
             return RelationshipKindMarker.Arrow;
 
-        case RelationshipKind.Composition:
+        case RelationshipKind.ClassComposition:
             return RelationshipKindMarker.RhombusFilled;
 
-        case RelationshipKind.Inheritance:
-        case RelationshipKind.Realization:
+        case RelationshipKind.ClassInheritance:
+        case RelationshipKind.ClassRealization:
+        case RelationshipKind.UseCaseGeneralization:
             return RelationshipKindMarker.Triangle;
 
-        case RelationshipKind.AssociationBidirectional:
-            return null;
-
         default:
-            return assertNever(kind);
+            return null;
     }
 }
 

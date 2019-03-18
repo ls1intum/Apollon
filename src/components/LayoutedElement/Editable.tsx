@@ -1,11 +1,12 @@
 import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
 import { compose } from 'redux';
+import { connect } from 'react-redux';
+import { State as ReduxState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withPopup, PopupContext } from '../Popup';
-import Element from '../../domain/Element';
+import Element, { ElementRepository } from '../../domain/Element';
 import Relationship from '../../domain/Relationship';
-import { Point } from '../../domain/geo';
 
 const editable = (WrappedComponent: typeof ElementComponent) => {
   class Editable extends Component<Props, State> {
@@ -25,7 +26,14 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
           y: targetPoint.y + bounds.y - 20,
         };
       } else {
-        const { x, y, width, height } = this.props.element.bounds;
+        let { x, y, width, height } = this.props.element.bounds;
+        let ownerID = this.props.element.owner;
+        while (ownerID) {
+          const owner = this.props.getById(ownerID);
+          x += owner.bounds.x;
+          y += owner.bounds.y;
+          ownerID = owner.owner;
+        }
         position = { x: x + width, y };
       }
       this.props.showPopup(this.state.element, position);
@@ -54,13 +62,24 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
     }
   }
 
-  type Props = OwnProps & PopupContext;
+  interface StateProps {
+    getById: (id: string) => Element;
+  }
+
+  interface DispatchProps {}
+
+  type Props = OwnProps & StateProps & DispatchProps & PopupContext;
 
   interface State {
     element: Element;
   }
 
-  return compose<ComponentClass<OwnProps>>(withPopup)(Editable);
+  return compose<ComponentClass<OwnProps>>(
+    withPopup,
+    connect<StateProps, DispatchProps, OwnProps, ReduxState>(state => ({
+      getById: ElementRepository.getById(state.elements),
+    }))
+  )(Editable);
 };
 
 export default editable;

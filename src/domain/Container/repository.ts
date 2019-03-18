@@ -1,16 +1,13 @@
-import { ActionTypes, AddChildAction } from './types';
-import Container from './Container';
-import Element from './../Element';
+import { ActionTypes, ChangeOwnerAction } from './types';
 
 class Repository {
-  static addChild = (parent: string, child: string): AddChildAction => ({
-    type: ActionTypes.ADD_CHILD,
-    payload: { parent, child },
+  static changeOwner = (
+    id: string,
+    owner: string | null
+  ): ChangeOwnerAction => ({
+    type: ActionTypes.CHANGE_OWNER,
+    payload: { id, owner },
   });
-
-  // TODO: remove
-  static addElement = (parent: Container, child: Element) => {};
-  static removeElement = (parent: Container, child: Element) => {};
 }
 
 export default Repository;

@@ -16,6 +16,14 @@ import {
     RectEdge
 } from "../../domain/geo";
 
+export interface RelationshipEnd {
+    entityId: string;
+    multiplicity: string | null;
+    role: string | null;
+    edge: RectEdge;
+    edgeOffset: number;
+  }
+
 export function computeRelationshipPath(
     sourceRect: Rect,
     sourceEdge: RectEdge,

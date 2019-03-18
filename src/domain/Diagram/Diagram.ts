@@ -1,9 +1,10 @@
 import Container from './../Container';
 import Boundary from './../geo/Boundary';
-import { DiagramType } from './types';
+import { ElementKind } from '../Element';
+import DiagramType from './../plugins/DiagramType';
 
 class Diagram extends Container {
-  readonly kind: string = 'Diagram';
+  readonly kind: ElementKind = ElementKind.Diagram;
 
   bounds: Boundary = {
     ...this.bounds,

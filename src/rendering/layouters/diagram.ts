@@ -3,7 +3,12 @@ import { computeRelationshipPath } from './relationship';
 import { computeBoundingBox, Point, Rect, Size } from '../../domain/geo';
 import { flatten } from '../../domain/utils';
 import { UUID } from './../../domain/utils/uuid';
-import { Entity, Relationship } from '../../services/Interface/ExternalState';
+import {
+  Entity,
+  Relationship,
+  EntityKind,
+  EntityRenderMode,
+} from '../../services/Interface/ExternalState';
 
 export interface UMLModel {
   entities: Entity[];
@@ -21,11 +26,31 @@ export interface LayoutedRelationship {
   path: Point[];
 }
 
+export interface LayoutedEntity {
+  id: string;
+  kind: EntityKind;
+  name: string;
+  position: Point;
+  size: Size;
+  attributes: LayoutedEntityMember[];
+  methods: LayoutedEntityMember[];
+  renderMode: EntityRenderMode;
+}
+export interface LayoutedEntityMember {
+  id: string;
+  name: string;
+  position: Point;
+  size: Size;
+}
+
 export interface LayoutOptions {
   outerPadding: number;
 }
 
-export function layoutDiagram(diagram: UMLModel, layoutOptions: LayoutOptions): LayoutedDiagram {
+export function layoutDiagram(
+  diagram: UMLModel,
+  layoutOptions: LayoutOptions
+): LayoutedDiagram {
   const { entities, relationships } = diagram;
   const { outerPadding } = layoutOptions;
 
@@ -33,23 +58,25 @@ export function layoutDiagram(diagram: UMLModel, layoutOptions: LayoutOptions): 
   const boundingBox = computeDiagramBoundingBox(diagram, relationshipPaths);
 
   const translateWithinBoundingBox = (point: Point): Point => ({
-      x: point.x - boundingBox.x + outerPadding,
-      y: point.y - boundingBox.y + outerPadding
+    x: point.x - boundingBox.x + outerPadding,
+    y: point.y - boundingBox.y + outerPadding,
   });
 
   return {
-      size: {
-          width: boundingBox.width + 2 * outerPadding,
-          height: boundingBox.height + 2 * outerPadding
-      },
-      entities: entities.map(layoutEntity).map(entity => ({
-          ...entity,
-          position: translateWithinBoundingBox(entity.position)
-      })),
-      relationships: relationships.map(relationship => ({
-          relationship,
-          path: relationshipPaths.get(relationship.id)!.map(translateWithinBoundingBox)
-      }))
+    size: {
+      width: boundingBox.width + 2 * outerPadding,
+      height: boundingBox.height + 2 * outerPadding,
+    },
+    entities: entities.map(layoutEntity).map(entity => ({
+      ...entity,
+      position: translateWithinBoundingBox(entity.position),
+    })),
+    relationships: relationships.map(relationship => ({
+      relationship,
+      path: relationshipPaths
+        .get(relationship.id)!
+        .map(translateWithinBoundingBox),
+    })),
   };
 }
 
@@ -60,8 +87,10 @@ export function computeDiagramBoundingBox(
   const { entities, relationships } = diagram;
 
   const points = flatten([
-      flatten(entities.map(getEntityBoundingPoints)),
-      flatten(relationships.map(relationship => relationshipPaths.get(relationship.id)!))
+    flatten(entities.map(getEntityBoundingPoints)),
+    flatten(
+      relationships.map(relationship => relationshipPaths.get(relationship.id)!)
+    ),
   ]);
 
   return computeBoundingBox(points);
@@ -74,33 +103,41 @@ function getEntityBoundingPoints(entity: Entity): Point[] {
   const topLeftCorner: Point = { x, y };
 
   const bottomRightCorner: Point = {
-      x: x + width,
-      y: y + height
+    x: x + width,
+    y: y + height,
   };
 
   return [topLeftCorner, bottomRightCorner];
 }
 
-export function computeRelationshipPaths(diagram: UMLModel): Map<UUID, Point[]> {
-  const relationshipPaths = diagram.relationships.map<[UUID, Point[]]>(relationship => {
-      const source = diagram.entities.find(e => e.id === relationship.source.entityId)!;
-      const target = diagram.entities.find(e => e.id === relationship.target.entityId)!;
+export function computeRelationshipPaths(
+  diagram: UMLModel
+): Map<UUID, Point[]> {
+  const relationshipPaths = diagram.relationships.map<[UUID, Point[]]>(
+    relationship => {
+      const source = diagram.entities.find(
+        e => e.id === relationship.source.entityId
+      )!;
+      const target = diagram.entities.find(
+        e => e.id === relationship.target.entityId
+      )!;
 
       const sourceRect = { ...source.position, ...source.size };
       const targetRect = { ...target.position, ...target.size };
 
       const relationshipPath = computeRelationshipPath(
-          sourceRect,
-          relationship.source.edge,
-          relationship.source.edgeOffset,
-          targetRect,
-          relationship.target.edge,
-          relationship.target.edgeOffset,
-          relationship.straightLine
+        sourceRect,
+        relationship.source.edge,
+        relationship.source.edgeOffset,
+        targetRect,
+        relationship.target.edge,
+        relationship.target.edgeOffset,
+        relationship.straightLine
       );
 
       return [relationship.id, relationshipPath];
-  });
+    }
+  );
 
   return new Map(relationshipPaths);
 }

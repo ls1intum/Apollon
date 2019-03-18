@@ -1,4 +1,5 @@
 import { RefObject } from 'react';
+import Point from '../../domain/geometry/Point';
 
 class CoordinateSystem {
   get canvas(): HTMLElement {
@@ -15,13 +16,13 @@ class CoordinateSystem {
     public height: number
   ) {}
 
-  offset() {
+  offset(): Point {
     const bounds = this.container.getBoundingClientRect();
     let x = bounds.left - this.container.scrollLeft;
     let y = bounds.top - this.container.scrollTop;
     x = Math.round(x / 10) * 10;
     y = Math.round(y / 10) * 10;
-    return { x, y };
+    return new Point(x, y);
   }
 
   screenToPoint(x: number, y: number, snap: boolean = true) {

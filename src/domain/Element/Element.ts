@@ -1,19 +1,22 @@
 import uuid from './../utils/uuid';
 import Boundary from './../geo/Boundary';
+import ElementKind from './../plugins/ElementKind';
+import { RelationshipKind } from '../Relationship';
 
 abstract class Element {
-  static isHoverable = true;
-  static isSelectable = true;
-  static isMovable = true;
-  static isResizable: 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE' = 'BOTH';
-  static isConnectable = true;
-  static isDroppable = false;
-  static isEditable = true;
-  static isInteractable = true;
+  static features = {
+    hoverable: true,
+    selectable: true,
+    movable: true,
+    resizable: 'BOTH' as 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE',
+    connectable: true,
+    editable: true,
+    interactable: true,
+  };
 
   readonly id: string = uuid();
   readonly base: string = 'Element';
-  abstract readonly kind: string;
+  abstract readonly kind: ElementKind | RelationshipKind;
   bounds: Boundary = new Boundary(0, 0, 200, 100);
 
   hovered: boolean = false;

@@ -24,13 +24,6 @@ class Connection {
     target: Endpoint,
     options: { isStraight: boolean }
   ): Point[] {
-    const straightPath = Connection.tryFindStraightPath(source, target);
-
-    // If there is a straight path, return that one
-    if (straightPath !== null) {
-      return straightPath;
-    }
-
     const startPointOnInnerEdge = Port.position(source.bounds, source.location)
       .point;
     const endPointOnInnerEdge = Port.position(target.bounds, target.location)
@@ -40,6 +33,13 @@ class Connection {
     // directly connect the start and end points, even if that results in an angled line
     if (options.isStraight) {
       return [startPointOnInnerEdge, endPointOnInnerEdge];
+    }
+
+    const straightPath = Connection.tryFindStraightPath(source, target);
+
+    // If there is a straight path, return that one
+    if (straightPath !== null) {
+      return straightPath;
     }
 
     // Each entity has an invisible margin around it (the "crumple zone")

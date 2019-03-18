@@ -4,7 +4,6 @@ import { RenderOptions } from "./index";
 import RelationshipLabels from "./RelationshipLabels";
 import { RelationshipKind } from "../../../domain/Relationship";
 import { Point } from "../../../domain/geo";
-import { assertNever } from "../../../domain/utils";
 import { Relationship } from '../../../services/Interface/ExternalState';
 
 export default class RenderedRelationship extends React.Component<Props> {
@@ -15,12 +14,12 @@ export default class RenderedRelationship extends React.Component<Props> {
             return null;
         }
 
-        const markerId = getMarkerIdForRelationshipKind(relationship.kind);
+        const markerId = undefined; //getMarkerIdForRelationshipKind(relationship.kind);
         const markerEnd = markerId === null ? undefined : `url(#${markerId})`;
 
         const polylinePoints = path.map(point => `${point.x} ${point.y}`).join(",");
 
-        const strokeDasharray = getSvgDasharrayForRelationshipKind(relationship.kind);
+        const strokeDasharray = undefined; //getSvgDasharrayForRelationshipKind(relationship.kind);
 
         return (
             <>
@@ -41,20 +40,13 @@ export default class RenderedRelationship extends React.Component<Props> {
 }
 export function getSvgDasharrayForRelationshipKind(kind: RelationshipKind): string | undefined {
     switch (kind) {
-        case RelationshipKind.Aggregation:
-        case RelationshipKind.AssociationUnidirectional:
-        case RelationshipKind.Composition:
-        case RelationshipKind.Inheritance:
-        case RelationshipKind.AssociationBidirectional:
-        case RelationshipKind.ActivityControlFlow:
+        case RelationshipKind.ClassDependency:
+        case RelationshipKind.ClassRealization:
+        case RelationshipKind.UseCaseInclude:
+            return "7, 7";
+        default:
             return undefined;
 
-        case RelationshipKind.Dependency:
-        case RelationshipKind.Realization:
-            return "7, 7";
-
-        default:
-            return assertNever(kind);
     }
 }
 

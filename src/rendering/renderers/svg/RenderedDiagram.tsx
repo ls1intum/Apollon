@@ -7,7 +7,6 @@ import RenderedRelationship from './RenderedRelationship';
 import { LayoutedDiagram } from '../../../rendering/layouters/diagram';
 import ElementComponent from '../../../components/LayoutedElement/ElementComponent';
 import Element from '../../../domain/Element';
-import { layoutedEntityToElements } from '../../../services/Interface/Interface';
 
 export default class RenderedDiagram extends React.Component<Props> {
   render() {
@@ -41,13 +40,13 @@ export default class RenderedDiagram extends React.Component<Props> {
           />
         ))}
 
-        {entities
+        {/* {entities
           .filter(e => renderOptions.shouldRenderElement(e.id))
           .reduce<Element[]>((xs, entity) => [...xs, ...layoutedEntityToElements(entity)], [])
           .filter(e => renderOptions.shouldRenderElement(e.id))
           .map(element => {
             return <ElementComponent key={element.id} element={element} />;
-          })}
+          })} */}
       </svg>
     );
   }

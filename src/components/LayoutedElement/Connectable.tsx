@@ -1,6 +1,6 @@
-import React, { Component, ComponentClass } from 'react';
-import { compose } from 'redux';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { State as ReduxState } from './../Store';
 import styled from 'styled-components';
 import Port from './../../domain/Port';
 import { ElementRepository } from './../../domain/Element';
@@ -8,7 +8,9 @@ import ElementComponent, { OwnProps } from './ElementComponent';
 import ConnectContext, {
   ConnectConsumer,
 } from './../Connectable/ConnectContext';
-import { BidirectionalAssociation } from '../../domain/plugins';
+import * as Plugins from './../../domain/plugins';
+import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
+import { DiagramType } from '../../domain/Diagram';
 
 const Path = styled.path`
   cursor: crosshair;
@@ -70,7 +72,9 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       try {
         const endpoints = await context.onStartConnect(port)(event);
 
-        const relationship = new BidirectionalAssociation(
+        const Relationship =
+          (Plugins as any)[DefaultRelationshipKind[this.props.diagramType]];
+        const relationship = new Relationship(
           'Association',
           endpoints.source,
           endpoints.target
@@ -143,16 +147,18 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
     }
   }
 
-  interface StateProps {}
+  interface StateProps {
+    diagramType: DiagramType;
+  }
 
   interface DispatchProps {
     create: typeof ElementRepository.create;
   }
 
-  type Props = OwnProps & DispatchProps;
+  type Props = OwnProps & StateProps & DispatchProps;
 
-  return connect<StateProps, DispatchProps, OwnProps>(
-    null,
+  return connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+    state => ({ diagramType: state.diagram.type }),
     { create: ElementRepository.create }
   )(Connectable);
 };

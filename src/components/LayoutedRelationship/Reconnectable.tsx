@@ -11,26 +11,19 @@ const reconnectable = (WrappedComponent: typeof RelationshipComponent) => {
       isReconnecting: false,
     };
 
-    composePath(start: Point, end: Point): Point[] {
-      const length = 40;
-      if (start.y > end.y) {
-        // North
-        return [start, { x: start.x, y: start.y - length }];
-      }
-      if (start.x < end.x) {
-        // East
-        return [start, { x: start.x + length, y: start.y }];
-      }
-      if (start.y < end.y) {
-        // South
-        return [start, { x: start.x, y: start.y + length }];
-      }
-      if (start.x > end.x) {
-        // West
-        return [start, { x: start.x - length, y: start.y }];
-      }
-
-      return [start, end];
+    composePath(path: Point[]): Point[] {
+      const distance = 40;
+      const v = {
+        x: path[1].x - path[0].x,
+        y: path[1].y - path[0].y,
+      };
+      const length = Math.sqrt(v.x * v.x + v.y * v.y);
+      const u = { x: v.x / length, y: v.y / length };
+      const pointOne = {
+        x: path[0].x + distance * u.x,
+        y: path[0].y + distance * u.y,
+      };
+      return [path[0], pointOne];
     }
 
     private start = () => {
@@ -62,11 +55,8 @@ const reconnectable = (WrappedComponent: typeof RelationshipComponent) => {
 
     render() {
       const { path } = this.props.element;
-      const handleStart = this.composePath(path[0], path[1]);
-      const handleEnd = this.composePath(
-        path[path.length - 1],
-        path[path.length - 2]
-      );
+      const handleStart = this.composePath([...path]);
+      const handleEnd = this.composePath([...path].reverse());
       return (
         !this.state.isReconnecting && (
           <ConnectConsumer

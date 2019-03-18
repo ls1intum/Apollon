@@ -1,14 +1,13 @@
 import Element from './../Element';
 import Port from '../Port';
+import RelationshipKind from '../plugins/RelationshipKind';
 
 abstract class Relationship extends Element {
-  readonly base: string = 'Relationship';
-  kind = 'Relationship';
+  static features = { ...Element.features, straight: false };
 
-  sourceRole: string = '';
-  sourceMultiplicity: string = '';
-  targetRole: string = '';
-  targetMultiplicity: string = '';
+  readonly abstract kind: RelationshipKind;
+
+  readonly base: string = 'Relationship';
 
   path: { x: number; y: number }[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
 

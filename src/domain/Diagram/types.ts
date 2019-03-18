@@ -2,11 +2,6 @@ import { Action as ReduxAction } from 'redux';
 import Diagram from './Diagram';
 import Omit from '../utils/Omit';
 
-export const enum DiagramType {
-  ClassDiagram = 'CLASS',
-  ActivityDiagram = 'ACTIVITY',
-}
-
 export const enum ActionTypes {
   ADD_ELEMENT = '@@diagram/ADD_ELEMENT',
   ADD_RELATIONSHIP = '@@diagram/ADD_RELATIONSHIP',

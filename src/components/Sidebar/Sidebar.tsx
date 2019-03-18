@@ -13,24 +13,29 @@ import EditorService, {
   InteractiveElementsMode,
 } from './../../services/EditorService';
 import { DiagramType } from './../../domain/Diagram';
-import Element, { ElementRepository } from '../../domain/Element';
+import Element, { ElementRepository, ElementKind } from '../../domain/Element';
 
 import { Draggable, DropEvent } from './../Draggable';
 
 import ElementComponent from './../LayoutedElement/ElementComponent';
-import Package from './../../domain/plugins/common/Package';
-import Class from './../../domain/plugins/class/Class';
-import Interface from './../../domain/plugins/class/Interface';
-import Enumeration from './../../domain/plugins/class/Enumeration';
-import Attribute from './../../domain/plugins/class/Attribute';
-import InitialNode from './../../domain/plugins/activity/InitialNode';
-import FinalNode from './../../domain/plugins/activity/FinalNode';
-import ActionNode from './../../domain/plugins/activity/ActionNode';
-import ObjectNode from './../../domain/plugins/activity/ObjectNode';
-import MergeNode from './../../domain/plugins/activity/MergeNode';
-import ForkNode from './../../domain/plugins/activity/ForkNode';
 import { CanvasProvider } from '../Canvas/CanvasContext';
-import { Method } from './../../domain/plugins';
+import {
+  UseCase,
+  UseCaseActor,
+  UseCaseSystem,
+  Class,
+  ClassAttribute,
+  ClassMethod,
+  AbstractClass,
+  Interface,
+  Enumeration,
+  ActivityInitialNode,
+  ActivityFinalNode,
+  ActivityActionNode,
+  ActivityObjectNode,
+  ActivityMergeNode,
+  ActivityForkNode,
+} from './../../domain/plugins';
 
 class Sidebar extends Component<Props, State> {
   state: State = {
@@ -43,25 +48,33 @@ class Sidebar extends Component<Props, State> {
         this.setState({
           previews: [
             // new Package(),
-            new Class(),
-            new Class('AbstractClass', true),
-            new Interface(),
-            new Enumeration(),
+            new Class('Class'),
+            new AbstractClass('AbstractClass'),
+            new Interface('Interface'),
+            new Enumeration('Enumeration'),
           ],
         });
         break;
       case DiagramType.ActivityDiagram:
         this.setState({
           previews: [
-            new InitialNode(),
-            new FinalNode(),
-            new ActionNode(),
-            new ObjectNode(),
-            new MergeNode(),
-            new ForkNode(),
+            new ActivityInitialNode(''),
+            new ActivityFinalNode(''),
+            new ActivityActionNode('ActionNode'),
+            new ActivityObjectNode('ObjectNode'),
+            new ActivityMergeNode('Condition'),
+            new ActivityForkNode(''),
           ],
         });
         break;
+      case DiagramType.UseCaseDiagram:
+        this.setState({
+          previews: [
+            new UseCase('UseCase'),
+            new UseCaseActor('Actor'),
+            new UseCaseSystem('System'),
+          ],
+        });
     }
   };
 
@@ -91,28 +104,27 @@ class Sidebar extends Component<Props, State> {
 
     setTimeout(() => {
       switch (element.kind) {
-        case 'Class':
-        case 'Interface': {
+        case ElementKind.Class:
+        case ElementKind.AbstractClass:
+        case ElementKind.Interface:
           [
-            new Attribute('+ attribute: Type'),
-            new Method('+ method()'),
+            new ClassAttribute('+ attribute: Type'),
+            new ClassMethod('+ method()'),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
           });
           break;
-        }
-        case 'Enumeration': {
+        case ElementKind.Enumeration:
           [
-            new Attribute('Case1'),
-            new Attribute('Case2'),
-            new Attribute('Case3'),
+            new ClassAttribute('Case1'),
+            new ClassAttribute('Case2'),
+            new ClassAttribute('Case3'),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
           });
           break;
-        }
       }
     }, 0);
   };
