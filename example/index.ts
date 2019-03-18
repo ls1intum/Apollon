@@ -55,7 +55,6 @@ export const draw = () => {
   };
 
   const { svg } = exportDiagram(state, renderOptions);
-  console.log(svg);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

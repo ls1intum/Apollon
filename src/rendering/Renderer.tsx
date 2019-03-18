@@ -5,11 +5,9 @@ import { ExternalState } from '../services/Interface/ExternalState';
 import { mapExternalToInternalState } from '../services/Interface/Interface';
 import Element from '../domain/Element';
 import Boundary from '../domain/geo/Boundary';
-import * as Plugins from './../domain/plugins';
-import ElementComponent from '../components/LayoutedElement/ElementComponent';
 import { createStore } from 'redux';
 import { EditorMode, ApollonMode } from '../services/EditorService';
-import LayoutedElement from '../components/LayoutedElement/LayoutedElement';
+import RenderedElement from './RenderedElement';
 
 export interface RenderOptions {
   shouldRenderElement: (id: string) => boolean;
@@ -33,40 +31,33 @@ class Renderer {
 
   static exportElements(elements: Element[]): SVG {
     const bounds = Renderer.computeBoundingBox(elements);
-    const layouted = elements.filter(e => !e.owner).map(e => {
-      e.bounds.x -= bounds.x;
-      e.bounds.y -= bounds.y;
-      return e;
-    });
-    console.log(bounds);
-    const store = createStore(() => ({
-      elements: elements.reduce((o, e) => ({ ...o, [e.id]: e }), {}),
-      editor: {
-        editorMode: EditorMode.ModelingView,
-        mode: ApollonMode.ReadOnly,
-      },
-    }));
+    const layouted = elements
+      .filter(e => !e.owner)
+      .map(e => {
+        e.bounds.x -= bounds.x;
+        e.bounds.y -= bounds.y;
+        return e;
+      });
 
     return {
       svg: Renderer.renderReactElementToString(
-        <Provider store={store}>
-          <svg
-            width={bounds.width}
-            height={bounds.height}
-            xmlns="http://www.w3.org/2000/svg"
-            fill="white"
-          >
-            <defs>
-              <style>{`text { fill: black }`}</style>
-            </defs>
-            {layouted.map(
-              element =>
-                !element.owner && (
-                  <ElementComponent key={element.id} element={element} />
-                )
-            )}
-          </svg>
-        </Provider>
+        <svg
+          width={bounds.width}
+          height={bounds.height}
+          xmlns="http://www.w3.org/2000/svg"
+          fill="white"
+        >
+          <defs>
+            <style>{`text { fill: black }`}</style>
+          </defs>
+          {layouted.map(element => (
+            <RenderedElement
+              key={element.id}
+              id={element.id}
+              elements={elements}
+            />
+          ))}
+        </svg>
       ),
       size: { width: bounds.width, height: bounds.height },
     };
