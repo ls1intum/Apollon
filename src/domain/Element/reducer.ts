@@ -63,6 +63,13 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
         },
       };
     }
+    case ActionTypes.CHANGE: {
+      const { payload } = action;
+      return {
+        ...state,
+        [payload.id]: { ...state[payload.id], kind: payload.kind },
+      };
+    }
     case ActionTypes.UPDATE: {
       const { payload } = action;
       return { ...state, [payload.element.id]: { ...payload.element } };

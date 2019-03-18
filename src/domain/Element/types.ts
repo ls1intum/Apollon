@@ -1,5 +1,6 @@
 import { Action } from 'redux';
 import Element from '.';
+import ElementKind from '../plugins/ElementKind';
 
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',
@@ -9,6 +10,7 @@ export const enum ActionTypes {
   RESIZE = '@@element/RESIZE',
   MOVE = '@@element/MOVE',
   UPDATE = '@@element/UPDATE',
+  CHANGE = '@@element/CHANGE',
   DELETE = '@@element/DELETE',
 }
 
@@ -59,6 +61,13 @@ export interface MoveAction extends Action<ActionTypes.MOVE> {
   };
 }
 
+export interface ChangeAction extends Action<ActionTypes.CHANGE> {
+  payload: {
+    id: string;
+    kind: ElementKind;
+  };
+}
+
 export interface UpdateAction extends Action<ActionTypes.UPDATE> {
   payload: {
     element: Element;
@@ -78,6 +87,7 @@ export type Actions =
   | SelectAction
   | ResizeAction
   | MoveAction
+  | ChangeAction
   | UpdateAction
   | DeleteAction;
 

@@ -11,10 +11,12 @@ import {
   ResizeAction,
   DeleteAction,
   SelectAction,
+  ChangeAction,
 } from './types';
 import Element from '.';
 import * as Plugins from '../plugins';
 import Point from '../geometry/Point';
+import ElementKind from '../plugins/ElementKind';
 
 class Repository {
   static create = (element: Element): CreateAction => ({
@@ -106,6 +108,11 @@ class Repository {
       {}
     );
   };
+
+  static change: ActionCreator<ChangeAction> = (id: string, kind: ElementKind) => ({
+    type: ActionTypes.CHANGE,
+    payload: { id, kind },
+  });
 
   static update: ActionCreator<UpdateAction> = (element: Element) => ({
     type: ActionTypes.UPDATE,
