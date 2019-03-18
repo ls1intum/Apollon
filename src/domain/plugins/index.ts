@@ -25,3 +25,4 @@ export * from './UseCaseDiagram/UseCaseSystem';
 export * from './UseCaseDiagram/UseCaseAssociation';
 export * from './UseCaseDiagram/UseCaseGeneralization';
 export * from './UseCaseDiagram/UseCaseInclude';
+export * from './UseCaseDiagram/UseCaseExtend';

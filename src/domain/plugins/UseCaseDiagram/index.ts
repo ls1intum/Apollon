@@ -8,4 +8,5 @@ export enum RelationshipKind {
   UseCaseAssociation = 'UseCaseAssociation',
   UseCaseGeneralization = 'UseCaseGeneralization',
   UseCaseInclude = 'UseCaseInclude',
+  UseCaseExtend = 'UseCaseExtend',
 }
