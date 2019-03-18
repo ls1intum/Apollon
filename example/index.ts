@@ -46,16 +46,11 @@ export const draw = () => {
   const state = editor.getState();
   if (!state || !state.entities.allIds.length) return;
 
-  // const layoutedDiagram = Apollon.layoutDiagram(state, {
-  //   outerPadding: 50,
-  // });
-
   const renderOptions: RenderOptions = {
     shouldRenderElement: (id: string) => true,
   };
 
   const { svg } = exportDiagram(state, renderOptions);
-  console.log(svg);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

@@ -111,7 +111,7 @@ const ClassAssociationComponent: SFC<Props> = ({ element }) => {
         };
       case 'E':
         return {
-          dy: position === 'TOP' ? -5 : 5,
+          dy: position === 'TOP' ? -10 : 5,
           dominantBaseline:
             position === 'TOP' ? 'text-after-edge' : 'text-before-edge',
           textAnchor: 'start',
@@ -124,7 +124,7 @@ const ClassAssociationComponent: SFC<Props> = ({ element }) => {
         };
       case 'W':
         return {
-          dy: position === 'TOP' ? -5 : 5,
+          dy: position === 'TOP' ? -10 : 5,
           dominantBaseline:
             position === 'TOP' ? 'text-after-edge' : 'text-before-edge',
           textAnchor: 'end',
