@@ -46,6 +46,9 @@ import {
   ActivityMergeNode,
   ActivityObjectNode,
   ActivityControlFlow,
+  ObjectName,
+  ObjectLink,
+  ObjectAttribute,
 } from '../../domain/plugins';
 import Port, { Connection } from '../../domain/Port';
 import ClassMember from '../../domain/plugins/ClassDiagram/ClassMember/ClassMember';
@@ -65,9 +68,15 @@ export const mapInternalToExternalState = (
     version: '1.0',
 
     entities: {
-      allIds: elements.filter(e => !(e instanceof ClassMember)).map(e => e.id),
+      allIds: elements
+        .filter(
+          e => !(e instanceof ClassMember) && !(e instanceof ObjectAttribute)
+        )
+        .map(e => e.id),
       byId: elements
-        .filter(e => !(e instanceof ClassMember))
+        .filter(
+          e => !(e instanceof ClassMember) && !(e instanceof ObjectAttribute)
+        )
         .map<Entity>(element => elementToExternal(element, state.elements))
         .map<Entity>(e => {
           if (e.owner === null) {
@@ -203,6 +212,8 @@ export const elementToExternal = (
         return EntityKind.Interface;
       case ElementKind.Enumeration:
         return EntityKind.Enumeration;
+      case ElementKind.ObjectName:
+        return EntityKind.ObjectName;
       case ElementKind.ActivityActionNode:
         return EntityKind.ActivityActionNode;
       case ElementKind.ActivityFinalNode:
@@ -245,7 +256,11 @@ export const elementToExternal = (
   };
   if (element instanceof Container) {
     entity.attributes = element.ownedElements
-      .filter(id => elements[id] instanceof ClassAttribute)
+      .filter(
+        id =>
+          elements[id] instanceof ClassAttribute ||
+          elements[id] instanceof ObjectAttribute
+      )
       .map<EntityMember>(id => ({ id, name: elements[id].name }));
     entity.methods = element.ownedElements
       .filter(id => elements[id] instanceof ClassMethod)
@@ -268,6 +283,8 @@ export const entityToElements = (entity: Entity): Element[] => {
         return new Interface(entity.name);
       case EntityKind.Enumeration:
         return new Enumeration(entity.name);
+      case EntityKind.ObjectName:
+        return new ObjectName(entity.name);
       case EntityKind.ActivityActionNode:
         return new ActivityActionNode(entity.name);
       case EntityKind.ActivityFinalNode:
@@ -310,17 +327,32 @@ export const entityToElements = (entity: Entity): Element[] => {
         !entity.methods.map(a => a.id).includes(id)
     );
     [element, ...current] = element.render([]);
-    for (const member of entity.attributes) {
-      const attribute = Object.setPrototypeOf(
-        { ...new ClassAttribute(member.name), id: member.id },
-        ClassAttribute.prototype
-      );
-      let [parent, ...children] = (element as Container).addElement(
-        attribute,
-        current
-      );
-      element = parent;
-      current = children;
+    if (element instanceof ObjectName) {
+      for (const member of entity.attributes) {
+        const attribute = Object.setPrototypeOf(
+          { ...new ObjectAttribute(member.name), id: member.id },
+          ObjectAttribute.prototype
+        );
+        let [parent, ...children] = (element as Container).addElement(
+          attribute,
+          current
+        );
+        element = parent;
+        current = children;
+      }
+    } else {
+      for (const member of entity.attributes) {
+        const attribute = Object.setPrototypeOf(
+          { ...new ClassAttribute(member.name), id: member.id },
+          ClassAttribute.prototype
+        );
+        let [parent, ...children] = (element as Container).addElement(
+          attribute,
+          current
+        );
+        element = parent;
+        current = children;
+      }
     }
     for (const member of entity.methods) {
       const method = Object.setPrototypeOf(
@@ -372,6 +404,8 @@ export const relationshipToExternal = (
         return ExternalRelationshipKind.ClassInheritance;
       case RelationshipKind.ClassRealization:
         return ExternalRelationshipKind.ClassRealization;
+      case RelationshipKind.ObjectLink:
+        return ExternalRelationshipKind.ObjectLink;
       case RelationshipKind.ActivityControlFlow:
         return ExternalRelationshipKind.ActivityControlFlow;
       case RelationshipKind.ClassUnidirectional:
@@ -490,6 +524,9 @@ export const externalToRelationship = (
       break;
     case ExternalRelationshipKind.ClassRealization:
       init = new ClassRealization('Association', source, target);
+      break;
+    case ExternalRelationshipKind.ObjectLink:
+      init = new ObjectLink('Association', source, target);
       break;
     case ExternalRelationshipKind.ActivityControlFlow:
       init = new ActivityControlFlow('Association', source, target);
