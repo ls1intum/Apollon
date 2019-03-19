@@ -71,7 +71,7 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 function* handleElementCreation({ payload }: CreateAction) {
   if (payload.element instanceof Container) {
     const updates = payload.element.render([]);
-    yield all(updates.map(element => put(ElementRepository.update(element))));
+    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
   }
 }
 
@@ -86,7 +86,7 @@ function* handleChildAdd({ payload }: CreateAction) {
       .map(ElementRepository.getById(elements));
 
     const updates = parent.addElement(payload.element, children);
-    yield all(updates.map(element => put(ElementRepository.update(element))));
+    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
   }
 }
 
@@ -111,7 +111,7 @@ function* handleElementDelete({ payload }: DeleteAction) {
       .map(ElementRepository.getById(elements));
 
     const updates = parent.removeElement(elementId, children);
-    yield all(updates.map(element => put(ElementRepository.update(element))));
+    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
   }
 }
 
@@ -123,7 +123,7 @@ function* handleElementChange({ payload }: ChangeAction) {
       ElementRepository.getById(elements)
     );
     const updates = element.render(children);
-    yield all(updates.map(element => put(ElementRepository.update(element))));
+    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
   }
 }
 
@@ -135,7 +135,7 @@ function* handleElementResize({ payload }: ResizeAction) {
       ElementRepository.getById(elements)
     );
     const updates = element.resizeElement(children);
-    yield all(updates.map(element => put(ElementRepository.update(element))));
+    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
   }
 }
 

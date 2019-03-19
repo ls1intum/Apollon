@@ -123,9 +123,9 @@ class Repository {
     payload: { id, name },
   });
 
-  static update: ActionCreator<UpdateAction> = (element: Element) => ({
+  static update = (id: string, values: Partial<Element>): UpdateAction => ({
     type: ActionTypes.UPDATE,
-    payload: { element },
+    payload: { id, values },
   });
 
   static delete = (id: string | null): DeleteAction => ({

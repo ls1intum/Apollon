@@ -78,7 +78,8 @@ export interface RenameAction extends Action<ActionTypes.RENAME> {
 
 export interface UpdateAction extends Action<ActionTypes.UPDATE> {
   payload: {
-    element: Element;
+    id: string,
+    values: Partial<Element>;
   };
 }
 

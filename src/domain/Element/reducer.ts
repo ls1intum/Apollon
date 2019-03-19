@@ -79,7 +79,7 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
     }
     case ActionTypes.UPDATE: {
       const { payload } = action;
-      return { ...state, [payload.element.id]: { ...payload.element } };
+      return { ...state, [payload.id]: { ...state[payload.id], ...payload.values } };
     }
     case ActionTypes.DELETE: {
       const { payload } = action;

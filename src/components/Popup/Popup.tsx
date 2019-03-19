@@ -13,12 +13,6 @@ export class Popup extends Component<Props> {
     return this.props.coordinateSystem.pointToScreen(position.x, position.y);
   };
 
-  private onSaveName = (value: string) => {
-    const { element, update } = this.props;
-    element.name = value;
-    update(element);
-  };
-
   render() {
     const position = this.calculatePosition();
     const Component = (Plugins as any)[`${this.props.element.kind}Popup`];
