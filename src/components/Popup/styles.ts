@@ -18,10 +18,6 @@ export const Content = styled.div`
   padding: 10px;
 `;
 
-export const Item = styled.section`
-  margin-bottom: 8px;
-`;
-
 export const Arrow = styled.div`
   position: absolute;
   top: 9px;
@@ -49,48 +45,5 @@ export const Arrow = styled.div`
     top: 0px;
     border-color: transparent #d0d0d0 transparent transparent;
     border-width: 11px;
-  }
-`;
-
-export const Header = styled.strong`
-  display: block;
-  font-family: HelveticaNeue-Medium;
-  font-weight: normal;
-  margin-bottom: 7px;
-`;
-
-export const Input = styled.input`
-  display: block;
-  width: 100%;
-  font-size: 0.9rem;
-  padding: 5px 8px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-`;
-
-export const ExistingMember = styled.div`
-  display: flex;
-  align-items: baseline;
-
-  & ${Input} {
-    margin-right: 5px;
-  }
-`;
-
-export const NewMember = styled.div`
-  & ${Input}:not(:focus) {
-    border-style: dashed;
-  }
-
-  & ${Input}:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-`;
-
-export const Label = styled.label`
-  user-select: none;
-  font-weight: bold;
-  & span {
-    margin-left: 5px;
   }
 `;

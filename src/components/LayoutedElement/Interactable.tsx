@@ -40,7 +40,7 @@ const interactable = (WrappedComponent: typeof ElementComponent) => {
       }
       elementsToToggle
         .map<Element>(e => ({ ...e, interactive: !e.interactive }))
-        .forEach(this.props.update);
+        .forEach(e => this.props.update(e.id, e));
     };
 
     componentDidMount() {
