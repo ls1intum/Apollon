@@ -35,6 +35,8 @@ import {
   ActivityObjectNode,
   ActivityMergeNode,
   ActivityForkNode,
+  ObjectName,
+  ObjectAttribute,
 } from './../../domain/plugins';
 
 class Sidebar extends Component<Props, State> {
@@ -53,6 +55,11 @@ class Sidebar extends Component<Props, State> {
             new Interface('Interface'),
             new Enumeration('Enumeration'),
           ],
+        });
+        break;
+      case DiagramType.ObjectDiagram:
+        this.setState({
+          previews: [new ObjectName('Object : Class')],
         });
         break;
       case DiagramType.ActivityDiagram:
@@ -125,6 +132,11 @@ class Sidebar extends Component<Props, State> {
             this.props.create(member);
           });
           break;
+        case ElementKind.ObjectName:
+          [new ObjectAttribute('attribute = value')].forEach(member => {
+            member.owner = element.id;
+            this.props.create(member);
+          });
       }
     }, 0);
   };
