@@ -517,6 +517,13 @@ export const externalToRelationship = (
       };
     }
 
+    if (init instanceof ClassAssociation) {
+      init.multiplicity.source = external.source.multiplicity || '';
+      init.role.source = external.source.role || '';
+      init.multiplicity.target = external.target.multiplicity || '';
+      init.role.target = external.target.role || '';
+    }
+
     current = elements.find(e => e.id === target.element)!;
     let targetRect: Boundary = { ...current.bounds };
     while (current.owner) {

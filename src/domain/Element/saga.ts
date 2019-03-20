@@ -62,42 +62,30 @@ function* handleElementSelect({ payload }: SelectAction) {
 function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
   const { elements }: State = yield select();
   const current = elements[payload.id];
-  console.log(
-    'change',
-    current.name,
-    ' interactive from ',
-    current.interactive,
-    ' to ',
-    !current.interactive
-  );
+
+  const update = (id: string, interactive: boolean) =>
+    put<UpdateAction>(ElementRepository.update(id, { interactive }));
 
   let owner = current.owner;
   while (owner) {
     const element = elements[owner];
     if (element.interactive) {
-      console.log(`${element.name} is interactive, make it not interactive`);
-      element.interactive = false;
-      yield put<UpdateAction>(ElementRepository.update(element));
+      yield update(element.id, false);
       break;
     }
     owner = element.owner;
   }
-  current.interactive = !current.interactive;
-  yield put<UpdateAction>(ElementRepository.update(current));
+  yield update(current.id, !current.interactive);
 
   if (current.base === 'Container') {
-    const rec = (
-      id: string
-    ): SimpleEffect<'PUT', PutEffectDescriptor<UpdateAction>>[] => {
+    const rec = (id: string): ReturnType<typeof update>[] => {
       const element = elements[id];
       if (element.interactive) {
-        console.log(`${element.name} is interactive, make it not interactive`);
-        element.interactive = false;
-        return [put(ElementRepository.update(element))];
+        return [update(element.id, false)];
       }
       if (element.base === 'Container') {
         return (current as Container).ownedElements.reduce<
-          SimpleEffect<'PUT', PutEffectDescriptor<UpdateAction>>[]
+          ReturnType<typeof update>[]
         >((a, o) => {
           return [...a, ...rec(o)];
         }, []);
@@ -105,9 +93,10 @@ function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
       return [];
     };
 
-    yield all((current as Container).ownedElements.map(rec));
-
-    yield put<UpdateAction>(ElementRepository.update(current));
+    const t = (current as Container).ownedElements.reduce<
+      ReturnType<typeof update>[]
+    >((a, o) => [...a, ...rec(o)], []);
+    yield all(t);
   }
 }
 
