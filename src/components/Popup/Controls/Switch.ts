@@ -1,6 +1,11 @@
 import styled from 'styled-components';
 
 export const SwitchItem = styled.button<{ active: boolean }>`
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+
   width: 100%;
   background: none;
   border: 1px solid #2a8fbd;
