@@ -6,8 +6,6 @@ import Element, { ElementRepository } from './../../../Element';
 import ClassAssociation from './ClassAssociation';
 import { RelationshipKind } from '..';
 import {
-  Dropdown,
-  DropdownItem,
   TextField,
   Section,
   Divider,
@@ -15,29 +13,20 @@ import {
   Trashcan,
 } from '../../../../components/Popup/Controls';
 
+import { Dropdown } from './../../../../components/controls';
+
 const Flex = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
 `;
 
-const Trash = styled(Trashcan).attrs({ width: 20 })`
+const Input = styled(TextField)`
   margin-left: 0.5rem;
 `;
 
-const NewMember = styled(TextField)`
-  &:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-
-  &:not(:focus) {
-    border-style: dashed;
-  }
-`;
-
 class ClassAssociationComponent extends Component<Props> {
-  private onChange = (event: React.FormEvent<HTMLSelectElement>) => {
-    const { value } = event.currentTarget;
+  private onChange = (value: RelationshipKind) => {
     const { element, change } = this.props;
     change(element.id, value);
   };
@@ -63,27 +52,27 @@ class ClassAssociationComponent extends Component<Props> {
         </Section>
         <Section>
           <Dropdown value={element.kind} onChange={this.onChange}>
-            <DropdownItem value={RelationshipKind.ClassAggregation}>
+            <Dropdown.Item value={RelationshipKind.ClassAggregation}>
               Aggregation
-            </DropdownItem>
-            <DropdownItem value={RelationshipKind.ClassUnidirectional}>
+            </Dropdown.Item>
+            <Dropdown.Item value={RelationshipKind.ClassUnidirectional}>
               Association (unidirectional)
-            </DropdownItem>
-            <DropdownItem value={RelationshipKind.ClassBidirectional}>
+            </Dropdown.Item>
+            <Dropdown.Item value={RelationshipKind.ClassBidirectional}>
               Association (bidirectional)
-            </DropdownItem>
-            <DropdownItem value={RelationshipKind.ClassComposition}>
+            </Dropdown.Item>
+            <Dropdown.Item value={RelationshipKind.ClassComposition}>
               Composition
-            </DropdownItem>
-            <DropdownItem value={RelationshipKind.ClassDependency}>
+            </Dropdown.Item>
+            <Dropdown.Item value={RelationshipKind.ClassDependency}>
               Dependency
-            </DropdownItem>
-            <DropdownItem value={RelationshipKind.ClassInheritance}>
+            </Dropdown.Item>
+            <Dropdown.Item value={RelationshipKind.ClassInheritance}>
               Inheritance
-            </DropdownItem>
-            <DropdownItem value={RelationshipKind.ClassRealization}>
+            </Dropdown.Item>
+            <Dropdown.Item value={RelationshipKind.ClassRealization}>
               Realization
-            </DropdownItem>
+            </Dropdown.Item>
           </Dropdown>
           <Divider />
         </Section>
@@ -91,14 +80,14 @@ class ClassAssociationComponent extends Component<Props> {
           <Header>{source.name}</Header>
           <Flex>
             <span>Multiplicity</span>
-            <TextField
+            <Input
               value={element.multiplicity.source}
               onUpdate={this.onUpdate('multiplicity', 'source')}
             />
           </Flex>
           <Flex>
             <span>Role</span>
-            <TextField
+            <Input
               value={element.role.source}
               onUpdate={this.onUpdate('role', 'source')}
             />
@@ -109,14 +98,14 @@ class ClassAssociationComponent extends Component<Props> {
           <Header>{target.name}</Header>
           <Flex>
             <span>Multiplicity</span>
-            <TextField
+            <Input
               value={element.multiplicity.target}
               onUpdate={this.onUpdate('multiplicity', 'target')}
             />
           </Flex>
           <Flex>
             <span>Role</span>
-            <TextField
+            <Input
               value={element.role.target}
               onUpdate={this.onUpdate('role', 'target')}
             />
