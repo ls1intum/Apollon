@@ -6,6 +6,8 @@ import Element, { ElementRepository } from '../../domain/Element';
 import { Point } from '../../domain/geo';
 import { withCanvas, CanvasContext } from '../Canvas';
 import * as Plugins from '../../domain/plugins/Popups';
+import Relationship from '../../domain/Relationship';
+import DefaultPopup from './DefaultPopup';
 
 export class Popup extends Component<Props> {
   private calculatePosition = (): Point => {
@@ -15,8 +17,14 @@ export class Popup extends Component<Props> {
 
   render() {
     const position = this.calculatePosition();
-    const Component = (Plugins as any)[`${this.props.element.kind}Popup`];
-    if (!Component) return null;
+    let Component = (Plugins as any)[`${this.props.element.kind}Popup`];
+    if (!Component) {
+      if (this.props.element instanceof Relationship) {
+        return null;
+      } else {
+        Component = DefaultPopup;
+      }
+    }
     return (
       <Container {...position}>
         <Content>
