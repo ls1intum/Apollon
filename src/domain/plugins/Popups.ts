@@ -31,3 +31,6 @@ export {
 export {
   default as ClassUnidirectionalPopup,
 } from './ClassDiagram/ClassAssociation/ClassAssociationPopup';
+export {
+  default as ObjectNamePopup,
+} from './ObjectDiagram/ObjectName/ObjectNamePopup';
