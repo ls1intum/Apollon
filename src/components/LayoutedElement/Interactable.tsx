@@ -1,103 +1,43 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
-import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
-import Element, { ElementRepository } from './../../domain/Element';
+import { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
-import { InteractiveElementsMode } from '../../services/EditorService';
-import Container from '../../domain/Container';
 
 const interactable = (WrappedComponent: typeof ElementComponent) => {
-  class Interactable extends Component<Props, State> {
-    state: State = {
-      interactive: this.props.element.interactive,
-    };
+  class Interactable extends Component<Props> {
+    private select = (event: MouseEvent) => {
+      if (event.which !== 1 || !this.props.element.hovered) return;
 
-    private toggle = (event: MouseEvent) => {
-      event.stopPropagation();
-      let elementsToToggle = [this.props.element];
-      for (const interactiveElement of this.props.interactiveElements) {
-        if (
-          interactiveElement instanceof Container &&
-          interactiveElement.ownedElements.includes(this.props.element.id)
-        ) {
-          elementsToToggle = [interactiveElement];
-        }
-        if (interactiveElement.owner === this.props.element.id) {
-          elementsToToggle = [this.props.element];
-          if (this.props.element instanceof Container) {
-            const children = this.props.element.ownedElements
-              .filter(id =>
-                this.props.interactiveElements.map(e => e.id).includes(id)
-              )
-              .map<Element>(
-                id => this.props.interactiveElements.find(e => e.id === id)!
-              );
-            elementsToToggle = [...elementsToToggle, ...children];
-          }
-        }
-      }
-      elementsToToggle
-        .map<Element>(e => ({ ...e, interactive: !e.interactive }))
-        .forEach(this.props.update);
+      this.props.makeInteractive(this.props.element.id);
     };
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('click', this.toggle);
+      node.addEventListener('click', this.select);
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.removeEventListener('click', this.toggle);
-    }
-
-    componentDidUpdate() {
-      if (this.props.element.interactive !== this.state.interactive) {
-        this.setState({ interactive: this.props.element.interactive });
-      }
+      node.removeEventListener('click', this.select);
     }
 
     render() {
-      return (
-        <WrappedComponent
-          {...this.props}
-          interactable={this.state.interactive}
-          hidden={
-            this.props.mode === InteractiveElementsMode.Hidden &&
-            this.state.interactive
-          }
-        />
-      );
+      return <WrappedComponent {...this.props} />;
     }
   }
 
-  interface StateProps {
-    mode: InteractiveElementsMode;
-    interactiveElements: Element[];
-  }
+  interface StateProps {}
 
   interface DispatchProps {
-    update: typeof ElementRepository.update;
+    makeInteractive: typeof ElementRepository.makeInteractive;
   }
 
   type Props = OwnProps & StateProps & DispatchProps;
 
-  interface State {
-    interactive: boolean;
-  }
-
-  return compose<ComponentClass<OwnProps>>(
-    connect(
-      (state: ReduxState): StateProps => ({
-        mode: state.editor.interactiveMode,
-        interactiveElements: Object.values(state.elements).filter(
-          e => state.elements[e.id].interactive
-        ),
-      }),
-      { update: ElementRepository.update }
-    )
+  return connect<StateProps, DispatchProps, OwnProps>(
+    null,
+    { makeInteractive: ElementRepository.makeInteractive }
   )(Interactable);
 };
 

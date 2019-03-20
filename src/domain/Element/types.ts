@@ -1,14 +1,18 @@
 import { Action } from 'redux';
 import Element from '.';
+import ElementKind from '../plugins/ElementKind';
 
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',
   HOVER = '@@element/HOVER',
   LEAVE = '@@element/LEAVE',
   SELECT = '@@element/SELECT',
+  MAKE_INTERACTIVE = '@@element/MAKE_INTERACTIVE',
   RESIZE = '@@element/RESIZE',
   MOVE = '@@element/MOVE',
   UPDATE = '@@element/UPDATE',
+  CHANGE = '@@element/CHANGE',
+  RENAME = '@@element/RENAME',
   DELETE = '@@element/DELETE',
 }
 
@@ -39,6 +43,13 @@ export interface SelectAction extends Action<ActionTypes.SELECT> {
   };
 }
 
+export interface MakeInteractiveAction
+  extends Action<ActionTypes.MAKE_INTERACTIVE> {
+  payload: {
+    id: string;
+  };
+}
+
 export interface ResizeAction extends Action<ActionTypes.RESIZE> {
   payload: {
     id: string;
@@ -59,9 +70,24 @@ export interface MoveAction extends Action<ActionTypes.MOVE> {
   };
 }
 
+export interface ChangeAction extends Action<ActionTypes.CHANGE> {
+  payload: {
+    id: string;
+    kind: ElementKind;
+  };
+}
+
+export interface RenameAction extends Action<ActionTypes.RENAME> {
+  payload: {
+    id: string;
+    name: string;
+  };
+}
+
 export interface UpdateAction extends Action<ActionTypes.UPDATE> {
   payload: {
-    element: Element;
+    id: string,
+    values: Partial<Element>;
   };
 }
 
@@ -76,8 +102,11 @@ export type Actions =
   | HoverAction
   | LeaveAction
   | SelectAction
+  | MakeInteractiveAction
   | ResizeAction
   | MoveAction
+  | ChangeAction
+  | RenameAction
   | UpdateAction
   | DeleteAction;
 

@@ -33,7 +33,7 @@ abstract class Classifier extends Container {
   render(elements: Element[]): Element[] {
     let [parent, ...children] = super.render(elements);
     const attributes = children.filter(c => c instanceof ClassAttribute);
-    const methods = children.filter(c => c instanceof ClassMethod);
+    let methods = children.filter(c => c instanceof ClassMethod);
 
     let y = this.headerHeight;
     for (const child of attributes) {
@@ -48,7 +48,11 @@ abstract class Classifier extends Container {
         child.bounds.width = this.bounds.width;
         y += child.bounds.height;
       }
+    } else {
+      this.deviderPosition = 0;
+      methods = []
     }
+    this.ownedElements = [...attributes.map(e => e.id), ...methods.map(e => e.id)]
 
     parent.bounds.height = y;
     return [parent, ...attributes, ...methods];

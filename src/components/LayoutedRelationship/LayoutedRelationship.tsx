@@ -15,7 +15,11 @@ import selectable from './../LayoutedElement/Selectable';
 import editable from './../LayoutedElement/Editable';
 import interactable from './../LayoutedElement/Interactable';
 import reconnectable from './Reconnectable';
-import { EditorMode, ApollonMode } from '../../services/EditorService';
+import {
+  EditorMode,
+  ApollonMode,
+  InteractiveElementsMode,
+} from '../../services/EditorService';
 
 class LayoutedRelationship extends Component<Props> {
   component: typeof RelationshipComponent = this.composeComponent();
@@ -34,7 +38,7 @@ class LayoutedRelationship extends Component<Props> {
     if (apollonMode === ApollonMode.ReadOnly) {
       decorators = [selectable, hoverable];
     } else if (editorMode === EditorMode.InteractiveElementsView) {
-      decorators = [interactable];
+      decorators = [interactable, hoverable];
     } else {
       decorators = [reconnectable, editable, selectable, hoverable];
     }
@@ -55,7 +59,19 @@ class LayoutedRelationship extends Component<Props> {
     if (!Object.keys(relationship).length) return null;
     const Component = this.component;
 
-    return <Component element={relationship} />;
+    return (
+      <Component
+        element={relationship}
+        interactable={
+          this.props.editorMode === EditorMode.InteractiveElementsView
+        }
+        hidden={
+          this.props.editorMode === EditorMode.InteractiveElementsView &&
+          this.props.interactiveMode === InteractiveElementsMode.Hidden &&
+          relationship.interactive
+        }
+      />
+    );
   }
 }
 
@@ -68,6 +84,7 @@ interface StateProps {
   getById: (id: string) => Relationship;
   editorMode: EditorMode;
   apollonMode: ApollonMode;
+  interactiveMode: InteractiveElementsMode;
 }
 
 interface DispatchProps {}
@@ -79,5 +96,6 @@ export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
     getById: RelationshipRepository.getById(state.elements),
     editorMode: state.editor.editorMode,
     apollonMode: state.editor.mode,
+    interactiveMode: state.editor.interactiveMode,
   })
 )(LayoutedRelationship);

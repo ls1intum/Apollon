@@ -1,4 +1,11 @@
-import { takeLatest, put, select, all } from 'redux-saga/effects';
+import {
+  takeLatest,
+  put,
+  select,
+  all,
+  SimpleEffect,
+  PutEffectDescriptor,
+} from 'redux-saga/effects';
 import { State } from '../../components/Store';
 import {
   ActionTypes,
@@ -7,6 +14,8 @@ import {
   SelectAction,
   MoveAction,
   DeleteAction,
+  MakeInteractiveAction,
+  UpdateAction,
 } from './types';
 import Element from './Element';
 import Repository from './repository';
@@ -18,6 +27,7 @@ function* saga() {
   yield takeLatest(ActionTypes.HOVER, handleElementHover);
   yield takeLatest(ActionTypes.LEAVE, handleElementLeave);
   yield takeLatest(ActionTypes.SELECT, handleElementSelect);
+  yield takeLatest(ActionTypes.MAKE_INTERACTIVE, handleElementMakeInteractive);
   yield takeLatest(ActionTypes.MOVE, handleElementMove);
   yield takeLatest(ActionTypes.DELETE, handleElementDelete);
 }
@@ -47,6 +57,47 @@ function* handleElementSelect({ payload }: SelectAction) {
     element => element.selected && element.id !== payload.id
   );
   yield all(selection.map(element => put(Repository.select(element.id, true))));
+}
+
+function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
+  const { elements }: State = yield select();
+  const current = elements[payload.id];
+
+  const update = (id: string, interactive: boolean) =>
+    put<UpdateAction>(ElementRepository.update(id, { interactive }));
+
+  let owner = current.owner;
+  while (owner) {
+    const element = elements[owner];
+    if (element.interactive) {
+      yield update(element.id, false);
+      break;
+    }
+    owner = element.owner;
+  }
+  yield update(current.id, !current.interactive);
+
+  if (current.base === 'Container') {
+    const rec = (id: string): ReturnType<typeof update>[] => {
+      const element = elements[id];
+      if (element.interactive) {
+        return [update(element.id, false)];
+      }
+      if (element.base === 'Container') {
+        return (current as Container).ownedElements.reduce<
+          ReturnType<typeof update>[]
+        >((a, o) => {
+          return [...a, ...rec(o)];
+        }, []);
+      }
+      return [];
+    };
+
+    const t = (current as Container).ownedElements.reduce<
+      ReturnType<typeof update>[]
+    >((a, o) => [...a, ...rec(o)], []);
+    yield all(t);
+  }
 }
 
 function* handleElementMove({ payload }: MoveAction) {
