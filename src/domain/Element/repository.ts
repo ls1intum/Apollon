@@ -11,6 +11,7 @@ import {
   ResizeAction,
   DeleteAction,
   SelectAction,
+  MakeInteractiveAction,
   ChangeAction,
   RenameAction,
 } from './types';
@@ -41,6 +42,11 @@ class Repository {
   ): SelectAction => ({
     type: ActionTypes.SELECT,
     payload: { id, toggle },
+  });
+
+  static makeInteractive = (id: string): MakeInteractiveAction => ({
+    type: ActionTypes.MAKE_INTERACTIVE,
+    payload: { id },
   });
 
   static resize: ActionCreator<ResizeAction> = (

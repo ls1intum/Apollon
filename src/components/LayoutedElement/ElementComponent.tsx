@@ -1,20 +1,16 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { State as ReduxState } from './../Store';
 import Element from './../../domain/Element';
 import * as Plugins from './../../domain/plugins';
 import Container from '../../domain/Container';
 import LayoutedElement from './LayoutedElement';
 import { CanvasConsumer } from '../Canvas/CanvasContext';
-import { EditorMode } from '../../services/EditorService';
 
 interface SvgProps {
   hidden: boolean;
   moving: boolean;
   isRoot: boolean;
-  interactable: boolean;
-  interactive: boolean;
+  highlight: boolean;
 }
 
 const Svg = styled.svg.attrs({
@@ -22,11 +18,8 @@ const Svg = styled.svg.attrs({
 })<SvgProps>`
   overflow: visible;
   opacity: ${({ moving, hidden }) => (hidden ? 0 : moving ? 0.35 : 1)};
-  fill: ${({ interactable, isRoot, theme }) =>
-    interactable ? theme.interactiveAreaColor : isRoot ? 'white' : 'none'};
-
-  pointer-events: ${({ interactive, moving }) =>
-    interactive && !moving ? 'fill' : 'none'};
+  fill: ${({ highlight, isRoot, theme }) =>
+    highlight ? theme.interactiveAreaColor : isRoot ? 'white' : 'none'};
 
   & text {
     cursor: default;
@@ -50,7 +43,7 @@ class ElementComponent extends Component<Props> {
   };
 
   render() {
-    const { element } = this.props;
+    const { element, interactable } = this.props;
     const Component = (Plugins as any)[`${element.kind}Component`];
 
     const strokeWidth = 5;
@@ -70,9 +63,8 @@ class ElementComponent extends Component<Props> {
               {...bounds}
               moving={this.props.moving}
               isRoot={this.props.element.owner === null}
-              interactable={this.props.interactable}
               hidden={this.props.hidden}
-              interactive={this.props.interactive}
+              highlight={interactable && element.interactive}
             >
               <Component element={element}>
                 {element instanceof Container &&
@@ -81,7 +73,7 @@ class ElementComponent extends Component<Props> {
                   })}
               </Component>
               {this.props.children}
-              {(element.hovered || element.selected) && (
+              {!interactable && (element.hovered || element.selected) && (
                 <rect
                   x={-strokeWidth / 2}
                   y={-strokeWidth / 2}
@@ -110,15 +102,6 @@ export interface OwnProps {
   interactable: boolean;
 }
 
-// interface StateProps {
-//   editorMode: EditorMode;
-// }
-
-type Props = OwnProps; // & StateProps;
+type Props = OwnProps;
 
 export default ElementComponent;
-// connect(
-//   (state: ReduxState): StateProps => ({
-//     editorMode: state.editor.editorMode,
-//   })
-// )(ElementComponent);

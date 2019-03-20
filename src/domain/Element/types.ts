@@ -7,6 +7,7 @@ export const enum ActionTypes {
   HOVER = '@@element/HOVER',
   LEAVE = '@@element/LEAVE',
   SELECT = '@@element/SELECT',
+  MAKE_INTERACTIVE = '@@element/MAKE_INTERACTIVE',
   RESIZE = '@@element/RESIZE',
   MOVE = '@@element/MOVE',
   UPDATE = '@@element/UPDATE',
@@ -39,6 +40,13 @@ export interface SelectAction extends Action<ActionTypes.SELECT> {
   payload: {
     id: string | null;
     toggle: boolean;
+  };
+}
+
+export interface MakeInteractiveAction
+  extends Action<ActionTypes.MAKE_INTERACTIVE> {
+  payload: {
+    id: string;
   };
 }
 
@@ -94,6 +102,7 @@ export type Actions =
   | HoverAction
   | LeaveAction
   | SelectAction
+  | MakeInteractiveAction
   | ResizeAction
   | MoveAction
   | ChangeAction
