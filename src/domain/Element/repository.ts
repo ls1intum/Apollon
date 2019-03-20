@@ -11,6 +11,7 @@ import {
   ResizeAction,
   DeleteAction,
   SelectAction,
+  MakeInteractiveAction,
 } from './types';
 import Element from '.';
 import * as Plugins from '../plugins';
@@ -38,6 +39,11 @@ class Repository {
   ): SelectAction => ({
     type: ActionTypes.SELECT,
     payload: { id, toggle },
+  });
+
+  static makeInteractive = (id: string): MakeInteractiveAction => ({
+    type: ActionTypes.MAKE_INTERACTIVE,
+    payload: { id },
   });
 
   static resize: ActionCreator<ResizeAction> = (

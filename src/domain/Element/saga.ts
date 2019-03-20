@@ -1,4 +1,11 @@
-import { takeLatest, put, select, all } from 'redux-saga/effects';
+import {
+  takeLatest,
+  put,
+  select,
+  all,
+  SimpleEffect,
+  PutEffectDescriptor,
+} from 'redux-saga/effects';
 import { State } from '../../components/Store';
 import {
   ActionTypes,
@@ -7,6 +14,8 @@ import {
   SelectAction,
   MoveAction,
   DeleteAction,
+  MakeInteractiveAction,
+  UpdateAction,
 } from './types';
 import Element from './Element';
 import Repository from './repository';
@@ -18,6 +27,7 @@ function* saga() {
   yield takeLatest(ActionTypes.HOVER, handleElementHover);
   yield takeLatest(ActionTypes.LEAVE, handleElementLeave);
   yield takeLatest(ActionTypes.SELECT, handleElementSelect);
+  yield takeLatest(ActionTypes.MAKE_INTERACTIVE, handleElementMakeInteractive);
   yield takeLatest(ActionTypes.MOVE, handleElementMove);
   yield takeLatest(ActionTypes.DELETE, handleElementDelete);
 }
@@ -47,6 +57,58 @@ function* handleElementSelect({ payload }: SelectAction) {
     element => element.selected && element.id !== payload.id
   );
   yield all(selection.map(element => put(Repository.select(element.id, true))));
+}
+
+function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
+  const { elements }: State = yield select();
+  const current = elements[payload.id];
+  console.log(
+    'change',
+    current.name,
+    ' interactive from ',
+    current.interactive,
+    ' to ',
+    !current.interactive
+  );
+
+  let owner = current.owner;
+  while (owner) {
+    const element = elements[owner];
+    if (element.interactive) {
+      console.log(`${element.name} is interactive, make it not interactive`);
+      element.interactive = false;
+      yield put<UpdateAction>(ElementRepository.update(element));
+      break;
+    }
+    owner = element.owner;
+  }
+  current.interactive = !current.interactive;
+  yield put<UpdateAction>(ElementRepository.update(current));
+
+  if (current.base === 'Container') {
+    const rec = (
+      id: string
+    ): SimpleEffect<'PUT', PutEffectDescriptor<UpdateAction>>[] => {
+      const element = elements[id];
+      if (element.interactive) {
+        console.log(`${element.name} is interactive, make it not interactive`);
+        element.interactive = false;
+        return [put(ElementRepository.update(element))];
+      }
+      if (element.base === 'Container') {
+        return (current as Container).ownedElements.reduce<
+          SimpleEffect<'PUT', PutEffectDescriptor<UpdateAction>>[]
+        >((a, o) => {
+          return [...a, ...rec(o)];
+        }, []);
+      }
+      return [];
+    };
+
+    yield all((current as Container).ownedElements.map(rec));
+
+    yield put<UpdateAction>(ElementRepository.update(current));
+  }
 }
 
 function* handleElementMove({ payload }: MoveAction) {
