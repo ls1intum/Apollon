@@ -15,6 +15,7 @@ import {
   UMLElement,
   UMLRelationship,
   Location,
+  Selection,
 } from '../../ApollonEditor';
 import Relationship, {
   RelationshipKind,
@@ -32,23 +33,36 @@ interface State {
 
 class State {
   static fromModel(model: UMLModel): State {
-    const elements: Element[] = model.elements.reduce<Element[]>(
-      (r, umlElement) => [
-        ...r,
-        ...(<any>Plugin)[umlElement.type].fromUMLElement(
-          umlElement,
-          (<any>Plugin)[umlElement.type]
-        ),
-      ],
-      []
-    );
-    const relationships: Relationship[] = model.relationships.map<Relationship>(
-      umlRelationship =>
+    const elements: Element[] = model.elements
+      .reduce<Element[]>(
+        (r, umlElement) => [
+          ...r,
+          ...(<any>Plugin)[umlElement.type].fromUMLElement(
+            umlElement,
+            (<any>Plugin)[umlElement.type]
+          ),
+        ],
+        []
+      )
+      .map(element => {
+        if (model.interactive.elements.includes(element.id)) {
+          element.interactive = true;
+        }
+        return element;
+      });
+    const relationships: Relationship[] = model.relationships
+      .map<Relationship>(umlRelationship =>
         (<any>Plugin)[umlRelationship.type].fromUMLRelationship(
           umlRelationship,
           elements
         )
-    );
+      )
+      .map(relationship => {
+        if (model.interactive.relationships.includes(relationship.id)) {
+          relationship.interactive = true;
+        }
+        return relationship;
+      });
 
     return {
       editor: {
@@ -105,7 +119,21 @@ class State {
       )
     );
 
-    return { type: state.diagram.type, elements: e, relationships: r };
+    const interactive: Selection = {
+      elements: elements
+        .filter(element => element.interactive)
+        .map<string>(element => element.id),
+      relationships: relationships
+        .filter(element => element.interactive)
+        .map<string>(element => element.id),
+    };
+
+    return {
+      type: state.diagram.type,
+      interactive,
+      elements: e,
+      relationships: r,
+    };
   }
 }
 

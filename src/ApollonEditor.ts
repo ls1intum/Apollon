@@ -9,6 +9,7 @@ import { RelationshipKind } from './domain/Relationship';
 
 export interface UMLModel {
   type: DiagramType;
+  interactive: Selection;
   elements: UMLElement[];
   relationships: UMLRelationship[];
 }
@@ -19,7 +20,6 @@ export interface UMLElement {
   owner: string | null;
   type: ElementKind;
   bounds: { x: number; y: number; width: number; height: number };
-  interactive: boolean;
 }
 
 export const enum Location {

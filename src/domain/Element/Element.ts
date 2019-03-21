@@ -39,7 +39,6 @@ abstract class Element {
         owner: element.owner,
         type: element.kind as ElementKind,
         bounds: element.bounds,
-        interactive: element.interactive,
       },
       children: children,
     };
@@ -57,7 +56,6 @@ abstract class Element {
           owner: umlElement.owner,
           kind: umlElement.type,
           bounds: umlElement.bounds,
-          interactive: umlElement.interactive,
           base: 'Element',
           hovered: false,
           selected: false,

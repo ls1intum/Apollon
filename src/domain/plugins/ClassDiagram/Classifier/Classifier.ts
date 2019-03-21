@@ -99,17 +99,15 @@ abstract class Classifier extends Container {
         ...base,
         attributes: children
           .filter(element => element instanceof ClassAttribute)
-          .map<{ id: string; name: string; interactive: boolean }>(element => ({
+          .map<{ id: string; name: string }>(element => ({
             id: element.id,
             name: element.name,
-            interactive: element.interactive,
           })),
         methods: children
           .filter(element => element instanceof ClassMethod)
-          .map<{ id: string; name: string; interactive: boolean }>(element => ({
+          .map<{ id: string; name: string }>(element => ({
             id: element.id,
             name: element.name,
-            interactive: element.interactive,
           })),
       },
       children: [],
@@ -128,7 +126,6 @@ abstract class Classifier extends Container {
           owner: umlElement.id,
           kind: ElementKind.ClassAttribute,
           bounds: { x: 0, y: 0, width: 0, height: 30 },
-          interactive: umlElement.interactive,
           base: 'Element',
           hovered: false,
           selected: false,
@@ -145,7 +142,6 @@ abstract class Classifier extends Container {
             owner: umlElement.id,
             kind: ElementKind.ClassMethod,
             bounds: { x: 0, y: 0, width: 0, height: 30 },
-            interactive: umlElement.interactive,
             base: 'Element',
             hovered: false,
             selected: false,
@@ -153,7 +149,7 @@ abstract class Classifier extends Container {
           ClassMethod.prototype
         )
     );
-    return (element as Container).render([element, ...attributes, ...methods])
+    return (element as Container).render([element, ...attributes, ...methods]);
   }
 }
 
