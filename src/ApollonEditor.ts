@@ -6,6 +6,7 @@ import { State } from './components/Store';
 import { DiagramType } from './domain/Diagram';
 import { ElementKind } from './domain/Element';
 import { RelationshipKind } from './domain/Relationship';
+import { Styles } from './components/Theme';
 
 export interface UMLModel {
   type: DiagramType;
@@ -13,6 +14,11 @@ export interface UMLModel {
   elements: { [id: string]: UMLElement };
   relationships: { [id: string]: UMLRelationship };
 }
+
+export { DiagramType };
+export { ElementKind };
+export { RelationshipKind };
+export { Styles };
 
 export interface UMLElement {
   id: string;
@@ -55,10 +61,12 @@ export const enum ApollonMode {
   Readonly,
 }
 
-export interface ApollonOptions {
+export type ApollonOptions = {
+  type: DiagramType;
   mode?: ApollonMode;
   model?: UMLModel;
-}
+  theme?: Partial<Styles>;
+};
 
 export class ApollonEditor {
   private application: RefObject<Application> = createRef();
@@ -68,9 +76,17 @@ export class ApollonEditor {
   selection: Selection = { elements: [], relationships: [] };
 
   constructor(private container: HTMLElement, options: ApollonOptions) {
+    const model: UMLModel = {
+      interactive: { elements: [], relationships: [] },
+      elements: {},
+      relationships: {},
+      ...options.model,
+      type: options.type,
+    };
+
     const element = createElement(Application, {
       ref: this.application,
-      state: options.model ? State.fromModel(options.model) : null,
+      state: State.fromModel(model),
       styles: {},
     });
     render(element, container, this.componentDidMount);

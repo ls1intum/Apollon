@@ -1,8 +1,9 @@
-import { ApollonEditor, ApollonOptions, ApollonExporter } from '../src';
+import { ApollonEditor, ApollonOptions, ApollonExporter, DiagramType } from '../src';
 
 const container = document.getElementById('apollon')!;
 let editor: ApollonEditor | null = null;
 let options: ApollonOptions = {
+  type: DiagramType.ClassDiagram,
   model: JSON.parse(window.localStorage.getItem('apollon')!),
 };
 
