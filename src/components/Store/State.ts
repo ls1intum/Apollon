@@ -1,9 +1,8 @@
 import Element, {
   ElementState,
-  ElementKind,
   ElementRepository,
 } from './../../domain/Element';
-import Diagram, { DiagramState, DiagramType } from './../../domain/Diagram';
+import Diagram, { DiagramState } from './../../domain/Diagram';
 import {
   EditorState,
   ApollonMode,
@@ -14,14 +13,11 @@ import {
   UMLModel,
   UMLElement,
   UMLRelationship,
-  Location,
   Selection,
 } from '../../ApollonEditor';
 import Relationship, {
-  RelationshipKind,
   RelationshipRepository,
 } from '../../domain/Relationship';
-import Port from '../../domain/Port';
 import Container from '../../domain/Container';
 import * as Plugin from './../../domain/plugins';
 
@@ -33,7 +29,7 @@ interface State {
 
 class State {
   static fromModel(model: UMLModel): State {
-    const elements: Element[] = model.elements
+    const elements: Element[] = Object.values(model.elements)
       .reduce<Element[]>(
         (r, umlElement) => [
           ...r,
@@ -50,7 +46,7 @@ class State {
         }
         return element;
       });
-    const relationships: Relationship[] = model.relationships
+    const relationships: Relationship[] = Object.values(model.relationships)
       .map<Relationship>(umlRelationship =>
         (<any>Plugin)[umlRelationship.type].fromUMLRelationship(
           umlRelationship,
@@ -131,8 +127,14 @@ class State {
     return {
       type: state.diagram.type,
       interactive,
-      elements: e,
-      relationships: r,
+      elements: e.reduce<{ [id: string]: UMLElement }>(
+        (o, e) => ({ ...o, [e.id]: e }),
+        {}
+      ),
+      relationships: r.reduce<{ [id: string]: UMLRelationship }>(
+        (o, e) => ({ ...o, [e.id]: e }),
+        {}
+      ),
     };
   }
 }

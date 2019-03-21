@@ -10,8 +10,8 @@ import { RelationshipKind } from './domain/Relationship';
 export interface UMLModel {
   type: DiagramType;
   interactive: Selection;
-  elements: UMLElement[];
-  relationships: UMLRelationship[];
+  elements: { [id: string]: UMLElement };
+  relationships: { [id: string]: UMLRelationship };
 }
 
 export interface UMLElement {
@@ -111,9 +111,7 @@ export class ApollonEditor {
     return State.toModel(this.store.getState());
   }
 
-  subscribeToSelectionChange(
-    callback: (selection: Selection) => void
-  ): number {
+  subscribeToSelectionChange(callback: (selection: Selection) => void): number {
     return this.subscribers.push(callback) - 1;
   }
 
