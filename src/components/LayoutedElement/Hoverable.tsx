@@ -1,10 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { ElementRepository } from '../../domain/Element';
 
-const hoverable = (WrappedComponent: typeof ElementComponent) => {
+const hoverable = (
+  WrappedComponent: typeof ElementComponent
+): ComponentClass<OwnProps> => {
   class Hoverable extends Component<Props> {
     private enter = () => this.props.hover(this.props.element.id);
     private leave = () => this.props.leave(this.props.element.id);

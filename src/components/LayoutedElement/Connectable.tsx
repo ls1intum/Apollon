@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import styled from 'styled-components';
@@ -22,7 +22,9 @@ const Group = styled.g`
   }
 `;
 
-const connectable = (WrappedComponent: typeof ElementComponent) => {
+const connectable = (
+  WrappedComponent: typeof ElementComponent
+): ComponentClass<OwnProps> => {
   class Connectable extends Component<Props> {
     private calculateInvisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
@@ -72,8 +74,9 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       try {
         const endpoints = await context.onStartConnect(port)(event);
 
-        const Relationship =
-          (Plugins as any)[DefaultRelationshipKind[this.props.diagramType]];
+        const Relationship = (Plugins as any)[
+          DefaultRelationshipKind[this.props.diagramType]
+        ];
         const relationship = new Relationship(
           'Association',
           endpoints.source,

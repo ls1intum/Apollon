@@ -1,11 +1,13 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import RelationshipComponent, { OwnProps } from './RelationshipComponent';
 import { Point } from '../../domain/geo';
 import ConnectContext, { ConnectConsumer } from '../Connectable/ConnectContext';
 import { RelationshipRepository } from '../../domain/Relationship';
 
-const reconnectable = (WrappedComponent: typeof RelationshipComponent) => {
+const reconnectable = (
+  WrappedComponent: typeof RelationshipComponent
+): ComponentClass<OwnProps> => {
   class Reconnectable extends Component<Props, State> {
     state = {
       isReconnecting: false,

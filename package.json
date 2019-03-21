@@ -11,18 +11,14 @@
     "email": "krusche@in.tum.de",
     "url": "https://www1.in.tum.de/krusche"
   },
-  "files": [
-    "lib"
-  ],
-  "browser": "lib/index.js",
+  "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "repository": "github:ls1intum/apollon",
   "scripts": {
     "start": "webpack-dev-server",
     "lint": "tslint --force -p tsconfig.json -c tslint.json -t stylish",
-    "build": "yarn clean && yarn typings && tsc -p .",
+    "build": "yarn clean && tsc -p .",
     "clean": "rm -rf lib",
-    "typings": "mkdir -p lib && cp src/index.d.ts lib",
     "prepare": "yarn build",
     "publish:patch": "yarn build && npm version patch && npm publish",
     "publish:minor": "yarn build && npm version minor && npm publish",
@@ -47,7 +43,6 @@
     "@types/reduce-reducers": "0.3.0",
     "@types/styled-components": "4.1.12",
     "@types/uuid": "3.4.4",
-    "prettier": "1.16.4",
     "ts-essentials": "2.0.3",
     "ts-loader": "5.3.3",
     "tslint": "5.13.1",

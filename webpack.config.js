@@ -7,14 +7,22 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'example'),
     filename: 'index.js',
-    library: 'exports',
   },
   resolve: {
     extensions: ['.js', '.ts', '.tsx'],
   },
   module: {
     rules: [
-      { test: /\.tsx?/, exclude: /\/node_modules\//, loader: 'ts-loader' },
+      {
+        test: /\.tsx?/,
+        exclude: /\/node_modules\//,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: { compilerOptions: { declaration: false } },
+          },
+        ],
+      },
     ],
   },
   devServer: {
