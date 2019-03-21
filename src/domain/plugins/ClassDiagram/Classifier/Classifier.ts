@@ -1,6 +1,6 @@
 import Element from '../../../Element';
 import Container from '../../../Container';
-import { ElementKind } from '..';
+import { ElementKind, UMLClassifier } from '..';
 import ClassMember from '../ClassMember/ClassMember';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';
 import { ClassMethod } from '../ClassMember/ClassMethod';
@@ -50,9 +50,12 @@ abstract class Classifier extends Container {
       }
     } else {
       this.deviderPosition = 0;
-      methods = []
+      methods = [];
     }
-    this.ownedElements = [...attributes.map(e => e.id), ...methods.map(e => e.id)]
+    this.ownedElements = [
+      ...attributes.map(e => e.id),
+      ...methods.map(e => e.id),
+    ];
 
     parent.bounds.height = y;
     return [parent, ...attributes, ...methods];
@@ -84,6 +87,73 @@ abstract class Classifier extends Container {
         return child;
       }),
     ];
+  }
+
+  static toUMLElement(
+    element: Classifier,
+    children: Element[]
+  ): { element: UMLClassifier; children: Element[] } {
+    const { element: base } = Element.toUMLElement(element, children);
+    return {
+      element: {
+        ...base,
+        attributes: children
+          .filter(element => element instanceof ClassAttribute)
+          .map<{ id: string; name: string; interactive: boolean }>(element => ({
+            id: element.id,
+            name: element.name,
+            interactive: element.interactive,
+          })),
+        methods: children
+          .filter(element => element instanceof ClassMethod)
+          .map<{ id: string; name: string; interactive: boolean }>(element => ({
+            id: element.id,
+            name: element.name,
+            interactive: element.interactive,
+          })),
+      },
+      children: [],
+    };
+  }
+
+  static fromUMLElement(umlElement: UMLClassifier): Element[] {
+    const [element] = Element.fromUMLElement(umlElement, Classifier);
+    const attributes: ClassAttribute[] = umlElement.attributes.map<
+      ClassAttribute
+    >(attribute =>
+      Object.setPrototypeOf(
+        {
+          id: attribute.id,
+          name: attribute.name,
+          owner: umlElement.id,
+          kind: ElementKind.ClassAttribute,
+          bounds: { x: 0, y: 0, width: 0, height: 30 },
+          interactive: umlElement.interactive,
+          base: 'Element',
+          hovered: false,
+          selected: false,
+        },
+        ClassAttribute.prototype
+      )
+    );
+    const methods: ClassMethod[] = umlElement.methods.map<ClassMethod>(
+      attribute =>
+        Object.setPrototypeOf(
+          {
+            id: attribute.id,
+            name: attribute.name,
+            owner: umlElement.id,
+            kind: ElementKind.ClassMethod,
+            bounds: { x: 0, y: 0, width: 0, height: 30 },
+            interactive: umlElement.interactive,
+            base: 'Element',
+            hovered: false,
+            selected: false,
+          },
+          ClassMethod.prototype
+        )
+    );
+    return (element as Container).render([element, ...attributes, ...methods])
   }
 }
 

@@ -6,6 +6,7 @@ import Element, { ElementRepository } from './../../domain/Element';
 import { Point } from './../../domain/geo';
 import Port from './../../domain/Port';
 import { withCanvas, CanvasContext } from '../Canvas';
+import { Location } from '../../ApollonEditor';
 
 class RelationshipPreview extends Component<Props, State> {
   state: State = {
@@ -30,7 +31,7 @@ class RelationshipPreview extends Component<Props, State> {
       const { element: id, location } = this.props.port;
       const element = this.props.getById(id);
       switch (location) {
-        case 'N':
+        case Location.North:
           path.push({
             x: element.bounds.x + element.bounds.width / 2,
             y: element.bounds.y,
@@ -40,7 +41,7 @@ class RelationshipPreview extends Component<Props, State> {
             y: element.bounds.y - 20,
           });
           break;
-        case 'E':
+        case Location.East:
           path.push({
             x: element.bounds.x + element.bounds.width,
             y: element.bounds.y + element.bounds.height / 2,
@@ -50,7 +51,7 @@ class RelationshipPreview extends Component<Props, State> {
             y: element.bounds.y + element.bounds.height / 2,
           });
           break;
-        case 'S':
+        case Location.South:
           path.push({
             x: element.bounds.x + element.bounds.width / 2,
             y: element.bounds.y + element.bounds.height,
@@ -60,7 +61,7 @@ class RelationshipPreview extends Component<Props, State> {
             y: element.bounds.y + element.bounds.height + 20,
           });
           break;
-        case 'W':
+        case Location.West:
           path.push({
             x: element.bounds.x,
             y: element.bounds.y + element.bounds.height / 2,

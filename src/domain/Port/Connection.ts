@@ -1,6 +1,7 @@
 import Port from '.';
 import { Point, beautifyPath } from '../geo';
 import Boundary from '../geo/Boundary';
+import { Location } from '../../ApollonEditor';
 
 interface Connection {
   source: Port;
@@ -224,8 +225,8 @@ class Connection {
         #######           #######
     */
     if (
-      source.location === 'E' &&
-      target.location === 'W' &&
+      source.location === Location.East &&
+      target.location === Location.West &&
       target.bounds.x >= source.bounds.x + source.bounds.width
     ) {
       const overlapY = Connection.computeOverlap(
@@ -256,8 +257,8 @@ class Connection {
         #######           #######
     */
     if (
-      source.location === 'W' &&
-      target.location === 'E' &&
+      source.location === Location.West &&
+      target.location === Location.East &&
       source.bounds.x >= target.bounds.x + target.bounds.width
     ) {
       const overlapY = Connection.computeOverlap(
@@ -294,8 +295,8 @@ class Connection {
         #######
     */
     if (
-      source.location === 'S' &&
-      target.location === 'N' &&
+      source.location === Location.South &&
+      target.location === Location.North &&
       target.bounds.y >= source.bounds.y + source.bounds.height
     ) {
       const overlapX = Connection.computeOverlap(
@@ -326,8 +327,8 @@ class Connection {
         #######
     */
     if (
-      source.location === 'N' &&
-      target.location === 'S' &&
+      source.location === Location.North &&
+      target.location === Location.South &&
       source.bounds.y >= target.bounds.y + target.bounds.height
     ) {
       const overlapX = Connection.computeOverlap(
@@ -418,19 +419,19 @@ class Connection {
     // Determine the clockwise and counter-clickwise order of corners
     // when starting at the selected edge of the rectangle
     switch (edge) {
-      case 'N':
+      case Location.North:
         clockwiseCornerQueue = [tr, br, bl, tl];
         counterClockwiseCornerQueue = [tl, bl, br, tr];
         break;
-      case 'E':
+      case Location.East:
         clockwiseCornerQueue = [br, bl, tl, tr];
         counterClockwiseCornerQueue = [tr, tl, bl, br];
         break;
-      case 'S':
+      case Location.South:
         clockwiseCornerQueue = [bl, tl, tr, br];
         counterClockwiseCornerQueue = [br, tr, tl, bl];
         break;
-      case 'W':
+      case Location.West:
         clockwiseCornerQueue = [tl, tr, br, bl];
         counterClockwiseCornerQueue = [bl, br, tr, tl];
         break;

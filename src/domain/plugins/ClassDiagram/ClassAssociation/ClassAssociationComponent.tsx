@@ -3,6 +3,7 @@ import ClassAssociation from './ClassAssociation';
 import Point from '../../../geometry/Point';
 import Port from '../../../Port';
 import { RelationshipKind } from '..';
+import { Location } from '../../../../ApollonEditor';
 
 const Marker = {
   Arrow: (id: string) => (
@@ -103,26 +104,26 @@ const ClassAssociationComponent: SFC<Props> = ({ element }) => {
     position: 'TOP' | 'BOTTOM'
   ) => {
     switch (location) {
-      case 'N':
+      case Location.North:
         return {
           dx: position === 'TOP' ? -5 : 5,
           dominantBaseline: 'text-after-edge',
           textAnchor: position === 'TOP' ? 'end' : 'start',
         };
-      case 'E':
+      case Location.East:
         return {
           dy: position === 'TOP' ? -10 : 5,
           dominantBaseline:
             position === 'TOP' ? 'text-after-edge' : 'text-before-edge',
           textAnchor: 'start',
         };
-      case 'S':
+      case Location.South:
         return {
           dx: position === 'TOP' ? -5 : 5,
           dominantBaseline: 'text-before-edge',
           textAnchor: position === 'TOP' ? 'end' : 'start',
         };
-      case 'W':
+      case Location.West:
         return {
           dy: position === 'TOP' ? -10 : 5,
           dominantBaseline:

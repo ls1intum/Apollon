@@ -21,7 +21,7 @@ class RelationshipComponent extends Component<Props> {
         children={context => {
           let bounds = element.bounds;
           let path = element.path;
-          if (context && element.owner === null) {
+          if (context) {
             bounds = {
               ...bounds,
               ...context.coordinateSystem.pointToScreen(bounds.x, bounds.y),
@@ -39,7 +39,13 @@ class RelationshipComponent extends Component<Props> {
             >
               <polyline
                 points={points}
-                stroke={!this.props.interactable ? '#0064ff' : element.interactive ? '#00dc00' : 'none'}
+                stroke={
+                  !this.props.interactable
+                    ? '#0064ff'
+                    : element.interactive
+                    ? '#00dc00'
+                    : 'none'
+                }
                 strokeOpacity={
                   element.hovered || element.selected || this.props.interactable
                     ? 0.2

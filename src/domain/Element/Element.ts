@@ -2,6 +2,7 @@ import uuid from './../utils/uuid';
 import Boundary from './../geo/Boundary';
 import ElementKind from './../plugins/ElementKind';
 import { RelationshipKind } from '../Relationship';
+import { UMLElement } from '../../ApollonEditor';
 
 abstract class Element {
   static features = {
@@ -26,6 +27,45 @@ abstract class Element {
   owner: string | null = null;
 
   constructor(public name: string) {}
+
+  static toUMLElement(
+    element: Element,
+    children: Element[]
+  ): { element: UMLElement; children: Element[] } {
+    return {
+      element: {
+        id: element.id,
+        name: element.name,
+        owner: element.owner,
+        type: element.kind as ElementKind,
+        bounds: element.bounds,
+        interactive: element.interactive,
+      },
+      children: children,
+    };
+  }
+
+  static fromUMLElement<T extends typeof Element>(
+    umlElement: UMLElement,
+    Clazz: T
+  ): Element[] {
+    return [
+      Object.setPrototypeOf(
+        {
+          id: umlElement.id,
+          name: umlElement.name,
+          owner: umlElement.owner,
+          kind: umlElement.type,
+          bounds: umlElement.bounds,
+          interactive: umlElement.interactive,
+          base: 'Element',
+          hovered: false,
+          selected: false,
+        },
+        Clazz.prototype
+      ),
+    ];
+  }
 }
 
 export default Element;

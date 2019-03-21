@@ -11,6 +11,7 @@ import ConnectContext, {
 import * as Plugins from './../../domain/plugins';
 import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
 import { DiagramType } from '../../domain/Diagram';
+import { Location } from '../../ApollonEditor';
 
 const Path = styled.path`
   cursor: crosshair;
@@ -32,13 +33,13 @@ const connectable = (
       const cirlce = `m ${-r}, 0 a ${r},${r} 0 1,0 ${r *
         2},0 a ${r},${r} 0 1,0 ${-r * 2},0 `;
       switch (port.location) {
-        case 'N':
+        case Location.North:
           return `M ${width / 2} 0 ${cirlce}`;
-        case 'E':
+        case Location.East:
           return `M ${width} ${height / 2} ${cirlce}`;
-        case 'S':
+        case Location.South:
           return `M ${width / 2} ${height} ${cirlce}`;
-        case 'W':
+        case Location.West:
           return `M 0 ${height / 2} ${cirlce}`;
       }
       return '';
@@ -47,15 +48,15 @@ const connectable = (
     private calculateVisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
       switch (port.location) {
-        case 'N':
+        case Location.North:
           return `M ${width / 2 - 20} 0 A 10 10 0 0 1 ${width / 2 + 20} 0`;
-        case 'E':
+        case Location.East:
           return `M ${width} ${height / 2 -
             20} A 10 10 0 0 1 ${width} ${height / 2 + 20}`;
-        case 'S':
+        case Location.South:
           return `M ${width / 2 - 20} ${height} A 10 10 0 0 0 ${width / 2 +
             20} ${height}`;
-        case 'W':
+        case Location.West:
           return `M 0 ${height / 2 - 20} A 10 10 0 0 0 0 ${height / 2 + 20}`;
       }
     }
@@ -98,19 +99,19 @@ const connectable = (
       const ports: Port[] = [
         {
           element: element.id,
-          location: 'N',
+          location: Location.North,
         },
         {
           element: element.id,
-          location: 'E',
+          location: Location.East,
         },
         {
           element: element.id,
-          location: 'S',
+          location: Location.South,
         },
         {
           element: element.id,
-          location: 'W',
+          location: Location.West,
         },
       ];
       return (

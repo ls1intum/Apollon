@@ -1,6 +1,7 @@
 import { Action } from 'redux';
 import Element from '.';
 import ElementKind from '../plugins/ElementKind';
+import Omit from '../utils/Omit';
 
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',

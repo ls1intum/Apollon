@@ -1,3 +1,5 @@
+import { UMLElement, UMLRelationship, Location } from '../../../ApollonEditor';
+
 export enum ElementKind {
   Class = 'Class',
   AbstractClass = 'AbstractClass',
@@ -15,4 +17,24 @@ export enum RelationshipKind {
   ClassDependency = 'ClassDependency',
   ClassAggregation = 'ClassAggregation',
   ClassComposition = 'ClassComposition',
+}
+
+export interface UMLClassifier extends UMLElement {
+  attributes: { id: string; name: string; interactive: boolean }[];
+  methods: { id: string; name: string; interactive: boolean }[];
+}
+
+export interface UMLClassAssociation extends UMLRelationship {
+  source: {
+    element: string;
+    location: Location;
+    multiplicity: string;
+    role: string;
+  };
+  target: {
+    element: string;
+    location: Location;
+    multiplicity: string;
+    role: string;
+  };
 }
