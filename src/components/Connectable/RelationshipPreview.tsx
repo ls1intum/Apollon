@@ -6,7 +6,7 @@ import Element, { ElementRepository } from './../../domain/Element';
 import { Point } from './../../domain/geo';
 import Port from './../../domain/Port';
 import { withCanvas, CanvasContext } from '../Canvas';
-import { Direction } from '../../ApollonEditor';
+import { Direction } from '../..';
 
 class RelationshipPreview extends Component<Props, State> {
   state: State = {

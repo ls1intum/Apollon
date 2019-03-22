@@ -11,7 +11,7 @@ import ConnectContext, {
 import * as Plugins from './../../domain/plugins';
 import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
 import { DiagramType } from '../../domain/Diagram';
-import { Direction } from '../../ApollonEditor';
+import { Direction } from '../..';
 
 const Path = styled.path`
   cursor: crosshair;

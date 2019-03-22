@@ -1,7 +1,7 @@
 import Port from '.';
 import { Point, beautifyPath } from '../geo';
 import Boundary from '../geo/Boundary';
-import { Direction } from '../../ApollonEditor';
+import { Direction } from '../..';
 
 interface Connection {
   source: Port;
@@ -10,7 +10,7 @@ interface Connection {
 
 interface Endpoint {
   bounds: Boundary;
-  location: Port['direction'];
+  direction: Port['direction'];
 }
 
 const enum Orientation {
@@ -25,9 +25,9 @@ class Connection {
     target: Endpoint,
     options: { isStraight: boolean }
   ): Point[] {
-    const startPointOnInnerEdge = Port.position(source.bounds, source.location)
+    const startPointOnInnerEdge = Port.position(source.bounds, source.direction)
       .point;
-    const endPointOnInnerEdge = Port.position(target.bounds, target.location)
+    const endPointOnInnerEdge = Port.position(target.bounds, target.direction)
       .point;
 
     // If the user forced this relationship path to be a straight line,
@@ -72,9 +72,9 @@ class Connection {
     // Calculate the exact position of the start and end points on their respective margin rectangle
     const startPointOnMarginBox = Port.position(
       sourceMarginRect,
-      source.location
+      source.direction
     ).point;
-    const endPointOnMarginBox = Port.position(targetMarginRect, target.location)
+    const endPointOnMarginBox = Port.position(targetMarginRect, target.direction)
       .point;
 
     // Determine the source corner that's closest to the point
@@ -93,7 +93,7 @@ class Connection {
     // Determine the corner queue for the source entity
     const sourceCornerQueue = Connection.determineCornerQueue(
       sourceMarginRect,
-      source.location,
+      source.direction,
       startPointOnMarginBox,
       sourceCornerClosestToEndPoint
     );
@@ -101,7 +101,7 @@ class Connection {
     // Determine the corner queue for the target entity
     const targetCornerQueue = Connection.determineCornerQueue(
       targetMarginRect,
-      target.location,
+      target.direction,
       endPointOnMarginBox,
       targetCornerClosestToClosestSourceCorner
     );
@@ -225,8 +225,8 @@ class Connection {
         #######           #######
     */
     if (
-      source.location === Direction.Right &&
-      target.location === Direction.Left &&
+      source.direction === Direction.Right &&
+      target.direction === Direction.Left &&
       target.bounds.x >= source.bounds.x + source.bounds.width
     ) {
       const overlapY = Connection.computeOverlap(
@@ -257,8 +257,8 @@ class Connection {
         #######           #######
     */
     if (
-      source.location === Direction.Left &&
-      target.location === Direction.Right &&
+      source.direction === Direction.Left &&
+      target.direction === Direction.Right &&
       source.bounds.x >= target.bounds.x + target.bounds.width
     ) {
       const overlapY = Connection.computeOverlap(
@@ -295,8 +295,8 @@ class Connection {
         #######
     */
     if (
-      source.location === Direction.Down &&
-      target.location === Direction.Up &&
+      source.direction === Direction.Down &&
+      target.direction === Direction.Up &&
       target.bounds.y >= source.bounds.y + source.bounds.height
     ) {
       const overlapX = Connection.computeOverlap(
@@ -327,8 +327,8 @@ class Connection {
         #######
     */
     if (
-      source.location === Direction.Up &&
-      target.location === Direction.Down &&
+      source.direction === Direction.Up &&
+      target.direction === Direction.Down &&
       source.bounds.y >= target.bounds.y + target.bounds.height
     ) {
       const overlapX = Connection.computeOverlap(

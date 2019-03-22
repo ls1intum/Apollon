@@ -10,7 +10,7 @@ import * as Plugins from '../../domain/plugins/Popups';
 import Relationship from '../../domain/Relationship';
 import DefaultPopup from './DefaultPopup';
 import AssessmentPopup from './AssessmentPopup';
-import { ApollonMode } from '../../ApollonEditor';
+import { ApollonMode } from '../..';
 
 export class Popup extends Component<Props> {
   private calculatePosition = (): Point => {

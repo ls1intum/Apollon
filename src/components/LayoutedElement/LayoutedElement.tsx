@@ -16,7 +16,7 @@ import editable from './Editable';
 import interactable from './Interactable';
 import Container from '../../domain/Container';
 import { ApollonView } from '../../services/editor';
-import { ApollonMode } from '../../ApollonEditor';
+import { ApollonMode } from '../..';
 
 class LayoutedElement extends Component<Props, State> {
   state: State = {

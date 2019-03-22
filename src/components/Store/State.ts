@@ -11,7 +11,7 @@ import {
   Selection,
   Assessment,
   ApollonMode,
-} from '../../ApollonEditor';
+} from '../..';
 import Relationship, {
   RelationshipRepository,
 } from '../../domain/Relationship';

@@ -3,7 +3,7 @@ import ClassAssociation from './ClassAssociation';
 import Point from '../../../geometry/Point';
 import Port from '../../../Port';
 import { RelationshipKind } from '..';
-import { Direction } from '../../../../ApollonEditor';
+import { Direction } from '../../../..';
 
 const Marker = {
   Arrow: (id: string) => (

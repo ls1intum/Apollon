@@ -1,5 +1,5 @@
 import { Action } from 'redux';
-import { ApollonMode } from './../../ApollonEditor';
+import { ApollonMode } from '../..';
 
 export const enum ApollonView {
   Modelling = 'Modelling',

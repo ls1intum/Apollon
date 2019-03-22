@@ -31,7 +31,7 @@ import {
   ObjectName,
   ObjectAttribute,
 } from './../../domain/plugins';
-import { ApollonMode } from '../../ApollonEditor';
+import { ApollonMode } from '../..';
 import { ApollonView, EditorRepository } from '../../services/editor';
 
 class Sidebar extends Component<Props, State> {

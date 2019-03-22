@@ -1,5 +1,5 @@
 import Element from './../Element';
-import { UMLElement } from '../../ApollonEditor';
+import { UMLElement } from '../..';
 
 abstract class Container extends Element {
   static features = { ...Element.features, droppable: true };

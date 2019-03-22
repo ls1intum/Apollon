@@ -1,7 +1,7 @@
 import Element from './../Element';
 import Port, { Connection } from '../Port';
 import RelationshipKind from '../plugins/RelationshipKind';
-import { UMLRelationship } from '../../ApollonEditor';
+import { UMLRelationship } from '../..';
 import Boundary from '../geo/Boundary';
 import Point from '../geometry/Point';
 
@@ -60,8 +60,8 @@ abstract class Relationship extends Element {
     }
 
     const points = Connection.computePath(
-      { bounds: sourceRect, location: umlRelationship.source.direction },
-      { bounds: targetRect, location: umlRelationship.target.direction },
+      { bounds: sourceRect, direction: umlRelationship.source.direction },
+      { bounds: targetRect, direction: umlRelationship.target.direction },
       { isStraight: false }
     );
     let path = points.map(point => new Point(point.x, point.y));

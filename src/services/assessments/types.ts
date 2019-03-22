@@ -1,5 +1,5 @@
 import { Action } from 'redux';
-import { Assessment } from './../../ApollonEditor';
+import { Assessment } from '../..';
 
 export const enum ActionTypes {
   ASSESS = '@@element/ASSESS',

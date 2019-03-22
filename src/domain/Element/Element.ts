@@ -2,7 +2,7 @@ import uuid from './../utils/uuid';
 import Boundary from './../geo/Boundary';
 import ElementKind from './../plugins/ElementKind';
 import { RelationshipKind } from '../Relationship';
-import { UMLElement } from '../../ApollonEditor';
+import { UMLElement } from '../..';
 
 abstract class Element {
   static features = {

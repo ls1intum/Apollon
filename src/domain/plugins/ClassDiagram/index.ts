@@ -1,4 +1,4 @@
-import { UMLElement, UMLRelationship, Direction } from '../../../ApollonEditor';
+import { UMLElement, UMLRelationship, Direction } from '../../..';
 
 export enum ElementKind {
   Class = 'Class',

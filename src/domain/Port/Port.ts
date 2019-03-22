@@ -1,5 +1,5 @@
 import Boundary from '../geo/Boundary';
-import { Direction } from '../../ApollonEditor';
+import { Direction } from '../..';
 
 interface Port {
   element: string;

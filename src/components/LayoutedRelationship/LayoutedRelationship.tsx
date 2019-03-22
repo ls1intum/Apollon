@@ -16,7 +16,7 @@ import editable from './../LayoutedElement/Editable';
 import interactable from './../LayoutedElement/Interactable';
 import reconnectable from './Reconnectable';
 import { ApollonView } from '../../services/editor';
-import { ApollonMode } from '../../ApollonEditor';
+import { ApollonMode } from '../..';
 
 class LayoutedRelationship extends Component<Props> {
   component: typeof RelationshipComponent = this.composeComponent();
