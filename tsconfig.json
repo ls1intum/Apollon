@@ -13,7 +13,6 @@
     "importHelpers": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "removeComments": true,
     "downlevelIteration": true
   },
   "include": ["src/index.ts"]

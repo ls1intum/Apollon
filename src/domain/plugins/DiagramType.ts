@@ -1,12 +1,6 @@
-enum types {
+export enum DiagramType {
   ClassDiagram = 'ClassDiagram',
   ObjectDiagram = 'ObjectDiagram',
   ActivityDiagram = 'ActivityDiagram',
   UseCaseDiagram = 'UseCaseDiagram',
 }
-
-export type DiagramType = types;
-
-export const DiagramType = {
-  ...types,
-};

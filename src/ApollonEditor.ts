@@ -40,7 +40,7 @@ export interface UMLElement extends UMLBase {
   type: ElementKind;
 }
 
-export const enum Direction {
+export enum Direction {
   Up,
   Right,
   Down,
@@ -65,7 +65,7 @@ export interface Selection {
   relationships: string[];
 }
 
-export const enum ApollonMode {
+export enum ApollonMode {
   Modelling = 'Modelling',
   Exporting = 'Exporting',
   Assessment = 'Assessment',
