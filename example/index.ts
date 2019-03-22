@@ -1,4 +1,4 @@
-import { ApollonEditor, ApollonOptions, DiagramType, ApollonMode } from '../src';
+import { ApollonEditor, ApollonOptions, DiagramType } from '../src';
 
 const container = document.getElementById('apollon')!;
 let editor: ApollonEditor | null = null;
@@ -7,22 +7,16 @@ let options: ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
 };
 
-const render = (container: HTMLElement, options: ApollonOptions) => {
-  editor && editor.destroy();
-  editor = new ApollonEditor(container, options);
-};
-render(container, options);
-
 export const onChange = (event: MouseEvent) => {
   const { name, value } = event.target as HTMLSelectElement;
   options = { ...options, [name]: value };
-  render(container, options);
+  render(container);
 };
 
 export const onSwitch = (event: MouseEvent) => {
   const { name, checked: value } = event.target as HTMLInputElement;
   options = { ...options, [name]: value };
-  render(container, options);
+  render(container);
 };
 
 export const save = () => {
@@ -30,6 +24,7 @@ export const save = () => {
 
   localStorage.setItem('apollon', JSON.stringify(editor.model));
   options = { ...options, model: editor.model };
+  return options;
 };
 
 export const clear = () => {
@@ -47,3 +42,10 @@ export const draw = () => {
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);
 };
+
+const render = (container: HTMLElement) => {
+  save();
+  editor && editor.destroy();
+  editor = new ApollonEditor(container, options);
+};
+render(container);
