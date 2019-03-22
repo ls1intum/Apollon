@@ -17,6 +17,7 @@ import Relationship, {
 } from '../../domain/Relationship';
 import Container from '../../domain/Container';
 import * as Plugin from './../../domain/plugins';
+import { computeBoundingBox } from '../../domain/geo';
 
 interface State {
   editor: EditorState;
@@ -122,8 +123,30 @@ class State {
         .map<string>(element => element.id),
     };
 
+    const points = [...e.map(e => e.bounds), ...r.map(r => r.bounds)].reduce<
+      {
+        x: number;
+        y: number;
+      }[]
+    >(
+      (a, bounds) => [
+        ...a,
+        { x: bounds.x, y: bounds.y },
+        { x: bounds.x + bounds.width, y: bounds.y },
+        { x: bounds.x, y: bounds.y + bounds.height },
+        { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
+      ],
+      []
+    );
+    const boundingBox = computeBoundingBox(points);
+    const size = {
+      width: boundingBox.width - boundingBox.x,
+      height: boundingBox.height - boundingBox.y,
+    };
+
     return {
       version: '2.0',
+      size,
       type: state.diagram.type,
       interactive,
       elements: e.reduce<{ [id: string]: UMLElement }>(

@@ -11,6 +11,7 @@ import { Styles } from './components/Theme';
 export interface UMLModel {
   version: string;
   type: DiagramType;
+  size: { width: number; height: number };
   interactive: Selection;
   assessments: { [id: string]: Assessment };
   elements: { [id: string]: UMLElement };
@@ -100,6 +101,7 @@ export class ApollonEditor {
   constructor(private container: HTMLElement, options: ApollonOptions) {
     const model: UMLModel = {
       version: '2.0',
+      size: { width: 0, height: 0 },
       interactive: { elements: [], relationships: [] },
       elements: {},
       relationships: {},
