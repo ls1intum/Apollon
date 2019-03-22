@@ -11,8 +11,14 @@ import { Styles } from './components/Theme';
 export interface UMLModel {
   type: DiagramType;
   interactive: Selection;
+  assessments: { [id: string]: Assessment };
   elements: { [id: string]: UMLElement };
   relationships: { [id: string]: UMLRelationship };
+}
+
+export interface Assessment {
+  score: number;
+  feedback?: string;
 }
 
 export { DiagramType };
@@ -20,12 +26,9 @@ export { ElementKind };
 export { RelationshipKind };
 export { Styles };
 
-export interface Element {
+export interface UMLElement {
   id: string;
   name: string;
-}
-
-export interface UMLElement extends Element {
   owner: string | null;
   type: ElementKind;
   bounds: { x: number; y: number; width: number; height: number };
@@ -38,7 +41,9 @@ export const enum Direction {
   Left,
 }
 
-export interface UMLRelationship extends Element {
+export interface UMLRelationship {
+  id: string;
+  name: string;
   type: RelationshipKind;
   source: {
     element: string;
@@ -93,6 +98,7 @@ export class ApollonEditor {
       interactive: { elements: [], relationships: [] },
       elements: {},
       relationships: {},
+      assessments: {},
       ...options.model,
       type:
         options.type ||

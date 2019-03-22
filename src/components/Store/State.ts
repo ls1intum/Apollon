@@ -14,6 +14,7 @@ import {
   UMLElement,
   UMLRelationship,
   Selection,
+  Assessment,
 } from '../../ApollonEditor';
 import Relationship, {
   RelationshipRepository,
@@ -25,6 +26,7 @@ interface State {
   editor: EditorState;
   diagram: DiagramState;
   elements: ElementState;
+  assessments: { [id: string]: Assessment };
 }
 
 class State {
@@ -78,6 +80,7 @@ class State {
         (r, o) => ({ ...r, [o.id]: o }),
         {}
       ),
+      assessments: model.assessments,
     };
   }
 
@@ -135,6 +138,7 @@ class State {
         (o, e) => ({ ...o, [e.id]: e }),
         {}
       ),
+      assessments: state.assessments,
     };
   }
 }
