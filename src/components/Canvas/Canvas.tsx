@@ -80,7 +80,7 @@ class Canvas extends Component<Props, State> {
                 {this.state.isMounted && (
                   <>
                     <KeyboardEventListener popup={this.popup} />
-                    <svg width="100%" height="100%" ref={this.layer}>
+                    <svg className="svg" width="100%" height="100%" ref={this.layer}>
                       <ConnectLayer>
                         {diagram.ownedElements.map(element => (
                           <LayoutedElement key={element} element={element} />

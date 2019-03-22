@@ -69,6 +69,18 @@ export type ApollonOptions = {
   theme?: Partial<Styles>;
 };
 
+export interface ExportOptions {
+  filter: string[];
+}
+
+export interface SVG {
+  svg: string;
+  size: {
+    width: number;
+    height: number;
+  };
+}
+
 export class ApollonEditor {
   private application: RefObject<Application> = createRef();
   private store: Store<State> | null = null;
@@ -134,5 +146,20 @@ export class ApollonEditor {
 
   unsubscribeFromSelectionChange(subscriptionId: number) {
     this.subscribers.splice(subscriptionId);
+  }
+
+  exportAsSVG(options?: ExportOptions): SVG {
+    const element = createElement('svg');
+    return {
+      svg: this.render(element),
+      size: { width: 0, height: 0 },
+    };
+  }
+
+  private render(element: JSX.Element): string {
+    const width = 100;
+    const height = 100;
+    const { innerHTML } = this.container.getElementsByClassName('svg')[0];
+    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" fill="white">${innerHTML}</svg>`;
   }
 }
