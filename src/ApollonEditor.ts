@@ -63,7 +63,7 @@ export const enum ApollonMode {
 }
 
 export type ApollonOptions = {
-  type: DiagramType;
+  type?: DiagramType;
   mode?: ApollonMode;
   model?: UMLModel;
   theme?: Partial<Styles>;
@@ -94,7 +94,10 @@ export class ApollonEditor {
       elements: {},
       relationships: {},
       ...options.model,
-      type: options.type,
+      type:
+        options.type ||
+        (options.model && options.model.type) ||
+        DiagramType.ClassDiagram,
     };
 
     const element = createElement(Application, {
