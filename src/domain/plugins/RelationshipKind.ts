@@ -3,7 +3,7 @@ import { RelationshipKind as ClassRelationshipKind } from './ClassDiagram';
 import { RelationshipKind as ObjectRelationshipKind } from './ObjectDiagram';
 import { RelationshipKind as ActivityRelationshipKind } from './ActivityDiagram';
 import { RelationshipKind as UseCaseRelationshipKind } from './UseCaseDiagram';
-import DiagramType from './DiagramType';
+import { DiagramType } from './DiagramType';
 
 type RelationshipKind =
   | CommonRelationshipKind

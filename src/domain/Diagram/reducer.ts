@@ -1,7 +1,7 @@
 import { Reducer } from 'redux';
 import Diagram from './Diagram';
 import { State, Actions, ActionTypes } from './types';
-import DiagramType from '../plugins/DiagramType';
+import { DiagramType } from '../plugins/DiagramType';
 
 const initialState: State = new Diagram(DiagramType.ClassDiagram);
 
