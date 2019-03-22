@@ -20,9 +20,12 @@ export { ElementKind };
 export { RelationshipKind };
 export { Styles };
 
-export interface UMLElement {
+export interface Element {
   id: string;
   name: string;
+}
+
+export interface UMLElement extends Element {
   owner: string | null;
   type: ElementKind;
   bounds: { x: number; y: number; width: number; height: number };
@@ -35,9 +38,7 @@ export const enum Direction {
   Left,
 }
 
-export interface UMLRelationship {
-  id: string;
-  name: string;
+export interface UMLRelationship extends Element {
   type: RelationshipKind;
   source: {
     element: string;
