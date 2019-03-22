@@ -3,11 +3,7 @@ import Element, {
   ElementRepository,
 } from './../../domain/Element';
 import Diagram, { DiagramState } from './../../domain/Diagram';
-import {
-  EditorState,
-  EditorMode,
-  InteractiveElementsMode,
-} from './../../services/EditorService';
+import { EditorState, ApollonView } from './../../services/editor';
 import {
   UMLModel,
   UMLElement,
@@ -64,11 +60,9 @@ class State {
 
     return {
       editor: {
-        gridSize: 0,
-        mode: ApollonMode.Exporting,
         readonly: false,
-        editorMode: EditorMode.ModelingView,
-        interactiveMode: InteractiveElementsMode.Highlighted,
+        mode: ApollonMode.Exporting,
+        view: ApollonView.Modelling,
       },
       diagram: {
         ...new Diagram(model.type),

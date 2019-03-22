@@ -1,4 +1,4 @@
-import React, { Component, createRef } from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import {
@@ -7,10 +7,6 @@ import {
   EditorModeSelection,
   EditorModeSelectionSegment,
 } from './styles';
-import EditorService, {
-  EditorMode,
-  InteractiveElementsMode,
-} from './../../services/EditorService';
 import { DiagramType } from './../../domain/Diagram';
 import Element, { ElementRepository, ElementKind } from '../../domain/Element';
 
@@ -38,6 +34,7 @@ import {
   ObjectAttribute,
 } from './../../domain/plugins';
 import { ApollonMode } from '../../ApollonEditor';
+import { ApollonView, EditorRepository } from '../../services/editor';
 
 class Sidebar extends Component<Props, State> {
   state: State = {
@@ -85,21 +82,17 @@ class Sidebar extends Component<Props, State> {
     }
   };
 
-  selectEditorMode = (mode: EditorMode) => () =>
-    this.props.selectEditorMode({ editorMode: mode });
-
-  selectInteractiveElementsMode = (mode: InteractiveElementsMode) =>
-    this.props.selectEditorMode({ interactiveMode: mode });
+  changeView = (view: ApollonView) => () => this.props.changeView(view);
 
   toggleInteractiveElementsMode = (
     event: React.FormEvent<HTMLInputElement>
   ) => {
     const { checked } = event.currentTarget;
-    const interactiveElementsMode = checked
-      ? InteractiveElementsMode.Highlighted
-      : InteractiveElementsMode.Hidden;
+    const view: ApollonView = checked
+      ? ApollonView.Exporting
+      : ApollonView.Highlight;
 
-    this.selectInteractiveElementsMode(interactiveElementsMode);
+    this.changeView(view)();
   };
 
   onDrop = (element: Element) => (event: DropEvent) => {
@@ -152,52 +145,43 @@ class Sidebar extends Component<Props, State> {
         {this.props.apollonMode === ApollonMode.Exporting && (
           <EditorModeSelection>
             <EditorModeSelectionSegment
-              onClick={this.selectEditorMode(EditorMode.ModelingView)}
-              selected={this.props.editorMode === EditorMode.ModelingView}
+              onClick={this.changeView(ApollonView.Modelling)}
+              selected={this.props.view === ApollonView.Modelling}
             >
               Diagram Modeling
             </EditorModeSelectionSegment>
             <EditorModeSelectionSegment
-              onClick={this.selectEditorMode(
-                EditorMode.InteractiveElementsView
-              )}
+              onClick={this.changeView(ApollonView.Exporting)}
               selected={
-                this.props.editorMode === EditorMode.InteractiveElementsView
+                this.props.view === ApollonView.Exporting ||
+                this.props.view === ApollonView.Highlight
               }
             >
               Interactive Areas
             </EditorModeSelectionSegment>
           </EditorModeSelection>
         )}
-        {
-          {
-            [EditorMode.ModelingView]: (
-              <CanvasProvider value={null}>
-                {this.state.previews.map((element, index) => (
-                  <Draggable key={index} onDrop={this.onDrop(element)}>
-                    <Preview>
-                      <ElementComponent element={element} />
-                    </Preview>
-                  </Draggable>
-                ))}
-              </CanvasProvider>
-            ),
-            [EditorMode.InteractiveElementsView]: (
-              <label htmlFor="toggleInteractiveElementsMode">
-                <input
-                  id="toggleInteractiveElementsMode"
-                  type="checkbox"
-                  checked={
-                    this.props.interactiveElementsMode ===
-                    InteractiveElementsMode.Highlighted
-                  }
-                  onChange={this.toggleInteractiveElementsMode}
-                />
-                Show interactive elements
-              </label>
-            ),
-          }[this.props.editorMode]
-        }
+        {this.props.view === ApollonView.Modelling ? (
+          <CanvasProvider value={null}>
+            {this.state.previews.map((element, index) => (
+              <Draggable key={index} onDrop={this.onDrop(element)}>
+                <Preview>
+                  <ElementComponent element={element} />
+                </Preview>
+              </Draggable>
+            ))}
+          </CanvasProvider>
+        ) : (
+          <label htmlFor="toggleInteractiveElementsMode">
+            <input
+              id="toggleInteractiveElementsMode"
+              type="checkbox"
+              checked={this.props.view === ApollonView.Exporting}
+              onChange={this.toggleInteractiveElementsMode}
+            />
+            Show interactive elements
+          </label>
+        )}
       </Container>
     );
   }
@@ -207,13 +191,12 @@ interface StateProps {
   diagramType: DiagramType;
   readonly: boolean;
   apollonMode: ApollonMode;
-  editorMode: EditorMode;
-  interactiveElementsMode: InteractiveElementsMode;
+  view: ApollonView;
 }
 
 interface DispatchProps {
   create: typeof ElementRepository.create;
-  selectEditorMode: typeof EditorService.update;
+  changeView: typeof EditorRepository.changeView;
 }
 
 type Props = StateProps & DispatchProps;
@@ -226,14 +209,13 @@ const mapStateToProps = (state: ReduxState) => ({
   diagramType: state.diagram.type,
   readonly: state.editor.readonly,
   apollonMode: state.editor.mode,
-  editorMode: state.editor.editorMode,
-  interactiveElementsMode: state.editor.interactiveMode,
+  view: state.editor.view,
 });
 
 export default connect(
   mapStateToProps,
   {
     create: ElementRepository.create,
-    selectEditorMode: EditorService.update,
+    changeView: EditorRepository.changeView,
   }
 )(Sidebar);

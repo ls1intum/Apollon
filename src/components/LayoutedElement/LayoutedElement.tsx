@@ -14,11 +14,8 @@ import connectable from './Connectable';
 import droppable from './Droppable';
 import editable from './Editable';
 import interactable from './Interactable';
-import {
-  EditorMode,
-  InteractiveElementsMode,
-} from '../../services/EditorService';
 import Container from '../../domain/Container';
+import { ApollonView } from '../../services/editor';
 
 class LayoutedElement extends Component<Props, State> {
   state: State = {
@@ -28,7 +25,7 @@ class LayoutedElement extends Component<Props, State> {
   component: typeof ElementComponent = this.composeComponent();
 
   private composeComponent(): typeof ElementComponent {
-    const { editorMode, readonly } = this.props;
+    const { readonly, view } = this.props;
     type DecoratorType = (
       Component: typeof ElementComponent
     ) => React.ComponentClass<ComponentProps>;
@@ -36,7 +33,10 @@ class LayoutedElement extends Component<Props, State> {
 
     if (readonly) {
       decorators = [selectable, hoverable];
-    } else if (editorMode === EditorMode.InteractiveElementsView) {
+    } else if (
+      view === ApollonView.Exporting ||
+      view == ApollonView.Highlight
+    ) {
       decorators = [interactable, hoverable];
     } else {
       const element = this.props.getById(this.props.element);
@@ -57,8 +57,8 @@ class LayoutedElement extends Component<Props, State> {
     return compose<typeof ElementComponent>(...decorators)(ElementComponent);
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
-    if (prevProps.editorMode !== this.props.editorMode) {
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.view !== this.props.view) {
       this.component = this.composeComponent();
       this.forceUpdate();
     }
@@ -72,12 +72,11 @@ class LayoutedElement extends Component<Props, State> {
       <Component
         element={element}
         interactable={
-          this.props.editorMode === EditorMode.InteractiveElementsView
+          this.props.view === ApollonView.Exporting ||
+          this.props.view === ApollonView.Highlight
         }
         hidden={
-          this.props.editorMode === EditorMode.InteractiveElementsView &&
-          this.props.interactiveMode === InteractiveElementsMode.Hidden &&
-          element.interactive
+          this.props.view === ApollonView.Highlight && element.interactive
         }
       />
     );
@@ -90,9 +89,8 @@ interface OwnProps {
 
 interface StateProps {
   getById: (id: string) => Element;
-  editorMode: EditorMode;
   readonly: boolean;
-  interactiveMode: InteractiveElementsMode;
+  view: ApollonView;
 }
 
 type Props = OwnProps & StateProps;
@@ -103,9 +101,8 @@ interface State {
 
 const mapStateToProps = (state: ReduxState): StateProps => ({
   getById: ElementRepository.getById(state.elements),
-  editorMode: state.editor.editorMode,
   readonly: state.editor.readonly,
-  interactiveMode: state.editor.interactiveMode,
+  view: state.editor.view,
 });
 
 export default connect(mapStateToProps)(LayoutedElement);

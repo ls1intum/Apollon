@@ -15,16 +15,13 @@ import selectable from './../LayoutedElement/Selectable';
 import editable from './../LayoutedElement/Editable';
 import interactable from './../LayoutedElement/Interactable';
 import reconnectable from './Reconnectable';
-import {
-  EditorMode,
-  InteractiveElementsMode,
-} from '../../services/EditorService';
+import { ApollonView } from '../../services/editor';
 
 class LayoutedRelationship extends Component<Props> {
   component: typeof RelationshipComponent = this.composeComponent();
 
   private composeComponent(): typeof RelationshipComponent {
-    const { editorMode, readonly } = this.props;
+    const { readonly, view } = this.props;
     type DecoratorType =
       | ((
           Component: typeof ElementComponent
@@ -36,7 +33,10 @@ class LayoutedRelationship extends Component<Props> {
 
     if (readonly) {
       decorators = [selectable, hoverable];
-    } else if (editorMode === EditorMode.InteractiveElementsView) {
+    } else if (
+      view === ApollonView.Exporting ||
+      view == ApollonView.Highlight
+    ) {
       decorators = [interactable, hoverable];
     } else {
       decorators = [reconnectable, editable, selectable, hoverable];
@@ -47,7 +47,7 @@ class LayoutedRelationship extends Component<Props> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (prevProps.editorMode !== this.props.editorMode) {
+    if (prevProps.view !== this.props.view) {
       this.component = this.composeComponent();
       this.forceUpdate();
     }
@@ -62,12 +62,11 @@ class LayoutedRelationship extends Component<Props> {
       <Component
         element={relationship}
         interactable={
-          this.props.editorMode === EditorMode.InteractiveElementsView
+          this.props.view === ApollonView.Exporting ||
+          this.props.view === ApollonView.Highlight
         }
         hidden={
-          this.props.editorMode === EditorMode.InteractiveElementsView &&
-          this.props.interactiveMode === InteractiveElementsMode.Hidden &&
-          relationship.interactive
+          this.props.view === ApollonView.Highlight && relationship.interactive
         }
       />
     );
@@ -81,9 +80,8 @@ interface OwnProps {
 
 interface StateProps {
   getById: (id: string) => Relationship;
-  editorMode: EditorMode;
   readonly: boolean;
-  interactiveMode: InteractiveElementsMode;
+  view: ApollonView;
 }
 
 interface DispatchProps {}
@@ -93,8 +91,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   state => ({
     getById: RelationshipRepository.getById(state.elements),
-    editorMode: state.editor.editorMode,
     readonly: state.editor.readonly,
-    interactiveMode: state.editor.interactiveMode,
+    view: state.editor.view,
   })
 )(LayoutedRelationship);
