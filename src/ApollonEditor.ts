@@ -9,6 +9,7 @@ import { RelationshipKind } from './domain/Relationship';
 import { Styles } from './components/Theme';
 
 export interface UMLModel {
+  version: string;
   type: DiagramType;
   interactive: Selection;
   assessments: { [id: string]: Assessment };
@@ -22,16 +23,20 @@ export interface Assessment {
 }
 
 export { DiagramType };
-export { ElementKind };
-export { RelationshipKind };
+export { ElementKind as ElementType };
+export { RelationshipKind as RelationshipType };
 export { Styles };
+export { UMLClassifier, UMLClassAssociation } from './domain/plugins/ClassDiagram';
 
-export interface UMLElement {
+interface UMLBase {
   id: string;
   name: string;
+  bounds: { x: number; y: number; width: number; height: number };
+}
+
+export interface UMLElement extends UMLBase {
   owner: string | null;
   type: ElementKind;
-  bounds: { x: number; y: number; width: number; height: number };
 }
 
 export const enum Direction {
@@ -41,10 +46,9 @@ export const enum Direction {
   Left,
 }
 
-export interface UMLRelationship {
-  id: string;
-  name: string;
+export interface UMLRelationship extends UMLBase {
   type: RelationshipKind;
+  path: { x: number; y: number }[];
   source: {
     element: string;
     direction: Direction;
@@ -95,6 +99,7 @@ export class ApollonEditor {
 
   constructor(private container: HTMLElement, options: ApollonOptions) {
     const model: UMLModel = {
+      version: '2.0',
       interactive: { elements: [], relationships: [] },
       elements: {},
       relationships: {},

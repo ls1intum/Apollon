@@ -25,6 +25,8 @@ abstract class Relationship extends Element {
       type: relationship.kind,
       source: relationship.source,
       target: relationship.target,
+      path: relationship.path,
+      bounds: relationship.bounds,
     };
   }
 

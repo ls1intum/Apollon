@@ -123,6 +123,7 @@ class State {
     };
 
     return {
+      version: '2.0',
       type: state.diagram.type,
       interactive,
       elements: e.reduce<{ [id: string]: UMLElement }>(
