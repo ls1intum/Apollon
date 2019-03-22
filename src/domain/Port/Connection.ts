@@ -1,7 +1,7 @@
 import Port from '.';
 import { Point, beautifyPath } from '../geo';
 import Boundary from '../geo/Boundary';
-import { Location } from '../../ApollonEditor';
+import { Direction } from '../../ApollonEditor';
 
 interface Connection {
   source: Port;
@@ -10,7 +10,7 @@ interface Connection {
 
 interface Endpoint {
   bounds: Boundary;
-  location: Port['location'];
+  location: Port['direction'];
 }
 
 const enum Orientation {
@@ -225,8 +225,8 @@ class Connection {
         #######           #######
     */
     if (
-      source.location === Location.East &&
-      target.location === Location.West &&
+      source.location === Direction.Right &&
+      target.location === Direction.Left &&
       target.bounds.x >= source.bounds.x + source.bounds.width
     ) {
       const overlapY = Connection.computeOverlap(
@@ -257,8 +257,8 @@ class Connection {
         #######           #######
     */
     if (
-      source.location === Location.West &&
-      target.location === Location.East &&
+      source.location === Direction.Left &&
+      target.location === Direction.Right &&
       source.bounds.x >= target.bounds.x + target.bounds.width
     ) {
       const overlapY = Connection.computeOverlap(
@@ -295,8 +295,8 @@ class Connection {
         #######
     */
     if (
-      source.location === Location.South &&
-      target.location === Location.North &&
+      source.location === Direction.Down &&
+      target.location === Direction.Up &&
       target.bounds.y >= source.bounds.y + source.bounds.height
     ) {
       const overlapX = Connection.computeOverlap(
@@ -327,8 +327,8 @@ class Connection {
         #######
     */
     if (
-      source.location === Location.North &&
-      target.location === Location.South &&
+      source.location === Direction.Up &&
+      target.location === Direction.Down &&
       source.bounds.y >= target.bounds.y + target.bounds.height
     ) {
       const overlapX = Connection.computeOverlap(
@@ -407,7 +407,7 @@ class Connection {
 
   private static determineCornerQueue(
     rect: Boundary,
-    edge: Port['location'],
+    edge: Port['direction'],
     pointOnOuterEdge: Point,
     destinationCorner: Point | null
   ): Point[] {
@@ -419,19 +419,19 @@ class Connection {
     // Determine the clockwise and counter-clickwise order of corners
     // when starting at the selected edge of the rectangle
     switch (edge) {
-      case Location.North:
+      case Direction.Up:
         clockwiseCornerQueue = [tr, br, bl, tl];
         counterClockwiseCornerQueue = [tl, bl, br, tr];
         break;
-      case Location.East:
+      case Direction.Right:
         clockwiseCornerQueue = [br, bl, tl, tr];
         counterClockwiseCornerQueue = [tr, tl, bl, br];
         break;
-      case Location.South:
+      case Direction.Down:
         clockwiseCornerQueue = [bl, tl, tr, br];
         counterClockwiseCornerQueue = [br, tr, tl, bl];
         break;
-      case Location.West:
+      case Direction.Left:
         clockwiseCornerQueue = [tl, tr, br, bl];
         counterClockwiseCornerQueue = [bl, br, tr, tl];
         break;

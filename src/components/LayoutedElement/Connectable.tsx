@@ -11,7 +11,7 @@ import ConnectContext, {
 import * as Plugins from './../../domain/plugins';
 import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
 import { DiagramType } from '../../domain/Diagram';
-import { Location } from '../../ApollonEditor';
+import { Direction } from '../../ApollonEditor';
 
 const Path = styled.path`
   cursor: crosshair;
@@ -32,14 +32,14 @@ const connectable = (
       const r = 20;
       const cirlce = `m ${-r}, 0 a ${r},${r} 0 1,0 ${r *
         2},0 a ${r},${r} 0 1,0 ${-r * 2},0 `;
-      switch (port.location) {
-        case Location.North:
+      switch (port.direction) {
+        case Direction.Up:
           return `M ${width / 2} 0 ${cirlce}`;
-        case Location.East:
+        case Direction.Right:
           return `M ${width} ${height / 2} ${cirlce}`;
-        case Location.South:
+        case Direction.Down:
           return `M ${width / 2} ${height} ${cirlce}`;
-        case Location.West:
+        case Direction.Left:
           return `M 0 ${height / 2} ${cirlce}`;
       }
       return '';
@@ -47,16 +47,16 @@ const connectable = (
 
     private calculateVisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
-      switch (port.location) {
-        case Location.North:
+      switch (port.direction) {
+        case Direction.Up:
           return `M ${width / 2 - 20} 0 A 10 10 0 0 1 ${width / 2 + 20} 0`;
-        case Location.East:
+        case Direction.Right:
           return `M ${width} ${height / 2 -
             20} A 10 10 0 0 1 ${width} ${height / 2 + 20}`;
-        case Location.South:
+        case Direction.Down:
           return `M ${width / 2 - 20} ${height} A 10 10 0 0 0 ${width / 2 +
             20} ${height}`;
-        case Location.West:
+        case Direction.Left:
           return `M 0 ${height / 2 - 20} A 10 10 0 0 0 0 ${height / 2 + 20}`;
       }
     }
@@ -99,19 +99,19 @@ const connectable = (
       const ports: Port[] = [
         {
           element: element.id,
-          location: Location.North,
+          direction: Direction.Up,
         },
         {
           element: element.id,
-          location: Location.East,
+          direction: Direction.Right,
         },
         {
           element: element.id,
-          location: Location.South,
+          direction: Direction.Down,
         },
         {
           element: element.id,
-          location: Location.West,
+          direction: Direction.Left,
         },
       ];
       return (
@@ -122,7 +122,7 @@ const connectable = (
               context &&
               ports.map(port => (
                 <Group
-                  key={port.location}
+                  key={port.direction}
                   onMouseDown={this.onMouseDown(port, context)}
                   onMouseUp={this.onMouseUp(port, context)}
                   onMouseEnter={this.onMouseEnter}

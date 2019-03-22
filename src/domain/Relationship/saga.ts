@@ -82,8 +82,8 @@ function* recalc(id: string) {
   } = (relationship.constructor as typeof Relationship).features;
 
   let path = Connection.computePath(
-    { bounds: source, location: relationship.source.location },
-    { bounds: target, location: relationship.target.location },
+    { bounds: source, location: relationship.source.direction },
+    { bounds: target, location: relationship.target.direction },
     { isStraight: straight }
   );
 

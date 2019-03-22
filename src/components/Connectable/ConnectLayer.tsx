@@ -26,7 +26,7 @@ class ConnectLayer extends Component<Props, State> {
 
     if (
       !start ||
-      (start.element === port.element && start.location === port.location)
+      (start.element === port.element && start.direction === port.direction)
     )
       return;
 

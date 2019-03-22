@@ -58,8 +58,8 @@ abstract class Relationship extends Element {
     }
 
     const points = Connection.computePath(
-      { bounds: sourceRect, location: umlRelationship.source.location },
-      { bounds: targetRect, location: umlRelationship.target.location },
+      { bounds: sourceRect, location: umlRelationship.source.direction },
+      { bounds: targetRect, location: umlRelationship.target.direction },
       { isStraight: false }
     );
     let path = points.map(point => new Point(point.x, point.y));

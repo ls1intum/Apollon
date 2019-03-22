@@ -28,11 +28,11 @@ export interface UMLElement {
   bounds: { x: number; y: number; width: number; height: number };
 }
 
-export const enum Location {
-  North,
-  East,
-  South,
-  West,
+export const enum Direction {
+  Up,
+  Right,
+  Down,
+  Left,
 }
 
 export interface UMLRelationship {
@@ -41,11 +41,11 @@ export interface UMLRelationship {
   type: RelationshipKind;
   source: {
     element: string;
-    location: Location;
+    direction: Direction;
   };
   target: {
     element: string;
-    location: Location;
+    direction: Direction;
   };
 }
 

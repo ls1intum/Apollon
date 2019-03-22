@@ -1,4 +1,4 @@
-import { UMLElement, UMLRelationship, Location } from '../../../ApollonEditor';
+import { UMLElement, UMLRelationship, Direction } from '../../../ApollonEditor';
 
 export enum ElementKind {
   Class = 'Class',
@@ -27,13 +27,13 @@ export interface UMLClassifier extends UMLElement {
 export interface UMLClassAssociation extends UMLRelationship {
   source: {
     element: string;
-    location: Location;
+    direction: Direction;
     multiplicity: string;
     role: string;
   };
   target: {
     element: string;
-    location: Location;
+    direction: Direction;
     multiplicity: string;
     role: string;
   };
