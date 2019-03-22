@@ -20,8 +20,16 @@ export enum RelationshipKind {
 }
 
 export interface UMLClassifier extends UMLElement {
-  attributes: { id: string; name: string }[];
-  methods: { id: string; name: string }[];
+  attributes: {
+    id: string;
+    name: string;
+    bounds: { x: number; y: number; width: number; height: number };
+  }[];
+  methods: {
+    id: string;
+    name: string;
+    bounds: { x: number; y: number; width: number; height: number };
+  }[];
 }
 
 export interface UMLClassAssociation extends UMLRelationship {

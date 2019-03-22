@@ -99,15 +99,17 @@ abstract class Classifier extends Container {
         ...base,
         attributes: children
           .filter(element => element instanceof ClassAttribute)
-          .map<{ id: string; name: string }>(element => ({
+          .map<UMLClassifier['attributes'][0]>(element => ({
             id: element.id,
             name: element.name,
+            bounds: element.bounds,
           })),
         methods: children
           .filter(element => element instanceof ClassMethod)
-          .map<{ id: string; name: string }>(element => ({
+          .map<UMLClassifier['methods'][0]>(element => ({
             id: element.id,
             name: element.name,
+            bounds: element.bounds,
           })),
       },
       children: [],
