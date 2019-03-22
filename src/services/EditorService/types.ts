@@ -1,12 +1,14 @@
+import { ApollonMode } from '../../ApollonEditor';
+
 export const enum ActionTypes {
   UPDATE = '@@option/UPDATE',
 }
 
-export const enum ApollonMode {
-  Full = 'FULL',
-  ModelingOnly = 'MODELING_ONLY',
-  ReadOnly = 'READ_ONLY',
-}
+// export const enum ApollonMode {
+//   Full = 'FULL',
+//   ModelingOnly = 'MODELING_ONLY',
+//   ReadOnly = 'READ_ONLY',
+// }
 
 export const enum EditorMode {
   ModelingView = 'MODELING_VIEW',
@@ -21,6 +23,7 @@ export const enum InteractiveElementsMode {
 export interface EditorState {
   readonly gridSize: number;
   readonly mode: ApollonMode;
+  readonly readonly: boolean;
   readonly editorMode: EditorMode;
   readonly interactiveMode: InteractiveElementsMode;
 }

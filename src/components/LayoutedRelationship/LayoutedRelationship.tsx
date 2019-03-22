@@ -17,7 +17,6 @@ import interactable from './../LayoutedElement/Interactable';
 import reconnectable from './Reconnectable';
 import {
   EditorMode,
-  ApollonMode,
   InteractiveElementsMode,
 } from '../../services/EditorService';
 
@@ -25,7 +24,7 @@ class LayoutedRelationship extends Component<Props> {
   component: typeof RelationshipComponent = this.composeComponent();
 
   private composeComponent(): typeof RelationshipComponent {
-    const { editorMode, apollonMode } = this.props;
+    const { editorMode, readonly } = this.props;
     type DecoratorType =
       | ((
           Component: typeof ElementComponent
@@ -35,7 +34,7 @@ class LayoutedRelationship extends Component<Props> {
         ) => React.ComponentClass<RelationshipComponentProps>);
     let decorators: DecoratorType[] = [];
 
-    if (apollonMode === ApollonMode.ReadOnly) {
+    if (readonly) {
       decorators = [selectable, hoverable];
     } else if (editorMode === EditorMode.InteractiveElementsView) {
       decorators = [interactable, hoverable];
@@ -83,7 +82,7 @@ interface OwnProps {
 interface StateProps {
   getById: (id: string) => Relationship;
   editorMode: EditorMode;
-  apollonMode: ApollonMode;
+  readonly: boolean;
   interactiveMode: InteractiveElementsMode;
 }
 
@@ -95,7 +94,7 @@ export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   state => ({
     getById: RelationshipRepository.getById(state.elements),
     editorMode: state.editor.editorMode,
-    apollonMode: state.editor.mode,
+    readonly: state.editor.readonly,
     interactiveMode: state.editor.interactiveMode,
   })
 )(LayoutedRelationship);

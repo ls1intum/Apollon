@@ -29,10 +29,18 @@
           <h class="header">Mode</h>
           <div class="dropdown">
             <select name="mode" onchange="exports.onChange(event)">
-              <option value="FULL">Full Mode</option>
-              <option value="MODELING_ONLY">Modeling Only Mode</option>
-              <option value="READ_ONLY">Read Only Mode</option>
+              <option value="Exporting">Exporting</option>
+              <option value="Modelling">Modelling</option>
+              <option value="Assessment">Assessment</option>
             </select>
+            <label>
+              <input
+                type="checkbox"
+                name="readonly"
+                onchange="exports.onSwitch(event)"
+              />
+              Readonly
+            </label>
           </div>
         </section>
         <section>

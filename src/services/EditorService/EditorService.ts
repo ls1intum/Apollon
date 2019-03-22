@@ -1,11 +1,11 @@
 import { Reducer, Action as ReduxAction } from 'redux';
 import {
   ActionTypes,
-  ApollonMode,
   EditorMode,
   InteractiveElementsMode,
   EditorState,
 } from './types';
+import { ApollonMode } from '../../ApollonEditor';
 
 interface Action<T extends ActionTypes> extends ReduxAction<T> {
   type: T;
@@ -17,7 +17,8 @@ type Actions = Action<ActionTypes.UPDATE>;
 class EditorService {
   static initialState: EditorState = {
     gridSize: 10,
-    mode: ApollonMode.Full,
+    readonly: false,
+    mode: ApollonMode.Exporting,
     editorMode: EditorMode.ModelingView,
     interactiveMode: InteractiveElementsMode.Highlighted,
   };

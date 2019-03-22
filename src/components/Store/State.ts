@@ -5,7 +5,6 @@ import Element, {
 import Diagram, { DiagramState } from './../../domain/Diagram';
 import {
   EditorState,
-  ApollonMode,
   EditorMode,
   InteractiveElementsMode,
 } from './../../services/EditorService';
@@ -15,6 +14,7 @@ import {
   UMLRelationship,
   Selection,
   Assessment,
+  ApollonMode,
 } from '../../ApollonEditor';
 import Relationship, {
   RelationshipRepository,
@@ -65,7 +65,8 @@ class State {
     return {
       editor: {
         gridSize: 0,
-        mode: ApollonMode.Full,
+        mode: ApollonMode.Exporting,
+        readonly: false,
         editorMode: EditorMode.ModelingView,
         interactiveMode: InteractiveElementsMode.Highlighted,
       },

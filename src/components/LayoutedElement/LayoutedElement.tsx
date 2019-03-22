@@ -16,7 +16,6 @@ import editable from './Editable';
 import interactable from './Interactable';
 import {
   EditorMode,
-  ApollonMode,
   InteractiveElementsMode,
 } from '../../services/EditorService';
 import Container from '../../domain/Container';
@@ -29,13 +28,13 @@ class LayoutedElement extends Component<Props, State> {
   component: typeof ElementComponent = this.composeComponent();
 
   private composeComponent(): typeof ElementComponent {
-    const { editorMode, apollonMode } = this.props;
+    const { editorMode, readonly } = this.props;
     type DecoratorType = (
       Component: typeof ElementComponent
     ) => React.ComponentClass<ComponentProps>;
     let decorators: DecoratorType[] = [];
 
-    if (apollonMode === ApollonMode.ReadOnly) {
+    if (readonly) {
       decorators = [selectable, hoverable];
     } else if (editorMode === EditorMode.InteractiveElementsView) {
       decorators = [interactable, hoverable];
@@ -92,7 +91,7 @@ interface OwnProps {
 interface StateProps {
   getById: (id: string) => Element;
   editorMode: EditorMode;
-  apollonMode: ApollonMode;
+  readonly: boolean;
   interactiveMode: InteractiveElementsMode;
 }
 
@@ -105,7 +104,7 @@ interface State {
 const mapStateToProps = (state: ReduxState): StateProps => ({
   getById: ElementRepository.getById(state.elements),
   editorMode: state.editor.editorMode,
-  apollonMode: state.editor.mode,
+  readonly: state.editor.readonly,
   interactiveMode: state.editor.interactiveMode,
 });
 

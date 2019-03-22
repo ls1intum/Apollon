@@ -61,15 +61,15 @@ export interface Selection {
 }
 
 export const enum ApollonMode {
-  Modelling,
-  Exporting,
-  Assessment,
-  Readonly,
+  Modelling = 'Modelling',
+  Exporting = 'Exporting',
+  Assessment = 'Assessment',
 }
 
 export type ApollonOptions = {
   type?: DiagramType;
   mode?: ApollonMode;
+  readonly?: boolean;
   model?: UMLModel;
   theme?: Partial<Styles>;
 };
@@ -105,10 +105,19 @@ export class ApollonEditor {
         (options.model && options.model.type) ||
         DiagramType.ClassDiagram,
     };
+    let state = State.fromModel(model);
+    state = {
+      ...state,
+      editor: {
+        ...state.editor,
+        ...(options.mode && { mode: options.mode }),
+        ...(options.readonly && { readonly: options.readonly }),
+      },
+    };
 
     const element = createElement(Application, {
       ref: this.application,
-      state: State.fromModel(model),
+      state: state,
       styles: {},
     });
     render(element, container, this.componentDidMount);

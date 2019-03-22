@@ -19,6 +19,12 @@ export const onChange = (event: MouseEvent) => {
   render(container, options);
 };
 
+export const onSwitch = (event: MouseEvent) => {
+  const { name, checked: value } = event.target as HTMLInputElement;
+  options = { ...options, [name]: value };
+  render(container, options);
+};
+
 export const save = () => {
   if (!editor) return;
 

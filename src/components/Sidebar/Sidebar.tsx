@@ -8,7 +8,6 @@ import {
   EditorModeSelectionSegment,
 } from './styles';
 import EditorService, {
-  ApollonMode,
   EditorMode,
   InteractiveElementsMode,
 } from './../../services/EditorService';
@@ -38,6 +37,7 @@ import {
   ObjectName,
   ObjectAttribute,
 } from './../../domain/plugins';
+import { ApollonMode } from '../../ApollonEditor';
 
 class Sidebar extends Component<Props, State> {
   state: State = {
@@ -146,10 +146,10 @@ class Sidebar extends Component<Props, State> {
   }
 
   render() {
-    if (this.props.apollonMode === ApollonMode.ReadOnly) return null;
+    if (this.props.readonly) return null;
     return (
       <Container>
-        {this.props.apollonMode === ApollonMode.Full && (
+        {this.props.apollonMode === ApollonMode.Exporting && (
           <EditorModeSelection>
             <EditorModeSelectionSegment
               onClick={this.selectEditorMode(EditorMode.ModelingView)}
@@ -205,6 +205,7 @@ class Sidebar extends Component<Props, State> {
 
 interface StateProps {
   diagramType: DiagramType;
+  readonly: boolean;
   apollonMode: ApollonMode;
   editorMode: EditorMode;
   interactiveElementsMode: InteractiveElementsMode;
@@ -223,6 +224,7 @@ interface State {
 
 const mapStateToProps = (state: ReduxState) => ({
   diagramType: state.diagram.type,
+  readonly: state.editor.readonly,
   apollonMode: state.editor.mode,
   editorMode: state.editor.editorMode,
   interactiveElementsMode: state.editor.interactiveMode,
