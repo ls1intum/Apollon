@@ -9,9 +9,7 @@ import {
 } from './styles';
 import { DiagramType } from './../../domain/Diagram';
 import Element, { ElementRepository, ElementKind } from '../../domain/Element';
-
 import { Draggable, DropEvent } from './../Draggable';
-
 import ElementComponent from './../LayoutedElement/ElementComponent';
 import { CanvasProvider } from '../Canvas/CanvasContext';
 import {
@@ -139,10 +137,11 @@ class Sidebar extends Component<Props, State> {
   }
 
   render() {
-    if (this.props.readonly) return null;
+    if (this.props.readonly || this.props.mode === ApollonMode.Assessment)
+      return null;
     return (
       <Container>
-        {this.props.apollonMode === ApollonMode.Exporting && (
+        {this.props.mode === ApollonMode.Exporting && (
           <EditorModeSelection>
             <EditorModeSelectionSegment
               onClick={this.changeView(ApollonView.Modelling)}
@@ -190,7 +189,7 @@ class Sidebar extends Component<Props, State> {
 interface StateProps {
   diagramType: DiagramType;
   readonly: boolean;
-  apollonMode: ApollonMode;
+  mode: ApollonMode;
   view: ApollonView;
 }
 
@@ -205,15 +204,13 @@ interface State {
   previews: Element[];
 }
 
-const mapStateToProps = (state: ReduxState) => ({
-  diagramType: state.diagram.type,
-  readonly: state.editor.readonly,
-  apollonMode: state.editor.mode,
-  view: state.editor.view,
-});
-
-export default connect(
-  mapStateToProps,
+export default connect<StateProps, DispatchProps, {}, ReduxState>(
+  state => ({
+    diagramType: state.diagram.type,
+    readonly: state.editor.readonly,
+    mode: state.editor.mode,
+    view: state.editor.view,
+  }),
   {
     create: ElementRepository.create,
     changeView: EditorRepository.changeView,
