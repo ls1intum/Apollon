@@ -43,7 +43,7 @@ export const draw = (all: boolean = true) => {
     ];
   }
 
-  const { svg, size }: SVG = editor.exportAsSVG(filter && { filter });
+  const { svg }: SVG = editor.exportAsSVG(filter && { filter });
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

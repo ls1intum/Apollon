@@ -99,22 +99,13 @@ export class ApollonEditor {
       state: State.fromModel(model),
       options,
     });
-    render(element, div);
+    const svg = render(element, div);
     const { innerHTML } = div;
-    const width =
-      (div.firstElementChild &&
-        div.firstElementChild.hasAttribute('width') &&
-        parseInt(div.firstElementChild.getAttribute('width')!)) ||
-      0;
-    const height =
-      (div.firstElementChild &&
-        div.firstElementChild.hasAttribute('height') &&
-        parseInt(div.firstElementChild.getAttribute('height')!)) ||
-      0;
+    const { bounds } = svg.state;
     unmountComponentAtNode(div);
     return {
       svg: innerHTML,
-      size: { width, height },
+      clip: bounds,
     };
   }
 }
