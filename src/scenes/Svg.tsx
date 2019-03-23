@@ -69,7 +69,7 @@ export class Svg extends Component<Props> {
 
   get filter(): string[] {
     const { state, options } = this.props;
-    if (!options) return [...Object.keys(state.elements)];
+    if (!options || !options.filter) return [...Object.keys(state.elements)];
     const children = (id: string): string[] => {
       if (
         (Plugins as any)[state.elements[id].kind].prototype instanceof Container
@@ -89,10 +89,13 @@ export class Svg extends Component<Props> {
   }
 
   render() {
-    const { state } = this.props;
+    const { state, options } = this.props;
+    const keepOriginalSize = (options && options.keepOriginalSize) || false;
     let elements = this.normalizeState(state);
     const bounds = this.computeBoundingBox(
-      elements.filter(element => this.filter.includes(element.id))
+      elements.filter(
+        element => keepOriginalSize || this.filter.includes(element.id)
+      )
     );
     elements = elements.map(element =>
       Object.setPrototypeOf(

@@ -79,7 +79,8 @@ export type ApollonOptions = {
 };
 
 export interface ExportOptions {
-  filter: string[];
+  filter?: string[];
+  keepOriginalSize?: boolean;
 }
 
 export interface SVG {
