@@ -109,8 +109,8 @@ export class Svg extends Component<Props> {
     );
     return (
       <svg
-        width={bounds.width}
-        height={bounds.height}
+        width={bounds.width + 1}
+        height={bounds.height + 1}
         xmlns="http://www.w3.org/2000/svg"
         fill="white"
       >
