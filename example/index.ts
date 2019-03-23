@@ -1,4 +1,4 @@
-import { ApollonEditor, ApollonOptions, DiagramType } from '../src';
+import { ApollonEditor, ApollonOptions, DiagramType, SVG } from '../src';
 
 const container = document.getElementById('apollon')!;
 let editor: ApollonEditor | null = null;
@@ -32,10 +32,18 @@ export const clear = () => {
   options = { ...options, model: undefined };
 };
 
-export const draw = () => {
+export const draw = (all: boolean = true) => {
   if (!editor) return;
 
-  const { svg } = editor.exportAsSVG();
+  let filter: string[] | undefined;
+  if (!all) {
+    filter = [
+      ...editor.model.interactive.elements,
+      ...editor.model.interactive.relationships,
+    ];
+  }
+
+  const { svg, size }: SVG = editor.exportAsSVG(filter && { filter });
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { State } from './../components/Store';
 import { ExportOptions } from '..';
-import Element, { ElementRepository } from '../domain/Element';
-import Relationship, { RelationshipRepository } from '../domain/Relationship';
+import Element from '../domain/Element';
+import Relationship from '../domain/Relationship';
 import * as Plugins from './../domain/plugins';
 import Boundary from '../domain/geo/Boundary';
 import Container from '../domain/Container';
@@ -11,30 +11,8 @@ type Props = { state: State; options?: ExportOptions };
 
 export class Svg extends Component<Props> {
   normalizeState = (state: State): Element[] => {
-    const bounds = this.computeBoundingBox(Object.values(state.elements));
-
-    // let elements: Element[] = ElementRepository.read(state).map(element => {
-    //   if (!element.owner) {
-    //     element.bounds.x -= bounds.x;
-    //     element.bounds.y -= bounds.y;
-    //   }
-    //   return element;
-    // });
-    // elements = elements.map(element => {
-    //   if (element.owner) {
-    //     const owner = elements.find
-    //   }
-    // })
-
     let elements: Element[] = state.diagram.ownedElements
-      .map(id => ({
-        ...state.elements[id],
-        bounds: {
-          ...state.elements[id].bounds,
-          x: state.elements[id].bounds.x - bounds.x,
-          y: state.elements[id].bounds.y - bounds.y,
-        },
-      }))
+      .map(id => state.elements[id])
       .map(element =>
         Object.setPrototypeOf(element, (Plugins as any)[element.kind].prototype)
       );
@@ -68,35 +46,71 @@ export class Svg extends Component<Props> {
       ),
     ];
 
-    const relationships: Relationship[] = RelationshipRepository.read(
-      state.elements
-    ).map(element => {
-      element.bounds.x -= bounds.x;
-      element.bounds.y -= bounds.y;
-      return element;
-    });
-
+    const relationships: Relationship[] = state.diagram.ownedRelationships
+      .map(id => state.elements[id])
+      .map(element =>
+        Object.setPrototypeOf(element, (Plugins as any)[element.kind].prototype)
+      );
     return [...elements, ...relationships];
   };
 
   computeBoundingBox(elements: Element[]): Boundary {
-    const x = Math.min(...elements.map(e => e.bounds.x));
-    const y = Math.min(...elements.map(e => e.bounds.y));
-    const width =
-      Math.max(...elements.map(e => e.bounds.x + e.bounds.width)) - x;
-    const height =
+    let x = Math.min(...elements.map(e => e.bounds.x));
+    x = x === Infinity ? 0 : x;
+    let y = Math.min(...elements.map(e => e.bounds.y));
+    y = y === Infinity ? 0 : y;
+    let width = Math.max(...elements.map(e => e.bounds.x + e.bounds.width)) - x;
+    width = width === -Infinity ? 0 : width;
+    let height =
       Math.max(...elements.map(e => e.bounds.y + e.bounds.height)) - y;
+    height = height === -Infinity ? 0 : height;
     return { x, y, width, height };
   }
 
-  render() {
+  get filter(): string[] {
     const { state, options } = this.props;
-    const filter: string[] | false = (options && options.filter) || false;
-    const elements = this.normalizeState(state);
+    if (!options) return [...Object.keys(state.elements)];
+    const children = (id: string): string[] => {
+      if (
+        (Plugins as any)[state.elements[id].kind].prototype instanceof Container
+      ) {
+        const elements = (state.elements[id] as Container).ownedElements;
+        return elements.reduce<string[]>(
+          (a, e) => [...a, e, ...children(e)],
+          []
+        );
+      }
+      return [];
+    };
+    return options.filter.reduce<string[]>(
+      (a, e) => [...a, e, ...children(e)],
+      []
+    );
+  }
+
+  render() {
+    const { state } = this.props;
+    let elements = this.normalizeState(state);
+    const bounds = this.computeBoundingBox(
+      elements.filter(element => this.filter.includes(element.id))
+    );
+    elements = elements.map(element =>
+      Object.setPrototypeOf(
+        {
+          ...element,
+          bounds: {
+            ...element.bounds,
+            x: element.bounds.x - bounds.x,
+            y: element.bounds.y - bounds.y,
+          },
+        },
+        (Plugins as any)[element.kind].prototype
+      )
+    );
     return (
       <svg
-        width={state.diagram.bounds.width}
-        height={state.diagram.bounds.height}
+        width={bounds.width}
+        height={bounds.height}
         xmlns="http://www.w3.org/2000/svg"
         fill="white"
       >
@@ -104,7 +118,7 @@ export class Svg extends Component<Props> {
           <style>{`text { fill: black } * { overflow: visible; }`}</style>
         </defs>
         {elements
-          .filter(element => !filter || filter.includes(element.id))
+          .filter(element => this.filter.includes(element.id))
           .map(element => {
             const Component = (Plugins as any)[`${element.kind}Component`];
             return (

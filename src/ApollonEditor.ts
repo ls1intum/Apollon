@@ -101,11 +101,20 @@ export class ApollonEditor {
     });
     render(element, div);
     const { innerHTML } = div;
+    const width =
+      (div.firstElementChild &&
+        div.firstElementChild.hasAttribute('width') &&
+        parseInt(div.firstElementChild.getAttribute('width')!)) ||
+      0;
+    const height =
+      (div.firstElementChild &&
+        div.firstElementChild.hasAttribute('height') &&
+        parseInt(div.firstElementChild.getAttribute('height')!)) ||
+      0;
     unmountComponentAtNode(div);
-    console.log(innerHTML);
     return {
       svg: innerHTML,
-      size: { width: 0, height: 0 },
+      size: { width, height },
     };
   }
 }
