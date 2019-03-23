@@ -27,9 +27,10 @@ export {
   UMLClassAssociation,
 } from './domain/plugins/ClassDiagram';
 
-interface Element {
+export interface Element {
   id: string;
   name: string;
+  type: ElementKind | RelationshipKind;
   bounds: { x: number; y: number; width: number; height: number };
 }
 
