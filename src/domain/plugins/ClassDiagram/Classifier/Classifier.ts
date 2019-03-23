@@ -1,6 +1,6 @@
 import Element from '../../../Element';
 import Container from '../../../Container';
-import { ElementKind, UMLClassifier } from '..';
+import { ElementKind, UMLClassifier, UMLClassMember } from '..';
 import ClassMember from '../ClassMember/ClassMember';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';
 import { ClassMethod } from '../ClassMember/ClassMethod';
@@ -99,15 +99,17 @@ abstract class Classifier extends Container {
         ...base,
         attributes: children
           .filter(element => element instanceof ClassAttribute)
-          .map<UMLClassifier['attributes'][0]>(element => ({
+          .map<UMLClassMember>(element => ({
             id: element.id,
+            type: ElementKind.ClassAttribute,
             name: element.name,
             bounds: element.bounds,
           })),
         methods: children
           .filter(element => element instanceof ClassMethod)
-          .map<UMLClassifier['methods'][0]>(element => ({
+          .map<UMLClassMember>(element => ({
             id: element.id,
+            type: ElementKind.ClassAttribute,
             name: element.name,
             bounds: element.bounds,
           })),

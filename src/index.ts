@@ -23,6 +23,7 @@ export { ElementKind as ElementType };
 export { RelationshipKind as RelationshipType };
 export { Styles };
 export {
+  UMLClassMember.
   UMLClassifier,
   UMLClassAssociation,
 } from './domain/plugins/ClassDiagram';

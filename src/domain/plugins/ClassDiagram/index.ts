@@ -1,4 +1,4 @@
-import { UMLElement, UMLRelationship, Direction } from '../../..';
+import { Element, UMLElement, UMLRelationship, Direction } from '../../..';
 
 export enum ElementKind {
   Class = 'Class',
@@ -19,17 +19,11 @@ export enum RelationshipKind {
   ClassComposition = 'ClassComposition',
 }
 
+export interface UMLClassMember extends Element {}
+
 export interface UMLClassifier extends UMLElement {
-  attributes: {
-    id: string;
-    name: string;
-    bounds: { x: number; y: number; width: number; height: number };
-  }[];
-  methods: {
-    id: string;
-    name: string;
-    bounds: { x: number; y: number; width: number; height: number };
-  }[];
+  attributes: UMLClassMember[];
+  methods: UMLClassMember[];
 }
 
 export interface UMLClassAssociation extends UMLRelationship {
