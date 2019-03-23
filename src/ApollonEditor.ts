@@ -2,6 +2,7 @@ import { createElement, RefObject, createRef } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { Store } from 'redux';
 import { Application } from './scenes/Application';
+import { Svg } from './scenes/Svg';
 import { State } from './components/Store';
 import { DiagramType } from './domain/Diagram';
 import { ApollonOptions, Selection, UMLModel, ExportOptions, SVG } from '.';
@@ -89,17 +90,22 @@ export class ApollonEditor {
   }
 
   exportAsSVG(options?: ExportOptions): SVG {
-    const element = createElement('svg');
-    return {
-      svg: this.render(element),
-      size: { width: 0, height: 0 },
-    };
+    return ApollonEditor.exportModelAsSvg(this.model, options);
   }
 
-  private render(element: JSX.Element): string {
-    const width = 100;
-    const height = 100;
-    const { innerHTML } = this.container.getElementsByClassName('svg')[0];
-    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" fill="white">${innerHTML}</svg>`;
+  static exportModelAsSvg(model: UMLModel, options?: ExportOptions): SVG {
+    const div = document.createElement('div');
+    const element = createElement(Svg, {
+      state: State.fromModel(model),
+      options,
+    });
+    render(element, div);
+    const { innerHTML } = div;
+    unmountComponentAtNode(div);
+    console.log(innerHTML);
+    return {
+      svg: innerHTML,
+      size: { width: 0, height: 0 },
+    };
   }
 }

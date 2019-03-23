@@ -35,9 +35,7 @@ export const clear = () => {
 export const draw = () => {
   if (!editor) return;
 
-  const div = document.createElement('div');
-  const exporter = new ApollonEditor(div, { model: editor.model });
-  const { svg } = exporter.exportAsSVG();
+  const { svg } = editor.exportAsSVG();
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

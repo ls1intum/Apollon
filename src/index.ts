@@ -27,13 +27,13 @@ export {
   UMLClassAssociation,
 } from './domain/plugins/ClassDiagram';
 
-interface UMLBase {
+interface Element {
   id: string;
   name: string;
   bounds: { x: number; y: number; width: number; height: number };
 }
 
-export interface UMLElement extends UMLBase {
+export interface UMLElement extends Element {
   owner: string | null;
   type: ElementKind;
 }
@@ -45,7 +45,7 @@ export enum Direction {
   Left = 'Left',
 }
 
-export interface UMLRelationship extends UMLBase {
+export interface UMLRelationship extends Element {
   type: RelationshipKind;
   path: { x: number; y: number }[];
   source: {
