@@ -12,29 +12,70 @@ type State = { bounds: Boundary; elements: Element[] };
 
 const getInitialState = ({ state, options }: Props): State => {
   const keepOriginalSize = (options && options.keepOriginalSize) || false;
-  const filter = ({ id }: Element) => {
-    if (options && options.include) return options.include.includes(id);
-    if (options && options.exclude) return !options.exclude.includes(id);
-    return true;
+
+  const filter = (
+    ids: string[],
+    include?: string[],
+    exclude?: string[]
+  ): string[] => {
+    const result: string[] = [];
+    for (const id of ids) {
+      const element = Object.setPrototypeOf(
+        state.elements[id],
+        (Plugins as any)[state.elements[id].kind].prototype
+      );
+      if (include && include.includes(id)) {
+        result.push(id);
+        if (element instanceof Container) {
+          result.push(...filter(element.ownedElements, element.ownedElements));
+        }
+      } else if (include && !include.includes(id)) {
+        if (element instanceof Container) {
+          result.push(...filter(element.ownedElements, include, exclude));
+        }
+      } else if (exclude && !exclude.includes(id)) {
+        result.push(id);
+        if (element instanceof Container) {
+          result.push(...filter(element.ownedElements, include, exclude));
+        }
+      } else if (exclude && exclude.includes(id)) {
+      } else {
+        if ((!include || !include.length) && (!exclude || !exclude.length)) {
+          result.push(id);
+          if (element instanceof Container) {
+            result.push(...filter(element.ownedElements, include, exclude));
+          }
+        }
+      }
+    }
+    return result;
   };
+
+  const layout: string[] = filter(
+    [...state.diagram.ownedElements, ...state.diagram.ownedRelationships],
+    options && options.include,
+    options && options.exclude
+  );
 
   let elements = normalizeState(state);
   const bounds = computeBoundingBox(
-    elements.filter(element => keepOriginalSize || filter(element))
+    elements.filter(element => keepOriginalSize || layout.includes(element.id))
   );
-  elements = elements.filter(filter).map(element =>
-    Object.setPrototypeOf(
-      {
-        ...element,
-        bounds: {
-          ...element.bounds,
-          x: element.bounds.x - bounds.x,
-          y: element.bounds.y - bounds.y,
+  elements = elements
+    .filter(element => layout.includes(element.id))
+    .map(element =>
+      Object.setPrototypeOf(
+        {
+          ...element,
+          bounds: {
+            ...element.bounds,
+            x: element.bounds.x - bounds.x,
+            y: element.bounds.y - bounds.y,
+          },
         },
-      },
-      (Plugins as any)[element.kind].prototype
-    )
-  );
+        (Plugins as any)[element.kind].prototype
+      )
+    );
   return { bounds, elements };
 };
 
