@@ -24,7 +24,7 @@ const assessable = (
       const generator = count > 0 ? [...Array(count)] : [];
 
       const icons = generator.map((_, i) => (
-        <g key={i} transform={`translate(${i * 28} 2)`}>
+        <g key={i} transform={`translate(${i * 12} 2)`}>
           {component}
         </g>
       ));
@@ -32,7 +32,7 @@ const assessable = (
       return (
         <WrappedComponent {...this.props}>
           {assessment && (
-            <g transform={`translate(${element.bounds.width - count * 28} 2)`}>
+            <g transform={`translate(${element.bounds.width - (count + 1) * 12} 0)`}>
               {icons}
             </g>
           )}
