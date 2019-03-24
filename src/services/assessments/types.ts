@@ -10,8 +10,7 @@ export type Actions = AssessAction;
 export interface AssessAction extends Action<ActionTypes.ASSESS> {
   payload: {
     element: string;
-    score: number;
-    feedback?: string;
+    assessment: Assessment;
   };
 }
 

@@ -17,7 +17,7 @@ import { ElementReducer, ElementSaga } from './../../domain/Element';
 import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
 import { ContainerReducer, ContainerSaga } from './../../domain/Container';
 import { DiagramReducer, DiagramSaga } from './../../domain/Diagram';
-import { reducer as AssessmentReducer } from './../../services/assessments';
+import { AssessmentReducer } from './../../services/assessments';
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;

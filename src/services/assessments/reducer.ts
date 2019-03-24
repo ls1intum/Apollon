@@ -12,10 +12,7 @@ export const reducer: Reducer<State, Actions> = (
       const { payload } = action;
       return {
         ...state,
-        [payload.element]: {
-          score: payload.score,
-          feedback: payload.feedback,
-        },
+        [payload.element]: payload.assessment,
       };
     }
   }
