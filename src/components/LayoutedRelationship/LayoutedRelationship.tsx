@@ -14,6 +14,7 @@ import hoverable from './../LayoutedElement/Hoverable';
 import selectable from './../LayoutedElement/Selectable';
 import editable from './../LayoutedElement/Editable';
 import interactable from './../LayoutedElement/Interactable';
+import assessable from './../LayoutedElement/Assessable';
 import reconnectable from './Reconnectable';
 import { ApollonView } from '../../services/editor';
 import { ApollonMode } from '../..';
@@ -33,7 +34,7 @@ class LayoutedRelationship extends Component<Props> {
     let decorators: DecoratorType[] = [];
 
     if (mode === ApollonMode.Assessment) {
-      decorators = [editable, selectable, hoverable];
+      decorators = [assessable, editable, selectable, hoverable];
     } else if (readonly) {
       decorators = [selectable, hoverable];
     } else if (
