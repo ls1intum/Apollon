@@ -2,36 +2,39 @@ import React, { Component } from 'react';
 import { State as ReduxState } from './../components/Store';
 import { ExportOptions } from '..';
 import Element from '../domain/Element';
-import Relationship from '../domain/Relationship';
-import * as Plugins from './../domain/plugins';
-import Boundary from '../domain/geo/Boundary';
 import Container from '../domain/Container';
+import Relationship from '../domain/Relationship';
+import Boundary from '../domain/geo/Boundary';
+import * as Plugins from './../domain/plugins';
 
 type Props = { state: ReduxState; options?: ExportOptions };
 type State = { bounds: Boundary; elements: Element[] };
 
 const getInitialState = ({ state, options }: Props): State => {
-  const filter = getFilter({ state, options });
   const keepOriginalSize = (options && options.keepOriginalSize) || false;
+  const filter = ({ id }: Element) => {
+    if (options && options.include) return options.include.includes(id);
+    if (options && options.exclude) return !options.exclude.includes(id);
+    return true;
+  };
+
   let elements = normalizeState(state);
   const bounds = computeBoundingBox(
-    elements.filter(element => keepOriginalSize || filter.includes(element.id))
+    elements.filter(element => keepOriginalSize || filter(element))
   );
-  elements = elements
-    .filter(element => filter.includes(element.id))
-    .map(element =>
-      Object.setPrototypeOf(
-        {
-          ...element,
-          bounds: {
-            ...element.bounds,
-            x: element.bounds.x - bounds.x,
-            y: element.bounds.y - bounds.y,
-          },
+  elements = elements.filter(filter).map(element =>
+    Object.setPrototypeOf(
+      {
+        ...element,
+        bounds: {
+          ...element.bounds,
+          x: element.bounds.x - bounds.x,
+          y: element.bounds.y - bounds.y,
         },
-        (Plugins as any)[element.kind].prototype
-      )
-    );
+      },
+      (Plugins as any)[element.kind].prototype
+    )
+  );
   return { bounds, elements };
 };
 
@@ -74,23 +77,6 @@ const normalizeState = (state: ReduxState): Element[] => {
       Object.setPrototypeOf(element, (Plugins as any)[element.kind].prototype)
     );
   return [...elements, ...relationships];
-};
-
-const getFilter = ({ state, options }: Props): string[] => {
-  if (!options || !options.filter) return [...Object.keys(state.elements)];
-  const children = (id: string): string[] => {
-    if (
-      (Plugins as any)[state.elements[id].kind].prototype instanceof Container
-    ) {
-      const elements = (state.elements[id] as Container).ownedElements;
-      return elements.reduce<string[]>((a, e) => [...a, e, ...children(e)], []);
-    }
-    return [];
-  };
-  return options.filter.reduce<string[]>(
-    (a, e) => [...a, e, ...children(e)],
-    []
-  );
 };
 
 const computeBoundingBox = (elements: Element[]): Boundary => {

@@ -79,10 +79,11 @@ export type ApollonOptions = {
   theme?: Partial<Styles>;
 };
 
-export interface ExportOptions {
-  filter?: string[];
+export type ExportOptions = {
   keepOriginalSize?: boolean;
-}
+  include?: string[];
+  exclude?: string[];
+};
 
 export interface SVG {
   svg: string;
