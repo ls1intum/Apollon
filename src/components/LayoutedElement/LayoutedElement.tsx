@@ -14,6 +14,7 @@ import connectable from './Connectable';
 import droppable from './Droppable';
 import editable from './Editable';
 import interactable from './Interactable';
+import assessable from './Assessable';
 import Container from '../../domain/Container';
 import { ApollonView } from '../../services/editor';
 import { ApollonMode } from '../..';
@@ -33,7 +34,7 @@ class LayoutedElement extends Component<Props, State> {
     let decorators: DecoratorType[] = [];
 
     if (mode === ApollonMode.Assessment) {
-      decorators = [editable, selectable, hoverable];
+      decorators = [assessable, editable, selectable, hoverable];
     } else if (readonly) {
       decorators = [selectable, hoverable];
     } else if (
