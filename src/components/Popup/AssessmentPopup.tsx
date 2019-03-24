@@ -11,12 +11,29 @@ class AssessmentPopup extends Component<Props, State> {
     assessment: this.props.assessment || { score: 0 },
   };
 
-  private onUpdate = (key: 'score' | 'feedback') => (value?: string) => {
+  private updateScore = (value: string) => {
     const { element, assess } = this.props;
-    if (key === 'feedback' && (!value || !value.length)) value = undefined;
+    const score = parseFloat(value) || 0;
     this.setState(
       state => ({
-        assessment: { ...state.assessment, [key]: value },
+        assessment: {
+          ...state.assessment,
+          score,
+        },
+      }),
+      () => assess(element.id, this.state.assessment)
+    );
+  };
+
+  private updateFeedback = (value: string) => {
+    const { element, assess } = this.props;
+    const feedback = value.length ? value : undefined;
+    this.setState(
+      state => ({
+        assessment: {
+          ...state.assessment,
+          feedback,
+        },
       }),
       () => assess(element.id, this.state.assessment)
     );
@@ -43,12 +60,12 @@ class AssessmentPopup extends Component<Props, State> {
             <Header>Score</Header>
             <TextField
               value={`${assessment.score}`}
-              onUpdate={this.onUpdate('score')}
+              onUpdate={this.updateScore}
             />
             <Header>Feedback</Header>
             <TextField
               value={`${assessment.feedback || ''}`}
-              onUpdate={this.onUpdate('feedback')}
+              onUpdate={this.updateFeedback}
             />
           </Section>
         )}
