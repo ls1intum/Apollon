@@ -19,11 +19,9 @@ export enum RelationshipKind {
   ClassComposition = 'ClassComposition',
 }
 
-export interface UMLClassMember extends Element {}
-
 export interface UMLClassifier extends UMLElement {
-  attributes: UMLClassMember[];
-  methods: UMLClassMember[];
+  attributes: string[];
+  methods: string[];
 }
 
 export interface UMLClassAssociation extends UMLRelationship {

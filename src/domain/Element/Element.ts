@@ -47,22 +47,20 @@ abstract class Element {
   static fromUMLElement<T extends typeof Element>(
     umlElement: UMLElement,
     Clazz: T
-  ): Element[] {
-    return [
-      Object.setPrototypeOf(
-        {
-          id: umlElement.id,
-          name: umlElement.name,
-          owner: umlElement.owner,
-          kind: umlElement.type,
-          bounds: umlElement.bounds,
-          base: 'Element',
-          hovered: false,
-          selected: false,
-        },
-        Clazz.prototype
-      ),
-    ];
+  ): Element {
+    return Object.setPrototypeOf(
+      {
+        id: umlElement.id,
+        name: umlElement.name,
+        owner: umlElement.owner,
+        kind: umlElement.type,
+        bounds: umlElement.bounds,
+        base: 'Element',
+        hovered: false,
+        selected: false,
+      },
+      Clazz.prototype
+    );
   }
 }
 

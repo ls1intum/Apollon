@@ -12,7 +12,7 @@ class Class extends Classifier {
     return Classifier.toUMLElement(element, children);
   }
 
-  static fromUMLElement(umlElement: UMLClassifier): Element[] {
+  static fromUMLElement(umlElement: UMLClassifier): Element {
     return Classifier.fromUMLElement(umlElement);
   }
 }

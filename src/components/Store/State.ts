@@ -28,36 +28,45 @@ interface State {
 
 class State {
   static fromModel(model: UMLModel): State {
-    const elements: Element[] = Object.values(model.elements)
-      .reduce<Element[]>(
-        (r, umlElement) => [
-          ...r,
-          ...(<any>Plugin)[umlElement.type].fromUMLElement(
-            umlElement,
-            (<any>Plugin)[umlElement.type]
-          ),
-        ],
-        []
-      )
-      .map(element => {
+    let elements: ElementState = Object.values(model.elements)
+      .map(umlElement => {
+        const Clazz: typeof Element = (<any>Plugin)[umlElement.type];
+        const element = Clazz.fromUMLElement(
+          umlElement,
+          (<any>Plugin)[umlElement.type]
+        );
         if (model.interactive.elements.includes(element.id)) {
           element.interactive = true;
         }
         return element;
-      });
-    const relationships: Relationship[] = Object.values(model.relationships)
-      .map<Relationship>(umlRelationship =>
-        (<any>Plugin)[umlRelationship.type].fromUMLRelationship(
+      })
+      .reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
+
+    elements = Object.values(elements).reduce((state, element) => {
+      if (element instanceof Container) {
+        const children = element.ownedElements.map(id => elements[id]);
+        const changes = element
+          .render(children)
+          .reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
+        return { ...state, ...changes };
+      }
+      return { ...state, [element.id]: element };
+    }, {});
+
+    const relationships: ElementState = Object.values(model.relationships)
+      .map<Relationship>(umlRelationship => {
+        const Clazz: typeof Relationship = (<any>Plugin)[umlRelationship.type];
+        const relationship = Clazz.fromUMLRelationship(
           umlRelationship,
-          elements
-        )
-      )
-      .map(relationship => {
+          Object.values(elements),
+          (<any>Plugin)[umlRelationship.type]
+        );
         if (model.interactive.relationships.includes(relationship.id)) {
           relationship.interactive = true;
         }
         return relationship;
-      });
+      })
+      .reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
 
     return {
       editor: {
@@ -70,12 +79,9 @@ class State {
         ownedElements: Object.values(elements)
           .filter(e => !e.owner)
           .map(e => e.id),
-        ownedRelationships: relationships.map(e => e.id),
+        ownedRelationships: Object.keys(relationships),
       },
-      elements: [...elements, ...relationships].reduce<ElementState>(
-        (r, o) => ({ ...r, [o.id]: o }),
-        {}
-      ),
+      elements: { ...elements, ...relationships },
       assessments: model.assessments,
     };
   }

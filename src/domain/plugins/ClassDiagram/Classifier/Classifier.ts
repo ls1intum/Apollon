@@ -1,6 +1,6 @@
 import Element from '../../../Element';
 import Container from '../../../Container';
-import { ElementKind, UMLClassifier, UMLClassMember } from '..';
+import { ElementKind, UMLClassifier } from '..';
 import ClassMember from '../ClassMember/ClassMember';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';
 import { ClassMethod } from '../ClassMember/ClassMethod';
@@ -99,61 +99,22 @@ abstract class Classifier extends Container {
         ...base,
         attributes: children
           .filter(element => element instanceof ClassAttribute)
-          .map<UMLClassMember>(element => ({
-            id: element.id,
-            type: ElementKind.ClassAttribute,
-            name: element.name,
-            bounds: element.bounds,
-          })),
+          .map(element => element.id),
         methods: children
           .filter(element => element instanceof ClassMethod)
-          .map<UMLClassMember>(element => ({
-            id: element.id,
-            type: ElementKind.ClassAttribute,
-            name: element.name,
-            bounds: element.bounds,
-          })),
+          .map(element => element.id),
       },
-      children: [],
+      children: children,
     };
   }
 
-  static fromUMLElement(umlElement: UMLClassifier): Element[] {
-    const [element] = Element.fromUMLElement(umlElement, Classifier);
-    const attributes: ClassAttribute[] = umlElement.attributes.map<
-      ClassAttribute
-    >(attribute =>
-      Object.setPrototypeOf(
-        {
-          id: attribute.id,
-          name: attribute.name,
-          owner: umlElement.id,
-          kind: ElementKind.ClassAttribute,
-          bounds: { x: 0, y: 0, width: 0, height: 30 },
-          base: 'Element',
-          hovered: false,
-          selected: false,
-        },
-        ClassAttribute.prototype
-      )
-    );
-    const methods: ClassMethod[] = umlElement.methods.map<ClassMethod>(
-      attribute =>
-        Object.setPrototypeOf(
-          {
-            id: attribute.id,
-            name: attribute.name,
-            owner: umlElement.id,
-            kind: ElementKind.ClassMethod,
-            bounds: { x: 0, y: 0, width: 0, height: 30 },
-            base: 'Element',
-            hovered: false,
-            selected: false,
-          },
-          ClassMethod.prototype
-        )
-    );
-    return (element as Container).render([element, ...attributes, ...methods]);
+  static fromUMLElement(umlElement: UMLClassifier): Element {
+    // return Element.fromUMLElement(umlElement, Classifier);
+    const element = Element.fromUMLElement(umlElement, Classifier);
+    if (element instanceof Container) {
+      element.ownedElements = [...umlElement.attributes, ...umlElement.methods];
+    }
+    return element;
   }
 }
 
