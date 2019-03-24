@@ -80,6 +80,7 @@ export type ApollonOptions = {
 };
 
 export type ExportOptions = {
+  margin?: number;
   keepOriginalSize?: boolean;
   include?: string[];
   exclude?: string[];

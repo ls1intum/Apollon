@@ -58,9 +58,17 @@ const getInitialState = ({ state, options }: Props): State => {
   );
 
   let elements = normalizeState(state);
-  const bounds = computeBoundingBox(
+
+  let bounds = computeBoundingBox(
     elements.filter(element => keepOriginalSize || layout.includes(element.id))
   );
+  if (options && options.margin) {
+    bounds.x -= options.margin;
+    bounds.y -= options.margin;
+    bounds.width += options.margin * 2;
+    bounds.height += options.margin * 2;
+  }
+
   elements = elements
     .filter(element => layout.includes(element.id))
     .map(element =>
