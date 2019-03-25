@@ -14,6 +14,7 @@ export interface UMLModel {
 }
 
 export interface Assessment {
+  type: ElementKind | RelationshipKind
   score: number;
   feedback?: string;
 }
