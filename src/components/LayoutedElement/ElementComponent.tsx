@@ -7,6 +7,7 @@ import LayoutedElement from './LayoutedElement';
 import { CanvasConsumer } from '../Canvas/CanvasContext';
 
 interface SvgProps {
+  disabled: boolean;
   hidden: boolean;
   moving: boolean;
   isRoot: boolean;
@@ -20,6 +21,8 @@ const Svg = styled.svg.attrs({
   opacity: ${({ moving, hidden }) => (hidden ? 0 : moving ? 0.35 : 1)};
   fill: ${({ highlight, isRoot, theme }) =>
     highlight ? theme.interactiveAreaColor : isRoot ? 'white' : 'none'};
+
+  ${({ disabled }) => disabled && `pointer-events: none;`}
 
   & text {
     cursor: default;
@@ -40,6 +43,7 @@ class ElementComponent extends Component<Props> {
     selected: false,
     moving: false,
     interactable: false,
+    disabled: false,
   };
 
   render() {
@@ -47,6 +51,7 @@ class ElementComponent extends Component<Props> {
     const Component = (Plugins as any)[`${element.type}Component`];
 
     const strokeWidth = 5;
+    const disabled = this.props.disabled || this.props.moving;
     return (
       <CanvasConsumer
         children={context => {
@@ -61,6 +66,7 @@ class ElementComponent extends Component<Props> {
             <Svg
               id={element.id}
               {...bounds}
+              disabled={disabled}
               moving={this.props.moving}
               isRoot={this.props.element.owner === null}
               hidden={this.props.hidden}
@@ -69,7 +75,13 @@ class ElementComponent extends Component<Props> {
               <Component element={element}>
                 {element instanceof Container &&
                   element.ownedElements.map((child: string) => {
-                    return <LayoutedElement key={child} element={child} />;
+                    return (
+                      <LayoutedElement
+                        key={child}
+                        element={child}
+                        disabled={disabled}
+                      />
+                    );
                   })}
               </Component>
               {this.props.children}
@@ -100,6 +112,7 @@ export interface OwnProps {
   hidden: boolean;
   moving: boolean;
   interactable: boolean;
+  disabled: boolean;
 }
 
 type Props = OwnProps;

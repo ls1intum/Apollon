@@ -96,14 +96,19 @@ const normalizeState = (state: ModelState): Element[] => {
 
   const positionChildren = (element: Element): Element[] => {
     if (element instanceof Container) {
-      const children = element.ownedElements.map(id => ({
-        ...state.elements[id],
-        bounds: {
-          ...state.elements[id].bounds,
-          x: state.elements[id].bounds.x + element.bounds.x,
-          y: state.elements[id].bounds.y + element.bounds.y,
-        },
-      }));
+      const children = element.ownedElements.map(id =>
+        Object.setPrototypeOf(
+          {
+            ...state.elements[id],
+            bounds: {
+              ...state.elements[id].bounds,
+              x: state.elements[id].bounds.x + element.bounds.x,
+              y: state.elements[id].bounds.y + element.bounds.y,
+            },
+          },
+          (Plugins as any)[state.elements[id].type].prototype
+        )
+      );
       return [
         ...children,
         ...children.reduce<Element[]>(

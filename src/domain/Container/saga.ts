@@ -1,4 +1,4 @@
-import { takeLatest, all, put, select } from 'redux-saga/effects';
+import { takeLatest, takeEvery, all, put, select } from 'redux-saga/effects';
 import { ModelState } from './../../components/Store';
 import Container from './Container';
 import { ElementRepository, ElementActionTypes } from '../Element';
@@ -18,7 +18,7 @@ import {
 import { notEmpty } from '../utils';
 
 function* saga() {
-  yield takeLatest(ActionTypes.CHANGE_OWNER, handleOwnerChange);
+  yield takeEvery(ActionTypes.CHANGE_OWNER, handleOwnerChange);
   yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.CREATE, handleChildAdd);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementResize);
@@ -27,46 +27,59 @@ function* saga() {
 }
 
 function* handleOwnerChange({ payload }: ChangeOwnerAction) {
-  // const { elements }: State = yield select();
-  // const element = ElementRepository.getById(elements)(payload.id);
-  // const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
-  // if (owner && !(owner.constructor as any).isDroppable) return;
+  if (!payload.id || payload.id === payload.owner) return;
 
-  // if (element.owner) {
-  //   yield put<RemoveChildAction>({
-  //     type: ActionTypes.REMOVE_CHILD,
-  //     payload: { id: element.id, owner: element.owner },
-  //   });
+  const { elements }: ModelState = yield select();
+  const selection = Object.values(elements).filter(element => element.selected);
+  if (selection.length > 1) return;
 
-  //   let ownerID: string | null = element.owner;
-  //   let position = { x: 0, y: 0 };
-  //   while (ownerID) {
-  //     const owner = ElementRepository.getById(elements)(ownerID);
-  //     position.x += owner.bounds.x;
-  //     position.y += owner.bounds.y;
-  //     ownerID = owner.owner;
-  //   }
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (!element || payload.owner === element.owner) return;
 
-  //   yield put<MoveAction>(ElementRepository.move(element.id, position));
-  // }
+  const owner =
+    payload.owner && ElementRepository.getById(elements)(payload.owner);
 
-  // if (payload.owner) {
-  //   yield put<AppendChildAction>({
-  //     type: ActionTypes.APPEND_CHILD,
-  //     payload: { id: element.id, owner: payload.owner },
-  //   });
-  //   let ownerID: string | null = payload.owner;
-  //   let position = { x: 0, y: 0 };
-  //   while (ownerID) {
-  //     const owner = ElementRepository.getById(elements)(ownerID);
-  //     position.x -= owner.bounds.x;
-  //     position.y -= owner.bounds.y;
-  //     ownerID = owner.owner;
-  //   }
+  const current =
+    element.owner && ElementRepository.getById(elements)(element.owner);
+  if (owner && !(owner.constructor as typeof Container).features.droppable)
+    return;
 
-  //   yield put<MoveAction>(ElementRepository.move(element.id, position));
-  // }
-  yield null;
+  if (current) {
+    yield put<RemoveChildAction>({
+      type: ActionTypes.REMOVE_CHILD,
+      payload: { id: element.id, owner: current.id },
+    });
+
+    let ownerID: string | null = current.id;
+    let position = { x: 0, y: 0 };
+    while (ownerID) {
+      const owner = ElementRepository.getById(elements)(ownerID);
+      if (!owner) break;
+      position.x += owner.bounds.x;
+      position.y += owner.bounds.y;
+      ownerID = owner.owner;
+    }
+
+    yield put<MoveAction>(ElementRepository.move(element.id, position));
+  }
+
+  if (owner) {
+    yield put<AppendChildAction>({
+      type: ActionTypes.APPEND_CHILD,
+      payload: { id: element.id, owner: owner.id },
+    });
+    let ownerID: string | null = owner.id;
+    let position = { x: 0, y: 0 };
+    while (ownerID) {
+      const owner = ElementRepository.getById(elements)(ownerID);
+      if (!owner) break;
+      position.x -= owner.bounds.x;
+      position.y -= owner.bounds.y;
+      ownerID = owner.owner;
+    }
+
+    yield put<MoveAction>(ElementRepository.move(element.id, position));
+  }
 }
 
 function* handleElementCreation({ payload }: CreateAction) {
@@ -101,10 +114,6 @@ function* handleElementDelete({ payload }: DeleteAction) {
   if (!elementId) return;
 
   const { elements }: ModelState = yield select();
-  const children = Object.keys(elements).filter(
-    id => elements[id].owner === elementId
-  );
-  yield all(children.map(id => put(ElementRepository.delete(id))));
 
   const parent = Object.keys(elements)
     .filter(id => 'ownedElements' in elements[id])
@@ -122,6 +131,11 @@ function* handleElementDelete({ payload }: DeleteAction) {
       updates.map(element => put(ElementRepository.update(element.id, element)))
     );
   }
+
+  const children = Object.keys(elements).filter(
+    id => elements[id].owner === elementId
+  );
+  yield all(children.map(id => put(ElementRepository.delete(id))));
 }
 
 function* handleElementChange({ payload }: ChangeAction) {

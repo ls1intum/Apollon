@@ -82,6 +82,8 @@ class Repository {
     if (!element) return null;
 
     const ElementClass = elements[element.type as ElementKind];
+    if (!ElementClass) return null;
+
     return new ElementClass(element);
   };
 

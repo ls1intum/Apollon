@@ -1,4 +1,4 @@
-import { takeLatest, put, select } from 'redux-saga/effects';
+import { takeLatest, put, select, all } from 'redux-saga/effects';
 import { ModelState } from './../../components/Store';
 import { ElementActionTypes, ElementRepository } from '../Element';
 import Relationship from '../Relationship';
@@ -18,6 +18,7 @@ import {
   DeleteElementAction,
   DeleteRelationshipAction,
 } from './types';
+import Container from '../Container';
 
 function* saga() {
   yield takeLatest(ContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
@@ -27,25 +28,33 @@ function* saga() {
 }
 
 function* handleOwnerChange({ payload }: ChangeOwnerAction) {
-  // const { elements }: State = yield select();
-  // const element = ElementRepository.getById(elements)(payload.id);
-  // const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
-  // if (owner && !(owner.constructor as any).isDroppable) return;
+  if (!payload.id || payload.id === payload.owner) return;
 
-  // if (!element.owner) {
-  //   yield put<DeleteElementAction>({
-  //     type: ActionTypes.DELETE_ELEMENT,
-  //     payload: { id: element.id },
-  //   });
-  // }
+  const { elements }: ModelState = yield select();
+  const selection = Object.values(elements).filter(element => element.selected);
+  if (selection.length > 1) return;
 
-  // if (!payload.owner) {
-  //   yield put<AddElementAction>({
-  //     type: ActionTypes.ADD_ELEMENT,
-  //     payload: { id: element.id },
-  //   });
-  // }
-  yield null;
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (!element || payload.owner === element.owner) return;
+
+  const owner =
+    payload.owner && ElementRepository.getById(elements)(payload.owner);
+  if (owner && !(owner.constructor as typeof Container).features.droppable)
+    return;
+
+  if (!element.owner) {
+    yield put<DeleteElementAction>({
+      type: ActionTypes.DELETE_ELEMENT,
+      payload: { id: element.id },
+    });
+  }
+
+  if (!payload.owner) {
+    yield put<AddElementAction>({
+      type: ActionTypes.ADD_ELEMENT,
+      payload: { id: element.id },
+    });
+  }
 }
 
 function* handleElementCreation({ payload }: ElementCreateAction) {
