@@ -20,6 +20,10 @@ import { ApollonView } from '../../services/editor';
 import { ApollonMode } from '../..';
 
 class LayoutedElement extends Component<Props, State> {
+  static defaultProps = {
+    disabled: false,
+  };
+
   state: State = {
     element: this.props.getById(this.props.element),
   };
@@ -75,6 +79,7 @@ class LayoutedElement extends Component<Props, State> {
     return (
       <Component
         element={element}
+        disabled={this.props.disabled}
         interactable={
           this.props.view === ApollonView.Exporting ||
           this.props.view === ApollonView.Highlight
@@ -89,6 +94,7 @@ class LayoutedElement extends Component<Props, State> {
 
 interface OwnProps {
   element: string;
+  disabled: boolean;
 }
 
 interface StateProps {

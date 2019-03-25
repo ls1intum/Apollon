@@ -3,7 +3,7 @@ import { ApollonEditor, ApollonOptions, DiagramType, SVG } from '../src';
 const container = document.getElementById('apollon')!;
 let editor: ApollonEditor | null = null;
 let options: ApollonOptions = {
-  type: DiagramType.ClassDiagram,
+  type: DiagramType.UseCaseDiagram,
   model: JSON.parse(window.localStorage.getItem('apollon')!),
 };
 
