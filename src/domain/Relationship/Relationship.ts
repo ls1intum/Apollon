@@ -1,9 +1,13 @@
-import Element from './../Element';
+import Element, { IElement } from './../Element';
 import Port, { Connection } from '../Port';
 import RelationshipKind from '../plugins/RelationshipKind';
 import { UMLRelationship } from '../..';
 import Boundary from '../geo/Boundary';
 import Point from '../geometry/Point';
+
+export interface IRelationship extends IElement {
+
+}
 
 abstract class Relationship extends Element {
   static features = { ...Element.features, straight: false };

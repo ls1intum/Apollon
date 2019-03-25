@@ -81,8 +81,8 @@ class Repository {
     const element = state[id];
     if (!element) return null;
 
-    const ElementClazz = elements[element.type as ElementKind];
-    return new ElementClazz(element);
+    const ElementClass = elements[element.type as ElementKind];
+    return new ElementClass(element);
   };
 
   static read = (state: ModelState): Element[] => {
