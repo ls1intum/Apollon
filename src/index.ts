@@ -8,13 +8,14 @@ export interface UMLModel {
   type: DiagramType;
   size: { width: number; height: number };
   interactive: Selection;
-  assessments: { [id: string]: Assessment };
-  elements: { [id: string]: UMLElement };
-  relationships: { [id: string]: UMLRelationship };
+  assessments: Assessment[];
+  elements: UMLElement[];
+  relationships: UMLRelationship[];
 }
 
 export interface Assessment {
-  type: ElementKind | RelationshipKind
+  modelElementId: string;
+  elementType: ElementKind | RelationshipKind;
   score: number;
   feedback?: string;
 }

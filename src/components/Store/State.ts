@@ -18,12 +18,13 @@ import Relationship, {
 import Container from '../../domain/Container';
 import * as Plugin from './../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
+import { AssessmentState } from '../../services/assessments';
 
 interface State {
   editor: EditorState;
   diagram: DiagramState;
   elements: ElementState;
-  assessments: { [id: string]: Assessment };
+  assessments: AssessmentState;
 }
 
 class State {
@@ -85,7 +86,10 @@ class State {
         ownedRelationships: Object.keys(relationships),
       },
       elements: { ...elements, ...relationships },
-      assessments: model.assessments,
+      assessments: model.assessments.reduce<AssessmentState>(
+        (r, o) => ({ ...r, [o.modelElementId]: o }),
+        {}
+      ),
     };
   }
 
@@ -158,15 +162,9 @@ class State {
       size,
       type: state.diagram.type,
       interactive,
-      elements: e.reduce<{ [id: string]: UMLElement }>(
-        (o, e) => ({ ...o, [e.id]: e }),
-        {}
-      ),
-      relationships: r.reduce<{ [id: string]: UMLRelationship }>(
-        (o, e) => ({ ...o, [e.id]: e }),
-        {}
-      ),
-      assessments: state.assessments,
+      elements: e,
+      relationships: r,
+      assessments: Object.values(state.assessments),
     };
   }
 }

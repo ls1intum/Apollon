@@ -9,7 +9,8 @@ import { AssessmentRepository } from '../../services/assessments';
 class AssessmentPopup extends Component<Props, State> {
   state = {
     assessment: this.props.assessment || {
-      type: this.props.element.kind,
+      modelElementId: this.props.element.id,
+      elementType: this.props.element.kind,
       score: 0,
     },
   };
@@ -83,7 +84,7 @@ interface OwnProps {
 
 interface StateProps {
   readonly: boolean;
-  assessment: Assessment;
+  assessment?: Assessment;
 }
 
 interface DispatchProps {

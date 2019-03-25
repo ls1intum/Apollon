@@ -32,7 +32,10 @@ const assessable = (
       return (
         <WrappedComponent {...this.props}>
           {assessment && (
-            <g transform={`translate(${element.bounds.width - (count + 1) * 12} 0)`}>
+            <g
+              transform={`translate(${element.bounds.width -
+                (count + 1) * 12} 0)`}
+            >
               {icons}
             </g>
           )}

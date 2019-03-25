@@ -19,9 +19,9 @@ export class ApollonEditor {
       version: '2.0',
       size: { width: 0, height: 0 },
       interactive: { elements: [], relationships: [] },
-      elements: {},
-      relationships: {},
-      assessments: {},
+      elements: [],
+      relationships: [],
+      assessments: [],
       ...options.model,
       type:
         options.type ||
