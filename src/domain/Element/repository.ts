@@ -75,40 +75,42 @@ class Repository {
     return position;
   };
 
-  static getById = (state: ElementState) => (id: string): Element => {
-    const element = { ...state[id] };
-    if (!Object.keys(element).length) return element;
+  static getById = (state: ElementState) => (id: string): Element | null => {
+    const element = state[id];
+    if (!element)
+      return null;
+
     return Object.setPrototypeOf(
       element,
-      (<any>Plugins)[element.kind].prototype
+      (<any>Plugins)[element.type].prototype
     );
   };
 
   static read = (state: State): Element[] => {
     const elements = Object.keys(state.elements).reduce<ElementState>(
       (r, e) => {
-        if (state.elements[e].base !== 'Relationship')
+        if (!('path' in state.elements[e]))
           return { ...r, [e]: state.elements[e] };
         return r;
       },
       {}
     );
 
-    return Object.values(elements).map((e: Element) =>
-      Object.setPrototypeOf(e, (<any>Plugins)[e.kind].prototype)
+    return Object.values(elements).map((e) =>
+      Object.setPrototypeOf(e, (<any>Plugins)[e.type].prototype)
     );
   };
 
   static parse = (state: State): ElementState => {
     return Object.values(state.elements).reduce<ElementState>(
       (result, element) => {
-        if (element.base === 'Relationship') return result;
+        if ('path' in element) return result;
 
         return {
           ...result,
           [element.id]: Object.setPrototypeOf(
             element,
-            (<any>Plugins)[element.kind].prototype
+            (<any>Plugins)[element.type].prototype
           ),
         };
       },

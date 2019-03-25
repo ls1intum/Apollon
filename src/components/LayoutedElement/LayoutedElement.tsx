@@ -19,11 +19,7 @@ import Container from '../../domain/Container';
 import { ApollonView } from '../../services/editor';
 import { ApollonMode } from '../..';
 
-class LayoutedElement extends Component<Props, State> {
-  state: State = {
-    element: this.props.getById(this.props.element),
-  };
-
+class LayoutedElement extends Component<Props> {
   component: typeof ElementComponent = this.composeComponent();
 
   private composeComponent(): typeof ElementComponent {
@@ -44,18 +40,20 @@ class LayoutedElement extends Component<Props, State> {
       decorators = [interactable, hoverable];
     } else {
       const element = this.props.getById(this.props.element);
-      const { features } = element.constructor as typeof Element;
-      if (features.editable) decorators.push(editable);
-      if (
-        element instanceof Container &&
-        (element.constructor as typeof Container).features.droppable
-      )
-        decorators.push(droppable);
-      if (features.connectable) decorators.push(connectable);
-      if (features.resizable !== 'NONE') decorators.push(resizable);
-      if (features.movable) decorators.push(movable);
-      if (features.selectable) decorators.push(selectable);
-      if (features.hoverable) decorators.push(hoverable);
+      if (element) {
+        const { features } = element.constructor as typeof Element;
+        if (features.editable) decorators.push(editable);
+        if (
+          element instanceof Container &&
+          (element.constructor as typeof Container).features.droppable
+        )
+          decorators.push(droppable);
+        if (features.connectable) decorators.push(connectable);
+        if (features.resizable !== 'NONE') decorators.push(resizable);
+        if (features.movable) decorators.push(movable);
+        if (features.selectable) decorators.push(selectable);
+        if (features.hoverable) decorators.push(hoverable);
+      }
     }
 
     return compose<typeof ElementComponent>(...decorators)(ElementComponent);
@@ -71,7 +69,7 @@ class LayoutedElement extends Component<Props, State> {
   render() {
     const Component = this.component;
     const element = this.props.getById(this.props.element);
-    if (!Object.keys(element).length) return null;
+    if (!element) return null;
     return (
       <Component
         element={element}
@@ -92,7 +90,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  getById: (id: string) => Element;
+  getById: (id: string) => Element | null;
   readonly: boolean;
   view: ApollonView;
   mode: ApollonMode;

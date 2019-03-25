@@ -3,7 +3,7 @@ import { RelationshipKind, UMLClassAssociation } from '../..';
 import Element from '../../../../Element';
 
 class ClassRealization extends ClassAssociation {
-  kind = RelationshipKind.ClassRealization;
+  type = RelationshipKind.ClassRealization;
 
   static toUMLRelationship(
     relationship: ClassAssociation

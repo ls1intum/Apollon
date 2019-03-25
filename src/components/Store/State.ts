@@ -153,7 +153,7 @@ class State {
     return {
       version: '2.0',
       size,
-      type: state.diagram.type,
+      type: state.diagram.type2,
       interactive,
       elements: e.reduce<{ [id: string]: UMLElement }>(
         (o, e) => ({ ...o, [e.id]: e }),

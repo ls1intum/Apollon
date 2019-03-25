@@ -13,15 +13,15 @@ abstract class Classifier extends Container {
   };
 
   get isAbstract() {
-    return this.kind === ElementKind.AbstractClass;
+    return this.type === ElementKind.AbstractClass;
   }
 
   get isInterface() {
-    return this.kind === ElementKind.Interface;
+    return this.type === ElementKind.Interface;
   }
 
   get isEnumeration() {
-    return this.kind === ElementKind.Enumeration;
+    return this.type === ElementKind.Enumeration;
   }
 
   get headerHeight() {

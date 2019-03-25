@@ -59,10 +59,10 @@ export class ApollonEditor {
     const { elements } = this.store.getState();
     const selection: Selection = {
       elements: Object.keys(elements).filter(
-        id => elements[id].selected && elements[id].base !== 'Relationship'
+        id => elements[id].selected && !('path' in elements[id])
       ),
       relationships: Object.keys(elements).filter(
-        id => elements[id].selected && elements[id].base === 'Relationship'
+        id => elements[id].selected && 'path' in elements[id]
       ),
     };
 

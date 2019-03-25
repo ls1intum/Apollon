@@ -8,7 +8,7 @@ class Package extends Container {
     editable: false,
   };
 
-  kind = ElementKind.Package;
+  type = ElementKind.Package;
 }
 
 export default Package;

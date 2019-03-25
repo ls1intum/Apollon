@@ -44,7 +44,7 @@ class ElementComponent extends Component<Props> {
 
   render() {
     const { element, interactable } = this.props;
-    const Component = (Plugins as any)[`${element.kind}Component`];
+    const Component = (Plugins as any)[`${element.type}Component`];
 
     const strokeWidth = 5;
     return (

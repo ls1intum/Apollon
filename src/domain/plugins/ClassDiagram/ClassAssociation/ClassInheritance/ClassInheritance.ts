@@ -3,7 +3,7 @@ import { RelationshipKind, UMLClassAssociation } from '../..';
 import Element from '../../../../Element';
 
 class ClassInheritance extends ClassAssociation {
-  kind = RelationshipKind.ClassInheritance;
+  type = RelationshipKind.ClassInheritance;
 
   static toUMLRelationship(
     relationship: ClassAssociation

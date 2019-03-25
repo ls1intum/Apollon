@@ -4,7 +4,7 @@ import { ElementKind } from '../Element';
 import { DiagramType } from './../plugins/DiagramType';
 
 class Diagram extends Container {
-  readonly kind: ElementKind = ElementKind.Diagram;
+  readonly type: ElementKind = ElementKind.Diagram;
 
   bounds: Boundary = {
     ...this.bounds,
@@ -15,7 +15,7 @@ class Diagram extends Container {
   ownedElements: string[] = [];
   ownedRelationships: string[] = [];
 
-  constructor(public type: DiagramType) {
+  constructor(public type2: DiagramType) {
     super('');
   }
 }

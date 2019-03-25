@@ -1,7 +1,7 @@
 import { Action } from 'redux';
 import Element from '.';
 import ElementKind from '../plugins/ElementKind';
-import Omit from '../utils/Omit';
+import { IElement } from './Element';
 
 export const enum ActionTypes {
   CREATE = '@@element/CREATE',
@@ -112,5 +112,5 @@ export type Actions =
   | DeleteAction;
 
 export interface State {
-  readonly [id: string]: Element;
+  readonly [id: string]: IElement;
 }

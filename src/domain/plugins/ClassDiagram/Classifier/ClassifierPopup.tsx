@@ -16,6 +16,7 @@ import {
   Header,
   Trashcan,
 } from '../../../../components/Popup/Controls';
+import { notEmpty } from '../../../utils';
 
 const Flex = styled.div`
   display: flex;
@@ -53,7 +54,7 @@ class ClassifierComponent extends Component<Props> {
 
   private toggle = (kind: ElementKind) => () => {
     const { element, change } = this.props;
-    change(element.id, element.kind === kind ? ElementKind.Class : kind);
+    change(element.id, element.type === kind ? ElementKind.Class : kind);
   };
 
   private delete = (id: string) => () => {
@@ -62,7 +63,7 @@ class ClassifierComponent extends Component<Props> {
 
   render() {
     const { element, getById } = this.props;
-    const children = element.ownedElements.map(id => getById(id));
+    const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
     const attributes = children.filter(
       child => child instanceof ClassAttribute
     );
@@ -136,7 +137,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  getById: (id: string) => Element;
+  getById: (id: string) => Element | null;
 }
 
 interface DispatchProps {

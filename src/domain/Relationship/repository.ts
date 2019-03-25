@@ -18,13 +18,13 @@ class Repository {
     if (!Object.keys(relationship).length) return relationship as Relationship;
     return Object.setPrototypeOf(
       relationship,
-      (<any>Plugins)[relationship.kind].prototype
+      (<any>Plugins)[relationship.type].prototype
     );
   };
 
   static read = (state: State): Relationship[] => {
     return Object.values(state)
-      .filter(element => element.base === 'Relationship')
+      .filter(element => 'path' in element)
       .map(relationship =>
         Repository.getById({ [relationship.id]: state[relationship.id] })(
           relationship.id

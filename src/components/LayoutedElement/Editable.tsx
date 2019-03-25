@@ -30,6 +30,7 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
         let ownerID = this.props.element.owner;
         while (ownerID) {
           const owner = this.props.getById(ownerID);
+          if (!owner) break;
           x += owner.bounds.x;
           y += owner.bounds.y;
           ownerID = owner.owner;
@@ -63,7 +64,7 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface StateProps {
-    getById: (id: string) => Element;
+    getById: (id: string) => Element | null;
   }
 
   interface DispatchProps {}

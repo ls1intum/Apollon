@@ -162,7 +162,7 @@ const connectable = (
   type Props = OwnProps & StateProps & DispatchProps;
 
   return connect<StateProps, DispatchProps, OwnProps, ReduxState>(
-    state => ({ diagramType: state.diagram.type }),
+    state => ({ diagramType: state.diagram.type2 }),
     { create: ElementRepository.create }
   )(Connectable);
 };

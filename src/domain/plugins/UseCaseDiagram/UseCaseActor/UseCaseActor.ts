@@ -3,7 +3,7 @@ import Boundary from '../../../geo/Boundary';
 import { ElementKind } from '..';
 
 class UseCaseActor extends Element {
-  kind = ElementKind.UseCaseActor;
+  type = ElementKind.UseCaseActor;
   bounds: Boundary = { ...this.bounds, width: 90, height: 140 }
 }
 

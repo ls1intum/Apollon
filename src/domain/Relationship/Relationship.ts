@@ -8,9 +8,7 @@ import Point from '../geometry/Point';
 abstract class Relationship extends Element {
   static features = { ...Element.features, straight: false };
 
-  abstract readonly kind: RelationshipKind;
-
-  readonly base: string = 'Relationship';
+  abstract readonly type: RelationshipKind;
 
   path: { x: number; y: number }[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
 
@@ -22,7 +20,7 @@ abstract class Relationship extends Element {
     return {
       id: relationship.id,
       name: relationship.name,
-      type: relationship.kind,
+      type: relationship.type,
       source: relationship.source,
       target: relationship.target,
       path: relationship.path,
@@ -38,6 +36,7 @@ abstract class Relationship extends Element {
     let current: Element = elements.find(
       e => e.id === umlRelationship.source.element
     )!;
+    console.log(current);
     let sourceRect: Boundary = { ...current.bounds };
     while (current.owner) {
       current = elements.find(e => e.id === current.owner)!;
@@ -76,7 +75,7 @@ abstract class Relationship extends Element {
       {
         id: umlRelationship.id,
         name: umlRelationship.name,
-        kind: umlRelationship.type,
+        type: umlRelationship.type,
         source: umlRelationship.source,
         target: umlRelationship.target,
         base: 'Relationship',

@@ -4,7 +4,7 @@ import { RelationshipKind } from '..';
 class UseCaseExtend extends Relationship {
   static features = { ...Relationship.features, straight: true };
 
-  kind = RelationshipKind.UseCaseExtend;
+  type = RelationshipKind.UseCaseExtend;
 }
 
 export default UseCaseExtend;

@@ -10,7 +10,7 @@ class ObjectName extends Container {
     resizable: 'WIDTH' as 'WIDTH' | 'BOTH' | 'HEIGHT' | 'NONE',
   };
 
-  kind = ElementKind.ObjectName;
+  type = ElementKind.ObjectName;
 
   get headerHeight() {
     return 40;

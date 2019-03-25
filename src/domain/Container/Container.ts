@@ -3,8 +3,6 @@ import { UMLElement } from '../..';
 
 abstract class Container extends Element {
   static features = { ...Element.features, droppable: true };
-
-  base = 'Container';
   ownedElements: string[] = [];
 
   render(children: Element[]): Element[] {

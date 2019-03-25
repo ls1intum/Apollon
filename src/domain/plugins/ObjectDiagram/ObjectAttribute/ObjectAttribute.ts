@@ -14,7 +14,7 @@ class ObjectAttribute extends Element {
     editable: false,
   };
 
-  kind = ElementKind.ObjectAttribute;
+  type = ElementKind.ObjectAttribute;
   bounds: Boundary = { ...this.bounds, height: 30 };
 
   static calculateWidth = (value: string): number => {

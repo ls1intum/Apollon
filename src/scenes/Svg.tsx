@@ -22,7 +22,7 @@ const getInitialState = ({ state, options }: Props): State => {
     for (const id of ids) {
       const element = Object.setPrototypeOf(
         state.elements[id],
-        (Plugins as any)[state.elements[id].kind].prototype
+        (Plugins as any)[state.elements[id].type].prototype
       );
       if (include && include.includes(id)) {
         result.push(id);
@@ -81,7 +81,7 @@ const getInitialState = ({ state, options }: Props): State => {
             y: element.bounds.y - bounds.y,
           },
         },
-        (Plugins as any)[element.kind].prototype
+        (Plugins as any)[element.type].prototype
       )
     );
   return { bounds, elements };
@@ -91,7 +91,7 @@ const normalizeState = (state: ReduxState): Element[] => {
   let elements: Element[] = state.diagram.ownedElements
     .map(id => state.elements[id])
     .map(element =>
-      Object.setPrototypeOf(element, (Plugins as any)[element.kind].prototype)
+      Object.setPrototypeOf(element, (Plugins as any)[element.type].prototype)
     );
 
   const positionChildren = (element: Element): Element[] => {
@@ -123,7 +123,7 @@ const normalizeState = (state: ReduxState): Element[] => {
   const relationships: Relationship[] = state.diagram.ownedRelationships
     .map(id => state.elements[id])
     .map(element =>
-      Object.setPrototypeOf(element, (Plugins as any)[element.kind].prototype)
+      Object.setPrototypeOf(element, (Plugins as any)[element.type].prototype)
     );
   return [...elements, ...relationships];
 };
@@ -157,7 +157,7 @@ export class Svg extends Component<Props, State> {
           <style>{`text { fill: black } * { overflow: visible; }`}</style>
         </defs>
         {elements.map(element => {
-          const Component = (Plugins as any)[`${element.kind}Component`];
+          const Component = (Plugins as any)[`${element.type}Component`];
           return (
             <svg {...element.bounds} key={element.id} className={element.name}>
               <Component element={element} />

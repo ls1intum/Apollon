@@ -3,7 +3,7 @@ import { ElementKind } from '..';
 
 class UseCaseSystem extends Container {
   static features = { ...Container.features, connectable: false };
-  kind = ElementKind.UseCaseSystem;
+  type = ElementKind.UseCaseSystem;
 }
 
 export default UseCaseSystem;

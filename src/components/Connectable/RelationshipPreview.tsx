@@ -30,6 +30,7 @@ class RelationshipPreview extends Component<Props, State> {
     if (this.props.port) {
       const { element: id, direction: location } = this.props.port;
       const element = this.props.getById(id);
+      if (!element) return [];
       switch (location) {
         case Direction.Up:
           path.push({
@@ -76,6 +77,7 @@ class RelationshipPreview extends Component<Props, State> {
       let ownerID = element.owner;
       while (ownerID) {
         const owner = this.props.getById(ownerID);
+        if (!owner) break;
         path = path.map(({ x, y }) => ({
           x: x + owner.bounds.x,
           y: y + owner.bounds.y,
@@ -126,7 +128,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  getById: (id: string) => Element;
+  getById: (id: string) => Element | null;
 }
 
 type Props = OwnProps & StateProps & CanvasContext;

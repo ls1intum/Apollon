@@ -3,7 +3,7 @@ import { ElementKind } from '..';
 import Boundary from '../../../geo/Boundary';
 
 class ActivityMergeNode extends Element {
-  kind = ElementKind.ActivityMergeNode;
+  type = ElementKind.ActivityMergeNode;
   bounds: Boundary = { ...this.bounds, height: 60 };
 }
 

@@ -3,7 +3,7 @@ import { ElementKind, UMLClassifier } from '../..';
 import Element from '../../../../Element';
 
 class Class extends Classifier {
-  kind = ElementKind.Class;
+  type = ElementKind.Class;
 
   static toUMLElement(
     element: Classifier,

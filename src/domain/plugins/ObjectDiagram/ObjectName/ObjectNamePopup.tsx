@@ -12,6 +12,7 @@ import {
   Header,
   Trashcan,
 } from '../../../../components/Popup/Controls';
+import { notEmpty } from '../../../utils';
 
 const Flex = styled.div`
   display: flex;
@@ -51,7 +52,7 @@ class ObjectNamePopup extends Component<Props> {
 
   render() {
     const { element, getById } = this.props;
-    const children = element.ownedElements.map(id => getById(id));
+    const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
     const attributes = children.filter(
       child => child instanceof ObjectAttribute
     );
@@ -85,7 +86,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  getById: (id: string) => Element;
+  getById: (id: string) => Element | null;
 }
 
 interface DispatchProps {

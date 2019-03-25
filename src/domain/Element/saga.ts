@@ -77,13 +77,13 @@ function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
   }
   yield update(current.id, !current.interactive);
 
-  if (current.base === 'Container') {
+  if ('ownedElements' in current) {
     const rec = (id: string): ReturnType<typeof update>[] => {
       const element = elements[id];
       if (element.interactive) {
         return [update(element.id, false)];
       }
-      if (element.base === 'Container') {
+      if ('ownedElements' in element) {
         return (current as Container).ownedElements.reduce<
           ReturnType<typeof update>[]
         >((a, o) => {

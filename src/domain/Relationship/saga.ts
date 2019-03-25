@@ -106,7 +106,7 @@ function* handleElementDelete({ payload }: DeleteAction) {
 
   const { elements }: State = yield select();
   const relationships = Object.values(elements)
-    .filter(element => element.base === 'Relationship')
+    .filter(element => 'path' in element)
     .map<Relationship>(element =>
       RelationshipRepository.getById(elements)(element.id)
     )

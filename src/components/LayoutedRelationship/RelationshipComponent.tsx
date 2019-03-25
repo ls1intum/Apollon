@@ -13,7 +13,7 @@ class RelationshipComponent extends Component<Props> {
 
   render() {
     const { element, disabled } = this.props;
-    const Component = (Plugins as any)[`${element.kind}Component`];
+    const Component = (Plugins as any)[`${element.type}Component`];
     const points = element.path.map(point => `${point.x} ${point.y}`).join(',');
 
     return (

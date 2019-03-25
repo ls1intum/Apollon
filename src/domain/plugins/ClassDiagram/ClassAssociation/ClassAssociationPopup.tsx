@@ -43,6 +43,7 @@ class ClassAssociationComponent extends Component<Props> {
     const { element, getById } = this.props;
     const source = getById(element.source.element);
     const target = getById(element.target.element);
+    if (!source || !target) return null;
 
     return (
       <div>
@@ -51,7 +52,7 @@ class ClassAssociationComponent extends Component<Props> {
           <Divider />
         </Section>
         <Section>
-          <Dropdown value={element.kind} onChange={this.onChange}>
+          <Dropdown value={element.type} onChange={this.onChange}>
             <Dropdown.Item value={RelationshipKind.ClassAggregation}>
               Aggregation
             </Dropdown.Item>
@@ -121,7 +122,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  getById: (id: string) => Element;
+  getById: (id: string) => Element | null;
 }
 
 interface DispatchProps {

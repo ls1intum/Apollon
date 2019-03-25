@@ -2,7 +2,7 @@ import Relationship from '../../../Relationship';
 import { RelationshipKind } from '..';
 
 class ActivityControlFlow extends Relationship {
-  kind = RelationshipKind.ActivityControlFlow;
+  type = RelationshipKind.ActivityControlFlow;
 }
 
 export default ActivityControlFlow;

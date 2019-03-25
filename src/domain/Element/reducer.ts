@@ -67,7 +67,7 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
       const { payload } = action;
       return {
         ...state,
-        [payload.id]: { ...state[payload.id], kind: payload.kind },
+        [payload.id]: { ...state[payload.id], type: payload.kind },
       };
     }
     case ActionTypes.RENAME: {

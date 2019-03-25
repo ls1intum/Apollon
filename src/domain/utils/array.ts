@@ -6,6 +6,10 @@ export function toggle<T>(value: T, array: T[]): T[] {
     return array.includes(value) ? array.filter(element => element !== value) : [...array, value];
 }
 
+export function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+    return value !== null && value !== undefined;
+}
+
 export function distinct<T>(elements: T[]): T[] {
     const seen = new Set<T>();
     const distinctElements: T[] = [];

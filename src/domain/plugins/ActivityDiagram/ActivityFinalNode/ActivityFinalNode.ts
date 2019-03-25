@@ -5,7 +5,7 @@ import Boundary from '../../../geo/Boundary';
 class ActivityFinalNode extends Element {
   static features = { ...Element.features, editable: false };
 
-  kind = ElementKind.ActivityFinalNode;
+  type = ElementKind.ActivityFinalNode;
   bounds: Boundary = { ...this.bounds, width: 45, height: 45 };
 }
 

@@ -4,7 +4,7 @@ import { RelationshipKind } from '..';
 class UseCaseAssociation extends Relationship {
   static features = { ...Relationship.features, straight: true };
 
-  kind = RelationshipKind.UseCaseAssociation;
+  type = RelationshipKind.UseCaseAssociation;
 }
 
 export default UseCaseAssociation;

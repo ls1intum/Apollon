@@ -80,7 +80,7 @@ const ClassAssociationComponent: SFC<Props> = ({ element }) => {
       case RelationshipKind.ClassRealization:
         return Marker.Triangle;
     }
-  })(element.kind);
+  })(element.type);
 
   const stroke = (type => {
     switch (type) {
@@ -88,7 +88,7 @@ const ClassAssociationComponent: SFC<Props> = ({ element }) => {
       case RelationshipKind.ClassRealization:
         return 7;
     }
-  })(element.kind);
+  })(element.type);
 
   const computeTextPosition = (
     path: Point[],

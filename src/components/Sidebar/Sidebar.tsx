@@ -101,7 +101,7 @@ class Sidebar extends Component<Props, State> {
     this.refresh();
 
     setTimeout(() => {
-      switch (element.kind) {
+      switch (element.type) {
         case ElementKind.Class:
         case ElementKind.AbstractClass:
         case ElementKind.Interface:
@@ -206,7 +206,7 @@ interface State {
 
 export default connect<StateProps, DispatchProps, {}, ReduxState>(
   state => ({
-    diagramType: state.diagram.type,
+    diagramType: state.diagram.type2,
     readonly: state.editor.readonly,
     mode: state.editor.mode,
     view: state.editor.view,

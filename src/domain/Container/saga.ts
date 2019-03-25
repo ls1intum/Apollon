@@ -15,6 +15,7 @@ import {
   AppendChildAction,
   RemoveChildAction,
 } from './types';
+import { notEmpty } from '../utils';
 
 function* saga() {
   yield takeLatest(ActionTypes.CHANGE_OWNER, handleOwnerChange);
@@ -71,7 +72,9 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 function* handleElementCreation({ payload }: CreateAction) {
   if (payload.element instanceof Container) {
     const updates = payload.element.render([]);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 
@@ -83,10 +86,13 @@ function* handleChildAdd({ payload }: CreateAction) {
   if (parent instanceof Container) {
     const children = parent.ownedElements
       .filter(id => id !== payload.element.id)
-      .map(ElementRepository.getById(elements));
+      .map(ElementRepository.getById(elements))
+      .filter(notEmpty);
 
     const updates = parent.addElement(payload.element, children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 
@@ -101,29 +107,35 @@ function* handleElementDelete({ payload }: DeleteAction) {
   yield all(children.map(id => put(ElementRepository.delete(id))));
 
   const parent = Object.keys(elements)
-    .filter(id => elements[id].base === 'Container')
+    .filter(id => 'ownedElements' in elements[id])
     .map<Container>(id => ElementRepository.getById(elements)(id) as Container)
     .find(element => element.ownedElements.includes(elementId));
 
   if (parent) {
     const children = parent.ownedElements
       .filter(id => id !== payload.id)
-      .map(ElementRepository.getById(elements));
+      .map(ElementRepository.getById(elements))
+      .filter(notEmpty);
 
     const updates = parent.removeElement(elementId, children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 
 function* handleElementChange({ payload }: ChangeAction) {
   const { elements }: State = yield select();
   const element = ElementRepository.getById(elements)(payload.id);
+  if (!element) return;
   if (element instanceof Container) {
-    const children = element.ownedElements.map(
-      ElementRepository.getById(elements)
-    );
+    const children = element.ownedElements
+      .map(ElementRepository.getById(elements))
+      .filter(notEmpty);
     const updates = element.render(children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 
@@ -131,11 +143,13 @@ function* handleElementResize({ payload }: ResizeAction) {
   const { elements }: State = yield select();
   const element = ElementRepository.getById(elements)(payload.id);
   if (element instanceof Container) {
-    const children = element.ownedElements.map(
-      ElementRepository.getById(elements)
-    );
+    const children = element.ownedElements
+      .map(ElementRepository.getById(elements))
+      .filter(notEmpty);
     const updates = element.resizeElement(children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 

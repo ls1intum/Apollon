@@ -24,7 +24,8 @@ const droppable = (WrappedComponent: typeof ElementComponent) => {
 
       let ownerID: string | null = this.props.element.id;
       while (ownerID) {
-        const owner: Element = this.props.getById(ownerID);
+        const owner = this.props.getById(ownerID);
+        if (!owner) break;
         element.bounds.x -= owner.bounds.x;
         element.bounds.y -= owner.bounds.y;
         ownerID = owner.owner;
@@ -43,7 +44,7 @@ const droppable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface StateProps {
-    getById: (id: string) => Element;
+    getById: (id: string) => Element | null;
   }
 
   interface DispatchProps {

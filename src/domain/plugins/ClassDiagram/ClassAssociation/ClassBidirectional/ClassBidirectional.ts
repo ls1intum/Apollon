@@ -3,7 +3,7 @@ import { RelationshipKind, UMLClassAssociation } from '../..';
 import Element from '../../../../Element';
 
 class ClassBidirectional extends ClassAssociation {
-  kind = RelationshipKind.ClassBidirectional;
+  type = RelationshipKind.ClassBidirectional;
 
   static toUMLRelationship(
     relationship: ClassAssociation

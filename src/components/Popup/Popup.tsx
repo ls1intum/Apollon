@@ -25,7 +25,7 @@ export class Popup extends Component<Props> {
     if (this.props.mode === ApollonMode.Assessment) {
       Component = AssessmentPopup
     } else {
-      Component = (Plugins as any)[`${this.props.element.kind}Popup`];
+      Component = (Plugins as any)[`${this.props.element.type}Popup`];
       if (!Component) {
         if (this.props.element instanceof Relationship) {
           return null;
