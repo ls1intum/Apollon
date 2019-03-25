@@ -15,7 +15,7 @@ import {
   ChangeAction,
   RenameAction,
 } from './types';
-import Element from '.';
+import { Element } from '.';
 import * as Plugins from '../plugins';
 import Point from '../geometry/Point';
 import ElementKind from '../plugins/ElementKind';
@@ -82,6 +82,7 @@ class Repository {
     if (!element) return null;
 
     const ElementClass = elements[element.type as ElementKind];
+    console.log(element.type, ElementClass);
     if (!ElementClass) return null;
 
     return new ElementClass(element);

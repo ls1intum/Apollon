@@ -1,4 +1,4 @@
-import Element from '../../../Element';
+import { Element } from '../../../Element';
 import { ElementKind } from '..';
 
 class UseCase extends Element {

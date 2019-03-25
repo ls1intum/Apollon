@@ -1,4 +1,4 @@
-import Element, { IElement } from './../Element';
+import { Element, IElement } from './../Element';
 import { UMLElement } from '../..';
 
 export interface IContainer extends IElement {
@@ -45,7 +45,7 @@ abstract class Container extends Element implements IContainer {
         id: umlElement.id,
         name: umlElement.name,
         owner: umlElement.owner,
-        kind: umlElement.type,
+        type: umlElement.type,
         bounds: umlElement.bounds,
         base: 'Container',
         hovered: false,

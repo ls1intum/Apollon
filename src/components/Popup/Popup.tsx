@@ -3,7 +3,7 @@ import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { ModelState } from './../Store';
 import { Container, Arrow, Content } from './styles';
-import Element, { ElementRepository } from '../../domain/Element';
+import { Element, ElementRepository } from '../../domain/Element';
 import { Point } from '../../domain/geo';
 import { withCanvas, CanvasContext } from '../Canvas';
 import * as Plugins from '../../domain/plugins/Popups';

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { ModelState } from './../Store';
-import Element, { ElementRepository } from './../../domain/Element';
+import { Element, ElementRepository } from './../../domain/Element';
 import ElementComponent, {
   OwnProps as ComponentProps,
 } from './ElementComponent';

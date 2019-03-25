@@ -1,6 +1,6 @@
 import { takeLatest, takeEvery, put, all, select } from 'redux-saga/effects';
 import { ModelState } from './../../components/Store';
-import Element, { ElementRepository, ElementActionTypes } from './../Element';
+import { Element, ElementRepository, ElementActionTypes } from './../Element';
 import RelationshipRepository from './repository';
 import { RedrawAction, ActionTypes, ConnectAction } from './types';
 import { MoveAction, DeleteAction, CreateAction } from '../Element/types';

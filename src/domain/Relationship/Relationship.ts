@@ -1,4 +1,4 @@
-import Element, { IElement } from './../Element';
+import { Element, IElement } from './../Element';
 import Port, { Connection } from '../Port';
 import RelationshipKind from '../plugins/RelationshipKind';
 import { UMLRelationship } from '../..';

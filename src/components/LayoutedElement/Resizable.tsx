@@ -2,7 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { ModelState } from './../Store';
-import Element, { ElementRepository } from './../../domain/Element';
+import { Element, ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { compose } from 'redux';
 import { withCanvas, CanvasContext } from '../Canvas';

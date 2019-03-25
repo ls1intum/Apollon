@@ -5,8 +5,7 @@ import { ModelState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { Droppable as DragDroppable, DropEvent } from './../Draggable';
 import { withCanvas, CanvasContext } from './../Canvas';
-import Element, { ElementRepository } from '../../domain/Element';
-import { ContainerRepository } from '../../domain/Container';
+import { Element, ElementRepository } from '../../domain/Element';
 
 const droppable = (WrappedComponent: typeof ElementComponent) => {
   class Droppable extends Component<Props> {

@@ -2,7 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { ModelState } from './../Store';
-import Element, { ElementRepository } from './../../domain/Element';
+import { Element, ElementRepository } from './../../domain/Element';
 import { Point } from './../../domain/geo';
 import Port from './../../domain/Port';
 import { withCanvas, CanvasContext } from '../Canvas';

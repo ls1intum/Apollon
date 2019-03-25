@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from './../Store';
-import Element from '../../domain/Element';
+import { Element } from '../../domain/Element';
 import { Section, Header, Divider, TextField } from './Controls';
 import { Assessment } from '../..';
 import { AssessmentRepository } from '../../services/assessments';

@@ -1,5 +1,5 @@
 import React, { SFC, createContext, ComponentType } from 'react';
-import Element from '../../domain/Element';
+import { Element } from '../../domain/Element';
 
 export interface PopupContext {
   showPopup: (element: Element, position: { x: number; y: number }) => void;

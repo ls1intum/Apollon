@@ -1,4 +1,4 @@
-import Element from '../../../Element';
+import { Element } from '../../../Element';
 import Container from '../../../Container';
 import { ElementKind, UMLClassifier } from '..';
 import ClassMember from '../ClassMember/ClassMember';

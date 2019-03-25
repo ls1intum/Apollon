@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PopupContext, { PopupProvider } from './PopupContext';
 import Popup from './Popup';
-import Element from '../../domain/Element';
+import { Element } from '../../domain/Element';
 
 class PopupLayer extends Component<{}, State> {
   popup: React.RefObject<HTMLDivElement> = React.createRef();

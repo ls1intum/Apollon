@@ -1,6 +1,6 @@
 import Classifier from '../Classifier';
 import { ElementKind, UMLClassifier } from '../..';
-import Element from '../../../../Element';
+import { Element } from '../../../../Element';
 
 class AbstractClass extends Classifier {
   type = ElementKind.AbstractClass;

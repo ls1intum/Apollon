@@ -10,7 +10,7 @@ import {
   MakeInteractiveAction,
   UpdateAction,
 } from './types';
-import Element from './Element';
+import { Element } from './Element';
 import Repository from './repository';
 import Container from '../Container';
 import { DiagramRepository } from '../Diagram';

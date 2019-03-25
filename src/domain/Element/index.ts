@@ -1,4 +1,4 @@
-export { default, IElement } from './Element';
+export { Element, IElement } from './Element';
 export { default as ElementKind } from './../plugins/ElementKind';
 export {
   ActionTypes as ElementActionTypes,

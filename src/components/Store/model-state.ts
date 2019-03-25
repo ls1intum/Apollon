@@ -1,7 +1,4 @@
-import Element, {
-  ElementState,
-  ElementRepository,
-} from '../../domain/Element';
+import { Element, ElementState, ElementRepository } from '../../domain/Element';
 import { Diagram, DiagramState } from '../../domain/Diagram';
 import { EditorState, ApollonView } from '../../services/editor';
 import {
@@ -9,7 +6,6 @@ import {
   UMLElement,
   UMLRelationship,
   Selection,
-  Assessment,
   ApollonMode,
 } from '../..';
 import Relationship, {

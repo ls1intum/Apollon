@@ -1,5 +1,5 @@
 import ElementKind from './ElementKind';
-import Element, { IElement } from './../Element';
+import { Element, IElement } from './../Element';
 import { Class } from './ClassDiagram/Classifier/Class';
 import { AbstractClass } from './ClassDiagram/Classifier/AbstractClass';
 import { Interface } from './ClassDiagram/Classifier/Interface';

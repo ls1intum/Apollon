@@ -8,7 +8,7 @@ import {
   EditorModeSelectionSegment,
 } from './styles';
 import { DiagramType } from './../../domain/Diagram';
-import Element, { ElementRepository, ElementKind } from '../../domain/Element';
+import { Element, ElementRepository, ElementKind } from '../../domain/Element';
 import { Draggable, DropEvent } from './../Draggable';
 import ElementComponent from './../LayoutedElement/ElementComponent';
 import { CanvasProvider } from '../Canvas/CanvasContext';

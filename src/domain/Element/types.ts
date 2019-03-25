@@ -1,5 +1,5 @@
 import { Action } from 'redux';
-import Element from '.';
+import { Element } from '.';
 import ElementKind from '../plugins/ElementKind';
 import { IElement } from './Element';
 
@@ -87,7 +87,7 @@ export interface RenameAction extends Action<ActionTypes.RENAME> {
 
 export interface UpdateAction extends Action<ActionTypes.UPDATE> {
   payload: {
-    id: string,
+    id: string;
     values: Partial<Element>;
   };
 }
