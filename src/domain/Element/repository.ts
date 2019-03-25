@@ -20,6 +20,7 @@ import * as Plugins from '../plugins';
 import Point from '../geometry/Point';
 import ElementKind from '../plugins/ElementKind';
 import { elements } from './../plugins/elements';
+import { notEmpty } from '../utils';
 
 class Repository {
   static create = (element: Element): CreateAction => ({
@@ -78,17 +79,10 @@ class Repository {
 
   static getById = (state: ElementState) => (id: string): Element | null => {
     const element = state[id];
-    if (!element)
-      return null;
+    if (!element) return null;
 
     const ElementClazz = elements[element.type as ElementKind];
-    const result = new ElementClazz(element);
-    return result;
-
-    // return Object.setPrototypeOf(
-    //   element,
-    //   (<any>Plugins)[element.type].prototype
-    // );
+    return new ElementClazz(element);
   };
 
   static read = (state: State): Element[] => {
@@ -101,9 +95,11 @@ class Repository {
       {}
     );
 
-    return Object.values(elements).map((e) =>
-      Object.setPrototypeOf(e, (<any>Plugins)[e.type].prototype)
-    );
+    return Object.values(elements)
+      .map<Element | null>(element =>
+        Repository.getById(state.elements)(element.id)
+      )
+      .filter(notEmpty);
   };
 
   static parse = (state: State): ElementState => {

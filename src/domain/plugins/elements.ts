@@ -15,7 +15,7 @@ import { ActivityMergeNode } from './ActivityDiagram/ActivityMergeNode';
 import { UseCase } from './UseCaseDiagram/UseCase';
 import { UseCaseActor } from './UseCaseDiagram/UseCaseActor';
 import { UseCaseSystem } from './UseCaseDiagram/UseCaseSystem';
-import Diagram from '../Diagram/Diagram';
+import { Diagram } from '../Diagram/Diagram';
 import { Package } from './Common/Package';
 import { ClassAttribute } from './ClassDiagram/ClassMember/ClassAttribute';
 import { ClassMethod } from './ClassDiagram/ClassMember/ClassMethod';

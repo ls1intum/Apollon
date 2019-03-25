@@ -2,7 +2,7 @@ import Element, {
   ElementState,
   ElementRepository,
 } from './../../domain/Element';
-import Diagram, { DiagramState } from './../../domain/Diagram';
+import { Diagram, DiagramState } from './../../domain/Diagram';
 import { EditorState, ApollonView } from './../../services/editor';
 import {
   UMLModel,

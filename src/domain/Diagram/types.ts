@@ -1,6 +1,5 @@
 import { Action as ReduxAction } from 'redux';
-import Diagram from './Diagram';
-import Omit from '../utils/Omit';
+import { IDiagram } from './Diagram';
 
 export const enum ActionTypes {
   ADD_ELEMENT = '@@diagram/ADD_ELEMENT',
@@ -42,8 +41,4 @@ export type Actions =
   | DeleteElementAction
   | DeleteRelationshipAction;
 
-export interface State
-  extends Omit<
-    Diagram,
-    'render' | 'addElement' | 'removeElement' | 'resizeElement'
-  > {}
+export interface State extends IDiagram {}

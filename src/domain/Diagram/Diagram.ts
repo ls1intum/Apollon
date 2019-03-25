@@ -1,28 +1,48 @@
 import Container from './../Container';
 import Boundary from './../geo/Boundary';
-import { ElementKind, IElement } from '../Element';
+import { ElementKind } from '../Element';
 import { DiagramType } from './../plugins/DiagramType';
+import { IContainer } from '../Container/Container';
 
-interface IDiagram extends IElement {
+export interface IDiagram extends IContainer {
   type2: DiagramType;
+  ownedRelationships: string[];
 }
 
-class Diagram extends Container {
-  readonly type: ElementKind = ElementKind.Diagram;
+export class Diagram extends Container implements IDiagram {
+  type: ElementKind = ElementKind.Diagram;
+  type2: DiagramType = DiagramType.ClassDiagram;
+  ownedElements: string[] = [];
+  ownedRelationships: string[] = [];
 
   bounds: Boundary = {
     ...this.bounds,
     width: 1600,
     height: 1600,
   };
-  public type2: DiagramType = DiagramType.ClassDiagram;
-
-  ownedElements: string[] = [];
-  ownedRelationships: string[] = [];
 
   constructor(values?: Partial<IDiagram>) {
     super(values);
+    Object.assign(this, values);
   }
 }
 
-export default Diagram;
+// class Diagram extends Container {
+//   readonly type: ElementKind = ElementKind.Diagram;
+
+//   bounds: Boundary = {
+//     ...this.bounds,
+//     width: 1600,
+//     height: 1600,
+//   };
+//   type2: DiagramType = DiagramType.ClassDiagram;
+
+//   ownedElements: string[] = [];
+//   ownedRelationships: string[] = [];
+
+//   constructor(values?: Partial<IDiagram>) {
+//     super(values);
+//   }
+// }
+
+// export default Diagram;

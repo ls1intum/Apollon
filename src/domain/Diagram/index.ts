@@ -1,4 +1,4 @@
-export { default } from './Diagram';
+export { Diagram } from './Diagram';
 export { DiagramType } from './../plugins/DiagramType';
 export {
   ActionTypes as DiagramActionTypes,

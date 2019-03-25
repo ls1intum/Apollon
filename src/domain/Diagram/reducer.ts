@@ -1,5 +1,5 @@
 import { Reducer } from 'redux';
-import Diagram from './Diagram';
+import { Diagram } from './Diagram';
 import { State, Actions, ActionTypes } from './types';
 
 const initialState: State = new Diagram();

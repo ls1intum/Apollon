@@ -94,7 +94,7 @@ class Sidebar extends Component<Props, State> {
     this.changeView(view)();
   };
 
-  onDrop = (element: Element) => (event: DropEvent) => { console.log('create', element);
+  onDrop = (element: Element) => (event: DropEvent) => {
     event.action = {
       type: 'CREATE',
       element,
@@ -111,7 +111,6 @@ class Sidebar extends Component<Props, State> {
             new ClassMethod({ name: '+ method()' }),
           ].forEach(member => {
             member.owner = element.id;
-            console.log('add child ', member);
             this.props.create(member);
           });
           break;

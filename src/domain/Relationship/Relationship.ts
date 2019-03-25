@@ -36,7 +36,6 @@ abstract class Relationship extends Element {
     let current: Element = elements.find(
       e => e.id === umlRelationship.source.element
     )!;
-    console.log(current);
     let sourceRect: Boundary = { ...current.bounds };
     while (current.owner) {
       current = elements.find(e => e.id === current.owner)!;

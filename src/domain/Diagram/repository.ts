@@ -1,5 +1,5 @@
 import { State } from '../../components/Store';
-import Diagram from './Diagram';
+import { Diagram } from './Diagram';
 
 class Repository {
   static read = (state: State): Diagram => {

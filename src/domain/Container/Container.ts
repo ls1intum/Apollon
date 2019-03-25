@@ -1,9 +1,18 @@
-import Element from './../Element';
-import { UMLElement } from '../..';
+import Element, { IElement } from './../Element';
 
-abstract class Container extends Element {
+export interface IContainer extends IElement {
+  ownedElements: string[];
+}
+
+abstract class Container extends Element implements IContainer {
   static features = { ...Element.features, droppable: true };
+
   ownedElements: string[] = [];
+
+  constructor(values?: Partial<IContainer>) {
+    super(values);
+    Object.assign(this, values);
+  }
 
   render(children: Element[]): Element[] {
     return [this, ...children];
