@@ -1,9 +1,9 @@
 import Element, {
   ElementState,
   ElementRepository,
-} from './../../domain/Element';
-import { Diagram, DiagramState } from './../../domain/Diagram';
-import { EditorState, ApollonView } from './../../services/editor';
+} from '../../domain/Element';
+import { Diagram, DiagramState } from '../../domain/Diagram';
+import { EditorState, ApollonView } from '../../services/editor';
 import {
   UMLModel,
   UMLElement,
@@ -16,18 +16,18 @@ import Relationship, {
   RelationshipRepository,
 } from '../../domain/Relationship';
 import Container from '../../domain/Container';
-import * as Plugin from './../../domain/plugins';
+import * as Plugin from '../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
 
-interface State {
+export interface ModelState {
   editor: EditorState;
   diagram: DiagramState;
   elements: ElementState;
   assessments: { [id: string]: Assessment };
 }
 
-class State {
-  static fromModel(model: UMLModel): State {
+export class ModelState {
+  static fromModel(model: UMLModel): ModelState {
     let elements: ElementState = Object.values(model.elements)
       .map(umlElement => {
         const Clazz: typeof Element = (<any>Plugin)[umlElement.type];
@@ -89,7 +89,7 @@ class State {
     };
   }
 
-  static toModel(state: State): UMLModel {
+  static toModel(state: ModelState): UMLModel {
     const elements = ElementRepository.read(state);
 
     const parseElement = (element: Element): UMLElement[] => {
@@ -170,5 +170,3 @@ class State {
     };
   }
 }
-
-export default State;

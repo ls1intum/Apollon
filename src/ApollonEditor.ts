@@ -3,13 +3,13 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { Store } from 'redux';
 import { Application } from './scenes/Application';
 import { Svg } from './scenes/Svg';
-import { State } from './components/Store';
+import { ModelState } from './components/Store';
 import { DiagramType } from './domain/Diagram';
 import { ApollonOptions, Selection, UMLModel, ExportOptions, SVG } from '.';
 
 export class ApollonEditor {
   private application: RefObject<Application> = createRef();
-  private store: Store<State> | null = null;
+  private store: Store<ModelState> | null = null;
   private subscribers: Array<(selection: Selection) => void> = [];
 
   selection: Selection = { elements: [], relationships: [] };
@@ -28,7 +28,7 @@ export class ApollonEditor {
         (options.model && options.model.type) ||
         DiagramType.ClassDiagram,
     };
-    let state = State.fromModel(model);
+    let state = ModelState.fromModel(model);
     state = {
       ...state,
       editor: {
@@ -78,7 +78,7 @@ export class ApollonEditor {
 
   get model(): UMLModel {
     if (!this.store) throw new Error('Apollon was already destroyed.');
-    return State.toModel(this.store.getState());
+    return ModelState.toModel(this.store.getState());
   }
 
   subscribeToSelectionChange(callback: (selection: Selection) => void): number {
@@ -96,7 +96,7 @@ export class ApollonEditor {
   static exportModelAsSvg(model: UMLModel, options?: ExportOptions): SVG {
     const div = document.createElement('div');
     const element = createElement(Svg, {
-      state: State.fromModel(model),
+      state: ModelState.fromModel(model),
       options,
     });
     const svg = render(element, div);

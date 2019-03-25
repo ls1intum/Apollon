@@ -2,7 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withCanvas, CanvasContext } from './../Canvas';
@@ -116,7 +116,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
-    connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+    connect<StateProps, DispatchProps, OwnProps, ModelState>(
       state => ({
         getAbsolutePosition: ElementRepository.getAbsolutePosition(
           state.elements

@@ -1,7 +1,7 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { compose } from 'redux';
@@ -91,7 +91,7 @@ const resizable = (WrappedComponent: typeof ElementComponent) => {
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
-    connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+    connect<StateProps, DispatchProps, OwnProps, ModelState>(
       state => ({
         getAbsolutePosition: ElementRepository.getAbsolutePosition(
           state.elements

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import ElementComponent, {
   OwnProps as ComponentProps,
@@ -102,7 +102,7 @@ interface State {
   element: Element;
 }
 
-const mapStateToProps = (state: ReduxState): StateProps => ({
+const mapStateToProps = (state: ModelState): StateProps => ({
   getById: ElementRepository.getById(state.elements),
   readonly: state.editor.readonly,
   view: state.editor.view,

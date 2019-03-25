@@ -1,5 +1,5 @@
 import { takeLatest, put, select } from 'redux-saga/effects';
-import { State } from './../../components/Store';
+import { ModelState } from './../../components/Store';
 import { ElementActionTypes, ElementRepository } from '../Element';
 import Relationship from '../Relationship';
 import {
@@ -66,7 +66,7 @@ function* handleElementCreation({ payload }: ElementCreateAction) {
 function* handleElementSelection({ payload }: SelectAction) {
   if (!payload.id || payload.toggle) return;
 
-  const { diagram }: State = yield select();
+  const { diagram }: ModelState = yield select();
 
   if (diagram.ownedElements.includes(payload.id)) {
     yield put<AddElementAction>({
@@ -84,7 +84,7 @@ function* handleElementSelection({ payload }: SelectAction) {
 function* handleElementDeletion({ payload }: DeleteAction) {
   if (!payload.id) return;
 
-  const { diagram }: State = yield select();
+  const { diagram }: ModelState = yield select();
 
   if (diagram.ownedElements.includes(payload.id)) {
     yield put<DeleteElementAction>({

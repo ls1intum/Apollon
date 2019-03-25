@@ -1,6 +1,6 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { Assessment } from '../..';
 import { CheckIcon } from './../controls/check-icon';
@@ -49,7 +49,7 @@ const assessable = (
 
   type Props = OwnProps & StateProps & DispatchProps;
 
-  return connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+  return connect<StateProps, DispatchProps, OwnProps, ModelState>(
     (state, props) => ({ assessment: state.assessments[props.element.id] })
   )(Assessable);
 };

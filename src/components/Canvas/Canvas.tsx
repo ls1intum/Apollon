@@ -1,6 +1,6 @@
 import React, { Component, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import Grid from './Grid';
 import CanvasContext, { CanvasProvider } from './CanvasContext';
 import CoordinateSystem from './CoordinateSystem';
@@ -122,8 +122,8 @@ interface State {
   isMounted: boolean;
 }
 
-export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
-  (state: ReduxState): StateProps => ({
+export default connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  (state: ModelState): StateProps => ({
     diagram: DiagramRepository.read(state),
   }),
   {

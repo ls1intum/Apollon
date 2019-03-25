@@ -1,7 +1,7 @@
 import React, { Component, RefObject } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import Relationship, {
   RelationshipRepository,
 } from '../../domain/Relationship';
@@ -93,7 +93,7 @@ interface DispatchProps {}
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+export default connect<StateProps, DispatchProps, OwnProps, ModelState>(
   state => ({
     getById: RelationshipRepository.getById(state.elements),
     readonly: state.editor.readonly,

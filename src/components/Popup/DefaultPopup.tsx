@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import { TextField, Section } from './Controls';
 
@@ -35,7 +35,7 @@ interface DispatchProps {
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+export default connect<StateProps, DispatchProps, OwnProps, ModelState>(
   null,
   {
     rename: ElementRepository.rename,

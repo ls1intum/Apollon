@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { State as ReduxState } from './../components/Store';
+import { ModelState } from './../components/Store';
 import { ExportOptions } from '..';
 import Element from '../domain/Element';
 import Container from '../domain/Container';
@@ -7,7 +7,7 @@ import Relationship from '../domain/Relationship';
 import Boundary from '../domain/geo/Boundary';
 import * as Plugins from './../domain/plugins';
 
-type Props = { state: ReduxState; options?: ExportOptions };
+type Props = { state: ModelState; options?: ExportOptions };
 type State = { bounds: Boundary; elements: Element[] };
 
 const getInitialState = ({ state, options }: Props): State => {
@@ -87,7 +87,7 @@ const getInitialState = ({ state, options }: Props): State => {
   return { bounds, elements };
 };
 
-const normalizeState = (state: ReduxState): Element[] => {
+const normalizeState = (state: ModelState): Element[] => {
   let elements: Element[] = state.diagram.ownedElements
     .map(id => state.elements[id])
     .map(element =>

@@ -4,7 +4,7 @@ import {
   select,
   all,
 } from 'redux-saga/effects';
-import { State } from '../../components/Store';
+import { ModelState } from '../../components/Store';
 import {
   ActionTypes,
   HoverAction,
@@ -32,7 +32,7 @@ function* saga() {
 
 function* handleElementHover({ payload }: HoverAction) {
   if (payload.internal) return;
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const element: Element = elements[payload.id];
   if (element.owner) {
     yield put(Repository.leave(element.owner, true));
@@ -41,7 +41,7 @@ function* handleElementHover({ payload }: HoverAction) {
 
 function* handleElementLeave({ payload }: LeaveAction) {
   if (payload.internal) return;
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const element = elements[payload.id];
   if (element.owner) {
     yield put(Repository.hover(element.owner, true));
@@ -50,7 +50,7 @@ function* handleElementLeave({ payload }: LeaveAction) {
 
 function* handleElementSelect({ payload }: SelectAction) {
   if (payload.toggle) return;
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const selection = Object.values(elements).filter(
     element => element.selected && element.id !== payload.id
   );
@@ -58,7 +58,7 @@ function* handleElementSelect({ payload }: SelectAction) {
 }
 
 function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const current = elements[payload.id];
 
   const update = (id: string, interactive: boolean) =>
@@ -100,7 +100,7 @@ function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
 
 function* handleElementMove({ payload }: MoveAction) {
   if (payload.id) return;
-  const state: State = yield select();
+  const state: ModelState = yield select();
   const diagram = DiagramRepository.read(state);
   const elements = ElementRepository.parse(state);
 
@@ -126,7 +126,7 @@ function* handleElementMove({ payload }: MoveAction) {
 function* handleElementDelete({ payload }: DeleteAction) {
   if (payload.id) return;
 
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const selection = Object.values(elements).filter(
     element => element.selected && element.id !== payload.id
   );

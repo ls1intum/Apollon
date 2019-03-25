@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import Element from '../../domain/Element';
 import { Section, Header, Divider, TextField } from './Controls';
 import { Assessment } from '../..';
@@ -93,7 +93,7 @@ interface State {
   assessment: Assessment;
 }
 
-export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+export default connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state, props) => ({
     readonly: state.editor.readonly,
     assessment: state.assessments[props.element.id],

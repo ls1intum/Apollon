@@ -1,5 +1,5 @@
 import { ActionCreator } from 'redux';
-import { State } from '../../components/Store';
+import { ModelState } from '../../components/Store';
 import {
   ActionTypes,
   State as ElementState,
@@ -85,7 +85,7 @@ class Repository {
     return new ElementClazz(element);
   };
 
-  static read = (state: State): Element[] => {
+  static read = (state: ModelState): Element[] => {
     const elements = Object.keys(state.elements).reduce<ElementState>(
       (r, e) => {
         if (!('path' in state.elements[e]))
@@ -102,7 +102,7 @@ class Repository {
       .filter(notEmpty);
   };
 
-  static parse = (state: State): ElementState => {
+  static parse = (state: ModelState): ElementState => {
     return Object.values(state.elements).reduce<ElementState>(
       (result, element) => {
         if ('path' in element) return result;

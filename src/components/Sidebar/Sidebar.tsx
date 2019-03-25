@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import {
   Container,
   Preview,
@@ -207,7 +207,7 @@ interface State {
   previews: Element[];
 }
 
-export default connect<StateProps, DispatchProps, {}, ReduxState>(
+export default connect<StateProps, DispatchProps, {}, ModelState>(
   state => ({
     diagramType: state.diagram.type2,
     readonly: state.editor.readonly,

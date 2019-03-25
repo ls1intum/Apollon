@@ -1,7 +1,7 @@
 import React, { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import Element, { ElementRepository } from './../../domain/Element';
 import { Point } from './../../domain/geo';
 import Port from './../../domain/Port';
@@ -141,7 +141,7 @@ interface State {
 export default compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect(
-    (state: ReduxState): StateProps => ({
+    (state: ModelState): StateProps => ({
       getById: ElementRepository.getById(state.elements),
     })
   )

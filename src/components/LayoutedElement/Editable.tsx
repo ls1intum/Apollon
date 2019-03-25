@@ -2,7 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withPopup, PopupContext } from '../Popup';
 import Element, { ElementRepository } from '../../domain/Element';
@@ -77,7 +77,7 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
 
   return compose<ComponentClass<OwnProps>>(
     withPopup,
-    connect<StateProps, DispatchProps, OwnProps, ReduxState>(state => ({
+    connect<StateProps, DispatchProps, OwnProps, ModelState>(state => ({
       getById: ElementRepository.getById(state.elements),
     }))
   )(Editable);

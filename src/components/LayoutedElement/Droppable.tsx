@@ -1,7 +1,7 @@
 import React, { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { Droppable as DragDroppable, DropEvent } from './../Draggable';
 import { withCanvas, CanvasContext } from './../Canvas';
@@ -55,7 +55,7 @@ const droppable = (WrappedComponent: typeof ElementComponent) => {
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
-    connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+    connect<StateProps, DispatchProps, OwnProps, ModelState>(
       state => ({ getById: ElementRepository.getById(state.elements) }),
       { create: ElementRepository.create }
     )

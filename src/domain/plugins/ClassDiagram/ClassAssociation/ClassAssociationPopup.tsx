@@ -1,7 +1,7 @@
 import React, { Component, SFC } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { State as ReduxState } from './../../../../components/Store';
+import { ModelState } from './../../../../components/Store';
 import Element, { ElementRepository } from './../../../Element';
 import ClassAssociation from './ClassAssociation';
 import { RelationshipKind } from '..';
@@ -132,7 +132,7 @@ interface DispatchProps {
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+export default connect<StateProps, DispatchProps, OwnProps, ModelState>(
   state => ({ getById: ElementRepository.getById(state.elements) }),
   {
     change: ElementRepository.change,

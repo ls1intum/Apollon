@@ -1,7 +1,7 @@
 import { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import CanvasContext, { withCanvas } from './CanvasContext';
 import { ElementRepository } from '../../domain/Element';
 import PopupLayer from '../Popup';
@@ -68,7 +68,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
 export default compose<ComponentClass<OwnProps>>(
   withCanvas,
-  connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({ readonly: state.editor.readonly }),
     {
       move: ElementRepository.move,

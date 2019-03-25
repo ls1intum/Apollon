@@ -1,5 +1,5 @@
 import React, { createRef, RefObject } from 'react';
-import Store, { State as ReduxState } from './../components/Store';
+import Store, { ModelState } from './../components/Store';
 import Theme, { Styles } from './../components/Theme';
 import { Layout } from './styles';
 import Editor from './../components/Container';
@@ -29,7 +29,7 @@ export class Application extends React.Component<Props> {
 }
 
 interface Props {
-  state: ReduxState | null;
+  state: ModelState | null;
   styles: Partial<Styles>;
 }
 

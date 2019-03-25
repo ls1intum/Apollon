@@ -1,6 +1,6 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import styled from 'styled-components';
 import Port from './../../domain/Port';
 import { ElementRepository } from './../../domain/Element';
@@ -161,7 +161,7 @@ const connectable = (
 
   type Props = OwnProps & StateProps & DispatchProps;
 
-  return connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+  return connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({ diagramType: state.diagram.type2 }),
     { create: ElementRepository.create }
   )(Connectable);

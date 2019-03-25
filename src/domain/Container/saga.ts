@@ -1,5 +1,5 @@
 import { takeLatest, all, put, select } from 'redux-saga/effects';
-import { State } from './../../components/Store';
+import { ModelState } from './../../components/Store';
 import Container from './Container';
 import { ElementRepository, ElementActionTypes } from '../Element';
 import {
@@ -81,7 +81,7 @@ function* handleElementCreation({ payload }: CreateAction) {
 function* handleChildAdd({ payload }: CreateAction) {
   if (!payload.element.owner) return;
 
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const parent = ElementRepository.getById(elements)(payload.element.owner);
   if (parent instanceof Container) {
     const children = parent.ownedElements
@@ -100,7 +100,7 @@ function* handleElementDelete({ payload }: DeleteAction) {
   const elementId = payload.id;
   if (!elementId) return;
 
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const children = Object.keys(elements).filter(
     id => elements[id].owner === elementId
   );
@@ -125,7 +125,7 @@ function* handleElementDelete({ payload }: DeleteAction) {
 }
 
 function* handleElementChange({ payload }: ChangeAction) {
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const element = ElementRepository.getById(elements)(payload.id);
   if (!element) return;
   if (element instanceof Container) {
@@ -140,7 +140,7 @@ function* handleElementChange({ payload }: ChangeAction) {
 }
 
 function* handleElementResize({ payload }: ResizeAction) {
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const element = ElementRepository.getById(elements)(payload.id);
   if (element instanceof Container) {
     const children = element.ownedElements

@@ -1,5 +1,5 @@
 import { takeLatest, takeEvery, put, all, select } from 'redux-saga/effects';
-import { State } from './../../components/Store';
+import { ModelState } from './../../components/Store';
 import Element, { ElementRepository, ElementActionTypes } from './../Element';
 import RelationshipRepository from './repository';
 import { RedrawAction, ActionTypes, ConnectAction } from './types';
@@ -28,7 +28,7 @@ function* handleRelationshipConnect({ payload }: ConnectAction) {
 function* handleElementMove({ payload }: MoveAction) {
   if (!payload.id) return;
 
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const relationships = RelationshipRepository.read(elements);
 
   loop: for (const relationship of relationships) {
@@ -52,7 +52,7 @@ function* handleElementMove({ payload }: MoveAction) {
 }
 
 function* recalc(id: string) {
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const relationship = RelationshipRepository.getById(elements)(id);
 
   let current: Element = elements[relationship.source.element];
@@ -104,7 +104,7 @@ function* recalc(id: string) {
 function* handleElementDelete({ payload }: DeleteAction) {
   if (!payload.id) return;
 
-  const { elements }: State = yield select();
+  const { elements }: ModelState = yield select();
   const relationships = Object.values(elements)
     .filter(element => 'path' in element)
     .map<Relationship>(element =>

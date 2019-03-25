@@ -1,4 +1,4 @@
 import Store from './Store';
 
-export { default as State } from './State';
+export { ModelState } from './model-state';
 export default Store;

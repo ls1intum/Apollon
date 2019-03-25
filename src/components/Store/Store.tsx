@@ -8,7 +8,7 @@ import {
   Store as ReduxStore,
 } from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import ReduxState from './State';
+import { ModelState } from './model-state';
 import reduceReducers from 'reduce-reducers';
 
 import { all, fork } from 'redux-saga/effects';
@@ -20,7 +20,7 @@ import { DiagramReducer, DiagramSaga } from './../../domain/Diagram';
 import { AssessmentReducer } from './../../services/assessments';
 
 class Store extends React.Component<Props> {
-  public store: ReduxStore<ReduxState>;
+  public store: ReduxStore<ModelState>;
 
   private reducers = {
     editor: EditorReducer,
@@ -32,7 +32,7 @@ class Store extends React.Component<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
 
-    const reducer = combineReducers<ReduxState>(this.reducers as any);
+    const reducer = combineReducers<ModelState>(this.reducers as any);
 
     const sagaMiddleware = createSagaMiddleware();
 
@@ -55,7 +55,7 @@ class Store extends React.Component<Props> {
 }
 
 export interface Props {
-  initialState: ReduxState | null;
+  initialState: ModelState | null;
 }
 
 export default Store;

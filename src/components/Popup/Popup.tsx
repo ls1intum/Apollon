@@ -1,7 +1,7 @@
 import React, { Component, ComponentClass } from 'react';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { State as ReduxState } from './../Store';
+import { ModelState } from './../Store';
 import { Container, Arrow, Content } from './styles';
 import Element, { ElementRepository } from '../../domain/Element';
 import { Point } from '../../domain/geo';
@@ -65,7 +65,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
 export default compose<ComponentClass<OwnProps>>(
   withCanvas,
-  connect<StateProps, DispatchProps, OwnProps, ReduxState>(
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({ mode: state.editor.mode }),
     { update: ElementRepository.update }
   )
