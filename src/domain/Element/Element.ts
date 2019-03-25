@@ -28,6 +28,7 @@ export abstract class Element implements IElement {
   };
 
   readonly id: string = uuid();
+  public name: string = '';
   abstract readonly type: ElementKind | RelationshipKind;
   readonly bounds: Boundary = new Boundary(0, 0, 200, 100);
   owner: string | null = null;
@@ -36,7 +37,9 @@ export abstract class Element implements IElement {
   selected: boolean = false;
   interactive: boolean = false;
 
-  constructor(public name: string) {}
+  constructor(values?: Partial<IElement>) {
+    Object.assign(this, values);
+  }
 
   static toUMLElement(
     element: Element,

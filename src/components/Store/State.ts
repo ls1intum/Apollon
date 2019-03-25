@@ -75,7 +75,7 @@ class State {
         view: ApollonView.Modelling,
       },
       diagram: {
-        ...new Diagram(model.type),
+        ...new Diagram({ type2: model.type }),
         ownedElements: Object.values(elements)
           .filter(e => !e.owner)
           .map(e => e.id),

@@ -1,9 +1,8 @@
 import { Reducer } from 'redux';
 import Diagram from './Diagram';
 import { State, Actions, ActionTypes } from './types';
-import { DiagramType } from '../plugins/DiagramType';
 
-const initialState: State = new Diagram(DiagramType.ClassDiagram);
+const initialState: State = new Diagram();
 
 const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
   switch (action.type) {

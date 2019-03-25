@@ -45,36 +45,36 @@ class Sidebar extends Component<Props, State> {
         this.setState({
           previews: [
             // new Package(),
-            new Class('Class'),
-            new AbstractClass('AbstractClass'),
-            new Interface('Interface'),
-            new Enumeration('Enumeration'),
+            new Class({ name: 'Class' }),
+            new AbstractClass({ name: 'AbstractClass' }),
+            new Interface({ name: 'Interface' }),
+            new Enumeration({ name: 'Enumeration' }),
           ],
         });
         break;
       case DiagramType.ObjectDiagram:
         this.setState({
-          previews: [new ObjectName('Object : Class')],
+          previews: [new ObjectName({ name: 'Object : Class' })],
         });
         break;
       case DiagramType.ActivityDiagram:
         this.setState({
           previews: [
-            new ActivityInitialNode(''),
-            new ActivityFinalNode(''),
-            new ActivityActionNode('ActionNode'),
-            new ActivityObjectNode('ObjectNode'),
-            new ActivityMergeNode('Condition'),
-            new ActivityForkNode(''),
+            new ActivityInitialNode(),
+            new ActivityFinalNode(),
+            new ActivityActionNode({ name: 'ActionNode' }),
+            new ActivityObjectNode({ name: 'ObjectNode' }),
+            new ActivityMergeNode({ name: 'Condition' }),
+            new ActivityForkNode(),
           ],
         });
         break;
       case DiagramType.UseCaseDiagram:
         this.setState({
           previews: [
-            new UseCase('UseCase'),
-            new UseCaseActor('Actor'),
-            new UseCaseSystem('System'),
+            new UseCase({ name: 'UseCase' }),
+            new UseCaseActor({ name: 'Actor' }),
+            new UseCaseSystem({ name: 'System' }),
           ],
         });
     }
@@ -106,8 +106,8 @@ class Sidebar extends Component<Props, State> {
         case ElementKind.AbstractClass:
         case ElementKind.Interface:
           [
-            new ClassAttribute('+ attribute: Type'),
-            new ClassMethod('+ method()'),
+            new ClassAttribute({ name: '+ attribute: Type' }),
+            new ClassMethod({ name: '+ method()' }),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
@@ -115,19 +115,21 @@ class Sidebar extends Component<Props, State> {
           break;
         case ElementKind.Enumeration:
           [
-            new ClassAttribute('Case1'),
-            new ClassAttribute('Case2'),
-            new ClassAttribute('Case3'),
+            new ClassAttribute({ name: 'Case1' }),
+            new ClassAttribute({ name: 'Case2' }),
+            new ClassAttribute({ name: 'Case3' }),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
           });
           break;
         case ElementKind.ObjectName:
-          [new ObjectAttribute('attribute = value')].forEach(member => {
-            member.owner = element.id;
-            this.props.create(member);
-          });
+          [new ObjectAttribute({ name: 'attribute = value' })].forEach(
+            member => {
+              member.owner = element.id;
+              this.props.create(member);
+            }
+          );
       }
     }, 0);
   };

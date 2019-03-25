@@ -19,6 +19,7 @@ import Element from '.';
 import * as Plugins from '../plugins';
 import Point from '../geometry/Point';
 import ElementKind from '../plugins/ElementKind';
+import { elements } from './../plugins/elements';
 
 class Repository {
   static create = (element: Element): CreateAction => ({
@@ -80,10 +81,15 @@ class Repository {
     if (!element)
       return null;
 
-    return Object.setPrototypeOf(
-      element,
-      (<any>Plugins)[element.type].prototype
-    );
+    const ElementClazz = elements[element.type as ElementKind];
+    const result = new ElementClazz(element);
+    console.log(result)
+    return result;
+
+    // return Object.setPrototypeOf(
+    //   element,
+    //   (<any>Plugins)[element.type].prototype
+    // );
   };
 
   static read = (state: State): Element[] => {
