@@ -1,7 +1,9 @@
 import { DiagramType } from './domain/plugins/DiagramType';
-import ElementKind from './domain/plugins/ElementKind';
-import RelationshipKind from './domain/plugins/RelationshipKind';
+import UMLElementType from './domain/plugins/ElementKind';
+import UMLRelationshipType from './domain/plugins/RelationshipKind';
 import Styles from './components/Theme/Styles';
+
+export type ElementType = UMLElementType | UMLRelationshipType;
 
 export interface UMLModel {
   version: string;
@@ -15,14 +17,14 @@ export interface UMLModel {
 
 export interface Assessment {
   modelElementId: string;
-  elementType: ElementKind | RelationshipKind;
+  elementType: ElementType;
   score: number;
   feedback?: string;
 }
 
 export { DiagramType };
-export { ElementKind as ElementType };
-export { RelationshipKind as RelationshipType };
+export { UMLElementType };
+export { UMLRelationshipType };
 export { Styles };
 export {
   UMLClassifier,
@@ -32,13 +34,13 @@ export {
 export interface Element {
   id: string;
   name: string;
-  type: ElementKind | RelationshipKind;
+  type: ElementType;
   bounds: { x: number; y: number; width: number; height: number };
 }
 
 export interface UMLElement extends Element {
   owner: string | null;
-  type: ElementKind;
+  type: UMLElementType;
 }
 
 export enum Direction {
@@ -49,7 +51,7 @@ export enum Direction {
 }
 
 export interface UMLRelationship extends Element {
-  type: RelationshipKind;
+  type: UMLRelationshipType;
   path: { x: number; y: number }[];
   source: {
     element: string;
