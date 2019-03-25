@@ -1,4 +1,4 @@
-import React, { Component, createRef, RefObject } from 'react';
+import React, { Component, createRef, RefObject, createElement } from 'react';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import Grid from './Grid';
@@ -13,6 +13,7 @@ import Diagram, { DiagramRepository } from '../../domain/Diagram';
 import { ElementRepository } from '../../domain/Element';
 import KeyboardEventListener from './KeyboardEventListener';
 import PopupLayer from './../Popup';
+import { ApollonMode } from '../..';
 
 class Canvas extends Component<Props, State> {
   state: State = {
@@ -61,7 +62,7 @@ class Canvas extends Component<Props, State> {
   };
 
   render() {
-    const { diagram } = this.props;
+    const { diagram, mode } = this.props;
     const context: CanvasContext = {
       canvas: this.canvas.current!,
       coordinateSystem: this.coordinateSystem,
@@ -75,6 +76,7 @@ class Canvas extends Component<Props, State> {
               grid={10}
               width={diagram.bounds.width}
               height={diagram.bounds.height}
+              show={mode !== ApollonMode.Assessment}
             >
               <PopupLayer ref={this.popup}>
                 {this.state.isMounted && (
@@ -109,6 +111,7 @@ interface OwnProps {}
 
 interface StateProps {
   diagram: Diagram;
+  mode: ApollonMode;
 }
 
 interface DispatchProps {
@@ -125,6 +128,7 @@ interface State {
 export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   (state: ReduxState): StateProps => ({
     diagram: DiagramRepository.read(state),
+    mode: state.editor.mode,
   }),
   {
     create: ElementRepository.create,
