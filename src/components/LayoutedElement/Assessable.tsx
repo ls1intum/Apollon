@@ -14,7 +14,7 @@ const assessable = (
       const { assessment, element } = this.props;
 
       const count: number =
-        (assessment && Math.min(3, Math.abs(assessment.score))) || 0;
+        (assessment && Math.min(3, Math.ceil(Math.abs(assessment.score)))) || 0;
       const component =
         assessment && assessment.score > 0 ? (
           <CheckIcon fill="green" />
