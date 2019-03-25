@@ -1,4 +1,4 @@
-import { Element, ElementState, ElementRepository } from '../../domain/Element';
+import { Element, ElementState, ElementRepository, ElementKind } from '../../domain/Element';
 import { Diagram, DiagramState } from '../../domain/Diagram';
 import { EditorState, ApollonView } from '../../services/editor';
 import {
@@ -15,6 +15,7 @@ import Container from '../../domain/Container';
 import * as Plugin from '../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
 import { AssessmentState } from '../../services/assessments';
+import { elements as elementClass } from './../../domain/plugins/elements'
 
 export interface ModelState {
   editor: EditorState;
@@ -25,25 +26,26 @@ export interface ModelState {
 
 export class ModelState {
   static fromModel(model: UMLModel): ModelState {
-    let elements: ElementState = Object.values(model.elements)
+    let elements: { [id: string]: Element } = Object.values(model.elements)
       .map(umlElement => {
-        const Clazz: typeof Element = (<any>Plugin)[umlElement.type];
-        const element = Clazz.fromUMLElement(
-          umlElement,
-          (<any>Plugin)[umlElement.type]
-        );
+        const Clazz = elementClass[umlElement.type];
+        const element = new Clazz(umlElement);
         if (model.interactive.elements.includes(element.id)) {
           element.interactive = true;
         }
         return element;
       })
-      .reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
+      .reduce((r, o) => ({ ...r, [o.id]: o }), {});
 
     elements = Object.values(elements).reduce((state, element) => {
       if (element instanceof Container) {
         const children = Object.values(elements).filter(
           child => child.owner === element.id
-        );
+        ).map<Element>(child => {
+          const Clazz = elementClass[child.type as ElementKind];
+          const element = new Clazz(child);
+          return element;
+        });
         element.ownedElements = children.map(child => child.id);
         const changes = element
           .render(children)
@@ -99,10 +101,7 @@ export class ModelState {
               id => elements.find(element => element.id === id)!
             )
           : [];
-      const {
-        element: result,
-        children,
-      } = (element.constructor as typeof Element).toUMLElement(element, c);
+      const { element: result, children } = element.toUMLElement(element, c);
       return [
         result,
         ...children.reduce<UMLElement[]>(

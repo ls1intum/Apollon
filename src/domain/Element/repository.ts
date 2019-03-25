@@ -82,7 +82,6 @@ class Repository {
     if (!element) return null;
 
     const ElementClass = elements[element.type as ElementKind];
-    console.log(element.type, ElementClass);
     if (!ElementClass) return null;
 
     return new ElementClass(element);
@@ -105,8 +104,8 @@ class Repository {
       .filter(notEmpty);
   };
 
-  static parse = (state: ModelState): ElementState => {
-    return Object.values(state.elements).reduce<ElementState>(
+  static parse = (state: ModelState): { [id: string]: Element } => {
+    return Object.values(state.elements).reduce<{ [id: string]: Element }>(
       (result, element) => {
         if ('path' in element) return result;
 

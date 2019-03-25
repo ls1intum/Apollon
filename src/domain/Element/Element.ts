@@ -37,11 +37,13 @@ export abstract class Element implements IElement {
   selected: boolean = false;
   interactive: boolean = false;
 
-  constructor(values?: Partial<IElement>) {
+  constructor(values?: UMLElement);
+  constructor(values?: Partial<IElement>);
+  constructor(values?: UMLElement | Partial<IElement>) {
     Object.assign(this, values);
   }
 
-  static toUMLElement(
+  toUMLElement(
     element: Element,
     children: Element[]
   ): { element: UMLElement; children: Element[] } {
@@ -55,24 +57,5 @@ export abstract class Element implements IElement {
       },
       children: children,
     };
-  }
-
-  static fromUMLElement<T extends typeof Element>(
-    umlElement: UMLElement,
-    Clazz: T
-  ): Element {
-    return Object.setPrototypeOf(
-      {
-        id: umlElement.id,
-        name: umlElement.name,
-        owner: umlElement.owner,
-        type: umlElement.type,
-        bounds: umlElement.bounds,
-        base: 'Element',
-        hovered: false,
-        selected: false,
-      },
-      Clazz.prototype
-    );
   }
 }

@@ -1,5 +1,6 @@
 import ElementKind from './ElementKind';
 import { Element, IElement } from './../Element';
+import { UMLElement } from '../..';
 import { Class } from './ClassDiagram/Classifier/Class';
 import { AbstractClass } from './ClassDiagram/Classifier/AbstractClass';
 import { Interface } from './ClassDiagram/Classifier/Interface';
@@ -20,7 +21,7 @@ import { Package } from './Common/Package';
 import { ClassAttribute } from './ClassDiagram/ClassMember/ClassAttribute';
 import { ClassMethod } from './ClassDiagram/ClassMember/ClassMethod';
 
-export const elements: { [key in ElementKind]: new (values?: Partial<IElement>) => Element } = {
+export const elements: { [key in ElementKind]: new (values?: UMLElement | Partial<IElement>) => Element } = {
   [ElementKind.Diagram]: Diagram,
   [ElementKind.Package]: Package,
   [ElementKind.Class]: Class,

@@ -1,9 +1,11 @@
-import { Element } from '../../../Element';
+import { Element, IElement } from '../../../Element';
 import Container from '../../../Container';
 import { ElementKind, UMLClassifier } from '..';
 import ClassMember from '../ClassMember/ClassMember';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';
 import { ClassMethod } from '../ClassMember/ClassMethod';
+import { UMLElement } from '../../../..';
+import { IContainer } from '../../../Container/Container';
 
 abstract class Classifier extends Container {
   static features = {
@@ -29,6 +31,19 @@ abstract class Classifier extends Container {
   }
 
   deviderPosition = 0;
+
+  constructor(values?: UMLClassifier);
+  constructor(values?: Partial<IContainer>);
+  constructor(values?: UMLClassifier | Partial<IContainer>) {
+    super(values);
+    this.ownedElements = [];
+    if (values && 'attributes' in values) {
+      this.ownedElements = [...this.ownedElements, ...values.attributes];
+    }
+    if (values && 'methods' in values) {
+      this.ownedElements = [...this.ownedElements, ...values.methods];
+    }
+  }
 
   render(elements: Element[]): Element[] {
     let [parent, ...children] = super.render(elements);
@@ -89,11 +104,11 @@ abstract class Classifier extends Container {
     ];
   }
 
-  static toUMLElement(
+  toUMLElement(
     element: Classifier,
     children: Element[]
   ): { element: UMLClassifier; children: Element[] } {
-    const { element: base } = Element.toUMLElement(element, children);
+    const { element: base } = super.toUMLElement(element, children);
     return {
       element: {
         ...base,
@@ -106,15 +121,6 @@ abstract class Classifier extends Container {
       },
       children: children,
     };
-  }
-
-  static fromUMLElement(umlElement: UMLClassifier): Element {
-    // return Element.fromUMLElement(umlElement, Classifier);
-    const element = Element.fromUMLElement(umlElement, Classifier);
-    if (element instanceof Container) {
-      element.ownedElements = [...umlElement.attributes, ...umlElement.methods];
-    }
-    return element;
   }
 }
 

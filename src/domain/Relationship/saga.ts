@@ -1,6 +1,6 @@
 import { takeLatest, takeEvery, put, all, select } from 'redux-saga/effects';
 import { ModelState } from './../../components/Store';
-import { Element, ElementRepository, ElementActionTypes } from './../Element';
+import { Element, ElementRepository, ElementActionTypes, IElement } from './../Element';
 import RelationshipRepository from './repository';
 import { RedrawAction, ActionTypes, ConnectAction } from './types';
 import { MoveAction, DeleteAction, CreateAction } from '../Element/types';
@@ -55,7 +55,7 @@ function* recalc(id: string) {
   const { elements }: ModelState = yield select();
   const relationship = RelationshipRepository.getById(elements)(id);
 
-  let current: Element = elements[relationship.source.element];
+  let current: IElement = elements[relationship.source.element];
   let source: Boundary = { ...current.bounds };
   while (current.owner) {
     current = elements[current.owner];

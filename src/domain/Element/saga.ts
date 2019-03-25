@@ -10,7 +10,7 @@ import {
   MakeInteractiveAction,
   UpdateAction,
 } from './types';
-import { Element } from './Element';
+import { Element, IElement } from './Element';
 import Repository from './repository';
 import Container from '../Container';
 import { DiagramRepository } from '../Diagram';
@@ -28,7 +28,7 @@ function* saga() {
 function* handleElementHover({ payload }: HoverAction) {
   if (payload.internal) return;
   const { elements }: ModelState = yield select();
-  const element: Element = elements[payload.id];
+  const element: IElement = elements[payload.id];
   if (element.owner) {
     yield put(Repository.leave(element.owner, true));
   }

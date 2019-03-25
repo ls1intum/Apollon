@@ -3,7 +3,7 @@ import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
 import { ModelState } from './../Store';
-import { Element, ElementRepository } from './../../domain/Element';
+import { Element, ElementRepository, IElement } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withCanvas, CanvasContext } from './../Canvas';
 import { ContainerRepository } from '../../domain/Container';
@@ -98,7 +98,7 @@ const moveable = (WrappedComponent: typeof ElementComponent) => {
 
   interface StateProps {
     getAbsolutePosition: (id: string) => Point;
-    target: Element | undefined;
+    target: IElement | undefined;
   }
 
   interface DispatchProps {
