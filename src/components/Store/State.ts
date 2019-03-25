@@ -44,7 +44,10 @@ class State {
 
     elements = Object.values(elements).reduce((state, element) => {
       if (element instanceof Container) {
-        const children = element.ownedElements.map(id => elements[id]);
+        const children = Object.values(elements).filter(
+          child => child.owner === element.id
+        );
+        element.ownedElements = children.map(child => child.id);
         const changes = element
           .render(children)
           .reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});

@@ -3,8 +3,6 @@ import {
   put,
   select,
   all,
-  SimpleEffect,
-  PutEffectDescriptor,
 } from 'redux-saga/effects';
 import { State } from '../../components/Store';
 import {

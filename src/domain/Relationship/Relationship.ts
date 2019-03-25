@@ -58,10 +58,12 @@ abstract class Relationship extends Element {
       };
     }
 
+    const { straight } = Clazz.features;
+
     const points = Connection.computePath(
       { bounds: sourceRect, direction: umlRelationship.source.direction },
       { bounds: targetRect, direction: umlRelationship.target.direction },
-      { isStraight: false }
+      { isStraight: straight }
     );
     let path = points.map(point => new Point(point.x, point.y));
     const x = Math.min(...path.map(point => point.x));

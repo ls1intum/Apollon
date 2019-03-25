@@ -83,7 +83,6 @@ class Repository {
 
     const ElementClazz = elements[element.type as ElementKind];
     const result = new ElementClazz(element);
-    console.log(result)
     return result;
 
     // return Object.setPrototypeOf(
