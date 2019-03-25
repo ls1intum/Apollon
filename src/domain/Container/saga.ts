@@ -71,7 +71,9 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 function* handleElementCreation({ payload }: CreateAction) {
   if (payload.element instanceof Container) {
     const updates = payload.element.render([]);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 
@@ -86,7 +88,9 @@ function* handleChildAdd({ payload }: CreateAction) {
       .map(ElementRepository.getById(elements));
 
     const updates = parent.addElement(payload.element, children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 
@@ -95,10 +99,6 @@ function* handleElementDelete({ payload }: DeleteAction) {
   if (!elementId) return;
 
   const { elements }: State = yield select();
-  const children = Object.keys(elements).filter(
-    id => elements[id].owner === elementId
-  );
-  yield all(children.map(id => put(ElementRepository.delete(id))));
 
   const parent = Object.keys(elements)
     .filter(id => elements[id].base === 'Container')
@@ -111,8 +111,16 @@ function* handleElementDelete({ payload }: DeleteAction) {
       .map(ElementRepository.getById(elements));
 
     const updates = parent.removeElement(elementId, children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
+
+  const children = Object.keys(elements).filter(
+    id => elements[id].owner === elementId
+  );
+  yield all(children.map(id => put(ElementRepository.delete(id))));
+
 }
 
 function* handleElementChange({ payload }: ChangeAction) {
@@ -123,7 +131,9 @@ function* handleElementChange({ payload }: ChangeAction) {
       ElementRepository.getById(elements)
     );
     const updates = element.render(children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 
@@ -135,7 +145,9 @@ function* handleElementResize({ payload }: ResizeAction) {
       ElementRepository.getById(elements)
     );
     const updates = element.resizeElement(children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(
+      updates.map(element => put(ElementRepository.update(element.id, element)))
+    );
   }
 }
 
