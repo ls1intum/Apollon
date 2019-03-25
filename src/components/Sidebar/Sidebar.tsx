@@ -30,6 +30,7 @@ import {
   ActivityForkNode,
   ObjectName,
   ObjectAttribute,
+  Package,
 } from './../../domain/plugins';
 import { ApollonMode } from '../..';
 import { ApollonView, EditorRepository } from '../../services/editor';
@@ -44,7 +45,7 @@ class Sidebar extends Component<Props, State> {
       case DiagramType.ClassDiagram:
         this.setState({
           previews: [
-            // new Package(),
+            new Package(''),
             new Class('Class'),
             new AbstractClass('AbstractClass'),
             new Interface('Interface'),
