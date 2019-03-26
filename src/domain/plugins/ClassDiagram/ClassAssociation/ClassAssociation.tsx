@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import Relationship from '../../../Relationship';
-import { Element } from '../../../Element';
+import { Element } from '../../../../services/element';
 import { UMLClassAssociation } from '..';
 import * as Plugins from './../../../plugins';
 import Boundary from '../../../geo/Boundary';

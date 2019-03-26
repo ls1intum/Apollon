@@ -1,11 +1,11 @@
 import { Reducer } from 'redux';
 import { ActionTypes, Actions } from './types';
-import { ElementState as State } from './../Element';
+import { ElementState } from '../../services/element/element-types';
 import Container from './Container';
 
-const initialState: State = {};
+const initialState: ElementState = {};
 
-const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
+const Reducer: Reducer<ElementState, Actions> = (state = initialState, action) => {
   switch (action.type) {
     case ActionTypes.APPEND_CHILD: {
       const { payload } = action;

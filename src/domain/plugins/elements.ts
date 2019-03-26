@@ -1,5 +1,5 @@
 import { ElementType } from './element-type';
-import { Element, IElement } from './../Element';
+import { Element, IElement } from '../../services/element';
 import { UMLElement } from '../..';
 import { Class } from './ClassDiagram/Classifier/Class';
 import { AbstractClass } from './ClassDiagram/Classifier/AbstractClass';

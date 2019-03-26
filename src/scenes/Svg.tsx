@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { ModelState } from './../components/Store';
 import { ExportOptions } from '..';
-import { Element } from '../domain/Element';
+import { Element } from '../services/element';
 import Container from '../domain/Container';
 import Relationship from '../domain/Relationship';
 import Boundary from '../domain/geo/Boundary';

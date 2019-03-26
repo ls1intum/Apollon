@@ -1,6 +1,6 @@
 import ClassAssociation from '../ClassAssociation';
 import { RelationshipKind, UMLClassAssociation } from '../..';
-import { Element } from '../../../../Element';
+import { Element } from '../../../../../services/element';
 
 class ClassUnidirectional extends ClassAssociation {
   type = RelationshipKind.ClassUnidirectional;

@@ -1,4 +1,4 @@
-import { Element, ElementState, ElementRepository, ElementType } from '../../domain/Element';
+import { Element, ElementRepository, ElementType } from '../../services/element';
 import { Diagram, DiagramState } from '../../domain/Diagram';
 import { EditorState, ApollonView } from '../../services/editor';
 import {
@@ -15,6 +15,7 @@ import Container from '../../domain/Container';
 import * as Plugin from '../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
 import { AssessmentState } from '../../services/assessment/assessment-types';
+import { ElementState } from '../../services/element/element-types';
 import { elements as elementClass } from './../../domain/plugins/elements'
 
 export interface ModelState {

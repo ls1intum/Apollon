@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { ModelState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withPopup, PopupContext } from '../Popup';
-import { Element, ElementRepository } from '../../domain/Element';
+import { Element, ElementRepository } from '../../services/element';
 import Relationship from '../../domain/Relationship';
 
 const editable = (WrappedComponent: typeof ElementComponent) => {

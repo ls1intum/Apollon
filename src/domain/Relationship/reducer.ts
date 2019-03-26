@@ -1,10 +1,10 @@
 import { Reducer } from 'redux';
 import { Actions, ActionTypes } from './types';
-import { State } from '../Element/types';
+import { ElementState } from '../../services/element/element-types';
 
-const initialState: State = {};
+const initialState: ElementState = {};
 
-const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
+const Reducer: Reducer<ElementState, Actions> = (state = initialState, action) => {
   switch (action.type) {
     case ActionTypes.REDRAW: {
       const { payload } = action;

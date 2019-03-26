@@ -1,29 +1,29 @@
 import { Reducer } from 'redux';
-import { State, ActionTypes, Actions } from './types';
+import { ElementState, ElementActionTypes, ElementActions } from './element-types';
 
-const initialState: State = {};
+const initialState: ElementState = {};
 
-const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
+export const ElementReducer: Reducer<ElementState, ElementActions> = (state = initialState, action) => {
   switch (action.type) {
-    case ActionTypes.CREATE: {
+    case ElementActionTypes.CREATE: {
       const { payload } = action;
       return { ...state, [payload.element.id]: { ...payload.element } };
     }
-    case ActionTypes.HOVER: {
+    case ElementActionTypes.HOVER: {
       const { payload } = action;
       return {
         ...state,
         [payload.id]: { ...state[payload.id], hovered: true },
       };
     }
-    case ActionTypes.LEAVE: {
+    case ElementActionTypes.LEAVE: {
       const { payload } = action;
       return {
         ...state,
         [payload.id]: { ...state[payload.id], hovered: false },
       };
     }
-    case ActionTypes.SELECT: {
+    case ElementActionTypes.SELECT: {
       const { payload } = action;
       if (!payload.id) return state;
       return {
@@ -34,7 +34,7 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
         },
       };
     }
-    case ActionTypes.RESIZE: {
+    case ElementActionTypes.RESIZE: {
       const { payload } = action;
       return {
         ...state,
@@ -48,7 +48,7 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
         },
       };
     }
-    case ActionTypes.MOVE: {
+    case ElementActionTypes.MOVE: {
       const { payload } = action;
       if (!payload.id) return state;
       return {
@@ -63,25 +63,25 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
         },
       };
     }
-    case ActionTypes.CHANGE: {
+    case ElementActionTypes.CHANGE: {
       const { payload } = action;
       return {
         ...state,
         [payload.id]: { ...state[payload.id], type: payload.kind },
       };
     }
-    case ActionTypes.RENAME: {
+    case ElementActionTypes.RENAME: {
       const { payload } = action;
       return {
         ...state,
         [payload.id]: { ...state[payload.id], name: payload.name },
       };
     }
-    case ActionTypes.UPDATE: {
+    case ElementActionTypes.UPDATE: {
       const { payload } = action;
       return { ...state, [payload.id]: { ...state[payload.id], ...payload.values } };
     }
-    case ActionTypes.DELETE: {
+    case ElementActionTypes.DELETE: {
       const { payload } = action;
       if (!payload.id) return state;
       const { [payload.id]: _, ...newState } = state;
@@ -90,5 +90,3 @@ const Reducer: Reducer<State, Actions> = (state = initialState, action) => {
   }
   return state;
 };
-
-export default Reducer;

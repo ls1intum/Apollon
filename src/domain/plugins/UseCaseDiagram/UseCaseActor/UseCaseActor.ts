@@ -1,4 +1,4 @@
-import { Element } from '../../../Element';
+import { Element } from '../../../../services/element';
 import Boundary from '../../../geo/Boundary';
 import { ElementType } from '..';
 

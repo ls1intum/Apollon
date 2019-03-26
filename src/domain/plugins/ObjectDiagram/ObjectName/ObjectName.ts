@@ -1,4 +1,4 @@
-import { Element, IElement } from '../../../Element';
+import { Element, IElement } from '../../../../services/element';
 import Container from '../../../Container';
 import { ElementType } from '..';
 import { ObjectAttribute } from '../ObjectAttribute';

@@ -1,10 +1,10 @@
 import { takeLatest, takeEvery, put, all, select } from 'redux-saga/effects';
 import { ModelState } from './../../components/Store';
-import { Element, ElementRepository, ElementActionTypes, IElement } from './../Element';
+import { ElementRepository, IElement } from '../../services/element';
 import RelationshipRepository from './repository';
 import { RedrawAction, ActionTypes, ConnectAction } from './types';
-import { MoveAction, DeleteAction, CreateAction } from '../Element/types';
-import Port, { Connection } from '../Port';
+import { MoveAction, DeleteAction, CreateAction, ElementActionTypes } from '../../services/element/element-types';
+import { Connection } from '../Port';
 import Relationship from '.';
 import Boundary from '../geo/Boundary';
 

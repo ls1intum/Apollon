@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from './../Store';
-import { Element, ElementRepository } from './../../domain/Element';
+import { Element, ElementRepository } from '../../services/element';
 import { TextField, Section } from './Controls';
 
 class DefaultPopup extends Component<Props> {

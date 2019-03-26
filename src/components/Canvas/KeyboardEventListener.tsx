@@ -3,7 +3,7 @@ import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { ModelState } from './../Store';
 import CanvasContext, { withCanvas } from './CanvasContext';
-import { ElementRepository } from '../../domain/Element';
+import { ElementRepository } from '../../services/element';
 import PopupLayer from '../Popup';
 
 class KeyboardEventListener extends Component<Props> {

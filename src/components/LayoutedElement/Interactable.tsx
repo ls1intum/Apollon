@@ -1,7 +1,7 @@
 import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
-import { ElementRepository } from './../../domain/Element';
+import { ElementRepository } from '../../services/element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 
 const interactable = (

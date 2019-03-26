@@ -1,6 +1,6 @@
 import Container from './../Container';
 import Boundary from './../geo/Boundary';
-import { ElementType, IElement } from '../Element';
+import { ElementType, IElement } from '../../services/element';
 import { DiagramType } from './../plugins/DiagramType';
 import { IContainer } from '../Container/Container';
 import { UMLElement } from '../..';

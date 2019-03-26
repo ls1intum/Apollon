@@ -13,11 +13,12 @@ import reduceReducers from 'reduce-reducers';
 
 import { all, fork } from 'redux-saga/effects';
 import { EditorReducer } from './../../services/editor'
-import { ElementReducer, ElementSaga } from './../../domain/Element';
 import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
 import { ContainerReducer, ContainerSaga } from './../../domain/Container';
 import { DiagramReducer, DiagramSaga } from './../../domain/Diagram';
-import { AssessmentReducer } from './../../services/assessment/assessment-reducer';
+import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
+import { ElementReducer } from '../../services/element/element-reducer';
+import { ElementSaga } from '../../services/element/element-saga';
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ModelState>;

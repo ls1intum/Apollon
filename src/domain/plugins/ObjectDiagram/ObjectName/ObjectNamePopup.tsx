@@ -2,7 +2,7 @@ import React, { Component, SFC } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { ModelState } from './../../../../components/Store';
-import { Element, ElementRepository } from './../../../Element';
+import { Element, ElementRepository } from '../../../../services/element';
 import ObjectName from './ObjectName';
 import { ObjectAttribute } from '../ObjectAttribute';
 import {

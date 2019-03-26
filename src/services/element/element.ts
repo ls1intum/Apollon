@@ -1,7 +1,7 @@
-import uuid from './../utils/uuid';
-import { Boundary } from './../geometry/Boundary';
-import { ElementType } from '../plugins/element-type';
-import { RelationshipKind } from '../Relationship';
+import uuid from './../../domain/utils/uuid';
+import { Boundary } from './../../domain/geometry/Boundary';
+import { ElementType } from '../../domain/plugins/element-type';
+import { RelationshipKind } from '../../domain/Relationship';
 import { UMLElement } from '../..';
 
 export interface IElement {

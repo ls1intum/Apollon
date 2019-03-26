@@ -1,4 +1,4 @@
-import { Element, IElement } from './../Element';
+import { Element, IElement } from '../../services/element';
 import { UMLElement } from '../..';
 
 export interface IContainer extends IElement {

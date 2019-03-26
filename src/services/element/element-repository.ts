@@ -1,8 +1,8 @@
 import { ActionCreator } from 'redux';
 import { ModelState } from '../../components/Store';
 import {
-  ActionTypes,
-  State as ElementState,
+  ElementActionTypes,
+  ElementState,
   HoverAction,
   LeaveAction,
   CreateAction,
@@ -14,27 +14,26 @@ import {
   MakeInteractiveAction,
   ChangeAction,
   RenameAction,
-} from './types';
+} from './element-types';
 import { Element } from '.';
-import * as Plugins from '../plugins';
-import Point from '../geometry/Point';
-import { ElementType } from '../plugins/element-type';
-import { elements } from './../plugins/elements';
-import { notEmpty } from '../utils';
+import { ElementType } from '../../domain/plugins/element-type';
+import { elements } from '../../domain/plugins/elements';
+import Point from '../../domain/geometry/Point';
+import { notEmpty } from '../../domain/utils';
 
-class Repository {
+export class ElementRepository {
   static create = (element: Element): CreateAction => ({
-    type: ActionTypes.CREATE,
+    type: ElementActionTypes.CREATE,
     payload: { element },
   });
 
   static hover = (id: string, internal: boolean = false): HoverAction => ({
-    type: ActionTypes.HOVER,
+    type: ElementActionTypes.HOVER,
     payload: { id, internal },
   });
 
   static leave = (id: string, internal: boolean = false): LeaveAction => ({
-    type: ActionTypes.LEAVE,
+    type: ElementActionTypes.LEAVE,
     payload: { id, internal },
   });
 
@@ -42,12 +41,12 @@ class Repository {
     id: string | null,
     toggle: boolean = false
   ): SelectAction => ({
-    type: ActionTypes.SELECT,
+    type: ElementActionTypes.SELECT,
     payload: { id, toggle },
   });
 
   static makeInteractive = (id: string): MakeInteractiveAction => ({
-    type: ActionTypes.MAKE_INTERACTIVE,
+    type: ElementActionTypes.MAKE_INTERACTIVE,
     payload: { id },
   });
 
@@ -55,7 +54,7 @@ class Repository {
     id: string,
     delta: { width: number; height: number }
   ) => ({
-    type: ActionTypes.RESIZE,
+    type: ElementActionTypes.RESIZE,
     payload: { id, delta },
   });
 
@@ -63,7 +62,7 @@ class Repository {
     id: string | null,
     delta: { x: number; y: number }
   ): MoveAction => ({
-    type: ActionTypes.MOVE,
+    type: ElementActionTypes.MOVE,
     payload: { id, delta },
   });
 
@@ -99,7 +98,7 @@ class Repository {
 
     return Object.values(elements)
       .map<Element | null>(element =>
-        Repository.getById(state.elements)(element.id)
+        ElementRepository.getById(state.elements)(element.id)
       )
       .filter(notEmpty);
   };
@@ -108,13 +107,12 @@ class Repository {
     return Object.values(state.elements).reduce<{ [id: string]: Element }>(
       (result, element) => {
         if ('path' in element) return result;
+        const el = ElementRepository.getById(state.elements)(element.id);
+        if (!el) return result;
 
         return {
           ...result,
-          [element.id]: Object.setPrototypeOf(
-            element,
-            (<any>Plugins)[element.type].prototype
-          ),
+          [element.id]: el
         };
       },
       {}
@@ -125,24 +123,22 @@ class Repository {
     id: string,
     kind: ElementType
   ) => ({
-    type: ActionTypes.CHANGE,
+    type: ElementActionTypes.CHANGE,
     payload: { id, kind },
   });
 
   static rename: ActionCreator<RenameAction> = (id: string, name: string) => ({
-    type: ActionTypes.RENAME,
+    type: ElementActionTypes.RENAME,
     payload: { id, name },
   });
 
   static update = (id: string, values: Partial<Element>): UpdateAction => ({
-    type: ActionTypes.UPDATE,
+    type: ElementActionTypes.UPDATE,
     payload: { id, values },
   });
 
   static delete = (id: string | null): DeleteAction => ({
-    type: ActionTypes.DELETE,
+    type: ElementActionTypes.DELETE,
     payload: { id },
   });
 }
-
-export default Repository;

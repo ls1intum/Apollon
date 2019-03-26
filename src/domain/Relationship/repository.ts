@@ -1,6 +1,6 @@
 import Relationship from './Relationship';
 import { ActionTypes, ConnectAction } from './types';
-import { State } from '../Element/types';
+import { ElementState } from '../../services/element/element-types';
 import Port from '../Port';
 import * as Plugins from '../plugins';
 
@@ -13,7 +13,7 @@ class Repository {
     payload: { id, source, target },
   });
 
-  static getById = (state: State) => (id: string): Relationship => {
+  static getById = (state: ElementState) => (id: string): Relationship => {
     const relationship = { ...state[id] };
     if (!Object.keys(relationship).length) return relationship as Relationship;
     return Object.setPrototypeOf(
@@ -22,7 +22,7 @@ class Repository {
     );
   };
 
-  static read = (state: State): Relationship[] => {
+  static read = (state: ElementState): Relationship[] => {
     return Object.values(state)
       .filter(element => 'path' in element)
       .map(relationship =>

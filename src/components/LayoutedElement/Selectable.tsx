@@ -2,7 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
 import ElementComponent, { OwnProps } from './ElementComponent';
-import { ElementRepository } from '../../domain/Element';
+import { ElementRepository } from '../../services/element';
 
 const selectable = (
   WrappedComponent: typeof ElementComponent

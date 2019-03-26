@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { ModelState } from './../Store';
 import styled from 'styled-components';
 import Port from './../../domain/Port';
-import { ElementRepository } from './../../domain/Element';
+import { ElementRepository } from '../../services/element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import ConnectContext, {
   ConnectConsumer,

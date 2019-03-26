@@ -2,7 +2,7 @@ import React, { Component, SFC } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { ModelState } from './../../../../components/Store';
-import { Element, ElementRepository } from './../../../Element';
+import { Element, ElementRepository } from '../../../../services/element';
 import Classifier from './Classifier';
 import { ElementType } from '..';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';

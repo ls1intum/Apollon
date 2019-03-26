@@ -1,7 +1,7 @@
 import { takeLatest, put, select, all } from 'redux-saga/effects';
 import { ModelState } from '../../components/Store';
 import {
-  ActionTypes,
+  ElementActionTypes,
   HoverAction,
   LeaveAction,
   SelectAction,
@@ -9,20 +9,19 @@ import {
   DeleteAction,
   MakeInteractiveAction,
   UpdateAction,
-} from './types';
-import { Element, IElement } from './Element';
-import Repository from './repository';
-import Container from '../Container';
-import { DiagramRepository } from '../Diagram';
-import { ElementRepository } from '.';
+} from './element-types';
+import { Element, IElement } from './element';
+import { ElementRepository } from './element-repository';
+import Container from '../../domain/Container';
+import { DiagramRepository } from '../../domain/Diagram';
 
-function* saga() {
-  yield takeLatest(ActionTypes.HOVER, handleElementHover);
-  yield takeLatest(ActionTypes.LEAVE, handleElementLeave);
-  yield takeLatest(ActionTypes.SELECT, handleElementSelect);
-  yield takeLatest(ActionTypes.MAKE_INTERACTIVE, handleElementMakeInteractive);
-  yield takeLatest(ActionTypes.MOVE, handleElementMove);
-  yield takeLatest(ActionTypes.DELETE, handleElementDelete);
+export function* ElementSaga() {
+  yield takeLatest(ElementActionTypes.HOVER, handleElementHover);
+  yield takeLatest(ElementActionTypes.LEAVE, handleElementLeave);
+  yield takeLatest(ElementActionTypes.SELECT, handleElementSelect);
+  yield takeLatest(ElementActionTypes.MAKE_INTERACTIVE, handleElementMakeInteractive);
+  yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
+  yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
 }
 
 function* handleElementHover({ payload }: HoverAction) {
@@ -30,7 +29,7 @@ function* handleElementHover({ payload }: HoverAction) {
   const { elements }: ModelState = yield select();
   const element: IElement = elements[payload.id];
   if (element.owner) {
-    yield put(Repository.leave(element.owner, true));
+    yield put(ElementRepository.leave(element.owner, true));
   }
 }
 
@@ -39,7 +38,7 @@ function* handleElementLeave({ payload }: LeaveAction) {
   const { elements }: ModelState = yield select();
   const element = elements[payload.id];
   if (element.owner) {
-    yield put(Repository.hover(element.owner, true));
+    yield put(ElementRepository.hover(element.owner, true));
   }
 }
 
@@ -49,7 +48,7 @@ function* handleElementSelect({ payload }: SelectAction) {
   const selection = Object.values(elements).filter(
     element => element.selected && element.id !== payload.id
   );
-  yield all(selection.map(element => put(Repository.select(element.id, true))));
+  yield all(selection.map(element => put(ElementRepository.select(element.id, true))));
 }
 
 function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
@@ -118,7 +117,7 @@ function* handleElementMove({ payload }: MoveAction) {
   };
   yield all(
     getSelection(diagram).map(element =>
-      put(Repository.move(element.id, payload.delta))
+      put(ElementRepository.move(element.id, payload.delta))
     )
   );
 }
@@ -134,5 +133,3 @@ function* handleElementDelete({ payload }: DeleteAction) {
     selection.map(element => put(ElementRepository.delete(element.id)))
   );
 }
-
-export default saga;

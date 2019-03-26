@@ -1,9 +1,8 @@
 import { Action } from 'redux';
-import { Element } from '.';
-import { ElementType } from '../plugins/element-type';
-import { IElement } from './Element';
+import { Element, IElement } from './element';
+import { ElementType } from '../../domain/plugins/element-type';
 
-export const enum ActionTypes {
+export const enum ElementActionTypes {
   CREATE = '@@element/CREATE',
   HOVER = '@@element/HOVER',
   LEAVE = '@@element/LEAVE',
@@ -17,41 +16,40 @@ export const enum ActionTypes {
   DELETE = '@@element/DELETE',
 }
 
-export interface CreateAction extends Action<ActionTypes.CREATE> {
+export interface CreateAction extends Action<ElementActionTypes.CREATE> {
   payload: {
     element: Element;
   };
 }
 
-export interface HoverAction extends Action<ActionTypes.HOVER> {
+export interface HoverAction extends Action<ElementActionTypes.HOVER> {
   payload: {
     id: string;
     internal: boolean;
   };
 }
 
-export interface LeaveAction extends Action<ActionTypes.LEAVE> {
+export interface LeaveAction extends Action<ElementActionTypes.LEAVE> {
   payload: {
     id: string;
     internal: boolean;
   };
 }
 
-export interface SelectAction extends Action<ActionTypes.SELECT> {
+export interface SelectAction extends Action<ElementActionTypes.SELECT> {
   payload: {
     id: string | null;
     toggle: boolean;
   };
 }
 
-export interface MakeInteractiveAction
-  extends Action<ActionTypes.MAKE_INTERACTIVE> {
+export interface MakeInteractiveAction extends Action<ElementActionTypes.MAKE_INTERACTIVE> {
   payload: {
     id: string;
   };
 }
 
-export interface ResizeAction extends Action<ActionTypes.RESIZE> {
+export interface ResizeAction extends Action<ElementActionTypes.RESIZE> {
   payload: {
     id: string;
     delta: {
@@ -61,7 +59,7 @@ export interface ResizeAction extends Action<ActionTypes.RESIZE> {
   };
 }
 
-export interface MoveAction extends Action<ActionTypes.MOVE> {
+export interface MoveAction extends Action<ElementActionTypes.MOVE> {
   payload: {
     id: string | null;
     delta: {
@@ -71,34 +69,34 @@ export interface MoveAction extends Action<ActionTypes.MOVE> {
   };
 }
 
-export interface ChangeAction extends Action<ActionTypes.CHANGE> {
+export interface ChangeAction extends Action<ElementActionTypes.CHANGE> {
   payload: {
     id: string;
     kind: ElementType;
   };
 }
 
-export interface RenameAction extends Action<ActionTypes.RENAME> {
+export interface RenameAction extends Action<ElementActionTypes.RENAME> {
   payload: {
     id: string;
     name: string;
   };
 }
 
-export interface UpdateAction extends Action<ActionTypes.UPDATE> {
+export interface UpdateAction extends Action<ElementActionTypes.UPDATE> {
   payload: {
     id: string;
     values: Partial<Element>;
   };
 }
 
-export interface DeleteAction extends Action<ActionTypes.DELETE> {
+export interface DeleteAction extends Action<ElementActionTypes.DELETE> {
   payload: {
     id: string | null;
   };
 }
 
-export type Actions =
+export type ElementActions =
   | CreateAction
   | HoverAction
   | LeaveAction
@@ -111,6 +109,6 @@ export type Actions =
   | UpdateAction
   | DeleteAction;
 
-export interface State {
+export interface ElementState {
   readonly [id: string]: IElement;
 }

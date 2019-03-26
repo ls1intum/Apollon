@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import { Element } from './../../domain/Element';
+import { Element } from '../../services/element';
 import * as Plugins from './../../domain/plugins';
 import Container from '../../domain/Container';
 import LayoutedElement from './LayoutedElement';

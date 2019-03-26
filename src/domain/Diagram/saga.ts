@@ -1,12 +1,13 @@
 import { takeLatest, put, select, all } from 'redux-saga/effects';
 import { ModelState } from './../../components/Store';
-import { ElementActionTypes, ElementRepository } from '../Element';
+import { ElementRepository } from '../../services/element';
 import Relationship from '../Relationship';
 import {
   CreateAction as ElementCreateAction,
   SelectAction,
   DeleteAction,
-} from '../Element/types';
+  ElementActionTypes,
+} from '../../services/element/element-types';
 import {
   ActionTypes as ContainerActionTypes,
   ChangeOwnerAction,
