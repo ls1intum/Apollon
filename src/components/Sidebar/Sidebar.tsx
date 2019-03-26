@@ -7,7 +7,7 @@ import {
   EditorModeSelection,
   EditorModeSelectionSegment,
 } from './styles';
-import { DiagramType } from './../../domain/Diagram';
+import { DiagramType } from '../../services/diagram';
 import { Element, ElementRepository, ElementType } from '../../services/element';
 import { Draggable, DropEvent } from './../Draggable';
 import ElementComponent from './../LayoutedElement/ElementComponent';

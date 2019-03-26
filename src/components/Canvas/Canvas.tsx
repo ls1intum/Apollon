@@ -9,7 +9,7 @@ import LayoutedElement from './../LayoutedElement/LayoutedElement';
 import LayoutedRelationship from './../LayoutedRelationship';
 
 import { Droppable, DropEvent } from './../Draggable';
-import { Diagram, DiagramRepository } from '../../domain/Diagram';
+import { Diagram, DiagramRepository } from '../../services/diagram';
 import { ElementRepository } from '../../services/element';
 import KeyboardEventListener from './KeyboardEventListener';
 import PopupLayer from './../Popup';

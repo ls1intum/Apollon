@@ -1,27 +1,19 @@
-import { takeLatest, put, select, all } from 'redux-saga/effects';
-import { ModelState } from './../../components/Store';
-import { ElementRepository } from '../../services/element';
-import Relationship from '../Relationship';
-import {
-  CreateAction as ElementCreateAction,
-  SelectAction,
-  DeleteAction,
-  ElementActionTypes,
-} from '../../services/element/element-types';
-import {
-  ContainerActionTypes as ContainerActionTypes,
-  ChangeOwnerAction,
-} from '../../services/container/container-types';
+import { takeLatest, put, select } from 'redux-saga/effects';
+import { ModelState } from '../../components/Store';
+import { ElementRepository } from '../element';
+import Relationship from '../../domain/Relationship';
+import { CreateAction as ElementCreateAction, SelectAction, DeleteAction, ElementActionTypes } from '../element/element-types';
+import { ContainerActionTypes, ChangeOwnerAction } from '../container/container-types';
 import {
   AddElementAction,
-  ActionTypes,
+  DiagramActionTypes,
   AddRelationshipAction,
   DeleteElementAction,
   DeleteRelationshipAction,
-} from './types';
-import { Container } from '../../services/container/container';
+} from './diagram-types';
+import { Container } from '../container/container';
 
-function* saga() {
+export function* DiagramSaga() {
   yield takeLatest(ContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
   yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.SELECT, handleElementSelection);
@@ -38,21 +30,19 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   const element = ElementRepository.getById(elements)(payload.id);
   if (!element || payload.owner === element.owner) return;
 
-  const owner =
-    payload.owner && ElementRepository.getById(elements)(payload.owner);
-  if (owner && !(owner.constructor as typeof Container).features.droppable)
-    return;
+  const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
+  if (owner && !(owner.constructor as typeof Container).features.droppable) return;
 
   if (!element.owner) {
     yield put<DeleteElementAction>({
-      type: ActionTypes.DELETE_ELEMENT,
+      type: DiagramActionTypes.DELETE_ELEMENT,
       payload: { id: element.id },
     });
   }
 
   if (!payload.owner) {
     yield put<AddElementAction>({
-      type: ActionTypes.ADD_ELEMENT,
+      type: DiagramActionTypes.ADD_ELEMENT,
       payload: { id: element.id },
     });
   }
@@ -61,13 +51,13 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 function* handleElementCreation({ payload }: ElementCreateAction) {
   if (payload.element instanceof Relationship) {
     yield put<AddRelationshipAction>({
-      type: ActionTypes.ADD_RELATIONSHIP,
+      type: DiagramActionTypes.ADD_RELATIONSHIP,
       payload: { id: payload.element.id },
     });
   } else {
     if (payload.element.owner) return;
     yield put<AddElementAction>({
-      type: ActionTypes.ADD_ELEMENT,
+      type: DiagramActionTypes.ADD_ELEMENT,
       payload: { id: payload.element.id },
     });
   }
@@ -80,12 +70,12 @@ function* handleElementSelection({ payload }: SelectAction) {
 
   if (diagram.ownedElements.includes(payload.id)) {
     yield put<AddElementAction>({
-      type: ActionTypes.ADD_ELEMENT,
+      type: DiagramActionTypes.ADD_ELEMENT,
       payload: { id: payload.id },
     });
   } else if (diagram.ownedRelationships.includes(payload.id)) {
     yield put<AddRelationshipAction>({
-      type: ActionTypes.ADD_RELATIONSHIP,
+      type: DiagramActionTypes.ADD_RELATIONSHIP,
       payload: { id: payload.id },
     });
   }
@@ -98,15 +88,13 @@ function* handleElementDeletion({ payload }: DeleteAction) {
 
   if (diagram.ownedElements.includes(payload.id)) {
     yield put<DeleteElementAction>({
-      type: ActionTypes.DELETE_ELEMENT,
+      type: DiagramActionTypes.DELETE_ELEMENT,
       payload: { id: payload.id },
     });
   } else if (diagram.ownedRelationships.includes(payload.id)) {
     yield put<DeleteRelationshipAction>({
-      type: ActionTypes.DELETE_RELATIONSHIP,
+      type: DiagramActionTypes.DELETE_RELATIONSHIP,
       payload: { id: payload.id },
     });
   }
 }
-
-export default saga;

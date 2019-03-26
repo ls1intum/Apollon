@@ -13,7 +13,7 @@ import {
 import { Element, IElement } from './element';
 import { ElementRepository } from './element-repository';
 import { Container } from '../container';
-import { DiagramRepository } from '../../domain/Diagram';
+import { DiagramRepository } from '../diagram';
 
 export function* ElementSaga() {
   yield takeLatest(ElementActionTypes.HOVER, handleElementHover);

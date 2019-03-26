@@ -1,5 +1,5 @@
 import { Element, ElementRepository, ElementType } from '../../services/element';
-import { Diagram, DiagramState } from '../../domain/Diagram';
+import { Diagram } from '../../services/diagram';
 import { ApollonView } from '../../services/editor';
 import {
   UMLModel,
@@ -15,6 +15,7 @@ import { Container } from '../../services/container';
 import * as Plugin from '../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
 import { AssessmentState } from '../../services/assessment/assessment-types';
+import { DiagramState } from '../../services/diagram/diagram-types';
 import { EditorState } from '../../services/editor/editor-types';
 import { ElementState } from '../../services/element/element-types';
 import { elements as elementClass } from './../../domain/plugins/elements'
@@ -79,7 +80,7 @@ export class ModelState {
         view: ApollonView.Modelling,
       },
       diagram: {
-        ...new Diagram(model.type),
+        ...(() => { const d = new Diagram(); d.type2 = model.type; return d; })(),
         ownedElements: Object.values(elements)
           .filter(e => !e.owner)
           .map(e => e.id),

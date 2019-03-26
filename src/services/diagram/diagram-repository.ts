@@ -1,11 +1,9 @@
 import { ModelState } from '../../components/Store';
-import { Diagram } from './Diagram';
+import { Diagram } from './diagram';
 
-class Repository {
+export class DiagramRepository {
   static read = (state: ModelState): Diagram => {
     const { diagram }: ModelState = state;
-    return Object.setPrototypeOf(diagram, Diagram.prototype);
+    return new Diagram(diagram);
   };
 }
-
-export default Repository;

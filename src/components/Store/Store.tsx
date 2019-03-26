@@ -7,12 +7,13 @@ import reduceReducers from 'reduce-reducers';
 
 import { all, fork } from 'redux-saga/effects';
 import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
-import { DiagramReducer, DiagramSaga } from './../../domain/Diagram';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
 import { ContainerReducer } from '../../services/container/container-reducer';
+import { DiagramReducer } from '../../services/diagram/diagram-reducer';
 import { EditorReducer } from './../../services/editor/editor-reducer';
 import { ElementReducer } from '../../services/element/element-reducer';
 import { ContainerSaga } from '../../services/container/container-saga';
+import { DiagramSaga } from '../../services/diagram/diagram-saga';
 import { ElementSaga } from '../../services/element/element-saga';
 
 class Store extends React.Component<Props> {

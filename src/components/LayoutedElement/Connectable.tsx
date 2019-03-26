@@ -10,7 +10,7 @@ import ConnectContext, {
 } from './../Connectable/ConnectContext';
 import * as Plugins from './../../domain/plugins';
 import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
-import { DiagramType } from '../../domain/Diagram';
+import { DiagramType } from '../../services/diagram';
 import { Direction } from '../..';
 
 const Path = styled.path`

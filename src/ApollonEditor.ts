@@ -4,7 +4,7 @@ import { Store } from 'redux';
 import { Application } from './scenes/Application';
 import { Svg } from './scenes/Svg';
 import { ModelState } from './components/Store';
-import { DiagramType } from './domain/Diagram';
+import { DiagramType } from './services/diagram';
 import { ApollonOptions, Selection, UMLModel, ExportOptions, SVG } from '.';
 
 export class ApollonEditor {
