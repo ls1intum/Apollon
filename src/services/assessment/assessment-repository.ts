@@ -1,9 +1,9 @@
-import { ActionTypes, AssessAction } from './types';
+import { AssessmentActionTypes, AssessAction } from './assessment-types';
 import { Assessment } from '../..';
 
-export class repository {
+export class AssessmentRepository {
   static assess = (element: string, assessment: Assessment): AssessAction => ({
-    type: ActionTypes.ASSESS,
+    type: AssessmentActionTypes.ASSESS,
     payload: { element, assessment },
   });
 }

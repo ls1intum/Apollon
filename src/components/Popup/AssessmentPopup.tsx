@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import { ModelState } from './../Store';
 import { Element } from '../../domain/Element';
 import { Section, Header, Divider, TextField } from './Controls';
-import { Assessment } from '../..';
-import { AssessmentRepository } from '../../services/assessments';
+import { Assessment } from '../../services/assessment';
+import { AssessmentRepository } from '../../services/assessment';
 
 class AssessmentPopup extends Component<Props, State> {
   state = {

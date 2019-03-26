@@ -14,7 +14,7 @@ import Relationship, {
 import Container from '../../domain/Container';
 import * as Plugin from '../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
-import { AssessmentState } from '../../services/assessments';
+import { AssessmentState } from '../../services/assessment/assessment-types';
 import { elements as elementClass } from './../../domain/plugins/elements'
 
 export interface ModelState {

@@ -2,7 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
-import { Assessment } from '../..';
+import { Assessment } from '../../services/assessment';
 import { CheckIcon } from './../controls/check-icon';
 import { CancelIcon } from './../controls/cancel-icon';
 
