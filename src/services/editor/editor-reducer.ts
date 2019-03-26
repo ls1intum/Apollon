@@ -1,19 +1,16 @@
 import { Reducer } from 'redux';
-import { State, Actions, ActionTypes, ApollonView } from './types';
+import { EditorState, Actions, EditorActionTypes, ApollonView } from './editor-types';
 import { ApollonMode } from '../..';
 
-const initialState: State = {
+const initialState: EditorState = {
   readonly: false,
   mode: ApollonMode.Exporting,
   view: ApollonView.Modelling,
 };
 
-export const reducer: Reducer<State, Actions> = (
-  state = initialState,
-  action
-) => {
+export const EditorReducer: Reducer<EditorState, Actions> = (state = initialState, action) => {
   switch (action.type) {
-    case ActionTypes.CHANGE_VIEW: {
+    case EditorActionTypes.CHANGE_VIEW: {
       const { payload } = action;
       return {
         ...state,

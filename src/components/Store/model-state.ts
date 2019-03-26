@@ -1,6 +1,6 @@
 import { Element, ElementRepository, ElementType } from '../../services/element';
 import { Diagram, DiagramState } from '../../domain/Diagram';
-import { EditorState, ApollonView } from '../../services/editor';
+import { ApollonView } from '../../services/editor';
 import {
   UMLModel,
   UMLElement,
@@ -15,6 +15,7 @@ import Container from '../../domain/Container';
 import * as Plugin from '../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
 import { AssessmentState } from '../../services/assessment/assessment-types';
+import { EditorState } from '../../services/editor/editor-types';
 import { ElementState } from '../../services/element/element-types';
 import { elements as elementClass } from './../../domain/plugins/elements'
 

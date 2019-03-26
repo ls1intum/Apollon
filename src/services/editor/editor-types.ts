@@ -7,19 +7,19 @@ export const enum ApollonView {
   Highlight = 'Highlight',
 }
 
-export const enum ActionTypes {
+export const enum EditorActionTypes {
   CHANGE_VIEW = '@@element/CHANGE_VIEW',
 }
 
 export type Actions = ChangeViewAction;
 
-export interface ChangeViewAction extends Action<ActionTypes.CHANGE_VIEW> {
+export interface ChangeViewAction extends Action<EditorActionTypes.CHANGE_VIEW> {
   payload: {
     view: ApollonView;
   };
 }
 
-export interface State {
+export interface EditorState {
   readonly mode: ApollonMode;
   readonly readonly: boolean;
   readonly view: ApollonView;

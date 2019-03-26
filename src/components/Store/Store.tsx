@@ -12,11 +12,11 @@ import { ModelState } from './model-state';
 import reduceReducers from 'reduce-reducers';
 
 import { all, fork } from 'redux-saga/effects';
-import { EditorReducer } from './../../services/editor'
 import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
 import { ContainerReducer, ContainerSaga } from './../../domain/Container';
 import { DiagramReducer, DiagramSaga } from './../../domain/Diagram';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
+import { EditorReducer } from './../../services/editor/editor-reducer'
 import { ElementReducer } from '../../services/element/element-reducer';
 import { ElementSaga } from '../../services/element/element-saga';
 
