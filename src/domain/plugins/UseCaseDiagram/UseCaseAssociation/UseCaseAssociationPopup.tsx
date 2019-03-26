@@ -26,18 +26,14 @@ const Input = styled(TextField)`
 `;
 
 class UseCaseAssociationPopup extends Component<Props> {
+  private rename = (id: string) => (value: string) => {
+    this.props.rename(id, value);
+  };
+
   private onChange = (value: RelationshipKind) => {
     const { element, change } = this.props;
     change(element.id, value);
   };
-
-  // private onUpdate = (
-  //   type: 'multiplicity' | 'role',
-  //   end: 'source' | 'target'
-  // ) => (value: string) => {
-  //   const { element, update } = this.props;
-  //   update(element.id, { [type]: { ...element[type], [end]: value } });
-  // };
 
   render() {
     const { element, getById } = this.props;
@@ -47,12 +43,23 @@ class UseCaseAssociationPopup extends Component<Props> {
     return (
       <div>
         <Section>
-          <Header>{{
-            [RelationshipKind.UseCaseAssociation]: 'Association',
-            [RelationshipKind.UseCaseGeneralization]: 'Generalization',
-            [RelationshipKind.UseCaseInclude]: 'Include',
-            [RelationshipKind.UseCaseExtend]: 'Extend',
-          }[element.kind]}</Header>
+          {element.kind === RelationshipKind.UseCaseAssociation ? (
+            <TextField
+              value={element.name}
+              onUpdate={this.rename(element.id)}
+            />
+          ) : (
+            <Header>
+              {
+                {
+                  [RelationshipKind.UseCaseAssociation]: 'Association',
+                  [RelationshipKind.UseCaseGeneralization]: 'Generalization',
+                  [RelationshipKind.UseCaseInclude]: 'Include',
+                  [RelationshipKind.UseCaseExtend]: 'Extend',
+                }[element.kind]
+              }
+            </Header>
+          )}
           <Divider />
         </Section>
         <Section>
@@ -85,6 +92,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
+  rename: typeof ElementRepository.rename;
   change: typeof ElementRepository.change;
   update: typeof ElementRepository.update;
 }
@@ -94,6 +102,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 export default connect<StateProps, DispatchProps, OwnProps, ReduxState>(
   state => ({ getById: ElementRepository.getById(state.elements) }),
   {
+    rename: ElementRepository.rename,
     change: ElementRepository.change,
     update: ElementRepository.update,
   }
