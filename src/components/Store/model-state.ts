@@ -47,9 +47,6 @@ export class ModelState {
           return element;
         });
         element.ownedElements = children.map(child => child.id);
-        console.log(Object.values(elements).filter(
-          child => child.owner === element.id
-        ))
         const changes = element
           .render(children)
           .reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});

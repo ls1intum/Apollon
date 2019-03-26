@@ -8,16 +8,15 @@ export interface IContainer extends IElement {
 abstract class Container extends Element implements IContainer {
   static features = { ...Element.features, droppable: true };
 
-  ownedElements: string[] = [];
+  ownedElements: string[];
 
   constructor(values?: IContainer);
   constructor(values?: UMLElement);
   constructor(values?: UMLElement | IElement);
   constructor(values?: UMLElement | IContainer) {
     super(values);
-    if (values && 'ownedElements'in values) {
-      this.ownedElements = values.ownedElements;
-    }
+
+    this.ownedElements = (values && 'ownedElements' in values) ? values.ownedElements : [];
   }
 
   render(children: Element[]): Element[] {

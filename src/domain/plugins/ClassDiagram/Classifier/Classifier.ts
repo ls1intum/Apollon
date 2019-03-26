@@ -36,15 +36,18 @@ abstract class Classifier extends Container {
   constructor(values?: IContainer);
   constructor(values?: UMLElement | IElement);
   constructor(values?: UMLClassifier | IContainer) {
-    super(values);
+    super();
 
-    this.ownedElements = [];
-    if (values && 'attributes' in values) {
-      this.ownedElements = [...this.ownedElements, ...values.attributes];
+    if (!values) return;
+
+    if ('attributes' in values) {
+      delete values.attributes;
     }
-    if (values && 'methods' in values) {
-      this.ownedElements = [...this.ownedElements, ...values.methods];
+    if ('methods' in values) {
+      delete values.methods;
     }
+
+    super(values);
   }
 
   render(elements: Element[]): Element[] {
