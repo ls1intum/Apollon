@@ -1,5 +1,5 @@
 import { DiagramType } from './domain/plugins/DiagramType';
-import UMLElementType from './domain/plugins/ElementKind';
+import { ElementType as UMLElementType } from './domain/plugins/element-type';
 import UMLRelationshipType from './domain/plugins/RelationshipKind';
 import Styles from './components/Theme/Styles';
 

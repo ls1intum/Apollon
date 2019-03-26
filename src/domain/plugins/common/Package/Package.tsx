@@ -1,5 +1,5 @@
 import Container from '../../../Container';
-import { ElementKind } from '..';
+import { ElementType } from '..';
 
 class Package extends Container {
   static features = {
@@ -8,7 +8,7 @@ class Package extends Container {
     editable: false,
   };
 
-  type = ElementKind.Package;
+  type = ElementType.Package;
 }
 
 export default Package;

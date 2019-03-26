@@ -1,4 +1,4 @@
-import { Element, ElementState, ElementRepository, ElementKind } from '../../domain/Element';
+import { Element, ElementState, ElementRepository, ElementType } from '../../domain/Element';
 import { Diagram, DiagramState } from '../../domain/Diagram';
 import { EditorState, ApollonView } from '../../services/editor';
 import {
@@ -42,7 +42,7 @@ export class ModelState {
         const children = Object.values(elements).filter(
           child => child.owner === element.id
         ).map<Element>(child => {
-          const Clazz = elementClass[child.type as ElementKind];
+          const Clazz = elementClass[child.type as ElementType];
           const element = new Clazz(child);
           return element;
         });

@@ -1,4 +1,4 @@
-import ElementKind from './ElementKind';
+import { ElementType } from './element-type';
 import { Element, IElement } from './../Element';
 import { UMLElement } from '../..';
 import { Class } from './ClassDiagram/Classifier/Class';
@@ -21,24 +21,24 @@ import { Package } from './Common/Package';
 import { ClassAttribute } from './ClassDiagram/ClassMember/ClassAttribute';
 import { ClassMethod } from './ClassDiagram/ClassMember/ClassMethod';
 
-export const elements: { [key in ElementKind]: new (values?: UMLElement | Partial<IElement>) => Element } = {
-  [ElementKind.Diagram]: Diagram,
-  [ElementKind.Package]: Package,
-  [ElementKind.Class]: Class,
-  [ElementKind.AbstractClass]: AbstractClass,
-  [ElementKind.Interface]: Interface,
-  [ElementKind.Enumeration]: Enumeration,
-  [ElementKind.ClassAttribute]: ClassAttribute,
-  [ElementKind.ClassMethod]: ClassMethod,
-  [ElementKind.ObjectName]: ObjectName,
-  [ElementKind.ObjectAttribute]: ObjectAttribute,
-  [ElementKind.ActivityInitialNode]: ActivityInitialNode,
-  [ElementKind.ActivityFinalNode]: ActivityFinalNode,
-  [ElementKind.ActivityActionNode]: ActivityActionNode,
-  [ElementKind.ActivityObjectNode]: ActivityObjectNode,
-  [ElementKind.ActivityForkNode]: ActivityForkNode,
-  [ElementKind.ActivityMergeNode]: ActivityMergeNode,
-  [ElementKind.UseCase]: UseCase,
-  [ElementKind.UseCaseActor]: UseCaseActor,
-  [ElementKind.UseCaseSystem]: UseCaseSystem,
+export const elements: { [key in ElementType]: new (values?: UMLElement | Partial<IElement>) => Element } = {
+  [ElementType.Diagram]: Diagram,
+  [ElementType.Package]: Package,
+  [ElementType.Class]: Class,
+  [ElementType.AbstractClass]: AbstractClass,
+  [ElementType.Interface]: Interface,
+  [ElementType.Enumeration]: Enumeration,
+  [ElementType.ClassAttribute]: ClassAttribute,
+  [ElementType.ClassMethod]: ClassMethod,
+  [ElementType.ObjectName]: ObjectName,
+  [ElementType.ObjectAttribute]: ObjectAttribute,
+  [ElementType.ActivityInitialNode]: ActivityInitialNode,
+  [ElementType.ActivityFinalNode]: ActivityFinalNode,
+  [ElementType.ActivityActionNode]: ActivityActionNode,
+  [ElementType.ActivityObjectNode]: ActivityObjectNode,
+  [ElementType.ActivityForkNode]: ActivityForkNode,
+  [ElementType.ActivityMergeNode]: ActivityMergeNode,
+  [ElementType.UseCase]: UseCase,
+  [ElementType.UseCaseActor]: UseCaseActor,
+  [ElementType.UseCaseSystem]: UseCaseSystem,
 }

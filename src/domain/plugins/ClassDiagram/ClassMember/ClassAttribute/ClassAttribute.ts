@@ -1,8 +1,8 @@
 import ClassMember from '../ClassMember';
-import { ElementKind } from '../..';
+import { ElementType } from '../..';
 
 class ClassAttribute extends ClassMember {
-  type = ElementKind.ClassAttribute;
+  type = ElementType.ClassAttribute;
 }
 
 export default ClassAttribute;

@@ -18,7 +18,7 @@ import {
 import { Element } from '.';
 import * as Plugins from '../plugins';
 import Point from '../geometry/Point';
-import ElementKind from '../plugins/ElementKind';
+import { ElementType } from '../plugins/element-type';
 import { elements } from './../plugins/elements';
 import { notEmpty } from '../utils';
 
@@ -81,7 +81,7 @@ class Repository {
     const element = state[id];
     if (!element) return null;
 
-    const ElementClass = elements[element.type as ElementKind];
+    const ElementClass = elements[element.type as ElementType];
     if (!ElementClass) return null;
 
     return new ElementClass(element);
@@ -123,7 +123,7 @@ class Repository {
 
   static change: ActionCreator<ChangeAction> = (
     id: string,
-    kind: ElementKind
+    kind: ElementType
   ) => ({
     type: ActionTypes.CHANGE,
     payload: { id, kind },

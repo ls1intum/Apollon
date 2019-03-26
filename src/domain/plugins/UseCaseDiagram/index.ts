@@ -1,4 +1,4 @@
-export enum ElementKind {
+export enum ElementType {
   UseCase = 'UseCase',
   UseCaseActor = 'UseCaseActor',
   UseCaseSystem = 'UseCaseSystem',

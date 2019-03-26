@@ -1,11 +1,11 @@
 import { Element } from '../../../Element';
-import { ElementKind } from '..';
+import { ElementType } from '..';
 import Boundary from '../../../geo/Boundary';
 
 class ActivityInitialNode extends Element {
   static features = { ...Element.features, editable: false };
 
-  type = ElementKind.ActivityInitialNode;
+  type = ElementType.ActivityInitialNode;
   bounds: Boundary = { ...this.bounds, width: 45, height: 45 };
 }
 

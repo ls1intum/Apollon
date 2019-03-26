@@ -1,5 +1,5 @@
 export { Element, IElement } from './Element';
-export { default as ElementKind } from './../plugins/ElementKind';
+export { ElementType } from '../plugins/element-type';
 export {
   ActionTypes as ElementActionTypes,
   State as ElementState,

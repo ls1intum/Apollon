@@ -1,5 +1,5 @@
 import { Element } from '../../../Element';
-import { ElementKind } from '..';
+import { ElementType } from '..';
 import Boundary from '../../../geo/Boundary';
 
 class ObjectAttribute extends Element {
@@ -14,7 +14,7 @@ class ObjectAttribute extends Element {
     editable: false,
   };
 
-  type = ElementKind.ObjectAttribute;
+  type = ElementType.ObjectAttribute;
   bounds: Boundary = { ...this.bounds, height: 30 };
 
   static calculateWidth = (value: string): number => {

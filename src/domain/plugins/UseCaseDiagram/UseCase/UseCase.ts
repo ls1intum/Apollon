@@ -1,8 +1,8 @@
 import { Element } from '../../../Element';
-import { ElementKind } from '..';
+import { ElementType } from '..';
 
 class UseCase extends Element {
-  type = ElementKind.UseCase;
+  type = ElementType.UseCase;
 }
 
 export default UseCase;

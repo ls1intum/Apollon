@@ -1,11 +1,11 @@
 import { Element } from '../../../Element';
-import { ElementKind } from '..';
+import { ElementType } from '..';
 import Boundary from '../../../geo/Boundary';
 
 class ActivityForkNode extends Element {
   static features = { ...Element.features, editable: false };
 
-  type = ElementKind.ActivityForkNode;
+  type = ElementType.ActivityForkNode;
   bounds: Boundary = { ...this.bounds, width: 20, height: 60 };
 }
 

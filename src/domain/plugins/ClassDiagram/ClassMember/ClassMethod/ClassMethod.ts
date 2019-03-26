@@ -1,8 +1,8 @@
 import ClassMember from '../ClassMember';
-import { ElementKind } from '../..';
+import { ElementType } from '../..';
 
 class ClassMethod extends ClassMember {
-  type = ElementKind.ClassMethod;
+  type = ElementType.ClassMethod;
 }
 
 export default ClassMethod;

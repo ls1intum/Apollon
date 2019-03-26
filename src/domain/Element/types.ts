@@ -1,6 +1,6 @@
 import { Action } from 'redux';
 import { Element } from '.';
-import ElementKind from '../plugins/ElementKind';
+import { ElementType } from '../plugins/element-type';
 import { IElement } from './Element';
 
 export const enum ActionTypes {
@@ -74,7 +74,7 @@ export interface MoveAction extends Action<ActionTypes.MOVE> {
 export interface ChangeAction extends Action<ActionTypes.CHANGE> {
   payload: {
     id: string;
-    kind: ElementKind;
+    kind: ElementType;
   };
 }
 

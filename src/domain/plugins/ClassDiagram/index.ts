@@ -1,6 +1,6 @@
-import { Element, UMLElement, UMLRelationship, Direction } from '../../..';
+import { UMLElement, UMLRelationship, Direction } from '../../..';
 
-export enum ElementKind {
+export enum ElementType {
   Class = 'Class',
   AbstractClass = 'AbstractClass',
   Interface = 'Interface',

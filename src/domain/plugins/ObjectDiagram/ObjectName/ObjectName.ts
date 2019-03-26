@@ -1,6 +1,6 @@
 import { Element } from '../../../Element';
 import Container from '../../../Container';
-import { ElementKind } from '..';
+import { ElementType } from '..';
 import { ObjectAttribute } from '../ObjectAttribute';
 
 class ObjectName extends Container {
@@ -10,7 +10,7 @@ class ObjectName extends Container {
     resizable: 'WIDTH' as 'WIDTH' | 'BOTH' | 'HEIGHT' | 'NONE',
   };
 
-  type = ElementKind.ObjectName;
+  type = ElementType.ObjectName;
 
   get headerHeight() {
     return 40;

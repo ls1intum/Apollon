@@ -1,13 +1,13 @@
 import uuid from './../utils/uuid';
 import { Boundary } from './../geometry/Boundary';
-import ElementKind from './../plugins/ElementKind';
+import { ElementType } from '../plugins/element-type';
 import { RelationshipKind } from '../Relationship';
 import { UMLElement } from '../..';
 
 export interface IElement {
   readonly id: string;
   readonly name: string;
-  readonly type: ElementKind | RelationshipKind;
+  readonly type: ElementType | RelationshipKind;
   readonly bounds: Boundary;
   readonly owner: string | null;
 
@@ -29,7 +29,7 @@ export abstract class Element implements IElement {
 
   readonly id: string = uuid();
   public name: string = '';
-  abstract readonly type: ElementKind | RelationshipKind;
+  abstract readonly type: ElementType | RelationshipKind;
   readonly bounds: Boundary = new Boundary(0, 0, 200, 100);
   owner: string | null = null;
 
@@ -52,7 +52,7 @@ export abstract class Element implements IElement {
         id: element.id,
         name: element.name,
         owner: element.owner,
-        type: element.type as ElementKind,
+        type: element.type as ElementType,
         bounds: element.bounds,
       },
       children: children,

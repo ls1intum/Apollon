@@ -1,4 +1,4 @@
-export enum ElementKind {
+export enum ElementType {
   ObjectName = 'ObjectName',
   ObjectAttribute = 'ObjectAttribute',
 }

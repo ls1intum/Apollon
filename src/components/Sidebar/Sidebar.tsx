@@ -8,7 +8,7 @@ import {
   EditorModeSelectionSegment,
 } from './styles';
 import { DiagramType } from './../../domain/Diagram';
-import { Element, ElementRepository, ElementKind } from '../../domain/Element';
+import { Element, ElementRepository, ElementType } from '../../domain/Element';
 import { Draggable, DropEvent } from './../Draggable';
 import ElementComponent from './../LayoutedElement/ElementComponent';
 import { CanvasProvider } from '../Canvas/CanvasContext';
@@ -103,9 +103,9 @@ class Sidebar extends Component<Props, State> {
 
     setTimeout(() => {
       switch (element.type) {
-        case ElementKind.Class:
-        case ElementKind.AbstractClass:
-        case ElementKind.Interface:
+        case ElementType.Class:
+        case ElementType.AbstractClass:
+        case ElementType.Interface:
           [
             new ClassAttribute({ name: '+ attribute: Type' }),
             new ClassMethod({ name: '+ method()' }),
@@ -114,7 +114,7 @@ class Sidebar extends Component<Props, State> {
             this.props.create(member);
           });
           break;
-        case ElementKind.Enumeration:
+        case ElementType.Enumeration:
           [
             new ClassAttribute({ name: 'Case1' }),
             new ClassAttribute({ name: 'Case2' }),
@@ -124,7 +124,7 @@ class Sidebar extends Component<Props, State> {
             this.props.create(member);
           });
           break;
-        case ElementKind.ObjectName:
+        case ElementType.ObjectName:
           [new ObjectAttribute({ name: 'attribute = value' })].forEach(
             member => {
               member.owner = element.id;

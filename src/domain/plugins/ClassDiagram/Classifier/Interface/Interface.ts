@@ -1,8 +1,8 @@
 import Classifier from '../Classifier';
-import { ElementKind } from '../..';
+import { ElementType } from '../..';
 
 class Interface extends Classifier {
-  type = ElementKind.Interface;
+  type = ElementType.Interface;
 }
 
 export default Interface;

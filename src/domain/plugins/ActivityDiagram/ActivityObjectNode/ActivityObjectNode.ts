@@ -1,8 +1,8 @@
 import { Element } from '../../../Element';
-import { ElementKind } from '..';
+import { ElementType } from '..';
 
 class ActivityObjectNode extends Element {
-  type = ElementKind.ActivityObjectNode;
+  type = ElementType.ActivityObjectNode;
 }
 
 export default ActivityObjectNode;

@@ -1,6 +1,6 @@
 import Container from './../Container';
 import Boundary from './../geo/Boundary';
-import { ElementKind } from '../Element';
+import { ElementType } from '../Element';
 import { DiagramType } from './../plugins/DiagramType';
 import { IContainer } from '../Container/Container';
 
@@ -10,7 +10,7 @@ export interface IDiagram extends IContainer {
 }
 
 export class Diagram extends Container implements IDiagram {
-  type: ElementKind = ElementKind.Diagram;
+  type: ElementType = ElementType.Diagram;
   type2: DiagramType = DiagramType.ClassDiagram;
   ownedElements: string[] = [];
   ownedRelationships: string[] = [];

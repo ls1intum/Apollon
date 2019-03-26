@@ -1,6 +1,6 @@
 import { Element, IElement } from '../../../Element';
 import Container from '../../../Container';
-import { ElementKind, UMLClassifier } from '..';
+import { ElementType, UMLClassifier } from '..';
 import ClassMember from '../ClassMember/ClassMember';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';
 import { ClassMethod } from '../ClassMember/ClassMethod';
@@ -15,15 +15,15 @@ abstract class Classifier extends Container {
   };
 
   get isAbstract() {
-    return this.type === ElementKind.AbstractClass;
+    return this.type === ElementType.AbstractClass;
   }
 
   get isInterface() {
-    return this.type === ElementKind.Interface;
+    return this.type === ElementType.Interface;
   }
 
   get isEnumeration() {
-    return this.type === ElementKind.Enumeration;
+    return this.type === ElementType.Enumeration;
   }
 
   get headerHeight() {

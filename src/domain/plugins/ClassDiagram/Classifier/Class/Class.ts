@@ -1,8 +1,8 @@
 import Classifier from '../Classifier';
-import { ElementKind } from '../..';
+import { ElementType } from '../..';
 
 class Class extends Classifier {
-  type = ElementKind.Class;
+  type = ElementType.Class;
 }
 
 export default Class;

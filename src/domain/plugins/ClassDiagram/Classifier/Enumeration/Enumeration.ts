@@ -1,8 +1,8 @@
 import Classifier from '../Classifier';
-import { ElementKind } from '../..';
+import { ElementType } from '../..';
 
 class Enumeration extends Classifier {
-  type = ElementKind.Enumeration;
+  type = ElementType.Enumeration;
 }
 
 export default Enumeration;

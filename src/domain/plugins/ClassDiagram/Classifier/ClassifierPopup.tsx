@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { ModelState } from './../../../../components/Store';
 import { Element, ElementRepository } from './../../../Element';
 import Classifier from './Classifier';
-import { ElementKind } from '..';
+import { ElementType } from '..';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';
 import { ClassMethod } from '../ClassMember/ClassMethod';
 import {
@@ -52,9 +52,9 @@ class ClassifierComponent extends Component<Props> {
     this.props.rename(id, value);
   };
 
-  private toggle = (kind: ElementKind) => () => {
+  private toggle = (kind: ElementType) => () => {
     const { element, change } = this.props;
-    change(element.id, element.type === kind ? ElementKind.Class : kind);
+    change(element.id, element.type === kind ? ElementType.Class : kind);
   };
 
   private delete = (id: string) => () => {
@@ -79,19 +79,19 @@ class ClassifierComponent extends Component<Props> {
           <Switch>
             <SwitchItem
               active={element.isAbstract}
-              onClick={this.toggle(ElementKind.AbstractClass)}
+              onClick={this.toggle(ElementType.AbstractClass)}
             >
               Abstract
             </SwitchItem>
             <SwitchItem
               active={element.isInterface}
-              onClick={this.toggle(ElementKind.Interface)}
+              onClick={this.toggle(ElementType.Interface)}
             >
               Interface
             </SwitchItem>
             <SwitchItem
               active={element.isEnumeration}
-              onClick={this.toggle(ElementKind.Enumeration)}
+              onClick={this.toggle(ElementType.Enumeration)}
             >
               Enum
             </SwitchItem>
