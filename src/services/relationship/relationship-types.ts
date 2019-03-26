@@ -1,12 +1,14 @@
 import { Action as ReduxAction } from 'redux';
-import Port from '../Port';
+import Port from '../../domain/Port';
 
-export const enum ActionTypes {
+export const enum RelationshipActionTypes {
   REDRAW = '@@relationship/REDRAW',
   CONNECT = '@@relationship/CONNECT',
 }
 
-export interface RedrawAction extends ReduxAction<ActionTypes.REDRAW> {
+export type RelationshipActions = RedrawAction | ConnectAction;
+
+export interface RedrawAction extends ReduxAction<RelationshipActionTypes.REDRAW> {
   payload: {
     id: string;
     path: { x: number; y: number }[];
@@ -14,12 +16,10 @@ export interface RedrawAction extends ReduxAction<ActionTypes.REDRAW> {
   };
 }
 
-export interface ConnectAction extends ReduxAction<ActionTypes.CONNECT> {
+export interface ConnectAction extends ReduxAction<RelationshipActionTypes.CONNECT> {
   payload: {
     id: string;
     source?: Port;
     target?: Port;
   };
 }
-
-export type Actions = RedrawAction | ConnectAction;

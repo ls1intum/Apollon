@@ -1,16 +1,16 @@
 import { takeLatest, takeEvery, put, all, select } from 'redux-saga/effects';
-import { ModelState } from './../../components/Store';
-import { ElementRepository, IElement } from '../../services/element';
-import RelationshipRepository from './repository';
-import { RedrawAction, ActionTypes, ConnectAction } from './types';
-import { MoveAction, DeleteAction, CreateAction, ElementActionTypes } from '../../services/element/element-types';
-import { Connection } from '../Port';
-import Relationship from '.';
-import Boundary from '../geo/Boundary';
+import { ModelState } from '../../components/Store';
+import { ElementRepository, IElement } from '../element';
+import { RelationshipRepository } from './relationship-repository';
+import { RedrawAction, RelationshipActionTypes, ConnectAction } from './relationship-types';
+import { MoveAction, DeleteAction, CreateAction, ElementActionTypes } from '../element/element-types';
+import { Connection } from '../../domain/Port';
+import { Relationship } from '.';
+import Boundary from '../../domain/geo/Boundary';
 
-function* saga() {
+export function* RelationshipSaga() {
   yield takeLatest(ElementActionTypes.CREATE, handleRelationshipCreation);
-  yield takeLatest(ActionTypes.CONNECT, handleRelationshipConnect);
+  yield takeLatest(RelationshipActionTypes.CONNECT, handleRelationshipConnect);
   yield takeEvery(ElementActionTypes.MOVE, handleElementMove);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementMove);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
@@ -77,9 +77,7 @@ function* recalc(id: string) {
     };
   }
 
-  const {
-    straight,
-  } = (relationship.constructor as typeof Relationship).features;
+  const { straight } = (relationship.constructor as typeof Relationship).features;
 
   let path = Connection.computePath(
     { bounds: source, direction: relationship.source.direction },
@@ -96,7 +94,7 @@ function* recalc(id: string) {
   path = path.map(point => ({ x: point.x - x, y: point.y - y }));
 
   yield put<RedrawAction>({
-    type: ActionTypes.REDRAW,
+    type: RelationshipActionTypes.REDRAW,
     payload: { id: relationship.id, path, bounds },
   });
 }
@@ -107,19 +105,7 @@ function* handleElementDelete({ payload }: DeleteAction) {
   const { elements }: ModelState = yield select();
   const relationships = Object.values(elements)
     .filter(element => 'path' in element)
-    .map<Relationship>(element =>
-      RelationshipRepository.getById(elements)(element.id)
-    )
-    .filter(
-      relationship =>
-        relationship.source.element === payload.id ||
-        relationship.target.element === payload.id
-    );
-  yield all(
-    relationships.map(relationship =>
-      put(ElementRepository.delete(relationship.id))
-    )
-  );
+    .map<Relationship>(element => RelationshipRepository.getById(elements)(element.id))
+    .filter(relationship => relationship.source.element === payload.id || relationship.target.element === payload.id);
+  yield all(relationships.map(relationship => put(ElementRepository.delete(relationship.id))));
 }
-
-export default saga;

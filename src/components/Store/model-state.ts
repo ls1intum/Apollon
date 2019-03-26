@@ -1,16 +1,8 @@
 import { Element, ElementRepository, ElementType } from '../../services/element';
 import { Diagram } from '../../services/diagram';
 import { ApollonView } from '../../services/editor';
-import {
-  UMLModel,
-  UMLElement,
-  UMLRelationship,
-  Selection,
-  ApollonMode,
-} from '../..';
-import Relationship, {
-  RelationshipRepository,
-} from '../../domain/Relationship';
+import { UMLModel, UMLElement, UMLRelationship, Selection, ApollonMode } from '../..';
+import { Relationship, RelationshipRepository } from '../../services/relationship';
 import { Container } from '../../services/container';
 import * as Plugin from '../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
@@ -18,7 +10,7 @@ import { AssessmentState } from '../../services/assessment/assessment-types';
 import { DiagramState } from '../../services/diagram/diagram-types';
 import { EditorState } from '../../services/editor/editor-types';
 import { ElementState } from '../../services/element/element-types';
-import { elements as elementClass } from './../../domain/plugins/elements'
+import { elements as elementClass } from './../../domain/plugins/elements';
 
 export interface ModelState {
   editor: EditorState;
@@ -42,17 +34,15 @@ export class ModelState {
 
     elements = Object.values(elements).reduce((state, element) => {
       if (element instanceof Container) {
-        const children = Object.values(elements).filter(
-          child => child.owner === element.id
-        ).map<Element>(child => {
-          const Clazz = elementClass[child.type as ElementType];
-          const element = new Clazz(child);
-          return element;
-        });
+        const children = Object.values(elements)
+          .filter(child => child.owner === element.id)
+          .map<Element>(child => {
+            const Clazz = elementClass[child.type as ElementType];
+            const element = new Clazz(child);
+            return element;
+          });
         element.ownedElements = children.map(child => child.id);
-        const changes = element
-          .render(children)
-          .reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
+        const changes = element.render(children).reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
         return { ...state, ...changes };
       }
       return { ...state, [element.id]: element };
@@ -61,11 +51,7 @@ export class ModelState {
     const relationships: ElementState = Object.values(model.relationships)
       .map<Relationship>(umlRelationship => {
         const Clazz: typeof Relationship = (<any>Plugin)[umlRelationship.type];
-        const relationship = Clazz.fromUMLRelationship(
-          umlRelationship,
-          Object.values(elements),
-          (<any>Plugin)[umlRelationship.type]
-        );
+        const relationship = Clazz.fromUMLRelationship(umlRelationship, Object.values(elements), (<any>Plugin)[umlRelationship.type]);
         if (model.interactive.relationships.includes(relationship.id)) {
           relationship.interactive = true;
         }
@@ -80,17 +66,18 @@ export class ModelState {
         view: ApollonView.Modelling,
       },
       diagram: {
-        ...(() => { const d = new Diagram(); d.type2 = model.type; return d; })(),
+        ...(() => {
+          const d = new Diagram();
+          d.type2 = model.type;
+          return d;
+        })(),
         ownedElements: Object.values(elements)
           .filter(e => !e.owner)
           .map(e => e.id),
         ownedRelationships: Object.keys(relationships),
       },
       elements: { ...elements, ...relationships },
-      assessments: model.assessments.reduce<AssessmentState>(
-        (r, o) => ({ ...r, [o.modelElementId]: o }),
-        {}
-      ),
+      assessments: model.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
     };
   }
 
@@ -99,39 +86,21 @@ export class ModelState {
 
     const parseElement = (element: Element): UMLElement[] => {
       const c: Element[] =
-        element instanceof Container
-          ? element.ownedElements.map(
-              id => elements.find(element => element.id === id)!
-            )
-          : [];
+        element instanceof Container ? element.ownedElements.map(id => elements.find(element => element.id === id)!) : [];
       const { element: result, children } = element.toUMLElement(element, c);
-      return [
-        result,
-        ...children.reduce<UMLElement[]>(
-          (r, e) => [...r, ...parseElement(e)],
-          []
-        ),
-      ];
+      return [result, ...children.reduce<UMLElement[]>((r, e) => [...r, ...parseElement(e)], [])];
     };
 
-    const e = elements
-      .filter(element => !element.owner)
-      .reduce<UMLElement[]>((r, e) => [...r, ...parseElement(e)], []);
+    const e = elements.filter(element => !element.owner).reduce<UMLElement[]>((r, e) => [...r, ...parseElement(e)], []);
 
     const relationships = RelationshipRepository.read(state.elements);
     const r = relationships.map<UMLRelationship>(relationship =>
-      (relationship.constructor as typeof Relationship).toUMLRelationship(
-        relationship
-      )
+      (relationship.constructor as typeof Relationship).toUMLRelationship(relationship)
     );
 
     const interactive: Selection = {
-      elements: elements
-        .filter(element => element.interactive)
-        .map<string>(element => element.id),
-      relationships: relationships
-        .filter(element => element.interactive)
-        .map<string>(element => element.id),
+      elements: elements.filter(element => element.interactive).map<string>(element => element.id),
+      relationships: relationships.filter(element => element.interactive).map<string>(element => element.id),
     };
 
     const points = [...e.map(e => e.bounds), ...r.map(r => r.bounds)].reduce<

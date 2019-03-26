@@ -1,9 +1,9 @@
 import ClassAssociation from '../ClassAssociation';
-import { RelationshipKind, UMLClassAssociation } from '../..';
+import { RelationshipType, UMLClassAssociation } from '../..';
 import { Element } from '../../../../../services/element';
 
 class ClassAggregation extends ClassAssociation {
-  type = RelationshipKind.ClassAggregation;
+  type = RelationshipType.ClassAggregation;
 
   static toUMLRelationship(
     relationship: ClassAssociation

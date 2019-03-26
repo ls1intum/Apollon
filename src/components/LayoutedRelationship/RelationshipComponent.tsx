@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Relationship from '../../domain/Relationship';
+import { Relationship } from '../../services/relationship';
 import { CanvasConsumer } from '../Canvas/CanvasContext';
 import * as Plugins from './../../domain/plugins';
 
@@ -39,18 +39,8 @@ class RelationshipComponent extends Component<Props> {
             >
               <polyline
                 points={points}
-                stroke={
-                  !this.props.interactable
-                    ? '#0064ff'
-                    : element.interactive
-                    ? '#00dc00'
-                    : 'none'
-                }
-                strokeOpacity={
-                  element.hovered || element.selected || this.props.interactable
-                    ? 0.2
-                    : 0
-                }
+                stroke={!this.props.interactable ? '#0064ff' : element.interactive ? '#00dc00' : 'none'}
+                strokeOpacity={element.hovered || element.selected || this.props.interactable ? 0.2 : 0}
                 fill="none"
                 strokeWidth={15}
               />

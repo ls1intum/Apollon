@@ -1,24 +1,40 @@
-import { Element, IElement } from '../../services/element';
-import Port, { Connection } from '../Port';
-import RelationshipKind from '../plugins/RelationshipKind';
-import { UMLRelationship } from '../..';
-import Boundary from '../geo/Boundary';
-import Point from '../geometry/Point';
+import { Element, IElement } from '../element';
+import Port, { Connection } from '../../domain/Port';
+import { RelationshipType } from '../../domain/plugins/relationship-type';
+import { UMLRelationship, Direction } from '../..';
+import Boundary from '../../domain/geo/Boundary';
+import Point from '../../domain/geometry/Point';
 
 export interface IRelationship extends IElement {
-
+  type: RelationshipType;
+  path: { x: number; y: number }[];
+  source: Port;
+  target: Port;
 }
 
-abstract class Relationship extends Element {
+export abstract class Relationship extends Element implements IRelationship {
   static features = { ...Element.features, straight: false };
 
-  abstract readonly type: RelationshipKind;
+  abstract readonly type: RelationshipType;
 
-  path: { x: number; y: number }[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
+  path = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
 
-  constructor(name: string, public source: Port, public target: Port) {
+  source: Port = {
+    element: '',
+    direction: Direction.Up,
+  };
+
+  target: Port = {
+    element: '',
+    direction: Direction.Up,
+  };
+
+  constructor(values?: IRelationship);
+  constructor(values?: UMLRelationship);
+  constructor(values?: IRelationship | UMLRelationship);
+  constructor(values?: IRelationship | UMLRelationship) {
     super();
-    this.name = name;
+    Object.assign(this, values);
   }
 
   static toUMLRelationship(relationship: Relationship): UMLRelationship {
@@ -33,14 +49,8 @@ abstract class Relationship extends Element {
     };
   }
 
-  static fromUMLRelationship<T extends typeof Relationship>(
-    umlRelationship: UMLRelationship,
-    elements: Element[],
-    Clazz: T
-  ): Relationship {
-    let current: Element = elements.find(
-      e => e.id === umlRelationship.source.element
-    )!;
+  static fromUMLRelationship<T extends typeof Relationship>(umlRelationship: UMLRelationship, elements: Element[], Clazz: T): Relationship {
+    let current: Element = elements.find(e => e.id === umlRelationship.source.element)!;
     let sourceRect: Boundary = { ...current.bounds };
     while (current.owner) {
       current = elements.find(e => e.id === current.owner)!;
@@ -92,5 +102,3 @@ abstract class Relationship extends Element {
     );
   }
 }
-
-export default Relationship;

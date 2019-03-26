@@ -2,7 +2,7 @@ import React, { SFC } from 'react';
 import ClassAssociation from './ClassAssociation';
 import Point from '../../../geometry/Point';
 import Port from '../../../Port';
-import { RelationshipKind } from '..';
+import { RelationshipType } from '..';
 import { Direction } from '../../../..';
 
 const Marker = {
@@ -69,23 +69,23 @@ const Marker = {
 const ClassAssociationComponent: SFC<Props> = ({ element }) => {
   const marker = (type => {
     switch (type) {
-      case RelationshipKind.ClassDependency:
-      case RelationshipKind.ClassUnidirectional:
+      case RelationshipType.ClassDependency:
+      case RelationshipType.ClassUnidirectional:
         return Marker.Arrow;
-      case RelationshipKind.ClassAggregation:
+      case RelationshipType.ClassAggregation:
         return Marker.Rhombus;
-      case RelationshipKind.ClassComposition:
+      case RelationshipType.ClassComposition:
         return Marker.RhombusFilled;
-      case RelationshipKind.ClassInheritance:
-      case RelationshipKind.ClassRealization:
+      case RelationshipType.ClassInheritance:
+      case RelationshipType.ClassRealization:
         return Marker.Triangle;
     }
   })(element.type);
 
   const stroke = (type => {
     switch (type) {
-      case RelationshipKind.ClassDependency:
-      case RelationshipKind.ClassRealization:
+      case RelationshipType.ClassDependency:
+      case RelationshipType.ClassRealization:
         return 7;
     }
   })(element.type);

@@ -1,6 +1,6 @@
-import { DiagramType } from './domain/plugins/DiagramType';
+import { DiagramType } from './domain/plugins/diagram-type';
 import { ElementType as UMLElementType } from './domain/plugins/element-type';
-import UMLRelationshipType from './domain/plugins/RelationshipKind';
+import { RelationshipType as UMLRelationshipType } from './domain/plugins/relationship-type';
 import Styles from './components/Theme/Styles';
 
 export type ElementType = UMLElementType | UMLRelationshipType;
@@ -26,10 +26,7 @@ export { DiagramType };
 export { UMLElementType };
 export { UMLRelationshipType };
 export { Styles };
-export {
-  UMLClassifier,
-  UMLClassAssociation,
-} from './domain/plugins/ClassDiagram';
+export { UMLClassifier, UMLClassAssociation } from './domain/plugins/ClassDiagram';
 
 export interface Element {
   id: string;

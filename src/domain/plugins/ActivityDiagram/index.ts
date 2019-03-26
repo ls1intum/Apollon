@@ -7,6 +7,6 @@ export enum ElementType {
   ActivityForkNode = 'ActivityForkNode',
 }
 
-export enum RelationshipKind {
+export enum RelationshipType {
   ActivityControlFlow = 'ActivityControlFlow',
 }

@@ -1,8 +1,8 @@
-import Relationship from '../../../Relationship';
-import { RelationshipKind } from '..';
+import { Relationship } from '../../../../services/relationship';
+import { RelationshipType } from '..';
 
 class ObjectLink extends Relationship {
-  type = RelationshipKind.ObjectLink;
+  type = RelationshipType.ObjectLink;
 }
 
 export default ObjectLink;

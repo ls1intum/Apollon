@@ -1,12 +1,12 @@
 import { Reducer } from 'redux';
-import { Actions, ActionTypes } from './types';
-import { ElementState } from '../../services/element/element-types';
+import { RelationshipActions, RelationshipActionTypes } from './relationship-types';
+import { ElementState } from '../element/element-types';
 
 const initialState: ElementState = {};
 
-const Reducer: Reducer<ElementState, Actions> = (state = initialState, action) => {
+export const RelationshipReducer: Reducer<ElementState, RelationshipActions> = (state = initialState, action) => {
   switch (action.type) {
-    case ActionTypes.REDRAW: {
+    case RelationshipActionTypes.REDRAW: {
       const { payload } = action;
       return {
         ...state,
@@ -17,7 +17,7 @@ const Reducer: Reducer<ElementState, Actions> = (state = initialState, action) =
         },
       };
     }
-    case ActionTypes.CONNECT: {
+    case RelationshipActionTypes.CONNECT: {
       const { payload } = action;
       return {
         ...state,
@@ -32,5 +32,3 @@ const Reducer: Reducer<ElementState, Actions> = (state = initialState, action) =
       return state;
   }
 };
-
-export default Reducer;

@@ -9,7 +9,7 @@ export enum ElementType {
   ClassMethod = 'ClassMethod',
 }
 
-export enum RelationshipKind {
+export enum RelationshipType {
   ClassBidirectional = 'ClassBidirectional',
   ClassUnidirectional = 'ClassUnidirectional',
   ClassInheritance = 'ClassInheritance',

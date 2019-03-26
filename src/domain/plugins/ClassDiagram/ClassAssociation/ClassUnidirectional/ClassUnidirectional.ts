@@ -1,9 +1,9 @@
 import ClassAssociation from '../ClassAssociation';
-import { RelationshipKind, UMLClassAssociation } from '../..';
+import { RelationshipType, UMLClassAssociation } from '../..';
 import { Element } from '../../../../../services/element';
 
 class ClassUnidirectional extends ClassAssociation {
-  type = RelationshipKind.ClassUnidirectional;
+  type = RelationshipType.ClassUnidirectional;
 
   static toUMLRelationship(
     relationship: ClassAssociation

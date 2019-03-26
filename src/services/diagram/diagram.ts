@@ -1,7 +1,7 @@
 import { Container, IContainer } from '../container';
 import Boundary from '../../domain/geo/Boundary';
 import { ElementType, IElement } from '../element';
-import { DiagramType } from '../../domain/plugins/DiagramType';
+import { DiagramType } from '../../domain/plugins/diagram-type';
 import { UMLElement } from '../..';
 
 export interface IDiagram extends IContainer {

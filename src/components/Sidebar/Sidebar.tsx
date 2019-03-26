@@ -1,39 +1,32 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from './../Store';
-import {
-  Container,
-  Preview,
-  EditorModeSelection,
-  EditorModeSelectionSegment,
-} from './styles';
+import { Container, Preview, EditorModeSelection, EditorModeSelectionSegment } from './styles';
 import { DiagramType } from '../../services/diagram';
 import { Element, ElementRepository, ElementType } from '../../services/element';
 import { Draggable, DropEvent } from './../Draggable';
 import ElementComponent from './../LayoutedElement/ElementComponent';
 import { CanvasProvider } from '../Canvas/CanvasContext';
-import {
-  UseCase,
-  UseCaseActor,
-  UseCaseSystem,
-  Class,
-  ClassAttribute,
-  ClassMethod,
-  AbstractClass,
-  Interface,
-  Enumeration,
-  ActivityInitialNode,
-  ActivityFinalNode,
-  ActivityActionNode,
-  ActivityObjectNode,
-  ActivityMergeNode,
-  ActivityForkNode,
-  ObjectName,
-  ObjectAttribute,
-  Package,
-} from './../../domain/plugins';
 import { ApollonMode } from '../..';
 import { ApollonView, EditorRepository } from '../../services/editor';
+import { Package } from '../../domain/plugins/Common/Package';
+import { Class } from '../../domain/plugins/ClassDiagram/Classifier/Class';
+import { AbstractClass } from '../../domain/plugins/ClassDiagram/Classifier/AbstractClass';
+import { Interface } from '../../domain/plugins/ClassDiagram/Classifier/Interface';
+import { Enumeration } from '../../domain/plugins/ClassDiagram/Classifier/Enumeration';
+import { ClassAttribute } from '../../domain/plugins/ClassDiagram/ClassMember/ClassAttribute';
+import { ClassMethod } from '../../domain/plugins/ClassDiagram/ClassMember/ClassMethod';
+import { ObjectName } from '../../domain/plugins/ObjectDiagram/ObjectName';
+import { ObjectAttribute } from '../../domain/plugins/ObjectDiagram/ObjectAttribute';
+import { ActivityInitialNode } from '../../domain/plugins/ActivityDiagram/ActivityInitialNode';
+import { ActivityFinalNode } from '../../domain/plugins/ActivityDiagram/ActivityFinalNode';
+import { ActivityActionNode } from '../../domain/plugins/ActivityDiagram/ActivityActionNode';
+import { ActivityObjectNode } from '../../domain/plugins/ActivityDiagram/ActivityObjectNode';
+import { ActivityMergeNode } from '../../domain/plugins/ActivityDiagram/ActivityMergeNode';
+import { ActivityForkNode } from '../../domain/plugins/ActivityDiagram/ActivityForkNode';
+import { UseCase } from '../../domain/plugins/UseCaseDiagram/UseCase';
+import { UseCaseActor } from '../../domain/plugins/UseCaseDiagram/UseCaseActor';
+import { UseCaseSystem } from '../../domain/plugins/UseCaseDiagram/UseCaseSystem';
 
 class Sidebar extends Component<Props, State> {
   state: State = {
@@ -46,17 +39,37 @@ class Sidebar extends Component<Props, State> {
         this.setState({
           previews: [
             new Package(),
-            (() => { const c = new Class(); c.name = 'Class'; return c; })(),
-            (() => { const c = new AbstractClass(); c.name = 'AbstractClass'; return c; })(),
-            (() => { const c = new Interface(); c.name = 'Interface'; return c; })(),
-            (() => { const c = new Enumeration(); c.name = 'Enumeration'; return c; })(),
+            (() => {
+              const c = new Class();
+              c.name = 'Class';
+              return c;
+            })(),
+            (() => {
+              const c = new AbstractClass();
+              c.name = 'AbstractClass';
+              return c;
+            })(),
+            (() => {
+              const c = new Interface();
+              c.name = 'Interface';
+              return c;
+            })(),
+            (() => {
+              const c = new Enumeration();
+              c.name = 'Enumeration';
+              return c;
+            })(),
           ],
         });
         break;
       case DiagramType.ObjectDiagram:
         this.setState({
           previews: [
-            (() => { const c = new ObjectName(); c.name = 'Object : Class'; return c; })(),
+            (() => {
+              const c = new ObjectName();
+              c.name = 'Object : Class';
+              return c;
+            })(),
           ],
         });
         break;
@@ -65,9 +78,21 @@ class Sidebar extends Component<Props, State> {
           previews: [
             new ActivityInitialNode(),
             new ActivityFinalNode(),
-            (() => { const c = new ActivityActionNode(); c.name = 'ActionNode'; return c; })(),
-            (() => { const c = new ActivityObjectNode(); c.name = 'ObjectNode'; return c; })(),
-            (() => { const c = new ActivityMergeNode(); c.name = 'Condition'; return c; })(),
+            (() => {
+              const c = new ActivityActionNode();
+              c.name = 'ActionNode';
+              return c;
+            })(),
+            (() => {
+              const c = new ActivityObjectNode();
+              c.name = 'ObjectNode';
+              return c;
+            })(),
+            (() => {
+              const c = new ActivityMergeNode();
+              c.name = 'Condition';
+              return c;
+            })(),
             new ActivityForkNode(),
           ],
         });
@@ -75,9 +100,21 @@ class Sidebar extends Component<Props, State> {
       case DiagramType.UseCaseDiagram:
         this.setState({
           previews: [
-            (() => { const c = new UseCase(); c.name = 'UseCase'; return c; })(),
-            (() => { const c = new UseCaseActor(); c.name = 'Actor'; return c; })(),
-            (() => { const c = new UseCaseSystem(); c.name = 'System'; return c; })(),
+            (() => {
+              const c = new UseCase();
+              c.name = 'UseCase';
+              return c;
+            })(),
+            (() => {
+              const c = new UseCaseActor();
+              c.name = 'Actor';
+              return c;
+            })(),
+            (() => {
+              const c = new UseCaseSystem();
+              c.name = 'System';
+              return c;
+            })(),
           ],
         });
     }
@@ -85,13 +122,9 @@ class Sidebar extends Component<Props, State> {
 
   changeView = (view: ApollonView) => () => this.props.changeView(view);
 
-  toggleInteractiveElementsMode = (
-    event: React.FormEvent<HTMLInputElement>
-  ) => {
+  toggleInteractiveElementsMode = (event: React.FormEvent<HTMLInputElement>) => {
     const { checked } = event.currentTarget;
-    const view: ApollonView = checked
-      ? ApollonView.Exporting
-      : ApollonView.Highlight;
+    const view: ApollonView = checked ? ApollonView.Exporting : ApollonView.Highlight;
 
     this.changeView(view)();
   };
@@ -109,8 +142,16 @@ class Sidebar extends Component<Props, State> {
         case ElementType.AbstractClass:
         case ElementType.Interface:
           [
-            (() => { const c = new ClassAttribute(); c.name = '+ attribute: Type'; return c; })(),
-            (() => { const c = new ClassMethod(); c.name = '+ method()'; return c; })(),
+            (() => {
+              const c = new ClassAttribute();
+              c.name = '+ attribute: Type';
+              return c;
+            })(),
+            (() => {
+              const c = new ClassMethod();
+              c.name = '+ method()';
+              return c;
+            })(),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
@@ -118,9 +159,21 @@ class Sidebar extends Component<Props, State> {
           break;
         case ElementType.Enumeration:
           [
-            (() => { const c = new ClassAttribute(); c.name = 'Case1'; return c; })(),
-            (() => { const c = new ClassAttribute(); c.name = 'Case2'; return c; })(),
-            (() => { const c = new ClassAttribute(); c.name = 'Case3'; return c; })(),
+            (() => {
+              const c = new ClassAttribute();
+              c.name = 'Case1';
+              return c;
+            })(),
+            (() => {
+              const c = new ClassAttribute();
+              c.name = 'Case2';
+              return c;
+            })(),
+            (() => {
+              const c = new ClassAttribute();
+              c.name = 'Case3';
+              return c;
+            })(),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
@@ -128,7 +181,11 @@ class Sidebar extends Component<Props, State> {
           break;
         case ElementType.ObjectName:
           [
-            (() => { const c = new ObjectAttribute(); c.name = 'attribute = value'; return c; })(),
+            (() => {
+              const c = new ObjectAttribute();
+              c.name = 'attribute = value';
+              return c;
+            })(),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
@@ -142,8 +199,7 @@ class Sidebar extends Component<Props, State> {
   }
 
   render() {
-    if (this.props.readonly || this.props.mode === ApollonMode.Assessment)
-      return null;
+    if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
     return (
       <Container>
         {this.props.mode === ApollonMode.Exporting && (
@@ -156,10 +212,7 @@ class Sidebar extends Component<Props, State> {
             </EditorModeSelectionSegment>
             <EditorModeSelectionSegment
               onClick={this.changeView(ApollonView.Exporting)}
-              selected={
-                this.props.view === ApollonView.Exporting ||
-                this.props.view === ApollonView.Highlight
-              }
+              selected={this.props.view === ApollonView.Exporting || this.props.view === ApollonView.Highlight}
             >
               Interactive Areas
             </EditorModeSelectionSegment>

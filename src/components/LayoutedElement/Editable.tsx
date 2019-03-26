@@ -6,7 +6,7 @@ import { ModelState } from './../Store';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withPopup, PopupContext } from '../Popup';
 import { Element, ElementRepository } from '../../services/element';
-import Relationship from '../../domain/Relationship';
+import { Relationship } from '../../services/relationship';
 
 const editable = (WrappedComponent: typeof ElementComponent) => {
   class Editable extends Component<Props, State> {
@@ -52,9 +52,7 @@ const editable = (WrappedComponent: typeof ElementComponent) => {
 
     componentDidUpdate(prevProps: Props) {
       if (prevProps.element !== this.props.element) {
-        this.setState({ element: this.props.element }, () =>
-          this.props.update(this.state.element)
-        );
+        this.setState({ element: this.props.element }, () => this.props.update(this.state.element));
       }
     }
 

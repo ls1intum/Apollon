@@ -1,10 +1,10 @@
-import Relationship from '../../../Relationship';
-import { RelationshipKind } from '..';
+import { Relationship } from '../../../../services/relationship';
+import { RelationshipType } from '..';
 
 class UseCaseInclude extends Relationship {
   static features = { ...Relationship.features, straight: true };
 
-  type = RelationshipKind.UseCaseInclude;
+  type = RelationshipType.UseCaseInclude;
 }
 
 export default UseCaseInclude;

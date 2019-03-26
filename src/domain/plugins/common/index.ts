@@ -3,4 +3,4 @@ export enum ElementType {
   Package = 'Package',
 }
 
-export enum RelationshipKind {}
+export enum RelationshipType {}

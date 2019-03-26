@@ -5,11 +5,9 @@ import styled from 'styled-components';
 import Port from './../../domain/Port';
 import { ElementRepository } from '../../services/element';
 import ElementComponent, { OwnProps } from './ElementComponent';
-import ConnectContext, {
-  ConnectConsumer,
-} from './../Connectable/ConnectContext';
+import ConnectContext, { ConnectConsumer } from './../Connectable/ConnectContext';
 import * as Plugins from './../../domain/plugins';
-import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
+import { DefaultRelationshipType } from '../../domain/plugins/relationship-type';
 import { DiagramType } from '../../services/diagram';
 import { Direction } from '../..';
 
@@ -23,15 +21,12 @@ const Group = styled.g`
   }
 `;
 
-const connectable = (
-  WrappedComponent: typeof ElementComponent
-): ComponentClass<OwnProps> => {
+const connectable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Connectable extends Component<Props> {
     private calculateInvisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
       const r = 20;
-      const cirlce = `m ${-r}, 0 a ${r},${r} 0 1,0 ${r *
-        2},0 a ${r},${r} 0 1,0 ${-r * 2},0 `;
+      const cirlce = `m ${-r}, 0 a ${r},${r} 0 1,0 ${r * 2},0 a ${r},${r} 0 1,0 ${-r * 2},0 `;
       switch (port.direction) {
         case Direction.Up:
           return `M ${width / 2} 0 ${cirlce}`;
@@ -51,11 +46,9 @@ const connectable = (
         case Direction.Up:
           return `M ${width / 2 - 20} 0 A 10 10 0 0 1 ${width / 2 + 20} 0`;
         case Direction.Right:
-          return `M ${width} ${height / 2 -
-            20} A 10 10 0 0 1 ${width} ${height / 2 + 20}`;
+          return `M ${width} ${height / 2 - 20} A 10 10 0 0 1 ${width} ${height / 2 + 20}`;
         case Direction.Down:
-          return `M ${width / 2 - 20} ${height} A 10 10 0 0 0 ${width / 2 +
-            20} ${height}`;
+          return `M ${width / 2 - 20} ${height} A 10 10 0 0 0 ${width / 2 + 20} ${height}`;
         case Direction.Left:
           return `M 0 ${height / 2 - 20} A 10 10 0 0 0 0 ${height / 2 + 20}`;
       }
@@ -69,27 +62,17 @@ const connectable = (
       event.currentTarget.classList.remove('hover');
     };
 
-    private onMouseDown = (port: Port, context: ConnectContext) => async (
-      event: React.MouseEvent
-    ) => {
+    private onMouseDown = (port: Port, context: ConnectContext) => async (event: React.MouseEvent) => {
       try {
         const endpoints = await context.onStartConnect(port)(event);
 
-        const Relationship = (Plugins as any)[
-          DefaultRelationshipKind[this.props.diagramType]
-        ];
-        const relationship = new Relationship(
-          'Association',
-          endpoints.source,
-          endpoints.target
-        );
+        const Relationship = (Plugins as any)[DefaultRelationshipType[this.props.diagramType]];
+        const relationship = new Relationship('Association', endpoints.source, endpoints.target);
         this.props.create(relationship);
       } catch (error) {}
     };
 
-    private onMouseUp = (port: Port, context: ConnectContext) => async (
-      event: React.MouseEvent
-    ) => {
+    private onMouseUp = (port: Port, context: ConnectContext) => async (event: React.MouseEvent) => {
       this.onMouseLeave(event);
       context.onEndConnect(port)(event);
     };
@@ -128,20 +111,11 @@ const connectable = (
                   onMouseEnter={this.onMouseEnter}
                   onMouseLeave={this.onMouseLeave}
                   style={{
-                    display:
-                      element.selected || context.isDragging ? 'block' : 'none',
+                    display: element.selected || context.isDragging ? 'block' : 'none',
                   }}
                 >
-                  {context.isDragging && (
-                    <path d={this.calculateInvisiblePath(port)} fill="none" />
-                  )}
-                  <Path
-                    d={this.calculateVisiblePath(port)}
-                    width={10}
-                    height={10}
-                    fill="#0064ff"
-                    fillOpacity="0.2"
-                  />
+                  {context.isDragging && <path d={this.calculateInvisiblePath(port)} fill="none" />}
+                  <Path d={this.calculateVisiblePath(port)} width={10} height={10} fill="#0064ff" fillOpacity="0.2" />
                 </Group>
               ))
             }

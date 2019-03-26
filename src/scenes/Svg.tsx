@@ -3,7 +3,7 @@ import { ModelState } from './../components/Store';
 import { ExportOptions } from '..';
 import { Element } from '../services/element';
 import { Container } from '../services/container';
-import Relationship from '../domain/Relationship';
+import { Relationship } from '../services/relationship';
 import Boundary from '../domain/geo/Boundary';
 import * as Plugins from './../domain/plugins';
 
@@ -13,17 +13,10 @@ type State = { bounds: Boundary; elements: Element[] };
 const getInitialState = ({ state, options }: Props): State => {
   const keepOriginalSize = (options && options.keepOriginalSize) || false;
 
-  const filter = (
-    ids: string[],
-    include?: string[],
-    exclude?: string[]
-  ): string[] => {
+  const filter = (ids: string[], include?: string[], exclude?: string[]): string[] => {
     const result: string[] = [];
     for (const id of ids) {
-      const element = Object.setPrototypeOf(
-        state.elements[id],
-        (Plugins as any)[state.elements[id].type].prototype
-      );
+      const element = Object.setPrototypeOf(state.elements[id], (Plugins as any)[state.elements[id].type].prototype);
       if (include && include.includes(id)) {
         result.push(id);
         if (element instanceof Container) {
@@ -59,9 +52,7 @@ const getInitialState = ({ state, options }: Props): State => {
 
   let elements = normalizeState(state);
 
-  let bounds = computeBoundingBox(
-    elements.filter(element => keepOriginalSize || layout.includes(element.id))
-  );
+  let bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.includes(element.id)));
   if (options && options.margin) {
     bounds.x -= options.margin;
     bounds.y -= options.margin;
@@ -90,9 +81,7 @@ const getInitialState = ({ state, options }: Props): State => {
 const normalizeState = (state: ModelState): Element[] => {
   let elements: Element[] = state.diagram.ownedElements
     .map(id => state.elements[id])
-    .map(element =>
-      Object.setPrototypeOf(element, (Plugins as any)[element.type].prototype)
-    );
+    .map(element => Object.setPrototypeOf(element, (Plugins as any)[element.type].prototype));
 
   const positionChildren = (element: Element): Element[] => {
     if (element instanceof Container) {
@@ -109,27 +98,16 @@ const normalizeState = (state: ModelState): Element[] => {
           (Plugins as any)[state.elements[id].type].prototype
         )
       );
-      return [
-        ...children,
-        ...children.reduce<Element[]>(
-          (a, e) => [...a, ...positionChildren(e)],
-          []
-        ),
-      ];
+      return [...children, ...children.reduce<Element[]>((a, e) => [...a, ...positionChildren(e)], [])];
     }
     return [];
   };
 
-  elements = [
-    ...elements,
-    ...elements.reduce<Element[]>((a, e) => [...a, ...positionChildren(e)], []),
-  ];
+  elements = [...elements, ...elements.reduce<Element[]>((a, e) => [...a, ...positionChildren(e)], [])];
 
   const relationships: Relationship[] = state.diagram.ownedRelationships
     .map(id => state.elements[id])
-    .map(element =>
-      Object.setPrototypeOf(element, (Plugins as any)[element.type].prototype)
-    );
+    .map(element => Object.setPrototypeOf(element, (Plugins as any)[element.type].prototype));
   return [...elements, ...relationships];
 };
 

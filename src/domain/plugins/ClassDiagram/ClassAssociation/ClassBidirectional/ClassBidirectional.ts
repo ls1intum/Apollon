@@ -1,9 +1,9 @@
 import ClassAssociation from '../ClassAssociation';
-import { RelationshipKind, UMLClassAssociation } from '../..';
+import { RelationshipType, UMLClassAssociation } from '../..';
 import { Element } from '../../../../../services/element';
 
 class ClassBidirectional extends ClassAssociation {
-  type = RelationshipKind.ClassBidirectional;
+  type = RelationshipType.ClassBidirectional;
 
   static toUMLRelationship(
     relationship: ClassAssociation

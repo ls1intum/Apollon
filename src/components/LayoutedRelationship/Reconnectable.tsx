@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import RelationshipComponent, { OwnProps } from './RelationshipComponent';
 import { Point } from '../../domain/geo';
 import ConnectContext, { ConnectConsumer } from '../Connectable/ConnectContext';
-import { RelationshipRepository } from '../../domain/Relationship';
+import { RelationshipRepository } from '../../services/relationship';
 
 const reconnectable = (
   WrappedComponent: typeof RelationshipComponent

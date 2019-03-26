@@ -1,7 +1,7 @@
 import { takeLatest, put, select } from 'redux-saga/effects';
 import { ModelState } from '../../components/Store';
 import { ElementRepository } from '../element';
-import Relationship from '../../domain/Relationship';
+import { Relationship } from '../relationship';
 import { CreateAction as ElementCreateAction, SelectAction, DeleteAction, ElementActionTypes } from '../element/element-types';
 import { ContainerActionTypes, ChangeOwnerAction } from '../container/container-types';
 import {

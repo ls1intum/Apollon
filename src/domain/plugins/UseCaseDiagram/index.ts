@@ -4,7 +4,7 @@ export enum ElementType {
   UseCaseSystem = 'UseCaseSystem',
 }
 
-export enum RelationshipKind {
+export enum RelationshipType {
   UseCaseAssociation = 'UseCaseAssociation',
   UseCaseGeneralization = 'UseCaseGeneralization',
   UseCaseInclude = 'UseCaseInclude',

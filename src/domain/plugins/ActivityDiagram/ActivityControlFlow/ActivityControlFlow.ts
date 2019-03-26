@@ -1,8 +1,8 @@
-import Relationship from '../../../Relationship';
-import { RelationshipKind } from '..';
+import { Relationship } from '../../../../services/relationship';
+import { RelationshipType } from '..';
 
 class ActivityControlFlow extends Relationship {
-  type = RelationshipKind.ActivityControlFlow;
+  type = RelationshipType.ActivityControlFlow;
 }
 
 export default ActivityControlFlow;

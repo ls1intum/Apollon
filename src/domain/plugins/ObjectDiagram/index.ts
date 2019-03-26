@@ -3,6 +3,6 @@ export enum ElementType {
   ObjectAttribute = 'ObjectAttribute',
 }
 
-export enum RelationshipKind {
+export enum RelationshipType {
   ObjectLink = 'ObjectLink',
 }

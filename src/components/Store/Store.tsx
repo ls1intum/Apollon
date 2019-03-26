@@ -6,15 +6,16 @@ import { ModelState } from './model-state';
 import reduceReducers from 'reduce-reducers';
 
 import { all, fork } from 'redux-saga/effects';
-import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
 import { ContainerReducer } from '../../services/container/container-reducer';
 import { DiagramReducer } from '../../services/diagram/diagram-reducer';
 import { EditorReducer } from './../../services/editor/editor-reducer';
 import { ElementReducer } from '../../services/element/element-reducer';
+import { RelationshipReducer } from '../../services/relationship/relationship-reducer';
 import { ContainerSaga } from '../../services/container/container-saga';
 import { DiagramSaga } from '../../services/diagram/diagram-saga';
 import { ElementSaga } from '../../services/element/element-saga';
+import { RelationshipSaga } from '../../services/relationship/relationship-saga';
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ModelState>;

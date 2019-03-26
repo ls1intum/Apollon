@@ -7,7 +7,7 @@ import { Element, ElementRepository } from '../../services/element';
 import { Point } from '../../domain/geo';
 import { withCanvas, CanvasContext } from '../Canvas';
 import * as Plugins from '../../domain/plugins/Popups';
-import Relationship from '../../domain/Relationship';
+import { Relationship } from '../../services/relationship';
 import DefaultPopup from './DefaultPopup';
 import AssessmentPopup from './AssessmentPopup';
 import { ApollonMode } from '../..';
@@ -23,7 +23,7 @@ export class Popup extends Component<Props> {
     let Component = null;
 
     if (this.props.mode === ApollonMode.Assessment) {
-      Component = AssessmentPopup
+      Component = AssessmentPopup;
     } else {
       Component = (Plugins as any)[`${this.props.element.type}Popup`];
       if (!Component) {

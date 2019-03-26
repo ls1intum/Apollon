@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
-import Relationship from '../../../Relationship';
+import { Relationship } from '../../../../services/relationship';
 import { Element } from '../../../../services/element';
 import { UMLClassAssociation } from '..';
 import * as Plugins from './../../../plugins';
@@ -11,9 +11,7 @@ abstract class ClassAssociation extends Relationship {
   multiplicity = { source: '', target: '' };
   role = { source: '', target: '' };
 
-  static toUMLRelationship(
-    relationship: ClassAssociation
-  ): UMLClassAssociation {
+  static toUMLRelationship(relationship: ClassAssociation): UMLClassAssociation {
     const umlRelationship = Relationship.toUMLRelationship(relationship);
     return {
       ...umlRelationship,
@@ -30,15 +28,8 @@ abstract class ClassAssociation extends Relationship {
     };
   }
 
-  static fromUMLRelationship(
-    umlRelationship: UMLClassAssociation,
-    elements: Element[]
-  ): ClassAssociation {
-    const relationship = Relationship.fromUMLRelationship(
-      umlRelationship,
-      elements,
-      ClassAssociation
-    ) as ClassAssociation;
+  static fromUMLRelationship(umlRelationship: UMLClassAssociation, elements: Element[]): ClassAssociation {
+    const relationship = Relationship.fromUMLRelationship(umlRelationship, elements, ClassAssociation) as ClassAssociation;
     relationship.multiplicity = {
       source: umlRelationship.source.multiplicity,
       target: umlRelationship.target.multiplicity,
@@ -71,9 +62,7 @@ abstract class ClassAssociation extends Relationship {
     return Object.setPrototypeOf(
       {
         ...relationship,
-        path: relationship.path.map(
-          point => new Point(point.x - bounds.x, point.y - bounds.y)
-        ),
+        path: relationship.path.map(point => new Point(point.x - bounds.x, point.y - bounds.y)),
         bounds: {
           x: relationship.bounds.x + bounds.x,
           y: relationship.bounds.y + bounds.y,
