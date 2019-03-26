@@ -2,13 +2,31 @@ import React, { SFC, SVGProps } from 'react';
 import UseCaseInclude from './UseCaseInclude';
 import Point from '../../../geometry/Point';
 
-const Arrow: SFC<SVGProps<SVGPathElement>> = props => (
-  <path
-    {...props}
-    stroke="black"
-    strokeDasharray={7}
-    markerEnd="url(#RelationshipKind_Arrow)"
-  />
+const Arrow: SFC<{ id: string } & SVGProps<SVGPathElement>> = ({
+  id,
+  ...props
+}) => (
+  <g>
+    <marker
+      id={`marker-${id}`}
+      viewBox="0 0 30 30"
+      markerWidth="22"
+      markerHeight="30"
+      refX="30"
+      refY="15"
+      orient="auto"
+      markerUnits="strokeWidth"
+      strokeDasharray="1,0"
+    >
+      <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
+    </marker>
+    <path
+      {...props}
+      stroke="black"
+      strokeDasharray={7}
+      markerEnd={`url(#marker-${id})`}
+    />
+  </g>
 );
 
 const UseCaseIncludeComponent: SFC<Props> = ({ element }) => {
@@ -16,7 +34,12 @@ const UseCaseIncludeComponent: SFC<Props> = ({ element }) => {
   const line = end.subtract(start);
 
   if (line.length <= 100) {
-    return <Arrow d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`} />;
+    return (
+      <Arrow
+        id={element.id}
+        d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`}
+      />
+    );
   }
 
   const norm = line.normalize();
@@ -26,6 +49,7 @@ const UseCaseIncludeComponent: SFC<Props> = ({ element }) => {
   return (
     <g>
       <Arrow
+        id={element.id}
         d={`
           M ${start.x} ${start.y} L ${startSection.x} ${startSection.y}
           M ${endSection.x} ${endSection.y} L ${end.x} ${end.y}
