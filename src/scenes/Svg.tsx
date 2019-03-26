@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { ModelState } from './../components/Store';
 import { ExportOptions } from '..';
 import { Element } from '../services/element';
-import Container from '../domain/Container';
+import { Container } from '../services/container';
 import Relationship from '../domain/Relationship';
 import Boundary from '../domain/geo/Boundary';
 import * as Plugins from './../domain/plugins';

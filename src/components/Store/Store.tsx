@@ -1,23 +1,18 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import {
-  createStore,
-  applyMiddleware,
-  compose,
-  combineReducers,
-  Store as ReduxStore,
-} from 'redux';
+import { createStore, applyMiddleware, compose, combineReducers, Store as ReduxStore } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import { ModelState } from './model-state';
 import reduceReducers from 'reduce-reducers';
 
 import { all, fork } from 'redux-saga/effects';
 import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
-import { ContainerReducer, ContainerSaga } from './../../domain/Container';
 import { DiagramReducer, DiagramSaga } from './../../domain/Diagram';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
-import { EditorReducer } from './../../services/editor/editor-reducer'
+import { ContainerReducer } from '../../services/container/container-reducer';
+import { EditorReducer } from './../../services/editor/editor-reducer';
 import { ElementReducer } from '../../services/element/element-reducer';
+import { ContainerSaga } from '../../services/container/container-saga';
 import { ElementSaga } from '../../services/element/element-saga';
 
 class Store extends React.Component<Props> {
@@ -37,8 +32,7 @@ class Store extends React.Component<Props> {
 
     const sagaMiddleware = createSagaMiddleware();
 
-    const composeEnhancers: typeof compose =
-      (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+    const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
     const enhancer = composeEnhancers(applyMiddleware(sagaMiddleware));
     this.store = createStore(reducer, props.initialState || {}, enhancer);

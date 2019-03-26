@@ -1,20 +1,13 @@
 import { takeLatest, takeEvery, all, put, select } from 'redux-saga/effects';
-import { ModelState } from './../../components/Store';
-import Container from './Container';
-import { ElementRepository } from '../../services/element';
-import {
-  CreateAction,
-  ResizeAction,
-  DeleteAction,
-  MoveAction,
-  ChangeAction,
-  ElementActionTypes,
-} from '../../services/element/element-types';
-import { ActionTypes, ChangeOwnerAction, AppendChildAction, RemoveChildAction } from './types';
-import { notEmpty } from '../utils';
+import { ModelState } from '../../components/Store';
+import { Container } from './container';
+import { ElementRepository } from '../element';
+import { CreateAction, ResizeAction, DeleteAction, MoveAction, ChangeAction, ElementActionTypes } from '../element/element-types';
+import { ContainerActionTypes, ChangeOwnerAction, AppendChildAction, RemoveChildAction } from './container-types';
+import { notEmpty } from '../../domain/utils';
 
-function* saga() {
-  yield takeEvery(ActionTypes.CHANGE_OWNER, handleOwnerChange);
+export function* ContainerSaga() {
+  yield takeEvery(ContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
   yield takeEvery(ElementActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.CREATE, handleChildAdd);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementResize);
@@ -39,7 +32,7 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 
   if (current) {
     yield put<RemoveChildAction>({
-      type: ActionTypes.REMOVE_CHILD,
+      type: ContainerActionTypes.REMOVE_CHILD,
       payload: { id: element.id, owner: current.id },
     });
 
@@ -58,7 +51,7 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 
   if (owner) {
     yield put<AppendChildAction>({
-      type: ActionTypes.APPEND_CHILD,
+      type: ContainerActionTypes.APPEND_CHILD,
       payload: { id: element.id, owner: owner.id },
     });
     let ownerID: string | null = owner.id;
@@ -143,5 +136,3 @@ function* handleElementResize({ payload }: ResizeAction) {
     yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
   }
 }
-
-export default saga;

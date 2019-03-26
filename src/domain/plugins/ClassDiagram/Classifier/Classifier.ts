@@ -1,11 +1,10 @@
 import { Element, IElement } from '../../../../services/element';
-import Container from '../../../Container';
+import { Container, IContainer } from '../../../../services/container';
 import { ElementType, UMLClassifier } from '..';
 import ClassMember from '../ClassMember/ClassMember';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';
 import { ClassMethod } from '../ClassMember/ClassMethod';
 import { UMLElement } from '../../../..';
-import { IContainer } from '../../../Container/Container';
 
 abstract class Classifier extends Container {
   static features = {

@@ -1,9 +1,8 @@
 import { Element, IElement } from '../../../../services/element';
-import Container from '../../../Container';
+import { Container } from '../../../../services/container';
 import { ElementType } from '..';
 import { ObjectAttribute } from '../ObjectAttribute';
 import { UMLElement } from '../../../..';
-import { IContainer } from '../../../Container/Container';
 
 class ObjectName extends Container {
   static features = {

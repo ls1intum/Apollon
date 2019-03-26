@@ -9,9 +9,9 @@ import {
   ElementActionTypes,
 } from '../../services/element/element-types';
 import {
-  ActionTypes as ContainerActionTypes,
+  ContainerActionTypes as ContainerActionTypes,
   ChangeOwnerAction,
-} from '../Container/types';
+} from '../../services/container/container-types';
 import {
   AddElementAction,
   ActionTypes,
@@ -19,7 +19,7 @@ import {
   DeleteElementAction,
   DeleteRelationshipAction,
 } from './types';
-import Container from '../Container';
+import { Container } from '../../services/container/container';
 
 function* saga() {
   yield takeLatest(ContainerActionTypes.CHANGE_OWNER, handleOwnerChange);

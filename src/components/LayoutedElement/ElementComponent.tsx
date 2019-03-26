@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { Element } from '../../services/element';
 import * as Plugins from './../../domain/plugins';
-import Container from '../../domain/Container';
+import { Container } from '../../services/container';
 import LayoutedElement from './LayoutedElement';
 import { CanvasConsumer } from '../Canvas/CanvasContext';
 

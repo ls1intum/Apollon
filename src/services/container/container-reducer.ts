@@ -1,30 +1,29 @@
 import { Reducer } from 'redux';
-import { ActionTypes, Actions } from './types';
-import { ElementState } from '../../services/element/element-types';
-import Container from './Container';
+import { ContainerActionTypes, ContainerActions } from './container-types';
+import { ElementState } from '../element/element-types';
+import { Container } from './container';
+import { ElementRepository } from '../element';
 
 const initialState: ElementState = {};
 
-const Reducer: Reducer<ElementState, Actions> = (state = initialState, action) => {
+export const ContainerReducer: Reducer<ElementState, ContainerActions> = (state = initialState, action) => {
   switch (action.type) {
-    case ActionTypes.APPEND_CHILD: {
+    case ContainerActionTypes.APPEND_CHILD: {
       const { payload } = action;
-      const container = state[payload.owner];
+      const container = ElementRepository.getById(state)(payload.owner);
       if (!(container instanceof Container)) return state;
       return {
         ...state,
         [payload.owner]: {
           ...container,
-          ownedElements: [
-            ...new Set([...container.ownedElements, payload.id].reverse()),
-          ].reverse(),
+          ownedElements: [...new Set([...container.ownedElements, payload.id].reverse())].reverse(),
         },
         [payload.id]: { ...state[payload.id], owner: payload.owner },
       };
     }
-    case ActionTypes.REMOVE_CHILD: {
+    case ContainerActionTypes.REMOVE_CHILD: {
       const { payload } = action;
-      const container = state[payload.owner];
+      const container = ElementRepository.getById(state)(payload.owner);
       if (!(container instanceof Container)) return state;
       return {
         ...state,
@@ -38,5 +37,3 @@ const Reducer: Reducer<ElementState, Actions> = (state = initialState, action) =
   }
   return state;
 };
-
-export default Reducer;

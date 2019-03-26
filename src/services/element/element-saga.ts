@@ -12,7 +12,7 @@ import {
 } from './element-types';
 import { Element, IElement } from './element';
 import { ElementRepository } from './element-repository';
-import Container from '../../domain/Container';
+import { Container } from '../container';
 import { DiagramRepository } from '../../domain/Diagram';
 
 export function* ElementSaga() {

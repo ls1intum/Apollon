@@ -1,11 +1,11 @@
-import { Element, IElement } from '../../services/element';
+import { Element, IElement } from '../element';
 import { UMLElement } from '../..';
 
 export interface IContainer extends IElement {
   ownedElements: string[];
 }
 
-abstract class Container extends Element implements IContainer {
+export abstract class Container extends Element implements IContainer {
   static features = { ...Element.features, droppable: true };
 
   ownedElements: string[];
@@ -16,7 +16,7 @@ abstract class Container extends Element implements IContainer {
   constructor(values?: UMLElement | IContainer) {
     super(values);
 
-    this.ownedElements = (values && 'ownedElements' in values) ? values.ownedElements : [];
+    this.ownedElements = values && 'ownedElements' in values ? values.ownedElements : [];
   }
 
   render(children: Element[]): Element[] {
@@ -39,10 +39,7 @@ abstract class Container extends Element implements IContainer {
     return [this, ...children];
   }
 
-  fromUMLElement<T extends typeof Element>(
-    umlElement: UMLElement,
-    Clazz: T
-  ): Element {
+  fromUMLElement<T extends typeof Element>(umlElement: UMLElement, Clazz: T): Element {
     return Object.setPrototypeOf(
       {
         id: umlElement.id,
@@ -58,5 +55,3 @@ abstract class Container extends Element implements IContainer {
     );
   }
 }
-
-export default Container;

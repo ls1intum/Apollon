@@ -6,7 +6,7 @@ import { ModelState } from './../Store';
 import { Element, ElementRepository, IElement } from '../../services/element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { withCanvas, CanvasContext } from './../Canvas';
-import { ContainerRepository } from '../../domain/Container';
+import { ContainerRepository } from '../../services/container';
 import Point from '../../domain/geometry/Point';
 
 const moveable = (WrappedComponent: typeof ElementComponent) => {

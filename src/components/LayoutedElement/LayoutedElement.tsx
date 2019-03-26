@@ -15,7 +15,7 @@ import droppable from './Droppable';
 import editable from './Editable';
 import interactable from './Interactable';
 import assessable from './Assessable';
-import Container from '../../domain/Container';
+import { Container } from '../../services/container';
 import { ApollonView } from '../../services/editor';
 import { ApollonMode } from '../..';
 

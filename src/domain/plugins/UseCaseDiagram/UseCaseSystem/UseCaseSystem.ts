@@ -1,4 +1,4 @@
-import Container from '../../../Container';
+import { Container } from '../../../../services/container';
 import { ElementType } from '..';
 
 class UseCaseSystem extends Container {

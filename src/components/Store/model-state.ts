@@ -11,7 +11,7 @@ import {
 import Relationship, {
   RelationshipRepository,
 } from '../../domain/Relationship';
-import Container from '../../domain/Container';
+import { Container } from '../../services/container';
 import * as Plugin from '../../domain/plugins';
 import { computeBoundingBox } from '../../domain/geo';
 import { AssessmentState } from '../../services/assessment/assessment-types';
