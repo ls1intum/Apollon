@@ -19,7 +19,7 @@ import { notEmpty } from '../utils';
 
 function* saga() {
   yield takeEvery(ActionTypes.CHANGE_OWNER, handleOwnerChange);
-  yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
+  yield takeEvery(ElementActionTypes.CREATE, handleElementCreation);
   yield takeLatest(ElementActionTypes.CREATE, handleChildAdd);
   yield takeLatest(ElementActionTypes.RESIZE, handleElementResize);
   yield takeLatest(ElementActionTypes.CHANGE, handleElementChange);

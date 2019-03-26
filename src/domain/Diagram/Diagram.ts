@@ -1,8 +1,9 @@
 import Container from './../Container';
 import Boundary from './../geo/Boundary';
-import { ElementType } from '../Element';
+import { ElementType, IElement } from '../Element';
 import { DiagramType } from './../plugins/DiagramType';
 import { IContainer } from '../Container/Container';
+import { UMLElement } from '../..';
 
 export interface IDiagram extends IContainer {
   type2: DiagramType;
@@ -21,9 +22,21 @@ export class Diagram extends Container implements IDiagram {
     height: 1600,
   };
 
-  constructor(values?: Partial<IDiagram>) {
-    super(values);
-    Object.assign(this, values);
+  constructor(values: DiagramType);
+  constructor(values?: UMLElement);
+  constructor(values?: IElement);
+  constructor(values?: UMLElement | IElement);
+  constructor(values?: DiagramType | UMLElement | IElement) {
+    super();
+
+    if (values && typeof values === 'string') {
+      this.type2 = values;
+    }
+    this.bounds = {
+      ...this.bounds,
+      width: 1600,
+      height: 1600,
+    }
   }
 }
 

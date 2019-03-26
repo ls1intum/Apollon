@@ -33,9 +33,11 @@ abstract class Classifier extends Container {
   deviderPosition = 0;
 
   constructor(values?: UMLClassifier);
-  constructor(values?: Partial<IContainer>);
-  constructor(values?: UMLClassifier | Partial<IContainer>) {
+  constructor(values?: IContainer);
+  constructor(values?: UMLElement | IElement);
+  constructor(values?: UMLClassifier | IContainer) {
     super(values);
+
     this.ownedElements = [];
     if (values && 'attributes' in values) {
       this.ownedElements = [...this.ownedElements, ...values.attributes];

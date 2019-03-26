@@ -17,7 +17,8 @@ abstract class Relationship extends Element {
   path: { x: number; y: number }[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
 
   constructor(name: string, public source: Port, public target: Port) {
-    super({ name });
+    super();
+    this.name = name;
   }
 
   static toUMLRelationship(relationship: Relationship): UMLRelationship {

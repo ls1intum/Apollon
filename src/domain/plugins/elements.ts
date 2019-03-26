@@ -21,7 +21,7 @@ import { Package } from './Common/Package';
 import { ClassAttribute } from './ClassDiagram/ClassMember/ClassAttribute';
 import { ClassMethod } from './ClassDiagram/ClassMember/ClassMethod';
 
-export const elements: { [key in ElementType]: new (values?: UMLElement | Partial<IElement>) => Element } = {
+export const elements: { [key in ElementType]: new (values?: IElement | UMLElement) => Element } = {
   [ElementType.Diagram]: Diagram,
   [ElementType.Package]: Package,
   [ElementType.Class]: Class,

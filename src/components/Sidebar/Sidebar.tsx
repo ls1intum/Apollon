@@ -46,16 +46,18 @@ class Sidebar extends Component<Props, State> {
         this.setState({
           previews: [
             new Package(),
-            new Class({ name: 'Class' }),
-            new AbstractClass({ name: 'AbstractClass' }),
-            new Interface({ name: 'Interface' }),
-            new Enumeration({ name: 'Enumeration' }),
+            (() => { const c = new Class(); c.name = 'Class'; return c; })(),
+            (() => { const c = new AbstractClass(); c.name = 'AbstractClass'; return c; })(),
+            (() => { const c = new Interface(); c.name = 'Interface'; return c; })(),
+            (() => { const c = new Enumeration(); c.name = 'Enumeration'; return c; })(),
           ],
         });
         break;
       case DiagramType.ObjectDiagram:
         this.setState({
-          previews: [new ObjectName({ name: 'Object : Class' })],
+          previews: [
+            (() => { const c = new ObjectName(); c.name = 'Object : Class'; return c; })(),
+          ],
         });
         break;
       case DiagramType.ActivityDiagram:
@@ -63,9 +65,9 @@ class Sidebar extends Component<Props, State> {
           previews: [
             new ActivityInitialNode(),
             new ActivityFinalNode(),
-            new ActivityActionNode({ name: 'ActionNode' }),
-            new ActivityObjectNode({ name: 'ObjectNode' }),
-            new ActivityMergeNode({ name: 'Condition' }),
+            (() => { const c = new ActivityActionNode(); c.name = 'ActionNode'; return c; })(),
+            (() => { const c = new ActivityObjectNode(); c.name = 'ObjectNode'; return c; })(),
+            (() => { const c = new ActivityMergeNode(); c.name = 'Condition'; return c; })(),
             new ActivityForkNode(),
           ],
         });
@@ -73,9 +75,9 @@ class Sidebar extends Component<Props, State> {
       case DiagramType.UseCaseDiagram:
         this.setState({
           previews: [
-            new UseCase({ name: 'UseCase' }),
-            new UseCaseActor({ name: 'Actor' }),
-            new UseCaseSystem({ name: 'System' }),
+            (() => { const c = new UseCase(); c.name = 'UseCase'; return c; })(),
+            (() => { const c = new UseCaseActor(); c.name = 'Actor'; return c; })(),
+            (() => { const c = new UseCaseSystem(); c.name = 'System'; return c; })(),
           ],
         });
     }
@@ -107,8 +109,8 @@ class Sidebar extends Component<Props, State> {
         case ElementType.AbstractClass:
         case ElementType.Interface:
           [
-            new ClassAttribute({ name: '+ attribute: Type' }),
-            new ClassMethod({ name: '+ method()' }),
+            (() => { const c = new ClassAttribute(); c.name = '+ attribute: Type'; return c; })(),
+            (() => { const c = new ClassMethod(); c.name = '+ method()'; return c; })(),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
@@ -116,21 +118,21 @@ class Sidebar extends Component<Props, State> {
           break;
         case ElementType.Enumeration:
           [
-            new ClassAttribute({ name: 'Case1' }),
-            new ClassAttribute({ name: 'Case2' }),
-            new ClassAttribute({ name: 'Case3' }),
+            (() => { const c = new ClassAttribute(); c.name = 'Case1'; return c; })(),
+            (() => { const c = new ClassAttribute(); c.name = 'Case2'; return c; })(),
+            (() => { const c = new ClassAttribute(); c.name = 'Case3'; return c; })(),
           ].forEach(member => {
             member.owner = element.id;
             this.props.create(member);
           });
           break;
         case ElementType.ObjectName:
-          [new ObjectAttribute({ name: 'attribute = value' })].forEach(
-            member => {
-              member.owner = element.id;
-              this.props.create(member);
-            }
-          );
+          [
+            (() => { const c = new ObjectAttribute(); c.name = 'attribute = value'; return c; })(),
+          ].forEach(member => {
+            member.owner = element.id;
+            this.props.create(member);
+          });
       }
     }, 0);
   };

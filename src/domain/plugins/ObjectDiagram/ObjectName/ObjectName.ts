@@ -1,7 +1,9 @@
-import { Element } from '../../../Element';
+import { Element, IElement } from '../../../Element';
 import Container from '../../../Container';
 import { ElementType } from '..';
 import { ObjectAttribute } from '../ObjectAttribute';
+import { UMLElement } from '../../../..';
+import { IContainer } from '../../../Container/Container';
 
 class ObjectName extends Container {
   static features = {
@@ -14,6 +16,10 @@ class ObjectName extends Container {
 
   get headerHeight() {
     return 40;
+  }
+
+  constructor(values?: UMLElement | IElement) {
+    super(values);
   }
 
   render(elements: Element[]): Element[] {

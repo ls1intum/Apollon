@@ -37,7 +37,8 @@ const NewMember = styled(TextField)`
 class ObjectNamePopup extends Component<Props> {
   private create = (value: string) => {
     const { element, create } = this.props;
-    const member = new ObjectAttribute({ name: value });
+    const member = new ObjectAttribute()
+    member.name = value;
     member.owner = element.id;
     create(member);
   };

@@ -10,9 +10,14 @@ abstract class Container extends Element implements IContainer {
 
   ownedElements: string[] = [];
 
-  constructor(values?: Partial<IContainer>) {
+  constructor(values?: IContainer);
+  constructor(values?: UMLElement);
+  constructor(values?: UMLElement | IElement);
+  constructor(values?: UMLElement | IContainer) {
     super(values);
-    Object.assign(this, values);
+    if (values && 'ownedElements'in values) {
+      this.ownedElements = values.ownedElements;
+    }
   }
 
   render(children: Element[]): Element[] {
@@ -35,8 +40,7 @@ abstract class Container extends Element implements IContainer {
     return [this, ...children];
   }
 
-
-  static fromUMLElement<T extends typeof Element>(
+  fromUMLElement<T extends typeof Element>(
     umlElement: UMLElement,
     Clazz: T
   ): Element {

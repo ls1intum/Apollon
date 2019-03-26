@@ -47,6 +47,9 @@ export class ModelState {
           return element;
         });
         element.ownedElements = children.map(child => child.id);
+        console.log(Object.values(elements).filter(
+          child => child.owner === element.id
+        ))
         const changes = element
           .render(children)
           .reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
@@ -77,7 +80,7 @@ export class ModelState {
         view: ApollonView.Modelling,
       },
       diagram: {
-        ...new Diagram({ type2: model.type }),
+        ...new Diagram(model.type),
         ownedElements: Object.values(elements)
           .filter(e => !e.owner)
           .map(e => e.id),

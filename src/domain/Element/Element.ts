@@ -37,9 +37,10 @@ export abstract class Element implements IElement {
   selected: boolean = false;
   interactive: boolean = false;
 
+  constructor(values?: IElement);
   constructor(values?: UMLElement);
-  constructor(values?: Partial<IElement>);
-  constructor(values?: UMLElement | Partial<IElement>) {
+  constructor(values?: IElement | UMLElement);
+  constructor(values?: IElement | UMLElement) {
     Object.assign(this, values);
   }
 

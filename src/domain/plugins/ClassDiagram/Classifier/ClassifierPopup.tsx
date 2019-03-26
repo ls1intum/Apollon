@@ -43,7 +43,8 @@ class ClassifierComponent extends Component<Props> {
     value: string
   ) => {
     const { element, create } = this.props;
-    const member = new Clazz({ name: value });
+    const member = new Clazz();
+    member.name = value;
     member.owner = element.id;
     create(member);
   };
