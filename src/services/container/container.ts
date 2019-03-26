@@ -38,20 +38,4 @@ export abstract class Container extends Element implements IContainer {
   resizeElement(children: Element[]): Element[] {
     return [this, ...children];
   }
-
-  fromUMLElement<T extends typeof Element>(umlElement: UMLElement, Clazz: T): Element {
-    return Object.setPrototypeOf(
-      {
-        id: umlElement.id,
-        name: umlElement.name,
-        owner: umlElement.owner,
-        type: umlElement.type,
-        bounds: umlElement.bounds,
-        base: 'Container',
-        hovered: false,
-        selected: false,
-      },
-      Clazz.prototype
-    );
-  }
 }
