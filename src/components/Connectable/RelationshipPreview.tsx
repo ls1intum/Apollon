@@ -6,6 +6,7 @@ import Element, { ElementRepository } from './../../domain/Element';
 import { Point } from './../../domain/geo';
 import Port from './../../domain/Port';
 import { withCanvas, CanvasContext } from '../Canvas';
+import { Direction } from '../..';
 
 class RelationshipPreview extends Component<Props, State> {
   state: State = {
@@ -27,10 +28,10 @@ class RelationshipPreview extends Component<Props, State> {
   private calculatePath = (): Point[] => {
     let path: Point[] = [];
     if (this.props.port) {
-      const { element: id, location } = this.props.port;
+      const { element: id, direction: location } = this.props.port;
       const element = this.props.getById(id);
       switch (location) {
-        case 'N':
+        case Direction.Up:
           path.push({
             x: element.bounds.x + element.bounds.width / 2,
             y: element.bounds.y,
@@ -40,7 +41,7 @@ class RelationshipPreview extends Component<Props, State> {
             y: element.bounds.y - 20,
           });
           break;
-        case 'E':
+        case Direction.Right:
           path.push({
             x: element.bounds.x + element.bounds.width,
             y: element.bounds.y + element.bounds.height / 2,
@@ -50,7 +51,7 @@ class RelationshipPreview extends Component<Props, State> {
             y: element.bounds.y + element.bounds.height / 2,
           });
           break;
-        case 'S':
+        case Direction.Down:
           path.push({
             x: element.bounds.x + element.bounds.width / 2,
             y: element.bounds.y + element.bounds.height,
@@ -60,7 +61,7 @@ class RelationshipPreview extends Component<Props, State> {
             y: element.bounds.y + element.bounds.height + 20,
           });
           break;
-        case 'W':
+        case Direction.Left:
           path.push({
             x: element.bounds.x,
             y: element.bounds.y + element.bounds.height / 2,

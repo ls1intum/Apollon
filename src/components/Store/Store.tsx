@@ -11,21 +11,22 @@ import createSagaMiddleware from 'redux-saga';
 import ReduxState from './State';
 import reduceReducers from 'reduce-reducers';
 
-import EditorService from './../../services/EditorService';
-
 import { all, fork } from 'redux-saga/effects';
+import { EditorReducer } from './../../services/editor'
 import { ElementReducer, ElementSaga } from './../../domain/Element';
 import { RelationshipReducer, RelationshipSaga } from './../../domain/Relationship';
 import { ContainerReducer, ContainerSaga } from './../../domain/Container';
 import { DiagramReducer, DiagramSaga } from './../../domain/Diagram';
+import { AssessmentReducer } from './../../services/assessments';
 
 class Store extends React.Component<Props> {
   public store: ReduxStore<ReduxState>;
 
   private reducers = {
-    editor: EditorService.reducer,
+    editor: EditorReducer,
     diagram: DiagramReducer,
     elements: reduceReducers(ElementReducer as any, RelationshipReducer as any, ContainerReducer as any) as any,
+    assessments: AssessmentReducer,
   };
 
   constructor(props: Readonly<Props>) {

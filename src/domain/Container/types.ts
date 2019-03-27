@@ -8,7 +8,7 @@ export const enum ActionTypes {
 
 export interface ChangeOwnerAction extends Action<ActionTypes.CHANGE_OWNER> {
   payload: {
-    id: string;
+    id: string | null;
     owner: string | null;
   };
 }

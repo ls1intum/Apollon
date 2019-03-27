@@ -7,7 +7,7 @@ import Canvas from './../components/Canvas';
 import Sidebar from './../components/Sidebar';
 import { DragLayer } from './../components/Draggable';
 
-class App extends React.Component<Props> {
+export class Application extends React.Component<Props> {
   store: RefObject<Store> = createRef();
 
   render() {
@@ -33,4 +33,4 @@ interface Props {
   styles: Partial<Styles>;
 }
 
-export default App;
+export default Application;

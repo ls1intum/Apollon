@@ -1,57 +1,54 @@
-import Apollon, { ApollonOptions, exportDiagram } from '../src';
-import { DiagramType } from '../src/domain/Diagram';
-import { ApollonMode } from '../src/services/EditorService';
-import { RenderOptions } from '../src/rendering/Renderer';
+import { ApollonEditor, ApollonOptions, DiagramType, SVG } from '../src';
 
 const container = document.getElementById('apollon')!;
+let editor: ApollonEditor | null = null;
 let options: ApollonOptions = {
-  initialState: JSON.parse(window.localStorage.getItem('apollon')!),
-  diagramType: DiagramType.ClassDiagram,
-  mode: ApollonMode.Full,
-  theme: {
-    fontFamily:
-      '-apple-system, BlinkMacSystemFont, HelveticaNeue, Arial, sans-serif',
-  },
+  type: DiagramType.ClassDiagram,
+  model: JSON.parse(window.localStorage.getItem('apollon')!),
 };
-
-let editor: Apollon | null = null;
-const render = (container: HTMLElement, options: ApollonOptions) => {
-  editor && editor.destroy();
-  editor = new Apollon(container, options);
-};
-render(container, options);
 
 export const onChange = (event: MouseEvent) => {
   const { name, value } = event.target as HTMLSelectElement;
   options = { ...options, [name]: value };
-  render(container, options);
+  render(container);
+};
+
+export const onSwitch = (event: MouseEvent) => {
+  const { name, checked: value } = event.target as HTMLInputElement;
+  options = { ...options, [name]: value };
+  render(container);
 };
 
 export const save = () => {
   if (!editor) return;
 
-  const state = editor.getState();
-  localStorage.setItem('apollon', JSON.stringify(state));
-  options = { ...options, initialState: state || undefined };
+  localStorage.setItem('apollon', JSON.stringify(editor.model));
+  options = { ...options, model: editor.model };
+  return options;
 };
 
 export const clear = () => {
   localStorage.removeItem('apollon');
-  options = { ...options, initialState: undefined };
+  options = { ...options, model: undefined };
 };
 
-export const draw = () => {
+export const draw = (mode?: 'include' | 'exclude') => {
   if (!editor) return;
 
-  const state = editor.getState();
-  if (!state || !state.entities.allIds.length) return;
+  const filter: string[] = [
+    ...editor.model.interactive.elements,
+    ...editor.model.interactive.relationships,
+  ];
 
-  const renderOptions: RenderOptions = {
-    shouldRenderElement: (id: string) => true,
-  };
-
-  const { svg } = exportDiagram(state, renderOptions);
+  const { svg }: SVG = editor.exportAsSVG(mode && { [mode]: filter });
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);
 };
+
+const render = (container: HTMLElement) => {
+  save();
+  editor && editor.destroy();
+  editor = new ApollonEditor(container, options);
+};
+render(container);

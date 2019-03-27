@@ -14,14 +14,16 @@ import connectable from './Connectable';
 import droppable from './Droppable';
 import editable from './Editable';
 import interactable from './Interactable';
-import {
-  EditorMode,
-  ApollonMode,
-  InteractiveElementsMode,
-} from '../../services/EditorService';
+import assessable from './Assessable';
 import Container from '../../domain/Container';
+import { ApollonView } from '../../services/editor';
+import { ApollonMode } from '../..';
 
 class LayoutedElement extends Component<Props, State> {
+  static defaultProps = {
+    disabled: false,
+  };
+
   state: State = {
     element: this.props.getById(this.props.element),
   };
@@ -29,15 +31,20 @@ class LayoutedElement extends Component<Props, State> {
   component: typeof ElementComponent = this.composeComponent();
 
   private composeComponent(): typeof ElementComponent {
-    const { editorMode, apollonMode } = this.props;
+    const { readonly, view, mode } = this.props;
     type DecoratorType = (
       Component: typeof ElementComponent
     ) => React.ComponentClass<ComponentProps>;
     let decorators: DecoratorType[] = [];
 
-    if (apollonMode === ApollonMode.ReadOnly) {
+    if (mode === ApollonMode.Assessment) {
+      decorators = [assessable, editable, selectable, hoverable];
+    } else if (readonly) {
       decorators = [selectable, hoverable];
-    } else if (editorMode === EditorMode.InteractiveElementsView) {
+    } else if (
+      view === ApollonView.Exporting ||
+      view == ApollonView.Highlight
+    ) {
       decorators = [interactable, hoverable];
     } else {
       const element = this.props.getById(this.props.element);
@@ -58,8 +65,8 @@ class LayoutedElement extends Component<Props, State> {
     return compose<typeof ElementComponent>(...decorators)(ElementComponent);
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
-    if (prevProps.editorMode !== this.props.editorMode) {
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.view !== this.props.view) {
       this.component = this.composeComponent();
       this.forceUpdate();
     }
@@ -72,13 +79,13 @@ class LayoutedElement extends Component<Props, State> {
     return (
       <Component
         element={element}
+        disabled={this.props.disabled}
         interactable={
-          this.props.editorMode === EditorMode.InteractiveElementsView
+          this.props.view === ApollonView.Exporting ||
+          this.props.view === ApollonView.Highlight
         }
         hidden={
-          this.props.editorMode === EditorMode.InteractiveElementsView &&
-          this.props.interactiveMode === InteractiveElementsMode.Hidden &&
-          element.interactive
+          this.props.view === ApollonView.Highlight && element.interactive
         }
       />
     );
@@ -87,13 +94,14 @@ class LayoutedElement extends Component<Props, State> {
 
 interface OwnProps {
   element: string;
+  disabled: boolean;
 }
 
 interface StateProps {
   getById: (id: string) => Element;
-  editorMode: EditorMode;
-  apollonMode: ApollonMode;
-  interactiveMode: InteractiveElementsMode;
+  readonly: boolean;
+  view: ApollonView;
+  mode: ApollonMode;
 }
 
 type Props = OwnProps & StateProps;
@@ -104,9 +112,9 @@ interface State {
 
 const mapStateToProps = (state: ReduxState): StateProps => ({
   getById: ElementRepository.getById(state.elements),
-  editorMode: state.editor.editorMode,
-  apollonMode: state.editor.mode,
-  interactiveMode: state.editor.interactiveMode,
+  readonly: state.editor.readonly,
+  view: state.editor.view,
+  mode: state.editor.mode,
 });
 
 export default connect(mapStateToProps)(LayoutedElement);

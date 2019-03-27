@@ -1,34 +1,35 @@
 import Boundary from '../geo/Boundary';
+import { Direction } from '../..';
 
 interface Port {
   element: string;
-  location: 'N' | 'E' | 'S' | 'W';
+  direction: Direction;
 }
 
 class Port {
   static position(
     bounds: Boundary,
-    location: Port['location']
+    direction: Port['direction']
   ): { point: { x: number; y: number }; offset: { x: number; y: number } } {
     let { x, y, width, height } = bounds;
     const offset = 40;
-    switch (location) {
-      case 'N':
+    switch (direction) {
+      case Direction.Up:
         return {
           point: { x: x + width / 2, y },
           offset: { x: x + width / 2, y: y - offset },
         };
-      case 'E':
+      case Direction.Right:
         return {
           point: { x: x + width, y: y + height / 2 },
           offset: { x: x + width + offset, y: y + height / 2 },
         };
-      case 'S':
+      case Direction.Down:
         return {
           point: { x: x + width / 2, y: y + height },
           offset: { x: x + width / 2, y: y + height + offset },
         };
-      case 'W':
+      case Direction.Left:
         return {
           point: { x, y: y + height / 2 },
           offset: { x: x - offset, y: y + height / 2 },

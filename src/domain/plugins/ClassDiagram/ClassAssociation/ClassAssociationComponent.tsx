@@ -3,6 +3,7 @@ import ClassAssociation from './ClassAssociation';
 import Point from '../../../geometry/Point';
 import Port from '../../../Port';
 import { RelationshipKind } from '..';
+import { Direction } from '../../../..';
 
 const Marker = {
   Arrow: (id: string) => (
@@ -99,30 +100,30 @@ const ClassAssociationComponent: SFC<Props> = ({ element }) => {
   };
 
   const layoutText = (
-    location: Port['location'],
+    location: Port['direction'],
     position: 'TOP' | 'BOTTOM'
   ) => {
     switch (location) {
-      case 'N':
+      case Direction.Up:
         return {
           dx: position === 'TOP' ? -5 : 5,
           dominantBaseline: 'text-after-edge',
           textAnchor: position === 'TOP' ? 'end' : 'start',
         };
-      case 'E':
+      case Direction.Right:
         return {
           dy: position === 'TOP' ? -10 : 5,
           dominantBaseline:
             position === 'TOP' ? 'text-after-edge' : 'text-before-edge',
           textAnchor: 'start',
         };
-      case 'S':
+      case Direction.Down:
         return {
           dx: position === 'TOP' ? -5 : 5,
           dominantBaseline: 'text-before-edge',
           textAnchor: position === 'TOP' ? 'end' : 'start',
         };
-      case 'W':
+      case Direction.Left:
         return {
           dy: position === 'TOP' ? -10 : 5,
           dominantBaseline:
@@ -151,28 +152,28 @@ const ClassAssociationComponent: SFC<Props> = ({ element }) => {
       <text
         x={source.x}
         y={source.y}
-        {...layoutText(element.source.location, 'BOTTOM')}
+        {...layoutText(element.source.direction, 'BOTTOM')}
       >
         {element.multiplicity.source}
       </text>
       <text
         x={target.x}
         y={target.y}
-        {...layoutText(element.target.location, 'BOTTOM')}
+        {...layoutText(element.target.direction, 'BOTTOM')}
       >
         {element.multiplicity.target}
       </text>
       <text
         x={source.x}
         y={source.y}
-        {...layoutText(element.source.location, 'TOP')}
+        {...layoutText(element.source.direction, 'TOP')}
       >
         {element.role.source}
       </text>
       <text
         x={target.x}
         y={target.y}
-        {...layoutText(element.target.location, 'TOP')}
+        {...layoutText(element.target.direction, 'TOP')}
       >
         {element.role.target}
       </text>

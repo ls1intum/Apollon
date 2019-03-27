@@ -1,23 +1,102 @@
-import Editor from './Editor';
-import Renderer from './rendering/Renderer';
+import { DiagramType } from './domain/plugins/DiagramType';
+import UMLElementType from './domain/plugins/ElementKind';
+import UMLRelationshipType from './domain/plugins/RelationshipKind';
+import Styles from './components/Theme/Styles';
 
-export * from './Editor';
-export default Editor;
+export type ElementType = UMLElementType | UMLRelationshipType;
 
+export interface UMLModel {
+  version: string;
+  type: DiagramType;
+  size: { width: number; height: number };
+  interactive: Selection;
+  assessments: Assessment[];
+  elements: UMLElement[];
+  relationships: UMLRelationship[];
+}
+
+export interface Assessment {
+  modelElementId: string;
+  elementType: ElementType;
+  score: number;
+  feedback?: string;
+}
+
+export { DiagramType };
+export { UMLElementType };
+export { UMLRelationshipType };
+export { Styles };
 export {
-  RelationshipKind,
-  EntityKind,
-} from './services/Interface/ExternalState';
+  UMLClassifier,
+  UMLClassAssociation,
+} from './domain/plugins/ClassDiagram';
 
-export { computeBoundingBox } from './domain/geo/boundingBox';
+export interface Element {
+  id: string;
+  name: string;
+  type: ElementType;
+  bounds: { x: number; y: number; width: number; height: number };
+}
 
-export const layoutDiagram = Editor.layoutDiagram;
-export const renderDiagramToSVG = Editor.renderDiagramToSVG;
-export const renderEntityToSVG = Editor.renderEntityToSVG;
-export const renderRelationshipToSVG = Editor.renderRelationshipToSVG;
-export const exportDiagram = Renderer.exportDiagram;
+export interface UMLElement extends Element {
+  owner: string | null;
+  type: UMLElementType;
+}
 
-export const ENTITY_KIND_HEIGHT = 10;
-export const ENTITY_MEMBER_HEIGHT = 30;
-export const ENTITY_MEMBER_LIST_VERTICAL_PADDING = 0;
-export const ENTITY_NAME_HEIGHT = 40;
+export enum Direction {
+  Up = 'Up',
+  Right = 'Right',
+  Down = 'Down',
+  Left = 'Left',
+}
+
+export interface UMLRelationship extends Element {
+  type: UMLRelationshipType;
+  path: { x: number; y: number }[];
+  source: {
+    element: string;
+    direction: Direction;
+  };
+  target: {
+    element: string;
+    direction: Direction;
+  };
+}
+
+export interface Selection {
+  elements: string[];
+  relationships: string[];
+}
+
+export enum ApollonMode {
+  Modelling = 'Modelling',
+  Exporting = 'Exporting',
+  Assessment = 'Assessment',
+}
+
+export type ApollonOptions = {
+  type?: DiagramType;
+  mode?: ApollonMode;
+  readonly?: boolean;
+  model?: UMLModel;
+  theme?: Partial<Styles>;
+};
+
+export type ExportOptions = {
+  margin?: number;
+  keepOriginalSize?: boolean;
+  include?: string[];
+  exclude?: string[];
+};
+
+export interface SVG {
+  svg: string;
+  clip: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
+export * from './ApollonEditor';

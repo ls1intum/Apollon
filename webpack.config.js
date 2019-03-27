@@ -14,7 +14,16 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.tsx?/, exclude: /\/node_modules\//, loader: 'ts-loader' },
+      {
+        test: /\.tsx?/,
+        exclude: /\/node_modules\//,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: { compilerOptions: { declaration: false } },
+          },
+        ],
+      },
     ],
   },
   devServer: {

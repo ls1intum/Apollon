@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { State as ReduxState } from './../Store';
 import styled from 'styled-components';
@@ -11,6 +11,7 @@ import ConnectContext, {
 import * as Plugins from './../../domain/plugins';
 import { DefaultRelationshipKind } from '../../domain/plugins/RelationshipKind';
 import { DiagramType } from '../../domain/Diagram';
+import { Direction } from '../..';
 
 const Path = styled.path`
   cursor: crosshair;
@@ -22,21 +23,23 @@ const Group = styled.g`
   }
 `;
 
-const connectable = (WrappedComponent: typeof ElementComponent) => {
+const connectable = (
+  WrappedComponent: typeof ElementComponent
+): ComponentClass<OwnProps> => {
   class Connectable extends Component<Props> {
     private calculateInvisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
       const r = 20;
       const cirlce = `m ${-r}, 0 a ${r},${r} 0 1,0 ${r *
         2},0 a ${r},${r} 0 1,0 ${-r * 2},0 `;
-      switch (port.location) {
-        case 'N':
+      switch (port.direction) {
+        case Direction.Up:
           return `M ${width / 2} 0 ${cirlce}`;
-        case 'E':
+        case Direction.Right:
           return `M ${width} ${height / 2} ${cirlce}`;
-        case 'S':
+        case Direction.Down:
           return `M ${width / 2} ${height} ${cirlce}`;
-        case 'W':
+        case Direction.Left:
           return `M 0 ${height / 2} ${cirlce}`;
       }
       return '';
@@ -44,16 +47,16 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
 
     private calculateVisiblePath(port: Port): string {
       const { width, height } = this.props.element.bounds;
-      switch (port.location) {
-        case 'N':
+      switch (port.direction) {
+        case Direction.Up:
           return `M ${width / 2 - 20} 0 A 10 10 0 0 1 ${width / 2 + 20} 0`;
-        case 'E':
+        case Direction.Right:
           return `M ${width} ${height / 2 -
             20} A 10 10 0 0 1 ${width} ${height / 2 + 20}`;
-        case 'S':
+        case Direction.Down:
           return `M ${width / 2 - 20} ${height} A 10 10 0 0 0 ${width / 2 +
             20} ${height}`;
-        case 'W':
+        case Direction.Left:
           return `M 0 ${height / 2 - 20} A 10 10 0 0 0 0 ${height / 2 + 20}`;
       }
     }
@@ -72,8 +75,9 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       try {
         const endpoints = await context.onStartConnect(port)(event);
 
-        const Relationship =
-          (Plugins as any)[DefaultRelationshipKind[this.props.diagramType]];
+        const Relationship = (Plugins as any)[
+          DefaultRelationshipKind[this.props.diagramType]
+        ];
         const relationship = new Relationship(
           'Association',
           endpoints.source,
@@ -95,19 +99,19 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
       const ports: Port[] = [
         {
           element: element.id,
-          location: 'N',
+          direction: Direction.Up,
         },
         {
           element: element.id,
-          location: 'E',
+          direction: Direction.Right,
         },
         {
           element: element.id,
-          location: 'S',
+          direction: Direction.Down,
         },
         {
           element: element.id,
-          location: 'W',
+          direction: Direction.Left,
         },
       ];
       return (
@@ -118,7 +122,7 @@ const connectable = (WrappedComponent: typeof ElementComponent) => {
               context &&
               ports.map(port => (
                 <Group
-                  key={port.location}
+                  key={port.direction}
                   onMouseDown={this.onMouseDown(port, context)}
                   onMouseUp={this.onMouseUp(port, context)}
                   onMouseEnter={this.onMouseEnter}

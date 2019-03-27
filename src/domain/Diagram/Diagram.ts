@@ -1,7 +1,7 @@
 import Container from './../Container';
 import Boundary from './../geo/Boundary';
 import { ElementKind } from '../Element';
-import DiagramType from './../plugins/DiagramType';
+import { DiagramType } from './../plugins/DiagramType';
 
 class Diagram extends Container {
   readonly kind: ElementKind = ElementKind.Diagram;

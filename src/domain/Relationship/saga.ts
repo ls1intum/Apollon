@@ -82,15 +82,15 @@ function* recalc(id: string) {
   } = (relationship.constructor as typeof Relationship).features;
 
   let path = Connection.computePath(
-    { bounds: source, location: relationship.source.location },
-    { bounds: target, location: relationship.target.location },
+    { bounds: source, direction: relationship.source.direction },
+    { bounds: target, direction: relationship.target.direction },
     { isStraight: straight }
   );
 
   const x = Math.min(...path.map(point => point.x));
   const y = Math.min(...path.map(point => point.y));
-  const width = Math.max(...path.map(point => point.x)) - x;
-  const height = Math.max(...path.map(point => point.y)) - y;
+  const width = Math.max(Math.max(...path.map(point => point.x)) - x, 1);
+  const height = Math.max(Math.max(...path.map(point => point.y)) - y, 1);
   const bounds = { x, y, width, height };
 
   path = path.map(point => ({ x: point.x - x, y: point.y - y }));

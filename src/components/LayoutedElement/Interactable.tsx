@@ -1,10 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import { ElementRepository } from './../../domain/Element';
 import ElementComponent, { OwnProps } from './ElementComponent';
 
-const interactable = (WrappedComponent: typeof ElementComponent) => {
+const interactable = (
+  WrappedComponent: typeof ElementComponent
+): ComponentClass<OwnProps> => {
   class Interactable extends Component<Props> {
     private select = (event: MouseEvent) => {
       if (event.which !== 1 || !this.props.element.hovered) return;

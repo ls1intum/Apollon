@@ -1,10 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
 import ElementComponent, { OwnProps } from './ElementComponent';
 import { ElementRepository } from '../../domain/Element';
 
-const selectable = (WrappedComponent: typeof ElementComponent) => {
+const selectable = (
+  WrappedComponent: typeof ElementComponent
+): ComponentClass<OwnProps> => {
   class Selectable extends Component<Props> {
     private select = (event: MouseEvent) => {
       if (

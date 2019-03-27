@@ -1,6 +1,6 @@
 import Element from '../../../Element';
 import Container from '../../../Container';
-import { ElementKind } from '..';
+import { ElementKind, UMLClassifier } from '..';
 import ClassMember from '../ClassMember/ClassMember';
 import { ClassAttribute } from '../ClassMember/ClassAttribute';
 import { ClassMethod } from '../ClassMember/ClassMethod';
@@ -50,9 +50,12 @@ abstract class Classifier extends Container {
       }
     } else {
       this.deviderPosition = 0;
-      methods = []
+      methods = [];
     }
-    this.ownedElements = [...attributes.map(e => e.id), ...methods.map(e => e.id)]
+    this.ownedElements = [
+      ...attributes.map(e => e.id),
+      ...methods.map(e => e.id),
+    ];
 
     parent.bounds.height = y;
     return [parent, ...attributes, ...methods];
@@ -84,6 +87,34 @@ abstract class Classifier extends Container {
         return child;
       }),
     ];
+  }
+
+  static toUMLElement(
+    element: Classifier,
+    children: Element[]
+  ): { element: UMLClassifier; children: Element[] } {
+    const { element: base } = Element.toUMLElement(element, children);
+    return {
+      element: {
+        ...base,
+        attributes: children
+          .filter(element => element instanceof ClassAttribute)
+          .map(element => element.id),
+        methods: children
+          .filter(element => element instanceof ClassMethod)
+          .map(element => element.id),
+      },
+      children: children,
+    };
+  }
+
+  static fromUMLElement(umlElement: UMLClassifier): Element {
+    // return Element.fromUMLElement(umlElement, Classifier);
+    const element = Element.fromUMLElement(umlElement, Classifier);
+    if (element instanceof Container) {
+      element.ownedElements = [...umlElement.attributes, ...umlElement.methods];
+    }
+    return element;
   }
 }
 

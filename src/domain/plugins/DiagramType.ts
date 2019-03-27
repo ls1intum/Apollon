@@ -1,8 +1,6 @@
-const enum DiagramType {
+export enum DiagramType {
   ClassDiagram = 'ClassDiagram',
   ObjectDiagram = 'ObjectDiagram',
   ActivityDiagram = 'ActivityDiagram',
   UseCaseDiagram = 'UseCaseDiagram',
 }
-
-export default DiagramType;

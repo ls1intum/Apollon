@@ -34,3 +34,15 @@ export {
 export {
   default as ObjectNamePopup,
 } from './ObjectDiagram/ObjectName/ObjectNamePopup';
+export {
+  default as UseCaseAssociationPopup,
+} from './UseCaseDiagram/UseCaseAssociation/UseCaseAssociationPopup';
+export {
+  default as UseCaseExtendPopup,
+} from './UseCaseDiagram/UseCaseAssociation/UseCaseAssociationPopup';
+export {
+  default as UseCaseIncludePopup,
+} from './UseCaseDiagram/UseCaseAssociation/UseCaseAssociationPopup';
+export {
+  default as UseCaseGeneralizationPopup,
+} from './UseCaseDiagram/UseCaseAssociation/UseCaseAssociationPopup';
