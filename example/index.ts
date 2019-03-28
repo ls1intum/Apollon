@@ -1,4 +1,4 @@
-import { ApollonEditor, ApollonOptions, DiagramType, SVG } from '../source';
+import { ApollonEditor, ApollonOptions, DiagramType, SVG } from '../src';
 
 const container = document.getElementById('apollon')!;
 let editor: ApollonEditor | null = null;
