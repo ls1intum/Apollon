@@ -15,5 +15,5 @@
     "forceConsistentCasingInFileNames": true,
     "downlevelIteration": true
   },
-  "include": ["src/index.ts"]
+  "include": ["source/index.ts"]
 }

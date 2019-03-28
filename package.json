@@ -43,6 +43,7 @@
     "@types/reduce-reducers": "0.3.0",
     "@types/styled-components": "4.1.12",
     "@types/uuid": "3.4.4",
+    "circular-dependency-plugin": "5.0.2",
     "ts-essentials": "2.0.3",
     "ts-loader": "5.3.3",
     "tslint": "5.13.1",
