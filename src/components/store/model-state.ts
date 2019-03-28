@@ -25,11 +25,12 @@ export interface ModelState {
 
 export class ModelState {
   static fromModel(model: UMLModel): ModelState {
-    let elements: { [id: string]: Element } = Object.values(model.elements)
+    const copy: UMLModel = JSON.parse(JSON.stringify(model));
+    let elements: { [id: string]: Element } = Object.values(copy.elements)
       .map(umlElement => {
         const Clazz = Elements[umlElement.type];
         const element = new Clazz(umlElement);
-        if (model.interactive.elements.includes(element.id)) {
+        if (copy.interactive.elements.includes(element.id)) {
           element.interactive = true;
         }
         return element;
@@ -52,11 +53,11 @@ export class ModelState {
       return { ...state, [element.id]: element };
     }, {});
 
-    const relationships: { [id: string]: Relationship } = Object.values(model.relationships)
+    const relationships: { [id: string]: Relationship } = Object.values(copy.relationships)
       .map<Relationship>(umlRelationship => {
         const Clazz = Relationships[umlRelationship.type];
         const relationship: Relationship = new Clazz(umlRelationship);
-        if (model.interactive.relationships.includes(relationship.id)) {
+        if (copy.interactive.relationships.includes(relationship.id)) {
           relationship.interactive = true;
         }
         return relationship;
@@ -72,7 +73,7 @@ export class ModelState {
       diagram: {
         ...(() => {
           const d = new Diagram();
-          d.type2 = model.type;
+          d.type2 = copy.type;
           return d;
         })(),
         ownedElements: Object.values(elements)
@@ -81,12 +82,13 @@ export class ModelState {
         ownedRelationships: Object.keys(relationships),
       },
       elements: { ...elements, ...relationships },
-      assessments: model.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
+      assessments: copy.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
     };
   }
 
   static toModel(state: ModelState): UMLModel {
-    const elements = ElementRepository.read(state);
+    const copy: ModelState = JSON.parse(JSON.stringify(state));
+    const elements = ElementRepository.read(copy);
 
     const parseElement = (element: Element): UMLElement[] => {
       const c: Element[] =
@@ -97,7 +99,7 @@ export class ModelState {
 
     const e = elements.filter(element => !element.owner).reduce<UMLElement[]>((r, e) => [...r, ...parseElement(e)], []);
 
-    const relationships = RelationshipRepository.read(state);
+    const relationships = RelationshipRepository.read(copy);
     const r = relationships.map<UMLRelationship>(relationship =>
       (relationship.constructor as typeof Relationship).toUMLRelationship(relationship)
     );
@@ -126,11 +128,11 @@ export class ModelState {
     return {
       version: '2.0',
       size,
-      type: state.diagram.type2,
+      type: copy.diagram.type2,
       interactive,
       elements: e,
       relationships: r,
-      assessments: Object.values(state.assessments),
+      assessments: Object.values(copy.assessments),
     };
   }
 }

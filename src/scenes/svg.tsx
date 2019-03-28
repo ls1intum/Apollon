@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { ModelState } from '../components/store/model-state';
 import { ExportOptions } from '../typings';
-import { Element } from '../services/element/element';
+import { Element, IElement } from '../services/element/element';
 import { Container } from '../services/container/container';
 import { Relationship, IRelationship } from '../services/relationship/relationship';
 import { Boundary } from '../utils/geometry/boundary';
@@ -78,8 +78,8 @@ const getInitialState = ({ state, options }: Props): State => {
 
 const normalizeState = (state: ModelState): Element[] => {
   let elements: Element[] = state.diagram.ownedElements
-    .map(id => state.elements[id])
-    .map(element => {
+    .map<IElement>(id => state.elements[id])
+    .map<Element>(element => {
       const ElementClazz = Elements[element.type as ElementType];
       return new ElementClazz(element);
     });
@@ -127,7 +127,6 @@ export class Svg extends Component<Props, State> {
 
   render() {
     const { bounds, elements } = this.state;
-    console.log(elements);
 
     return (
       <svg
