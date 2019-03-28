@@ -1,6 +1,6 @@
 export enum DiagramType {
   ClassDiagram = 'ClassDiagram',
   ObjectDiagram = 'ObjectDiagram',
-  // ActivityDiagram = 'ActivityDiagram',
+  ActivityDiagram = 'ActivityDiagram',
   // UseCaseDiagram = 'UseCaseDiagram',
 }

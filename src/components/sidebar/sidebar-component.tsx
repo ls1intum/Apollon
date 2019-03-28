@@ -21,6 +21,12 @@ import { ClassAttribute } from '../../packages/class-diagram/class-member/class-
 import { ClassMethod } from '../../packages/class-diagram/class-member/class-method/class-method';
 import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
 import { ObjectAttribute } from '../../packages/object-diagram/object-attribute/object-attribute';
+import { ActivityInitialNode } from '../../packages/activity-diagram/activity-initial-node/activity-initial-node';
+import { ActivityFinalNode } from '../../packages/activity-diagram/activity-final-node/activity-final-node';
+import { ActivityActionNode } from '../../packages/activity-diagram/activity-action-node/activity-action-node';
+import { ActivityObjectNode } from '../../packages/activity-diagram/activity-object-node/activity-object-node';
+import { ActivityMergeNode } from '../../packages/activity-diagram/activity-merge-node/activity-merge-node';
+import ActivityForkNode from '../../packages/activity-diagram/activity-fork-node/activity-fork-node';
 
 class SidebarComponent extends Component<Props, State> {
   state: State = {
@@ -67,30 +73,30 @@ class SidebarComponent extends Component<Props, State> {
           ],
         });
         break;
-      // case DiagramType.ActivityDiagram:
-      //   this.setState({
-      //     previews: [
-      //       new ActivityInitialNode(),
-      //       new ActivityFinalNode(),
-      //       (() => {
-      //         const c = new ActivityActionNode();
-      //         c.name = 'ActionNode';
-      //         return c;
-      //       })(),
-      //       (() => {
-      //         const c = new ActivityObjectNode();
-      //         c.name = 'ObjectNode';
-      //         return c;
-      //       })(),
-      //       (() => {
-      //         const c = new ActivityMergeNode();
-      //         c.name = 'Condition';
-      //         return c;
-      //       })(),
-      //       new ActivityForkNode(),
-      //     ],
-      //   });
-      //   break;
+      case DiagramType.ActivityDiagram:
+        this.setState({
+          previews: [
+            new ActivityInitialNode(),
+            new ActivityFinalNode(),
+            (() => {
+              const c = new ActivityActionNode();
+              c.name = 'ActionNode';
+              return c;
+            })(),
+            (() => {
+              const c = new ActivityObjectNode();
+              c.name = 'ObjectNode';
+              return c;
+            })(),
+            (() => {
+              const c = new ActivityMergeNode();
+              c.name = 'Condition';
+              return c;
+            })(),
+            new ActivityForkNode(),
+          ],
+        });
+        break;
       // case DiagramType.UseCaseDiagram:
       //   this.setState({
       //     previews: [

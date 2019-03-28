@@ -11,21 +11,17 @@ import { ClassAttribute } from './class-diagram/class-member/class-attribute/cla
 import { ClassMethod } from './class-diagram/class-member/class-method/class-method';
 import { ObjectName } from './object-diagram/object-name/object-name';
 import { ObjectAttribute } from './object-diagram/object-attribute/object-attribute';
-// import { ActivityInitialNode } from './ActivityDiagram/ActivityInitialNode';
-// import { ActivityFinalNode } from './ActivityDiagram/ActivityFinalNode';
-// import { ObjectName } from './ObjectDiagram/ObjectName';
-// import { ObjectAttribute } from './ObjectDiagram/ObjectAttribute';
-// import { ActivityActionNode } from './ActivityDiagram/ActivityActionNode';
-// import { ActivityObjectNode } from './ActivityDiagram/ActivityObjectNode';
-// import { ActivityForkNode } from './ActivityDiagram/ActivityForkNode';
-// import { ActivityMergeNode } from './ActivityDiagram/ActivityMergeNode';
+import { ActivityActionNode } from './activity-diagram/activity-action-node/activity-action-node';
+import { ActivityFinalNode } from './activity-diagram/activity-final-node/activity-final-node';
+import { ActivityForkNode } from './activity-diagram/activity-fork-node/activity-fork-node';
+import { ActivityInitialNode } from './activity-diagram/activity-initial-node/activity-initial-node';
+import { ActivityMergeNode } from './activity-diagram/activity-merge-node/activity-merge-node';
+import { ActivityObjectNode } from './activity-diagram/activity-object-node/activity-object-node';
 // import { UseCase } from './UseCaseDiagram/UseCase';
 // import { UseCaseActor } from './UseCaseDiagram/UseCaseActor';
 // import { UseCaseSystem } from './UseCaseDiagram/UseCaseSystem';
 
-type Elements = {
-  [key in ElementType]: new (values?: IElement | UMLElement) => Element;
-}
+type Elements = { [key in ElementType]: new (values?: IElement | UMLElement) => Element };
 
 export const Elements = {
   [ElementType.Diagram]: Diagram,
@@ -38,12 +34,12 @@ export const Elements = {
   [ElementType.ClassMethod]: ClassMethod,
   [ElementType.ObjectName]: ObjectName,
   [ElementType.ObjectAttribute]: ObjectAttribute,
-  // [ElementType.ActivityInitialNode]: ActivityInitialNode,
-  // [ElementType.ActivityFinalNode]: ActivityFinalNode,
-  // [ElementType.ActivityActionNode]: ActivityActionNode,
-  // [ElementType.ActivityObjectNode]: ActivityObjectNode,
-  // [ElementType.ActivityForkNode]: ActivityForkNode,
-  // [ElementType.ActivityMergeNode]: ActivityMergeNode,
+  [ElementType.ActivityInitialNode]: ActivityInitialNode,
+  [ElementType.ActivityFinalNode]: ActivityFinalNode,
+  [ElementType.ActivityActionNode]: ActivityActionNode,
+  [ElementType.ActivityObjectNode]: ActivityObjectNode,
+  [ElementType.ActivityForkNode]: ActivityForkNode,
+  [ElementType.ActivityMergeNode]: ActivityMergeNode,
   // [ElementType.UseCase]: UseCase,
   // [ElementType.UseCaseActor]: UseCaseActor,
   // [ElementType.UseCaseSystem]: UseCaseSystem,

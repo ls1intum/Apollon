@@ -9,7 +9,7 @@ import { ClassInheritance } from './class-diagram/class-association/class-inheri
 import { ClassRealization } from './class-diagram/class-association/class-realization/class-realization';
 import { ClassUnidirectional } from './class-diagram/class-association/class-unidirectional/class-unidirectional';
 import { ObjectLink } from './object-diagram/object-link/object-link';
-// import { ActivityControlFlow } from './ActivityDiagram/ActivityControlFlow';
+import { ActivityControlFlow } from './activity-diagram/activity-control-flow/activity-control-flow';
 // import { UseCaseAssociation } from './UseCaseDiagram/UseCaseAssociation';
 // import { UseCaseExtend } from './UseCaseDiagram/UseCaseExtend';
 // import { UseCaseGeneralization } from './UseCaseDiagram/UseCaseGeneralization';
@@ -28,7 +28,7 @@ export const Relationships = {
   [RelationshipType.ClassRealization]: ClassRealization,
   [RelationshipType.ClassUnidirectional]: ClassUnidirectional,
   [RelationshipType.ObjectLink]: ObjectLink,
-  // [RelationshipType.ActivityControlFlow]: ActivityControlFlow,
+  [RelationshipType.ActivityControlFlow]: ActivityControlFlow,
   // [RelationshipType.UseCaseAssociation]: UseCaseAssociation,
   // [RelationshipType.UseCaseExtend]: UseCaseExtend,
   // [RelationshipType.UseCaseGeneralization]: UseCaseGeneralization,

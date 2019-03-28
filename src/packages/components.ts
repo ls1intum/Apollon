@@ -9,13 +9,13 @@ import { ClassAssociationComponent } from './class-diagram/class-association/cla
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
 import { ObjectNameComponent } from './object-diagram/object-name/object-name-component';
 import { ObjectAttributeComponent } from './object-diagram/object-attribute/object-attribute-component';
-// export { ActivityActionNodeComponent } from './ActivityDiagram/ActivityActionNode';
-// export { ActivityFinalNodeComponent } from './ActivityDiagram/ActivityFinalNode';
-// export { ActivityForkNodeComponent } from './ActivityDiagram/ActivityForkNode';
-// export { ActivityInitialNodeComponent } from './ActivityDiagram/ActivityInitialNode';
-// export { ActivityMergeNodeComponent } from './ActivityDiagram/ActivityMergeNode';
-// export { ActivityObjectNodeComponent } from './ActivityDiagram/ActivityObjectNode';
-// export { ActivityControlFlowComponent } from './ActivityDiagram/ActivityControlFlow';
+import { ActivityActionNodeComponent } from './activity-diagram/activity-action-node/activity-action-node-component';
+import { ActivityFinalNodeComponent } from './activity-diagram/activity-final-node/activity-final-node-component';
+import { ActivityForkNodeComponent } from './activity-diagram/activity-fork-node/activity-fork-node-component';
+import { ActivityInitialNodeComponent } from './activity-diagram/activity-initial-node/activity-initial-node-component';
+import { ActivityMergeNodeComponent } from './activity-diagram/activity-merge-node/activity-merge-node-component';
+import { ActivityObjectNodeComponent } from './activity-diagram/activity-object-node/activity-object-node-component';
+import { ActivityControlFlowComponent } from './activity-diagram/activity-control-flow/activity-control-flow-component';
 // export { UseCaseComponent } from './UseCaseDiagram/UseCase';
 // export { UseCaseActorComponent } from './UseCaseDiagram/UseCaseActor';
 // export { UseCaseSystemComponent } from './UseCaseDiagram/UseCaseSystem';
@@ -35,6 +35,12 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [ElementType.ClassMethod]: ClassMemberComponent,
   [ElementType.ObjectName]: ObjectNameComponent,
   [ElementType.ObjectAttribute]: ObjectAttributeComponent,
+  [ElementType.ActivityActionNode]: ActivityActionNodeComponent,
+  [ElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
+  [ElementType.ActivityForkNode]: ActivityForkNodeComponent,
+  [ElementType.ActivityInitialNode]: ActivityInitialNodeComponent,
+  [ElementType.ActivityMergeNode]: ActivityMergeNodeComponent,
+  [ElementType.ActivityObjectNode]: ActivityObjectNodeComponent,
   [RelationshipType.ClassAggregation]: ClassAssociationComponent,
   [RelationshipType.ClassBidirectional]: ClassAssociationComponent,
   [RelationshipType.ClassComposition]: ClassAssociationComponent,
@@ -43,4 +49,5 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [RelationshipType.ClassRealization]: ClassAssociationComponent,
   [RelationshipType.ClassUnidirectional]: ClassAssociationComponent,
   [RelationshipType.ObjectLink]: ObjectLinkComponent,
+  [RelationshipType.ActivityControlFlow]: ActivityControlFlowComponent,
 };
