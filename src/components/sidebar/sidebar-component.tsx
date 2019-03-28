@@ -11,25 +11,16 @@ import { CanvasProvider } from '../canvas/canvas-context';
 import { ApollonMode, DiagramType } from '../../typings';
 import { ApollonView } from '../../services/editor/editor-types';
 import { EditorRepository } from '../../services/editor/editor-repository';
-import { Package } from '../../packages/common/package/package';
-// import { ObjectName } from '../../packages/ObjectDiagram/ObjectName';
-// import { ObjectAttribute } from '../../packages/ObjectDiagram/ObjectAttribute';
-// import { ActivityInitialNode } from '../../packages/ActivityDiagram/ActivityInitialNode';
-// import { ActivityFinalNode } from '../../packages/ActivityDiagram/ActivityFinalNode';
-// import { ActivityActionNode } from '../../packages/ActivityDiagram/ActivityActionNode';
-// import { ActivityObjectNode } from '../../packages/ActivityDiagram/ActivityObjectNode';
-// import { ActivityMergeNode } from '../../packages/ActivityDiagram/ActivityMergeNode';
-// import { ActivityForkNode } from '../../packages/ActivityDiagram/ActivityForkNode';
-// import { UseCase } from '../../packages/UseCaseDiagram/UseCase';
-// import { UseCaseActor } from '../../packages/UseCaseDiagram/UseCaseActor';
-// import { UseCaseSystem } from '../../packages/UseCaseDiagram/UseCaseSystem';
 import { ElementType } from '../../packages/element-type';
+import { Package } from '../../packages/common/package/package';
 import { Class } from '../../packages/class-diagram/classifier/class/class';
 import { AbstractClass } from '../../packages/class-diagram/classifier/abstract-class/abstract-class';
 import { Interface } from '../../packages/class-diagram/classifier/interface/interface';
 import { Enumeration } from '../../packages/class-diagram/classifier/enumeration/enumeration';
 import { ClassAttribute } from '../../packages/class-diagram/class-member/class-attribute/class-attribute';
 import { ClassMethod } from '../../packages/class-diagram/class-member/class-method/class-method';
+import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
+import { ObjectAttribute } from '../../packages/object-diagram/object-attribute/object-attribute';
 
 class SidebarComponent extends Component<Props, State> {
   state: State = {
@@ -65,17 +56,17 @@ class SidebarComponent extends Component<Props, State> {
           ],
         });
         break;
-      // case DiagramType.ObjectDiagram:
-      //   this.setState({
-      //     previews: [
-      //       (() => {
-      //         const c = new ObjectName();
-      //         c.name = 'Object : Class';
-      //         return c;
-      //       })(),
-      //     ],
-      //   });
-      //   break;
+      case DiagramType.ObjectDiagram:
+        this.setState({
+          previews: [
+            (() => {
+              const c = new ObjectName();
+              c.name = 'Object : Class';
+              return c;
+            })(),
+          ],
+        });
+        break;
       // case DiagramType.ActivityDiagram:
       //   this.setState({
       //     previews: [
@@ -182,17 +173,17 @@ class SidebarComponent extends Component<Props, State> {
             this.props.create(member);
           });
           break;
-        // case ElementType.ObjectName:
-        //   [
-        //     (() => {
-        //       const c = new ObjectAttribute();
-        //       c.name = 'attribute = value';
-        //       return c;
-        //     })(),
-        //   ].forEach(member => {
-        //     member.owner = element.id;
-        //     this.props.create(member);
-        //   });
+        case ElementType.ObjectName:
+          [
+            (() => {
+              const c = new ObjectAttribute();
+              c.name = 'attribute = value';
+              return c;
+            })(),
+          ].forEach(member => {
+            member.owner = element.id;
+            this.props.create(member);
+          });
       }
     }, 0);
   };

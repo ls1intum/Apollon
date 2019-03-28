@@ -5,7 +5,7 @@ import { RelationshipType } from './relationship-type';
 import { DefaultPopup } from './common/default-popup';
 import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
-// export { ObjectNameComponent } from './ObjectDiagram/ObjectName';
+import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
 // export { ObjectAttributeComponent } from './ObjectDiagram/ObjectAttribute';
 // export { ObjectLinkComponent } from './ObjectDiagram/ObjectLink';
 // export { ActivityActionNodeComponent } from './ActivityDiagram/ActivityActionNode';
@@ -33,6 +33,8 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [ElementType.Enumeration]: ClassifierPopup,
   [ElementType.ClassAttribute]: null,
   [ElementType.ClassMethod]: null,
+  [ElementType.ObjectName]: ObjectNamePopup,
+  [ElementType.ObjectAttribute]: null,
   [RelationshipType.ClassAggregation]: ClassAssociationPopup,
   [RelationshipType.ClassBidirectional]: ClassAssociationPopup,
   [RelationshipType.ClassComposition]: ClassAssociationPopup,
@@ -40,4 +42,5 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [RelationshipType.ClassInheritance]: ClassAssociationPopup,
   [RelationshipType.ClassRealization]: ClassAssociationPopup,
   [RelationshipType.ClassUnidirectional]: ClassAssociationPopup,
+  [RelationshipType.ObjectLink]: null,
 };

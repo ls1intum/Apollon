@@ -9,6 +9,8 @@ import { Interface } from './class-diagram/classifier/interface/interface';
 import { Enumeration } from './class-diagram/classifier/enumeration/enumeration';
 import { ClassAttribute } from './class-diagram/class-member/class-attribute/class-attribute';
 import { ClassMethod } from './class-diagram/class-member/class-method/class-method';
+import { ObjectName } from './object-diagram/object-name/object-name';
+import { ObjectAttribute } from './object-diagram/object-attribute/object-attribute';
 // import { ActivityInitialNode } from './ActivityDiagram/ActivityInitialNode';
 // import { ActivityFinalNode } from './ActivityDiagram/ActivityFinalNode';
 // import { ObjectName } from './ObjectDiagram/ObjectName';
@@ -34,8 +36,8 @@ export const Elements = {
   [ElementType.Enumeration]: Enumeration,
   [ElementType.ClassAttribute]: ClassAttribute,
   [ElementType.ClassMethod]: ClassMethod,
-  // [ElementType.ObjectName]: ObjectName,
-  // [ElementType.ObjectAttribute]: ObjectAttribute,
+  [ElementType.ObjectName]: ObjectName,
+  [ElementType.ObjectAttribute]: ObjectAttribute,
   // [ElementType.ActivityInitialNode]: ActivityInitialNode,
   // [ElementType.ActivityFinalNode]: ActivityFinalNode,
   // [ElementType.ActivityActionNode]: ActivityActionNode,
