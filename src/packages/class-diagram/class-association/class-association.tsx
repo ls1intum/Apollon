@@ -1,15 +1,30 @@
-// import React from 'react';
-// import { render, unmountComponentAtNode } from 'react-dom';
-import { Relationship } from '../../../services/relationship/relationship';
-// import { Element } from '../../../services/element/element';
+import { Relationship, IRelationship } from '../../../services/relationship/relationship';
 import { UMLClassAssociation } from '..';
-// import * as Plugins from '../../../plugins';
-// import { Boundary } from '../../../utils/geometry/boundary';
-// import { Point } from '../../../utils/geometry/point';
+import { UMLRelationship } from '../../../typings';
 
 export abstract class ClassAssociation extends Relationship {
   multiplicity = { source: '', target: '' };
   role = { source: '', target: '' };
+
+  constructor(values?: IRelationship);
+  constructor(values?: UMLClassAssociation);
+  constructor(values?: IRelationship | UMLRelationship);
+  constructor(values?: IRelationship | UMLClassAssociation) {
+    super();
+    if (values && 'multiplicity' in values.source) {
+      const { multiplicity, role, ...source } = values.source;
+      values.source = source;
+      this.multiplicity = { ...this.multiplicity, source: multiplicity };
+      this.role = { ...this.role, source: role };
+    }
+    if (values && 'multiplicity' in values.target) {
+      const { multiplicity, role, ...target } = values.target;
+      values.target = target;
+      this.multiplicity = { ...this.multiplicity, target: multiplicity };
+      this.role = { ...this.role, target: role };
+    }
+    Object.assign(this, values);
+  }
 
   static toUMLRelationship(relationship: ClassAssociation): UMLClassAssociation {
     const umlRelationship = Relationship.toUMLRelationship(relationship);
@@ -27,50 +42,4 @@ export abstract class ClassAssociation extends Relationship {
       },
     };
   }
-
-  // static fromUMLRelationship(umlRelationship: UMLClassAssociation, elements: Element[]): ClassAssociation {
-  //   const relationship = Relationship.fromUMLRelationship(umlRelationship, elements, ClassAssociation) as ClassAssociation;
-  //   relationship.multiplicity = {
-  //     source: umlRelationship.source.multiplicity,
-  //     target: umlRelationship.target.multiplicity,
-  //   };
-  //   relationship.role = {
-  //     source: umlRelationship.source.role,
-  //     target: umlRelationship.target.role,
-  //   };
-
-    // const Component = (Plugins as any)[relationship.type + 'Component'];
-
-    // const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    // svg.style.visibility = 'none';
-    // document.body.appendChild(svg);
-    // render(<Component element={relationship} />, svg);
-    // let bounds: Boundary = new Boundary(0, 0, 0, 0);
-    // if (svg.firstElementChild) {
-    //   const parent = svg.getBoundingClientRect() as DOMRect;
-    //   const child = svg.firstElementChild.getBoundingClientRect() as DOMRect;
-    //   bounds = {
-    //     x: child.x - parent.x,
-    //     y: child.y - parent.y,
-    //     width: child.width,
-    //     height: child.height,
-    //   };
-    // }
-    // unmountComponentAtNode(svg);
-    // document.body.removeChild(svg);
-
-    // return Object.setPrototypeOf(
-    //   {
-    //     ...relationship,
-        // path: relationship.path.map(point => new Point(point.x - bounds.x, point.y - bounds.y)),
-        // bounds: {
-        //   x: relationship.bounds.x + bounds.x,
-        //   y: relationship.bounds.y + bounds.y,
-        //   width: bounds.width,
-        //   height: bounds.height,
-        // },
-    //   },
-    //   ClassAssociation.prototype
-    // );
-  // }
 }
