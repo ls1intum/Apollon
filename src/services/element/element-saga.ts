@@ -14,6 +14,7 @@ import { Element, IElement } from './element';
 import { ElementRepository } from './element-repository';
 import { Container } from '../container/container';
 import { DiagramRepository } from '../diagram/diagram-repository';
+import { RelationshipRepository } from '../relationship/relationship-repository';
 
 export function* ElementSaga() {
   yield takeLatest(ElementActionTypes.HOVER, handleElementHover);
@@ -45,19 +46,23 @@ function* handleElementLeave({ payload }: LeaveAction) {
 function* handleElementSelect({ payload }: SelectAction) {
   if (payload.toggle) return;
   const { elements }: ModelState = yield select();
-  const selection = Object.values(elements).filter(
-    element => element.selected && element.id !== payload.id
-  );
+  const selection = Object.values(elements).filter(element => element.selected && element.id !== payload.id);
   yield all(selection.map(element => put(ElementRepository.select(element.id, true))));
 }
 
 function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
   const { elements }: ModelState = yield select();
+
+  const relationship = RelationshipRepository.getById(elements)(payload.id);
+  if (relationship) {
+    yield put<UpdateAction>(ElementRepository.update(relationship.id, { interactive: !relationship.interactive }));
+    return;
+  }
+
   const current = ElementRepository.getById(elements)(payload.id);
   if (!current) return;
 
-  const update = (id: string, interactive: boolean) =>
-    put<UpdateAction>(ElementRepository.update(id, { interactive }));
+  const update = (id: string, interactive: boolean) => put<UpdateAction>(ElementRepository.update(id, { interactive }));
 
   let owner = current.owner;
   while (owner) {
@@ -79,20 +84,14 @@ function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
         return [update(child.id, false)];
       }
       if (child instanceof Container) {
-        return child.ownedElements.reduce<ReturnType<typeof update>[]>(
-          (a, o) => {
-            return [...a, ...rec(o)];
-          },
-          []
-        );
+        return child.ownedElements.reduce<ReturnType<typeof update>[]>((a, o) => {
+          return [...a, ...rec(o)];
+        }, []);
       }
       return [];
     };
 
-    const t = current.ownedElements.reduce<ReturnType<typeof update>[]>(
-      (a, o) => [...a, ...rec(o)],
-      []
-    );
+    const t = current.ownedElements.reduce<ReturnType<typeof update>[]>((a, o) => [...a, ...rec(o)], []);
     yield all(t);
   }
 }
@@ -110,26 +109,17 @@ function* handleElementMove({ payload }: MoveAction) {
       const element = elements[id];
       if (!element) return result;
       if (element.selected) return [...result, element];
-      if (element instanceof Container)
-        return [...result, ...getSelection(element)];
+      if (element instanceof Container) return [...result, ...getSelection(element)];
       return result;
     }, []);
   };
-  yield all(
-    getSelection(diagram).map(element =>
-      put(ElementRepository.move(element.id, payload.delta))
-    )
-  );
+  yield all(getSelection(diagram).map(element => put(ElementRepository.move(element.id, payload.delta))));
 }
 
 function* handleElementDelete({ payload }: DeleteAction) {
   if (payload.id) return;
 
   const { elements }: ModelState = yield select();
-  const selection = Object.values(elements).filter(
-    element => element.selected && element.id !== payload.id
-  );
-  yield all(
-    selection.map(element => put(ElementRepository.delete(element.id)))
-  );
+  const selection = Object.values(elements).filter(element => element.selected && element.id !== payload.id);
+  yield all(selection.map(element => put(ElementRepository.delete(element.id))));
 }
