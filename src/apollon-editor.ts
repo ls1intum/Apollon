@@ -2,7 +2,7 @@ import { createElement, RefObject, createRef } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { Store } from 'redux';
 import { Application } from './scenes/application';
-import { Svg } from './scenes/Svg';
+import { Svg } from './scenes/svg';
 import { ModelState } from './components/store/model-state';
 import { ApollonOptions, Selection, UMLModel, ExportOptions, SVG, DiagramType } from './typings';
 
