@@ -1,20 +1,22 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import reduceReducers from 'reduce-reducers';
+import { Action, Reducer } from 'redux';
 import { applyMiddleware, combineReducers, compose, createStore, Store as ReduxStore } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import { all, fork } from 'redux-saga/effects';
-
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
 import { ContainerReducer } from '../../services/container/container-reducer';
 import { ContainerSaga } from '../../services/container/container-saga';
+import { ContainerActions } from '../../services/container/container-types';
 import { DiagramReducer } from '../../services/diagram/diagram-reducer';
 import { DiagramSaga } from '../../services/diagram/diagram-saga';
 import { EditorReducer } from '../../services/editor/editor-reducer';
 import { ElementReducer } from '../../services/element/element-reducer';
 import { ElementSaga } from '../../services/element/element-saga';
+import { ElementActions, ElementState } from '../../services/element/element-types';
 import { RelationshipReducer } from '../../services/relationship/relationship-reducer';
 import { RelationshipSaga } from '../../services/relationship/relationship-saga';
+import { RelationshipActions } from '../../services/relationship/relationship-types';
 import { ModelState } from './model-state';
 
 export class ModelStore extends React.Component<Props> {
@@ -23,7 +25,11 @@ export class ModelStore extends React.Component<Props> {
   private reducers = {
     editor: EditorReducer,
     diagram: DiagramReducer,
-    elements: reduceReducers(ElementReducer as any, RelationshipReducer as any, ContainerReducer as any) as any,
+    elements: this.reduceReducers<ElementActions & RelationshipActions & ContainerActions>(
+      ElementReducer,
+      RelationshipReducer,
+      ContainerReducer,
+    ),
     assessments: AssessmentReducer,
   };
 
@@ -48,6 +54,14 @@ export class ModelStore extends React.Component<Props> {
 
   render() {
     return <Provider store={this.store}>{this.props.children}</Provider>;
+  }
+
+  private reduceReducers<T extends Action>(...reducers: Array<Reducer<ElementState, T>>): Reducer<ElementState, T> {
+    return (state = {}, action) => {
+      return reducers.reduce<ElementState>((newState, reducer) => {
+        return reducer(newState, action);
+      }, state);
+    };
   }
 }
 
