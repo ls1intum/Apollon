@@ -6,13 +6,7 @@ import { DefaultPopup } from './common/default-popup';
 import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
-// export { UseCaseComponent } from './UseCaseDiagram/UseCase';
-// export { UseCaseActorComponent } from './UseCaseDiagram/UseCaseActor';
-// export { UseCaseSystemComponent } from './UseCaseDiagram/UseCaseSystem';
-// export { UseCaseAssociationComponent } from './UseCaseDiagram/UseCaseAssociation';
-// export { UseCaseGeneralizationComponent } from './UseCaseDiagram/UseCaseGeneralization';
-// export { UseCaseIncludeComponent } from './UseCaseDiagram/UseCaseInclude';
-// export { UseCaseExtendComponent } from './UseCaseDiagram/UseCaseExtend';
+import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
 
 export type Popups = { [key in ElementType | RelationshipType]: ComponentClass<{ element: any }> | null };
 export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{ element: any }> | null } = {
@@ -32,6 +26,9 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [ElementType.ActivityInitialNode]: DefaultPopup,
   [ElementType.ActivityMergeNode]: DefaultPopup,
   [ElementType.ActivityObjectNode]: DefaultPopup,
+  [ElementType.UseCase]: DefaultPopup,
+  [ElementType.UseCaseActor]: DefaultPopup,
+  [ElementType.UseCaseSystem]: DefaultPopup,
   [RelationshipType.ClassAggregation]: ClassAssociationPopup,
   [RelationshipType.ClassBidirectional]: ClassAssociationPopup,
   [RelationshipType.ClassComposition]: ClassAssociationPopup,
@@ -41,4 +38,8 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [RelationshipType.ClassUnidirectional]: ClassAssociationPopup,
   [RelationshipType.ObjectLink]: null,
   [RelationshipType.ActivityControlFlow]: null,
+  [RelationshipType.UseCaseAssociation]: UseCaseAssociationPopup,
+  [RelationshipType.UseCaseExtend]: UseCaseAssociationPopup,
+  [RelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
+  [RelationshipType.UseCaseInclude]: UseCaseAssociationPopup,
 };

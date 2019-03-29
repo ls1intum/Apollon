@@ -10,14 +10,12 @@ import { ClassRealization } from './class-diagram/class-association/class-realiz
 import { ClassUnidirectional } from './class-diagram/class-association/class-unidirectional/class-unidirectional';
 import { ObjectLink } from './object-diagram/object-link/object-link';
 import { ActivityControlFlow } from './activity-diagram/activity-control-flow/activity-control-flow';
-// import { UseCaseAssociation } from './UseCaseDiagram/UseCaseAssociation';
-// import { UseCaseExtend } from './UseCaseDiagram/UseCaseExtend';
-// import { UseCaseGeneralization } from './UseCaseDiagram/UseCaseGeneralization';
-// import { UseCaseInclude } from './UseCaseDiagram/UseCaseInclude';
+import { UseCaseAssociation } from './use-case-diagram/use-case-association/use-case-association';
+import { UseCaseExtend } from './use-case-diagram/use-case-extend/use-case-extend';
+import { UseCaseGeneralization } from './use-case-diagram/use-case-generalization/use-case-generalization';
+import { UseCaseInclude } from './use-case-diagram/use-case-include/use-case-include';
 
-type Relationships = {
-  [key in RelationshipType]: new (values?: IRelationship | UMLRelationship) => Relationship;
-}
+type Relationships = { [key in RelationshipType]: new (values?: IRelationship | UMLRelationship) => Relationship };
 
 export const Relationships = {
   [RelationshipType.ClassAggregation]: ClassAggregation,
@@ -29,8 +27,8 @@ export const Relationships = {
   [RelationshipType.ClassUnidirectional]: ClassUnidirectional,
   [RelationshipType.ObjectLink]: ObjectLink,
   [RelationshipType.ActivityControlFlow]: ActivityControlFlow,
-  // [RelationshipType.UseCaseAssociation]: UseCaseAssociation,
-  // [RelationshipType.UseCaseExtend]: UseCaseExtend,
-  // [RelationshipType.UseCaseGeneralization]: UseCaseGeneralization,
-  // [RelationshipType.UseCaseInclude]: UseCaseInclude,
+  [RelationshipType.UseCaseAssociation]: UseCaseAssociation,
+  [RelationshipType.UseCaseExtend]: UseCaseExtend,
+  [RelationshipType.UseCaseGeneralization]: UseCaseGeneralization,
+  [RelationshipType.UseCaseInclude]: UseCaseInclude,
 };

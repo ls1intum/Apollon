@@ -17,9 +17,9 @@ import { ActivityForkNode } from './activity-diagram/activity-fork-node/activity
 import { ActivityInitialNode } from './activity-diagram/activity-initial-node/activity-initial-node';
 import { ActivityMergeNode } from './activity-diagram/activity-merge-node/activity-merge-node';
 import { ActivityObjectNode } from './activity-diagram/activity-object-node/activity-object-node';
-// import { UseCase } from './UseCaseDiagram/UseCase';
-// import { UseCaseActor } from './UseCaseDiagram/UseCaseActor';
-// import { UseCaseSystem } from './UseCaseDiagram/UseCaseSystem';
+import { UseCase } from './use-case-diagram/use-case/use-case';
+import { UseCaseActor } from './use-case-diagram/use-case-actor/use-case-actor';
+import { UseCaseSystem } from './use-case-diagram/use-case-system/use-case-system';
 
 type Elements = { [key in ElementType]: new (values?: IElement | UMLElement) => Element };
 
@@ -40,7 +40,7 @@ export const Elements = {
   [ElementType.ActivityObjectNode]: ActivityObjectNode,
   [ElementType.ActivityForkNode]: ActivityForkNode,
   [ElementType.ActivityMergeNode]: ActivityMergeNode,
-  // [ElementType.UseCase]: UseCase,
-  // [ElementType.UseCaseActor]: UseCaseActor,
-  // [ElementType.UseCaseSystem]: UseCaseSystem,
+  [ElementType.UseCase]: UseCase,
+  [ElementType.UseCaseActor]: UseCaseActor,
+  [ElementType.UseCaseSystem]: UseCaseSystem,
 };

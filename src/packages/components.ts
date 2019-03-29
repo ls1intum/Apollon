@@ -16,13 +16,13 @@ import { ActivityInitialNodeComponent } from './activity-diagram/activity-initia
 import { ActivityMergeNodeComponent } from './activity-diagram/activity-merge-node/activity-merge-node-component';
 import { ActivityObjectNodeComponent } from './activity-diagram/activity-object-node/activity-object-node-component';
 import { ActivityControlFlowComponent } from './activity-diagram/activity-control-flow/activity-control-flow-component';
-// export { UseCaseComponent } from './UseCaseDiagram/UseCase';
-// export { UseCaseActorComponent } from './UseCaseDiagram/UseCaseActor';
-// export { UseCaseSystemComponent } from './UseCaseDiagram/UseCaseSystem';
-// export { UseCaseAssociationComponent } from './UseCaseDiagram/UseCaseAssociation';
-// export { UseCaseGeneralizationComponent } from './UseCaseDiagram/UseCaseGeneralization';
-// export { UseCaseIncludeComponent } from './UseCaseDiagram/UseCaseInclude';
-// export { UseCaseExtendComponent } from './UseCaseDiagram/UseCaseExtend';
+import { UseCaseComponent } from './use-case-diagram/use-case/use-case-component';
+import { UseCaseActorComponent } from './use-case-diagram/use-case-actor/use-case-actor-component';
+import { UseCaseSystemComponent } from './use-case-diagram/use-case-system/use-case-system-component';
+import { UseCaseAssociationComponent } from './use-case-diagram/use-case-association/use-case-association-component';
+import { UseCaseExtendComponent } from './use-case-diagram/use-case-extend/use-case-extend-component';
+import { UseCaseGeneralizationComponent } from './use-case-diagram/use-case-generalization/use-case-generalization-component';
+import { UseCaseIncludeComponent } from './use-case-diagram/use-case-include/use-case-include-component';
 
 export const Components: { [key in ElementType | RelationshipType]: FunctionComponent<{ element: any }> } = {
   [ElementType.Diagram]: PackageComponent,
@@ -41,6 +41,9 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [ElementType.ActivityInitialNode]: ActivityInitialNodeComponent,
   [ElementType.ActivityMergeNode]: ActivityMergeNodeComponent,
   [ElementType.ActivityObjectNode]: ActivityObjectNodeComponent,
+  [ElementType.UseCase]: UseCaseComponent,
+  [ElementType.UseCaseActor]: UseCaseActorComponent,
+  [ElementType.UseCaseSystem]: UseCaseSystemComponent,
   [RelationshipType.ClassAggregation]: ClassAssociationComponent,
   [RelationshipType.ClassBidirectional]: ClassAssociationComponent,
   [RelationshipType.ClassComposition]: ClassAssociationComponent,
@@ -50,4 +53,8 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [RelationshipType.ClassUnidirectional]: ClassAssociationComponent,
   [RelationshipType.ObjectLink]: ObjectLinkComponent,
   [RelationshipType.ActivityControlFlow]: ActivityControlFlowComponent,
+  [RelationshipType.UseCaseAssociation]: UseCaseAssociationComponent,
+  [RelationshipType.UseCaseExtend]: UseCaseExtendComponent,
+  [RelationshipType.UseCaseGeneralization]: UseCaseGeneralizationComponent,
+  [RelationshipType.UseCaseInclude]: UseCaseIncludeComponent,
 };

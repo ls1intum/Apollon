@@ -26,7 +26,10 @@ import { ActivityFinalNode } from '../../packages/activity-diagram/activity-fina
 import { ActivityActionNode } from '../../packages/activity-diagram/activity-action-node/activity-action-node';
 import { ActivityObjectNode } from '../../packages/activity-diagram/activity-object-node/activity-object-node';
 import { ActivityMergeNode } from '../../packages/activity-diagram/activity-merge-node/activity-merge-node';
-import ActivityForkNode from '../../packages/activity-diagram/activity-fork-node/activity-fork-node';
+import { ActivityForkNode } from '../../packages/activity-diagram/activity-fork-node/activity-fork-node';
+import { UseCase } from '../../packages/use-case-diagram/use-case/use-case';
+import { UseCaseActor } from '../../packages/use-case-diagram/use-case-actor/use-case-actor';
+import { UseCaseSystem } from '../../packages/use-case-diagram/use-case-system/use-case-system';
 
 class SidebarComponent extends Component<Props, State> {
   state: State = {
@@ -97,26 +100,26 @@ class SidebarComponent extends Component<Props, State> {
           ],
         });
         break;
-      // case DiagramType.UseCaseDiagram:
-      //   this.setState({
-      //     previews: [
-      //       (() => {
-      //         const c = new UseCase();
-      //         c.name = 'UseCase';
-      //         return c;
-      //       })(),
-      //       (() => {
-      //         const c = new UseCaseActor();
-      //         c.name = 'Actor';
-      //         return c;
-      //       })(),
-      //       (() => {
-      //         const c = new UseCaseSystem();
-      //         c.name = 'System';
-      //         return c;
-      //       })(),
-      //     ],
-      //   });
+      case DiagramType.UseCaseDiagram:
+        this.setState({
+          previews: [
+            (() => {
+              const c = new UseCase();
+              c.name = 'UseCase';
+              return c;
+            })(),
+            (() => {
+              const c = new UseCaseActor();
+              c.name = 'Actor';
+              return c;
+            })(),
+            (() => {
+              const c = new UseCaseSystem();
+              c.name = 'System';
+              return c;
+            })(),
+          ],
+        });
     }
   };
 

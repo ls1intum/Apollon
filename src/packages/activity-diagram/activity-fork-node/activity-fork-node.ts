@@ -8,5 +8,3 @@ export class ActivityForkNode extends Element {
   type = ActivityElementType.ActivityForkNode;
   bounds: Boundary = { ...this.bounds, width: 20, height: 60 };
 }
-
-export default ActivityForkNode;
