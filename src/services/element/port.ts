@@ -8,7 +8,7 @@ export interface Port {
 }
 
 export class Port {
-  static position(bounds: Boundary, direction: Port['direction']): { point: Point; offset: Point } {
+  static position(bounds: Boundary, direction: Direction): { point: Point; offset: Point } {
     const { x, y, width, height } = bounds;
     const offset = 40;
     switch (direction) {
@@ -29,7 +29,7 @@ export class Port {
         };
       case Direction.Left:
         return {
-          point: new Point(y + height / 2),
+          point: new Point(x, y + height / 2),
           offset: new Point(x - offset, y + height / 2),
         };
     }
