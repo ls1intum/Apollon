@@ -37,7 +37,7 @@ class LayoutedElementComponent extends Component<Props> {
     const element = this.props.getById(this.props.element);
     if (!element) return null;
     return (
-      <ElementComponent
+      <ElementComponents
         childComponent={LayoutedElement}
         element={element}
         disabled={this.props.disabled}
