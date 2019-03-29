@@ -1,16 +1,16 @@
 import React, { Component, SFC } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { ModelState } from './../../../components/store/model-state';
-import { Element } from '../../../services/element/element';
-import { ElementRepository } from '../../../services/element/element-repository';
-import { UseCaseAssociation } from './use-case-association';
 import { UseCaseRelationshipType } from '..';
-import { TextField } from '../../../components/popup/controls/textfield';
-import { Section } from '../../../components/popup/controls/section';
+import { Dropdown } from '../../../components/controls/dropdown';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
-import { Dropdown } from '../../../components/controls/dropdown';
+import { Section } from '../../../components/popup/controls/section';
+import { TextField } from '../../../components/popup/controls/textfield';
+import { Element } from '../../../services/element/element';
+import { ElementRepository } from '../../../services/element/element-repository';
+import { ModelState } from './../../../components/store/model-state';
+import { UseCaseAssociation } from './use-case-association';
 
 const Flex = styled.div`
   display: flex;
@@ -23,14 +23,6 @@ const Input = styled(TextField)`
 `;
 
 class UseCaseAssociationComponent extends Component<Props> {
-  private rename = (id: string) => (value: string) => {
-    this.props.rename(id, value);
-  };
-
-  private onChange = (value: UseCaseRelationshipType) => {
-    const { element, change } = this.props;
-    change(element.id, value);
-  };
 
   render() {
     const { element, getById } = this.props;
@@ -67,6 +59,14 @@ class UseCaseAssociationComponent extends Component<Props> {
       </div>
     );
   }
+  private rename = (id: string) => (value: string) => {
+    this.props.rename(id, value);
+  };
+
+  private onChange = (value: UseCaseRelationshipType) => {
+    const { element, change } = this.props;
+    change(element.id, value);
+  };
 }
 
 interface OwnProps {

@@ -1,17 +1,17 @@
 import React, { Component, SFC } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { ModelState } from './../../../components/store/model-state';
-import { Element } from '../../../services/element/element';
-import { ElementRepository } from '../../../services/element/element-repository';
-import { ObjectName } from './object-name';
-import { ObjectAttribute } from '../object-attribute/object-attribute';
-import { TextField } from '../../../components/popup/controls/textfield';
-import { Section } from '../../../components/popup/controls/section';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
+import { Section } from '../../../components/popup/controls/section';
+import { TextField } from '../../../components/popup/controls/textfield';
 import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
+import { Element } from '../../../services/element/element';
+import { ElementRepository } from '../../../services/element/element-repository';
 import { notEmpty } from '../../../utils/not-empty';
+import { ObjectAttribute } from '../object-attribute/object-attribute';
+import { ModelState } from './../../../components/store/model-state';
+import { ObjectName } from './object-name';
 
 const Flex = styled.div`
   display: flex;
@@ -34,21 +34,6 @@ const NewMember = styled(TextField)`
 `;
 
 class ObjectNameComponent extends Component<Props> {
-  private create = (value: string) => {
-    const { element, create } = this.props;
-    const member = new ObjectAttribute();
-    member.name = value;
-    member.owner = element.id;
-    create(member);
-  };
-
-  private rename = (id: string) => (value: string) => {
-    this.props.rename(id, value);
-  };
-
-  private delete = (id: string) => () => {
-    this.props.delete(id);
-  };
 
   render() {
     const { element, getById } = this.props;
@@ -74,6 +59,21 @@ class ObjectNameComponent extends Component<Props> {
       </div>
     );
   }
+  private create = (value: string) => {
+    const { element, create } = this.props;
+    const member = new ObjectAttribute();
+    member.name = value;
+    member.owner = element.id;
+    create(member);
+  };
+
+  private rename = (id: string) => (value: string) => {
+    this.props.rename(id, value);
+  };
+
+  private delete = (id: string) => () => {
+    this.props.delete(id);
+  };
 }
 
 interface OwnProps {

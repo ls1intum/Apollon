@@ -1,18 +1,18 @@
-import { takeLatest, put, select } from 'redux-saga/effects';
+import { put, select, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
+import { Container } from '../container/container';
+import { ChangeOwnerAction, ContainerActionTypes } from '../container/container-types';
 import { ElementRepository } from '../element/element-repository';
+import { CreateAction as ElementCreateAction, DeleteAction, ElementActionTypes, SelectAction } from '../element/element-types';
 import { Relationship } from '../relationship/relationship';
-import { CreateAction as ElementCreateAction, SelectAction, DeleteAction, ElementActionTypes } from '../element/element-types';
-import { ContainerActionTypes, ChangeOwnerAction } from '../container/container-types';
+import { CreateAction as RelationshipCreateAction, RelationshipActionTypes } from '../relationship/relationship-types';
 import {
   AddElementAction,
-  DiagramActionTypes,
   AddRelationshipAction,
   DeleteElementAction,
   DeleteRelationshipAction,
+  DiagramActionTypes,
 } from './diagram-types';
-import { Container } from '../container/container';
-import { RelationshipActionTypes, CreateAction as RelationshipCreateAction } from '../relationship/relationship-types';
 
 export function* DiagramSaga() {
   yield takeLatest(ContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
@@ -26,7 +26,7 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   if (!payload.id || payload.id === payload.owner) return;
 
   const { elements }: ModelState = yield select();
-  const selection = Object.values(elements).filter(element => element.selected);
+  const selection = Object.values(elements).filter(e => e.selected);
   if (selection.length > 1) return;
 
   const element = ElementRepository.getById(elements)(payload.id);

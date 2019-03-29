@@ -1,22 +1,22 @@
 import React, { Component } from 'react';
-import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
+import { compose } from 'redux';
+import { Container } from '../../services/container/container';
+import { ApollonView } from '../../services/editor/editor-types';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
-import { ElementComponent, OwnProps as ComponentProps } from './element-component';
-import { hoverable } from './hoverable';
-import { selectable } from './selectable';
-import { movable } from './movable';
-import { resizable } from './resizable';
+import { ApollonMode } from '../../typings';
+import { ModelState } from '../store/model-state';
+import { assessable } from './assessable';
 import { connectable } from './connectable';
 import { droppable } from './droppable';
 import { editable } from './editable';
+import { ElementComponent, OwnProps as ComponentProps } from './element-component';
+import { hoverable } from './hoverable';
 import { interactable } from './interactable';
-import { assessable } from './assessable';
-import { Container } from '../../services/container/container';
-import { ApollonView } from '../../services/editor/editor-types';
-import { ApollonMode } from '../../typings';
+import { movable } from './movable';
+import { resizable } from './resizable';
+import { selectable } from './selectable';
 
 class LayoutedElementComponent extends Component<Props> {
   static defaultProps = {
@@ -24,6 +24,28 @@ class LayoutedElementComponent extends Component<Props> {
   };
 
   component: typeof ElementComponent = this.composeComponent();
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.view !== this.props.view) {
+      this.component = this.composeComponent();
+      this.forceUpdate();
+    }
+  }
+
+  render() {
+    const ElementComponents = this.component;
+    const element = this.props.getById(this.props.element);
+    if (!element) return null;
+    return (
+      <ElementComponent
+        childComponent={LayoutedElement}
+        element={element}
+        disabled={this.props.disabled}
+        interactable={this.props.view === ApollonView.Exporting || this.props.view === ApollonView.Highlight}
+        hidden={this.props.view === ApollonView.Highlight && element.interactive}
+      />
+    );
+  }
 
   private composeComponent(): typeof ElementComponent {
     const { readonly, view, mode } = this.props;
@@ -34,7 +56,7 @@ class LayoutedElementComponent extends Component<Props> {
       decorators = [assessable, editable, selectable, hoverable];
     } else if (readonly) {
       decorators = [selectable, hoverable];
-    } else if (view === ApollonView.Exporting || view == ApollonView.Highlight) {
+    } else if (view === ApollonView.Exporting || view === ApollonView.Highlight) {
       decorators = [interactable, hoverable];
     } else {
       const element = this.props.getById(this.props.element);
@@ -52,41 +74,19 @@ class LayoutedElementComponent extends Component<Props> {
 
     return compose<typeof ElementComponent>(...decorators)(ElementComponent);
   }
-
-  componentDidUpdate(prevProps: Props) {
-    if (prevProps.view !== this.props.view) {
-      this.component = this.composeComponent();
-      this.forceUpdate();
-    }
-  }
-
-  render() {
-    const Component = this.component;
-    const element = this.props.getById(this.props.element);
-    if (!element) return null;
-    return (
-      <Component
-        childComponent={LayoutedElement}
-        element={element}
-        disabled={this.props.disabled}
-        interactable={this.props.view === ApollonView.Exporting || this.props.view === ApollonView.Highlight}
-        hidden={this.props.view === ApollonView.Highlight && element.interactive}
-      />
-    );
-  }
 }
 
-interface OwnProps {
+type OwnProps = {
   element: string;
   disabled: boolean;
-}
+};
 
-interface StateProps {
+type StateProps = {
   getById: (id: string) => Element | null;
   readonly: boolean;
   view: ApollonView;
   mode: ApollonMode;
-}
+};
 
 type Props = OwnProps & StateProps;
 

@@ -1,5 +1,5 @@
-import { Draggable } from './draggable';
 import { Element } from '../../services/element/element';
+import { Draggable } from './draggable';
 
 export interface DropAction {
   type: 'CREATE';

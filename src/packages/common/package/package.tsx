@@ -1,5 +1,5 @@
-import { Container } from '../../../services/container/container';
 import { CommonElementType } from '..';
+import { Container } from '../../../services/container/container';
 
 export class Package extends Container {
   static features = {

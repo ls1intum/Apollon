@@ -1,8 +1,8 @@
-import { ClassRelationshipType } from './class-diagram';
-import { ObjectRelationshipType } from './object-diagram';
 import { ActivityRelationshipType } from './activity-diagram';
-import { UseCaseRelationshipType } from './use-case-diagram';
+import { ClassRelationshipType } from './class-diagram';
 import { DiagramType } from './diagram-type';
+import { ObjectRelationshipType } from './object-diagram';
+import { UseCaseRelationshipType } from './use-case-diagram';
 
 export type RelationshipType = ClassRelationshipType | ObjectRelationshipType | ActivityRelationshipType | UseCaseRelationshipType;
 

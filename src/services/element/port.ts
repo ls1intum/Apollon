@@ -1,5 +1,5 @@
-import { Boundary } from '../../utils/geometry/boundary';
 import { Direction } from '../../typings';
+import { Boundary } from '../../utils/geometry/boundary';
 import { Point } from '../../utils/geometry/point';
 
 export interface Port {
@@ -9,7 +9,7 @@ export interface Port {
 
 export class Port {
   static position(bounds: Boundary, direction: Port['direction']): { point: Point; offset: Point } {
-    let { x, y, width, height } = bounds;
+    const { x, y, width, height } = bounds;
     const offset = 40;
     switch (direction) {
       case Direction.Up:

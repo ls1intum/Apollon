@@ -1,4 +1,4 @@
-import { MouseEvent, createContext } from 'react';
+import { createContext, MouseEvent } from 'react';
 import { Port } from '../../services/element/port';
 import { Connection } from '../../services/relationship/connection';
 

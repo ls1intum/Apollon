@@ -1,12 +1,12 @@
-import { Relationship, IRelationship } from './relationship';
-import { RelationshipActionTypes, ConnectAction, CreateAction } from './relationship-types';
+import { ModelState } from '../../components/store/model-state';
+import { RelationshipType } from '../../packages/relationship-type';
+import { Relationships } from '../../packages/relationships';
+import { UMLRelationship } from '../../typings';
+import { notEmpty } from '../../utils/not-empty';
 import { ElementState } from '../element/element-types';
 import { Port } from '../element/port';
-import { Relationships } from '../../packages/relationships';
-import { RelationshipType } from '../../packages/relationship-type';
-import { notEmpty } from '../../utils/not-empty';
-import { ModelState } from '../../components/store/model-state';
-import { UMLRelationship } from '../../typings';
+import { IRelationship, Relationship } from './relationship';
+import { ConnectAction, CreateAction, RelationshipActionTypes } from './relationship-types';
 
 export class RelationshipRepository {
   static create = (relationship: Relationship): CreateAction => ({

@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { ThemeProvider } from 'styled-components';
-import { Styles, defaults } from './styles';
+import { defaults, Styles } from './styles';
 
 export class Theme extends Component<Props> {
-  public theme: Styles = {
+  theme: Styles = {
     ...defaults,
     ...this.props.styles,
   };

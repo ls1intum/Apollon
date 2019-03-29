@@ -1,5 +1,5 @@
-import { Container } from '../../../services/container/container';
 import { UseCaseElementType } from '..';
+import { Container } from '../../../services/container/container';
 
 export class UseCaseSystem extends Container {
   static features = { ...Container.features, connectable: false };

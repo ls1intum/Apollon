@@ -1,7 +1,7 @@
+import { Styles } from './components/theme/styles';
 import { DiagramType } from './packages/diagram-type';
 import { ElementType as UMLElementType } from './packages/element-type';
 import { RelationshipType as UMLRelationshipType } from './packages/relationship-type';
-import { Styles } from './components/theme/styles';
 
 export type ElementType = UMLElementType | UMLRelationshipType;
 
@@ -48,7 +48,7 @@ export enum Direction {
 
 export interface UMLRelationship extends Element {
   type: UMLRelationshipType;
-  path: { x: number; y: number }[];
+  path: Array<{ x: number; y: number }>;
   source: {
     element: string;
     direction: Direction;
@@ -70,20 +70,20 @@ export enum ApollonMode {
   Assessment = 'Assessment',
 }
 
-export type ApollonOptions = {
+export interface ApollonOptions {
   type?: DiagramType;
   mode?: ApollonMode;
   readonly?: boolean;
   model?: UMLModel;
   theme?: Partial<Styles>;
-};
+}
 
-export type ExportOptions = {
+export interface ExportOptions {
   margin?: number;
   keepOriginalSize?: boolean;
   include?: string[];
   exclude?: string[];
-};
+}
 
 export interface SVG {
   svg: string;

@@ -1,18 +1,24 @@
 import React, { Component } from 'react';
 import { ModelState } from '../components/store/model-state';
-import { ExportOptions } from '../typings';
-import { Element, IElement } from '../services/element/element';
-import { Container } from '../services/container/container';
-import { Relationship, IRelationship } from '../services/relationship/relationship';
-import { Boundary } from '../utils/geometry/boundary';
-import { Elements } from '../packages/elements';
-import { Relationships } from '../packages/relationships';
 import { Components } from '../packages/components';
 import { ElementType } from '../packages/element-type';
+import { Elements } from '../packages/elements';
 import { RelationshipType } from '../packages/relationship-type';
+import { Relationships } from '../packages/relationships';
+import { Container } from '../services/container/container';
+import { Element, IElement } from '../services/element/element';
+import { IRelationship, Relationship } from '../services/relationship/relationship';
+import { ExportOptions } from '../typings';
+import { Boundary } from '../utils/geometry/boundary';
 
-type Props = { state: ModelState; options?: ExportOptions };
-type State = { bounds: Boundary; elements: Element[] };
+interface Props {
+  state: ModelState;
+  options?: ExportOptions;
+}
+interface State {
+  bounds: Boundary;
+  elements: Element[];
+}
 
 const getInitialState = ({ state, options }: Props): State => {
   const keepOriginalSize = (options && options.keepOriginalSize) || false;
@@ -37,8 +43,7 @@ const getInitialState = ({ state, options }: Props): State => {
         if (element instanceof Container) {
           result.push(...filter(element.ownedElements, include, exclude));
         }
-      } else if (exclude && exclude.includes(id)) {
-      } else {
+      } else if (!exclude || !exclude.includes(id)) {
         if ((!include || !include.length) && (!exclude || !exclude.length)) {
           result.push(id);
           if (element instanceof Container) {
@@ -53,12 +58,12 @@ const getInitialState = ({ state, options }: Props): State => {
   const layout: string[] = filter(
     [...state.diagram.ownedElements, ...state.diagram.ownedRelationships],
     options && options.include,
-    options && options.exclude
+    options && options.exclude,
   );
 
   let elements = normalizeState(state);
 
-  let bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.includes(element.id)));
+  const bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.includes(element.id)));
   if (options && options.margin) {
     bounds.x -= options.margin;
     bounds.y -= options.margin;
@@ -140,10 +145,10 @@ export class Svg extends Component<Props, State> {
           <style>{`text { fill: black } * { overflow: visible; }`}</style>
         </defs>
         {elements.map(element => {
-          const Component = Components[element.type];
+          const ElementComponent = Components[element.type];
           return (
             <svg {...element.bounds} key={element.id} className={element.name}>
-              <Component element={element} />
+              <ElementComponent element={element} />
             </svg>
           );
         })}

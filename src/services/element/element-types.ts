@@ -1,6 +1,6 @@
 import { Action } from 'redux';
-import { Element, IElement } from './element';
 import { ElementType } from '../../packages/element-type';
+import { Element, IElement } from './element';
 
 export const enum ElementActionTypes {
   CREATE = '@@element/CREATE',

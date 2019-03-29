@@ -1,6 +1,6 @@
 import { Reducer } from 'redux';
-import { RelationshipActions, RelationshipActionTypes } from './relationship-types';
 import { ElementState } from '../element/element-types';
+import { RelationshipActions, RelationshipActionTypes } from './relationship-types';
 
 const initialState: ElementState = {};
 

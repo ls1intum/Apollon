@@ -1,25 +1,25 @@
 import { ActionCreator } from 'redux';
 import { ModelState } from '../../components/store/model-state';
-import {
-  ElementActionTypes,
-  ElementState,
-  HoverAction,
-  LeaveAction,
-  CreateAction,
-  UpdateAction,
-  MoveAction,
-  ResizeAction,
-  DeleteAction,
-  SelectAction,
-  MakeInteractiveAction,
-  ChangeAction,
-  RenameAction,
-} from './element-types';
-import { Element, IElement } from './element';
 import { ElementType } from '../../packages/element-type';
 import { Elements } from '../../packages/elements';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
+import { Element, IElement } from './element';
+import {
+  ChangeAction,
+  CreateAction,
+  DeleteAction,
+  ElementActionTypes,
+  ElementState,
+  HoverAction,
+  LeaveAction,
+  MakeInteractiveAction,
+  MoveAction,
+  RenameAction,
+  ResizeAction,
+  SelectAction,
+  UpdateAction,
+} from './element-types';
 
 export class ElementRepository {
   static create = (element: Element): CreateAction => ({

@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
-import { Element } from '../../services/element/element';
-import { Section } from './controls/section';
-import { Header } from './controls/header';
-import { Divider } from './controls/divider';
-import { TextField } from './controls/textfield';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
+import { Element } from '../../services/element/element';
 import { Assessment } from '../../typings';
+import { ModelState } from '../store/model-state';
+import { Divider } from './controls/divider';
+import { Header } from './controls/header';
+import { Section } from './controls/section';
+import { TextField } from './controls/textfield';
 
 class AssessmentPopupComponent extends Component<Props, State> {
   state = {
@@ -16,34 +16,6 @@ class AssessmentPopupComponent extends Component<Props, State> {
       elementType: this.props.element.type,
       score: 0,
     },
-  };
-
-  private updateScore = (value: string) => {
-    const { element, assess } = this.props;
-    const score = parseFloat(value) || 0;
-    this.setState(
-      state => ({
-        assessment: {
-          ...state.assessment,
-          score,
-        },
-      }),
-      () => assess(element.id, this.state.assessment)
-    );
-  };
-
-  private updateFeedback = (value: string) => {
-    const { element, assess } = this.props;
-    const feedback = value.length ? value : undefined;
-    this.setState(
-      state => ({
-        assessment: {
-          ...state.assessment,
-          feedback,
-        },
-      }),
-      () => assess(element.id, this.state.assessment)
-    );
   };
 
   render() {
@@ -73,6 +45,34 @@ class AssessmentPopupComponent extends Component<Props, State> {
       </div>
     );
   }
+
+  private updateScore = (value: string) => {
+    const { element, assess } = this.props;
+    const score = parseFloat(value) || 0;
+    this.setState(
+      state => ({
+        assessment: {
+          ...state.assessment,
+          score,
+        },
+      }),
+      () => assess(element.id, this.state.assessment)
+    );
+  };
+
+  private updateFeedback = (value: string) => {
+    const { element, assess } = this.props;
+    const feedback = value.length ? value : undefined;
+    this.setState(
+      state => ({
+        assessment: {
+          ...state.assessment,
+          feedback,
+        },
+      }),
+      () => assess(element.id, this.state.assessment)
+    );
+  };
 }
 
 interface OwnProps {

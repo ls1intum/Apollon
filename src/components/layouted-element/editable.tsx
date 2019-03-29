@@ -1,44 +1,18 @@
 import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
-import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
-import { ElementComponent, OwnProps } from './element-component';
-import { withPopup, PopupContext } from '../popup/popup-context';
+import { compose } from 'redux';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
 import { Relationship } from '../../services/relationship/relationship';
+import { PopupContext, withPopup } from '../popup/popup-context';
+import { ModelState } from '../store/model-state';
+import { ElementComponent, OwnProps } from './element-component';
 
 export const editable = (WrappedComponent: typeof ElementComponent) => {
   class Editable extends Component<Props, State> {
     state: State = {
       element: this.props.element,
-    };
-
-    private edit = (event: MouseEvent) => {
-      event.stopPropagation();
-      let position = { x: 0, y: 0 };
-      if (this.props.element instanceof Relationship) {
-        const { bounds } = this.props.element;
-        const path = this.props.element.path;
-        const targetPoint = path[path.length - 2];
-        position = {
-          x: targetPoint.x + bounds.x,
-          y: targetPoint.y + bounds.y - 20,
-        };
-      } else {
-        let { x, y, width, height } = this.props.element.bounds;
-        let ownerID = this.props.element.owner;
-        while (ownerID) {
-          const owner = this.props.getById(ownerID);
-          if (!owner) break;
-          x += owner.bounds.x;
-          y += owner.bounds.y;
-          ownerID = owner.owner;
-        }
-        position = { x: x + width, y };
-      }
-      this.props.showPopup(this.state.element, position);
     };
 
     componentDidMount() {
@@ -60,24 +34,51 @@ export const editable = (WrappedComponent: typeof ElementComponent) => {
     render() {
       return <WrappedComponent {...this.props} />;
     }
+
+    private edit = (event: MouseEvent) => {
+      event.stopPropagation();
+      let position = { x: 0, y: 0 };
+      if (this.props.element instanceof Relationship) {
+        const { bounds } = this.props.element;
+        const path = this.props.element.path;
+        const targetPoint = path[path.length - 2];
+        position = {
+          x: targetPoint.x + bounds.x,
+          y: targetPoint.y + bounds.y - 20,
+        };
+      } else {
+        let { x, y } = this.props.element.bounds;
+        const { width } = this.props.element.bounds;
+        let ownerID = this.props.element.owner;
+        while (ownerID) {
+          const owner = this.props.getById(ownerID);
+          if (!owner) break;
+          x += owner.bounds.x;
+          y += owner.bounds.y;
+          ownerID = owner.owner;
+        }
+        position = { x: x + width, y };
+      }
+      this.props.showPopup(this.state.element, position);
+    };
   }
 
-  interface StateProps {
+  type StateProps = {
     getById: (id: string) => Element | null;
-  }
+  };
 
-  interface DispatchProps {}
+  type DispatchProps = {};
 
   type Props = OwnProps & StateProps & DispatchProps & PopupContext;
 
-  interface State {
+  type State = {
     element: Element;
-  }
+  };
 
   return compose<ComponentClass<OwnProps>>(
     withPopup,
     connect<StateProps, DispatchProps, OwnProps, ModelState>(state => ({
       getById: ElementRepository.getById(state.elements),
-    }))
+    })),
   )(Editable);
 };

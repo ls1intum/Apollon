@@ -1,14 +1,11 @@
 import React, { Component, ComponentClass } from 'react';
-import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
-import { ElementComponent, OwnProps } from './element-component';
+import { connect } from 'react-redux';
 import { ElementRepository } from '../../services/element/element-repository';
+import { ElementComponent, OwnProps } from './element-component';
 
 export const hoverable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Hoverable extends Component<Props> {
-    private enter = () => this.props.hover(this.props.element.id);
-    private leave = () => this.props.leave(this.props.element.id);
-
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('mouseenter', this.enter);
@@ -24,19 +21,21 @@ export const hoverable = (WrappedComponent: typeof ElementComponent): ComponentC
     render() {
       return <WrappedComponent {...this.props} />;
     }
+    private enter = () => this.props.hover(this.props.element.id);
+    private leave = () => this.props.leave(this.props.element.id);
   }
 
-  interface StateProps {}
+  type StateProps = {};
 
-  interface DispatchProps {
+  type DispatchProps = {
     hover: typeof ElementRepository.hover;
     leave: typeof ElementRepository.leave;
-  }
+  };
 
   type Props = OwnProps & StateProps & DispatchProps;
 
   return connect<StateProps, DispatchProps, OwnProps>(
     null,
-    { hover: ElementRepository.hover, leave: ElementRepository.leave }
+    { hover: ElementRepository.hover, leave: ElementRepository.leave },
   )(Hoverable);
 };

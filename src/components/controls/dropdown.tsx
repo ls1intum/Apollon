@@ -1,10 +1,13 @@
-import React, { Component, ReactElement, Children, cloneElement } from 'react';
+import React, { Children, cloneElement, Component, ReactElement } from 'react';
 import { DropdownButton } from './dropdown-button';
 import { DropdownItem, Props as ItemProps } from './dropdown-item';
 import { DropdownMenu } from './dropdown-menu';
 
 type Item = ReactElement<ItemProps>;
-type State = { show: boolean; value: any };
+type State = {
+  show: boolean;
+  value: any;
+};
 type Props = {
   value: any;
   onChange?: (value: any) => void;
@@ -12,12 +15,35 @@ type Props = {
 };
 
 export class Dropdown extends Component<Props, State> {
+  static Item = DropdownItem;
   state = {
     show: false,
     value: this.props.value,
   };
 
-  static Item = DropdownItem;
+  componentWillUnmount() {
+    document.removeEventListener('click', this.close);
+  }
+
+  render() {
+    const values = Children.toArray<Item>(this.props.children);
+    const current = values.map(value => value.props).find(props => props.value === this.state.value);
+
+    return (
+      <div>
+        <DropdownButton onClick={this.show}>{current ? current.children : 'Select...'}</DropdownButton>
+        {this.state.show && (
+          <DropdownMenu>
+            {values.map(child =>
+              cloneElement(child, {
+                onClick: this.select(child.props.value),
+              }),
+            )}
+          </DropdownMenu>
+        )}
+      </div>
+    );
+  }
 
   private show = () => {
     this.setState({ show: true });
@@ -32,34 +58,8 @@ export class Dropdown extends Component<Props, State> {
 
   private select = (value: any) => () => {
     this.setState({ value });
-    this.props.onChange && this.props.onChange(value);
+    if (this.props.onChange) {
+      this.props.onChange(value);
+    }
   };
-
-  componentWillUnmount() {
-    document.removeEventListener('click', this.close);
-  }
-
-  render() {
-    const values = Children.toArray<Item>(this.props.children);
-    const current = values
-      .map(value => value.props)
-      .find(props => props.value === this.state.value);
-
-    return (
-      <div>
-        <DropdownButton onClick={this.show}>
-          {current ? current.children : 'Select...'}
-        </DropdownButton>
-        {this.state.show && (
-          <DropdownMenu>
-            {values.map(child =>
-              cloneElement(child, {
-                onClick: this.select(child.props.value),
-              })
-            )}
-          </DropdownMenu>
-        )}
-      </div>
-    );
-  }
 }

@@ -10,13 +10,13 @@ let options: ApollonOptions = {
 export const onChange = (event: MouseEvent) => {
   const { name, value } = event.target as HTMLSelectElement;
   options = { ...options, [name]: value };
-  render(container);
+  render();
 };
 
 export const onSwitch = (event: MouseEvent) => {
   const { name, checked: value } = event.target as HTMLInputElement;
   options = { ...options, [name]: value };
-  render(container);
+  render();
 };
 
 export const save = () => {
@@ -35,10 +35,7 @@ export const clear = () => {
 export const draw = (mode?: 'include' | 'exclude') => {
   if (!editor) return;
 
-  const filter: string[] = [
-    ...editor.model.interactive.elements,
-    ...editor.model.interactive.relationships,
-  ];
+  const filter: string[] = [...editor.model.interactive.elements, ...editor.model.interactive.relationships];
 
   const { svg }: SVG = editor.exportAsSVG(mode && { [mode]: filter });
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
@@ -46,9 +43,11 @@ export const draw = (mode?: 'include' | 'exclude') => {
   window.open(svgBlobURL);
 };
 
-const render = (container: HTMLElement) => {
+const render = () => {
   save();
-  editor && editor.destroy();
+  if (editor) {
+    editor.destroy();
+  }
   editor = new ApollonEditor(container, options);
 };
-render(container);
+render();

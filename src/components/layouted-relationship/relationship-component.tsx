@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
+import { Components } from '../../packages/components';
 import { Relationship } from '../../services/relationship/relationship';
 import { CanvasConsumer } from '../canvas/canvas-context';
-import { Components } from '../../packages/components';
 
 export class RelationshipComponent extends Component<Props> {
   static defaultProps = {
@@ -16,7 +16,7 @@ export class RelationshipComponent extends Component<Props> {
 
   render() {
     const { element, disabled } = this.props;
-    const Component = Components[element.type];
+    const ElementComponent = Components[element.type];
     const points = element.path.map(point => `${point.x} ${point.y}`).join(',');
 
     return (
@@ -46,7 +46,7 @@ export class RelationshipComponent extends Component<Props> {
                 fill="none"
                 strokeWidth={15}
               />
-              <Component element={element} />
+              <ElementComponent element={element} />
               {this.props.children}
             </svg>
           );

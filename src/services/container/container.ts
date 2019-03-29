@@ -1,5 +1,5 @@
-import { Element, IElement } from '../element/element';
 import { UMLElement } from '../../typings';
+import { Element, IElement } from '../element/element';
 
 export interface IContainer extends IElement {
   ownedElements: string[];

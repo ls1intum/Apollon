@@ -1,9 +1,9 @@
-import { Container, IContainer } from '../container/container';
-import { Boundary } from '../../utils/geometry/boundary';
-import { IElement } from '../element/element';
 import { DiagramType } from '../../packages/diagram-type';
-import { UMLElement } from '../../typings';
 import { ElementType } from '../../packages/element-type';
+import { UMLElement } from '../../typings';
+import { Boundary } from '../../utils/geometry/boundary';
+import { Container, IContainer } from '../container/container';
+import { IElement } from '../element/element';
 
 export interface IDiagram extends IContainer {
   type2: DiagramType;

@@ -1,10 +1,10 @@
-import { takeLatest, takeEvery, all, put, select } from 'redux-saga/effects';
+import { all, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
-import { Container } from './container';
-import { ElementRepository } from '../element/element-repository';
-import { CreateAction, ResizeAction, DeleteAction, MoveAction, ChangeAction, ElementActionTypes } from '../element/element-types';
-import { ContainerActionTypes, ChangeOwnerAction, AppendChildAction, RemoveChildAction } from './container-types';
 import { notEmpty } from '../../utils/not-empty';
+import { ElementRepository } from '../element/element-repository';
+import { ChangeAction, CreateAction, DeleteAction, ElementActionTypes, MoveAction, ResizeAction } from '../element/element-types';
+import { Container } from './container';
+import { AppendChildAction, ChangeOwnerAction, ContainerActionTypes, RemoveChildAction } from './container-types';
 
 export function* ContainerSaga() {
   yield takeEvery(ContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
@@ -19,7 +19,7 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   if (!payload.id || payload.id === payload.owner) return;
 
   const { elements }: ModelState = yield select();
-  const selection = Object.values(elements).filter(element => element.selected);
+  const selection = Object.values(elements).filter(e => e.selected);
   if (selection.length > 1) return;
 
   const element = ElementRepository.getById(elements)(payload.id);
@@ -37,13 +37,13 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
     });
 
     let ownerID: string | null = current.id;
-    let position = { x: 0, y: 0 };
+    const position = { x: 0, y: 0 };
     while (ownerID) {
-      const owner = ElementRepository.getById(elements)(ownerID);
-      if (!owner) break;
-      position.x += owner.bounds.x;
-      position.y += owner.bounds.y;
-      ownerID = owner.owner;
+      const o = ElementRepository.getById(elements)(ownerID);
+      if (!o) break;
+      position.x += o.bounds.x;
+      position.y += o.bounds.y;
+      ownerID = o.owner;
     }
 
     yield put<MoveAction>(ElementRepository.move(element.id, position));
@@ -55,13 +55,13 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
       payload: { id: element.id, owner: owner.id },
     });
     let ownerID: string | null = owner.id;
-    let position = { x: 0, y: 0 };
+    const position = { x: 0, y: 0 };
     while (ownerID) {
-      const owner = ElementRepository.getById(elements)(ownerID);
-      if (!owner) break;
-      position.x -= owner.bounds.x;
-      position.y -= owner.bounds.y;
-      ownerID = owner.owner;
+      const o = ElementRepository.getById(elements)(ownerID);
+      if (!o) break;
+      position.x -= o.bounds.x;
+      position.y -= o.bounds.y;
+      ownerID = o.owner;
     }
 
     yield put<MoveAction>(ElementRepository.move(element.id, position));
@@ -112,8 +112,8 @@ function* handleElementDelete({ payload }: DeleteAction) {
     yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
   }
 
-  const children = Object.keys(elements).filter(id => elements[id].owner === elementId);
-  yield all(children.map(id => put(ElementRepository.delete(id))));
+  const owned = Object.keys(elements).filter(id => elements[id].owner === elementId);
+  yield all(owned.map(id => put(ElementRepository.delete(id))));
 }
 
 function* handleElementChange({ payload }: ChangeAction) {
@@ -123,7 +123,7 @@ function* handleElementChange({ payload }: ChangeAction) {
   if (element instanceof Container) {
     const children = element.ownedElements.map(ElementRepository.getById(elements)).filter(notEmpty);
     const updates = element.render(children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(updates.map(e => put(ElementRepository.update(e.id, e))));
   }
 }
 
@@ -133,6 +133,6 @@ function* handleElementResize({ payload }: ResizeAction) {
   if (element instanceof Container) {
     const children = element.ownedElements.map(ElementRepository.getById(elements)).filter(notEmpty);
     const updates = element.resizeElement(children);
-    yield all(updates.map(element => put(ElementRepository.update(element.id, element))));
+    yield all(updates.map(e => put(ElementRepository.update(e.id, e))));
   }
 }

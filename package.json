@@ -16,7 +16,7 @@
   "repository": "github:ls1intum/apollon",
   "scripts": {
     "start": "webpack-dev-server",
-    "lint": "tslint --force -p tsconfig.json -c tslint.json -t stylish",
+    "lint": "tslint --force -p tsconfig.json -e ./src/typings.ts -c tslint.json -t stylish",
     "build": "yarn clean && tsc -p .",
     "clean": "rm -rf lib",
     "prepare": "yarn build",
@@ -47,7 +47,9 @@
     "ts-essentials": "2.0.3",
     "ts-loader": "5.3.3",
     "tslint": "5.13.1",
+    "tslint-config-prettier": "1.18.0",
     "tslint-loader": "3.5.4",
+    "tslint-react": "4.0.0",
     "typescript": "3.3.3333",
     "webpack": "4.29.6",
     "webpack-cli": "3.2.3",

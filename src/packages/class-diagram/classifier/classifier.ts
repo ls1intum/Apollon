@@ -1,10 +1,10 @@
-import { Element, IElement } from '../../../services/element/element';
-import { Container, IContainer } from '../../../services/container/container';
 import { ClassElementType, UMLClassifier } from '..';
-import { ClassMember } from '../class-member/class-member';
-import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
-import { ClassMethod } from '../class-member/class-method/class-method';
+import { Container, IContainer } from '../../../services/container/container';
+import { Element, IElement } from '../../../services/element/element';
 import { UMLElement } from '../../../typings';
+import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
+import { ClassMember } from '../class-member/class-member';
+import { ClassMethod } from '../class-member/class-method/class-method';
 
 export abstract class Classifier extends Container {
   static features = {
@@ -50,7 +50,7 @@ export abstract class Classifier extends Container {
   }
 
   render(elements: Element[]): Element[] {
-    let [parent, ...children] = super.render(elements);
+    const [parent, ...children] = super.render(elements);
     const attributes = children.filter(c => c instanceof ClassAttribute);
     let methods = children.filter(c => c instanceof ClassMethod);
 
@@ -78,12 +78,12 @@ export abstract class Classifier extends Container {
   }
 
   addElement(newElement: Element, currentElements: Element[]): Element[] {
-    let [parent, ...children] = super.addElement(newElement, currentElements);
+    const [parent, ...children] = super.addElement(newElement, currentElements);
     return this.render(children);
   }
 
   removeElement(removedElement: string, currentElements: Element[]): Element[] {
-    let [parent, ...children] = super.removeElement(removedElement, currentElements);
+    const [parent, ...children] = super.removeElement(removedElement, currentElements);
     return this.render(children);
   }
 
@@ -104,10 +104,10 @@ export abstract class Classifier extends Container {
     return {
       element: {
         ...base,
-        attributes: children.filter(element => element instanceof ClassAttribute).map(element => element.id),
-        methods: children.filter(element => element instanceof ClassMethod).map(element => element.id),
+        attributes: children.filter(e => e instanceof ClassAttribute).map(e2 => e2.id),
+        methods: children.filter(e => e instanceof ClassMethod).map(e2 => e2.id),
       },
-      children: children,
+      children,
     };
   }
 }

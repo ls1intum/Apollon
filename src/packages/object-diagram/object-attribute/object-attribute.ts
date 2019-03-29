@@ -1,5 +1,5 @@
-import { Element } from '../../../services/element/element';
 import { ObjectElementType } from '..';
+import { Element } from '../../../services/element/element';
 import { Boundary } from '../../../utils/geometry/boundary';
 
 export class ObjectAttribute extends Element {
@@ -13,9 +13,6 @@ export class ObjectAttribute extends Element {
     droppable: false,
     editable: false,
   };
-
-  type = ObjectElementType.ObjectAttribute;
-  bounds: Boundary = { ...this.bounds, height: 30 };
 
   static calculateWidth = (value: string): number => {
     const root = document.body.getElementsByClassName('apollon-editor')[0];
@@ -32,4 +29,7 @@ export class ObjectAttribute extends Element {
     root.removeChild(svg);
     return width + 2 * 10;
   };
+
+  type = ObjectElementType.ObjectAttribute;
+  bounds: Boundary = { ...this.bounds, height: 30 };
 }

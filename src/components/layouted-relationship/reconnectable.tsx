@@ -1,9 +1,9 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
-import { RelationshipComponent, OwnProps } from './relationship-component';
-import { Point } from '../../utils/geometry/point';
-import { ConnectContext, ConnectConsumer } from '../connectable/connect-context';
 import { RelationshipRepository } from '../../services/relationship/relationship-repository';
+import { Point } from '../../utils/geometry/point';
+import { ConnectConsumer, ConnectContext } from '../connectable/connect-context';
+import { OwnProps, RelationshipComponent } from './relationship-component';
 
 export const reconnectable = (WrappedComponent: typeof RelationshipComponent): ComponentClass<OwnProps> => {
   class Reconnectable extends Component<Props, State> {
@@ -22,28 +22,6 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
       const pointOne = new Point(path[0].x + distance * u.x, path[0].y + distance * u.y);
       return [path[0], pointOne];
     }
-
-    private start = () => {
-      this.setState({ isReconnecting: true });
-    };
-
-    private onMouseDown = (position: 'source' | 'target', context: ConnectContext) => async (event: React.MouseEvent) => {
-      document.addEventListener('mousemove', this.start, {
-        once: true,
-        passive: true,
-      });
-      const change = position === 'source' ? 'target' : 'source';
-      try {
-        const endpoints = await context.onStartConnect(this.props.element[position])(event);
-        this.props.connect(this.props.element.id, {
-          [change]: endpoints.target,
-        });
-      } catch (error) {
-      } finally {
-        this.setState({ isReconnecting: false });
-        document.removeEventListener('mousemove', this.start);
-      }
-    };
 
     render() {
       const { path } = this.props.element;
@@ -88,22 +66,44 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
         )
       );
     }
+
+    private start = () => {
+      this.setState({ isReconnecting: true });
+    };
+
+    private onMouseDown = (position: 'source' | 'target', context: ConnectContext) => async (event: React.MouseEvent) => {
+      document.addEventListener('mousemove', this.start, {
+        once: true,
+        passive: true,
+      });
+      const change = position === 'source' ? 'target' : 'source';
+      try {
+        const endpoints = await context.onStartConnect(this.props.element[position])(event);
+        this.props.connect(this.props.element.id, {
+          [change]: endpoints.target,
+        });
+      } catch (error) {
+      } finally {
+        this.setState({ isReconnecting: false });
+        document.removeEventListener('mousemove', this.start);
+      }
+    };
   }
 
-  interface StateProps {}
+  type StateProps = {};
 
-  interface DispatchProps {
+  type DispatchProps = {
     connect: typeof RelationshipRepository.connect;
-  }
+  };
 
   type Props = OwnProps & StateProps & DispatchProps;
 
-  interface State {
+  type State = {
     isReconnecting: boolean;
-  }
+  };
 
   return connect<StateProps, DispatchProps, OwnProps>(
     null,
-    { connect: RelationshipRepository.connect }
+    { connect: RelationshipRepository.connect },
   )(Reconnectable);
 };

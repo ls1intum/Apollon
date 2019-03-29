@@ -1,19 +1,41 @@
 import React, { Component, ComponentClass } from 'react';
-import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
+import { compose } from 'redux';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
-import { Point } from '../../utils/geometry/point';
 import { Port } from '../../services/element/port';
-import { withCanvas, CanvasContext } from '../canvas/canvas-context';
 import { Direction } from '../../typings';
+import { Point } from '../../utils/geometry/point';
+import { CanvasContext, withCanvas } from '../canvas/canvas-context';
+import { ModelState } from '../store/model-state';
 
 class RelationshipPreviewComponent extends Component<Props, State> {
   state: State = {
     offset: new Point(0, 0),
     position: null,
   };
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.port === this.props.port) return;
+
+    if (this.props.port) {
+      const offset = this.props.coordinateSystem.offset();
+      this.setState({ offset });
+      document.addEventListener('mousemove', this.onMouseMove);
+    } else {
+      document.removeEventListener('mousemove', this.onMouseMove);
+      this.setState({ position: null, offset: new Point(0, 0) });
+    }
+  }
+
+  render() {
+    if (!this.props.port) return null;
+    const points = this.calculatePath()
+      .map(p => this.props.coordinateSystem.pointToScreen(p.x, p.y))
+      .map(p => `${p.x} ${p.y}`)
+      .join(', ');
+    return <polyline points={points} pointerEvents="none" fill="none" stroke="black" strokeWidth="1" strokeDasharray="5,5" />;
+  }
 
   private onMouseMove = (event: MouseEvent) => {
     let { x, y } = this.props.coordinateSystem.screenToPoint(event.clientX, event.clientY, false);
@@ -60,52 +82,30 @@ class RelationshipPreviewComponent extends Component<Props, State> {
     }
     return path;
   };
-
-  componentDidUpdate(prevProps: Props) {
-    if (prevProps.port === this.props.port) return;
-
-    if (this.props.port) {
-      const offset = this.props.coordinateSystem.offset();
-      this.setState({ offset });
-      document.addEventListener('mousemove', this.onMouseMove);
-    } else {
-      document.removeEventListener('mousemove', this.onMouseMove);
-      this.setState({ position: null, offset: new Point(0, 0) });
-    }
-  }
-
-  render() {
-    if (!this.props.port) return null;
-    const points = this.calculatePath()
-      .map(p => this.props.coordinateSystem.pointToScreen(p.x, p.y))
-      .map(p => `${p.x} ${p.y}`)
-      .join(', ');
-    return <polyline points={points} pointerEvents="none" fill="none" stroke="black" strokeWidth="1" strokeDasharray="5,5" />;
-  }
 }
 
-interface OwnProps {
+type OwnProps = {
   port: Port | null;
-}
+};
 
-interface StateProps {
+type StateProps = {
   getById: (id: string) => Element | null;
-}
+};
 
 type Props = OwnProps & StateProps & CanvasContext;
 
-interface State {
+type State = {
   offset: Point;
   position: Point | null;
-}
+};
 
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect(
     (state: ModelState): StateProps => ({
       getById: ElementRepository.getById(state.elements),
-    })
-  )
+    }),
+  ),
 );
 
 export const RelationshipPreview = enhance(RelationshipPreviewComponent);

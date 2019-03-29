@@ -2,9 +2,9 @@ import { ComponentClass } from 'react';
 import { ElementType } from './element-type';
 import { RelationshipType } from './relationship-type';
 
-import { DefaultPopup } from './common/default-popup';
-import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
+import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
+import { DefaultPopup } from './common/default-popup';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
 import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
 

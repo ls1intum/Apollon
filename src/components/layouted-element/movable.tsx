@@ -1,14 +1,14 @@
 import React, { Component, ComponentClass } from 'react';
-import { compose } from 'redux';
-import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
-import { ModelState } from '../store/model-state';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+import { ContainerRepository } from '../../services/container/container-repository';
 import { IElement } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
-import { ElementComponent, OwnProps } from './element-component';
-import { withCanvas, CanvasContext } from '../canvas/canvas-context';
-import { ContainerRepository } from '../../services/container/container-repository';
 import { Point } from '../../utils/geometry/point';
+import { CanvasContext, withCanvas } from '../canvas/canvas-context';
+import { ModelState } from '../store/model-state';
+import { ElementComponent, OwnProps } from './element-component';
 
 export const movable = (WrappedComponent: typeof ElementComponent) => {
   class Movable extends Component<Props, State> {
@@ -17,6 +17,22 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
       moving: false,
       offset: new Point(),
     };
+
+    componentDidMount() {
+      const node = findDOMNode(this) as HTMLElement;
+      const child = node.firstChild as HTMLElement;
+      child.addEventListener('mousedown', this.onMouseDown);
+    }
+
+    componentWillUnmount() {
+      const node = findDOMNode(this) as HTMLElement;
+      const child = node.firstChild as HTMLElement;
+      child.removeEventListener('mousedown', this.onMouseDown);
+    }
+
+    render() {
+      return <WrappedComponent {...this.props} moving={this.state.moving} />;
+    }
 
     private move = (x: number, y: number) => {
       const { bounds } = this.props.element;
@@ -79,22 +95,6 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
       document.removeEventListener('mouseup', this.onMouseUp);
       if (moving) this.checkOwnership();
     };
-
-    componentDidMount() {
-      const node = findDOMNode(this) as HTMLElement;
-      const child = node.firstChild as HTMLElement;
-      child.addEventListener('mousedown', this.onMouseDown);
-    }
-
-    componentWillUnmount() {
-      const node = findDOMNode(this) as HTMLElement;
-      const child = node.firstChild as HTMLElement;
-      child.removeEventListener('mousedown', this.onMouseDown);
-    }
-
-    render() {
-      return <WrappedComponent {...this.props} moving={this.state.moving} />;
-    }
   }
 
   interface StateProps {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { findDOMNode } from 'react-dom';
-import { DropEvent } from './drop-event';
 import { Consumer, Context } from './context';
+import { DropEvent } from './drop-event';
 
 export class Droppable extends React.Component<Props> {
   context: Context | null = null;

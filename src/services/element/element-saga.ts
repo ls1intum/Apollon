@@ -1,20 +1,20 @@
-import { takeLatest, put, select, all } from 'redux-saga/effects';
+import { all, put, select, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
-import {
-  ElementActionTypes,
-  HoverAction,
-  LeaveAction,
-  SelectAction,
-  MoveAction,
-  DeleteAction,
-  MakeInteractiveAction,
-  UpdateAction,
-} from './element-types';
-import { Element, IElement } from './element';
-import { ElementRepository } from './element-repository';
 import { Container } from '../container/container';
 import { DiagramRepository } from '../diagram/diagram-repository';
 import { RelationshipRepository } from '../relationship/relationship-repository';
+import { Element, IElement } from './element';
+import { ElementRepository } from './element-repository';
+import {
+  DeleteAction,
+  ElementActionTypes,
+  HoverAction,
+  LeaveAction,
+  MakeInteractiveAction,
+  MoveAction,
+  SelectAction,
+  UpdateAction,
+} from './element-types';
 
 export function* ElementSaga() {
   yield takeLatest(ElementActionTypes.HOVER, handleElementHover);
@@ -77,21 +77,21 @@ function* handleElementMakeInteractive({ payload }: MakeInteractiveAction) {
   yield update(current.id, !current.interactive);
 
   if (current instanceof Container) {
-    const rec = (id: string): ReturnType<typeof update>[] => {
+    const rec = (id: string): Array<ReturnType<typeof update>> => {
       const child = ElementRepository.getById(elements)(id);
       if (!child) return [];
       if (child.interactive) {
         return [update(child.id, false)];
       }
       if (child instanceof Container) {
-        return child.ownedElements.reduce<ReturnType<typeof update>[]>((a, o) => {
+        return child.ownedElements.reduce<Array<ReturnType<typeof update>>>((a, o) => {
           return [...a, ...rec(o)];
         }, []);
       }
       return [];
     };
 
-    const t = current.ownedElements.reduce<ReturnType<typeof update>[]>((a, o) => [...a, ...rec(o)], []);
+    const t = current.ownedElements.reduce<Array<ReturnType<typeof update>>>((a, o) => [...a, ...rec(o)], []);
     yield all(t);
   }
 }

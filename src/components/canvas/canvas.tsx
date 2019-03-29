@@ -1,20 +1,20 @@
 import React, { Component, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
-import { Grid } from './grid';
-import { CanvasContext, CanvasProvider } from './canvas-context';
-import { CoordinateSystem } from './coordinate-system';
-import { ConnectLayer } from '../connectable/connect-layer';
-import { LayoutedElement } from '../layouted-element/layouted-element';
-import { LayoutedRelationship } from '../layouted-relationship/layouted-relationship';
-import { Droppable } from '../draggable/droppable';
-import { DropEvent } from '../draggable/drop-event';
 import { Diagram } from '../../services/diagram/diagram';
 import { DiagramRepository } from '../../services/diagram/diagram-repository';
 import { ElementRepository } from '../../services/element/element-repository';
-import { KeyboardEventListener } from './keyboard-eventlistener';
-import { PopupLayer } from '../popup/popup-layer';
 import { ApollonMode } from '../../typings';
+import { ConnectLayer } from '../connectable/connect-layer';
+import { DropEvent } from '../draggable/drop-event';
+import { Droppable } from '../draggable/droppable';
+import { LayoutedElement } from '../layouted-element/layouted-element';
+import { LayoutedRelationship } from '../layouted-relationship/layouted-relationship';
+import { PopupLayer } from '../popup/popup-layer';
+import { ModelState } from '../store/model-state';
+import { CanvasContext, CanvasProvider } from './canvas-context';
+import { CoordinateSystem } from './coordinate-system';
+import { Grid } from './grid';
+import { KeyboardEventListener } from './keyboard-eventlistener';
 
 class CanvasComponent extends Component<Props, State> {
   state: State = {
@@ -45,11 +45,6 @@ class CanvasComponent extends Component<Props, State> {
     element.bounds.y = position.y - offset.y;
 
     this.props.create(element);
-  };
-
-  private deselectAll = (event: React.MouseEvent) => {
-    if (event.target !== this.layer.current || event.shiftKey) return;
-    this.props.select(null);
   };
 
   render() {
@@ -87,19 +82,24 @@ class CanvasComponent extends Component<Props, State> {
       </div>
     );
   }
+
+  private deselectAll = (event: React.MouseEvent) => {
+    if (event.target !== this.layer.current || event.shiftKey) return;
+    this.props.select(null);
+  };
 }
 
-interface OwnProps {}
+type OwnProps = {};
 
-interface StateProps {
+type StateProps = {
   diagram: Diagram;
   mode: ApollonMode;
-}
+};
 
-interface DispatchProps {
+type DispatchProps = {
   create: typeof ElementRepository.create;
   select: typeof ElementRepository.select;
-}
+};
 
 type Props = OwnProps & StateProps & DispatchProps;
 
@@ -115,7 +115,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   {
     create: ElementRepository.create,
     select: ElementRepository.select,
-  }
+  },
 );
 
 export const Canvas = enhance(CanvasComponent);

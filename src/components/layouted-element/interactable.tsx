@@ -6,12 +6,6 @@ import { ElementComponent, OwnProps } from './element-component';
 
 export const interactable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Interactable extends Component<Props> {
-    private select = (event: MouseEvent) => {
-      if (event.which !== 1 || !this.props.element.hovered) return;
-
-      this.props.makeInteractive(this.props.element.id);
-    };
-
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('click', this.select);
@@ -25,18 +19,23 @@ export const interactable = (WrappedComponent: typeof ElementComponent): Compone
     render() {
       return <WrappedComponent {...this.props} />;
     }
+    private select = (event: MouseEvent) => {
+      if (event.which !== 1 || !this.props.element.hovered) return;
+
+      this.props.makeInteractive(this.props.element.id);
+    };
   }
 
-  interface StateProps {}
+  type StateProps = {};
 
-  interface DispatchProps {
+  type DispatchProps = {
     makeInteractive: typeof ElementRepository.makeInteractive;
-  }
+  };
 
   type Props = OwnProps & StateProps & DispatchProps;
 
   return connect<StateProps, DispatchProps, OwnProps>(
     null,
-    { makeInteractive: ElementRepository.makeInteractive }
+    { makeInteractive: ElementRepository.makeInteractive },
   )(Interactable);
 };

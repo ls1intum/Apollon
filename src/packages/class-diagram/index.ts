@@ -1,4 +1,4 @@
-import { UMLElement, UMLRelationship, Direction } from '../../typings';
+import { Direction, UMLElement, UMLRelationship } from '../../typings';
 
 export enum ClassElementType {
   Class = 'Class',

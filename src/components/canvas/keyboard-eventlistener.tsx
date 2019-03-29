@@ -1,12 +1,24 @@
 import { Component, ComponentClass } from 'react';
-import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
-import { CanvasContext, withCanvas } from './canvas-context';
+import { compose } from 'redux';
 import { ElementRepository } from '../../services/element/element-repository';
 import { PopupLayer } from '../popup/popup-layer';
+import { ModelState } from '../store/model-state';
+import { CanvasContext, withCanvas } from './canvas-context';
 
 class KeyboardEventListenerComponent extends Component<Props> {
+
+  componentDidMount() {
+    this.props.canvas.addEventListener('keydown', this.eventListener);
+  }
+
+  componentWillUnmount() {
+    this.props.canvas.removeEventListener('keydown', this.eventListener);
+  }
+
+  render() {
+    return null;
+  }
   private eventListener = (event: KeyboardEvent) => {
     if (this.props.readonly) return;
 
@@ -36,18 +48,6 @@ class KeyboardEventListenerComponent extends Component<Props> {
         break;
     }
   };
-
-  componentDidMount() {
-    this.props.canvas.addEventListener('keydown', this.eventListener);
-  }
-
-  componentWillUnmount() {
-    this.props.canvas.removeEventListener('keydown', this.eventListener);
-  }
-
-  render() {
-    return null;
-  }
 }
 
 interface OwnProps {

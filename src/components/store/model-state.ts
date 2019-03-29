@@ -1,18 +1,18 @@
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
-import { Diagram } from '../../services/diagram/diagram';
-import { ApollonView } from '../../services/editor/editor-types';
-import { UMLModel, UMLElement, UMLRelationship, Selection, ApollonMode } from '../../typings';
-import { Relationship } from '../../services/relationship/relationship';
-import { RelationshipRepository } from '../../services/relationship/relationship-repository';
-import { Container } from '../../services/container/container';
-import { AssessmentState } from '../../services/assessment/assessment-types';
-import { DiagramState } from '../../services/diagram/diagram-types';
-import { EditorState } from '../../services/editor/editor-types';
-import { ElementState } from '../../services/element/element-types';
+import { ElementType } from '../../packages/element-type';
 import { Elements } from '../../packages/elements';
 import { Relationships } from '../../packages/relationships';
-import { ElementType } from '../../packages/element-type';
+import { AssessmentState } from '../../services/assessment/assessment-types';
+import { Container } from '../../services/container/container';
+import { Diagram } from '../../services/diagram/diagram';
+import { DiagramState } from '../../services/diagram/diagram-types';
+import { ApollonView } from '../../services/editor/editor-types';
+import { EditorState } from '../../services/editor/editor-types';
+import { Element } from '../../services/element/element';
+import { ElementRepository } from '../../services/element/element-repository';
+import { ElementState } from '../../services/element/element-types';
+import { Relationship } from '../../services/relationship/relationship';
+import { RelationshipRepository } from '../../services/relationship/relationship-repository';
+import { ApollonMode, Selection, UMLElement, UMLModel, UMLRelationship } from '../../typings';
 import { computeBoundingBox } from '../../utils/geometry/boundary';
 import { Point } from '../../utils/geometry/point';
 
@@ -43,8 +43,7 @@ export class ModelState {
           .filter(child => child.owner === element.id)
           .map<Element>(child => {
             const Clazz = Elements[child.type as ElementType];
-            const element = new Clazz(child);
-            return element;
+            return new Clazz(child);
           });
         element.ownedElements = children.map(child => child.id);
         const changes = element.render(children).reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
@@ -91,17 +90,16 @@ export class ModelState {
     const elements = ElementRepository.read(copy);
 
     const parseElement = (element: Element): UMLElement[] => {
-      const c: Element[] =
-        element instanceof Container ? element.ownedElements.map(id => elements.find(element => element.id === id)!) : [];
-      const { element: result, children } = element.toUMLElement(element, c);
-      return [result, ...children.reduce<UMLElement[]>((r, e) => [...r, ...parseElement(e)], [])];
+      const cont: Element[] = element instanceof Container ? element.ownedElements.map(id => elements.find(ee => ee.id === id)!) : [];
+      const { element: result, children } = element.toUMLElement(element, cont);
+      return [result, ...children.reduce<UMLElement[]>((r2, e3) => [...r2, ...parseElement(e3)], [])];
     };
 
-    const e = elements.filter(element => !element.owner).reduce<UMLElement[]>((r, e) => [...r, ...parseElement(e)], []);
+    const e = elements.filter(element => !element.owner).reduce<UMLElement[]>((r2, e2) => [...r2, ...parseElement(e2)], []);
 
     const relationships = RelationshipRepository.read(copy);
     const r = relationships.map<UMLRelationship>(relationship =>
-      (relationship.constructor as typeof Relationship).toUMLRelationship(relationship)
+      (relationship.constructor as typeof Relationship).toUMLRelationship(relationship),
     );
 
     const interactive: Selection = {
@@ -109,7 +107,7 @@ export class ModelState {
       relationships: relationships.filter(element => element.interactive).map<string>(element => element.id),
     };
 
-    const points: Point[] = [...e.map(e => e.bounds), ...r.map(r => r.bounds)].reduce<Point[]>(
+    const points: Point[] = [...e.map(e2 => e2.bounds), ...r.map(r2 => r2.bounds)].reduce<Point[]>(
       (a, bounds) => [
         ...a,
         new Point(bounds.x, bounds.y),
@@ -117,7 +115,7 @@ export class ModelState {
         new Point(bounds.x, bounds.y + bounds.height),
         new Point(bounds.x + bounds.width, bounds.y + bounds.height),
       ],
-      []
+      [],
     );
     const boundingBox = computeBoundingBox(points);
     const size = {

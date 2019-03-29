@@ -1,10 +1,10 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import { Assessment } from '../../typings';
+import { CancelIcon } from '../controls/cancel-icon';
+import { CheckIcon } from '../controls/check-icon';
 import { ModelState } from '../store/model-state';
 import { ElementComponent, OwnProps } from './element-component';
-import { CheckIcon } from '../controls/check-icon';
-import { CancelIcon } from '../controls/cancel-icon';
-import { Assessment } from '../../typings';
 
 export const assessable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Assessable extends Component<Props> {
@@ -29,15 +29,15 @@ export const assessable = (WrappedComponent: typeof ElementComponent): Component
     }
   }
 
-  interface StateProps {
+  type StateProps = {
     assessment?: Assessment;
-  }
+  };
 
-  interface DispatchProps {}
+  type DispatchProps = {};
 
   type Props = OwnProps & StateProps & DispatchProps;
 
   return connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({ assessment: state.assessments[props.element.id] }))(
-    Assessable
+    Assessable,
   );
 };

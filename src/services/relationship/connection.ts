@@ -1,7 +1,7 @@
-import { Port } from '../element/port';
-import { Point } from '../../utils/geometry/point';
-import { Boundary } from '../../utils/geometry/boundary';
 import { Direction } from '../../typings';
+import { Boundary } from '../../utils/geometry/boundary';
+import { Point } from '../../utils/geometry/point';
+import { Port } from '../element/port';
 
 export interface Connection {
   source: Port;

@@ -1,8 +1,25 @@
-import { Relationship, IRelationship } from '../../../services/relationship/relationship';
 import { UMLClassAssociation } from '..';
+import { IRelationship, Relationship } from '../../../services/relationship/relationship';
 import { UMLRelationship } from '../../../typings';
 
 export abstract class ClassAssociation extends Relationship {
+
+  static toUMLRelationship(relationship: ClassAssociation): UMLClassAssociation {
+    const umlRelationship = Relationship.toUMLRelationship(relationship);
+    return {
+      ...umlRelationship,
+      source: {
+        ...umlRelationship.source,
+        multiplicity: relationship.multiplicity.source,
+        role: relationship.role.source,
+      },
+      target: {
+        ...umlRelationship.target,
+        multiplicity: relationship.multiplicity.target,
+        role: relationship.role.target,
+      },
+    };
+  }
   multiplicity = { source: '', target: '' };
   role = { source: '', target: '' };
 
@@ -24,22 +41,5 @@ export abstract class ClassAssociation extends Relationship {
       this.role = { ...this.role, target: role };
     }
     Object.assign(this, values);
-  }
-
-  static toUMLRelationship(relationship: ClassAssociation): UMLClassAssociation {
-    const umlRelationship = Relationship.toUMLRelationship(relationship);
-    return {
-      ...umlRelationship,
-      source: {
-        ...umlRelationship.source,
-        multiplicity: relationship.multiplicity.source,
-        role: relationship.role.source,
-      },
-      target: {
-        ...umlRelationship.target,
-        multiplicity: relationship.multiplicity.target,
-        role: relationship.role.target,
-      },
-    };
   }
 }

@@ -1,9 +1,9 @@
 import React, { SFC } from 'react';
-import { ClassAssociation } from './class-association';
-import { Point } from '../../../utils/geometry/point';
-import { Port } from '../../../services/element/port';
 import { ClassRelationshipType } from '..';
+import { Port } from '../../../services/element/port';
 import { Direction } from '../../../typings';
+import { Point } from '../../../utils/geometry/point';
+import { ClassAssociation } from './class-association';
 
 const Marker = {
   Arrow: (id: string) => (
@@ -72,10 +72,10 @@ export const ClassAssociationComponent: SFC<Props> = ({ element }) => {
     }
   })(element.type);
 
-  const computeTextPosition = (path: Point[], marker: boolean = false): Point => {
-    const distance = marker ? 31 : 8;
-    const vector = path[1].subtract(path[0]);
-    return path[0].add(vector.normalize().scale(distance));
+  const computeTextPosition = (alignmentPath: Point[], hasMarker: boolean = false): Point => {
+    const distance = hasMarker ? 31 : 8;
+    const vector = alignmentPath[1].subtract(alignmentPath[0]);
+    return alignmentPath[0].add(vector.normalize().scale(distance));
   };
 
   const layoutText = (location: Port['direction'], position: 'TOP' | 'BOTTOM') => {

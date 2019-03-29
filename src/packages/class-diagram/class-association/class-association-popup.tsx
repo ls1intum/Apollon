@@ -1,16 +1,16 @@
-import React, { Component, SFC } from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
+import { ClassRelationshipType } from '..';
+import { Dropdown } from '../../../components/controls/dropdown';
+import { Divider } from '../../../components/popup/controls/divider';
+import { Header } from '../../../components/popup/controls/header';
+import { Section } from '../../../components/popup/controls/section';
+import { TextField } from '../../../components/popup/controls/textfield';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
 import { ClassAssociation } from './class-association';
-import { ClassRelationshipType } from '..';
-import { TextField } from '../../../components/popup/controls/textfield';
-import { Section } from '../../../components/popup/controls/section';
-import { Divider } from '../../../components/popup/controls/divider';
-import { Header } from '../../../components/popup/controls/header';
-import { Dropdown } from '../../../components/controls/dropdown';
 
 const Flex = styled.div`
   display: flex;
@@ -23,16 +23,6 @@ const Input = styled(TextField)`
 `;
 
 class ClassAssociationComponent extends Component<Props> {
-  private onChange = (value: ClassRelationshipType) => {
-    const { element, change } = this.props;
-    change(element.id, value);
-  };
-
-  private onUpdate = (type: 'multiplicity' | 'role', end: 'source' | 'target') => (value: string) => {
-    const { element, update } = this.props;
-    update(element.id, { [type]: { ...element[type], [end]: value } });
-  };
-
   render() {
     const { element, getById } = this.props;
     const source = getById(element.source.element);
@@ -83,20 +73,29 @@ class ClassAssociationComponent extends Component<Props> {
       </div>
     );
   }
+  private onChange = (value: ClassRelationshipType) => {
+    const { element, change } = this.props;
+    change(element.id, value);
+  };
+
+  private onUpdate = (type: 'multiplicity' | 'role', end: 'source' | 'target') => (value: string) => {
+    const { element, update } = this.props;
+    update(element.id, { [type]: { ...element[type], [end]: value } });
+  };
 }
 
-interface OwnProps {
+type OwnProps = {
   element: ClassAssociation;
-}
+};
 
-interface StateProps {
+type StateProps = {
   getById: (id: string) => Element | null;
-}
+};
 
-interface DispatchProps {
+type DispatchProps = {
   change: typeof ElementRepository.change;
   update: typeof ElementRepository.update;
-}
+};
 
 type Props = OwnProps & StateProps & DispatchProps;
 
@@ -105,7 +104,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   {
     change: ElementRepository.change,
     update: ElementRepository.update,
-  }
-)
+  },
+);
 
 export const ClassAssociationPopup = enhance(ClassAssociationComponent);

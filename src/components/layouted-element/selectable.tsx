@@ -1,16 +1,11 @@
 import React, { Component, ComponentClass } from 'react';
-import { connect } from 'react-redux';
 import { findDOMNode } from 'react-dom';
-import { ElementComponent, OwnProps } from './element-component';
+import { connect } from 'react-redux';
 import { ElementRepository } from '../../services/element/element-repository';
+import { ElementComponent, OwnProps } from './element-component';
 
 export const selectable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Selectable extends Component<Props> {
-    private select = (event: MouseEvent) => {
-      if (event.which !== 1 || !this.props.element.hovered || (this.props.element.selected && !event.shiftKey)) return;
-      this.props.select(this.props.element.id, event.shiftKey);
-    };
-
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('mousedown', this.select);
@@ -24,18 +19,22 @@ export const selectable = (WrappedComponent: typeof ElementComponent): Component
     render() {
       return <WrappedComponent {...this.props} />;
     }
+    private select = (event: MouseEvent) => {
+      if (event.which !== 1 || !this.props.element.hovered || (this.props.element.selected && !event.shiftKey)) return;
+      this.props.select(this.props.element.id, event.shiftKey);
+    };
   }
 
-  interface StateProps {}
+  type StateProps = {};
 
-  interface DispatchProps {
+  type DispatchProps = {
     select: typeof ElementRepository.select;
-  }
+  };
 
   type Props = OwnProps & StateProps & DispatchProps;
 
   return connect<StateProps, DispatchProps, OwnProps>(
     null,
-    { select: ElementRepository.select }
+    { select: ElementRepository.select },
   )(Selectable);
 };

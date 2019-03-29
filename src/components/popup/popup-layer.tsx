@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { PopupContext, PopupProvider } from './popup-context';
-import { Popup } from './popup';
 import { Element } from '../../services/element/element';
+import { Popup } from './popup';
+import { PopupContext, PopupProvider } from './popup-context';
 
 export class PopupLayer extends Component<{}, State> {
   popup: React.RefObject<HTMLDivElement> = React.createRef();
@@ -9,25 +9,6 @@ export class PopupLayer extends Component<{}, State> {
   state: State = {
     element: null,
     position: { x: 0, y: 0 },
-  };
-
-  private showPopup = (element: Element, position: { x: number; y: number }) => {
-    this.setState({ element, position });
-  };
-
-  private update = (element: Element) => {
-    if (this.state.element && this.state.element.id === element.id) {
-      this.setState({ element });
-    }
-  };
-
-  private cancel = (event: MouseEvent) => {
-    if (!this.popup.current) return;
-    const popup = this.popup.current as HTMLElement;
-    const target = event.target as HTMLElement;
-    if (!popup.contains(target)) {
-      this.setState({ element: null });
-    }
   };
 
   componentDidMount() {
@@ -54,6 +35,25 @@ export class PopupLayer extends Component<{}, State> {
       </PopupProvider>
     );
   }
+
+  private showPopup = (element: Element, position: { x: number; y: number }) => {
+    this.setState({ element, position });
+  };
+
+  private update = (element: Element) => {
+    if (this.state.element && this.state.element.id === element.id) {
+      this.setState({ element });
+    }
+  };
+
+  private cancel = (event: MouseEvent) => {
+    if (!this.popup.current) return;
+    const popup = this.popup.current as HTMLElement;
+    const target = event.target as HTMLElement;
+    if (!popup.contains(target)) {
+      this.setState({ element: null });
+    }
+  };
 }
 
 interface State {

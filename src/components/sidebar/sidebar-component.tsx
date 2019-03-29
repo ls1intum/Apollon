@@ -1,126 +1,39 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
-import { Container, Preview, EditorModeSelection, EditorModeSelectionSegment } from './sidebar-styles';
+import { ActivityActionNode } from '../../packages/activity-diagram/activity-action-node/activity-action-node';
+import { ActivityFinalNode } from '../../packages/activity-diagram/activity-final-node/activity-final-node';
+import { ActivityForkNode } from '../../packages/activity-diagram/activity-fork-node/activity-fork-node';
+import { ActivityInitialNode } from '../../packages/activity-diagram/activity-initial-node/activity-initial-node';
+import { ActivityMergeNode } from '../../packages/activity-diagram/activity-merge-node/activity-merge-node';
+import { ActivityObjectNode } from '../../packages/activity-diagram/activity-object-node/activity-object-node';
+import { ClassAttribute } from '../../packages/class-diagram/class-member/class-attribute/class-attribute';
+import { ClassMethod } from '../../packages/class-diagram/class-member/class-method/class-method';
+import { AbstractClass } from '../../packages/class-diagram/classifier/abstract-class/abstract-class';
+import { Class } from '../../packages/class-diagram/classifier/class/class';
+import { Enumeration } from '../../packages/class-diagram/classifier/enumeration/enumeration';
+import { Interface } from '../../packages/class-diagram/classifier/interface/interface';
+import { Package } from '../../packages/common/package/package';
+import { ElementType } from '../../packages/element-type';
+import { ObjectAttribute } from '../../packages/object-diagram/object-attribute/object-attribute';
+import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
+import { UseCaseActor } from '../../packages/use-case-diagram/use-case-actor/use-case-actor';
+import { UseCaseSystem } from '../../packages/use-case-diagram/use-case-system/use-case-system';
+import { UseCase } from '../../packages/use-case-diagram/use-case/use-case';
+import { EditorRepository } from '../../services/editor/editor-repository';
+import { ApollonView } from '../../services/editor/editor-types';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
+import { ApollonMode, DiagramType } from '../../typings';
+import { CanvasProvider } from '../canvas/canvas-context';
 import { Draggable } from '../draggable/draggable';
 import { DropEvent } from '../draggable/drop-event';
 import { ElementComponent } from '../layouted-element/element-component';
-import { CanvasProvider } from '../canvas/canvas-context';
-import { ApollonMode, DiagramType } from '../../typings';
-import { ApollonView } from '../../services/editor/editor-types';
-import { EditorRepository } from '../../services/editor/editor-repository';
-import { ElementType } from '../../packages/element-type';
-import { Package } from '../../packages/common/package/package';
-import { Class } from '../../packages/class-diagram/classifier/class/class';
-import { AbstractClass } from '../../packages/class-diagram/classifier/abstract-class/abstract-class';
-import { Interface } from '../../packages/class-diagram/classifier/interface/interface';
-import { Enumeration } from '../../packages/class-diagram/classifier/enumeration/enumeration';
-import { ClassAttribute } from '../../packages/class-diagram/class-member/class-attribute/class-attribute';
-import { ClassMethod } from '../../packages/class-diagram/class-member/class-method/class-method';
-import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
-import { ObjectAttribute } from '../../packages/object-diagram/object-attribute/object-attribute';
-import { ActivityInitialNode } from '../../packages/activity-diagram/activity-initial-node/activity-initial-node';
-import { ActivityFinalNode } from '../../packages/activity-diagram/activity-final-node/activity-final-node';
-import { ActivityActionNode } from '../../packages/activity-diagram/activity-action-node/activity-action-node';
-import { ActivityObjectNode } from '../../packages/activity-diagram/activity-object-node/activity-object-node';
-import { ActivityMergeNode } from '../../packages/activity-diagram/activity-merge-node/activity-merge-node';
-import { ActivityForkNode } from '../../packages/activity-diagram/activity-fork-node/activity-fork-node';
-import { UseCase } from '../../packages/use-case-diagram/use-case/use-case';
-import { UseCaseActor } from '../../packages/use-case-diagram/use-case-actor/use-case-actor';
-import { UseCaseSystem } from '../../packages/use-case-diagram/use-case-system/use-case-system';
+import { ModelState } from '../store/model-state';
+import { Container, EditorModeSelection, EditorModeSelectionSegment, Preview } from './sidebar-styles';
 
 class SidebarComponent extends Component<Props, State> {
   state: State = {
     previews: [],
-  };
-
-  private refresh = () => {
-    switch (this.props.diagramType) {
-      case DiagramType.ClassDiagram:
-        this.setState({
-          previews: [
-            new Package(),
-            (() => {
-              const c = new Class();
-              c.name = 'Class';
-              return c;
-            })(),
-            (() => {
-              const c = new AbstractClass();
-              c.name = 'AbstractClass';
-              return c;
-            })(),
-            (() => {
-              const c = new Interface();
-              c.name = 'Interface';
-              return c;
-            })(),
-            (() => {
-              const c = new Enumeration();
-              c.name = 'Enumeration';
-              return c;
-            })(),
-          ],
-        });
-        break;
-      case DiagramType.ObjectDiagram:
-        this.setState({
-          previews: [
-            (() => {
-              const c = new ObjectName();
-              c.name = 'Object : Class';
-              return c;
-            })(),
-          ],
-        });
-        break;
-      case DiagramType.ActivityDiagram:
-        this.setState({
-          previews: [
-            new ActivityInitialNode(),
-            new ActivityFinalNode(),
-            (() => {
-              const c = new ActivityActionNode();
-              c.name = 'ActionNode';
-              return c;
-            })(),
-            (() => {
-              const c = new ActivityObjectNode();
-              c.name = 'ObjectNode';
-              return c;
-            })(),
-            (() => {
-              const c = new ActivityMergeNode();
-              c.name = 'Condition';
-              return c;
-            })(),
-            new ActivityForkNode(),
-          ],
-        });
-        break;
-      case DiagramType.UseCaseDiagram:
-        this.setState({
-          previews: [
-            (() => {
-              const c = new UseCase();
-              c.name = 'UseCase';
-              return c;
-            })(),
-            (() => {
-              const c = new UseCaseActor();
-              c.name = 'Actor';
-              return c;
-            })(),
-            (() => {
-              const c = new UseCaseSystem();
-              c.name = 'System';
-              return c;
-            })(),
-          ],
-        });
-    }
   };
 
   changeView = (view: ApollonView) => () => this.props.changeView(view);
@@ -245,6 +158,93 @@ class SidebarComponent extends Component<Props, State> {
       </Container>
     );
   }
+
+  private refresh = () => {
+    switch (this.props.diagramType) {
+      case DiagramType.ClassDiagram:
+        this.setState({
+          previews: [
+            new Package(),
+            (() => {
+              const c = new Class();
+              c.name = 'Class';
+              return c;
+            })(),
+            (() => {
+              const c = new AbstractClass();
+              c.name = 'AbstractClass';
+              return c;
+            })(),
+            (() => {
+              const c = new Interface();
+              c.name = 'Interface';
+              return c;
+            })(),
+            (() => {
+              const c = new Enumeration();
+              c.name = 'Enumeration';
+              return c;
+            })(),
+          ],
+        });
+        break;
+      case DiagramType.ObjectDiagram:
+        this.setState({
+          previews: [
+            (() => {
+              const c = new ObjectName();
+              c.name = 'Object : Class';
+              return c;
+            })(),
+          ],
+        });
+        break;
+      case DiagramType.ActivityDiagram:
+        this.setState({
+          previews: [
+            new ActivityInitialNode(),
+            new ActivityFinalNode(),
+            (() => {
+              const c = new ActivityActionNode();
+              c.name = 'ActionNode';
+              return c;
+            })(),
+            (() => {
+              const c = new ActivityObjectNode();
+              c.name = 'ObjectNode';
+              return c;
+            })(),
+            (() => {
+              const c = new ActivityMergeNode();
+              c.name = 'Condition';
+              return c;
+            })(),
+            new ActivityForkNode(),
+          ],
+        });
+        break;
+      case DiagramType.UseCaseDiagram:
+        this.setState({
+          previews: [
+            (() => {
+              const c = new UseCase();
+              c.name = 'UseCase';
+              return c;
+            })(),
+            (() => {
+              const c = new UseCaseActor();
+              c.name = 'Actor';
+              return c;
+            })(),
+            (() => {
+              const c = new UseCaseSystem();
+              c.name = 'System';
+              return c;
+            })(),
+          ],
+        });
+    }
+  };
 }
 
 interface StateProps {

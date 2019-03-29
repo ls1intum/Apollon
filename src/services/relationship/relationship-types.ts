@@ -19,7 +19,7 @@ export interface CreateAction extends Action<RelationshipActionTypes.CREATE> {
 export interface RedrawAction extends Action<RelationshipActionTypes.REDRAW> {
   payload: {
     id: string;
-    path: { x: number; y: number }[];
+    path: Array<{ x: number; y: number }>;
     bounds: { x: number; y: number; width: number; height: number };
   };
 }

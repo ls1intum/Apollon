@@ -1,8 +1,8 @@
 import { Reducer } from 'redux';
-import { ContainerActionTypes, ContainerActions } from './container-types';
+import { ElementRepository } from '../element/element-repository';
 import { ElementState } from '../element/element-types';
 import { Container } from './container';
-import { ElementRepository } from '../element/element-repository';
+import { ContainerActions, ContainerActionTypes } from './container-types';
 
 const initialState: ElementState = {};
 
@@ -29,7 +29,7 @@ export const ContainerReducer: Reducer<ElementState, ContainerActions> = (state 
         ...state,
         [payload.owner]: {
           ...container,
-          ownedElements: container.ownedElements.filter(id => id != payload.id),
+          ownedElements: container.ownedElements.filter(id => id !== payload.id),
         },
         [payload.id]: { ...state[payload.id], owner: null },
       };

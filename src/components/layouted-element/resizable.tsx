@@ -1,13 +1,13 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import styled from 'styled-components';
-import { ModelState } from '../store/model-state';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
-import { ElementComponent, OwnProps } from './element-component';
-import { compose } from 'redux';
-import { withCanvas, CanvasContext } from '../canvas/canvas-context';
 import { Point } from '../../utils/geometry/point';
+import { CanvasContext, withCanvas } from '../canvas/canvas-context';
+import { ModelState } from '../store/model-state';
+import { ElementComponent, OwnProps } from './element-component';
 
 const Handler = styled.rect`
   width: 15px;
@@ -22,6 +22,16 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
       resizing: false,
       offset: new Point(),
     };
+
+    render() {
+      const { width: x, height: y } = this.props.element.bounds;
+      return (
+        <WrappedComponent {...this.props}>
+          {this.props.children}
+          <Handler x={x - 10} y={y - 10} onMouseDown={this.onMouseDown} />
+        </WrappedComponent>
+      );
+    }
 
     private resize = (width: number, height: number) => {
       const { features } = this.props.element.constructor as typeof Element;
@@ -63,16 +73,6 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
       document.removeEventListener('mousemove', this.onMouseMove);
       document.removeEventListener('mouseup', this.onMouseUp);
     };
-
-    render() {
-      const { width: x, height: y } = this.props.element.bounds;
-      return (
-        <WrappedComponent {...this.props}>
-          {this.props.children}
-          <Handler x={x - 10} y={y - 10} onMouseDown={this.onMouseDown} />
-        </WrappedComponent>
-      );
-    }
   }
 
   interface StateProps {
@@ -90,13 +90,15 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
-  return compose<ComponentClass<OwnProps>>(
+  const enhance = compose<ComponentClass<OwnProps>>(
     withCanvas,
     connect<StateProps, DispatchProps, OwnProps, ModelState>(
       state => ({
         getAbsolutePosition: ElementRepository.getAbsolutePosition(state.elements),
       }),
-      { resize: ElementRepository.resize }
-    )
-  )(Resizable);
+      { resize: ElementRepository.resize },
+    ),
+  );
+
+  return enhance(Resizable);
 };

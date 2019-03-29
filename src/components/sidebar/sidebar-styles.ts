@@ -25,8 +25,8 @@ export const EditorModeSelectionSegment: any = styled.button`
   text-decoration: none;
   border: 1px solid ${(props: any) => props.theme.primaryColor};
   border-left-width: 0;
-  background: ${(props: any) => (props.selected ? props.theme.primaryColor : "white")};
-  color: ${(props: any) => (props.selected ? "white" : props.theme.primaryColor)} !important;
+  background: ${(props: any) => (props.selected ? props.theme.primaryColor : 'white')};
+  color: ${(props: any) => (props.selected ? 'white' : props.theme.primaryColor)} !important;
   text-decoration: none !important;
   font-size: 1rem;
   cursor: pointer;

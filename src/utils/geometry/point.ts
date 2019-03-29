@@ -15,7 +15,7 @@ export class Point {
     if (x instanceof Point) {
       return new Point(this.x + x.x, this.y + x.y);
     }
-    if (typeof y == 'number') {
+    if (typeof y === 'number') {
       return new Point(this.x + x, this.y + y);
     }
     return this.clone();

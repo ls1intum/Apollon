@@ -1,15 +1,15 @@
-import { takeLatest, takeEvery, put, all, select } from 'redux-saga/effects';
+import { all, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
+import { Connection } from '../../services/relationship/connection';
+import { Boundary } from '../../utils/geometry/boundary';
+import { Point } from '../../utils/geometry/point';
+import { notEmpty } from '../../utils/not-empty';
 import { IElement } from '../element/element';
 import { ElementRepository } from '../element/element-repository';
-import { RelationshipRepository } from './relationship-repository';
-import { RedrawAction, RelationshipActionTypes, ConnectAction, CreateAction } from './relationship-types';
-import { MoveAction, DeleteAction, ElementActionTypes } from '../element/element-types';
-import { Connection } from '../../services/relationship/connection';
+import { DeleteAction, ElementActionTypes, MoveAction } from '../element/element-types';
 import { Relationship } from './relationship';
-import { Boundary } from '../../utils/geometry/boundary';
-import { notEmpty } from '../../utils/not-empty';
-import { Point } from '../../utils/geometry/point';
+import { RelationshipRepository } from './relationship-repository';
+import { ConnectAction, CreateAction, RedrawAction, RelationshipActionTypes } from './relationship-types';
 
 export function* RelationshipSaga() {
   yield takeLatest(RelationshipActionTypes.CREATE, handleRelationshipCreation);

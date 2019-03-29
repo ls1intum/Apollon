@@ -41,4 +41,4 @@ export interface DeleteRelationshipAction
   };
 }
 
-export interface DiagramState extends IDiagram {}
+export type DiagramState = IDiagram;

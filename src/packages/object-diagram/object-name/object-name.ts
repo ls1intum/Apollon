@@ -1,8 +1,8 @@
-import { Element, IElement } from '../../../services/element/element';
-import { Container } from '../../../services/container/container';
 import { ObjectElementType } from '..';
-import { ObjectAttribute } from '../object-attribute/object-attribute';
+import { Container } from '../../../services/container/container';
+import { Element, IElement } from '../../../services/element/element';
 import { UMLElement } from '../../../typings';
+import { ObjectAttribute } from '../object-attribute/object-attribute';
 
 export class ObjectName extends Container {
   static features = {
@@ -22,7 +22,7 @@ export class ObjectName extends Container {
   }
 
   render(elements: Element[]): Element[] {
-    let [parent, ...children] = super.render(elements);
+    const [parent, ...children] = super.render(elements);
 
     let y = this.headerHeight;
     for (const child of children) {
@@ -36,12 +36,12 @@ export class ObjectName extends Container {
   }
 
   addElement(newElement: Element, currentElements: Element[]): Element[] {
-    let [parent, ...children] = super.addElement(newElement, currentElements);
+    const [parent, ...children] = super.addElement(newElement, currentElements);
     return this.render(children);
   }
 
   removeElement(removedElement: string, currentElements: Element[]): Element[] {
-    let [parent, ...children] = super.removeElement(removedElement, currentElements);
+    const [parent, ...children] = super.removeElement(removedElement, currentElements);
     return this.render(children);
   }
 

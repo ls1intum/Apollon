@@ -1,20 +1,20 @@
 import React, { Component, SFC } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
+import { ClassElementType } from '..';
+import { Divider } from '../../../components/popup/controls/divider';
+import { Header } from '../../../components/popup/controls/header';
+import { Section } from '../../../components/popup/controls/section';
+import { Switch, SwitchItem } from '../../../components/popup/controls/switch';
+import { TextField } from '../../../components/popup/controls/textfield';
+import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
-import { Classifier } from './classifier';
-import { ClassElementType } from '..';
+import { notEmpty } from '../../../utils/not-empty';
 import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
 import { ClassMethod } from '../class-member/class-method/class-method';
-import { TextField } from '../../../components/popup/controls/textfield';
-import { Section } from '../../../components/popup/controls/section';
-import { Divider } from '../../../components/popup/controls/divider';
-import { Header } from '../../../components/popup/controls/header';
-import { Switch, SwitchItem } from '../../../components/popup/controls/switch';
-import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
-import { notEmpty } from '../../../utils/not-empty';
+import { Classifier } from './classifier';
 
 const Flex = styled.div`
   display: flex;
@@ -37,26 +37,6 @@ const NewMember = styled(TextField)`
 `;
 
 class ClassifierComponent extends Component<Props> {
-  private create = (Clazz: typeof ClassAttribute | typeof ClassMethod) => (value: string) => {
-    const { element, create } = this.props;
-    const member = new Clazz();
-    member.name = value;
-    member.owner = element.id;
-    create(member);
-  };
-
-  private rename = (id: string) => (value: string) => {
-    this.props.rename(id, value);
-  };
-
-  private toggle = (kind: ClassElementType) => () => {
-    const { element, change } = this.props;
-    change(element.id, element.type === kind ? ClassElementType.Class : kind);
-  };
-
-  private delete = (id: string) => () => {
-    this.props.delete(id);
-  };
 
   render() {
     const { element, getById } = this.props;
@@ -110,6 +90,26 @@ class ClassifierComponent extends Component<Props> {
       </div>
     );
   }
+  private create = (Clazz: typeof ClassAttribute | typeof ClassMethod) => (value: string) => {
+    const { element, create } = this.props;
+    const member = new Clazz();
+    member.name = value;
+    member.owner = element.id;
+    create(member);
+  };
+
+  private rename = (id: string) => (value: string) => {
+    this.props.rename(id, value);
+  };
+
+  private toggle = (kind: ClassElementType) => () => {
+    const { element, change } = this.props;
+    change(element.id, element.type === kind ? ClassElementType.Class : kind);
+  };
+
+  private delete = (id: string) => () => {
+    this.props.delete(id);
+  };
 }
 
 interface OwnProps {
@@ -137,6 +137,6 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     rename: ElementRepository.rename,
     delete: ElementRepository.delete,
   }
-)
+);
 
 export const ClassifierPopup = enhance(ClassifierComponent);

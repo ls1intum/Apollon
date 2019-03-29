@@ -1,6 +1,6 @@
 import React, { SFC } from 'react';
-import { UseCaseAssociation } from './use-case-association';
 import { Point } from '../../../utils/geometry/point';
+import { UseCaseAssociation } from './use-case-association';
 
 export const UseCaseAssociationComponent: SFC<Props> = ({ element }) => {
   const [start, end] = element.path.map(p => new Point(p.x, p.y));

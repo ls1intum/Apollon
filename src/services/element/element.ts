@@ -1,8 +1,8 @@
-import { uuid } from '../../utils/uuid';
-import { Boundary } from '../../utils/geometry/boundary';
 import { ElementType } from '../../packages/element-type';
 import { RelationshipType } from '../../packages/relationship-type';
 import { UMLElement } from '../../typings';
+import { Boundary } from '../../utils/geometry/boundary';
+import { uuid } from '../../utils/uuid';
 
 export interface IElement {
   readonly id: string;
@@ -28,7 +28,7 @@ export abstract class Element implements IElement {
   };
 
   readonly id: string = uuid();
-  public name: string = '';
+  name: string = '';
   abstract readonly type: ElementType | RelationshipType;
   readonly bounds: Boundary = new Boundary(0, 0, 200, 100);
   owner: string | null = null;
@@ -53,7 +53,7 @@ export abstract class Element implements IElement {
         type: element.type as ElementType,
         bounds: element.bounds,
       },
-      children: children,
+      children,
     };
   }
 }

@@ -13,8 +13,6 @@ export abstract class ClassMember extends Element {
     editable: false,
   };
 
-  bounds: Boundary = { ...this.bounds, height: 30 };
-
   static calculateWidth = (value: string): number => {
     const root = document.body.getElementsByClassName('apollon-editor')[0];
     if (!root) return 0;
@@ -30,4 +28,6 @@ export abstract class ClassMember extends Element {
     root.removeChild(svg);
     return width + 2 * 10;
   };
+
+  bounds: Boundary = { ...this.bounds, height: 30 };
 }

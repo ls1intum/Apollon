@@ -1,6 +1,6 @@
-import { RelationshipType } from './relationship-type';
-import { Relationship, IRelationship } from '../services/relationship/relationship';
+import { IRelationship, Relationship } from '../services/relationship/relationship';
 import { UMLRelationship } from '../typings';
+import { ActivityControlFlow } from './activity-diagram/activity-control-flow/activity-control-flow';
 import { ClassAggregation } from './class-diagram/class-association/class-aggregation/class-aggregation';
 import { ClassBidirectional } from './class-diagram/class-association/class-bidirectional/class-bidirectional';
 import { ClassComposition } from './class-diagram/class-association/class-composition/class-composition';
@@ -9,7 +9,7 @@ import { ClassInheritance } from './class-diagram/class-association/class-inheri
 import { ClassRealization } from './class-diagram/class-association/class-realization/class-realization';
 import { ClassUnidirectional } from './class-diagram/class-association/class-unidirectional/class-unidirectional';
 import { ObjectLink } from './object-diagram/object-link/object-link';
-import { ActivityControlFlow } from './activity-diagram/activity-control-flow/activity-control-flow';
+import { RelationshipType } from './relationship-type';
 import { UseCaseAssociation } from './use-case-diagram/use-case-association/use-case-association';
 import { UseCaseExtend } from './use-case-diagram/use-case-extend/use-case-extend';
 import { UseCaseGeneralization } from './use-case-diagram/use-case-generalization/use-case-generalization';

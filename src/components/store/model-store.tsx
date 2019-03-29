@@ -1,24 +1,24 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { createStore, applyMiddleware, compose, combineReducers, Store as ReduxStore } from 'redux';
-import createSagaMiddleware from 'redux-saga';
 import reduceReducers from 'reduce-reducers';
+import { applyMiddleware, combineReducers, compose, createStore, Store as ReduxStore } from 'redux';
+import createSagaMiddleware from 'redux-saga';
 import { all, fork } from 'redux-saga/effects';
 
-import { ModelState } from './model-state';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
 import { ContainerReducer } from '../../services/container/container-reducer';
+import { ContainerSaga } from '../../services/container/container-saga';
 import { DiagramReducer } from '../../services/diagram/diagram-reducer';
+import { DiagramSaga } from '../../services/diagram/diagram-saga';
 import { EditorReducer } from '../../services/editor/editor-reducer';
 import { ElementReducer } from '../../services/element/element-reducer';
-import { RelationshipReducer } from '../../services/relationship/relationship-reducer';
-import { ContainerSaga } from '../../services/container/container-saga';
-import { DiagramSaga } from '../../services/diagram/diagram-saga';
 import { ElementSaga } from '../../services/element/element-saga';
+import { RelationshipReducer } from '../../services/relationship/relationship-reducer';
 import { RelationshipSaga } from '../../services/relationship/relationship-saga';
+import { ModelState } from './model-state';
 
 export class ModelStore extends React.Component<Props> {
-  public store: ReduxStore<ModelState>;
+  store: ReduxStore<ModelState>;
 
   private reducers = {
     editor: EditorReducer,

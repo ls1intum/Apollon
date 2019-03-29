@@ -1,10 +1,10 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Provider as ContextProvider, Context } from './context';
+import { Context, Provider as ContextProvider } from './context';
 import { Draggable } from './draggable';
 import { DropEvent } from './drop-event';
-import { Ghost } from './ghost';
 import { Droppable } from './droppable';
+import { Ghost } from './ghost';
 
 export class DragLayer extends React.Component<Props, State> {
   state: State = {
@@ -26,7 +26,7 @@ export class DragLayer extends React.Component<Props, State> {
   }
 
   onMouseDown = (element: Draggable) => (event: MouseEvent) => {
-    if (event.button != 0) return;
+    if (event.button !== 0) return;
 
     const node = event.currentTarget as HTMLElement;
     const bounds = node.getBoundingClientRect();
@@ -87,7 +87,7 @@ export class DragLayer extends React.Component<Props, State> {
       onMouseDown: this.onMouseDown,
       onMouseUp: this.onMouseUp,
     };
-    let { x, y } = this.state.position;
+    const { x, y } = this.state.position;
     return (
       <ContextProvider value={context}>
         {this.props.children}
@@ -97,12 +97,12 @@ export class DragLayer extends React.Component<Props, State> {
   }
 }
 
-interface Props {}
+type Props = {};
 
-interface State {
+type State = {
   focused: boolean;
   dragging: boolean;
   element: Draggable | null;
   offset: { x: number; y: number };
   position: { x: number; y: number };
-}
+};

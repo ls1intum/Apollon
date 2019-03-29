@@ -1,5 +1,5 @@
 import { Reducer } from 'redux';
-import { ElementState, ElementActionTypes, ElementActions } from './element-types';
+import { ElementActions, ElementActionTypes, ElementState } from './element-types';
 
 const initialState: ElementState = {};
 

@@ -1,4 +1,4 @@
-import React, { SFC, createContext, ComponentType } from 'react';
+import React, { ComponentType, createContext, SFC } from 'react';
 import { Element } from '../../services/element/element';
 
 export interface PopupContext {

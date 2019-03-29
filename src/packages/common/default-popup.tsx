@@ -1,17 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Section } from '../../components/popup/controls/section';
+import { TextField } from '../../components/popup/controls/textfield';
 import { ModelState } from '../../components/store/model-state';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
-import { TextField } from '../../components/popup/controls/textfield';
-import { Section } from '../../components/popup/controls/section';
 
 class DefaultPopupComponent extends Component<Props> {
-  private onUpdate = (value: string) => {
-    const { element, rename } = this.props;
-    rename(element.id, value);
-  };
-
   render() {
     const { element } = this.props;
 
@@ -23,17 +18,21 @@ class DefaultPopupComponent extends Component<Props> {
       </div>
     );
   }
+  private onUpdate = (value: string) => {
+    const { element, rename } = this.props;
+    rename(element.id, value);
+  };
 }
 
-interface OwnProps {
+type OwnProps = {
   element: Element;
-}
+};
 
-interface StateProps {}
+type StateProps = {};
 
-interface DispatchProps {
+type DispatchProps = {
   rename: typeof ElementRepository.rename;
-}
+};
 
 type Props = OwnProps & StateProps & DispatchProps;
 
@@ -41,7 +40,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   null,
   {
     rename: ElementRepository.rename,
-  }
+  },
 );
 
 export const DefaultPopup = enhance(DefaultPopupComponent);

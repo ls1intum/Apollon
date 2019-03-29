@@ -1,5 +1,5 @@
 import { Reducer } from 'redux';
-import { AssessmentState, AssessmentActions, AssessmentActionTypes } from './assessment-types';
+import { AssessmentActions, AssessmentActionTypes, AssessmentState } from './assessment-types';
 
 const initialState: AssessmentState = {};
 

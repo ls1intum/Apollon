@@ -1,13 +1,13 @@
 import React, { Component, ComponentClass } from 'react';
-import { compose } from 'redux';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
-import { ElementComponent, OwnProps } from './element-component';
-import { Droppable as DragDroppable } from '../draggable/droppable';
-import { DropEvent } from '../draggable/drop-event';
-import { withCanvas, CanvasContext } from '../canvas/canvas-context';
+import { compose } from 'redux';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
+import { CanvasContext, withCanvas } from '../canvas/canvas-context';
+import { DropEvent } from '../draggable/drop-event';
+import { Droppable as DragDroppable } from '../draggable/droppable';
+import { ModelState } from '../store/model-state';
+import { ElementComponent, OwnProps } from './element-component';
 
 export const droppable = (WrappedComponent: typeof ElementComponent) => {
   class Droppable extends Component<Props> {

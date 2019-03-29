@@ -1,17 +1,17 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import { Element } from '../../services/element/element';
-import { Container } from '../../services/container/container';
-import { CanvasConsumer } from '../canvas/canvas-context';
 import { Components } from '../../packages/components';
+import { Container } from '../../services/container/container';
+import { Element } from '../../services/element/element';
+import { CanvasConsumer } from '../canvas/canvas-context';
 
-interface SvgProps {
+type SvgProps = {
   disabled: boolean;
   hidden: boolean;
   moving: boolean;
   isRoot: boolean;
   highlight: boolean;
-}
+};
 
 const Svg = styled.svg.attrs({
   pointerEvents: 'fill',
@@ -47,7 +47,7 @@ export class ElementComponent extends Component<Props> {
 
   render() {
     const { element, interactable } = this.props;
-    const Component = Components[element.type];
+    const ChildComponent = Components[element.type];
 
     const strokeWidth = 5;
     const disabled = this.props.disabled || this.props.moving;
@@ -72,12 +72,13 @@ export class ElementComponent extends Component<Props> {
               hidden={this.props.hidden}
               highlight={interactable && element.interactive}
             >
-              <Component element={element}>
-                {element instanceof Container && Child &&
+              <ChildComponent element={element}>
+                {element instanceof Container &&
+                  Child &&
                   element.ownedElements.map((child: string) => {
                     return <Child key={child} element={child} disabled={disabled} />;
                   })}
-              </Component>
+              </ChildComponent>
               {this.props.children}
               {!interactable && (element.hovered || element.selected) && (
                 <rect
@@ -100,7 +101,7 @@ export class ElementComponent extends Component<Props> {
   }
 }
 
-export interface OwnProps {
+export type OwnProps = {
   element: Element;
   interactive: boolean;
   hidden: boolean;
@@ -108,6 +109,6 @@ export interface OwnProps {
   interactable: boolean;
   disabled: boolean;
   childComponent: React.ComponentClass<any> | null;
-}
+};
 
 type Props = OwnProps;

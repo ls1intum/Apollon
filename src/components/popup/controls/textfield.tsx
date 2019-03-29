@@ -6,10 +6,27 @@ class TextFieldComponent extends Component<Props, State> {
     value: this.props.value,
   };
 
+  render() {
+    const { value, onUpdate, onCreate, ...props } = this.props;
+    return (
+      <input
+        {...props}
+        type="text"
+        autoComplete="off"
+        value={this.state.value}
+        onChange={this.onChange}
+        onKeyUp={this.onKeyUp}
+        onBlur={this.onBlur}
+      />
+    );
+  }
+
   private onChange = ({ currentTarget }: React.FormEvent<HTMLInputElement>) => {
     const { value } = currentTarget;
     this.setState({ value });
-    this.props.onUpdate && this.props.onUpdate(value);
+    if (this.props.onUpdate) {
+      this.props.onUpdate(value);
+    }
   };
 
   private onKeyUp = ({ key, currentTarget }: React.KeyboardEvent<HTMLInputElement>) => {
@@ -26,24 +43,11 @@ class TextFieldComponent extends Component<Props, State> {
   private onBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const { value } = event.currentTarget;
     if (!value) return;
-    this.props.onCreate && this.props.onCreate(value);
+    if (this.props.onCreate) {
+      this.props.onCreate(value);
+    }
     this.setState({ value: this.props.value });
   };
-
-  render() {
-    const { value, onUpdate, onCreate, ...props } = this.props;
-    return (
-      <input
-        {...props}
-        type="text"
-        autoComplete="off"
-        value={this.state.value}
-        onChange={this.onChange}
-        onKeyUp={this.onKeyUp}
-        onBlur={this.onBlur}
-      />
-    );
-  }
 }
 
 interface Props extends React.HTMLProps<HTMLInputElement> {
