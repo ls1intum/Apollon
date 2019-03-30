@@ -1,7 +1,6 @@
 import { Reducer } from 'redux';
-import { ElementRepository } from '../element/element-repository';
 import { ElementState } from '../element/element-types';
-import { Container } from './container';
+import { IContainer } from './container';
 import { ContainerActions, ContainerActionTypes } from './container-types';
 
 const initialState: ElementState = {};
@@ -10,8 +9,7 @@ export const ContainerReducer: Reducer<ElementState, ContainerActions> = (state 
   switch (action.type) {
     case ContainerActionTypes.APPEND_CHILD: {
       const { payload } = action;
-      const container = ElementRepository.getById(state)(payload.owner);
-      if (!(container instanceof Container)) return state;
+      const container = state[payload.owner] as IContainer;
       return {
         ...state,
         [payload.owner]: {
@@ -23,15 +21,14 @@ export const ContainerReducer: Reducer<ElementState, ContainerActions> = (state 
     }
     case ContainerActionTypes.REMOVE_CHILD: {
       const { payload } = action;
-      const container = ElementRepository.getById(state)(payload.owner);
-      if (!(container instanceof Container)) return state;
+      const container = state[payload.owner] as IContainer;
       return {
         ...state,
         [payload.owner]: {
           ...container,
           ownedElements: container.ownedElements.filter(id => id !== payload.id),
         },
-        [payload.id]: { ...state[payload.id], owner: null },
+        ...(state[payload.id] && { [payload.id]: { ...state[payload.id], owner: null } }),
       };
     }
   }

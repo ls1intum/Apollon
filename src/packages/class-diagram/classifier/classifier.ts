@@ -49,45 +49,33 @@ export abstract class Classifier extends Container {
     super(values);
   }
 
-  render(elements: Element[]): Element[] {
-    const [parent, ...children] = super.render(elements);
-    const attributes = children.filter(c => c instanceof ClassAttribute);
-    let methods = children.filter(c => c instanceof ClassMethod);
+  render(children: Element[]): Element[] {
+    const attributes = children.filter(child => child instanceof ClassAttribute);
+    let methods = children.filter(child => child instanceof ClassMethod);
 
     let y = this.headerHeight;
-    for (const child of attributes) {
-      child.bounds.y = y;
-      child.bounds.width = this.bounds.width;
-      y += child.bounds.height;
+    for (const attribute of attributes) {
+      attribute.bounds.y = y;
+      attribute.bounds.width = this.bounds.width;
+      y += attribute.bounds.height;
     }
     if (!this.isEnumeration) {
       this.deviderPosition = y;
-      for (const child of methods) {
-        child.bounds.y = y;
-        child.bounds.width = this.bounds.width;
-        y += child.bounds.height;
+      for (const method of methods) {
+        method.bounds.y = y;
+        method.bounds.width = this.bounds.width;
+        y += method.bounds.height;
       }
     } else {
       this.deviderPosition = 0;
       methods = [];
     }
-    this.ownedElements = [...attributes.map(e => e.id), ...methods.map(e => e.id)];
 
-    parent.bounds.height = y;
-    return [parent, ...attributes, ...methods];
+    this.bounds.height = y;
+    return [this, ...attributes, ...methods];
   }
 
-  addElement(newElement: Element, currentElements: Element[]): Element[] {
-    const [parent, ...children] = super.addElement(newElement, currentElements);
-    return this.render(children);
-  }
-
-  removeElement(removedElement: string, currentElements: Element[]): Element[] {
-    const [parent, ...children] = super.removeElement(removedElement, currentElements);
-    return this.render(children);
-  }
-
-  resizeElement(children: Element[]): Element[] {
+  resize(children: Element[]): Element[] {
     const minWidth = children.reduce((width, child) => Math.max(width, ClassMember.calculateWidth(child.name)), 100);
     this.bounds.width = Math.max(this.bounds.width, minWidth);
     return [
@@ -104,8 +92,8 @@ export abstract class Classifier extends Container {
     return {
       element: {
         ...base,
-        attributes: children.filter(e => e instanceof ClassAttribute).map(e2 => e2.id),
-        methods: children.filter(e => e instanceof ClassMethod).map(e2 => e2.id),
+        attributes: children.filter(child => child instanceof ClassAttribute).map(child => child.id),
+        methods: children.filter(child => child instanceof ClassMethod).map(child => child.id),
       },
       children,
     };

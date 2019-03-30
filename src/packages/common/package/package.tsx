@@ -35,17 +35,7 @@ export class Package extends Container {
     return [resizedParent, ...relativeChildren];
   }
 
-  addElement(newElement: Element, currentElements: Element[]): Element[] {
-    const [_, ...children] = super.addElement(newElement, currentElements);
-    return this.render(children);
-  }
-
-  removeElement(removedElement: string, currentElements: Element[]): Element[] {
-    const [_, ...children] = super.removeElement(removedElement, currentElements);
-    return this.render(children);
-  }
-
-  resizeElement(children: Element[]): Element[] {
+  resize(children: Element[]): Element[] {
     const bounds = computeBoundingBoxForElements(children);
     this.bounds.width = Math.max(this.bounds.width, bounds.x + bounds.width, 100);
     this.bounds.height = Math.max(this.bounds.height, bounds.y + bounds.height, 100);

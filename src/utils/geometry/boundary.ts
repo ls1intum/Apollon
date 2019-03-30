@@ -12,10 +12,6 @@ export interface Boundary {
   height: number;
 }
 
-export class Boundary {
-  constructor(public x: number, public y: number, public width: number, public height: number) {}
-}
-
 export function computeBoundingBox(points: Point[]): Boundary {
   if (points.length === 0) {
     return { x: 0, y: 0, width: 0, height: 0 };
@@ -65,7 +61,7 @@ export async function computeBoundingBoxForRelationship(relationship: Relationsh
   const element = createElement(Component, { element: relationship });
   return new Promise((resolve, reject) => {
     render(element, svg, () => {
-      let bounds: Boundary = new Boundary(0, 0, 0, 0);
+      let bounds: Boundary = { x: 0, y: 0, width: 0, height: 0 };
       if (svg.firstElementChild) {
         const parent = svg.getBoundingClientRect() as DOMRect;
         const child = svg.firstElementChild.getBoundingClientRect() as DOMRect;

@@ -4,7 +4,7 @@ import { ElementType } from '../../packages/element-type';
 import { Elements } from '../../packages/elements';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
-import { Element, IElement } from './element';
+import { Element } from './element';
 import {
   ChangeAction,
   CreateAction,
@@ -75,6 +75,10 @@ export class ElementRepository {
     if (!ElementClass) return null;
 
     return new ElementClass(element);
+  };
+
+  static getByIds = (state: ElementState) => (ids: string[]): Element[] => {
+    return ids.map(ElementRepository.getById(state)).filter(notEmpty);
   };
 
   static read = (state: ModelState): Element[] => {
