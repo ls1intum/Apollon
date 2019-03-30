@@ -1,7 +1,8 @@
 import { all, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
+import { Relationships } from '../../packages/relationships';
 import { Connection } from '../../services/relationship/connection';
-import { Boundary } from '../../utils/geometry/boundary';
+import { Boundary, computeBoundingBoxForRelationship } from '../../utils/geometry/boundary';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
 import { IElement } from '../element/element';
@@ -86,7 +87,7 @@ function* recalc(id: string) {
   let path = Connection.computePath(
     { bounds: source, direction: relationship.source.direction },
     { bounds: target, direction: relationship.target.direction },
-    { isStraight: straight }
+    { isStraight: straight },
   );
 
   const x = Math.min(...path.map(point => point.x));
@@ -97,9 +98,19 @@ function* recalc(id: string) {
 
   path = path.map(point => new Point(point.x - x, point.y - y));
 
+  const RelationshipClass = Relationships[relationship.type];
+  const copy: Relationship = new RelationshipClass({ ...relationship, bounds, path });
+  let computedBounds: Boundary = yield computeBoundingBoxForRelationship(copy);
+  const computedPath = copy.path.map(point => ({ x: point.x - computedBounds.x, y: point.y - computedBounds.y }));
+  computedBounds = { ...computedBounds, x: bounds.x + computedBounds.x, y: bounds.y + computedBounds.y };
+
   yield put<RedrawAction>({
     type: RelationshipActionTypes.REDRAW,
-    payload: { id: relationship.id, path, bounds },
+    payload: {
+      id: relationship.id,
+      path: computedPath,
+      bounds: computedBounds,
+    },
   });
 }
 
