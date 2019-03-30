@@ -44,4 +44,11 @@ export class Package extends Container {
     const [_, ...children] = super.removeElement(removedElement, currentElements);
     return this.render(children);
   }
+
+  resizeElement(children: Element[]): Element[] {
+    const bounds = computeBoundingBoxForElements(children);
+    this.bounds.width = Math.max(this.bounds.width, bounds.x + bounds.width, 100);
+    this.bounds.height = Math.max(this.bounds.height, bounds.y + bounds.height, 100);
+    return [this, ...children];
+  }
 }
