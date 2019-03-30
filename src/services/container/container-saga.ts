@@ -13,9 +13,11 @@ export function* ContainerSaga() {
   yield takeLatest(ElementActionTypes.RESIZE, handleElementResize);
   yield takeLatest(ElementActionTypes.CHANGE, handleElementChange);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
+  yield takeLatest(ContainerActionTypes.APPEND_CHILD, handleChildFit);
+  yield takeLatest(ContainerActionTypes.REMOVE_CHILD, handleChildFit);
 }
 
-function* handleOwnerChange({ payload }: ChangeOwnerAction) {
+function* handleOwnerChange({ type, payload }: ChangeOwnerAction) {
   if (!payload.id || payload.id === payload.owner) return;
 
   const { elements }: ModelState = yield select();
@@ -23,7 +25,12 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   if (selection.length > 1) return;
 
   const element = ElementRepository.getById(elements)(payload.id);
-  if (!element || payload.owner === element.owner) return;
+  if (!element) return;
+
+  if (payload.owner === element.owner) {
+    yield handleChildFit({ type, payload });
+    return;
+  }
 
   const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
 
@@ -31,11 +38,6 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   if (owner && !(owner.constructor as typeof Container).features.droppable) return;
 
   if (current) {
-    yield put<RemoveChildAction>({
-      type: ContainerActionTypes.REMOVE_CHILD,
-      payload: { id: element.id, owner: current.id },
-    });
-
     let ownerID: string | null = current.id;
     const position = { x: 0, y: 0 };
     while (ownerID) {
@@ -47,13 +49,13 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
     }
 
     yield put<MoveAction>(ElementRepository.move(element.id, position));
+    yield put<RemoveChildAction>({
+      type: ContainerActionTypes.REMOVE_CHILD,
+      payload: { id: element.id, owner: current.id },
+    });
   }
 
   if (owner) {
-    yield put<AppendChildAction>({
-      type: ContainerActionTypes.APPEND_CHILD,
-      payload: { id: element.id, owner: owner.id },
-    });
     let ownerID: string | null = owner.id;
     const position = { x: 0, y: 0 };
     while (ownerID) {
@@ -65,6 +67,10 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
     }
 
     yield put<MoveAction>(ElementRepository.move(element.id, position));
+    yield put<AppendChildAction>({
+      type: ContainerActionTypes.APPEND_CHILD,
+      payload: { id: element.id, owner: owner.id },
+    });
   }
 }
 
@@ -135,4 +141,20 @@ function* handleElementResize({ payload }: ResizeAction) {
     const updates = element.resizeElement(children);
     yield all(updates.map(e => put(ElementRepository.update(e.id, e))));
   }
+}
+
+function* handleChildFit({ payload }: AppendChildAction | RemoveChildAction | ChangeOwnerAction) {
+  if (!payload.id) return;
+
+  const { elements }: ModelState = yield select();
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (!element || !element.owner) return;
+
+  const owner = ElementRepository.getById(elements)(element.owner);
+  if (!owner || !(owner instanceof Container)) return;
+
+  const children = owner.ownedElements.map(id => ElementRepository.getById(elements)(id)).filter(notEmpty);
+
+  const updates = owner.render(children);
+  yield all(updates.map(e => put(ElementRepository.update(e.id, e))));
 }

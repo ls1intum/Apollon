@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { Components } from '../../packages/components';
+import { Element } from '../../services/element/element';
 import { Relationship } from '../../services/relationship/relationship';
 import { Point } from './point';
 
@@ -42,6 +43,18 @@ export function computeBoundingBox(points: Point[]): Boundary {
     width: maxX - minX,
     height: maxY - minY,
   };
+}
+
+export function computeBoundingBoxForElements(elements: Element[]): Boundary {
+  if (!elements.length) {
+    return { x: 0, y: 0, width: 0, height: 0 };
+  }
+  const boundaries: Boundary[] = elements.map<Boundary>(element => ({ ...element.bounds }));
+  const x = Math.min(...boundaries.map(bounds => bounds.x));
+  const y = Math.min(...boundaries.map(bounds => bounds.y));
+  const width = Math.max(...boundaries.map(bounds => bounds.x + bounds.width)) - x;
+  const height = Math.max(...boundaries.map(bounds => bounds.y + bounds.height)) - y;
+  return { x, y, width, height };
 }
 
 export async function computeBoundingBoxForRelationship(relationship: Relationship): Promise<Boundary> {
