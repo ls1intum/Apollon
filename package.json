@@ -25,10 +25,9 @@
     "publish:major": "yarn build && npm version major && npm publish"
   },
   "dependencies": {
-    "react": "16.8.5",
-    "react-dom": "16.8.5",
+    "react": "16.8.6",
+    "react-dom": "16.8.6",
     "react-redux": "6.0.1",
-    "reduce-reducers": "1.0.1",
     "redux": "4.0.1",
     "redux-saga": "1.0.2",
     "reselect": "4.0.0",
@@ -37,15 +36,19 @@
     "uuid": "3.3.2"
   },
   "devDependencies": {
-    "@types/react": "16.8.8",
+    "@types/react": "16.8.10",
     "@types/react-dom": "16.8.3",
     "@types/react-redux": "7.0.5",
     "@types/reduce-reducers": "0.3.0",
     "@types/styled-components": "4.1.12",
     "@types/uuid": "3.4.4",
+    "circular-dependency-plugin": "5.0.2",
     "ts-essentials": "2.0.3",
     "ts-loader": "5.3.3",
     "tslint": "5.14.0",
+    "tslint-config-prettier": "1.18.0",
+    "tslint-loader": "3.5.4",
+    "tslint-react": "4.0.0",
     "typescript": "3.3.4000",
     "webpack": "4.29.6",
     "webpack-cli": "3.3.0",

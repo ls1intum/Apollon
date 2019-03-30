@@ -1,4 +1,4 @@
-import { ReactNode, HTMLAttributes } from 'react';
+import { HTMLAttributes, ReactNode } from 'react';
 import styled from 'styled-components';
 
 export type Props = { value: any; children: ReactNode } & HTMLAttributes<

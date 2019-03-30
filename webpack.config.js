@@ -1,4 +1,5 @@
 const path = require('path');
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 module.exports = {
   mode: 'development',
@@ -16,6 +17,11 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?/,
+        enforce: 'pre',
+        loader: 'tslint-loader',
+      },
+      {
+        test: /\.tsx?/,
         exclude: /\/node_modules\//,
         use: [
           {
@@ -26,6 +32,7 @@ module.exports = {
       },
     ],
   },
+  plugins: [new CircularDependencyPlugin({ exclude: /node_modules/ })],
   devServer: {
     contentBase: path.join(__dirname, 'example'),
     host: '0.0.0.0',
