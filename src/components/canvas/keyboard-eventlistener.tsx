@@ -2,12 +2,12 @@ import { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { ElementRepository } from '../../services/element/element-repository';
+import { ApollonMode } from '../../typings';
 import { PopupLayer } from '../popup/popup-layer';
 import { ModelState } from '../store/model-state';
 import { CanvasContext, withCanvas } from './canvas-context';
 
 class KeyboardEventListenerComponent extends Component<Props> {
-
   componentDidMount() {
     this.props.canvas.addEventListener('keydown', this.eventListener);
   }
@@ -20,7 +20,7 @@ class KeyboardEventListenerComponent extends Component<Props> {
     return null;
   }
   private eventListener = (event: KeyboardEvent) => {
-    if (this.props.readonly) return;
+    if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return;
 
     if (this.props.popup.current && this.props.popup.current.state.element) return;
 
@@ -56,6 +56,7 @@ interface OwnProps {
 
 interface StateProps {
   readonly: boolean;
+  mode: ApollonMode;
 }
 
 interface DispatchProps {
@@ -68,12 +69,12 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ readonly: state.editor.readonly }),
+    state => ({ readonly: state.editor.readonly, mode: state.editor.mode }),
     {
       move: ElementRepository.move,
       delete: ElementRepository.delete,
-    }
-  )
+    },
+  ),
 );
 
 export const KeyboardEventListener = enhance(KeyboardEventListenerComponent);
