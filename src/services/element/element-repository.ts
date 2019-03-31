@@ -87,14 +87,9 @@ export class ElementRepository {
     return ids.map(ElementRepository.getById(state)).filter(notEmpty);
   };
 
-  static read = (state: ModelState): Element[] => {
-    const elements = Object.keys(state.elements).reduce<ElementState>((r, e) => {
-      if (state.elements[e].type in ElementType) return { ...r, [e]: state.elements[e] };
-      return r;
-    }, {});
-
-    return Object.values(elements)
-      .map<Element | null>(element => ElementRepository.getById(state.elements)(element.id))
+  static read = (state: ElementState): Element[] => {
+    return Object.keys(state)
+      .map(ElementRepository.getById(state))
       .filter(notEmpty);
   };
 

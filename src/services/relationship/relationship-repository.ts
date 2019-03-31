@@ -1,4 +1,3 @@
-import { ModelState } from '../../components/store/model-state';
 import { RelationshipType } from '../../packages/relationship-type';
 import { Relationships } from '../../packages/relationships';
 import { notEmpty } from '../../utils/not-empty';
@@ -26,6 +25,10 @@ export class RelationshipRepository {
     if (!RelationshipClass) return null;
 
     return new RelationshipClass(relationship);
+  };
+
+  static getByIds = (state: ElementState) => (ids: string[]): Relationship[] => {
+    return ids.map(RelationshipRepository.getById(state)).filter(notEmpty);
   };
 
   static read = (state: ElementState): Relationship[] => {
