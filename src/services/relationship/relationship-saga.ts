@@ -14,7 +14,7 @@ import { ConnectAction, CreateAction, RedrawAction, RelationshipActionTypes } fr
 export function* RelationshipSaga() {
   yield takeEvery(RelationshipActionTypes.CREATE, handleRelationshipCreation);
   yield takeEvery(RelationshipActionTypes.CONNECT, handleRelationshipConnect);
-  yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
+  yield takeEvery(ElementActionTypes.MOVE, handleElementMove);
   yield takeEvery(ElementActionTypes.RESIZE, handleElementResize);
   yield takeLatest(ElementActionTypes.UPDATE, handleElementUpdate);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
