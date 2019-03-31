@@ -14,8 +14,10 @@ const subdivisions = 5;
 export const Grid = styled.div<Props>`
   position: relative;
   z-index: 1;
-  width: ${({ width }: Props) => width + 1}px;
-  height: ${({ height }: Props) => height + 1}px;
+  width: 100%;
+  height: 100%;
+  min-width: ${({ width }: Props) => width + 1}px;
+  min-height: ${({ height }: Props) => height + 1}px;
 
   ${({ show = true, grid }) =>
     show &&

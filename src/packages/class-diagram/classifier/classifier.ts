@@ -55,6 +55,7 @@ export abstract class Classifier extends Container {
 
     let y = this.headerHeight;
     for (const attribute of attributes) {
+      attribute.bounds.x = 0;
       attribute.bounds.y = y;
       attribute.bounds.width = this.bounds.width;
       y += attribute.bounds.height;
@@ -62,6 +63,7 @@ export abstract class Classifier extends Container {
     if (!this.isEnumeration) {
       this.deviderPosition = y;
       for (const method of methods) {
+        method.bounds.x = 0;
         method.bounds.y = y;
         method.bounds.width = this.bounds.width;
         y += method.bounds.height;

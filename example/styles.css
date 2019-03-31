@@ -5,10 +5,11 @@
   margin: 20px;
 }
 main {
-  width: calc(100% - 200px);
+  flex: 1 0 auto;
+  width: 800px;
 }
 aside.sidebar {
-  width: 200px;
+  flex: 0 0 10em;
   margin-left: 1em;
 }
 aside.sidebar section {

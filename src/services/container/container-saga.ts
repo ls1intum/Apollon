@@ -11,6 +11,7 @@ import {
   ResizeAction,
   UpdateAction,
 } from '../element/element-types';
+import { RelationshipRepository } from '../relationship/relationship-repository';
 import { Container } from './container';
 import { AppendChildAction, ChangeOwnerAction, ContainerActionTypes, RemoveChildAction } from './container-types';
 
@@ -102,7 +103,12 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 
   const { elements }: ModelState = yield select();
   const selection = Object.values(elements).filter(e => e.selected);
-  if (selection.length > 1) return;
+  if (selection.length > 1) {
+    if (payload.owner) {
+      yield renderContainer(payload.owner);
+    }
+    return;
+  }
 
   const element = ElementRepository.getById(elements)(payload.id);
   if (!element) return;
@@ -113,6 +119,10 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   }
 
   const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
+
+  if (!owner && payload.owner && RelationshipRepository.getById(elements)(payload.owner)) {
+    return;
+  }
 
   const current = element.owner && ElementRepository.getById(elements)(element.owner);
   if (owner && !(owner.constructor as typeof Container).features.droppable) return;

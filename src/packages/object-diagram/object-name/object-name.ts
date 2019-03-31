@@ -26,6 +26,7 @@ export class ObjectName extends Container {
 
     let y = this.headerHeight;
     for (const child of children) {
+      child.bounds.x = 0;
       child.bounds.y = y;
       child.bounds.width = this.bounds.width;
       y += child.bounds.height;

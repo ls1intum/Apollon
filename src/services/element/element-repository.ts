@@ -17,6 +17,7 @@ import {
   MoveAction,
   RenameAction,
   ResizeAction,
+  ResizedAction,
   SelectAction,
   UpdateAction,
 } from './element-types';
@@ -47,9 +48,14 @@ export class ElementRepository {
     payload: { id },
   });
 
-  static resize: ActionCreator<ResizeAction> = (id: string, delta: { width: number; height: number }) => ({
+  static resize = (id: string, delta: { width: number; height: number }): ResizeAction => ({
     type: ElementActionTypes.RESIZE,
     payload: { id, delta },
+  });
+
+  static resized = (id: string): ResizedAction => ({
+    type: ElementActionTypes.RESIZED,
+    payload: { id },
   });
 
   static move = (id: string | null, delta: { x: number; y: number }): MoveAction => ({

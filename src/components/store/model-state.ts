@@ -5,16 +5,14 @@ import { AssessmentState } from '../../services/assessment/assessment-types';
 import { Container } from '../../services/container/container';
 import { Diagram } from '../../services/diagram/diagram';
 import { DiagramState } from '../../services/diagram/diagram-types';
-import { ApollonView } from '../../services/editor/editor-types';
-import { EditorState } from '../../services/editor/editor-types';
+import { ApollonView, EditorState } from '../../services/editor/editor-types';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
 import { ElementState } from '../../services/element/element-types';
 import { Relationship } from '../../services/relationship/relationship';
 import { RelationshipRepository } from '../../services/relationship/relationship-repository';
 import { ApollonMode, Selection, UMLElement, UMLModel, UMLRelationship } from '../../typings';
-import { computeBoundingBox } from '../../utils/geometry/boundary';
-import { Point } from '../../utils/geometry/point';
+import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
 export interface ModelState {
   editor: EditorState;
@@ -63,6 +61,28 @@ export class ModelState {
       })
       .reduce((r, o) => ({ ...r, [o.id]: o }), {});
 
+    const rootElements = Object.values(elements).filter(element => !element.owner);
+    const bounds = computeBoundingBoxForElements(rootElements);
+    for (const id in elements) {
+      if (elements[id].owner) continue;
+      elements[id].bounds.x -= bounds.width / 2;
+      elements[id].bounds.y -= bounds.height / 2;
+    }
+    for (const id in relationships) {
+      if (relationships[id].owner) continue;
+      relationships[id].bounds.x -= bounds.width / 2;
+      relationships[id].bounds.y -= bounds.height / 2;
+    }
+
+    let width = 0;
+    let height = 0;
+    for (const element of rootElements) {
+      width = Math.max(Math.abs(element.bounds.x), Math.abs(element.bounds.x + element.bounds.width), width);
+      height = Math.max(Math.abs(element.bounds.y), Math.abs(element.bounds.y + element.bounds.height), height);
+    }
+
+    const computedBounds = { x: -width, y: -height, width: width * 2, height: height * 2 };
+
     return {
       editor: {
         readonly: false,
@@ -72,7 +92,10 @@ export class ModelState {
       diagram: {
         ...(() => {
           const d = new Diagram();
-          d.type2 = copy.type;
+          Object.assign(d, {
+            type2: copy.type,
+            bounds: computedBounds,
+          });
           return d;
         })(),
         ownedElements: Object.values(elements)
@@ -107,20 +130,21 @@ export class ModelState {
       relationships: relationships.filter(element => element.interactive).map<string>(element => element.id),
     };
 
-    const points: Point[] = [...e.map(e2 => e2.bounds), ...r.map(r2 => r2.bounds)].reduce<Point[]>(
-      (a, bounds) => [
-        ...a,
-        new Point(bounds.x, bounds.y),
-        new Point(bounds.x + bounds.width, bounds.y),
-        new Point(bounds.x, bounds.y + bounds.height),
-        new Point(bounds.x + bounds.width, bounds.y + bounds.height),
-      ],
-      [],
-    );
-    const boundingBox = computeBoundingBox(points);
+    const rootElements = elements.filter(element => !element.owner);
+    const bounds = computeBoundingBoxForElements(rootElements);
+    for (const element of e) {
+      if (element.owner) continue;
+      element.bounds.x -= bounds.x;
+      element.bounds.y -= bounds.y;
+    }
+    for (const relationship of r) {
+      relationship.bounds.x -= bounds.x;
+      relationship.bounds.y -= bounds.y;
+    }
+
     const size = {
-      width: boundingBox.width - boundingBox.x,
-      height: boundingBox.height - boundingBox.y,
+      width: bounds.width,
+      height: bounds.height,
     };
 
     return {
