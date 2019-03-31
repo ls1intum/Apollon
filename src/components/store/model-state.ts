@@ -97,7 +97,7 @@ export class ModelState {
 
     const e = elements.filter(element => !element.owner).reduce<UMLElement[]>((r2, e2) => [...r2, ...parseElement(e2)], []);
 
-    const relationships = RelationshipRepository.read(copy);
+    const relationships = RelationshipRepository.read(copy.elements);
     const r = relationships.map<UMLRelationship>(relationship =>
       (relationship.constructor as typeof Relationship).toUMLRelationship(relationship),
     );

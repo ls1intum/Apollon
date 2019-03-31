@@ -61,11 +61,15 @@ class SidebarComponent extends Component<Props, State> {
             (() => {
               const c = new ClassAttribute();
               c.name = '+ attribute: Type';
+              c.bounds.x = element.bounds.x;
+              c.bounds.y = element.bounds.y;
               return c;
             })(),
             (() => {
               const c = new ClassMethod();
               c.name = '+ method()';
+              c.bounds.x = element.bounds.x;
+              c.bounds.y = element.bounds.y;
               return c;
             })(),
           ].forEach(member => {
@@ -78,16 +82,22 @@ class SidebarComponent extends Component<Props, State> {
             (() => {
               const c = new ClassAttribute();
               c.name = 'Case1';
+              c.bounds.x = element.bounds.x;
+              c.bounds.y = element.bounds.y;
               return c;
             })(),
             (() => {
               const c = new ClassAttribute();
               c.name = 'Case2';
+              c.bounds.x = element.bounds.x;
+              c.bounds.y = element.bounds.y;
               return c;
             })(),
             (() => {
               const c = new ClassAttribute();
               c.name = 'Case3';
+              c.bounds.x = element.bounds.x;
+              c.bounds.y = element.bounds.y;
               return c;
             })(),
           ].forEach(member => {
@@ -100,6 +110,8 @@ class SidebarComponent extends Component<Props, State> {
             (() => {
               const c = new ObjectAttribute();
               c.name = 'attribute = value';
+              c.bounds.x = element.bounds.x;
+              c.bounds.y = element.bounds.y;
               return c;
             })(),
           ].forEach(member => {

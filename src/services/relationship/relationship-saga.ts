@@ -1,27 +1,26 @@
 import { all, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
-import { Relationships } from '../../packages/relationships';
 import { Connection } from '../../services/relationship/connection';
 import { Boundary, computeBoundingBoxForRelationship } from '../../utils/geometry/boundary';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
-import { IElement } from '../element/element';
+import { Element } from '../element/element';
 import { ElementRepository } from '../element/element-repository';
-import { DeleteAction, ElementActionTypes, MoveAction } from '../element/element-types';
+import { DeleteAction, ElementActionTypes, MoveAction, ResizeAction, UpdateAction } from '../element/element-types';
 import { Relationship } from './relationship';
 import { RelationshipRepository } from './relationship-repository';
 import { ConnectAction, CreateAction, RedrawAction, RelationshipActionTypes } from './relationship-types';
 
 export function* RelationshipSaga() {
-  yield takeLatest(RelationshipActionTypes.CREATE, handleRelationshipCreation);
-  yield takeLatest(RelationshipActionTypes.CONNECT, handleRelationshipConnect);
-  yield takeEvery(ElementActionTypes.MOVE, handleElementMove);
-  yield takeLatest(ElementActionTypes.RESIZE, handleElementMove);
+  yield takeEvery(RelationshipActionTypes.CREATE, handleRelationshipCreation);
+  yield takeEvery(RelationshipActionTypes.CONNECT, handleRelationshipConnect);
+  yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
+  yield takeEvery(ElementActionTypes.RESIZE, handleElementResize);
+  yield takeLatest(ElementActionTypes.UPDATE, handleElementUpdate);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
 }
 
 function* handleRelationshipCreation({ payload }: CreateAction) {
-  if (!(payload.relationship instanceof Relationship)) return;
   yield recalc(payload.relationship.id);
 }
 
@@ -32,8 +31,11 @@ function* handleRelationshipConnect({ payload }: ConnectAction) {
 function* handleElementMove({ payload }: MoveAction) {
   if (!payload.id) return;
 
-  const state: ModelState = yield select();
-  const relationships = RelationshipRepository.read(state);
+  const { elements }: ModelState = yield select();
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (!element) return;
+
+  const relationships = RelationshipRepository.read(elements);
 
   loop: for (const relationship of relationships) {
     let source: string | null = relationship.source.element;
@@ -42,7 +44,7 @@ function* handleElementMove({ payload }: MoveAction) {
         yield recalc(relationship.id);
         continue loop;
       }
-      source = state.elements[source].owner;
+      source = elements[source].owner;
     }
     let target: string | null = relationship.target.element;
     while (target) {
@@ -50,8 +52,32 @@ function* handleElementMove({ payload }: MoveAction) {
         yield recalc(relationship.id);
         continue loop;
       }
-      target = state.elements[target].owner;
+      target = elements[target].owner;
     }
+  }
+}
+
+function* handleElementResize({ payload }: ResizeAction) {
+  const { elements }: ModelState = yield select();
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (!element || !(element.constructor as typeof Element).features.connectable) return;
+
+  const relationships = RelationshipRepository.read(elements);
+
+  for (const relationship of relationships) {
+    if (relationship.source.element === element.id) {
+      yield recalc(relationship.id);
+    } else if (relationship.target.element === element.id) {
+      yield recalc(relationship.id);
+    }
+  }
+}
+
+function* handleElementUpdate({ payload }: UpdateAction) {
+  const { elements }: ModelState = yield select();
+  const relationship = RelationshipRepository.getById(elements)(payload.id);
+  if (relationship instanceof Relationship) {
+    yield recalc(relationship.id);
   }
 }
 
@@ -60,33 +86,17 @@ function* recalc(id: string) {
   const relationship = RelationshipRepository.getById(elements)(id);
   if (!relationship) return;
 
-  let current: IElement = elements[relationship.source.element];
-  let source: Boundary = { ...current.bounds };
-  while (current.owner) {
-    current = elements[current.owner];
-    source = {
-      ...source,
-      x: source.x + current.bounds.x,
-      y: source.y + current.bounds.y,
-    };
-  }
+  const sourcePosition = ElementRepository.getAbsolutePosition(elements)(relationship.source.element);
+  const sourceBounds: Boundary = { ...elements[relationship.source.element].bounds, ...sourcePosition };
 
-  current = elements[relationship.target.element];
-  let target: Boundary = { ...current.bounds };
-  while (current.owner) {
-    current = elements[current.owner];
-    target = {
-      ...target,
-      x: target.x + current.bounds.x,
-      y: target.y + current.bounds.y,
-    };
-  }
+  const targetPosition = ElementRepository.getAbsolutePosition(elements)(relationship.target.element);
+  const targetBounds: Boundary = { ...elements[relationship.target.element].bounds, ...targetPosition };
 
   const { straight } = (relationship.constructor as typeof Relationship).features;
 
   let path = Connection.computePath(
-    { bounds: source, direction: relationship.source.direction },
-    { bounds: target, direction: relationship.target.direction },
+    { bounds: sourceBounds, direction: relationship.source.direction },
+    { bounds: targetBounds, direction: relationship.target.direction },
     { isStraight: straight },
   );
 
@@ -95,11 +105,10 @@ function* recalc(id: string) {
   const width = Math.max(Math.max(...path.map(point => point.x)) - x, 1);
   const height = Math.max(Math.max(...path.map(point => point.y)) - y, 1);
   const bounds = { x, y, width, height };
-
   path = path.map(point => new Point(point.x - x, point.y - y));
 
-  const RelationshipClass = Relationships[relationship.type];
-  const copy: Relationship = new RelationshipClass({ ...relationship, bounds, path });
+  const copy: Relationship = relationship.copy();
+  Object.assign(copy, { bounds: { ...bounds }, path: [...path] });
   let computedBounds: Boundary = yield computeBoundingBoxForRelationship(copy);
   const computedPath = copy.path.map(point => ({ x: point.x - computedBounds.x, y: point.y - computedBounds.y }));
   computedBounds = { ...computedBounds, x: bounds.x + computedBounds.x, y: bounds.y + computedBounds.y };

@@ -27,7 +27,7 @@ export abstract class Relationship extends Element implements IRelationship {
 
   abstract readonly type: RelationshipType;
 
-  path = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
+  path = [{ x: 0, y: 0 }, { x: 200, y: 100 }];
 
   source: Port = {
     element: '',
@@ -44,6 +44,14 @@ export abstract class Relationship extends Element implements IRelationship {
   constructor(values?: IRelationship | UMLRelationship);
   constructor(values?: IRelationship | UMLRelationship) {
     super();
-    Object.assign(this, values);
+    if (values) {
+      Object.assign(this, {
+        ...values,
+        path: [...values.path],
+        bounds: { ...values.bounds },
+        source: { ...values.source },
+        target: { ...values.target },
+      });
+    }
   }
 }

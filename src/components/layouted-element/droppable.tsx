@@ -20,15 +20,6 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
       element.bounds.x = position.x - offset.x;
       element.bounds.y = position.y - offset.y;
 
-      let ownerID: string | null = this.props.element.id;
-      while (ownerID) {
-        const owner = this.props.getById(ownerID);
-        if (!owner) break;
-        element.bounds.x -= owner.bounds.x;
-        element.bounds.y -= owner.bounds.y;
-        ownerID = owner.owner;
-      }
-
       this.props.create(element);
     };
 
@@ -41,21 +32,19 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
     }
   }
 
-  interface StateProps {
-    getById: (id: string) => Element | null;
-  }
+  type StateProps = {};
 
-  interface DispatchProps {
+  type DispatchProps = {
     create: typeof ElementRepository.create;
-  }
+  };
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
     connect<StateProps, DispatchProps, OwnProps, ModelState>(
-      state => ({ getById: ElementRepository.getById(state.elements) }),
-      { create: ElementRepository.create }
-    )
+      null,
+      { create: ElementRepository.create },
+    ),
   )(Droppable);
 };

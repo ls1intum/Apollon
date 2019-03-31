@@ -1,7 +1,6 @@
 import { ModelState } from '../../components/store/model-state';
 import { RelationshipType } from '../../packages/relationship-type';
 import { Relationships } from '../../packages/relationships';
-import { UMLRelationship } from '../../typings';
 import { notEmpty } from '../../utils/not-empty';
 import { ElementState } from '../element/element-types';
 import { Port } from '../element/port';
@@ -29,14 +28,14 @@ export class RelationshipRepository {
     return new RelationshipClass(relationship);
   };
 
-  static read = (state: ModelState): Relationship[] => {
-    const relationships = Object.keys(state.elements).reduce<ElementState>((r, e) => {
-      if (state.elements[e].type in RelationshipType) return { ...r, [e]: state.elements[e] };
+  static read = (state: ElementState): Relationship[] => {
+    const relationships = Object.keys(state).reduce<ElementState>((r, e) => {
+      if (state[e].type in RelationshipType) return { ...r, [e]: state[e] };
       return r;
     }, {});
 
     return Object.values(relationships)
-      .map<Relationship | null>(element => RelationshipRepository.getById(state.elements)(element.id))
+      .map<Relationship | null>(element => RelationshipRepository.getById(state)(element.id))
       .filter(notEmpty);
   };
 }

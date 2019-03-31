@@ -59,14 +59,45 @@ function* removeElementFromParent({ payload }: DeleteAction) {
 }
 
 function* appendChild({ payload }: AppendChildAction) {
+  const { elements }: ModelState = yield select();
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (!element) return;
+  const position = { x: element.bounds.x, y: element.bounds.y };
+  let owner = ElementRepository.getById(elements)(payload.owner);
+
+  while (owner) {
+    position.x -= owner.bounds.x;
+    position.y -= owner.bounds.y;
+    if (!owner.owner) break;
+    owner = ElementRepository.getById(elements)(owner.owner);
+  }
+
+  const delta = { x: position.x - element.bounds.x, y: position.y - element.bounds.y };
+  yield put<MoveAction>(ElementRepository.move(element.id, delta));
+
   yield renderContainer(payload.owner);
 }
 
 function* removeChild({ payload }: RemoveChildAction) {
+  const { elements }: ModelState = yield select();
+  const element = ElementRepository.getById(elements)(payload.id);
+  if (!element) return;
+  const position = { x: element.bounds.x, y: element.bounds.y };
+  let owner = ElementRepository.getById(elements)(payload.owner);
+  while (owner) {
+    position.x += owner.bounds.x;
+    position.y += owner.bounds.y;
+    if (!owner.owner) break;
+    owner = ElementRepository.getById(elements)(owner.owner);
+  }
+
+  const delta = { x: position.x - element.bounds.x, y: position.y - element.bounds.y };
+  yield put<MoveAction>(ElementRepository.move(element.id, delta));
+
   yield renderContainer(payload.owner);
 }
 
-function* handleOwnerChange({ type, payload }: ChangeOwnerAction) {
+function* handleOwnerChange({ payload }: ChangeOwnerAction) {
   if (!payload.id || payload.id === payload.owner) return;
 
   const { elements }: ModelState = yield select();
@@ -78,6 +109,7 @@ function* handleOwnerChange({ type, payload }: ChangeOwnerAction) {
 
   if (payload.owner && payload.owner === element.owner) {
     yield renderContainer(payload.owner);
+    return;
   }
 
   const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
@@ -86,17 +118,6 @@ function* handleOwnerChange({ type, payload }: ChangeOwnerAction) {
   if (owner && !(owner.constructor as typeof Container).features.droppable) return;
 
   if (current) {
-    let ownerID: string | null = current.id;
-    const position = { x: 0, y: 0 };
-    while (ownerID) {
-      const o = ElementRepository.getById(elements)(ownerID);
-      if (!o) break;
-      position.x += o.bounds.x;
-      position.y += o.bounds.y;
-      ownerID = o.owner;
-    }
-
-    yield put<MoveAction>(ElementRepository.move(element.id, position));
     yield put<RemoveChildAction>({
       type: ContainerActionTypes.REMOVE_CHILD,
       payload: { id: element.id, owner: current.id },
@@ -104,17 +125,6 @@ function* handleOwnerChange({ type, payload }: ChangeOwnerAction) {
   }
 
   if (owner) {
-    let ownerID: string | null = owner.id;
-    const position = { x: 0, y: 0 };
-    while (ownerID) {
-      const o = ElementRepository.getById(elements)(ownerID);
-      if (!o) break;
-      position.x -= o.bounds.x;
-      position.y -= o.bounds.y;
-      ownerID = o.owner;
-    }
-
-    yield put<MoveAction>(ElementRepository.move(element.id, position));
     yield put<AppendChildAction>({
       type: ContainerActionTypes.APPEND_CHILD,
       payload: { id: element.id, owner: owner.id },
