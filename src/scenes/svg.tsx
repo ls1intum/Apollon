@@ -64,11 +64,12 @@ const getInitialState = ({ state, options }: Props): State => {
   let elements = normalizeState(state);
 
   const bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.includes(element.id)));
-  if (options && options.margin) {
-    bounds.x -= options.margin;
-    bounds.y -= options.margin;
-    bounds.width += options.margin * 2;
-    bounds.height += options.margin * 2;
+  if (options) {
+    const margin = getMargin(options.margin);
+    bounds.x -= margin.left;
+    bounds.y -= margin.top;
+    bounds.width += margin.left + margin.right;
+    bounds.height += margin.top + margin.bottom;
   }
 
   elements = elements
@@ -79,6 +80,14 @@ const getInitialState = ({ state, options }: Props): State => {
       return element;
     });
   return { bounds, elements };
+};
+
+const getMargin = (margin: ExportOptions['margin']): { top: number; right: number; bottom: number; left: number } => {
+  if (typeof margin === 'number') {
+    return { top: margin, right: margin, bottom: margin, left: margin };
+  }
+  const result = { top: 0, right: 0, bottom: 0, left: 0 };
+  return Object.assign(result, margin);
 };
 
 const normalizeState = (state: ModelState): Element[] => {
