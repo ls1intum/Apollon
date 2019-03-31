@@ -107,6 +107,18 @@ function* recalc(id: string) {
   const bounds = { x, y, width, height };
   path = path.map(point => new Point(point.x - x, point.y - y));
 
+  if (bounds.width === 1 && bounds.height === 1) {
+    yield put<RedrawAction>({
+      type: RelationshipActionTypes.REDRAW,
+      payload: {
+        id: relationship.id,
+        path,
+        bounds,
+      },
+    });
+    return;
+  }
+
   const copy: Relationship = relationship.copy();
   Object.assign(copy, { bounds: { ...bounds }, path: [...path] });
   let computedBounds: Boundary = yield computeBoundingBoxForRelationship(copy);
