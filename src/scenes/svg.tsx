@@ -151,7 +151,15 @@ export class Svg extends Component<Props, State> {
         fill="white"
       >
         <defs>
-          <style>{`text { fill: black } * { overflow: visible; }`}</style>
+          <style>{`
+            text {
+              fill: black;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            }
+            * {
+              overflow: visible;
+            }
+          `}</style>
         </defs>
         {elements.map(element => {
           const ElementComponent = Components[element.type];
