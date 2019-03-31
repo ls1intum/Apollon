@@ -102,22 +102,10 @@ function* recalc(id: string) {
 
   const x = Math.min(...path.map(point => point.x));
   const y = Math.min(...path.map(point => point.y));
-  const width = Math.max(Math.max(...path.map(point => point.x)) - x, 1);
-  const height = Math.max(Math.max(...path.map(point => point.y)) - y, 1);
+  const width = Math.max(...path.map(point => point.x)) - x;
+  const height = Math.max(...path.map(point => point.y)) - y;
   const bounds = { x, y, width, height };
   path = path.map(point => new Point(point.x - x, point.y - y));
-
-  if (bounds.width === 1 && bounds.height === 1) {
-    yield put<RedrawAction>({
-      type: RelationshipActionTypes.REDRAW,
-      payload: {
-        id: relationship.id,
-        path,
-        bounds,
-      },
-    });
-    return;
-  }
 
   const copy: Relationship = relationship.copy();
   Object.assign(copy, { bounds: { ...bounds }, path: [...path] });

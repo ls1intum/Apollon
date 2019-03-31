@@ -68,8 +68,8 @@ export async function computeBoundingBoxForRelationship(relationship: Relationsh
         bounds = {
           x: child.x - parent.x,
           y: child.y - parent.y,
-          width: child.width,
-          height: child.height,
+          width: Math.max(child.width, 1),
+          height: Math.max(child.height, 1),
         };
       }
       unmountComponentAtNode(svg);
