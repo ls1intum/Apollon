@@ -82,7 +82,10 @@ function* appendChild({ payload }: AppendChildAction) {
 function* removeChild({ payload }: RemoveChildAction) {
   const { elements }: ModelState = yield select();
   const element = ElementRepository.getById(elements)(payload.id);
-  if (!element) return;
+  if (!element) {
+    yield renderContainer(payload.owner);
+    return;
+  }
   const position = { x: element.bounds.x, y: element.bounds.y };
   let owner = ElementRepository.getById(elements)(payload.owner);
   while (owner) {
@@ -94,8 +97,6 @@ function* removeChild({ payload }: RemoveChildAction) {
 
   const delta = { x: position.x - element.bounds.x, y: position.y - element.bounds.y };
   yield put<MoveAction>(ElementRepository.move(element.id, delta));
-
-  yield renderContainer(payload.owner);
 }
 
 function* handleOwnerChange({ payload }: ChangeOwnerAction) {
