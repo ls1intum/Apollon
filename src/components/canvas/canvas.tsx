@@ -79,15 +79,6 @@ class CanvasComponent extends Component<Props, State> {
                 >
                   {this.state.isMounted && (
                     <g>
-                      <circle cx={0} cy={0} r={5} fill="green" />
-                      <rect
-                        x={-diagram.bounds.width / 2}
-                        y={-diagram.bounds.height / 2}
-                        width={diagram.bounds.width}
-                        height={diagram.bounds.height}
-                        fill="red"
-                        fillOpacity={0.1}
-                      />
                       <KeyboardEventListener popup={this.popup} />
                       <ConnectLayer>
                         {diagram.ownedElements.map(element => (
