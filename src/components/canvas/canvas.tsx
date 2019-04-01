@@ -22,22 +22,17 @@ const Container = styled.div`
 `;
 
 class CanvasComponent extends Component<Props, State> {
+  state: State = {
+    isMounted: false,
+  };
+
   canvas: RefObject<HTMLDivElement> = createRef();
   layer: RefObject<SVGSVGElement> = createRef();
   popup: RefObject<PopupLayer> = createRef();
-
-  state: State = {
-    isMounted: false,
-    coordinateSystem: new CoordinateSystem(this.layer, this.canvas, this.props.diagram.bounds.width, this.props.diagram.bounds.height),
-  };
+  coordinateSystem = new CoordinateSystem(this.layer);
 
   componentDidMount() {
     this.setState({ isMounted: true }, this.center);
-    window.addEventListener('resize', this.center);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.center);
   }
 
   center = () => {
@@ -49,30 +44,19 @@ class CanvasComponent extends Component<Props, State> {
   onDrop = (event: DropEvent) => {
     if (!event.action) return;
     const element = event.action.element;
-    const offset = this.state.coordinateSystem.offset();
-    const position = this.state.coordinateSystem.screenToPoint(event.position.x, event.position.y);
+    const offset = this.coordinateSystem.offset();
+    const position = this.coordinateSystem.screenToPoint(event.position.x, event.position.y);
     element.bounds.x = position.x - offset.x;
     element.bounds.y = position.y - offset.y;
 
     this.props.create(element);
   };
 
-  componentDidUpdate(prevProps: Props) {
-    if (
-      prevProps.diagram.bounds.width !== this.props.diagram.bounds.width ||
-      prevProps.diagram.bounds.height !== this.props.diagram.bounds.height
-    ) {
-      this.setState({
-        coordinateSystem: new CoordinateSystem(this.layer, this.canvas, this.props.diagram.bounds.width, this.props.diagram.bounds.height),
-      }, this.center);
-    }
-  }
-
   render() {
     const { diagram, mode } = this.props;
     const context: CanvasContext = {
       canvas: this.canvas.current!,
-      coordinateSystem: this.state.coordinateSystem,
+      coordinateSystem: this.coordinateSystem,
     };
 
     return (
@@ -83,18 +67,27 @@ class CanvasComponent extends Component<Props, State> {
               <PopupLayer ref={this.popup}>
                 <svg
                   className="svg"
-                  width={diagram.bounds.width}
-                  height={diagram.bounds.height}
+                  width={diagram.bounds.width / 2}
+                  height={diagram.bounds.height / 2}
                   ref={this.layer}
                   style={{
                     position: 'absolute',
-                    top: `calc(50% - ${diagram.bounds.height / 2}px)`,
-                    left: `calc(50% - ${diagram.bounds.width / 2}px)`,
+                    top: '50%',
+                    left: '50%',
                     overflow: 'visible',
                   }}
                 >
                   {this.state.isMounted && (
                     <g>
+                      <circle cx={0} cy={0} r={5} fill="green" />
+                      <rect
+                        x={-diagram.bounds.width / 2}
+                        y={-diagram.bounds.height / 2}
+                        width={diagram.bounds.width}
+                        height={diagram.bounds.height}
+                        fill="red"
+                        fillOpacity={0.1}
+                      />
                       <KeyboardEventListener popup={this.popup} />
                       <ConnectLayer>
                         {diagram.ownedElements.map(element => (
@@ -142,7 +135,6 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 interface State {
   isMounted: boolean;
-  coordinateSystem: CoordinateSystem;
 }
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(

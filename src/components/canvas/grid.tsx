@@ -16,8 +16,8 @@ export const Grid = styled.div<Props>`
   z-index: 1;
   width: 100%;
   height: 100%;
-  min-width: ${({ width }: Props) => width + 1}px;
-  min-height: ${({ height }: Props) => height + 1}px;
+  min-width: ${({ width }: Props) => width}px;
+  min-height: ${({ height }: Props) => height}px;
 
   ${({ show = true, grid }) =>
     show &&
@@ -30,6 +30,7 @@ export const Grid = styled.div<Props>`
       width: 100%;
       height: 100%;
 
+      background-position: calc(50% + ${(grid * subdivisions) / 2}px) calc(50% + ${(grid * subdivisions) / 2}px);
       background-size: ${grid * subdivisions}px ${grid * subdivisions}px,
         ${grid * subdivisions}px ${grid * subdivisions}px,
         ${grid}px ${grid}px,
