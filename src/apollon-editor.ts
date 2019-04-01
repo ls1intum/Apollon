@@ -15,12 +15,12 @@ export class ApollonEditor {
   static exportModelAsSvg(model: UMLModel, options?: ExportOptions): SVG {
     const div = document.createElement('div');
     const element = createElement(Svg, { model, options });
-    render(element, div);
+    const svg = render(element, div);
     const { innerHTML } = div;
     unmountComponentAtNode(div);
     return {
       svg: innerHTML,
-      clip: model.size,
+      clip: svg.state.bounds,
     };
   }
 

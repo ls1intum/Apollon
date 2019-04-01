@@ -22,45 +22,45 @@ const getInitialState = ({ model, options }: Props): State => {
   const umlElements = [...model.elements, ...model.relationships];
   const rootElements = [...model.elements.filter(element => !element.owner), ...model.relationships];
 
-  const includeChildren = (ids: string[], include: string[]): string[] => {
-    const result = [];
+  const includeChildren = (ids: Set<string>, include: Set<string>): Set<string> => {
+    const result = new Set<string>();
     for (const id of ids) {
       const umlElement = umlElements.find(element => element.id === id);
       if (!umlElement) continue;
 
-      const children = model.elements.filter(elem => elem.owner === id).map(elem => elem.id);
-      if (include.includes(id)) {
-        result.push(id);
-        include.push(...children);
+      const children = new Set<string>(model.elements.filter(elem => elem.owner === id).map(elem => elem.id));
+      if (include.has(id)) {
+        result.add(id);
+        include = new Set<string>([...include, ...children]);
       }
-      result.push(...includeChildren(children, include));
+      includeChildren(children, include).forEach(result.add, result);
     }
     return result;
   };
 
-  const excludeChildren = (ids: string[], exclude: string[]): string[] => {
-    const result = [];
+  const excludeChildren = (ids: Set<string>, exclude: Set<string>): Set<string> => {
+    const result = new Set<string>();
     for (const id of ids) {
       const umlElement = umlElements.find(element => element.id === id);
       if (!umlElement) continue;
 
-      const children = model.elements.filter(element => element.owner === id).map(element => element.id);
-      if (!exclude.includes(id)) {
-        result.push(id);
+      const children = new Set<string>(model.elements.filter(element => element.owner === id).map(element => element.id));
+      if (!exclude.has(id)) {
+        result.add(id);
       } else {
-        exclude.push(...children);
+        exclude = new Set<string>([...exclude, ...children]);
       }
-      result.push(...excludeChildren(children, exclude));
+      excludeChildren(children, exclude).forEach(result.add, result);
     }
     return result;
   };
 
-  let layout: string[] = umlElements.map(element => element.id);
+  let layout = new Set<string>(umlElements.map(element => element.id));
   if (options && options.include) {
-    layout = includeChildren(rootElements.map(element => element.id), options.include);
+    layout = includeChildren(new Set<string>(rootElements.map(element => element.id)), new Set<string>(options.include));
   }
   if (options && options.exclude) {
-    layout = excludeChildren(rootElements.map(element => element.id), options.exclude);
+    layout = excludeChildren(new Set<string>(rootElements.map(element => element.id)), new Set<string>(options.exclude));
   }
 
   let elements: Element[] = [
@@ -70,11 +70,12 @@ const getInitialState = ({ model, options }: Props): State => {
     }),
     ...model.relationships.map(umlRelationship => {
       const RelationshipClazz = Relationships[umlRelationship.type];
-      return new RelationshipClazz(umlRelationship);
+      const rel = new RelationshipClazz(umlRelationship);
+      return rel;
     }),
   ];
 
-  const bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.includes(element.id)));
+  const bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.has(element.id)));
   if (options) {
     const margin = getMargin(options.margin);
     bounds.x -= margin.left;
@@ -83,7 +84,7 @@ const getInitialState = ({ model, options }: Props): State => {
     bounds.height += margin.top + margin.bottom;
   }
   elements = elements
-    .filter(element => layout.includes(element.id))
+    .filter(element => layout.has(element.id))
     .map(element => {
       element.bounds.x -= bounds.x;
       element.bounds.y -= bounds.y;
