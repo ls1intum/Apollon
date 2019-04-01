@@ -45,9 +45,10 @@ export abstract class ClassAssociation extends Relationship {
       this.multiplicity = { ...this.multiplicity, source: multiplicity };
       this.role = { ...this.role, source: role };
     }
+
     if ('multiplicity' in values.target) {
       const { multiplicity, role, ...target } = values.target;
-      values.target = target;
+      this.target = target;
       this.multiplicity = { ...this.multiplicity, target: multiplicity };
       this.role = { ...this.role, target: role };
     }
