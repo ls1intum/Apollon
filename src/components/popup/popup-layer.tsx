@@ -28,7 +28,7 @@ export class PopupLayer extends Component<{}, State> {
       <PopupProvider value={context}>
         {this.props.children}
         {this.state.element && (
-          <div ref={this.popup}>
+          <div ref={this.popup} style={{ position: 'absolute', left: '50%', top: '50%' }}>
             <Popup element={this.state.element} position={this.state.position} />
           </div>
         )}
