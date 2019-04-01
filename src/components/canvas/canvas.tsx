@@ -23,9 +23,12 @@ const Container = styled.div`
 
 const Svg = styled.svg`
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 50%;
   overflow: visible;
+  transform: translate(100%, 100%);
 `;
 
 class CanvasComponent extends Component<Props, State> {
