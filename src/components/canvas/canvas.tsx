@@ -21,6 +21,13 @@ const Container = styled.div`
   height: 100%;
 `;
 
+const Svg = styled.svg`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  overflow: visible;
+`;
+
 class CanvasComponent extends Component<Props, State> {
   state: State = {
     isMounted: false,
@@ -65,18 +72,7 @@ class CanvasComponent extends Component<Props, State> {
           <Droppable onDrop={this.onDrop}>
             <Grid grid={10} width={diagram.bounds.width} height={diagram.bounds.height} show={mode !== ApollonMode.Assessment}>
               <PopupLayer ref={this.popup}>
-                <svg
-                  className="svg"
-                  width={diagram.bounds.width / 2}
-                  height={diagram.bounds.height / 2}
-                  ref={this.layer}
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    overflow: 'visible',
-                  }}
-                >
+                <Svg width={diagram.bounds.width / 2} height={diagram.bounds.height / 2} ref={this.layer}>
                   {this.state.isMounted && (
                     <g>
                       <KeyboardEventListener popup={this.popup} />
@@ -90,7 +86,7 @@ class CanvasComponent extends Component<Props, State> {
                       </ConnectLayer>
                     </g>
                   )}
-                </svg>
+                </Svg>
               </PopupLayer>
             </Grid>
           </Droppable>
