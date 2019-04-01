@@ -88,8 +88,6 @@ export interface ExportOptions {
 export interface SVG {
   svg: string;
   clip: {
-    x: number;
-    y: number;
     width: number;
     height: number;
   };

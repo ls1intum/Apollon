@@ -1,18 +1,14 @@
 import React, { Component } from 'react';
-import { ModelState } from '../components/store/model-state';
 import { Components } from '../packages/components';
 import { ElementType } from '../packages/element-type';
 import { Elements } from '../packages/elements';
-import { RelationshipType } from '../packages/relationship-type';
 import { Relationships } from '../packages/relationships';
-import { Container } from '../services/container/container';
-import { Element, IElement } from '../services/element/element';
-import { IRelationship, Relationship } from '../services/relationship/relationship';
-import { ExportOptions } from '../typings';
+import { Element } from '../services/element/element';
+import { ExportOptions, UMLModel } from '../typings';
 import { Boundary } from '../utils/geometry/boundary';
 
 interface Props {
-  state: ModelState;
+  model: UMLModel;
   options?: ExportOptions;
 }
 interface State {
@@ -20,48 +16,63 @@ interface State {
   elements: Element[];
 }
 
-const getInitialState = ({ state, options }: Props): State => {
+const getInitialState = ({ model, options }: Props): State => {
   const keepOriginalSize = (options && options.keepOriginalSize) || false;
 
-  const filter = (ids: string[], include?: string[], exclude?: string[]): string[] => {
-    const result: string[] = [];
-    for (const id of ids) {
-      const ElementClazz = Elements[state.elements[id].type as ElementType] || Relationships[state.elements[id].type as RelationshipType];
-      const element: Element = new ElementClazz(state.elements[id]);
+  const umlElements = [...model.elements, ...model.relationships];
+  const rootElements = [...model.elements.filter(element => !element.owner), ...model.relationships];
 
-      if (include && include.includes(id)) {
+  const includeChildren = (ids: string[], include: string[]): string[] => {
+    const result = [];
+    for (const id of ids) {
+      const umlElement = umlElements.find(element => element.id === id);
+      if (!umlElement) continue;
+
+      const children = model.elements.filter(elem => elem.owner === id).map(elem => elem.id);
+      if (include.includes(id)) {
         result.push(id);
-        if (element instanceof Container) {
-          result.push(...filter(element.ownedElements, element.ownedElements));
-        }
-      } else if (include && !include.includes(id)) {
-        if (element instanceof Container) {
-          result.push(...filter(element.ownedElements, include, exclude));
-        }
-      } else if (exclude && !exclude.includes(id)) {
-        result.push(id);
-        if (element instanceof Container) {
-          result.push(...filter(element.ownedElements, include, exclude));
-        }
-      } else if (!exclude || !exclude.includes(id)) {
-        if ((!include || !include.length) && (!exclude || !exclude.length)) {
-          result.push(id);
-          if (element instanceof Container) {
-            result.push(...filter(element.ownedElements, include, exclude));
-          }
-        }
+        include.push(...children);
       }
+      result.push(...includeChildren(children, include));
     }
     return result;
   };
 
-  const layout: string[] = filter(
-    [...state.diagram.ownedElements, ...state.diagram.ownedRelationships],
-    options && options.include,
-    options && options.exclude,
-  );
+  const excludeChildren = (ids: string[], exclude: string[]): string[] => {
+    const result = [];
+    for (const id of ids) {
+      const umlElement = umlElements.find(element => element.id === id);
+      if (!umlElement) continue;
 
-  let elements = normalizeState(state);
+      const children = model.elements.filter(element => element.owner === id).map(element => element.id);
+      if (!exclude.includes(id)) {
+        result.push(id);
+      } else {
+        exclude.push(...children);
+      }
+      result.push(...excludeChildren(children, exclude));
+    }
+    return result;
+  };
+
+  let layout: string[] = umlElements.map(element => element.id);
+  if (options && options.include) {
+    layout = includeChildren(rootElements.map(element => element.id), options.include);
+  }
+  if (options && options.exclude) {
+    layout = excludeChildren(rootElements.map(element => element.id), options.exclude);
+  }
+
+  let elements: Element[] = [
+    ...model.elements.map(umlElement => {
+      const ElementClazz = Elements[umlElement.type as ElementType];
+      return new ElementClazz(umlElement);
+    }),
+    ...model.relationships.map(umlRelationship => {
+      const RelationshipClazz = Relationships[umlRelationship.type];
+      return new RelationshipClazz(umlRelationship);
+    }),
+  ];
 
   const bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.includes(element.id)));
   if (options) {
@@ -71,7 +82,6 @@ const getInitialState = ({ state, options }: Props): State => {
     bounds.width += margin.left + margin.right;
     bounds.height += margin.top + margin.bottom;
   }
-
   elements = elements
     .filter(element => layout.includes(element.id))
     .map(element => {
@@ -88,40 +98,6 @@ const getMargin = (margin: ExportOptions['margin']): { top: number; right: numbe
   }
   const result = { top: 0, right: 0, bottom: 0, left: 0 };
   return Object.assign(result, margin);
-};
-
-const normalizeState = (state: ModelState): Element[] => {
-  let elements: Element[] = state.diagram.ownedElements
-    .map<IElement>(id => state.elements[id])
-    .map<Element>(element => {
-      const ElementClazz = Elements[element.type as ElementType];
-      return new ElementClazz(element);
-    });
-
-  const positionChildren = (element: Element): Element[] => {
-    if (element instanceof Container) {
-      const children: Element[] = element.ownedElements.map(id => {
-        const ElementClazz = Elements[state.elements[id].type as ElementType];
-        const child = new ElementClazz(state.elements[id]);
-        child.bounds.x += element.bounds.x;
-        child.bounds.y += element.bounds.y;
-        return child;
-      });
-      return [...children, ...children.reduce<Element[]>((a, e) => [...a, ...positionChildren(e)], [])];
-    }
-    return [];
-  };
-
-  elements = [...elements, ...elements.reduce<Element[]>((a, e) => [...a, ...positionChildren(e)], [])];
-
-  const relationships: Relationship[] = state.diagram.ownedRelationships
-    .map<IRelationship>(id => state.elements[id] as IRelationship)
-    .map<Relationship>(element => {
-      const RelationshipClazz = Relationships[element.type];
-      return new RelationshipClazz(element);
-    });
-
-  return [...elements, ...relationships];
 };
 
 const computeBoundingBox = (elements: Element[]): Boundary => {
