@@ -6,6 +6,7 @@ import { Relationships } from '../packages/relationships';
 import { Element } from '../services/element/element';
 import { ExportOptions, UMLModel } from '../typings';
 import { Boundary } from '../utils/geometry/boundary';
+import { Style } from './svg-styles';
 
 interface Props {
   model: UMLModel;
@@ -128,15 +129,7 @@ export class Svg extends Component<Props, State> {
         fill="white"
       >
         <defs>
-          <style>{`
-            text {
-              fill: black;
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            }
-            * {
-              overflow: visible;
-            }
-          `}</style>
+          <style>{Style}</style>
         </defs>
         {elements.map(element => {
           const ElementComponent = Components[element.type];
