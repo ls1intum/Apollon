@@ -17,6 +17,7 @@ class PopupComponent extends Component<Props> {
     let CustomPopupComponent = null;
 
     if (this.props.mode === ApollonMode.Assessment) {
+      if (this.props.readonly) return null;
       CustomPopupComponent = AssessmentPopup;
     } else {
       CustomPopupComponent = Popups[this.props.element.type];
@@ -49,6 +50,7 @@ interface OwnProps {
 
 interface StateProps {
   mode: ApollonMode;
+  readonly: boolean;
 }
 
 interface DispatchProps {
@@ -60,7 +62,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ mode: state.editor.mode }),
+    state => ({ mode: state.editor.mode, readonly: state.editor.readonly }),
     { update: ElementRepository.update },
   ),
 );
