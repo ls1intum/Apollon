@@ -74,6 +74,7 @@ export interface ApollonOptions {
   type?: DiagramType;
   mode?: ApollonMode;
   readonly?: boolean;
+  enablePopups?: boolean;
   model?: UMLModel;
   theme?: Partial<Styles>;
 }

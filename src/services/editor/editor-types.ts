@@ -22,5 +22,6 @@ export interface ChangeViewAction extends Action<EditorActionTypes.CHANGE_VIEW> 
 export interface EditorState {
   readonly mode: ApollonMode;
   readonly readonly: boolean;
+  readonly enablePopups: boolean;
   readonly view: ApollonView;
 }

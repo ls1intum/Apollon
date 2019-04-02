@@ -4,6 +4,7 @@ import { Actions, ApollonView, EditorActionTypes, EditorState } from './editor-t
 
 const initialState: EditorState = {
   readonly: false,
+  enablePopups: true,
   mode: ApollonMode.Exporting,
   view: ApollonView.Modelling,
 };

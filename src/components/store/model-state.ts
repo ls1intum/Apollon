@@ -75,6 +75,7 @@ export class ModelState {
     return {
       editor: {
         readonly: false,
+        enablePopups: true,
         mode: ApollonMode.Exporting,
         view: ApollonView.Modelling,
       },

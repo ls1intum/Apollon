@@ -48,8 +48,9 @@ export class ApollonEditor {
       ...state,
       editor: {
         ...state.editor,
-        ...(options.mode && { mode: options.mode }),
-        ...(options.readonly && { readonly: options.readonly }),
+        ...(options.mode !== undefined && { mode: options.mode }),
+        ...(options.readonly !== undefined && { readonly: options.readonly }),
+        ...(options.enablePopups !== undefined && { enablePopups: options.enablePopups }),
       },
     };
 
