@@ -41,9 +41,9 @@ export class ElementRepository {
     payload: { id, internal },
   });
 
-  static select = (id: string | null, toggle: boolean = false): SelectAction => ({
+  static select = (id: string | null, toggle: boolean = false, keep: boolean = false): SelectAction => ({
     type: ElementActionTypes.SELECT,
-    payload: { id, toggle },
+    payload: { id, toggle, keep },
   });
 
   static makeInteractive = (id: string): MakeInteractiveAction => ({

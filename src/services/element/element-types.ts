@@ -41,6 +41,7 @@ export interface SelectAction extends Action<ElementActionTypes.SELECT> {
   payload: {
     id: string | null;
     toggle: boolean;
+    keep: boolean;
   };
 }
 

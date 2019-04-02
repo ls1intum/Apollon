@@ -44,7 +44,7 @@ function* handleElementLeave({ payload }: LeaveAction) {
 }
 
 function* handleElementSelect({ payload }: SelectAction) {
-  if (payload.toggle) return;
+  if (payload.toggle || payload.keep) return;
   const { elements }: ModelState = yield select();
   const selection = Object.values(elements).filter(element => element.selected && element.id !== payload.id);
   yield all(selection.map(element => put(ElementRepository.select(element.id, true))));

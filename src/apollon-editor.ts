@@ -4,6 +4,7 @@ import { Store } from 'redux';
 import { ModelState } from './components/store/model-state';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
+import { ElementRepository } from './services/element/element-repository';
 import { ApollonOptions, Assessment, DiagramType, ExportOptions, Selection, SVG, UMLModel } from './typings';
 
 export class ApollonEditor {
@@ -62,6 +63,13 @@ export class ApollonEditor {
 
   destroy() {
     unmountComponentAtNode(this.container);
+  }
+
+  select(selection: Selection) {
+    if (!this.store) return;
+    const { dispatch } = this.store;
+    dispatch(ElementRepository.select(null));
+    [...selection.elements, ...selection.relationships].map(id => dispatch(ElementRepository.select(id, false, true)));
   }
 
   subscribeToSelectionChange(callback: (selection: Selection) => void): number {
