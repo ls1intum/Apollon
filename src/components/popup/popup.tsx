@@ -6,9 +6,9 @@ import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
 import { ApollonMode } from '../../typings';
 import { Point } from '../../utils/geometry/point';
+import { AssessmentPopup } from '../assessment-popup/assessment-popup';
 import { CanvasContext, withCanvas } from '../canvas/canvas-context';
 import { ModelState } from '../store/model-state';
-import { AssessmentPopup } from './assessment-popup';
 import { Arrow, Container, Content } from './popup-styles';
 
 class PopupComponent extends Component<Props> {

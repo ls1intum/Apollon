@@ -1,6 +1,6 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
-import { Assessment } from '../../typings';
+import { IAssessment } from '../../services/assessment/assessment';
 import { CancelIcon } from '../controls/cancel-icon';
 import { CheckIcon } from '../controls/check-icon';
 import { ModelState } from '../store/model-state';
@@ -30,7 +30,7 @@ export const assessable = (WrappedComponent: typeof ElementComponent): Component
   }
 
   type StateProps = {
-    assessment?: Assessment;
+    assessment?: IAssessment;
   };
 
   type DispatchProps = {};

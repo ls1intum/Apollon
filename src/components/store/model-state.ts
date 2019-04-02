@@ -8,7 +8,7 @@ import { ElementRepository } from '../../services/element/element-repository';
 import { ElementState } from '../../services/element/element-types';
 import { Relationship } from '../../services/relationship/relationship';
 import { RelationshipRepository } from '../../services/relationship/relationship-repository';
-import { ApollonMode, Selection, UMLElement, UMLModel, UMLRelationship } from '../../typings';
+import { ApollonMode, Assessment, Selection, UMLElement, UMLModel, UMLRelationship } from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
 export interface ModelState {
@@ -137,6 +137,13 @@ export class ModelState {
       height: bounds.height,
     };
 
+    const assessments = Object.keys(state.assessments).map<Assessment>(id => ({
+      modelElementId: id,
+      elementType: state.elements[id].type,
+      score: state.assessments[id].score,
+      feedback: state.assessments[id].feedback,
+    }));
+
     return {
       version: '2.0',
       size,
@@ -144,7 +151,7 @@ export class ModelState {
       interactive,
       elements: e,
       relationships: r,
-      assessments: Object.values(state.assessments),
+      assessments,
     };
   }
 }

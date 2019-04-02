@@ -1,9 +1,10 @@
-import { ApollonEditor, ApollonOptions, DiagramType, SVG, UMLModel } from '../src';
+import { ApollonEditor, ApollonMode, ApollonOptions, DiagramType, SVG, UMLModel } from '../src';
 
 const container = document.getElementById('apollon')!;
 let editor: ApollonEditor | null = null;
 let options: ApollonOptions = {
   type: DiagramType.ClassDiagram,
+  mode: ApollonMode.Assessment,
   model: JSON.parse(window.localStorage.getItem('apollon')!),
 };
 

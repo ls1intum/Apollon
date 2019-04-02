@@ -10,9 +10,9 @@ class TextFieldComponent extends Component<Props, State> {
     const { value, onUpdate, onCreate, ...props } = this.props;
     return (
       <input
-        {...props}
         type="text"
         autoComplete="off"
+        {...props}
         value={this.state.value}
         onChange={this.onChange}
         onKeyUp={this.onKeyUp}
