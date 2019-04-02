@@ -4,7 +4,7 @@ import { ElementType } from '../../packages/element-type';
 import { Elements } from '../../packages/elements';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
-import { Element, IElement } from './element';
+import { Element } from './element';
 import {
   ChangeAction,
   CreateAction,
@@ -17,6 +17,7 @@ import {
   MoveAction,
   RenameAction,
   ResizeAction,
+  ResizedAction,
   SelectAction,
   UpdateAction,
 } from './element-types';
@@ -47,9 +48,14 @@ export class ElementRepository {
     payload: { id },
   });
 
-  static resize: ActionCreator<ResizeAction> = (id: string, delta: { width: number; height: number }) => ({
+  static resize = (id: string, delta: { width: number; height: number }): ResizeAction => ({
     type: ElementActionTypes.RESIZE,
     payload: { id, delta },
+  });
+
+  static resized = (id: string): ResizedAction => ({
+    type: ElementActionTypes.RESIZED,
+    payload: { id },
   });
 
   static move = (id: string | null, delta: { x: number; y: number }): MoveAction => ({
@@ -77,14 +83,13 @@ export class ElementRepository {
     return new ElementClass(element);
   };
 
-  static read = (state: ModelState): Element[] => {
-    const elements = Object.keys(state.elements).reduce<ElementState>((r, e) => {
-      if (state.elements[e].type in ElementType) return { ...r, [e]: state.elements[e] };
-      return r;
-    }, {});
+  static getByIds = (state: ElementState) => (ids: string[]): Element[] => {
+    return ids.map(ElementRepository.getById(state)).filter(notEmpty);
+  };
 
-    return Object.values(elements)
-      .map<Element | null>(element => ElementRepository.getById(state.elements)(element.id))
+  static read = (state: ElementState): Element[] => {
+    return Object.keys(state)
+      .map(ElementRepository.getById(state))
       .filter(notEmpty);
   };
 

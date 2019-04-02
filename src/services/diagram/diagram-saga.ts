@@ -4,7 +4,7 @@ import { Container } from '../container/container';
 import { ChangeOwnerAction, ContainerActionTypes } from '../container/container-types';
 import { ElementRepository } from '../element/element-repository';
 import { CreateAction as ElementCreateAction, DeleteAction, ElementActionTypes, SelectAction } from '../element/element-types';
-import { Relationship } from '../relationship/relationship';
+import { RelationshipRepository } from '../relationship/relationship-repository';
 import { CreateAction as RelationshipCreateAction, RelationshipActionTypes } from '../relationship/relationship-types';
 import {
   AddElementAction,
@@ -12,6 +12,7 @@ import {
   DeleteElementAction,
   DeleteRelationshipAction,
   DiagramActionTypes,
+  UpdateBoundsAction,
 } from './diagram-types';
 
 export function* DiagramSaga() {
@@ -19,7 +20,12 @@ export function* DiagramSaga() {
   yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
   yield takeLatest(RelationshipActionTypes.CREATE, handleRelationshipCreation);
   yield takeLatest(ElementActionTypes.SELECT, handleElementSelection);
+  yield takeLatest(ElementActionTypes.RESIZED, recalc);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDeletion);
+  yield takeLatest(DiagramActionTypes.ADD_ELEMENT, recalc);
+  yield takeLatest(DiagramActionTypes.ADD_RELATIONSHIP, recalc);
+  yield takeLatest(DiagramActionTypes.DELETE_ELEMENT, recalc);
+  yield takeLatest(DiagramActionTypes.DELETE_RELATIONSHIP, recalc);
 }
 
 function* handleOwnerChange({ payload }: ChangeOwnerAction) {
@@ -27,12 +33,24 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 
   const { elements }: ModelState = yield select();
   const selection = Object.values(elements).filter(e => e.selected);
-  if (selection.length > 1) return;
+  if (selection.length > 1) {
+    yield recalc();
+    return;
+  }
 
   const element = ElementRepository.getById(elements)(payload.id);
-  if (!element || payload.owner === element.owner) return;
+  if (!element) return;
+
+  if (payload.owner === element.owner) {
+    yield recalc();
+    return;
+  }
 
   const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
+  if (!owner && payload.owner && RelationshipRepository.getById(elements)(payload.owner)) {
+    return;
+  }
+
   if (owner && !(owner.constructor as typeof Container).features.droppable) return;
 
   if (!element.owner) {
@@ -48,6 +66,7 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
       payload: { id: element.id },
     });
   }
+  yield recalc();
 }
 
 function* handleRelationshipCreation({ payload }: RelationshipCreateAction) {
@@ -99,4 +118,20 @@ function* handleElementDeletion({ payload }: DeleteAction) {
       payload: { id: payload.id },
     });
   }
+}
+
+function* recalc() {
+  const { elements }: ModelState = yield select();
+  const ids = Object.keys(elements).filter(id => !elements[id].owner);
+  const rootElements = ElementRepository.getByIds(elements)(ids);
+
+  let width = 0;
+  let height = 0;
+  for (const element of rootElements) {
+    width = Math.max(Math.abs(element.bounds.x), Math.abs(element.bounds.x + element.bounds.width), width);
+    height = Math.max(Math.abs(element.bounds.y), Math.abs(element.bounds.y + element.bounds.height), height);
+  }
+
+  const bounds = { x: -width, y: -height, width: width * 2, height: height * 2 };
+  yield put<UpdateBoundsAction>({ type: DiagramActionTypes.UPDATE_BOUNDS, payload: { bounds } });
 }

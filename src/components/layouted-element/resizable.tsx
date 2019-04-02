@@ -72,6 +72,7 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
       this.setState({ resizing: false, offset: new Point() });
       document.removeEventListener('mousemove', this.onMouseMove);
       document.removeEventListener('mouseup', this.onMouseUp);
+      this.props.resized(this.props.element.id);
     };
   }
 
@@ -81,6 +82,7 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
 
   interface DispatchProps {
     resize: typeof ElementRepository.resize;
+    resized: typeof ElementRepository.resized;
   }
 
   interface State {
@@ -96,7 +98,7 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
       state => ({
         getAbsolutePosition: ElementRepository.getAbsolutePosition(state.elements),
       }),
-      { resize: ElementRepository.resize },
+      { resize: ElementRepository.resize, resized: ElementRepository.resized },
     ),
   );
 

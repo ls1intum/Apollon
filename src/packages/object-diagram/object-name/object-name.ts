@@ -26,6 +26,7 @@ export class ObjectName extends Container {
 
     let y = this.headerHeight;
     for (const child of children) {
+      child.bounds.x = 0;
       child.bounds.y = y;
       child.bounds.width = this.bounds.width;
       y += child.bounds.height;
@@ -35,17 +36,7 @@ export class ObjectName extends Container {
     return [parent, ...children];
   }
 
-  addElement(newElement: Element, currentElements: Element[]): Element[] {
-    const [parent, ...children] = super.addElement(newElement, currentElements);
-    return this.render(children);
-  }
-
-  removeElement(removedElement: string, currentElements: Element[]): Element[] {
-    const [parent, ...children] = super.removeElement(removedElement, currentElements);
-    return this.render(children);
-  }
-
-  resizeElement(children: Element[]): Element[] {
+  resize(children: Element[]): Element[] {
     const minWidth = children.reduce((width, child) => Math.max(width, ObjectAttribute.calculateWidth(child.name)), 100);
     this.bounds.width = Math.max(this.bounds.width, minWidth);
     return [

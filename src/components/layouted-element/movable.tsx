@@ -46,10 +46,7 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
 
     private checkOwnership = () => {
       const target = this.props.target ? this.props.target.id : null;
-      const { id, owner } = this.props.element;
-      if (owner === target) return;
-
-      this.props.changeOwner(id, target);
+      this.props.changeOwner(this.props.element.id, target);
     };
 
     private onMouseDown = (event: MouseEvent) => {
@@ -125,7 +122,7 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
       {
         move: ElementRepository.move,
         changeOwner: ContainerRepository.changeOwner,
-      }
-    )
+      },
+    ),
   )(Movable);
 };

@@ -1,20 +1,15 @@
-import { ElementType } from '../../packages/element-type';
-import { Elements } from '../../packages/elements';
-import { Relationships } from '../../packages/relationships';
 import { AssessmentState } from '../../services/assessment/assessment-types';
 import { Container } from '../../services/container/container';
 import { Diagram } from '../../services/diagram/diagram';
 import { DiagramState } from '../../services/diagram/diagram-types';
-import { ApollonView } from '../../services/editor/editor-types';
-import { EditorState } from '../../services/editor/editor-types';
+import { ApollonView, EditorState } from '../../services/editor/editor-types';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
 import { ElementState } from '../../services/element/element-types';
 import { Relationship } from '../../services/relationship/relationship';
 import { RelationshipRepository } from '../../services/relationship/relationship-repository';
 import { ApollonMode, Selection, UMLElement, UMLModel, UMLRelationship } from '../../typings';
-import { computeBoundingBox } from '../../utils/geometry/boundary';
-import { Point } from '../../utils/geometry/point';
+import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
 export interface ModelState {
   editor: EditorState;
@@ -25,43 +20,57 @@ export interface ModelState {
 
 export class ModelState {
   static fromModel(model: UMLModel): ModelState {
-    const copy: UMLModel = JSON.parse(JSON.stringify(model));
-    let elements: { [id: string]: Element } = Object.values(copy.elements)
-      .map(umlElement => {
-        const Clazz = Elements[umlElement.type];
-        const element = new Clazz(umlElement);
-        if (copy.interactive.elements.includes(element.id)) {
-          element.interactive = true;
-        }
-        return element;
-      })
-      .reduce((r, o) => ({ ...r, [o.id]: o }), {});
+    const state = [...model.elements, ...model.relationships].reduce<ElementState>(
+      (result, element) => ({
+        ...result,
+        [element.id]: {
+          owner: null,
+          ...element,
+          hovered: false,
+          selected: false,
+          interactive: [...model.interactive.elements, ...model.interactive.relationships].includes(element.id),
+        },
+      }),
+      {},
+    );
 
-    elements = Object.values(elements).reduce((state, element) => {
+    const elements = [
+      ...ElementRepository.getByIds(state)(Object.keys(state)),
+      ...RelationshipRepository.getByIds(state)(Object.keys(state)),
+    ].reduce<{ [id: string]: Element }>((result, element) => ({ ...result, [element.id]: element }), {});
+
+    const root = Object.values(elements).filter(element => !element.owner);
+
+    const position = (element: Element) => {
       if (element instanceof Container) {
-        const children = Object.values(elements)
-          .filter(child => child.owner === element.id)
-          .map<Element>(child => {
-            const Clazz = Elements[child.type as ElementType];
-            return new Clazz(child);
-          });
+        const children = Object.values(elements).filter(child => child.owner === element.id);
         element.ownedElements = children.map(child => child.id);
-        const changes = element.render(children).reduce<ElementState>((r, o) => ({ ...r, [o.id]: o }), {});
-        return { ...state, ...changes };
-      }
-      return { ...state, [element.id]: element };
-    }, {});
-
-    const relationships: { [id: string]: Relationship } = Object.values(copy.relationships)
-      .map<Relationship>(umlRelationship => {
-        const Clazz = Relationships[umlRelationship.type];
-        const relationship: Relationship = new Clazz(umlRelationship);
-        if (copy.interactive.relationships.includes(relationship.id)) {
-          relationship.interactive = true;
+        for (const child of children) {
+          position(child);
+          child.bounds.x -= element.bounds.x;
+          child.bounds.y -= element.bounds.y;
         }
-        return relationship;
-      })
-      .reduce((r, o) => ({ ...r, [o.id]: o }), {});
+        element.render(children);
+      }
+    };
+    root.forEach(position);
+
+    const bounds = computeBoundingBoxForElements(root);
+    bounds.width = Math.ceil(bounds.width / 20) * 20;
+    bounds.height = Math.ceil(bounds.height / 20) * 20;
+    for (const element of root) {
+      elements[element.id].bounds.x -= bounds.width / 2;
+      elements[element.id].bounds.y -= bounds.height / 2;
+    }
+
+    let width = 0;
+    let height = 0;
+    for (const element of root) {
+      width = Math.max(Math.abs(element.bounds.x), Math.abs(element.bounds.x + element.bounds.width), width);
+      height = Math.max(Math.abs(element.bounds.y), Math.abs(element.bounds.y + element.bounds.height), height);
+    }
+
+    const computedBounds = { x: -width, y: -height, width: width * 2, height: height * 2 };
 
     return {
       editor: {
@@ -72,22 +81,24 @@ export class ModelState {
       diagram: {
         ...(() => {
           const d = new Diagram();
-          d.type2 = copy.type;
+          Object.assign(d, {
+            type2: model.type,
+            bounds: computedBounds,
+          });
           return d;
         })(),
-        ownedElements: Object.values(elements)
-          .filter(e => !e.owner)
-          .map(e => e.id),
-        ownedRelationships: Object.keys(relationships),
+        ownedElements: root.filter(element => !(element instanceof Relationship)).map(element => element.id),
+        ownedRelationships: root.filter(element => element instanceof Relationship).map(element => element.id),
       },
-      elements: { ...elements, ...relationships },
-      assessments: copy.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
+      elements,
+      assessments: model.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
     };
   }
 
   static toModel(state: ModelState): UMLModel {
-    const copy: ModelState = JSON.parse(JSON.stringify(state));
-    const elements = ElementRepository.read(copy);
+    const elements = ElementRepository.read(state.elements);
+    const relationships = RelationshipRepository.read(state.elements);
+    const root = elements.filter(element => !element.owner);
 
     const parseElement = (element: Element): UMLElement[] => {
       const cont: Element[] = element instanceof Container ? element.ownedElements.map(id => elements.find(ee => ee.id === id)!) : [];
@@ -95,9 +106,8 @@ export class ModelState {
       return [result, ...children.reduce<UMLElement[]>((r2, e3) => [...r2, ...parseElement(e3)], [])];
     };
 
-    const e = elements.filter(element => !element.owner).reduce<UMLElement[]>((r2, e2) => [...r2, ...parseElement(e2)], []);
+    const e = root.reduce<UMLElement[]>((r2, e2) => [...r2, ...parseElement(e2)], []);
 
-    const relationships = RelationshipRepository.read(copy);
     const r = relationships.map<UMLRelationship>(relationship =>
       (relationship.constructor as typeof Relationship).toUMLRelationship(relationship),
     );
@@ -107,30 +117,34 @@ export class ModelState {
       relationships: relationships.filter(element => element.interactive).map<string>(element => element.id),
     };
 
-    const points: Point[] = [...e.map(e2 => e2.bounds), ...r.map(r2 => r2.bounds)].reduce<Point[]>(
-      (a, bounds) => [
-        ...a,
-        new Point(bounds.x, bounds.y),
-        new Point(bounds.x + bounds.width, bounds.y),
-        new Point(bounds.x, bounds.y + bounds.height),
-        new Point(bounds.x + bounds.width, bounds.y + bounds.height),
-      ],
-      [],
-    );
-    const boundingBox = computeBoundingBox(points);
+    const bounds = computeBoundingBoxForElements(root);
+    for (const element of e) {
+      if (element.owner) {
+        const absolutePosition = ElementRepository.getAbsolutePosition(state.elements)(element.id);
+        element.bounds.x = absolutePosition.x;
+        element.bounds.y = absolutePosition.y;
+      }
+      element.bounds.x -= bounds.x;
+      element.bounds.y -= bounds.y;
+    }
+    for (const relationship of r) {
+      relationship.bounds.x -= bounds.x;
+      relationship.bounds.y -= bounds.y;
+    }
+
     const size = {
-      width: boundingBox.width - boundingBox.x,
-      height: boundingBox.height - boundingBox.y,
+      width: bounds.width,
+      height: bounds.height,
     };
 
     return {
       version: '2.0',
       size,
-      type: copy.diagram.type2,
+      type: state.diagram.type2,
       interactive,
       elements: e,
       relationships: r,
-      assessments: Object.values(copy.assessments),
+      assessments: Object.values(state.assessments),
     };
   }
 }

@@ -1,5 +1,6 @@
 import React, { Component, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
+import styled from 'styled-components';
 import { Diagram } from '../../services/diagram/diagram';
 import { DiagramRepository } from '../../services/diagram/diagram-repository';
 import { ElementRepository } from '../../services/element/element-repository';
@@ -16,15 +17,29 @@ import { CoordinateSystem } from './coordinate-system';
 import { Grid } from './grid';
 import { KeyboardEventListener } from './keyboard-eventlistener';
 
+const Container = styled.div`
+  height: 100%;
+`;
+
+const Svg = styled.svg`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 50%;
+  overflow: visible;
+  transform: translate(100%, 100%);
+`;
+
 class CanvasComponent extends Component<Props, State> {
   state: State = {
     isMounted: false,
   };
+
   canvas: RefObject<HTMLDivElement> = createRef();
   layer: RefObject<SVGSVGElement> = createRef();
   popup: RefObject<PopupLayer> = createRef();
-
-  coordinateSystem = new CoordinateSystem(this.canvas, this.props.diagram.bounds.width, this.props.diagram.bounds.height);
+  coordinateSystem = new CoordinateSystem(this.layer);
 
   componentDidMount() {
     this.setState({ isMounted: true }, this.center);
@@ -33,7 +48,7 @@ class CanvasComponent extends Component<Props, State> {
   center = () => {
     const container = this.canvas.current!.parentElement!;
     const { width, height } = container.getBoundingClientRect();
-    container.scrollTo(this.coordinateSystem.width / 2 - width / 2, this.coordinateSystem.height / 2 - height / 2);
+    container.scrollTo(this.props.diagram.bounds.width / 2 - width / 2, this.props.diagram.bounds.height / 2 - height / 2);
   };
 
   onDrop = (event: DropEvent) => {
@@ -55,15 +70,15 @@ class CanvasComponent extends Component<Props, State> {
     };
 
     return (
-      <div ref={this.canvas} tabIndex={0} onMouseDown={this.deselectAll}>
+      <Container ref={this.canvas} tabIndex={0} onMouseDown={this.deselectAll}>
         <CanvasProvider value={context}>
           <Droppable onDrop={this.onDrop}>
             <Grid grid={10} width={diagram.bounds.width} height={diagram.bounds.height} show={mode !== ApollonMode.Assessment}>
               <PopupLayer ref={this.popup}>
-                {this.state.isMounted && (
-                  <>
-                    <KeyboardEventListener popup={this.popup} />
-                    <svg className="svg" width="100%" height="100%" ref={this.layer}>
+                <Svg width={diagram.bounds.width / 2} height={diagram.bounds.height / 2} ref={this.layer}>
+                  {this.state.isMounted && (
+                    <g>
+                      <KeyboardEventListener popup={this.popup} />
                       <ConnectLayer>
                         {diagram.ownedElements.map(element => (
                           <LayoutedElement key={element} element={element} />
@@ -72,19 +87,24 @@ class CanvasComponent extends Component<Props, State> {
                           <LayoutedRelationship key={relationship} relationship={relationship} container={this.canvas} />
                         ))}
                       </ConnectLayer>
-                    </svg>
-                  </>
-                )}
+                    </g>
+                  )}
+                </Svg>
               </PopupLayer>
             </Grid>
           </Droppable>
         </CanvasProvider>
-      </div>
+      </Container>
     );
   }
 
   private deselectAll = (event: React.MouseEvent) => {
-    if (event.target !== this.layer.current || event.shiftKey) return;
+    const deselect: boolean =
+      !!this.canvas.current &&
+      !!this.canvas.current.firstElementChild &&
+      this.canvas.current.firstElementChild !== event.target &&
+      event.target !== this.layer.current;
+    if (deselect || event.shiftKey) return;
     this.props.select(null);
   };
 }

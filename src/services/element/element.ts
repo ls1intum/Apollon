@@ -30,7 +30,7 @@ export abstract class Element implements IElement {
   readonly id: string = uuid();
   name: string = '';
   abstract readonly type: ElementType | RelationshipType;
-  readonly bounds: Boundary = new Boundary(0, 0, 200, 100);
+  readonly bounds: Boundary = { x: 0, y: 0, width: 200, height: 100 };
   owner: string | null = null;
 
   hovered: boolean = false;
@@ -41,7 +41,15 @@ export abstract class Element implements IElement {
   constructor(values?: UMLElement);
   constructor(values?: IElement | UMLElement);
   constructor(values?: IElement | UMLElement) {
-    Object.assign(this, values);
+    if (values) {
+      Object.assign(this, { ...values, bounds: { ...values.bounds } });
+    }
+  }
+
+  copy<T extends Element>(): T {
+    const Constructor = (this.constructor as any) as new (values: IElement) => T;
+    const copy = new Constructor(this);
+    return copy;
   }
 
   toUMLElement(element: Element, children: Element[]): { element: UMLElement; children: Element[] } {

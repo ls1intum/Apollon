@@ -34,6 +34,13 @@ export const DiagramReducer: Reducer<DiagramState, DiagramActions> = (state = in
         ownedRelationships: state.ownedRelationships.filter(id => id !== payload.id),
       };
     }
+    case DiagramActionTypes.UPDATE_BOUNDS: {
+      const { payload } = action;
+      return {
+        ...state,
+        bounds: { ...payload.bounds },
+      };
+    }
   }
   return state;
 };

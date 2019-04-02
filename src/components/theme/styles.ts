@@ -20,7 +20,6 @@ export const defaults: Styles = {
   interactiveAreaColor: 'rgba(0, 220, 0, 0.3)',
   interactiveAreaHoverColor: 'rgba(0, 220, 0, 0.15)',
   fontFamily: 'HelveticaNeue, Helvetica, Arial, Verdana, sans-serif',
-  headingFontFamily:
-    'HelveticaNeue-Light, Helvetica, Arial, Verdana, sans-serif',
+  headingFontFamily: 'HelveticaNeue-Light, Helvetica, Arial, Verdana, sans-serif',
   headingFontWeight: 300,
 };

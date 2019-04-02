@@ -9,6 +9,7 @@ export const enum ElementActionTypes {
   SELECT = '@@element/SELECT',
   MAKE_INTERACTIVE = '@@element/MAKE_INTERACTIVE',
   RESIZE = '@@element/RESIZE',
+  RESIZED = '@@element/RESIZED',
   MOVE = '@@element/MOVE',
   UPDATE = '@@element/UPDATE',
   CHANGE = '@@element/CHANGE',
@@ -59,6 +60,12 @@ export interface ResizeAction extends Action<ElementActionTypes.RESIZE> {
   };
 }
 
+export interface ResizedAction extends Action<ElementActionTypes.RESIZED> {
+  payload: {
+    id: string;
+  };
+}
+
 export interface MoveAction extends Action<ElementActionTypes.MOVE> {
   payload: {
     id: string | null;
@@ -103,6 +110,7 @@ export type ElementActions =
   | SelectAction
   | MakeInteractiveAction
   | ResizeAction
+  | ResizedAction
   | MoveAction
   | ChangeAction
   | RenameAction

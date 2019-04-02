@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { Components } from '../../packages/components';
+import { Element } from '../../services/element/element';
 import { Relationship } from '../../services/relationship/relationship';
 import { Point } from './point';
 
@@ -9,10 +10,6 @@ export interface Boundary {
   y: number;
   width: number;
   height: number;
-}
-
-export class Boundary {
-  constructor(public x: number, public y: number, public width: number, public height: number) {}
 }
 
 export function computeBoundingBox(points: Point[]): Boundary {
@@ -44,23 +41,36 @@ export function computeBoundingBox(points: Point[]): Boundary {
   };
 }
 
+export function computeBoundingBoxForElements(elements: Element[]): Boundary {
+  if (!elements.length) {
+    return { x: 0, y: 0, width: 0, height: 0 };
+  }
+  const boundaries: Boundary[] = elements.map<Boundary>(element => ({ ...element.bounds }));
+  const x = Math.min(...boundaries.map(bounds => bounds.x));
+  const y = Math.min(...boundaries.map(bounds => bounds.y));
+  const width = Math.max(...boundaries.map(bounds => bounds.x + bounds.width)) - x;
+  const height = Math.max(...boundaries.map(bounds => bounds.y + bounds.height)) - y;
+  return { x, y, width, height };
+}
+
 export async function computeBoundingBoxForRelationship(relationship: Relationship): Promise<Boundary> {
   const Component = Components[relationship.type];
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.style.visibility = 'none';
+  svg.style.fontFamily = 'HelveticaNeue, Helvetica, Arial, Verdana, sans-serif';
   document.body.appendChild(svg);
   const element = createElement(Component, { element: relationship });
   return new Promise((resolve, reject) => {
     render(element, svg, () => {
-      let bounds: Boundary = new Boundary(0, 0, 0, 0);
+      let bounds: Boundary = { x: 0, y: 0, width: 0, height: 0 };
       if (svg.firstElementChild) {
         const parent = svg.getBoundingClientRect() as DOMRect;
         const child = svg.firstElementChild.getBoundingClientRect() as DOMRect;
         bounds = {
           x: child.x - parent.x,
           y: child.y - parent.y,
-          width: child.width,
-          height: child.height,
+          width: Math.max(child.width, 1),
+          height: Math.max(child.height, 1),
         };
       }
       unmountComponentAtNode(svg);

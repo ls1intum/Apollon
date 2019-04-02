@@ -116,8 +116,8 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
         const relationship = new RelationshipClazz();
         Object.assign(relationship, {
           type,
-          source: endpoints.source,
-          target: endpoints.target,
+          source: { ...endpoints.source },
+          target: { ...endpoints.target },
         });
         this.props.create(relationship);
       } catch (error) {}

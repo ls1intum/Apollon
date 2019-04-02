@@ -18,8 +18,8 @@ export class Diagram extends Container implements IDiagram {
 
   bounds: Boundary = {
     ...this.bounds,
-    width: 1600,
-    height: 1600,
+    width: 800,
+    height: 300,
   };
 
   constructor(values?: IDiagram);

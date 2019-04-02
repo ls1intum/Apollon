@@ -19,6 +19,7 @@ export const selectable = (WrappedComponent: typeof ElementComponent): Component
     render() {
       return <WrappedComponent {...this.props} />;
     }
+
     private select = (event: MouseEvent) => {
       if (event.which !== 1 || !this.props.element.hovered || (this.props.element.selected && !event.shiftKey)) return;
       this.props.select(this.props.element.id, event.shiftKey);

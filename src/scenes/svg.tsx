@@ -1,18 +1,15 @@
 import React, { Component } from 'react';
-import { ModelState } from '../components/store/model-state';
 import { Components } from '../packages/components';
 import { ElementType } from '../packages/element-type';
 import { Elements } from '../packages/elements';
-import { RelationshipType } from '../packages/relationship-type';
 import { Relationships } from '../packages/relationships';
-import { Container } from '../services/container/container';
-import { Element, IElement } from '../services/element/element';
-import { IRelationship, Relationship } from '../services/relationship/relationship';
-import { ExportOptions } from '../typings';
+import { Element } from '../services/element/element';
+import { ExportOptions, UMLModel } from '../typings';
 import { Boundary } from '../utils/geometry/boundary';
+import { Style } from './svg-styles';
 
 interface Props {
-  state: ModelState;
+  model: UMLModel;
   options?: ExportOptions;
 }
 interface State {
@@ -20,59 +17,75 @@ interface State {
   elements: Element[];
 }
 
-const getInitialState = ({ state, options }: Props): State => {
+const getInitialState = ({ model, options }: Props): State => {
   const keepOriginalSize = (options && options.keepOriginalSize) || false;
 
-  const filter = (ids: string[], include?: string[], exclude?: string[]): string[] => {
-    const result: string[] = [];
-    for (const id of ids) {
-      const ElementClazz = Elements[state.elements[id].type as ElementType] || Relationships[state.elements[id].type as RelationshipType];
-      const element: Element = new ElementClazz(state.elements[id]);
+  const umlElements = [...model.elements, ...model.relationships];
+  const rootElements = [...model.elements.filter(element => !element.owner), ...model.relationships];
 
-      if (include && include.includes(id)) {
-        result.push(id);
-        if (element instanceof Container) {
-          result.push(...filter(element.ownedElements, element.ownedElements));
-        }
-      } else if (include && !include.includes(id)) {
-        if (element instanceof Container) {
-          result.push(...filter(element.ownedElements, include, exclude));
-        }
-      } else if (exclude && !exclude.includes(id)) {
-        result.push(id);
-        if (element instanceof Container) {
-          result.push(...filter(element.ownedElements, include, exclude));
-        }
-      } else if (!exclude || !exclude.includes(id)) {
-        if ((!include || !include.length) && (!exclude || !exclude.length)) {
-          result.push(id);
-          if (element instanceof Container) {
-            result.push(...filter(element.ownedElements, include, exclude));
-          }
-        }
+  const includeChildren = (ids: Set<string>, include: Set<string>): Set<string> => {
+    const result = new Set<string>();
+    for (const id of ids) {
+      const umlElement = umlElements.find(element => element.id === id);
+      if (!umlElement) continue;
+
+      const children = new Set<string>(model.elements.filter(elem => elem.owner === id).map(elem => elem.id));
+      if (include.has(id)) {
+        result.add(id);
+        include = new Set<string>([...include, ...children]);
       }
+      includeChildren(children, include).forEach(result.add, result);
     }
     return result;
   };
 
-  const layout: string[] = filter(
-    [...state.diagram.ownedElements, ...state.diagram.ownedRelationships],
-    options && options.include,
-    options && options.exclude,
-  );
+  const excludeChildren = (ids: Set<string>, exclude: Set<string>): Set<string> => {
+    const result = new Set<string>();
+    for (const id of ids) {
+      const umlElement = umlElements.find(element => element.id === id);
+      if (!umlElement) continue;
 
-  let elements = normalizeState(state);
+      const children = new Set<string>(model.elements.filter(element => element.owner === id).map(element => element.id));
+      if (!exclude.has(id)) {
+        result.add(id);
+      } else {
+        exclude = new Set<string>([...exclude, ...children]);
+      }
+      excludeChildren(children, exclude).forEach(result.add, result);
+    }
+    return result;
+  };
 
-  const bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.includes(element.id)));
-  if (options && options.margin) {
-    bounds.x -= options.margin;
-    bounds.y -= options.margin;
-    bounds.width += options.margin * 2;
-    bounds.height += options.margin * 2;
+  let layout = new Set<string>(umlElements.map(element => element.id));
+  if (options && options.include) {
+    layout = includeChildren(new Set<string>(rootElements.map(element => element.id)), new Set<string>(options.include));
+  }
+  if (options && options.exclude) {
+    layout = excludeChildren(new Set<string>(rootElements.map(element => element.id)), new Set<string>(options.exclude));
   }
 
+  let elements: Element[] = [
+    ...model.elements.map(umlElement => {
+      const ElementClazz = Elements[umlElement.type as ElementType];
+      return new ElementClazz(umlElement);
+    }),
+    ...model.relationships.map(umlRelationship => {
+      const RelationshipClazz = Relationships[umlRelationship.type];
+      const rel = new RelationshipClazz(umlRelationship);
+      return rel;
+    }),
+  ];
+
+  const bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.has(element.id)));
+  if (options) {
+    const margin = getMargin(options.margin);
+    bounds.x -= margin.left;
+    bounds.y -= margin.top;
+    bounds.width += margin.left + margin.right;
+    bounds.height += margin.top + margin.bottom;
+  }
   elements = elements
-    .filter(element => layout.includes(element.id))
+    .filter(element => layout.has(element.id))
     .map(element => {
       element.bounds.x -= bounds.x;
       element.bounds.y -= bounds.y;
@@ -81,38 +94,12 @@ const getInitialState = ({ state, options }: Props): State => {
   return { bounds, elements };
 };
 
-const normalizeState = (state: ModelState): Element[] => {
-  let elements: Element[] = state.diagram.ownedElements
-    .map<IElement>(id => state.elements[id])
-    .map<Element>(element => {
-      const ElementClazz = Elements[element.type as ElementType];
-      return new ElementClazz(element);
-    });
-
-  const positionChildren = (element: Element): Element[] => {
-    if (element instanceof Container) {
-      const children: Element[] = element.ownedElements.map(id => {
-        const ElementClazz = Elements[state.elements[id].type as ElementType];
-        const child = new ElementClazz(state.elements[id]);
-        child.bounds.x += element.bounds.x;
-        child.bounds.y += element.bounds.y;
-        return child;
-      });
-      return [...children, ...children.reduce<Element[]>((a, e) => [...a, ...positionChildren(e)], [])];
-    }
-    return [];
-  };
-
-  elements = [...elements, ...elements.reduce<Element[]>((a, e) => [...a, ...positionChildren(e)], [])];
-
-  const relationships: Relationship[] = state.diagram.ownedRelationships
-    .map<IRelationship>(id => state.elements[id] as IRelationship)
-    .map<Relationship>(element => {
-      const RelationshipClazz = Relationships[element.type];
-      return new RelationshipClazz(element);
-    });
-
-  return [...elements, ...relationships];
+const getMargin = (margin: ExportOptions['margin']): { top: number; right: number; bottom: number; left: number } => {
+  if (typeof margin === 'number') {
+    return { top: margin, right: margin, bottom: margin, left: margin };
+  }
+  const result = { top: 0, right: 0, bottom: 0, left: 0 };
+  return Object.assign(result, margin);
 };
 
 const computeBoundingBox = (elements: Element[]): Boundary => {
@@ -142,7 +129,7 @@ export class Svg extends Component<Props, State> {
         fill="white"
       >
         <defs>
-          <style>{`text { fill: black } * { overflow: visible; }`}</style>
+          <style>{Style}</style>
         </defs>
         {elements.map(element => {
           const ElementComponent = Components[element.type];

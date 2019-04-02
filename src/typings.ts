@@ -79,7 +79,7 @@ export interface ApollonOptions {
 }
 
 export interface ExportOptions {
-  margin?: number;
+  margin?: number | { top?: number; right?: number; bottom?: number; left?: number };
   keepOriginalSize?: boolean;
   include?: string[];
   exclude?: string[];
