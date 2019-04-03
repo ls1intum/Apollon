@@ -7,7 +7,6 @@ export class Package extends Container {
   static features = {
     ...Container.features,
     connectable: false,
-    editable: false,
   };
 
   type = CommonElementType.Package;
