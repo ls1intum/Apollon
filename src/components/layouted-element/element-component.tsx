@@ -11,6 +11,7 @@ type SvgProps = {
   moving: boolean;
   isRoot: boolean;
   highlight: boolean;
+  color: string;
 };
 
 const Svg = styled.svg.attrs({
@@ -18,7 +19,7 @@ const Svg = styled.svg.attrs({
 })<SvgProps>`
   overflow: visible;
   opacity: ${({ moving, hidden }) => (hidden ? 0 : moving ? 0.35 : 1)};
-  fill: ${({ highlight, isRoot, theme }) => (highlight ? theme.interactiveAreaColor : isRoot ? 'white' : 'none')};
+  fill: ${({ highlight, isRoot, theme, color }) => (highlight ? theme.interactiveAreaColor : isRoot ? color : 'none')};
 
   ${({ disabled }) => disabled && `pointer-events: none;`}
 
@@ -71,6 +72,7 @@ export class ElementComponent extends Component<Props> {
               isRoot={this.props.element.owner === null}
               hidden={this.props.hidden}
               highlight={interactable && element.interactive}
+              color={element.color}
             >
               <ChildComponent element={element}>
                 {element instanceof Container &&

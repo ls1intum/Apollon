@@ -3,10 +3,12 @@ import { RelationshipType } from '../../packages/relationship-type';
 import { UMLElement } from '../../typings';
 import { Boundary } from '../../utils/geometry/boundary';
 import { uuid } from '../../utils/uuid';
+import { ColorPropType } from 'react-native';
 
 export interface IElement {
   readonly id: string;
   readonly name: string;
+  readonly color: string;
   readonly type: ElementType | RelationshipType;
   readonly bounds: Boundary;
   readonly owner: string | null;
@@ -29,6 +31,7 @@ export abstract class Element implements IElement {
 
   readonly id: string = uuid();
   name: string = '';
+  color: string = 'white';
   abstract readonly type: ElementType | RelationshipType;
   readonly bounds: Boundary = { x: 0, y: 0, width: 200, height: 100 };
   owner: string | null = null;
@@ -58,6 +61,7 @@ export abstract class Element implements IElement {
         id: element.id,
         name: element.name,
         owner: element.owner,
+        color: element.color === 'white' ? undefined : element.color,
         type: element.type as ElementType,
         bounds: element.bounds,
       },
