@@ -31,6 +31,7 @@ export interface Element {
   id: string;
   name: string;
   type: ElementType;
+  highlight?: string;
   bounds: { x: number; y: number; width: number; height: number };
 }
 
@@ -74,6 +75,7 @@ export interface ApollonOptions {
   type?: DiagramType;
   mode?: ApollonMode;
   readonly?: boolean;
+  enablePopups?: boolean;
   model?: UMLModel;
   theme?: Partial<Styles>;
 }

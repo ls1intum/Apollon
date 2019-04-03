@@ -7,6 +7,7 @@ import { uuid } from '../../utils/uuid';
 export interface IElement {
   readonly id: string;
   readonly name: string;
+  readonly highlight?: string;
   readonly type: ElementType | RelationshipType;
   readonly bounds: Boundary;
   readonly owner: string | null;
@@ -29,6 +30,7 @@ export abstract class Element implements IElement {
 
   readonly id: string = uuid();
   name: string = '';
+  highlight?: string;
   abstract readonly type: ElementType | RelationshipType;
   readonly bounds: Boundary = { x: 0, y: 0, width: 200, height: 100 };
   owner: string | null = null;
@@ -58,6 +60,7 @@ export abstract class Element implements IElement {
         id: element.id,
         name: element.name,
         owner: element.owner,
+        highlight: element.highlight,
         type: element.type as ElementType,
         bounds: element.bounds,
       },

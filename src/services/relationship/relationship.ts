@@ -17,6 +17,7 @@ export abstract class Relationship extends Element implements IRelationship {
     return {
       id: relationship.id,
       name: relationship.name,
+      highlight: relationship.highlight,
       type: relationship.type,
       source: relationship.source,
       target: relationship.target,

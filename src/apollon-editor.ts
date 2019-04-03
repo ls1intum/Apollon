@@ -4,12 +4,29 @@ import { Store } from 'redux';
 import { ModelState } from './components/store/model-state';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
-import { ApollonOptions, DiagramType, ExportOptions, Selection, SVG, UMLModel } from './typings';
+import { ElementRepository } from './services/element/element-repository';
+import { ApollonOptions, Assessment, DiagramType, ExportOptions, Selection, SVG, UMLModel } from './typings';
 
 export class ApollonEditor {
   get model(): UMLModel {
     if (!this.store) throw new Error('Apollon was already destroyed.');
     return ModelState.toModel(this.store.getState());
+  }
+
+  set model(model: UMLModel) {
+    if (!this.store) throw new Error('Apollon was already destroyed.');
+    const state: ModelState = {
+      ...ModelState.fromModel(model),
+      editor: { ...this.store.getState().editor },
+    };
+    this.destroy();
+
+    const element = createElement(Application, {
+      ref: this.application,
+      state,
+      styles: {},
+    });
+    render(element, this.container, this.componentDidMount);
   }
 
   static exportModelAsSvg(model: UMLModel, options?: ExportOptions): SVG {
@@ -25,9 +42,11 @@ export class ApollonEditor {
   }
 
   selection: Selection = { elements: [], relationships: [] };
+  private assessments: Assessment[] = [];
   private application: RefObject<Application> = createRef();
   private store: Store<ModelState> | null = null;
-  private subscribers: Array<(selection: Selection) => void> = [];
+  private selectionSubscribers: Array<(selection: Selection) => void> = [];
+  private assessmentSubscribers: Array<(assessments: Assessment[]) => void> = [];
 
   constructor(private container: HTMLElement, options: ApollonOptions) {
     const model: UMLModel = {
@@ -45,8 +64,9 @@ export class ApollonEditor {
       ...state,
       editor: {
         ...state.editor,
-        ...(options.mode && { mode: options.mode }),
-        ...(options.readonly && { readonly: options.readonly }),
+        ...(options.mode !== undefined && { mode: options.mode }),
+        ...(options.readonly !== undefined && { readonly: options.readonly }),
+        ...(options.enablePopups !== undefined && { enablePopups: options.enablePopups }),
       },
     };
 
@@ -62,12 +82,27 @@ export class ApollonEditor {
     unmountComponentAtNode(this.container);
   }
 
+  select(selection: Selection) {
+    if (!this.store) return;
+    const { dispatch } = this.store;
+    dispatch(ElementRepository.select(null));
+    [...selection.elements, ...selection.relationships].map(id => dispatch(ElementRepository.select(id, false, true)));
+  }
+
   subscribeToSelectionChange(callback: (selection: Selection) => void): number {
-    return this.subscribers.push(callback) - 1;
+    return this.selectionSubscribers.push(callback) - 1;
   }
 
   unsubscribeFromSelectionChange(subscriptionId: number) {
-    this.subscribers.splice(subscriptionId);
+    this.selectionSubscribers.splice(subscriptionId);
+  }
+
+  subscribeToAssessmentChange(callback: (assessments: Assessment[]) => void): number {
+    return this.assessmentSubscribers.push(callback) - 1;
+  }
+
+  unsubscribeFromAssessmentChange(subscriptionId: number) {
+    this.assessmentSubscribers.splice(subscriptionId);
   }
 
   exportAsSVG(options?: ExportOptions): SVG {
@@ -83,15 +118,27 @@ export class ApollonEditor {
 
   private onDispatch = () => {
     if (!this.store) return;
-    const { elements } = this.store.getState();
+    const { elements, assessments } = this.store.getState();
     const selection: Selection = {
       elements: Object.keys(elements).filter(id => elements[id].selected && !('path' in elements[id])),
       relationships: Object.keys(elements).filter(id => elements[id].selected && 'path' in elements[id]),
     };
 
-    if (JSON.stringify(this.selection) === JSON.stringify(selection)) return;
+    if (JSON.stringify(this.selection) !== JSON.stringify(selection)) {
+      this.selectionSubscribers.forEach(subscriber => subscriber(selection));
+      this.selection = selection;
+    }
 
-    this.subscribers.forEach(subscriber => subscriber(selection));
-    this.selection = selection;
+    const umlAssessments = Object.keys(assessments).map<Assessment>(id => ({
+      modelElementId: id,
+      elementType: elements[id].type,
+      score: assessments[id].score,
+      feedback: assessments[id].feedback,
+    }));
+
+    if (JSON.stringify(this.assessments) !== JSON.stringify(umlAssessments)) {
+      this.assessmentSubscribers.forEach(subscriber => subscriber(umlAssessments));
+      this.assessments = umlAssessments;
+    }
   };
 }

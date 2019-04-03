@@ -6,9 +6,9 @@ import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
 import { ApollonMode } from '../../typings';
 import { Point } from '../../utils/geometry/point';
+import { AssessmentPopup } from '../assessment-popup/assessment-popup';
 import { CanvasContext, withCanvas } from '../canvas/canvas-context';
 import { ModelState } from '../store/model-state';
-import { AssessmentPopup } from './assessment-popup';
 import { Arrow, Container, Content } from './popup-styles';
 
 class PopupComponent extends Component<Props> {
@@ -16,7 +16,10 @@ class PopupComponent extends Component<Props> {
     const position: Point = this.calculatePosition();
     let CustomPopupComponent = null;
 
+    if (!this.props.enablePopups) return false;
+
     if (this.props.mode === ApollonMode.Assessment) {
+      if (this.props.readonly) return null;
       CustomPopupComponent = AssessmentPopup;
     } else {
       CustomPopupComponent = Popups[this.props.element.type];
@@ -49,6 +52,8 @@ interface OwnProps {
 
 interface StateProps {
   mode: ApollonMode;
+  readonly: boolean;
+  enablePopups: boolean;
 }
 
 interface DispatchProps {
@@ -60,7 +65,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ mode: state.editor.mode }),
+    state => ({ mode: state.editor.mode, readonly: state.editor.readonly, enablePopups: state.editor.enablePopups }),
     { update: ElementRepository.update },
   ),
 );

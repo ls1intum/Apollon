@@ -2,8 +2,11 @@ import { ActionCreator } from 'redux';
 import { ModelState } from '../../components/store/model-state';
 import { ElementType } from '../../packages/element-type';
 import { Elements } from '../../packages/elements';
+import { RelationshipType } from '../../packages/relationship-type';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
+import { Container } from '../container/container';
+import { RelationshipRepository } from '../relationship/relationship-repository';
 import { Element } from './element';
 import {
   ChangeAction,
@@ -38,9 +41,9 @@ export class ElementRepository {
     payload: { id, internal },
   });
 
-  static select = (id: string | null, toggle: boolean = false): SelectAction => ({
+  static select = (id: string | null, toggle: boolean = false, keep: boolean = false): SelectAction => ({
     type: ElementActionTypes.SELECT,
-    payload: { id, toggle },
+    payload: { id, toggle, keep },
   });
 
   static makeInteractive = (id: string): MakeInteractiveAction => ({
@@ -77,6 +80,10 @@ export class ElementRepository {
     const element = state[id];
     if (!element) return null;
 
+    if (element.type in RelationshipType) {
+      return RelationshipRepository.getById(state)(id);
+    }
+
     const ElementClass = Elements[element.type as ElementType];
     if (!ElementClass) return null;
 
@@ -104,6 +111,16 @@ export class ElementRepository {
         [element.id]: el,
       };
     }, {});
+  };
+
+  static getChildren = (state: ElementState) => (id: string): Element[] => {
+    const owner = ElementRepository.getById(state)(id);
+    if (!owner) return [];
+
+    if (owner instanceof Container) {
+      return owner.ownedElements.reduce<Element[]>((acc, element) => [...acc, ...ElementRepository.getChildren(state)(element)], [owner]);
+    }
+    return [owner];
   };
 
   static change: ActionCreator<ChangeAction> = (id: string, kind: ElementType) => ({
