@@ -3,7 +3,6 @@ import { RelationshipType } from '../../packages/relationship-type';
 import { UMLElement } from '../../typings';
 import { Boundary } from '../../utils/geometry/boundary';
 import { uuid } from '../../utils/uuid';
-import { ColorPropType } from 'react-native';
 
 export interface IElement {
   readonly id: string;

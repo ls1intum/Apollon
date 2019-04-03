@@ -13,6 +13,22 @@ export class ApollonEditor {
     return ModelState.toModel(this.store.getState());
   }
 
+  set model(model: UMLModel) {
+    if (!this.store) throw new Error('Apollon was already destroyed.');
+    const state: ModelState = {
+      ...ModelState.fromModel(model),
+      editor: { ...this.store.getState().editor },
+    };
+    this.destroy();
+
+    const element = createElement(Application, {
+      ref: this.application,
+      state,
+      styles: {},
+    });
+    render(element, this.container, this.componentDidMount);
+  }
+
   static exportModelAsSvg(model: UMLModel, options?: ExportOptions): SVG {
     const div = document.createElement('div');
     const element = createElement(Svg, { model, options });
