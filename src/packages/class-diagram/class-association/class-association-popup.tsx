@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { ClassRelationshipType } from '..';
 import { Dropdown } from '../../../components/controls/dropdown';
+import { FlipIcon } from '../../../components/controls/flip-icon';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
 import { Section } from '../../../components/popup/controls/section';
@@ -32,7 +33,10 @@ class ClassAssociationComponent extends Component<Props> {
     return (
       <div>
         <Section>
-          <Header>Association</Header>
+          <Flex>
+            <Header>Association</Header>
+            <FlipIcon fill="black" />
+          </Flex>
           <Divider />
         </Section>
         <Section>
