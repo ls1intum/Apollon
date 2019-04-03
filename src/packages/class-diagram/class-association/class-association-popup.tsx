@@ -11,6 +11,7 @@ import { TextField } from '../../../components/popup/controls/textfield';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
+import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
 import { ClassAssociation } from './class-association';
 
 const Flex = styled.div`
@@ -35,7 +36,7 @@ class ClassAssociationComponent extends Component<Props> {
         <Section>
           <Flex>
             <Header>Association</Header>
-            <FlipIcon fill="black" />
+            <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
           </Flex>
           <Divider />
         </Section>
@@ -99,6 +100,7 @@ type StateProps = {
 type DispatchProps = {
   change: typeof ElementRepository.change;
   update: typeof ElementRepository.update;
+  flip: typeof RelationshipRepository.flip;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -108,6 +110,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   {
     change: ElementRepository.change,
     update: ElementRepository.update,
+    flip: RelationshipRepository.flip,
   },
 );
 

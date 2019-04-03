@@ -9,11 +9,12 @@ import { ElementRepository } from '../element/element-repository';
 import { DeleteAction, ElementActionTypes, MoveAction, ResizeAction, UpdateAction } from '../element/element-types';
 import { Relationship } from './relationship';
 import { RelationshipRepository } from './relationship-repository';
-import { ConnectAction, CreateAction, RedrawAction, RelationshipActionTypes } from './relationship-types';
+import { ConnectAction, CreateAction, FlipAction, RedrawAction, RelationshipActionTypes } from './relationship-types';
 
 export function* RelationshipSaga() {
   yield takeEvery(RelationshipActionTypes.CREATE, handleRelationshipCreation);
   yield takeEvery(RelationshipActionTypes.CONNECT, handleRelationshipConnect);
+  yield takeEvery(RelationshipActionTypes.FLIP, handleRelationshipFlip);
   yield takeEvery(ElementActionTypes.MOVE, handleElementMove);
   yield takeEvery(ElementActionTypes.RESIZE, handleElementResize);
   yield takeLatest(ElementActionTypes.UPDATE, handleElementUpdate);
@@ -25,6 +26,10 @@ function* handleRelationshipCreation({ payload }: CreateAction) {
 }
 
 function* handleRelationshipConnect({ payload }: ConnectAction) {
+  yield recalc(payload.id);
+}
+
+function* handleRelationshipFlip({ payload }: FlipAction) {
   yield recalc(payload.id);
 }
 

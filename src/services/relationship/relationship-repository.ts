@@ -4,7 +4,7 @@ import { notEmpty } from '../../utils/not-empty';
 import { ElementState } from '../element/element-types';
 import { Port } from '../element/port';
 import { IRelationship, Relationship } from './relationship';
-import { ConnectAction, CreateAction, RelationshipActionTypes } from './relationship-types';
+import { ConnectAction, CreateAction, FlipAction, RelationshipActionTypes } from './relationship-types';
 
 export class RelationshipRepository {
   static create = (relationship: Relationship): CreateAction => ({
@@ -15,6 +15,11 @@ export class RelationshipRepository {
   static connect = (id: string, { source, target }: { source?: Port; target?: Port }): ConnectAction => ({
     type: RelationshipActionTypes.CONNECT,
     payload: { id, source, target },
+  });
+
+  static flip = (id: string): FlipAction => ({
+    type: RelationshipActionTypes.FLIP,
+    payload: { id },
   });
 
   static getById = (state: ElementState) => (id: string): Relationship | null => {
