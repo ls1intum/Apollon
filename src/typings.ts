@@ -31,7 +31,7 @@ export interface Element {
   id: string;
   name: string;
   type: ElementType;
-  color?: string;
+  highlight?: string;
   bounds: { x: number; y: number; width: number; height: number };
 }
 

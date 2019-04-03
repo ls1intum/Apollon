@@ -26,7 +26,7 @@ export class ModelState {
         [element.id]: {
           owner: null,
           ...element,
-          color: element.color || 'white',
+          highlight: element.highlight,
           hovered: false,
           selected: false,
           interactive: [...model.interactive.elements, ...model.interactive.relationships].includes(element.id),
