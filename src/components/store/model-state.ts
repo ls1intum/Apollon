@@ -60,8 +60,8 @@ export class ModelState {
     bounds.width = Math.ceil(bounds.width / 20) * 20;
     bounds.height = Math.ceil(bounds.height / 20) * 20;
     for (const element of root) {
-      elements[element.id].bounds.x -= bounds.width / 2;
-      elements[element.id].bounds.y -= bounds.height / 2;
+      elements[element.id].bounds.x -= bounds.x + bounds.width / 2;
+      elements[element.id].bounds.y -= bounds.y + bounds.height / 2;
     }
 
     let width = 0;
