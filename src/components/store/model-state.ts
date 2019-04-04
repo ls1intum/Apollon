@@ -48,8 +48,11 @@ export class ModelState {
         element.ownedElements = children.map(child => child.id);
         for (const child of children) {
           position(child);
-          child.bounds.x -= element.bounds.x;
-          child.bounds.y -= element.bounds.y;
+
+          if (model.version === '2.0.0') {
+            child.bounds.x -= element.bounds.x;
+            child.bounds.y -= element.bounds.y;
+          }
         }
         element.render(children);
       }
