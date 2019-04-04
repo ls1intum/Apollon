@@ -1,14 +1,16 @@
-import React, { Component, SFC } from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { UseCaseRelationshipType } from '..';
 import { Dropdown } from '../../../components/controls/dropdown';
+import { FlipIcon } from '../../../components/controls/flip-icon';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
 import { Section } from '../../../components/popup/controls/section';
 import { TextField } from '../../../components/popup/controls/textfield';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
+import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
 import { ModelState } from './../../../components/store/model-state';
 import { UseCaseAssociation } from './use-case-association';
 
@@ -23,7 +25,6 @@ const Input = styled(TextField)`
 `;
 
 class UseCaseAssociationComponent extends Component<Props> {
-
   render() {
     const { element, getById } = this.props;
     const source = getById(element.source.element);
@@ -35,16 +36,19 @@ class UseCaseAssociationComponent extends Component<Props> {
           {element.type === UseCaseRelationshipType.UseCaseAssociation ? (
             <TextField value={element.name} onUpdate={this.rename(element.id)} />
           ) : (
-            <Header>
-              {
+            <Flex>
+              <Header>
                 {
-                  [UseCaseRelationshipType.UseCaseAssociation]: 'Association',
-                  [UseCaseRelationshipType.UseCaseGeneralization]: 'Generalization',
-                  [UseCaseRelationshipType.UseCaseInclude]: 'Include',
-                  [UseCaseRelationshipType.UseCaseExtend]: 'Extend',
-                }[element.type]
-              }
-            </Header>
+                  {
+                    [UseCaseRelationshipType.UseCaseAssociation]: 'Association',
+                    [UseCaseRelationshipType.UseCaseGeneralization]: 'Generalization',
+                    [UseCaseRelationshipType.UseCaseInclude]: 'Include',
+                    [UseCaseRelationshipType.UseCaseExtend]: 'Extend',
+                  }[element.type]
+                }
+              </Header>
+              <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            </Flex>
           )}
           <Divider />
         </Section>
@@ -81,6 +85,7 @@ interface DispatchProps {
   rename: typeof ElementRepository.rename;
   change: typeof ElementRepository.change;
   update: typeof ElementRepository.update;
+  flip: typeof RelationshipRepository.flip;
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -91,7 +96,8 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     rename: ElementRepository.rename,
     change: ElementRepository.change,
     update: ElementRepository.update,
-  }
+    flip: RelationshipRepository.flip,
+  },
 );
 
 export const UseCaseAssociationPopup = enhance(UseCaseAssociationComponent);

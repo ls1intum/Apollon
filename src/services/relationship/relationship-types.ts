@@ -6,9 +6,10 @@ export const enum RelationshipActionTypes {
   CREATE = '@@relationship/CREATE',
   REDRAW = '@@relationship/REDRAW',
   CONNECT = '@@relationship/CONNECT',
+  FLIP = '@@relationship/FLIP',
 }
 
-export type RelationshipActions = CreateAction | RedrawAction | ConnectAction;
+export type RelationshipActions = CreateAction | RedrawAction | ConnectAction | FlipAction;
 
 export interface CreateAction extends Action<RelationshipActionTypes.CREATE> {
   payload: {
@@ -29,5 +30,11 @@ export interface ConnectAction extends Action<RelationshipActionTypes.CONNECT> {
     id: string;
     source?: Port;
     target?: Port;
+  };
+}
+
+export interface FlipAction extends Action<RelationshipActionTypes.FLIP> {
+  payload: {
+    id: string;
   };
 }
