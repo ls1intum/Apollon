@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { ClassRelationshipType } from '..';
 import { Dropdown } from '../../../components/controls/dropdown';
+import { FlipIcon } from '../../../components/controls/flip-icon';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
 import { Section } from '../../../components/popup/controls/section';
@@ -10,6 +11,7 @@ import { TextField } from '../../../components/popup/controls/textfield';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
+import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
 import { ClassAssociation } from './class-association';
 
 const Flex = styled.div`
@@ -32,7 +34,10 @@ class ClassAssociationComponent extends Component<Props> {
     return (
       <div>
         <Section>
-          <Header>Association</Header>
+          <Flex>
+            <Header>Association</Header>
+            <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
+          </Flex>
           <Divider />
         </Section>
         <Section>
@@ -95,6 +100,7 @@ type StateProps = {
 type DispatchProps = {
   change: typeof ElementRepository.change;
   update: typeof ElementRepository.update;
+  flip: typeof RelationshipRepository.flip;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -104,6 +110,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   {
     change: ElementRepository.change,
     update: ElementRepository.update,
+    flip: RelationshipRepository.flip,
   },
 );
 
