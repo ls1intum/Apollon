@@ -19,7 +19,7 @@ const Svg = styled.svg.attrs({
 })<SvgProps>`
   overflow: visible;
   opacity: ${({ moving, hidden }) => (hidden ? 0 : moving ? 0.35 : 1)};
-  fill: ${({ highlight, isRoot, theme, highlightColor }) => (highlight ? theme.interactiveAreaColor : isRoot ? highlightColor || 'white' : 'none')};
+  fill: ${({ highlight, isRoot, theme, highlightColor }) => highlightColor ? highlightColor : (highlight ? theme.interactiveAreaColor : isRoot ? 'white' : 'none')};
 
   ${({ disabled }) => disabled && `pointer-events: none;`}
 
