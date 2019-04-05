@@ -1,0 +1,55 @@
+{
+  "views": {
+    "modelling": "Diagram Modellierung",
+    "exporting": "Interaktive Bereiche",
+    "highlight": "Zeige interaktive Elemente"
+  },
+  "sidebar": {
+    "classAttribute": "+ attribut: Typ",
+    "classMethod": "+ methode()",
+    "enumAttribute": "Fall",
+    "objectAttribute": "attribut = Wert"
+  },
+  "popup": {
+    "attributes": "Attribute",
+    "methods": "Methoden",
+    "association": "Assoziation",
+    "multiplicity": "Multiziplität",
+    "role": "Rolle"
+  },
+  "packages": {
+    "classDiagram": {
+      "class": "Klasse",
+      "abstract": "Abstrakt",
+      "interface": "Schnittstelle",
+      "enumeration": "Aufzählung",
+      "attribute": "Attribut",
+      "method": "Methode",
+      "aggregation": "Aggregation",
+      "bidirectional": "Assoziation (bidirektional)",
+      "composition": "Komposition",
+      "dependency": "Abhängigkeit",
+      "inheritance": "Vererbung",
+      "realization": "Realisierung",
+      "unidirectional": "Assoziation (unidirektional)"
+    },
+    "objectDiagram": {
+      "objectName": "Objekt",
+      "objectAttribute": "Attribut"
+    },
+    "activityDiagram": {
+      "actionNode": "Aktion",
+      "objectNode": "Objekt",
+      "condition": "Bedingung"
+    },
+    "useCaseDiagram": {
+      "useCase": "Anwendungsfall",
+      "actor": "Akteur",
+      "system": "System",
+      "association": "Assoziation",
+      "extend": "Extend",
+      "generalization": "Generalisierung",
+      "include": "Include"
+    }
+  }
+}

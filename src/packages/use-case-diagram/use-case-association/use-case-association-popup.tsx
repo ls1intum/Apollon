@@ -1,9 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import styled from 'styled-components';
 import { UseCaseRelationshipType } from '..';
 import { Dropdown } from '../../../components/controls/dropdown';
 import { FlipIcon } from '../../../components/controls/flip-icon';
+import { I18nContext } from '../../../components/i18n/i18n-context';
+import { localized } from '../../../components/i18n/localized';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
 import { Section } from '../../../components/popup/controls/section';
@@ -40,10 +43,10 @@ class UseCaseAssociationComponent extends Component<Props> {
               <Header>
                 {
                   {
-                    [UseCaseRelationshipType.UseCaseAssociation]: 'Association',
-                    [UseCaseRelationshipType.UseCaseGeneralization]: 'Generalization',
-                    [UseCaseRelationshipType.UseCaseInclude]: 'Include',
-                    [UseCaseRelationshipType.UseCaseExtend]: 'Extend',
+                    [UseCaseRelationshipType.UseCaseAssociation]: this.props.translate('packages.useCaseDiagram.association'),
+                    [UseCaseRelationshipType.UseCaseGeneralization]: this.props.translate('packages.useCaseDiagram.generalization'),
+                    [UseCaseRelationshipType.UseCaseInclude]: this.props.translate('packages.useCaseDiagram.include'),
+                    [UseCaseRelationshipType.UseCaseExtend]: this.props.translate('packages.useCaseDiagram.extend'),
                   }[element.type]
                 }
               </Header>
@@ -54,10 +57,18 @@ class UseCaseAssociationComponent extends Component<Props> {
         </Section>
         <Section>
           <Dropdown value={element.type} onChange={this.onChange}>
-            <Dropdown.Item value={UseCaseRelationshipType.UseCaseAssociation}>Association</Dropdown.Item>
-            <Dropdown.Item value={UseCaseRelationshipType.UseCaseGeneralization}>Generalization</Dropdown.Item>
-            <Dropdown.Item value={UseCaseRelationshipType.UseCaseInclude}>Include</Dropdown.Item>
-            <Dropdown.Item value={UseCaseRelationshipType.UseCaseExtend}>Extend</Dropdown.Item>
+            <Dropdown.Item value={UseCaseRelationshipType.UseCaseAssociation}>
+              {this.props.translate('packages.useCaseDiagram.association')}
+            </Dropdown.Item>
+            <Dropdown.Item value={UseCaseRelationshipType.UseCaseGeneralization}>
+              {this.props.translate('packages.useCaseDiagram.generalization')}
+            </Dropdown.Item>
+            <Dropdown.Item value={UseCaseRelationshipType.UseCaseInclude}>
+              {this.props.translate('packages.useCaseDiagram.include')}
+            </Dropdown.Item>
+            <Dropdown.Item value={UseCaseRelationshipType.UseCaseExtend}>
+              {this.props.translate('packages.useCaseDiagram.extend')}
+            </Dropdown.Item>
           </Dropdown>
         </Section>
       </div>
@@ -88,16 +99,19 @@ interface DispatchProps {
   flip: typeof RelationshipRepository.flip;
 }
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  state => ({ getById: ElementRepository.getById(state.elements) }),
-  {
-    rename: ElementRepository.rename,
-    change: ElementRepository.change,
-    update: ElementRepository.update,
-    flip: RelationshipRepository.flip,
-  },
+const enhance = compose<ComponentClass<OwnProps>>(
+  localized,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    state => ({ getById: ElementRepository.getById(state.elements) }),
+    {
+      rename: ElementRepository.rename,
+      change: ElementRepository.change,
+      update: ElementRepository.update,
+      flip: RelationshipRepository.flip,
+    },
+  ),
 );
 
 export const UseCaseAssociationPopup = enhance(UseCaseAssociationComponent);

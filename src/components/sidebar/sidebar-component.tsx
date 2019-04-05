@@ -1,5 +1,6 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import { ActivityActionNode } from '../../packages/activity-diagram/activity-action-node/activity-action-node';
 import { ActivityFinalNode } from '../../packages/activity-diagram/activity-final-node/activity-final-node';
 import { ActivityForkNode } from '../../packages/activity-diagram/activity-fork-node/activity-fork-node';
@@ -27,9 +28,47 @@ import { ApollonMode, DiagramType } from '../../typings';
 import { CanvasProvider } from '../canvas/canvas-context';
 import { Draggable } from '../draggable/draggable';
 import { DropEvent } from '../draggable/drop-event';
+import { I18nContext } from '../i18n/i18n-context';
+import { localized } from '../i18n/localized';
 import { ElementComponent } from '../layouted-element/element-component';
 import { ModelState } from '../store/model-state';
 import { Container, EditorModeSelection, EditorModeSelectionSegment, Preview } from './sidebar-styles';
+
+type OwnProps = {};
+
+type StateProps = {
+  diagramType: DiagramType;
+  readonly: boolean;
+  mode: ApollonMode;
+  view: ApollonView;
+};
+
+type DispatchProps = {
+  create: typeof ElementRepository.create;
+  changeView: typeof EditorRepository.changeView;
+};
+
+type Props = OwnProps & StateProps & DispatchProps & I18nContext;
+
+type State = {
+  previews: Element[];
+};
+
+const enhance = compose<ComponentClass<OwnProps>>(
+  localized,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    state => ({
+      diagramType: state.diagram.type2,
+      readonly: state.editor.readonly,
+      mode: state.editor.mode,
+      view: state.editor.view,
+    }),
+    {
+      create: ElementRepository.create,
+      changeView: EditorRepository.changeView,
+    },
+  ),
+);
 
 class SidebarComponent extends Component<Props, State> {
   state: State = {
@@ -60,12 +99,12 @@ class SidebarComponent extends Component<Props, State> {
           [
             (() => {
               const c = new ClassAttribute();
-              c.name = '+ attribute: Type';
+              c.name = this.props.translate('sidebar.classAttribute');
               return c;
             })(),
             (() => {
               const c = new ClassMethod();
-              c.name = '+ method()';
+              c.name = this.props.translate('sidebar.classMethod');
               return c;
             })(),
           ].forEach(member => {
@@ -77,17 +116,17 @@ class SidebarComponent extends Component<Props, State> {
           [
             (() => {
               const c = new ClassAttribute();
-              c.name = 'Case1';
+              c.name = this.props.translate('sidebar.enumAttribute') + 1;
               return c;
             })(),
             (() => {
               const c = new ClassAttribute();
-              c.name = 'Case2';
+              c.name = this.props.translate('sidebar.enumAttribute') + 2;
               return c;
             })(),
             (() => {
               const c = new ClassAttribute();
-              c.name = 'Case3';
+              c.name = this.props.translate('sidebar.enumAttribute') + 3;
               return c;
             })(),
           ].forEach(member => {
@@ -99,7 +138,7 @@ class SidebarComponent extends Component<Props, State> {
           [
             (() => {
               const c = new ObjectAttribute();
-              c.name = 'attribute = value';
+              c.name = this.props.translate('sidebar.objectAttribute');
               return c;
             })(),
           ].forEach(member => {
@@ -125,13 +164,13 @@ class SidebarComponent extends Component<Props, State> {
                 onClick={this.changeView(ApollonView.Modelling)}
                 selected={this.props.view === ApollonView.Modelling}
               >
-                Diagram Modeling
+                {this.props.translate('views.modelling')}
               </EditorModeSelectionSegment>
               <EditorModeSelectionSegment
                 onClick={this.changeView(ApollonView.Exporting)}
                 selected={this.props.view === ApollonView.Exporting || this.props.view === ApollonView.Highlight}
               >
-                Interactive Areas
+                {this.props.translate('views.exporting')}
               </EditorModeSelectionSegment>
             </EditorModeSelection>
           )}
@@ -154,7 +193,7 @@ class SidebarComponent extends Component<Props, State> {
               checked={this.props.view === ApollonView.Exporting}
               onChange={this.toggleInteractiveElementsMode}
             />
-            Show interactive elements
+            {this.props.translate('views.highlight')}
           </label>
         )}
       </Container>
@@ -169,22 +208,22 @@ class SidebarComponent extends Component<Props, State> {
             new Package(),
             (() => {
               const c = new Class();
-              c.name = 'Class';
+              c.name = this.props.translate('packages.classDiagram.class');
               return c;
             })(),
             (() => {
               const c = new AbstractClass();
-              c.name = 'AbstractClass';
+              c.name = this.props.translate('packages.classDiagram.abstract');
               return c;
             })(),
             (() => {
               const c = new Interface();
-              c.name = 'Interface';
+              c.name = this.props.translate('packages.classDiagram.interface');
               return c;
             })(),
             (() => {
               const c = new Enumeration();
-              c.name = 'Enumeration';
+              c.name = this.props.translate('packages.classDiagram.enumeration');
               return c;
             })(),
           ],
@@ -195,7 +234,7 @@ class SidebarComponent extends Component<Props, State> {
           previews: [
             (() => {
               const c = new ObjectName();
-              c.name = 'Object : Class';
+              c.name = this.props.translate('packages.objectDiagram.objectName');
               return c;
             })(),
           ],
@@ -208,17 +247,17 @@ class SidebarComponent extends Component<Props, State> {
             new ActivityFinalNode(),
             (() => {
               const c = new ActivityActionNode();
-              c.name = 'ActionNode';
+              c.name = this.props.translate('packages.activityDiagram.actionNode');
               return c;
             })(),
             (() => {
               const c = new ActivityObjectNode();
-              c.name = 'ObjectNode';
+              c.name = this.props.translate('packages.activityDiagram.objectNode');
               return c;
             })(),
             (() => {
               const c = new ActivityMergeNode();
-              c.name = 'Condition';
+              c.name = this.props.translate('packages.activityDiagram.condition');
               return c;
             })(),
             new ActivityForkNode(),
@@ -230,17 +269,17 @@ class SidebarComponent extends Component<Props, State> {
           previews: [
             (() => {
               const c = new UseCase();
-              c.name = 'UseCase';
+              c.name = this.props.translate('packages.useCaseDiagram.useCase');
               return c;
             })(),
             (() => {
               const c = new UseCaseActor();
-              c.name = 'Actor';
+              c.name = this.props.translate('packages.useCaseDiagram.actor');
               return c;
             })(),
             (() => {
               const c = new UseCaseSystem();
-              c.name = 'System';
+              c.name = this.props.translate('packages.useCaseDiagram.system');
               return c;
             })(),
           ],
@@ -248,36 +287,5 @@ class SidebarComponent extends Component<Props, State> {
     }
   };
 }
-
-interface StateProps {
-  diagramType: DiagramType;
-  readonly: boolean;
-  mode: ApollonMode;
-  view: ApollonView;
-}
-
-interface DispatchProps {
-  create: typeof ElementRepository.create;
-  changeView: typeof EditorRepository.changeView;
-}
-
-type Props = StateProps & DispatchProps;
-
-interface State {
-  previews: Element[];
-}
-
-const enhance = connect<StateProps, DispatchProps, {}, ModelState>(
-  state => ({
-    diagramType: state.diagram.type2,
-    readonly: state.editor.readonly,
-    mode: state.editor.mode,
-    view: state.editor.view,
-  }),
-  {
-    create: ElementRepository.create,
-    changeView: EditorRepository.changeView,
-  },
-);
 
 export const Sidebar = enhance(SidebarComponent);

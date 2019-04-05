@@ -1,7 +1,10 @@
-import React, { Component, SFC } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import styled from 'styled-components';
 import { ClassElementType } from '..';
+import { I18nContext } from '../../../components/i18n/i18n-context';
+import { localized } from '../../../components/i18n/localized';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
 import { Section } from '../../../components/popup/controls/section';
@@ -36,8 +39,37 @@ const NewMember = styled(TextField)`
   }
 `;
 
-class ClassifierComponent extends Component<Props> {
+interface OwnProps {
+  element: Classifier;
+}
 
+interface StateProps {
+  getById: (id: string) => Element | null;
+}
+
+interface DispatchProps {
+  create: typeof ElementRepository.create;
+  change: typeof ElementRepository.change;
+  rename: typeof ElementRepository.rename;
+  delete: typeof ElementRepository.delete;
+}
+
+type Props = OwnProps & StateProps & DispatchProps & I18nContext;
+
+const enhance = compose<ComponentClass<OwnProps>>(
+  localized,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    state => ({ getById: ElementRepository.getById(state.elements) }),
+    {
+      create: ElementRepository.create,
+      change: ElementRepository.change,
+      rename: ElementRepository.rename,
+      delete: ElementRepository.delete,
+    },
+  ),
+);
+
+class ClassifierComponent extends Component<Props> {
   render() {
     const { element, getById } = this.props;
     const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
@@ -53,19 +85,19 @@ class ClassifierComponent extends Component<Props> {
         <Section>
           <Switch>
             <SwitchItem active={element.isAbstract} onClick={this.toggle(ClassElementType.AbstractClass)}>
-              Abstract
+              {this.props.translate('packages.classDiagram.abstract')}
             </SwitchItem>
             <SwitchItem active={element.isInterface} onClick={this.toggle(ClassElementType.Interface)}>
-              Interface
+              {this.props.translate('packages.classDiagram.interface')}
             </SwitchItem>
             <SwitchItem active={element.isEnumeration} onClick={this.toggle(ClassElementType.Enumeration)}>
-              Enum
+              {this.props.translate('packages.classDiagram.enumeration')}
             </SwitchItem>
           </Switch>
           <Divider />
         </Section>
         <Section>
-          <Header>Attributes</Header>
+          <Header>{this.props.translate('popup.attributes')}</Header>
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
               <TextField value={attribute.name} onUpdate={this.rename(attribute.id)} />
@@ -77,7 +109,7 @@ class ClassifierComponent extends Component<Props> {
         {!element.isEnumeration && (
           <Section>
             <Divider />
-            <Header>Methods</Header>
+            <Header>{this.props.translate('popup.methods')}</Header>
             {methods.map(method => (
               <Flex key={method.id}>
                 <TextField value={method.name} onUpdate={this.rename(method.id)} />
@@ -111,32 +143,5 @@ class ClassifierComponent extends Component<Props> {
     this.props.delete(id);
   };
 }
-
-interface OwnProps {
-  element: Classifier;
-}
-
-interface StateProps {
-  getById: (id: string) => Element | null;
-}
-
-interface DispatchProps {
-  create: typeof ElementRepository.create;
-  change: typeof ElementRepository.change;
-  rename: typeof ElementRepository.rename;
-  delete: typeof ElementRepository.delete;
-}
-
-type Props = OwnProps & StateProps & DispatchProps;
-
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  state => ({ getById: ElementRepository.getById(state.elements) }),
-  {
-    create: ElementRepository.create,
-    change: ElementRepository.change,
-    rename: ElementRepository.rename,
-    delete: ElementRepository.delete,
-  }
-);
 
 export const ClassifierPopup = enhance(ClassifierComponent);
