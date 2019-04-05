@@ -1,8 +1,12 @@
 import styled from 'styled-components';
 
 export const Editor = styled.div`
-  overflow: scroll;
+  display: block;
   width: 100%;
-  height: 100%;
+  min-height: inherit;
+  max-height: inherit;
+  max-width: inherit;
+
+  overflow: scroll;
   border: 1px solid ${({ theme }) => theme.borderColor};
 `;

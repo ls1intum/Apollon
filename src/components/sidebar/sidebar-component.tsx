@@ -118,22 +118,24 @@ class SidebarComponent extends Component<Props, State> {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
     return (
       <Container>
-        {this.props.mode === ApollonMode.Exporting && (
-          <EditorModeSelection>
-            <EditorModeSelectionSegment
-              onClick={this.changeView(ApollonView.Modelling)}
-              selected={this.props.view === ApollonView.Modelling}
-            >
-              Diagram Modeling
-            </EditorModeSelectionSegment>
-            <EditorModeSelectionSegment
-              onClick={this.changeView(ApollonView.Exporting)}
-              selected={this.props.view === ApollonView.Exporting || this.props.view === ApollonView.Highlight}
-            >
-              Interactive Areas
-            </EditorModeSelectionSegment>
-          </EditorModeSelection>
-        )}
+        <div style={{ flex: '0 0' }}>
+          {this.props.mode === ApollonMode.Exporting && (
+            <EditorModeSelection>
+              <EditorModeSelectionSegment
+                onClick={this.changeView(ApollonView.Modelling)}
+                selected={this.props.view === ApollonView.Modelling}
+              >
+                Diagram Modeling
+              </EditorModeSelectionSegment>
+              <EditorModeSelectionSegment
+                onClick={this.changeView(ApollonView.Exporting)}
+                selected={this.props.view === ApollonView.Exporting || this.props.view === ApollonView.Highlight}
+              >
+                Interactive Areas
+              </EditorModeSelectionSegment>
+            </EditorModeSelection>
+          )}
+        </div>
         {this.props.view === ApollonView.Modelling ? (
           <CanvasProvider value={null}>
             {this.state.previews.map((element, index) => (
@@ -275,7 +277,7 @@ const enhance = connect<StateProps, DispatchProps, {}, ModelState>(
   {
     create: ElementRepository.create,
     changeView: EditorRepository.changeView,
-  }
+  },
 );
 
 export const Sidebar = enhance(SidebarComponent);

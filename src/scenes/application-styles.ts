@@ -4,6 +4,10 @@ export const Layout = styled.div`
   display: flex;
   width: 100%;
   height: 100%;
+  min-width: inherit;
+  min-height: inherit;
+  max-width: inherit;
+  max-height: inherit;
   box-sizing: border-box;
   user-select: none;
   position: relative;

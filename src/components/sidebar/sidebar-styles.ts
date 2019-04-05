@@ -1,14 +1,18 @@
 import styled from 'styled-components';
 
 export const Container = styled.aside`
-  width: 300px;
-  padding: 0 1em 0 1em;
-  overflow-y: auto;
-  overflow-x: hidden;
+  flex: 0 0 230px;
+  padding: 0 10px;
+  height: 100%;
+  min-height: inherit;
+  max-height: inherit;
+  overflow: scroll;
+  display: flex;
+  flex-direction: column;
 `;
 
 export const Preview = styled.div`
-  margin: 1em;
+  margin: 0.5em 0;
 `;
 
 export const EditorModeSelection = styled.div`
@@ -34,13 +38,13 @@ export const EditorModeSelectionSegment: any = styled.button`
   font-weight: normal !important;
 
   :first-child {
-      border-left-width: 1px;
-      border-top-left-radius: 3px;
-      border-bottom-left-radius: 3px;
+    border-left-width: 1px;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
   }
 
   :last-child {
-      border-top-right-radius: 3px;
-      border-bottom-right-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
   }
 `;
