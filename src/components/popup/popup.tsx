@@ -19,7 +19,6 @@ class PopupComponent extends Component<Props> {
     if (!this.props.enablePopups) return false;
 
     if (this.props.mode === ApollonMode.Assessment) {
-      if (this.props.readonly) return null;
       CustomPopupComponent = AssessmentPopup;
     } else {
       CustomPopupComponent = Popups[this.props.element.type];

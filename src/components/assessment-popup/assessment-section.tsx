@@ -25,6 +25,7 @@ type OwnProps = {
 };
 
 type StateProps = {
+  readonly: boolean;
   assessment: IAssessment | null;
 };
 type DispatchProps = { assess: typeof AssessmentRepository.assess };
@@ -32,6 +33,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state, props) => ({
+    readonly: state.editor.readonly,
     assessment: AssessmentRepository.getById(state.assessments)(props.element.id),
   }),
   { assess: AssessmentRepository.assess },
@@ -39,7 +41,8 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 class AssessmentSectionCompoennt extends Component<Props> {
   render() {
-    const { element, assessment } = this.props;
+    const { element, assessment, readonly } = this.props;
+
     return (
       <>
         <Section>
@@ -49,16 +52,24 @@ class AssessmentSectionCompoennt extends Component<Props> {
         <Section>
           <Flex>
             <span>Score:</span>
-            <TextField type="number" step={0.5} onUpdate={this.updateScore} value={assessment ? String(assessment.score) : ''} />
+            {readonly ? (
+              <span>{(assessment && assessment.score) || '-'}</span>
+            ) : (
+              <TextField type="number" step={0.5} onUpdate={this.updateScore} value={assessment ? String(assessment.score) : ''} />
+            )}
           </Flex>
         </Section>
-        <Section>
-          <TextField
-            placeholder="Feedback"
-            onUpdate={this.updateFeedback}
-            value={assessment && assessment.feedback ? assessment.feedback : ''}
-          />
-        </Section>
+        {readonly ? (
+          assessment && assessment.feedback && <Section>{assessment.feedback}</Section>
+        ) : (
+          <Section>
+            <TextField
+              placeholder="Feedback"
+              onUpdate={this.updateFeedback}
+              value={assessment && assessment.feedback ? assessment.feedback : ''}
+            />
+          </Section>
+        )}
       </>
     );
   }
