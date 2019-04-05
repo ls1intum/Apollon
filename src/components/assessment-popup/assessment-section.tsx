@@ -1,9 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import styled from 'styled-components';
 import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { Element } from '../../services/element/element';
+import { I18nContext } from '../i18n/i18n-context';
+import { localized } from '../i18n/localized';
 import { Divider } from '../popup/controls/divider';
 import { Header } from '../popup/controls/header';
 import { Section } from '../popup/controls/section';
@@ -29,14 +32,17 @@ type StateProps = {
   assessment: IAssessment | null;
 };
 type DispatchProps = { assess: typeof AssessmentRepository.assess };
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  (state, props) => ({
-    readonly: state.editor.readonly,
-    assessment: AssessmentRepository.getById(state.assessments)(props.element.id),
-  }),
-  { assess: AssessmentRepository.assess },
+const enhance = compose<ComponentClass<OwnProps>>(
+  localized,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    (state, props) => ({
+      readonly: state.editor.readonly,
+      assessment: AssessmentRepository.getById(state.assessments)(props.element.id),
+    }),
+    { assess: AssessmentRepository.assess },
+  ),
 );
 
 class AssessmentSectionCompoennt extends Component<Props> {
@@ -46,12 +52,12 @@ class AssessmentSectionCompoennt extends Component<Props> {
     return (
       <>
         <Section>
-          <Header>Assessment for {element.name}</Header>
+          <Header>{this.props.translate('assessment.assessment')} {element.name}</Header>
           <Divider />
         </Section>
         <Section>
           <Flex>
-            <span>Score:</span>
+            <span>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
               <span>{(assessment && assessment.score) || '-'}</span>
             ) : (
@@ -64,7 +70,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
         ) : (
           <Section>
             <TextField
-              placeholder="Feedback"
+              placeholder={this.props.translate('assessment.feedback')}
               onUpdate={this.updateFeedback}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />

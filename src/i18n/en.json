@@ -17,6 +17,11 @@
     "multiplicity": "Multiplicity",
     "role": "Role"
   },
+  "assessment": {
+    "assessment": "Assessment for",
+    "score": "Score",
+    "feedback": "Feedback"
+  },
   "packages": {
     "classDiagram": {
       "class": "Class",
