@@ -10,8 +10,6 @@ import { ModelState } from '../store/model-state';
 import { ElementComponent, OwnProps } from './element-component';
 
 const Handler = styled.rect`
-  width: 15px;
-  height: 15px;
   fill: none;
   cursor: nwse-resize;
 `;
@@ -28,7 +26,7 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
       return (
         <WrappedComponent {...this.props}>
           {this.props.children}
-          <Handler x={x - 10} y={y - 10} onMouseDown={this.onMouseDown} />
+          <Handler x={x - 10} y={y - 10} width={15} height={15} onMouseDown={this.onMouseDown} />
         </WrappedComponent>
       );
     }
