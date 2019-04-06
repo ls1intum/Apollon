@@ -43,8 +43,12 @@ export class RelationshipComponent extends Component<Props> {
             >
               <polyline
                 points={points}
-                stroke={!this.props.interactable ? '#0064ff' : element.interactive ? '#00dc00' : 'none'}
-                strokeOpacity={element.hovered || element.selected || this.props.interactable ? 0.2 : 0}
+                stroke={!this.props.interactable ? '#0064ff' : element.interactive ? '#00dc00' : '#00dc00'}
+                strokeOpacity={
+                  element.hovered || (!this.props.interactable && element.selected) || (this.props.interactable && element.interactive)
+                    ? 0.2
+                    : 0
+                }
                 fill="none"
                 strokeWidth={15}
               />
