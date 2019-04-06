@@ -5,7 +5,7 @@ import { ModelState } from './components/store/model-state';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
 import { ElementRepository } from './services/element/element-repository';
-import { ApollonOptions, Assessment, DiagramType, ExportOptions, Selection, SVG, UMLModel } from './typings';
+import { ApollonOptions, Assessment, DiagramType, ExportOptions, Locale, Selection, SVG, UMLModel } from './typings';
 
 export class ApollonEditor {
   get model(): UMLModel {
@@ -25,6 +25,20 @@ export class ApollonEditor {
       ref: this.application,
       state,
       styles: {},
+      locale: this.options.locale || Locale.en,
+    });
+    render(element, this.container, this.componentDidMount);
+  }
+
+  set locale(locale: Locale) {
+    if (!this.store) throw new Error('Apollon was already destroyed.');
+    this.destroy();
+
+    const element = createElement(Application, {
+      ref: this.application,
+      state: this.store.getState(),
+      styles: {},
+      locale,
     });
     render(element, this.container, this.componentDidMount);
   }
@@ -48,7 +62,7 @@ export class ApollonEditor {
   private selectionSubscribers: Array<(selection: Selection) => void> = [];
   private assessmentSubscribers: Array<(assessments: Assessment[]) => void> = [];
 
-  constructor(private container: HTMLElement, options: ApollonOptions) {
+  constructor(private container: HTMLElement, private options: ApollonOptions) {
     const model: UMLModel = {
       version: '2.0',
       size: { width: 0, height: 0 },
@@ -74,6 +88,7 @@ export class ApollonEditor {
       ref: this.application,
       state,
       styles: {},
+      locale: options.locale,
     });
     render(element, container, this.componentDidMount);
   }

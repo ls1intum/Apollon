@@ -1,0 +1,60 @@
+{
+  "views": {
+    "modelling": "Diagram Modeling",
+    "exporting": "Interactive Areas",
+    "highlight": "Show interactive elements"
+  },
+  "sidebar": {
+    "classAttribute": "+ attribute: Type",
+    "classMethod": "+ method()",
+    "enumAttribute": "Case",
+    "objectAttribute": "attribute = value"
+  },
+  "popup": {
+    "attributes": "Attributes",
+    "methods": "Methods",
+    "association": "Association",
+    "multiplicity": "Multiplicity",
+    "role": "Role"
+  },
+  "assessment": {
+    "assessment": "Assessment for",
+    "score": "Score",
+    "feedback": "Feedback"
+  },
+  "packages": {
+    "classDiagram": {
+      "class": "Class",
+      "abstract": "Abstract",
+      "interface": "Interface",
+      "enumeration": "Enumeration",
+      "attribute": "Attribute",
+      "method": "Method",
+      "aggregation": "Aggregation",
+      "bidirectional": "Association (bidirectional)",
+      "composition": "Composition",
+      "dependency": "Dependency",
+      "inheritance": "Inheritance",
+      "realization": "Realization",
+      "unidirectional": "Association (unidirectional)"
+    },
+    "objectDiagram": {
+      "objectName": "Object",
+      "objectAttribute": "Attribute"
+    },
+    "activityDiagram": {
+      "actionNode": "Action",
+      "objectNode": "Object",
+      "condition": "Condition"
+    },
+    "useCaseDiagram": {
+      "useCase": "UseCase",
+      "actor": "Actor",
+      "system": "System",
+      "association": "Association",
+      "extend": "Extend",
+      "generalization": "Generalization",
+      "include": "Include"
+    }
+  }
+}

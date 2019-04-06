@@ -3,6 +3,11 @@ import { DiagramType } from './packages/diagram-type';
 import { ElementType as UMLElementType } from './packages/element-type';
 import { RelationshipType as UMLRelationshipType } from './packages/relationship-type';
 
+export enum Locale {
+  en = 'en',
+  de = 'de',
+}
+
 export type ElementType = UMLElementType | UMLRelationshipType;
 
 export interface UMLModel {
@@ -78,6 +83,7 @@ export interface ApollonOptions {
   enablePopups?: boolean;
   model?: UMLModel;
   theme?: Partial<Styles>;
+  locale?: Locale;
 }
 
 export interface ExportOptions {
