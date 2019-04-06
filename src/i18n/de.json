@@ -45,7 +45,8 @@
     "activityDiagram": {
       "actionNode": "Aktion",
       "objectNode": "Objekt",
-      "condition": "Bedingung"
+      "condition": "Bedingung",
+      "controlFlow": "Kontrollfluss"
     },
     "useCaseDiagram": {
       "useCase": "Anwendungsfall",

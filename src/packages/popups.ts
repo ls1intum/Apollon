@@ -1,11 +1,11 @@
 import { ComponentClass } from 'react';
-import { ElementType } from './element-type';
-import { RelationshipType } from './relationship-type';
-
+import { ActivityControlFlowPopup } from './activity-diagram/activity-control-flow/activity-control-flow-popup';
 import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
 import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { DefaultPopup } from './common/default-popup';
+import { ElementType } from './element-type';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
+import { RelationshipType } from './relationship-type';
 import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
 
 export type Popups = { [key in ElementType | RelationshipType]: ComponentClass<{ element: any }> | null };
@@ -37,7 +37,7 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [RelationshipType.ClassRealization]: ClassAssociationPopup,
   [RelationshipType.ClassUnidirectional]: ClassAssociationPopup,
   [RelationshipType.ObjectLink]: null,
-  [RelationshipType.ActivityControlFlow]: null,
+  [RelationshipType.ActivityControlFlow]: ActivityControlFlowPopup,
   [RelationshipType.UseCaseAssociation]: UseCaseAssociationPopup,
   [RelationshipType.UseCaseExtend]: UseCaseAssociationPopup,
   [RelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
