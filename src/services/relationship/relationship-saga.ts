@@ -21,19 +21,23 @@ export function* RelationshipSaga() {
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
 }
 
-function* handleRelationshipCreation({ payload }: CreateAction) {
+function* handleRelationshipCreation(action: CreateAction) {
+  const { payload } = action;
   yield recalc(payload.relationship.id);
 }
 
-function* handleRelationshipConnect({ payload }: ConnectAction) {
+function* handleRelationshipConnect(action: ConnectAction) {
+  const { payload } = action;
   yield recalc(payload.id);
 }
 
-function* handleRelationshipFlip({ payload }: FlipAction) {
+function* handleRelationshipFlip(action: FlipAction) {
+  const { payload } = action;
   yield recalc(payload.id);
 }
 
-function* handleElementMove({ payload }: MoveAction) {
+function* handleElementMove(action: MoveAction) {
+  const { payload } = action;
   if (!payload.id) return;
 
   const { elements }: ModelState = yield select();
@@ -62,7 +66,8 @@ function* handleElementMove({ payload }: MoveAction) {
   }
 }
 
-function* handleElementResize({ payload }: ResizeAction) {
+function* handleElementResize(action: ResizeAction) {
+  const { payload } = action;
   const { elements }: ModelState = yield select();
   const element = ElementRepository.getById(elements)(payload.id);
   if (!element || !(element.constructor as typeof Element).features.connectable) return;
@@ -78,7 +83,8 @@ function* handleElementResize({ payload }: ResizeAction) {
   }
 }
 
-function* handleElementUpdate({ payload }: UpdateAction) {
+function* handleElementUpdate(action: UpdateAction) {
+  const { payload } = action;
   const { elements }: ModelState = yield select();
   const relationship = RelationshipRepository.getById(elements)(payload.id);
   if (relationship instanceof Relationship) {
@@ -128,7 +134,8 @@ function* recalc(id: string) {
   });
 }
 
-function* handleElementDelete({ payload }: DeleteAction) {
+function* handleElementDelete(action: DeleteAction) {
+  const { payload } = action;
   if (!payload.id) return;
 
   const { elements }: ModelState = yield select();
