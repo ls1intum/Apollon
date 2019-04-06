@@ -1,6 +1,9 @@
-import React, { Component, SFC } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import styled from 'styled-components';
+import { I18nContext } from '../../../components/i18n/i18n-context';
+import { localized } from '../../../components/i18n/localized';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
 import { Section } from '../../../components/popup/controls/section';
@@ -34,7 +37,6 @@ const NewMember = styled(TextField)`
 `;
 
 class ObjectNameComponent extends Component<Props> {
-
   render() {
     const { element, getById } = this.props;
     const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
@@ -47,7 +49,7 @@ class ObjectNameComponent extends Component<Props> {
           <Divider />
         </Section>
         <Section>
-          <Header>Attributes</Header>
+          <Header>{this.props.translate('popup.attributes')}</Header>
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
               <TextField value={attribute.name} onUpdate={this.rename(attribute.id)} />
@@ -90,15 +92,18 @@ interface DispatchProps {
   delete: typeof ElementRepository.delete;
 }
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  state => ({ getById: ElementRepository.getById(state.elements) }),
-  {
-    create: ElementRepository.create,
-    rename: ElementRepository.rename,
-    delete: ElementRepository.delete,
-  }
+const enhance = compose<ComponentClass<OwnProps>>(
+  localized,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    state => ({ getById: ElementRepository.getById(state.elements) }),
+    {
+      create: ElementRepository.create,
+      rename: ElementRepository.rename,
+      delete: ElementRepository.delete,
+    },
+  ),
 );
 
 export const ObjectNamePopup = enhance(ObjectNameComponent);
