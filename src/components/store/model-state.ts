@@ -101,7 +101,7 @@ export class ModelState {
   }
 
   static toModel(state: ModelState): UMLModel {
-    const elements = ElementRepository.read(state.elements);
+    const elements = ElementRepository.read(state.elements).filter(element => !(element instanceof Relationship));
     const relationships = RelationshipRepository.read(state.elements);
     const root = elements.filter(element => !element.owner);
 
