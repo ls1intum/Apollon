@@ -15,7 +15,8 @@
     "methods": "Methods",
     "association": "Association",
     "multiplicity": "Multiplicity",
-    "role": "Role"
+    "role": "Role",
+    "condition": "Options"
   },
   "assessment": {
     "assessment": "Assessment for",
