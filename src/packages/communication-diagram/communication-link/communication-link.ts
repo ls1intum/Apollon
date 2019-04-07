@@ -1,9 +1,9 @@
-import { CommunicationRelationshipType, UMLCommunicationLink } from '..';
+import { CommunicationMessage, CommunicationRelationshipType, UMLCommunicationLink } from '..';
 import { IRelationship, Relationship } from '../../../services/relationship/relationship';
 import { UMLRelationship } from '../../../typings';
 
 export interface ICommunicationLink extends IRelationship {
-  messages: string[];
+  messages: CommunicationMessage[];
 }
 
 export class CommunicationLink extends Relationship implements ICommunicationLink {
@@ -16,7 +16,7 @@ export class CommunicationLink extends Relationship implements ICommunicationLin
   }
 
   type = CommunicationRelationshipType.CommunicationLink;
-  messages: string[] = [];
+  messages: CommunicationMessage[] = [];
 
   constructor(values?: ICommunicationLink);
   constructor(values?: UMLCommunicationLink);
