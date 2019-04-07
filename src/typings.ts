@@ -104,3 +104,4 @@ export interface SVG {
 }
 
 export { UMLClassifier, UMLClassAssociation } from './packages/class-diagram';
+export { UMLCommunicationLink } from './packages/communication-diagram';

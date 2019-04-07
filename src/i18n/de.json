@@ -15,7 +15,8 @@
     "methods": "Methoden",
     "association": "Assoziation",
     "multiplicity": "Multiziplität",
-    "role": "Rolle"
+    "role": "Rolle",
+    "messages": "Nachrichten"
   },
   "assessment": {
     "assessment": "Bewertung für",
@@ -55,6 +56,9 @@
       "extend": "Extend",
       "generalization": "Generalisierung",
       "include": "Include"
+    },
+    "communicationDiagram": {
+      "objectLink": "Kommunikation"
     }
   }
 }
