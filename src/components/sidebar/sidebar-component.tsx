@@ -284,6 +284,16 @@ class SidebarComponent extends Component<Props, State> {
             })(),
           ],
         });
+      case DiagramType.CommunicationDiagram:
+        this.setState({
+          previews: [
+            (() => {
+              const c = new ObjectName();
+              c.name = this.props.translate('packages.objectDiagram.objectName');
+              return c;
+            })(),
+          ],
+        });
     }
   };
 }
