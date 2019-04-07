@@ -61,7 +61,7 @@ class CommunactionLinkPopupComponent extends Component<Props> {
           <Header>{this.props.translate('popup.messages')}</Header>
           {element.messages.map((message, i) => (
             <Flex key={i}>
-              <TextField value={message.name} />
+              <TextField value={message.name} onUpdate={this.rename(message)} />
               <Flip onClick={this.flip(message)} />
               <Trash onClick={this.delete(message)} />
             </Flex>
@@ -77,6 +77,14 @@ class CommunactionLinkPopupComponent extends Component<Props> {
     if (!element.messages.find(message => message.name === value)) {
       update(element.id, { messages: [...element.messages, { name: value, direction: 'target' }] });
     }
+  };
+
+  private rename = (value: CommunicationMessage) => (name: string) => {
+    const { element, update } = this.props;
+    const messages: CommunicationMessage[] = [...element.messages];
+    const index = messages.findIndex(message => message.name === value.name);
+    messages[index].name = name;
+    update(element.id, { messages });
   };
 
   private flip = (value: CommunicationMessage) => () => {
