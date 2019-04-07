@@ -53,7 +53,7 @@ class CommunactionLinkPopupComponent extends Component<Props> {
       <div>
         <Section>
           <Flex>
-            <Header>{this.props.translate('packages.communicationDiagram.objectLink')}</Header>
+            <Header>{this.props.translate('packages.communicationDiagram.communicationLink')}</Header>
           </Flex>
           <Divider />
         </Section>

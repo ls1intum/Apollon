@@ -58,7 +58,7 @@
       "include": "Include"
     },
     "communicationDiagram": {
-      "objectLink": "Object Link"
+      "communicationLink": "Communication Link"
     }
   }
 }
