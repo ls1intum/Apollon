@@ -27,12 +27,12 @@ const Trash = styled(TrashCanIcon).attrs({ width: 20 })`
 `;
 
 const NewMember = styled(TextField)`
-  &:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-
   &:not(:focus) {
     border-style: dashed;
+  }
+
+  &:not(:focus):not(:hover) {
+    background: rgba(255, 255, 255, 0.5);
   }
 `;
 

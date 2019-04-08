@@ -24,17 +24,17 @@ const Button = styled.button`
     box-shadow 0.15s ease-in-out;
   user-select: none;
 
+  ::-moz-focus-inner {
+    border-style: none;
+    padding: 0;
+  }
+
   :focus {
     outline: 0;
   }
 
   :not(:disabled) {
     cursor: pointer;
-  }
-
-  ::-moz-focus-inner {
-    border-style: none;
-    padding: 0;
   }
 `;
 

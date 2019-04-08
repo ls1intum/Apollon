@@ -30,12 +30,12 @@ const Trash = styled(TrashCanIcon).attrs({ width: 20 })`
 `;
 
 const NewMember = styled(TextField)`
-  &:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-
   &:not(:focus) {
     border-style: dashed;
+  }
+
+  &:not(:focus):not(:hover) {
+    background: rgba(255, 255, 255, 0.5);
   }
 `;
 
@@ -84,9 +84,15 @@ class ClassifierComponent extends Component<Props> {
         </Section>
         <Section>
           <Switch value={element.type as ClassElementType} onChange={this.toggle} color="primary">
-            <Switch.Item value={ClassElementType.AbstractClass}>{this.props.translate('packages.classDiagram.abstract')}</Switch.Item>
-            <Switch.Item value={ClassElementType.Interface}>{this.props.translate('packages.classDiagram.interface')}</Switch.Item>
-            <Switch.Item value={ClassElementType.Enumeration}>{this.props.translate('packages.classDiagram.enumeration')}</Switch.Item>
+            <Switch.Item value={ClassElementType.AbstractClass}>
+              {this.props.translate('packages.classDiagram.abstract')}
+            </Switch.Item>
+            <Switch.Item value={ClassElementType.Interface}>
+              {this.props.translate('packages.classDiagram.interface')}
+            </Switch.Item>
+            <Switch.Item value={ClassElementType.Enumeration}>
+              {this.props.translate('packages.classDiagram.enumeration')}
+            </Switch.Item>
           </Switch>
           <Divider />
         </Section>

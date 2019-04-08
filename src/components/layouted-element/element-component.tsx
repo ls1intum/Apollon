@@ -25,9 +25,6 @@ const Svg = styled.svg.attrs({
 
   & text {
     cursor: default;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
     pointer-events: none;
     font-family: ${props => props.theme.fontFamily};

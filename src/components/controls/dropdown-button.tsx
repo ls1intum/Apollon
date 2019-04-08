@@ -12,9 +12,9 @@ const Button = styled.button`
   border: none;
   outline: none;
   background: transparent;
-  &:focus {
-    // outline: 1px dotted;
-    // outline: 5px auto -webkit-focus-ring-color;
+  &::-moz-focus-inner {
+    padding: 0;
+    border-style: none;
   }
   &:active {
     color: inherit;
@@ -22,17 +22,11 @@ const Button = styled.button`
   &:not(:disabled) {
     cursor: pointer;
   }
-  &::-moz-focus-inner {
-    padding: 0;
-    border-style: none;
-  }
 `;
 
 export const DropdownButton = styled(Button)`
   font-weight: 400;
   white-space: nowrap;
-  border: 1px solid transparent;
-  padding: .375rem .75rem;
   border-radius: .25rem;
 
   background: white;

@@ -21,10 +21,6 @@ export const StyledSwitchItem = styled(Button).attrs<SwitchItemProps>(props => (
     margin-left: -1px;
   }
 
-  :not(:first-child):not(:last-child) {
-    border-radius: 0;
-  }
-
   :first-child {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
@@ -33,5 +29,9 @@ export const StyledSwitchItem = styled(Button).attrs<SwitchItemProps>(props => (
   :last-child {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+  }
+
+  :not(:first-child):not(:last-child) {
+    border-radius: 0;
   }
 `;

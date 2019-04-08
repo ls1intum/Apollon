@@ -15,7 +15,7 @@ const Path = styled.path`
 `;
 
 const Group = styled.g`
-  &:hover ${Path}, &.hover ${Path} {
+  :hover ${Path} {
     fill-opacity: 0.6;
   }
 `;

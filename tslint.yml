@@ -9,6 +9,8 @@ rules:
   newline-per-chained-call: false
   member-access:
     options: no-public
+  no-console:
+    severity: warning
   no-null-keyword: false
   no-null-undefined-union: false
   ordered-imports:
