@@ -3,12 +3,12 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { ClassElementType } from '..';
+import { Switch } from '../../../components/controls/switch/switch';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Divider } from '../../../components/popup/controls/divider';
 import { Header } from '../../../components/popup/controls/header';
 import { Section } from '../../../components/popup/controls/section';
-import { Switch, SwitchItem } from '../../../components/popup/controls/switch';
 import { TextField } from '../../../components/popup/controls/textfield';
 import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
 import { ModelState } from '../../../components/store/model-state';
@@ -83,16 +83,10 @@ class ClassifierComponent extends Component<Props> {
           <Divider />
         </Section>
         <Section>
-          <Switch>
-            <SwitchItem active={element.isAbstract} onClick={this.toggle(ClassElementType.AbstractClass)}>
-              {this.props.translate('packages.classDiagram.abstract')}
-            </SwitchItem>
-            <SwitchItem active={element.isInterface} onClick={this.toggle(ClassElementType.Interface)}>
-              {this.props.translate('packages.classDiagram.interface')}
-            </SwitchItem>
-            <SwitchItem active={element.isEnumeration} onClick={this.toggle(ClassElementType.Enumeration)}>
-              {this.props.translate('packages.classDiagram.enumeration')}
-            </SwitchItem>
+          <Switch value={element.type as ClassElementType} onChange={this.toggle} color="primary">
+            <Switch.Item value={ClassElementType.AbstractClass}>{this.props.translate('packages.classDiagram.abstract')}</Switch.Item>
+            <Switch.Item value={ClassElementType.Interface}>{this.props.translate('packages.classDiagram.interface')}</Switch.Item>
+            <Switch.Item value={ClassElementType.Enumeration}>{this.props.translate('packages.classDiagram.enumeration')}</Switch.Item>
           </Switch>
           <Divider />
         </Section>
@@ -134,7 +128,7 @@ class ClassifierComponent extends Component<Props> {
     this.props.rename(id, value);
   };
 
-  private toggle = (kind: ClassElementType) => () => {
+  private toggle = (kind: ClassElementType) => {
     const { element, change } = this.props;
     change(element.id, element.type === kind ? ClassElementType.Class : kind);
   };
