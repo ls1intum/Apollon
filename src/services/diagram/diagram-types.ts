@@ -1,6 +1,6 @@
 import { Action as ReduxAction } from 'redux';
-import { IDiagram } from './diagram';
 import { Boundary } from '../../utils/geometry/boundary';
+import { IDiagram } from './diagram';
 
 export const enum DiagramActionTypes {
   ADD_ELEMENT = '@@diagram/ADD_ELEMENT',
