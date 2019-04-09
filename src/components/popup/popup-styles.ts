@@ -11,7 +11,7 @@ export const Container = styled.div<{ x: number; y: number }>`
 export const Content = styled.div`
   width: 275px;
   max-height: 650px;
-  overflow-y: scroll;
+  /* overflow-y: scroll; */
   border: 1px solid #d0d0d0;
   border-radius: 5px;
   background: #efefef;

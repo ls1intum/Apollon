@@ -13,7 +13,11 @@ export const defaults = {
     primary: '#007bff',
     secondary: '#6c757d',
     white: '#fff',
+    lightgray: '#f8f9fa',
     black: '#212529',
+  },
+  font: {
+    color: '#212529',
   },
   primaryColor: '#2A8FBD',
   borderColor: '#AAAAAA',

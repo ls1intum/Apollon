@@ -4,7 +4,7 @@ import { StyledButton } from './button-styles';
 
 const defaultProps = Object.freeze({
   block: false,
-  color: 'secondary' as Color,
+  color: 'secondary' as Color | 'link',
   disabled: false,
   outline: false,
   size: 'md' as Size,

@@ -38,67 +38,76 @@ const Button = styled.button`
   }
 `;
 
-export const StyledButton = styled(Button)<Props>`
-  :focus {
-    box-shadow: 0 0 0 0.2rem ${props => `${props.theme.color[props.color]}80`};
-  }
+export const StyledButton = styled(Button)<Props>(props => {
+  const color = props.color !== 'link' ? props.theme.color[props.color] : props.theme.color.primary;
 
-  ${props =>
-    props.block &&
-    css`
-      display: block;
-      width: 100%;
-    `}
+  return css`
+    ${props.block &&
+      css`
+        display: block;
+        width: 100%;
+      `}
 
-  ${props =>
-    props.disabled &&
-    css`
-      opacity: 0.65;
-    `}
+    ${props.disabled &&
+      css`
+        opacity: 0.65;
+      `}
 
-  ${props =>
-    props.size === 'sm' &&
-    css`
-      border-radius: 0.2rem;
-      font-size: 0.875rem;
-      padding: 0.25rem 0.5rem;
-    `}
+    ${props.size === 'sm' &&
+      css`
+        border-radius: 0.2rem;
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+      `}
 
-  ${props =>
-    props.size === 'lg' &&
-    css`
-      border-radius: 0.3rem;
-      font-size: 1.25rem;
-      padding: 0.5rem 1rem;
-    `}
+    ${props.size === 'lg' &&
+      css`
+        border-radius: 0.3rem;
+        font-size: 1.25rem;
+        padding: 0.5rem 1rem;
+      `}
 
-  ${props =>
-    !props.outline &&
-    css`
-      background-color: ${props.theme.color[props.color]};
-      border-color: ${props.theme.color[props.color]};
-      color: ${props.theme.color.white};
+    ${props.color === 'link' &&
+      css`
+        color: ${props.theme.color.primary};
+        text-decoration: none;
+      `}
 
-      :hover {
-        background-color: ${darken(props.theme.color[props.color], HOVER_BACKGROUND_DARKEN)};
-        border-color: ${darken(props.theme.color[props.color], HOVER_BORDER_DARKEN)};
-      }
+    ${props.color !== 'link' &&
+      css`
+        :focus {
+          box-shadow: 0 0 0 0.2rem ${color}80;
+        }
+      `}
 
-      :active {
-        background-color: ${darken(props.theme.color[props.color], ACTIVE_BACKGROUND_DARKEN)};
-        border-color: ${darken(props.theme.color[props.color], ACTIVE_BORDER_DARKEN)};
-      }
-    `}
-
-  ${props =>
-    props.outline &&
-    css`
-      border-color: ${props.theme.color[props.color]};
-      color: ${props.theme.color[props.color]};
-
-      :hover {
-        background-color: ${props.theme.color[props.color]};
+    ${props.color !== 'link' &&
+      !props.outline &&
+      css`
+        background-color: ${color};
+        border-color: ${color};
         color: ${props.theme.color.white};
-      }
-    `}
-`;
+
+        :hover {
+          background-color: ${darken(color, HOVER_BACKGROUND_DARKEN)};
+          border-color: ${darken(color, HOVER_BORDER_DARKEN)};
+        }
+
+        :active {
+          background-color: ${darken(color, ACTIVE_BACKGROUND_DARKEN)};
+          border-color: ${darken(color, ACTIVE_BORDER_DARKEN)};
+        }
+      `}
+
+    ${props.color !== 'link' &&
+      props.outline &&
+      css`
+        border-color: ${color};
+        color: ${color};
+
+        :hover {
+          background-color: ${color};
+          color: ${props.theme.color.white};
+        }
+      `}
+  `;
+});

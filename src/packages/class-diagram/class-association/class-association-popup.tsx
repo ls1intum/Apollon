@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { ClassRelationshipType } from '..';
-import { Dropdown } from '../../../components/controls/dropdown';
+import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { FlipIcon } from '../../../components/controls/flip-icon';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
@@ -44,7 +44,7 @@ class ClassAssociationComponent extends Component<Props> {
           <Divider />
         </Section>
         <Section>
-          <Dropdown value={element.type} onChange={this.onChange}>
+          <Dropdown value={element.type as ClassRelationshipType} onChange={this.onChange}>
             <Dropdown.Item value={ClassRelationshipType.ClassAggregation}>{this.props.translate('packages.classDiagram.aggregation')}</Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassUnidirectional}>{this.props.translate('packages.classDiagram.unidirectional')}</Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassBidirectional}>{this.props.translate('packages.classDiagram.bidirectional')}</Dropdown.Item>

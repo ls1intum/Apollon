@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { UseCaseRelationshipType } from '..';
-import { Dropdown } from '../../../components/controls/dropdown';
+import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { FlipIcon } from '../../../components/controls/flip-icon';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
