@@ -7,6 +7,8 @@ import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Header } from '../../../components/popup/controls/header';
 import { Section } from '../../../components/popup/controls/section';
+import { TextField } from '../../../components/popup/controls/textfield';
+import { ElementRepository } from '../../../services/element/element-repository';
 import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
 import { ModelState } from './../../../components/store/model-state';
 import { ActivityControlFlow } from './activity-control-flow';
@@ -29,9 +31,16 @@ class ActivityControlFlowPopupComponent extends Component<Props> {
             <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
           </Flex>
         </Section>
+        <Section>
+          <TextField value={element.name} onUpdate={this.rename} />
+        </Section>
       </div>
     );
   }
+
+  private rename = (value: string) => {
+    this.props.rename(this.props.element.id, value);
+  };
 }
 
 type OwnProps = {
@@ -41,6 +50,7 @@ type OwnProps = {
 type StateProps = {};
 
 type DispatchProps = {
+  rename: typeof ElementRepository.rename;
   flip: typeof RelationshipRepository.flip;
 };
 
@@ -51,6 +61,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     null,
     {
+      rename: ElementRepository.rename,
       flip: RelationshipRepository.flip,
     },
   ),
