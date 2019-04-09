@@ -6,10 +6,10 @@ import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { Element } from '../../services/element/element';
 import { Divider } from '../controls/divider/divider';
+import { Header } from '../controls/header';
 import { Textfield } from '../controls/textfield/textfield';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
-import { Header } from '../popup/controls/header';
 import { ModelState } from '../store/model-state';
 
 const Flex = styled.div`
