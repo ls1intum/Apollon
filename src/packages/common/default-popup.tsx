@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { TextField } from '../../components/popup/controls/textfield';
+import { Textfield } from '../../components/controls/textfield/textfield';
 import { ModelState } from '../../components/store/model-state';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
@@ -12,7 +12,7 @@ class DefaultPopupComponent extends Component<Props> {
     return (
       <div>
         <section>
-          <TextField value={element.name} onUpdate={this.onUpdate} />
+          <Textfield value={element.name} onChange={this.onUpdate} />
         </section>
       </div>
     );

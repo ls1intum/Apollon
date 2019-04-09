@@ -1,6 +1,6 @@
 import { darken } from '../../../utils/color';
 import { css, styled } from '../../theme/styles';
-import { Props } from './button';
+import { defaultProps } from './button';
 
 const HOVER_BACKGROUND_DARKEN = 7.5;
 const HOVER_BORDER_DARKEN = 10;
@@ -38,13 +38,14 @@ const Button = styled.button`
   }
 `;
 
-export const StyledButton = styled(Button)<Props>(props => {
+export const StyledButton = styled(Button)<typeof defaultProps>(props => {
   const color = props.color !== 'link' ? props.theme.color[props.color] : props.theme.color.primary;
 
   return css`
     ${props.block &&
       css`
         display: block;
+        width: 100%;
       `}
 
     ${props.disabled &&

@@ -6,10 +6,10 @@ import { UseCaseRelationshipType } from '..';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { FlipIcon } from '../../../components/controls/flip-icon';
+import { Textfield } from '../../../components/controls/textfield/textfield';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Header } from '../../../components/popup/controls/header';
-import { TextField } from '../../../components/popup/controls/textfield';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
 import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
@@ -22,7 +22,7 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-const Input = styled(TextField)`
+const Input = styled(Textfield)`
   margin-left: 0.5rem;
 `;
 
@@ -36,7 +36,7 @@ class UseCaseAssociationComponent extends Component<Props> {
       <div>
         <section>
           {element.type === UseCaseRelationshipType.UseCaseAssociation ? (
-            <TextField value={element.name} onUpdate={this.rename(element.id)} />
+            <Textfield value={element.name} onChange={this.rename(element.id)} />
           ) : (
             <Flex>
               <Header>

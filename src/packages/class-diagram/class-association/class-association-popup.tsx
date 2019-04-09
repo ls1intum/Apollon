@@ -6,10 +6,10 @@ import { ClassRelationshipType } from '..';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { FlipIcon } from '../../../components/controls/flip-icon';
+import { Textfield } from '../../../components/controls/textfield/textfield';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Header } from '../../../components/popup/controls/header';
-import { TextField } from '../../../components/popup/controls/textfield';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
@@ -22,7 +22,7 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-const Input = styled(TextField)`
+const Input = styled(Textfield)`
   margin-left: 0.5rem;
 `;
 
@@ -58,11 +58,11 @@ class ClassAssociationComponent extends Component<Props> {
           <Header>{source.name}</Header>
           <Flex>
             <span>{this.props.translate('popup.multiplicity')}</span>
-            <Input value={element.multiplicity.source} onUpdate={this.onUpdate('multiplicity', 'source')} />
+            <Input value={element.multiplicity.source} onChange={this.onUpdate('multiplicity', 'source')} />
           </Flex>
           <Flex>
             <span>{this.props.translate('popup.role')}</span>
-            <Input value={element.role.source} onUpdate={this.onUpdate('role', 'source')} />
+            <Input value={element.role.source} onChange={this.onUpdate('role', 'source')} />
           </Flex>
           <Divider />
         </section>
@@ -70,11 +70,11 @@ class ClassAssociationComponent extends Component<Props> {
           <Header>{target.name}</Header>
           <Flex>
             <span>{this.props.translate('popup.multiplicity')}</span>
-            <Input value={element.multiplicity.target} onUpdate={this.onUpdate('multiplicity', 'target')} />
+            <Input value={element.multiplicity.target} onChange={this.onUpdate('multiplicity', 'target')} />
           </Flex>
           <Flex>
             <span>{this.props.translate('popup.role')}</span>
-            <Input value={element.role.target} onUpdate={this.onUpdate('role', 'target')} />
+            <Input value={element.role.target} onChange={this.onUpdate('role', 'target')} />
           </Flex>
         </section>
       </div>

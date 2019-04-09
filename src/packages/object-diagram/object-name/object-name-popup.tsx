@@ -3,10 +3,10 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { Divider } from '../../../components/controls/divider/divider';
+import { Textfield } from '../../../components/controls/textfield/textfield';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Header } from '../../../components/popup/controls/header';
-import { TextField } from '../../../components/popup/controls/textfield';
 import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
@@ -25,7 +25,7 @@ const Trash = styled(TrashCanIcon).attrs({ width: 20 })`
   margin-left: 0.5rem;
 `;
 
-const NewMember = styled(TextField)`
+const NewMember = styled(Textfield)`
   &:not(:focus) {
     border-style: dashed;
   }
@@ -44,18 +44,18 @@ class ObjectNameComponent extends Component<Props> {
     return (
       <div>
         <section>
-          <TextField value={element.name} onUpdate={this.rename(element.id)} />
+          <Textfield value={element.name} onChange={this.rename(element.id)} />
           <Divider />
         </section>
         <section>
           <Header>{this.props.translate('popup.attributes')}</Header>
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
-              <TextField value={attribute.name} onUpdate={this.rename(attribute.id)} />
+              <Textfield value={attribute.name} onChange={this.rename(attribute.id)} />
               <Trash onClick={this.delete(attribute.id)} />
             </Flex>
           ))}
-          <NewMember value="" onCreate={this.create} />
+          <NewMember value="" onSubmit={this.create} />
         </section>
       </div>
     );
