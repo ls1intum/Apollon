@@ -12,8 +12,8 @@ import { ClassifierComponent } from './class-diagram/classifier/classifier-compo
 import { PackageComponent } from './common/package/package-component';
 import { CommunicationLinkComponent } from './communication-diagram/communication-link/communication-link-component';
 import { ElementType } from './element-type';
-import { ObjectAttributeComponent } from './object-diagram/object-attribute/object-attribute-component';
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
+import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
 import { ObjectNameComponent } from './object-diagram/object-name/object-name-component';
 import { RelationshipType } from './relationship-type';
 import { UseCaseActorComponent } from './use-case-diagram/use-case-actor/use-case-actor-component';
@@ -34,7 +34,8 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [ElementType.ClassAttribute]: ClassMemberComponent,
   [ElementType.ClassMethod]: ClassMemberComponent,
   [ElementType.ObjectName]: ObjectNameComponent,
-  [ElementType.ObjectAttribute]: ObjectAttributeComponent,
+  [ElementType.ObjectAttribute]: ObjectMemberComponent,
+  [ElementType.ObjectMethod]: ObjectMemberComponent,
   [ElementType.ActivityActionNode]: ActivityActionNodeComponent,
   [ElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
   [ElementType.ActivityForkNode]: ActivityForkNodeComponent,

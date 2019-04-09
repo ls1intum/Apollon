@@ -15,7 +15,8 @@ import { Enumeration } from './class-diagram/classifier/enumeration/enumeration'
 import { Interface } from './class-diagram/classifier/interface/interface';
 import { Package } from './common/package/package';
 import { ElementType } from './element-type';
-import { ObjectAttribute } from './object-diagram/object-attribute/object-attribute';
+import { ObjectAttribute } from './object-diagram/object-member/object-attribute/object-attribute';
+import { ObjectMethod } from './object-diagram/object-member/object-method/object-method';
 import { ObjectName } from './object-diagram/object-name/object-name';
 import { UseCaseActor } from './use-case-diagram/use-case-actor/use-case-actor';
 import { UseCaseSystem } from './use-case-diagram/use-case-system/use-case-system';
@@ -34,6 +35,7 @@ export const Elements = {
   [ElementType.ClassMethod]: ClassMethod,
   [ElementType.ObjectName]: ObjectName,
   [ElementType.ObjectAttribute]: ObjectAttribute,
+  [ElementType.ObjectMethod]: ObjectMethod,
   [ElementType.ActivityInitialNode]: ActivityInitialNode,
   [ElementType.ActivityFinalNode]: ActivityFinalNode,
   [ElementType.ActivityActionNode]: ActivityActionNode,

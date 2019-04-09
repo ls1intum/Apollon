@@ -20,6 +20,7 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [ElementType.ClassMethod]: null,
   [ElementType.ObjectName]: ObjectNamePopup,
   [ElementType.ObjectAttribute]: null,
+  [ElementType.ObjectMethod]: null,
   [ElementType.ActivityActionNode]: DefaultPopup,
   [ElementType.ActivityFinalNode]: DefaultPopup,
   [ElementType.ActivityForkNode]: DefaultPopup,
