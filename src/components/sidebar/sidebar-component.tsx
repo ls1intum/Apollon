@@ -15,7 +15,7 @@ import { Enumeration } from '../../packages/class-diagram/classifier/enumeration
 import { Interface } from '../../packages/class-diagram/classifier/interface/interface';
 import { Package } from '../../packages/common/package/package';
 import { ElementType } from '../../packages/element-type';
-import { ObjectAttribute } from '../../packages/object-diagram/object-attribute/object-attribute';
+import { ObjectAttribute } from '../../packages/object-diagram/object-member/object-attribute/object-attribute';
 import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
 import { UseCaseActor } from '../../packages/use-case-diagram/use-case-actor/use-case-actor';
 import { UseCaseSystem } from '../../packages/use-case-diagram/use-case-system/use-case-system';
