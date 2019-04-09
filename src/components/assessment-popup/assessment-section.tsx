@@ -5,9 +5,9 @@ import styled from 'styled-components';
 import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { Element } from '../../services/element/element';
+import { Divider } from '../controls/divider/divider';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
-import { Divider } from '../popup/controls/divider';
 import { Header } from '../popup/controls/header';
 import { Section } from '../popup/controls/section';
 import { TextField } from '../popup/controls/textfield';
@@ -60,9 +60,9 @@ class AssessmentSectionCompoennt extends Component<Props> {
             <span>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
               <span>{(assessment && assessment.score) || '-'}</span>
-            ) : (
-              <TextField type="number" step={0.5} onUpdate={this.updateScore} value={assessment ? String(assessment.score) : ''} />
-            )}
+              ) : (
+                <TextField type="number" step={0.5} onUpdate={this.updateScore} value={assessment ? String(assessment.score) : ''} />
+              )}
           </Flex>
         </Section>
         {readonly ? (
