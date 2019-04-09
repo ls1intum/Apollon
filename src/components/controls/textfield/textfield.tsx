@@ -44,6 +44,16 @@ export class Textfield extends Component<Props, State> {
     );
   }
 
+  private onBlur = ({ currentTarget }: FocusEvent<HTMLInputElement>) => {
+    const { value } = currentTarget;
+    if (!value || !this.props.onSubmit) {
+      return;
+    }
+
+    this.props.onSubmit(value);
+    this.setState({ key: Date.now() });
+  };
+
   private onChange = ({ currentTarget }: FormEvent<HTMLInputElement>) => {
     if (!this.props.onChange) {
       return;
@@ -59,14 +69,7 @@ export class Textfield extends Component<Props, State> {
       case 'Escape':
         currentTarget.blur();
         break;
+      default:
     }
-  };
-
-  private onBlur = ({ currentTarget }: FocusEvent<HTMLInputElement>) => {
-    const { value } = currentTarget;
-    if (!value || !this.props.onSubmit) return;
-
-    this.props.onSubmit(value);
-    this.setState({ key: Date.now() });
   };
 }

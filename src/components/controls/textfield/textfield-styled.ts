@@ -3,6 +3,8 @@ import { lighten } from '../../../utils/color';
 import { css, styled } from '../../theme/styles';
 import { defaultProps } from './textfield';
 
+const FOCUS_BORDER_LIGHTEN = 25;
+
 const Input = styled.input`
   background-clip: padding-box;
   background-color: ${props => props.theme.color.white};
@@ -19,7 +21,7 @@ const Input = styled.input`
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 
   :focus {
-    border-color: ${props => lighten(props.theme.color.primary, 25)};
+    border-color: ${props => lighten(props.theme.color.primary, FOCUS_BORDER_LIGHTEN)};
     outline: 0;
     box-shadow: 0 0 0 0.2rem ${props => props.theme.color.primary}40;
   }
