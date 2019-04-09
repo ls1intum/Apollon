@@ -9,7 +9,6 @@ import { Divider } from '../controls/divider/divider';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { Header } from '../popup/controls/header';
-import { Section } from '../popup/controls/section';
 import { TextField } from '../popup/controls/textfield';
 import { ModelState } from '../store/model-state';
 
@@ -51,11 +50,11 @@ class AssessmentSectionCompoennt extends Component<Props> {
 
     return (
       <>
-        <Section>
+        <section>
           <Header>{this.props.translate('assessment.assessment')} {element.name}</Header>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Flex>
             <span>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
@@ -64,17 +63,17 @@ class AssessmentSectionCompoennt extends Component<Props> {
                 <TextField type="number" step={0.5} onUpdate={this.updateScore} value={assessment ? String(assessment.score) : ''} />
               )}
           </Flex>
-        </Section>
+        </section>
         {readonly ? (
-          assessment && assessment.feedback && <Section>{assessment.feedback}</Section>
+          assessment && assessment.feedback && <section>{assessment.feedback}</section>
         ) : (
-          <Section>
+          <section>
             <TextField
               placeholder={this.props.translate('assessment.feedback')}
               onUpdate={this.updateFeedback}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />
-          </Section>
+          </section>
         )}
       </>
     );

@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Section } from '../../components/popup/controls/section';
 import { TextField } from '../../components/popup/controls/textfield';
 import { ModelState } from '../../components/store/model-state';
 import { Element } from '../../services/element/element';
@@ -12,9 +11,9 @@ class DefaultPopupComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
+        <section>
           <TextField value={element.name} onUpdate={this.onUpdate} />
-        </Section>
+        </section>
       </div>
     );
   }

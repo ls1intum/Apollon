@@ -45,11 +45,6 @@ export const StyledButton = styled(Button)<Props>(props => {
     ${props.block &&
       css`
         display: block;
-        width: 100%;
-
-        & + & {
-          margin-top: 0.5rem;
-        }
       `}
 
     ${props.disabled &&

@@ -8,7 +8,6 @@ import { Switch } from '../../../components/controls/switch/switch';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
 import { TextField } from '../../../components/popup/controls/textfield';
 import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
 import { ModelState } from '../../../components/store/model-state';
@@ -78,11 +77,11 @@ class ClassifierComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
+        <section>
           <TextField value={element.name} onUpdate={this.rename(element.id)} />
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Switch value={element.type as ClassElementType} onChange={this.toggle} color="primary">
             <Switch.Item value={ClassElementType.AbstractClass}>
               {this.props.translate('packages.classDiagram.abstract')}
@@ -95,8 +94,8 @@ class ClassifierComponent extends Component<Props> {
             </Switch.Item>
           </Switch>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>{this.props.translate('popup.attributes')}</Header>
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
@@ -105,9 +104,9 @@ class ClassifierComponent extends Component<Props> {
             </Flex>
           ))}
           <NewMember value="" onCreate={this.create(ClassAttribute)} />
-        </Section>
+        </section>
         {!element.isEnumeration && (
-          <Section>
+          <section>
             <Divider />
             <Header>{this.props.translate('popup.methods')}</Header>
             {methods.map(method => (
@@ -117,7 +116,7 @@ class ClassifierComponent extends Component<Props> {
               </Flex>
             ))}
             <NewMember value="" onCreate={this.create(ClassMethod)} />
-          </Section>
+          </section>
         )}
       </div>
     );

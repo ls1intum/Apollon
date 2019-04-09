@@ -9,7 +9,6 @@ import { FlipIcon } from '../../../components/controls/flip-icon';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
 import { TextField } from '../../../components/popup/controls/textfield';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
@@ -36,14 +35,14 @@ class ClassAssociationComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
+        <section>
           <Flex>
             <Header>{this.props.translate('popup.association')}</Header>
             <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
           </Flex>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Dropdown value={element.type as ClassRelationshipType} onChange={this.onChange}>
             <Dropdown.Item value={ClassRelationshipType.ClassAggregation}>{this.props.translate('packages.classDiagram.aggregation')}</Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassUnidirectional}>{this.props.translate('packages.classDiagram.unidirectional')}</Dropdown.Item>
@@ -54,8 +53,8 @@ class ClassAssociationComponent extends Component<Props> {
             <Dropdown.Item value={ClassRelationshipType.ClassRealization}>{this.props.translate('packages.classDiagram.realization')}</Dropdown.Item>
           </Dropdown>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>{source.name}</Header>
           <Flex>
             <span>{this.props.translate('popup.multiplicity')}</span>
@@ -66,8 +65,8 @@ class ClassAssociationComponent extends Component<Props> {
             <Input value={element.role.source} onUpdate={this.onUpdate('role', 'source')} />
           </Flex>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>{target.name}</Header>
           <Flex>
             <span>{this.props.translate('popup.multiplicity')}</span>
@@ -77,7 +76,7 @@ class ClassAssociationComponent extends Component<Props> {
             <span>{this.props.translate('popup.role')}</span>
             <Input value={element.role.target} onUpdate={this.onUpdate('role', 'target')} />
           </Flex>
-        </Section>
+        </section>
       </div>
     );
   }

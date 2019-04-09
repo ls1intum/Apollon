@@ -9,7 +9,6 @@ import { FlipIcon } from '../../../components/controls/flip-icon';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
 import { TextField } from '../../../components/popup/controls/textfield';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
@@ -35,7 +34,7 @@ class UseCaseAssociationComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
+        <section>
           {element.type === UseCaseRelationshipType.UseCaseAssociation ? (
             <TextField value={element.name} onUpdate={this.rename(element.id)} />
           ) : (
@@ -54,8 +53,8 @@ class UseCaseAssociationComponent extends Component<Props> {
             </Flex>
           )}
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Dropdown value={element.type} onChange={this.onChange}>
             <Dropdown.Item value={UseCaseRelationshipType.UseCaseAssociation}>
               {this.props.translate('packages.useCaseDiagram.association')}
@@ -70,7 +69,7 @@ class UseCaseAssociationComponent extends Component<Props> {
               {this.props.translate('packages.useCaseDiagram.extend')}
             </Dropdown.Item>
           </Dropdown>
-        </Section>
+        </section>
       </div>
     );
   }
