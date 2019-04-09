@@ -8,6 +8,7 @@ export const DropdownMenu = styled.div`
   list-style: none;
   margin: 0.125rem 0 0;
   min-width: 100%;
+  padding: 0.5rem 0;
   position: absolute;
   text-align: left;
   z-index: 1000;
