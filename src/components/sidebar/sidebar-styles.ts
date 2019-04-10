@@ -6,7 +6,7 @@ export const Container = styled.aside`
   height: 100%;
   min-height: inherit;
   max-height: inherit;
-  overflow: scroll;
+  overflow: auto;
   display: flex;
   flex-direction: column;
 `;

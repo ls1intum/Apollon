@@ -1,8 +1,7 @@
-import { ObjectElementType } from '..';
 import { Element } from '../../../services/element/element';
 import { Boundary } from '../../../utils/geometry/boundary';
 
-export class ObjectAttribute extends Element {
+export abstract class ObjectMember extends Element {
   static features = {
     ...Element.features,
     hoverable: false,
@@ -30,6 +29,5 @@ export class ObjectAttribute extends Element {
     return width + 2 * 10;
   };
 
-  type = ObjectElementType.ObjectAttribute;
   bounds: Boundary = { ...this.bounds, height: 30 };
 }

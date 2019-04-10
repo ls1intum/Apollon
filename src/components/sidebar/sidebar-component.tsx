@@ -15,7 +15,7 @@ import { Enumeration } from '../../packages/class-diagram/classifier/enumeration
 import { Interface } from '../../packages/class-diagram/classifier/interface/interface';
 import { Package } from '../../packages/common/package/package';
 import { ElementType } from '../../packages/element-type';
-import { ObjectAttribute } from '../../packages/object-diagram/object-attribute/object-attribute';
+import { ObjectAttribute } from '../../packages/object-diagram/object-member/object-attribute/object-attribute';
 import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
 import { UseCaseActor } from '../../packages/use-case-diagram/use-case-actor/use-case-actor';
 import { UseCaseSystem } from '../../packages/use-case-diagram/use-case-system/use-case-system';
@@ -280,6 +280,16 @@ class SidebarComponent extends Component<Props, State> {
             (() => {
               const c = new UseCaseSystem();
               c.name = this.props.translate('packages.useCaseDiagram.system');
+              return c;
+            })(),
+          ],
+        });
+      case DiagramType.CommunicationDiagram:
+        this.setState({
+          previews: [
+            (() => {
+              const c = new ObjectName();
+              c.name = this.props.translate('packages.objectDiagram.objectName');
               return c;
             })(),
           ],

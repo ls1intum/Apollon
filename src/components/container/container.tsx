@@ -7,6 +7,6 @@ export const Editor = styled.div`
   max-height: inherit;
   max-width: inherit;
 
-  overflow: scroll;
+  overflow: auto;
   border: 1px solid ${({ theme }) => theme.borderColor};
 `;

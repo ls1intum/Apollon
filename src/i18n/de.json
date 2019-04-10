@@ -15,7 +15,8 @@
     "methods": "Methoden",
     "association": "Assoziation",
     "multiplicity": "Multiziplität",
-    "role": "Rolle"
+    "role": "Rolle",
+    "messages": "Nachrichten"
   },
   "assessment": {
     "assessment": "Bewertung für",
@@ -45,7 +46,8 @@
     "activityDiagram": {
       "actionNode": "Aktion",
       "objectNode": "Objekt",
-      "condition": "Bedingung"
+      "condition": "Bedingung",
+      "controlFlow": "Kontrollfluss"
     },
     "useCaseDiagram": {
       "useCase": "Anwendungsfall",
@@ -55,6 +57,9 @@
       "extend": "Extend",
       "generalization": "Generalisierung",
       "include": "Include"
+    },
+    "communicationDiagram": {
+      "communicationLink": "Kommunikation"
     }
   }
 }

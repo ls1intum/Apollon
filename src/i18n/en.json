@@ -15,7 +15,8 @@
     "methods": "Methods",
     "association": "Association",
     "multiplicity": "Multiplicity",
-    "role": "Role"
+    "role": "Role",
+    "messages": "Messages"
   },
   "assessment": {
     "assessment": "Assessment for",
@@ -45,7 +46,8 @@
     "activityDiagram": {
       "actionNode": "Action",
       "objectNode": "Object",
-      "condition": "Condition"
+      "condition": "Condition",
+      "controlFlow": "Control Flow"
     },
     "useCaseDiagram": {
       "useCase": "UseCase",
@@ -55,6 +57,9 @@
       "extend": "Extend",
       "generalization": "Generalization",
       "include": "Include"
+    },
+    "communicationDiagram": {
+      "communicationLink": "Communication Link"
     }
   }
 }

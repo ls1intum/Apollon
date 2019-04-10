@@ -11,7 +11,8 @@ import { localized } from '../../../components/i18n/localized';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
 import { notEmpty } from '../../../utils/not-empty';
-import { ObjectAttribute } from '../object-attribute/object-attribute';
+import { ObjectAttribute } from '../object-member/object-attribute/object-attribute';
+import { ObjectMethod } from '../object-member/object-method/object-method';
 import { ModelState } from './../../../components/store/model-state';
 import { ObjectName } from './object-name';
 
@@ -40,6 +41,7 @@ class ObjectNameComponent extends Component<Props> {
     const { element, getById } = this.props;
     const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
     const attributes = children.filter(child => child instanceof ObjectAttribute);
+    const methods = children.filter(child => child instanceof ObjectMethod);
 
     return (
       <div>
@@ -55,14 +57,25 @@ class ObjectNameComponent extends Component<Props> {
               <Trash onClick={this.delete(attribute.id)} />
             </Flex>
           ))}
-          <NewMember value="" onSubmit={this.create} />
+          <NewMember value="" onSubmit={this.create(ObjectAttribute)} />
+        </section>
+        <section>
+          <Divider />
+          <Header>{this.props.translate('popup.methods')}</Header>
+          {methods.map(method => (
+            <Flex key={method.id}>
+              <Textfield value={method.name} onChange={this.rename(method.id)} />
+              <Trash onClick={this.delete(method.id)} />
+            </Flex>
+          ))}
+          <NewMember value="" onSubmit={this.create(ObjectMethod)} />
         </section>
       </div>
     );
   }
-  private create = (value: string) => {
+  private create = (Clazz: typeof ObjectAttribute | typeof ObjectMethod) => (value: string) => {
     const { element, create } = this.props;
-    const member = new ObjectAttribute();
+    const member = new Clazz();
     member.name = value;
     member.owner = element.id;
     create(member);

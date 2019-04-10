@@ -133,7 +133,7 @@ export class ElementRepository {
     payload: { id, name },
   });
 
-  static update = (id: string, values: Partial<Element>): UpdateAction => ({
+  static update = (id: string, values: any): UpdateAction => ({
     type: ElementActionTypes.UPDATE,
     payload: { id, values },
   });

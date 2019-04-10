@@ -1,7 +1,4 @@
 import { FunctionComponent } from 'react';
-import { ElementType } from './element-type';
-import { RelationshipType } from './relationship-type';
-
 import { ActivityActionNodeComponent } from './activity-diagram/activity-action-node/activity-action-node-component';
 import { ActivityControlFlowComponent } from './activity-diagram/activity-control-flow/activity-control-flow-component';
 import { ActivityFinalNodeComponent } from './activity-diagram/activity-final-node/activity-final-node-component';
@@ -13,9 +10,12 @@ import { ClassAssociationComponent } from './class-diagram/class-association/cla
 import { ClassMemberComponent } from './class-diagram/class-member/class-member-component';
 import { ClassifierComponent } from './class-diagram/classifier/classifier-component';
 import { PackageComponent } from './common/package/package-component';
-import { ObjectAttributeComponent } from './object-diagram/object-attribute/object-attribute-component';
+import { CommunicationLinkComponent } from './communication-diagram/communication-link/communication-link-component';
+import { ElementType } from './element-type';
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
+import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
 import { ObjectNameComponent } from './object-diagram/object-name/object-name-component';
+import { RelationshipType } from './relationship-type';
 import { UseCaseActorComponent } from './use-case-diagram/use-case-actor/use-case-actor-component';
 import { UseCaseAssociationComponent } from './use-case-diagram/use-case-association/use-case-association-component';
 import { UseCaseExtendComponent } from './use-case-diagram/use-case-extend/use-case-extend-component';
@@ -34,7 +34,8 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [ElementType.ClassAttribute]: ClassMemberComponent,
   [ElementType.ClassMethod]: ClassMemberComponent,
   [ElementType.ObjectName]: ObjectNameComponent,
-  [ElementType.ObjectAttribute]: ObjectAttributeComponent,
+  [ElementType.ObjectAttribute]: ObjectMemberComponent,
+  [ElementType.ObjectMethod]: ObjectMemberComponent,
   [ElementType.ActivityActionNode]: ActivityActionNodeComponent,
   [ElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
   [ElementType.ActivityForkNode]: ActivityForkNodeComponent,
@@ -57,4 +58,5 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [RelationshipType.UseCaseExtend]: UseCaseExtendComponent,
   [RelationshipType.UseCaseGeneralization]: UseCaseGeneralizationComponent,
   [RelationshipType.UseCaseInclude]: UseCaseIncludeComponent,
+  [RelationshipType.CommunicationLink]: CommunicationLinkComponent,
 };

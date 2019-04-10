@@ -64,9 +64,9 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
         offset.y += position.y - this.props.element.bounds.y;
 
         this.setState({ movable: true, offset });
-        document.addEventListener('mousemove', this.onMouseMove);
-        document.addEventListener('mouseup', this.onMouseUp);
       }, 0);
+      document.addEventListener('mousemove', this.onMouseMove);
+      document.addEventListener('mouseup', this.onMouseUp);
     };
 
     private onMouseMove = (event: MouseEvent) => {
