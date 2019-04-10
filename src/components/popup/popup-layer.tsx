@@ -1,9 +1,41 @@
 import React, { Component } from 'react';
+import { createPortal } from 'react-dom';
+import { connect } from 'react-redux';
+import { Popups } from '../../packages/popups';
 import { Element } from '../../services/element/element';
-import { Popup } from './popup';
+import { ApollonMode } from '../../typings';
+import { AssessmentPopup } from '../assessment-popup/assessment-popup';
+import { CanvasConsumer } from '../canvas/canvas-context';
+import { Popover } from '../controls/popover/popover';
+import { ModelState } from '../store/model-state';
 import { PopupContext, PopupProvider } from './popup-context';
 
-export class PopupLayer extends Component<{}, State> {
+type OwnProps = {};
+type StateProps = {
+  mode: ApollonMode;
+  readonly: boolean;
+  enablePopups: boolean;
+};
+type DispatchProps = {};
+type Props = OwnProps & StateProps & DispatchProps;
+
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  state => ({
+    mode: state.editor.mode,
+    readonly: state.editor.readonly,
+    enablePopups: state.editor.enablePopups,
+  }),
+  null,
+  null,
+  { forwardRef: true },
+);
+
+interface State {
+  element: Element | null;
+  position: { x: number; y: number };
+}
+
+export class PopupLayerComponent extends Component<Props, State> {
   popup: React.RefObject<HTMLDivElement> = React.createRef();
 
   state: State = {
@@ -17,6 +49,7 @@ export class PopupLayer extends Component<{}, State> {
 
   componentWillUnmount() {
     document.removeEventListener('mousedown', this.cancel);
+    window.removeEventListener('resize', this.close);
   }
 
   render() {
@@ -24,20 +57,47 @@ export class PopupLayer extends Component<{}, State> {
       showPopup: this.showPopup,
       update: this.update,
     };
+
+    if (!this.props.enablePopups) return false;
+
     return (
       <PopupProvider value={context}>
         {this.props.children}
-        {this.state.element && (
-          <div ref={this.popup} style={{ position: 'absolute', left: '50%', top: '50%' }}>
-            <Popup element={this.state.element} position={this.state.position} />
-          </div>
-        )}
+        <CanvasConsumer
+          children={canvasContext => {
+            if (!canvasContext || !this.state.element) return null;
+
+            const offset = canvasContext.coordinateSystem.offset(false);
+            const position = {
+              x: offset.x + window.scrollX + this.state.position.x,
+              y: offset.y + window.scrollY + this.state.position.y,
+            };
+
+            let CustomPopupComponent = null;
+
+            if (this.props.mode === ApollonMode.Assessment) {
+              CustomPopupComponent = AssessmentPopup;
+            } else {
+              CustomPopupComponent = Popups[this.state.element.type];
+              if (!CustomPopupComponent) {
+                return null;
+              }
+            }
+            return createPortal(
+              <Popover position={position} ref={this.popup}>
+                <CustomPopupComponent element={this.state.element} />
+              </Popover>,
+              document.body,
+            );
+          }}
+        />
       </PopupProvider>
     );
   }
 
   private showPopup = (element: Element, position: { x: number; y: number }) => {
     this.setState({ element, position });
+    window.addEventListener('resize', this.close, { once: true });
   };
 
   private update = (element: Element) => {
@@ -51,12 +111,13 @@ export class PopupLayer extends Component<{}, State> {
     const popup = this.popup.current as HTMLElement;
     const target = event.target as HTMLElement;
     if (!popup.contains(target)) {
-      this.setState({ element: null });
+      this.close();
     }
+  };
+
+  private close = () => {
+    this.setState({ element: null });
   };
 }
 
-interface State {
-  element: Element | null;
-  position: { x: number; y: number };
-}
+export const PopupLayer = enhance(PopupLayerComponent);

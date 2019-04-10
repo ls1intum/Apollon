@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { ElementRepository } from '../../services/element/element-repository';
 import { ApollonMode } from '../../typings';
-import { PopupLayer } from '../popup/popup-layer';
+import { PopupLayerComponent } from '../popup/popup-layer';
 import { ModelState } from '../store/model-state';
 import { CanvasContext, withCanvas } from './canvas-context';
 
@@ -51,7 +51,7 @@ class KeyboardEventListenerComponent extends Component<Props> {
 }
 
 interface OwnProps {
-  popup: React.RefObject<PopupLayer>;
+  popup: React.RefObject<PopupLayerComponent>;
 }
 
 interface StateProps {

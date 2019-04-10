@@ -4,12 +4,14 @@ import { Point } from '../../utils/geometry/point';
 export class CoordinateSystem {
   constructor(public layer: RefObject<SVGSVGElement>) {}
 
-  offset(): Point {
+  offset(snap: boolean = true): Point {
     const layerBounds = this.layer.current!.getBoundingClientRect();
     let x = layerBounds.left;
     let y = layerBounds.top;
-    x = Math.round(x / 10) * 10;
-    y = Math.round(y / 10) * 10;
+    if (snap) {
+      x = Math.round(x / 10) * 10;
+      y = Math.round(y / 10) * 10;
+    }
     return new Point(x, y);
   }
 
