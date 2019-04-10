@@ -1,4 +1,4 @@
-import React, { Component, FocusEvent, FormEvent, HTMLProps, KeyboardEvent } from 'react';
+import React, { Component, FocusEvent, FormEvent, InputHTMLAttributes, KeyboardEvent } from 'react';
 import { Omit } from 'react-redux';
 import { Size } from '../../theme/styles';
 import { StyledTextfield } from './textfield-styled';
@@ -18,7 +18,7 @@ type Props = {
   onSubmit?: (value: string) => void;
   placeholder?: string;
   value: string;
-} & Omit<HTMLProps<HTMLInputElement>, 'ref' | 'as' | 'onChange' | 'onSubmit'> &
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onSubmit'> &
   typeof defaultProps;
 
 type State = typeof initialState;
