@@ -23,9 +23,8 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-const Flip = styled(FlipIcon).attrs({ width: 20 })`
+const Flip = styled.span.attrs({ width: 20 })`
   margin-left: 0.5rem;
-  transform: rotate(90deg);
 `;
 
 const Trash = styled(TrashCanIcon).attrs({ width: 20 })`
@@ -58,11 +57,17 @@ class CommunactionLinkPopupComponent extends Component<Props> {
           <Divider />
         </Section>
         <Section>
-          <Header>{this.props.translate('popup.messages')}</Header>
+          <Header>
+            {this.props.translate('popup.messages')} (
+            <small>
+              {source.name} ⟶ {target.name}
+            </small>
+            )
+          </Header>
           {element.messages.map((message, i) => (
             <Flex key={i}>
               <TextField value={message.name} onUpdate={this.rename(message)} />
-              <Flip onClick={this.flip(message)} />
+              <Flip onClick={this.flip(message)}>{message.direction === 'source' ? '⟶' : '⟵'}</Flip>
               <Trash onClick={this.delete(message)} />
             </Flex>
           ))}
