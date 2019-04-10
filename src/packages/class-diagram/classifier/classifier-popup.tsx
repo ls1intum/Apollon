@@ -4,9 +4,9 @@ import { compose } from 'redux';
 import styled from 'styled-components';
 import { ClassElementType } from '..';
 import { Divider } from '../../../components/controls/divider/divider';
+import { MinusIcon } from '../../../components/controls/icon/minus';
 import { Switch } from '../../../components/controls/switch/switch';
 import { Textfield } from '../../../components/controls/textfield/textfield';
-import { TrashCanIcon } from '../../../components/controls/trashcan';
 import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
@@ -24,7 +24,7 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-const Trash = styled(TrashCanIcon).attrs({ width: 20 })`
+const Trash = styled(MinusIcon).attrs({ width: 20 })`
   margin-left: 0.5rem;
 `;
 

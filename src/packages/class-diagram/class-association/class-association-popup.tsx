@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { ClassRelationshipType } from '..';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
-import { FlipIcon } from '../../../components/controls/flip-icon';
+import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
@@ -38,7 +38,7 @@ class ClassAssociationComponent extends Component<Props> {
         <section>
           <Flex>
             <Header>{this.props.translate('popup.association')}</Header>
-            <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
           </Flex>
           <Divider />
         </section>

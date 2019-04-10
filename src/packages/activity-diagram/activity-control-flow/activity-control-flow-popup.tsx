@@ -2,7 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
-import { FlipIcon } from '../../../components/controls/flip-icon';
+import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
@@ -27,7 +27,7 @@ class ActivityControlFlowPopupComponent extends Component<Props> {
         <section>
           <Flex>
             <Header>{this.props.translate('packages.activityDiagram.controlFlow')}</Header>
-            <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
           </Flex>
         </section>
         <section>
