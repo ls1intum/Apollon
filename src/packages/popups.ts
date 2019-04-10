@@ -1,4 +1,6 @@
 import { ComponentClass } from 'react';
+import { ActivityControlFlowPopup } from './activity-diagram/activity-control-flow/activity-control-flow-popup';
+import { ActivityMergeNodePopup } from './activity-diagram/activity-merge-node/activity-merge-node-popup';
 import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
 import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { DefaultPopup } from './common/default-popup';
@@ -25,7 +27,7 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [ElementType.ActivityFinalNode]: DefaultPopup,
   [ElementType.ActivityForkNode]: DefaultPopup,
   [ElementType.ActivityInitialNode]: DefaultPopup,
-  [ElementType.ActivityMergeNode]: DefaultPopup,
+  [ElementType.ActivityMergeNode]: ActivityMergeNodePopup,
   [ElementType.ActivityObjectNode]: DefaultPopup,
   [ElementType.UseCase]: DefaultPopup,
   [ElementType.UseCaseActor]: DefaultPopup,
@@ -38,7 +40,7 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [RelationshipType.ClassRealization]: ClassAssociationPopup,
   [RelationshipType.ClassUnidirectional]: ClassAssociationPopup,
   [RelationshipType.ObjectLink]: null,
-  [RelationshipType.ActivityControlFlow]: null,
+  [RelationshipType.ActivityControlFlow]: ActivityControlFlowPopup,
   [RelationshipType.UseCaseAssociation]: UseCaseAssociationPopup,
   [RelationshipType.UseCaseExtend]: UseCaseAssociationPopup,
   [RelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
