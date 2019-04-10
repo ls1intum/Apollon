@@ -16,7 +16,7 @@
     "association": "Assoziation",
     "multiplicity": "Multiziplität",
     "role": "Rolle",
-    "condition": "Optionen"
+    "messages": "Nachrichten"
   },
   "assessment": {
     "assessment": "Bewertung für",
@@ -57,6 +57,9 @@
       "extend": "Extend",
       "generalization": "Generalisierung",
       "include": "Include"
+    },
+    "communicationDiagram": {
+      "communicationLink": "Kommunikation"
     }
   }
 }

@@ -10,7 +10,9 @@ export const ObjectNameComponent: SFC<Props> = ({ element, children }) => (
       </text>
     </svg>
     {children}
+    <rect width="100%" height="100%" stroke="black" fill="none" pointerEvents="none" />
     <path d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} stroke="black" />
+    <path d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} stroke="black" />
   </g>
 );
 

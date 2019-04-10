@@ -16,7 +16,7 @@
     "association": "Association",
     "multiplicity": "Multiplicity",
     "role": "Role",
-    "condition": "Options"
+    "messages": "Messages"
   },
   "assessment": {
     "assessment": "Assessment for",
@@ -57,6 +57,9 @@
       "extend": "Extend",
       "generalization": "Generalization",
       "include": "Include"
+    },
+    "communicationDiagram": {
+      "communicationLink": "Communication Link"
     }
   }
 }

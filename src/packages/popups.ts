@@ -4,6 +4,7 @@ import { ActivityMergeNodePopup } from './activity-diagram/activity-merge-node/a
 import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
 import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { DefaultPopup } from './common/default-popup';
+import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
 import { ElementType } from './element-type';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
 import { RelationshipType } from './relationship-type';
@@ -21,6 +22,7 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [ElementType.ClassMethod]: null,
   [ElementType.ObjectName]: ObjectNamePopup,
   [ElementType.ObjectAttribute]: null,
+  [ElementType.ObjectMethod]: null,
   [ElementType.ActivityActionNode]: DefaultPopup,
   [ElementType.ActivityFinalNode]: DefaultPopup,
   [ElementType.ActivityForkNode]: DefaultPopup,
@@ -43,4 +45,5 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [RelationshipType.UseCaseExtend]: UseCaseAssociationPopup,
   [RelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
   [RelationshipType.UseCaseInclude]: UseCaseAssociationPopup,
+  [RelationshipType.CommunicationLink]: CommunicationLinkPopup,
 };

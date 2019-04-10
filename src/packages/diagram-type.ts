@@ -3,4 +3,5 @@ export enum DiagramType {
   ObjectDiagram = 'ObjectDiagram',
   ActivityDiagram = 'ActivityDiagram',
   UseCaseDiagram = 'UseCaseDiagram',
+  CommunicationDiagram = 'CommunicationDiagram',
 }
