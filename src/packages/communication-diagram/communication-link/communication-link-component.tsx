@@ -30,7 +30,7 @@ export const CommunicationLinkComponent: SFC<Props> = ({ element }) => {
         <>
           <text x={position.x} y={position.y} dx={5} fontSize="85%" dominantBaseline="middle" textAnchor="start">
             <tspan fontWeight="bold" fontSize="120%">
-              ↓
+              {targets.length ? '↓' : ''}
             </tspan>
             {targets.map((target, i) => (
               <tspan key={i} x={position.x + 20} dy={i === 0 ? undefined : '1.2em'}>
@@ -40,7 +40,7 @@ export const CommunicationLinkComponent: SFC<Props> = ({ element }) => {
           </text>
           <text x={position.x} y={position.y} dx={-5} fontSize="85%" dominantBaseline="middle" textAnchor="end">
             <tspan fontWeight="bold" fontSize="120%">
-              ↑
+              {sources.length ? '↑' : ''}
             </tspan>
             {sources.map((source, i) => (
               <tspan key={i} x={position.x - 20} dy={i === 0 ? undefined : '1.2em'}>
@@ -53,7 +53,7 @@ export const CommunicationLinkComponent: SFC<Props> = ({ element }) => {
         <>
           <text x={position.x} y={position.y} dy={-6} fontSize="85%" dominantBaseline="text-after-edge" textAnchor="middle">
             <tspan fontWeight="bold" fontSize="120%">
-              ⟶
+              {targets.length ? '⟶' : ''}
             </tspan>
             {targets.map((target, i) => (
               <tspan key={i} x={position.x} dy="-1.2em">
@@ -63,7 +63,7 @@ export const CommunicationLinkComponent: SFC<Props> = ({ element }) => {
           </text>
           <text x={position.x} y={position.y} dy={3} fontSize="85%" dominantBaseline="text-before-edge" textAnchor="middle">
             <tspan fontWeight="bold" fontSize="120%">
-              ⟵
+              {sources.length ? '⟵' : ''}
             </tspan>
             {sources.map((source, i) => (
               <tspan key={i} x={position.x} dy="1.2em">
