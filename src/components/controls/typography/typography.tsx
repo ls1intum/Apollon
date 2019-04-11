@@ -1,4 +1,12 @@
 import React, { HTMLAttributes } from 'react';
 import { Typography } from './typography-styles';
 
-export const Header = (props: HTMLAttributes<HTMLElement>) => <Typography variant="header" as="h1" {...props} />;
+export const defaultProps = {
+  gutter: true,
+};
+
+type Props = typeof defaultProps & HTMLAttributes<HTMLElement>;
+
+export const Header = (props: Props) => <Typography variant="header" as="h1" {...props} />;
+
+Header.defaultProps = defaultProps;

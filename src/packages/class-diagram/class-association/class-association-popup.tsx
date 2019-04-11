@@ -37,7 +37,7 @@ class ClassAssociationComponent extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Header>{this.props.translate('popup.association')}</Header>
+            <Header gutter={false}>{this.props.translate('popup.association')}</Header>
             <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
           </Flex>
           <Divider />

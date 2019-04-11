@@ -39,7 +39,7 @@ class UseCaseAssociationComponent extends Component<Props> {
             <Textfield value={element.name} onChange={this.rename(element.id)} />
           ) : (
             <Flex>
-              <Header>
+              <Header gutter={false}>
                 {
                   {
                     [UseCaseRelationshipType.UseCaseAssociation]: this.props.translate('packages.useCaseDiagram.association'),
