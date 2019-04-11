@@ -27,8 +27,9 @@ export const Grid = styled.div<Props>`
       display: block;
       position: absolute;
       z-index: -1;
-      width: 100%;
-      height: 100%;
+      margin: -1rem;
+      width: calc(100% + 2rem);
+      height: calc(100% + 2rem);
 
       background-position: calc(50% + ${(grid * subdivisions) / 2}px) calc(50% + ${(grid * subdivisions) / 2}px);
       background-size: ${grid * subdivisions}px ${grid * subdivisions}px,
