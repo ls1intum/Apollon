@@ -1,4 +1,4 @@
-import { all, put, select, takeLatest } from 'redux-saga/effects';
+import { all, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
 import { Container } from '../container/container';
 import { DiagramRepository } from '../diagram/diagram-repository';
@@ -7,6 +7,7 @@ import { Element, IElement } from './element';
 import { ElementRepository } from './element-repository';
 import {
   DeleteAction,
+  DuplicateAction,
   ElementActionTypes,
   HoverAction,
   LeaveAction,
@@ -17,12 +18,44 @@ import {
 } from './element-types';
 
 export function* ElementSaga() {
+  yield takeEvery(ElementActionTypes.DUPLICATE, handleElementDuplicate);
   yield takeLatest(ElementActionTypes.HOVER, handleElementHover);
   yield takeLatest(ElementActionTypes.LEAVE, handleElementLeave);
   yield takeLatest(ElementActionTypes.SELECT, handleElementSelect);
   yield takeLatest(ElementActionTypes.MAKE_INTERACTIVE, handleElementMakeInteractive);
-  yield takeLatest(ElementActionTypes.MOVE, handleElementMove);
+  yield takeEvery(ElementActionTypes.MOVE, handleElementMove);
   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
+}
+
+function* handleElementDuplicate({ payload }: DuplicateAction) {
+  const { id, parent } = payload;
+  const { elements }: ModelState = yield select();
+  const element = ElementRepository.getById(elements)(id);
+  if (!element) return;
+
+  const clone = element.clone();
+  if (parent) {
+    clone.owner = parent;
+  } else {
+    clone.bounds.x += 30;
+    clone.bounds.y += 30;
+  }
+
+  let ownedElements: string[] = [];
+  if (clone instanceof Container) {
+    ownedElements = clone.ownedElements;
+    clone.ownedElements = [];
+  }
+
+  yield all([put(ElementRepository.select(null)), put(ElementRepository.create(clone))]);
+
+  for (const ownedElement of ownedElements) {
+    yield put(ElementRepository.duplicate(ownedElement, clone.id));
+  }
+
+  if (!parent) {
+    yield put(ElementRepository.select(clone.id));
+  }
 }
 
 function* handleElementHover({ payload }: HoverAction) {

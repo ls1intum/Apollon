@@ -118,7 +118,7 @@ function* recalc(id: string) {
   const bounds = { x, y, width, height };
   path = path.map(point => new Point(point.x - x, point.y - y));
 
-  const copy: Relationship = relationship.copy();
+  const copy: Relationship = relationship.clone();
   Object.assign(copy, { bounds: { ...bounds }, path: [...path] });
   let computedBounds: Boundary = yield computeBoundingBoxForRelationship(copy);
   const computedPath = copy.path.map(point => ({ x: point.x - computedBounds.x, y: point.y - computedBounds.y }));

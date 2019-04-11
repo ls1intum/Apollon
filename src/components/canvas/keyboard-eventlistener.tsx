@@ -52,11 +52,15 @@ class KeyboardEventListenerComponent extends Component<Props> {
         break;
     }
 
-    if (event.ctrlKey) {
+    if (event.metaKey) {
       switch (event.key) {
         case 'a':
           event.preventDefault();
           this.props.elements.forEach(id => this.props.select(id, false, true));
+          break;
+        case 'd':
+          event.preventDefault();
+          this.props.selection.forEach(child => this.props.duplicate(child));
           break;
       }
     }
@@ -69,11 +73,13 @@ interface OwnProps {
 
 interface StateProps {
   elements: string[];
+  selection: string[];
   readonly: boolean;
   mode: ApollonMode;
 }
 
 interface DispatchProps {
+  duplicate: typeof ElementRepository.duplicate;
   select: typeof ElementRepository.select;
   move: typeof ElementRepository.move;
   delete: typeof ElementRepository.delete;
@@ -84,8 +90,16 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ elements: Object.keys(state.elements), readonly: state.editor.readonly, mode: state.editor.mode }),
+    state => ({
+      elements: Object.keys(state.elements),
+      selection: Object.values(state.elements)
+        .filter(element => element.selected)
+        .map(element => element.id),
+      readonly: state.editor.readonly,
+      mode: state.editor.mode,
+    }),
     {
+      duplicate: ElementRepository.duplicate,
       select: ElementRepository.select,
       move: ElementRepository.move,
       delete: ElementRepository.delete,

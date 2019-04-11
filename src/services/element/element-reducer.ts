@@ -48,8 +48,8 @@ export const ElementReducer: Reducer<ElementState, ElementActions> = (state = in
           ...state[payload.id],
           bounds: {
             ...state[payload.id].bounds,
-            width: state[payload.id].bounds.width + payload.delta.width,
-            height: state[payload.id].bounds.height + payload.delta.height,
+            width: payload.size.width,
+            height: payload.size.height,
           },
         },
       };

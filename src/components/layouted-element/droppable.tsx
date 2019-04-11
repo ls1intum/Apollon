@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
+import { Point } from '../../utils/geometry/point';
 import { CanvasContext, withCanvas } from '../canvas/canvas-context';
 import { DropEvent } from '../draggable/drop-event';
 import { Droppable as DragDroppable } from '../draggable/droppable';
@@ -19,6 +20,9 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
       const position = this.props.coordinateSystem.screenToPoint(event.position.x, event.position.y);
       element.bounds.x = position.x - offset.x;
       element.bounds.y = position.y - offset.y;
+      const relativePosition = this.props.getRelativePosition(element.owner, new Point(element.bounds.x, element.bounds.y));
+      element.bounds.x = relativePosition.x;
+      element.bounds.y = relativePosition.y;
 
       this.props.create(element);
     };
@@ -32,7 +36,9 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
     }
   }
 
-  type StateProps = {};
+  type StateProps = {
+    getRelativePosition: (owner: string, position: Point) => Point;
+  };
 
   type DispatchProps = {
     create: typeof ElementRepository.create;
@@ -43,7 +49,7 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
     connect<StateProps, DispatchProps, OwnProps, ModelState>(
-      null,
+      state => ({ getRelativePosition: ElementRepository.getRelativePosition(state.elements) }),
       { create: ElementRepository.create },
     ),
   )(Droppable);

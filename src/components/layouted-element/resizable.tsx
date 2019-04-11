@@ -35,17 +35,14 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
       const { features } = this.props.element.constructor as typeof Element;
       const { id, bounds } = this.props.element;
 
-      width = Math.max(0, width);
-      height = Math.max(0, height);
+      width = Math.max(10, width);
+      height = Math.max(10, height);
 
       if (features.resizable === 'HEIGHT') width = bounds.width;
       if (features.resizable === 'WIDTH') height = bounds.height;
       if (bounds.width === width && bounds.height === height) return;
 
-      this.props.resize(id, {
-        width: width - bounds.width,
-        height: height - bounds.height,
-      });
+      this.props.resize(id, { width, height });
     };
 
     private onMouseDown = (event: React.MouseEvent) => {
