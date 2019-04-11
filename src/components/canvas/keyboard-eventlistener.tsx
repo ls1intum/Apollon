@@ -46,10 +46,19 @@ class KeyboardEventListenerComponent extends Component<Props> {
         event.preventDefault();
         this.props.delete(null);
         break;
-      case "Escape":
+      case 'Escape':
         event.preventDefault();
         this.props.select(null);
         break;
+    }
+
+    if (event.ctrlKey) {
+      switch (event.key) {
+        case 'a':
+          event.preventDefault();
+          this.props.elements.forEach(id => this.props.select(id, false, true));
+          break;
+      }
     }
   };
 }
@@ -59,6 +68,7 @@ interface OwnProps {
 }
 
 interface StateProps {
+  elements: string[];
   readonly: boolean;
   mode: ApollonMode;
 }
@@ -74,7 +84,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ readonly: state.editor.readonly, mode: state.editor.mode }),
+    state => ({ elements: Object.keys(state.elements), readonly: state.editor.readonly, mode: state.editor.mode }),
     {
       select: ElementRepository.select,
       move: ElementRepository.move,

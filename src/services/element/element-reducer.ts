@@ -1,4 +1,6 @@
 import { Reducer } from 'redux';
+import { Element } from './element';
+import { ElementRepository } from './element-repository';
 import { ElementActions, ElementActionTypes, ElementState } from './element-types';
 
 const initialState: ElementState = {};
@@ -26,6 +28,10 @@ export const ElementReducer: Reducer<ElementState, ElementActions> = (state = in
     case ElementActionTypes.SELECT: {
       const { payload } = action;
       if (!payload.id) return state;
+      const element = ElementRepository.getById(state)(payload.id);
+      if (!element) return state;
+      const { features } = element.constructor as typeof Element;
+      if (!features.selectable) return state;
       return {
         ...state,
         [payload.id]: {
