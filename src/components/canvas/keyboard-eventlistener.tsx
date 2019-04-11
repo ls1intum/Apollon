@@ -46,6 +46,10 @@ class KeyboardEventListenerComponent extends Component<Props> {
         event.preventDefault();
         this.props.delete(null);
         break;
+      case "Escape":
+        event.preventDefault();
+        this.props.select(null);
+        break;
     }
   };
 }
@@ -60,6 +64,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
+  select: typeof ElementRepository.select;
   move: typeof ElementRepository.move;
   delete: typeof ElementRepository.delete;
 }
@@ -71,6 +76,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({ readonly: state.editor.readonly, mode: state.editor.mode }),
     {
+      select: ElementRepository.select,
       move: ElementRepository.move,
       delete: ElementRepository.delete,
     },
