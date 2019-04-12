@@ -84,7 +84,7 @@ export class PopupLayerComponent extends Component<Props, State> {
               }
             }
             return createPortal(
-              <Popover position={position} ref={this.popup}>
+              <Popover position={position} ref={this.popup} style={{ width: '276px' }}>
                 <CustomPopupComponent element={this.state.element} />
               </Popover>,
               document.body,
