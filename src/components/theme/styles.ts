@@ -10,7 +10,7 @@ export type Size = 'sm' | 'md' | 'lg';
 
 export const defaults = {
   color: {
-    primary: '#007bff',
+    primary: '#2a8fbd',
     secondary: '#6c757d',
     white: '#fff',
     gray100: '#f8f9fa',
