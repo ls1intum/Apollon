@@ -284,6 +284,7 @@ class SidebarComponent extends Component<Props, State> {
             })(),
           ],
         });
+        break;
       case DiagramType.CommunicationDiagram:
         this.setState({
           previews: [
@@ -294,6 +295,7 @@ class SidebarComponent extends Component<Props, State> {
             })(),
           ],
         });
+        break;
     }
   };
 }
