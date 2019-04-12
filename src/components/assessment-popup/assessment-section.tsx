@@ -14,16 +14,13 @@ import { ModelState } from '../store/model-state';
 
 const Flex = styled.div`
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  align-items: center;
-
-  & > * {
-    flex: 0 0 50%;
-  }
 `;
 
 type OwnProps = {
   element: Element;
+  last: boolean;
 };
 
 type StateProps = {
@@ -46,21 +43,20 @@ const enhance = compose<ComponentClass<OwnProps>>(
 
 class AssessmentSectionCompoennt extends Component<Props> {
   render() {
-    const { element, assessment, readonly } = this.props;
+    const { element, assessment, readonly, last } = this.props;
 
     return (
       <>
         <section>
           <Header>{this.props.translate('assessment.assessment')} {element.name}</Header>
-          <Divider />
         </section>
         <section>
           <Flex>
-            <span>{this.props.translate('assessment.score')}:</span>
+            <span style={{ marginRight: '0.5rem' }}>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
               <span>{(assessment && assessment.score) || '-'}</span>
               ) : (
-                <Textfield type="number" step={0.5} onChange={this.updateScore} value={assessment ? String(assessment.score) : ''} />
+                <Textfield gutter={true} type="number" step={0.5} onChange={this.updateScore} value={assessment ? String(assessment.score) : ''} />
               )}
           </Flex>
         </section>
@@ -75,6 +71,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
             />
           </section>
         )}
+        {!last && <Divider />}
       </>
     );
   }

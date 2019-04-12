@@ -2,6 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
+import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { Textfield } from '../../../components/controls/textfield/textfield';
@@ -15,7 +16,7 @@ import { ActivityControlFlow } from './activity-control-flow';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
 `;
 
@@ -28,7 +29,9 @@ class ActivityControlFlowPopupComponent extends Component<Props> {
         <section>
           <Flex>
             <Header gutter={false}>{this.props.translate('packages.activityDiagram.controlFlow')}</Header>
-            <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            <Button color="link">
+              <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            </Button>
           </Flex>
           <Divider />
         </section>

@@ -2,9 +2,10 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
+import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Textfield } from '../../../components/controls/textfield/textfield';
-import { Header } from '../../../components/controls/typography/typography';
+import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { Element } from '../../../services/element/element';
@@ -16,7 +17,7 @@ import { ActivityMergeNode } from './activity-merge-node';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
 `;
 
@@ -37,8 +38,15 @@ class ActivityMergeNodePopupComponent extends Component<Props> {
           <Header>{this.props.translate('popup.condition')}</Header>
           {decisions.map((decision, i) => (
             <Flex key={decision.id}>
-              <span>→&nbsp;{targets[i].name}&nbsp;</span>
-              <Textfield gutter={i < decisions.length - 1} value={decision.name} onChange={this.onUpdateOption(decision.id)} />
+              <Textfield
+                gutter={i < decisions.length - 1}
+                value={decision.name}
+                onChange={this.onUpdateOption(decision.id)}
+              />
+              <Button color="link" disabled={true}>
+                →
+              </Button>
+              <Body>{targets[i].name}</Body>
             </Flex>
           ))}
         </section>

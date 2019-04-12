@@ -3,11 +3,12 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { ClassRelationshipType } from '..';
+import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { Textfield } from '../../../components/controls/textfield/textfield';
-import { Header } from '../../../components/controls/typography/typography';
+import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
@@ -18,7 +19,7 @@ import { ClassAssociation } from './class-association';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
 `;
 
@@ -34,7 +35,9 @@ class ClassAssociationComponent extends Component<Props> {
         <section>
           <Flex>
             <Header gutter={false}>{this.props.translate('popup.association')}</Header>
-            <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            <Button color="link">
+              <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            </Button>
           </Flex>
           <Divider />
         </section>
@@ -67,7 +70,7 @@ class ClassAssociationComponent extends Component<Props> {
         <section>
           <Header>{source.name}</Header>
           <Flex>
-            <span style={{ marginRight: '0.5rem' }}>{this.props.translate('popup.multiplicity')}</span>
+            <Body style={{ marginRight: '0.5rem' }}>{this.props.translate('popup.multiplicity')}</Body>
             <Textfield
               gutter={true}
               value={element.multiplicity.source}
@@ -75,7 +78,7 @@ class ClassAssociationComponent extends Component<Props> {
             />
           </Flex>
           <Flex>
-            <span style={{ marginRight: '0.5rem' }}>{this.props.translate('popup.role')}</span>
+            <Body style={{ marginRight: '0.5rem' }}>{this.props.translate('popup.role')}</Body>
             <Textfield value={element.role.source} onChange={this.onUpdate('role', 'source')} />
           </Flex>
           <Divider />
@@ -83,7 +86,7 @@ class ClassAssociationComponent extends Component<Props> {
         <section>
           <Header>{target.name}</Header>
           <Flex>
-            <span style={{ marginRight: '0.5rem' }}>{this.props.translate('popup.multiplicity')}</span>
+            <Body style={{ marginRight: '0.5rem' }}>{this.props.translate('popup.multiplicity')}</Body>
             <Textfield
               gutter={true}
               value={element.multiplicity.target}
@@ -91,7 +94,7 @@ class ClassAssociationComponent extends Component<Props> {
             />
           </Flex>
           <Flex>
-            <span style={{ marginRight: '0.5rem' }}>{this.props.translate('popup.role')}</span>
+            <Body style={{ marginRight: '0.5rem' }}>{this.props.translate('popup.role')}</Body>
             <Textfield value={element.role.target} onChange={this.onUpdate('role', 'target')} />
           </Flex>
         </section>

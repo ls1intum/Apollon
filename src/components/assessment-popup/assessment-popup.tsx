@@ -22,8 +22,8 @@ class AssessmentPopupComponent extends Component<Props> {
 
     return (
       <div>
-        {elements.map(element => (
-          <AssessmentSection key={element.id} element={element} />
+        {elements.map((element, i) => (
+          <AssessmentSection key={element.id} element={element} last={i === elements.length - 1} />
         ))}
       </div>
     );

@@ -7,7 +7,7 @@ export const defaultProps = Object.freeze({
   color: 'secondary' as Color | 'link',
   disabled: false,
   outline: false,
-  size: 'md' as Size,
+  size: 'sm' as Size,
 });
 
 type Props = { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement> & typeof defaultProps;

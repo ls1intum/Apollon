@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { CommunicationMessage } from '..';
+import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { MinusIcon } from '../../../components/controls/icon/minus';
 import { Textfield } from '../../../components/controls/textfield/textfield';
@@ -17,16 +18,8 @@ import { CommunicationLink } from './communication-link';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-`;
-
-const Flip = styled.span.attrs({ width: 20 })`
-  margin-left: 0.5rem;
-`;
-
-const Trash = styled(MinusIcon).attrs({ width: 20 })`
-  margin-left: 0.5rem;
 `;
 
 class CommunactionLinkPopupComponent extends Component<Props> {
@@ -55,8 +48,12 @@ class CommunactionLinkPopupComponent extends Component<Props> {
           {element.messages.map((message, i) => (
             <Flex key={i}>
               <Textfield gutter={true} value={message.name} onChange={this.rename(message)} />
-              <Flip onClick={this.flip(message)}>{message.direction === 'source' ? '⟶' : '⟵'}</Flip>
-              <Trash onClick={this.delete(message)} />
+              <Button color="link" onClick={this.flip(message)}>
+                {message.direction === 'source' ? '⟶' : '⟵'}
+              </Button>
+              <Button color="link">
+                <MinusIcon onClick={this.delete(message)} />
+              </Button>
             </Flex>
           ))}
           <Textfield outline={true} value="" onSubmit={this.create} />

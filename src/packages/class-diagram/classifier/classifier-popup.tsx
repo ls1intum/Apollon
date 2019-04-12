@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { ClassElementType } from '..';
+import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { MinusIcon } from '../../../components/controls/icon/minus';
 import { Switch } from '../../../components/controls/switch/switch';
@@ -20,12 +21,8 @@ import { Classifier } from './classifier';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-`;
-
-const Trash = styled(MinusIcon).attrs({ width: 20 })`
-  margin-left: 0.5rem;
 `;
 
 interface OwnProps {
@@ -90,7 +87,9 @@ class ClassifierComponent extends Component<Props> {
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
               <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
-              <Trash onClick={this.delete(attribute.id)} />
+              <Button color="link">
+                <MinusIcon onClick={this.delete(attribute.id)} />
+              </Button>
             </Flex>
           ))}
           <Textfield outline={true} value="" onSubmit={this.create(ClassAttribute)} />
@@ -102,7 +101,9 @@ class ClassifierComponent extends Component<Props> {
             {methods.map(method => (
               <Flex key={method.id}>
                 <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
-                <Trash onClick={this.delete(method.id)} />
+                <Button color="link">
+                  <MinusIcon onClick={this.delete(method.id)} />
+                </Button>
               </Flex>
             ))}
             <Textfield outline={true} value="" onSubmit={this.create(ClassMethod)} />
