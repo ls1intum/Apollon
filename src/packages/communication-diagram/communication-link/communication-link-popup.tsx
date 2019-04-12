@@ -29,16 +29,6 @@ const Trash = styled(MinusIcon).attrs({ width: 20 })`
   margin-left: 0.5rem;
 `;
 
-const NewMessage = styled(Textfield)`
-  &:not(:focus) {
-    border-style: dashed;
-  }
-
-  &:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-`;
-
 class CommunactionLinkPopupComponent extends Component<Props> {
   render() {
     const { element, getById } = this.props;
@@ -64,12 +54,12 @@ class CommunactionLinkPopupComponent extends Component<Props> {
           </Header>
           {element.messages.map((message, i) => (
             <Flex key={i}>
-              <Textfield value={message.name} onChange={this.rename(message)} />
+              <Textfield gutter={true} value={message.name} onChange={this.rename(message)} />
               <Flip onClick={this.flip(message)}>{message.direction === 'source' ? '⟶' : '⟵'}</Flip>
               <Trash onClick={this.delete(message)} />
             </Flex>
           ))}
-          <NewMessage value="" onSubmit={this.create} />
+          <Textfield outline={true} value="" onSubmit={this.create} />
         </section>
       </div>
     );

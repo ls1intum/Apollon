@@ -26,16 +26,6 @@ const Trash = styled(MinusIcon).attrs({ width: 20 })`
   margin-left: 0.5rem;
 `;
 
-const NewMember = styled(Textfield)`
-  &:not(:focus) {
-    border-style: dashed;
-  }
-
-  &:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-`;
-
 class ObjectNameComponent extends Component<Props> {
   render() {
     const { element, getById } = this.props;
@@ -53,22 +43,22 @@ class ObjectNameComponent extends Component<Props> {
           <Header>{this.props.translate('popup.attributes')}</Header>
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
-              <Textfield value={attribute.name} onChange={this.rename(attribute.id)} />
+              <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
               <Trash onClick={this.delete(attribute.id)} />
             </Flex>
           ))}
-          <NewMember value="" onSubmit={this.create(ObjectAttribute)} />
+          <Textfield outline={true} value="" onSubmit={this.create(ObjectAttribute)} />
         </section>
         <section>
           <Divider />
           <Header>{this.props.translate('popup.methods')}</Header>
           {methods.map(method => (
             <Flex key={method.id}>
-              <Textfield value={method.name} onChange={this.rename(method.id)} />
+              <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
               <Trash onClick={this.delete(method.id)} />
             </Flex>
           ))}
-          <NewMember value="" onSubmit={this.create(ObjectMethod)} />
+          <Textfield outline={true} value="" onSubmit={this.create(ObjectMethod)} />
         </section>
       </div>
     );

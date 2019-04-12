@@ -36,6 +36,22 @@ type Props = Omit<typeof defaultProps, 'size'>;
 
 export const StyledTextfield = styled(Input)<Props>(
   props => css`
+    ${props.gutter &&
+      css`
+        margin-bottom: 0.5rem;
+      `}
+
+    ${props.outline &&
+      css`
+        &:not(:focus) {
+          border-style: dashed;
+        }
+
+        &:not(:focus):not(:hover) {
+          background: rgba(255, 255, 255, 0.5);
+        }
+      `}
+
     ${props.block &&
       css`
         display: block;

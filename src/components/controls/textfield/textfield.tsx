@@ -5,6 +5,8 @@ import { StyledTextfield } from './textfield-styled';
 
 export const defaultProps = Object.freeze({
   block: true,
+  gutter: false,
+  outline: false,
   readonly: false,
   size: 'sm' as Size,
 });

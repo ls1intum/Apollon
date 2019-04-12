@@ -38,7 +38,7 @@ class ActivityMergeNodePopupComponent extends Component<Props> {
           {decisions.map((decision, i) => (
             <Flex key={decision.id}>
               <span>→&nbsp;{targets[i].name}&nbsp;</span>
-              <Textfield value={decision.name} onChange={this.onUpdateOption(decision.id)} />
+              <Textfield gutter={i < decisions.length - 1} value={decision.name} onChange={this.onUpdateOption(decision.id)} />
             </Flex>
           ))}
         </section>
