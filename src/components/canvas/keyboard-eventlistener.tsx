@@ -2,6 +2,7 @@ import { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { ElementRepository } from '../../services/element/element-repository';
+import { UndoRepository } from '../../services/undo/undo-repository';
 import { ApollonMode } from '../../typings';
 import { PopupLayerComponent } from '../popup/popup-layer';
 import { ModelState } from '../store/model-state';
@@ -62,6 +63,10 @@ class KeyboardEventListenerComponent extends Component<Props> {
           event.preventDefault();
           this.props.selection.forEach(child => this.props.duplicate(child));
           break;
+        case 'z':
+          event.preventDefault();
+          event.shiftKey ? this.props.redo() : this.props.undo();
+          break;
       }
     }
   };
@@ -83,6 +88,8 @@ interface DispatchProps {
   select: typeof ElementRepository.select;
   move: typeof ElementRepository.move;
   delete: typeof ElementRepository.delete;
+  undo: typeof UndoRepository.undo;
+  redo: typeof UndoRepository.redo;
 }
 
 type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -103,6 +110,8 @@ const enhance = compose<ComponentClass<OwnProps>>(
       select: ElementRepository.select,
       move: ElementRepository.move,
       delete: ElementRepository.delete,
+      undo: UndoRepository.undo,
+      redo: UndoRepository.redo,
     },
   ),
 );
