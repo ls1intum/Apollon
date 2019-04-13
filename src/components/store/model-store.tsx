@@ -1,6 +1,15 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { Action, applyMiddleware, combineReducers, compose, createStore, Reducer, Store as ReduxStore } from 'redux';
+import {
+  Action,
+  applyMiddleware,
+  combineReducers,
+  compose,
+  createStore,
+  DeepPartial,
+  Reducer,
+  Store as ReduxStore,
+} from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import { all, fork } from 'redux-saga/effects';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
@@ -66,5 +75,5 @@ export class ModelStore extends React.Component<Props> {
 }
 
 export interface Props {
-  initialState: ModelState | null;
+  initialState?: DeepPartial<ModelState>;
 }

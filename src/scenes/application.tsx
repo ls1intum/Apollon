@@ -13,7 +13,7 @@ import { Locale } from '../typings';
 import { Layout } from './application-styles';
 
 type Props = {
-  state: ModelState | null;
+  state?: DeepPartial<ModelState>,
   styles?: DeepPartial<Styles>,
   locale?: Locale;
 };

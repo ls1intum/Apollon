@@ -3,10 +3,13 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { DeepPartial, Store } from 'redux';
 import { ModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
+import { DiagramType } from './packages/diagram-type';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
+import { Diagram } from './services/diagram/diagram';
+import { ApollonView } from './services/editor/editor-types';
 import { ElementRepository } from './services/element/element-repository';
-import { ApollonOptions, Assessment, DiagramType, ExportOptions, Locale, Selection, SVG, UMLModel } from './typings';
+import { ApollonMode, ApollonOptions, Assessment, ExportOptions, Locale, Selection, SVG, UMLModel } from './typings';
 
 export class ApollonEditor {
   get model(): UMLModel {
@@ -26,7 +29,7 @@ export class ApollonEditor {
       ref: this.application,
       state,
       styles: this.options.theme,
-      locale: this.options.locale || Locale.en,
+      locale: this.options.locale,
     });
     render(element, this.container, this.componentDidMount);
   }
@@ -64,24 +67,21 @@ export class ApollonEditor {
   private assessmentSubscribers: Array<(assessments: Assessment[]) => void> = [];
 
   constructor(private container: HTMLElement, private options: ApollonOptions) {
-    const model: UMLModel = {
-      version: '2.0',
-      size: { width: 0, height: 0 },
-      interactive: { elements: [], relationships: [] },
-      elements: [],
-      relationships: [],
-      assessments: [],
-      ...options.model,
-      type: options.type || (options.model && options.model.type) || DiagramType.ClassDiagram,
-    };
-    let state = ModelState.fromModel(model);
+    let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
     state = {
       ...state,
+      diagram: (() => {
+        const d = new Diagram();
+        Object.assign(d, state.diagram);
+        d.type2 = options.type|| DiagramType.ClassDiagram;
+        return d;
+      })(),
       editor: {
         ...state.editor,
-        ...(options.mode !== undefined && { mode: options.mode }),
-        ...(options.readonly !== undefined && { readonly: options.readonly }),
-        ...(options.enablePopups !== undefined && { enablePopups: options.enablePopups }),
+        view: ApollonView.Modelling,
+        mode: options.mode || ApollonMode.Exporting,
+        readonly: options.readonly || false,
+        enablePopups: options.enablePopups || true,
       },
     };
 

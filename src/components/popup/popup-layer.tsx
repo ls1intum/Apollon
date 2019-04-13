@@ -58,7 +58,6 @@ export class PopupLayerComponent extends Component<Props, State> {
       update: this.update,
     };
 
-    if (!this.props.enablePopups) return false;
 
     return (
       <PopupProvider value={context}>
@@ -75,6 +74,7 @@ export class PopupLayerComponent extends Component<Props, State> {
 
             let CustomPopupComponent = null;
 
+            if (!this.props.enablePopups) return false;
             if (this.props.mode === ApollonMode.Assessment) {
               CustomPopupComponent = AssessmentPopup;
             } else {
