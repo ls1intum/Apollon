@@ -30,7 +30,7 @@ class ActivityControlFlowPopupComponent extends Component<Props> {
           <Flex>
             <Header gutter={false}>{this.props.translate('packages.activityDiagram.controlFlow')}</Header>
             <Button color="link">
-              <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
+              <ExchangeIcon onClick={() => this.props.flip(element.id)} />
             </Button>
           </Flex>
           <Divider />

@@ -87,7 +87,7 @@ class ClassifierComponent extends Component<Props> {
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
               <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
-              <Button color="link">
+              <Button color="link" tabIndex={-1}>
                 <MinusIcon onClick={this.delete(attribute.id)} />
               </Button>
             </Flex>
@@ -101,7 +101,7 @@ class ClassifierComponent extends Component<Props> {
             {methods.map(method => (
               <Flex key={method.id}>
                 <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
-                <Button color="link">
+                <Button color="link" tabIndex={-1}>
                   <MinusIcon onClick={this.delete(method.id)} />
                 </Button>
               </Flex>

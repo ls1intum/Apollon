@@ -4,6 +4,7 @@ import { compose } from 'redux';
 import styled from 'styled-components';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
+import { ArrowRightIcon } from '../../../components/controls/icon/arrow-right';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
@@ -44,7 +45,7 @@ class ActivityMergeNodePopupComponent extends Component<Props> {
                 onChange={this.onUpdateOption(decision.id)}
               />
               <Button color="link" disabled={true}>
-                →
+                <ArrowRightIcon />
               </Button>
               <Body>{targets[i].name}</Body>
             </Flex>

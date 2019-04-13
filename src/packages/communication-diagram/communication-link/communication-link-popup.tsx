@@ -5,6 +5,8 @@ import styled from 'styled-components';
 import { CommunicationMessage } from '..';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
+import { ArrowLeftIcon } from '../../../components/controls/icon/arrow-left';
+import { ArrowRightIcon } from '../../../components/controls/icon/arrow-right';
 import { MinusIcon } from '../../../components/controls/icon/minus';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Header } from '../../../components/controls/typography/typography';
@@ -48,10 +50,10 @@ class CommunactionLinkPopupComponent extends Component<Props> {
           {element.messages.map((message, i) => (
             <Flex key={i}>
               <Textfield gutter={true} value={message.name} onChange={this.rename(message)} />
-              <Button color="link" onClick={this.flip(message)}>
-                {message.direction === 'source' ? '⟶' : '⟵'}
+              <Button color="link" onClick={this.flip(message)} tabIndex={-1}>
+                {message.direction === 'source' ? <ArrowRightIcon /> : <ArrowLeftIcon />}
               </Button>
-              <Button color="link">
+              <Button color="link" tabIndex={-1}>
                 <MinusIcon onClick={this.delete(message)} />
               </Button>
             </Flex>

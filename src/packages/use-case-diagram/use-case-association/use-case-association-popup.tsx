@@ -48,7 +48,7 @@ class UseCaseAssociationComponent extends Component<Props> {
                 }
               </Header>
               <Button color="link">
-                <ExchangeIcon fill="black" onClick={() => this.props.flip(element.id)} />
+                <ExchangeIcon onClick={() => this.props.flip(element.id)} />
               </Button>
             </Flex>
           )}
