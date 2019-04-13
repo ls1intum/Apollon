@@ -13,7 +13,7 @@ export const Layout = styled.div`
   user-select: none;
   position: relative;
 
-  font-family: ${({ theme }) => theme.font.body};
+  font-family: ${({ theme }) => theme.font.family};
   font-size: ${({ theme }) => theme.font.size}px;
   color: ${({ theme }) => theme.font.color};
   font-weight: 400;

@@ -57,7 +57,8 @@ export async function computeBoundingBoxForRelationship(relationship: Relationsh
   const Component = Components[relationship.type];
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.style.visibility = 'none';
-  document.body.appendChild(svg);
+  const container = document.getElementsByClassName('apollon-editor')[0];
+  container.appendChild(svg);
   const element = createElement(Component, { element: relationship });
   return new Promise((resolve, reject) => {
     render(element, svg, () => {
@@ -73,7 +74,7 @@ export async function computeBoundingBoxForRelationship(relationship: Relationsh
         };
       }
       unmountComponentAtNode(svg);
-      document.body.removeChild(svg);
+      container.removeChild(svg);
       resolve(bounds);
     });
   });

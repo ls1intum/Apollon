@@ -9,7 +9,7 @@ export const PopoverContainer = styled.div<Props>`
   box-sizing: border-box;
   display: block;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
-  font-family: ${props => props.theme.font.body};
+  font-family: ${props => props.theme.font.family};
   font-size: ${props => props.theme.font.size}px;
   font-style: normal;
   font-weight: 400;

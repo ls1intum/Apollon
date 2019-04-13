@@ -26,8 +26,7 @@ export const defaults = {
   },
   font: {
     color: '#212529',
-    body:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif," Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+    family: 'Helvetica Neue, Helvetica, Arial, sans-serif',
     size: 16,
   },
 };

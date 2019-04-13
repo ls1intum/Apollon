@@ -11,7 +11,7 @@ const Input = styled.input`
   border: 1px solid ${props => props.theme.color.gray400};
   border-radius: 0.25em;
   color: ${props => props.theme.color.gray700};
-  font-family: ${props => props.theme.font.body};
+  font-family: ${props => props.theme.font.family};
   font-size: 1em;
   font-weight: 400;
   line-height: 1.5;
