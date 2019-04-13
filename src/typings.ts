@@ -1,3 +1,4 @@
+import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
 import { DiagramType } from './packages/diagram-type';
 import { ElementType as UMLElementType } from './packages/element-type';
@@ -27,10 +28,12 @@ export interface Assessment {
   feedback?: string;
 }
 
+export { UMLClassAssociation, UMLClassifier } from './packages/class-diagram';
+export { UMLCommunicationLink } from './packages/communication-diagram';
 export { DiagramType };
 export { UMLElementType };
 export { UMLRelationshipType };
-export { Styles };
+export type Theme = DeepPartial<Styles>;
 
 export interface Element {
   id: string;
@@ -82,7 +85,7 @@ export interface ApollonOptions {
   readonly?: boolean;
   enablePopups?: boolean;
   model?: UMLModel;
-  theme?: Partial<Styles>;
+  theme?: Theme;
   locale?: Locale;
 }
 
@@ -102,6 +105,3 @@ export interface SVG {
     height: number;
   };
 }
-
-export { UMLClassifier, UMLClassAssociation } from './packages/class-diagram';
-export { UMLCommunicationLink } from './packages/communication-diagram';

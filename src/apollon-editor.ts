@@ -1,7 +1,8 @@
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
-import { Store } from 'redux';
+import { DeepPartial, Store } from 'redux';
 import { ModelState } from './components/store/model-state';
+import { Styles } from './components/theme/styles';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
 import { ElementRepository } from './services/element/element-repository';
@@ -24,7 +25,7 @@ export class ApollonEditor {
     const element = createElement(Application, {
       ref: this.application,
       state,
-      styles: {},
+      styles: this.options.theme,
       locale: this.options.locale || Locale.en,
     });
     render(element, this.container, this.componentDidMount);
@@ -37,15 +38,15 @@ export class ApollonEditor {
     const element = createElement(Application, {
       ref: this.application,
       state: this.store.getState(),
-      styles: {},
+      styles: this.options.theme,
       locale,
     });
     render(element, this.container, this.componentDidMount);
   }
 
-  static exportModelAsSvg(model: UMLModel, options?: ExportOptions): SVG {
+  static exportModelAsSvg(model: UMLModel, options?: ExportOptions, theme?: DeepPartial<Styles>): SVG {
     const div = document.createElement('div');
-    const element = createElement(Svg, { model, options });
+    const element = createElement(Svg, { model, options, styles: theme });
     const svg = render(element, div);
     const { innerHTML } = div;
     unmountComponentAtNode(div);
@@ -87,7 +88,7 @@ export class ApollonEditor {
     const element = createElement(Application, {
       ref: this.application,
       state,
-      styles: {},
+      styles: options.theme,
       locale: options.locale,
     });
     render(element, container, this.componentDidMount);
@@ -121,11 +122,14 @@ export class ApollonEditor {
   }
 
   exportAsSVG(options?: ExportOptions): SVG {
-    return ApollonEditor.exportModelAsSvg(this.model, options);
+    return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }
 
   private componentDidMount = () => {
-    this.store = this.application.current && this.application.current.store.current && this.application.current.store.current.store;
+    this.store =
+      this.application.current &&
+      this.application.current.store.current &&
+      this.application.current.store.current.store;
     if (this.store) {
       this.store.subscribe(this.onDispatch);
     }

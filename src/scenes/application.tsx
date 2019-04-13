@@ -1,4 +1,5 @@
 import React, { createRef, RefObject } from 'react';
+import { DeepPartial } from 'redux';
 import { Canvas } from '../components/canvas/canvas';
 import { Editor } from '../components/container/container';
 import { DragLayer } from '../components/draggable/drag-layer';
@@ -10,6 +11,12 @@ import { Styles } from '../components/theme/styles';
 import { Theme } from '../components/theme/theme';
 import { Locale } from '../typings';
 import { Layout } from './application-styles';
+
+type Props = {
+  state: ModelState | null;
+  styles?: DeepPartial<Styles>,
+  locale?: Locale;
+};
 
 export class Application extends React.Component<Props> {
   store: RefObject<ModelStore> = createRef();
@@ -32,10 +39,4 @@ export class Application extends React.Component<Props> {
       </ModelStore>
     );
   }
-}
-
-interface Props {
-  state: ModelState | null;
-  styles: Partial<Styles>;
-  locale?: Locale;
 }

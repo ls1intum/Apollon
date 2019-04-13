@@ -12,8 +12,8 @@ export const StyledDropdownItem = styled(Button).attrs<DropdownItemProps>({
   color: 'link',
 })<DropdownItemProps>`
   color: ${props => props.theme.font.color};
-  padding-right: 1.5rem;
-  padding-left: 1.5rem;
+  padding-right: 1.5em;
+  padding-left: 1.5em;
   text-align: left;
 
   :hover {

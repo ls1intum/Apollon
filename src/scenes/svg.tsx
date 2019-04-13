@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import { DeepPartial } from 'redux';
+import { defaults, Styles } from '../components/theme/styles';
 import { Components } from '../packages/components';
 import { ElementType } from '../packages/element-type';
 import { Elements } from '../packages/elements';
@@ -6,11 +8,13 @@ import { Relationships } from '../packages/relationships';
 import { Element } from '../services/element/element';
 import { ExportOptions, UMLModel } from '../typings';
 import { Boundary } from '../utils/geometry/boundary';
+import { update } from '../utils/update';
 import { Style } from './svg-styles';
 
 interface Props {
   model: UMLModel;
   options?: ExportOptions;
+  styles?: DeepPartial<Styles>;
 }
 interface State {
   bounds: Boundary;
@@ -45,7 +49,9 @@ const getInitialState = ({ model, options }: Props): State => {
       const umlElement = umlElements.find(element => element.id === id);
       if (!umlElement) continue;
 
-      const children = new Set<string>(model.elements.filter(element => element.owner === id).map(element => element.id));
+      const children = new Set<string>(
+        model.elements.filter(element => element.owner === id).map(element => element.id),
+      );
       if (!exclude.has(id)) {
         result.add(id);
       } else {
@@ -58,10 +64,16 @@ const getInitialState = ({ model, options }: Props): State => {
 
   let layout = new Set<string>(umlElements.map(element => element.id));
   if (options && options.include) {
-    layout = includeChildren(new Set<string>(rootElements.map(element => element.id)), new Set<string>(options.include));
+    layout = includeChildren(
+      new Set<string>(rootElements.map(element => element.id)),
+      new Set<string>(options.include),
+    );
   }
   if (options && options.exclude) {
-    layout = excludeChildren(new Set<string>(rootElements.map(element => element.id)), new Set<string>(options.exclude));
+    layout = excludeChildren(
+      new Set<string>(rootElements.map(element => element.id)),
+      new Set<string>(options.exclude),
+    );
   }
 
   let elements: Element[] = [
@@ -119,6 +131,7 @@ export class Svg extends Component<Props, State> {
 
   render() {
     const { bounds, elements } = this.state;
+    const theme: Styles = update(defaults, this.props.styles || {});
 
     return (
       <svg
@@ -129,7 +142,7 @@ export class Svg extends Component<Props, State> {
         fill="white"
       >
         <defs>
-          <style>{Style}</style>
+          <style>{(Style[0] as any)({ theme })}</style>
         </defs>
         {elements.map(element => {
           const ElementComponent = Components[element.type];

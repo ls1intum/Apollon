@@ -11,14 +11,14 @@ const Button = styled.button`
   appearance: button;
   background-color: transparent;
   border: 1px solid transparent;
-  border-radius: 0.25rem;
+  border-radius: 0.25em;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 1em;
   font-weight: 400;
   line-height: 1.5;
   margin: 0;
   overflow: visible;
-  padding: 0.375rem 0.75rem;
+  padding: 0.375em 0.75em;
   text-transform: none;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out,
     box-shadow 0.15s ease-in-out;
@@ -55,16 +55,16 @@ export const StyledButton = styled(Button)<typeof defaultProps>(props => {
 
     ${props.size === 'sm' &&
       css`
-        border-radius: 0.2rem;
-        font-size: 0.875rem;
-        padding: 0.25rem 0.5rem;
+        border-radius: 0.2em;
+        font-size: 0.875em;
+        padding: 0.25em 0.5em;
       `}
 
     ${props.size === 'lg' &&
       css`
-        border-radius: 0.3rem;
-        font-size: 1.25rem;
-        padding: 0.5rem 1rem;
+        border-radius: 0.3em;
+        font-size: 1.25em;
+        padding: 0.5em 1em;
       `}
 
     ${props.color === 'link' &&
@@ -76,7 +76,7 @@ export const StyledButton = styled(Button)<typeof defaultProps>(props => {
     ${props.color !== 'link' &&
       css`
         :focus {
-          box-shadow: 0 0 0 0.2rem ${color}80;
+          box-shadow: 0 0 0 0.2em ${color}80;
         }
       `}
 

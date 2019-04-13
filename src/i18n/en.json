@@ -1,7 +1,7 @@
 {
   "views": {
-    "modelling": "Diagram Modeling",
-    "exporting": "Interactive Areas",
+    "modelling": "Modeling",
+    "exporting": "Interactive",
     "highlight": "Show interactive elements"
   },
   "sidebar": {

@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import { styled } from '../theme/styles';
 
 export const Editor = styled.div`
   display: block;
@@ -8,5 +8,5 @@ export const Editor = styled.div`
   max-width: inherit;
 
   overflow: auto;
-  border: 1px solid ${({ theme }) => theme.borderColor};
+  border: 1px solid ${props => props.theme.color.gray500};
 `;

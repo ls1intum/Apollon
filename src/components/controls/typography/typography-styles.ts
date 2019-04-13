@@ -11,16 +11,16 @@ export const Typography = styled.p<Props>`
   ${props =>
     props.variant === 'header' &&
     css`
-      font-size: 1.25rem;
+      font-size: 1.25em;
       font-weight: 500;
       line-height: 1.2;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.5em;
     `}
 
   ${props =>
     props.variant === 'body' &&
     css`
-      margin-bottom: 1rem;
+      margin-bottom: 1em;
     `}
 
   ${props =>

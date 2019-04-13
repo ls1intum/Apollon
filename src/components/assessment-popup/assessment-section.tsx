@@ -52,7 +52,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
         </section>
         <section>
           <Flex>
-            <span style={{ marginRight: '0.5rem' }}>{this.props.translate('assessment.score')}:</span>
+            <span style={{ marginRight: '0.5em' }}>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
               <span>{(assessment && assessment.score) || '-'}</span>
               ) : (

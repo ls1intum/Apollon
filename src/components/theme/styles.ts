@@ -26,16 +26,8 @@ export const defaults = {
   },
   font: {
     color: '#212529',
-    family: 'HelveticaNeue, Helvetica, Arial, Verdana, sans-serif',
+    body:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif," Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+    size: 16,
   },
-  primaryColor: '#2A8FBD',
-  borderColor: '#AAAAAA',
-  highlightColor: 'rgba(0, 100, 255, 0.21)',
-  highlightColorDarker: 'rgba(0, 100, 255, 0.6)',
-  highlightBorderColor: 'rgba(0, 100, 255, 0.6)',
-  interactiveAreaColor: 'rgba(0, 220, 0, 0.3)',
-  interactiveAreaHoverColor: 'rgba(0, 220, 0, 0.15)',
-  fontFamily: 'HelveticaNeue, Helvetica, Arial, Verdana, sans-serif',
-  headingFontFamily: 'HelveticaNeue-Light, Helvetica, Arial, Verdana, sans-serif',
-  headingFontWeight: 300,
 };

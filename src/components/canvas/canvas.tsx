@@ -19,7 +19,7 @@ import { KeyboardEventListener } from './keyboard-eventlistener';
 
 const Container = styled.div`
   height: 100%;
-  padding: 1rem;
+  padding: 1em;
 `;
 
 const Svg = styled.svg`
