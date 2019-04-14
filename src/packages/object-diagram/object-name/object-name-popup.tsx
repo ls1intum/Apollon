@@ -2,13 +2,13 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
+import { Button } from '../../../components/controls/button/button';
+import { Divider } from '../../../components/controls/divider/divider';
+import { MinusIcon } from '../../../components/controls/icon/minus';
+import { Textfield } from '../../../components/controls/textfield/textfield';
+import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
-import { Divider } from '../../../components/popup/controls/divider';
-import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
-import { TextField } from '../../../components/popup/controls/textfield';
-import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
 import { notEmpty } from '../../../utils/not-empty';
@@ -19,22 +19,8 @@ import { ObjectName } from './object-name';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-`;
-
-const Trash = styled(TrashCanIcon).attrs({ width: 20 })`
-  margin-left: 0.5rem;
-`;
-
-const NewMember = styled(TextField)`
-  &:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-
-  &:not(:focus) {
-    border-style: dashed;
-  }
 `;
 
 class ObjectNameComponent extends Component<Props> {
@@ -46,31 +32,35 @@ class ObjectNameComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
-          <TextField value={element.name} onUpdate={this.rename(element.id)} />
+        <section>
+          <Textfield value={element.name} onChange={this.rename(element.id)} />
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>{this.props.translate('popup.attributes')}</Header>
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
-              <TextField value={attribute.name} onUpdate={this.rename(attribute.id)} />
-              <Trash onClick={this.delete(attribute.id)} />
+              <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
+              <Button color="link" tabIndex={-1}>
+                <MinusIcon onClick={this.delete(attribute.id)} />
+              </Button>
             </Flex>
           ))}
-          <NewMember value="" onCreate={this.create(ObjectAttribute)} />
-        </Section>
-        <Section>
+          <Textfield outline={true} value="" onSubmit={this.create(ObjectAttribute)} />
+        </section>
+        <section>
           <Divider />
           <Header>{this.props.translate('popup.methods')}</Header>
           {methods.map(method => (
             <Flex key={method.id}>
-              <TextField value={method.name} onUpdate={this.rename(method.id)} />
-              <Trash onClick={this.delete(method.id)} />
+              <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
+              <Button color="link" tabIndex={-1}>
+                <MinusIcon onClick={this.delete(method.id)} />
+              </Button>
             </Flex>
           ))}
-          <NewMember value="" onCreate={this.create(ObjectMethod)} />
-        </Section>
+          <Textfield outline={true} value="" onSubmit={this.create(ObjectMethod)} />
+        </section>
       </div>
     );
   }

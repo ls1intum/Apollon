@@ -5,26 +5,22 @@ import styled from 'styled-components';
 import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { Element } from '../../services/element/element';
+import { Divider } from '../controls/divider/divider';
+import { Textfield } from '../controls/textfield/textfield';
+import { Header } from '../controls/typography/typography';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
-import { Divider } from '../popup/controls/divider';
-import { Header } from '../popup/controls/header';
-import { Section } from '../popup/controls/section';
-import { TextField } from '../popup/controls/textfield';
 import { ModelState } from '../store/model-state';
 
 const Flex = styled.div`
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  align-items: center;
-
-  & > * {
-    flex: 0 0 50%;
-  }
 `;
 
 type OwnProps = {
   element: Element;
+  last: boolean;
 };
 
 type StateProps = {
@@ -47,35 +43,35 @@ const enhance = compose<ComponentClass<OwnProps>>(
 
 class AssessmentSectionCompoennt extends Component<Props> {
   render() {
-    const { element, assessment, readonly } = this.props;
+    const { element, assessment, readonly, last } = this.props;
 
     return (
       <>
-        <Section>
+        <section>
           <Header>{this.props.translate('assessment.assessment')} {element.name}</Header>
-          <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Flex>
-            <span>{this.props.translate('assessment.score')}:</span>
+            <span style={{ marginRight: '0.5em' }}>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
               <span>{(assessment && assessment.score) || '-'}</span>
-            ) : (
-              <TextField type="number" step={0.5} onUpdate={this.updateScore} value={assessment ? String(assessment.score) : ''} />
-            )}
+              ) : (
+                <Textfield gutter={true} type="number" step={0.5} onChange={this.updateScore} value={assessment ? String(assessment.score) : ''} />
+              )}
           </Flex>
-        </Section>
+        </section>
         {readonly ? (
-          assessment && assessment.feedback && <Section>{assessment.feedback}</Section>
+          assessment && assessment.feedback && <section>{assessment.feedback}</section>
         ) : (
-          <Section>
-            <TextField
+          <section>
+            <Textfield
               placeholder={this.props.translate('assessment.feedback')}
-              onUpdate={this.updateFeedback}
+              onChange={this.updateFeedback}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />
-          </Section>
+          </section>
         )}
+        {!last && <Divider />}
       </>
     );
   }

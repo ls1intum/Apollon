@@ -72,6 +72,7 @@ export abstract class Classifier extends Container {
       this.deviderPosition = 0;
       methods = [];
     }
+    this.ownedElements = [...attributes.map(attribute => attribute.id), ...methods.map(method => method.id)];
 
     this.bounds.height = y;
     return [this, ...attributes, ...methods];

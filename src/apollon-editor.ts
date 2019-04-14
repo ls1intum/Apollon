@@ -1,11 +1,15 @@
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
-import { Store } from 'redux';
+import { DeepPartial, Store } from 'redux';
 import { ModelState } from './components/store/model-state';
+import { Styles } from './components/theme/styles';
+import { DiagramType } from './packages/diagram-type';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
+import { Diagram } from './services/diagram/diagram';
+import { ApollonView } from './services/editor/editor-types';
 import { ElementRepository } from './services/element/element-repository';
-import { ApollonOptions, Assessment, DiagramType, ExportOptions, Locale, Selection, SVG, UMLModel } from './typings';
+import { ApollonMode, ApollonOptions, Assessment, ExportOptions, Locale, Selection, SVG, UMLModel } from './typings';
 
 export class ApollonEditor {
   get model(): UMLModel {
@@ -24,8 +28,8 @@ export class ApollonEditor {
     const element = createElement(Application, {
       ref: this.application,
       state,
-      styles: {},
-      locale: this.options.locale || Locale.en,
+      styles: this.options.theme,
+      locale: this.options.locale,
     });
     render(element, this.container, this.componentDidMount);
   }
@@ -37,15 +41,15 @@ export class ApollonEditor {
     const element = createElement(Application, {
       ref: this.application,
       state: this.store.getState(),
-      styles: {},
+      styles: this.options.theme,
       locale,
     });
     render(element, this.container, this.componentDidMount);
   }
 
-  static exportModelAsSvg(model: UMLModel, options?: ExportOptions): SVG {
+  static exportModelAsSvg(model: UMLModel, options?: ExportOptions, theme?: DeepPartial<Styles>): SVG {
     const div = document.createElement('div');
-    const element = createElement(Svg, { model, options });
+    const element = createElement(Svg, { model, options, styles: theme });
     const svg = render(element, div);
     const { innerHTML } = div;
     unmountComponentAtNode(div);
@@ -63,31 +67,28 @@ export class ApollonEditor {
   private assessmentSubscribers: Array<(assessments: Assessment[]) => void> = [];
 
   constructor(private container: HTMLElement, private options: ApollonOptions) {
-    const model: UMLModel = {
-      version: '2.0',
-      size: { width: 0, height: 0 },
-      interactive: { elements: [], relationships: [] },
-      elements: [],
-      relationships: [],
-      assessments: [],
-      ...options.model,
-      type: options.type || (options.model && options.model.type) || DiagramType.ClassDiagram,
-    };
-    let state = ModelState.fromModel(model);
+    let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
     state = {
       ...state,
+      diagram: (() => {
+        const d = new Diagram();
+        Object.assign(d, state.diagram);
+        d.type2 = options.type|| DiagramType.ClassDiagram;
+        return d;
+      })(),
       editor: {
         ...state.editor,
-        ...(options.mode !== undefined && { mode: options.mode }),
-        ...(options.readonly !== undefined && { readonly: options.readonly }),
-        ...(options.enablePopups !== undefined && { enablePopups: options.enablePopups }),
+        view: ApollonView.Modelling,
+        mode: options.mode || ApollonMode.Exporting,
+        readonly: options.readonly || false,
+        enablePopups: options.enablePopups || true,
       },
     };
 
     const element = createElement(Application, {
       ref: this.application,
       state,
-      styles: {},
+      styles: options.theme,
       locale: options.locale,
     });
     render(element, container, this.componentDidMount);
@@ -121,11 +122,14 @@ export class ApollonEditor {
   }
 
   exportAsSVG(options?: ExportOptions): SVG {
-    return ApollonEditor.exportModelAsSvg(this.model, options);
+    return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }
 
   private componentDidMount = () => {
-    this.store = this.application.current && this.application.current.store.current && this.application.current.store.current.store;
+    this.store =
+      this.application.current &&
+      this.application.current.store.current &&
+      this.application.current.store.current.store;
     if (this.store) {
       this.store.subscribe(this.onDispatch);
     }

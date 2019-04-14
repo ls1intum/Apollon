@@ -48,10 +48,10 @@ export abstract class Element implements IElement {
     }
   }
 
-  copy<T extends Element>(): T {
+  clone<T extends Element>(): T {
     const Constructor = (this.constructor as any) as new (values: IElement) => T;
-    const copy = new Constructor(this);
-    return copy;
+    const values: IElement = { ...this, id: uuid() };
+    return new Constructor(values);
   }
 
   toUMLElement(element: Element, children: Element[]): { element: UMLElement; children: Element[] } {

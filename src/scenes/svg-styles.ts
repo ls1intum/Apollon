@@ -1,11 +1,15 @@
-import { css } from 'styled-components';
+import { css } from '../components/theme/styles';
 
-export const Style = css`
+export const Style = css(
+  props => `
   text {
-    fill: black;
-    font-family: HelveticaNeue, Helvetica, Arial, Verdana, sans-serif;
+    fill: ${props.theme.font.color};
+    font-family: ${props.theme.font.family};
+    font-size: ${props.theme.font.size}px;
   }
+
   * {
     overflow: visible;
   }
-`;
+`,
+);

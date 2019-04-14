@@ -3,14 +3,15 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { CommunicationMessage } from '..';
-import { FlipIcon } from '../../../components/controls/flip-icon';
+import { Button } from '../../../components/controls/button/button';
+import { Divider } from '../../../components/controls/divider/divider';
+import { ArrowLeftIcon } from '../../../components/controls/icon/arrow-left';
+import { ArrowRightIcon } from '../../../components/controls/icon/arrow-right';
+import { MinusIcon } from '../../../components/controls/icon/minus';
+import { Textfield } from '../../../components/controls/textfield/textfield';
+import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
-import { Divider } from '../../../components/popup/controls/divider';
-import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
-import { TextField } from '../../../components/popup/controls/textfield';
-import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
@@ -19,26 +20,8 @@ import { CommunicationLink } from './communication-link';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-`;
-
-const Flip = styled.span.attrs({ width: 20 })`
-  margin-left: 0.5rem;
-`;
-
-const Trash = styled(TrashCanIcon).attrs({ width: 20 })`
-  margin-left: 0.5rem;
-`;
-
-const NewMessage = styled(TextField)`
-  &:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-
-  &:not(:focus) {
-    border-style: dashed;
-  }
 `;
 
 class CommunactionLinkPopupComponent extends Component<Props> {
@@ -50,13 +33,13 @@ class CommunactionLinkPopupComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
+        <section>
           <Flex>
-            <Header>{this.props.translate('packages.communicationDiagram.communicationLink')}</Header>
+            <Header gutter={false}>{this.props.translate('packages.communicationDiagram.communicationLink')}</Header>
           </Flex>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>
             {this.props.translate('popup.messages')} (
             <small>
@@ -66,13 +49,17 @@ class CommunactionLinkPopupComponent extends Component<Props> {
           </Header>
           {element.messages.map((message, i) => (
             <Flex key={i}>
-              <TextField value={message.name} onUpdate={this.rename(message)} />
-              <Flip onClick={this.flip(message)}>{message.direction === 'source' ? '⟶' : '⟵'}</Flip>
-              <Trash onClick={this.delete(message)} />
+              <Textfield gutter={true} value={message.name} onChange={this.rename(message)} />
+              <Button color="link" onClick={this.flip(message)} tabIndex={-1}>
+                {message.direction === 'source' ? <ArrowRightIcon /> : <ArrowLeftIcon />}
+              </Button>
+              <Button color="link" tabIndex={-1}>
+                <MinusIcon onClick={this.delete(message)} />
+              </Button>
             </Flex>
           ))}
-          <NewMessage value="" onCreate={this.create} />
-        </Section>
+          <Textfield outline={true} value="" onSubmit={this.create} />
+        </section>
       </div>
     );
   }

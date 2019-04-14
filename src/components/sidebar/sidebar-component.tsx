@@ -26,13 +26,14 @@ import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
 import { ApollonMode, DiagramType } from '../../typings';
 import { CanvasProvider } from '../canvas/canvas-context';
+import { Switch } from '../controls/switch/switch';
 import { Draggable } from '../draggable/draggable';
 import { DropEvent } from '../draggable/drop-event';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ElementComponent } from '../layouted-element/element-component';
 import { ModelState } from '../store/model-state';
-import { Container, EditorModeSelection, EditorModeSelectionSegment, Preview } from './sidebar-styles';
+import { Container, Preview } from './sidebar-styles';
 
 type OwnProps = {};
 
@@ -75,13 +76,13 @@ class SidebarComponent extends Component<Props, State> {
     previews: [],
   };
 
-  changeView = (view: ApollonView) => () => this.props.changeView(view);
+  changeView = (view: ApollonView) => this.props.changeView(view);
 
   toggleInteractiveElementsMode = (event: React.FormEvent<HTMLInputElement>) => {
     const { checked } = event.currentTarget;
     const view: ApollonView = checked ? ApollonView.Exporting : ApollonView.Highlight;
 
-    this.changeView(view)();
+    this.changeView(view);
   };
 
   onDrop = (element: Element) => (event: DropEvent) => {
@@ -157,24 +158,12 @@ class SidebarComponent extends Component<Props, State> {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
     return (
       <Container>
-        <div style={{ flex: '0 0' }}>
-          {this.props.mode === ApollonMode.Exporting && (
-            <EditorModeSelection>
-              <EditorModeSelectionSegment
-                onClick={this.changeView(ApollonView.Modelling)}
-                selected={this.props.view === ApollonView.Modelling}
-              >
-                {this.props.translate('views.modelling')}
-              </EditorModeSelectionSegment>
-              <EditorModeSelectionSegment
-                onClick={this.changeView(ApollonView.Exporting)}
-                selected={this.props.view === ApollonView.Exporting || this.props.view === ApollonView.Highlight}
-              >
-                {this.props.translate('views.exporting')}
-              </EditorModeSelectionSegment>
-            </EditorModeSelection>
-          )}
-        </div>
+        {this.props.mode === ApollonMode.Exporting && (
+          <Switch value={this.props.view} onChange={this.changeView} color="primary">
+            <Switch.Item value={ApollonView.Modelling}>{this.props.translate('views.modelling')}</Switch.Item>
+            <Switch.Item value={ApollonView.Exporting}>{this.props.translate('views.exporting')}</Switch.Item>
+          </Switch>
+        )}
         {this.props.view === ApollonView.Modelling ? (
           <CanvasProvider value={null}>
             {this.state.previews.map((element, index) => (
@@ -284,6 +273,7 @@ class SidebarComponent extends Component<Props, State> {
             })(),
           ],
         });
+        break;
       case DiagramType.CommunicationDiagram:
         this.setState({
           previews: [
@@ -294,6 +284,7 @@ class SidebarComponent extends Component<Props, State> {
             })(),
           ],
         });
+        break;
     }
   };
 }

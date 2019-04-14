@@ -3,14 +3,14 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { ClassRelationshipType } from '..';
-import { Dropdown } from '../../../components/controls/dropdown';
-import { FlipIcon } from '../../../components/controls/flip-icon';
+import { Button } from '../../../components/controls/button/button';
+import { Divider } from '../../../components/controls/divider/divider';
+import { Dropdown } from '../../../components/controls/dropdown/dropdown';
+import { ExchangeIcon } from '../../../components/controls/icon/exchange';
+import { Textfield } from '../../../components/controls/textfield/textfield';
+import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
-import { Divider } from '../../../components/popup/controls/divider';
-import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
-import { TextField } from '../../../components/popup/controls/textfield';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
@@ -19,12 +19,8 @@ import { ClassAssociation } from './class-association';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-`;
-
-const Input = styled(TextField)`
-  margin-left: 0.5rem;
 `;
 
 class ClassAssociationComponent extends Component<Props> {
@@ -36,48 +32,72 @@ class ClassAssociationComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
+        <section>
           <Flex>
-            <Header>{this.props.translate('popup.association')}</Header>
-            <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            <Header gutter={false}>{this.props.translate('popup.association')}</Header>
+            <Button color="link">
+              <ExchangeIcon onClick={() => this.props.flip(element.id)} />
+            </Button>
           </Flex>
           <Divider />
-        </Section>
-        <Section>
-          <Dropdown value={element.type} onChange={this.onChange}>
-            <Dropdown.Item value={ClassRelationshipType.ClassAggregation}>{this.props.translate('packages.classDiagram.aggregation')}</Dropdown.Item>
-            <Dropdown.Item value={ClassRelationshipType.ClassUnidirectional}>{this.props.translate('packages.classDiagram.unidirectional')}</Dropdown.Item>
-            <Dropdown.Item value={ClassRelationshipType.ClassBidirectional}>{this.props.translate('packages.classDiagram.bidirectional')}</Dropdown.Item>
-            <Dropdown.Item value={ClassRelationshipType.ClassComposition}>{this.props.translate('packages.classDiagram.composition')}</Dropdown.Item>
-            <Dropdown.Item value={ClassRelationshipType.ClassDependency}>{this.props.translate('packages.classDiagram.dependency')}</Dropdown.Item>
-            <Dropdown.Item value={ClassRelationshipType.ClassInheritance}>{this.props.translate('packages.classDiagram.inheritance')}</Dropdown.Item>
-            <Dropdown.Item value={ClassRelationshipType.ClassRealization}>{this.props.translate('packages.classDiagram.realization')}</Dropdown.Item>
+        </section>
+        <section>
+          <Dropdown value={element.type as ClassRelationshipType} onChange={this.onChange}>
+            <Dropdown.Item value={ClassRelationshipType.ClassAggregation}>
+              {this.props.translate('packages.classDiagram.aggregation')}
+            </Dropdown.Item>
+            <Dropdown.Item value={ClassRelationshipType.ClassUnidirectional}>
+              {this.props.translate('packages.classDiagram.unidirectional')}
+            </Dropdown.Item>
+            <Dropdown.Item value={ClassRelationshipType.ClassBidirectional}>
+              {this.props.translate('packages.classDiagram.bidirectional')}
+            </Dropdown.Item>
+            <Dropdown.Item value={ClassRelationshipType.ClassComposition}>
+              {this.props.translate('packages.classDiagram.composition')}
+            </Dropdown.Item>
+            <Dropdown.Item value={ClassRelationshipType.ClassDependency}>
+              {this.props.translate('packages.classDiagram.dependency')}
+            </Dropdown.Item>
+            <Dropdown.Item value={ClassRelationshipType.ClassInheritance}>
+              {this.props.translate('packages.classDiagram.inheritance')}
+            </Dropdown.Item>
+            <Dropdown.Item value={ClassRelationshipType.ClassRealization}>
+              {this.props.translate('packages.classDiagram.realization')}
+            </Dropdown.Item>
           </Dropdown>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>{source.name}</Header>
           <Flex>
-            <span>{this.props.translate('popup.multiplicity')}</span>
-            <Input value={element.multiplicity.source} onUpdate={this.onUpdate('multiplicity', 'source')} />
+            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.multiplicity')}</Body>
+            <Textfield
+              gutter={true}
+              value={element.multiplicity.source}
+              onChange={this.onUpdate('multiplicity', 'source')}
+            />
           </Flex>
           <Flex>
-            <span>{this.props.translate('popup.role')}</span>
-            <Input value={element.role.source} onUpdate={this.onUpdate('role', 'source')} />
+            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.role')}</Body>
+            <Textfield value={element.role.source} onChange={this.onUpdate('role', 'source')} />
           </Flex>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>{target.name}</Header>
           <Flex>
-            <span>{this.props.translate('popup.multiplicity')}</span>
-            <Input value={element.multiplicity.target} onUpdate={this.onUpdate('multiplicity', 'target')} />
+            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.multiplicity')}</Body>
+            <Textfield
+              gutter={true}
+              value={element.multiplicity.target}
+              onChange={this.onUpdate('multiplicity', 'target')}
+            />
           </Flex>
           <Flex>
-            <span>{this.props.translate('popup.role')}</span>
-            <Input value={element.role.target} onUpdate={this.onUpdate('role', 'target')} />
+            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.role')}</Body>
+            <Textfield value={element.role.target} onChange={this.onUpdate('role', 'target')} />
           </Flex>
-        </Section>
+        </section>
       </div>
     );
   }

@@ -21,8 +21,16 @@ export class Point {
     return this.clone();
   }
 
-  subtract(point: Point): Point {
-    return new Point(this.x - point.x, this.y - point.y);
+  subtract(x: number, y: number): Point;
+  subtract(x: Point): Point;
+  subtract(x: number | Point, y?: number): Point {
+    if (x instanceof Point) {
+      return new Point(this.x - x.x, this.y - x.y);
+    }
+    if (typeof y === 'number') {
+      return new Point(this.x - x, this.y - y);
+    }
+    return this.clone();
   }
 
   scale(factor: number) {

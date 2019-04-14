@@ -10,7 +10,7 @@ import { DropEvent } from '../draggable/drop-event';
 import { Droppable } from '../draggable/droppable';
 import { LayoutedElement } from '../layouted-element/layouted-element';
 import { LayoutedRelationship } from '../layouted-relationship/layouted-relationship';
-import { PopupLayer } from '../popup/popup-layer';
+import { PopupLayer, PopupLayerComponent } from '../popup/popup-layer';
 import { ModelState } from '../store/model-state';
 import { CanvasContext, CanvasProvider } from './canvas-context';
 import { CoordinateSystem } from './coordinate-system';
@@ -19,6 +19,7 @@ import { KeyboardEventListener } from './keyboard-eventlistener';
 
 const Container = styled.div`
   height: 100%;
+  padding: 1em;
 `;
 
 const Svg = styled.svg`
@@ -38,7 +39,7 @@ class CanvasComponent extends Component<Props, State> {
 
   canvas: RefObject<HTMLDivElement> = createRef();
   layer: RefObject<SVGSVGElement> = createRef();
-  popup: RefObject<PopupLayer> = createRef();
+  popup: RefObject<PopupLayerComponent> = createRef();
   coordinateSystem = new CoordinateSystem(this.layer);
 
   componentDidMount() {

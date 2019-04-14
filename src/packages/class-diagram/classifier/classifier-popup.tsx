@@ -3,14 +3,14 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { ClassElementType } from '..';
+import { Button } from '../../../components/controls/button/button';
+import { Divider } from '../../../components/controls/divider/divider';
+import { MinusIcon } from '../../../components/controls/icon/minus';
+import { Switch } from '../../../components/controls/switch/switch';
+import { Textfield } from '../../../components/controls/textfield/textfield';
+import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
-import { Divider } from '../../../components/popup/controls/divider';
-import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
-import { Switch, SwitchItem } from '../../../components/popup/controls/switch';
-import { TextField } from '../../../components/popup/controls/textfield';
-import { TrashCanIcon } from '../../../components/popup/controls/trashcan';
 import { ModelState } from '../../../components/store/model-state';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
@@ -21,22 +21,8 @@ import { Classifier } from './classifier';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-`;
-
-const Trash = styled(TrashCanIcon).attrs({ width: 20 })`
-  margin-left: 0.5rem;
-`;
-
-const NewMember = styled(TextField)`
-  &:not(:focus):not(:hover) {
-    background: rgba(255, 255, 255, 0.5);
-  }
-
-  &:not(:focus) {
-    border-style: dashed;
-  }
 `;
 
 interface OwnProps {
@@ -78,46 +64,50 @@ class ClassifierComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
-          <TextField value={element.name} onUpdate={this.rename(element.id)} />
+        <section>
+          <Textfield value={element.name} onChange={this.rename(element.id)} />
           <Divider />
-        </Section>
-        <Section>
-          <Switch>
-            <SwitchItem active={element.isAbstract} onClick={this.toggle(ClassElementType.AbstractClass)}>
+        </section>
+        <section>
+          <Switch value={element.type as ClassElementType} onChange={this.toggle} color="primary">
+            <Switch.Item value={ClassElementType.AbstractClass}>
               {this.props.translate('packages.classDiagram.abstract')}
-            </SwitchItem>
-            <SwitchItem active={element.isInterface} onClick={this.toggle(ClassElementType.Interface)}>
+            </Switch.Item>
+            <Switch.Item value={ClassElementType.Interface}>
               {this.props.translate('packages.classDiagram.interface')}
-            </SwitchItem>
-            <SwitchItem active={element.isEnumeration} onClick={this.toggle(ClassElementType.Enumeration)}>
+            </Switch.Item>
+            <Switch.Item value={ClassElementType.Enumeration}>
               {this.props.translate('packages.classDiagram.enumeration')}
-            </SwitchItem>
+            </Switch.Item>
           </Switch>
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>{this.props.translate('popup.attributes')}</Header>
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
-              <TextField value={attribute.name} onUpdate={this.rename(attribute.id)} />
-              <Trash onClick={this.delete(attribute.id)} />
+              <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
+              <Button color="link" tabIndex={-1}>
+                <MinusIcon onClick={this.delete(attribute.id)} />
+              </Button>
             </Flex>
           ))}
-          <NewMember value="" onCreate={this.create(ClassAttribute)} />
-        </Section>
+          <Textfield outline={true} value="" onSubmit={this.create(ClassAttribute)} />
+        </section>
         {!element.isEnumeration && (
-          <Section>
+          <section>
             <Divider />
             <Header>{this.props.translate('popup.methods')}</Header>
             {methods.map(method => (
               <Flex key={method.id}>
-                <TextField value={method.name} onUpdate={this.rename(method.id)} />
-                <Trash onClick={this.delete(method.id)} />
+                <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
+                <Button color="link" tabIndex={-1}>
+                  <MinusIcon onClick={this.delete(method.id)} />
+                </Button>
               </Flex>
             ))}
-            <NewMember value="" onCreate={this.create(ClassMethod)} />
-          </Section>
+            <Textfield outline={true} value="" onSubmit={this.create(ClassMethod)} />
+          </section>
         )}
       </div>
     );
@@ -134,7 +124,7 @@ class ClassifierComponent extends Component<Props> {
     this.props.rename(id, value);
   };
 
-  private toggle = (kind: ClassElementType) => () => {
+  private toggle = (kind: ClassElementType) => {
     const { element, change } = this.props;
     change(element.id, element.type === kind ? ClassElementType.Class : kind);
   };

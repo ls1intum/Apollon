@@ -4,6 +4,7 @@ import { Element, IElement } from './element';
 
 export const enum ElementActionTypes {
   CREATE = '@@element/CREATE',
+  DUPLICATE = '@@element/DUPLICATE',
   HOVER = '@@element/HOVER',
   LEAVE = '@@element/LEAVE',
   SELECT = '@@element/SELECT',
@@ -20,6 +21,13 @@ export const enum ElementActionTypes {
 export interface CreateAction extends Action<ElementActionTypes.CREATE> {
   payload: {
     element: Element;
+  };
+}
+
+export interface DuplicateAction extends Action<ElementActionTypes.DUPLICATE> {
+  payload: {
+    id: string;
+    parent?: string;
   };
 }
 
@@ -54,7 +62,7 @@ export interface MakeInteractiveAction extends Action<ElementActionTypes.MAKE_IN
 export interface ResizeAction extends Action<ElementActionTypes.RESIZE> {
   payload: {
     id: string;
-    delta: {
+    size: {
       width: number;
       height: number;
     };
@@ -106,6 +114,7 @@ export interface DeleteAction extends Action<ElementActionTypes.DELETE> {
 
 export type ElementActions =
   | CreateAction
+  | DuplicateAction
   | HoverAction
   | LeaveAction
   | SelectAction

@@ -7,11 +7,12 @@ import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
 import { Container } from '../container/container';
 import { RelationshipRepository } from '../relationship/relationship-repository';
-import { Element } from './element';
+import { Element, IElement } from './element';
 import {
   ChangeAction,
   CreateAction,
   DeleteAction,
+  DuplicateAction,
   ElementActionTypes,
   ElementState,
   HoverAction,
@@ -29,6 +30,11 @@ export class ElementRepository {
   static create = (element: Element): CreateAction => ({
     type: ElementActionTypes.CREATE,
     payload: { element },
+  });
+
+  static duplicate = (id: string, parent?: string): DuplicateAction => ({
+    type: ElementActionTypes.DUPLICATE,
+    payload: { id, parent },
   });
 
   static hover = (id: string, internal: boolean = false): HoverAction => ({
@@ -51,9 +57,9 @@ export class ElementRepository {
     payload: { id },
   });
 
-  static resize = (id: string, delta: { width: number; height: number }): ResizeAction => ({
+  static resize = (id: string, size: { width: number; height: number }): ResizeAction => ({
     type: ElementActionTypes.RESIZE,
-    payload: { id, delta },
+    payload: { id, size },
   });
 
   static resized = (id: string): ResizedAction => ({
@@ -73,6 +79,15 @@ export class ElementRepository {
       element = state[element.owner];
       position = position.add(element.bounds.x, element.bounds.y);
     }
+    return position;
+  };
+
+  static getRelativePosition = (state: ElementState) => (owner: string, position: Point): Point => {
+    let parent: IElement | null = state[owner];
+    do {
+      position = position.subtract(parent.bounds.x, parent.bounds.y);
+      parent = parent.owner ? state[parent.owner] : null;
+    } while (parent);
     return position;
   };
 
@@ -118,7 +133,10 @@ export class ElementRepository {
     if (!owner) return [];
 
     if (owner instanceof Container) {
-      return owner.ownedElements.reduce<Element[]>((acc, element) => [...acc, ...ElementRepository.getChildren(state)(element)], [owner]);
+      return owner.ownedElements.reduce<Element[]>(
+        (acc, element) => [...acc, ...ElementRepository.getChildren(state)(element)],
+        [owner],
+      );
     }
     return [owner];
   };

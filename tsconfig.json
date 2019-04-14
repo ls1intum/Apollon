@@ -3,7 +3,10 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["es2017", "dom"],
+    "lib": [
+      "es2017",
+      "dom"
+    ],
     "jsx": "react",
     "outDir": "lib",
     "declaration": true,
@@ -16,5 +19,10 @@
     "downlevelIteration": true,
     "resolveJsonModule": true
   },
-  "include": ["src/index.ts"]
+  "include": [
+    "src/index.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

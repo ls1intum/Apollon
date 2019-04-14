@@ -2,8 +2,9 @@ import { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { ElementRepository } from '../../services/element/element-repository';
+import { UndoRepository } from '../../services/undo/undo-repository';
 import { ApollonMode } from '../../typings';
-import { PopupLayer } from '../popup/popup-layer';
+import { PopupLayerComponent } from '../popup/popup-layer';
 import { ModelState } from '../store/model-state';
 import { CanvasContext, withCanvas } from './canvas-context';
 
@@ -46,22 +47,49 @@ class KeyboardEventListenerComponent extends Component<Props> {
         event.preventDefault();
         this.props.delete(null);
         break;
+      case 'Escape':
+        event.preventDefault();
+        this.props.select(null);
+        break;
+    }
+
+    if (event.metaKey) {
+      switch (event.key) {
+        case 'a':
+          event.preventDefault();
+          this.props.elements.forEach(id => this.props.select(id, false, true));
+          break;
+        case 'd':
+          event.preventDefault();
+          this.props.selection.forEach(child => this.props.duplicate(child));
+          break;
+        case 'z':
+          event.preventDefault();
+          event.shiftKey ? this.props.redo() : this.props.undo();
+          break;
+      }
     }
   };
 }
 
 interface OwnProps {
-  popup: React.RefObject<PopupLayer>;
+  popup: React.RefObject<PopupLayerComponent>;
 }
 
 interface StateProps {
+  elements: string[];
+  selection: string[];
   readonly: boolean;
   mode: ApollonMode;
 }
 
 interface DispatchProps {
+  duplicate: typeof ElementRepository.duplicate;
+  select: typeof ElementRepository.select;
   move: typeof ElementRepository.move;
   delete: typeof ElementRepository.delete;
+  undo: typeof UndoRepository.undo;
+  redo: typeof UndoRepository.redo;
 }
 
 type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -69,10 +97,21 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ readonly: state.editor.readonly, mode: state.editor.mode }),
+    state => ({
+      elements: Object.keys(state.elements),
+      selection: Object.values(state.elements)
+        .filter(element => element.selected)
+        .map(element => element.id),
+      readonly: state.editor.readonly,
+      mode: state.editor.mode,
+    }),
     {
+      duplicate: ElementRepository.duplicate,
+      select: ElementRepository.select,
       move: ElementRepository.move,
       delete: ElementRepository.delete,
+      undo: UndoRepository.undo,
+      redo: UndoRepository.redo,
     },
   ),
 );

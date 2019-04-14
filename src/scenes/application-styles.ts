@@ -1,4 +1,5 @@
-import styled from 'styled-components';
+import { styled } from '../components/theme/styles';
+import { Style } from './svg-styles';
 
 export const Layout = styled.div`
   display: flex;
@@ -12,11 +13,21 @@ export const Layout = styled.div`
   user-select: none;
   position: relative;
 
-  font-family: ${({ theme }) => theme.fontFamily};
+  font-family: ${({ theme }) => theme.font.family};
+  font-size: ${({ theme }) => theme.font.size}px;
+  color: ${({ theme }) => theme.font.color};
+  font-weight: 400;
+  line-height: 1.5;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 
   *,
   *:before,
   *:after {
     box-sizing: inherit;
+  }
+
+  svg {
+    ${Style}
   }
 `;

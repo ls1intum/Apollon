@@ -1,7 +1,15 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { Action, Reducer } from 'redux';
-import { applyMiddleware, combineReducers, compose, createStore, Store as ReduxStore } from 'redux';
+import {
+  Action,
+  applyMiddleware,
+  combineReducers,
+  compose,
+  createStore,
+  DeepPartial,
+  Reducer,
+  Store as ReduxStore,
+} from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import { all, fork } from 'redux-saga/effects';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
@@ -17,6 +25,7 @@ import { ElementActions, ElementState } from '../../services/element/element-typ
 import { RelationshipReducer } from '../../services/relationship/relationship-reducer';
 import { RelationshipSaga } from '../../services/relationship/relationship-saga';
 import { RelationshipActions } from '../../services/relationship/relationship-types';
+import { undoable } from '../../services/undo/undo-reducer';
 import { ModelState } from './model-state';
 
 export class ModelStore extends React.Component<Props> {
@@ -36,7 +45,7 @@ export class ModelStore extends React.Component<Props> {
   constructor(props: Readonly<Props>) {
     super(props);
 
-    const reducer = combineReducers<ModelState>(this.reducers as any);
+    const reducer = undoable(combineReducers<ModelState>(this.reducers));
 
     const sagaMiddleware = createSagaMiddleware();
 
@@ -66,5 +75,5 @@ export class ModelStore extends React.Component<Props> {
 }
 
 export interface Props {
-  initialState: ModelState | null;
+  initialState?: DeepPartial<ModelState>;
 }

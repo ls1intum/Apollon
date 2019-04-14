@@ -2,12 +2,13 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
+import { Button } from '../../../components/controls/button/button';
+import { Divider } from '../../../components/controls/divider/divider';
+import { ArrowRightIcon } from '../../../components/controls/icon/arrow-right';
+import { Textfield } from '../../../components/controls/textfield/textfield';
+import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
-import { Divider } from '../../../components/popup/controls/divider';
-import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
-import { TextField } from '../../../components/popup/controls/textfield';
 import { Element } from '../../../services/element/element';
 import { ElementRepository } from '../../../services/element/element-repository';
 import { Relationship } from '../../../services/relationship/relationship';
@@ -17,7 +18,7 @@ import { ActivityMergeNode } from './activity-merge-node';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
 `;
 
@@ -30,19 +31,26 @@ class ActivityMergeNodePopupComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
-          <TextField value={element.name} onUpdate={this.onUpdate} />
+        <section>
+          <Textfield value={element.name} onChange={this.onUpdate} />
           <Divider />
-        </Section>
-        <Section>
+        </section>
+        <section>
           <Header>{this.props.translate('popup.condition')}</Header>
           {decisions.map((decision, i) => (
             <Flex key={decision.id}>
-              <span>→&nbsp;{targets[i].name}&nbsp;</span>
-              <TextField value={decision.name} onUpdate={this.onUpdateOption(decision.id)} />
+              <Textfield
+                gutter={i < decisions.length - 1}
+                value={decision.name}
+                onChange={this.onUpdateOption(decision.id)}
+              />
+              <Button color="link" disabled={true}>
+                <ArrowRightIcon />
+              </Button>
+              <Body>{targets[i].name}</Body>
             </Flex>
           ))}
-        </Section>
+        </section>
       </div>
     );
   }
@@ -76,7 +84,10 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ relationships: RelationshipRepository.read(state.elements), getByIds: ElementRepository.getByIds(state.elements) }),
+    state => ({
+      relationships: RelationshipRepository.read(state.elements),
+      getByIds: ElementRepository.getByIds(state.elements),
+    }),
     {
       rename: ElementRepository.rename,
     },

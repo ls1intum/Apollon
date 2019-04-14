@@ -2,12 +2,13 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
-import { FlipIcon } from '../../../components/controls/flip-icon';
+import { Button } from '../../../components/controls/button/button';
+import { Divider } from '../../../components/controls/divider/divider';
+import { ExchangeIcon } from '../../../components/controls/icon/exchange';
+import { Textfield } from '../../../components/controls/textfield/textfield';
+import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
-import { Header } from '../../../components/popup/controls/header';
-import { Section } from '../../../components/popup/controls/section';
-import { TextField } from '../../../components/popup/controls/textfield';
 import { ElementRepository } from '../../../services/element/element-repository';
 import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
 import { ModelState } from './../../../components/store/model-state';
@@ -15,7 +16,7 @@ import { ActivityControlFlow } from './activity-control-flow';
 
 const Flex = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
 `;
 
@@ -25,15 +26,18 @@ class ActivityControlFlowPopupComponent extends Component<Props> {
 
     return (
       <div>
-        <Section>
+        <section>
           <Flex>
-            <Header>{this.props.translate('packages.activityDiagram.controlFlow')}</Header>
-            <FlipIcon fill="black" onClick={() => this.props.flip(element.id)} />
+            <Header gutter={false}>{this.props.translate('packages.activityDiagram.controlFlow')}</Header>
+            <Button color="link">
+              <ExchangeIcon onClick={() => this.props.flip(element.id)} />
+            </Button>
           </Flex>
-        </Section>
-        <Section>
-          <TextField value={element.name} onUpdate={this.rename} />
-        </Section>
+          <Divider />
+        </section>
+        <section>
+          <Textfield value={element.name} onChange={this.rename} />
+        </section>
       </div>
     );
   }
