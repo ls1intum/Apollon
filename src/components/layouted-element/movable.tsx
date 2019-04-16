@@ -21,13 +21,13 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
       const child = node.firstChild as HTMLElement;
-      child.addEventListener('mousedown', this.onMouseDown);
+      child.addEventListener('pointerdown', this.onMouseDown);
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
       const child = node.firstChild as HTMLElement;
-      child.removeEventListener('mousedown', this.onMouseDown);
+      child.removeEventListener('pointerdown', this.onMouseDown);
     }
 
     render() {
@@ -49,8 +49,8 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
       this.props.changeOwner(this.props.element.id, target);
     };
 
-    private onMouseDown = (event: MouseEvent) => {
-      if (event.which !== 1) return;
+    private onMouseDown = (event: PointerEvent) => {
+      if (event.which && event.which !== 1) return;
       const target = event.currentTarget as HTMLElement;
       window.setTimeout(() => {
         if (!this.props.element.selected) return;
@@ -65,11 +65,11 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
 
         this.setState({ movable: true, offset });
       }, 0);
-      document.addEventListener('mousemove', this.onMouseMove);
-      document.addEventListener('mouseup', this.onMouseUp);
+      document.addEventListener('pointermove', this.onMouseMove);
+      document.addEventListener('pointerup', this.onMouseUp);
     };
 
-    private onMouseMove = (event: MouseEvent) => {
+    private onMouseMove = (event: PointerEvent) => {
       if (!this.state.movable) return;
       const x = event.clientX - this.state.offset.x;
       const y = event.clientY - this.state.offset.y;
@@ -88,8 +88,8 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
     private onMouseUp = () => {
       const { moving } = this.state;
       this.setState({ movable: false, moving: false, offset: new Point() });
-      document.removeEventListener('mousemove', this.onMouseMove);
-      document.removeEventListener('mouseup', this.onMouseUp);
+      document.removeEventListener('pointermove', this.onMouseMove);
+      document.removeEventListener('pointerup', this.onMouseUp);
       if (moving) this.checkOwnership();
     };
   }
