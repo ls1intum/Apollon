@@ -27,6 +27,7 @@
     "publish:major": "yarn build && npm version major && npm publish"
   },
   "dependencies": {
+    "pepjs": "0.5.2",
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "react-redux": "6.0.1",
