@@ -71,7 +71,7 @@ class CanvasComponent extends Component<Props, State> {
     };
 
     return (
-      <Container ref={this.canvas} tabIndex={0} onMouseDown={this.deselectAll}>
+      <Container ref={this.canvas} tabIndex={0} onPointerDown={this.deselectAll}>
         <CanvasProvider value={context}>
           <Droppable onDrop={this.onDrop}>
             <Grid grid={10} width={diagram.bounds.width} height={diagram.bounds.height} show={mode !== ApollonMode.Assessment}>
@@ -99,7 +99,7 @@ class CanvasComponent extends Component<Props, State> {
     );
   }
 
-  private deselectAll = (event: React.MouseEvent) => {
+  private deselectAll = (event: React.PointerEvent) => {
     const deselect: boolean =
       !!this.canvas.current &&
       !!this.canvas.current.firstElementChild &&
