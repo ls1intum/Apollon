@@ -8,14 +8,14 @@ export const hoverable = (WrappedComponent: typeof ElementComponent): ComponentC
   class Hoverable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('mouseenter', this.enter);
-      node.addEventListener('mouseleave', this.leave);
+      node.addEventListener('pointerenter', this.enter);
+      node.addEventListener('pointerleave', this.leave);
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.removeEventListener('mouseenter', this.enter);
-      node.removeEventListener('mouseleave', this.leave);
+      node.removeEventListener('pointerenter', this.enter);
+      node.removeEventListener('pointerleave', this.leave);
     }
 
     render() {
