@@ -67,8 +67,8 @@ export async function computeBoundingBoxForRelationship(relationship: Relationsh
         const parent = svg.getBoundingClientRect() as DOMRect;
         const child = svg.firstElementChild.getBoundingClientRect() as DOMRect;
         bounds = {
-          x: child.x - parent.x,
-          y: child.y - parent.y,
+          x: child.left - parent.left,
+          y: child.top - parent.top,
           width: Math.max(child.width, 1),
           height: Math.max(child.height, 1),
         };
