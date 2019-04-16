@@ -44,7 +44,7 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
                       stroke="white"
                       strokeWidth={15}
                       strokeOpacity={0}
-                      onMouseDown={this.onMouseDown('target', context)}
+                      onPointerDown={this.onMouseDown('target', context)}
                       style={{ cursor: 'move' }}
                     />
                     <line
@@ -55,7 +55,7 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
                       stroke="white"
                       strokeWidth={15}
                       strokeOpacity={0}
-                      onMouseDown={this.onMouseDown('source', context)}
+                      onPointerDown={this.onMouseDown('source', context)}
                       style={{ cursor: 'move' }}
                     />
                   </g>
@@ -71,21 +71,21 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
       this.setState({ isReconnecting: true });
     };
 
-    private onMouseDown = (position: 'source' | 'target', context: ConnectContext) => async (event: React.MouseEvent) => {
+    private onMouseDown = (position: 'source' | 'target', context: ConnectContext) => async (event: React.PointerEvent) => {
       document.addEventListener('mousemove', this.start, {
         once: true,
         passive: true,
       });
       const change = position === 'source' ? 'target' : 'source';
       try {
-        const endpoints = await context.onStartConnect(this.props.element[position])(event);
+        const endpoints = await context.onStartConnect(this.props.element[position])(event.nativeEvent);
         this.props.connect(this.props.element.id, {
           [change]: endpoints.target,
         });
       } catch (error) {
       } finally {
         this.setState({ isReconnecting: false });
-        document.removeEventListener('mousemove', this.start);
+        document.removeEventListener('pointermove', this.start);
       }
     };
   }
