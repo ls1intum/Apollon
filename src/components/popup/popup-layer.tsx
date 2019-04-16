@@ -44,11 +44,11 @@ export class PopupLayerComponent extends Component<Props, State> {
   };
 
   componentDidMount() {
-    document.addEventListener('mousedown', this.cancel);
+    document.addEventListener('pointerdown', this.cancel);
   }
 
   componentWillUnmount() {
-    document.removeEventListener('mousedown', this.cancel);
+    document.removeEventListener('pointerdown', this.cancel);
     window.removeEventListener('resize', this.close);
   }
 
@@ -106,7 +106,7 @@ export class PopupLayerComponent extends Component<Props, State> {
     }
   };
 
-  private cancel = (event: MouseEvent) => {
+  private cancel = (event: PointerEvent) => {
     if (!this.popup.current) return;
     const popup = this.popup.current as HTMLElement;
     const target = event.target as HTMLElement;
