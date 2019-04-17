@@ -7,6 +7,7 @@ import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
+import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
@@ -34,9 +35,14 @@ class ClassAssociationComponent extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Header gutter={false}>{this.props.translate('popup.association')}</Header>
-            <Button color="link">
-              <ExchangeIcon onClick={() => this.props.flip(element.id)} />
+            <Header gutter={false} style={{ flexGrow: 1 }}>
+              {this.props.translate('popup.association')}
+            </Header>
+            <Button color="link" onClick={() => this.props.flip(element.id)}>
+              <ExchangeIcon />
+            </Button>
+            <Button color="link" onClick={() => this.props.delete(element.id)}>
+              <TrashIcon />
             </Button>
           </Flex>
           <Divider />
@@ -123,6 +129,7 @@ type StateProps = {
 type DispatchProps = {
   change: typeof ElementRepository.change;
   update: typeof ElementRepository.update;
+  delete: typeof ElementRepository.delete;
   flip: typeof RelationshipRepository.flip;
 };
 
@@ -135,6 +142,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     {
       change: ElementRepository.change,
       update: ElementRepository.update,
+      delete: ElementRepository.delete,
       flip: RelationshipRepository.flip,
     },
   ),

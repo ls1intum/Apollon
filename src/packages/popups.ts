@@ -4,6 +4,7 @@ import { ActivityMergeNodePopup } from './activity-diagram/activity-merge-node/a
 import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
 import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { DefaultPopup } from './common/default-popup';
+import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
 import { ElementType } from './element-type';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
@@ -39,7 +40,7 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [RelationshipType.ClassInheritance]: ClassAssociationPopup,
   [RelationshipType.ClassRealization]: ClassAssociationPopup,
   [RelationshipType.ClassUnidirectional]: ClassAssociationPopup,
-  [RelationshipType.ObjectLink]: null,
+  [RelationshipType.ObjectLink]: DefaultRelationshipPopup,
   [RelationshipType.ActivityControlFlow]: ActivityControlFlowPopup,
   [RelationshipType.UseCaseAssociation]: UseCaseAssociationPopup,
   [RelationshipType.UseCaseExtend]: UseCaseAssociationPopup,
