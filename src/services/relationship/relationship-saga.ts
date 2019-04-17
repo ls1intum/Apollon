@@ -38,7 +38,7 @@ function* handleRelationshipFlip(action: FlipAction) {
 
 function* handleElementMove(action: MoveAction) {
   const { payload } = action;
-  if (!payload.id) return;
+  if (!payload.id || payload.internal) return;
 
   const { elements }: ModelState = yield select();
   const element = ElementRepository.getById(elements)(payload.id);

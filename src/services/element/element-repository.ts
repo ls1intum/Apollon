@@ -67,9 +67,9 @@ export class ElementRepository {
     payload: { id },
   });
 
-  static move = (id: string | null, delta: { x: number; y: number }): MoveAction => ({
+  static move = (id: string | null, delta: { x: number; y: number }, internal = false): MoveAction => ({
     type: ElementActionTypes.MOVE,
-    payload: { id, delta },
+    payload: { id, delta, internal },
   });
 
   static getAbsolutePosition = (state: ElementState) => (id: string): Point => {

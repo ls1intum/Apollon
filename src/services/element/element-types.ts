@@ -82,6 +82,7 @@ export interface MoveAction extends Action<ElementActionTypes.MOVE> {
       x: number;
       y: number;
     };
+    internal: boolean;
   };
 }
 

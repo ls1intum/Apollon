@@ -139,7 +139,7 @@ function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 
   effects = [
     put<MoveAction>(
-      ElementRepository.move(element.id, { x: position.x - element.bounds.x, y: position.y - element.bounds.y }),
+      ElementRepository.move(element.id, { x: position.x - element.bounds.x, y: position.y - element.bounds.y }, true),
     ),
     ...effects,
   ];
@@ -206,6 +206,7 @@ function updateElements(state: ModelState, updates: Element[]): Effect[] {
               x: update.bounds.x - original.bounds.x,
               y: update.bounds.y - original.bounds.y,
             },
+            internal: true,
           },
         }),
       );
