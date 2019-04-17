@@ -3,6 +3,7 @@ import { Button } from '../button/button';
 
 export const StyledSwitch = styled.div`
   display: flex;
+  min-height: 1.9rem;
 `;
 
 export type SwitchItemProps = {
