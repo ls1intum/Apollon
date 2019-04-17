@@ -10,12 +10,12 @@ export class Draggable extends React.Component<Props> {
 
   componentDidMount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.addEventListener('pointerdown', this.context!.onMouseDown(this));
+    node.addEventListener('pointerdown', this.context!.onPointerDown(this));
   }
 
   componentWillUnmount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.removeEventListener('pointerdown', this.context!.onMouseDown(this));
+    node.removeEventListener('pointerdown', this.context!.onPointerDown(this));
   }
 
   render() {

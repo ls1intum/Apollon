@@ -28,54 +28,48 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
       const points: Point[] = path.map(p => new Point(p.x, p.y));
       const handleStart = this.composePath([...points]);
       const handleEnd = this.composePath([...points].reverse());
+
       return (
-        !this.state.isReconnecting && (
-          <ConnectConsumer
-            children={context =>
-              context && (
-                <WrappedComponent {...this.props} disabled={context.isDragging}>
-                  {this.props.children}
-                  <g>
-                    <line
-                      x1={handleStart[0].x}
-                      y1={handleStart[0].y}
-                      x2={handleStart[1].x}
-                      y2={handleStart[1].y}
-                      stroke="white"
-                      strokeWidth={15}
-                      strokeOpacity={0}
-                      onPointerDown={this.onMouseDown('target', context)}
-                      style={{ cursor: 'move' }}
-                    />
-                    <line
-                      x1={handleEnd[0].x}
-                      y1={handleEnd[0].y}
-                      x2={handleEnd[1].x}
-                      y2={handleEnd[1].y}
-                      stroke="white"
-                      strokeWidth={15}
-                      strokeOpacity={0}
-                      onPointerDown={this.onMouseDown('source', context)}
-                      style={{ cursor: 'move' }}
-                    />
-                  </g>
-                </WrappedComponent>
-              )
-            }
-          />
-        )
+        <ConnectConsumer
+          children={context =>
+            context && (
+              <WrappedComponent {...this.props} disabled={context.isDragging} hidden={this.state.isReconnecting}>
+                {this.props.children}
+                <g>
+                  <line
+                    x1={handleStart[0].x}
+                    y1={handleStart[0].y}
+                    x2={handleStart[1].x}
+                    y2={handleStart[1].y}
+                    stroke="white"
+                    strokeWidth={15}
+                    strokeOpacity={0}
+                    onPointerDown={this.onPointerDown('target', context)}
+                    style={{ cursor: 'move' }}
+                  />
+                  <line
+                    x1={handleEnd[0].x}
+                    y1={handleEnd[0].y}
+                    x2={handleEnd[1].x}
+                    y2={handleEnd[1].y}
+                    stroke="white"
+                    strokeWidth={15}
+                    strokeOpacity={0}
+                    onPointerDown={this.onPointerDown('source', context)}
+                    style={{ cursor: 'move' }}
+                  />
+                </g>
+              </WrappedComponent>
+            )
+          }
+        />
       );
     }
 
-    private start = () => {
+    private onPointerDown = (position: 'source' | 'target', context: ConnectContext) => async (
+      event: React.PointerEvent,
+    ) => {
       this.setState({ isReconnecting: true });
-    };
-
-    private onMouseDown = (position: 'source' | 'target', context: ConnectContext) => async (event: React.PointerEvent) => {
-      document.addEventListener('mousemove', this.start, {
-        once: true,
-        passive: true,
-      });
       const change = position === 'source' ? 'target' : 'source';
       try {
         const endpoints = await context.onStartConnect(this.props.element[position])(event.nativeEvent);
@@ -85,7 +79,6 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
       } catch (error) {
       } finally {
         this.setState({ isReconnecting: false });
-        document.removeEventListener('pointermove', this.start);
       }
     };
   }

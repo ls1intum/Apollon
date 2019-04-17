@@ -51,10 +51,10 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
               ports.map(port => (
                 <Group
                   key={port.direction}
-                  onPointerDown={this.onMouseDown(port, context)}
-                  onPointerUp={this.onMouseUp(port, context)}
-                  onPointerEnter={this.onMouseEnter}
-                  onPointerLeave={this.onMouseLeave}
+                  onPointerDown={this.onPointerDown(port, context)}
+                  onPointerUp={this.onPointerUp(port, context)}
+                  onPointerEnter={this.onPointerEnter}
+                  onPointerLeave={this.onPointerLeave}
                   style={{
                     display: element.selected || context.isDragging ? 'block' : 'none',
                   }}
@@ -99,15 +99,15 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
       }
     }
 
-    private onMouseEnter = (event: React.PointerEvent) => {
+    private onPointerEnter = (event: React.PointerEvent) => {
       event.currentTarget.classList.add('hover');
     };
 
-    private onMouseLeave = (event: React.PointerEvent) => {
+    private onPointerLeave = (event: React.PointerEvent) => {
       event.currentTarget.classList.remove('hover');
     };
 
-    private onMouseDown = (port: Port, context: ConnectContext) => async (event: React.PointerEvent) => {
+    private onPointerDown = (port: Port, context: ConnectContext) => async (event: React.PointerEvent) => {
       try {
         const endpoints = await context.onStartConnect(port)(event.nativeEvent);
 
@@ -123,8 +123,8 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
       } catch (error) {}
     };
 
-    private onMouseUp = (port: Port, context: ConnectContext) => async (event: React.PointerEvent) => {
-      this.onMouseLeave(event);
+    private onPointerUp = (port: Port, context: ConnectContext) => async (event: React.PointerEvent) => {
+      this.onPointerLeave(event);
       context.onEndConnect(port)(event.nativeEvent);
     };
   }

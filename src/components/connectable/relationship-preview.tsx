@@ -21,9 +21,9 @@ class RelationshipPreviewComponent extends Component<Props, State> {
     if (this.props.port) {
       const offset = this.props.coordinateSystem.offset();
       this.setState({ offset });
-      document.addEventListener('pointermove', this.onMouseMove);
+      document.addEventListener('pointermove', this.onPointerMove);
     } else {
-      document.removeEventListener('pointermove', this.onMouseMove);
+      document.removeEventListener('pointermove', this.onPointerMove);
       this.setState({ position: null, offset: new Point(0, 0) });
     }
   }
@@ -37,7 +37,7 @@ class RelationshipPreviewComponent extends Component<Props, State> {
     return <polyline points={points} pointerEvents="none" fill="none" stroke="black" strokeWidth="1" strokeDasharray="5,5" />;
   }
 
-  private onMouseMove = (event: PointerEvent) => {
+  private onPointerMove = (event: PointerEvent) => {
     let { x, y } = this.props.coordinateSystem.screenToPoint(event.clientX, event.clientY, false);
     x -= this.state.offset.x;
     y -= this.state.offset.y;

@@ -16,16 +16,16 @@ export class DragLayer extends React.Component<Props, State> {
   };
 
   componentDidMount() {
-    document.addEventListener('pointermove', this.onMouseMove);
+    document.addEventListener('pointermove', this.onPointerMove);
     document.addEventListener('pointerup', this.cancel);
   }
 
   componentWillUnmount() {
-    document.removeEventListener('pointermove', this.onMouseMove);
+    document.removeEventListener('pointermove', this.onPointerMove);
     document.removeEventListener('pointerup', this.cancel);
   }
 
-  onMouseDown = (element: Draggable) => (event: PointerEvent) => {
+  onPointerDown = (element: Draggable) => (event: PointerEvent) => {
     if (event.button !== 0) return;
 
     const node = event.currentTarget as HTMLElement;
@@ -42,7 +42,7 @@ export class DragLayer extends React.Component<Props, State> {
     });
   };
 
-  onMouseMove = (event: PointerEvent) => {
+  onPointerMove = (event: PointerEvent) => {
     if (!this.state.focused) return;
 
     const position = {
@@ -55,7 +55,7 @@ export class DragLayer extends React.Component<Props, State> {
     });
   };
 
-  onMouseUp = (element: Droppable) => (event: PointerEvent) => {
+  onPointerUp = (element: Droppable) => (event: PointerEvent) => {
     if (!this.state.dragging || !this.state.element) return;
     event.stopPropagation();
 
@@ -84,8 +84,8 @@ export class DragLayer extends React.Component<Props, State> {
 
   render() {
     const context: Context = {
-      onMouseDown: this.onMouseDown,
-      onMouseUp: this.onMouseUp,
+      onPointerDown: this.onPointerDown,
+      onPointerUp: this.onPointerUp,
     };
     const { x, y } = this.state.position;
     return (

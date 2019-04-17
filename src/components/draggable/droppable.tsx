@@ -10,12 +10,12 @@ export class Droppable extends React.Component<Props> {
 
   componentDidMount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.addEventListener('pointerup', this.context!.onMouseUp(this));
+    node.addEventListener('pointerup', this.context!.onPointerUp(this));
   }
 
   componentWillUnmount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.removeEventListener('pointerup', this.context!.onMouseUp(this));
+    node.removeEventListener('pointerup', this.context!.onPointerUp(this));
   }
 
   render() {

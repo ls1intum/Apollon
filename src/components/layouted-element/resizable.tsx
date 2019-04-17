@@ -26,7 +26,7 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
       return (
         <WrappedComponent {...this.props}>
           {this.props.children}
-          <Handler x={x - 10} y={y - 10} width={15} height={15} onPointerDown={this.onMouseDown} />
+          <Handler x={x - 10} y={y - 10} width={15} height={15} onPointerDown={this.onPointerDown} />
         </WrappedComponent>
       );
     }
@@ -45,28 +45,28 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
       this.props.resize(id, { width, height });
     };
 
-    private onMouseDown = (event: React.PointerEvent) => {
+    private onPointerDown = (event: React.PointerEvent) => {
       if (event.nativeEvent.which && event.nativeEvent.which !== 1) return;
 
       const position = this.props.getAbsolutePosition(this.props.element.id);
       const offset = position.add(this.props.coordinateSystem.offset());
 
       this.setState({ resizing: true, offset });
-      document.addEventListener('pointermove', this.onMouseMove);
-      document.addEventListener('pointerup', this.onMouseUp);
+      document.addEventListener('pointermove', this.onPointerMove);
+      document.addEventListener('pointerup', this.onPointerUp);
     };
 
-    private onMouseMove = (event: PointerEvent) => {
+    private onPointerMove = (event: PointerEvent) => {
       const width = event.clientX - this.state.offset.x;
       const height = event.clientY - this.state.offset.y;
       const point = this.props.coordinateSystem.screenToPoint(width, height);
       this.resize(point.x, point.y);
     };
 
-    private onMouseUp = () => {
+    private onPointerUp = () => {
       this.setState({ resizing: false, offset: new Point() });
-      document.removeEventListener('pointermove', this.onMouseMove);
-      document.removeEventListener('pointerup', this.onMouseUp);
+      document.removeEventListener('pointermove', this.onPointerMove);
+      document.removeEventListener('pointerup', this.onPointerUp);
       this.props.resized(this.props.element.id);
     };
   }
