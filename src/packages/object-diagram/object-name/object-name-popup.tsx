@@ -4,7 +4,7 @@ import { compose } from 'redux';
 import styled from 'styled-components';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
-import { MinusIcon } from '../../../components/controls/icon/minus';
+import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
@@ -33,7 +33,12 @@ class ObjectNameComponent extends Component<Props> {
     return (
       <div>
         <section>
-          <Textfield value={element.name} onChange={this.rename(element.id)} />
+          <Flex>
+            <Textfield value={element.name} onChange={this.rename(element.id)} />
+            <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
+              <TrashIcon />
+            </Button>
+          </Flex>
           <Divider />
         </section>
         <section>
@@ -41,8 +46,8 @@ class ObjectNameComponent extends Component<Props> {
           {attributes.map(attribute => (
             <Flex key={attribute.id}>
               <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
-              <Button color="link" tabIndex={-1}>
-                <MinusIcon onClick={this.delete(attribute.id)} />
+              <Button color="link" tabIndex={-1} onClick={this.delete(attribute.id)}>
+                <TrashIcon />
               </Button>
             </Flex>
           ))}
@@ -54,8 +59,8 @@ class ObjectNameComponent extends Component<Props> {
           {methods.map(method => (
             <Flex key={method.id}>
               <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
-              <Button color="link" tabIndex={-1}>
-                <MinusIcon onClick={this.delete(method.id)} />
+              <Button color="link" tabIndex={-1} onClick={this.delete(method.id)}>
+                <TrashIcon />
               </Button>
             </Flex>
           ))}

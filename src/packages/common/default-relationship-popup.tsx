@@ -1,8 +1,11 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import { Button } from '../../components/controls/button/button';
 import { TrashIcon } from '../../components/controls/icon/trash';
-import { Textfield } from '../../components/controls/textfield/textfield';
+import { Header } from '../../components/controls/typography/typography';
+import { I18nContext } from '../../components/i18n/i18n-context';
+import { localized } from '../../components/i18n/localized';
 import { ModelState } from '../../components/store/model-state';
 import { styled } from '../../components/theme/styles';
 import { Element } from '../../services/element/element';
@@ -14,7 +17,7 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class DefaultPopupComponent extends Component<Props> {
+class DefaultRelationshipPopupComponent extends Component<Props> {
   render() {
     const { element } = this.props;
 
@@ -22,7 +25,7 @@ class DefaultPopupComponent extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.onUpdate} />
+            <Header>{this.props.translate('popup.relationship')}</Header>
             <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -31,10 +34,6 @@ class DefaultPopupComponent extends Component<Props> {
       </div>
     );
   }
-  private onUpdate = (value: string) => {
-    const { element, rename } = this.props;
-    rename(element.id, value);
-  };
 }
 
 type OwnProps = {
@@ -44,18 +43,19 @@ type OwnProps = {
 type StateProps = {};
 
 type DispatchProps = {
-  rename: typeof ElementRepository.rename;
   delete: typeof ElementRepository.delete;
 };
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  null,
-  {
-    rename: ElementRepository.rename,
-    delete: ElementRepository.delete,
-  },
+const enhance = compose<ComponentClass<OwnProps>>(
+  localized,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    null,
+    {
+      delete: ElementRepository.delete,
+    },
+  ),
 );
 
-export const DefaultPopup = enhance(DefaultPopupComponent);
+export const DefaultRelationshipPopup = enhance(DefaultRelationshipPopupComponent);

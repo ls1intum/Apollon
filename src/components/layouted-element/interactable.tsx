@@ -8,19 +8,19 @@ export const interactable = (WrappedComponent: typeof ElementComponent): Compone
   class Interactable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('click', this.select);
+      node.addEventListener('pointerdown', this.select);
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.removeEventListener('click', this.select);
+      node.removeEventListener('pointerdown', this.select);
     }
 
     render() {
       return <WrappedComponent {...this.props} />;
     }
-    private select = (event: MouseEvent) => {
-      if (event.which !== 1 || !this.props.element.hovered) return;
+    private select = (event: PointerEvent) => {
+      if ((event.which && event.which !== 1) || !this.props.element.hovered) return;
 
       this.props.makeInteractive(this.props.element.id);
     };

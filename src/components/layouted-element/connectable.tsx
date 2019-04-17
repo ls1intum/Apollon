@@ -51,10 +51,10 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
               ports.map(port => (
                 <Group
                   key={port.direction}
-                  onMouseDown={this.onMouseDown(port, context)}
-                  onMouseUp={this.onMouseUp(port, context)}
-                  onMouseEnter={this.onMouseEnter}
-                  onMouseLeave={this.onMouseLeave}
+                  onPointerDown={this.onPointerDown(port, context)}
+                  onPointerUp={this.onPointerUp(port, context)}
+                  onPointerEnter={this.onPointerEnter}
+                  onPointerLeave={this.onPointerLeave}
                   style={{
                     display: element.selected || context.isDragging ? 'block' : 'none',
                   }}
@@ -99,17 +99,17 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
       }
     }
 
-    private onMouseEnter = (event: React.MouseEvent) => {
+    private onPointerEnter = (event: React.PointerEvent) => {
       event.currentTarget.classList.add('hover');
     };
 
-    private onMouseLeave = (event: React.MouseEvent) => {
+    private onPointerLeave = (event: React.PointerEvent) => {
       event.currentTarget.classList.remove('hover');
     };
 
-    private onMouseDown = (port: Port, context: ConnectContext) => async (event: React.MouseEvent) => {
+    private onPointerDown = (port: Port, context: ConnectContext) => async (event: React.PointerEvent) => {
       try {
-        const endpoints = await context.onStartConnect(port)(event);
+        const endpoints = await context.onStartConnect(port)(event.nativeEvent);
 
         const type: RelationshipType = DefaultRelationshipType[this.props.diagramType];
         const RelationshipClazz = Relationships[type];
@@ -123,9 +123,9 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
       } catch (error) {}
     };
 
-    private onMouseUp = (port: Port, context: ConnectContext) => async (event: React.MouseEvent) => {
-      this.onMouseLeave(event);
-      context.onEndConnect(port)(event);
+    private onPointerUp = (port: Port, context: ConnectContext) => async (event: React.PointerEvent) => {
+      this.onPointerLeave(event);
+      context.onEndConnect(port)(event.nativeEvent);
     };
   }
 

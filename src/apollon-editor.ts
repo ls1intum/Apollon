@@ -1,3 +1,4 @@
+import 'pepjs';
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { DeepPartial, Store } from 'redux';
@@ -73,7 +74,7 @@ export class ApollonEditor {
       diagram: (() => {
         const d = new Diagram();
         Object.assign(d, state.diagram);
-        d.type2 = options.type|| DiagramType.ClassDiagram;
+        d.type2 = options.type || DiagramType.ClassDiagram;
         return d;
       })(),
       editor: {
@@ -126,6 +127,8 @@ export class ApollonEditor {
   }
 
   private componentDidMount = () => {
+    this.container.setAttribute('touch-action', 'none');
+
     this.store =
       this.application.current &&
       this.application.current.store.current &&

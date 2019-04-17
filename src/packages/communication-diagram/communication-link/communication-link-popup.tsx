@@ -7,7 +7,7 @@ import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { ArrowLeftIcon } from '../../../components/controls/icon/arrow-left';
 import { ArrowRightIcon } from '../../../components/controls/icon/arrow-right';
-import { MinusIcon } from '../../../components/controls/icon/minus';
+import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
@@ -36,6 +36,9 @@ class CommunactionLinkPopupComponent extends Component<Props> {
         <section>
           <Flex>
             <Header gutter={false}>{this.props.translate('packages.communicationDiagram.communicationLink')}</Header>
+            <Button color="link" onClick={() => this.props.delete(element.id)}>
+              <TrashIcon />
+            </Button>
           </Flex>
           <Divider />
         </section>
@@ -50,11 +53,11 @@ class CommunactionLinkPopupComponent extends Component<Props> {
           {element.messages.map((message, i) => (
             <Flex key={i}>
               <Textfield gutter={true} value={message.name} onChange={this.rename(message)} />
-              <Button color="link" onClick={this.flip(message)} tabIndex={-1}>
+              <Button color="link" tabIndex={-1} onClick={this.flip(message)}>
                 {message.direction === 'source' ? <ArrowRightIcon /> : <ArrowLeftIcon />}
               </Button>
-              <Button color="link" tabIndex={-1}>
-                <MinusIcon onClick={this.delete(message)} />
+              <Button color="link" tabIndex={-1} onClick={this.delete(message)}>
+                <TrashIcon />
               </Button>
             </Flex>
           ))}
@@ -103,6 +106,7 @@ type StateProps = {
 
 type DispatchProps = {
   update: typeof ElementRepository.update;
+  delete: typeof ElementRepository.delete;
   flip: typeof RelationshipRepository.flip;
 };
 
@@ -114,6 +118,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     state => ({ getById: ElementRepository.getById(state.elements) }),
     {
       update: ElementRepository.update,
+      delete: ElementRepository.delete,
       flip: RelationshipRepository.flip,
     },
   ),

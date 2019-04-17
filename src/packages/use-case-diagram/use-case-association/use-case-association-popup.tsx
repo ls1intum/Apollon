@@ -7,6 +7,7 @@ import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
+import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
@@ -30,10 +31,15 @@ class UseCaseAssociationComponent extends Component<Props> {
       <div>
         <section>
           {element.type === UseCaseRelationshipType.UseCaseAssociation ? (
-            <Textfield value={element.name} onChange={this.rename(element.id)} />
+            <Flex>
+              <Textfield value={element.name} placeholder="..." onChange={this.rename(element.id)} />
+              <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
+                <TrashIcon />
+              </Button>
+            </Flex>
           ) : (
             <Flex>
-              <Header gutter={false}>
+              <Header gutter={false} style={{ flexGrow: 1 }}>
                 {
                   {
                     [UseCaseRelationshipType.UseCaseAssociation]: this.props.translate(
@@ -47,14 +53,17 @@ class UseCaseAssociationComponent extends Component<Props> {
                   }[element.type]
                 }
               </Header>
-              <Button color="link">
-                <ExchangeIcon onClick={() => this.props.flip(element.id)} />
+              <Button color="link" tabIndex={-1} onClick={() => this.props.flip(element.id)}>
+                <ExchangeIcon />
+              </Button>
+              <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
+                <TrashIcon />
               </Button>
             </Flex>
           )}
-          <Divider />
         </section>
-        <section>
+        {/* <section>
+          <Divider />
           <Dropdown value={element.type} onChange={this.onChange}>
             <Dropdown.Item value={UseCaseRelationshipType.UseCaseAssociation}>
               {this.props.translate('packages.useCaseDiagram.association')}
@@ -69,7 +78,7 @@ class UseCaseAssociationComponent extends Component<Props> {
               {this.props.translate('packages.useCaseDiagram.extend')}
             </Dropdown.Item>
           </Dropdown>
-        </section>
+        </section> */}
       </div>
     );
   }
@@ -93,6 +102,7 @@ type DispatchProps = {
   rename: typeof ElementRepository.rename;
   change: typeof ElementRepository.change;
   update: typeof ElementRepository.update;
+  delete: typeof ElementRepository.delete;
   flip: typeof RelationshipRepository.flip;
 };
 
@@ -106,6 +116,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       rename: ElementRepository.rename,
       change: ElementRepository.change,
       update: ElementRepository.update,
+      delete: ElementRepository.delete,
       flip: RelationshipRepository.flip,
     },
   ),

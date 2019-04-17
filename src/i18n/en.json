@@ -13,6 +13,7 @@
   "popup": {
     "attributes": "Attributes",
     "methods": "Methods",
+    "relationship": "Relationship",
     "association": "Association",
     "multiplicity": "Multiplicity",
     "role": "Role",

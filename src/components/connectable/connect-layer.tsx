@@ -24,7 +24,7 @@ export class ConnectLayer extends Component<Props, State> {
   }
 
   private onStartConnect = (port: Port) => (): Promise<Connection> => {
-    document.addEventListener('mouseup', this.cancel, {
+    document.addEventListener('pointerup', this.cancel, {
       once: true,
       passive: true,
     });

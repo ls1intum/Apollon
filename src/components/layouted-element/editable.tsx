@@ -5,6 +5,7 @@ import { compose } from 'redux';
 import { Element } from '../../services/element/element';
 import { ElementRepository } from '../../services/element/element-repository';
 import { Relationship } from '../../services/relationship/relationship';
+import { Point } from '../../utils/geometry/point';
 import { PopupContext, withPopup } from '../popup/popup-context';
 import { ModelState } from '../store/model-state';
 import { ElementComponent, OwnProps } from './element-component';
@@ -13,16 +14,17 @@ export const editable = (WrappedComponent: typeof ElementComponent) => {
   class Editable extends Component<Props, State> {
     state: State = {
       element: this.props.element,
+      lastEvent: null,
     };
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('dblclick', this.edit);
+      node.addEventListener('pointerdown', this.edit);
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.removeEventListener('dblclick', this.edit);
+      node.removeEventListener('pointerdown', this.edit);
     }
 
     componentDidUpdate(prevProps: Props) {
@@ -35,7 +37,14 @@ export const editable = (WrappedComponent: typeof ElementComponent) => {
       return <WrappedComponent {...this.props} />;
     }
 
-    private edit = (event: MouseEvent) => {
+    private edit = (event: PointerEvent) => {
+      const { lastEvent } = this.state;
+      if (!lastEvent || Date.now() - lastEvent > 500) {
+        this.setState({ lastEvent: Date.now() });
+        return;
+      }
+
+      event.preventDefault();
       event.stopPropagation();
       let position = { x: 0, y: 0 };
       if (this.props.element instanceof Relationship) {
@@ -47,16 +56,8 @@ export const editable = (WrappedComponent: typeof ElementComponent) => {
           y: targetPoint.y + bounds.y - 20,
         };
       } else {
-        let { x, y } = this.props.element.bounds;
+        const { x, y } = this.props.getAbsolutePosition(this.props.element.id);
         const { width } = this.props.element.bounds;
-        let ownerID = this.props.element.owner;
-        while (ownerID) {
-          const owner = this.props.getById(ownerID);
-          if (!owner) break;
-          x += owner.bounds.x;
-          y += owner.bounds.y;
-          ownerID = owner.owner;
-        }
         position = { x: x + width, y };
       }
       this.props.showPopup(this.state.element, position);
@@ -65,6 +66,7 @@ export const editable = (WrappedComponent: typeof ElementComponent) => {
 
   type StateProps = {
     getById: (id: string) => Element | null;
+    getAbsolutePosition: (id: string) => Point;
   };
 
   type DispatchProps = {};
@@ -73,12 +75,14 @@ export const editable = (WrappedComponent: typeof ElementComponent) => {
 
   type State = {
     element: Element;
+    lastEvent: number | null;
   };
 
   return compose<ComponentClass<OwnProps>>(
     withPopup,
     connect<StateProps, DispatchProps, OwnProps, ModelState>(state => ({
       getById: ElementRepository.getById(state.elements),
+      getAbsolutePosition: ElementRepository.getAbsolutePosition(state.elements),
     })),
   )(Editable);
 };
