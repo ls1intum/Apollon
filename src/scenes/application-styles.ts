@@ -12,6 +12,7 @@ export const Layout = styled.div`
   box-sizing: border-box;
   user-select: none;
   position: relative;
+  touch-action: none;
 
   font-family: ${({ theme }) => theme.font.family};
   font-size: ${({ theme }) => theme.font.size}px;
