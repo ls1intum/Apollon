@@ -51,7 +51,7 @@ export const CommunicationLinkComponent: SFC<Props> = ({ element }) => {
         </>
       ) : (
         <>
-          <text x={position.x} y={position.y} dy={-6} fontSize="85%" dominantBaseline="text-after-edge" textAnchor="middle">
+          <text x={position.x} y={position.y} dy={-6} fontSize="85%" textAnchor="middle">
             <tspan fontWeight="bold" fontSize="120%">
               {targets.length ? '⟶' : ''}
             </tspan>
@@ -61,7 +61,7 @@ export const CommunicationLinkComponent: SFC<Props> = ({ element }) => {
               </tspan>
             ))}
           </text>
-          <text x={position.x} y={position.y} dy={3} fontSize="85%" dominantBaseline="text-before-edge" textAnchor="middle">
+          <text x={position.x} y={position.y} dy={18} fontSize="85%" textAnchor="middle">
             <tspan fontWeight="bold" fontSize="120%">
               {sources.length ? '⟵' : ''}
             </tspan>

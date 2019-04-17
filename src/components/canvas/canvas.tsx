@@ -48,8 +48,10 @@ class CanvasComponent extends Component<Props, State> {
 
   center = () => {
     const container = this.canvas.current!.parentElement!;
-    const { width, height } = container.getBoundingClientRect();
-    container.scrollTo(this.props.diagram.bounds.width / 2 - width / 2, this.props.diagram.bounds.height / 2 - height / 2);
+    if ('scrollTo' in container) {
+      const { width, height } = container.getBoundingClientRect();
+      container.scrollTo(this.props.diagram.bounds.width / 2 - width / 2, this.props.diagram.bounds.height / 2 - height / 2);
+    }
   };
 
   onDrop = (event: DropEvent) => {
