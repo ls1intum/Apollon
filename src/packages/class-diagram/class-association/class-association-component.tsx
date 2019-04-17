@@ -83,25 +83,22 @@ export const ClassAssociationComponent: SFC<Props> = ({ element }) => {
       case Direction.Up:
         return {
           dx: position === 'TOP' ? -5 : 5,
-          dominantBaseline: 'text-after-edge',
           textAnchor: position === 'TOP' ? 'end' : 'start',
         };
       case Direction.Right:
         return {
-          dy: position === 'TOP' ? -10 : 5,
-          dominantBaseline: position === 'TOP' ? 'text-after-edge' : 'text-before-edge',
+          dy: position === 'TOP' ? -10 : 21,
           textAnchor: 'start',
         };
       case Direction.Down:
         return {
           dx: position === 'TOP' ? -5 : 5,
-          dominantBaseline: 'text-before-edge',
+          dy: 10,
           textAnchor: position === 'TOP' ? 'end' : 'start',
         };
       case Direction.Left:
         return {
-          dy: position === 'TOP' ? -10 : 5,
-          dominantBaseline: position === 'TOP' ? 'text-after-edge' : 'text-before-edge',
+          dy: position === 'TOP' ? -10 : 21,
           textAnchor: 'end',
         };
     }
