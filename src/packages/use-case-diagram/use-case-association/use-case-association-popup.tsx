@@ -62,7 +62,7 @@ class UseCaseAssociationComponent extends Component<Props> {
             </Flex>
           )}
         </section>
-        {/* <section>
+        <section>
           <Divider />
           <Dropdown value={element.type} onChange={this.onChange}>
             <Dropdown.Item value={UseCaseRelationshipType.UseCaseAssociation}>
@@ -78,7 +78,7 @@ class UseCaseAssociationComponent extends Component<Props> {
               {this.props.translate('packages.useCaseDiagram.extend')}
             </Dropdown.Item>
           </Dropdown>
-        </section> */}
+        </section>
       </div>
     );
   }
