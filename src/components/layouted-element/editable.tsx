@@ -39,7 +39,7 @@ export const editable = (WrappedComponent: typeof ElementComponent) => {
 
     private edit = (event: PointerEvent) => {
       const { lastEvent } = this.state;
-      if (!lastEvent || Date.now() - lastEvent > 500) {
+      if (!lastEvent || Date.now() - lastEvent > 300) {
         this.setState({ lastEvent: Date.now() });
         return;
       }
