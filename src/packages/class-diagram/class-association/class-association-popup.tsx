@@ -13,9 +13,9 @@ import { Body, Header } from '../../../components/controls/typography/typography
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
-import { Element } from '../../../services/element/element';
-import { ElementRepository } from '../../../services/element/element-repository';
-import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
+import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { ClassAssociation } from './class-association';
 
 const Flex = styled.div`
@@ -123,14 +123,14 @@ type OwnProps = {
 };
 
 type StateProps = {
-  getById: (id: string) => Element | null;
+  getById: (id: string) => UMLElement | null;
 };
 
 type DispatchProps = {
-  change: typeof ElementRepository.change;
-  update: typeof ElementRepository.update;
-  delete: typeof ElementRepository.delete;
-  flip: typeof RelationshipRepository.flip;
+  change: typeof UMLElementRepository.change;
+  update: typeof UMLElementRepository.update;
+  delete: typeof UMLElementRepository.delete;
+  flip: typeof UMLRelationshipRepository.flip;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -138,12 +138,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ getById: ElementRepository.getById(state.elements) }),
+    state => ({ getById: UMLElementRepository.getById(state.elements) }),
     {
-      change: ElementRepository.change,
-      update: ElementRepository.update,
-      delete: ElementRepository.delete,
-      flip: RelationshipRepository.flip,
+      change: UMLElementRepository.change,
+      update: UMLElementRepository.update,
+      delete: UMLElementRepository.delete,
+      flip: UMLRelationshipRepository.flip,
     },
   ),
 );

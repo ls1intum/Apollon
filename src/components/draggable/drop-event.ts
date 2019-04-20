@@ -1,9 +1,9 @@
-import { Element } from '../../services/element/element';
+import { UMLElement } from '../../services/uml-element/uml-element';
 import { Draggable } from './draggable';
 
 export interface DropAction {
   type: 'CREATE';
-  element: Element;
+  element: UMLElement;
 }
 
 export interface DropEvent {

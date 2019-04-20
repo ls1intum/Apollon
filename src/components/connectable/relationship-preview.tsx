@@ -1,9 +1,9 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
-import { Port } from '../../services/element/port';
+import { Port } from '../../services/uml-element/port';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { Direction } from '../../typings';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext, withCanvas } from '../canvas/canvas-context';
@@ -34,7 +34,9 @@ class RelationshipPreviewComponent extends Component<Props, State> {
       .map(p => this.props.coordinateSystem.pointToScreen(p.x, p.y))
       .map(p => `${p.x} ${p.y}`)
       .join(', ');
-    return <polyline points={points} pointerEvents="none" fill="none" stroke="black" strokeWidth="1" strokeDasharray="5,5" />;
+    return (
+      <polyline points={points} pointerEvents="none" fill="none" stroke="black" strokeWidth="1" strokeDasharray="5,5" />
+    );
   }
 
   private onPointerMove = (event: PointerEvent) => {
@@ -57,11 +59,15 @@ class RelationshipPreviewComponent extends Component<Props, State> {
           break;
         case Direction.Right:
           path.push(new Point(element.bounds.x + element.bounds.width, element.bounds.y + element.bounds.height / 2));
-          path.push(new Point(element.bounds.x + element.bounds.width + 20, element.bounds.y + element.bounds.height / 2));
+          path.push(
+            new Point(element.bounds.x + element.bounds.width + 20, element.bounds.y + element.bounds.height / 2),
+          );
           break;
         case Direction.Down:
           path.push(new Point(element.bounds.x + element.bounds.width / 2, element.bounds.y + element.bounds.height));
-          path.push(new Point(element.bounds.x + element.bounds.width / 2, element.bounds.y + element.bounds.height + 20));
+          path.push(
+            new Point(element.bounds.x + element.bounds.width / 2, element.bounds.y + element.bounds.height + 20),
+          );
           break;
         case Direction.Left:
           path.push(new Point(element.bounds.x, element.bounds.y + element.bounds.height / 2));
@@ -89,7 +95,7 @@ type OwnProps = {
 };
 
 type StateProps = {
-  getById: (id: string) => Element | null;
+  getById: (id: string) => UMLElement | null;
 };
 
 type Props = OwnProps & StateProps & CanvasContext;
@@ -103,7 +109,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect(
     (state: ModelState): StateProps => ({
-      getById: ElementRepository.getById(state.elements),
+      getById: UMLElementRepository.getById(state.elements),
     }),
   ),
 );

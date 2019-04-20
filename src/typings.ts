@@ -1,8 +1,8 @@
 import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
 import { DiagramType } from './packages/diagram-type';
-import { ElementType as UMLElementType } from './packages/element-type';
 import { RelationshipType as UMLRelationshipType } from './packages/relationship-type';
+import { UMLElementType as UMLElementType } from './packages/uml-element-type';
 
 export enum Locale {
   en = 'en',
@@ -28,23 +28,25 @@ export interface Assessment {
   feedback?: string;
 }
 
-export { UMLClassAssociation, UMLClassifier } from './packages/class-diagram';
+export { UMLClass, UMLClassAssociation } from './packages/class-diagram';
 export { UMLCommunicationLink } from './packages/communication-diagram';
 export { DiagramType };
 export { UMLElementType };
 export { UMLRelationshipType };
 export type Theme = DeepPartial<Styles>;
 
+// IUMLElement
 export interface Element {
   id: string;
   name: string;
   type: ElementType;
+  owner: string | null;
   highlight?: string;
   bounds: { x: number; y: number; width: number; height: number };
 }
 
+// IUMLClassifier
 export interface UMLElement extends Element {
-  owner: string | null;
   type: UMLElementType;
 }
 
@@ -55,6 +57,7 @@ export enum Direction {
   Left = 'Left',
 }
 
+// IUMLRelationship
 export interface UMLRelationship extends Element {
   type: UMLRelationshipType;
   path: Array<{ x: number; y: number }>;

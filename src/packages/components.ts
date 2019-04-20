@@ -11,11 +11,11 @@ import { ClassMemberComponent } from './class-diagram/class-member/class-member-
 import { ClassifierComponent } from './class-diagram/classifier/classifier-component';
 import { PackageComponent } from './common/package/package-component';
 import { CommunicationLinkComponent } from './communication-diagram/communication-link/communication-link-component';
-import { ElementType } from './element-type';
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
 import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
 import { ObjectNameComponent } from './object-diagram/object-name/object-name-component';
 import { RelationshipType } from './relationship-type';
+import { UMLElementType } from './uml-element-type';
 import { UseCaseActorComponent } from './use-case-diagram/use-case-actor/use-case-actor-component';
 import { UseCaseAssociationComponent } from './use-case-diagram/use-case-association/use-case-association-component';
 import { UseCaseExtendComponent } from './use-case-diagram/use-case-extend/use-case-extend-component';
@@ -24,27 +24,27 @@ import { UseCaseIncludeComponent } from './use-case-diagram/use-case-include/use
 import { UseCaseSystemComponent } from './use-case-diagram/use-case-system/use-case-system-component';
 import { UseCaseComponent } from './use-case-diagram/use-case/use-case-component';
 
-export const Components: { [key in ElementType | RelationshipType]: FunctionComponent<{ element: any }> } = {
-  [ElementType.Diagram]: PackageComponent,
-  [ElementType.Package]: PackageComponent,
-  [ElementType.Class]: ClassifierComponent,
-  [ElementType.AbstractClass]: ClassifierComponent,
-  [ElementType.Interface]: ClassifierComponent,
-  [ElementType.Enumeration]: ClassifierComponent,
-  [ElementType.ClassAttribute]: ClassMemberComponent,
-  [ElementType.ClassMethod]: ClassMemberComponent,
-  [ElementType.ObjectName]: ObjectNameComponent,
-  [ElementType.ObjectAttribute]: ObjectMemberComponent,
-  [ElementType.ObjectMethod]: ObjectMemberComponent,
-  [ElementType.ActivityActionNode]: ActivityActionNodeComponent,
-  [ElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
-  [ElementType.ActivityForkNode]: ActivityForkNodeComponent,
-  [ElementType.ActivityInitialNode]: ActivityInitialNodeComponent,
-  [ElementType.ActivityMergeNode]: ActivityMergeNodeComponent,
-  [ElementType.ActivityObjectNode]: ActivityObjectNodeComponent,
-  [ElementType.UseCase]: UseCaseComponent,
-  [ElementType.UseCaseActor]: UseCaseActorComponent,
-  [ElementType.UseCaseSystem]: UseCaseSystemComponent,
+export const Components: { [key in UMLElementType | RelationshipType]: FunctionComponent<{ element: any }> } = {
+  [UMLElementType.Diagram]: PackageComponent,
+  [UMLElementType.Package]: PackageComponent,
+  [UMLElementType.Class]: ClassifierComponent,
+  [UMLElementType.AbstractClass]: ClassifierComponent,
+  [UMLElementType.Interface]: ClassifierComponent,
+  [UMLElementType.Enumeration]: ClassifierComponent,
+  [UMLElementType.ClassAttribute]: ClassMemberComponent,
+  [UMLElementType.ClassMethod]: ClassMemberComponent,
+  [UMLElementType.ObjectName]: ObjectNameComponent,
+  [UMLElementType.ObjectAttribute]: ObjectMemberComponent,
+  [UMLElementType.ObjectMethod]: ObjectMemberComponent,
+  [UMLElementType.ActivityActionNode]: ActivityActionNodeComponent,
+  [UMLElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
+  [UMLElementType.ActivityForkNode]: ActivityForkNodeComponent,
+  [UMLElementType.ActivityInitialNode]: ActivityInitialNodeComponent,
+  [UMLElementType.ActivityMergeNode]: ActivityMergeNodeComponent,
+  [UMLElementType.ActivityObjectNode]: ActivityObjectNodeComponent,
+  [UMLElementType.UseCase]: UseCaseComponent,
+  [UMLElementType.UseCaseActor]: UseCaseActorComponent,
+  [UMLElementType.UseCaseSystem]: UseCaseSystemComponent,
   [RelationshipType.ClassAggregation]: ClassAssociationComponent,
   [RelationshipType.ClassBidirectional]: ClassAssociationComponent,
   [RelationshipType.ClassComposition]: ClassAssociationComponent,

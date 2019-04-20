@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { DefaultRelationshipType, RelationshipType } from '../../packages/relationship-type';
 import { Relationships } from '../../packages/relationships';
-import { Port } from '../../services/element/port';
-import { RelationshipRepository } from '../../services/relationship/relationship-repository';
+import { Port } from '../../services/uml-element/port';
+import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { DiagramType, Direction } from '../../typings';
 import { ConnectConsumer, ConnectContext } from '../connectable/connect-context';
 import { ModelState } from '../store/model-state';
@@ -56,7 +56,7 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
                   onPointerEnter={this.onPointerEnter}
                   onPointerLeave={this.onPointerLeave}
                   style={{
-                    display: element.selected || context.isDragging ? 'block' : 'none',
+                    display: this.props.selected || context.isDragging ? 'block' : 'none',
                   }}
                 >
                   {context.isDragging && <path d={this.calculateInvisiblePath(port)} fill="none" />}
@@ -130,17 +130,21 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
   }
 
   interface StateProps {
+    selected: boolean;
     diagramType: DiagramType;
   }
 
   interface DispatchProps {
-    create: typeof RelationshipRepository.create;
+    create: typeof UMLRelationshipRepository.create;
   }
 
   type Props = OwnProps & StateProps & DispatchProps;
 
   return connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ diagramType: state.diagram.type2 }),
-    { create: RelationshipRepository.create },
+    (state, props) => ({
+      selected: state.selected.includes(props.id),
+      diagramType: state.diagram.type2
+    }),
+    { create: UMLRelationshipRepository.create },
   )(Connectable);
 };

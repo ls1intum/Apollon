@@ -1,8 +1,25 @@
 import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ElementComponent, OwnProps } from './element-component';
+
+type StateProps = {};
+
+type DispatchProps = {
+  hover: typeof UMLElementRepository.hover;
+  leave: typeof UMLElementRepository.leave;
+};
+
+type Props = OwnProps & StateProps & DispatchProps;
+
+const enhance = connect<StateProps, DispatchProps, OwnProps>(
+  null,
+  {
+    hover: UMLElementRepository.hover,
+    leave: UMLElementRepository.leave,
+  },
+);
 
 export const hoverable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Hoverable extends Component<Props> {
@@ -21,21 +38,11 @@ export const hoverable = (WrappedComponent: typeof ElementComponent): ComponentC
     render() {
       return <WrappedComponent {...this.props} />;
     }
-    private enter = () => this.props.hover(this.props.element.id);
-    private leave = () => this.props.leave(this.props.element.id);
+
+    private enter = () => this.props.hover(this.props.id);
+
+    private leave = () => this.props.leave(this.props.id);
   }
 
-  type StateProps = {};
-
-  type DispatchProps = {
-    hover: typeof ElementRepository.hover;
-    leave: typeof ElementRepository.leave;
-  };
-
-  type Props = OwnProps & StateProps & DispatchProps;
-
-  return connect<StateProps, DispatchProps, OwnProps>(
-    null,
-    { hover: ElementRepository.hover, leave: ElementRepository.leave },
-  )(Hoverable);
+  return enhance(Hoverable);
 };

@@ -14,16 +14,16 @@ import { Class } from '../../packages/class-diagram/classifier/class/class';
 import { Enumeration } from '../../packages/class-diagram/classifier/enumeration/enumeration';
 import { Interface } from '../../packages/class-diagram/classifier/interface/interface';
 import { Package } from '../../packages/common/package/package';
-import { ElementType } from '../../packages/element-type';
 import { ObjectAttribute } from '../../packages/object-diagram/object-member/object-attribute/object-attribute';
 import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
+import { UMLElementType } from '../../packages/uml-element-type';
 import { UseCaseActor } from '../../packages/use-case-diagram/use-case-actor/use-case-actor';
 import { UseCaseSystem } from '../../packages/use-case-diagram/use-case-system/use-case-system';
 import { UseCase } from '../../packages/use-case-diagram/use-case/use-case';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { ApollonView } from '../../services/editor/editor-types';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ApollonMode, DiagramType } from '../../typings';
 import { CanvasProvider } from '../canvas/canvas-context';
 import { Switch } from '../controls/switch/switch';
@@ -45,14 +45,14 @@ type StateProps = {
 };
 
 type DispatchProps = {
-  create: typeof ElementRepository.create;
+  create: typeof UMLElementRepository.create;
   changeView: typeof EditorRepository.changeView;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 type State = {
-  previews: Element[];
+  previews: UMLElement[];
 };
 
 const enhance = compose<ComponentClass<OwnProps>>(
@@ -65,7 +65,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       view: state.editor.view,
     }),
     {
-      create: ElementRepository.create,
+      create: UMLElementRepository.create,
       changeView: EditorRepository.changeView,
     },
   ),
@@ -85,7 +85,7 @@ class SidebarComponent extends Component<Props, State> {
     this.changeView(view);
   };
 
-  onDrop = (element: Element) => (event: DropEvent) => {
+  onDrop = (element: UMLElement) => (event: DropEvent) => {
     event.action = {
       type: 'CREATE',
       element,
@@ -94,9 +94,9 @@ class SidebarComponent extends Component<Props, State> {
 
     setTimeout(() => {
       switch (element.type) {
-        case ElementType.Class:
-        case ElementType.AbstractClass:
-        case ElementType.Interface:
+        case UMLElementType.Class:
+        case UMLElementType.AbstractClass:
+        case UMLElementType.Interface:
           [
             (() => {
               const c = new ClassAttribute();
@@ -113,7 +113,7 @@ class SidebarComponent extends Component<Props, State> {
             this.props.create(member);
           });
           break;
-        case ElementType.Enumeration:
+        case UMLElementType.Enumeration:
           [
             (() => {
               const c = new ClassAttribute();
@@ -135,7 +135,7 @@ class SidebarComponent extends Component<Props, State> {
             this.props.create(member);
           });
           break;
-        case ElementType.ObjectName:
+        case UMLElementType.ObjectName:
           [
             (() => {
               const c = new ObjectAttribute();
@@ -169,7 +169,7 @@ class SidebarComponent extends Component<Props, State> {
             {this.state.previews.map((element, index) => (
               <Draggable key={index} onDrop={this.onDrop(element)}>
                 <Preview>
-                  <ElementComponent element={element} />
+                  <ElementComponent id={element.id} element={element} />
                 </Preview>
               </Draggable>
             ))}

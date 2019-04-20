@@ -1,8 +1,8 @@
 import { UseCaseRelationshipType } from '..';
-import { Relationship } from '../../../services/relationship/relationship';
+import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 
-export class UseCaseAssociation extends Relationship {
-  static features = { ...Relationship.features, straight: true };
+export class UseCaseAssociation extends UMLRelationship {
+  static features = { ...UMLRelationship.features, straight: true };
 
   type = UseCaseRelationshipType.UseCaseAssociation;
 }

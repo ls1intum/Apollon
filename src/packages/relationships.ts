@@ -1,5 +1,4 @@
-import { IRelationship, Relationship } from '../services/relationship/relationship';
-import { UMLRelationship } from '../typings';
+import { IUMLRelationship, UMLRelationship } from '../services/uml-relationship/uml-relationship';
 import { ActivityControlFlow } from './activity-diagram/activity-control-flow/activity-control-flow';
 import { ClassAggregation } from './class-diagram/class-association/class-aggregation/class-aggregation';
 import { ClassBidirectional } from './class-diagram/class-association/class-bidirectional/class-bidirectional';
@@ -16,7 +15,7 @@ import { UseCaseExtend } from './use-case-diagram/use-case-extend/use-case-exten
 import { UseCaseGeneralization } from './use-case-diagram/use-case-generalization/use-case-generalization';
 import { UseCaseInclude } from './use-case-diagram/use-case-include/use-case-include';
 
-type Relationships = { [key in RelationshipType]: new (values?: IRelationship | UMLRelationship) => Relationship };
+type Relationships = { [key in RelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
 
 export const Relationships = {
   [RelationshipType.ClassAggregation]: ClassAggregation,

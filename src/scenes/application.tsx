@@ -9,12 +9,13 @@ import { ModelState } from '../components/store/model-state';
 import { ModelStore } from '../components/store/model-store';
 import { Styles } from '../components/theme/styles';
 import { Theme } from '../components/theme/theme';
+import { UpdatePane } from '../components/update-pane/update-pane';
 import { Locale } from '../typings';
 import { Layout } from './application-styles';
 
 type Props = {
-  state?: DeepPartial<ModelState>,
-  styles?: DeepPartial<Styles>,
+  state?: DeepPartial<ModelState>;
+  styles?: DeepPartial<Styles>;
   locale?: Locale;
 };
 
@@ -32,6 +33,7 @@ export class Application extends React.Component<Props> {
                   <Canvas />
                 </Editor>
                 <Sidebar />
+                <UpdatePane />
               </Layout>
             </DragLayer>
           </Theme>

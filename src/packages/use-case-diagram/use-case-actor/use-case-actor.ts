@@ -1,14 +1,10 @@
 import { UseCaseElementType } from '..';
-import { Element, IElement } from '../../../services/element/element';
-import { UMLElement } from '../../../typings';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 
-export class UseCaseActor extends Element {
+export class UseCaseActor extends UMLElement {
   type = UseCaseElementType.UseCaseActor;
 
-  constructor(values?: IElement);
-  constructor(values?: UMLElement);
-  constructor(values?: IElement | UMLElement);
-  constructor(values?: IElement | UMLElement) {
+  constructor(values?: IUMLElement) {
     super(values);
 
     if (!values) {

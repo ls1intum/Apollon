@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { Components } from '../../packages/components';
-import { Relationship } from '../../services/relationship/relationship';
+import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { CanvasConsumer } from '../canvas/canvas-context';
+import { ModelState } from '../store/model-state';
 
-export class RelationshipComponent extends Component<Props> {
+export class RelationshipComponentComponent extends Component<Props> {
   static defaultProps = {
     interactive: false,
     hidden: false,
-    selected: false,
     moving: false,
     interactable: false,
     disabled: false,
@@ -43,9 +44,11 @@ export class RelationshipComponent extends Component<Props> {
             >
               <polyline
                 points={points}
-                stroke={!this.props.interactable ? '#0064ff' : element.interactive ? '#00dc00' : '#00dc00'}
+                stroke={!this.props.interactable ? '#0064ff' : this.props.interactive ? '#00dc00' : '#00dc00'}
                 strokeOpacity={
-                  element.hovered || (!this.props.interactable && element.selected) || (this.props.interactable && element.interactive)
+                  this.props.hovered ||
+                  (!this.props.interactable && this.props.selected) ||
+                  (this.props.interactable && this.props.interactive)
                     ? 0.2
                     : 0
                 }
@@ -63,7 +66,8 @@ export class RelationshipComponent extends Component<Props> {
 }
 
 export interface OwnProps {
-  element: Relationship;
+  id: string;
+  element: UMLRelationship;
   interactive: boolean;
   hidden: boolean;
   moving: boolean;
@@ -72,4 +76,23 @@ export interface OwnProps {
   childComponent: React.ComponentClass<any> | null;
 }
 
-type Props = OwnProps;
+type StateProps = {
+  hovered: boolean;
+  selected: boolean;
+  interactive: boolean;
+};
+
+type DispatchProps = {};
+
+type Props = OwnProps & StateProps & DispatchProps;
+
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  (state, props) => ({
+    hovered: state.hovered[0] === props.id,
+    selected: state.selected.includes(props.id),
+    interactive: state.interactive.includes(props.id),
+  }),
+  {},
+);
+
+export const RelationshipComponent = enhance(RelationshipComponentComponent);

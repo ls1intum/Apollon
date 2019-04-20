@@ -5,11 +5,13 @@ import { DeepPartial, Store } from 'redux';
 import { ModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
 import { DiagramType } from './packages/diagram-type';
+import { RelationshipType } from './packages/relationship-type';
+import { UMLElementType } from './packages/uml-element-type';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
-import { Diagram } from './services/diagram/diagram';
 import { ApollonView } from './services/editor/editor-types';
-import { ElementRepository } from './services/element/element-repository';
+import { UMLDiagram } from './services/uml-diagram/uml-diagram';
+import { UMLElementRepository } from './services/uml-element/uml-element-repository';
 import { ApollonMode, ApollonOptions, Assessment, ExportOptions, Locale, Selection, SVG, UMLModel } from './typings';
 
 export class ApollonEditor {
@@ -72,7 +74,7 @@ export class ApollonEditor {
     state = {
       ...state,
       diagram: (() => {
-        const d = new Diagram();
+        const d = new UMLDiagram();
         Object.assign(d, state.diagram);
         d.type2 = options.type || DiagramType.ClassDiagram;
         return d;
@@ -102,8 +104,7 @@ export class ApollonEditor {
   select(selection: Selection) {
     if (!this.store) return;
     const { dispatch } = this.store;
-    dispatch(ElementRepository.select(null));
-    [...selection.elements, ...selection.relationships].map(id => dispatch(ElementRepository.select(id, false, true)));
+    dispatch(UMLElementRepository.select([...selection.elements, ...selection.relationships], true));
   }
 
   subscribeToSelectionChange(callback: (selection: Selection) => void): number {
@@ -140,10 +141,10 @@ export class ApollonEditor {
 
   private onDispatch = () => {
     if (!this.store) return;
-    const { elements, assessments } = this.store.getState();
+    const { elements, selected, assessments } = this.store.getState();
     const selection: Selection = {
-      elements: Object.keys(elements).filter(id => elements[id].selected && !('path' in elements[id])),
-      relationships: Object.keys(elements).filter(id => elements[id].selected && 'path' in elements[id]),
+      elements: selected.filter(id => elements[id].type in UMLElementType),
+      relationships: selected.filter(id => elements[id].type in RelationshipType),
     };
 
     if (JSON.stringify(this.selection) !== JSON.stringify(selection)) {

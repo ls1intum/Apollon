@@ -8,8 +8,8 @@ import { I18nContext } from '../../components/i18n/i18n-context';
 import { localized } from '../../components/i18n/localized';
 import { ModelState } from '../../components/store/model-state';
 import { styled } from '../../components/theme/styles';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 
 const Flex = styled.div`
   display: flex;
@@ -37,13 +37,13 @@ class DefaultRelationshipPopupComponent extends Component<Props> {
 }
 
 type OwnProps = {
-  element: Element;
+  element: UMLElement;
 };
 
 type StateProps = {};
 
 type DispatchProps = {
-  delete: typeof ElementRepository.delete;
+  delete: typeof UMLElementRepository.delete;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -53,7 +53,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     null,
     {
-      delete: ElementRepository.delete,
+      delete: UMLElementRepository.delete,
     },
   ),
 );

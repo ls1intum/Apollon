@@ -6,33 +6,33 @@ import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
-import { ElementType } from './element-type';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
 import { RelationshipType } from './relationship-type';
 import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
+import { UMLElementType } from './uml-element-type';
 
-export type Popups = { [key in ElementType | RelationshipType]: ComponentClass<{ element: any }> | null };
-export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{ element: any }> | null } = {
-  [ElementType.Diagram]: DefaultPopup,
-  [ElementType.Package]: DefaultPopup,
-  [ElementType.Class]: ClassifierPopup,
-  [ElementType.AbstractClass]: ClassifierPopup,
-  [ElementType.Interface]: ClassifierPopup,
-  [ElementType.Enumeration]: ClassifierPopup,
-  [ElementType.ClassAttribute]: null,
-  [ElementType.ClassMethod]: null,
-  [ElementType.ObjectName]: ObjectNamePopup,
-  [ElementType.ObjectAttribute]: null,
-  [ElementType.ObjectMethod]: null,
-  [ElementType.ActivityActionNode]: DefaultPopup,
-  [ElementType.ActivityFinalNode]: DefaultPopup,
-  [ElementType.ActivityForkNode]: DefaultPopup,
-  [ElementType.ActivityInitialNode]: DefaultPopup,
-  [ElementType.ActivityMergeNode]: ActivityMergeNodePopup,
-  [ElementType.ActivityObjectNode]: DefaultPopup,
-  [ElementType.UseCase]: DefaultPopup,
-  [ElementType.UseCaseActor]: DefaultPopup,
-  [ElementType.UseCaseSystem]: DefaultPopup,
+export type Popups = { [key in UMLElementType | RelationshipType]: ComponentClass<{ element: any }> | null };
+export const Popups: { [key in UMLElementType | RelationshipType]: ComponentClass<{ element: any }> | null } = {
+  [UMLElementType.Diagram]: DefaultPopup,
+  [UMLElementType.Package]: DefaultPopup,
+  [UMLElementType.Class]: ClassifierPopup,
+  [UMLElementType.AbstractClass]: ClassifierPopup,
+  [UMLElementType.Interface]: ClassifierPopup,
+  [UMLElementType.Enumeration]: ClassifierPopup,
+  [UMLElementType.ClassAttribute]: null,
+  [UMLElementType.ClassMethod]: null,
+  [UMLElementType.ObjectName]: ObjectNamePopup,
+  [UMLElementType.ObjectAttribute]: null,
+  [UMLElementType.ObjectMethod]: null,
+  [UMLElementType.ActivityActionNode]: DefaultPopup,
+  [UMLElementType.ActivityFinalNode]: DefaultPopup,
+  [UMLElementType.ActivityForkNode]: DefaultPopup,
+  [UMLElementType.ActivityInitialNode]: DefaultPopup,
+  [UMLElementType.ActivityMergeNode]: ActivityMergeNodePopup,
+  [UMLElementType.ActivityObjectNode]: DefaultPopup,
+  [UMLElementType.UseCase]: DefaultPopup,
+  [UMLElementType.UseCaseActor]: DefaultPopup,
+  [UMLElementType.UseCaseSystem]: DefaultPopup,
   [RelationshipType.ClassAggregation]: ClassAssociationPopup,
   [RelationshipType.ClassBidirectional]: ClassAssociationPopup,
   [RelationshipType.ClassComposition]: ClassAssociationPopup,

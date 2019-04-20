@@ -1,25 +1,25 @@
 import { CommonElementType } from '..';
-import { Container } from '../../../services/container/container';
-import { Element } from '../../../services/element/element';
+import { UMLContainer } from '../../../services/uml-container/uml-container';
+import { UMLElement } from '../../../services/uml-element/uml-element';
 import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
 
-export class Package extends Container {
+export class Package extends UMLContainer {
   static features = {
-    ...Container.features,
+    ...UMLContainer.features,
     connectable: false,
   };
 
   type = CommonElementType.Package;
 
-  render(elements: Element[]): Element[] {
+  render(elements: UMLElement[]): UMLElement[] {
     const [parent, ...children] = super.render(elements);
-    const absoluteChildren: Element[] = children.map<Element>(child => {
+    const absoluteChildren: UMLElement[] = children.map<UMLElement>(child => {
       child.bounds.x += parent.bounds.x;
       child.bounds.y += parent.bounds.y;
       return child;
     });
     const bounds = computeBoundingBoxForElements([parent, ...absoluteChildren]);
-    const relativeChildren: Element[] = absoluteChildren.map<Element>(child => {
+    const relativeChildren: UMLElement[] = absoluteChildren.map<UMLElement>(child => {
       child.bounds.x -= parent.bounds.x;
       child.bounds.y -= parent.bounds.y;
       return child;
@@ -30,11 +30,11 @@ export class Package extends Container {
       child.bounds.x -= deltaX;
       child.bounds.y -= deltaY;
     });
-    const resizedParent = new Package({ ...parent, bounds });
+    const resizedParent = new Package({ ...parent as UMLContainer, bounds });
     return [resizedParent, ...relativeChildren];
   }
 
-  resize(children: Element[]): Element[] {
+  resize(children: UMLElement[]): UMLElement[] {
     const bounds = computeBoundingBoxForElements(children);
     this.bounds.width = Math.max(this.bounds.width, bounds.x + bounds.width, 100);
     this.bounds.height = Math.max(this.bounds.height, bounds.y + bounds.height, 100);

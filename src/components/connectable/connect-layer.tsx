@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { Port } from '../../services/element/port';
-import { Connection } from '../../services/relationship/connection';
+import { Port } from '../../services/uml-element/port';
+import { Connection } from '../../services/uml-relationship/connection';
 import { ConnectContext, ConnectProvider } from './connect-context';
 import { RelationshipPreview } from './relationship-preview';
 

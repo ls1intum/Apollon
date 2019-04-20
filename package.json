@@ -33,6 +33,7 @@
     "react-redux": "6.0.1",
     "redux": "4.0.1",
     "redux-saga": "1.0.2",
+    "redux-thunk": "2.3.0",
     "styled-components": "4.2.0",
     "tslib": "1.9.3",
     "uuid": "3.3.2"

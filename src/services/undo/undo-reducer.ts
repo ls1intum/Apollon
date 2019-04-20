@@ -1,5 +1,6 @@
 import { Action, AnyAction, Reducer } from 'redux';
-import { MoveAction, ResizeAction } from '../element/element-types';
+import { MoveAction } from '../uml-element/movable/movable-types';
+import { ResizeAction } from '../uml-element/resizable/resizable-types';
 import { UndoActionTypes } from './undo-types';
 
 const MAX_UNDO_STACK_SIZE = 25;
@@ -36,12 +37,12 @@ export const undoable = <S = any, T extends Action = AnyAction>(reducer: Reducer
         if (latest && latest[1].type.includes('MOVE') && action.type.includes('MOVE')) {
           const current = (action as any) as MoveAction;
           const previous = (latest[1] as any) as MoveAction;
-          ignore = ignore || current.payload.id === previous.payload.id;
+          ignore = ignore || current.payload.ids === previous.payload.ids;
         }
         if (latest && latest[1].type.includes('RESIZE') && action.type.includes('RESIZE')) {
           const current = (action as any) as ResizeAction;
           const previous = (latest[1] as any) as ResizeAction;
-          ignore = ignore || current.payload.id === previous.payload.id;
+          ignore = ignore || current.payload.ids === previous.payload.ids;
         }
 
         if (!ignore) {

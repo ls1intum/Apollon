@@ -1,9 +1,9 @@
-import { Element } from '../../../services/element/element';
+import { UMLElement } from '../../../services/uml-element/uml-element';
 import { Boundary } from '../../../utils/geometry/boundary';
 
-export abstract class ClassMember extends Element {
+export abstract class ClassMember extends UMLElement {
   static features = {
-    ...Element.features,
+    ...UMLElement.features,
     hoverable: false,
     selectable: false,
     movable: false,

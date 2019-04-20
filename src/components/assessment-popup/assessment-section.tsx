@@ -4,7 +4,7 @@ import { compose } from 'redux';
 import styled from 'styled-components';
 import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
-import { Element } from '../../services/element/element';
+import { UMLElement } from '../../services/uml-element/uml-element';
 import { Divider } from '../controls/divider/divider';
 import { Textfield } from '../controls/textfield/textfield';
 import { Header } from '../controls/typography/typography';
@@ -19,7 +19,7 @@ const Flex = styled.div`
 `;
 
 type OwnProps = {
-  element: Element;
+  element: UMLElement;
   last: boolean;
 };
 

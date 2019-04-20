@@ -1,6 +1,6 @@
 import { createContext } from 'react';
-import { Port } from '../../services/element/port';
-import { Connection } from '../../services/relationship/connection';
+import { Port } from '../../services/uml-element/port';
+import { Connection } from '../../services/uml-relationship/connection';
 
 export interface ConnectContext {
   isDragging: boolean;

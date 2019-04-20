@@ -1,6 +1,6 @@
 import { ActivityElementType } from '..';
-import { Element } from '../../../services/element/element';
+import { UMLElement } from '../../../services/uml-element/uml-element';
 
-export class ActivityObjectNode extends Element {
+export class ActivityObjectNode extends UMLElement {
   type = ActivityElementType.ActivityObjectNode;
 }

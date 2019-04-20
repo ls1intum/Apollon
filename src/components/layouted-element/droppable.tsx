@@ -1,8 +1,8 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext, withCanvas } from '../canvas/canvas-context';
 import { DropEvent } from '../draggable/drop-event';
@@ -20,7 +20,11 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
       const position = this.props.coordinateSystem.screenToPoint(event.position.x, event.position.y);
       element.bounds.x = position.x - offset.x;
       element.bounds.y = position.y - offset.y;
-      const relativePosition = this.props.getRelativePosition(element.owner, new Point(element.bounds.x, element.bounds.y));
+      // const relativePosition = this.props.getRelativePosition(
+      //   element.owner,
+      //   new Point(element.bounds.x, element.bounds.y),
+      // );
+      const relativePosition = position;
       element.bounds.x = relativePosition.x;
       element.bounds.y = relativePosition.y;
 
@@ -37,11 +41,11 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   type StateProps = {
-    getRelativePosition: (owner: string, position: Point) => Point;
+    // getRelativePosition: (owner: string, position: Point) => Point;
   };
 
   type DispatchProps = {
-    create: typeof ElementRepository.create;
+    create: typeof UMLElementRepository.create;
   };
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -49,8 +53,10 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
     connect<StateProps, DispatchProps, OwnProps, ModelState>(
-      state => ({ getRelativePosition: ElementRepository.getRelativePosition(state.elements) }),
-      { create: ElementRepository.create },
+      state => ({
+        // getRelativePosition: ElementRepository.getRelativePosition(state.elements),
+      }),
+      { create: UMLElementRepository.create },
     ),
   )(Droppable);
 };

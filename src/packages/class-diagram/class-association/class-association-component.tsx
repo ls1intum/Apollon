@@ -1,6 +1,6 @@
 import React, { SFC } from 'react';
 import { ClassRelationshipType } from '..';
-import { Port } from '../../../services/element/port';
+import { Port } from '../../../services/uml-element/port';
 import { Direction } from '../../../typings';
 import { Point } from '../../../utils/geometry/point';
 import { ClassAssociation } from './class-association';

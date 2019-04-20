@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { Components } from '../../packages/components';
-import { Container } from '../../services/container/container';
-import { Element } from '../../services/element/element';
+import { IUMLContainer } from '../../services/uml-container/uml-container';
+import { IUMLElement } from '../../services/uml-element/uml-element';
 import { CanvasConsumer } from '../canvas/canvas-context';
+import { ModelState } from '../store/model-state';
 
 type SvgProps = {
   disabled: boolean;
@@ -19,7 +21,8 @@ const Svg = styled.svg.attrs({
 })<SvgProps>`
   overflow: visible;
   opacity: ${({ moving, hidden }) => (hidden ? 0 : moving ? 0.35 : 1)};
-  fill: ${({ highlight, isRoot, theme, highlightColor }) => highlightColor ? highlightColor : (highlight ? 'rgba(0, 220, 0, 0.3)' : isRoot ? 'white' : 'none')};
+  fill: ${({ highlight, isRoot, theme, highlightColor }) =>
+    highlightColor ? highlightColor : highlight ? 'rgba(0, 220, 0, 0.3)' : isRoot ? 'white' : 'none'};
 
   ${({ disabled }) => disabled && `pointer-events: none;`}
 
@@ -32,11 +35,9 @@ const Svg = styled.svg.attrs({
   }
 `;
 
-export class ElementComponent extends Component<Props> {
+export class ElementComponentComponent extends Component<Props> {
   static defaultProps = {
-    interactive: false,
     hidden: false,
-    selected: false,
     moving: false,
     interactable: false,
     disabled: false,
@@ -60,6 +61,7 @@ export class ElementComponent extends Component<Props> {
               ...context.coordinateSystem.pointToScreen(bounds.x, bounds.y),
             };
           }
+          const container = element as IUMLContainer;
           return (
             <Svg
               id={element.id}
@@ -68,18 +70,18 @@ export class ElementComponent extends Component<Props> {
               moving={this.props.moving}
               isRoot={this.props.element.owner === null}
               hidden={this.props.hidden}
-              highlight={interactable && element.interactive}
+              highlight={interactable && this.props.interactive}
               highlightColor={element.highlight}
             >
               <ChildComponent element={element}>
-                {element instanceof Container &&
+                {'ownedElements' in container &&
                   Child &&
-                  element.ownedElements.map((child: string) => {
-                    return <Child key={child} element={child} disabled={disabled} />;
+                  container.ownedElements.map((child: string) => {
+                    return <Child key={child} id={child} disabled={disabled} />;
                   })}
               </ChildComponent>
               {this.props.children}
-              {!interactable && (element.hovered || element.selected) && (
+              {!interactable && (this.props.hovered || this.props.selected) && (
                 <rect
                   x={-strokeWidth / 2}
                   y={-strokeWidth / 2}
@@ -101,8 +103,8 @@ export class ElementComponent extends Component<Props> {
 }
 
 export type OwnProps = {
-  element: Element;
-  interactive: boolean;
+  id: string;
+  element: IUMLElement;
   hidden: boolean;
   moving: boolean;
   interactable: boolean;
@@ -110,4 +112,23 @@ export type OwnProps = {
   childComponent: React.ComponentClass<any> | null;
 };
 
-type Props = OwnProps;
+type StateProps = {
+  hovered: boolean;
+  selected: boolean;
+  interactive: boolean;
+};
+
+type DispatchProps = {};
+
+type Props = OwnProps & StateProps & DispatchProps;
+
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  (state, props) => ({
+    hovered: state.hovered[0] === props.id,
+    selected: state.selected.includes(props.id),
+    interactive: state.interactive.includes(props.id),
+  }),
+  {},
+);
+
+export const ElementComponent = enhance(ElementComponentComponent);

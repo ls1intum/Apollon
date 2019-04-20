@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { createPortal } from 'react-dom';
 import { connect } from 'react-redux';
 import { Popups } from '../../packages/popups';
-import { Element } from '../../services/element/element';
+import { UMLElement } from '../../services/uml-element/uml-element';
 import { ApollonMode } from '../../typings';
 import { AssessmentPopup } from '../assessment-popup/assessment-popup';
 import { CanvasConsumer } from '../canvas/canvas-context';
@@ -31,7 +31,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 );
 
 interface State {
-  element: Element | null;
+  element: UMLElement | null;
   position: { x: number; y: number };
 }
 
@@ -95,12 +95,12 @@ export class PopupLayerComponent extends Component<Props, State> {
     );
   }
 
-  private showPopup = (element: Element, position: { x: number; y: number }) => {
+  private showPopup = (element: UMLElement, position: { x: number; y: number }) => {
     this.setState({ element, position });
     window.addEventListener('resize', this.close, { once: true });
   };
 
-  private update = (element: Element) => {
+  private update = (element: UMLElement) => {
     if (this.state.element && this.state.element.id === element.id) {
       this.setState({ element });
     }

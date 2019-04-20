@@ -1,8 +1,8 @@
 import { createElement } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { Components } from '../../packages/components';
-import { Element } from '../../services/element/element';
-import { Relationship } from '../../services/relationship/relationship';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { Point } from './point';
 
 export interface Boundary {
@@ -41,7 +41,7 @@ export function computeBoundingBox(points: Point[]): Boundary {
   };
 }
 
-export function computeBoundingBoxForElements(elements: Element[]): Boundary {
+export function computeBoundingBoxForElements(elements: UMLElement[]): Boundary {
   if (!elements.length) {
     return { x: 0, y: 0, width: 0, height: 0 };
   }
@@ -53,7 +53,7 @@ export function computeBoundingBoxForElements(elements: Element[]): Boundary {
   return { x, y, width, height };
 }
 
-export async function computeBoundingBoxForRelationship(relationship: Relationship): Promise<Boundary> {
+export async function computeBoundingBoxForRelationship(relationship: UMLRelationship): Promise<Boundary> {
   const Component = Components[relationship.type];
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.style.visibility = 'none';

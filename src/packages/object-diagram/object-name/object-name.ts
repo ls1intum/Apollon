@@ -1,15 +1,13 @@
 import { ObjectElementType } from '..';
-import { Container, IContainer } from '../../../services/container/container';
-import { Element, IElement } from '../../../services/element/element';
-import { UMLElement } from '../../../typings';
-import { UMLClassifier } from '../../class-diagram';
+import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { ObjectAttribute } from '../object-member/object-attribute/object-attribute';
 import { ObjectMember } from '../object-member/object-member';
 import { ObjectMethod } from '../object-member/object-method/object-method';
 
-export class ObjectName extends Container {
+export class ObjectName extends UMLContainer {
   static features = {
-    ...Container.features,
+    ...UMLContainer.features,
     droppable: false,
     resizable: 'WIDTH' as 'WIDTH' | 'BOTH' | 'HEIGHT' | 'NONE',
   };
@@ -22,25 +20,22 @@ export class ObjectName extends Container {
 
   deviderPosition = 0;
 
-  constructor(values?: UMLClassifier);
-  constructor(values?: IContainer);
-  constructor(values?: UMLElement | IElement);
-  constructor(values?: UMLClassifier | IContainer) {
+  constructor(values?: IUMLContainer | IUMLElement) {
     super();
 
     if (!values) return;
 
-    if ('attributes' in values) {
-      delete values.attributes;
-    }
-    if ('methods' in values) {
-      delete values.methods;
-    }
+    // if ('attributes' in values) {
+    //   delete values.attributes;
+    // }
+    // if ('methods' in values) {
+    //   delete values.methods;
+    // }
 
-    super(values);
+    // super(values);
   }
 
-  render(children: Element[]): Element[] {
+  render(children: UMLElement[]): UMLElement[] {
     const attributes = children.filter(child => child instanceof ObjectAttribute);
     const methods = children.filter(child => child instanceof ObjectMethod);
 
@@ -63,7 +58,7 @@ export class ObjectName extends Container {
     return [this, ...attributes, ...methods];
   }
 
-  resize(children: Element[]): Element[] {
+  resize(children: UMLElement[]): UMLElement[] {
     const minWidth = children.reduce((width, child) => Math.max(width, ObjectMember.calculateWidth(child.name)), 100);
     this.bounds.width = Math.max(this.bounds.width, minWidth);
     return [
@@ -75,15 +70,16 @@ export class ObjectName extends Container {
     ];
   }
 
-  toUMLElement(element: ObjectName, children: Element[]): { element: UMLClassifier; children: Element[] } {
-    const { element: base } = super.toUMLElement(element, children);
-    return {
-      element: {
-        ...base,
-        attributes: children.filter(child => child instanceof ObjectAttribute).map(child => child.id),
-        methods: children.filter(child => child instanceof ObjectMethod).map(child => child.id),
-      },
-      children,
-    };
-  }
+  // toUMLElement(element: ObjectName, children: UMLElement[]): { element: IUMLContainer; children: UMLElement[] } {
+  //   const { element: base } = super.toUMLElement(element, children);
+  //   return {
+  //     element: {
+  //       ...base,
+  //       ownedElements: [],
+  //       // attributes: children.filter(child => child instanceof ObjectAttribute).map(child => child.id),
+  //       // methods: children.filter(child => child instanceof ObjectMethod).map(child => child.id),
+  //     },
+  //     children,
+  //   };
+  // }
 }

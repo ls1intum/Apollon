@@ -1,6 +1,6 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
-import { RelationshipRepository } from '../../services/relationship/relationship-repository';
+import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { Point } from '../../utils/geometry/point';
 import { ConnectConsumer, ConnectContext } from '../connectable/connect-context';
 import { OwnProps, RelationshipComponent } from './relationship-component';
@@ -86,7 +86,7 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
   type StateProps = {};
 
   type DispatchProps = {
-    connect: typeof RelationshipRepository.connect;
+    connect: typeof UMLRelationshipRepository.connect;
   };
 
   type Props = OwnProps & StateProps & DispatchProps;
@@ -97,6 +97,6 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
 
   return connect<StateProps, DispatchProps, OwnProps>(
     null,
-    { connect: RelationshipRepository.connect },
+    { connect: UMLRelationshipRepository.connect },
   )(Reconnectable);
 };

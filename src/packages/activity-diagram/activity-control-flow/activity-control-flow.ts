@@ -1,6 +1,6 @@
 import { ActivityRelationshipType } from '..';
-import { Relationship } from '../../../services/relationship/relationship';
+import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 
-export class ActivityControlFlow extends Relationship {
+export class ActivityControlFlow extends UMLRelationship {
   type = ActivityRelationshipType.ActivityControlFlow;
 }

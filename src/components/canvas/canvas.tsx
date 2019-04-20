@@ -1,16 +1,15 @@
 import React, { Component, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { Diagram } from '../../services/diagram/diagram';
-import { DiagramRepository } from '../../services/diagram/diagram-repository';
-import { ElementRepository } from '../../services/element/element-repository';
+import { IUMLDiagram } from '../../services/uml-diagram/uml-diagram';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ApollonMode } from '../../typings';
 import { ConnectLayer } from '../connectable/connect-layer';
 import { DropEvent } from '../draggable/drop-event';
 import { Droppable } from '../draggable/droppable';
 import { LayoutedElement } from '../layouted-element/layouted-element';
 import { LayoutedRelationship } from '../layouted-relationship/layouted-relationship';
-import { PopupLayer, PopupLayerComponent } from '../popup/popup-layer';
+import { PopupLayerComponent } from '../popup/popup-layer';
 import { ModelState } from '../store/model-state';
 import { CanvasContext, CanvasProvider } from './canvas-context';
 import { CoordinateSystem } from './coordinate-system';
@@ -50,7 +49,10 @@ class CanvasComponent extends Component<Props, State> {
     const container = this.canvas.current!.parentElement!;
     if ('scrollTo' in container) {
       const { width, height } = container.getBoundingClientRect();
-      container.scrollTo(this.props.diagram.bounds.width / 2 - width / 2, this.props.diagram.bounds.height / 2 - height / 2);
+      container.scrollTo(
+        this.props.diagram.bounds.width / 2 - width / 2,
+        this.props.diagram.bounds.height / 2 - height / 2,
+      );
     }
   };
 
@@ -76,24 +78,29 @@ class CanvasComponent extends Component<Props, State> {
       <Container ref={this.canvas} tabIndex={0} onPointerDown={this.deselectAll}>
         <CanvasProvider value={context}>
           <Droppable onDrop={this.onDrop}>
-            <Grid grid={10} width={diagram.bounds.width} height={diagram.bounds.height} show={mode !== ApollonMode.Assessment}>
-              <PopupLayer ref={this.popup}>
-                <Svg width={diagram.bounds.width / 2} height={diagram.bounds.height / 2} ref={this.layer}>
-                  {this.state.isMounted && (
-                    <g>
-                      <KeyboardEventListener popup={this.popup} />
-                      <ConnectLayer>
-                        {diagram.ownedElements.map(element => (
-                          <LayoutedElement key={element} element={element} />
-                        ))}
-                        {diagram.ownedRelationships.map(relationship => (
-                          <LayoutedRelationship key={relationship} relationship={relationship} container={this.canvas} />
-                        ))}
-                      </ConnectLayer>
-                    </g>
-                  )}
-                </Svg>
-              </PopupLayer>
+            <Grid
+              grid={10}
+              width={diagram.bounds.width}
+              height={diagram.bounds.height}
+              show={mode !== ApollonMode.Assessment}
+            >
+              {/* <PopupLayer ref={this.popup}> */}
+              <Svg width={diagram.bounds.width / 2} height={diagram.bounds.height / 2} ref={this.layer}>
+                {this.state.isMounted && (
+                  <g>
+                    <KeyboardEventListener popup={this.popup} />
+                    <ConnectLayer>
+                      {diagram.ownedElements.map(element => (
+                        <LayoutedElement key={element} id={element} />
+                      ))}
+                      {diagram.ownedRelationships.map(relationship => (
+                        <LayoutedRelationship key={relationship} relationship={relationship} container={this.canvas} />
+                      ))}
+                    </ConnectLayer>
+                  </g>
+                )}
+              </Svg>
+              {/* </PopupLayer> */}
             </Grid>
           </Droppable>
         </CanvasProvider>
@@ -108,20 +115,20 @@ class CanvasComponent extends Component<Props, State> {
       this.canvas.current.firstElementChild !== event.target &&
       event.target !== this.layer.current;
     if (deselect || event.shiftKey) return;
-    this.props.select(null);
+    this.props.deselectAll();
   };
 }
 
 type OwnProps = {};
 
 type StateProps = {
-  diagram: Diagram;
+  diagram: IUMLDiagram;
   mode: ApollonMode;
 };
 
 type DispatchProps = {
-  create: typeof ElementRepository.create;
-  select: typeof ElementRepository.select;
+  create: typeof UMLElementRepository.create;
+  deselectAll: () => void;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -132,12 +139,12 @@ interface State {
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state: ModelState): StateProps => ({
-    diagram: DiagramRepository.read(state),
+    diagram: state.diagram,
     mode: state.editor.mode,
   }),
   {
-    create: ElementRepository.create,
-    select: ElementRepository.select,
+    create: UMLElementRepository.create,
+    deselectAll: UMLElementRepository.deselectAll,
   },
 );
 

@@ -1,9 +1,9 @@
 import React, { ComponentType, createContext, SFC } from 'react';
-import { Element } from '../../services/element/element';
+import { UMLElement } from '../../services/uml-element/uml-element';
 
 export interface PopupContext {
-  showPopup: (element: Element, position: { x: number; y: number }) => void;
-  update: (element: Element) => void;
+  showPopup: (element: UMLElement, position: { x: number; y: number }) => void;
+  update: (element: UMLElement) => void;
 }
 
 export const {

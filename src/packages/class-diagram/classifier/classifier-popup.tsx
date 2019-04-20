@@ -12,8 +12,8 @@ import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
-import { Element } from '../../../services/element/element';
-import { ElementRepository } from '../../../services/element/element-repository';
+import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { notEmpty } from '../../../utils/not-empty';
 import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
 import { ClassMethod } from '../class-member/class-method/class-method';
@@ -30,14 +30,14 @@ interface OwnProps {
 }
 
 interface StateProps {
-  getById: (id: string) => Element | null;
+  getById: (id: string) => UMLElement | null;
 }
 
 interface DispatchProps {
-  create: typeof ElementRepository.create;
-  change: typeof ElementRepository.change;
-  rename: typeof ElementRepository.rename;
-  delete: typeof ElementRepository.delete;
+  create: typeof UMLElementRepository.create;
+  change: typeof UMLElementRepository.change;
+  rename: typeof UMLElementRepository.rename;
+  delete: typeof UMLElementRepository.delete;
 }
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -45,12 +45,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ getById: ElementRepository.getById(state.elements) }),
+    state => ({ getById: UMLElementRepository.getById(state.elements) }),
     {
-      create: ElementRepository.create,
-      change: ElementRepository.change,
-      rename: ElementRepository.rename,
-      delete: ElementRepository.delete,
+      create: UMLElementRepository.create,
+      change: UMLElementRepository.change,
+      rename: UMLElementRepository.rename,
+      delete: UMLElementRepository.delete,
     },
   ),
 );

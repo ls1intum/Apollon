@@ -10,8 +10,8 @@ import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
-import { ElementRepository } from '../../../services/element/element-repository';
-import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { ModelState } from './../../../components/store/model-state';
 import { ActivityControlFlow } from './activity-control-flow';
 
@@ -60,9 +60,9 @@ type OwnProps = {
 type StateProps = {};
 
 type DispatchProps = {
-  rename: typeof ElementRepository.rename;
-  delete: typeof ElementRepository.delete;
-  flip: typeof RelationshipRepository.flip;
+  rename: typeof UMLElementRepository.rename;
+  delete: typeof UMLElementRepository.delete;
+  flip: typeof UMLRelationshipRepository.flip;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -72,9 +72,9 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     null,
     {
-      rename: ElementRepository.rename,
-      delete: ElementRepository.delete,
-      flip: RelationshipRepository.flip,
+      rename: UMLElementRepository.rename,
+      delete: UMLElementRepository.delete,
+      flip: UMLRelationshipRepository.flip,
     },
   ),
 );

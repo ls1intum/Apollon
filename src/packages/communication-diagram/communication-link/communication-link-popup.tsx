@@ -13,9 +13,9 @@ import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
-import { Element } from '../../../services/element/element';
-import { ElementRepository } from '../../../services/element/element-repository';
-import { RelationshipRepository } from '../../../services/relationship/relationship-repository';
+import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { CommunicationLink } from './communication-link';
 
 const Flex = styled.div`
@@ -70,7 +70,7 @@ class CommunactionLinkPopupComponent extends Component<Props> {
   private create = (value: string) => {
     const { element, update } = this.props;
     if (!element.messages.find(message => message.name === value)) {
-      update(element.id, { messages: [...element.messages, { name: value, direction: 'target' }] });
+      update<CommunicationLink>(element.id, { messages: [...element.messages, { name: value, direction: 'target' }] });
     }
   };
 
@@ -79,7 +79,7 @@ class CommunactionLinkPopupComponent extends Component<Props> {
     const messages: CommunicationMessage[] = [...element.messages];
     const index = messages.findIndex(message => message.name === value.name);
     messages[index].name = name;
-    update(element.id, { messages });
+    update<CommunicationLink>(element.id, { messages });
   };
 
   private flip = (value: CommunicationMessage) => () => {
@@ -87,12 +87,12 @@ class CommunactionLinkPopupComponent extends Component<Props> {
     const messages: CommunicationMessage[] = [...element.messages];
     const index = messages.findIndex(message => message.name === value.name);
     messages[index].direction = messages[index].direction === 'source' ? 'target' : 'source';
-    update(element.id, { messages });
+    update<CommunicationLink>(element.id, { messages });
   };
 
   private delete = (value: CommunicationMessage) => () => {
     const { element, update } = this.props;
-    update(element.id, { messages: element.messages.filter(message => message.name !== value.name) });
+    update<CommunicationLink>(element.id, { messages: element.messages.filter(message => message.name !== value.name) });
   };
 }
 
@@ -101,13 +101,13 @@ type OwnProps = {
 };
 
 type StateProps = {
-  getById: (id: string) => Element | null;
+  getById: (id: string) => UMLElement | null;
 };
 
 type DispatchProps = {
-  update: typeof ElementRepository.update;
-  delete: typeof ElementRepository.delete;
-  flip: typeof RelationshipRepository.flip;
+  update: typeof UMLElementRepository.update;
+  delete: typeof UMLElementRepository.delete;
+  flip: typeof UMLRelationshipRepository.flip;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -115,11 +115,11 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ getById: ElementRepository.getById(state.elements) }),
+    state => ({ getById: UMLElementRepository.getById(state.elements) }),
     {
-      update: ElementRepository.update,
-      delete: ElementRepository.delete,
-      flip: RelationshipRepository.flip,
+      update: UMLElementRepository.update,
+      delete: UMLElementRepository.delete,
+      flip: UMLRelationshipRepository.flip,
     },
   ),
 );

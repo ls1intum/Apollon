@@ -1,8 +1,32 @@
 import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { ModelState } from '../store/model-state';
 import { ElementComponent, OwnProps } from './element-component';
+
+type StateProps = {
+  hovered: boolean;
+  selected: boolean;
+};
+
+type DispatchProps = {
+  select: typeof UMLElementRepository.select;
+  deselect: typeof UMLElementRepository.deselect;
+};
+
+type Props = OwnProps & StateProps & DispatchProps;
+
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  (state, props) => ({
+    hovered: state.hovered[0] === props.id,
+    selected: state.selected.includes(props.id),
+  }),
+  {
+    select: UMLElementRepository.select,
+    deselect: UMLElementRepository.deselect,
+  },
+);
 
 export const selectable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Selectable extends Component<Props> {
@@ -21,21 +45,17 @@ export const selectable = (WrappedComponent: typeof ElementComponent): Component
     }
 
     private select = (event: PointerEvent) => {
-      if ((event.which && event.which !== 1) || !this.props.element.hovered || (this.props.element.selected && !event.shiftKey)) return;
-      this.props.select(this.props.element.id, event.shiftKey);
+      if ((event.which && event.which !== 1) || !this.props.hovered) {
+        return;
+      }
+      if (event.shiftKey && this.props.selected) {
+        this.props.deselect(this.props.id);
+        return;
+      }
+
+      this.props.select(this.props.id, !event.shiftKey);
     };
   }
 
-  type StateProps = {};
-
-  type DispatchProps = {
-    select: typeof ElementRepository.select;
-  };
-
-  type Props = OwnProps & StateProps & DispatchProps;
-
-  return connect<StateProps, DispatchProps, OwnProps>(
-    null,
-    { select: ElementRepository.select },
-  )(Selectable);
+  return enhance(Selectable);
 };

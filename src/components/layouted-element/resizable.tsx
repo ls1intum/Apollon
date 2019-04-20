@@ -1,11 +1,8 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
-import { compose } from 'redux';
 import styled from 'styled-components';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { Point } from '../../utils/geometry/point';
-import { CanvasContext, withCanvas } from '../canvas/canvas-context';
 import { ModelState } from '../store/model-state';
 import { ElementComponent, OwnProps } from './element-component';
 
@@ -14,7 +11,9 @@ const Handler = styled.rect`
   cursor: nwse-resize;
 `;
 
-export const resizable = (WrappedComponent: typeof ElementComponent) => {
+export const resizable = (options?: { preventX: boolean; preventY: boolean }) => (
+  WrappedComponent: typeof ElementComponent,
+): ComponentClass<OwnProps> => {
   class Resizable extends Component<Props, State> {
     state: State = {
       resizing: false,
@@ -32,26 +31,22 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
     }
 
     private resize = (width: number, height: number) => {
-      const { features } = this.props.element.constructor as typeof Element;
-      const { id, bounds } = this.props.element;
+      width = Math.round(width / 10) * 10;
+      height = Math.round(height / 10) * 10;
+      if (options && options.preventX) width = 0;
+      if (options && options.preventY) height = 0;
+      if (width === 0 && height === 0) return;
 
-      width = Math.max(10, width);
-      height = Math.max(10, height);
-
-      if (features.resizable === 'HEIGHT') width = bounds.width;
-      if (features.resizable === 'WIDTH') height = bounds.height;
-      if (bounds.width === width && bounds.height === height) return;
-
-      this.props.resize(id, { width, height });
+      this.setState(state => ({ offset: state.offset.add(width, height) }));
+      this.props.resize(this.props.id, { width, height });
     };
 
     private onPointerDown = (event: React.PointerEvent) => {
-      if (event.nativeEvent.which && event.nativeEvent.which !== 1) return;
+      if (event.nativeEvent.which && event.nativeEvent.which !== 1) {
+        return;
+      }
 
-      const position = this.props.getAbsolutePosition(this.props.element.id);
-      const offset = position.add(this.props.coordinateSystem.offset());
-
-      this.setState({ resizing: true, offset });
+      this.setState({ resizing: true, offset: new Point(event.clientX, event.clientY) });
       document.addEventListener('pointermove', this.onPointerMove);
       document.addEventListener('pointerup', this.onPointerUp);
     };
@@ -59,8 +54,7 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
     private onPointerMove = (event: PointerEvent) => {
       const width = event.clientX - this.state.offset.x;
       const height = event.clientY - this.state.offset.y;
-      const point = this.props.coordinateSystem.screenToPoint(width, height);
-      this.resize(point.x, point.y);
+      this.resize(width, height);
     };
 
     private onPointerUp = () => {
@@ -71,30 +65,23 @@ export const resizable = (WrappedComponent: typeof ElementComponent) => {
     };
   }
 
-  interface StateProps {
-    getAbsolutePosition: (id: string) => Point;
-  }
+  type StateProps = {};
 
-  interface DispatchProps {
-    resize: typeof ElementRepository.resize;
-    resized: typeof ElementRepository.resized;
-  }
+  type DispatchProps = {
+    resize: typeof UMLElementRepository.resize;
+    resized: typeof UMLElementRepository.resizeEnd;
+  };
 
-  interface State {
+  type State = {
     resizing: boolean;
     offset: Point;
-  }
+  };
 
-  type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
+  type Props = OwnProps & StateProps & DispatchProps;
 
-  const enhance = compose<ComponentClass<OwnProps>>(
-    withCanvas,
-    connect<StateProps, DispatchProps, OwnProps, ModelState>(
-      state => ({
-        getAbsolutePosition: ElementRepository.getAbsolutePosition(state.elements),
-      }),
-      { resize: ElementRepository.resize, resized: ElementRepository.resized },
-    ),
+  const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    null,
+    { resize: UMLElementRepository.resize, resized: UMLElementRepository.resizeEnd },
   );
 
   return enhance(Resizable);

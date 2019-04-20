@@ -19,7 +19,7 @@ export enum ClassRelationshipType {
   ClassComposition = 'ClassComposition',
 }
 
-export interface UMLClassifier extends UMLElement {
+export interface UMLClass extends UMLElement {
   attributes: string[];
   methods: string[];
 }

@@ -1,19 +1,19 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ModelState } from '../store/model-state';
 import { AssessmentSection } from './assessment-section';
 
-type OwnProps = { element: Element };
+type OwnProps = { element: UMLElement };
 type StateProps = {
-  elements: Element[];
+  elements: UMLElement[];
 };
 type DispatchProps = {};
 type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
-  elements: ElementRepository.getChildren(state.elements)(props.element.id),
+  elements: UMLElementRepository.getChildren(state.elements)(props.element.id),
 }));
 
 class AssessmentPopupComponent extends Component<Props> {

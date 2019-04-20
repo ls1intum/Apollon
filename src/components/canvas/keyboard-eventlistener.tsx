@@ -1,7 +1,7 @@
 import { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UndoRepository } from '../../services/undo/undo-repository';
 import { ApollonMode } from '../../typings';
 import { PopupLayerComponent } from '../popup/popup-layer';
@@ -28,28 +28,28 @@ class KeyboardEventListenerComponent extends Component<Props> {
     switch (event.key) {
       case 'ArrowUp':
         event.preventDefault();
-        this.props.move(null, { x: 0, y: -10 });
+        this.props.move({ x: 0, y: -10 });
         break;
       case 'ArrowRight':
         event.preventDefault();
-        this.props.move(null, { x: 10, y: 0 });
+        this.props.move({ x: 10, y: 0 });
         break;
       case 'ArrowDown':
         event.preventDefault();
-        this.props.move(null, { x: 0, y: 10 });
+        this.props.move({ x: 0, y: 10 });
         break;
       case 'ArrowLeft':
         event.preventDefault();
-        this.props.move(null, { x: -10, y: 0 });
+        this.props.move({ x: -10, y: 0 });
         break;
       case 'Backspace':
       case 'Delete':
         event.preventDefault();
-        this.props.delete(null);
+        this.props.delete();
         break;
       case 'Escape':
         event.preventDefault();
-        this.props.select(null);
+        this.props.deselectAll();
         break;
     }
 
@@ -57,7 +57,7 @@ class KeyboardEventListenerComponent extends Component<Props> {
       switch (event.key) {
         case 'a':
           event.preventDefault();
-          this.props.elements.forEach(id => this.props.select(id, false, true));
+          this.props.selectAll();
           break;
         case 'd':
           event.preventDefault();
@@ -84,12 +84,13 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  duplicate: typeof ElementRepository.duplicate;
-  select: typeof ElementRepository.select;
-  move: typeof ElementRepository.move;
-  delete: typeof ElementRepository.delete;
+  duplicate: typeof UMLElementRepository.duplicate;
+  move: typeof UMLElementRepository.moveSelection;
+  delete: typeof UMLElementRepository.deleteSelection;
   undo: typeof UndoRepository.undo;
   redo: typeof UndoRepository.redo;
+  selectAll: typeof UMLElementRepository.selectAll;
+  deselectAll: typeof UMLElementRepository.deselectAll;
 }
 
 type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -99,19 +100,18 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({
       elements: Object.keys(state.elements),
-      selection: Object.values(state.elements)
-        .filter(element => element.selected)
-        .map(element => element.id),
+      selection: state.selected,
       readonly: state.editor.readonly,
       mode: state.editor.mode,
     }),
     {
-      duplicate: ElementRepository.duplicate,
-      select: ElementRepository.select,
-      move: ElementRepository.move,
-      delete: ElementRepository.delete,
+      duplicate: UMLElementRepository.duplicate,
+      move: UMLElementRepository.moveSelection,
+      delete: UMLElementRepository.deleteSelection,
       undo: UndoRepository.undo,
       redo: UndoRepository.redo,
+      selectAll: UMLElementRepository.selectAll,
+      deselectAll: UMLElementRepository.deselectAll,
     },
   ),
 );

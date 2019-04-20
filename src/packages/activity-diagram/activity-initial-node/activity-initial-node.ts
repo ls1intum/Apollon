@@ -1,16 +1,12 @@
 import { ActivityElementType } from '..';
-import { Element, IElement } from '../../../services/element/element';
-import { UMLElement } from '../../../typings';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 
-export class ActivityInitialNode extends Element {
-  static features = { ...Element.features, editable: false };
+export class ActivityInitialNode extends UMLElement {
+  static features = { ...UMLElement.features, editable: false };
 
   type = ActivityElementType.ActivityInitialNode;
 
-  constructor(values?: IElement);
-  constructor(values?: UMLElement);
-  constructor(values?: IElement | UMLElement);
-  constructor(values?: IElement | UMLElement) {
+  constructor(values?: IUMLElement) {
     super(values);
 
     if (!values) {

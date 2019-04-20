@@ -1,49 +1,53 @@
 import { AssessmentState } from '../../services/assessment/assessment-types';
-import { Container } from '../../services/container/container';
-import { Diagram } from '../../services/diagram/diagram';
-import { DiagramState } from '../../services/diagram/diagram-types';
 import { ApollonView, EditorState } from '../../services/editor/editor-types';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
-import { ElementState } from '../../services/element/element-types';
-import { Relationship } from '../../services/relationship/relationship';
-import { RelationshipRepository } from '../../services/relationship/relationship-repository';
-import { ApollonMode, Assessment, Selection, UMLElement, UMLModel, UMLRelationship } from '../../typings';
+import { UMLContainer } from '../../services/uml-container/uml-container';
+import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
+import { UMLDiagramState } from '../../services/uml-diagram/uml-diagram-types';
+import { HoverableState } from '../../services/uml-element/hoverable/hoverable-types';
+import { InteractableState } from '../../services/uml-element/interactable/interactable-types';
+import { SelectableState } from '../../services/uml-element/selectable/selectable-types';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { UMLElementState } from '../../services/uml-element/uml-element-types';
+import { UpdatableState } from '../../services/uml-element/updatable/updatable-types';
+import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationship/uml-relationship';
+import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
+import { ApollonMode, Assessment, Selection, UMLElement as Other, UMLModel } from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
 export interface ModelState {
   editor: EditorState;
-  diagram: DiagramState;
-  elements: ElementState;
+  diagram: UMLDiagramState;
+  hovered: HoverableState;
+  selected: SelectableState;
+  interactive: InteractableState;
+  updating: UpdatableState;
+  elements: UMLElementState;
   assessments: AssessmentState;
 }
 
 export class ModelState {
   static fromModel(model: UMLModel): ModelState {
-    const state = [...model.elements, ...model.relationships].reduce<ElementState>(
+    const state = [...model.elements, ...model.relationships].reduce<UMLElementState>(
       (result, element) => ({
         ...result,
         [element.id]: {
           owner: null,
           ...element,
-          highlight: element.highlight,
-          hovered: false,
-          selected: false,
-          interactive: [...model.interactive.elements, ...model.interactive.relationships].includes(element.id),
         },
       }),
       {},
     );
 
     const elements = [
-      ...ElementRepository.getByIds(state)(Object.keys(state)),
-      ...RelationshipRepository.getByIds(state)(Object.keys(state)),
-    ].reduce<{ [id: string]: Element }>((result, element) => ({ ...result, [element.id]: element }), {});
+      ...UMLElementRepository.getByIds(state)(Object.keys(state)),
+      ...UMLRelationshipRepository.getByIds(state)(Object.keys(state)),
+    ].reduce<{ [id: string]: UMLElement }>((result, element) => ({ ...result, [element.id]: element }), {});
 
     const root = Object.values(elements).filter(element => !element.owner);
 
-    const position = (element: Element) => {
-      if (element instanceof Container) {
+    const position = (element: UMLElement) => {
+      if (element instanceof UMLContainer) {
         const children = Object.values(elements).filter(child => child.owner === element.id);
         element.ownedElements = children.map(child => child.id);
         for (const child of children) {
@@ -85,47 +89,55 @@ export class ModelState {
       },
       diagram: {
         ...(() => {
-          const d = new Diagram();
+          const d = new UMLDiagram();
           Object.assign(d, {
             type2: model.type,
             bounds: computedBounds,
           });
           return d;
         })(),
-        ownedElements: root.filter(element => !(element instanceof Relationship)).map(element => element.id),
-        ownedRelationships: root.filter(element => element instanceof Relationship).map(element => element.id),
+        ownedElements: root.filter(element => !(element instanceof UMLRelationship)).map(element => element.id),
+        ownedRelationships: root.filter(element => element instanceof UMLRelationship).map(element => element.id),
       },
+      hovered: [],
+      selected: [],
+      interactive: [...model.interactive.elements, ...model.interactive.relationships],
+      updating: [],
       elements,
       assessments: model.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
     };
   }
 
   static toModel(state: ModelState): UMLModel {
-    const elements = ElementRepository.read(state.elements).filter(element => !(element instanceof Relationship));
-    const relationships = RelationshipRepository.read(state.elements);
+    const elements = UMLElementRepository.read(state.elements).filter(element => !(element instanceof UMLRelationship));
+    const relationships = UMLRelationshipRepository.read(state.elements);
     const root = elements.filter(element => !element.owner);
 
-    const parseElement = (element: Element): UMLElement[] => {
-      const cont: Element[] = element instanceof Container ? element.ownedElements.map(id => elements.find(ee => ee.id === id)!) : [];
+    const parseElement = (element: UMLElement): Other[] => {
+      const cont: UMLElement[] =
+        element instanceof UMLContainer ? element.ownedElements.map(id => elements.find(ee => ee.id === id)!) : [];
       const { element: result, children } = element.toUMLElement(element, cont);
-      return [result, ...children.reduce<UMLElement[]>((r2, e3) => [...r2, ...parseElement(e3)], [])];
+      return [result as Other, ...children.reduce<Other[]>((r2, e3) => [...r2, ...parseElement(e3)], [])];
     };
 
-    const e = root.reduce<UMLElement[]>((r2, e2) => [...r2, ...parseElement(e2)], []);
+    const e = root.reduce<Other[]>((r2, e2) => [...r2, ...parseElement(e2)], []);
 
-    const r = relationships.map<UMLRelationship>(relationship =>
-      (relationship.constructor as typeof Relationship).toUMLRelationship(relationship),
-    );
+    // const r = relationships.map<IUMLRelationship>(relationship =>
+    //   (relationship.constructor as typeof UMLRelationship).toUMLRelationship(relationship),
+    // );
+    const r = [] as IUMLRelationship[];
 
     const interactive: Selection = {
-      elements: elements.filter(element => element.interactive).map<string>(element => element.id),
-      relationships: relationships.filter(element => element.interactive).map<string>(element => element.id),
+      elements: elements.filter(element => state.interactive.includes(element.id)).map<string>(element => element.id),
+      relationships: relationships
+        .filter(element => state.interactive.includes(element.id))
+        .map<string>(element => element.id),
     };
 
     const bounds = computeBoundingBoxForElements(root);
     for (const element of e) {
       if (element.owner) {
-        const absolutePosition = ElementRepository.getAbsolutePosition(state.elements)(element.id);
+        const absolutePosition = UMLElementRepository.getAbsolutePosition(state.elements)(element.id);
         element.bounds.x = absolutePosition.x;
         element.bounds.y = absolutePosition.y;
       }

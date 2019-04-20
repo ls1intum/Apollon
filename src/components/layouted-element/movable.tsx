@@ -2,9 +2,8 @@ import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { ContainerRepository } from '../../services/container/container-repository';
-import { IElement } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext, withCanvas } from '../canvas/canvas-context';
 import { ModelState } from '../store/model-state';
@@ -38,28 +37,29 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
       const { bounds } = this.props.element;
       if (bounds.x === x && bounds.y === y) return;
 
-      this.props.move(null, {
+      this.props.move({
         x: x - this.props.element.bounds.x,
         y: y - this.props.element.bounds.y,
       });
     };
 
     private checkOwnership = () => {
-      const target = this.props.target ? this.props.target.id : null;
-      this.props.changeOwner(this.props.element.id, target);
+      // const target = this.props.target ? this.props.target.id : null;
+      // this.props.changeOwner(this.props.element.id, target);
     };
 
     private onPointerDown = (event: PointerEvent) => {
       if (event.which && event.which !== 1) return;
       const target = event.currentTarget as HTMLElement;
       window.setTimeout(() => {
-        if (!this.props.element.selected) return;
+        if (!this.props.selected) return;
         const rect = target.getBoundingClientRect();
         const offset = this.props.coordinateSystem.offset();
         offset.x += event.clientX - rect.left;
         offset.y += event.clientY - rect.top;
 
-        const position = this.props.getAbsolutePosition(this.props.element.id);
+        // const position = this.props.getAbsolutePosition(this.props.element.id);
+        const position = new Point(this.props.element.bounds.x, this.props.element.bounds.y);
         offset.x += position.x - this.props.element.bounds.x;
         offset.y += position.y - this.props.element.bounds.y;
 
@@ -95,13 +95,14 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
   }
 
   interface StateProps {
-    getAbsolutePosition: (id: string) => Point;
-    target: IElement | undefined;
+    selected: boolean;
+    // getAbsolutePosition: (id: string) => Point;
+    // target: IElement | undefined;
   }
 
   interface DispatchProps {
-    move: typeof ElementRepository.move;
-    changeOwner: typeof ContainerRepository.changeOwner;
+    move: typeof UMLElementRepository.moveSelection;
+    changeOwner: typeof UMLContainerRepository.changeOwner;
   }
 
   type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -115,13 +116,14 @@ export const movable = (WrappedComponent: typeof ElementComponent) => {
   return compose<ComponentClass<OwnProps>>(
     withCanvas,
     connect<StateProps, DispatchProps, OwnProps, ModelState>(
-      state => ({
-        getAbsolutePosition: ElementRepository.getAbsolutePosition(state.elements),
-        target: Object.values(state.elements).find(element => element.hovered),
+      (state, props) => ({
+        selected: state.selected.includes(props.id),
+        // getAbsolutePosition: ElementRepository.getAbsolutePosition(state.elements),
+        // target: Object.values(state.elements).find(element => element.hovered),
       }),
       {
-        move: ElementRepository.move,
-        changeOwner: ContainerRepository.changeOwner,
+        move: UMLElementRepository.moveSelection,
+        changeOwner: UMLContainerRepository.changeOwner,
       },
     ),
   )(Movable);

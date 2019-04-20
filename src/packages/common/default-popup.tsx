@@ -5,8 +5,8 @@ import { TrashIcon } from '../../components/controls/icon/trash';
 import { Textfield } from '../../components/controls/textfield/textfield';
 import { ModelState } from '../../components/store/model-state';
 import { styled } from '../../components/theme/styles';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 
 const Flex = styled.div`
   display: flex;
@@ -38,14 +38,14 @@ class DefaultPopupComponent extends Component<Props> {
 }
 
 type OwnProps = {
-  element: Element;
+  element: UMLElement;
 };
 
 type StateProps = {};
 
 type DispatchProps = {
-  rename: typeof ElementRepository.rename;
-  delete: typeof ElementRepository.delete;
+  rename: typeof UMLElementRepository.rename;
+  delete: typeof UMLElementRepository.delete;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -53,8 +53,8 @@ type Props = OwnProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   null,
   {
-    rename: ElementRepository.rename,
-    delete: ElementRepository.delete,
+    rename: UMLElementRepository.rename,
+    delete: UMLElementRepository.delete,
   },
 );
 

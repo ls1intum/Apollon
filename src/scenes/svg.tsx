@@ -2,10 +2,10 @@ import React, { Component } from 'react';
 import { DeepPartial } from 'redux';
 import { defaults, Styles } from '../components/theme/styles';
 import { Components } from '../packages/components';
-import { ElementType } from '../packages/element-type';
-import { Elements } from '../packages/elements';
 import { Relationships } from '../packages/relationships';
-import { Element } from '../services/element/element';
+import { UMLElementType } from '../packages/uml-element-type';
+import { UMLElements } from '../packages/uml-elements';
+import { IUMLElement, UMLElement } from '../services/uml-element/uml-element';
 import { ExportOptions, UMLModel } from '../typings';
 import { Boundary } from '../utils/geometry/boundary';
 import { update } from '../utils/update';
@@ -18,7 +18,7 @@ interface Props {
 }
 interface State {
   bounds: Boundary;
-  elements: Element[];
+  elements: UMLElement[];
 }
 
 const getInitialState = ({ model, options }: Props): State => {
@@ -76,9 +76,11 @@ const getInitialState = ({ model, options }: Props): State => {
     );
   }
 
-  let elements: Element[] = [
+  let elements: UMLElement[] = [
     ...model.elements.map(umlElement => {
-      const ElementClazz = Elements[umlElement.type as ElementType];
+      const ElementClazz = UMLElements[umlElement.type as UMLElementType] as new (
+        values: IUMLElement,
+      ) => UMLElement;
       return new ElementClazz(umlElement);
     }),
     ...model.relationships.map(umlRelationship => {
@@ -114,7 +116,7 @@ const getMargin = (margin: ExportOptions['margin']): { top: number; right: numbe
   return Object.assign(result, margin);
 };
 
-const computeBoundingBox = (elements: Element[]): Boundary => {
+const computeBoundingBox = (elements: UMLElement[]): Boundary => {
   let x = Math.min(...elements.map(e => e.bounds.x));
   x = x === Infinity ? 0 : x;
   let y = Math.min(...elements.map(e => e.bounds.y));
