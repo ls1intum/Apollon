@@ -24,7 +24,6 @@ import { UseCase } from './use-case-diagram/use-case/use-case';
 type UMLElements = { [key in UMLElementType]: new (values: IUMLElement) => UMLElement };
 
 export const UMLElements = {
-  [UMLElementType.Diagram]: UMLDiagram,
   [UMLElementType.Package]: Package,
   [UMLElementType.Class]: Class,
   [UMLElementType.AbstractClass]: AbstractClass,

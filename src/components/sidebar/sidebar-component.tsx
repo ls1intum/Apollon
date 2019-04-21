@@ -59,7 +59,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({
-      diagramType: state.diagram.type2,
+      diagramType: state.diagram.type,
       readonly: state.editor.readonly,
       mode: state.editor.mode,
       view: state.editor.view,

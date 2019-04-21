@@ -1,3 +1,4 @@
+import { UMLDiagramType } from '../../packages/diagram-type';
 import { RelationshipType as UMLRelationshipType } from '../../packages/relationship-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { Boundary } from '../../utils/geometry/boundary';
@@ -6,7 +7,7 @@ import { uuid } from '../../utils/uuid';
 export interface IUMLElement {
   id: string;
   name: string;
-  type: UMLElementType | UMLRelationshipType;
+  type: UMLElementType | UMLRelationshipType | UMLDiagramType;
   owner: string | null;
   highlight?: string;
   bounds: { x: number; y: number; width: number; height: number };
@@ -27,7 +28,7 @@ export abstract class UMLElement implements IUMLElement {
   readonly id: string = uuid();
   name: string = '';
   highlight?: string;
-  abstract readonly type: UMLElementType | UMLRelationshipType;
+  abstract readonly type: UMLElementType | UMLRelationshipType | UMLDiagramType;
   readonly bounds: Boundary = { x: 0, y: 0, width: 200, height: 100 };
   owner: string | null = null;
 

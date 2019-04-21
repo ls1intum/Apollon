@@ -4,7 +4,6 @@ import { compose } from 'redux';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UndoRepository } from '../../services/undo/undo-repository';
 import { ApollonMode } from '../../typings';
-import { PopupLayerComponent } from '../popup/popup-layer';
 import { ModelState } from '../store/model-state';
 import { CanvasContext, withCanvas } from './canvas-context';
 
@@ -22,8 +21,6 @@ class KeyboardEventListenerComponent extends Component<Props> {
   }
   private eventListener = (event: KeyboardEvent) => {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return;
-
-    if (this.props.popup.current && this.props.popup.current.state.element) return;
 
     switch (event.key) {
       case 'ArrowUp':
@@ -72,9 +69,7 @@ class KeyboardEventListenerComponent extends Component<Props> {
   };
 }
 
-interface OwnProps {
-  popup: React.RefObject<PopupLayerComponent>;
-}
+type OwnProps = {};
 
 interface StateProps {
   elements: string[];

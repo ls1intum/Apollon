@@ -4,7 +4,7 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { DeepPartial, Store } from 'redux';
 import { ModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
-import { DiagramType } from './packages/diagram-type';
+import { UMLDiagramType } from './packages/diagram-type';
 import { RelationshipType } from './packages/relationship-type';
 import { UMLElementType } from './packages/uml-element-type';
 import { Application } from './scenes/application';
@@ -76,7 +76,7 @@ export class ApollonEditor {
       diagram: (() => {
         const d = new UMLDiagram();
         Object.assign(d, state.diagram);
-        d.type2 = options.type || DiagramType.ClassDiagram;
+        d.type = options.type || UMLDiagramType.ClassDiagram;
         return d;
       })(),
       editor: {
@@ -154,7 +154,7 @@ export class ApollonEditor {
 
     const umlAssessments = Object.keys(assessments).map<Assessment>(id => ({
       modelElementId: id,
-      elementType: elements[id].type,
+      elementType: elements[id].type as UMLElementType | RelationshipType,
       score: assessments[id].score,
       feedback: assessments[id].feedback,
     }));

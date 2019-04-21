@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Components } from '../../packages/components';
 import { IUMLContainer } from '../../services/uml-container/uml-container';
 import { IUMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { CanvasConsumer } from '../canvas/canvas-context';
 import { ModelState } from '../store/model-state';
 
@@ -46,6 +47,9 @@ export class ElementComponentComponent extends Component<Props> {
 
   render() {
     const { element, interactable } = this.props;
+    if (!UMLElementRepository.isUMLElement(element)) {
+      return;
+    }
     const ChildComponent = Components[element.type];
 
     const strokeWidth = 5;

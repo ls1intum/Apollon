@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
 import { ApollonView } from '../../services/editor/editor-types';
 import { IUMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ApollonMode } from '../../typings';
 import { ModelState } from '../store/model-state';
 import { assessable } from './assessable';
@@ -28,8 +28,8 @@ const getInitialState = ({ element, readonly, view, mode }: Props) => {
     decorators = [selectable, hoverable];
   } else if (view === ApollonView.Exporting || view === ApollonView.Highlight) {
     decorators = [interactable, hoverable];
-  } else if (element) {
-    const { features } = UMLElements[element.type as UMLElementType];
+  } else if (element && UMLElementRepository.isUMLElement(element)) {
+    const { features } = UMLElements[element.type];
     if (features.editable) decorators.push(updatable);
     if (features.droppable) decorators.push(droppable);
     if (features.connectable) decorators.push(connectable);

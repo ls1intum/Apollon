@@ -143,7 +143,7 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
   return connect<StateProps, DispatchProps, OwnProps, ModelState>(
     (state, props) => ({
       selected: state.selected.includes(props.id),
-      diagramType: state.diagram.type2
+      diagramType: state.diagram.type,
     }),
     { create: UMLRelationshipRepository.create },
   )(Connectable);

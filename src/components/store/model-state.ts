@@ -12,7 +12,7 @@ import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableState } from '../../services/uml-element/updatable/updatable-types';
 import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
-import { ApollonMode, Assessment, Selection, UMLElement as Other, UMLModel } from '../../typings';
+import { ApollonMode, Assessment, Selection, UMLElement as Other, UMLElementType, UMLModel } from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
 export interface ModelState {
@@ -91,7 +91,7 @@ export class ModelState {
         ...(() => {
           const d = new UMLDiagram();
           Object.assign(d, {
-            type2: model.type,
+            type: model.type,
             bounds: computedBounds,
           });
           return d;
@@ -156,7 +156,7 @@ export class ModelState {
 
     const assessments = Object.keys(state.assessments).map<Assessment>(id => ({
       modelElementId: id,
-      elementType: state.elements[id].type,
+      elementType: state.elements[id].type as UMLElementType,
       score: state.assessments[id].score,
       feedback: state.assessments[id].feedback,
     }));
@@ -164,7 +164,7 @@ export class ModelState {
     return {
       version: '2.0.0',
       size,
-      type: state.diagram.type2,
+      type: state.diagram.type,
       interactive,
       elements: e,
       relationships: r,

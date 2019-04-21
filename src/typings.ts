@@ -1,6 +1,6 @@
 import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
-import { DiagramType } from './packages/diagram-type';
+import { UMLDiagramType } from './packages/diagram-type';
 import { RelationshipType as UMLRelationshipType } from './packages/relationship-type';
 import { UMLElementType as UMLElementType } from './packages/uml-element-type';
 
@@ -13,7 +13,7 @@ export type ElementType = UMLElementType | UMLRelationshipType;
 
 export interface UMLModel {
   version: string;
-  type: DiagramType;
+  type: UMLDiagramType;
   size: { width: number; height: number };
   interactive: Selection;
   assessments: Assessment[];
@@ -30,7 +30,7 @@ export interface Assessment {
 
 export { UMLClass, UMLClassAssociation } from './packages/class-diagram';
 export { UMLCommunicationLink } from './packages/communication-diagram';
-export { DiagramType };
+export { UMLDiagramType as DiagramType };
 export { UMLElementType };
 export { UMLRelationshipType };
 export type Theme = DeepPartial<Styles>;
@@ -83,7 +83,7 @@ export enum ApollonMode {
 }
 
 export interface ApollonOptions {
-  type?: DiagramType;
+  type?: UMLDiagramType;
   mode?: ApollonMode;
   readonly?: boolean;
   enablePopups?: boolean;

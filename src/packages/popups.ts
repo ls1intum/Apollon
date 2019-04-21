@@ -13,7 +13,6 @@ import { UMLElementType } from './uml-element-type';
 
 export type Popups = { [key in UMLElementType | RelationshipType]: ComponentClass<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | RelationshipType]: ComponentClass<{ element: any }> | null } = {
-  [UMLElementType.Diagram]: DefaultPopup,
   [UMLElementType.Package]: DefaultPopup,
   [UMLElementType.Class]: ClassifierPopup,
   [UMLElementType.AbstractClass]: ClassifierPopup,

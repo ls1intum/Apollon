@@ -1,7 +1,7 @@
 import { ActivityRelationshipType } from './activity-diagram';
 import { ClassRelationshipType } from './class-diagram';
 import { CommunicationRelationshipType } from './communication-diagram';
-import { DiagramType } from './diagram-type';
+import { UMLDiagramType } from './diagram-type';
 import { ObjectRelationshipType } from './object-diagram';
 import { UseCaseRelationshipType } from './use-case-diagram';
 
@@ -20,10 +20,10 @@ export const RelationshipType = {
   ...CommunicationRelationshipType,
 };
 
-export const DefaultRelationshipType: { [type in DiagramType]: RelationshipType } = {
-  [DiagramType.ClassDiagram]: ClassRelationshipType.ClassBidirectional,
-  [DiagramType.ObjectDiagram]: ObjectRelationshipType.ObjectLink,
-  [DiagramType.ActivityDiagram]: ActivityRelationshipType.ActivityControlFlow,
-  [DiagramType.UseCaseDiagram]: UseCaseRelationshipType.UseCaseAssociation,
-  [DiagramType.CommunicationDiagram]: CommunicationRelationshipType.CommunicationLink,
+export const DefaultRelationshipType: { [type in UMLDiagramType]: RelationshipType } = {
+  [UMLDiagramType.ClassDiagram]: ClassRelationshipType.ClassBidirectional,
+  [UMLDiagramType.ObjectDiagram]: ObjectRelationshipType.ObjectLink,
+  [UMLDiagramType.ActivityDiagram]: ActivityRelationshipType.ActivityControlFlow,
+  [UMLDiagramType.UseCaseDiagram]: UseCaseRelationshipType.UseCaseAssociation,
+  [UMLDiagramType.CommunicationDiagram]: CommunicationRelationshipType.CommunicationLink,
 };

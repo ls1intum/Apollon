@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { DeepPartial } from 'redux';
 import { defaults, Styles } from '../components/theme/styles';
 import { Components } from '../packages/components';
+import { RelationshipType } from '../packages/relationship-type';
 import { Relationships } from '../packages/relationships';
 import { UMLElementType } from '../packages/uml-element-type';
 import { UMLElements } from '../packages/uml-elements';
@@ -78,9 +79,7 @@ const getInitialState = ({ model, options }: Props): State => {
 
   let elements: UMLElement[] = [
     ...model.elements.map(umlElement => {
-      const ElementClazz = UMLElements[umlElement.type as UMLElementType] as new (
-        values: IUMLElement,
-      ) => UMLElement;
+      const ElementClazz = UMLElements[umlElement.type as UMLElementType] as new (values: IUMLElement) => UMLElement;
       return new ElementClazz(umlElement);
     }),
     ...model.relationships.map(umlRelationship => {
@@ -147,7 +146,7 @@ export class Svg extends Component<Props, State> {
           <style>{(Style[0] as any)({ theme })}</style>
         </defs>
         {elements.map(element => {
-          const ElementComponent = Components[element.type];
+          const ElementComponent = Components[element.type as UMLElementType | RelationshipType];
           return (
             <svg {...element.bounds} key={element.id} className={element.name}>
               <ElementComponent element={element} />

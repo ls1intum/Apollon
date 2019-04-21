@@ -1,17 +1,15 @@
-import { DiagramType } from '../../packages/diagram-type';
-import { UMLElementType } from '../../packages/uml-element-type';
+import { UMLDiagramType } from '../../packages/diagram-type';
 import { Boundary } from '../../utils/geometry/boundary';
 import { IUMLContainer, UMLContainer } from '../uml-container/uml-container';
 import { IUMLElement } from '../uml-element/uml-element';
 
 export interface IUMLDiagram extends IUMLContainer {
-  type2: DiagramType;
+  type: UMLDiagramType;
   ownedRelationships: string[];
 }
 
 export class UMLDiagram extends UMLContainer implements IUMLDiagram {
-  type: UMLElementType = UMLElementType.Diagram;
-  type2: DiagramType = DiagramType.ClassDiagram;
+  type = UMLDiagramType.ClassDiagram;
   ownedElements: string[] = [];
   ownedRelationships: string[] = [];
 
@@ -21,8 +19,8 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
     height: 300,
   };
 
-  constructor(values?: IUMLDiagram | IUMLElement) {
-    super(values);
-    Object.assign(this, values);
-  }
+  // constructor(values?: IUMLDiagram | IUMLElement) {
+  //   super(values);
+  //   Object.assign(this, values);
+  // }
 }

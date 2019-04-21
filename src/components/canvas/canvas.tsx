@@ -9,7 +9,6 @@ import { DropEvent } from '../draggable/drop-event';
 import { Droppable } from '../draggable/droppable';
 import { LayoutedElement } from '../layouted-element/layouted-element';
 import { LayoutedRelationship } from '../layouted-relationship/layouted-relationship';
-import { PopupLayerComponent } from '../popup/popup-layer';
 import { ModelState } from '../store/model-state';
 import { CanvasContext, CanvasProvider } from './canvas-context';
 import { CoordinateSystem } from './coordinate-system';
@@ -38,7 +37,6 @@ class CanvasComponent extends Component<Props, State> {
 
   canvas: RefObject<HTMLDivElement> = createRef();
   layer: RefObject<SVGSVGElement> = createRef();
-  popup: RefObject<PopupLayerComponent> = createRef();
   coordinateSystem = new CoordinateSystem(this.layer);
 
   componentDidMount() {
@@ -88,7 +86,7 @@ class CanvasComponent extends Component<Props, State> {
               <Svg width={diagram.bounds.width / 2} height={diagram.bounds.height / 2} ref={this.layer}>
                 {this.state.isMounted && (
                   <g>
-                    <KeyboardEventListener popup={this.popup} />
+                    <KeyboardEventListener />
                     <ConnectLayer>
                       {diagram.ownedElements.map(element => (
                         <LayoutedElement key={element} id={element} />

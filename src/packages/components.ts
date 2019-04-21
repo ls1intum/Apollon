@@ -25,7 +25,6 @@ import { UseCaseSystemComponent } from './use-case-diagram/use-case-system/use-c
 import { UseCaseComponent } from './use-case-diagram/use-case/use-case-component';
 
 export const Components: { [key in UMLElementType | RelationshipType]: FunctionComponent<{ element: any }> } = {
-  [UMLElementType.Diagram]: PackageComponent,
   [UMLElementType.Package]: PackageComponent,
   [UMLElementType.Class]: ClassifierComponent,
   [UMLElementType.AbstractClass]: ClassifierComponent,
