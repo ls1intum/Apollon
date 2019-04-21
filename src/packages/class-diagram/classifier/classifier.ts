@@ -42,7 +42,7 @@ export abstract class Classifier extends UMLContainer {
     //   delete values.methods;
     // }
 
-    super(values);
+    // super(values);
   }
 
   render(children: UMLElement[]): UMLElement[] {

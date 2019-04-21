@@ -1,30 +1,31 @@
 import { Action } from 'redux';
 
 export const enum UMLContainerActionTypes {
+  APPEND = '@@element/container/APPEND',
+  REMOVE = '@@element/container/REMOVE',
   CHANGE_OWNER = '@@container/CHANGE_OWNER',
-  APPEND_CHILD = '@@container/APPEND_CHILD',
-  REMOVE_CHILD = '@@container/REMOVE_CHILD',
 }
 
+export type UMLContainerActions = AppendAction | RemoveAction | ChangeOwnerAction;
+
+export interface AppendAction extends Action<UMLContainerActionTypes.APPEND> {
+  payload: {
+    ids: string[];
+    owner: string;
+  };
+}
+
+export interface RemoveAction extends Action<UMLContainerActionTypes.REMOVE> {
+  payload: {
+    ids: string[];
+    owner: string;
+  };
+}
+
+  // TODO: necessary?
 export interface ChangeOwnerAction extends Action<UMLContainerActionTypes.CHANGE_OWNER> {
   payload: {
     id: string | null;
     owner: string | null;
   };
 }
-
-export interface AppendChildAction extends Action<UMLContainerActionTypes.APPEND_CHILD> {
-  payload: {
-    id: string;
-    owner: string;
-  };
-}
-
-export interface RemoveChildAction extends Action<UMLContainerActionTypes.REMOVE_CHILD> {
-  payload: {
-    id: string;
-    owner: string;
-  };
-}
-
-export type UMLContainerActions = ChangeOwnerAction | AppendChildAction | RemoveChildAction;

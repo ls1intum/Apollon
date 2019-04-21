@@ -21,7 +21,7 @@
 //   UMLContainerActionTypes,
 // } from './uml-container-types';
 
-// export function* UMLContainerSaga() {
+export function* UMLContainerSaga() {
 //   yield takeLatest(UMLElementActionTypes.CREATE, appendNewElementToParent);
 //   yield takeLatest(UMLElementActionTypes.DELETE, removeElementFromParent);
 //   yield takeLatest(UMLContainerActionTypes.APPEND_CHILD, appendChild);
@@ -29,7 +29,8 @@
 //   yield takeLatest(UMLContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
 //   yield takeLatest(UMLElementActionTypes.CHANGE, handleElementChange);
 //   yield takeLatest(UMLElementActionTypes.RESIZE, handleElementResize);
-// }
+  yield null;
+}
 
 // function* appendNewElementToParent({ payload }: CreateAction) {
 //   if (payload.element.owner) {

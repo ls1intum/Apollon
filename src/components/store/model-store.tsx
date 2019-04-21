@@ -11,11 +11,12 @@ import {
   Store as ReduxStore,
 } from 'redux';
 import createSagaMiddleware from 'redux-saga';
+import { all } from 'redux-saga/effects';
 import thunk, { ThunkMiddleware } from 'redux-thunk';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
 import { EditorReducer } from '../../services/editor/editor-reducer';
 import { UMLContainerReducer } from '../../services/uml-container/uml-container-reducer';
-// import { UMLContainerSaga } from '../../services/uml-container/uml-container-saga';
+import { UMLContainerSaga } from '../../services/uml-container/uml-container-saga';
 import { UMLContainerActions } from '../../services/uml-container/uml-container-types';
 import { UMLDiagramReducer } from '../../services/uml-diagram/uml-diagram-reducer';
 // import { UMLDiagramSaga } from '../../services/uml-diagram/uml-diagram-saga';
@@ -66,7 +67,7 @@ export class ModelStore extends React.Component<Props> {
 
     function* rootSaga() {
       // yield all([UMLElementSaga, UMLRelationshipSaga, UMLContainerSaga, UMLDiagramSaga].map(fork));
-      yield null;
+      yield all([UMLContainerSaga]);
     }
 
     sagaMiddleware.run(rootSaga);

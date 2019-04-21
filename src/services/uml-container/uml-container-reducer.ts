@@ -1,34 +1,56 @@
 import { Reducer } from 'redux';
 import { UMLElementState } from '../uml-element/uml-element-types';
-import { IUMLContainer } from './uml-container';
+import { UMLContainerRepository } from './uml-container-repository';
 import { UMLContainerActions, UMLContainerActionTypes } from './uml-container-types';
 
-const initialState: UMLElementState = {};
-
-export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> = (state = initialState, action) => {
+export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> = (state = {}, action) => {
   switch (action.type) {
-    case UMLContainerActionTypes.APPEND_CHILD: {
+    case UMLContainerActionTypes.APPEND: {
       const { payload } = action;
-      const container = state[payload.owner] as IUMLContainer;
+      const container = state[payload.owner];
+      if (!UMLContainerRepository.isUMLContainer(container)) {
+        break;
+      }
+
       return {
         ...state,
-        [payload.owner]: {
+        [container.id]: {
           ...container,
-          ownedElements: [...new Set([...container.ownedElements, payload.id].reverse())].reverse(),
+          ownedElements: [...new Set([...payload.ids, ...container.ownedElements])],
         },
-        [payload.id]: { ...state[payload.id], owner: payload.owner },
+        ...payload.ids.reduce<UMLElementState>((newState, id) => {
+          return {
+            ...newState,
+            [id]: {
+              ...newState[id],
+              owner: payload.owner,
+            },
+          };
+        }, {}),
       };
     }
-    case UMLContainerActionTypes.REMOVE_CHILD: {
+    case UMLContainerActionTypes.REMOVE: {
       const { payload } = action;
-      const container = state[payload.owner] as IUMLContainer;
+      const container = state[payload.owner];
+      if (!UMLContainerRepository.isUMLContainer(container)) {
+        break;
+      }
+
       return {
         ...state,
-        [payload.owner]: {
+        [container.id]: {
           ...container,
-          ownedElements: container.ownedElements.filter(id => id !== payload.id),
+          ownedElements: container.ownedElements.filter(id => !payload.ids.includes(id)),
         },
-        ...(state[payload.id] && { [payload.id]: { ...state[payload.id], owner: null } }),
+        ...payload.ids.reduce<UMLElementState>((newState, id) => {
+          return {
+            ...newState,
+            [id]: {
+              ...newState[id],
+              owner: null,
+            },
+          };
+        }, {}),
       };
     }
   }
