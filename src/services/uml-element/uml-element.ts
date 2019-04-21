@@ -1,6 +1,8 @@
+import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { RelationshipType as UMLRelationshipType } from '../../packages/relationship-type';
 import { UMLElementType } from '../../packages/uml-element-type';
+import { assign } from '../../utils/assign';
 import { Boundary } from '../../utils/geometry/boundary';
 import { uuid } from '../../utils/uuid';
 
@@ -32,10 +34,8 @@ export abstract class UMLElement implements IUMLElement {
   readonly bounds: Boundary = { x: 0, y: 0, width: 200, height: 100 };
   owner: string | null = null;
 
-  constructor(values?: IUMLElement) {
-    if (values) {
-      Object.assign(this, { ...values, bounds: { ...values.bounds } });
-    }
+  constructor(values?: DeepPartial<IUMLElement>) {
+    assign<IUMLElement>(this, values);
   }
 
   clone<T extends UMLElement>(): T {

@@ -47,11 +47,7 @@ export class ModelStore extends React.Component<Props> {
     interactive: InteractableReducer,
     updating: UpdatableReducer,
     elements: this.reduceReducers<
-      UMLElementActions &
-        ResizableActions &
-        MovableActions &
-        UMLRelationshipActions &
-        UMLContainerActions
+      UMLElementActions & ResizableActions & MovableActions & UMLRelationshipActions & UMLContainerActions
     >(UMLElementReducer, ResizableReducer, MovableReducer, UMLRelationshipReducer, UMLContainerReducer),
     assessments: AssessmentReducer,
   };

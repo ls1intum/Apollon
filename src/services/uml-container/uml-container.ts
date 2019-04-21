@@ -7,13 +7,13 @@ export interface IUMLContainer extends IUMLElement {
 export abstract class UMLContainer extends UMLElement implements IUMLContainer {
   static features = { ...UMLElement.features, droppable: true };
 
-  ownedElements: string[];
+  ownedElements: string[] = [];
 
-  constructor(values?: IUMLContainer | IUMLElement) {
-    super(values);
+  // constructor(values?: IUMLContainer | IUMLElement) {
+  //   super(values);
 
-    this.ownedElements = values && 'ownedElements' in values ? values.ownedElements : [];
-  }
+  //   this.ownedElements = values && 'ownedElements' in values ? values.ownedElements : [];
+  // }
 
   render(children: UMLElement[]): UMLElement[] {
     return [this, ...children];

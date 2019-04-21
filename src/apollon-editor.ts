@@ -4,7 +4,6 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { DeepPartial, Store } from 'redux';
 import { ModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
-import { UMLDiagramType } from './packages/diagram-type';
 import { RelationshipType } from './packages/relationship-type';
 import { UMLElementType } from './packages/uml-element-type';
 import { Application } from './scenes/application';
@@ -73,12 +72,7 @@ export class ApollonEditor {
     let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
     state = {
       ...state,
-      diagram: (() => {
-        const d = new UMLDiagram();
-        Object.assign(d, state.diagram);
-        d.type = options.type || UMLDiagramType.ClassDiagram;
-        return d;
-      })(),
+      diagram: new UMLDiagram({ type: options.type }),
       editor: {
         ...state.editor,
         view: ApollonView.Modelling,
