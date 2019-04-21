@@ -14,21 +14,21 @@ export const droppable = (WrappedComponent: typeof ElementComponent) => {
   class Droppable extends Component<Props> {
     onDrop = (event: DropEvent) => {
       if (!event.action) return;
-      const element = event.action.element;
-      element.owner = this.props.element.id;
-      const offset = this.props.coordinateSystem.offset();
-      const position = this.props.coordinateSystem.screenToPoint(event.position.x, event.position.y);
-      element.bounds.x = position.x - offset.x;
-      element.bounds.y = position.y - offset.y;
-      // const relativePosition = this.props.getRelativePosition(
-      //   element.owner,
-      //   new Point(element.bounds.x, element.bounds.y),
-      // );
-      const relativePosition = position;
-      element.bounds.x = relativePosition.x;
-      element.bounds.y = relativePosition.y;
+      const elements = event.action.elements;
+      // element.owner = this.props.element.id;
+      // const offset = this.props.coordinateSystem.offset();
+      // const position = this.props.coordinateSystem.screenToPoint(event.position.x, event.position.y);
+      // element.bounds.x = position.x - offset.x;
+      // element.bounds.y = position.y - offset.y;
+      // // const relativePosition = this.props.getRelativePosition(
+      // //   element.owner,
+      // //   new Point(element.bounds.x, element.bounds.y),
+      // // );
+      // const relativePosition = position;
+      // element.bounds.x = position.x; //relativePosition.x;
+      // element.bounds.y = position.y; //relativePosition.y;
 
-      this.props.create(element);
+      this.props.create(elements, this.props.id);
     };
 
     render() {

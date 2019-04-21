@@ -6,6 +6,7 @@ import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
 import { UMLContainer } from '../uml-container/uml-container';
+import { AppendAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
 import { Hoverable } from './hoverable/hoverable-repository';
 import { Interactable } from './interactable/interactable-repository';
 import { Movable } from './movable/movable-repository';
@@ -46,10 +47,24 @@ class Repository {
     return element.type in UMLElementType;
   }
 
-  static create = <T extends IUMLElement>(values: T | T[]): CreateAction<T> => ({
-    type: UMLElementActionTypes.CREATE,
-    payload: { values: Array.isArray(values) ? values : [values] },
-  });
+  static create = <T extends IUMLElement>(value: T | T[] , owner?: string): AsyncDispatch<void> => async (dispatch, getState) => {
+    const values = Array.isArray(value) ? value : [value];
+    dispatch<CreateAction<T>>({
+      type: UMLElementActionTypes.CREATE,
+      payload: { values },
+    });
+
+    const ids = values.filter(v => !v.owner).map(v => v.id);
+    if (ids.length) {
+      dispatch<AppendAction>({
+        type: UMLContainerActionTypes.APPEND,
+        payload: {
+          ids,
+          owner: owner || getState().diagram.id,
+        },
+      });
+    }
+  };
 
   static update = <T extends IUMLElement>(id: string | string[], values: Partial<T>): UpdateAction<T> => ({
     type: UMLElementActionTypes.UPDATE,

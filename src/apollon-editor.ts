@@ -21,7 +21,7 @@ export class ApollonEditor {
 
   set model(model: UMLModel) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
-    const state: ModelState = {
+    const state: DeepPartial<ModelState> = {
       ...ModelState.fromModel(model),
       editor: { ...this.store.getState().editor },
     };
@@ -70,9 +70,10 @@ export class ApollonEditor {
 
   constructor(private container: HTMLElement, private options: ApollonOptions) {
     let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
+
     state = {
       ...state,
-      diagram: new UMLDiagram({ type: options.type }),
+      diagram: new UMLDiagram({ ...state.diagram, type: options.type }),
       editor: {
         ...state.editor,
         view: ApollonView.Modelling,

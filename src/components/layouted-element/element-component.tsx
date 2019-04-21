@@ -48,7 +48,7 @@ export class ElementComponentComponent extends Component<Props> {
   render() {
     const { element, interactable } = this.props;
     if (!UMLElementRepository.isUMLElement(element)) {
-      return;
+      return null;
     }
     const ChildComponent = Components[element.type];
 

@@ -8,7 +8,7 @@ export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> 
     case UMLContainerActionTypes.APPEND: {
       const { payload } = action;
       const container = state[payload.owner];
-      if (!UMLContainerRepository.isUMLContainer(container)) {
+      if (!container || !UMLContainerRepository.isUMLContainer(container)) {
         break;
       }
 
@@ -18,11 +18,10 @@ export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> 
           ...container,
           ownedElements: [...new Set([...payload.ids, ...container.ownedElements])],
         },
-        ...payload.ids.reduce<UMLElementState>((newState, id) => {
+        ...payload.ids.reduce<UMLElementState>((_, id) => {
           return {
-            ...newState,
             [id]: {
-              ...newState[id],
+              ...state[id],
               owner: payload.owner,
             },
           };
@@ -42,11 +41,10 @@ export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> 
           ...container,
           ownedElements: container.ownedElements.filter(id => !payload.ids.includes(id)),
         },
-        ...payload.ids.reduce<UMLElementState>((newState, id) => {
+        ...payload.ids.reduce<UMLElementState>((_, id) => {
           return {
-            ...newState,
             [id]: {
-              ...newState[id],
+              ...state[id],
               owner: null,
             },
           };

@@ -22,6 +22,7 @@ import { UseCaseSystem } from '../../packages/use-case-diagram/use-case-system/u
 import { UseCase } from '../../packages/use-case-diagram/use-case/use-case';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { ApollonView } from '../../services/editor/editor-types';
+import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ApollonMode, DiagramType } from '../../typings';
@@ -86,68 +87,42 @@ class SidebarComponent extends Component<Props, State> {
   };
 
   onDrop = (element: UMLElement) => (event: DropEvent) => {
+    const elements: UMLElement[] = [];
+
+    switch (element.type) {
+      case UMLElementType.Class:
+      case UMLElementType.AbstractClass:
+      case UMLElementType.Interface:
+        elements.push(
+          new ClassAttribute({ name: this.props.translate('sidebar.classAttribute') }),
+          new ClassMethod({ name: this.props.translate('sidebar.classMethod') }),
+        );
+        break;
+      case UMLElementType.Enumeration:
+        elements.push(
+          new ClassAttribute({ name: this.props.translate('sidebar.enumAttribute') + 1 }),
+          new ClassAttribute({ name: this.props.translate('sidebar.enumAttribute') + 2 }),
+          new ClassAttribute({ name: this.props.translate('sidebar.enumAttribute') + 3 }),
+        );
+        break;
+      case UMLElementType.ObjectName:
+        elements.push(new ObjectAttribute({ name: this.props.translate('sidebar.objectAttribute') }));
+        break;
+    }
+
+    if (UMLContainerRepository.isUMLContainer(element)) {
+      elements.forEach(e => {
+        e.owner = element.id;
+      });
+      element.ownedElements = elements.map(e => e.id);
+    }
+    elements.unshift(element);
+
     event.action = {
       type: 'CREATE',
-      element,
+      elements,
     };
     this.refresh();
-
-    setTimeout(() => {
-      switch (element.type) {
-        case UMLElementType.Class:
-        case UMLElementType.AbstractClass:
-        case UMLElementType.Interface:
-          [
-            (() => {
-              const c = new ClassAttribute();
-              c.name = this.props.translate('sidebar.classAttribute');
-              return c;
-            })(),
-            (() => {
-              const c = new ClassMethod();
-              c.name = this.props.translate('sidebar.classMethod');
-              return c;
-            })(),
-          ].forEach(member => {
-            member.owner = element.id;
-            this.props.create(member);
-          });
-          break;
-        case UMLElementType.Enumeration:
-          [
-            (() => {
-              const c = new ClassAttribute();
-              c.name = this.props.translate('sidebar.enumAttribute') + 1;
-              return c;
-            })(),
-            (() => {
-              const c = new ClassAttribute();
-              c.name = this.props.translate('sidebar.enumAttribute') + 2;
-              return c;
-            })(),
-            (() => {
-              const c = new ClassAttribute();
-              c.name = this.props.translate('sidebar.enumAttribute') + 3;
-              return c;
-            })(),
-          ].forEach(member => {
-            member.owner = element.id;
-            this.props.create(member);
-          });
-          break;
-        case UMLElementType.ObjectName:
-          [
-            (() => {
-              const c = new ObjectAttribute();
-              c.name = this.props.translate('sidebar.objectAttribute');
-              return c;
-            })(),
-          ].forEach(member => {
-            member.owner = element.id;
-            this.props.create(member);
-          });
-      }
-    }, 0);
   };
 
   componentDidMount() {

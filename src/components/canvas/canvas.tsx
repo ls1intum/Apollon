@@ -2,6 +2,7 @@ import React, { Component, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { IUMLDiagram } from '../../services/uml-diagram/uml-diagram';
+import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ApollonMode } from '../../typings';
 import { ConnectLayer } from '../connectable/connect-layer';
@@ -56,13 +57,13 @@ class CanvasComponent extends Component<Props, State> {
 
   onDrop = (event: DropEvent) => {
     if (!event.action) return;
-    const element = event.action.element;
-    const offset = this.coordinateSystem.offset();
-    const position = this.coordinateSystem.screenToPoint(event.position.x, event.position.y);
-    element.bounds.x = position.x - offset.x;
-    element.bounds.y = position.y - offset.y;
+    const elements = event.action.elements;
+    // const offset = this.coordinateSystem.offset();
+    // const position = this.coordinateSystem.screenToPoint(event.position.x, event.position.y);
+    // element.bounds.x = position.x - offset.x;
+    // element.bounds.y = position.y - offset.y;
 
-    this.props.create(element);
+    this.props.create(elements);
   };
 
   render() {
@@ -125,7 +126,7 @@ type StateProps = {
 };
 
 type DispatchProps = {
-  create: typeof UMLElementRepository.create;
+  create: (values: IUMLElement | IUMLElement[]) => void;
   deselectAll: () => void;
 };
 

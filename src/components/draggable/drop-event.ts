@@ -3,7 +3,7 @@ import { Draggable } from './draggable';
 
 export interface DropAction {
   type: 'CREATE';
-  element: UMLElement;
+  elements: UMLElement[];
 }
 
 export interface DropEvent {
