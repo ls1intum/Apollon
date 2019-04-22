@@ -130,7 +130,7 @@ export class ApollonEditor {
     this.store =
       this.application.current &&
       this.application.current.store.current &&
-      this.application.current.store.current.store;
+      this.application.current.store.current.state.store;
     if (this.store) {
       this.store.subscribe(this.onDispatch);
     }

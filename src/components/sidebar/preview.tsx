@@ -1,17 +1,17 @@
 import React, { Component } from 'react';
 import { DeepPartial } from 'redux';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
-import { ElementComponent } from '../layouted-element/element-component';
+import { hoverable } from '../layouted-element/hoverable';
 import { ModelState } from '../store/model-state';
 import { ModelStore } from '../store/model-store';
-import { hoverable } from '../layouted-element/hoverable';
 import { styled } from '../theme/styles';
+import { CanvasElement } from '../uml-element/canvas-element';
 
 type OwnProps = {
   elements?: UMLElementState;
 };
 
-const StyledPreview = styled(hoverable(ElementComponent))`
+const StyledPreview = styled(hoverable(CanvasElement))`
   margin: 5px;
   overflow: visible;
 `;
@@ -28,9 +28,7 @@ export class Preview extends Component<OwnProps> {
     const id = Object.keys(elements)[0];
 
     return (
-      <ModelStore initialState={state}>
-        <StyledPreview id={id} />
-      </ModelStore>
+      <StyledPreview id={id} />
     );
   }
 }

@@ -39,56 +39,54 @@ import { undoable } from '../../services/undo/undo-reducer';
 import { Action } from '../../utils/actions/actions';
 import { ModelState } from './model-state';
 
-export class ModelStore extends React.Component<Props> {
-  store: ReduxStore<ModelState>;
-
-  private reducers = {
-    editor: EditorReducer,
-    diagram: UMLDiagramReducer,
-    hovered: HoverableReducer,
-    selected: SelectableReducer,
-    moving: MovableReducer,
-    resizing: ResizableReducer,
-    interactive: InteractableReducer,
-    updating: UpdatableReducer,
-    elements: this.reduceReducers<
-      UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions & UMLContainerActions
-    >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
-    assessments: AssessmentReducer,
+const reduceReducers = <T extends Action>(
+  ...reducers: Array<Reducer<UMLElementState, T>>
+): Reducer<UMLElementState, T> => {
+  return (state = {}, action) => {
+    return reducers.reduce<UMLElementState>((newState, reducer) => {
+      return reducer(newState, action);
+    }, state);
   };
+}
 
-  constructor(props: Readonly<Props>) {
-    super(props);
+const reducers = {
+  editor: EditorReducer,
+  diagram: UMLDiagramReducer,
+  hovered: HoverableReducer,
+  selected: SelectableReducer,
+  moving: MovableReducer,
+  resizing: ResizableReducer,
+  interactive: InteractableReducer,
+  updating: UpdatableReducer,
+  elements: reduceReducers<
+    UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions & UMLContainerActions
+  >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
+  assessments: AssessmentReducer,
+};
 
-    const reducer = undoable(combineReducers<ModelState>(this.reducers));
+const getInitialState = ({ initialState }: Props) => {
+  const reducer = undoable(combineReducers<ModelState>(reducers));
+  const sagaMiddleware = createSagaMiddleware();
+  const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+  const enhancer = composeEnhancers(applyMiddleware(thunk as ThunkMiddleware<ModelState, Action>, sagaMiddleware));
 
-    const sagaMiddleware = createSagaMiddleware();
-
-    const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-
-    const enhancer = composeEnhancers(applyMiddleware(thunk as ThunkMiddleware<ModelState, Action>, sagaMiddleware));
-    this.store = createStore(reducer, props.initialState || {}, enhancer);
-
-    function* rootSaga() {
-      // yield all([UMLElementSaga, UMLRelationshipSaga, UMLContainerSaga, UMLDiagramSaga].map(fork));
-      yield all([UMLContainerSaga]);
-    }
-
-    sagaMiddleware.run(rootSaga);
+  function* rootSaga() {
+    // yield all([UMLElementSaga, UMLRelationshipSaga, UMLContainerSaga, UMLDiagramSaga].map(fork));
+    yield all([UMLContainerSaga]);
   }
+  const store = createStore(reducer, initialState || {}, enhancer);
+
+  sagaMiddleware.run(rootSaga);
+  return { store };
+};
+
+type State = ReturnType<typeof getInitialState>
+
+export class ModelStore extends React.Component<Props, State> {
+  state = getInitialState(this.props);
 
   render() {
-    return <Provider store={this.store}>{this.props.children}</Provider>;
-  }
-
-  private reduceReducers<T extends Action>(
-    ...reducers: Array<Reducer<UMLElementState, T>>
-  ): Reducer<UMLElementState, T> {
-    return (state = {}, action) => {
-      return reducers.reduce<UMLElementState>((newState, reducer) => {
-        return reducer(newState, action);
-      }, state);
-    };
+    return <Provider store={this.state.store}>{this.props.children}</Provider>;
   }
 }
 

@@ -6,7 +6,7 @@ import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary'
 export class Package extends UMLContainer {
   static features = {
     ...UMLContainer.features,
-    connectable: false,
+    // connectable: false,
   };
 
   type = CommonElementType.Package;

@@ -5,7 +5,7 @@ import { UMLElementRepository } from '../../services/uml-element/uml-element-rep
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { ModelState } from '../store/model-state';
-import { OwnProps } from './element-component';
+import { UMLElementComponentProps } from '../uml-element/uml-element-component';
 
 type StateProps = {};
 
@@ -15,7 +15,7 @@ type DispatchProps = {
   end: AsyncDispatch<typeof UMLElementRepository.endResizing>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
 const initialState = {
   resizing: false,
@@ -24,7 +24,7 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
   null,
   {
     start: UMLElementRepository.startResizing,
@@ -46,15 +46,15 @@ const Handle = styled.rect.attrs({
 `;
 
 export const resizable = (options?: { preventX: boolean; preventY: boolean }) => (
-  WrappedComponent: ComponentType<OwnProps>,
-): ComponentClass<OwnProps> => {
+  WrappedComponent: ComponentType<UMLElementComponentProps>,
+): ComponentClass<UMLElementComponentProps> => {
   class Resizable extends Component<Props, State> {
     state = initialState;
 
     render() {
+      const { start, resize, end, ...props } = this.props;
       return (
-        <WrappedComponent id={this.props.id} className={this.props.className}>
-          {this.props.children}
+        <WrappedComponent {...props}>
           <Handle onPointerDown={this.onPointerDown} />
         </WrappedComponent>
       );

@@ -15,6 +15,7 @@ import { CanvasContext, CanvasProvider } from './canvas-context';
 import { CoordinateSystem } from './coordinate-system';
 import { Grid } from './grid';
 import { KeyboardEventListener } from './keyboard-eventlistener';
+import { UMLElementComponent } from './../uml-element/uml-element-component';
 
 const Container = styled.div`
   height: 100%;
@@ -58,10 +59,15 @@ class CanvasComponent extends Component<Props, State> {
   onDrop = (event: DropEvent) => {
     if (!event.action) return;
     const elements = event.action.elements;
-    // const offset = this.coordinateSystem.offset();
+    console.log(event.position.x, event.position.y, this.coordinateSystem.offset());
+    const offset = this.coordinateSystem.offset();
     // const position = this.coordinateSystem.screenToPoint(event.position.x, event.position.y);
-    // element.bounds.x = position.x - offset.x;
-    // element.bounds.y = position.y - offset.y;
+    for (const element of elements) {
+      if (!element.owner) {
+        element.bounds.x = Math.round((event.position.x - offset.x) / 10) * 10;
+        element.bounds.y = Math.round((event.position.y - offset.y) / 10) * 10;
+      }
+    }
 
     this.props.create(elements);
   };
@@ -90,7 +96,7 @@ class CanvasComponent extends Component<Props, State> {
                     <KeyboardEventListener />
                     <ConnectLayer>
                       {diagram.ownedElements.map(element => (
-                        <LayoutedElement key={element} id={element} />
+                        <UMLElementComponent key={element} id={element} component="canvas" />
                       ))}
                       {diagram.ownedRelationships.map(relationship => (
                         <LayoutedRelationship key={relationship} relationship={relationship} container={this.canvas} />

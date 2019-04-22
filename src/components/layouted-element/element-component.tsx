@@ -7,6 +7,7 @@ import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { CanvasConsumer } from '../canvas/canvas-context';
 import { ModelState } from '../store/model-state';
+import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 
 const STROKE = 5;
 
@@ -52,6 +53,13 @@ export class ElementComponentComponent extends Component<Props> {
 
     if (!element) {
       return null;
+    }
+
+    let children = null;
+    if (UMLContainerRepository.isUMLContainer(element)) {
+      // children = element.ownedElements.map((id: string) => (
+      //   <Child key={id} id={id} disabled={disabled} />
+      // ));
     }
 
     return (

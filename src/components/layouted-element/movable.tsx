@@ -5,7 +5,7 @@ import { UMLElementRepository } from '../../services/uml-element/uml-element-rep
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { ModelState } from '../store/model-state';
-import { OwnProps } from './element-component';
+import { UMLElementComponentProps } from '../uml-element/uml-element-component';
 
 type StateProps = {
   selected: boolean;
@@ -17,7 +17,7 @@ type DispatchProps = {
   end: AsyncDispatch<typeof UMLElementRepository.endMoving>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
 const initialState = {
   moving: false,
@@ -26,7 +26,7 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
   (state, props) => ({
     selected: state.selected.includes(props.id),
   }),
@@ -37,7 +37,9 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   },
 );
 
-export const movable = (WrappedComponent: ComponentType<OwnProps>): ComponentClass<OwnProps> => {
+export const movable = (
+  WrappedComponent: ComponentType<UMLElementComponentProps>,
+): ComponentClass<UMLElementComponentProps> => {
   class Movable extends Component<Props, State> {
     state = initialState;
 
@@ -52,6 +54,7 @@ export const movable = (WrappedComponent: ComponentType<OwnProps>): ComponentCla
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
+      console.log('movable NODE', node);
       node.style.cursor = 'move';
       const child = node.firstChild as HTMLElement;
       child.addEventListener('pointerdown', this.onPointerDown);
@@ -64,11 +67,8 @@ export const movable = (WrappedComponent: ComponentType<OwnProps>): ComponentCla
     }
 
     render() {
-      return (
-        <WrappedComponent id={this.props.id} className={this.props.className}>
-          {this.props.children}
-        </WrappedComponent>
-      );
+      const { selected, start, move, end, ...props } = this.props;
+      return <WrappedComponent {...props} />;
     }
 
     private onPointerDown = (event: PointerEvent) => {

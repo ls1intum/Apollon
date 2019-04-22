@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { ModelState } from '../store/model-state';
-import { OwnProps } from './element-component';
+import { UMLElementComponentProps } from '../uml-element/uml-element-component';
 
 type StateProps = {
   hovered: boolean;
@@ -16,9 +16,9 @@ type DispatchProps = {
   deselect: AsyncDispatch<typeof UMLElementRepository.deselect>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
   (state, props) => ({
     hovered: state.hovered[0] === props.id,
     selected: state.selected.includes(props.id),
@@ -29,10 +29,13 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   },
 );
 
-export const selectable = (WrappedComponent: ComponentType<OwnProps>): ComponentClass<OwnProps> => {
+export const selectable = (
+  WrappedComponent: ComponentType<UMLElementComponentProps>,
+): ComponentClass<UMLElementComponentProps> => {
   class Selectable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
+      console.log('selectable NODE', node);
       node.addEventListener('pointerdown', this.select);
     }
 
@@ -42,11 +45,8 @@ export const selectable = (WrappedComponent: ComponentType<OwnProps>): Component
     }
 
     render() {
-      return (
-        <WrappedComponent id={this.props.id} className={this.props.className}>
-          {this.props.children}
-        </WrappedComponent>
-      );
+      const { hovered, selected, select, deselect, ...props } = this.props;
+      return <WrappedComponent {...props} />;
     }
 
     private select = (event: PointerEvent) => {

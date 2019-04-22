@@ -5,7 +5,11 @@ export const assign = <T extends { [key: string]: any }>(target: T, source?: Dee
     if (Array.isArray(source[key])) {
       target[key] = [...new Set([ ...target[key], ...assign(target[key], source[key]) ])] as any;
     } else if (typeof source[key] === 'object') {
-      target[key] = { ...target[key], ...assign(target[key], source[key]) };
+      if (source[key] == null) {
+        target[key] = null as any;
+      } else {
+        target[key] = { ...target[key], ...assign(target[key], source[key]) };
+      }
     } else if (source[key]) {
       target[key] = source[key] as T[Extract<keyof T, string>];
     }

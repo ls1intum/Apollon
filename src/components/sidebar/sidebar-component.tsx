@@ -36,6 +36,7 @@ import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { Preview } from './preview';
 import { Container } from './sidebar-styles';
+import { ModelStore } from '../store/model-store';
 
 type OwnProps = {};
 
@@ -53,9 +54,11 @@ type DispatchProps = {
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
-type State = {
-  previews: UMLElement[];
+const initialState = {
+  previews: [new Package({ name: 'package' })],
 };
+
+type State = typeof initialState;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
@@ -74,9 +77,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 );
 
 class SidebarComponent extends Component<Props, State> {
-  state: State = {
-    previews: [],
-  };
+  state = initialState;
 
   changeView = (view: ApollonView) => this.props.changeView(view);
 
@@ -111,33 +112,27 @@ class SidebarComponent extends Component<Props, State> {
         break;
     }
 
-    if (UMLContainerRepository.isUMLContainer(element)) {
+    const clone = element.clone();
+    if (UMLContainerRepository.isUMLContainer(clone)) {
       elements.forEach(e => {
-        e.owner = element.id;
+        e.owner = clone.id;
       });
-      element.ownedElements = elements.map(e => e.id);
+      clone.ownedElements = elements.map(e => e.id);
     }
-    elements.unshift(element);
+    elements.unshift(clone);
 
     event.action = {
       type: 'CREATE',
       elements,
     };
-    this.refresh();
   };
 
-  componentDidMount() {
-    // this.refresh();
-  }
-
   render() {
+    console.log('rerender');
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
 
     const elements: UMLElement[] = [new Package({ name: 'package' })];
-    const elementState: UMLElementState = elements.reduce(
-      (acc, val) => ({ ...acc, [val.id]: val }),
-      {},
-    );
+    const elementState: UMLElementState = elements.reduce((acc, val) => ({ ...acc, [val.id]: val }), {});
 
     return (
       <Container>
@@ -147,9 +142,11 @@ class SidebarComponent extends Component<Props, State> {
             <Switch.Item value={ApollonView.Exporting}>{this.props.translate('views.exporting')}</Switch.Item>
           </Switch>
         )}
-        <Draggable onDrop={this.onDrop(elements[0])}>
-          <Preview elements={elementState} />
-        </Draggable>
+        <ModelStore initialState={{ elements: elementState }}>
+          <Draggable onDrop={this.onDrop(elements[0])}>
+            <Preview elements={elementState} />
+          </Draggable>
+        </ModelStore>
         {this.props.view === ApollonView.Modelling ? (
           <CanvasProvider value={null}>
             {/* {this.state.previews.map((element, index) => (
@@ -175,104 +172,104 @@ class SidebarComponent extends Component<Props, State> {
     );
   }
 
-  private refresh = () => {
-    switch (this.props.diagramType) {
-      case DiagramType.ClassDiagram:
-        this.setState({
-          previews: [
-            new Package(),
-            (() => {
-              const c = new Class();
-              c.name = this.props.translate('packages.classDiagram.class');
-              return c;
-            })(),
-            (() => {
-              const c = new AbstractClass();
-              c.name = this.props.translate('packages.classDiagram.abstract');
-              return c;
-            })(),
-            (() => {
-              const c = new Interface();
-              c.name = this.props.translate('packages.classDiagram.interface');
-              return c;
-            })(),
-            (() => {
-              const c = new Enumeration();
-              c.name = this.props.translate('packages.classDiagram.enumeration');
-              return c;
-            })(),
-          ],
-        });
-        break;
-      case DiagramType.ObjectDiagram:
-        this.setState({
-          previews: [
-            (() => {
-              const c = new ObjectName();
-              c.name = this.props.translate('packages.objectDiagram.objectName');
-              return c;
-            })(),
-          ],
-        });
-        break;
-      case DiagramType.ActivityDiagram:
-        this.setState({
-          previews: [
-            new ActivityInitialNode(),
-            new ActivityFinalNode(),
-            (() => {
-              const c = new ActivityActionNode();
-              c.name = this.props.translate('packages.activityDiagram.actionNode');
-              return c;
-            })(),
-            (() => {
-              const c = new ActivityObjectNode();
-              c.name = this.props.translate('packages.activityDiagram.objectNode');
-              return c;
-            })(),
-            (() => {
-              const c = new ActivityMergeNode();
-              c.name = this.props.translate('packages.activityDiagram.condition');
-              return c;
-            })(),
-            new ActivityForkNode(),
-          ],
-        });
-        break;
-      case DiagramType.UseCaseDiagram:
-        this.setState({
-          previews: [
-            (() => {
-              const c = new UseCase();
-              c.name = this.props.translate('packages.useCaseDiagram.useCase');
-              return c;
-            })(),
-            (() => {
-              const c = new UseCaseActor();
-              c.name = this.props.translate('packages.useCaseDiagram.actor');
-              return c;
-            })(),
-            (() => {
-              const c = new UseCaseSystem();
-              c.name = this.props.translate('packages.useCaseDiagram.system');
-              return c;
-            })(),
-          ],
-        });
-        break;
-      case DiagramType.CommunicationDiagram:
-        this.setState({
-          previews: [
-            (() => {
-              const c = new ObjectName();
-              c.name = this.props.translate('packages.objectDiagram.objectName');
-              return c;
-            })(),
-          ],
-        });
-        break;
-    }
-  };
+  // private refresh = () => {
+  //   switch (this.props.diagramType) {
+  //     case DiagramType.ClassDiagram:
+  //       this.setState({
+  //         previews: [
+  //           new Package(),
+  //           (() => {
+  //             const c = new Class();
+  //             c.name = this.props.translate('packages.classDiagram.class');
+  //             return c;
+  //           })(),
+  //           (() => {
+  //             const c = new AbstractClass();
+  //             c.name = this.props.translate('packages.classDiagram.abstract');
+  //             return c;
+  //           })(),
+  //           (() => {
+  //             const c = new Interface();
+  //             c.name = this.props.translate('packages.classDiagram.interface');
+  //             return c;
+  //           })(),
+  //           (() => {
+  //             const c = new Enumeration();
+  //             c.name = this.props.translate('packages.classDiagram.enumeration');
+  //             return c;
+  //           })(),
+  //         ],
+  //       });
+  //       break;
+  //     case DiagramType.ObjectDiagram:
+  //       this.setState({
+  //         previews: [
+  //           (() => {
+  //             const c = new ObjectName();
+  //             c.name = this.props.translate('packages.objectDiagram.objectName');
+  //             return c;
+  //           })(),
+  //         ],
+  //       });
+  //       break;
+  //     case DiagramType.ActivityDiagram:
+  //       this.setState({
+  //         previews: [
+  //           new ActivityInitialNode(),
+  //           new ActivityFinalNode(),
+  //           (() => {
+  //             const c = new ActivityActionNode();
+  //             c.name = this.props.translate('packages.activityDiagram.actionNode');
+  //             return c;
+  //           })(),
+  //           (() => {
+  //             const c = new ActivityObjectNode();
+  //             c.name = this.props.translate('packages.activityDiagram.objectNode');
+  //             return c;
+  //           })(),
+  //           (() => {
+  //             const c = new ActivityMergeNode();
+  //             c.name = this.props.translate('packages.activityDiagram.condition');
+  //             return c;
+  //           })(),
+  //           new ActivityForkNode(),
+  //         ],
+  //       });
+  //       break;
+  //     case DiagramType.UseCaseDiagram:
+  //       this.setState({
+  //         previews: [
+  //           (() => {
+  //             const c = new UseCase();
+  //             c.name = this.props.translate('packages.useCaseDiagram.useCase');
+  //             return c;
+  //           })(),
+  //           (() => {
+  //             const c = new UseCaseActor();
+  //             c.name = this.props.translate('packages.useCaseDiagram.actor');
+  //             return c;
+  //           })(),
+  //           (() => {
+  //             const c = new UseCaseSystem();
+  //             c.name = this.props.translate('packages.useCaseDiagram.system');
+  //             return c;
+  //           })(),
+  //         ],
+  //       });
+  //       break;
+  //     case DiagramType.CommunicationDiagram:
+  //       this.setState({
+  //         previews: [
+  //           (() => {
+  //             const c = new ObjectName();
+  //             c.name = this.props.translate('packages.objectDiagram.objectName');
+  //             return c;
+  //           })(),
+  //         ],
+  //       });
+  //       break;
+  //   }
+  // };
 }
 
 export const Sidebar = enhance(SidebarComponent);
