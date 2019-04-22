@@ -25,6 +25,7 @@ import { ApollonView } from '../../services/editor/editor-types';
 import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { ApollonMode, DiagramType } from '../../typings';
 import { CanvasProvider } from '../canvas/canvas-context';
 import { Switch } from '../controls/switch/switch';
@@ -32,9 +33,9 @@ import { Draggable } from '../draggable/draggable';
 import { DropEvent } from '../draggable/drop-event';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
-import { ElementComponent } from '../layouted-element/element-component';
 import { ModelState } from '../store/model-state';
-import { Container, Preview } from './sidebar-styles';
+import { Preview } from './preview';
+import { Container } from './sidebar-styles';
 
 type OwnProps = {};
 
@@ -126,11 +127,18 @@ class SidebarComponent extends Component<Props, State> {
   };
 
   componentDidMount() {
-    this.refresh();
+    // this.refresh();
   }
 
   render() {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
+
+    const elements: UMLElement[] = [new Package({ name: 'package' })];
+    const elementState: UMLElementState = elements.reduce(
+      (acc, val) => ({ ...acc, [val.id]: val }),
+      {},
+    );
+
     return (
       <Container>
         {this.props.mode === ApollonMode.Exporting && (
@@ -139,15 +147,18 @@ class SidebarComponent extends Component<Props, State> {
             <Switch.Item value={ApollonView.Exporting}>{this.props.translate('views.exporting')}</Switch.Item>
           </Switch>
         )}
+        <Draggable onDrop={this.onDrop(elements[0])}>
+          <Preview elements={elementState} />
+        </Draggable>
         {this.props.view === ApollonView.Modelling ? (
           <CanvasProvider value={null}>
-            {this.state.previews.map((element, index) => (
+            {/* {this.state.previews.map((element, index) => (
               <Draggable key={index} onDrop={this.onDrop(element)}>
                 <Preview>
-                  <ElementComponent id={element.id} element={element} />
+                  <ElementComponent id={element.id} />
                 </Preview>
               </Draggable>
-            ))}
+            ))} */}
           </CanvasProvider>
         ) : (
           <label htmlFor="toggleInteractiveElementsMode">

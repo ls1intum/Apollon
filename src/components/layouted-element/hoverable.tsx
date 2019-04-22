@@ -1,8 +1,8 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { ElementComponent, OwnProps } from './element-component';
+import { OwnProps } from './element-component';
 
 type StateProps = {};
 
@@ -21,7 +21,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps>(
   },
 );
 
-export const hoverable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
+export const hoverable = (WrappedComponent: ComponentType<OwnProps>): ComponentClass<OwnProps> => {
   class Hoverable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
@@ -36,7 +36,11 @@ export const hoverable = (WrappedComponent: typeof ElementComponent): ComponentC
     }
 
     render() {
-      return <WrappedComponent {...this.props} />;
+      return (
+        <WrappedComponent id={this.props.id} className={this.props.className}>
+          {this.props.children}
+        </WrappedComponent>
+      );
     }
 
     private enter = () => this.props.hover(this.props.id);

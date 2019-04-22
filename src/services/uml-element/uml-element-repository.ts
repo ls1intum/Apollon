@@ -26,19 +26,19 @@ import {
 import { Updatable } from './updatable/updatable-repository';
 
 type UMLElementRepository = typeof Repository &
-  ReturnType<typeof Selectable> &
-  ReturnType<typeof Interactable> &
-  ReturnType<typeof Resizable> &
-  ReturnType<typeof Movable> &
   ReturnType<typeof Hoverable> &
+  ReturnType<typeof Selectable> &
+  ReturnType<typeof Movable> &
+  ReturnType<typeof Resizable> &
+  ReturnType<typeof Interactable> &
   ReturnType<typeof Updatable>;
 
 const enhance = compose<UMLElementRepository>(
   Hoverable,
   Selectable,
-  Interactable,
-  Resizable,
   Movable,
+  Resizable,
+  Interactable,
   Updatable,
 );
 

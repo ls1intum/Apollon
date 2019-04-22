@@ -68,16 +68,7 @@ class LayoutedElementComponent extends Component<Props, State> {
     const { element } = this.props;
 
     if (!element) return null;
-    return (
-      <ElementComponents
-        childComponent={LayoutedElement}
-        id={this.props.id}
-        element={element}
-        disabled={this.props.disabled}
-        interactable={this.props.view === ApollonView.Exporting || this.props.view === ApollonView.Highlight}
-        hidden={this.props.view === ApollonView.Highlight && this.props.interactive}
-      />
-    );
+    return <ElementComponents id={this.props.id} />;
   }
 }
 

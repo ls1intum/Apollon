@@ -1,26 +1,15 @@
 import { Reducer } from 'redux';
-import { UMLElementState } from '../uml-element-types';
-import { ResizableActions, ResizableActionTypes } from './resizable-types';
+import { ResizableActions, ResizableActionTypes, ResizableState } from './resizable-types';
 
-const initialState: UMLElementState = {};
-
-export const ResizableReducer: Reducer<UMLElementState, ResizableActions> = (state = initialState, action) => {
+export const ResizableReducer: Reducer<ResizableState, ResizableActions> = (state = [], action) => {
   switch (action.type) {
-    case ResizableActionTypes.RESIZE: {
+    case ResizableActionTypes.RESIZE_START: {
       const { payload } = action;
-      return payload.ids.reduce<UMLElementState>((newState, id) => {
-        return {
-          ...newState,
-          [id]: {
-            ...newState[id],
-            bounds: {
-              ...newState[id].bounds,
-              width: newState[id].bounds.width + payload.delta.width,
-              height: newState[id].bounds.height + payload.delta.height,
-            },
-          },
-        };
-      }, state);
+      return [...new Set([...payload.ids, ...state])];
+    }
+    case ResizableActionTypes.RESIZE_END: {
+      const { payload } = action;
+      return state.filter(id => !payload.ids.includes(id));
     }
   }
   return state;

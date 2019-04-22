@@ -22,9 +22,11 @@ import { UMLDiagramReducer } from '../../services/uml-diagram/uml-diagram-reduce
 import { HoverableReducer } from '../../services/uml-element/hoverable/hoverable-reducer';
 import { InteractableReducer } from '../../services/uml-element/interactable/interactable-reducer';
 import { MovableReducer } from '../../services/uml-element/movable/movable-reducer';
-import { MovableActions } from '../../services/uml-element/movable/movable-types';
+import { MovingReducer } from '../../services/uml-element/movable/moving-reducer';
+import { MovingActions } from '../../services/uml-element/movable/moving-types';
 import { ResizableReducer } from '../../services/uml-element/resizable/resizable-reducer';
-import { ResizableActions } from '../../services/uml-element/resizable/resizable-types';
+import { ResizingReducer } from '../../services/uml-element/resizable/resizing-reducer';
+import { ResizingActions } from '../../services/uml-element/resizable/resizing-types';
 import { SelectableReducer } from '../../services/uml-element/selectable/selectable-reducer';
 import { UMLElementReducer } from '../../services/uml-element/uml-element-reducer';
 // import { UMLElementSaga } from '../../services/uml-element/uml-element-saga';
@@ -45,11 +47,13 @@ export class ModelStore extends React.Component<Props> {
     diagram: UMLDiagramReducer,
     hovered: HoverableReducer,
     selected: SelectableReducer,
+    moving: MovableReducer,
+    resizing: ResizableReducer,
     interactive: InteractableReducer,
     updating: UpdatableReducer,
     elements: this.reduceReducers<
-      UMLElementActions & ResizableActions & MovableActions & UMLRelationshipActions & UMLContainerActions
-    >(UMLElementReducer, ResizableReducer, MovableReducer, UMLRelationshipReducer, UMLContainerReducer),
+      UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions & UMLContainerActions
+    >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
     assessments: AssessmentReducer,
   };
 

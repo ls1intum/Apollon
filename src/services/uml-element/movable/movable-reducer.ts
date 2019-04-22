@@ -1,26 +1,15 @@
 import { Reducer } from 'redux';
-import { UMLElementState } from '../uml-element-types';
-import { MovableActions, MovableActionTypes } from './movable-types';
+import { MovableActions, MovableActionTypes, MovableState } from './movable-types';
 
-const initialState: UMLElementState = {};
-
-export const MovableReducer: Reducer<UMLElementState, MovableActions> = (state = initialState, action) => {
+export const MovableReducer: Reducer<MovableState, MovableActions> = (state = [], action) => {
   switch (action.type) {
-    case MovableActionTypes.MOVE: {
+    case MovableActionTypes.MOVE_START: {
       const { payload } = action;
-      return payload.ids.reduce<UMLElementState>((newState, id) => {
-        return {
-          ...newState,
-          [id]: {
-            ...newState[id],
-            bounds: {
-              ...newState[id].bounds,
-              x: newState[id].bounds.x + payload.delta.x,
-              y: newState[id].bounds.y + payload.delta.y,
-            },
-          },
-        };
-      }, state);
+      return [...new Set([...payload.ids, ...state])];
+    }
+    case MovableActionTypes.MOVE_END: {
+      const { payload } = action;
+      return state.filter(id => !payload.ids.includes(id));
     }
   }
   return state;

@@ -1,31 +1,61 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { ModelState } from '../store/model-state';
-import { ElementComponent, OwnProps } from './element-component';
+import { OwnProps } from './element-component';
 
-const Handler = styled.rect`
-  fill: none;
+type StateProps = {};
+
+type DispatchProps = {
+  start: AsyncDispatch<typeof UMLElementRepository.startResizing>;
+  resize: AsyncDispatch<typeof UMLElementRepository.resize>;
+  end: AsyncDispatch<typeof UMLElementRepository.endResizing>;
+};
+
+type Props = OwnProps & StateProps & DispatchProps;
+
+const initialState = {
+  resizing: false,
+  offset: new Point(),
+};
+
+type State = typeof initialState;
+
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  null,
+  {
+    start: UMLElementRepository.startResizing,
+    resize: UMLElementRepository.resize,
+    end: UMLElementRepository.endResizing,
+  },
+);
+
+const Handle = styled.rect.attrs({
+  x: '100%',
+  y: '100%',
+  width: 15,
+  height: 15,
+  transform: 'translate(-10, -10)',
+  fill: 'none',
+})`
   cursor: nwse-resize;
+  pointer-events: all;
 `;
 
 export const resizable = (options?: { preventX: boolean; preventY: boolean }) => (
-  WrappedComponent: typeof ElementComponent,
+  WrappedComponent: ComponentType<OwnProps>,
 ): ComponentClass<OwnProps> => {
   class Resizable extends Component<Props, State> {
-    state: State = {
-      resizing: false,
-      offset: new Point(),
-    };
+    state = initialState;
 
     render() {
-      const { width: x, height: y } = this.props.element.bounds;
       return (
-        <WrappedComponent {...this.props}>
+        <WrappedComponent id={this.props.id} className={this.props.className}>
           {this.props.children}
-          <Handler x={x - 10} y={y - 10} width={15} height={15} onPointerDown={this.onPointerDown} />
+          <Handle onPointerDown={this.onPointerDown} />
         </WrappedComponent>
       );
     }
@@ -38,7 +68,7 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
       if (width === 0 && height === 0) return;
 
       this.setState(state => ({ offset: state.offset.add(width, height) }));
-      this.props.resize(this.props.id, { width, height });
+      this.props.resize({ width, height });
     };
 
     private onPointerDown = (event: React.PointerEvent) => {
@@ -47,6 +77,7 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
       }
 
       this.setState({ resizing: true, offset: new Point(event.clientX, event.clientY) });
+      this.props.start();
       document.addEventListener('pointermove', this.onPointerMove);
       document.addEventListener('pointerup', this.onPointerUp, { once: true });
     };
@@ -58,30 +89,11 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
     };
 
     private onPointerUp = () => {
-      this.setState({ resizing: false, offset: new Point() });
       document.removeEventListener('pointermove', this.onPointerMove);
-      this.props.resized(this.props.element.id);
+      this.setState(initialState);
+      this.props.end();
     };
   }
-
-  type StateProps = {};
-
-  type DispatchProps = {
-    resize: typeof UMLElementRepository.resize;
-    resized: typeof UMLElementRepository.resizeEnd;
-  };
-
-  type State = {
-    resizing: boolean;
-    offset: Point;
-  };
-
-  type Props = OwnProps & StateProps & DispatchProps;
-
-  const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    { resize: UMLElementRepository.resize, resized: UMLElementRepository.resizeEnd },
-  );
 
   return enhance(Resizable);
 };

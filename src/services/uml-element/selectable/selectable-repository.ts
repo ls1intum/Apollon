@@ -4,31 +4,26 @@ import { DeselectAction, SelectableActionTypes, SelectAction } from './selectabl
 
 export function Selectable<TBase extends Constructor<{}>>(Base: TBase) {
   return class extends Base {
-    static deselect = (id: string | string[]): DeselectAction => ({
-      type: SelectableActionTypes.DESELECT,
-      payload: { ids: Array.isArray(id) ? id : [id] },
-    });
+    static deselect = (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
+      if (!ids.length) {
+        return;
+      }
 
-    static deselectAll = (): AsyncAction<DeselectAction> => (dispatch, getState) => {
-      const ids = getState().selected;
-      return dispatch({
+      dispatch<DeselectAction>({
         type: SelectableActionTypes.DESELECT,
-        payload: { ids, toggle: false },
+        payload: { ids },
       });
     };
 
-    static select = (id: string | string[], toggle: boolean = false): SelectAction => ({
-      type: SelectableActionTypes.SELECT,
-      payload: { ids: Array.isArray(id) ? id : [id], toggle },
-    });
-
-    static selectAll = (): AsyncAction<SelectAction> => (dispatch, getState) => {
-      const elements = getState().elements;
-      const ids = Object.keys(elements);
-
-      return dispatch({
+    static select = (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : Object.keys(getState().elements);
+      if (!ids.length) {
+        return;
+      }
+      dispatch<SelectAction>({
         type: SelectableActionTypes.SELECT,
-        payload: { ids, toggle: false },
+        payload: { ids },
       });
     };
   };

@@ -5,12 +5,13 @@ export const enum SelectableActionTypes {
   DESELECT = '@@element/selectable/DESELECT',
 }
 
+export type SelectableState = string[];
+
 export type SelectableActions = SelectAction | DeselectAction;
 
 export interface SelectAction extends Action<SelectableActionTypes.SELECT> {
   payload: {
     ids: string[];
-    toggle: boolean;
   };
 }
 
@@ -19,5 +20,3 @@ export interface DeselectAction extends Action<SelectableActionTypes.DESELECT> {
     ids: string[];
   };
 }
-
-export interface SelectableState extends Array<string> {}

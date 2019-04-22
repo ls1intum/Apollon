@@ -7,8 +7,7 @@ export const SelectableReducer: Reducer<SelectableState, SelectableActions> = (s
   switch (action.type) {
     case SelectableActionTypes.SELECT: {
       const { payload } = action;
-      const selection = payload.toggle ? [] : state;
-      return [...new Set([...payload.ids, ...selection])];
+      return [...new Set([...payload.ids, ...state])];
     }
     case SelectableActionTypes.DESELECT: {
       const { payload } = action;

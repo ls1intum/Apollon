@@ -1,28 +1,44 @@
 import { Constructor } from 'react-native';
 import { AsyncAction } from '../../../utils/actions/actions';
-import { MovableActionTypes, MoveAction, MoveEndAction, MoveStartAction } from './movable-types';
+import { MovableActionTypes, MoveEndAction, MoveStartAction } from './movable-types';
+import { MoveAction, MovingActionTypes } from './moving-types';
 
 export function Movable<TBase extends Constructor<{}>>(Base: TBase) {
   return class extends Base {
-    static moveStart = (id: string | string[]): MoveStartAction => ({
-      type: MovableActionTypes.MOVE_START,
-      payload: { ids: Array.isArray(id) ? id : [id] },
-    });
+    static startMoving = (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
+      if (!ids.length) {
+        return;
+      }
 
-    static move = (id: string | string[], delta: { x: number; y: number }): MoveAction => ({
-      type: MovableActionTypes.MOVE,
-      payload: { ids: Array.isArray(id) ? id : [id], delta },
-    });
-
-    static moveSelection = (delta: { x: number; y: number }): AsyncAction => (dispatch, getState) =>
-      dispatch({
-        type: MovableActionTypes.MOVE,
-        payload: { ids: getState().selected, delta },
+      dispatch<MoveStartAction>({
+        type: MovableActionTypes.MOVE_START,
+        payload: { ids },
       });
+    };
 
-    static moveEnd = (id: string | string[]): MoveEndAction => ({
-      type: MovableActionTypes.MOVE_END,
-      payload: { ids: Array.isArray(id) ? id : [id] },
-    });
+    static move = (delta: { x: number; y: number }, id?: string | string[]): AsyncAction => (dispatch, getState) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().moving;
+      if (!ids.length) {
+        return;
+      }
+
+      dispatch<MoveAction>({
+        type: MovingActionTypes.MOVE,
+        payload: { ids, delta },
+      });
+    };
+
+    static endMoving = (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().moving;
+      if (!ids.length) {
+        return;
+      }
+
+      dispatch<MoveEndAction>({
+        type: MovableActionTypes.MOVE_END,
+        payload: { ids },
+      });
+    };
   };
 }

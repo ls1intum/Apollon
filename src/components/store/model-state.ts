@@ -1,26 +1,27 @@
 import { DeepPartial } from 'redux';
 import { AssessmentState } from '../../services/assessment/assessment-types';
-import { ApollonView, EditorState } from '../../services/editor/editor-types';
-import { UMLContainer } from '../../services/uml-container/uml-container';
-import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
+import { EditorState } from '../../services/editor/editor-types';
 import { UMLDiagramState } from '../../services/uml-diagram/uml-diagram-types';
 import { HoverableState } from '../../services/uml-element/hoverable/hoverable-types';
 import { InteractableState } from '../../services/uml-element/interactable/interactable-types';
+import { MovableState } from '../../services/uml-element/movable/movable-types';
+import { ResizableState } from '../../services/uml-element/resizable/resizable-types';
 import { SelectableState } from '../../services/uml-element/selectable/selectable-types';
-import { IUMLElement, UMLElement } from '../../services/uml-element/uml-element';
+import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableState } from '../../services/uml-element/updatable/updatable-types';
-import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationship/uml-relationship';
+import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
-import { ApollonMode, Assessment, Selection, UMLElementType, UMLModel } from '../../typings';
-import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
+import { Assessment, Selection, UMLElementType, UMLModel } from '../../typings';
 
 export interface ModelState {
   editor: EditorState;
   diagram: UMLDiagramState;
   hovered: HoverableState;
   selected: SelectableState;
+  moving: MovableState;
+  resizing: ResizableState;
   interactive: InteractableState;
   updating: UpdatableState;
   elements: UMLElementState;

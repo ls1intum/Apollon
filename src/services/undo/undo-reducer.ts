@@ -1,6 +1,6 @@
 import { Action, AnyAction, Reducer } from 'redux';
-import { MoveAction } from '../uml-element/movable/movable-types';
-import { ResizeAction } from '../uml-element/resizable/resizable-types';
+import { MoveAction } from '../uml-element/movable/moving-types';
+import { ResizeAction } from '../uml-element/resizable/resizing-types';
 import { UndoActionTypes } from './undo-types';
 
 const MAX_UNDO_STACK_SIZE = 25;

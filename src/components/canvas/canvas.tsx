@@ -114,7 +114,7 @@ class CanvasComponent extends Component<Props, State> {
       this.canvas.current.firstElementChild !== event.target &&
       event.target !== this.layer.current;
     if (deselect || event.shiftKey) return;
-    this.props.deselectAll();
+    this.props.deselect();
   };
 }
 
@@ -127,7 +127,7 @@ type StateProps = {
 
 type DispatchProps = {
   create: (values: IUMLElement | IUMLElement[]) => void;
-  deselectAll: () => void;
+  deselect: () => void;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -143,7 +143,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   }),
   {
     create: UMLElementRepository.create,
-    deselectAll: UMLElementRepository.deselectAll,
+    deselect: UMLElementRepository.deselect,
   },
 );
 

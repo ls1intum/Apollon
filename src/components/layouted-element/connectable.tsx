@@ -23,22 +23,22 @@ const Group = styled.g`
 export const connectable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Connectable extends Component<Props> {
     render() {
-      const { element } = this.props;
+      // const { element } = this.props;
       const ports: Port[] = [
         {
-          element: element.id,
+          element: this.props.id,
           direction: Direction.Up,
         },
         {
-          element: element.id,
+          element: this.props.id,
           direction: Direction.Right,
         },
         {
-          element: element.id,
+          element: this.props.id,
           direction: Direction.Down,
         },
         {
-          element: element.id,
+          element: this.props.id,
           direction: Direction.Left,
         },
       ];
@@ -69,34 +69,35 @@ export const connectable = (WrappedComponent: typeof ElementComponent): Componen
       );
     }
     private calculateInvisiblePath(port: Port): string {
-      const { width, height } = this.props.element.bounds;
-      const r = 20;
-      const cirlce = `m ${-r}, 0 a ${r},${r} 0 1,0 ${r * 2},0 a ${r},${r} 0 1,0 ${-r * 2},0 `;
-      switch (port.direction) {
-        case Direction.Up:
-          return `M ${width / 2} 0 ${cirlce}`;
-        case Direction.Right:
-          return `M ${width} ${height / 2} ${cirlce}`;
-        case Direction.Down:
-          return `M ${width / 2} ${height} ${cirlce}`;
-        case Direction.Left:
-          return `M 0 ${height / 2} ${cirlce}`;
-      }
+      // const { width, height } = this.props.element.bounds;
+      // const r = 20;
+      // const cirlce = `m ${-r}, 0 a ${r},${r} 0 1,0 ${r * 2},0 a ${r},${r} 0 1,0 ${-r * 2},0 `;
+      // switch (port.direction) {
+      //   case Direction.Up:
+      //     return `M ${width / 2} 0 ${cirlce}`;
+      //   case Direction.Right:
+      //     return `M ${width} ${height / 2} ${cirlce}`;
+      //   case Direction.Down:
+      //     return `M ${width / 2} ${height} ${cirlce}`;
+      //   case Direction.Left:
+      //     return `M 0 ${height / 2} ${cirlce}`;
+      // }
       return '';
     }
 
     private calculateVisiblePath(port: Port): string {
-      const { width, height } = this.props.element.bounds;
-      switch (port.direction) {
-        case Direction.Up:
-          return `M ${width / 2 - 20} 0 A 10 10 0 0 1 ${width / 2 + 20} 0`;
-        case Direction.Right:
-          return `M ${width} ${height / 2 - 20} A 10 10 0 0 1 ${width} ${height / 2 + 20}`;
-        case Direction.Down:
-          return `M ${width / 2 - 20} ${height} A 10 10 0 0 0 ${width / 2 + 20} ${height}`;
-        case Direction.Left:
-          return `M 0 ${height / 2 - 20} A 10 10 0 0 0 0 ${height / 2 + 20}`;
-      }
+      // const { width, height } = this.props.element.bounds;
+      // switch (port.direction) {
+      //   case Direction.Up:
+      //     return `M ${width / 2 - 20} 0 A 10 10 0 0 1 ${width / 2 + 20} 0`;
+      //   case Direction.Right:
+      //     return `M ${width} ${height / 2 - 20} A 10 10 0 0 1 ${width} ${height / 2 + 20}`;
+      //   case Direction.Down:
+      //     return `M ${width / 2 - 20} ${height} A 10 10 0 0 0 ${width / 2 + 20} ${height}`;
+      //   case Direction.Left:
+      //     return `M 0 ${height / 2 - 20} A 10 10 0 0 0 0 ${height / 2 + 20}`;
+      // }
+      return '';
     }
 
     private onPointerEnter = (event: React.PointerEvent) => {

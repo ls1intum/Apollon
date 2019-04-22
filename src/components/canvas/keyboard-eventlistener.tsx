@@ -6,6 +6,7 @@ import { UndoRepository } from '../../services/undo/undo-repository';
 import { ApollonMode } from '../../typings';
 import { ModelState } from '../store/model-state';
 import { CanvasContext, withCanvas } from './canvas-context';
+import { AsyncDispatch } from '../../utils/actions/actions';
 
 class KeyboardEventListenerComponent extends Component<Props> {
   componentDidMount() {
@@ -46,7 +47,7 @@ class KeyboardEventListenerComponent extends Component<Props> {
         break;
       case 'Escape':
         event.preventDefault();
-        this.props.deselectAll();
+        this.props.deselect();
         break;
     }
 
@@ -54,7 +55,7 @@ class KeyboardEventListenerComponent extends Component<Props> {
       switch (event.key) {
         case 'a':
           event.preventDefault();
-          this.props.selectAll();
+          this.props.select();
           break;
         case 'd':
           event.preventDefault();
@@ -80,12 +81,12 @@ interface StateProps {
 
 interface DispatchProps {
   duplicate: typeof UMLElementRepository.duplicate;
-  move: typeof UMLElementRepository.moveSelection;
+  move: typeof UMLElementRepository.move;
   delete: typeof UMLElementRepository.deleteSelection;
   undo: typeof UndoRepository.undo;
   redo: typeof UndoRepository.redo;
-  selectAll: typeof UMLElementRepository.selectAll;
-  deselectAll: typeof UMLElementRepository.deselectAll;
+  select: typeof UMLElementRepository.select;
+  deselect: typeof UMLElementRepository.deselect;
 }
 
 type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -101,12 +102,12 @@ const enhance = compose<ComponentClass<OwnProps>>(
     }),
     {
       duplicate: UMLElementRepository.duplicate,
-      move: UMLElementRepository.moveSelection,
+      move: UMLElementRepository.move,
       delete: UMLElementRepository.deleteSelection,
       undo: UndoRepository.undo,
       redo: UndoRepository.redo,
-      selectAll: UMLElementRepository.selectAll,
-      deselectAll: UMLElementRepository.deselectAll,
+      select: UMLElementRepository.select,
+      deselect: UMLElementRepository.deselect,
     },
   ),
 );

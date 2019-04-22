@@ -9,7 +9,7 @@ import { ElementComponent, OwnProps } from './element-component';
 export const assessable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
   class Assessable extends Component<Props> {
     render() {
-      const { assessment, element } = this.props;
+      const { assessment } = this.props;
 
       const count: number = (assessment && Math.min(3, Math.floor(Math.abs(assessment.score)))) || 0;
       const component = assessment && assessment.score > 0 ? <CheckIcon fill="green" /> : <TimesIcon fill="red" />;
@@ -37,7 +37,7 @@ export const assessable = (WrappedComponent: typeof ElementComponent): Component
 
       return (
         <WrappedComponent {...this.props}>
-          {assessment && <g transform={`translate(${element.bounds.width - (icons.length + 1) * 12} 0)`}>{icons}</g>}
+          {/* {assessment && <g transform={`translate(${element.bounds.width - (icons.length + 1) * 12} 0)`}>{icons}</g>} */}
         </WrappedComponent>
       );
     }
@@ -51,7 +51,7 @@ export const assessable = (WrappedComponent: typeof ElementComponent): Component
 
   type Props = OwnProps & StateProps & DispatchProps;
 
-  return connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({ assessment: state.assessments[props.element.id] }))(
+  return connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({ assessment: state.assessments[props.id] }))(
     Assessable,
   );
 };

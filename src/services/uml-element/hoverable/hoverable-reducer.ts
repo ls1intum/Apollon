@@ -1,9 +1,7 @@
 import { Reducer } from 'redux';
 import { HoverableActions, HoverableActionTypes, HoverableState } from './hoverable-types';
 
-const initialState: HoverableState = [];
-
-export const HoverableReducer: Reducer<HoverableState, HoverableActions> = (state = initialState, action) => {
+export const HoverableReducer: Reducer<HoverableState, HoverableActions> = (state = [], action) => {
   switch (action.type) {
     case HoverableActionTypes.HOVER: {
       const { payload } = action;

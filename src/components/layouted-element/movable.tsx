@@ -1,23 +1,20 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { ModelState } from '../store/model-state';
-import { css, styled } from '../theme/styles';
-import { ElementComponent, OwnProps } from './element-component';
+import { OwnProps } from './element-component';
 
 type StateProps = {
   selected: boolean;
-  // target: IElement | undefined;
 };
 
 type DispatchProps = {
-  moveStart: typeof UMLElementRepository.moveStart;
-  move: AsyncDispatch<typeof UMLElementRepository.moveSelection>;
-  moveEnd: typeof UMLElementRepository.moveEnd;
-  // changeOwner: typeof UMLContainerRepository.changeOwner;
+  start: AsyncDispatch<typeof UMLElementRepository.startMoving>;
+  move: AsyncDispatch<typeof UMLElementRepository.move>;
+  end: AsyncDispatch<typeof UMLElementRepository.endMoving>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -34,22 +31,13 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     selected: state.selected.includes(props.id),
   }),
   {
-    moveStart: UMLElementRepository.moveStart,
-    move: UMLElementRepository.moveSelection,
-    moveEnd: UMLElementRepository.moveEnd,
-    // changeOwner: UMLContainerRepository.changeOwner,
+    start: UMLElementRepository.startMoving,
+    move: UMLElementRepository.move,
+    end: UMLElementRepository.endMoving,
   },
 );
 
-export const movable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
-  const StyledWrappedComponent = styled(WrappedComponent)<{ moving: boolean }>(
-    props =>
-      props.moving &&
-      css`
-        opacity: 0.35;
-      `,
-  );
-
+export const movable = (WrappedComponent: ComponentType<OwnProps>): ComponentClass<OwnProps> => {
   class Movable extends Component<Props, State> {
     state = initialState;
 
@@ -64,8 +52,8 @@ export const movable = (WrappedComponent: typeof ElementComponent): ComponentCla
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
+      node.style.cursor = 'move';
       const child = node.firstChild as HTMLElement;
-      console.log(child);
       child.addEventListener('pointerdown', this.onPointerDown);
     }
 
@@ -76,13 +64,12 @@ export const movable = (WrappedComponent: typeof ElementComponent): ComponentCla
     }
 
     render() {
-      return <StyledWrappedComponent moving={this.state.moving} {...this.props} />;
+      return (
+        <WrappedComponent id={this.props.id} className={this.props.className}>
+          {this.props.children}
+        </WrappedComponent>
+      );
     }
-
-    private checkOwnership = () => {
-      // const target = this.props.target ? this.props.target.id : null;
-      // this.props.changeOwner(this.props.element.id, target);
-    };
 
     private onPointerDown = (event: PointerEvent) => {
       if (event.which && event.which !== 1) {
@@ -107,7 +94,7 @@ export const movable = (WrappedComponent: typeof ElementComponent): ComponentCla
       if (!this.state.moving) {
         if (Math.abs(x) > 5 || Math.abs(y) > 5) {
           this.setState({ moving: true });
-          this.props.moveStart(this.props.id);
+          this.props.start();
         }
       } else {
         this.move(x, y);
@@ -115,10 +102,13 @@ export const movable = (WrappedComponent: typeof ElementComponent): ComponentCla
     };
 
     private onPointerUp = () => {
-      this.setState(initialState);
-      this.props.moveEnd(this.props.id);
       document.removeEventListener('pointermove', this.onPointerMove);
-      // if (moving) this.checkOwnership();
+      if (!this.state.moving) {
+        return;
+      }
+
+      this.setState(initialState);
+      this.props.end();
     };
   }
 

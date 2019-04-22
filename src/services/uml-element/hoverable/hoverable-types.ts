@@ -5,6 +5,8 @@ export const enum HoverableActionTypes {
   LEAVE = '@@element/hoverable/LEAVE',
 }
 
+export type HoverableState = string[];
+
 export type HoverableActions = HoverAction | LeaveAction;
 
 export interface HoverAction extends Action<HoverableActionTypes.HOVER> {
@@ -18,5 +20,3 @@ export interface LeaveAction extends Action<HoverableActionTypes.LEAVE> {
     ids: string[];
   };
 }
-
-export interface HoverableState extends Array<string> {}
