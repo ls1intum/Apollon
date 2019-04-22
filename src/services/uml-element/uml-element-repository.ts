@@ -2,7 +2,7 @@ import { ActionCreator, compose } from 'redux';
 import { ModelState } from '../../components/store/model-state';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
-import { AsyncDispatch } from '../../utils/actions/actions';
+import { AsyncAction } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
 import { UMLContainer } from '../uml-container/uml-container';
@@ -47,7 +47,7 @@ class Repository {
     return element.type in UMLElementType;
   }
 
-  static create = <T extends IUMLElement>(value: T | T[] , owner?: string): AsyncDispatch<void> => async (dispatch, getState) => {
+  static create = <T extends IUMLElement>(value: T | T[] , owner?: string): AsyncAction<void> => async (dispatch, getState) => {
     const values = Array.isArray(value) ? value : [value];
     dispatch<CreateAction<T>>({
       type: UMLElementActionTypes.CREATE,
@@ -76,7 +76,7 @@ class Repository {
     payload: { ids: Array.isArray(id) ? id : [id] },
   });
 
-  static deleteSelection = (): AsyncDispatch<DeleteAction> => (dispatch, getState) =>
+  static deleteSelection = (): AsyncAction<DeleteAction> => (dispatch, getState) =>
     dispatch({
       type: UMLElementActionTypes.DELETE,
       payload: { ids: getState().selected },

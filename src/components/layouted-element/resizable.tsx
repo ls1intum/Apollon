@@ -48,7 +48,7 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
 
       this.setState({ resizing: true, offset: new Point(event.clientX, event.clientY) });
       document.addEventListener('pointermove', this.onPointerMove);
-      document.addEventListener('pointerup', this.onPointerUp);
+      document.addEventListener('pointerup', this.onPointerUp, { once: true });
     };
 
     private onPointerMove = (event: PointerEvent) => {
@@ -60,7 +60,6 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
     private onPointerUp = () => {
       this.setState({ resizing: false, offset: new Point() });
       document.removeEventListener('pointermove', this.onPointerMove);
-      document.removeEventListener('pointerup', this.onPointerUp);
       this.props.resized(this.props.element.id);
     };
   }

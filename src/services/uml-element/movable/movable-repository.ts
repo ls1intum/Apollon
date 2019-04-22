@@ -1,5 +1,5 @@
 import { Constructor } from 'react-native';
-import { AsyncDispatch } from '../../../utils/actions/actions';
+import { AsyncAction } from '../../../utils/actions/actions';
 import { MovableActionTypes, MoveAction, MoveEndAction, MoveStartAction } from './movable-types';
 
 export function Movable<TBase extends Constructor<{}>>(Base: TBase) {
@@ -14,7 +14,7 @@ export function Movable<TBase extends Constructor<{}>>(Base: TBase) {
       payload: { ids: Array.isArray(id) ? id : [id], delta },
     });
 
-    static moveSelection = (delta: { x: number; y: number }): AsyncDispatch<MoveAction> => (dispatch, getState) =>
+    static moveSelection = (delta: { x: number; y: number }): AsyncAction => (dispatch, getState) =>
       dispatch({
         type: MovableActionTypes.MOVE,
         payload: { ids: getState().selected, delta },

@@ -1,5 +1,5 @@
 import { Constructor } from 'react-native';
-import { AsyncDispatch } from '../../../utils/actions/actions';
+import { AsyncAction } from '../../../utils/actions/actions';
 import { DeselectAction, SelectableActionTypes, SelectAction } from './selectable-types';
 
 export function Selectable<TBase extends Constructor<{}>>(Base: TBase) {
@@ -9,7 +9,7 @@ export function Selectable<TBase extends Constructor<{}>>(Base: TBase) {
       payload: { ids: Array.isArray(id) ? id : [id] },
     });
 
-    static deselectAll = (): AsyncDispatch<DeselectAction> => (dispatch, getState) => {
+    static deselectAll = (): AsyncAction<DeselectAction> => (dispatch, getState) => {
       const ids = getState().selected;
       return dispatch({
         type: SelectableActionTypes.DESELECT,
@@ -22,7 +22,7 @@ export function Selectable<TBase extends Constructor<{}>>(Base: TBase) {
       payload: { ids: Array.isArray(id) ? id : [id], toggle },
     });
 
-    static selectAll = (): AsyncDispatch<SelectAction> => (dispatch, getState) => {
+    static selectAll = (): AsyncAction<SelectAction> => (dispatch, getState) => {
       const elements = getState().elements;
       const ids = Object.keys(elements);
 

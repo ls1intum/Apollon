@@ -1,7 +1,6 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 import {
-  Action,
   applyMiddleware,
   combineReducers,
   compose,
@@ -35,6 +34,7 @@ import { UMLRelationshipReducer } from '../../services/uml-relationship/uml-rela
 // import { UMLRelationshipSaga } from '../../services/uml-relationship/uml-relationship-saga';
 import { UMLRelationshipActions } from '../../services/uml-relationship/uml-relationship-types';
 import { undoable } from '../../services/undo/undo-reducer';
+import { Action } from '../../utils/actions/actions';
 import { ModelState } from './model-state';
 
 export class ModelStore extends React.Component<Props> {
@@ -62,7 +62,7 @@ export class ModelStore extends React.Component<Props> {
 
     const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
-    const enhancer = composeEnhancers(applyMiddleware(thunk as ThunkMiddleware<ModelState>, sagaMiddleware));
+    const enhancer = composeEnhancers(applyMiddleware(thunk as ThunkMiddleware<ModelState, Action>, sagaMiddleware));
     this.store = createStore(reducer, props.initialState || {}, enhancer);
 
     function* rootSaga() {

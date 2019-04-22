@@ -53,7 +53,9 @@ export const selectable = (WrappedComponent: typeof ElementComponent): Component
         return;
       }
 
-      this.props.select(this.props.id, !event.shiftKey);
+      if (!this.props.selected) {
+        this.props.select(this.props.id, !event.shiftKey);
+      }
     };
   }
 
