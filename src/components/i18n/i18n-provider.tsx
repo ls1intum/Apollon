@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import de from '../../i18n/de.json';
 import en from '../../i18n/en.json';
+import zh from '../../i18n/zh.json';
 import { Locale } from '../../typings';
 import { I18nContext, I18nProvider as Provider } from './i18n-context';
 
@@ -13,6 +14,7 @@ type Props = {
 const dictionary: { [key in Locale]: object } = {
   [Locale.de]: de,
   [Locale.en]: en,
+  [Locale.zh]: zh
 };
 
 export class I18nProvider extends Component<Props> {

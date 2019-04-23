@@ -7,6 +7,7 @@ import { RelationshipType as UMLRelationshipType } from './packages/relationship
 export enum Locale {
   en = 'en',
   de = 'de',
+  zh = 'zh'
 }
 
 export type ElementType = UMLElementType | UMLRelationshipType;

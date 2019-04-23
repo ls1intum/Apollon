@@ -1,0 +1,66 @@
+{
+  "views": {
+    "modelling": "模型",
+    "exporting": "交互",
+    "highlight": "显示交互元素"
+  },
+  "sidebar": {
+    "classAttribute": "+ attribute: Type",
+    "classMethod": "+ method()",
+    "enumAttribute": "Case",
+    "objectAttribute": "attribute = value"
+  },
+  "popup": {
+    "attributes": "属性",
+    "methods": "方法",
+    "relationship": "关系",
+    "association": "关联",
+    "multiplicity": "多样性",
+    "role": "角色",
+    "messages": "消息"
+  },
+  "assessment": {
+    "assessment": "评估",
+    "score": "得分",
+    "feedback": "反馈"
+  },
+  "packages": {
+    "classDiagram": {
+      "class": "类",
+      "abstract": "抽象类",
+      "interface": "接口",
+      "enumeration": "枚举",
+      "attribute": "属性",
+      "method": "方法",
+      "aggregation": "聚合",
+      "bidirectional":  "关联(双向)",
+      "composition": "组合",
+      "dependency": "依赖",
+      "inheritance": "集成",
+      "realization": "实现",
+      "unidirectional": "关联 (单向)"
+    },
+    "objectDiagram": {
+      "objectName": "对象",
+      "objectAttribute": "属性"
+    },
+    "activityDiagram": {
+      "actionNode": "行为",
+      "objectNode": "对象",
+      "condition": "条件",
+      "controlFlow": "控制流"
+    },
+    "useCaseDiagram": {
+      "useCase": "用例",
+      "actor": "角色",
+      "system": "系统",
+      "association": "关联",
+      "extend": "扩展",
+      "generalization": "生成",
+      "include": "包含"
+    },
+    "communicationDiagram": {
+      "communicationLink": "通信链路"
+    }
+  }
+}
