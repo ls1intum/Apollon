@@ -1,0 +1,65 @@
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { Direction, Port } from '../../services/uml-element/port';
+import { IUMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
+import { Point } from '../../utils/geometry/point';
+import { ModelState } from '../store/model-state';
+
+type OwnProps = {
+  port: Port;
+  target: Point;
+};
+
+type StateProps = {
+  element: IUMLElement;
+};
+
+type DispatchProps = {
+  end: AsyncDispatch<typeof UMLElementRepository.endConnecting>;
+};
+
+type Props = OwnProps & StateProps & DispatchProps;
+
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  (state, props) => ({
+    element: state.elements[props.port.element],
+  }),
+  {
+    end: UMLElementRepository.endConnecting,
+  },
+);
+
+class RelationshipPreview extends Component<Props> {
+  render() {
+    const { element, port } = this.props;
+    if (!element) {
+      return null;
+    }
+
+    const { x, y, width, height } = element.bounds;
+    const position = {
+      ...(port.direction === Direction.Left
+        ? { x: 0 }
+        : port.direction === Direction.Right
+        ? { x: width }
+        : { x: width / 2 }),
+      ...(port.direction === Direction.Up
+        ? { y: 0 }
+        : port.direction === Direction.Down
+        ? { y: height }
+        : { y: height / 2 }),
+    };
+
+    const source = new Point(x + position.x, y + position.y);
+    const path = [source, this.props.target];
+    const points = path.map(p => `${p.x} ${p.y}`).join(', ');
+
+    return (
+      <polyline points={points} pointerEvents="none" fill="none" stroke="black" strokeWidth="1" strokeDasharray="5,5" />
+    );
+  }
+}
+
+export const UMLRelationshipPreview = enhance(RelationshipPreview);

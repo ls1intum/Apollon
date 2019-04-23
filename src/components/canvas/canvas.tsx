@@ -8,14 +8,14 @@ import { ApollonMode } from '../../typings';
 // import { ConnectLayer } from '../connectable/connect-layer';
 import { DropEvent } from '../draggable/drop-event';
 import { Droppable } from '../draggable/droppable';
-import { LayoutedElement } from '../layouted-element/layouted-element';
 import { LayoutedRelationship } from '../layouted-relationship/layouted-relationship';
 import { ModelState } from '../store/model-state';
+import { ConnectionPreview } from './../connectable/connection-preview';
+import { UMLElementComponent } from './../uml-element/uml-element-component';
 import { CanvasContext, CanvasProvider } from './canvas-context';
 import { CoordinateSystem } from './coordinate-system';
 import { Grid } from './grid';
 import { KeyboardEventListener } from './keyboard-eventlistener';
-import { UMLElementComponent } from './../uml-element/uml-element-component';
 
 const Container = styled.div`
   height: 100%;
@@ -94,13 +94,14 @@ class CanvasComponent extends Component<Props, State> {
                   <g>
                     <KeyboardEventListener />
                     {/* <ConnectLayer> */}
-                      {diagram.ownedElements.map(element => (
-                        <UMLElementComponent key={element} id={element} component="canvas" />
-                      ))}
-                      {diagram.ownedRelationships.map(relationship => (
-                        <LayoutedRelationship key={relationship} relationship={relationship} container={this.canvas} />
-                      ))}
+                    {diagram.ownedElements.map(element => (
+                      <UMLElementComponent key={element} id={element} component="canvas" />
+                    ))}
+                    {diagram.ownedRelationships.map(relationship => (
+                      <LayoutedRelationship key={relationship} relationship={relationship} container={this.canvas} />
+                    ))}
                     {/* </ConnectLayer> */}
+                    <ConnectionPreview coordinateSystem={this.coordinateSystem} />
                   </g>
                 )}
               </Svg>

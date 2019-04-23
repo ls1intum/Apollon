@@ -1,6 +1,12 @@
-import { Direction } from '../../typings';
 import { Boundary } from '../../utils/geometry/boundary';
 import { Point } from '../../utils/geometry/point';
+
+export enum Direction {
+  Up = 'Up',
+  Right = 'Right',
+  Down = 'Down',
+  Left = 'Left',
+}
 
 export interface Port {
   element: string;

@@ -21,6 +21,7 @@ export function Selectable<TBase extends Constructor<{}>>(Base: TBase) {
       if (!ids.length) {
         return;
       }
+
       dispatch<SelectAction>({
         type: SelectableActionTypes.SELECT,
         payload: { ids },

@@ -2,6 +2,7 @@ import { DeepPartial } from 'redux';
 import { AssessmentState } from '../../services/assessment/assessment-types';
 import { EditorState } from '../../services/editor/editor-types';
 import { UMLDiagramState } from '../../services/uml-diagram/uml-diagram-types';
+import { ConnectableState } from '../../services/uml-element/connectable/connectable-types';
 import { HoverableState } from '../../services/uml-element/hoverable/hoverable-types';
 import { InteractableState } from '../../services/uml-element/interactable/interactable-types';
 import { MovableState } from '../../services/uml-element/movable/movable-types';
@@ -23,6 +24,7 @@ export interface ModelState {
   selected: SelectableState;
   moving: MovableState;
   resizing: ResizableState;
+  connecting: ConnectableState;
   interactive: InteractableState;
   updating: UpdatableState;
   elements: UMLElementState;

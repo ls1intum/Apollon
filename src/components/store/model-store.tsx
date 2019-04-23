@@ -1,14 +1,6 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import {
-  applyMiddleware,
-  combineReducers,
-  compose,
-  createStore,
-  DeepPartial,
-  Reducer,
-  Store as ReduxStore,
-} from 'redux';
+import { applyMiddleware, combineReducers, compose, createStore, DeepPartial, Reducer } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import { all } from 'redux-saga/effects';
 import thunk, { ThunkMiddleware } from 'redux-thunk';
@@ -18,6 +10,7 @@ import { UMLContainerReducer } from '../../services/uml-container/uml-container-
 import { UMLContainerSaga } from '../../services/uml-container/uml-container-saga';
 import { UMLContainerActions } from '../../services/uml-container/uml-container-types';
 import { UMLDiagramReducer } from '../../services/uml-diagram/uml-diagram-reducer';
+import { ConnectableReducer } from '../../services/uml-element/connectable/connectable-reducer';
 // import { UMLDiagramSaga } from '../../services/uml-diagram/uml-diagram-saga';
 import { HoverableReducer } from '../../services/uml-element/hoverable/hoverable-reducer';
 import { InteractableReducer } from '../../services/uml-element/interactable/interactable-reducer';
@@ -57,6 +50,7 @@ const reducers = {
   selected: SelectableReducer,
   moving: MovableReducer,
   resizing: ResizableReducer,
+  connecting: ConnectableReducer,
   interactive: InteractableReducer,
   updating: UpdatableReducer,
   elements: reduceReducers<

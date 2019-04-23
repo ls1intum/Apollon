@@ -24,12 +24,14 @@ import {
   UpdateAction,
 } from './uml-element-types';
 import { Updatable } from './updatable/updatable-repository';
+import { Connectable } from './connectable/connectable-repository';
 
 type UMLElementRepository = typeof Repository &
   ReturnType<typeof Hoverable> &
   ReturnType<typeof Selectable> &
   ReturnType<typeof Movable> &
   ReturnType<typeof Resizable> &
+  ReturnType<typeof Connectable> &
   ReturnType<typeof Interactable> &
   ReturnType<typeof Updatable>;
 
@@ -38,6 +40,7 @@ const enhance = compose<UMLElementRepository>(
   Selectable,
   Movable,
   Resizable,
+  Connectable,
   Interactable,
   Updatable,
 );

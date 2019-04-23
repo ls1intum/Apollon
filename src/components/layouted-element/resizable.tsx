@@ -72,7 +72,7 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
       this.props.resize({ width, height });
     };
 
-    private onPointerDown = (event: React.PointerEvent) => {
+    private onPointerDown = (event: React.PointerEvent<SVGRectElement>) => {
       if (event.nativeEvent.which && event.nativeEvent.which !== 1) {
         return;
       }
