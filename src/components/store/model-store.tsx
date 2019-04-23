@@ -63,9 +63,8 @@ const reducers = {
     UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions & UMLContainerActions
   >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
   assessments: AssessmentReducer,
-  features: ((state = { hoverable: true, selectable: true, movable: true, resizable: true }) => state) as Reducer<
-    UMLElementFeatures
-  >,
+  features: ((state = { hoverable: true, selectable: true, movable: true, resizable: true, connectable: true }) =>
+    state) as Reducer<UMLElementFeatures>,
 };
 
 const getInitialState = ({ initialState }: Props) => {

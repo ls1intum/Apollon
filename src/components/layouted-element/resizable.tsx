@@ -55,6 +55,7 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
       const { start, resize, end, ...props } = this.props;
       return (
         <WrappedComponent {...props}>
+          {props.children}
           <Handle onPointerDown={this.onPointerDown} />
         </WrappedComponent>
       );

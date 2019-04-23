@@ -5,7 +5,7 @@ import { IUMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ApollonMode } from '../../typings';
-import { ConnectLayer } from '../connectable/connect-layer';
+// import { ConnectLayer } from '../connectable/connect-layer';
 import { DropEvent } from '../draggable/drop-event';
 import { Droppable } from '../draggable/droppable';
 import { LayoutedElement } from '../layouted-element/layouted-element';
@@ -93,14 +93,14 @@ class CanvasComponent extends Component<Props, State> {
                 {this.state.isMounted && (
                   <g>
                     <KeyboardEventListener />
-                    <ConnectLayer>
+                    {/* <ConnectLayer> */}
                       {diagram.ownedElements.map(element => (
                         <UMLElementComponent key={element} id={element} component="canvas" />
                       ))}
                       {diagram.ownedRelationships.map(relationship => (
                         <LayoutedRelationship key={relationship} relationship={relationship} container={this.canvas} />
                       ))}
-                    </ConnectLayer>
+                    {/* </ConnectLayer> */}
                   </g>
                 )}
               </Svg>

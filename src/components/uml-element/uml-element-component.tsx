@@ -1,6 +1,7 @@
 import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { connectable } from '../layouted-element/connectable';
 import { hoverable } from '../layouted-element/hoverable';
 import { movable } from '../layouted-element/movable';
 import { resizable } from '../layouted-element/resizable';
@@ -19,6 +20,7 @@ export type UMLElementFeatures = {
   selectable: boolean;
   movable: boolean;
   resizable: boolean;
+  connectable: boolean;
 };
 
 const components = {
@@ -58,6 +60,9 @@ const getInitialState = (props: Props) => {
   }
   if (props.features.resizable) {
     decorators.push(resizable());
+  }
+  if (props.features.connectable) {
+    decorators.push(connectable);
   }
 
   return {

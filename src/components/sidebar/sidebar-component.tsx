@@ -102,6 +102,7 @@ class SidebarComponent extends Component<Props, State> {
       selectable: false,
       movable: false,
       resizable: false,
+      connectable: false,
     };
 
     return (
