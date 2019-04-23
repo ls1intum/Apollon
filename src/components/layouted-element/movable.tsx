@@ -54,7 +54,6 @@ export const movable = (
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      console.log('movable NODE', node);
       node.style.cursor = 'move';
       const child = node.firstChild as HTMLElement;
       child.addEventListener('pointerdown', this.onPointerDown);

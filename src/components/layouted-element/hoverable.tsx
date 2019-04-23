@@ -28,7 +28,6 @@ export const hoverable = (
   class Hoverable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      console.log('hoverable NODE', node);
       node.addEventListener('pointerenter', this.enter);
       node.addEventListener('pointerleave', this.leave);
     }

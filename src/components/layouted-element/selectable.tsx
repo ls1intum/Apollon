@@ -35,7 +35,6 @@ export const selectable = (
   class Selectable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      console.log('selectable NODE', node);
       node.addEventListener('pointerdown', this.select);
     }
 

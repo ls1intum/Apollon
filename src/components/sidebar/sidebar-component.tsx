@@ -1,47 +1,33 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { ActivityActionNode } from '../../packages/activity-diagram/activity-action-node/activity-action-node';
-import { ActivityFinalNode } from '../../packages/activity-diagram/activity-final-node/activity-final-node';
-import { ActivityForkNode } from '../../packages/activity-diagram/activity-fork-node/activity-fork-node';
-import { ActivityInitialNode } from '../../packages/activity-diagram/activity-initial-node/activity-initial-node';
-import { ActivityMergeNode } from '../../packages/activity-diagram/activity-merge-node/activity-merge-node';
-import { ActivityObjectNode } from '../../packages/activity-diagram/activity-object-node/activity-object-node';
 import { ClassAttribute } from '../../packages/class-diagram/class-member/class-attribute/class-attribute';
 import { ClassMethod } from '../../packages/class-diagram/class-member/class-method/class-method';
-import { AbstractClass } from '../../packages/class-diagram/classifier/abstract-class/abstract-class';
 import { Class } from '../../packages/class-diagram/classifier/class/class';
-import { Enumeration } from '../../packages/class-diagram/classifier/enumeration/enumeration';
-import { Interface } from '../../packages/class-diagram/classifier/interface/interface';
 import { Package } from '../../packages/common/package/package';
-import { ObjectAttribute } from '../../packages/object-diagram/object-member/object-attribute/object-attribute';
-import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
-import { UMLElementType } from '../../packages/uml-element-type';
-import { UseCaseActor } from '../../packages/use-case-diagram/use-case-actor/use-case-actor';
-import { UseCaseSystem } from '../../packages/use-case-diagram/use-case-system/use-case-system';
-import { UseCase } from '../../packages/use-case-diagram/use-case/use-case';
+import { UMLDiagramType } from '../../packages/diagram-type';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { ApollonView } from '../../services/editor/editor-types';
+import { UMLContainer } from '../../services/uml-container/uml-container';
 import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { ApollonMode, DiagramType } from '../../typings';
-import { CanvasProvider } from '../canvas/canvas-context';
 import { Switch } from '../controls/switch/switch';
 import { Draggable } from '../draggable/draggable';
 import { DropEvent } from '../draggable/drop-event';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
-import { Preview } from './preview';
-import { Container } from './sidebar-styles';
 import { ModelStore } from '../store/model-store';
+import { UMLElementFeatures } from '../uml-element/uml-element-component';
+import { Container, Preview } from './sidebar-styles';
 
 type OwnProps = {};
 
 type StateProps = {
-  diagramType: DiagramType;
+  type: DiagramType;
   readonly: boolean;
   mode: ApollonMode;
   view: ApollonView;
@@ -54,17 +40,37 @@ type DispatchProps = {
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
-const initialState = {
-  previews: [new Package({ name: 'package' })],
+const getInitialState = ({ type, translate }: Props) => {
+  const previews: UMLElement[][] = [];
+  switch (type) {
+    case UMLDiagramType.ClassDiagram: {
+      const umlPackage = new Package();
+      const umlClass = new Class({ name: translate('packages.classDiagram.class') });
+      const umlClassAttribute = new ClassAttribute({
+        name: translate('sidebar.classAttribute'),
+        owner: umlClass.id,
+        bounds: { y: 40 },
+      });
+      const umlClassMethod = new ClassMethod({
+        name: translate('sidebar.classAttribute'),
+        owner: umlClass.id,
+        bounds: { y: 70 },
+      });
+      umlClass.ownedElements = [umlClassAttribute.id, umlClassMethod.id];
+      previews.push([umlPackage], [umlClass, umlClassAttribute, umlClassMethod]);
+    }
+  }
+
+  return { previews };
 };
 
-type State = typeof initialState;
+type State = ReturnType<typeof getInitialState>;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({
-      diagramType: state.diagram.type,
+      type: state.diagram.type,
       readonly: state.editor.readonly,
       mode: state.editor.mode,
       view: state.editor.view,
@@ -77,62 +83,26 @@ const enhance = compose<ComponentClass<OwnProps>>(
 );
 
 class SidebarComponent extends Component<Props, State> {
-  state = initialState;
-
-  changeView = (view: ApollonView) => this.props.changeView(view);
-
-  toggleInteractiveElementsMode = (event: React.FormEvent<HTMLInputElement>) => {
-    const { checked } = event.currentTarget;
-    const view: ApollonView = checked ? ApollonView.Exporting : ApollonView.Highlight;
-
-    this.changeView(view);
-  };
-
-  onDrop = (element: UMLElement) => (event: DropEvent) => {
-    const elements: UMLElement[] = [];
-
-    switch (element.type) {
-      case UMLElementType.Class:
-      case UMLElementType.AbstractClass:
-      case UMLElementType.Interface:
-        elements.push(
-          new ClassAttribute({ name: this.props.translate('sidebar.classAttribute') }),
-          new ClassMethod({ name: this.props.translate('sidebar.classMethod') }),
-        );
-        break;
-      case UMLElementType.Enumeration:
-        elements.push(
-          new ClassAttribute({ name: this.props.translate('sidebar.enumAttribute') + 1 }),
-          new ClassAttribute({ name: this.props.translate('sidebar.enumAttribute') + 2 }),
-          new ClassAttribute({ name: this.props.translate('sidebar.enumAttribute') + 3 }),
-        );
-        break;
-      case UMLElementType.ObjectName:
-        elements.push(new ObjectAttribute({ name: this.props.translate('sidebar.objectAttribute') }));
-        break;
-    }
-
-    const clone = element.clone();
-    if (UMLContainerRepository.isUMLContainer(clone)) {
-      elements.forEach(e => {
-        e.owner = clone.id;
-      });
-      clone.ownedElements = elements.map(e => e.id);
-    }
-    elements.unshift(clone);
-
-    event.action = {
-      type: 'CREATE',
-      elements,
-    };
-  };
+  state = getInitialState(this.props);
 
   render() {
-    console.log('rerender');
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
 
-    const elements: UMLElement[] = [new Package({ name: 'package' })];
-    const elementState: UMLElementState = elements.reduce((acc, val) => ({ ...acc, [val.id]: val }), {});
+    const { previews } = this.state;
+
+    const elements = previews.reduce<UMLElementState>(
+      (elements, preview) => ({
+        ...elements,
+        ...preview.reduce<UMLElementState>((previews, element) => ({ ...previews, [element.id]: element }), {}),
+      }),
+      {},
+    );
+    const features: UMLElementFeatures = {
+      hoverable: false,
+      selectable: false,
+      movable: false,
+      resizable: false,
+    };
 
     return (
       <Container>
@@ -142,21 +112,14 @@ class SidebarComponent extends Component<Props, State> {
             <Switch.Item value={ApollonView.Exporting}>{this.props.translate('views.exporting')}</Switch.Item>
           </Switch>
         )}
-        <ModelStore initialState={{ elements: elementState }}>
-          <Draggable onDrop={this.onDrop(elements[0])}>
-            <Preview elements={elementState} />
-          </Draggable>
-        </ModelStore>
         {this.props.view === ApollonView.Modelling ? (
-          <CanvasProvider value={null}>
-            {/* {this.state.previews.map((element, index) => (
-              <Draggable key={index} onDrop={this.onDrop(element)}>
-                <Preview>
-                  <ElementComponent id={element.id} />
-                </Preview>
+          <ModelStore initialState={{ elements, features }}>
+            {previews.map((preview, index) => (
+              <Draggable key={index} onDrop={this.create(preview)}>
+                <Preview id={preview[0].id} />
               </Draggable>
-            ))} */}
-          </CanvasProvider>
+            ))}
+          </ModelStore>
         ) : (
           <label htmlFor="toggleInteractiveElementsMode">
             <input
@@ -172,104 +135,50 @@ class SidebarComponent extends Component<Props, State> {
     );
   }
 
-  // private refresh = () => {
-  //   switch (this.props.diagramType) {
-  //     case DiagramType.ClassDiagram:
-  //       this.setState({
-  //         previews: [
-  //           new Package(),
-  //           (() => {
-  //             const c = new Class();
-  //             c.name = this.props.translate('packages.classDiagram.class');
-  //             return c;
-  //           })(),
-  //           (() => {
-  //             const c = new AbstractClass();
-  //             c.name = this.props.translate('packages.classDiagram.abstract');
-  //             return c;
-  //           })(),
-  //           (() => {
-  //             const c = new Interface();
-  //             c.name = this.props.translate('packages.classDiagram.interface');
-  //             return c;
-  //           })(),
-  //           (() => {
-  //             const c = new Enumeration();
-  //             c.name = this.props.translate('packages.classDiagram.enumeration');
-  //             return c;
-  //           })(),
-  //         ],
-  //       });
-  //       break;
-  //     case DiagramType.ObjectDiagram:
-  //       this.setState({
-  //         previews: [
-  //           (() => {
-  //             const c = new ObjectName();
-  //             c.name = this.props.translate('packages.objectDiagram.objectName');
-  //             return c;
-  //           })(),
-  //         ],
-  //       });
-  //       break;
-  //     case DiagramType.ActivityDiagram:
-  //       this.setState({
-  //         previews: [
-  //           new ActivityInitialNode(),
-  //           new ActivityFinalNode(),
-  //           (() => {
-  //             const c = new ActivityActionNode();
-  //             c.name = this.props.translate('packages.activityDiagram.actionNode');
-  //             return c;
-  //           })(),
-  //           (() => {
-  //             const c = new ActivityObjectNode();
-  //             c.name = this.props.translate('packages.activityDiagram.objectNode');
-  //             return c;
-  //           })(),
-  //           (() => {
-  //             const c = new ActivityMergeNode();
-  //             c.name = this.props.translate('packages.activityDiagram.condition');
-  //             return c;
-  //           })(),
-  //           new ActivityForkNode(),
-  //         ],
-  //       });
-  //       break;
-  //     case DiagramType.UseCaseDiagram:
-  //       this.setState({
-  //         previews: [
-  //           (() => {
-  //             const c = new UseCase();
-  //             c.name = this.props.translate('packages.useCaseDiagram.useCase');
-  //             return c;
-  //           })(),
-  //           (() => {
-  //             const c = new UseCaseActor();
-  //             c.name = this.props.translate('packages.useCaseDiagram.actor');
-  //             return c;
-  //           })(),
-  //           (() => {
-  //             const c = new UseCaseSystem();
-  //             c.name = this.props.translate('packages.useCaseDiagram.system');
-  //             return c;
-  //           })(),
-  //         ],
-  //       });
-  //       break;
-  //     case DiagramType.CommunicationDiagram:
-  //       this.setState({
-  //         previews: [
-  //           (() => {
-  //             const c = new ObjectName();
-  //             c.name = this.props.translate('packages.objectDiagram.objectName');
-  //             return c;
-  //           })(),
-  //         ],
-  //       });
-  //       break;
-  //   }
-  // };
+  changeView = (view: ApollonView) => this.props.changeView(view);
+
+  toggleInteractiveElementsMode = (event: React.FormEvent<HTMLInputElement>) => {
+    const { checked } = event.currentTarget;
+    const view: ApollonView = checked ? ApollonView.Exporting : ApollonView.Highlight;
+
+    this.changeView(view);
+  };
+
+  create = (preview: UMLElement[]) => (event: DropEvent) => {
+    if (!preview.length) {
+      return;
+    }
+
+    const clonePreview = (element: UMLElement): UMLElement[] => {
+      if (!UMLContainerRepository.isUMLContainer(element)) {
+        return [element.clone()];
+      }
+
+      const result: UMLElement[] = [];
+      const clone = element.clone<UMLContainer>();
+      const { ownedElements } = element;
+      for (const id of ownedElements) {
+        const child = preview.find(prev => prev.id === id);
+        if (!child) {
+          continue;
+        }
+
+        const [clonedChild, ...clonedChildren] = clonePreview(child);
+        clonedChild.owner = clone.id;
+
+        const index = clone.ownedElements.findIndex(x => x === id);
+        clone.ownedElements[index] = clonedChild.id;
+        result.push(clonedChild, ...clonedChildren);
+      }
+
+      return [clone, ...result];
+    };
+
+    event.action = {
+      type: 'CREATE',
+      elements: clonePreview(preview[0]),
+    };
+  };
 }
 
 export const Sidebar = enhance(SidebarComponent);

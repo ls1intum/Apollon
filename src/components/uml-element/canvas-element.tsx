@@ -2,7 +2,8 @@ import React, { Component, ComponentType, SVGProps } from 'react';
 import { connect } from 'react-redux';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { ModelState } from '../store/model-state';
-import { UMLElementComponentProps } from './uml-element-component';
+import { UMLElementComponentProps, UMLElementComponent } from './uml-element-component';
+import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 
 const STROKE = 5;
 
@@ -36,9 +37,17 @@ class CanvasElementComponent extends Component<Props> {
       return null;
     }
 
+    let elements = null;
+    if (UMLContainerRepository.isUMLContainer(element)) {
+      elements = element.ownedElements.map(id => (
+        <UMLElementComponent key={id} id={id} component="canvas" />
+      ))
+    }
+
     return (
       <svg {...props} {...element.bounds}>
         <rect width={element.bounds.width} height={element.bounds.height} fill="red" fillOpacity={0.2} />
+        {elements}
         {children}
         {(hovered || selected) && (
           <rect

@@ -59,7 +59,6 @@ class CanvasComponent extends Component<Props, State> {
   onDrop = (event: DropEvent) => {
     if (!event.action) return;
     const elements = event.action.elements;
-    console.log(event.position.x, event.position.y, this.coordinateSystem.offset());
     const offset = this.coordinateSystem.offset();
     // const position = this.coordinateSystem.screenToPoint(event.position.x, event.position.y);
     for (const element of elements) {

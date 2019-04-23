@@ -37,6 +37,7 @@ import { UMLRelationshipReducer } from '../../services/uml-relationship/uml-rela
 import { UMLRelationshipActions } from '../../services/uml-relationship/uml-relationship-types';
 import { undoable } from '../../services/undo/undo-reducer';
 import { Action } from '../../utils/actions/actions';
+import { UMLElementFeatures } from '../uml-element/uml-element-component';
 import { ModelState } from './model-state';
 
 const reduceReducers = <T extends Action>(
@@ -47,7 +48,7 @@ const reduceReducers = <T extends Action>(
       return reducer(newState, action);
     }, state);
   };
-}
+};
 
 const reducers = {
   editor: EditorReducer,
@@ -62,6 +63,9 @@ const reducers = {
     UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions & UMLContainerActions
   >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
   assessments: AssessmentReducer,
+  features: ((state = { hoverable: true, selectable: true, movable: true, resizable: true }) => state) as Reducer<
+    UMLElementFeatures
+  >,
 };
 
 const getInitialState = ({ initialState }: Props) => {
@@ -80,7 +84,7 @@ const getInitialState = ({ initialState }: Props) => {
   return { store };
 };
 
-type State = ReturnType<typeof getInitialState>
+type State = ReturnType<typeof getInitialState>;
 
 export class ModelStore extends React.Component<Props, State> {
   state = getInitialState(this.props);

@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import { CanvasElement } from '../uml-element/canvas-element';
+import { hoverable } from '../layouted-element/hoverable';
 
 export const Container = styled.aside`
   flex: 0 0 230px;
@@ -11,6 +13,7 @@ export const Container = styled.aside`
   flex-direction: column;
 `;
 
-export const Preview = styled.div`
-  margin: 0.5em 0;
+export const Preview = styled(hoverable(CanvasElement))`
+  margin: 5px;
+  overflow: visible;
 `;

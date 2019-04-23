@@ -14,6 +14,7 @@ import { UpdatableState } from '../../services/uml-element/updatable/updatable-t
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { Assessment, Selection, UMLElementType, UMLModel } from '../../typings';
+import { UMLElementFeatures } from '../uml-element/uml-element-component';
 
 export interface ModelState {
   editor: EditorState;
@@ -26,6 +27,7 @@ export interface ModelState {
   updating: UpdatableState;
   elements: UMLElementState;
   assessments: AssessmentState;
+  features: UMLElementFeatures;
 }
 
 export class ModelState {

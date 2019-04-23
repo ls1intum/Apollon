@@ -30,10 +30,10 @@ export abstract class Classifier extends UMLContainer {
 
   deviderPosition = 0;
 
-  constructor(values?: IUMLContainer | IUMLElement) {
-    super();
+  // constructor(values?: IUMLContainer | IUMLElement) {
+  //   super();
 
-    if (!values) return;
+  //   if (!values) return;
 
     // if ('attributes' in values) {
     //   delete values.attributes;
@@ -43,7 +43,7 @@ export abstract class Classifier extends UMLContainer {
     // }
 
     // super(values);
-  }
+  // }
 
   render(children: UMLElement[]): UMLElement[] {
     const attributes = children.filter(child => child instanceof ClassAttribute);

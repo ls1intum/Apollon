@@ -1,9 +1,11 @@
 import React, { Component, ComponentType } from 'react';
+import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { hoverable } from '../layouted-element/hoverable';
 import { movable } from '../layouted-element/movable';
 import { resizable } from '../layouted-element/resizable';
 import { selectable } from '../layouted-element/selectable';
+import { ModelState } from '../store/model-state';
 import { CanvasElement } from './canvas-element';
 import { SvgElement } from './svg-element';
 
@@ -11,18 +13,52 @@ export type UMLElementComponentProps = {
   id: string;
 };
 
+// TODO: Move
+export type UMLElementFeatures = {
+  hoverable: boolean;
+  selectable: boolean;
+  movable: boolean;
+  resizable: boolean;
+};
+
 const components = {
   canvas: CanvasElement,
   svg: SvgElement,
 };
 
-type Props = {
+type OwnProps = {
   id: string;
   component: keyof typeof components;
 };
 
-const getInitialState = (component: ComponentType<UMLElementComponentProps>) => {
-  const decorators = [hoverable, selectable, movable, resizable()];
+type StateProps = {
+  features: UMLElementFeatures;
+};
+
+type DispatchProps = {};
+
+type Props = OwnProps & StateProps & DispatchProps;
+
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(state => ({
+  features: state.features,
+}));
+
+const getInitialState = (props: Props) => {
+  const component = components[props.component];
+  const decorators = [];
+
+  if (props.features.hoverable) {
+    decorators.push(hoverable);
+  }
+  if (props.features.selectable) {
+    decorators.push(selectable);
+  }
+  if (props.features.movable) {
+    decorators.push(movable);
+  }
+  if (props.features.resizable) {
+    decorators.push(resizable());
+  }
 
   return {
     component: compose<ComponentType<UMLElementComponentProps>>(...decorators.reverse())(component),
@@ -31,11 +67,13 @@ const getInitialState = (component: ComponentType<UMLElementComponentProps>) => 
 
 type State = ReturnType<typeof getInitialState>;
 
-export class UMLElementComponent extends Component<Props, State> {
-  state = getInitialState(components[this.props.component]);
+class UMLElementComponentC extends Component<Props, State> {
+  state = getInitialState(this.props);
 
   render() {
     const { component: ElementComponent } = this.state;
     return <ElementComponent id={this.props.id} />;
   }
 }
+
+export const UMLElementComponent = enhance(UMLElementComponentC);
