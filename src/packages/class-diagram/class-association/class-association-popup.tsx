@@ -76,7 +76,7 @@ class ClassAssociationComponent extends Component<Props> {
         <section>
           <Header>{source.name}</Header>
           <Flex>
-            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.multiplicity')}</Body>
+            <Body style={{ marginRight: '0.5em', flexShrink: 0 }}>{this.props.translate('popup.multiplicity')}</Body>
             <Textfield
               gutter={true}
               value={element.multiplicity.source}
@@ -84,7 +84,7 @@ class ClassAssociationComponent extends Component<Props> {
             />
           </Flex>
           <Flex>
-            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.role')}</Body>
+            <Body style={{ marginRight: '0.5em', flexShrink: 0  }}>{this.props.translate('popup.role')}</Body>
             <Textfield value={element.role.source} onChange={this.onUpdate('role', 'source')} />
           </Flex>
           <Divider />
@@ -92,7 +92,7 @@ class ClassAssociationComponent extends Component<Props> {
         <section>
           <Header>{target.name}</Header>
           <Flex>
-            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.multiplicity')}</Body>
+            <Body style={{ marginRight: '0.5em', flexShrink: 0  }}>{this.props.translate('popup.multiplicity')}</Body>
             <Textfield
               gutter={true}
               value={element.multiplicity.target}
@@ -100,7 +100,7 @@ class ClassAssociationComponent extends Component<Props> {
             />
           </Flex>
           <Flex>
-            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.role')}</Body>
+            <Body style={{ marginRight: '0.5em', flexShrink: 0  }}>{this.props.translate('popup.role')}</Body>
             <Textfield value={element.role.target} onChange={this.onUpdate('role', 'target')} />
           </Flex>
         </section>
