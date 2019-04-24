@@ -33,12 +33,12 @@
       "attribute": "属性",
       "method": "方法",
       "aggregation": "聚合",
-      "bidirectional":  "关联(双向)",
+      "bidirectional":  "关联（双向）",
       "composition": "组合",
       "dependency": "依赖",
       "inheritance": "集成",
       "realization": "实现",
-      "unidirectional": "关联 (单向)"
+      "unidirectional": "关联（单向）"
     },
     "objectDiagram": {
       "objectName": "对象",
