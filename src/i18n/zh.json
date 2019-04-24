@@ -1,8 +1,8 @@
 {
   "views": {
     "modelling": "模型",
-    "exporting": "交互",
-    "highlight": "显示交互元素"
+    "exporting": "选中",
+    "highlight": "显示选中元素"
   },
   "sidebar": {
     "classAttribute": "+ attribute: Type",
