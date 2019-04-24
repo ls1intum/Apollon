@@ -15,7 +15,7 @@
     "methods": "方法",
     "relationship": "关系",
     "association": "关联",
-    "multiplicity": "多样性",
+    "multiplicity": "多重性",
     "role": "角色",
     "messages": "消息"
   },
