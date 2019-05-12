@@ -11,6 +11,11 @@ import { ClassMemberComponent } from './class-diagram/class-member/class-member-
 import { ClassifierComponent } from './class-diagram/classifier/classifier-component';
 import { PackageComponent } from './common/package/package-component';
 import { CommunicationLinkComponent } from './communication-diagram/communication-link/communication-link-component';
+import { ComponentDependencyComponent } from './component-diagram/component-dependency/component-dependency-component';
+import { ComponentInterfaceProvidedComponent } from './component-diagram/component-interface-provided/component-interface-provided-component';
+import { ComponentInterfaceRequiredComponent } from './component-diagram/component-interface-required/component-interface-required-component';
+import { ComponentInterfaceComponent } from './component-diagram/component-interface/component-interface-component';
+import { ComponentComponent } from './component-diagram/component/component-component';
 import { ElementType } from './element-type';
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
 import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
@@ -45,6 +50,8 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [ElementType.UseCase]: UseCaseComponent,
   [ElementType.UseCaseActor]: UseCaseActorComponent,
   [ElementType.UseCaseSystem]: UseCaseSystemComponent,
+  [ElementType.Component]: ComponentComponent,
+  [ElementType.ComponentInterface]: ComponentInterfaceComponent,
   [RelationshipType.ClassAggregation]: ClassAssociationComponent,
   [RelationshipType.ClassBidirectional]: ClassAssociationComponent,
   [RelationshipType.ClassComposition]: ClassAssociationComponent,
@@ -59,4 +66,7 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [RelationshipType.UseCaseGeneralization]: UseCaseGeneralizationComponent,
   [RelationshipType.UseCaseInclude]: UseCaseIncludeComponent,
   [RelationshipType.CommunicationLink]: CommunicationLinkComponent,
+  [RelationshipType.ComponentInterfaceProvided]: ComponentInterfaceProvidedComponent,
+  [RelationshipType.ComponentInterfaceRequired]: ComponentInterfaceRequiredComponent,
+  [RelationshipType.ComponentDependency]: ComponentDependencyComponent,
 };

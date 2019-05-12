@@ -14,6 +14,8 @@ import { Class } from '../../packages/class-diagram/classifier/class/class';
 import { Enumeration } from '../../packages/class-diagram/classifier/enumeration/enumeration';
 import { Interface } from '../../packages/class-diagram/classifier/interface/interface';
 import { Package } from '../../packages/common/package/package';
+import { ComponentInterface } from '../../packages/component-diagram/component-interface/component-interface';
+import { Component as UMLComponent } from '../../packages/component-diagram/component/component';
 import { ElementType } from '../../packages/element-type';
 import { ObjectAttribute } from '../../packages/object-diagram/object-member/object-attribute/object-attribute';
 import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
@@ -280,6 +282,22 @@ class SidebarComponent extends Component<Props, State> {
             (() => {
               const c = new ObjectName();
               c.name = this.props.translate('packages.objectDiagram.objectName');
+              return c;
+            })(),
+          ],
+        });
+        break;
+      case DiagramType.ComponentDiagram:
+        this.setState({
+          previews: [
+            (() => {
+              const c = new UMLComponent();
+              c.name = this.props.translate('packages.componentDiagram.component');
+              return c;
+            })(),
+            (() => {
+              const c = new ComponentInterface();
+              c.name = this.props.translate('packages.componentDiagram.interface');
               return c;
             })(),
           ],

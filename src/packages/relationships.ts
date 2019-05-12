@@ -9,6 +9,9 @@ import { ClassInheritance } from './class-diagram/class-association/class-inheri
 import { ClassRealization } from './class-diagram/class-association/class-realization/class-realization';
 import { ClassUnidirectional } from './class-diagram/class-association/class-unidirectional/class-unidirectional';
 import { CommunicationLink } from './communication-diagram/communication-link/communication-link';
+import { ComponentDependency } from './component-diagram/component-dependency/component-dependency';
+import { ComponentInterfaceProvided } from './component-diagram/component-interface-provided/component-interface-provided';
+import { ComponentInterfaceRequired } from './component-diagram/component-interface-required/component-interface-required';
 import { ObjectLink } from './object-diagram/object-link/object-link';
 import { RelationshipType } from './relationship-type';
 import { UseCaseAssociation } from './use-case-diagram/use-case-association/use-case-association';
@@ -33,4 +36,7 @@ export const Relationships = {
   [RelationshipType.UseCaseGeneralization]: UseCaseGeneralization,
   [RelationshipType.UseCaseInclude]: UseCaseInclude,
   [RelationshipType.CommunicationLink]: CommunicationLink,
+  [RelationshipType.ComponentDependency]: ComponentDependency,
+  [RelationshipType.ComponentInterfaceProvided]: ComponentInterfaceProvided,
+  [RelationshipType.ComponentInterfaceRequired]: ComponentInterfaceRequired,
 };

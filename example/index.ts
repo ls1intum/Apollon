@@ -1,9 +1,10 @@
-import { ApollonEditor, ApollonOptions, SVG, UMLModel } from '../src';
+import { ApollonEditor, ApollonOptions, DiagramType, SVG, UMLModel } from '../src';
 
 const container = document.getElementById('apollon')!;
 let editor: ApollonEditor | null = null;
 let options: ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
+  type: DiagramType.ComponentDiagram,
 };
 
 export const onChange = (event: MouseEvent) => {
