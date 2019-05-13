@@ -16,6 +16,9 @@ import { ComponentInterfaceProvidedComponent } from './component-diagram/compone
 import { ComponentInterfaceRequiredComponent } from './component-diagram/component-interface-required/component-interface-required-component';
 import { ComponentInterfaceComponent } from './component-diagram/component-interface/component-interface-component';
 import { ComponentComponent } from './component-diagram/component/component-component';
+import { DeploymentArtifactComponent } from './deployment-diagram/deployment-artifact/deployment-artifact-component';
+import { DeploymentAssociationComponent } from './deployment-diagram/deployment-association/deployment-association-component';
+import { DeploymentNodeComponent } from './deployment-diagram/deployment-node/deployment-node-component';
 import { ElementType } from './element-type';
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
 import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
@@ -52,6 +55,8 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [ElementType.UseCaseSystem]: UseCaseSystemComponent,
   [ElementType.Component]: ComponentComponent,
   [ElementType.ComponentInterface]: ComponentInterfaceComponent,
+  [ElementType.DeploymentNode]: DeploymentNodeComponent,
+  [ElementType.DeploymentArtifact]: DeploymentArtifactComponent,
   [RelationshipType.ClassAggregation]: ClassAssociationComponent,
   [RelationshipType.ClassBidirectional]: ClassAssociationComponent,
   [RelationshipType.ClassComposition]: ClassAssociationComponent,
@@ -69,4 +74,5 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [RelationshipType.ComponentInterfaceProvided]: ComponentInterfaceProvidedComponent,
   [RelationshipType.ComponentInterfaceRequired]: ComponentInterfaceRequiredComponent,
   [RelationshipType.ComponentDependency]: ComponentDependencyComponent,
+  [RelationshipType.DeploymentAssociation]: DeploymentAssociationComponent,
 };

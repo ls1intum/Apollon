@@ -68,6 +68,11 @@
       "interface": "Schnittstelle",
       "interfaceProvided": "Bereitgestellte Schnittstelle",
       "interfaceRequired": "Verwendete Schnittstelle"
+    },
+    "deploymentDiagram": {
+      "node": "Knoten",
+      "artifact": "Artefakt",
+      "stereotype": "Stereotyp"
     }
   }
 }

@@ -16,6 +16,8 @@ import { Interface } from '../../packages/class-diagram/classifier/interface/int
 import { Package } from '../../packages/common/package/package';
 import { ComponentInterface } from '../../packages/component-diagram/component-interface/component-interface';
 import { Component as UMLComponent } from '../../packages/component-diagram/component/component';
+import { DeploymentArtifact } from '../../packages/deployment-diagram/deployment-artifact/deployment-artifact';
+import { DeploymentNode } from '../../packages/deployment-diagram/deployment-node/deployment-node';
 import { ElementType } from '../../packages/element-type';
 import { ObjectAttribute } from '../../packages/object-diagram/object-member/object-attribute/object-attribute';
 import { ObjectName } from '../../packages/object-diagram/object-name/object-name';
@@ -298,6 +300,27 @@ class SidebarComponent extends Component<Props, State> {
             (() => {
               const c = new ComponentInterface();
               c.name = this.props.translate('packages.componentDiagram.interface');
+              return c;
+            })(),
+          ],
+        });
+        break;
+      case DiagramType.DeploymentDiagram:
+        this.setState({
+          previews: [
+            (() => {
+              const c = new DeploymentNode();
+              c.name = this.props.translate('packages.deploymentDiagram.node');
+              return c;
+            })(),
+            (() => {
+              const c = new UMLComponent();
+              c.name = this.props.translate('packages.componentDiagram.component');
+              return c;
+            })(),
+            (() => {
+              const c = new DeploymentArtifact();
+              c.name = this.props.translate('packages.deploymentDiagram.artifact');
               return c;
             })(),
           ],

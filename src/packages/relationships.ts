@@ -12,6 +12,7 @@ import { CommunicationLink } from './communication-diagram/communication-link/co
 import { ComponentDependency } from './component-diagram/component-dependency/component-dependency';
 import { ComponentInterfaceProvided } from './component-diagram/component-interface-provided/component-interface-provided';
 import { ComponentInterfaceRequired } from './component-diagram/component-interface-required/component-interface-required';
+import { DeploymentAssociation } from './deployment-diagram/deployment-association/deployment-association';
 import { ObjectLink } from './object-diagram/object-link/object-link';
 import { RelationshipType } from './relationship-type';
 import { UseCaseAssociation } from './use-case-diagram/use-case-association/use-case-association';
@@ -39,4 +40,5 @@ export const Relationships = {
   [RelationshipType.ComponentDependency]: ComponentDependency,
   [RelationshipType.ComponentInterfaceProvided]: ComponentInterfaceProvided,
   [RelationshipType.ComponentInterfaceRequired]: ComponentInterfaceRequired,
+  [RelationshipType.DeploymentAssociation]: DeploymentAssociation,
 };
