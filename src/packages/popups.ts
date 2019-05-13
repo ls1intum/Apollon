@@ -7,6 +7,7 @@ import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
 import { ComponentAssociationPopup } from './component-diagram/component-association-popup';
+import { DeploymentAssociationPopup } from './deployment-diagram/deployment-association/deployment-association-popup';
 import { DeploymentNodePopup } from './deployment-diagram/deployment-node/deployment-node-popup';
 import { ElementType } from './element-type';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
@@ -56,5 +57,5 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [RelationshipType.ComponentInterfaceProvided]: ComponentAssociationPopup,
   [RelationshipType.ComponentInterfaceRequired]: ComponentAssociationPopup,
   [RelationshipType.ComponentDependency]: ComponentAssociationPopup,
-  [RelationshipType.DeploymentAssociation]: DefaultRelationshipPopup,
+  [RelationshipType.DeploymentAssociation]: DeploymentAssociationPopup,
 };
