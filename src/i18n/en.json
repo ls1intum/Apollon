@@ -68,6 +68,11 @@
       "interface": "Interface",
       "interfaceProvided": "Provided Interface",
       "interfaceRequired": "Required Interface"
+    },
+    "deploymentDiagram": {
+      "node": "Node",
+      "artifact": "Artifact",
+      "stereotype": "Stereotype"
     }
   }
 }

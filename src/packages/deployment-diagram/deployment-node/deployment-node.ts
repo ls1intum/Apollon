@@ -1,21 +1,35 @@
-import { ComponentElementType } from '..';
-import { Container } from '../../../services/container/container';
+import { DeploymentElementType, UMLDeploymentNode } from '..';
+import { Container, IContainer } from '../../../services/container/container';
 import { Element, IElement } from '../../../services/element/element';
 import { UMLElement } from '../../../typings';
 import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
 
-export class Component extends Container {
-  type = ComponentElementType.Component;
+export interface IDeploymentNode extends IContainer {
+  stereotype: string;
+}
 
-  constructor(values?: IElement);
-  constructor(values?: UMLElement);
+export class DeploymentNode extends Container {
+  type = DeploymentElementType.DeploymentNode;
+
+  stereotype = 'node';
+
+  constructor(values?: IDeploymentNode);
+  constructor(values?: UMLDeploymentNode);
   constructor(values?: IElement | UMLElement);
-  constructor(values?: IElement | UMLElement) {
+  constructor(values?: IDeploymentNode | UMLDeploymentNode) {
     super(values);
+    this.stereotype = (values && values.stereotype) || 'node';
+  }
 
-    if (!values) {
-      Object.assign(this, { bounds: { ...this.bounds, height: 40 } });
-    }
+  toUMLElement(element: DeploymentNode, children: Element[]): { element: UMLDeploymentNode; children: Element[] } {
+    const { element: base } = super.toUMLElement(element, children);
+    return {
+      element: {
+        ...base,
+        stereotype: element.stereotype,
+      },
+      children,
+    };
   }
 
   render(elements: Element[]): Element[] {
@@ -37,14 +51,14 @@ export class Component extends Container {
       child.bounds.x -= deltaX;
       child.bounds.y -= deltaY;
     });
-    const resizedParent = new Component({ ...parent, bounds });
+    const resizedParent = new DeploymentNode({ ...(parent as DeploymentNode), bounds });
     return [resizedParent, ...relativeChildren];
   }
 
   resize(children: Element[]): Element[] {
     const bounds = computeBoundingBoxForElements(children);
     this.bounds.width = Math.max(this.bounds.width, bounds.x + bounds.width, 100);
-    this.bounds.height = Math.max(this.bounds.height, bounds.y + bounds.height, 40);
+    this.bounds.height = Math.max(this.bounds.height, bounds.y + bounds.height, 100);
     return [this, ...children];
   }
 }

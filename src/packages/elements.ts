@@ -16,6 +16,8 @@ import { Interface } from './class-diagram/classifier/interface/interface';
 import { Package } from './common/package/package';
 import { ComponentInterface } from './component-diagram/component-interface/component-interface';
 import { Component } from './component-diagram/component/component';
+import { DeploymentArtifact } from './deployment-diagram/deployment-artifact/deployment-artifact';
+import { DeploymentNode } from './deployment-diagram/deployment-node/deployment-node';
 import { ElementType } from './element-type';
 import { ObjectAttribute } from './object-diagram/object-member/object-attribute/object-attribute';
 import { ObjectMethod } from './object-diagram/object-member/object-method/object-method';
@@ -49,4 +51,6 @@ export const Elements = {
   [ElementType.UseCaseSystem]: UseCaseSystem,
   [ElementType.Component]: Component,
   [ElementType.ComponentInterface]: ComponentInterface,
+  [ElementType.DeploymentNode]: DeploymentNode,
+  [ElementType.DeploymentArtifact]: DeploymentArtifact,
 };

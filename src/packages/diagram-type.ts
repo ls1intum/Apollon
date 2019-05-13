@@ -5,4 +5,5 @@ export enum DiagramType {
   UseCaseDiagram = 'UseCaseDiagram',
   CommunicationDiagram = 'CommunicationDiagram',
   ComponentDiagram = 'ComponentDiagram',
+  DeploymentDiagram = 'DeploymentDiagram',
 }
