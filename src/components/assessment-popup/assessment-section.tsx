@@ -20,7 +20,6 @@ const Flex = styled.div`
 
 type OwnProps = {
   element: Element;
-  last: boolean;
 };
 
 type StateProps = {
@@ -43,7 +42,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 
 class AssessmentSectionCompoennt extends Component<Props> {
   render() {
-    const { element, assessment, readonly, last } = this.props;
+    const { element, assessment, readonly } = this.props;
 
     return (
       <>
@@ -71,7 +70,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
             />
           </section>
         )}
-        {!last && <Divider />}
+        <Divider />
       </>
     );
   }

@@ -99,6 +99,14 @@ export class PopupLayerComponent extends Component<Props, State> {
   private showPopup = (element: Element, position: { x: number; y: number }) => {
     this.setState({ element, position });
     window.addEventListener('resize', this.close, { once: true });
+    setTimeout(() => {
+      if (!this.popup.current) return;
+
+      const inputs = this.popup.current.getElementsByTagName('input');
+      if (!inputs.length) return;
+
+      inputs[0].focus();
+    }, 0);
   };
 
   private update = (element: Element) => {
