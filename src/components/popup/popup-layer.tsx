@@ -56,6 +56,7 @@ export class PopupLayerComponent extends Component<Props, State> {
     const context: PopupContext = {
       showPopup: this.showPopup,
       update: this.update,
+      dissmiss: this.close,
     };
 
 

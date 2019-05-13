@@ -23,6 +23,7 @@ export const editable = (WrappedComponent: typeof ElementComponent) => {
     }
 
     componentWillUnmount() {
+      this.props.dissmiss();
       const node = findDOMNode(this) as HTMLElement;
       node.removeEventListener('pointerdown', this.edit);
     }
