@@ -1,11 +1,22 @@
 import { ComponentElementType } from '..';
 import { Container } from '../../../services/container/container';
-import { Element } from '../../../services/element/element';
+import { Element, IElement } from '../../../services/element/element';
+import { UMLElement } from '../../../typings';
 import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
 
 export class Component extends Container {
-
   type = ComponentElementType.Component;
+
+  constructor(values?: IElement);
+  constructor(values?: UMLElement);
+  constructor(values?: IElement | UMLElement);
+  constructor(values?: IElement | UMLElement) {
+    super(values);
+
+    if (!values) {
+      Object.assign(this, { bounds: { ...this.bounds, height: 40 } });
+    }
+  }
 
   render(elements: Element[]): Element[] {
     const [parent, ...children] = super.render(elements);

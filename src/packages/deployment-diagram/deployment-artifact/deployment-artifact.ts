@@ -12,7 +12,7 @@ export class DeploymentArtifact extends Element {
     super(values);
 
     if (!values) {
-      Object.assign(this, { bounds: { ...this.bounds, height: 45 } });
+      Object.assign(this, { bounds: { ...this.bounds, height: 40 } });
     }
   }
 }
