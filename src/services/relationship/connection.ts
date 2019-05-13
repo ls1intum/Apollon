@@ -40,6 +40,10 @@ export class Connection {
     // If the user forced this relationship path to be a straight line,
     // directly connect the start and end points, even if that results in an angled line
     if (options.isStraight) {
+      if (startPointOnInnerEdge.x === endPointOnInnerEdge.x && startPointOnInnerEdge.y === endPointOnInnerEdge.y) {
+        endPointOnInnerEdge.x += 1;
+        endPointOnInnerEdge.y += 1;
+      }
       return [startPointOnInnerEdge, endPointOnInnerEdge];
     }
 
@@ -47,6 +51,10 @@ export class Connection {
 
     // If there is a straight path, return that one
     if (straightPath !== null) {
+      if (straightPath[0].x === straightPath[1].x && straightPath[0].y === straightPath[1].y) {
+        straightPath[1].x += 1;
+        straightPath[1].y += 1;
+      }
       return straightPath;
     }
 

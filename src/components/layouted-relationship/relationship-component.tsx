@@ -16,7 +16,6 @@ export class RelationshipComponent extends Component<Props> {
 
   render() {
     const { element, disabled } = this.props;
-    if (element.bounds.width === 1 && element.bounds.height === 1) return null;
 
     const ElementComponent = Components[element.type];
     const points = element.path.map(point => `${point.x} ${point.y}`).join(',');
