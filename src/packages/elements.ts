@@ -14,6 +14,8 @@ import { Class } from './class-diagram/classifier/class/class';
 import { Enumeration } from './class-diagram/classifier/enumeration/enumeration';
 import { Interface } from './class-diagram/classifier/interface/interface';
 import { Package } from './common/package/package';
+import { ComponentInterface } from './component-diagram/component-interface/component-interface';
+import { Component } from './component-diagram/component/component';
 import { ElementType } from './element-type';
 import { ObjectAttribute } from './object-diagram/object-member/object-attribute/object-attribute';
 import { ObjectMethod } from './object-diagram/object-member/object-method/object-method';
@@ -45,4 +47,6 @@ export const Elements = {
   [ElementType.UseCase]: UseCase,
   [ElementType.UseCaseActor]: UseCaseActor,
   [ElementType.UseCaseSystem]: UseCaseSystem,
+  [ElementType.Component]: Component,
+  [ElementType.ComponentInterface]: ComponentInterface,
 };

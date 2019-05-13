@@ -2,8 +2,8 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { IAssessment } from '../../services/assessment/assessment';
 import { CheckIcon } from '../controls/icon/check';
-import { TimesIcon } from '../controls/icon/times';
 import { ExclamationCircleIcon } from '../controls/icon/exclamation-circle';
+import { TimesIcon } from '../controls/icon/times';
 import { ModelState } from '../store/model-state';
 import { ElementComponent, OwnProps } from './element-component';
 
@@ -58,7 +58,7 @@ export const assessable = (WrappedComponent: typeof ElementComponent): Component
 
   type Props = OwnProps & StateProps & DispatchProps;
 
-  return connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({ assessment: state.assessments[props.element.id] }))(
-    Assessable,
-  );
+  return connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
+    assessment: state.assessments[props.element.id],
+  }))(Assessable);
 };

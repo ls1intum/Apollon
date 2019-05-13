@@ -6,6 +6,7 @@ import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
+import { ComponentAssociationPopup } from './component-diagram/component-association-popup';
 import { ElementType } from './element-type';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
 import { RelationshipType } from './relationship-type';
@@ -33,6 +34,8 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [ElementType.UseCase]: DefaultPopup,
   [ElementType.UseCaseActor]: DefaultPopup,
   [ElementType.UseCaseSystem]: DefaultPopup,
+  [ElementType.Component]: DefaultPopup,
+  [ElementType.ComponentInterface]: DefaultPopup,
   [RelationshipType.ClassAggregation]: ClassAssociationPopup,
   [RelationshipType.ClassBidirectional]: ClassAssociationPopup,
   [RelationshipType.ClassComposition]: ClassAssociationPopup,
@@ -47,4 +50,7 @@ export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{
   [RelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
   [RelationshipType.UseCaseInclude]: UseCaseAssociationPopup,
   [RelationshipType.CommunicationLink]: CommunicationLinkPopup,
+  [RelationshipType.ComponentInterfaceProvided]: ComponentAssociationPopup,
+  [RelationshipType.ComponentInterfaceRequired]: ComponentAssociationPopup,
+  [RelationshipType.ComponentDependency]: ComponentAssociationPopup,
 };

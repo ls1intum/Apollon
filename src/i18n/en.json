@@ -61,6 +61,13 @@
     },
     "communicationDiagram": {
       "communicationLink": "Communication Link"
+    },
+    "componentDiagram": {
+      "component": "Component",
+      "dependency": "Dependency",
+      "interface": "Interface",
+      "interfaceProvided": "Provided Interface",
+      "interfaceRequired": "Required Interface"
     }
   }
 }

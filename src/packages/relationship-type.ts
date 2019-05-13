@@ -1,6 +1,7 @@
 import { ActivityRelationshipType } from './activity-diagram';
 import { ClassRelationshipType } from './class-diagram';
 import { CommunicationRelationshipType } from './communication-diagram';
+import { ComponentRelationshipType } from './component-diagram';
 import { DiagramType } from './diagram-type';
 import { ObjectRelationshipType } from './object-diagram';
 import { UseCaseRelationshipType } from './use-case-diagram';
@@ -10,7 +11,8 @@ export type RelationshipType =
   | ObjectRelationshipType
   | ActivityRelationshipType
   | UseCaseRelationshipType
-  | CommunicationRelationshipType;
+  | CommunicationRelationshipType
+  | ComponentRelationshipType;
 
 export const RelationshipType = {
   ...ClassRelationshipType,
@@ -18,6 +20,7 @@ export const RelationshipType = {
   ...ActivityRelationshipType,
   ...UseCaseRelationshipType,
   ...CommunicationRelationshipType,
+  ...ComponentRelationshipType,
 };
 
 export const DefaultRelationshipType: { [type in DiagramType]: RelationshipType } = {
@@ -26,4 +29,5 @@ export const DefaultRelationshipType: { [type in DiagramType]: RelationshipType 
   [DiagramType.ActivityDiagram]: ActivityRelationshipType.ActivityControlFlow,
   [DiagramType.UseCaseDiagram]: UseCaseRelationshipType.UseCaseAssociation,
   [DiagramType.CommunicationDiagram]: CommunicationRelationshipType.CommunicationLink,
+  [DiagramType.ComponentDiagram]: ComponentRelationshipType.ComponentDependency,
 };
