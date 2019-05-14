@@ -41,7 +41,8 @@ export const updatable = (WrappedComponent: typeof ElementComponent): ComponentC
     }
 
     render() {
-      return <WrappedComponent {...this.props} />;
+      const { updateStart, ...props } = this.props;
+      return <WrappedComponent {...props} />;
     }
 
     private onPointerDown = (event: PointerEvent) => {

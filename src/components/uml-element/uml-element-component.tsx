@@ -6,6 +6,7 @@ import { hoverable } from '../layouted-element/hoverable';
 import { movable } from '../layouted-element/movable';
 import { resizable } from '../layouted-element/resizable';
 import { selectable } from '../layouted-element/selectable';
+import { updatable } from '../layouted-element/updatable';
 import { ModelState } from '../store/model-state';
 import { CanvasElement } from './canvas-element';
 import { SvgElement } from './svg-element';
@@ -21,6 +22,7 @@ export type UMLElementFeatures = {
   movable: boolean;
   resizable: boolean;
   connectable: boolean;
+  updatable: boolean;
 };
 
 const components = {
@@ -63,6 +65,12 @@ const getInitialState = (props: Props) => {
   }
   if (props.features.connectable) {
     decorators.push(connectable);
+  }
+  if (props.features.connectable) {
+    decorators.push(connectable);
+  }
+  if (props.features.updatable) {
+    decorators.push(updatable);
   }
 
   return {
