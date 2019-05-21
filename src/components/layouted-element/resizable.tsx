@@ -79,8 +79,10 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
 
       this.setState({ resizing: true, offset: new Point(event.clientX, event.clientY) });
       this.props.start();
-      document.addEventListener('pointermove', this.onPointerMove);
-      document.addEventListener('pointerup', this.onPointerUp, { once: true });
+      const element = event.currentTarget;
+      element.setPointerCapture(event.pointerId);
+      element.addEventListener('pointermove', this.onPointerMove);
+      element.addEventListener('pointerup', this.onPointerUp, { once: true });
     };
 
     private onPointerMove = (event: PointerEvent) => {
@@ -89,8 +91,14 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
       this.resize(width, height);
     };
 
-    private onPointerUp = () => {
-      document.removeEventListener('pointermove', this.onPointerMove);
+    private onPointerUp = (event: PointerEvent) => {
+      const element = event.currentTarget as HTMLDivElement;
+      if (!element) {
+        return;
+      }
+
+      element.releasePointerCapture(event.pointerId);
+      element.removeEventListener('pointermove', this.onPointerMove);
       this.setState(initialState);
       this.props.end();
     };

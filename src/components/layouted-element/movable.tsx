@@ -75,14 +75,16 @@ export const movable = (
         return;
       }
 
+      const element = event.currentTarget as HTMLDivElement;
       this.setState({ offset: new Point(event.clientX, event.clientY) });
       setTimeout(() => {
         if (!this.props.selected) {
           return;
         }
 
-        document.addEventListener('pointermove', this.onPointerMove);
-        document.addEventListener('pointerup', this.onPointerUp, { once: true });
+        element.setPointerCapture(event.pointerId);
+        element.addEventListener('pointermove', this.onPointerMove);
+        element.addEventListener('pointerup', this.onPointerUp, { once: true });
       }, 0);
     };
 
@@ -100,8 +102,14 @@ export const movable = (
       }
     };
 
-    private onPointerUp = () => {
-      document.removeEventListener('pointermove', this.onPointerMove);
+    private onPointerUp = (event: PointerEvent) => {
+      const element = event.currentTarget as HTMLDivElement;
+      if (!element) {
+        return;
+      }
+
+      element.releasePointerCapture(event.pointerId);
+      element.removeEventListener('pointermove', this.onPointerMove);
       if (!this.state.moving) {
         return;
       }
