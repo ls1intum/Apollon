@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import { CanvasElement } from '../uml-element/canvas-element';
 import { hoverable } from '../layouted-element/hoverable';
+import { CanvasElement } from '../uml-element/canvas-element';
 
 export const Container = styled.aside`
   flex: 0 0 230px;
