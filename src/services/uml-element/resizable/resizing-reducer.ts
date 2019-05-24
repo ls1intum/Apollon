@@ -6,6 +6,8 @@ export const ResizingReducer: Reducer<ResizingState, ResizingActions> = (state =
     case ResizingActionTypes.RESIZE: {
       const { payload } = action;
       return payload.ids.reduce<ResizingState>((newState, id) => {
+        if (!(id in newState)) return newState;
+
         return {
           ...newState,
           [id]: {

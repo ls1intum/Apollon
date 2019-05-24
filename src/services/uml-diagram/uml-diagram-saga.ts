@@ -1,31 +1,91 @@
-// import { put, select, takeLatest } from 'redux-saga/effects';
-// import { ModelState } from '../../components/store/model-state';
-// import { UMLContainer } from '../uml-container/uml-container';
-// import { ChangeOwnerAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
-// import { UMLElementRepository } from '../uml-element/uml-element-repository';
-// import { CreateAction as UMLElementCreateAction, DeleteAction, UMLElementActionTypes } from '../uml-element/uml-element-types';
-// import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
-// import { CreateAction as UMLRelationshipCreateAction, UMLRelationshipActionTypes } from '../uml-relationship/uml-relationship-types';
-// import {
-//   AddElementAction,
-//   AddRelationshipAction,
-//   DeleteElementAction,
-//   DeleteRelationshipAction,
-//   UMLDiagramActionTypes,
-//   UpdateBoundsAction,
-// } from './uml-diagram-types';
+import { all, call, put, select, spawn, take } from 'redux-saga/effects';
+import { ModelState } from '../../components/store/model-state';
+import { notEmpty } from '../../utils/not-empty';
+import { AppendAction, RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
+import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
+import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
+import { ResizableActionTypes, ResizeEndAction } from '../uml-element/resizable/resizable-types';
+import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
+import { UMLElementRepository } from '../uml-element/uml-element-repository';
+import { UMLElementState } from '../uml-element/uml-element-types';
+import { IUMLDiagram } from './uml-diagram';
 
-// export function* UMLDiagramSaga() {
-//   yield takeLatest(UMLContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
-//   yield takeLatest(UMLElementActionTypes.CREATE, handleElementCreation);
-//   yield takeLatest(UMLRelationshipActionTypes.CREATE, handleRelationshipCreation);
-//   yield takeLatest(UMLElementActionTypes.RESIZED, recalc);
-//   yield takeLatest(UMLElementActionTypes.DELETE, handleElementDeletion);
-//   yield takeLatest(UMLDiagramActionTypes.ADD_ELEMENT, recalc);
-//   yield takeLatest(UMLDiagramActionTypes.ADD_RELATIONSHIP, recalc);
-//   yield takeLatest(UMLDiagramActionTypes.DELETE_ELEMENT, recalc);
-//   yield takeLatest(UMLDiagramActionTypes.DELETE_RELATIONSHIP, recalc);
-// }
+export function* UMLDiagramSaga() {
+  const sagas = [append, removed, moved, resized];
+
+  yield all(
+    sagas.map(saga =>
+      spawn(function*() {
+        while (true) {
+          try {
+            yield call(saga);
+          } catch (e) {
+            console.log('error', e);
+          }
+        }
+      }),
+    ),
+  );
+}
+
+function* append() {
+  const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
+  const { elements, diagram }: ModelState = yield select();
+
+  if (diagram.id !== action.payload.owner) {
+    return;
+  }
+  yield resize(diagram, elements);
+}
+
+function* removed() {
+  const action: RemoveAction = yield take(UMLContainerActionTypes.REMOVE);
+  const { elements, diagram }: ModelState = yield select();
+
+  if (diagram.id !== action.payload.owner) {
+    return;
+  }
+  yield resize(diagram, elements);
+}
+
+function* moved() {
+  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
+  const { elements, diagram }: ModelState = yield select();
+
+  const render = action.payload.ids.some(id => !elements[id].owner);
+
+  if (!render) {
+    return;
+  }
+  yield resize(diagram, elements);
+}
+
+function* resized() {
+  const action: ResizeEndAction = yield take(ResizableActionTypes.RESIZE_END);
+  const { elements, diagram }: ModelState = yield select();
+
+  const render = action.payload.ids.some(id => !elements[id].owner);
+
+  if (!render) {
+    return;
+  }
+  yield resize(diagram, elements);
+}
+
+function resize(diagram: IUMLDiagram, elements: UMLElementState) {
+  const container = UMLDiagramRepository.get(diagram);
+  if (!container) {
+    return;
+  }
+
+  const ownedElements = container.ownedElements.map(id => UMLElementRepository.get(elements[id])).filter(notEmpty);
+  const [update] = container.render(ownedElements);
+
+  return put<ResizeAction>({
+    type: ResizingActionTypes.RESIZE,
+    payload: { ids: [update.id], delta: { width: update.bounds.width, height: update.bounds.height } },
+  });
+}
 
 // function* handleOwnerChange({ payload }: ChangeOwnerAction) {
 //   if (!payload.id || payload.id === payload.owner) return;
@@ -99,20 +159,4 @@
 //       payload: { id: payload.id },
 //     });
 //   }
-// }
-
-// function* recalc() {
-//   const { elements }: ModelState = yield select();
-//   const ids = Object.keys(elements).filter(id => !elements[id].owner);
-//   const rootElements = UMLElementRepository.getByIds(elements)(ids);
-
-//   let width = 0;
-//   let height = 0;
-//   for (const element of rootElements) {
-//     width = Math.max(Math.abs(element.bounds.x), Math.abs(element.bounds.x + element.bounds.width), width);
-//     height = Math.max(Math.abs(element.bounds.y), Math.abs(element.bounds.y + element.bounds.height), height);
-//   }
-
-//   const bounds = { x: -width, y: -height, width: width * 2, height: height * 2 };
-//   yield put<UpdateBoundsAction>({ type: UMLDiagramActionTypes.UPDATE_BOUNDS, payload: { bounds } });
 // }

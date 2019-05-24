@@ -62,7 +62,6 @@ class LayoutedRelationshipComponent extends Component<Props> {
 
 type OwnProps = {
   relationship: string;
-  container: RefObject<HTMLDivElement>;
 };
 
 type StateProps = {

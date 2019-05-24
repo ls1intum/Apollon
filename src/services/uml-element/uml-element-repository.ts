@@ -25,6 +25,7 @@ import {
 } from './uml-element-types';
 import { Updatable } from './updatable/updatable-repository';
 import { Connectable } from './connectable/connectable-repository';
+import { UMLContainerRepository } from '../uml-container/uml-container-repository';
 
 type UMLElementRepository = typeof Repository &
   ReturnType<typeof Hoverable> &
@@ -84,6 +85,31 @@ class Repository {
       type: UMLElementActionTypes.DELETE,
       payload: { ids: getState().selected },
     });
+
+  static clone = (element: UMLElement, elements: UMLElement[]): UMLElement[] => {
+    if (!UMLContainerRepository.isUMLContainer(element)) {
+      return [element.clone()];
+    }
+
+    const result: UMLElement[] = [];
+    const clone = element.clone<UMLContainer>();
+    const { ownedElements } = element;
+    for (const id of ownedElements) {
+      const child = elements.find(prev => prev.id === id);
+      if (!child) {
+        continue;
+      }
+
+      const [clonedChild, ...clonedChildren] = UMLElementRepository.clone(child, elements);
+      clonedChild.owner = clone.id;
+
+      const index = clone.ownedElements.findIndex(x => x === id);
+      clone.ownedElements[index] = clonedChild.id;
+      result.push(clonedChild, ...clonedChildren);
+    }
+
+    return [clone, ...result];
+  };
 
   static duplicate = (id: string, parent?: string): DuplicateAction => ({
     type: UMLElementActionTypes.DUPLICATE,

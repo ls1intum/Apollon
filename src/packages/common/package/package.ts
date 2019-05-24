@@ -11,7 +11,7 @@ export class Package extends UMLContainer {
 
   type = CommonElementType.Package;
 
-  render(elements: UMLElement[]): UMLElement[] {
+  render(elements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     const [parent, ...children] = super.render(elements);
     const absoluteChildren: UMLElement[] = children.map<UMLElement>(child => {
       child.bounds.x += parent.bounds.x;

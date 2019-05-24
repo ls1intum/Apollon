@@ -1,4 +1,8 @@
-// import { all, Effect, put, select, takeLatest } from 'redux-saga/effects';
+import { all, call, select, spawn, take } from 'redux-saga/effects';
+import { ModelState } from '../../components/store/model-state';
+import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
+import { UMLElementRepository } from '../uml-element/uml-element-repository';
+import { UMLContainerRepository } from './uml-container-repository';
 // import { ModelState } from '../../components/store/model-state';
 // import { Point } from '../../utils/geometry/point';
 // import { UMLElement } from '../uml-element/uml-element';
@@ -14,22 +18,50 @@
 // } from '../uml-element/uml-element-types';
 // import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
 // import { UMLContainer } from './uml-container';
-// import {
-//   AppendChildAction,
-//   ChangeOwnerAction,
-//   RemoveChildAction,
-//   UMLContainerActionTypes,
-// } from './uml-container-types';
+import { AppendAction, UMLContainerActionTypes } from './uml-container-types';
 
 export function* UMLContainerSaga() {
-//   yield takeLatest(UMLElementActionTypes.CREATE, appendNewElementToParent);
-//   yield takeLatest(UMLElementActionTypes.DELETE, removeElementFromParent);
-//   yield takeLatest(UMLContainerActionTypes.APPEND_CHILD, appendChild);
-//   yield takeLatest(UMLContainerActionTypes.REMOVE_CHILD, removeChild);
-//   yield takeLatest(UMLContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
-//   yield takeLatest(UMLElementActionTypes.CHANGE, handleElementChange);
-//   yield takeLatest(UMLElementActionTypes.RESIZE, handleElementResize);
   yield null;
+  // const sagas = [append];
+
+  // yield all(
+  //   sagas.map(saga =>
+  //     spawn(function*() {
+  //       while (true) {
+  //         try {
+  //           yield call(saga);
+  //         } catch (e) {
+  //           console.log('error', e);
+  //         }
+  //       }
+  //     }),
+  //   ),
+  // );
+  // yield all([spawn(append)]);
+  //   yield takeLatest(UMLElementActionTypes.CREATE, appendNewElementToParent);
+  //   yield takeLatest(UMLElementActionTypes.DELETE, removeElementFromParent);
+  //   yield takeLatest(UMLContainerActionTypes.REMOVE_CHILD, removeChild);
+  //   yield takeLatest(UMLContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
+  //   yield takeLatest(UMLElementActionTypes.CHANGE, handleElementChange);
+  //   yield takeLatest(UMLElementActionTypes.RESIZE, handleElementResize);
+  // yield null;
+}
+
+function* append() {
+  const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
+  const { elements, diagram }: ModelState = yield select();
+
+  const container =
+    diagram.id === action.payload.owner
+      ? UMLDiagramRepository.get(diagram)
+      : UMLElementRepository.get(elements[action.payload.owner]);
+
+  console.log('action', action, container, UMLContainerRepository.isUMLContainer(container!));
+  if (!container || !UMLContainerRepository.isUMLContainer(container)) {
+    return;
+  }
+
+  console.log('action', action, container);
 }
 
 // function* appendNewElementToParent({ payload }: CreateAction) {

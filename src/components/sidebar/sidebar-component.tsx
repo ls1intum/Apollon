@@ -5,10 +5,10 @@ import { EditorRepository } from '../../services/editor/editor-repository';
 import { ApollonView } from '../../services/editor/editor-types';
 import { ApollonMode } from '../../typings';
 import { Switch } from '../controls/switch/switch';
+import { CreatePane } from '../create-pane/create-pane';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
-import { CreatePane } from './create-pane';
 import { Container } from './sidebar-styles';
 
 type OwnProps = {};

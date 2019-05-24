@@ -12,8 +12,3 @@ export const Container = styled.aside`
   display: flex;
   flex-direction: column;
 `;
-
-export const Preview = styled(hoverable(CanvasElement))`
-  margin: 5px;
-  overflow: visible;
-`;

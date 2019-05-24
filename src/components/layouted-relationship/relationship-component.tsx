@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Components } from '../../packages/components';
 import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
-import { CanvasConsumer } from '../canvas/canvas-context';
 import { ModelState } from '../store/model-state';
 
 export class RelationshipComponentComponent extends Component<Props> {
@@ -21,46 +20,34 @@ export class RelationshipComponentComponent extends Component<Props> {
 
     const ElementComponent = Components[element.type];
     const points = element.path.map(point => `${point.x} ${point.y}`).join(',');
+    const bounds = element.bounds;
 
     return (
-      <CanvasConsumer
-        children={context => {
-          let bounds = element.bounds;
-          if (context) {
-            bounds = {
-              ...bounds,
-              ...context.coordinateSystem.pointToScreen(bounds.x, bounds.y),
-            };
-          }
-          return (
-            <svg
-              {...bounds}
-              id={element.id}
-              pointerEvents={disabled ? 'none' : 'stroke'}
-              style={{
-                overflow: 'visible',
-                opacity: this.props.hidden ? 0 : 1,
-              }}
-            >
-              <polyline
-                points={points}
-                stroke={!this.props.interactable ? '#0064ff' : this.props.interactive ? '#00dc00' : '#00dc00'}
-                strokeOpacity={
-                  this.props.hovered ||
-                  (!this.props.interactable && this.props.selected) ||
-                  (this.props.interactable && this.props.interactive)
-                    ? 0.2
-                    : 0
-                }
-                fill="none"
-                strokeWidth={15}
-              />
-              <ElementComponent element={element} />
-              {this.props.children}
-            </svg>
-          );
+      <svg
+        {...bounds}
+        id={element.id}
+        pointerEvents={disabled ? 'none' : 'stroke'}
+        style={{
+          overflow: 'visible',
+          opacity: this.props.hidden ? 0 : 1,
         }}
-      />
+      >
+        <polyline
+          points={points}
+          stroke={!this.props.interactable ? '#0064ff' : this.props.interactive ? '#00dc00' : '#00dc00'}
+          strokeOpacity={
+            this.props.hovered ||
+            (!this.props.interactable && this.props.selected) ||
+            (this.props.interactable && this.props.interactive)
+              ? 0.2
+              : 0
+          }
+          fill="none"
+          strokeWidth={15}
+        />
+        <ElementComponent element={element} />
+        {this.props.children}
+      </svg>
     );
   }
 }

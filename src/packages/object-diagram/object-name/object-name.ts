@@ -35,7 +35,7 @@ export class ObjectName extends UMLContainer {
     // super(values);
   }
 
-  render(children: UMLElement[]): UMLElement[] {
+  render(children: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     const attributes = children.filter(child => child instanceof ObjectAttribute);
     const methods = children.filter(child => child instanceof ObjectMethod);
 
@@ -55,7 +55,7 @@ export class ObjectName extends UMLContainer {
     }
 
     this.bounds.height = y;
-    return [this, ...attributes, ...methods];
+    return [this, ...[...attributes, ...methods]];
   }
 
   resize(children: UMLElement[]): UMLElement[] {

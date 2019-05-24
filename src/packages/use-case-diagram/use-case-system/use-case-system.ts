@@ -7,7 +7,7 @@ export class UseCaseSystem extends UMLContainer {
   static features = { ...UMLContainer.features, connectable: false };
   type = UseCaseElementType.UseCaseSystem;
 
-  render(elements: UMLElement[]): UMLElement[] {
+  render(elements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     const [parent, ...children] = super.render(elements);
     const absoluteChildren: UMLElement[] = children.map<UMLElement>(child => {
       child.bounds.x += parent.bounds.x;

@@ -1,13 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import styled from 'styled-components';
-import { Components } from '../../packages/components';
-import { IUMLContainer } from '../../services/uml-container/uml-container';
-import { IUMLElement } from '../../services/uml-element/uml-element';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { CanvasConsumer } from '../canvas/canvas-context';
-import { ModelState } from '../store/model-state';
 import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
+import { IUMLElement } from '../../services/uml-element/uml-element';
+import { ModelState } from '../store/model-state';
 
 const STROKE = 5;
 
@@ -55,7 +50,7 @@ export class ElementComponentComponent extends Component<Props> {
       return null;
     }
 
-    let children = null;
+    const children = null;
     if (UMLContainerRepository.isUMLContainer(element)) {
       // children = element.ownedElements.map((id: string) => (
       //   <Child key={id} id={id} disabled={disabled} />
@@ -67,20 +62,20 @@ export class ElementComponentComponent extends Component<Props> {
         <rect width={element.bounds.width} height={element.bounds.height} fill="red" fillOpacity={0.2} />
         {this.props.children}
         {(this.props.hovered || this.props.selected) && (
-            <rect
-              x={-STROKE / 2}
-              y={-STROKE / 2}
-              width={element.bounds.width + STROKE}
-              height={element.bounds.height + STROKE}
-              fill="none"
-              stroke="#0064ff"
-              strokeOpacity="0.2"
-              strokeWidth={STROKE}
-              pointerEvents="none"
-            />
-          )}
+          <rect
+            x={-STROKE / 2}
+            y={-STROKE / 2}
+            width={element.bounds.width + STROKE}
+            height={element.bounds.height + STROKE}
+            fill="none"
+            stroke="#0064ff"
+            strokeOpacity="0.2"
+            strokeWidth={STROKE}
+            pointerEvents="none"
+          />
+        )}
       </svg>
-    )
+    );
     // const { element, interactable } = this.props;
     // if (!UMLElementRepository.isUMLElement(element)) {
     //   return null;

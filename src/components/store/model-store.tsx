@@ -2,7 +2,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { applyMiddleware, combineReducers, compose, createStore, DeepPartial, Reducer } from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import { all } from 'redux-saga/effects';
+import { all, call, spawn } from 'redux-saga/effects';
 import thunk, { ThunkMiddleware } from 'redux-thunk';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
 import { EditorReducer } from '../../services/editor/editor-reducer';
@@ -10,6 +10,7 @@ import { UMLContainerReducer } from '../../services/uml-container/uml-container-
 import { UMLContainerSaga } from '../../services/uml-container/uml-container-saga';
 import { UMLContainerActions } from '../../services/uml-container/uml-container-types';
 import { UMLDiagramReducer } from '../../services/uml-diagram/uml-diagram-reducer';
+import { UMLDiagramSaga } from '../../services/uml-diagram/uml-diagram-saga';
 import { ConnectableReducer } from '../../services/uml-element/connectable/connectable-reducer';
 // import { UMLDiagramSaga } from '../../services/uml-diagram/uml-diagram-saga';
 import { HoverableReducer } from '../../services/uml-element/hoverable/hoverable-reducer';
@@ -57,8 +58,9 @@ const reducers = {
     UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions & UMLContainerActions
   >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
   assessments: AssessmentReducer,
-  features: ((state = { hoverable: true, selectable: true, movable: true, resizable: true, connectable: true, updatable: true }) =>
-    state) as Reducer<UMLElementFeatures>,
+  features: ((
+    state = { hoverable: true, selectable: true, movable: true, resizable: true, connectable: true, updatable: true },
+  ) => state) as Reducer<UMLElementFeatures>,
 };
 
 const getInitialState = ({ initialState }: Props) => {
@@ -68,8 +70,24 @@ const getInitialState = ({ initialState }: Props) => {
   const enhancer = composeEnhancers(applyMiddleware(thunk as ThunkMiddleware<ModelState, Action>, sagaMiddleware));
 
   function* rootSaga() {
+    const sagas = [UMLContainerSaga, UMLDiagramSaga];
+
+    yield all(
+      sagas.map(saga =>
+        spawn(function*() {
+          while (true) {
+            try {
+              yield call(saga);
+              break;
+            } catch (e) {
+              console.log('error', e);
+            }
+          }
+        }),
+      ),
+    );
     // yield all([UMLElementSaga, UMLRelationshipSaga, UMLContainerSaga, UMLDiagramSaga].map(fork));
-    yield all([UMLContainerSaga]);
+    // yield all([UMLContainerSaga].map(spawn));
   }
   const store = createStore(reducer, initialState || {}, enhancer);
 

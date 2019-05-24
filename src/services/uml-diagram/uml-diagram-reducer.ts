@@ -2,10 +2,11 @@ import { Reducer } from 'redux';
 import { AppendAction, RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
 import { UMLDiagram } from './uml-diagram';
 import { UMLDiagramActions, UMLDiagramActionTypes, UMLDiagramState } from './uml-diagram-types';
+import { ResizingActionTypes, ResizeAction } from '../uml-element/resizable/resizing-types';
 
 const initialState: UMLDiagramState = new UMLDiagram();
 
-export const UMLDiagramReducer: Reducer<UMLDiagramState, UMLDiagramActions & AppendAction & RemoveAction> = (
+export const UMLDiagramReducer: Reducer<UMLDiagramState, UMLDiagramActions & AppendAction & RemoveAction & ResizeAction> = (
   state = initialState,
   action,
 ) => {
@@ -32,6 +33,26 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, UMLDiagramActions & App
         ownedElements: state.ownedElements.filter(id => !payload.ids.includes(id)),
       };
     }
+    case UMLDiagramActionTypes.UPDATE_BOUNDS: {
+      const { payload } = action;
+      return {
+        ...state,
+        bounds: { ...state.bounds, ...payload },
+      };
+    }
+    case ResizingActionTypes.RESIZE: {
+      const { payload } = action;
+      console.log(state, payload);
+      if (!payload.ids.includes(state.id)) {
+        break;
+      }
+
+      return {
+        ...state,
+        bounds: { ...state.bounds, width: payload.delta.width, height: payload.delta.height },
+      };
+    }
+    
 
     // case UMLDiagramActionTypes.ADD_ELEMENT: {
     //   const { payload } = action;
@@ -59,13 +80,6 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, UMLDiagramActions & App
     //   return {
     //     ...state,
     //     ownedRelationships: state.ownedRelationships.filter(id => id !== payload.id),
-    //   };
-    // }
-    // case UMLDiagramActionTypes.UPDATE_BOUNDS: {
-    //   const { payload } = action;
-    //   return {
-    //     ...state,
-    //     bounds: { ...payload.bounds },
     //   };
     // }
   }

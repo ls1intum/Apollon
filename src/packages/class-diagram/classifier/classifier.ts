@@ -45,7 +45,7 @@ export abstract class Classifier extends UMLContainer {
     // super(values);
   // }
 
-  render(children: UMLElement[]): UMLElement[] {
+  render(children: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     const attributes = children.filter(child => child instanceof ClassAttribute);
     let methods = children.filter(child => child instanceof ClassMethod);
 
@@ -71,7 +71,7 @@ export abstract class Classifier extends UMLContainer {
     this.ownedElements = [...attributes.map(attribute => attribute.id), ...methods.map(method => method.id)];
 
     this.bounds.height = y;
-    return [this, ...attributes, ...methods];
+    return [this, ...[...attributes, ...methods]];
   }
 
   resize(children: UMLElement[]): UMLElement[] {

@@ -20,8 +20,8 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
     assign<IUMLContainer>(this, values);
   }
 
-  render(children: UMLElement[]): UMLElement[] {
-    return [this, ...children];
+  render(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    return [this, ...ownedElements];
   }
 
   resize(children: UMLElement[]): UMLElement[] {
