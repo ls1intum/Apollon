@@ -10,6 +10,7 @@ import { Relationship } from '../../services/relationship/relationship';
 import { RelationshipRepository } from '../../services/relationship/relationship-repository';
 import { ApollonMode, Assessment, Selection, UMLElement, UMLModel, UMLRelationship } from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
+import { notEmpty } from '../../utils/not-empty';
 
 export interface ModelState {
   editor: EditorState;
@@ -76,6 +77,9 @@ export class ModelState {
 
     const computedBounds = { x: -width, y: -height, width: width * 2, height: height * 2 };
 
+    const diagramElements = root.filter(element => !(element instanceof Relationship))
+      .sort((a, b) => b.bounds.width * b.bounds.height - a.bounds.width * a.bounds.height);
+
     return {
       editor: {
         readonly: false,
@@ -92,7 +96,7 @@ export class ModelState {
           });
           return d;
         })(),
-        ownedElements: root.filter(element => !(element instanceof Relationship)).map(element => element.id),
+        ownedElements: diagramElements.map(element => element.id),
         ownedRelationships: root.filter(element => element instanceof Relationship).map(element => element.id),
       },
       elements,
@@ -103,10 +107,11 @@ export class ModelState {
   static toModel(state: ModelState): UMLModel {
     const elements = ElementRepository.read(state.elements).filter(element => !(element instanceof Relationship));
     const relationships = RelationshipRepository.read(state.elements);
-    const root = elements.filter(element => !element.owner);
+    const root = state.diagram.ownedElements.map(id => elements.find(element => element.id === id)).filter(notEmpty);
 
     const parseElement = (element: Element): UMLElement[] => {
-      const cont: Element[] = element instanceof Container ? element.ownedElements.map(id => elements.find(ee => ee.id === id)!) : [];
+      const cont: Element[] =
+        element instanceof Container ? element.ownedElements.map(id => elements.find(ee => ee.id === id)!) : [];
       const { element: result, children } = element.toUMLElement(element, cont);
       return [result, ...children.reduce<UMLElement[]>((r2, e3) => [...r2, ...parseElement(e3)], [])];
     };
