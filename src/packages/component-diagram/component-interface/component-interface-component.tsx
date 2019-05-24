@@ -8,6 +8,7 @@ export const ComponentInterfaceComponent: SFC<Props> = ({ element, children }) =
       cy="50%"
       r={Math.min(element.bounds.width, element.bounds.height) / 2}
       stroke="black"
+      strokeWidth={2}
       fill="none"
     />
     <text x="100%" y="0%" fontWeight="bold">

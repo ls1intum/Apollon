@@ -32,6 +32,6 @@ export const DefaultRelationshipType: { [type in DiagramType]: RelationshipType 
   [DiagramType.ActivityDiagram]: ActivityRelationshipType.ActivityControlFlow,
   [DiagramType.UseCaseDiagram]: UseCaseRelationshipType.UseCaseAssociation,
   [DiagramType.CommunicationDiagram]: CommunicationRelationshipType.CommunicationLink,
-  [DiagramType.ComponentDiagram]: ComponentRelationshipType.ComponentDependency,
+  [DiagramType.ComponentDiagram]: ComponentRelationshipType.ComponentInterfaceProvided,
   [DiagramType.DeploymentDiagram]: DeploymentRelationshipType.DeploymentAssociation,
 };

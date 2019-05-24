@@ -33,7 +33,7 @@ type Rect = Boundary;
 type RectEdge = Direction;
 
 export class Connection {
-  static computePath(source: Endpoint, target: Endpoint, options: { isStraight: boolean }): Point[] {
+  static computePath(source: Endpoint, target: Endpoint, options: { isStraight: boolean, isVariable: boolean }): Point[] {
     const startPointOnInnerEdge: Point = Port.position(source.bounds, source.direction).point;
     const endPointOnInnerEdge: Point = Port.position(target.bounds, target.direction).point;
 
@@ -47,15 +47,17 @@ export class Connection {
       return [startPointOnInnerEdge, endPointOnInnerEdge];
     }
 
-    const straightPath = Connection.tryFindStraightPath(source, target);
+    if (options.isVariable) {
+      const straightPath = Connection.tryFindStraightPath(source, target);
 
-    // If there is a straight path, return that one
-    if (straightPath !== null) {
-      if (straightPath[0].x === straightPath[1].x && straightPath[0].y === straightPath[1].y) {
-        straightPath[1].x += 1;
-        straightPath[1].y += 1;
+      // If there is a straight path, return that one
+      if (straightPath !== null) {
+        if (straightPath[0].x === straightPath[1].x && straightPath[0].y === straightPath[1].y) {
+          straightPath[1].x += 1;
+          straightPath[1].y += 1;
+        }
+        return straightPath;
       }
-      return straightPath;
     }
 
     // Each entity has an invisible margin around it (the "crumple zone")

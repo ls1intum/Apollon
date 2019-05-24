@@ -11,7 +11,7 @@ export interface IRelationship extends IElement {
 }
 
 export abstract class Relationship extends Element implements IRelationship {
-  static features = { ...Element.features, straight: false };
+  static features = { ...Element.features, straight: false, variable: true };
 
   static toUMLRelationship(relationship: Relationship): UMLRelationship {
     return {

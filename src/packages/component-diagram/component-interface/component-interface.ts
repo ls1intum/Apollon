@@ -14,7 +14,7 @@ export class ComponentInterface extends Element {
     super(values);
 
     if (!values) {
-      Object.assign(this, { bounds: { ...this.bounds, width: 45, height: 45 } });
+      Object.assign(this, { bounds: { ...this.bounds, width: 20, height: 20 } });
     }
   }
 }

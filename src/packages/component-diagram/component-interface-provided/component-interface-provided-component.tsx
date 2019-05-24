@@ -7,7 +7,6 @@ export const ComponentInterfaceProvidedComponent: SFC<Props> = ({ element }) => 
       points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
       stroke="black"
       fill="none"
-      strokeWidth={1}
     />
   </g>
 );

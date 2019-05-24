@@ -103,12 +103,12 @@ function* recalc(id: string) {
   const targetPosition = ElementRepository.getAbsolutePosition(elements)(relationship.target.element);
   const targetBounds: Boundary = { ...elements[relationship.target.element].bounds, ...targetPosition };
 
-  const { straight } = (relationship.constructor as typeof Relationship).features;
+  const { straight, variable } = (relationship.constructor as typeof Relationship).features;
 
   let path = Connection.computePath(
     { bounds: sourceBounds, direction: relationship.source.direction },
     { bounds: targetBounds, direction: relationship.target.direction },
-    { isStraight: straight },
+    { isStraight: straight, isVariable: variable },
   );
 
   const x = Math.min(...path.map(point => point.x));
