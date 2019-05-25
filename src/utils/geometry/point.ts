@@ -33,6 +33,10 @@ export class Point {
     return this.clone();
   }
 
+  round(radix: number = 10): Point {
+    return new Point(Math.round(this.x / radix) * radix, Math.round(this.y / radix) * radix);
+  }
+
   scale(factor: number) {
     return new Point(this.x * factor, this.y * factor);
   }

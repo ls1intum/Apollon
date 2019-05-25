@@ -1,38 +1,28 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
-import { Consumer, Context } from './context';
-import { DropEvent } from './drop-event';
+import { DraggableContext } from './draggable-context';
+import { withDraggable } from './with-draggable';
 
-export class Droppable extends React.Component<Props> {
-  context: Context | null = null;
+type Props = {
+  children: React.ReactNode;
+} & DraggableContext;
 
-  onDrop = (event: DropEvent) => this.props.onDrop && this.props.onDrop(event);
+const enhance = withDraggable;
 
+class DroppableComponent extends Component<Props> {
   componentDidMount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.addEventListener('pointerup', this.context!.onPointerUp(this));
+    node.addEventListener('pointerup', this.props.onDragEnd);
   }
 
   componentWillUnmount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.removeEventListener('pointerup', this.context!.onPointerUp(this));
+    node.removeEventListener('pointerup', this.props.onDragEnd);
   }
 
   render() {
-    return (
-      <Consumer
-        children={context => {
-          this.context = context;
-          return context && this.props.children;
-        }}
-      />
-    );
+    return this.props.children;
   }
 }
 
-interface OwnProps {
-  children: React.ReactElement<any>;
-  onDrop?: (event: DropEvent) => void;
-}
-
-type Props = OwnProps;
+export const Droppable = enhance(DroppableComponent);

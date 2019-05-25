@@ -38,9 +38,9 @@ export abstract class UMLElement implements IUMLElement {
     assign<IUMLElement>(this, values);
   }
 
-  clone<T extends UMLElement>(): T {
+  clone<T extends UMLElement>(override?: DeepPartial<IUMLElement>): T {
     const Constructor = (this.constructor as any) as new (values: IUMLElement) => T;
-    const values: IUMLElement = { ...this, id: uuid() };
+    const values: IUMLElement = { ...this, id: uuid(), ...override };
     return new Constructor(values);
   }
 

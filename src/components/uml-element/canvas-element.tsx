@@ -12,6 +12,7 @@ type OwnProps = UMLElementComponentProps & SVGProps<SVGSVGElement>;
 type StateProps = {
   hovered: boolean;
   selected: boolean;
+  moving: boolean;
   interactive: boolean;
   element: IUMLElement;
 };
@@ -24,6 +25,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state, props) => ({
     hovered: state.hovered[0] === props.id,
     selected: state.selected.includes(props.id),
+    moving: state.moving.includes(props.id),
     interactive: state.interactive.includes(props.id),
     element: state.elements[props.id],
   }),
@@ -32,7 +34,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 class CanvasElementComponent extends Component<Props> {
   render() {
-    const { hovered, selected, interactive, element, children, ...props } = this.props;
+    const { hovered, selected, moving, interactive, element, children, ...props } = this.props;
     if (!element) {
       return null;
     }
@@ -41,12 +43,12 @@ class CanvasElementComponent extends Component<Props> {
     if (UMLContainerRepository.isUMLContainer(element)) {
       elements = element.ownedElements.map(id => (
         <UMLElementComponent key={id} id={id} component="canvas" />
-      ))
+      ));
     }
 
     return (
-      <svg {...props} {...element.bounds}>
-        <rect width={element.bounds.width} height={element.bounds.height} fill="red" fillOpacity={0.2} />
+      <svg {...props} {...element.bounds} pointerEvents={moving ? 'none' : undefined} fillOpacity={moving ? 0.1 : 0.2}>
+        <rect width={element.bounds.width} height={element.bounds.height} fill="red" />
         {elements}
         {children}
         {(hovered || selected) && (
@@ -67,4 +69,4 @@ class CanvasElementComponent extends Component<Props> {
   }
 }
 
-export const CanvasElement = enhance(CanvasElementComponent) as ComponentType<OwnProps>;
+export const CanvasElement = enhance(CanvasElementComponent);

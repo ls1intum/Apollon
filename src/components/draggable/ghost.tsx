@@ -1,19 +1,17 @@
-import styled from 'styled-components';
+import { styled } from '../theme/styles';
 
-interface GhostProps {
-  x: number;
-  y: number;
-}
+type GhostProps = {
+  position: { x: number; y: number };
+};
 
-export const Ghost = styled.div.attrs<GhostProps>(({ x, y }) => ({
-  style: { left: x + 'px', top: y + 'px' },
+export const Ghost = styled.div.attrs<GhostProps>(({ position }) => ({
+  style: { transform: `translate(${position.x}px, ${position.y}px)` },
 }))<GhostProps>`
   position: absolute;
-  width: 200px;
-  height: 100px;
-  line-height: 80px;
-  text-align: center;
-  border: thin dashed blue;
+  top: 0;
+  left: 0;
+  will-change: transform;
   z-index: 10;
   pointer-events: none;
+  margin: -5px;
 `;

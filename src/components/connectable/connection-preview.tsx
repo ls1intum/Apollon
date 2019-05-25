@@ -1,16 +1,16 @@
-import React, { Component } from 'react';
+import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import { Port } from '../../services/uml-element/port';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
-import { CoordinateSystem } from '../canvas/coordinate-system';
+import { CanvasContext } from '../canvas/canvas-context';
+import { withCanvas } from '../canvas/with-canvas';
 import { ModelState } from '../store/model-state';
 import { UMLRelationshipPreview } from './uml-relationship-preview';
 
-type OwnProps = {
-  coordinateSystem: CoordinateSystem;
-};
+type OwnProps = {};
 
 type StateProps = {
   connecting: Port[];
@@ -20,15 +20,18 @@ type DispatchProps = {
   end: AsyncDispatch<typeof UMLElementRepository.endConnecting>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  state => ({
-    connecting: state.connecting,
-  }),
-  {
-    end: UMLElementRepository.endConnecting,
-  },
+const enhance = compose<ComponentType<OwnProps>>(
+  withCanvas,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    state => ({
+      connecting: state.connecting,
+    }),
+    {
+      end: UMLElementRepository.endConnecting,
+    },
+  ),
 );
 
 const initialState = {
@@ -63,7 +66,7 @@ class Preview extends Component<Props, State> {
   }
 
   onPointerMove = (event: PointerEvent) => {
-    const offset = this.props.coordinateSystem.offset();
+    const offset = this.props.canvas.current!.origin();
     const position = new Point(event.clientX - offset.x, event.clientY - offset.y);
     this.setState({ position });
   };

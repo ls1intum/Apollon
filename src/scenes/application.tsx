@@ -1,8 +1,9 @@
 import React, { createRef, RefObject } from 'react';
 import { DeepPartial } from 'redux';
-import { Canvas } from '../components/canvas/canvas';
+import { Canvas, CanvasComponent } from '../components/canvas/canvas';
+import { CanvasProvider } from '../components/canvas/canvas-context';
 import { Editor } from '../components/container/container';
-import { DragLayer } from '../components/draggable/drag-layer';
+import { DraggableLayer } from '../components/draggable/draggable-layer';
 import { I18nProvider } from '../components/i18n/i18n-provider';
 import { Sidebar } from '../components/sidebar/sidebar-component';
 import { ModelState } from '../components/store/model-state';
@@ -21,21 +22,24 @@ type Props = {
 
 export class Application extends React.Component<Props> {
   store: RefObject<ModelStore> = createRef();
+  canvas: RefObject<CanvasComponent> = createRef();
 
   render() {
     return (
       <ModelStore ref={this.store} initialState={this.props.state}>
         <I18nProvider locale={this.props.locale}>
           <Theme styles={this.props.styles}>
-            <DragLayer>
-              <Layout className="apollon-editor">
-                <Editor>
-                  <Canvas />
-                </Editor>
-                <Sidebar />
-                <UpdatePane />
-              </Layout>
-            </DragLayer>
+            <CanvasProvider value={{ canvas: this.canvas }}>
+              <DraggableLayer>
+                <Layout className="apollon-editor">
+                  <Editor>
+                    <Canvas ref={this.canvas} />
+                  </Editor>
+                  <Sidebar />
+                  <UpdatePane />
+                </Layout>
+              </DraggableLayer>
+            </CanvasProvider>
           </Theme>
         </I18nProvider>
       </ModelStore>

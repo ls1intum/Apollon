@@ -74,7 +74,7 @@ export class ApollonEditor {
 
     state = {
       ...state,
-      diagram: new UMLDiagram({ ...state.diagram, type: options.type }),
+      diagram: new UMLDiagram({ ...state.diagram, type: options.type, bounds: { ...(options.model && options.model.size) } }),
       editor: {
         ...state.editor,
         view: ApollonView.Modelling,
