@@ -1,4 +1,5 @@
 import { Reducer } from 'redux';
+import { Point } from '../../utils/geometry/point';
 import { UMLElementState } from '../uml-element/uml-element-types';
 import { IUMLContainer } from './uml-container';
 import { UMLContainerRepository } from './uml-container-repository';
@@ -28,6 +29,19 @@ export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> 
         }
         const owner = element.owner && newState[element.owner];
 
+        let position = new Point();
+        let current = owner;
+        while (current) {
+          position = position.add(current.bounds.x, current.bounds.y);
+          current = current.owner ? newState[current.owner] : null;
+        }
+
+        current = container;
+        while (current) {
+          position = position.subtract(current.bounds.x, current.bounds.y);
+          current = current.owner ? newState[current.owner] : null;
+        }
+
         return {
           ...newState,
           [id]: {
@@ -35,8 +49,8 @@ export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> 
             owner: container ? container.id : null,
             bounds: {
               ...newState[id].bounds,
-              x: newState[id].bounds.x + (owner ? owner.bounds.x : 0) - (container ? container.bounds.x : 0),
-              y: newState[id].bounds.y + (owner ? owner.bounds.y : 0) - (container ? container.bounds.y : 0),
+              x: newState[id].bounds.x + position.x,
+              y: newState[id].bounds.y + position.y,
             },
           },
           ...(owner &&

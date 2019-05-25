@@ -104,6 +104,24 @@ class Repository {
     return [clone, ...result];
   };
 
+  static filterRoots = (ids: string[], elements: UMLElementState): string[] => {
+    const getSelection = (root: IUMLElement): string[] => {
+      if (ids.includes(root.id)) return [root.id];
+
+      if (UMLContainerRepository.isUMLContainer(root)) {
+        return root.ownedElements.reduce<string[]>(
+          (selection, id) => [...selection, ...getSelection(elements[id])],
+          [],
+        );
+      }
+      return [];
+    };
+
+    return Object.values(elements)
+      .filter(element => !element.owner)
+      .reduce<string[]>((selection, element) => [...selection, ...getSelection(element)], []);
+  };
+
   static duplicate = (id: string, parent?: string): DuplicateAction => ({
     type: UMLElementActionTypes.DUPLICATE,
     payload: { id, parent },
