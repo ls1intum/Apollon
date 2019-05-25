@@ -7,7 +7,6 @@ import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
 import { UMLContainer } from '../uml-container/uml-container';
 import { UMLContainerRepository } from '../uml-container/uml-container-repository';
-import { AppendAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
 import { Connectable } from './connectable/connectable-repository';
 import { Hoverable } from './hoverable/hoverable-repository';
 import { Interactable } from './interactable/interactable-repository';
@@ -51,10 +50,7 @@ class Repository {
     return element.type in UMLElementType;
   }
 
-  static create = <T extends IUMLElement>(value: T | T[], owner?: string): AsyncAction<void> => async (
-    dispatch,
-    getState,
-  ) => {
+  static create = <T extends IUMLElement>(value: T | T[], owner?: string): AsyncAction<void> => async dispatch => {
     const values = Array.isArray(value) ? value : [value];
     dispatch<CreateAction<T>>({
       type: UMLElementActionTypes.CREATE,
@@ -63,13 +59,7 @@ class Repository {
 
     const ids = values.filter(v => !v.owner).map(v => v.id);
     if (ids.length) {
-      dispatch<AppendAction>({
-        type: UMLContainerActionTypes.APPEND,
-        payload: {
-          ids,
-          owner: owner || getState().diagram.id,
-        },
-      });
+      dispatch(UMLContainerRepository.append(ids, owner));
     }
   };
 

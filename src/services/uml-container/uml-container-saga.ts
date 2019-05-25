@@ -1,25 +1,9 @@
 import { all, call, put, select, spawn, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
+import { notEmpty } from '../../utils/not-empty';
+import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UMLContainerRepository } from './uml-container-repository';
-// import { ModelState } from '../../components/store/model-state';
-// import { Point } from '../../utils/geometry/point';
-// import { UMLElement } from '../uml-element/uml-element';
-// import { UMLElementRepository } from '../uml-element/uml-element-repository';
-// import {
-//   ChangeAction,
-//   CreateAction,
-//   DeleteAction,
-//   MoveAction,
-//   ResizeAction,
-//   UMLElementActionTypes,
-//   UpdateAction,
-// } from '../uml-element/uml-element-types';
-// import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
-// import { UMLContainer } from './uml-container';
-import { AppendAction, UMLContainerActionTypes } from './uml-container-types';
-import { Point } from '../../utils/geometry/point';
-import { Action } from 'redux';
 
 export function* UMLContainerSaga() {
   const sagas = [append];
@@ -63,30 +47,68 @@ export function* UMLContainerSaga() {
   // yield null;
 }
 
-function* append() {
-  const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
-  const { elements, diagram }: ModelState = yield select();
+// function* position() {
+//   const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
+//   const { elements, diagram }: ModelState = yield select();
 
-  if (diagram.id === action.payload.owner) {
+//   if (diagram.id === action.payload.owner) {
+//     return;
+//   }
+
+//   const container = UMLElementRepository.get(elements[action.payload.owner]);
+
+//   if (!container || !UMLContainerRepository.isUMLContainer(container)) {
+//     return;
+//   }
+
+//   let delta = new Point(-container.bounds.x, -container.bounds.y);
+//   let owner = container.owner;
+
+//   while (owner) {
+//     const parent = elements[owner];
+//     delta = delta.subtract(parent.bounds.x, parent.bounds.y);
+//     owner = parent.owner;
+//   }
+
+//   // yield put(UMLElementRepository.move({ ...delta }, action.payload.ids));
+// }
+
+function* append() {
+  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
+  const { diagram, elements, hovered }: ModelState = yield select();
+
+  if (!hovered.length) {
+    const movedElements = action.payload.ids
+      .map(id => UMLElementRepository.get(elements[id]))
+      .filter(notEmpty)
+      .filter(element => element.owner !== null)
+      .map(element => element.id);
+    yield put(UMLContainerRepository.append(movedElements));
     return;
   }
 
-  const container = UMLElementRepository.get(elements[action.payload.owner]);
+  const container = UMLElementRepository.get(elements[hovered[0]]);
 
   if (!container || !UMLContainerRepository.isUMLContainer(container)) {
     return;
   }
 
-  let delta = new Point(-container.bounds.x, -container.bounds.y);
-  let owner = container.owner;
+  const movedElements = action.payload.ids
+    .map(id => UMLElementRepository.get(elements[id]))
+    .filter(notEmpty)
+    .filter(element => element.owner !== container.id)
+    .map(element => element.id);
 
-  while (owner) {
-    const parent = elements[owner];
-    delta = delta.subtract(parent.bounds.x, parent.bounds.y);
-    owner = parent.owner;
+  if (!movedElements.length) {
+    return;
   }
 
-  yield put(UMLElementRepository.move({ ...delta }, action.payload.ids));
+  // console.log(container, movedElements);
+  yield put(UMLContainerRepository.append(movedElements, container.id));
+  // yield all([
+  // put(UMLContainerRepository.remove(action.payload.ids)),
+  //   put(UMLContainerRepository.append(action.payload.ids, container.id)),
+  // ]);
 }
 
 // function* appendNewElementToParent({ payload }: CreateAction) {

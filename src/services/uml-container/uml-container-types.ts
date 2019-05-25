@@ -1,4 +1,4 @@
-import { Action } from 'redux';
+import { Action } from '../../utils/actions/actions';
 
 export const enum UMLContainerActionTypes {
   APPEND = '@@element/container/APPEND',
@@ -18,11 +18,10 @@ export interface AppendAction extends Action<UMLContainerActionTypes.APPEND> {
 export interface RemoveAction extends Action<UMLContainerActionTypes.REMOVE> {
   payload: {
     ids: string[];
-    owner: string;
   };
 }
 
-  // TODO: necessary?
+// TODO: necessary?
 export interface ChangeOwnerAction extends Action<UMLContainerActionTypes.CHANGE_OWNER> {
   payload: {
     id: string | null;

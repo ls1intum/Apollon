@@ -12,6 +12,7 @@ import { ApollonView } from './services/editor/editor-types';
 import { UMLDiagram } from './services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from './services/uml-element/uml-element-repository';
 import { ApollonMode, ApollonOptions, Assessment, ExportOptions, Locale, Selection, SVG, UMLModel } from './typings';
+import { Dispatch } from './utils/actions/actions';
 
 export class ApollonEditor {
   get model(): UMLModel {
@@ -73,7 +74,11 @@ export class ApollonEditor {
 
     state = {
       ...state,
-      diagram: new UMLDiagram({ ...state.diagram, type: options.type, bounds: { ...(options.model && options.model.size) } }),
+      diagram: new UMLDiagram({
+        ...state.diagram,
+        type: options.type,
+        bounds: { ...(options.model && options.model.size) },
+      }),
       editor: {
         ...state.editor,
         view: ApollonView.Modelling,
@@ -98,7 +103,7 @@ export class ApollonEditor {
 
   select(selection: Selection) {
     if (!this.store) return;
-    const dispatch = this.store.dispatch;
+    const dispatch = this.store.dispatch as Dispatch;
     dispatch(UMLElementRepository.deselect());
     dispatch(UMLElementRepository.select([...selection.elements, ...selection.relationships]));
   }

@@ -1,5 +1,5 @@
-import { Action } from 'redux';
 import { UMLElementType } from '../../packages/uml-element-type';
+import { Action } from '../../utils/actions/actions';
 import { IUMLElement } from './uml-element';
 
 export const enum UMLElementActionTypes {
@@ -7,14 +7,18 @@ export const enum UMLElementActionTypes {
   UPDATE = '@@element/UPDATE',
   DELETE = '@@element/DELETE',
 
-
   DUPLICATE = '@@element/DUPLICATE',
   CHANGE = '@@element/CHANGE',
   RENAME = '@@element/RENAME',
 }
 
-
-export type UMLElementActions = CreateAction | UpdateAction | DeleteAction    | DuplicateAction | ChangeAction | RenameAction;
+export type UMLElementActions =
+  | CreateAction
+  | UpdateAction
+  | DeleteAction
+  | DuplicateAction
+  | ChangeAction
+  | RenameAction;
 
 export interface CreateAction<T extends IUMLElement = IUMLElement> extends Action<UMLElementActionTypes.CREATE> {
   payload: {
@@ -34,8 +38,6 @@ export interface DeleteAction extends Action<UMLElementActionTypes.DELETE> {
     ids: string[];
   };
 }
-
-
 
 export interface DuplicateAction extends Action<UMLElementActionTypes.DUPLICATE> {
   payload: {

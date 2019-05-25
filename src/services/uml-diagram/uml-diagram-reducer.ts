@@ -14,7 +14,10 @@ export const UMLDiagramReducer: Reducer<
     case UMLContainerActionTypes.APPEND: {
       const { payload } = action;
       if (state.id !== payload.owner) {
-        break;
+        return {
+          ...state,
+          ownedElements: state.ownedElements.filter(id => !payload.ids.includes(id)),
+        };
       }
 
       return {
@@ -23,15 +26,20 @@ export const UMLDiagramReducer: Reducer<
       };
     }
     case UMLContainerActionTypes.REMOVE: {
-      const { payload } = action;
-      if (state.id !== payload.owner) {
-        break;
-      }
+      const { payload } = action as RemoveAction;
 
-      return {
-        ...state,
-        ownedElements: state.ownedElements.filter(id => !payload.ids.includes(id)),
-      };
+      return payload.ids.reduce<UMLDiagramState>((newState, id) => {
+        console.log(id);
+        return newState;
+      }, state);
+      // if (state.id !== payload.owner) {
+      //   break;
+      // }
+
+      // return {
+      //   ...state,
+      //   ownedElements: state.ownedElements.filter(id => !payload.ids.includes(id)),
+      // };
     }
     case UMLDiagramActionTypes.UPDATE_BOUNDS: {
       const { payload } = action;

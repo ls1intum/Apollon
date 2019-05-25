@@ -42,9 +42,9 @@ function* removed() {
   const action: RemoveAction = yield take(UMLContainerActionTypes.REMOVE);
   const { elements, diagram }: ModelState = yield select();
 
-  if (diagram.id !== action.payload.owner) {
-    return;
-  }
+  // if (diagram.id !== action.payload.owner) {
+  //   return;
+  // }
   yield resize(diagram, elements);
 }
 
