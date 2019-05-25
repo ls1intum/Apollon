@@ -6,7 +6,9 @@ import { AsyncAction } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
 import { UMLContainer } from '../uml-container/uml-container';
+import { UMLContainerRepository } from '../uml-container/uml-container-repository';
 import { AppendAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
+import { Connectable } from './connectable/connectable-repository';
 import { Hoverable } from './hoverable/hoverable-repository';
 import { Interactable } from './interactable/interactable-repository';
 import { Movable } from './movable/movable-repository';
@@ -24,8 +26,6 @@ import {
   UpdateAction,
 } from './uml-element-types';
 import { Updatable } from './updatable/updatable-repository';
-import { Connectable } from './connectable/connectable-repository';
-import { UMLContainerRepository } from '../uml-container/uml-container-repository';
 
 type UMLElementRepository = typeof Repository &
   ReturnType<typeof Hoverable> &
@@ -51,7 +51,10 @@ class Repository {
     return element.type in UMLElementType;
   }
 
-  static create = <T extends IUMLElement>(value: T | T[] , owner?: string): AsyncAction<void> => async (dispatch, getState) => {
+  static create = <T extends IUMLElement>(value: T | T[], owner?: string): AsyncAction<void> => async (
+    dispatch,
+    getState,
+  ) => {
     const values = Array.isArray(value) ? value : [value];
     dispatch<CreateAction<T>>({
       type: UMLElementActionTypes.CREATE,

@@ -2,6 +2,7 @@ import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { connectable } from '../layouted-element/connectable';
+import { droppable } from '../layouted-element/droppable';
 import { hoverable } from '../layouted-element/hoverable';
 import { movable } from '../layouted-element/movable';
 import { resizable } from '../layouted-element/resizable';
@@ -23,6 +24,7 @@ export type UMLElementFeatures = {
   resizable: boolean;
   connectable: boolean;
   updatable: boolean;
+  droppable: boolean;
 };
 
 const components = {
@@ -71,6 +73,9 @@ const getInitialState = (props: Props) => {
   }
   if (props.features.updatable) {
     decorators.push(updatable);
+  }
+  if (props.features.droppable) {
+    decorators.push(droppable);
   }
 
   return {

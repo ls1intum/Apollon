@@ -10,7 +10,7 @@ import { CanvasElement } from '../uml-element/canvas-element';
 
 type Props = {
   element: UMLElement;
-  create: (element: UMLElement) => void;
+  create: (element: UMLElement, owner?: string) => void;
 } & CanvasContext;
 
 const enhance = withCanvas;
@@ -35,7 +35,7 @@ class PreviewElementComponent extends Component<Props> {
     const element = this.props.element.clone({
       bounds: { ...event.position },
     });
-    this.props.create(element);
+    this.props.create(element, event.owner);
   };
 }
 

@@ -62,6 +62,7 @@ class CreatePaneComponent extends Component<Props, State> {
       resizable: false,
       connectable: false,
       updatable: false,
+      droppable: false,
     };
 
     const { previews } = this.state;
@@ -84,9 +85,9 @@ class CreatePaneComponent extends Component<Props, State> {
     );
   }
 
-  create = (preview: UMLElement) => {
+  create = (preview: UMLElement, owner?: string) => {
     const elements = UMLElementRepository.clone(preview, this.state.previews);
-    this.props.create(elements);
+    this.props.create(elements, owner);
   };
 }
 

@@ -1,6 +1,5 @@
-import { all, call, select, spawn, take } from 'redux-saga/effects';
+import { all, call, put, select, spawn, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
-import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UMLContainerRepository } from './uml-container-repository';
 // import { ModelState } from '../../components/store/model-state';
@@ -19,9 +18,26 @@ import { UMLContainerRepository } from './uml-container-repository';
 // import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
 // import { UMLContainer } from './uml-container';
 import { AppendAction, UMLContainerActionTypes } from './uml-container-types';
+import { Point } from '../../utils/geometry/point';
+import { Action } from 'redux';
 
 export function* UMLContainerSaga() {
-  yield null;
+  const sagas = [append];
+
+  yield all(
+    sagas.map(saga =>
+      spawn(function*() {
+        while (true) {
+          try {
+            yield call(saga);
+          } catch (e) {
+            console.log('error', e);
+          }
+        }
+      }),
+    ),
+  );
+
   // const sagas = [append];
 
   // yield all(
@@ -51,17 +67,26 @@ function* append() {
   const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
   const { elements, diagram }: ModelState = yield select();
 
-  const container =
-    diagram.id === action.payload.owner
-      ? UMLDiagramRepository.get(diagram)
-      : UMLElementRepository.get(elements[action.payload.owner]);
+  if (diagram.id === action.payload.owner) {
+    return;
+  }
 
-  console.log('action', action, container, UMLContainerRepository.isUMLContainer(container!));
+  const container = UMLElementRepository.get(elements[action.payload.owner]);
+
   if (!container || !UMLContainerRepository.isUMLContainer(container)) {
     return;
   }
 
-  console.log('action', action, container);
+  let delta = new Point(-container.bounds.x, -container.bounds.y);
+  let owner = container.owner;
+
+  while (owner) {
+    const parent = elements[owner];
+    delta = delta.subtract(parent.bounds.x, parent.bounds.y);
+    owner = parent.owner;
+  }
+
+  yield put(UMLElementRepository.move({ ...delta }, action.payload.ids));
 }
 
 // function* appendNewElementToParent({ payload }: CreateAction) {

@@ -59,7 +59,7 @@ const reducers = {
   >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
   assessments: AssessmentReducer,
   features: ((
-    state = { hoverable: true, selectable: true, movable: true, resizable: true, connectable: true, updatable: true },
+    state = { hoverable: true, selectable: true, movable: true, resizable: true, connectable: true, updatable: true, droppable: true },
   ) => state) as Reducer<UMLElementFeatures>,
 };
 

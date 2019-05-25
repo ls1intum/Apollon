@@ -15,9 +15,6 @@ const initialState = {
   position: new Point(),
   resolve: null as ((value?: DropEvent) => void) | null,
   reject: null as ((reason?: any) => void) | null,
-
-  focused: false,
-  element: null,
 };
 
 type State = typeof initialState;
@@ -54,10 +51,11 @@ class DraggableLayerComponent extends Component<Props, State> {
     this.setState({ position });
   };
 
-  onDragEnd = (event: PointerEvent) => {
+  onDragEnd = (owner?: string) => (event: PointerEvent) => {
     if (!this.state.dragging) return;
 
     const dropEvent: DropEvent = {
+      owner,
       position: this.state.position.subtract(this.props.canvas.current!.origin()),
     };
 

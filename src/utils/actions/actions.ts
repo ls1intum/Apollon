@@ -1,4 +1,5 @@
 import { Action as ReduxAction } from 'redux';
+import { PutEffect } from 'redux-saga/effects';
 import { ThunkAction, ThunkDispatch } from 'redux-thunk';
 import { ModelState } from '../../components/store/model-state';
 
@@ -17,3 +18,7 @@ export type Dispatch = ThunkDispatch<ModelState, undefined, Action>;
 export type AsyncDispatch<T extends (...args: any[]) => AsyncAction<any>> = (
   ...args: Parameters<T>
 ) => T extends (...args: any[]) => AsyncAction<infer R> ? ReturnType<AsyncAction<R>> : any;
+
+declare module 'redux-saga/effects' {
+  export function put<A extends Action>(action: A | AsyncAction): PutEffect<A>;
+}

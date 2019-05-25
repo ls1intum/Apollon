@@ -1,9 +1,9 @@
-import React, { Component, ComponentType, SVGProps } from 'react';
+import React, { Component, SVGProps } from 'react';
 import { connect } from 'react-redux';
+import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { ModelState } from '../store/model-state';
-import { UMLElementComponentProps, UMLElementComponent } from './uml-element-component';
-import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
+import { UMLElementComponent, UMLElementComponentProps } from './uml-element-component';
 
 const STROKE = 5;
 
@@ -32,7 +32,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   {},
 );
 
-class CanvasElementComponent extends Component<Props> {
+export class CanvasElementComponent extends Component<Props> {
   render() {
     const { hovered, selected, moving, interactive, element, children, ...props } = this.props;
     if (!element) {
@@ -41,9 +41,7 @@ class CanvasElementComponent extends Component<Props> {
 
     let elements = null;
     if (UMLContainerRepository.isUMLContainer(element)) {
-      elements = element.ownedElements.map(id => (
-        <UMLElementComponent key={id} id={id} component="canvas" />
-      ));
+      elements = element.ownedElements.map(id => <UMLElementComponent key={id} id={id} component="canvas" />);
     }
 
     return (
