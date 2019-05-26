@@ -6,6 +6,10 @@ export const MovingReducer: Reducer<MovingState, MovingActions> = (state = {}, a
     case MovingActionTypes.MOVE: {
       const { payload } = action;
       return payload.ids.reduce<MovingState>((newState, id) => {
+        if (!newState[id]) {
+          return newState;
+        }
+
         return {
           ...newState,
           [id]: {

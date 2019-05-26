@@ -2,7 +2,7 @@ import { Reducer } from 'redux';
 import { AppendAction, RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { UMLDiagram } from './uml-diagram';
-import { UMLDiagramActions, UMLDiagramActionTypes, UMLDiagramState } from './uml-diagram-types';
+import { UMLDiagramActions, UMLDiagramState } from './uml-diagram-types';
 
 const initialState: UMLDiagramState = new UMLDiagram();
 
@@ -12,7 +12,7 @@ export const UMLDiagramReducer: Reducer<
 > = (state = initialState, action) => {
   switch (action.type) {
     case UMLContainerActionTypes.APPEND: {
-      const { payload } = action;
+      const { payload } = action as AppendAction;
       if (state.id !== payload.owner) {
         return {
           ...state,
@@ -41,53 +41,21 @@ export const UMLDiagramReducer: Reducer<
       //   ownedElements: state.ownedElements.filter(id => !payload.ids.includes(id)),
       // };
     }
-    case UMLDiagramActionTypes.UPDATE_BOUNDS: {
-      const { payload } = action;
-      return {
-        ...state,
-        bounds: { ...state.bounds, ...payload },
-      };
-    }
     case ResizingActionTypes.RESIZE: {
-      const { payload } = action;
+      const { payload } = action as ResizeAction;
       if (!payload.ids.includes(state.id)) {
         break;
       }
 
       return {
         ...state,
-        bounds: { ...state.bounds, width: payload.delta.width, height: payload.delta.height },
+        bounds: {
+          ...state.bounds,
+          width: state.bounds.width + payload.delta.width,
+          height: state.bounds.height + payload.delta.height,
+        },
       };
     }
-
-    // case UMLDiagramActionTypes.ADD_ELEMENT: {
-    //   const { payload } = action;
-    //   return {
-    //     ...state,
-    //     ownedElements: [...new Set([...state.ownedElements, payload.id].reverse())].reverse(),
-    //   };
-    // }
-    // case UMLDiagramActionTypes.ADD_RELATIONSHIP: {
-    //   const { payload } = action;
-    //   return {
-    //     ...state,
-    //     ownedRelationships: [...new Set([...state.ownedRelationships, payload.id].reverse())].reverse(),
-    //   };
-    // }
-    // case UMLDiagramActionTypes.DELETE_ELEMENT: {
-    //   const { payload } = action;
-    //   return {
-    //     ...state,
-    //     ownedElements: state.ownedElements.filter(id => id !== payload.id),
-    //   };
-    // }
-    // case UMLDiagramActionTypes.DELETE_RELATIONSHIP: {
-    //   const { payload } = action;
-    //   return {
-    //     ...state,
-    //     ownedRelationships: state.ownedRelationships.filter(id => id !== payload.id),
-    //   };
-    // }
   }
   return state;
 };

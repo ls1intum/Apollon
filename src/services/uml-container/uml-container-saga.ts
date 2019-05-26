@@ -1,249 +1,150 @@
-import { SagaIterator, Saga } from 'redux-saga';
-import { put, select, take } from 'redux-saga/effects';
+import { SagaIterator } from 'redux-saga';
+import { all, call, delay, Effect, put, race, select, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
 import { run } from '../../utils/actions/sagas';
 import { notEmpty } from '../../utils/not-empty';
+import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
+import { ResizableActionTypes, ResizeEndAction } from '../uml-element/resizable/resizable-types';
+import { IUMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
+import { UMLElementState } from '../uml-element/uml-element-types';
+import { UMLContainer } from './uml-container';
 import { UMLContainerRepository } from './uml-container-repository';
+import { AppendAction, UMLContainerActionTypes } from './uml-container-types';
 
 export function* UMLContainerSaga() {
-  const sagas: Saga[] = [append];
-  yield run([append]);
+  yield run([appendAfterMove, resizeAfterAppend, resizeAfterMove, resizeAfterResize]);
 }
 
-// function* resize() {
-//   const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
-//   const { elements, diagram }: ModelState = yield select();
-
-//   if (diagram.id === action.payload.owner) {
-//     return;
-//   }
-
-//   const container = UMLElementRepository.get(elements[action.payload.owner]);
-
-//   if (!container || !UMLContainerRepository.isUMLContainer(container)) {
-//     return;
-//   }
-
-//   let delta = new Point(-container.bounds.x, -container.bounds.y);
-//   let owner = container.owner;
-
-//   while (owner) {
-//     const parent = elements[owner];
-//     delta = delta.subtract(parent.bounds.x, parent.bounds.y);
-//     owner = parent.owner;
-//   }
-
-//   // yield put(UMLElementRepository.move({ ...delta }, action.payload.ids));
-// }
-
-function* append(): SagaIterator {
+function* appendAfterMove(): SagaIterator {
   const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
-  const { diagram, elements, hovered }: ModelState = yield select();
+  const { elements, hovered }: ModelState = yield select();
+  let containerID: string | null = null;
 
-  if (!hovered.length) {
-    const movedElements = action.payload.ids
-      .map(id => UMLElementRepository.get(elements[id]))
-      .filter(notEmpty)
-      .filter(element => element.owner !== null)
-      .map(element => element.id);
-    yield put(UMLContainerRepository.append(movedElements));
-    return;
+  if (hovered.length) {
+    const container = elements[hovered[0]];
+    if (!container || !UMLContainerRepository.isUMLContainer(container)) {
+      return;
+    }
+
+    containerID = container.id;
   }
 
-  const container = UMLElementRepository.get(elements[hovered[0]]);
-
-  if (!container || !UMLContainerRepository.isUMLContainer(container)) {
-    return;
-  }
-
-  const movedElements = action.payload.ids
-    .map(id => UMLElementRepository.get(elements[id]))
-    .filter(notEmpty)
-    .filter(element => element.owner !== container.id)
-    .map(element => element.id);
-
+  const movedElements = action.payload.ids.filter(id => elements[id].owner !== containerID);
   if (!movedElements.length) {
     return;
   }
 
-  yield put(UMLContainerRepository.append(movedElements, container.id));
+  yield put(UMLContainerRepository.append(movedElements, containerID || undefined));
 }
 
-// function* appendChild(action: AppendChildAction) {
-//   const { payload } = action;
-//   const state: ModelState = yield select();
-//   const { elements } = state;
+function* resizeAfterAppend(): SagaIterator {
+  const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
+  const { elements, diagram }: ModelState = yield select();
+  const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
 
-//   const element = UMLElementRepository.getById(elements)(payload.id);
-//   if (!element) return;
+  yield all(resize(action.payload.owner, elementState));
+}
 
-//   yield all(renderContainer(state, payload.owner));
-// }
+function* resizeAfterMove(): SagaIterator {
+  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
+  const { elements, diagram }: ModelState = yield select();
+  const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
 
-// function* removeChild({ payload }: RemoveChildAction) {
-//   const state: ModelState = yield select();
-//   const { elements } = state;
+  const { append } = yield race({
+    append: take(UMLContainerActionTypes.APPEND),
+    resize: call(function*() {
+      yield delay(0);
 
-//   const element = UMLElementRepository.getById(elements)(payload.id);
-//   if (element) return;
+      const owner = action.payload.ids.map(id => elementState[id].owner || diagram.id);
+      if (!owner.length || owner.some(id => id !== owner[0])) {
+        return;
+      }
 
-//   yield all(renderContainer(state, payload.owner));
-// }
+      yield all(resize(owner[0], elementState));
+    }),
+  });
 
-// function* handleOwnerChange({ payload }: ChangeOwnerAction) {
-//   if (!payload.id || payload.id === payload.owner) return;
+  if (append) {
+    yield all(resize(diagram.id, elementState));
+  }
+}
 
-//   const state: ModelState = yield select();
-//   const { elements, selected } = state;
-//   const selection = [...selected];
-//   if (selection.length > 1) {
-//     if (payload.owner) {
-//       yield all(renderContainer(state, payload.owner));
-//     }
-//     return;
-//   }
+function* resizeAfterResize(): SagaIterator {
+  const action: ResizeEndAction = yield take(ResizableActionTypes.RESIZE_END);
+  const { elements, diagram }: ModelState = yield select();
+  const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
 
-//   const element = UMLElementRepository.getById(elements)(payload.id);
-//   if (!element) return;
+  const owner = action.payload.ids.map(id => elementState[id].owner || diagram.id);
+  if (!owner.length || owner.some(id => id !== owner[0])) {
+    return;
+  }
 
-//   if (payload.owner && payload.owner === element.owner) {
-//     yield all(renderContainer(state, payload.owner));
-//     return;
-//   }
+  yield all(resize(owner[0], elementState));
+}
 
-//   const owner = payload.owner && UMLElementRepository.getById(elements)(payload.owner);
+function resize(owner: string, elements: UMLElementState): Effect[] {
+  const element = elements[owner];
+  let container: UMLContainer | null = null;
 
-//   if (!owner && payload.owner && UMLRelationshipRepository.getById(elements)(payload.owner)) {
-//     return;
-//   }
+  if (element && UMLDiagramRepository.isUMLDiagram(element)) {
+    container = UMLDiagramRepository.get(elements[owner]);
+  }
+  if (element && UMLContainerRepository.isUMLContainer(element)) {
+    container = UMLElementRepository.get(element) as UMLContainer;
+  }
 
-//   const current = element.owner && UMLElementRepository.getById(elements)(element.owner);
-//   if (owner && !(owner.constructor as typeof UMLContainer).features.droppable) return;
+  if (!container) {
+    return [];
+  }
 
-//   let position = new Point(element.bounds.x, element.bounds.y);
+  const ownedElements = container.ownedElements.map(id => UMLElementRepository.get(elements[id])).filter(notEmpty);
+  const updates = container.render(ownedElements);
+  return updateElements(updates, elements);
+}
 
-//   let effects: Effect[] = [];
-//   if (current) {
-//     position = UMLElementRepository.getAbsolutePosition(elements)(element.id);
+function updateElements(updates: IUMLElement[], elements: UMLElementState): Effect[] {
+  const effects: Effect[] = [];
 
-//     effects = [
-//       ...effects,
-//       put<RemoveChildAction>({
-//         type: UMLContainerActionTypes.REMOVE_CHILD,
-//         payload: { id: element.id, owner: current.id },
-//       }),
-//     ];
-//   }
-
-//   if (owner) {
-//     position = UMLElementRepository.getRelativePosition(elements)(owner.id, position);
-//     effects = [
-//       ...effects,
-//       put<AppendChildAction>({
-//         type: UMLContainerActionTypes.APPEND_CHILD,
-//         payload: { id: element.id, owner: owner.id },
-//       }),
-//     ];
-//   }
-
-//   effects = [
-//     put<MoveAction>(
-//       UMLElementRepository.move(element.id, { x: position.x - element.bounds.x, y: position.y - element.bounds.y }, true),
-//     ),
-//     ...effects,
-//   ];
-
-//   yield all(effects);
-// }
-
-// function* handleElementChange({ payload }: ChangeAction) {
-//   const state: ModelState = yield select();
-//   yield all(renderContainer(state, payload.id));
-// }
-
-// function* handleElementResize({ payload }: ResizeAction) {
-//   const state: ModelState = yield select();
-//   const { elements } = state;
-//   const element = UMLElementRepository.getById(elements)(payload.id);
-
-//   let effects: Effect[] = [];
-//   if (element instanceof UMLContainer) {
-//     effects = [...effects, ...resizeContainer(state, element.id)];
-//   }
-
-//   if (element && element.owner) {
-//     effects = [...effects, ...renderContainer(state, element.owner)];
-//   }
-
-//   yield all(effects);
-// }
-
-// function renderContainer(state: ModelState, id: string): Effect[] {
-//   const { elements } = state;
-//   const owner = UMLElementRepository.getById(elements)(id);
-//   if (!owner || !(owner instanceof UMLContainer)) return [];
-
-//   const children = UMLElementRepository.getByIds(elements)(owner.ownedElements);
-//   const updates = owner.render(children);
-//   return updateElements(state, updates);
-// }
-
-// function resizeContainer(state: ModelState, id: string): Effect[] {
-//   const { elements } = state;
-//   const owner = UMLElementRepository.getById(elements)(id);
-//   if (!owner || !(owner instanceof UMLContainer)) return [];
-
-//   const children = UMLElementRepository.getByIds(elements)(owner.ownedElements);
-//   const updates = owner.resize(children);
-//   return updateElements(state, updates);
-// }
-
-// function updateElements(state: ModelState, updates: UMLElement[]): Effect[] {
-//   const { elements } = state;
-//   const effects: Effect[] = [];
-
-//   for (const update of updates) {
-//     const original = UMLElementRepository.getById(elements)(update.id);
-//     if (!original) continue;
-//     if (update.bounds.x !== original.bounds.x || update.bounds.y !== original.bounds.y) {
-//       effects.push(
-//         put<MoveAction>({
-//           type: UMLElementActionTypes.MOVE,
-//           payload: {
-//             id: original.id,
-//             delta: {
-//               x: update.bounds.x - original.bounds.x,
-//               y: update.bounds.y - original.bounds.y,
-//             },
-//             internal: true,
-//           },
-//         }),
-//       );
-//     }
-//     if (update.bounds.width !== original.bounds.width || update.bounds.height !== original.bounds.height) {
-//       effects.push(
-//         put<ResizeAction>({
-//           type: UMLElementActionTypes.RESIZE,
-//           payload: {
-//             id: original.id,
-//             delta: {
-//               width: update.bounds.width - original.bounds.width,
-//               height: update.bounds.height - original.bounds.height,
-//             },
-//           },
-//         }),
-//       );
-//     }
-//     const difference = diff(original, update);
-//     for (const key of Object.keys(difference) as Array<keyof UMLElement>) {
-//       if (key === 'bounds') continue;
-//       effects.push(put<UpdateAction>(UMLElementRepository.update(update.id, { [key]: difference[key] })));
-//     }
-//   }
-//   return effects;
-// }
+  for (const update of updates) {
+    const original = elements[update.id];
+    if (!original) continue;
+    if (update.bounds.x !== original.bounds.x || update.bounds.y !== original.bounds.y) {
+      effects.push(
+        put(
+          UMLElementRepository.move(
+            {
+              x: update.bounds.x - original.bounds.x,
+              y: update.bounds.y - original.bounds.y,
+            },
+            update.id,
+          ),
+        ),
+      );
+    }
+    if (update.bounds.width !== original.bounds.width || update.bounds.height !== original.bounds.height) {
+      effects.push(
+        put(
+          UMLElementRepository.resize(
+            {
+              width: update.bounds.width - original.bounds.width,
+              height: update.bounds.height - original.bounds.height,
+            },
+            update.id,
+          ),
+        ),
+      );
+      effects.push(put(UMLElementRepository.endResizing(update.id)));
+    }
+    // const difference = diff(original, update);
+    // for (const key of Object.keys(difference) as Array<keyof UMLElement>) {
+    //   if (key === 'bounds') continue;
+    //   effects.push(put<UpdateAction>(UMLElementRepository.update(update.id, { [key]: difference[key] })));
+    // }
+  }
+  return effects;
+}
 
 // function diff(lhs: UMLElement, rhs: UMLElement): Partial<UMLElement> {
 //   const deletedValues = Object.keys(lhs).reduce((acc, key) => {

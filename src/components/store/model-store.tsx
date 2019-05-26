@@ -9,7 +9,6 @@ import { UMLContainerReducer } from '../../services/uml-container/uml-container-
 import { UMLContainerSaga } from '../../services/uml-container/uml-container-saga';
 import { UMLContainerActions } from '../../services/uml-container/uml-container-types';
 import { UMLDiagramReducer } from '../../services/uml-diagram/uml-diagram-reducer';
-import { UMLDiagramSaga } from '../../services/uml-diagram/uml-diagram-saga';
 import { ConnectableReducer } from '../../services/uml-element/connectable/connectable-reducer';
 // import { UMLDiagramSaga } from '../../services/uml-diagram/uml-diagram-saga';
 import { HoverableReducer } from '../../services/uml-element/hoverable/hoverable-reducer';
@@ -78,7 +77,7 @@ const getInitialState = ({ initialState }: Props) => {
   const enhancer = composeEnhancers(applyMiddleware(thunk as ThunkMiddleware<ModelState, Action>, sagaMiddleware));
 
   function* rootSaga() {
-    yield composeSaga([UMLContainerSaga, UMLDiagramSaga]);
+    yield composeSaga([UMLContainerSaga]);
   }
   const store = createStore(reducer, initialState || {}, enhancer);
 
