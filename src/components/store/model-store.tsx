@@ -2,7 +2,6 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { applyMiddleware, combineReducers, compose, createStore, DeepPartial, Reducer } from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import { all, call, spawn } from 'redux-saga/effects';
 import thunk, { ThunkMiddleware } from 'redux-thunk';
 import { AssessmentReducer } from '../../services/assessment/assessment-reducer';
 import { EditorReducer } from '../../services/editor/editor-reducer';
@@ -31,6 +30,7 @@ import { UMLRelationshipReducer } from '../../services/uml-relationship/uml-rela
 import { UMLRelationshipActions } from '../../services/uml-relationship/uml-relationship-types';
 import { undoable } from '../../services/undo/undo-reducer';
 import { Action } from '../../utils/actions/actions';
+import { composeSaga } from '../../utils/actions/sagas';
 import { UMLElementFeatures } from '../uml-element/uml-element-component';
 import { ModelState } from './model-state';
 
@@ -59,7 +59,15 @@ const reducers = {
   >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
   assessments: AssessmentReducer,
   features: ((
-    state = { hoverable: true, selectable: true, movable: true, resizable: true, connectable: true, updatable: true, droppable: true },
+    state = {
+      hoverable: true,
+      selectable: true,
+      movable: true,
+      resizable: true,
+      connectable: true,
+      updatable: true,
+      droppable: true,
+    },
   ) => state) as Reducer<UMLElementFeatures>,
 };
 
@@ -70,24 +78,7 @@ const getInitialState = ({ initialState }: Props) => {
   const enhancer = composeEnhancers(applyMiddleware(thunk as ThunkMiddleware<ModelState, Action>, sagaMiddleware));
 
   function* rootSaga() {
-    const sagas = [UMLContainerSaga, UMLDiagramSaga];
-
-    yield all(
-      sagas.map(saga =>
-        spawn(function*() {
-          while (true) {
-            try {
-              yield call(saga);
-              break;
-            } catch (e) {
-              console.log('error', e);
-            }
-          }
-        }),
-      ),
-    );
-    // yield all([UMLElementSaga, UMLRelationshipSaga, UMLContainerSaga, UMLDiagramSaga].map(fork));
-    // yield all([UMLContainerSaga].map(spawn));
+    yield composeSaga([UMLContainerSaga, UMLDiagramSaga]);
   }
   const store = createStore(reducer, initialState || {}, enhancer);
 

@@ -1,53 +1,18 @@
-import { all, call, put, select, spawn, take } from 'redux-saga/effects';
+import { SagaIterator, Saga } from 'redux-saga';
+import { put, select, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
+import { run } from '../../utils/actions/sagas';
 import { notEmpty } from '../../utils/not-empty';
 import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UMLContainerRepository } from './uml-container-repository';
 
 export function* UMLContainerSaga() {
-  const sagas = [append];
-
-  yield all(
-    sagas.map(saga =>
-      spawn(function*() {
-        while (true) {
-          try {
-            yield call(saga);
-          } catch (e) {
-            console.log('error', e);
-          }
-        }
-      }),
-    ),
-  );
-
-  // const sagas = [append];
-
-  // yield all(
-  //   sagas.map(saga =>
-  //     spawn(function*() {
-  //       while (true) {
-  //         try {
-  //           yield call(saga);
-  //         } catch (e) {
-  //           console.log('error', e);
-  //         }
-  //       }
-  //     }),
-  //   ),
-  // );
-  // yield all([spawn(append)]);
-  //   yield takeLatest(UMLElementActionTypes.CREATE, appendNewElementToParent);
-  //   yield takeLatest(UMLElementActionTypes.DELETE, removeElementFromParent);
-  //   yield takeLatest(UMLContainerActionTypes.REMOVE_CHILD, removeChild);
-  //   yield takeLatest(UMLContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
-  //   yield takeLatest(UMLElementActionTypes.CHANGE, handleElementChange);
-  //   yield takeLatest(UMLElementActionTypes.RESIZE, handleElementResize);
-  // yield null;
+  const sagas: Saga[] = [append];
+  yield run([append]);
 }
 
-// function* position() {
+// function* resize() {
 //   const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
 //   const { elements, diagram }: ModelState = yield select();
 
@@ -73,7 +38,7 @@ export function* UMLContainerSaga() {
 //   // yield put(UMLElementRepository.move({ ...delta }, action.payload.ids));
 // }
 
-function* append() {
+function* append(): SagaIterator {
   const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
   const { diagram, elements, hovered }: ModelState = yield select();
 
@@ -103,48 +68,8 @@ function* append() {
     return;
   }
 
-  // console.log(container, movedElements);
   yield put(UMLContainerRepository.append(movedElements, container.id));
-  // yield all([
-  // put(UMLContainerRepository.remove(action.payload.ids)),
-  //   put(UMLContainerRepository.append(action.payload.ids, container.id)),
-  // ]);
 }
-
-// function* appendNewElementToParent({ payload }: CreateAction) {
-//   if (payload.element.owner) {
-//     yield put<AppendChildAction>({
-//       type: UMLContainerActionTypes.APPEND_CHILD,
-//       payload: { id: payload.element.id, owner: payload.element.owner },
-//     });
-//   }
-// }
-
-// function* removeElementFromParent({ payload }: DeleteAction) {
-//   const elementID = payload.id;
-//   if (!elementID) return;
-
-//   const { elements }: ModelState = yield select();
-//   const effects = [];
-
-//   // const children = Object.keys(elements).filter(id => elements[id].owner === elementID);
-//   const children = [] as string[];
-//   effects.push(...children.map(id => put(UMLElementRepository.delete(id))));
-
-//   const owner = UMLElementRepository.getByIds(elements)(Object.keys(elements)).find(
-//     element => element instanceof UMLContainer && element.ownedElements.includes(elementID),
-//   );
-//   if (owner) {
-//     effects.push(
-//       put<RemoveChildAction>({
-//         type: UMLContainerActionTypes.REMOVE_CHILD,
-//         payload: { id: elementID, owner: owner.id },
-//       }),
-//     );
-//   }
-
-//   yield all(effects);
-// }
 
 // function* appendChild(action: AppendChildAction) {
 //   const { payload } = action;
