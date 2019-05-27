@@ -25,6 +25,7 @@ export const PopoverContainer = styled.div<Props>`
   text-transform: none;
   text-shadow: none;
   top: 0;
+  will-change: transform;
   white-space: normal;
   word-break: normal;
   word-spacing: normal;
@@ -37,34 +38,33 @@ export const PopoverContainer = styled.div<Props>`
     box-sizing: inherit;
   }
 
-  ${props => css`
-    transform: translate(${props.position.x}px, ${props.position.y}px);
-    will-change: transform;
-  `}
+  ${props => {
+    let x = `${props.position.x}px`;
+    let y = `${props.position.y}px`;
+    const alignment = props.alignment === 'start' ? 0 : props.alignment === 'end' ? 100 : 50;
+    switch (props.placement) {
+      case 'top':
+        x += ` - ${alignment}%`;
+        y += ` - 100% - 0.5em`;
+        break;
+      case 'right':
+        x += ` + 0.5em`;
+        y += ` - ${alignment}%`;
+        break;
+      case 'bottom':
+        x += ` - ${alignment}%`;
+        y += ` + 0.5em`;
+        break;
+      case 'left':
+        x += ` - 100% - 0.5em`;
+        y += ` - ${alignment}%`;
+        break;
+    }
 
-  ${props =>
-    props.placement === 'top' &&
-    css`
-      margin-bottom: 0.5em;
-    `}
-
-  ${props =>
-    props.placement === 'right' &&
-    css`
-      margin-left: 0.5em;
-    `}
-
-  ${props =>
-    props.placement === 'bottom' &&
-    css`
-      margin-top: 0.5em;
-    `}
-
-  ${props =>
-    props.placement === 'left' &&
-    css`
-      margin-right: 0.5em;
-    `}
+    return css`
+      transform: translate(calc(${x}), calc(${y}));
+    `;
+  }}
 `;
 
 export const PopoverBody = styled.div`
@@ -91,7 +91,6 @@ const ArrowTop = css`
 const ArrowRight = css`
   height: 1em;
   left: calc((0.5em + 1px) * -1);
-  margin: 0.3em 0;
   width: 0.5em;
 
   &::before {
@@ -125,7 +124,6 @@ const ArrowBottom = css`
 
 const ArrowLeft = css`
   height: 1em;
-  margin: 0.3em 0;
   right: calc((0.5em + 1px) * -1);
   width: 0.5em;
 
@@ -142,12 +140,11 @@ const ArrowLeft = css`
   }
 `;
 
-type ArrowProps = Pick<Props, 'placement'>;
+type ArrowProps = Pick<Props, 'placement' | 'alignment'>;
 
 export const Arrow = styled.div<ArrowProps>`
   display: block;
   height: 0.5em;
-  margin: 0 0.3em;
   position: absolute;
   width: 1em;
 
@@ -164,4 +161,17 @@ export const Arrow = styled.div<ArrowProps>`
   ${props => props.placement === 'right' && ArrowRight}
   ${props => props.placement === 'bottom' && ArrowBottom}
   ${props => props.placement === 'left' && ArrowLeft}
+
+  ${props =>
+    props.placement === 'top' || props.placement === 'bottom'
+      ? props.alignment === 'start'
+        ? 'left: 0.3em;'
+        : props.alignment === 'end'
+        ? 'right: 0.3em;'
+        : 'left: 50%; transform: translate(-50%, 0);'
+      : props.alignment === 'start'
+      ? 'top: 0.3em;'
+      : props.alignment === 'end'
+      ? 'bottom: 0.3em;'
+      : 'top: 50%; transform: translate(0, -50%);'}
 `;
