@@ -75,16 +75,10 @@ export const movable = (
         return;
       }
 
-      const element = event.currentTarget as HTMLElement;
       this.setState({ offset: new Point(event.clientX, event.clientY) });
-      setTimeout(() => {
-        if (!this.props.selected) {
-          return;
-        }
-
-        document.addEventListener('pointermove', this.onPointerMove);
-        document.addEventListener('pointerup', this.onPointerUp, { once: true });
-      }, 0);
+      document.addEventListener('pointermove', this.onPointerMove);
+      document.addEventListener('pointerup', this.onPointerUp, { once: true });
+      setTimeout(() => !this.props.selected && this.onPointerUp(), 0);
     };
 
     private onPointerMove = (event: PointerEvent) => {
