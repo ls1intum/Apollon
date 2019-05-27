@@ -1,5 +1,7 @@
 import React, { Component, SVGProps } from 'react';
 import { connect } from 'react-redux';
+import { Components } from '../../packages/components';
+import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { ModelState } from '../store/model-state';
@@ -43,11 +45,11 @@ export class CanvasElementComponent extends Component<Props> {
     if (UMLContainerRepository.isUMLContainer(element)) {
       elements = element.ownedElements.map(id => <UMLElementComponent key={id} id={id} component="canvas" />);
     }
+    const ChildComponent = Components[element.type as UMLElementType];
 
     return (
       <svg {...props} {...element.bounds} pointerEvents={moving ? 'none' : undefined} fillOpacity={moving ? 0.1 : 0.2}>
-        <rect width={element.bounds.width} height={element.bounds.height} fill="red" />
-        {elements}
+        <ChildComponent element={element}>{elements}</ChildComponent>
         {children}
         {(hovered || selected) && (
           <rect
