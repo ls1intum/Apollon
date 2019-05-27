@@ -73,11 +73,12 @@ class Repository {
     payload: { ids: Array.isArray(id) ? id : [id] },
   });
 
-  static deleteSelection = (): AsyncAction<DeleteAction> => (dispatch, getState) =>
-    dispatch({
+  static deleteSelection = (): AsyncAction => async (dispatch, getState) => {
+    dispatch<DeleteAction>({
       type: UMLElementActionTypes.DELETE,
       payload: { ids: getState().selected },
     });
+  };
 
   static clone = (element: UMLElement, elements: UMLElement[]): UMLElement[] => {
     if (!UMLContainerRepository.isUMLContainer(element)) {
@@ -122,20 +123,21 @@ class Repository {
       .reduce<string[]>((selection, element) => [...selection, ...getSelection(element)], []);
   };
 
-  static duplicate = (id: string, parent?: string): DuplicateAction => ({
-    type: UMLElementActionTypes.DUPLICATE,
-    payload: { id, parent },
-  });
-
-  static getAbsolutePosition = (state: UMLElementState) => (id: string): Point => {
-    let element = state[id];
+  static getAbsolutePosition = (id: string): AsyncAction<Point> => (dispatch, getState) => {
+    const { elements } = getState();
+    let element = elements[id];
     let position = new Point(element.bounds.x, element.bounds.y);
     while (element.owner) {
-      element = state[element.owner];
+      element = elements[element.owner];
       position = position.add(element.bounds.x, element.bounds.y);
     }
     return position;
   };
+
+  static duplicate = (id: string, parent?: string): DuplicateAction => ({
+    type: UMLElementActionTypes.DUPLICATE,
+    payload: { id, parent },
+  });
 
   static getRelativePosition = (state: UMLElementState) => (owner: string, position: Point): Point => {
     let parent: IUMLElement | null = state[owner];

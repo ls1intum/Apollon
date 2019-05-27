@@ -15,9 +15,11 @@ export type AsyncAction<R = void> = ThunkAction<R, ModelState, undefined, Action
 
 export type Dispatch = ThunkDispatch<ModelState, undefined, Action>;
 
-export type AsyncDispatch<T extends (...args: any[]) => AsyncAction<any>> = (
-  ...args: Parameters<T>
-) => T extends (...args: any[]) => AsyncAction<infer R> ? ReturnType<AsyncAction<R>> : any;
+export type AsyncDispatch<
+  TActionCreator extends (...args: any[]) => ThunkAction<any, any, any, any>
+> = (
+  ...args: Parameters<TActionCreator>
+) => ReturnType<ReturnType<TActionCreator>>;
 
 declare module 'redux-saga/effects' {
   export function put<A extends Action>(action: A | AsyncAction): PutEffect<A>;

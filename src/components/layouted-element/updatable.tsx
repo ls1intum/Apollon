@@ -2,6 +2,7 @@ import React, { Component, ComponentClass } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
 import { ModelState } from '../store/model-state';
 import { ElementComponent, OwnProps } from './element-component';
 
@@ -12,7 +13,7 @@ const initialState = {
 type StateProps = {};
 
 type DispatchProps = {
-  updateStart: typeof UMLElementRepository.updateStart;
+  updateStart: AsyncDispatch<typeof UMLElementRepository.updateStart>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;

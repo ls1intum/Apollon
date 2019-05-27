@@ -16,8 +16,8 @@ export function Connectable<TBase extends Constructor<{}>>(Base: TBase) {
         return;
       }
 
-      const ports = ids.map<Port>((id, index) => ({
-        element: id,
+      const ports = ids.map<Port>((element, index) => ({
+        element,
         direction: directions.length === 1 ? directions[0] : directions[index],
       }));
 

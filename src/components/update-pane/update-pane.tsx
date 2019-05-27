@@ -6,6 +6,7 @@ import { Popups } from '../../packages/popups';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { Popover } from '../controls/popover/popover';
@@ -19,6 +20,7 @@ type StateProps = {
 
 type DispatchProps = {
   updateEnd: typeof UMLElementRepository.updateEnd;
+  getAbsolutePosition: AsyncDispatch<typeof UMLElementRepository.getAbsolutePosition>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -31,6 +33,10 @@ const enhance = compose<ComponentClass<OwnProps>>(
     }),
     {
       updateEnd: UMLElementRepository.updateEnd,
+      // TODO: Fix typescript issue with async actions with a return statement.
+      getAbsolutePosition: (UMLElementRepository.getAbsolutePosition as any) as AsyncDispatch<
+        typeof UMLElementRepository.getAbsolutePosition
+      >,
     },
   ),
 );
@@ -50,9 +56,10 @@ class UnwrappedUpdatePane extends Component<Props> {
       return null;
     }
 
-    const position = this.props.canvas.current!.origin().add(element.bounds.x, element.bounds.y);
-    const placement = element.bounds.x < 0 ? 'right' : 'left';
-    const alignment = element.bounds.y < 0 ? 'start' : 'end';
+    const absolute = this.props.getAbsolutePosition(element.id);
+    const position = this.props.canvas.current!.origin().add(absolute);
+    const placement = absolute.x < 0 ? 'right' : 'left';
+    const alignment = absolute.y < 0 ? 'start' : 'end';
 
     if (placement === 'right') {
       position.x += element.bounds.width;
