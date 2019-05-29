@@ -9,13 +9,13 @@ export type InteractableActions = SelectAction | DeselectAction;
 
 export interface SelectAction extends Action<InteractableActionTypes.SELECT> {
   payload: {
-    id: string;
+    ids: string[];
   };
 }
 
 export interface DeselectAction extends Action<InteractableActionTypes.DESELECT> {
   payload: {
-    id: string;
+    ids: string[];
   };
 }
 

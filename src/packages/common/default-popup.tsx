@@ -7,6 +7,7 @@ import { ModelState } from '../../components/store/model-state';
 import { styled } from '../../components/theme/styles';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
 
 const Flex = styled.div`
   display: flex;
@@ -45,7 +46,7 @@ type StateProps = {};
 
 type DispatchProps = {
   rename: typeof UMLElementRepository.rename;
-  delete: typeof UMLElementRepository.delete;
+  delete: AsyncDispatch<typeof UMLElementRepository.delete>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;

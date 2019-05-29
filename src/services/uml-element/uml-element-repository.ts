@@ -7,6 +7,7 @@ import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
 import { UMLContainer } from '../uml-container/uml-container';
 import { UMLContainerRepository } from '../uml-container/uml-container-repository';
+import { RemoveAction } from '../uml-container/uml-container-types';
 import { Connectable } from './connectable/connectable-repository';
 import { Hoverable } from './hoverable/hoverable-repository';
 import { Interactable } from './interactable/interactable-repository';
@@ -68,15 +69,25 @@ class Repository {
     payload: { ids: Array.isArray(id) ? id : [id], values },
   });
 
-  static delete = (id: string | string[]): DeleteAction => ({
-    type: UMLElementActionTypes.DELETE,
-    payload: { ids: Array.isArray(id) ? id : [id] },
-  });
+  static delete = (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+    const { elements, selected } = getState();
+    const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
 
-  static deleteSelection = (): AsyncAction => async (dispatch, getState) => {
+    const roots = UMLElementRepository.filterRoots(ids, elements);
+
+    if (!roots.length) {
+      return;
+    }
+
+    dispatch<RemoveAction>(UMLContainerRepository.remove(roots));
+
+    const t = roots
+      .reduce<IUMLElement[]>((acc, root) => [...acc, ...Repository.getChildren(root, elements)], [])
+      .map(element => element.id);
+
     dispatch<DeleteAction>({
       type: UMLElementActionTypes.DELETE,
-      payload: { ids: getState().selected },
+      payload: { ids: t },
     });
   };
 
@@ -121,6 +132,19 @@ class Repository {
     return Object.values(elements)
       .filter(element => !element.owner)
       .reduce<string[]>((selection, element) => [...selection, ...getSelection(element)], []);
+  };
+
+  static getChildren = (id: string, elements: UMLElementState): IUMLElement[] => {
+    const owner = elements[id];
+    if (!owner) return [];
+
+    if (UMLContainerRepository.isUMLContainer(owner)) {
+      return owner.ownedElements.reduce<IUMLElement[]>(
+        (acc, element) => [...acc, ...Repository.getChildren(element, elements)],
+        [owner],
+      );
+    }
+    return [owner];
   };
 
   static getAbsolutePosition = (id: string): AsyncAction<Point> => (dispatch, getState) => {
@@ -200,19 +224,6 @@ class Repository {
         [element.id]: el,
       };
     }, {});
-  };
-
-  static getChildren = (state: UMLElementState) => (id: string): UMLElement[] => {
-    const owner = Repository.getById(state)(id);
-    if (!owner) return [];
-
-    if (owner instanceof UMLContainer) {
-      return owner.ownedElements.reduce<UMLElement[]>(
-        (acc, element) => [...acc, ...Repository.getChildren(state)(element)],
-        [owner],
-      );
-    }
-    return [owner];
   };
 
   static change: ActionCreator<ChangeAction> = (id: string, kind: UMLElementType) => ({

@@ -54,8 +54,8 @@ const reducers = {
   interactive: InteractableReducer,
   updating: UpdatableReducer,
   elements: reduceReducers<
-    UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions & UMLContainerActions
-  >(UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer, UMLContainerReducer),
+    UMLContainerActions & UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions
+  >(UMLContainerReducer, UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer),
   assessments: AssessmentReducer,
   features: ((
     state = {

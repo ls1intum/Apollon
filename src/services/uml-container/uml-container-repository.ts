@@ -2,7 +2,7 @@ import { UMLElementType } from '../../packages/uml-element-type';
 import { AsyncAction } from '../../utils/actions/actions';
 import { IUMLElement } from '../uml-element/uml-element';
 import { IUMLContainer } from './uml-container';
-import { AppendAction, ChangeOwnerAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
+import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
 
 export class UMLContainerRepository {
   static isUMLContainer(element: IUMLElement): element is IUMLContainer & { type: UMLElementType } {
@@ -19,11 +19,5 @@ export class UMLContainerRepository {
   static remove = (id: string | string[]): RemoveAction => ({
     type: UMLContainerActionTypes.REMOVE,
     payload: { ids: Array.isArray(id) ? id : [id] },
-  });
-
-  // TODO: necessary?
-  static changeOwner = (id: string | null, owner: string | null): ChangeOwnerAction => ({
-    type: UMLContainerActionTypes.CHANGE_OWNER,
-    payload: { id, owner },
   });
 }

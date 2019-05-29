@@ -1,7 +1,6 @@
 import { Reducer } from 'redux';
 import { Point } from '../../utils/geometry/point';
 import { UMLElementState } from '../uml-element/uml-element-types';
-import { IUMLContainer } from './uml-container';
 import { UMLContainerRepository } from './uml-container-repository';
 import { UMLContainerActions, UMLContainerActionTypes } from './uml-container-types';
 
@@ -65,58 +64,25 @@ export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> 
     }
     case UMLContainerActionTypes.REMOVE: {
       const { payload } = action;
-      const containers: IUMLContainer[] = [];
 
-      const elementState = payload.ids.reduce<UMLElementState>((newState, id) => {
-        const { owner } = state[id];
-        console.log('id', id, 'owner', owner);
-        if (!owner) {
+      return payload.ids.reduce<UMLElementState>((newState, id) => {
+        const element = newState[id];
+        if (!element) {
           return newState;
         }
-        const container = state[owner];
-        if (!container || !UMLContainerRepository.isUMLContainer(container)) {
+        const owner = element.owner && newState[element.owner];
+
+        if (!owner || !UMLContainerRepository.isUMLContainer(owner)) {
           return newState;
         }
-        containers.push(container);
         return {
           ...newState,
-          [id]: {
-            ...newState[id],
-            owner: null,
+          [owner.id]: {
+            ...newState[owner.id],
+            ownedElements: owner.ownedElements.filter(e => !payload.ids.includes(e)),
           },
         };
       }, state);
-
-      return containers.reduce<UMLElementState>((newState, container) => {
-        return {
-          ...newState,
-          [container.id]: {
-            ...newState[container.id],
-            ownedElements: container.ownedElements.filter(id => !payload.ids.includes(id)),
-          },
-        };
-      }, elementState);
-
-      // const container = state[payload.owner];
-      // if (!container || !UMLContainerRepository.isUMLContainer(container)) {
-      //   break;
-      // }
-
-      // return {
-      //   ...state,
-      //   [container.id]: {
-      //     ...container,
-      //     ownedElements: container.ownedElements.filter(id => !payload.ids.includes(id)),
-      //   },
-      //   ...payload.ids.reduce<UMLElementState>((_, id) => {
-      //     return {
-      //       [id]: {
-      //         ...state[id],
-      //         owner: null,
-      //       },
-      //     };
-      //   }, {}),
-      // };
     }
   }
   return state;

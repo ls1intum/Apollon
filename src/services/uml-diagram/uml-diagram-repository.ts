@@ -1,10 +1,9 @@
 import { UMLDiagramType } from '../../packages/diagram-type';
-import { IUMLContainer } from '../uml-container/uml-container';
 import { IUMLElement } from '../uml-element/uml-element';
-import { UMLDiagram } from './uml-diagram';
+import { IUMLDiagram, UMLDiagram } from './uml-diagram';
 
 export class UMLDiagramRepository {
-  static isUMLDiagram(element: IUMLElement): element is IUMLContainer & { type: UMLDiagramType } {
+  static isUMLDiagram(element: IUMLElement): element is IUMLDiagram {
     return element.type in UMLDiagramType;
   }
 
