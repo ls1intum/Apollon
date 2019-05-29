@@ -18,6 +18,7 @@ type StateProps = {
 
 type DispatchProps = {
   end: AsyncDispatch<typeof UMLElementRepository.endConnecting>;
+  getAbsolutePosition: AsyncDispatch<typeof UMLElementRepository.getAbsolutePosition>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -28,6 +29,10 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   }),
   {
     end: UMLElementRepository.endConnecting,
+    // TODO: Fix typescript issue with async actions with a return statement.
+    getAbsolutePosition: (UMLElementRepository.getAbsolutePosition as any) as AsyncDispatch<
+      typeof UMLElementRepository.getAbsolutePosition
+    >,
   },
 );
 
@@ -38,7 +43,8 @@ class RelationshipPreview extends Component<Props> {
       return null;
     }
 
-    const { x, y, width, height } = element.bounds;
+    const { x, y } = this.props.getAbsolutePosition(element.id);
+    const { width, height } = element.bounds;
     const position = {
       ...(port.direction === Direction.Left
         ? { x: 0 }

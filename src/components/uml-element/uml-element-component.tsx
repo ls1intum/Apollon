@@ -68,9 +68,6 @@ const getInitialState = (props: Props) => {
   if (props.features.connectable) {
     decorators.push(connectable);
   }
-  if (props.features.connectable) {
-    decorators.push(connectable);
-  }
   if (props.features.updatable) {
     decorators.push(updatable);
   }
