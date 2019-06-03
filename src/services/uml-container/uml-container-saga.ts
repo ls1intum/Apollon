@@ -72,12 +72,8 @@ function* resizeAfterResize(): SagaIterator {
   const { elements, diagram }: ModelState = yield select();
   const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
 
-  const owner = action.payload.ids.map(id => elementState[id].owner || diagram.id);
-  if (!owner.length || owner.some(id => id !== owner[0])) {
-    return;
-  }
-
-  yield all(resize(owner[0], elementState));
+  const owners = [...new Set(action.payload.ids.map(id => elementState[id].owner || diagram.id))];
+  yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
 }
 
 function resize(owner: string, elements: UMLElementState): Effect[] {
