@@ -9,6 +9,7 @@ import { UMLElementComponentProps } from '../uml-element/uml-element-component';
 
 type StateProps = {
   selected: boolean;
+  moving: boolean;
 };
 
 type DispatchProps = {
@@ -20,7 +21,6 @@ type DispatchProps = {
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
 const initialState = {
-  moving: false,
   offset: new Point(),
 };
 
@@ -29,6 +29,7 @@ type State = typeof initialState;
 const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
   (state, props) => ({
     selected: state.selected.includes(props.id),
+    moving: state.moving.includes(props.id),
   }),
   {
     start: UMLElementRepository.startMoving,
@@ -85,9 +86,8 @@ export const movable = (
       const x = event.clientX - this.state.offset.x;
       const y = event.clientY - this.state.offset.y;
 
-      if (!this.state.moving) {
+      if (!this.props.moving) {
         if (Math.abs(x) > 5 || Math.abs(y) > 5) {
-          this.setState({ moving: true });
           this.props.start();
         }
       } else {
@@ -97,7 +97,7 @@ export const movable = (
 
     private onPointerUp = () => {
       document.removeEventListener('pointermove', this.onPointerMove);
-      if (!this.state.moving) {
+      if (!this.props.moving) {
         return;
       }
 
