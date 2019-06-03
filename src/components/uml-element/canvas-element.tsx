@@ -37,9 +37,6 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 export class CanvasElementComponent extends Component<Props> {
   render() {
     const { hovered, selected, moving, interactive, element, children, ...props } = this.props;
-    if (!element) {
-      return null;
-    }
 
     let elements = null;
     if (UMLContainerRepository.isUMLContainer(element)) {
@@ -48,7 +45,7 @@ export class CanvasElementComponent extends Component<Props> {
     const ChildComponent = Components[element.type as UMLElementType];
 
     return (
-      <svg {...props} {...element.bounds} pointerEvents={moving ? 'none' : undefined} fillOpacity={moving ? 0.1 : 0.2}>
+      <svg {...props} {...element.bounds} pointerEvents={moving ? 'none' : undefined} fillOpacity={moving ? 0.7 : 1}>
         <ChildComponent element={element}>{elements}</ChildComponent>
         {children}
         {(hovered || selected) && (

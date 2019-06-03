@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { Draggable } from '../draggable/draggable';
 import { DropEvent } from '../draggable/drop-event';
-import { hoverable } from '../layouted-element/hoverable';
 import { styled } from '../theme/styles';
 import { CanvasElement } from '../uml-element/canvas-element';
+import { hoverable } from '../uml-element/hoverable/hoverable';
 
 type Props = {
   element: UMLElement;
@@ -14,6 +14,7 @@ type Props = {
 export const Preview = styled(hoverable(CanvasElement))`
   margin: 5px;
   overflow: visible;
+  fill: white;
 `;
 
 export class PreviewElement extends Component<Props> {

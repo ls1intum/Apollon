@@ -11,4 +11,5 @@ export const CanvasContainer = styled.svg.attrs({
   outline: none;
   overflow: visible;
   transform-origin: center center;
+  fill: white;
 `;

@@ -1,30 +1,20 @@
 import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { connectable } from '../layouted-element/connectable';
-import { droppable } from '../layouted-element/droppable';
-import { hoverable } from '../layouted-element/hoverable';
-import { movable } from '../layouted-element/movable';
-import { resizable } from '../layouted-element/resizable';
-import { selectable } from '../layouted-element/selectable';
-import { updatable } from '../layouted-element/updatable';
+import { UMLElementFeatures } from '../../services/uml-element/uml-element-types';
 import { ModelState } from '../store/model-state';
 import { CanvasElement } from './canvas-element';
+import { connectable } from './connectable/connectable';
+import { droppable } from './droppable/droppable';
+import { hoverable } from './hoverable/hoverable';
+import { movable } from './movable/movable';
+import { resizable } from './resizable/resizable';
+import { selectable } from './selectable/selectable';
 import { SvgElement } from './svg-element';
+import { updatable } from './updatable/updatable';
 
 export type UMLElementComponentProps = {
   id: string;
-};
-
-// TODO: Move
-export type UMLElementFeatures = {
-  hoverable: boolean;
-  selectable: boolean;
-  movable: boolean;
-  resizable: boolean;
-  connectable: boolean;
-  updatable: boolean;
-  droppable: boolean;
 };
 
 const components = {

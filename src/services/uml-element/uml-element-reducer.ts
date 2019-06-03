@@ -9,7 +9,6 @@ export const UMLElementReducer: Reducer<UMLElementState, UMLElementActions> = (s
         (elements, values) => ({ ...elements, [values.id]: values }),
         state,
       );
-      // return { ...state, [payload.values.id]: { ...payload.values } };
     }
     case UMLElementActionTypes.UPDATE: {
       const { payload } = action;
@@ -25,11 +24,16 @@ export const UMLElementReducer: Reducer<UMLElementState, UMLElementActions> = (s
     }
     case UMLElementActionTypes.DELETE: {
       const { payload } = action;
-      return Object.assign(
-        {},
-        state,
-        payload.ids.reduce<{ [id: string]: undefined }>((elements, id) => ({ ...elements, [id]: undefined }), {}),
-      );
+
+      return Object.keys(state)
+        .filter(id => !payload.ids.includes(id))
+        .reduce<UMLElementState>(
+          (newState, id) => ({
+            ...newState,
+            [id]: state[id],
+          }),
+          {},
+        );
     }
 
     case UMLElementActionTypes.CHANGE: {

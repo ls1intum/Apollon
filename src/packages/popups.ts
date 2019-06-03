@@ -8,8 +8,8 @@ import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
 import { RelationshipType } from './relationship-type';
-import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
 import { UMLElementType } from './uml-element-type';
+import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
 
 export type Popups = { [key in UMLElementType | RelationshipType]: ComponentClass<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | RelationshipType]: ComponentClass<{ element: any }> | null } = {

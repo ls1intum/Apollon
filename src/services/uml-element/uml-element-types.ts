@@ -63,3 +63,13 @@ export interface RenameAction extends Action<UMLElementActionTypes.RENAME> {
 export interface UMLElementState {
   readonly [id: string]: IUMLElement;
 }
+
+export type UMLElementFeatures = {
+  hoverable: boolean;
+  selectable: boolean;
+  movable: boolean;
+  resizable: boolean;
+  connectable: boolean;
+  updatable: boolean;
+  droppable: boolean;
+};

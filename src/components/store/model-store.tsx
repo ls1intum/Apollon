@@ -22,7 +22,7 @@ import { ResizingActions } from '../../services/uml-element/resizable/resizing-t
 import { SelectableReducer } from '../../services/uml-element/selectable/selectable-reducer';
 import { UMLElementReducer } from '../../services/uml-element/uml-element-reducer';
 // import { UMLElementSaga } from '../../services/uml-element/uml-element-saga';
-import { UMLElementActions, UMLElementState } from '../../services/uml-element/uml-element-types';
+import { UMLElementActions, UMLElementFeatures, UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableReducer } from '../../services/uml-element/updatable/updatable-reducer';
 import { UMLRelationshipReducer } from '../../services/uml-relationship/uml-relationship-reducer';
 // import { UMLRelationshipSaga } from '../../services/uml-relationship/uml-relationship-saga';
@@ -30,14 +30,13 @@ import { UMLRelationshipActions } from '../../services/uml-relationship/uml-rela
 import { undoable } from '../../services/undo/undo-reducer';
 import { Action } from '../../utils/actions/actions';
 import { composeSaga } from '../../utils/actions/sagas';
-import { UMLElementFeatures } from '../uml-element/uml-element-component';
 import { ModelState } from './model-state';
 
 const reduceReducers = <T extends Action>(
-  ...reducers: Array<Reducer<UMLElementState, T>>
+  ...reducerList: Array<Reducer<UMLElementState, T>>
 ): Reducer<UMLElementState, T> => {
   return (state = {}, action) => {
-    return reducers.reduce<UMLElementState>((newState, reducer) => {
+    return reducerList.reduce<UMLElementState>((newState, reducer) => {
       return reducer(newState, action);
     }, state);
   };

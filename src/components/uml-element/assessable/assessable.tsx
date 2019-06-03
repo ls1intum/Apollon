@@ -1,12 +1,14 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
-import { IAssessment } from '../../services/assessment/assessment';
-import { CheckIcon } from '../controls/icon/check';
-import { TimesIcon } from '../controls/icon/times';
-import { ModelState } from '../store/model-state';
-import { ElementComponent, OwnProps } from './element-component';
+import { IAssessment } from '../../../services/assessment/assessment';
+import { CheckIcon } from '../../controls/icon/check';
+import { TimesIcon } from '../../controls/icon/times';
+import { ModelState } from '../../store/model-state';
+import { UMLElementComponentProps } from '../uml-element-component';
 
-export const assessable = (WrappedComponent: typeof ElementComponent): ComponentClass<OwnProps> => {
+export const assessable = (
+  WrappedComponent: ComponentType<UMLElementComponentProps>,
+): ComponentClass<UMLElementComponentProps> => {
   class Assessable extends Component<Props> {
     render() {
       const { assessment } = this.props;
@@ -49,9 +51,9 @@ export const assessable = (WrappedComponent: typeof ElementComponent): Component
 
   type DispatchProps = {};
 
-  type Props = OwnProps & StateProps & DispatchProps;
+  type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
-  return connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({ assessment: state.assessments[props.id] }))(
-    Assessable,
-  );
+  return connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>((state, props) => ({
+    assessment: state.assessments[props.id],
+  }))(Assessable);
 };

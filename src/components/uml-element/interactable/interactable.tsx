@@ -1,10 +1,9 @@
 import React, { Component, ComponentClass, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../utils/actions/actions';
-import { ModelState } from '../store/model-state';
-import { UMLElementComponentProps } from '../uml-element/uml-element-component';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { ModelState } from '../../store/model-state';
+import { UMLElementComponentProps } from '../uml-element-component';
 
 type StateProps = {
   hovered: boolean;
@@ -12,8 +11,8 @@ type StateProps = {
 };
 
 type DispatchProps = {
-  select: AsyncDispatch<typeof UMLElementRepository.select>;
-  deselect: AsyncDispatch<typeof UMLElementRepository.deselect>;
+  select: typeof UMLElementRepository.makeInteractive;
+  deselect: typeof UMLElementRepository.unmakeInteractive;
 };
 
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
@@ -21,18 +20,18 @@ type Props = UMLElementComponentProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
   (state, props) => ({
     hovered: state.hovered[0] === props.id,
-    selected: state.selected.includes(props.id),
+    selected: state.interactive.includes(props.id),
   }),
   {
-    select: UMLElementRepository.select,
-    deselect: UMLElementRepository.deselect,
+    select: UMLElementRepository.makeInteractive,
+    deselect: UMLElementRepository.unmakeInteractive,
   },
 );
 
-export const selectable = (
+export const interactable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
 ): ComponentClass<UMLElementComponentProps> => {
-  class Selectable extends Component<Props> {
+  class Interactable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('pointerdown', this.select);
@@ -44,28 +43,21 @@ export const selectable = (
     }
 
     render() {
-      const { hovered, selected, select, deselect, ...props } = this.props;
-      return <WrappedComponent {...props} />;
+      return <WrappedComponent {...this.props} />;
     }
 
     private select = (event: PointerEvent) => {
       if ((event.which && event.which !== 1) || !this.props.hovered) {
         return;
       }
-      if (event.shiftKey && this.props.selected) {
+      if (this.props.selected) {
         this.props.deselect(this.props.id);
         return;
       }
 
-      if (!this.props.selected) {
-        if (!event.shiftKey) {
-          this.props.deselect();
-        }
-
-        this.props.select(this.props.id);
-      }
+      this.props.select(this.props.id);
     };
   }
 
-  return enhance(Selectable);
+  return enhance(Interactable);
 };

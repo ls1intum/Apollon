@@ -1,11 +1,11 @@
 import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { Direction } from '../../typings';
-import { AsyncDispatch } from '../../utils/actions/actions';
-import { ModelState } from '../store/model-state';
-import { styled } from '../theme/styles';
-import { UMLElementComponentProps } from '../uml-element/uml-element-component';
+import { Direction } from '../../../services/uml-element/port';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
+import { ModelState } from '../../store/model-state';
+import { styled } from '../../theme/styles';
+import { UMLElementComponentProps } from '../uml-element-component';
 
 type StateProps = {
   hovered: boolean;
@@ -71,7 +71,7 @@ export const connectable = (
 ): ComponentClass<UMLElementComponentProps> => {
   class Connectable extends Component<Props> {
     render() {
-      const { hovered, selected, connecting, start, connect, ...props } = this.props;
+      const { hovered, selected, connecting, start, connect: _, ...props } = this.props;
       return (
         <WrappedComponent {...props}>
           {props.children}

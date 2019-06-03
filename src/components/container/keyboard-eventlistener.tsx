@@ -137,8 +137,6 @@ class KeyboardEventListenerComponent extends Component<Props> {
   };
 
   private keyUp = (event: KeyboardEvent) => {
-    console.log('keyup', event);
-
     switch (event.key) {
       case 'ArrowUp':
       case 'ArrowRight':

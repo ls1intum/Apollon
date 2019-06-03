@@ -1,11 +1,11 @@
 import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
-import styled from 'styled-components';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../utils/actions/actions';
-import { Point } from '../../utils/geometry/point';
-import { ModelState } from '../store/model-state';
-import { UMLElementComponentProps } from '../uml-element/uml-element-component';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
+import { Point } from '../../../utils/geometry/point';
+import { ModelState } from '../../store/model-state';
+import { styled } from '../../theme/styles';
+import { UMLElementComponentProps } from '../uml-element-component';
 
 type StateProps = {};
 

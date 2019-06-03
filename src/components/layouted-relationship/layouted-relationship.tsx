@@ -1,17 +1,17 @@
-import React, { Component, RefObject } from 'react';
+import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { ApollonView } from '../../services/editor/editor-types';
 import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { ApollonMode } from '../../typings';
-import { assessable } from '../layouted-element/assessable';
-import { ElementComponent, OwnProps as ElementComponentProps } from '../layouted-element/element-component';
-import { hoverable } from '../layouted-element/hoverable';
-import { interactable } from '../layouted-element/interactable';
-import { selectable } from '../layouted-element/selectable';
-import { updatable } from '../layouted-element/updatable';
 import { ModelState } from '../store/model-state';
+import { assessable } from '../uml-element/assessable/assessable';
+import { hoverable } from '../uml-element/hoverable/hoverable';
+import { interactable } from '../uml-element/interactable/interactable';
+import { selectable } from '../uml-element/selectable/selectable';
+import { UMLElementComponentProps } from '../uml-element/uml-element-component';
+import { updatable } from '../uml-element/updatable/updatable';
 import { reconnectable } from './reconnectable';
 import { OwnProps as RelationshipComponentProps, RelationshipComponent } from './relationship-component';
 
@@ -43,7 +43,7 @@ class LayoutedRelationshipComponent extends Component<Props> {
   private composeComponent(): typeof RelationshipComponent {
     const { readonly, view, mode } = this.props;
     type DecoratorType =
-      | ((Component: typeof ElementComponent) => React.ComponentClass<ElementComponentProps>)
+      | ((Component: ComponentType<UMLElementComponentProps>) => ComponentClass<UMLElementComponentProps>)
       | ((Component: typeof RelationshipComponent) => React.ComponentClass<RelationshipComponentProps>);
     let decorators: DecoratorType[] = [];
 

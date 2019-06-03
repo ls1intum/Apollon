@@ -1,14 +1,14 @@
 import React, { Component, ComponentClass, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../utils/actions/actions';
-import { Point } from '../../utils/geometry/point';
-import { ModelState } from '../store/model-state';
-import { UMLElementComponentProps } from '../uml-element/uml-element-component';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
+import { Point } from '../../../utils/geometry/point';
+import { ModelState } from '../../store/model-state';
+import { UMLElementComponentProps } from '../uml-element-component';
 
 type StateProps = {
-  selected: boolean;
+  movable: boolean;
   moving: boolean;
 };
 
@@ -28,7 +28,7 @@ type State = typeof initialState;
 
 const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
   (state, props) => ({
-    selected: state.selected.includes(props.id),
+    movable: state.selected.includes(props.id) && !state.resizing.includes(props.id) && !state.connecting.length,
     moving: state.moving.includes(props.id),
   }),
   {
@@ -67,7 +67,7 @@ export const movable = (
     }
 
     render() {
-      const { selected, start, move, end, ...props } = this.props;
+      const { movable: _, start, move, end, ...props } = this.props;
       return <WrappedComponent {...props} />;
     }
 
@@ -79,7 +79,7 @@ export const movable = (
       this.setState({ offset: new Point(event.clientX, event.clientY) });
       document.addEventListener('pointermove', this.onPointerMove);
       document.addEventListener('pointerup', this.onPointerUp, { once: true });
-      setTimeout(() => !this.props.selected && this.onPointerUp(), 0);
+      setTimeout(() => !this.props.movable && this.onPointerUp(), 0);
     };
 
     private onPointerMove = (event: PointerEvent) => {

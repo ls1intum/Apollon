@@ -5,13 +5,12 @@ import { composeClassPreview } from '../../packages/class-diagram/class-preview'
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { UMLElementState } from '../../services/uml-element/uml-element-types';
+import { UMLElementFeatures, UMLElementState } from '../../services/uml-element/uml-element-types';
 import { DiagramType } from '../../typings';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { ModelStore } from '../store/model-store';
-import { UMLElementFeatures } from '../uml-element/uml-element-component';
 import { PreviewElement } from './preview-element';
 
 type OwnProps = {};

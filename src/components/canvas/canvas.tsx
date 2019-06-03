@@ -55,6 +55,7 @@ export class CanvasComponent extends Component<Props> implements CoordinateSyste
     return (
       <Droppable>
         <CanvasContainer width={diagram.bounds.width} height={diagram.bounds.height} ref={this.canvas}>
+          {/* TODO: delete */}
           {this.canvas.current && (
             <circle cx={this.center().x} cy={this.center().y} r={10} fill="green" fillOpacity={0.5} />
           )}
@@ -67,6 +68,7 @@ export class CanvasComponent extends Component<Props> implements CoordinateSyste
               fill="green"
               fillOpacity={0.1}
             />
+            {/* end delete */}
             {diagram.ownedElements.map(element => (
               <UMLElementComponent key={element} id={element} component="canvas" />
             ))}

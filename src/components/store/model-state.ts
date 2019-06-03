@@ -10,12 +10,11 @@ import { ResizableState } from '../../services/uml-element/resizable/resizable-t
 import { SelectableState } from '../../services/uml-element/selectable/selectable-types';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { UMLElementState } from '../../services/uml-element/uml-element-types';
+import { UMLElementFeatures, UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableState } from '../../services/uml-element/updatable/updatable-types';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { Assessment, Selection, UMLElementType, UMLModel } from '../../typings';
-import { UMLElementFeatures } from '../uml-element/uml-element-component';
 
 export interface ModelState {
   editor: EditorState;
