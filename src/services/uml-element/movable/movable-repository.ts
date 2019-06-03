@@ -31,7 +31,7 @@ export function Movable<TBase extends Constructor<{}>>(Base: TBase) {
       });
     };
 
-    static endMoving = (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+    static endMoving = (id?: string | string[], keyboard = false): AsyncAction => (dispatch, getState) => {
       const ids = id ? (Array.isArray(id) ? id : [id]) : getState().moving;
       if (!ids.length) {
         return;
@@ -39,7 +39,7 @@ export function Movable<TBase extends Constructor<{}>>(Base: TBase) {
 
       dispatch<MoveEndAction>({
         type: MovableActionTypes.MOVE_END,
-        payload: { ids },
+        payload: { ids, keyboard },
       });
     };
   };

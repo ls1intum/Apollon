@@ -1,8 +1,9 @@
 import React, { ComponentType } from 'react';
-import { CanvasConsumer, CanvasContext } from './canvas-context';
+import { CanvasConsumer } from './canvas-context';
+import { CoordinateSystem } from './coordinate-system';
 
-export function withCanvas<P extends CanvasContext>(Component: ComponentType<P>) {
-  return function ThemedComponent(props: Pick<P, Exclude<keyof P, keyof CanvasContext>>) {
+export function withCanvas<P extends CoordinateSystem>(Component: ComponentType<P>) {
+  return function ThemedComponent(props: Pick<P, Exclude<keyof P, keyof CoordinateSystem>>) {
     return <CanvasConsumer>{context => <Component {...props as P} {...context} />}</CanvasConsumer>;
   };
 }

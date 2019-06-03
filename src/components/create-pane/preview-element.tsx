@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 import { UMLElement } from '../../services/uml-element/uml-element';
-import { CanvasContext } from '../canvas/canvas-context';
-import { withCanvas } from '../canvas/with-canvas';
 import { Draggable } from '../draggable/draggable';
 import { DropEvent } from '../draggable/drop-event';
 import { hoverable } from '../layouted-element/hoverable';
@@ -11,16 +9,14 @@ import { CanvasElement } from '../uml-element/canvas-element';
 type Props = {
   element: UMLElement;
   create: (element: UMLElement, owner?: string) => void;
-} & CanvasContext;
-
-const enhance = withCanvas;
+};
 
 export const Preview = styled(hoverable(CanvasElement))`
   margin: 5px;
   overflow: visible;
 `;
 
-class PreviewElementComponent extends Component<Props> {
+export class PreviewElement extends Component<Props> {
   render() {
     const { element } = this.props;
 
@@ -38,5 +34,3 @@ class PreviewElementComponent extends Component<Props> {
     this.props.create(element, event.owner);
   };
 }
-
-export const PreviewElement = enhance(PreviewElementComponent);

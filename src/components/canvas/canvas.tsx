@@ -32,12 +32,12 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 export class CanvasComponent extends Component<Props> implements CoordinateSystem {
   canvas: RefObject<SVGSVGElement> = createRef();
 
-  origin(): Point {
+  origin = (): Point => {
     const canvasBounds = this.canvas.current!.getBoundingClientRect();
     return new Point(canvasBounds.left + canvasBounds.width / 2, canvasBounds.top + canvasBounds.height / 2);
   }
 
-  snap(point: Point): Point {
+  snap = (point: Point): Point => {
     const origin = this.origin();
     return point
       .subtract(origin)

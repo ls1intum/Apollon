@@ -7,7 +7,7 @@ import { UMLElementType } from '../../packages/uml-element-type';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
-import { CanvasContext } from '../canvas/canvas-context';
+import { CoordinateSystem } from '../canvas/coordinate-system';
 import { withCanvas } from '../canvas/with-canvas';
 import { Popover } from '../controls/popover/popover';
 import { ModelState } from '../store/model-state';
@@ -23,7 +23,7 @@ type DispatchProps = {
   getAbsolutePosition: AsyncDispatch<typeof UMLElementRepository.getAbsolutePosition>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
+type Props = OwnProps & StateProps & DispatchProps & CoordinateSystem;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
@@ -57,7 +57,7 @@ class UnwrappedUpdatePane extends Component<Props> {
     }
 
     const absolute = this.props.getAbsolutePosition(element.id);
-    const position = this.props.canvas.current!.origin().add(absolute);
+    const position = this.props.origin().add(absolute);
     const placement = absolute.x < 0 ? 'right' : 'left';
     const alignment = absolute.y < 0 ? 'start' : 'end';
 

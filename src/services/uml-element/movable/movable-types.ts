@@ -18,5 +18,6 @@ export interface MoveStartAction extends Action<MovableActionTypes.MOVE_START> {
 export interface MoveEndAction extends Action<MovableActionTypes.MOVE_END> {
   payload: {
     ids: string[];
+    keyboard: boolean;
   };
 }

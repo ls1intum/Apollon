@@ -1,13 +1,13 @@
 import React, { Component, createRef, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { Point } from '../../utils/geometry/point';
-import { CanvasContext } from '../canvas/canvas-context';
+import { CoordinateSystem } from '../canvas/coordinate-system';
 import { withCanvas } from '../canvas/with-canvas';
 import { DraggableContext, DraggableProvider } from './draggable-context';
 import { DropEvent } from './drop-event';
 import { Ghost } from './ghost';
 
-type Props = {} & CanvasContext;
+type Props = CoordinateSystem;
 
 const initialState = {
   dragging: false,
@@ -45,9 +45,7 @@ class DraggableLayerComponent extends Component<Props, State> {
   };
 
   onPointerMove = (event: PointerEvent) => {
-    const position = this.props.canvas.current!.snap(
-      new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y),
-    );
+    const position = this.props.snap(new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y));
     this.setState({ position });
   };
 
@@ -56,7 +54,7 @@ class DraggableLayerComponent extends Component<Props, State> {
 
     const dropEvent: DropEvent = {
       owner,
-      position: this.state.position.subtract(this.props.canvas.current!.origin()),
+      position: this.state.position.subtract(this.props.origin()),
     };
 
     if (this.state.resolve) {

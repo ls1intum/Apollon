@@ -32,7 +32,7 @@ function* appendAfterMove(): SagaIterator {
   }
 
   const movedElements = action.payload.ids.filter(id => elements[id].owner !== containerID);
-  if (!movedElements.length) {
+  if (!movedElements.length || action.payload.keyboard) {
     return;
   }
 
@@ -57,12 +57,8 @@ function* resizeAfterMove(): SagaIterator {
     resize: call(function*() {
       yield delay(0);
 
-      const owner = action.payload.ids.map(id => elementState[id].owner || diagram.id);
-      if (!owner.length || owner.some(id => id !== owner[0])) {
-        return;
-      }
-
-      yield all(resize(owner[0], elementState));
+      const owners = [...new Set(action.payload.ids.map(id => elementState[id].owner || diagram.id))];
+      yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
     }),
   });
 
