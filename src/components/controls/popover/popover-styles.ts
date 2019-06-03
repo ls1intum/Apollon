@@ -30,7 +30,6 @@ export const PopoverContainer = styled.div<Props>`
   word-break: normal;
   word-spacing: normal;
   word-wrap: break-word;
-  z-index: 1060;
 
   *,
   *:before,

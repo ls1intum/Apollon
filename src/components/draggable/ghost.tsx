@@ -11,7 +11,6 @@ export const Ghost = styled.div.attrs<GhostProps>(({ position }) => ({
   top: 0;
   left: 0;
   will-change: transform;
-  z-index: 10;
   pointer-events: none;
   margin: -5px;
 `;

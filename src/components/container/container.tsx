@@ -9,7 +9,6 @@ export const Editor = styled.div`
   display: block;
   width: 100%;
   position: relative;
-  z-index: 1;
   min-height: inherit;
   max-height: inherit;
   max-width: inherit;
