@@ -52,7 +52,7 @@ function* resizeAfterMove(): SagaIterator {
   const { elements, diagram }: ModelState = yield select();
   const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
 
-  const { append } = yield race({
+  yield race({
     append: take(UMLContainerActionTypes.APPEND),
     resize: call(function*() {
       yield delay(0);
@@ -61,10 +61,6 @@ function* resizeAfterMove(): SagaIterator {
       yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
     }),
   });
-
-  if (append) {
-    yield all(resize(diagram.id, elementState));
-  }
 }
 
 function* resizeAfterResize(): SagaIterator {
@@ -102,7 +98,10 @@ function updateElements(updates: IUMLElement[], elements: UMLElementState): Effe
   for (const update of updates) {
     const original = elements[update.id];
     if (!original) continue;
-    if (update.bounds.x !== original.bounds.x || update.bounds.y !== original.bounds.y) {
+    if (
+      !UMLDiagramRepository.isUMLDiagram(update) &&
+      (update.bounds.x !== original.bounds.x || update.bounds.y !== original.bounds.y)
+    ) {
       effects.push(
         put(
           UMLElementRepository.move(
@@ -127,10 +126,12 @@ function updateElements(updates: IUMLElement[], elements: UMLElementState): Effe
           ),
         ),
       );
-      effects.push(put(UMLElementRepository.endResizing(update.id)));
+      if (!UMLDiagramRepository.isUMLDiagram(update)) {
+        effects.push(put(UMLElementRepository.endResizing(update.id)));
+      }
     }
-    // const difference = diff(original, update);
-    // for (const key of Object.keys(difference) as Array<keyof UMLElement>) {
+    const difference = diff(original, update);
+    // for (const key of Object.keys(difference) as Array<keyof IUMLElement>) {
     //   if (key === 'bounds') continue;
     //   effects.push(put<UpdateAction>(UMLElementRepository.update(update.id, { [key]: difference[key] })));
     // }
@@ -138,15 +139,15 @@ function updateElements(updates: IUMLElement[], elements: UMLElementState): Effe
   return effects;
 }
 
-// function diff(lhs: UMLElement, rhs: UMLElement): Partial<UMLElement> {
-//   const deletedValues = Object.keys(lhs).reduce((acc, key) => {
-//     return rhs.hasOwnProperty(key) ? acc : { ...acc, [key]: undefined };
-//   }, {});
+function diff(lhs: IUMLElement, rhs: IUMLElement): Partial<IUMLElement> {
+  const deletedValues = Object.keys(lhs).reduce((acc, key) => {
+    return rhs.hasOwnProperty(key) ? acc : { ...acc, [key]: undefined };
+  }, {});
 
-//   return (Object.keys(rhs) as Array<keyof UMLElement>).reduce((acc, key) => {
-//     if (!lhs.hasOwnProperty(key)) return { ...acc, [key]: rhs[key] };
-//     if (lhs[key] === rhs[key]) return acc;
+  return (Object.keys(rhs) as Array<keyof IUMLElement>).reduce((acc, key) => {
+    if (!lhs.hasOwnProperty(key)) return { ...acc, [key]: rhs[key] };
+    if (lhs[key] === rhs[key]) return acc;
 
-//     return { ...acc, [key]: rhs[key] };
-//   }, deletedValues);
-// }
+    return { ...acc, [key]: rhs[key] };
+  }, deletedValues);
+}

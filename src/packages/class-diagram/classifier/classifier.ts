@@ -1,6 +1,8 @@
+import { DeepPartial } from 'redux';
 import { ClassElementType } from '..';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElement } from '../../../services/uml-element/uml-element';
+import { assign } from '../../../utils/assign';
 import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
 import { ClassMember } from '../class-member/class-member';
 import { ClassMethod } from '../class-member/class-method/class-method';
@@ -30,19 +32,24 @@ export abstract class Classifier extends UMLContainer {
 
   deviderPosition = 0;
 
+  constructor(values?: DeepPartial<IUMLContainer>) {
+    super();
+    assign<IUMLContainer>(this, values);
+  }
+
   // constructor(values?: IUMLContainer | IUMLElement) {
   //   super();
 
   //   if (!values) return;
 
-    // if ('attributes' in values) {
-    //   delete values.attributes;
-    // }
-    // if ('methods' in values) {
-    //   delete values.methods;
-    // }
+  // if ('attributes' in values) {
+  //   delete values.attributes;
+  // }
+  // if ('methods' in values) {
+  //   delete values.methods;
+  // }
 
-    // super(values);
+  // super(values);
   // }
 
   render(children: UMLElement[]): [UMLContainer, ...UMLElement[]] {

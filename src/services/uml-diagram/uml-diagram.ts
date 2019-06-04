@@ -30,6 +30,6 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
 
     const bounds = { x: -width, y: -height, width: width * 2, height: height * 2 };
     const resizedDiagram = new UMLDiagram({ ...this, bounds });
-    return [resizedDiagram, ...ownedElements];
+    return [resizedDiagram];
   }
 }

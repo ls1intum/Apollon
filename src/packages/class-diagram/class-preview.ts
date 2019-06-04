@@ -13,10 +13,10 @@ export const composeClassPreview = (translate: (id: string) => string): UMLEleme
     bounds: { y: 40 },
   });
   const umlClassMethod = new ClassMethod({
-    name: translate('sidebar.classAttribute'),
+    name: translate('sidebar.classMethod'),
     owner: umlClass.id,
     bounds: { y: 70 },
   });
-  umlClass.ownedElements = [umlClassAttribute.id, umlClassMethod.id];
+  umlClass.render([umlClassAttribute, umlClassMethod]);
   return [umlPackage, umlClass, umlClassAttribute, umlClassMethod];
 };
