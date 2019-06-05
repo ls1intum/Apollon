@@ -58,8 +58,8 @@ class UnwrappedUpdatePane extends Component<Props> {
 
     const absolute = this.props.getAbsolutePosition(element.id);
     const position = this.props.origin().add(absolute);
-    const placement = absolute.x < 0 ? 'right' : 'left';
-    const alignment = absolute.y < 0 ? 'start' : 'end';
+    const placement = absolute.x + element.bounds.width / 2 < 0 ? 'right' : 'left';
+    const alignment = absolute.y + element.bounds.height / 2 < 0 ? 'start' : 'end';
 
     if (placement === 'right') {
       position.x += element.bounds.width;
