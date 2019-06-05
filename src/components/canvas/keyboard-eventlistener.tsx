@@ -4,8 +4,8 @@ import { connect } from 'react-redux';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ApollonMode } from '../../typings';
 import { AsyncDispatch } from '../../utils/actions/actions';
-import { CanvasComponent } from '../canvas/canvas';
 import { ModelState } from '../store/model-state';
+import { CanvasComponent } from './canvas';
 
 type OwnProps = {
   canvas: RefObject<CanvasComponent>;
