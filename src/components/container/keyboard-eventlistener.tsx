@@ -51,16 +51,11 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 class KeyboardEventListenerComponent extends Component<Props> {
   componentDidMount() {
     const node = findDOMNode(this.props.canvas.current) as SVGSVGElement;
-    node.addEventListener('keydown', this.keyDown);
-    node.addEventListener('keyup', this.keyUp);
+    if (!this.props.readonly && this.props.mode !== ApollonMode.Assessment) {
+      node.addEventListener('keydown', this.keyDown);
+      node.addEventListener('keyup', this.keyUp);
+    }
     node.addEventListener('pointerdown', this.pointerDown);
-  }
-
-  componentWillUnmount() {
-    const node = findDOMNode(this.props.canvas.current) as SVGSVGElement;
-    node.removeEventListener('keydown', this.keyDown);
-    node.removeEventListener('keyup', this.keyUp);
-    node.removeEventListener('pointerdown', this.pointerDown);
   }
 
   render() {
@@ -75,10 +70,6 @@ class KeyboardEventListenerComponent extends Component<Props> {
   };
 
   private keyDown = (event: KeyboardEvent) => {
-    if (this.props.readonly || this.props.mode === ApollonMode.Assessment) {
-      return;
-    }
-
     switch (event.key) {
       case 'ArrowUp':
         event.preventDefault();
