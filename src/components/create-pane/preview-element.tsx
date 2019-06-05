@@ -30,7 +30,7 @@ export class PreviewElement extends Component<Props> {
 
   private onDrop = (event: DropEvent) => {
     const element = this.props.element.clone({
-      bounds: { ...event.position },
+      bounds: { ...this.props.element.bounds, ...event.position },
     });
     this.props.create(element, event.owner);
   };
