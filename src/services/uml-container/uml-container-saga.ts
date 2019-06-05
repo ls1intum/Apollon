@@ -6,6 +6,7 @@ import { notEmpty } from '../../utils/not-empty';
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
 import { ResizableActionTypes, ResizeEndAction } from '../uml-element/resizable/resizable-types';
+import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { IUMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UMLElementState } from '../uml-element/uml-element-types';
@@ -14,7 +15,7 @@ import { UMLContainerRepository } from './uml-container-repository';
 import { AppendAction, UMLContainerActionTypes } from './uml-container-types';
 
 export function* UMLContainerSaga() {
-  yield run([appendAfterMove, resizeAfterAppend, resizeAfterMove, resizeAfterResize]);
+  yield run([appendAfterMove, resizeAfterAppend, resizeAfterMove, resizeWhileResize, resizeAfterResize]);
 }
 
 function* appendAfterMove(): SagaIterator {
@@ -31,7 +32,7 @@ function* appendAfterMove(): SagaIterator {
     containerID = container.id;
   }
 
-  const movedElements = action.payload.ids.filter(id => elements[id].owner !== containerID);
+  const movedElements = action.payload.ids.filter(id => elements[id].owner !== containerID && id !== containerID);
   if (!movedElements.length || action.payload.keyboard) {
     return;
   }
@@ -63,6 +64,12 @@ function* resizeAfterMove(): SagaIterator {
   });
 }
 
+function* resizeWhileResize(): SagaIterator {
+  const action: ResizeAction = yield take(ResizingActionTypes.RESIZE);
+  const { elements }: ModelState = yield select();
+  yield all(action.payload.ids.reduce<Effect[]>((effects, id) => [...effects, ...resize(id, elements, false)], []));
+}
+
 function* resizeAfterResize(): SagaIterator {
   const action: ResizeEndAction = yield take(ResizableActionTypes.RESIZE_END);
   const { elements, diagram }: ModelState = yield select();
@@ -72,7 +79,7 @@ function* resizeAfterResize(): SagaIterator {
   yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
 }
 
-function resize(owner: string, elements: UMLElementState): Effect[] {
+function resize(owner: string, elements: UMLElementState, isEnd = true): Effect[] {
   const element = elements[owner];
   let container: UMLContainer | null = null;
 
@@ -89,10 +96,10 @@ function resize(owner: string, elements: UMLElementState): Effect[] {
 
   const ownedElements = container.ownedElements.map(id => UMLElementRepository.get(elements[id])).filter(notEmpty);
   const updates = container.render(ownedElements);
-  return updateElements(updates, elements);
+  return updateElements(updates, elements, isEnd);
 }
 
-function updateElements(updates: IUMLElement[], elements: UMLElementState): Effect[] {
+function updateElements(updates: IUMLElement[], elements: UMLElementState, isEnd = true): Effect[] {
   const effects: Effect[] = [];
 
   for (const update of updates) {
@@ -126,7 +133,7 @@ function updateElements(updates: IUMLElement[], elements: UMLElementState): Effe
           ),
         ),
       );
-      if (!UMLDiagramRepository.isUMLDiagram(update)) {
+      if (isEnd && !UMLDiagramRepository.isUMLDiagram(update)) {
         effects.push(put(UMLElementRepository.endResizing(update.id)));
       }
     }
