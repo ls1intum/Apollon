@@ -4,6 +4,7 @@ import { Components } from '../../packages/components';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { IUMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ModelState } from '../store/model-state';
 import { UMLElementComponent, UMLElementComponentProps } from './uml-element-component';
 
@@ -46,7 +47,7 @@ export class CanvasElementComponent extends Component<Props> {
 
     return (
       <svg {...props} {...element.bounds} pointerEvents={moving ? 'none' : undefined} fillOpacity={moving ? 0.7 : 1}>
-        <ChildComponent element={element}>{elements}</ChildComponent>
+        <ChildComponent element={UMLElementRepository.get(element)}>{elements}</ChildComponent>
         {children}
         {(hovered || selected) && (
           <rect

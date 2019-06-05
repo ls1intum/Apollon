@@ -68,7 +68,7 @@ class CreatePaneComponent extends Component<Props, State> {
     const elements = previews.reduce<UMLElementState>(
       (state, preview) => ({
         ...state,
-        [preview.id]: preview,
+        [preview.id]: preview.serialize(),
       }),
       {},
     );
@@ -85,7 +85,7 @@ class CreatePaneComponent extends Component<Props, State> {
   }
 
   create = (preview: UMLElement, owner?: string) => {
-    const elements = UMLElementRepository.clone(preview, this.state.previews);
+    const elements = UMLElementRepository.clone(preview, this.state.previews).map(element => element.serialize());
     this.props.create(elements, owner);
   };
 }

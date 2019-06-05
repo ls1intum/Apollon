@@ -44,6 +44,15 @@ export abstract class UMLElement implements IUMLElement {
     return new Constructor(values);
   }
 
+  serialize<T extends IUMLElement>(): T {
+    const keys = Object.getOwnPropertyNames(this) as Array<keyof T>;
+    return keys.reduce<T>((object, key) => ({
+      ...object,
+      // TODO: Fix Typings
+      [key]: (this as any as T)[key],
+    }), {} as T);
+  }
+
   toUMLElement(element: UMLElement, children: UMLElement[]): { element: IUMLElement; children: UMLElement[] } {
     return {
       element: {
