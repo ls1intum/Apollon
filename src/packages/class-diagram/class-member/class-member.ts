@@ -7,7 +7,7 @@ export abstract class ClassMember extends UMLElement {
     hoverable: false,
     selectable: false,
     movable: false,
-    resizable: 'NONE' as 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE',
+    resizable: false,
     connectable: false,
     droppable: false,
     editable: false,

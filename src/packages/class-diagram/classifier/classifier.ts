@@ -2,16 +2,17 @@ import { DeepPartial } from 'redux';
 import { ClassElementType } from '..';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
 import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-types';
 import { assign } from '../../../utils/assign';
 import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
 import { ClassMember } from '../class-member/class-member';
 import { ClassMethod } from '../class-member/class-method/class-method';
 
 export abstract class Classifier extends UMLContainer {
-  static features = {
+  static features: UMLElementFeatures = {
     ...UMLContainer.features,
     droppable: false,
-    resizable: 'WIDTH' as 'WIDTH' | 'BOTH' | 'HEIGHT' | 'NONE',
+    resizable: 'WIDTH',
   };
 
   get isAbstract() {

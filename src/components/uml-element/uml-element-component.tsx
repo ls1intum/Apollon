@@ -1,8 +1,9 @@
 import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { UMLElementType } from '../../packages/uml-element-type';
+import { UMLElements } from '../../packages/uml-elements';
 import { UMLElementFeatures } from '../../services/uml-element/uml-element-types';
-import { ApollonMode } from '../../typings';
 import { ModelState } from '../store/model-state';
 import { CanvasElement } from './canvas-element';
 import { connectable } from './connectable/connectable';
@@ -30,46 +31,47 @@ type OwnProps = {
 
 type StateProps = {
   features: UMLElementFeatures;
-  readonly: boolean;
-  mode: ApollonMode;
+  type: UMLElementType;
 };
 
 type DispatchProps = {};
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(state => ({
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
   features: state.features,
-  readonly: state.editor.readonly,
-  mode: state.editor.mode,
+  type: state.elements[props.id].type as UMLElementType,
 }));
 
 const getInitialState = (props: Props) => {
+  const { features } = UMLElements[props.type];
   const component = components[props.component];
   const decorators = [];
 
-  if (props.features.hoverable) {
+  if (props.features.hoverable && features.hoverable) {
     decorators.push(hoverable);
   }
-  if (props.features.selectable) {
+  if (props.features.selectable && features.selectable) {
     decorators.push(selectable);
   }
-  if (!props.readonly && props.mode !== ApollonMode.Assessment) {
-    if (props.features.movable) {
-      decorators.push(movable);
-    }
-    if (props.features.resizable) {
-      decorators.push(resizable());
-    }
-    if (props.features.connectable) {
-      decorators.push(connectable);
-    }
-    if (props.features.updatable) {
-      decorators.push(updatable);
-    }
-    if (props.features.droppable) {
-      decorators.push(droppable);
-    }
+  if (props.features.movable && features.movable) {
+    decorators.push(movable);
+  }
+  if (props.features.resizable && features.resizable) {
+    const options = {
+      preventY: features.resizable === 'WIDTH',
+      preventX: features.resizable === 'HEIGHT',
+    };
+    decorators.push(resizable(options));
+  }
+  if (props.features.connectable && features.connectable) {
+    decorators.push(connectable);
+  }
+  if (props.features.updatable && features.updatable) {
+    decorators.push(updatable);
+  }
+  if (props.features.droppable && features.droppable) {
+    decorators.push(droppable);
   }
 
   return {

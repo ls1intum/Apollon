@@ -1,15 +1,16 @@
 import { ObjectElementType } from '..';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-types';
 import { ObjectAttribute } from '../object-member/object-attribute/object-attribute';
 import { ObjectMember } from '../object-member/object-member';
 import { ObjectMethod } from '../object-member/object-method/object-method';
 
 export class ObjectName extends UMLContainer {
-  static features = {
+  static features: UMLElementFeatures = {
     ...UMLContainer.features,
     droppable: false,
-    resizable: 'WIDTH' as 'WIDTH' | 'BOTH' | 'HEIGHT' | 'NONE',
+    resizable: 'WIDTH',
   };
 
   type = ObjectElementType.ObjectName;

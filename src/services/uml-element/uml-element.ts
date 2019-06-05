@@ -5,6 +5,7 @@ import { UMLElementType } from '../../packages/uml-element-type';
 import { assign } from '../../utils/assign';
 import { Boundary } from '../../utils/geometry/boundary';
 import { uuid } from '../../utils/uuid';
+import { UMLElementFeatures } from './uml-element-types';
 
 export interface IUMLElement {
   id: string;
@@ -16,14 +17,13 @@ export interface IUMLElement {
 }
 
 export abstract class UMLElement implements IUMLElement {
-  static features = {
+  static features: UMLElementFeatures = {
     hoverable: true,
     selectable: true,
     movable: true,
-    resizable: 'BOTH' as 'BOTH' | 'WIDTH' | 'HEIGHT' | 'NONE',
+    resizable: true,
     connectable: true,
-    editable: true,
-    interactable: true,
+    updatable: true,
     droppable: false,
   };
 
@@ -46,11 +46,14 @@ export abstract class UMLElement implements IUMLElement {
 
   serialize<T extends IUMLElement>(): T {
     const keys = Object.getOwnPropertyNames(this) as Array<keyof T>;
-    return keys.reduce<T>((object, key) => ({
-      ...object,
-      // TODO: Fix Typings
-      [key]: (this as any as T)[key],
-    }), {} as T);
+    return keys.reduce<T>(
+      (object, key) => ({
+        ...object,
+        // TODO: Fix Typings
+        [key]: ((this as any) as T)[key],
+      }),
+      {} as T,
+    );
   }
 
   toUMLElement(element: UMLElement, children: UMLElement[]): { element: IUMLElement; children: UMLElement[] } {
