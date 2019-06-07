@@ -21,5 +21,6 @@ export const Ghost = styled.div.attrs<GhostProps>(({ position }) => ({
   }
   text {
     fill: black;
+    fill-opacity: 0.7;
   }
 `;

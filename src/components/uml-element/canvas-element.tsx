@@ -46,7 +46,7 @@ export class CanvasElementComponent extends Component<Props> {
     const ChildComponent = Components[element.type as UMLElementType];
 
     return (
-      <svg {...props} {...element.bounds} pointerEvents={moving ? 'none' : undefined} fillOpacity={moving ? 0.7 : 1}>
+      <svg {...props} {...element.bounds} pointerEvents={moving ? 'none' : undefined} fillOpacity={moving ? 0.7 : undefined}>
         <ChildComponent element={UMLElementRepository.get(element)}>{elements}</ChildComponent>
         {children}
         {(hovered || selected) && (
