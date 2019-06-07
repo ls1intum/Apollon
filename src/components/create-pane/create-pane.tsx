@@ -74,7 +74,7 @@ class CreatePaneComponent extends Component<Props, State> {
     );
 
     return (
-      <ModelStore initialState={{ elements, features }}>
+      <ModelStore initialState={{ elements, editor: { features } }}>
         {Object.values(previews)
           .filter(preview => !preview.owner)
           .map((preview, index) => (

@@ -7,6 +7,15 @@ const initialState: EditorState = {
   enablePopups: true,
   mode: ApollonMode.Exporting,
   view: ApollonView.Modelling,
+  features: {
+    hoverable: true,
+    selectable: true,
+    movable: true,
+    resizable: true,
+    connectable: true,
+    updatable: true,
+    droppable: true,
+  },
 };
 
 export const EditorReducer: Reducer<EditorState, Actions> = (state = initialState, action) => {

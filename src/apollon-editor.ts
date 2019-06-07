@@ -85,6 +85,15 @@ export class ApollonEditor {
         mode: options.mode || ApollonMode.Exporting,
         readonly: options.readonly || false,
         enablePopups: options.enablePopups || true,
+        features: {
+          hoverable: true,
+          selectable: true,
+          movable: !options.readonly,
+          resizable: !options.readonly,
+          connectable: !options.readonly,
+          updatable: !options.readonly,
+          droppable: !options.readonly,
+        },
       },
     };
 

@@ -39,7 +39,7 @@ type DispatchProps = {};
 type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
-  features: state.features,
+  features: state.editor.features,
   type: state.elements[props.id].type as UMLElementType,
 }));
 

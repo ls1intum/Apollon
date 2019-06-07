@@ -22,7 +22,7 @@ import { ResizingActions } from '../../services/uml-element/resizable/resizing-t
 import { SelectableReducer } from '../../services/uml-element/selectable/selectable-reducer';
 import { UMLElementReducer } from '../../services/uml-element/uml-element-reducer';
 // import { UMLElementSaga } from '../../services/uml-element/uml-element-saga';
-import { UMLElementActions, UMLElementFeatures, UMLElementState } from '../../services/uml-element/uml-element-types';
+import { UMLElementActions, UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableReducer } from '../../services/uml-element/updatable/updatable-reducer';
 import { UMLRelationshipReducer } from '../../services/uml-relationship/uml-relationship-reducer';
 // import { UMLRelationshipSaga } from '../../services/uml-relationship/uml-relationship-saga';
@@ -56,17 +56,6 @@ const reducers = {
     UMLContainerActions & UMLElementActions & ResizingActions & MovingActions & UMLRelationshipActions
   >(UMLContainerReducer, UMLElementReducer, ResizingReducer, MovingReducer, UMLRelationshipReducer),
   assessments: AssessmentReducer,
-  features: ((
-    state = {
-      hoverable: true,
-      selectable: true,
-      movable: true,
-      resizable: true,
-      connectable: true,
-      updatable: true,
-      droppable: true,
-    },
-  ) => state) as Reducer<UMLElementFeatures>,
 };
 
 const getInitialState = ({ initialState }: Props) => {

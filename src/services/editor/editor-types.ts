@@ -1,5 +1,6 @@
 import { Action } from 'redux';
 import { ApollonMode } from '../../typings';
+import { UMLElementFeatures } from '../uml-element/uml-element-types';
 
 export const enum ApollonView {
   Modelling = 'Modelling',
@@ -24,4 +25,5 @@ export interface EditorState {
   readonly readonly: boolean;
   readonly enablePopups: boolean;
   readonly view: ApollonView;
+  readonly features: UMLElementFeatures;
 }
