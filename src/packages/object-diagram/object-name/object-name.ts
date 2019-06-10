@@ -1,7 +1,7 @@
 import { ObjectElementType } from '..';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-types';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { ObjectAttribute } from '../object-member/object-attribute/object-attribute';
 import { ObjectMember } from '../object-member/object-member';
 import { ObjectMethod } from '../object-member/object-method/object-method';
@@ -36,6 +36,14 @@ export class ObjectName extends UMLContainer {
     // super(values);
   }
 
+  appendElement(element: UMLElement, ownedElements: UMLContainer[]): [UMLContainer, ...UMLElement[]] {
+    return this.render([element, ...ownedElements]);
+  }
+
+  removeElement(element: UMLElement, ownedElements: UMLContainer[]): [UMLContainer, ...UMLElement[]] {
+    return this.render([...ownedElements]);
+  }
+
   render(children: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     const attributes = children.filter(child => child instanceof ObjectAttribute);
     const methods = children.filter(child => child instanceof ObjectMethod);
@@ -59,12 +67,12 @@ export class ObjectName extends UMLContainer {
     return [this, ...[...attributes, ...methods]];
   }
 
-  resize(children: UMLElement[]): UMLElement[] {
-    const minWidth = children.reduce((width, child) => Math.max(width, ObjectMember.calculateWidth(child.name)), 100);
+  resize(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    const minWidth = ownedElements.reduce((width, child) => Math.max(width, ObjectMember.calculateWidth(child.name)), 100);
     this.bounds.width = Math.max(this.bounds.width, minWidth);
     return [
       this,
-      ...children.map(child => {
+      ...ownedElements.map(child => {
         child.bounds.width = this.bounds.width;
         return child;
       }),

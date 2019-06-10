@@ -7,8 +7,16 @@ export class UseCaseSystem extends UMLContainer {
   static features = { ...UMLContainer.features, connectable: false };
   type = UseCaseElementType.UseCaseSystem;
 
-  render(elements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    const [parent, ...children] = super.render(elements);
+  appendElement(element: UMLElement, ownedElements: UMLContainer[]): [UMLContainer, ...UMLElement[]] {
+    return this.render([element, ...ownedElements]);
+  }
+
+  removeElement(element: UMLElement, ownedElements: UMLContainer[]): [UMLContainer, ...UMLElement[]] {
+    return this.render([...ownedElements]);
+  }
+
+  render(children: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    const parent = this;
     const absoluteChildren: UMLElement[] = children.map<UMLElement>(child => {
       child.bounds.x += parent.bounds.x;
       child.bounds.y += parent.bounds.y;
@@ -26,14 +34,14 @@ export class UseCaseSystem extends UMLContainer {
       child.bounds.x -= deltaX;
       child.bounds.y -= deltaY;
     });
-    const resizedParent = new UseCaseSystem({ ...parent as UMLContainer, bounds });
+    const resizedParent = new UseCaseSystem({ ...(parent as UMLContainer), bounds });
     return [resizedParent, ...relativeChildren];
   }
 
-  resize(children: UMLElement[]): UMLElement[] {
-    const bounds = computeBoundingBoxForElements(children);
+  resize(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    const bounds = computeBoundingBoxForElements(ownedElements);
     this.bounds.width = Math.max(this.bounds.width, bounds.x + bounds.width, 100);
     this.bounds.height = Math.max(this.bounds.height, bounds.y + bounds.height, 100);
-    return [this, ...children];
+    return [this, ...ownedElements];
   }
 }

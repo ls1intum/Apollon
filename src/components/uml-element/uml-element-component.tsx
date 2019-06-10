@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
-import { UMLElementFeatures } from '../../services/uml-element/uml-element-types';
+import { UMLElementFeatures } from '../../services/uml-element/uml-element-features';
 import { ModelState } from '../store/model-state';
 import { CanvasElement } from './canvas-element';
 import { connectable } from './connectable/connectable';

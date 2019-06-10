@@ -9,10 +9,15 @@ rules:
   newline-per-chained-call: false
   member-access:
     options: no-public
+  member-ordering:
+    - order: fields-first
   no-console:
     severity: warning
   no-null-keyword: false
   no-null-undefined-union: false
+  no-unsafe-any: false
+  object-literal-sort-keys:
+    - match-declaration-order
   ordered-imports:
     options:
       - import-sources-order: case-insensitive

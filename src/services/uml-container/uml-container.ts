@@ -1,8 +1,9 @@
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
-import { assign } from '../../utils/assign';
+import { assign } from '../../utils/fx/assign';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
+import { UMLElementFeatures } from '../uml-element/uml-element-features';
 
 export interface IUMLContainer extends IUMLElement {
   type: UMLElementType | UMLDiagramType;
@@ -10,9 +11,9 @@ export interface IUMLContainer extends IUMLElement {
 }
 
 export abstract class UMLContainer extends UMLElement implements IUMLContainer {
-  static features = { ...UMLElement.features, droppable: true };
+  static features: UMLElementFeatures = { ...UMLElement.features, droppable: true };
 
-  abstract readonly type: UMLElementType | UMLDiagramType;
+  abstract type: UMLElementType | UMLDiagramType;
   ownedElements: string[] = [];
 
   constructor(values?: DeepPartial<IUMLContainer>) {
@@ -20,11 +21,15 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
     assign<IUMLContainer>(this, values);
   }
 
-  render(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+  appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    return [this, ...[...elements, ...ownedElements]];
+  }
+
+  removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     return [this, ...ownedElements];
   }
 
-  resize(children: UMLElement[]): UMLElement[] {
-    return [this, ...children];
+  resize(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    return [this, ...ownedElements];
   }
 }

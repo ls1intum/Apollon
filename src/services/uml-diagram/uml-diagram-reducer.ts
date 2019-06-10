@@ -1,13 +1,11 @@
 import { Reducer } from 'redux';
-import { AppendAction, RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
-import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
+import { UMLContainerActions, UMLContainerActionTypes } from '../uml-container/uml-container-types';
+import { ResizingActions, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { UMLDiagram } from './uml-diagram';
 import { UMLDiagramState } from './uml-diagram-types';
 
-const initialState: UMLDiagramState = new UMLDiagram();
-
-export const UMLDiagramReducer: Reducer<UMLDiagramState, AppendAction | RemoveAction | ResizeAction> = (
-  state = initialState,
+export const UMLDiagramReducer: Reducer<UMLDiagramState, UMLContainerActions | ResizingActions> = (
+  state = new UMLDiagram(),
   action,
 ) => {
   switch (action.type) {
@@ -22,7 +20,7 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, AppendAction | RemoveAc
 
       return {
         ...state,
-        ownedElements: [...new Set([...payload.ids, ...state.ownedElements])],
+        ownedElements: [...new Set([...state.ownedElements, ...payload.ids])],
       };
     }
     case UMLContainerActionTypes.REMOVE: {
@@ -49,5 +47,6 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, AppendAction | RemoveAc
       };
     }
   }
+
   return state;
 };

@@ -9,7 +9,7 @@ export type ResizingState = UMLElementState;
 
 export type ResizingActions = ResizeAction;
 
-export interface ResizeAction extends Action<ResizingActionTypes.RESIZE> {
+export type ResizeAction = Action<ResizingActionTypes.RESIZE> & {
   payload: {
     ids: string[];
     delta: {
@@ -17,4 +17,4 @@ export interface ResizeAction extends Action<ResizingActionTypes.RESIZE> {
       height: number;
     };
   };
-}
+};

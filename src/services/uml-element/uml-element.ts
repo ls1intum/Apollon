@@ -2,71 +2,64 @@ import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { RelationshipType as UMLRelationshipType } from '../../packages/relationship-type';
 import { UMLElementType } from '../../packages/uml-element-type';
-import { assign } from '../../utils/assign';
-import { Boundary } from '../../utils/geometry/boundary';
+import { assign } from '../../utils/fx/assign';
 import { uuid } from '../../utils/uuid';
-import { UMLElementFeatures } from './uml-element-types';
+import { UMLElementFeatures } from './uml-element-features';
 
+/** Interface of a `UMLElement` defining the properties persisted in the internal storage */
 export interface IUMLElement {
+  /** Unique Identifier of the `UMLElement` */
   id: string;
+  /** Visual name of the `UMLElement` */
   name: string;
+  /** Distinct type to recreate the `UMLElement` */
   type: UMLElementType | UMLRelationshipType | UMLDiagramType;
+  /** Optional owner of the `UMLElement` */
   owner: string | null;
-  highlight?: string;
+  /** Position and sizing of the `UMLElement` */
   bounds: { x: number; y: number; width: number; height: number };
 }
 
+/** Class implementation of `IUMLElement` to use inheritance at runtime */
 export abstract class UMLElement implements IUMLElement {
+  /** `UMLElement` type specific feature flags */
   static features: UMLElementFeatures = {
+    connectable: true,
+    droppable: false,
     hoverable: true,
-    selectable: true,
     movable: true,
     resizable: true,
-    connectable: true,
+    selectable: true,
     updatable: true,
-    droppable: false,
   };
 
-  readonly id: string = uuid();
-  name: string = '';
-  highlight?: string;
-  abstract readonly type: UMLElementType | UMLRelationshipType | UMLDiagramType;
-  readonly bounds: Boundary = { x: 0, y: 0, width: 200, height: 100 };
-  owner: string | null = null;
+  id = uuid();
+  name = '';
+  abstract type: UMLElementType | UMLRelationshipType | UMLDiagramType;
+  bounds = { x: 0, y: 0, width: 200, height: 100 };
+  owner = null as string | null;
 
   constructor(values?: DeepPartial<IUMLElement>) {
     assign<IUMLElement>(this, values);
   }
 
+  /**
+   * Clones an instance of `UMLElement`
+   *
+   * @param override - Override existing properties.
+   */
   clone<T extends UMLElement>(override?: DeepPartial<IUMLElement>): T {
-    const Constructor = (this.constructor as any) as new (values: IUMLElement) => T;
-    const values: IUMLElement = { ...this, id: uuid(), ...override };
+    const Constructor = this.constructor as new (values?: DeepPartial<IUMLElement>) => T;
+    // TODO: deep merge
+    const values: IUMLElement = { ...this, ...override, id: uuid() };
+
     return new Constructor(values);
   }
 
+  /** Serializes an `UMLElement` to an `IUMLElement` */
   serialize<T extends IUMLElement>(): T {
-    const keys = Object.getOwnPropertyNames(this) as Array<keyof T>;
-    return keys.reduce<T>(
-      (object, key) => ({
-        ...object,
-        // TODO: Fix Typings
-        [key]: ((this as any) as T)[key],
-      }),
-      {} as T,
-    );
-  }
+    const json = { ...(this as UMLElement) };
 
-  toUMLElement(element: UMLElement, children: UMLElement[]): { element: IUMLElement; children: UMLElement[] } {
-    return {
-      element: {
-        id: element.id,
-        name: element.name,
-        owner: element.owner,
-        highlight: element.highlight,
-        type: element.type as UMLElementType,
-        bounds: element.bounds,
-      },
-      children,
-    };
+    return json as T;
   }
 }

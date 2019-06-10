@@ -9,14 +9,14 @@ export type SelectableState = string[];
 
 export type SelectableActions = SelectAction | DeselectAction;
 
-export interface SelectAction extends Action<SelectableActionTypes.SELECT> {
+export type SelectAction = Action<SelectableActionTypes.SELECT> & {
   payload: {
     ids: string[];
   };
-}
+};
 
-export interface DeselectAction extends Action<SelectableActionTypes.DESELECT> {
+export type DeselectAction = Action<SelectableActionTypes.DESELECT> & {
   payload: {
     ids: string[];
   };
-}
+};

@@ -1,6 +1,6 @@
 import { Point } from '../../utils/geometry/point';
 
-export interface CoordinateSystem {
+export type CoordinateSystem = {
   origin(): Point;
   snap(point: Point): Point;
-}
+};

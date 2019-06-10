@@ -48,8 +48,8 @@ class ActivityControlFlowPopupComponent extends Component<Props> {
     );
   }
 
-  private rename = (value: string) => {
-    this.props.rename(this.props.element.id, value);
+  private rename = (name: string) => {
+    this.props.update(this.props.element.id, { name });
   };
 }
 
@@ -60,7 +60,7 @@ type OwnProps = {
 type StateProps = {};
 
 type DispatchProps = {
-  rename: typeof UMLElementRepository.rename;
+  update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
   flip: typeof UMLRelationshipRepository.flip;
 };
@@ -72,7 +72,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     null,
     {
-      rename: UMLElementRepository.rename,
+      update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
       flip: UMLRelationshipRepository.flip,
     },

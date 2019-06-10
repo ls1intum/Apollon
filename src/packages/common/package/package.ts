@@ -11,33 +11,53 @@ export class Package extends UMLContainer {
 
   type = CommonElementType.Package;
 
-  render(elements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    const [parent, ...children] = super.render(elements);
-    const absoluteChildren: UMLElement[] = children.map<UMLElement>(child => {
-      child.bounds.x += parent.bounds.x;
-      child.bounds.y += parent.bounds.y;
-      return child;
+  appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    const absoluteElements: UMLElement[] = elements.map<UMLElement>(element => {
+      element.bounds.x += this.bounds.x;
+      element.bounds.y += this.bounds.y;
+      return element;
     });
-    const bounds = computeBoundingBoxForElements([parent, ...absoluteChildren]);
-    const relativeChildren: UMLElement[] = absoluteChildren.map<UMLElement>(child => {
-      child.bounds.x -= parent.bounds.x;
-      child.bounds.y -= parent.bounds.y;
-      return child;
+    const bounds = computeBoundingBoxForElements([this, ...absoluteElements]);
+    const relativeElements: UMLElement[] = absoluteElements.map<UMLElement>(element => {
+      element.bounds.x -= this.bounds.x;
+      element.bounds.y -= this.bounds.y;
+      return element;
     });
-    const deltaX = bounds.x - parent.bounds.x;
-    const deltaY = bounds.y - parent.bounds.y;
-    relativeChildren.forEach(child => {
+    const deltaX = bounds.x - this.bounds.x;
+    const deltaY = bounds.y - this.bounds.y;
+    [...relativeElements, ...ownedElements].forEach(child => {
       child.bounds.x -= deltaX;
       child.bounds.y -= deltaY;
     });
-    const resizedParent = new Package({ ...parent as UMLContainer, bounds });
-    return [resizedParent, ...relativeChildren];
+
+    return [new Package({ ...this, bounds }), ...[...relativeElements, ...ownedElements]];
   }
 
-  resize(children: UMLElement[]): UMLElement[] {
-    const bounds = computeBoundingBoxForElements(children);
-    this.bounds.width = Math.max(this.bounds.width, bounds.x + bounds.width, 100);
-    this.bounds.height = Math.max(this.bounds.height, bounds.y + bounds.height, 100);
-    return [this, ...children];
+  removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    return [this];
+  }
+
+  resize(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    const absoluteElements: UMLElement[] = ownedElements.map<UMLElement>(element => {
+      element.bounds.x += this.bounds.x;
+      element.bounds.y += this.bounds.y;
+      return element;
+    });
+    const bounds = computeBoundingBoxForElements([this, ...absoluteElements]);
+    const relativeElements: UMLElement[] = absoluteElements.map<UMLElement>(element => {
+      element.bounds.x -= this.bounds.x;
+      element.bounds.y -= this.bounds.y;
+      return element;
+    });
+    const deltaX = bounds.x - this.bounds.x;
+    const deltaY = bounds.y - this.bounds.y;
+    relativeElements.forEach(child => {
+      child.bounds.x -= deltaX;
+      child.bounds.y -= deltaY;
+    });
+
+    // bounds.width = Math.max(this.bounds.width, bounds.x + bounds.width, 100);
+    // bounds.height = Math.max(this.bounds.height, bounds.y + bounds.height, 100);
+    return [new Package({ ...this, bounds }), ...relativeElements];
   }
 }

@@ -11,6 +11,7 @@ import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
 import { ObjectAttribute } from '../object-member/object-attribute/object-attribute';
 import { ObjectMethod } from '../object-member/object-method/object-method';
@@ -77,8 +78,8 @@ class ObjectNameComponent extends Component<Props> {
     create(member);
   };
 
-  private rename = (id: string) => (value: string) => {
-    this.props.rename(id, value);
+  private rename = (id: string) => (name: string) => {
+    this.props.update(id, { name });
   };
 
   private delete = (id: string) => () => {
@@ -90,14 +91,13 @@ interface OwnProps {
   element: ObjectName;
 }
 
-interface StateProps {
-  getById: (id: string) => UMLElement | null;
-}
+type StateProps = {};
 
 interface DispatchProps {
   create: typeof UMLElementRepository.create;
-  rename: typeof UMLElementRepository.rename;
+  update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
+  getById: (id: string) => UMLElement | null;
 }
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -105,11 +105,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ getById: UMLElementRepository.getById(state.elements) }),
+    null,
     {
       create: UMLElementRepository.create,
-      rename: UMLElementRepository.rename,
+      update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
+      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
     },
   ),
 );

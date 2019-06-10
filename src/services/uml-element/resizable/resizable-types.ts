@@ -9,14 +9,14 @@ export type ResizableState = string[];
 
 export type ResizableActions = ResizeStartAction | ResizeEndAction;
 
-export interface ResizeStartAction extends Action<ResizableActionTypes.RESIZE_START> {
+export type ResizeStartAction = Action<ResizableActionTypes.RESIZE_START> & {
   payload: {
     ids: string[];
   };
-}
+};
 
-export interface ResizeEndAction extends Action<ResizableActionTypes.RESIZE_END> {
+export type ResizeEndAction = Action<ResizableActionTypes.RESIZE_END> & {
   payload: {
     ids: string[];
   };
-}
+};

@@ -13,6 +13,8 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
+import { notEmpty } from '../../../utils/not-empty';
 import { ModelState } from './../../../components/store/model-state';
 import { ActivityMergeNode } from './activity-merge-node';
 
@@ -27,7 +29,7 @@ class ActivityMergeNodePopupComponent extends Component<Props> {
     const { element, relationships } = this.props;
 
     const decisions = relationships.filter(relationship => relationship.source.element === element.id);
-    const targets = this.props.getByIds(decisions.map(relationship => relationship.target.element));
+    const targets = decisions.map(relationship => this.props.getById(relationship.target.element)).filter(notEmpty);
 
     return (
       <div>
@@ -55,14 +57,14 @@ class ActivityMergeNodePopupComponent extends Component<Props> {
     );
   }
 
-  private onUpdate = (value: string) => {
-    const { element, rename } = this.props;
-    rename(element.id, value);
+  private onUpdate = (name: string) => {
+    const { element, update } = this.props;
+    update(element.id, { name });
   };
 
-  private onUpdateOption = (id: string) => (value: string) => {
-    const { rename } = this.props;
-    rename(id, value);
+  private onUpdateOption = (id: string) => (name: string) => {
+    const { update } = this.props;
+    update(id, { name });
   };
 }
 
@@ -72,11 +74,11 @@ type OwnProps = {
 
 type StateProps = {
   relationships: UMLRelationship[];
-  getByIds: (id: string[]) => UMLElement[];
 };
 
 type DispatchProps = {
-  rename: typeof UMLElementRepository.rename;
+  update: typeof UMLElementRepository.update;
+  getById: (id: string) => UMLElement | null;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -86,10 +88,10 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({
       relationships: UMLRelationshipRepository.read(state.elements),
-      getByIds: UMLElementRepository.getByIds(state.elements),
     }),
     {
-      rename: UMLElementRepository.rename,
+      update: UMLElementRepository.update,
+      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
     },
   ),
 );

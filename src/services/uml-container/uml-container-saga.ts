@@ -1,6 +1,8 @@
 import { SagaIterator } from 'redux-saga';
 import { all, call, delay, Effect, put, race, select, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
+import { UMLElements } from '../../packages/uml-elements';
+import { UMLElementType } from '../../typings';
 import { run } from '../../utils/actions/sagas';
 import { notEmpty } from '../../utils/not-empty';
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
@@ -12,99 +14,20 @@ import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UMLElementState } from '../uml-element/uml-element-types';
 import { UMLContainer } from './uml-container';
 import { UMLContainerRepository } from './uml-container-repository';
-import { AppendAction, UMLContainerActionTypes } from './uml-container-types';
+import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
 
 export function* UMLContainerSaga() {
-  yield run([appendAfterMove, resizeAfterAppend, resizeAfterMove, resizeWhileResize, resizeAfterResize]);
+  yield run([append, remove, appendAfterMove, resizeAfterMove, resizeAfterResize, resizeWhileResize]);
 }
 
-function* appendAfterMove(): SagaIterator {
-  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
-  const { elements, hovered }: ModelState = yield select();
-  let containerID: string | null = null;
-
-  if (hovered.length) {
-    const container = elements[hovered[0]];
-    if (!container || !UMLContainerRepository.isUMLContainer(container)) {
-      return;
-    }
-
-    containerID = container.id;
-  }
-
-  const movedElements = action.payload.ids.filter(id => elements[id].owner !== containerID && id !== containerID);
-  if (!movedElements.length || action.payload.keyboard) {
-    return;
-  }
-
-  yield put(UMLContainerRepository.append(movedElements, containerID || undefined));
-}
-
-function* resizeAfterAppend(): SagaIterator {
-  const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
-  const { elements, diagram }: ModelState = yield select();
-  const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
-
-  yield all(resize(action.payload.owner, elementState));
-}
-
-function* resizeAfterMove(): SagaIterator {
-  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
-  const { elements, diagram }: ModelState = yield select();
-  const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
-
-  yield race({
-    append: take(UMLContainerActionTypes.APPEND),
-    resize: call(function*() {
-      yield delay(0);
-
-      const owners = [...new Set(action.payload.ids.map(id => elementState[id].owner || diagram.id))];
-      yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
-    }),
-  });
-}
-
-function* resizeWhileResize(): SagaIterator {
-  const action: ResizeAction = yield take(ResizingActionTypes.RESIZE);
-  const { elements }: ModelState = yield select();
-  yield all(action.payload.ids.reduce<Effect[]>((effects, id) => [...effects, ...resize(id, elements, false)], []));
-}
-
-function* resizeAfterResize(): SagaIterator {
-  const action: ResizeEndAction = yield take(ResizableActionTypes.RESIZE_END);
-  const { elements, diagram }: ModelState = yield select();
-  const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
-
-  const owners = [...new Set(action.payload.ids.map(id => elementState[id].owner || diagram.id))];
-  yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
-}
-
-function resize(owner: string, elements: UMLElementState, isEnd = true): Effect[] {
-  const element = elements[owner];
-  let container: UMLContainer | null = null;
-
-  if (element && UMLDiagramRepository.isUMLDiagram(element)) {
-    container = UMLDiagramRepository.get(elements[owner]);
-  }
-  if (element && UMLContainerRepository.isUMLContainer(element)) {
-    container = UMLElementRepository.get(element) as UMLContainer;
-  }
-
-  if (!container) {
-    return [];
-  }
-
-  const ownedElements = container.ownedElements.map(id => UMLElementRepository.get(elements[id])).filter(notEmpty);
-  const updates = container.render(ownedElements);
-  return updateElements(updates, elements, isEnd);
-}
-
-function updateElements(updates: IUMLElement[], elements: UMLElementState, isEnd = true): Effect[] {
+const updateElements = (updates: IUMLElement[], elements: UMLElementState, isEnd = true): Effect[] => {
   const effects: Effect[] = [];
 
   for (const update of updates) {
     const original = elements[update.id];
-    if (!original) continue;
+    if (!original) {
+      continue;
+    }
     if (
       !UMLDiagramRepository.isUMLDiagram(update) &&
       (update.bounds.x !== original.bounds.x || update.bounds.y !== original.bounds.y)
@@ -137,24 +60,124 @@ function updateElements(updates: IUMLElement[], elements: UMLElementState, isEnd
         effects.push(put(UMLElementRepository.endResizing(update.id)));
       }
     }
-    const difference = diff(original, update);
-    // for (const key of Object.keys(difference) as Array<keyof IUMLElement>) {
-    //   if (key === 'bounds') continue;
-    //   effects.push(put<UpdateAction>(UMLElementRepository.update(update.id, { [key]: difference[key] })));
-    // }
   }
+
   return effects;
+};
+
+const resize = (owner: string, elements: UMLElementState, isEnd = true): Effect[] => {
+  const container: UMLContainer | null = UMLContainerRepository.get(elements[owner]);
+
+  if (!container) {
+    return [];
+  }
+
+  const ownedElements = container.ownedElements.map(id => UMLElementRepository.get(elements[id])).filter(notEmpty);
+  const updates = container.resize(ownedElements);
+
+  return updateElements(updates, elements, isEnd);
+};
+
+function* append(): SagaIterator {
+  const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
+  const { elements, diagram }: ModelState = yield select();
+  const state: UMLElementState = { ...elements, [diagram.id]: diagram };
+  const container = UMLContainerRepository.get(state[action.payload.owner]);
+
+  if (!container) {
+    return;
+  }
+
+  const ownedElements = container.ownedElements.map(id => UMLElementRepository.get(state[id])).filter(notEmpty);
+  const updates = container.appendElements(
+    ownedElements.filter(element => action.payload.ids.includes(element.id)),
+    ownedElements.filter(element => !action.payload.ids.includes(element.id)),
+  );
+
+  yield all(updateElements(updates, state));
 }
 
-function diff(lhs: IUMLElement, rhs: IUMLElement): Partial<IUMLElement> {
-  const deletedValues = Object.keys(lhs).reduce((acc, key) => {
-    return rhs.hasOwnProperty(key) ? acc : { ...acc, [key]: undefined };
-  }, {});
+function* remove(): SagaIterator {
+  const action: RemoveAction = yield take(UMLContainerActionTypes.REMOVE);
+  const { elements, diagram }: ModelState = yield select();
+  const state: UMLElementState = { ...elements, [diagram.id]: diagram };
+  const owners = [...new Set(action.payload.ids.map(id => state[id].owner || diagram.id))];
 
-  return (Object.keys(rhs) as Array<keyof IUMLElement>).reduce((acc, key) => {
-    if (!lhs.hasOwnProperty(key)) return { ...acc, [key]: rhs[key] };
-    if (lhs[key] === rhs[key]) return acc;
+  const effects: Effect[] = [];
+  for (const owner of owners) {
+    const container = UMLContainerRepository.get(state[owner]);
 
-    return { ...acc, [key]: rhs[key] };
-  }, deletedValues);
+    if (!container) {
+      continue;
+    }
+
+    const ownedElements = [...action.payload.ids, ...container.ownedElements]
+      .map(id => UMLElementRepository.get(state[id]))
+      .filter(notEmpty);
+
+    const updates = container.removeElements(
+      ownedElements.filter(element => !container.ownedElements.includes(element.id)),
+      ownedElements.filter(element => container.ownedElements.includes(element.id)),
+    );
+    effects.push(...updateElements(updates, state));
+  }
+  yield all(effects);
+}
+
+function* appendAfterMove(): SagaIterator {
+  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
+  const { elements, hovered }: ModelState = yield select();
+  let containerID: string | null = null;
+
+  if (hovered.length) {
+    const container = elements[hovered[0]];
+    if (
+      !container ||
+      !UMLContainerRepository.isUMLContainer(container) ||
+      !UMLElements[container.type as UMLElementType].features.droppable
+    ) {
+      return;
+    }
+
+    containerID = container.id;
+  }
+
+  const movedElements = action.payload.ids.filter(id => elements[id].owner !== containerID && id !== containerID);
+  if (!movedElements.length || action.payload.keyboard) {
+    return;
+  }
+
+  yield put(UMLContainerRepository.remove(movedElements));
+  yield put(UMLContainerRepository.append(movedElements, containerID || undefined));
+}
+
+function* resizeAfterMove(): SagaIterator {
+  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
+  const { elements, diagram }: ModelState = yield select();
+  const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
+
+  yield race({
+    append: take(UMLContainerActionTypes.APPEND),
+    resize: call(function*() {
+      yield delay(0);
+
+      const owners = [...new Set(action.payload.ids.map(id => elementState[id].owner || diagram.id))];
+      yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
+    }),
+  });
+}
+
+function* resizeWhileResize(): SagaIterator {
+  const action: ResizeAction = yield take(ResizingActionTypes.RESIZE);
+  const { elements }: ModelState = yield select();
+  yield all(action.payload.ids.reduce<Effect[]>((effects, id) => [...effects, ...resize(id, elements, false)], []));
+}
+
+function* resizeAfterResize(): SagaIterator {
+  const action: ResizeEndAction = yield take(ResizableActionTypes.RESIZE_END);
+  const { elements, diagram }: ModelState = yield select();
+  const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
+
+  const owners = [...new Set(action.payload.ids.map(id => elementState[id].owner || diagram.id))];
+  yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
 }

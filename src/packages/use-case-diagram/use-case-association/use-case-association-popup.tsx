@@ -83,12 +83,12 @@ class UseCaseAssociationComponent extends Component<Props> {
     );
   }
   private rename = (id: string) => (value: string) => {
-    this.props.rename(id, value);
+    this.props.update(id, { name: value });
   };
 
-  private onChange = (value: UseCaseRelationshipType) => {
-    const { element, change } = this.props;
-    change(element.id, value);
+  private onChange = (type: UseCaseRelationshipType) => {
+    const { element, update } = this.props;
+    update(element.id, { type });
   };
 }
 
@@ -99,8 +99,6 @@ type OwnProps = {
 type StateProps = {};
 
 type DispatchProps = {
-  rename: typeof UMLElementRepository.rename;
-  change: typeof UMLElementRepository.change;
   update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
   flip: typeof UMLRelationshipRepository.flip;
@@ -113,8 +111,6 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     null,
     {
-      rename: UMLElementRepository.rename,
-      change: UMLElementRepository.change,
       update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
       flip: UMLRelationshipRepository.flip,

@@ -1,8 +1,8 @@
 import { RelationshipType as UMLRelationshipType } from '../../packages/relationship-type';
 import { Relationships } from '../../packages/relationships';
 import { notEmpty } from '../../utils/not-empty';
-import { Port } from '../uml-element/port';
 import { IUMLElement } from '../uml-element/uml-element';
+import { IUMLElementPort } from '../uml-element/uml-element-port';
 import { UMLElementState } from '../uml-element/uml-element-types';
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { ConnectAction, CreateAction, FlipAction, UMLRelationshipActionTypes } from './uml-relationship-types';
@@ -17,7 +17,7 @@ export class UMLRelationshipRepository {
     payload: { relationship },
   });
 
-  static connect = (id: string, { source, target }: { source?: Port; target?: Port }): ConnectAction => ({
+  static connect = (id: string, { source, target }: { source?: IUMLElementPort; target?: IUMLElementPort }): ConnectAction => ({
     type: UMLRelationshipActionTypes.CONNECT,
     payload: { id, source, target },
   });

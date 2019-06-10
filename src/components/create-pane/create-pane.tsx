@@ -4,9 +4,11 @@ import { compose } from 'redux';
 import { composeClassPreview } from '../../packages/class-diagram/class-preview';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementFeatures } from '../../services/uml-element/uml-element-features';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { UMLElementFeatures, UMLElementState } from '../../services/uml-element/uml-element-types';
+import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { DiagramType } from '../../typings';
+import { clone } from '../../utils/geometry/tree';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
@@ -85,7 +87,7 @@ class CreatePaneComponent extends Component<Props, State> {
   }
 
   create = (preview: UMLElement, owner?: string) => {
-    const elements = UMLElementRepository.clone(preview, this.state.previews).map(element => element.serialize());
+    const elements = clone(preview, this.state.previews).map(element => element.serialize());
     this.props.create(elements, owner);
   };
 }

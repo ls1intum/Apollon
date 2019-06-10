@@ -18,6 +18,7 @@ import { notEmpty } from '../../../utils/not-empty';
 import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
 import { ClassMethod } from '../class-member/class-method/class-method';
 import { Classifier } from './classifier';
+import { AsyncDispatch } from '../../../utils/actions/actions';
 
 const Flex = styled.div`
   display: flex;
@@ -29,15 +30,14 @@ interface OwnProps {
   element: Classifier;
 }
 
-interface StateProps {
-  getById: (id: string) => UMLElement | null;
+type StateProps = {
 }
 
 interface DispatchProps {
   create: typeof UMLElementRepository.create;
-  change: typeof UMLElementRepository.change;
-  rename: typeof UMLElementRepository.rename;
+  update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
+  getById: (id: string) => UMLElement | null;
 }
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -45,12 +45,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ getById: UMLElementRepository.getById(state.elements) }),
+    null,
     {
       create: UMLElementRepository.create,
-      change: UMLElementRepository.change,
-      rename: UMLElementRepository.rename,
+      update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
+      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
     },
   ),
 );
@@ -126,12 +126,12 @@ class ClassifierComponent extends Component<Props> {
   };
 
   private rename = (id: string) => (value: string) => {
-    this.props.rename(id, value);
+    this.props.update(id, { name: value });
   };
 
-  private toggle = (kind: ClassElementType) => {
-    const { element, change } = this.props;
-    change(element.id, element.type === kind ? ClassElementType.Class : kind);
+  private toggle = (type: ClassElementType) => {
+    const { element, update } = this.props;
+    update(element.id, { type: element.type === type ? ClassElementType.Class : type });
   };
 
   private delete = (id: string) => () => {

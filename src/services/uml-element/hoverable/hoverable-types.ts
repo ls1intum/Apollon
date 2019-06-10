@@ -9,14 +9,14 @@ export type HoverableState = string[];
 
 export type HoverableActions = HoverAction | LeaveAction;
 
-export interface HoverAction extends Action<HoverableActionTypes.HOVER> {
+export type HoverAction = Action<HoverableActionTypes.HOVER> & {
   payload: {
     ids: string[];
   };
-}
+};
 
-export interface LeaveAction extends Action<HoverableActionTypes.LEAVE> {
+export type LeaveAction = Action<HoverableActionTypes.LEAVE> & {
   payload: {
     ids: string[];
   };
-}
+};

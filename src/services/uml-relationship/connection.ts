@@ -1,10 +1,11 @@
 import { Direction } from '../../typings';
 import { Boundary } from '../../utils/geometry/boundary';
-import { Port } from '../uml-element/port';
+import { position } from '../../utils/geometry/rect';
+import { IUMLElementPort } from '../uml-element/uml-element-port';
 
 export interface Connection {
-  source: Port;
-  target: Port;
+  source: IUMLElementPort;
+  target: IUMLElementPort;
 }
 
 interface Endpoint {
@@ -34,8 +35,8 @@ type RectEdge = Direction;
 
 export class Connection {
   static computePath(source: Endpoint, target: Endpoint, options: { isStraight: boolean }): Point[] {
-    const startPointOnInnerEdge: Point = Port.position(source.bounds, source.direction).point;
-    const endPointOnInnerEdge: Point = Port.position(target.bounds, target.direction).point;
+    const startPointOnInnerEdge: Point = position(source.bounds, source.direction).point;
+    const endPointOnInnerEdge: Point = position(target.bounds, target.direction).point;
 
     // If the user forced this relationship path to be a straight line,
     // directly connect the start and end points, even if that results in an angled line
@@ -65,15 +66,18 @@ export class Connection {
     const targetMarginRect1px = enlargeRect(target.bounds, ENTITY_MARGIN - 1);
 
     // Calculate the exact position of the start and end points on their respective margin rectangle
-    const startPointOnMarginBox: Point = Port.position(sourceMarginRect, source.direction).point;
-    const endPointOnMarginBox: Point = Port.position(targetMarginRect, target.direction).point;
+    const startPointOnMarginBox: Point = position(sourceMarginRect, source.direction).point;
+    const endPointOnMarginBox: Point = position(targetMarginRect, target.direction).point;
 
     // Determine the source corner that's closest to the point
     // on the margin box of the target entity
     const sourceCornerClosestToEndPoint = findClosestPoint(getCorners(sourceMarginRect), endPointOnMarginBox);
 
     // Determine the target corner that's closest to the previously determined source corner
-    const targetCornerClosestToClosestSourceCorner = findClosestPoint(getCorners(targetMarginRect), sourceCornerClosestToEndPoint);
+    const targetCornerClosestToClosestSourceCorner = findClosestPoint(
+      getCorners(targetMarginRect),
+      sourceCornerClosestToEndPoint,
+    );
 
     // Determine the corner queue for the source entity
     const sourceCornerQueue = determineCornerQueue(
@@ -348,11 +352,15 @@ function removeTransitNodes(path: Point[]): Point[] {
 }
 
 function isHorizontalLineSegment(p: Point, q: Point, r: Point) {
-  return areAlmostEqual(p.y, q.y) && areAlmostEqual(q.y, r.y) && ((p.x >= q.x && q.x >= r.x) || (p.x <= q.x && q.x <= r.x));
+  return (
+    areAlmostEqual(p.y, q.y) && areAlmostEqual(q.y, r.y) && ((p.x >= q.x && q.x >= r.x) || (p.x <= q.x && q.x <= r.x))
+  );
 }
 
 function isVerticalLineSegment(p: Point, q: Point, r: Point) {
-  return areAlmostEqual(p.x, q.x) && areAlmostEqual(q.x, r.x) && ((p.y <= q.y && q.y <= r.y) || (p.y >= q.y && q.y >= r.y));
+  return (
+    areAlmostEqual(p.x, q.x) && areAlmostEqual(q.x, r.x) && ((p.y <= q.y && q.y <= r.y) || (p.y >= q.y && q.y >= r.y))
+  );
 }
 
 function mergeConsecutiveSameAxisDeltas(path: Point[]): Point[] {
@@ -444,12 +452,34 @@ function simplifyDeltas(deltas: Delta[]): Delta[] {
     const d3 = deltas[i + 2];
     const d4 = deltas[i + 3];
 
-    if (d1.dy === 0 && d2.dx === 0 && d3.dy === 0 && Math.sign(d1.dx) === Math.sign(d3.dx) && Math.sign(d2.dy) === Math.sign(d4.dy)) {
-      return simplifyDeltas([...deltas.slice(0, i), { dx: d1.dx + d3.dx, dy: 0 }, { dx: 0, dy: d2.dy }, ...deltas.slice(i + 3)]);
+    if (
+      d1.dy === 0 &&
+      d2.dx === 0 &&
+      d3.dy === 0 &&
+      Math.sign(d1.dx) === Math.sign(d3.dx) &&
+      Math.sign(d2.dy) === Math.sign(d4.dy)
+    ) {
+      return simplifyDeltas([
+        ...deltas.slice(0, i),
+        { dx: d1.dx + d3.dx, dy: 0 },
+        { dx: 0, dy: d2.dy },
+        ...deltas.slice(i + 3),
+      ]);
     }
 
-    if (d1.dx === 0 && d2.dy === 0 && d3.dx === 0 && Math.sign(d1.dy) === Math.sign(d3.dy) && Math.sign(d2.dx) === Math.sign(d4.dx)) {
-      return simplifyDeltas([...deltas.slice(0, i), { dx: 0, dy: d1.dy + d3.dy }, { dx: d2.dx, dy: 0 }, ...deltas.slice(i + 3)]);
+    if (
+      d1.dx === 0 &&
+      d2.dy === 0 &&
+      d3.dx === 0 &&
+      Math.sign(d1.dy) === Math.sign(d3.dy) &&
+      Math.sign(d2.dx) === Math.sign(d4.dx)
+    ) {
+      return simplifyDeltas([
+        ...deltas.slice(0, i),
+        { dx: 0, dy: d1.dy + d3.dy },
+        { dx: d2.dx, dy: 0 },
+        ...deltas.slice(i + 3),
+      ]);
     }
   }
 
@@ -511,7 +541,12 @@ function enlargeRect(rect: Rect, padding: number): Rect {
   };
 }
 
-function determineCornerQueue(rect: Rect, edge: RectEdge, pointOnOuterEdge: Point, destinationCorner: Point | null): Point[] {
+function determineCornerQueue(
+  rect: Rect,
+  edge: RectEdge,
+  pointOnOuterEdge: Point,
+  destinationCorner: Point | null,
+): Point[] {
   let clockwiseCornerQueue: Point[];
   let counterClockwiseCornerQueue: Point[];
 
@@ -650,7 +685,9 @@ function getOrientation(p: Point, q: Point, r: Point): Orientation {
  * Given three collinear points p, q, r, checks if point q lies on line segment 'p-r'
  */
 function liesOnSegment(p: Point, q: Point, r: Point) {
-  return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+  return (
+    q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y)
+  );
 }
 
 function computeOverlap(range1: [number, number], range2: [number, number]): [number, number] | null {

@@ -7,15 +7,15 @@ export const enum UMLContainerActionTypes {
 
 export type UMLContainerActions = AppendAction | RemoveAction;
 
-export interface AppendAction extends Action<UMLContainerActionTypes.APPEND> {
+export type AppendAction = Action<UMLContainerActionTypes.APPEND> & {
   payload: {
     ids: string[];
     owner: string;
   };
-}
+};
 
-export interface RemoveAction extends Action<UMLContainerActionTypes.REMOVE> {
+export type RemoveAction = Action<UMLContainerActionTypes.REMOVE> & {
   payload: {
     ids: string[];
   };
-}
+};

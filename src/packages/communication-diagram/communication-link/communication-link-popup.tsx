@@ -16,6 +16,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
 import { CommunicationLink } from './communication-link';
 
 const Flex = styled.div`
@@ -92,7 +93,9 @@ class CommunactionLinkPopupComponent extends Component<Props> {
 
   private delete = (value: CommunicationMessage) => () => {
     const { element, update } = this.props;
-    update<CommunicationLink>(element.id, { messages: element.messages.filter(message => message.name !== value.name) });
+    update<CommunicationLink>(element.id, {
+      messages: element.messages.filter(message => message.name !== value.name),
+    });
   };
 }
 
@@ -100,14 +103,13 @@ type OwnProps = {
   element: CommunicationLink;
 };
 
-type StateProps = {
-  getById: (id: string) => UMLElement | null;
-};
+type StateProps = {};
 
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
   flip: typeof UMLRelationshipRepository.flip;
+  getById: (id: string) => UMLElement | null;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -115,11 +117,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ getById: UMLElementRepository.getById(state.elements) }),
+    null,
     {
       update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
       flip: UMLRelationshipRepository.flip,
+      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
     },
   ),
 );

@@ -1,11 +1,8 @@
-import { ActionCreator, compose } from 'redux';
-import { ModelState } from '../../components/store/model-state';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
 import { AsyncAction } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
-import { notEmpty } from '../../utils/not-empty';
-import { UMLContainer } from '../uml-container/uml-container';
+import { filterRoots, getChildren } from '../../utils/geometry/tree';
 import { UMLContainerRepository } from '../uml-container/uml-container-repository';
 import { RemoveAction } from '../uml-container/uml-container-types';
 import { Connectable } from './connectable/connectable-repository';
@@ -15,43 +12,21 @@ import { Movable } from './movable/movable-repository';
 import { Resizable } from './resizable/resizable-repository';
 import { Selectable } from './selectable/selectable-repository';
 import { IUMLElement, UMLElement } from './uml-element';
-import {
-  ChangeAction,
-  CreateAction,
-  DeleteAction,
-  DuplicateAction,
-  RenameAction,
-  UMLElementActionTypes,
-  UMLElementState,
-  UpdateAction,
-} from './uml-element-types';
+import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from './uml-element-types';
 import { Updatable } from './updatable/updatable-repository';
 
-type UMLElementRepository = typeof Repository &
-  ReturnType<typeof Hoverable> &
-  ReturnType<typeof Selectable> &
-  ReturnType<typeof Movable> &
-  ReturnType<typeof Resizable> &
-  ReturnType<typeof Connectable> &
-  ReturnType<typeof Interactable> &
-  ReturnType<typeof Updatable>;
+const Repository = {
+  /** Checks whether an `IUMLElement` is of type `UMLElementType` */
+  isUMLElement: (element: IUMLElement): element is IUMLElement & { type: UMLElementType } =>
+    element.type in UMLElementType,
 
-const enhance = compose<UMLElementRepository>(
-  Hoverable,
-  Selectable,
-  Movable,
-  Resizable,
-  Connectable,
-  Interactable,
-  Updatable,
-);
-
-class Repository {
-  static isUMLElement(element: IUMLElement): element is IUMLElement & { type: UMLElementType } {
-    return element.type in UMLElementType;
-  }
-
-  static create = <T extends IUMLElement>(value: T | T[], owner?: string): AsyncAction<void> => async dispatch => {
+  /**
+   * Creates new instances of `UMLElements`
+   *
+   * @param values - An array of new values for the instances to create.
+   * @param [owner] - Specify the owner for the new elements.
+   */
+  create: <T extends IUMLElement>(value: T | T[], owner?: string): AsyncAction => async dispatch => {
     const values = Array.isArray(value) ? value : [value];
     dispatch<CreateAction<T>>({
       type: UMLElementActionTypes.CREATE,
@@ -62,92 +37,56 @@ class Repository {
     if (ids.length) {
       dispatch(UMLContainerRepository.append(ids, owner));
     }
-  };
+  },
 
-  static update = <T extends IUMLElement>(id: string | string[], values: Partial<T>): UpdateAction<T> => ({
+  /** Read an UMLElement */
+  get: (element?: IUMLElement): UMLElement | null => {
+    if (!element) {
+      return null;
+    }
+
+    if (Repository.isUMLElement(element)) {
+      const Classifier = UMLElements[element.type];
+
+      return new Classifier(element);
+    }
+
+    return null;
+  },
+
+  /** Read an UMLElement by id */
+  getById: (id: string): AsyncAction<UMLElement | null> => (dispatch, getState) => {
+    const { elements } = getState();
+
+    return Repository.get(elements[id]);
+  },
+
+  /** Update existing elements */
+  update: <T extends IUMLElement>(id: string | string[], values: Partial<T>): UpdateAction<T> => ({
     type: UMLElementActionTypes.UPDATE,
-    payload: { ids: Array.isArray(id) ? id : [id], values },
-  });
+    payload: { values: (Array.isArray(id) ? id : [id]).map(i => ({ id: i, ...values })) },
+  }),
 
-  static delete = (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+  /** Delete existing elements */
+  delete: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
     const { elements, selected } = getState();
     const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
 
-    const roots = UMLElementRepository.filterRoots(ids, elements);
-
+    const roots = filterRoots(ids, elements);
     if (!roots.length) {
       return;
     }
 
     dispatch<RemoveAction>(UMLContainerRepository.remove(roots));
 
-    const t = roots
-      .reduce<IUMLElement[]>((acc, root) => [...acc, ...Repository.getChildren(root, elements)], [])
-      .map(element => element.id);
-
     dispatch<DeleteAction>({
       type: UMLElementActionTypes.DELETE,
-      payload: { ids: t },
+      payload: { ids: getChildren(roots, elements) },
     });
-  };
+  },
 
-  static clone = (element: UMLElement, elements: UMLElement[]): UMLElement[] => {
-    if (!UMLContainerRepository.isUMLContainer(element)) {
-      return [element.clone()];
-    }
-
-    const result: UMLElement[] = [];
-    const clone = element.clone<UMLContainer>();
-    const { ownedElements } = element;
-    for (const id of ownedElements) {
-      const child = elements.find(prev => prev.id === id);
-      if (!child) {
-        continue;
-      }
-
-      const [clonedChild, ...clonedChildren] = UMLElementRepository.clone(child, elements);
-      clonedChild.owner = clone.id;
-
-      const index = clone.ownedElements.findIndex(x => x === id);
-      clone.ownedElements[index] = clonedChild.id;
-      result.push(clonedChild, ...clonedChildren);
-    }
-
-    return [clone, ...result];
-  };
-
-  static filterRoots = (ids: string[], elements: UMLElementState): string[] => {
-    const getSelection = (root: IUMLElement): string[] => {
-      if (ids.includes(root.id)) return [root.id];
-
-      if (UMLContainerRepository.isUMLContainer(root)) {
-        return root.ownedElements.reduce<string[]>(
-          (selection, id) => [...selection, ...getSelection(elements[id])],
-          [],
-        );
-      }
-      return [];
-    };
-
-    return Object.values(elements)
-      .filter(element => !element.owner)
-      .reduce<string[]>((selection, element) => [...selection, ...getSelection(element)], []);
-  };
-
-  static getChildren = (id: string, elements: UMLElementState): IUMLElement[] => {
-    const owner = elements[id];
-    if (!owner) return [];
-
-    if (UMLContainerRepository.isUMLContainer(owner)) {
-      return owner.ownedElements.reduce<IUMLElement[]>(
-        (acc, element) => [...acc, ...Repository.getChildren(element, elements)],
-        [owner],
-      );
-    }
-    return [owner];
-  };
-
-  static getAbsolutePosition = (id: string): AsyncAction<Point> => (dispatch, getState) => {
+  /** Composes the absolute position of an element */
+  getAbsolutePosition: (id: string): AsyncAction<Point> => (dispatch, getState) => {
     const { elements } = getState();
     let element = elements[id];
     let position = new Point(element.bounds.x, element.bounds.y);
@@ -155,86 +94,18 @@ class Repository {
       element = elements[element.owner];
       position = position.add(element.bounds.x, element.bounds.y);
     }
+
     return position;
-  };
+  },
+};
 
-  static duplicate = (id: string, parent?: string): DuplicateAction => ({
-    type: UMLElementActionTypes.DUPLICATE,
-    payload: { id, parent },
-  });
-
-  static getRelativePosition = (state: UMLElementState) => (owner: string, position: Point): Point => {
-    let parent: IUMLElement | null = state[owner];
-    do {
-      position = position.subtract(parent.bounds.x, parent.bounds.y);
-      parent = parent.owner ? state[parent.owner] : null;
-    } while (parent);
-    return position;
-  };
-
-  static get = (element?: IUMLElement): UMLElement | null => {
-    if (!element) {
-      return null;
-    }
-
-    if (Repository.isUMLElement(element)) {
-      const Classifier = UMLElements[element.type];
-      return new Classifier(element);
-    }
-    // if (element.type in RelationshipType) {
-    //   return new Relationships[element.type as RelationshipType]();
-    // }
-    return null;
-  };
-
-  static getById = (state: UMLElementState) => (id: string): UMLElement | null => {
-    const element = state[id];
-    return Repository.get(element);
-
-    // if (!element) return null;
-
-    // if (element.type in RelationshipType) {
-    //   return RelationshipRepository.getById(state)(id);
-    // }
-
-    // const ElementClass = Elements[element.type as ElementType];
-    // if (!ElementClass) return null;
-
-    // return new ElementClass(element);
-  };
-
-  static getByIds = (state: UMLElementState) => (ids: string[]): UMLElement[] => {
-    return ids.map(Repository.getById(state)).filter(notEmpty);
-  };
-
-  static read = (state: UMLElementState): UMLElement[] => {
-    return Object.keys(state)
-      .map(Repository.getById(state))
-      .filter(notEmpty);
-  };
-
-  static parse = (state: ModelState): { [id: string]: UMLElement } => {
-    return Object.values(state.elements).reduce<{ [id: string]: UMLElement }>((result, element) => {
-      if (!(element.type in UMLElementType)) return result;
-      const el = Repository.getById(state.elements)(element.id);
-      if (!el) return result;
-
-      return {
-        ...result,
-        [element.id]: el,
-      };
-    }, {});
-  };
-
-  static change: ActionCreator<ChangeAction> = (id: string, kind: UMLElementType) => ({
-    type: UMLElementActionTypes.CHANGE,
-    payload: { id, kind },
-  });
-
-  static rename: ActionCreator<RenameAction> = (id: string, name: string) => ({
-    type: UMLElementActionTypes.RENAME,
-    payload: { id, name },
-  });
-}
-
-export const UMLElementRepository = enhance(Repository);
+export const UMLElementRepository = {
+  ...Repository,
+  ...Hoverable,
+  ...Selectable,
+  ...Movable,
+  ...Resizable,
+  ...Connectable,
+  ...Interactable,
+  ...Updatable,
+};

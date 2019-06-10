@@ -1,7 +1,7 @@
 import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Port } from '../../services/uml-element/port';
+import { IUMLElementPort } from '../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
@@ -13,7 +13,7 @@ import { UMLRelationshipPreview } from './uml-relationship-preview';
 type OwnProps = {};
 
 type StateProps = {
-  connecting: Port[];
+  connecting: IUMLElementPort[];
 };
 
 type DispatchProps = {

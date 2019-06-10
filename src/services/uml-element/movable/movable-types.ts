@@ -9,15 +9,15 @@ export type MovableState = string[];
 
 export type MovableActions = MoveStartAction | MoveEndAction;
 
-export interface MoveStartAction extends Action<MovableActionTypes.MOVE_START> {
+export type MoveStartAction = Action<MovableActionTypes.MOVE_START> & {
   payload: {
     ids: string[];
   };
-}
+};
 
-export interface MoveEndAction extends Action<MovableActionTypes.MOVE_END> {
+export type MoveEndAction = Action<MovableActionTypes.MOVE_END> & {
   payload: {
     ids: string[];
     keyboard: boolean;
   };
-}
+};

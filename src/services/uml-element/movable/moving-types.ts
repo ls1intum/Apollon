@@ -9,7 +9,7 @@ export type MovingState = UMLElementState;
 
 export type MovingActions = MoveAction;
 
-export interface MoveAction extends Action<MovingActionTypes.MOVE> {
+export type MoveAction = Action<MovingActionTypes.MOVE> & {
   payload: {
     ids: string[];
     delta: {
@@ -17,4 +17,4 @@ export interface MoveAction extends Action<MovingActionTypes.MOVE> {
       y: number;
     };
   };
-}
+};

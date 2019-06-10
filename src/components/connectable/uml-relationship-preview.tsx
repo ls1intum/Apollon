@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Direction, Port } from '../../services/uml-element/port';
 import { IUMLElement } from '../../services/uml-element/uml-element';
+import { Direction, IUMLElementPort } from '../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { ModelState } from '../store/model-state';
 
 type OwnProps = {
-  port: Port;
+  port: IUMLElementPort;
   target: Point;
 };
 

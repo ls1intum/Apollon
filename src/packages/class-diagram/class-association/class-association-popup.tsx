@@ -16,6 +16,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
 import { ClassAssociation } from './class-association';
 
 const Flex = styled.div`
@@ -107,9 +108,9 @@ class ClassAssociationComponent extends Component<Props> {
       </div>
     );
   }
-  private onChange = (value: ClassRelationshipType) => {
-    const { element, change } = this.props;
-    change(element.id, value);
+  private onChange = (type: ClassRelationshipType) => {
+    const { element, update } = this.props;
+    update(element.id, { type });
   };
 
   private onUpdate = (type: 'multiplicity' | 'role', end: 'source' | 'target') => (value: string) => {
@@ -122,15 +123,13 @@ type OwnProps = {
   element: ClassAssociation;
 };
 
-type StateProps = {
-  getById: (id: string) => UMLElement | null;
-};
+type StateProps = {};
 
 type DispatchProps = {
-  change: typeof UMLElementRepository.change;
   update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
   flip: typeof UMLRelationshipRepository.flip;
+  getById: (id: string) => UMLElement | null;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -138,12 +137,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({ getById: UMLElementRepository.getById(state.elements) }),
+    null,
     {
-      change: UMLElementRepository.change,
       update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
       flip: UMLRelationshipRepository.flip,
+      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
     },
   ),
 );

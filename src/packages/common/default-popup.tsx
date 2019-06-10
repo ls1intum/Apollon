@@ -32,9 +32,9 @@ class DefaultPopupComponent extends Component<Props> {
       </div>
     );
   }
-  private onUpdate = (value: string) => {
-    const { element, rename } = this.props;
-    rename(element.id, value);
+  private onUpdate = (name: string) => {
+    const { element, update } = this.props;
+    update(element.id, { name });
   };
 }
 
@@ -45,7 +45,7 @@ type OwnProps = {
 type StateProps = {};
 
 type DispatchProps = {
-  rename: typeof UMLElementRepository.rename;
+  update: typeof UMLElementRepository.update;
   delete: AsyncDispatch<typeof UMLElementRepository.delete>;
 };
 
@@ -54,7 +54,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   null,
   {
-    rename: UMLElementRepository.rename,
+    update: UMLElementRepository.update,
     delete: UMLElementRepository.delete,
   },
 );

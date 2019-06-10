@@ -2,8 +2,8 @@ import { DeepPartial } from 'redux';
 import { ClassElementType } from '..';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
 import { UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-types';
-import { assign } from '../../../utils/assign';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
+import { assign } from '../../../utils/fx/assign';
 import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
 import { ClassMember } from '../class-member/class-member';
 import { ClassMethod } from '../class-member/class-method/class-method';
@@ -53,6 +53,14 @@ export abstract class Classifier extends UMLContainer {
   // super(values);
   // }
 
+  appendElement(element: UMLElement, ownedElements: UMLContainer[]): [UMLContainer, ...UMLElement[]] {
+    return this.render([element, ...ownedElements]);
+  }
+
+  removeElement(element: UMLElement, ownedElements: UMLContainer[]): [UMLContainer, ...UMLElement[]] {
+    return this.render([...ownedElements]);
+  }
+
   render(children: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     const attributes = children.filter(child => child instanceof ClassAttribute);
     let methods = children.filter(child => child instanceof ClassMethod);
@@ -82,12 +90,12 @@ export abstract class Classifier extends UMLContainer {
     return [this, ...[...attributes, ...methods]];
   }
 
-  resize(children: UMLElement[]): UMLElement[] {
-    const minWidth = children.reduce((width, child) => Math.max(width, ClassMember.calculateWidth(child.name)), 100);
+  resize(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+    const minWidth = ownedElements.reduce((width, child) => Math.max(width, ClassMember.calculateWidth(child.name)), 100);
     this.bounds.width = Math.max(this.bounds.width, minWidth);
     return [
       this,
-      ...children.map(child => {
+      ...ownedElements.map(child => {
         child.bounds.width = this.bounds.width;
         return child;
       }),

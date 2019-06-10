@@ -1,5 +1,5 @@
 import { Action } from 'redux';
-import { Port } from '../uml-element/port';
+import { IUMLElementPort } from '../uml-element/uml-element-port';
 import { UMLRelationship } from './uml-relationship';
 
 export const enum UMLRelationshipActionTypes {
@@ -28,8 +28,8 @@ export interface RedrawAction extends Action<UMLRelationshipActionTypes.REDRAW> 
 export interface ConnectAction extends Action<UMLRelationshipActionTypes.CONNECT> {
   payload: {
     id: string;
-    source?: Port;
-    target?: Port;
+    source?: IUMLElementPort;
+    target?: IUMLElementPort;
   };
 }
 

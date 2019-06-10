@@ -1,6 +1,6 @@
 import React, { SFC } from 'react';
 import { ClassRelationshipType } from '..';
-import { Port } from '../../../services/uml-element/port';
+import { IUMLElementPort } from '../../../services/uml-element/uml-element-port';
 import { Direction } from '../../../typings';
 import { Point } from '../../../utils/geometry/point';
 import { ClassAssociation } from './class-association';
@@ -78,7 +78,7 @@ export const ClassAssociationComponent: SFC<Props> = ({ element }) => {
     return alignmentPath[0].add(vector.normalize().scale(distance));
   };
 
-  const layoutText = (location: Port['direction'], position: 'TOP' | 'BOTTOM') => {
+  const layoutText = (location: IUMLElementPort['direction'], position: 'TOP' | 'BOTTOM') => {
     switch (location) {
       case Direction.Up:
         return {

@@ -33,17 +33,22 @@ export class CanvasComponent extends Component<Props> implements CoordinateSyste
   canvas: RefObject<SVGSVGElement> = createRef();
 
   origin = (): Point => {
-    const canvasBounds = this.canvas.current!.getBoundingClientRect();
+    if (!this.canvas.current) {
+      return new Point();
+    }
+    const canvasBounds = this.canvas.current.getBoundingClientRect();
+
     return new Point(canvasBounds.left + canvasBounds.width / 2, canvasBounds.top + canvasBounds.height / 2);
-  }
+  };
 
   snap = (point: Point): Point => {
     const origin = this.origin();
+
     return point
       .subtract(origin)
       .round()
       .add(origin);
-  }
+  };
 
   componentDidMount() {
     this.forceUpdate();
@@ -83,7 +88,11 @@ export class CanvasComponent extends Component<Props> implements CoordinateSyste
   }
 
   private center(): Point {
-    const canvasBounds = this.canvas.current!.getBoundingClientRect();
+    if (!this.canvas.current) {
+      return new Point();
+    }
+    const canvasBounds = this.canvas.current.getBoundingClientRect();
+
     return new Point(canvasBounds.width / 2, canvasBounds.height / 2);
   }
 }

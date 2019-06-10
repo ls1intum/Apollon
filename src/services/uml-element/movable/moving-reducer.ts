@@ -5,24 +5,25 @@ export const MovingReducer: Reducer<MovingState, MovingActions> = (state = {}, a
   switch (action.type) {
     case MovingActionTypes.MOVE: {
       const { payload } = action;
-      return payload.ids.reduce<MovingState>((newState, id) => {
-        if (!newState[id]) {
-          return newState;
-        }
 
-        return {
-          ...newState,
-          [id]: {
-            ...newState[id],
-            bounds: {
-              ...newState[id].bounds,
-              x: newState[id].bounds.x + payload.delta.x,
-              y: newState[id].bounds.y + payload.delta.y,
+      return payload.ids.reduce<MovingState>(
+        (elements, id) => ({
+          ...elements,
+          ...(id in elements && {
+            [id]: {
+              ...elements[id],
+              bounds: {
+                ...elements[id].bounds,
+                x: elements[id].bounds.x + payload.delta.x,
+                y: elements[id].bounds.y + payload.delta.y,
+              },
             },
-          },
-        };
-      }, state);
+          }),
+        }),
+        state,
+      );
     }
   }
+
   return state;
 };

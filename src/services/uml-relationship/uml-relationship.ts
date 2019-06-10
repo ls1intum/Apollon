@@ -1,7 +1,7 @@
 import { RelationshipType } from '../../packages/relationship-type';
 import { Direction } from '../../typings';
-import { Port } from '../uml-element/port';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
+import { IUMLElementPort } from '../uml-element/uml-element-port';
 
 export interface IUMLRelationship extends IUMLElement {
   type: RelationshipType;
@@ -23,12 +23,12 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
 
   path = [{ x: 0, y: 0 }, { x: 200, y: 100 }];
 
-  source: Port = {
+  source: IUMLElementPort = {
     element: '',
     direction: Direction.Up,
   };
 
-  target: Port = {
+  target: IUMLElementPort = {
     element: '',
     direction: Direction.Up,
   };
