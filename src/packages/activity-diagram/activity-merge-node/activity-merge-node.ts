@@ -11,4 +11,8 @@ export class ActivityMergeNode extends UMLElement {
       Object.assign(this, { bounds: { ...this.bounds, height: 60 } });
     }
   }
+
+  render() {
+    return [this];
+  }
 }

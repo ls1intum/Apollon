@@ -1,15 +1,14 @@
-import { Component, RefObject } from 'react';
-import { findDOMNode } from 'react-dom';
+import { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ApollonMode } from '../../typings';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { ModelState } from '../store/model-state';
-import { CanvasComponent } from './canvas';
+import { CanvasContext } from './canvas-context';
+import { withCanvas } from './with-canvas';
 
-type OwnProps = {
-  canvas: RefObject<CanvasComponent>;
-};
+type OwnProps = {};
 
 type StateProps = {
   readonly: boolean;
@@ -28,37 +27,43 @@ type DispatchProps = {
   delete: AsyncDispatch<typeof UMLElementRepository.delete>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  state => ({
-    readonly: state.editor.readonly,
-    mode: state.editor.mode,
-  }),
-  {
-    // duplicate: UMLElementRepository.duplicate,
-    // undo: UndoRepository.undo,
-    // redo: UndoRepository.redo,
-    select: UMLElementRepository.select,
-    deselect: UMLElementRepository.deselect,
-    startMoving: UMLElementRepository.startMoving,
-    move: UMLElementRepository.move,
-    endMoving: UMLElementRepository.endMoving,
-    delete: UMLElementRepository.delete,
-  },
+const enhance = compose<ComponentType<OwnProps>>(
+  withCanvas,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    state => ({
+      readonly: state.editor.readonly,
+      mode: state.editor.mode,
+    }),
+    {
+      // duplicate: UMLElementRepository.duplicate,
+      // undo: UndoRepository.undo,
+      // redo: UndoRepository.redo,
+      select: UMLElementRepository.select,
+      deselect: UMLElementRepository.deselect,
+      startMoving: UMLElementRepository.startMoving,
+      move: UMLElementRepository.move,
+      endMoving: UMLElementRepository.endMoving,
+      delete: UMLElementRepository.delete,
+    },
+  ),
 );
 
 class KeyboardEventListenerComponent extends Component<Props> {
   componentDidMount() {
-    const node = findDOMNode(this.props.canvas.current) as SVGSVGElement;
+    console.log('KeyboardEventListenerComponent#componentDidMount()', this.props.canvas);
+
+    const { layer } = this.props.canvas;
     if (!this.props.readonly && this.props.mode !== ApollonMode.Assessment) {
-      node.addEventListener('keydown', this.keyDown);
-      node.addEventListener('keyup', this.keyUp);
+      layer.addEventListener('keydown', this.keyDown);
+      layer.addEventListener('keyup', this.keyUp);
     }
-    node.addEventListener('pointerdown', this.pointerDown);
+    layer.addEventListener('pointerdown', this.pointerDown);
   }
 
   render() {
+    console.log('KeyboardEventListenerComponent#render()', this.props.canvas);
     return null;
   }
 

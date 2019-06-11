@@ -8,6 +8,7 @@ import { RelationshipType } from './packages/relationship-type';
 import { UMLElementType } from './packages/uml-element-type';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
+import { Actions } from './services/actions';
 import { ApollonView } from './services/editor/editor-types';
 import { UMLDiagram } from './services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from './services/uml-element/uml-element-repository';
@@ -65,7 +66,7 @@ export class ApollonEditor {
   selection: Selection = { elements: [], relationships: [] };
   private assessments: Assessment[] = [];
   private application: RefObject<Application> = createRef();
-  private store: Store<ModelState> | null = null;
+  private store: Store<ModelState, Actions> | null = null;
   private selectionSubscribers: Array<(selection: Selection) => void> = [];
   private assessmentSubscribers: Array<(assessments: Assessment[]) => void> = [];
 
@@ -143,7 +144,7 @@ export class ApollonEditor {
     this.store =
       this.application.current &&
       this.application.current.store.current &&
-      this.application.current.store.current.state.store;
+      this.application.current.store.current.state;
     if (this.store) {
       this.store.subscribe(this.onDispatch);
     }

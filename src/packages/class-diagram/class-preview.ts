@@ -1,3 +1,4 @@
+import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { Package } from '../common/package/package';
 import { ClassAttribute } from './class-member/class-attribute/class-attribute';
@@ -7,7 +8,7 @@ import { Class } from './classifier/class/class';
 import { Enumeration } from './classifier/enumeration/enumeration';
 import { Interface } from './classifier/interface/interface';
 
-export const composeClassPreview = (translate: (id: string) => string): UMLElement[] => {
+export const composeClassPreview = (layer: ILayer, translate: (id: string) => string): UMLElement[] => {
   const elements: UMLElement[] = [];
 
   // Package
@@ -19,14 +20,13 @@ export const composeClassPreview = (translate: (id: string) => string): UMLEleme
   const umlClassAttribute = new ClassAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlClass.id,
-    bounds: { y: 40 },
   });
   const umlClassMethod = new ClassMethod({
     name: translate('sidebar.classMethod'),
     owner: umlClass.id,
-    bounds: { y: 70 },
   });
-  elements.push(...umlClass.render([umlClassAttribute, umlClassMethod]));
+  umlClass.ownedElements = [umlClassAttribute.id, umlClassMethod.id];
+  elements.push(...(umlClass.render(layer, [umlClassAttribute, umlClassMethod]) as UMLElement[]));
 
   // Abstract Class
   const umlAbstract = new AbstractClass({ name: translate('packages.classDiagram.abstract') });
@@ -40,37 +40,48 @@ export const composeClassPreview = (translate: (id: string) => string): UMLEleme
     owner: umlAbstract.id,
     bounds: { y: 70 },
   });
-  elements.push(...umlAbstract.render([umlAbstractAttribute, umlAbstractMethod]));
+  umlAbstract.ownedElements = [umlAbstractAttribute.id, umlAbstractMethod.id];
+  elements.push(...(umlAbstract.render(layer, [umlAbstractAttribute, umlAbstractMethod]) as UMLElement[]));
 
   // Interface
-  const umlInterface = new Interface({ name: translate('packages.classDiagram.interface') });
+  const umlInterface = new Interface({ name: translate('packages.classDiagram.interface'), bounds: { height: 110 } });
   const umlInterfaceAttribute = new ClassAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlInterface.id,
-    bounds: { y: 40 },
+    bounds: { y: 50 },
   });
   const umlInterfaceMethod = new ClassMethod({
     name: translate('sidebar.classMethod'),
     owner: umlInterface.id,
-    bounds: { y: 70 },
+    bounds: { y: 80 },
   });
-  elements.push(...umlInterface.render([umlInterfaceAttribute, umlInterfaceMethod]));
+  umlInterface.ownedElements = [umlInterfaceAttribute.id, umlInterfaceMethod.id];
+  elements.push(...(umlInterface.render(layer, [umlInterfaceAttribute, umlInterfaceMethod]) as UMLElement[]));
 
   // Enumeration
-  const umlEnumeration = new Enumeration({ name: translate('packages.classDiagram.enumeration') });
+  const umlEnumeration = new Enumeration({
+    name: translate('packages.classDiagram.enumeration'),
+    bounds: { height: 140 },
+  });
   const umlEnumerationCase1 = new ClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 1',
     owner: umlEnumeration.id,
+    bounds: { y: 50 },
   });
   const umlEnumerationCase2 = new ClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 2',
     owner: umlEnumeration.id,
+    bounds: { y: 80 },
   });
   const umlEnumerationCase3 = new ClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 3',
     owner: umlEnumeration.id,
+    bounds: { y: 110 },
   });
-  elements.push(...umlEnumeration.render([umlEnumerationCase1, umlEnumerationCase2, umlEnumerationCase3]));
+  umlEnumeration.ownedElements = [umlEnumerationCase1.id, umlEnumerationCase2.id, umlEnumerationCase3.id];
+  elements.push(
+    ...(umlEnumeration.render(layer, [umlEnumerationCase1, umlEnumerationCase2, umlEnumerationCase3]) as UMLElement[]),
+  );
 
   return elements;
 };

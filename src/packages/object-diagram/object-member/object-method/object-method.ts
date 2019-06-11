@@ -3,4 +3,8 @@ import { ObjectMember } from '../object-member';
 
 export class ObjectMethod extends ObjectMember {
   type = ObjectElementType.ObjectMethod;
+
+  render() {
+    return [this];
+  }
 }

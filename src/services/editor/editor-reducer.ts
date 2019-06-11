@@ -1,6 +1,6 @@
 import { Reducer } from 'redux';
 import { ApollonMode } from '../../typings';
-import { Actions, ApollonView, EditorActionTypes, EditorState } from './editor-types';
+import { ApollonView, EditorActions, EditorActionTypes, EditorState } from './editor-types';
 
 const initialState: EditorState = {
   readonly: false,
@@ -18,7 +18,7 @@ const initialState: EditorState = {
   },
 };
 
-export const EditorReducer: Reducer<EditorState, Actions> = (state = initialState, action) => {
+export const EditorReducer: Reducer<EditorState, EditorActions> = (state = initialState, action) => {
   switch (action.type) {
     case EditorActionTypes.CHANGE_VIEW: {
       const { payload } = action;

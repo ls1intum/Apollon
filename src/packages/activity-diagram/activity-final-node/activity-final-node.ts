@@ -13,4 +13,8 @@ export class ActivityFinalNode extends UMLElement {
       Object.assign(this, { bounds: { ...this.bounds, width: 45, height: 45 } });
     }
   }
+
+  render() {
+    return [this];
+  }
 }

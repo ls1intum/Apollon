@@ -1,17 +1,18 @@
 import React, { createRef, RefObject } from 'react';
 import { DeepPartial } from 'redux';
 import { Canvas, CanvasComponent } from '../components/canvas/canvas';
-import { CanvasProvider, context } from '../components/canvas/canvas-context';
+import { CanvasContext, CanvasProvider } from '../components/canvas/canvas-context';
 import { Editor } from '../components/canvas/container';
 import { KeyboardEventListener } from '../components/canvas/keyboard-eventlistener';
 import { DraggableLayer } from '../components/draggable/draggable-layer';
 import { I18nProvider } from '../components/i18n/i18n-provider';
 import { Sidebar } from '../components/sidebar/sidebar-component';
 import { ModelState } from '../components/store/model-state';
-import { ModelStore } from '../components/store/model-store';
+import { ModelStore, StoreProvider } from '../components/store/model-store';
 import { Styles } from '../components/theme/styles';
 import { Theme } from '../components/theme/theme';
 import { UpdatePane } from '../components/update-pane/update-pane';
+import { ILayer } from '../services/layouter/layer';
 import { Locale } from '../typings';
 import { Layout } from './application-styles';
 
@@ -21,34 +22,50 @@ type Props = {
   locale?: Locale;
 };
 
-export class Application extends React.Component<Props> {
-  store: RefObject<ModelStore> = createRef();
-  canvas: RefObject<CanvasComponent> = createRef();
+const initialState = Object.freeze({
+  canvas: null as ILayer | null,
+});
 
-  componentDidMount() {
-    this.forceUpdate();
-  }
+type State = typeof initialState;
+
+export class Application extends React.Component<Props, State> {
+  state = initialState;
+
+  store: RefObject<ModelStore> = createRef();
+
+  setCanvas = (ref: CanvasComponent) => {
+    if (ref.layer.current) {
+      this.setState({ canvas: { ...ref, layer: ref.layer.current } });
+    }
+  };
 
   render() {
+    const context: CanvasContext | null = this.state.canvas ? { canvas: this.state.canvas } : null;
+    console.log('Application#render()', context);
+
     return (
-      <ModelStore ref={this.store} initialState={this.props.state}>
-        <I18nProvider locale={this.props.locale}>
-          <Theme styles={this.props.styles}>
-            <CanvasProvider value={this.canvas.current || context}>
+      <CanvasProvider value={context}>
+        <StoreProvider ref={this.store} initialState={this.props.state}>
+          <I18nProvider locale={this.props.locale}>
+            <Theme styles={this.props.styles}>
               <DraggableLayer>
                 <Layout className="apollon-editor">
                   <Editor>
-                    <Canvas ref={this.canvas} />
+                    <Canvas ref={this.setCanvas} />
                   </Editor>
-                  <Sidebar />
-                  <UpdatePane />
-                  <KeyboardEventListener canvas={this.canvas} />
+                  {context && (
+                    <>
+                      <Sidebar />
+                      <UpdatePane />
+                      <KeyboardEventListener />
+                    </>
+                  )}
                 </Layout>
               </DraggableLayer>
-            </CanvasProvider>
-          </Theme>
-        </I18nProvider>
-      </ModelStore>
+            </Theme>
+          </I18nProvider>
+        </StoreProvider>
+      </CanvasProvider>
     );
   }
 }

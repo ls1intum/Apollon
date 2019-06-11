@@ -1,5 +1,7 @@
 import { RelationshipType } from '../../packages/relationship-type';
 import { Direction } from '../../typings';
+import { ILayer } from '../layouter/layer';
+import { ILayoutable } from '../layouter/layoutable';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { IUMLElementPort } from '../uml-element/uml-element-port';
 
@@ -44,6 +46,10 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
         target: { ...values.target },
       });
     }
+  }
+
+  render(canvas: ILayer): ILayoutable[] {
+    return [this];
   }
 
   // static toUMLRelationship(relationship: UMLRelationship): Other {

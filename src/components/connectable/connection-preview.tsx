@@ -5,7 +5,7 @@ import { IUMLElementPort } from '../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
-import { CoordinateSystem } from '../canvas/coordinate-system';
+import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { ModelState } from '../store/model-state';
 import { UMLRelationshipPreview } from './uml-relationship-preview';
@@ -20,7 +20,7 @@ type DispatchProps = {
   end: AsyncDispatch<typeof UMLElementRepository.endConnecting>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps & CoordinateSystem;
+type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
 const enhance = compose<ComponentType<OwnProps>>(
   withCanvas,
@@ -66,7 +66,7 @@ class Preview extends Component<Props, State> {
   }
 
   onPointerMove = (event: PointerEvent) => {
-    const offset = this.props.origin();
+    const offset = this.props.canvas.origin();
     const position = new Point(event.clientX - offset.x, event.clientY - offset.y);
     this.setState({ position });
   };

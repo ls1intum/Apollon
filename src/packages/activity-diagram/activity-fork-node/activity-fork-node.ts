@@ -13,4 +13,8 @@ export class ActivityForkNode extends UMLElement {
       Object.assign(this, { bounds: { ...this.bounds, width: 20, height: 60 } });
     }
   }
+
+  render() {
+    return [this];
+  }
 }

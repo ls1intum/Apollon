@@ -2,6 +2,8 @@ import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { assign } from '../../utils/fx/assign';
+import { ILayer } from '../layouter/layer';
+import { ILayoutable } from '../layouter/layoutable';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { UMLElementFeatures } from '../uml-element/uml-element-features';
 
@@ -21,15 +23,21 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
     assign<IUMLContainer>(this, values);
   }
 
-  appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this, ...[...elements, ...ownedElements]];
-  }
+  abstract appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]];
 
-  removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this, ...ownedElements];
-  }
+  abstract removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]];
 
-  resize(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this, ...ownedElements];
-  }
+  abstract render(canvas: ILayer, children?: ILayoutable[]): ILayoutable[];
+
+  // appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+  //   return [this, ...[...elements, ...ownedElements]];
+  // }
+
+  // removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+  //   return [this, ...ownedElements];
+  // }
+
+  // render(ownedElements?: UMLElement[]): [UMLContainer, ...UMLElement[]] {
+  //   return [this, ...ownedElements];
+  // }
 }

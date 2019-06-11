@@ -1,35 +1,28 @@
 import { SagaIterator } from 'redux-saga';
-import { all, call, delay, Effect, put, race, select, take } from 'redux-saga/effects';
+import { all, call, delay, Effect, getContext, put, race, select, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
 import { UMLElements } from '../../packages/uml-elements';
 import { UMLElementType } from '../../typings';
 import { run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
 import { notEmpty } from '../../utils/not-empty';
+import { ILayer } from '../layouter/layer';
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
 import { ResizableActionTypes, ResizeEndAction } from '../uml-element/resizable/resizable-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
-import { IUMLElement } from '../uml-element/uml-element';
+import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
-import { UMLElementActionTypes, UMLElementState, UpdateAction } from '../uml-element/uml-element-types';
+import { UMLElementState, UpdateAction } from '../uml-element/uml-element-types';
 import { UMLContainer } from './uml-container';
 import { UMLContainerRepository } from './uml-container-repository';
 import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
 
 export function* UMLContainerSaga() {
-  yield run([
-    append,
-    remove,
-    appendAfterMove,
-    resizeAfterMove,
-    resizeAfterResize,
-    resizeWhileResize,
-    resizeAfterUpdate,
-  ]);
+  yield run([append, remove, appendAfterMove, resizeAfterMove, resizeAfterResize, resizeWhileResize]);
 }
 
-const updateElements = (updates: IUMLElement[], elements: UMLElementState, isEnd = true): Effect[] => {
+export const updateElements = (updates: IUMLElement[], elements: UMLElementState, isEnd = true): Effect[] => {
   const effects: Effect[] = [];
 
   for (const update of updates) {
@@ -81,7 +74,7 @@ const updateElements = (updates: IUMLElement[], elements: UMLElementState, isEnd
   return effects;
 };
 
-const resize = (owner: string, elements: UMLElementState, isEnd = true): Effect[] => {
+const resize = (layer: ILayer, owner: string, elements: UMLElementState, isEnd = true): Effect[] => {
   const container: UMLContainer | null = UMLContainerRepository.get(elements[owner]);
 
   if (!container) {
@@ -89,7 +82,7 @@ const resize = (owner: string, elements: UMLElementState, isEnd = true): Effect[
   }
 
   const ownedElements = container.ownedElements.map(id => UMLElementRepository.get(elements[id])).filter(notEmpty);
-  const updates = container.resize(ownedElements);
+  const updates = container.render(layer, ownedElements) as UMLElement[];
 
   return updateElements(updates, elements, isEnd);
 };
@@ -169,6 +162,7 @@ function* appendAfterMove(): SagaIterator {
 
 function* resizeAfterMove(): SagaIterator {
   const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
+  const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
 
@@ -178,45 +172,26 @@ function* resizeAfterMove(): SagaIterator {
       yield delay(0);
 
       const owners = [...new Set(action.payload.ids.map(id => elementState[id].owner || diagram.id))];
-      yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
+      yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(layer, owner, elementState)], []));
     }),
   });
 }
 
 function* resizeWhileResize(): SagaIterator {
   const action: ResizeAction = yield take(ResizingActionTypes.RESIZE);
+  const layer: ILayer = yield getContext('layer');
   const { elements }: ModelState = yield select();
-  yield all(action.payload.ids.reduce<Effect[]>((effects, id) => [...effects, ...resize(id, elements, false)], []));
+  yield all(
+    action.payload.ids.reduce<Effect[]>((effects, id) => [...effects, ...resize(layer, id, elements, false)], []),
+  );
 }
 
 function* resizeAfterResize(): SagaIterator {
   const action: ResizeEndAction = yield take(ResizableActionTypes.RESIZE_END);
+  const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
 
   const owners = [...new Set(action.payload.ids.map(id => elementState[id].owner || diagram.id))];
-  yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(owner, elementState)], []));
-}
-
-function* resizeAfterUpdate(): SagaIterator {
-  const action: UpdateAction = yield take(UMLElementActionTypes.UPDATE);
-  const { elements }: ModelState = yield select();
-  const ids = action.payload.values.map(value => value.id);
-
-  const effects: Effect[] = [];
-  for (const id of ids) {
-    const container = UMLContainerRepository.get(elements[id]);
-
-    if (!container) {
-      continue;
-    }
-
-    const ownedElements = container.ownedElements
-      .map(ownedElement => UMLElementRepository.get(elements[ownedElement]))
-      .filter(notEmpty);
-
-    const updates = container.resize(ownedElements);
-    effects.push(...updateElements(updates, elements));
-  }
-  yield all(effects);
+  yield all(owners.reduce<Effect[]>((effects, owner) => [...effects, ...resize(layer, owner, elementState)], []));
 }

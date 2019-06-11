@@ -1,6 +1,7 @@
 import { Point } from '../../utils/geometry/point';
 
-export type CoordinateSystem = {
+export interface ILayer {
+  layer: SVGSVGElement;
   origin(): Point;
   snap(point: Point): Point;
-};
+}

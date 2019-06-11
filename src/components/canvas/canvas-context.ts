@@ -1,10 +1,8 @@
 import { createContext } from 'react';
-import { Point } from '../../utils/geometry/point';
-import { CoordinateSystem } from './coordinate-system';
+import { ILayer } from '../../services/layouter/layer';
 
-export const context: CoordinateSystem = {
-  origin: () => new Point(),
-  snap: (point: Point) => point.round(),
+export type CanvasContext = {
+  canvas: ILayer;
 };
 
-export const { Consumer: CanvasConsumer, Provider: CanvasProvider } = createContext<CoordinateSystem>(context);
+export const { Consumer: CanvasConsumer, Provider: CanvasProvider } = createContext<CanvasContext | null>(null);

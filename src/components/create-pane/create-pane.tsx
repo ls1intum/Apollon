@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, createRef } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { composeClassPreview } from '../../packages/class-diagram/class-preview';
@@ -9,10 +9,13 @@ import { UMLElementRepository } from '../../services/uml-element/uml-element-rep
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { DiagramType } from '../../typings';
 import { clone } from '../../utils/geometry/tree';
+import { CanvasComponent } from '../canvas/canvas';
+import { CanvasContext } from '../canvas/canvas-context';
+import { withCanvas } from '../canvas/with-canvas';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
-import { ModelStore } from '../store/model-store';
+import { ModelStore, StoreProvider } from '../store/model-store';
 import { PreviewElement } from './preview-element';
 
 type OwnProps = {};
@@ -25,13 +28,13 @@ type DispatchProps = {
   create: typeof UMLElementRepository.create;
 };
 
-type Props = OwnProps & StateProps & DispatchProps & I18nContext;
+type Props = OwnProps & StateProps & DispatchProps & I18nContext & CanvasContext;
 
-const getInitialState = ({ type, translate }: Props) => {
+const getInitialState = ({ type, canvas, translate }: Props) => {
   const previews: UMLElement[] = [];
   switch (type) {
     case UMLDiagramType.ClassDiagram: {
-      previews.push(...composeClassPreview(translate));
+      previews.push(...composeClassPreview(canvas, translate));
     }
   }
 
@@ -42,6 +45,7 @@ type State = ReturnType<typeof getInitialState>;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
+  withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({
       type: state.diagram.type,
@@ -76,13 +80,13 @@ class CreatePaneComponent extends Component<Props, State> {
     );
 
     return (
-      <ModelStore initialState={{ elements, editor: { features } }}>
+      <StoreProvider initialState={{ elements, editor: { features } }}>
         {Object.values(previews)
           .filter(preview => !preview.owner)
           .map((preview, index) => (
             <PreviewElement key={index} element={preview} create={this.create} />
           ))}
-      </ModelStore>
+      </StoreProvider>
     );
   }
 

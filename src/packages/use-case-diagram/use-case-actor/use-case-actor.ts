@@ -11,4 +11,8 @@ export class UseCaseActor extends UMLElement {
       Object.assign(this, { bounds: { ...this.bounds, width: 90, height: 140 } });
     }
   }
+
+  render() {
+    return [this];
+  }
 }

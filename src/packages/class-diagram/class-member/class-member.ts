@@ -1,7 +1,8 @@
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { Boundary } from '../../../utils/geometry/boundary';
+import { NamedElement } from '../../common/named-element/named-element';
 
-export abstract class ClassMember extends UMLElement {
+export abstract class ClassMember extends NamedElement {
   static features = {
     ...UMLElement.features,
     hoverable: false,
@@ -10,7 +11,7 @@ export abstract class ClassMember extends UMLElement {
     resizable: false,
     connectable: false,
     droppable: false,
-    editable: false,
+    updatable: false,
   };
 
   static calculateWidth = (value: string): number => {
@@ -28,6 +29,10 @@ export abstract class ClassMember extends UMLElement {
     root.removeChild(svg);
     return width + 2 * 10;
   };
+
+  // render() {
+  //   return [this];
+  // }
 
   bounds: Boundary = { ...this.bounds, height: 30 };
 }

@@ -22,8 +22,3 @@ export type AsyncDispatch<TActionCreator extends (...args: any[]) => ThunkAction
 declare module 'redux-saga/effects' {
   export function put<A extends Action>(action: A | AsyncAction): PutEffect<A>;
 }
-
-// import { SAGA_ACTION } from '@redux-saga/symbols';
-// function isInternal<T extends Action>(action: T): boolean {
-//   return SAGA_ACTION in action;
-// }

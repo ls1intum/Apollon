@@ -4,6 +4,8 @@ import { RelationshipType as UMLRelationshipType } from '../../packages/relation
 import { UMLElementType } from '../../packages/uml-element-type';
 import { assign } from '../../utils/fx/assign';
 import { uuid } from '../../utils/uuid';
+import { ILayer } from '../layouter/layer';
+import { ILayoutable } from '../layouter/layoutable';
 import { UMLElementFeatures } from './uml-element-features';
 
 /** Interface of a `UMLElement` defining the properties persisted in the internal storage */
@@ -21,7 +23,7 @@ export interface IUMLElement {
 }
 
 /** Class implementation of `IUMLElement` to use inheritance at runtime */
-export abstract class UMLElement implements IUMLElement {
+export abstract class UMLElement implements IUMLElement, ILayoutable {
   /** `UMLElement` type specific feature flags */
   static features: UMLElementFeatures = {
     connectable: true,
@@ -62,4 +64,6 @@ export abstract class UMLElement implements IUMLElement {
 
     return json as T;
   }
+
+  abstract render(canvas: ILayer): ILayoutable[];
 }
