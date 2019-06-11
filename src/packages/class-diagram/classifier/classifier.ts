@@ -63,7 +63,7 @@ export abstract class Classifier extends UMLContainer {
 
   render(children: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     const attributes = children.filter(child => child instanceof ClassAttribute);
-    let methods = children.filter(child => child instanceof ClassMethod);
+    const methods = children.filter(child => child instanceof ClassMethod);
 
     let y = this.headerHeight;
     for (const attribute of attributes) {
@@ -72,7 +72,7 @@ export abstract class Classifier extends UMLContainer {
       attribute.bounds.width = this.bounds.width;
       y += attribute.bounds.height;
     }
-    if (!this.isEnumeration) {
+    // if (!this.isEnumeration) {
       this.deviderPosition = y;
       for (const method of methods) {
         method.bounds.x = 0;
@@ -80,10 +80,10 @@ export abstract class Classifier extends UMLContainer {
         method.bounds.width = this.bounds.width;
         y += method.bounds.height;
       }
-    } else {
-      this.deviderPosition = 0;
-      methods = [];
-    }
+    // } else {
+    //   this.deviderPosition = 0;
+    //   methods = [];
+    // }
     this.ownedElements = [...attributes.map(attribute => attribute.id), ...methods.map(method => method.id)];
 
     this.bounds.height = y;
@@ -91,12 +91,13 @@ export abstract class Classifier extends UMLContainer {
   }
 
   resize(ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    const minWidth = ownedElements.reduce((width, child) => Math.max(width, ClassMember.calculateWidth(child.name)), 100);
-    this.bounds.width = Math.max(this.bounds.width, minWidth);
+    const [parent, ...children] = this.render(ownedElements);
+    const minWidth = children.reduce((width, child) => Math.max(width, ClassMember.calculateWidth(child.name)), 100);
+    parent.bounds.width = Math.max(parent.bounds.width, minWidth);
     return [
       this,
-      ...ownedElements.map(child => {
-        child.bounds.width = this.bounds.width;
+      ...children.map(child => {
+        child.bounds.width = parent.bounds.width;
         return child;
       }),
     ];
