@@ -1,9 +1,15 @@
 import { put, select, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
+import { ApollonMode } from '../../typings';
 import { Container } from '../container/container';
 import { ChangeOwnerAction, ContainerActionTypes } from '../container/container-types';
 import { ElementRepository } from '../element/element-repository';
-import { CreateAction as ElementCreateAction, DeleteAction, ElementActionTypes, SelectAction } from '../element/element-types';
+import {
+  CreateAction as ElementCreateAction,
+  DeleteAction,
+  ElementActionTypes,
+  SelectAction,
+} from '../element/element-types';
 import { RelationshipRepository } from '../relationship/relationship-repository';
 import { CreateAction as RelationshipCreateAction, RelationshipActionTypes } from '../relationship/relationship-types';
 import {
@@ -87,7 +93,11 @@ function* handleElementCreation({ payload }: ElementCreateAction) {
 function* handleElementSelection({ payload }: SelectAction) {
   if (!payload.id || payload.toggle) return;
 
-  const { diagram }: ModelState = yield select();
+  const { diagram, editor }: ModelState = yield select();
+
+  if (editor.readonly || editor.mode === ApollonMode.Assessment) {
+    return;
+  }
 
   if (diagram.ownedElements.includes(payload.id)) {
     yield put<AddElementAction>({
