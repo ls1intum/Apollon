@@ -40,7 +40,7 @@
   "devDependencies": {
     "@types/react": "16.8.12",
     "@types/react-dom": "16.8.3",
-    "@types/react-redux": "7.0.6",
+    "@types/react-redux": "7.1.0",
     "@types/styled-components": "4.1.13",
     "@types/uuid": "3.4.4",
     "circular-dependency-plugin": "5.0.2",
