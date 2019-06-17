@@ -24,6 +24,10 @@ const Button = styled.button`
     box-shadow 0.15s ease-in-out;
   user-select: none;
 
+  svg {
+    pointer-events: none;
+  }
+
   ::-moz-focus-inner {
     border-style: none;
     padding: 0;
