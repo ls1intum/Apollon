@@ -1,4 +1,4 @@
-export const diff = <T>(lhs: T, rhs: T): Partial<T> => {
+export const diff = <T extends object>(lhs: T, rhs: T): Partial<T> => {
   const deletedValues = Object.keys(lhs).reduce((acc, key) => {
     return rhs.hasOwnProperty(key) ? acc : { ...acc, [key]: undefined };
   }, {});

@@ -29,9 +29,6 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   { forwardRef: true },
 );
 
-// TODO: Update
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-
 export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'layer'> {
   layer: RefObject<SVGSVGElement> = createRef();
 
