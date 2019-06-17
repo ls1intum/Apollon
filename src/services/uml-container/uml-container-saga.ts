@@ -89,6 +89,7 @@ const resize = (layer: ILayer, owner: string, elements: UMLElementState, isEnd =
 
 function* append(): SagaIterator {
   const action: AppendAction = yield take(UMLContainerActionTypes.APPEND);
+  const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const state: UMLElementState = { ...elements, [diagram.id]: diagram };
   const container = UMLContainerRepository.get(state[action.payload.owner]);
@@ -103,11 +104,12 @@ function* append(): SagaIterator {
     ownedElements.filter(element => !action.payload.ids.includes(element.id)),
   );
 
-  yield all(updateElements(updates, state));
+  yield all([...updateElements(updates, state), ...resize(layer, container.id, state)]);
 }
 
 function* remove(): SagaIterator {
   const action: RemoveAction = yield take(UMLContainerActionTypes.REMOVE);
+  const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const state: UMLElementState = { ...elements, [diagram.id]: diagram };
   const owners = [...new Set(action.payload.ids.map(id => state[id].owner || diagram.id))];
@@ -129,6 +131,7 @@ function* remove(): SagaIterator {
       ownedElements.filter(element => container.ownedElements.includes(element.id)),
     );
     effects.push(...updateElements(updates, state));
+    effects.push(...resize(layer, container.id, state));
   }
   yield all(effects);
 }
