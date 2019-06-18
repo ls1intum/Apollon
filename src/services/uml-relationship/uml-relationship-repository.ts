@@ -1,54 +1,62 @@
-import { RelationshipType as UMLRelationshipType } from '../../packages/relationship-type';
-import { Relationships } from '../../packages/relationships';
-import { notEmpty } from '../../utils/not-empty';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type';
+import { UMLRelationships } from '../../packages/uml-relationships';
 import { IUMLElement } from '../uml-element/uml-element';
-import { IUMLElementPort } from '../uml-element/uml-element-port';
-import { UMLElementState } from '../uml-element/uml-element-types';
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
-import { ConnectAction, CreateAction, FlipAction, UMLRelationshipActionTypes } from './uml-relationship-types';
 
-export class UMLRelationshipRepository {
-  static isUMLRelationship(element: IUMLElement): element is UMLRelationship {
+export const UMLRelationshipRepository = {
+  isUMLRelationship: (element: IUMLElement): element is IUMLRelationship => {
     return element.type in UMLRelationshipType;
-  }
+  },
 
-  static create = (relationship: UMLRelationship): CreateAction => ({
-    type: UMLRelationshipActionTypes.CREATE,
-    payload: { relationship },
-  });
+  get: (element?: IUMLElement): UMLRelationship | null => {
+    if (!element) {
+      return null;
+    }
 
-  static connect = (id: string, { source, target }: { source?: IUMLElementPort; target?: IUMLElementPort }): ConnectAction => ({
-    type: UMLRelationshipActionTypes.CONNECT,
-    payload: { id, source, target },
-  });
+    if (UMLRelationshipRepository.isUMLRelationship(element)) {
+      const Classifier = UMLRelationships[element.type];
 
-  static flip = (id: string): FlipAction => ({
-    type: UMLRelationshipActionTypes.FLIP,
-    payload: { id },
-  });
+      return new Classifier(element);
+    }
 
-  static getById = (state: UMLElementState) => (id: string): UMLRelationship | null => {
-    const relationship = state[id] as IUMLRelationship;
-    if (!relationship) return null;
+    return null;
+  },
 
-    const RelationshipClass = Relationships[relationship.type];
-    if (!RelationshipClass) return null;
+  // static connect = (
+  //   id: string,
+  //   { source, target }: { source?: IUMLElementPort; target?: IUMLElementPort },
+  // ): ConnectAction => ({
+  //   type: UMLRelationshipActionTypes.CONNECT,
+  //   payload: { id, source, target },
+  // });
 
-    return new RelationshipClass(relationship);
-  };
+  // static flip = (id: string): FlipAction => ({
+  //   type: UMLRelationshipActionTypes.FLIP,
+  //   payload: { id },
+  // });
 
-  static getByIds = (state: UMLElementState) => (ids: string[]): UMLRelationship[] => {
-    return ids.map(UMLRelationshipRepository.getById(state)).filter(notEmpty);
-  };
+  // static getById = (state: UMLElementState) => (id: string): UMLRelationship | null => {
+  //   const relationship = state[id] as IUMLRelationship;
+  //   if (!relationship) return null;
 
-  static read = (state: UMLElementState): UMLRelationship[] => {
-    const relationships = Object.keys(state).reduce<UMLElementState>((r, e) => {
-      if (state[e].type in UMLRelationshipType) return { ...r, [e]: state[e] };
-      return r;
-    }, {});
+  //   const RelationshipClass = Relationships[relationship.type];
+  //   if (!RelationshipClass) return null;
 
-    return Object.values(relationships)
-      .map<UMLRelationship | null>(element => UMLRelationshipRepository.getById(state)(element.id))
-      .filter(notEmpty);
-  };
-}
+  //   return new RelationshipClass(relationship);
+  // };
+
+  // static getByIds = (state: UMLElementState) => (ids: string[]): UMLRelationship[] => {
+  //   return ids.map(UMLRelationshipRepository.getById(state)).filter(notEmpty);
+  // };
+
+  // static read = (state: UMLElementState): UMLRelationship[] => {
+  //   const relationships = Object.keys(state).reduce<UMLElementState>((r, e) => {
+  //     if (state[e].type in UMLRelationshipType) return { ...r, [e]: state[e] };
+  //     return r;
+  //   }, {});
+
+  //   return Object.values(relationships)
+  //     .map<UMLRelationship | null>(element => UMLRelationshipRepository.getById(state)(element.id))
+  //     .filter(notEmpty);
+  // };
+};

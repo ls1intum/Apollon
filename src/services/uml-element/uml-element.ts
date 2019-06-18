@@ -1,8 +1,9 @@
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
-import { RelationshipType as UMLRelationshipType } from '../../packages/relationship-type';
 import { UMLElementType } from '../../packages/uml-element-type';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { assign } from '../../utils/fx/assign';
+import { IBoundary } from '../../utils/geometry/boundary';
 import { uuid } from '../../utils/uuid';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
@@ -19,7 +20,7 @@ export interface IUMLElement {
   /** Optional owner of the `UMLElement` */
   owner: string | null;
   /** Position and sizing of the `UMLElement` */
-  bounds: { x: number; y: number; width: number; height: number };
+  bounds: IBoundary;
 }
 
 /** Class implementation of `IUMLElement` to use inheritance at runtime */

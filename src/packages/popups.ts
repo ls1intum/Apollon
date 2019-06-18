@@ -7,12 +7,12 @@ import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
-import { RelationshipType } from './relationship-type';
 import { UMLElementType } from './uml-element-type';
+import { UMLRelationshipType } from './uml-relationship-type';
 import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
 
-export type Popups = { [key in UMLElementType | RelationshipType]: ComponentClass<{ element: any }> | null };
-export const Popups: { [key in UMLElementType | RelationshipType]: ComponentClass<{ element: any }> | null } = {
+export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentClass<{ element: any }> | null };
+export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentClass<{ element: any }> | null } = {
   [UMLElementType.Package]: DefaultPopup,
   [UMLElementType.Class]: ClassifierPopup,
   [UMLElementType.AbstractClass]: ClassifierPopup,
@@ -32,18 +32,18 @@ export const Popups: { [key in UMLElementType | RelationshipType]: ComponentClas
   [UMLElementType.UseCase]: DefaultPopup,
   [UMLElementType.UseCaseActor]: DefaultPopup,
   [UMLElementType.UseCaseSystem]: DefaultPopup,
-  [RelationshipType.ClassAggregation]: ClassAssociationPopup,
-  [RelationshipType.ClassBidirectional]: ClassAssociationPopup,
-  [RelationshipType.ClassComposition]: ClassAssociationPopup,
-  [RelationshipType.ClassDependency]: ClassAssociationPopup,
-  [RelationshipType.ClassInheritance]: ClassAssociationPopup,
-  [RelationshipType.ClassRealization]: ClassAssociationPopup,
-  [RelationshipType.ClassUnidirectional]: ClassAssociationPopup,
-  [RelationshipType.ObjectLink]: DefaultRelationshipPopup,
-  [RelationshipType.ActivityControlFlow]: ActivityControlFlowPopup,
-  [RelationshipType.UseCaseAssociation]: UseCaseAssociationPopup,
-  [RelationshipType.UseCaseExtend]: UseCaseAssociationPopup,
-  [RelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
-  [RelationshipType.UseCaseInclude]: UseCaseAssociationPopup,
-  [RelationshipType.CommunicationLink]: CommunicationLinkPopup,
+  [UMLRelationshipType.ClassAggregation]: ClassAssociationPopup,
+  [UMLRelationshipType.ClassBidirectional]: ClassAssociationPopup,
+  [UMLRelationshipType.ClassComposition]: ClassAssociationPopup,
+  [UMLRelationshipType.ClassDependency]: ClassAssociationPopup,
+  [UMLRelationshipType.ClassInheritance]: ClassAssociationPopup,
+  [UMLRelationshipType.ClassRealization]: ClassAssociationPopup,
+  [UMLRelationshipType.ClassUnidirectional]: ClassAssociationPopup,
+  [UMLRelationshipType.ObjectLink]: DefaultRelationshipPopup,
+  [UMLRelationshipType.ActivityControlFlow]: ActivityControlFlowPopup,
+  [UMLRelationshipType.UseCaseAssociation]: UseCaseAssociationPopup,
+  [UMLRelationshipType.UseCaseExtend]: UseCaseAssociationPopup,
+  [UMLRelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
+  [UMLRelationshipType.UseCaseInclude]: UseCaseAssociationPopup,
+  [UMLRelationshipType.CommunicationLink]: CommunicationLinkPopup,
 };

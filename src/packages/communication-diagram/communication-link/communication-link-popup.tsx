@@ -28,8 +28,8 @@ const Flex = styled.div`
 class CommunactionLinkPopupComponent extends Component<Props> {
   render() {
     const { element, getById } = this.props;
-    const source = getById(element.source.element);
-    const target = getById(element.target.element);
+    const source = element.source && getById(element.source.element);
+    const target = element.target && getById(element.target.element);
     if (!source || !target) return null;
 
     return (
@@ -54,9 +54,9 @@ class CommunactionLinkPopupComponent extends Component<Props> {
           {element.messages.map((message, i) => (
             <Flex key={i}>
               <Textfield gutter={true} value={message.name} onChange={this.rename(message)} />
-              <Button color="link" tabIndex={-1} onClick={this.flip(message)}>
+              {/* <Button color="link" tabIndex={-1} onClick={this.flip(message)}>
                 {message.direction === 'source' ? <ArrowRightIcon /> : <ArrowLeftIcon />}
-              </Button>
+              </Button> */}
               <Button color="link" tabIndex={-1} onClick={this.delete(message)}>
                 <TrashIcon />
               </Button>
@@ -108,7 +108,7 @@ type StateProps = {};
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
-  flip: typeof UMLRelationshipRepository.flip;
+  // flip: typeof UMLRelationshipRepository.flip;
   getById: (id: string) => UMLElement | null;
 };
 
@@ -121,7 +121,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     {
       update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
+      // flip: UMLRelationshipRepository.flip,
       getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
     },
   ),

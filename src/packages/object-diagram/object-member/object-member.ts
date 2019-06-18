@@ -1,5 +1,5 @@
 import { UMLElement } from '../../../services/uml-element/uml-element';
-import { Boundary } from '../../../utils/geometry/boundary';
+import { IBoundary } from '../../../utils/geometry/boundary';
 
 export abstract class ObjectMember extends UMLElement {
   static features = {
@@ -29,5 +29,5 @@ export abstract class ObjectMember extends UMLElement {
     return width + 2 * 10;
   };
 
-  bounds: Boundary = { ...this.bounds, height: 30 };
+  bounds: IBoundary = { ...this.bounds, height: 30 };
 }

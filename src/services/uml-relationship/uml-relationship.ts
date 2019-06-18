@@ -1,68 +1,44 @@
-import { RelationshipType } from '../../packages/relationship-type';
-import { Direction } from '../../typings';
+import { DeepPartial } from 'redux';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type';
+import { assign } from '../../utils/fx/assign';
+import { IPoint } from '../../utils/geometry/point';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { IUMLElementPort } from '../uml-element/uml-element-port';
+import { UMLRelationshipFeatures } from './uml-relationship-features';
 
 export interface IUMLRelationship extends IUMLElement {
-  type: RelationshipType;
-  path: Array<{ x: number; y: number }>;
-  source: {
-    element: string;
-    direction: Direction;
-  };
-  target: {
-    element: string;
-    direction: Direction;
-  };
+  type: UMLRelationshipType;
+  path: IPoint[];
+  source: IUMLElementPort | null;
+  target: IUMLElementPort | null;
 }
 
 export abstract class UMLRelationship extends UMLElement implements IUMLRelationship {
-  static features = { ...UMLElement.features, straight: false };
-
-  abstract readonly type: RelationshipType;
-
-  path = [{ x: 0, y: 0 }, { x: 200, y: 100 }];
-
-  source: IUMLElementPort = {
-    element: '',
-    direction: Direction.Up,
+  static features: UMLRelationshipFeatures = {
+    connectable: false,
+    droppable: false,
+    hoverable: false,
+    movable: false,
+    resizable: false,
+    selectable: false,
+    updatable: false,
+    straight: false,
   };
 
-  target: IUMLElementPort = {
-    element: '',
-    direction: Direction.Up,
-  };
+  abstract type: UMLRelationshipType;
+  path: IPoint[] = [];
+  source: IUMLElementPort | null = null;
+  target: IUMLElementPort | null = null;
 
-  constructor(values?: IUMLRelationship) {
+  constructor(values?: DeepPartial<IUMLRelationship>) {
     super();
-    if (values) {
-      Object.assign(this, {
-        ...values,
-        path: [...values.path],
-        bounds: { ...values.bounds },
-        source: { ...values.source },
-        target: { ...values.target },
-      });
-    }
+    assign<IUMLRelationship>(this, values);
   }
 
+  // abstract render(canvas: ILayer): ILayoutable[];
   render(canvas: ILayer): ILayoutable[] {
     return [this];
   }
-
-  // static toUMLRelationship(relationship: UMLRelationship): Other {
-  //   return {
-  //     id: relationship.id,
-  //     name: relationship.name,
-  //     highlight: relationship.highlight,
-  //     type: relationship.type,
-  //     owner: null,
-  //     source: relationship.source,
-  //     target: relationship.target,
-  //     path: relationship.path,
-  //     bounds: relationship.bounds,
-  //   };
-  // }
 }

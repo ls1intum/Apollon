@@ -3,9 +3,12 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type';
+import { UMLRelationships } from '../../packages/uml-relationships';
 import { UMLElementFeatures } from '../../services/uml-element/uml-element-features';
 import { ModelState } from '../store/model-state';
 import { CanvasElement } from './canvas-element';
+import { CanvasRelationship } from './canvas-relationship';
 import { connectable } from './connectable/connectable';
 import { droppable } from './droppable/droppable';
 import { hoverable } from './hoverable/hoverable';
@@ -20,8 +23,8 @@ export type UMLElementComponentProps = {
 };
 
 const components = {
-  canvas: CanvasElement,
-  svg: SvgElement,
+  canvas: (type: UMLElementType) => (type in UMLRelationshipType ? CanvasRelationship : CanvasElement),
+  svg: () => SvgElement,
 };
 
 type OwnProps = {
@@ -44,8 +47,8 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
 }));
 
 const getInitialState = (props: Props) => {
-  const { features } = UMLElements[props.type];
-  const component = components[props.component];
+  const { features } = { ...UMLElements, ...UMLRelationships }[props.type];
+  const component = components[props.component](props.type);
   const decorators = [];
 
   if (props.features.hoverable && features.hoverable) {
@@ -86,6 +89,7 @@ class UMLElementComponentC extends Component<Props, State> {
 
   render() {
     const { component: ElementComponent } = this.state;
+    console.log('UMLElementComponentC#render', ElementComponent);
     return <ElementComponent id={this.props.id} />;
   }
 }

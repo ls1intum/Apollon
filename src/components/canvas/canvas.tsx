@@ -4,7 +4,6 @@ import { ILayer } from '../../services/layouter/layer';
 import { IUMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { Point } from '../../utils/geometry/point';
 import { Droppable } from '../draggable/droppable';
-import { LayoutedRelationship } from '../layouted-relationship/layouted-relationship';
 import { ModelState } from '../store/model-state';
 import { ConnectionPreview } from './../connectable/connection-preview';
 import { UMLElementComponent } from './../uml-element/uml-element-component';
@@ -75,7 +74,7 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
                   <UMLElementComponent key={element} id={element} component="canvas" />
                 ))}
                 {diagram.ownedRelationships.map(relationship => (
-                  <LayoutedRelationship key={relationship} relationship={relationship} />
+                  <UMLElementComponent key={relationship} id={relationship} component="canvas" />
                 ))}
                 <ConnectionPreview />
               </svg>

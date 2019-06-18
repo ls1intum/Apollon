@@ -28,8 +28,8 @@ const Flex = styled.div`
 class ClassAssociationComponent extends Component<Props> {
   render() {
     const { element, getById } = this.props;
-    const source = getById(element.source.element);
-    const target = getById(element.target.element);
+    const source = element.source && getById(element.source.element);
+    const target = element.target && getById(element.target.element);
     if (!source || !target) return null;
 
     return (
@@ -39,9 +39,9 @@ class ClassAssociationComponent extends Component<Props> {
             <Header gutter={false} style={{ flexGrow: 1 }}>
               {this.props.translate('popup.association')}
             </Header>
-            <Button color="link" onClick={() => this.props.flip(element.id)}>
+            {/* <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />
-            </Button>
+            </Button> */}
             <Button color="link" onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -128,7 +128,7 @@ type StateProps = {};
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
-  flip: typeof UMLRelationshipRepository.flip;
+  // flip: typeof UMLRelationshipRepository.flip;
   getById: (id: string) => UMLElement | null;
 };
 
@@ -141,7 +141,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     {
       update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
+      // flip: UMLRelationshipRepository.flip,
       getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
     },
   ),

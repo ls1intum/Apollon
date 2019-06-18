@@ -9,27 +9,27 @@ import { ClassRealization } from './class-diagram/class-association/class-realiz
 import { ClassUnidirectional } from './class-diagram/class-association/class-unidirectional/class-unidirectional';
 import { CommunicationLink } from './communication-diagram/communication-link/communication-link';
 import { ObjectLink } from './object-diagram/object-link/object-link';
-import { RelationshipType } from './relationship-type';
+import { UMLRelationshipType } from './uml-relationship-type';
 import { UseCaseAssociation } from './use-case-diagram/use-case-association/use-case-association';
 import { UseCaseExtend } from './use-case-diagram/use-case-extend/use-case-extend';
 import { UseCaseGeneralization } from './use-case-diagram/use-case-generalization/use-case-generalization';
 import { UseCaseInclude } from './use-case-diagram/use-case-include/use-case-include';
 
-type Relationships = { [key in RelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
+type UMLRelationships = { [key in UMLRelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
 
-export const Relationships = {
-  [RelationshipType.ClassAggregation]: ClassAggregation,
-  [RelationshipType.ClassBidirectional]: ClassBidirectional,
-  [RelationshipType.ClassComposition]: ClassComposition,
-  [RelationshipType.ClassDependency]: ClassDependency,
-  [RelationshipType.ClassInheritance]: ClassInheritance,
-  [RelationshipType.ClassRealization]: ClassRealization,
-  [RelationshipType.ClassUnidirectional]: ClassUnidirectional,
-  [RelationshipType.ObjectLink]: ObjectLink,
-  [RelationshipType.ActivityControlFlow]: ActivityControlFlow,
-  [RelationshipType.UseCaseAssociation]: UseCaseAssociation,
-  [RelationshipType.UseCaseExtend]: UseCaseExtend,
-  [RelationshipType.UseCaseGeneralization]: UseCaseGeneralization,
-  [RelationshipType.UseCaseInclude]: UseCaseInclude,
-  [RelationshipType.CommunicationLink]: CommunicationLink,
+export const UMLRelationships = {
+  [UMLRelationshipType.ClassAggregation]: ClassAggregation,
+  [UMLRelationshipType.ClassBidirectional]: ClassBidirectional,
+  [UMLRelationshipType.ClassComposition]: ClassComposition,
+  [UMLRelationshipType.ClassDependency]: ClassDependency,
+  [UMLRelationshipType.ClassInheritance]: ClassInheritance,
+  [UMLRelationshipType.ClassRealization]: ClassRealization,
+  [UMLRelationshipType.ClassUnidirectional]: ClassUnidirectional,
+  [UMLRelationshipType.ObjectLink]: ObjectLink,
+  [UMLRelationshipType.ActivityControlFlow]: ActivityControlFlow,
+  [UMLRelationshipType.UseCaseAssociation]: UseCaseAssociation,
+  [UMLRelationshipType.UseCaseExtend]: UseCaseExtend,
+  [UMLRelationshipType.UseCaseGeneralization]: UseCaseGeneralization,
+  [UMLRelationshipType.UseCaseInclude]: UseCaseInclude,
+  [UMLRelationshipType.CommunicationLink]: CommunicationLink,
 };

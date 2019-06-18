@@ -1,8 +1,9 @@
 import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
 import { UMLDiagramType } from './packages/diagram-type';
-import { RelationshipType as UMLRelationshipType } from './packages/relationship-type';
-import { UMLElementType as UMLElementType } from './packages/uml-element-type';
+import { UMLElementType } from './packages/uml-element-type';
+import { UMLRelationshipType } from './packages/uml-relationship-type';
+import { IUMLRelationship } from './services/uml-relationship/uml-relationship';
 
 export enum Locale {
   en = 'en',
@@ -18,7 +19,7 @@ export interface UMLModel {
   interactive: Selection;
   assessments: Assessment[];
   elements: UMLElement[];
-  relationships: UMLRelationship[];
+  relationships: IUMLRelationship[];
 }
 
 export interface Assessment {

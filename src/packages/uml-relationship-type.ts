@@ -5,14 +5,14 @@ import { UMLDiagramType } from './diagram-type';
 import { ObjectRelationshipType } from './object-diagram';
 import { UseCaseRelationshipType } from './use-case-diagram';
 
-export type RelationshipType =
+export type UMLRelationshipType =
   | ClassRelationshipType
   | ObjectRelationshipType
   | ActivityRelationshipType
   | UseCaseRelationshipType
   | CommunicationRelationshipType;
 
-export const RelationshipType = {
+export const UMLRelationshipType = {
   ...ClassRelationshipType,
   ...ObjectRelationshipType,
   ...ActivityRelationshipType,
@@ -20,7 +20,7 @@ export const RelationshipType = {
   ...CommunicationRelationshipType,
 };
 
-export const DefaultRelationshipType: { [type in UMLDiagramType]: RelationshipType } = {
+export const DefaultUMLRelationshipType: { [type in UMLDiagramType]: UMLRelationshipType } = {
   [UMLDiagramType.ClassDiagram]: ClassRelationshipType.ClassBidirectional,
   [UMLDiagramType.ObjectDiagram]: ObjectRelationshipType.ObjectLink,
   [UMLDiagramType.ActivityDiagram]: ActivityRelationshipType.ActivityControlFlow,

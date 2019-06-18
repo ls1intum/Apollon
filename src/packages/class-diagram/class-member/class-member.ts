@@ -1,5 +1,5 @@
 import { UMLElement } from '../../../services/uml-element/uml-element';
-import { Boundary } from '../../../utils/geometry/boundary';
+import { IBoundary } from '../../../utils/geometry/boundary';
 import { NamedElement } from '../../common/named-element/named-element';
 
 export abstract class ClassMember extends NamedElement {
@@ -34,5 +34,5 @@ export abstract class ClassMember extends NamedElement {
   //   return [this];
   // }
 
-  bounds: Boundary = { ...this.bounds, height: 30 };
+  bounds: IBoundary = { ...this.bounds, height: 30 };
 }

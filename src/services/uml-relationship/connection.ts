@@ -1,5 +1,5 @@
 import { Direction } from '../../typings';
-import { Boundary } from '../../utils/geometry/boundary';
+import { IBoundary } from '../../utils/geometry/boundary';
 import { position } from '../../utils/geometry/rect';
 import { IUMLElementPort } from '../uml-element/uml-element-port';
 
@@ -9,7 +9,7 @@ export interface Connection {
 }
 
 interface Endpoint {
-  bounds: Boundary;
+  bounds: IBoundary;
   direction: Direction;
 }
 
@@ -29,7 +29,7 @@ interface Delta {
   dy: number;
 }
 
-type Rect = Boundary;
+type Rect = IBoundary;
 
 type RectEdge = Direction;
 

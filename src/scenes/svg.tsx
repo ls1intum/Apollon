@@ -2,13 +2,13 @@ import React, { Component } from 'react';
 import { DeepPartial } from 'redux';
 import { defaults, Styles } from '../components/theme/styles';
 import { Components } from '../packages/components';
-import { RelationshipType } from '../packages/relationship-type';
-import { Relationships } from '../packages/relationships';
 import { UMLElementType } from '../packages/uml-element-type';
 import { UMLElements } from '../packages/uml-elements';
+import { UMLRelationshipType } from '../packages/uml-relationship-type';
+import { UMLRelationships } from '../packages/uml-relationships';
 import { IUMLElement, UMLElement } from '../services/uml-element/uml-element';
 import { ExportOptions, UMLModel } from '../typings';
-import { Boundary } from '../utils/geometry/boundary';
+import { IBoundary } from '../utils/geometry/boundary';
 import { update } from '../utils/update';
 import { Style } from './svg-styles';
 
@@ -18,7 +18,7 @@ interface Props {
   styles?: DeepPartial<Styles>;
 }
 interface State {
-  bounds: Boundary;
+  bounds: IBoundary;
   elements: UMLElement[];
 }
 
@@ -83,7 +83,7 @@ const getInitialState = ({ model, options }: Props): State => {
       return new ElementClazz(umlElement);
     }),
     ...model.relationships.map(umlRelationship => {
-      const RelationshipClazz = Relationships[umlRelationship.type];
+      const RelationshipClazz = UMLRelationships[umlRelationship.type];
       const rel = new RelationshipClazz(umlRelationship);
       return rel;
     }),
@@ -115,7 +115,7 @@ const getMargin = (margin: ExportOptions['margin']): { top: number; right: numbe
   return Object.assign(result, margin);
 };
 
-const computeBoundingBox = (elements: UMLElement[]): Boundary => {
+const computeBoundingBox = (elements: UMLElement[]): IBoundary => {
   let x = Math.min(...elements.map(e => e.bounds.x));
   x = x === Infinity ? 0 : x;
   let y = Math.min(...elements.map(e => e.bounds.y));
@@ -146,7 +146,7 @@ export class Svg extends Component<Props, State> {
           <style>{(Style[0] as any)({ theme })}</style>
         </defs>
         {elements.map(element => {
-          const ElementComponent = Components[element.type as UMLElementType | RelationshipType];
+          const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
           return (
             <svg {...element.bounds} key={element.id} className={element.name}>
               <ElementComponent element={element} />

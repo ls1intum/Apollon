@@ -26,7 +26,7 @@ class LayoutedRelationshipComponent extends Component<Props> {
   }
 
   render() {
-    const relationship = this.props.getById(this.props.relationship);
+    const relationship = null;//this.props.getById(this.props.relationship);
     if (!relationship) return null;
     const ElementChildComponent = this.component;
 
@@ -65,7 +65,7 @@ type OwnProps = {
 };
 
 type StateProps = {
-  getById: (id: string) => UMLRelationship | null;
+  // getById: (id: string) => UMLRelationship | null;
   readonly: boolean;
   view: ApollonView;
   mode: ApollonMode;
@@ -77,7 +77,7 @@ type DispatchProps = {};
 type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
-  getById: UMLRelationshipRepository.getById(state.elements),
+  // getById: UMLRelationshipRepository.getById(state.elements),
   readonly: state.editor.readonly,
   view: state.editor.view,
   mode: state.editor.mode,

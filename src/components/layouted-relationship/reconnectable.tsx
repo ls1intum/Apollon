@@ -87,7 +87,7 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
   type StateProps = {};
 
   type DispatchProps = {
-    connect: typeof UMLRelationshipRepository.connect;
+    // connect: typeof UMLRelationshipRepository.connect;
   };
 
   type Props = OwnProps & StateProps & DispatchProps;
@@ -98,6 +98,6 @@ export const reconnectable = (WrappedComponent: typeof RelationshipComponent): C
 
   return connect<StateProps, DispatchProps, OwnProps>(
     null,
-    { connect: UMLRelationshipRepository.connect },
+    // { connect: UMLRelationshipRepository.connect },
   )(Reconnectable);
 };

@@ -53,9 +53,9 @@ class UseCaseAssociationComponent extends Component<Props> {
                   }[element.type]
                 }
               </Header>
-              <Button color="link" tabIndex={-1} onClick={() => this.props.flip(element.id)}>
+              {/* <Button color="link" tabIndex={-1} onClick={() => this.props.flip(element.id)}>
                 <ExchangeIcon />
-              </Button>
+              </Button> */}
               <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
                 <TrashIcon />
               </Button>
@@ -101,7 +101,7 @@ type StateProps = {};
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
-  flip: typeof UMLRelationshipRepository.flip;
+  // flip: typeof UMLRelationshipRepository.flip;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -113,7 +113,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     {
       update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
+      // flip: UMLRelationshipRepository.flip,
     },
   ),
 );

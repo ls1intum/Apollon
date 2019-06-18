@@ -4,8 +4,8 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { DeepPartial, Store } from 'redux';
 import { ModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
-import { RelationshipType } from './packages/relationship-type';
 import { UMLElementType } from './packages/uml-element-type';
+import { UMLRelationshipType } from './packages/uml-relationship-type';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
 import { Actions } from './services/actions';
@@ -155,7 +155,7 @@ export class ApollonEditor {
     const { elements, selected, assessments } = this.store.getState();
     const selection: Selection = {
       elements: selected.filter(id => elements[id].type in UMLElementType),
-      relationships: selected.filter(id => elements[id].type in RelationshipType),
+      relationships: selected.filter(id => elements[id].type in UMLRelationshipType),
     };
 
     if (JSON.stringify(this.selection) !== JSON.stringify(selection)) {
@@ -165,7 +165,7 @@ export class ApollonEditor {
 
     const umlAssessments = Object.keys(assessments).map<Assessment>(id => ({
       modelElementId: id,
-      elementType: elements[id].type as UMLElementType | RelationshipType,
+      elementType: elements[id].type as UMLElementType | UMLRelationshipType,
       score: assessments[id].score,
       feedback: assessments[id].feedback,
     }));

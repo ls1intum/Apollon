@@ -22,12 +22,30 @@ const Marker = {
     </marker>
   ),
   Rhombus: (id: string) => (
-    <marker id={id} viewBox="0 0 30 30" markerWidth="30" markerHeight="30" refX="30" refY="15" orient="auto" markerUnits="strokeWidth">
+    <marker
+      id={id}
+      viewBox="0 0 30 30"
+      markerWidth="30"
+      markerHeight="30"
+      refX="30"
+      refY="15"
+      orient="auto"
+      markerUnits="strokeWidth"
+    >
       <path d="M0,15 L15,22 L30,15 L15,8 z" fill="white" stroke="black" />
     </marker>
   ),
   RhombusFilled: (id: string) => (
-    <marker id={id} viewBox="0 0 30 30" markerWidth="30" markerHeight="30" refX="30" refY="15" orient="auto" markerUnits="strokeWidth">
+    <marker
+      id={id}
+      viewBox="0 0 30 30"
+      markerWidth="30"
+      markerHeight="30"
+      refX="30"
+      refY="15"
+      orient="auto"
+      markerUnits="strokeWidth"
+    >
       <path d="M0,15 L15,22 L30,15 L15,8 z" fill="black" />
     </marker>
   ),
@@ -120,18 +138,26 @@ export const ClassAssociationComponent: SFC<Props> = ({ element }) => {
         markerEnd={`url(#${id})`}
         strokeDasharray={stroke}
       />
-      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'BOTTOM')}>
-        {element.multiplicity.source}
-      </text>
-      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'BOTTOM')}>
-        {element.multiplicity.target}
-      </text>
-      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'TOP')}>
-        {element.role.source}
-      </text>
-      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'TOP')}>
-        {element.role.target}
-      </text>
+      {element.source && (
+        <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'BOTTOM')}>
+          {element.multiplicity.source}
+        </text>
+      )}
+      {element.target && (
+        <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'BOTTOM')}>
+          {element.multiplicity.target}
+        </text>
+      )}
+      {element.source && (
+        <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'TOP')}>
+          {element.role.source}
+        </text>
+      )}
+      {element.target && (
+        <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'TOP')}>
+          {element.role.target}
+        </text>
+      )}
     </g>
   );
 };

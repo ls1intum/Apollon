@@ -10,13 +10,13 @@ export class CommunicationLink extends UMLRelationship implements ICommunication
   type = CommunicationRelationshipType.CommunicationLink;
   messages: CommunicationMessage[] = [];
 
-  constructor(values?: ICommunicationLink);
-  constructor(values?: UMLCommunicationLink);
-  constructor(values?: IUMLRelationship | Other);
-  constructor(values?: ICommunicationLink | UMLCommunicationLink) {
-    super(values);
-    this.messages = (values && values.messages) || [];
-  }
+  // constructor(values?: ICommunicationLink);
+  // constructor(values?: UMLCommunicationLink);
+  // constructor(values?: IUMLRelationship | Other);
+  // constructor(values?: ICommunicationLink | UMLCommunicationLink) {
+  //   super(values);
+  //   this.messages = (values && values.messages) || [];
+  // }
 
   // static toUMLRelationship(relationship: CommunicationLink): UMLCommunicationLink {
   //   const umlRelationship = UMLRelationship.toUMLRelationship(relationship);

@@ -26,35 +26,36 @@ const Flex = styled.div`
 
 class ActivityMergeNodePopupComponent extends Component<Props> {
   render() {
-    const { element, relationships } = this.props;
+    const { element } = this.props;
+    return null;
 
-    const decisions = relationships.filter(relationship => relationship.source.element === element.id);
-    const targets = decisions.map(relationship => this.props.getById(relationship.target.element)).filter(notEmpty);
+    // const decisions = relationships.filter(relationship => relationship.source.element === element.id);
+    // const targets = decisions.map(relationship => this.props.getById(relationship.target.element)).filter(notEmpty);
 
-    return (
-      <div>
-        <section>
-          <Textfield value={element.name} onChange={this.onUpdate} />
-          <Divider />
-        </section>
-        <section>
-          <Header>{this.props.translate('popup.condition')}</Header>
-          {decisions.map((decision, i) => (
-            <Flex key={decision.id}>
-              <Textfield
-                gutter={i < decisions.length - 1}
-                value={decision.name}
-                onChange={this.onUpdateOption(decision.id)}
-              />
-              <Button color="link" disabled={true}>
-                <ArrowRightIcon />
-              </Button>
-              <Body>{targets[i].name}</Body>
-            </Flex>
-          ))}
-        </section>
-      </div>
-    );
+    // return (
+    //   <div>
+    //     <section>
+    //       <Textfield value={element.name} onChange={this.onUpdate} />
+    //       <Divider />
+    //     </section>
+    //     <section>
+    //       <Header>{this.props.translate('popup.condition')}</Header>
+    //       {decisions.map((decision, i) => (
+    //         <Flex key={decision.id}>
+    //           <Textfield
+    //             gutter={i < decisions.length - 1}
+    //             value={decision.name}
+    //             onChange={this.onUpdateOption(decision.id)}
+    //           />
+    //           <Button color="link" disabled={true}>
+    //             <ArrowRightIcon />
+    //           </Button>
+    //           <Body>{targets[i].name}</Body>
+    //         </Flex>
+    //       ))}
+    //     </section>
+    //   </div>
+    // );
   }
 
   private onUpdate = (name: string) => {
@@ -73,7 +74,7 @@ type OwnProps = {
 };
 
 type StateProps = {
-  relationships: UMLRelationship[];
+  // relationships: UMLRelationship[];
 };
 
 type DispatchProps = {
@@ -87,7 +88,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({
-      relationships: UMLRelationshipRepository.read(state.elements),
+      // relationships: UMLRelationshipRepository.read(state.elements),
     }),
     {
       update: UMLElementRepository.update,

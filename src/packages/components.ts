@@ -14,8 +14,8 @@ import { CommunicationLinkComponent } from './communication-diagram/communicatio
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
 import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
 import { ObjectNameComponent } from './object-diagram/object-name/object-name-component';
-import { RelationshipType } from './relationship-type';
 import { UMLElementType } from './uml-element-type';
+import { UMLRelationshipType } from './uml-relationship-type';
 import { UseCaseActorComponent } from './use-case-diagram/use-case-actor/use-case-actor-component';
 import { UseCaseAssociationComponent } from './use-case-diagram/use-case-association/use-case-association-component';
 import { UseCaseExtendComponent } from './use-case-diagram/use-case-extend/use-case-extend-component';
@@ -24,7 +24,7 @@ import { UseCaseIncludeComponent } from './use-case-diagram/use-case-include/use
 import { UseCaseSystemComponent } from './use-case-diagram/use-case-system/use-case-system-component';
 import { UseCaseComponent } from './use-case-diagram/use-case/use-case-component';
 
-export const Components: { [key in UMLElementType | RelationshipType]: FunctionComponent<{ element: any }> } = {
+export const Components: { [key in UMLElementType | UMLRelationshipType]: FunctionComponent<{ element: any }> } = {
   [UMLElementType.Package]: PackageComponent,
   [UMLElementType.Class]: ClassifierComponent,
   [UMLElementType.AbstractClass]: ClassifierComponent,
@@ -44,18 +44,18 @@ export const Components: { [key in UMLElementType | RelationshipType]: FunctionC
   [UMLElementType.UseCase]: UseCaseComponent,
   [UMLElementType.UseCaseActor]: UseCaseActorComponent,
   [UMLElementType.UseCaseSystem]: UseCaseSystemComponent,
-  [RelationshipType.ClassAggregation]: ClassAssociationComponent,
-  [RelationshipType.ClassBidirectional]: ClassAssociationComponent,
-  [RelationshipType.ClassComposition]: ClassAssociationComponent,
-  [RelationshipType.ClassDependency]: ClassAssociationComponent,
-  [RelationshipType.ClassInheritance]: ClassAssociationComponent,
-  [RelationshipType.ClassRealization]: ClassAssociationComponent,
-  [RelationshipType.ClassUnidirectional]: ClassAssociationComponent,
-  [RelationshipType.ObjectLink]: ObjectLinkComponent,
-  [RelationshipType.ActivityControlFlow]: ActivityControlFlowComponent,
-  [RelationshipType.UseCaseAssociation]: UseCaseAssociationComponent,
-  [RelationshipType.UseCaseExtend]: UseCaseExtendComponent,
-  [RelationshipType.UseCaseGeneralization]: UseCaseGeneralizationComponent,
-  [RelationshipType.UseCaseInclude]: UseCaseIncludeComponent,
-  [RelationshipType.CommunicationLink]: CommunicationLinkComponent,
+  [UMLRelationshipType.ClassAggregation]: ClassAssociationComponent,
+  [UMLRelationshipType.ClassBidirectional]: ClassAssociationComponent,
+  [UMLRelationshipType.ClassComposition]: ClassAssociationComponent,
+  [UMLRelationshipType.ClassDependency]: ClassAssociationComponent,
+  [UMLRelationshipType.ClassInheritance]: ClassAssociationComponent,
+  [UMLRelationshipType.ClassRealization]: ClassAssociationComponent,
+  [UMLRelationshipType.ClassUnidirectional]: ClassAssociationComponent,
+  [UMLRelationshipType.ObjectLink]: ObjectLinkComponent,
+  [UMLRelationshipType.ActivityControlFlow]: ActivityControlFlowComponent,
+  [UMLRelationshipType.UseCaseAssociation]: UseCaseAssociationComponent,
+  [UMLRelationshipType.UseCaseExtend]: UseCaseExtendComponent,
+  [UMLRelationshipType.UseCaseGeneralization]: UseCaseGeneralizationComponent,
+  [UMLRelationshipType.UseCaseInclude]: UseCaseIncludeComponent,
+  [UMLRelationshipType.CommunicationLink]: CommunicationLinkComponent,
 };
