@@ -58,9 +58,9 @@ export const updateElements = (updates: IUMLElement[], elements: UMLElementState
           ),
         ),
       );
-      if (isEnd && !UMLDiagramRepository.isUMLDiagram(update)) {
-        effects.push(put(UMLElementRepository.endResizing(update.id)));
-      }
+      // if (isEnd && !UMLDiagramRepository.isUMLDiagram(update)) {
+      //   effects.push(put(UMLElementRepository.endResizing(update.id)));
+      // }
     }
 
     if (!UMLDiagramRepository.isUMLDiagram(update)) {
@@ -73,6 +73,29 @@ export const updateElements = (updates: IUMLElement[], elements: UMLElementState
 
   return effects;
 };
+
+function* render(id: string): SagaIterator {
+  const { elements, diagram }: ModelState = yield select();
+  const state: UMLElementState = { [diagram.id]: diagram, ...elements };
+  const canvas: ILayer = yield getContext('layer');
+
+  const element: IUMLElement = state[id];
+  const effects: Effect[] = [];
+
+  if (UMLContainerRepository.isUMLContainer(element)) {
+    const container = UMLContainerRepository.get(element);
+    if (!container) {
+      return;
+    }
+    const children: UMLElement[] = element.ownedElements
+      .map(child => UMLElementRepository.get(state[child]))
+      .filter(notEmpty);
+    const changes = container.render(canvas, children) as UMLElement[];
+    effects.push(...updateElements(changes, state));
+  }
+
+  yield all(effects);
+}
 
 const resize = (layer: ILayer, owner: string, elements: UMLElementState, isEnd = true): Effect[] => {
   const container: UMLContainer | null = UMLContainerRepository.get(elements[owner]);
@@ -182,11 +205,10 @@ function* resizeAfterMove(): SagaIterator {
 
 function* resizeWhileResize(): SagaIterator {
   const action: ResizeAction = yield take(ResizingActionTypes.RESIZE);
-  const layer: ILayer = yield getContext('layer');
-  const { elements }: ModelState = yield select();
-  yield all(
-    action.payload.ids.reduce<Effect[]>((effects, id) => [...effects, ...resize(layer, id, elements, false)], []),
-  );
+
+  for (const id of action.payload.ids) {
+    yield call(render, id);
+  }
 }
 
 function* resizeAfterResize(): SagaIterator {

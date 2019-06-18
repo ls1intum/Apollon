@@ -6,6 +6,7 @@ import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { assign } from '../../../utils/fx/assign';
+import { Text } from '../../../utils/svg/text';
 import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
 import { ClassMethod } from '../class-member/class-method/class-method';
 
@@ -64,41 +65,30 @@ export abstract class Classifier extends UMLContainer {
     // return this.render([...ownedElements]);
   }
 
-  render(layer: ILayer, children?: ILayoutable[]): ILayoutable[] {
-    if (!children) {
-      return [this];
-    }
+  render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
+    const attributes = children.filter((x): x is ClassAttribute => x instanceof ClassAttribute);
+    const methods = children.filter((x): x is ClassMethod => x instanceof ClassMethod);
+    const width = [this, ...attributes, ...methods].reduce(
+      (current, child) => Math.max(current, Text.width(layer, child.name) + 20),
+      this.bounds.width,
+    );
 
-    const attributes = children.filter(child => child instanceof ClassAttribute);
-    const methods = children.filter(child => child instanceof ClassMethod);
+    this.bounds.width = Math.round(width / 10) * 10;
 
     let y = this.headerHeight;
     for (const attribute of attributes) {
-      attribute.render(layer);
-      attribute.bounds.x = 0;
       attribute.bounds.y = y;
       attribute.bounds.width = this.bounds.width;
       y += attribute.bounds.height;
     }
     this.deviderPosition = y;
     for (const method of methods) {
-      method.bounds.x = 0;
       method.bounds.y = y;
       method.bounds.width = this.bounds.width;
       y += method.bounds.height;
     }
-    // const minWidth = ownedElements.reduce(
-    //   (width, child) => Math.max(width, ClassMember.calculateWidth(child.name)),
-    //   100,
-    // );
-    // this.bounds.width = Math.max(this.bounds.width, minWidth);
-    // return [
-    //   this,
-    //   ...[...attributes, ...methods].map(child => {
-    //     child.bounds.width = this.bounds.width;
-    //     return child;
-    //   }),
-    // ];
-    return [this, ...[...attributes, ...methods]];
+
+    this.bounds.height = y;
+    return [this, ...attributes, ...methods];
   }
 }
