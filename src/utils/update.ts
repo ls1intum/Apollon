@@ -1,6 +1,8 @@
 import { DeepPartial } from 'redux';
 
-export const update = <T extends object>(target: T, source: DeepPartial<T>): T => {
+type update = <T extends object>(target: T, source: DeepPartial<T>) => T;
+
+export const update: update = <T extends object>(target: T, source: DeepPartial<T>): T => {
   let clone: T = { ...target };
 
   for (let [key, value] of Object.entries(source)) {
