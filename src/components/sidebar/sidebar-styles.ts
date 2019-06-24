@@ -9,4 +9,10 @@ export const Container = styled.aside`
   overflow: auto;
   display: flex;
   flex-direction: column;
+
+  svg {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
 `;
