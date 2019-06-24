@@ -50,7 +50,6 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
   };
 
   render() {
-    console.log('Canvas#render', this.layer.current);
     const { diagram } = this.props;
 
     return (

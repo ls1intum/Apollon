@@ -1,6 +1,8 @@
 import { ActivityRelationshipType } from './activity-diagram';
 import { ClassRelationshipType } from './class-diagram';
 import { CommunicationRelationshipType } from './communication-diagram';
+import { ComponentRelationshipType } from './component-diagram';
+import { DeploymentRelationshipType } from './deployment-diagram';
 import { UMLDiagramType } from './diagram-type';
 import { ObjectRelationshipType } from './object-diagram';
 import { UseCaseRelationshipType } from './use-case-diagram';
@@ -10,7 +12,9 @@ export type UMLRelationshipType =
   | ObjectRelationshipType
   | ActivityRelationshipType
   | UseCaseRelationshipType
-  | CommunicationRelationshipType;
+  | CommunicationRelationshipType
+  | ComponentRelationshipType
+  | DeploymentRelationshipType;
 
 export const UMLRelationshipType = {
   ...ClassRelationshipType,
@@ -18,6 +22,8 @@ export const UMLRelationshipType = {
   ...ActivityRelationshipType,
   ...UseCaseRelationshipType,
   ...CommunicationRelationshipType,
+  ...ComponentRelationshipType,
+  ...DeploymentRelationshipType,
 };
 
 export const DefaultUMLRelationshipType: { [type in UMLDiagramType]: UMLRelationshipType } = {
@@ -26,4 +32,6 @@ export const DefaultUMLRelationshipType: { [type in UMLDiagramType]: UMLRelation
   [UMLDiagramType.ActivityDiagram]: ActivityRelationshipType.ActivityControlFlow,
   [UMLDiagramType.UseCaseDiagram]: UseCaseRelationshipType.UseCaseAssociation,
   [UMLDiagramType.CommunicationDiagram]: CommunicationRelationshipType.CommunicationLink,
+  [UMLDiagramType.ComponentDiagram]: ComponentRelationshipType.ComponentInterfaceProvided,
+  [UMLDiagramType.DeploymentDiagram]: DeploymentRelationshipType.DeploymentAssociation,
 };

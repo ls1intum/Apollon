@@ -2,6 +2,7 @@ import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { IAssessment } from '../../../services/assessment/assessment';
 import { CheckIcon } from '../../controls/icon/check';
+import { ExclamationCircleIcon } from '../../controls/icon/exclamation-circle';
 import { TimesIcon } from '../../controls/icon/times';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component';
@@ -26,6 +27,12 @@ export const assessable = (
           </g>,
         ];
         i += 1;
+      } else if (assessment && assessment.score === 0 && assessment.feedback && assessment.feedback.length) {
+        icons = [
+          <g key={0} transform={`translate(0 2)`}>
+            <ExclamationCircleIcon fill="blue" />
+          </g>,
+        ];
       }
 
       icons = [
@@ -39,7 +46,7 @@ export const assessable = (
 
       return (
         <WrappedComponent {...this.props}>
-          {/* {assessment && <g transform={`translate(${element.bounds.width - (icons.length + 1) * 12} 0)`}>{icons}</g>} */}
+          {/* {assessment && <g transform={`translate(${element.bounds.width - (icons.length + 1) * 12} 8)`}>{icons}</g>} */}
         </WrappedComponent>
       );
     }

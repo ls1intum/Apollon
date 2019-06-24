@@ -1,9 +1,9 @@
 import { CommonElementType } from '..';
+import { ILayer } from '../../../services/layouter/layer';
+import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { ILayer } from '../../../services/layouter/layer';
 
 export class Package extends UMLContainer {
   static features = {

@@ -37,7 +37,6 @@ export class CanvasRelationshipComponent extends Component<Props> {
     const { hovered, selected, interactive, relationship, children, ...props } = this.props;
 
     const ChildComponent = Components[relationship.type as UMLRelationshipType];
-    console.log(relationship.path);
 
     return (
       <svg {...props} {...relationship.bounds}>

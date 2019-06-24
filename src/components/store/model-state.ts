@@ -86,6 +86,9 @@ export class ModelState {
 
     const elements: IUMLElement[] = [...model.elements, ...model.relationships];
 
+    // const diagramElements = root.filter(element => !(element instanceof Relationship))
+    //   .sort((a, b) => b.bounds.width * b.bounds.height - a.bounds.width * a.bounds.height);
+
     return {
       diagram: {
         ownedElements: model.elements.filter(e => !e.owner).map(element => element.id),

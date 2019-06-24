@@ -1,10 +1,8 @@
 import { UseCaseElementType } from '..';
-import { UMLContainer } from '../../../services/uml-container/uml-container';
-import { UMLElement } from '../../../services/uml-element/uml-element';
-import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
-
+import { UMLContainer } from '../../../services/uml-container/uml-container';
+import { UMLElement } from '../../../services/uml-element/uml-element';
 export class UseCaseSystem extends UMLContainer {
   static features = { ...UMLContainer.features, connectable: false };
   type = UseCaseElementType.UseCaseSystem;

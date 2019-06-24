@@ -11,6 +11,14 @@ import { ClassMemberComponent } from './class-diagram/class-member/class-member-
 import { ClassifierComponent } from './class-diagram/classifier/classifier-component';
 import { PackageComponent } from './common/package/package-component';
 import { CommunicationLinkComponent } from './communication-diagram/communication-link/communication-link-component';
+import { ComponentDependencyComponent } from './component-diagram/component-dependency/component-dependency-component';
+import { ComponentInterfaceProvidedComponent } from './component-diagram/component-interface-provided/component-interface-provided-component';
+import { ComponentInterfaceRequiredComponent } from './component-diagram/component-interface-required/component-interface-required-component';
+import { ComponentInterfaceComponent } from './component-diagram/component-interface/component-interface-component';
+import { ComponentComponent } from './component-diagram/component/component-component';
+import { DeploymentArtifactComponent } from './deployment-diagram/deployment-artifact/deployment-artifact-component';
+import { DeploymentAssociationComponent } from './deployment-diagram/deployment-association/deployment-association-component';
+import { DeploymentNodeComponent } from './deployment-diagram/deployment-node/deployment-node-component';
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
 import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
 import { ObjectNameComponent } from './object-diagram/object-name/object-name-component';
@@ -44,6 +52,10 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLElementType.UseCase]: UseCaseComponent,
   [UMLElementType.UseCaseActor]: UseCaseActorComponent,
   [UMLElementType.UseCaseSystem]: UseCaseSystemComponent,
+  [UMLElementType.Component]: ComponentComponent,
+  [UMLElementType.ComponentInterface]: ComponentInterfaceComponent,
+  [UMLElementType.DeploymentNode]: DeploymentNodeComponent,
+  [UMLElementType.DeploymentArtifact]: DeploymentArtifactComponent,
   [UMLRelationshipType.ClassAggregation]: ClassAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: ClassAssociationComponent,
   [UMLRelationshipType.ClassComposition]: ClassAssociationComponent,
@@ -58,4 +70,8 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLRelationshipType.UseCaseGeneralization]: UseCaseGeneralizationComponent,
   [UMLRelationshipType.UseCaseInclude]: UseCaseIncludeComponent,
   [UMLRelationshipType.CommunicationLink]: CommunicationLinkComponent,
+  [UMLRelationshipType.ComponentInterfaceProvided]: ComponentInterfaceProvidedComponent,
+  [UMLRelationshipType.ComponentInterfaceRequired]: ComponentInterfaceRequiredComponent,
+  [UMLRelationshipType.ComponentDependency]: ComponentDependencyComponent,
+  [UMLRelationshipType.DeploymentAssociation]: DeploymentAssociationComponent,
 };

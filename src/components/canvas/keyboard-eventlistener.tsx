@@ -52,7 +52,6 @@ const enhance = compose<ComponentType<OwnProps>>(
 
 class KeyboardEventListenerComponent extends Component<Props> {
   componentDidMount() {
-    console.log('KeyboardEventListenerComponent#componentDidMount()', this.props.canvas);
 
     const { layer } = this.props.canvas;
     if (!this.props.readonly && this.props.mode !== ApollonMode.Assessment) {
@@ -63,7 +62,6 @@ class KeyboardEventListenerComponent extends Component<Props> {
   }
 
   render() {
-    console.log('KeyboardEventListenerComponent#render()', this.props.canvas);
     return null;
   }
 

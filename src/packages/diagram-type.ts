@@ -4,4 +4,6 @@ export enum UMLDiagramType {
   ActivityDiagram = 'ActivityDiagram',
   UseCaseDiagram = 'UseCaseDiagram',
   CommunicationDiagram = 'CommunicationDiagram',
+  ComponentDiagram = 'ComponentDiagram',
+  DeploymentDiagram = 'DeploymentDiagram',
 }

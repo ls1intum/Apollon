@@ -89,7 +89,6 @@ class UMLElementComponentC extends Component<Props, State> {
 
   render() {
     const { component: ElementComponent } = this.state;
-    console.log('UMLElementComponentC#render', ElementComponent);
     return <ElementComponent id={this.props.id} />;
   }
 }

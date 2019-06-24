@@ -1,4 +1,3 @@
-import uuid from 'uuid/v4';
+import { v4 } from 'uuid';
 
-export type UUID = string;
-export { uuid };
+export const uuid: () => string = v4;

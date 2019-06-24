@@ -34,14 +34,13 @@ export class Application extends React.Component<Props, State> {
   store: RefObject<ModelStore> = createRef();
 
   setCanvas = (ref: CanvasComponent) => {
-    if (ref.layer.current) {
+    if (ref && ref.layer.current) {
       this.setState({ canvas: { ...ref, layer: ref.layer.current } });
     }
   };
 
   render() {
     const context: CanvasContext | null = this.state.canvas ? { canvas: this.state.canvas } : null;
-    console.log('Application#render()', context);
 
     return (
       <CanvasProvider value={context}>

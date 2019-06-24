@@ -24,7 +24,6 @@ const getInitialState = (
   initialState: DeepPartial<ModelState> = {},
   layer: ILayer | null = null,
 ): Store<ModelState, Actions> => {
-  console.log('ModelState#state', layer);
   const reducer = undoable(combineReducers<ModelState, Actions>(reducers));
   const sagaMiddleware = createSagaMiddleware<SagaContext>({ context: { layer } });
 

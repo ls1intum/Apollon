@@ -34,21 +34,35 @@ type Rect = IBoundary;
 type RectEdge = Direction;
 
 export class Connection {
-  static computePath(source: Endpoint, target: Endpoint, options: { isStraight: boolean }): Point[] {
+  static computePath(
+    source: Endpoint,
+    target: Endpoint,
+    options: { isStraight: boolean; isVariable: boolean },
+  ): Point[] {
     const startPointOnInnerEdge: Point = position(source.bounds, source.direction).point;
     const endPointOnInnerEdge: Point = position(target.bounds, target.direction).point;
 
     // If the user forced this relationship path to be a straight line,
     // directly connect the start and end points, even if that results in an angled line
     if (options.isStraight) {
+      if (startPointOnInnerEdge.x === endPointOnInnerEdge.x && startPointOnInnerEdge.y === endPointOnInnerEdge.y) {
+        endPointOnInnerEdge.x += 1;
+        endPointOnInnerEdge.y += 1;
+      }
       return [startPointOnInnerEdge, endPointOnInnerEdge];
     }
 
-    const straightPath = Connection.tryFindStraightPath(source, target);
+    if (options.isVariable) {
+      const straightPath = Connection.tryFindStraightPath(source, target);
 
-    // If there is a straight path, return that one
-    if (straightPath !== null) {
-      return straightPath;
+      // If there is a straight path, return that one
+      if (straightPath !== null) {
+        if (straightPath[0].x === straightPath[1].x && straightPath[0].y === straightPath[1].y) {
+          straightPath[1].x += 1;
+          straightPath[1].y += 1;
+        }
+        return straightPath;
+      }
     }
 
     // Each entity has an invisible margin around it (the "crumple zone")

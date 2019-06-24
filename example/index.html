@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Apollon Editor</title>
+    <title>Apollon</title>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap-reboot.min.css" />
-    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
@@ -15,19 +13,21 @@
         <section>
           <h class="header">Diagram Type</h>
           <div class="dropdown">
-            <select name="type" onchange="exports.onChange(event)">
+            <select name="type" onchange="apollon.onChange(event)">
               <option value="ClassDiagram">Class Diagram</option>
               <option value="ObjectDiagram">Object Diagram</option>
               <option value="ActivityDiagram">Activity Diagram</option>
               <option value="UseCaseDiagram">Use Case Diagram</option>
               <option value="CommunicationDiagram">Communication Diagram</option>
+              <option value="ComponentDiagram">Component Diagram</option>
+              <option value="DeploymentDiagram">Deployment Diagram</option>
             </select>
           </div>
         </section>
         <section>
           <h class="header">Language</h>
           <div class="dropdown">
-            <select name="locale" onchange="exports.onChange(event)">
+            <select name="locale" onchange="apollon.onChange(event)">
               <option value="en">English</option>
               <option value="de">German</option>
             </select>
@@ -36,13 +36,13 @@
         <section>
           <h class="header">Mode</h>
           <div class="dropdown">
-            <select name="mode" onchange="exports.onChange(event)">
+            <select name="mode" onchange="apollon.onChange(event)">
               <option value="Exporting">Exporting</option>
               <option value="Modelling">Modelling</option>
               <option value="Assessment">Assessment</option>
             </select>
             <label>
-              <input type="checkbox" name="readonly" onchange="exports.onSwitch(event)" />
+              <input type="checkbox" name="readonly" onchange="apollon.onSwitch(event)" />
               Readonly
             </label>
           </div>
@@ -50,21 +50,19 @@
         <section>
           <h class="header">Export</h>
           <div class="switch">
-            <button onclick="exports.draw()">All</button>
-            <button onclick="exports.draw('include')">Include</button>
-            <button onclick="exports.draw('exclude')">Exclude</button>
+            <button onclick="apollon.draw()">All</button>
+            <button onclick="apollon.draw('include')">Include</button>
+            <button onclick="apollon.draw('exclude')">Exclude</button>
           </div>
         </section>
         <section>
           <h class="header">State</h>
           <div class="switch">
-            <button onclick="exports.save(event)">Save</button>
-            <button onclick="exports.clear(event)">Clear</button>
+            <button onclick="apollon.save(event)">Save</button>
+            <button onclick="apollon.clear(event)">Clear</button>
           </div>
         </section>
       </aside>
     </div>
-
-    <script src="index.js"></script>
   </body>
 </html>

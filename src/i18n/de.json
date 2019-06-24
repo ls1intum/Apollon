@@ -61,6 +61,18 @@
     },
     "communicationDiagram": {
       "communicationLink": "Kommunikation"
+    },
+    "componentDiagram": {
+      "component": "Komponente",
+      "dependency": "Abhängigkeit",
+      "interface": "Schnittstelle",
+      "interfaceProvided": "Bereitgestellte Schnittstelle",
+      "interfaceRequired": "Verwendete Schnittstelle"
+    },
+    "deploymentDiagram": {
+      "node": "Knoten",
+      "artifact": "Artefakt",
+      "stereotype": "Stereotyp"
     }
   }
 }

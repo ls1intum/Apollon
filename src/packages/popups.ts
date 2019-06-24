@@ -6,6 +6,9 @@ import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
+import { ComponentAssociationPopup } from './component-diagram/component-association-popup';
+import { DeploymentAssociationPopup } from './deployment-diagram/deployment-association/deployment-association-popup';
+import { DeploymentNodePopup } from './deployment-diagram/deployment-node/deployment-node-popup';
 import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
 import { UMLElementType } from './uml-element-type';
 import { UMLRelationshipType } from './uml-relationship-type';
@@ -32,6 +35,10 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentC
   [UMLElementType.UseCase]: DefaultPopup,
   [UMLElementType.UseCaseActor]: DefaultPopup,
   [UMLElementType.UseCaseSystem]: DefaultPopup,
+  [UMLElementType.Component]: DefaultPopup,
+  [UMLElementType.ComponentInterface]: DefaultPopup,
+  [UMLElementType.DeploymentNode]: DeploymentNodePopup,
+  [UMLElementType.DeploymentArtifact]: DefaultPopup,
   [UMLRelationshipType.ClassAggregation]: ClassAssociationPopup,
   [UMLRelationshipType.ClassBidirectional]: ClassAssociationPopup,
   [UMLRelationshipType.ClassComposition]: ClassAssociationPopup,
@@ -46,4 +53,8 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentC
   [UMLRelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
   [UMLRelationshipType.UseCaseInclude]: UseCaseAssociationPopup,
   [UMLRelationshipType.CommunicationLink]: CommunicationLinkPopup,
+  [UMLRelationshipType.ComponentInterfaceProvided]: ComponentAssociationPopup,
+  [UMLRelationshipType.ComponentInterfaceRequired]: ComponentAssociationPopup,
+  [UMLRelationshipType.ComponentDependency]: ComponentAssociationPopup,
+  [UMLRelationshipType.DeploymentAssociation]: DeploymentAssociationPopup,
 };

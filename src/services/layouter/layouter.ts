@@ -13,5 +13,4 @@ function* layout(): SagaIterator {
   const action: LayoutAction = yield take(LayouterActionTypes.LAYOUT);
   const layer: ILayer = yield getContext('layer');
   const { elements }: ModelState = yield select();
-  console.log(action, layer, elements);
 }

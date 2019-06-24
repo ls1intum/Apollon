@@ -14,11 +14,11 @@ import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
 import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
 import { ClassMethod } from '../class-member/class-method/class-method';
 import { Classifier } from './classifier';
-import { AsyncDispatch } from '../../../utils/actions/actions';
 
 const Flex = styled.div`
   display: flex;
@@ -30,8 +30,7 @@ interface OwnProps {
   element: Classifier;
 }
 
-type StateProps = {
-}
+type StateProps = {};
 
 interface DispatchProps {
   create: typeof UMLElementRepository.create;

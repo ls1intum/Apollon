@@ -1,4 +1,3 @@
-import { UMLDiagram } from '../services/uml-diagram/uml-diagram';
 import { IUMLElement, UMLElement } from '../services/uml-element/uml-element';
 import { ActivityActionNode } from './activity-diagram/activity-action-node/activity-action-node';
 import { ActivityFinalNode } from './activity-diagram/activity-final-node/activity-final-node';
@@ -13,6 +12,10 @@ import { Class } from './class-diagram/classifier/class/class';
 import { Enumeration } from './class-diagram/classifier/enumeration/enumeration';
 import { Interface } from './class-diagram/classifier/interface/interface';
 import { Package } from './common/package/package';
+import { ComponentInterface } from './component-diagram/component-interface/component-interface';
+import { Component } from './component-diagram/component/component';
+import { DeploymentArtifact } from './deployment-diagram/deployment-artifact/deployment-artifact';
+import { DeploymentNode } from './deployment-diagram/deployment-node/deployment-node';
 import { ObjectAttribute } from './object-diagram/object-member/object-attribute/object-attribute';
 import { ObjectMethod } from './object-diagram/object-member/object-method/object-method';
 import { ObjectName } from './object-diagram/object-name/object-name';
@@ -43,4 +46,8 @@ export const UMLElements = {
   [UMLElementType.UseCase]: UseCase,
   [UMLElementType.UseCaseActor]: UseCaseActor,
   [UMLElementType.UseCaseSystem]: UseCaseSystem,
+  [UMLElementType.Component]: Component,
+  [UMLElementType.ComponentInterface]: ComponentInterface,
+  [UMLElementType.DeploymentNode]: DeploymentNode,
+  [UMLElementType.DeploymentArtifact]: DeploymentArtifact,
 };
