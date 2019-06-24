@@ -1,6 +1,4 @@
-import { UMLClassAssociation } from '..';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { UMLRelationship as Other } from '../../../typings';
 
 export interface IClassAssociation extends IUMLRelationship {
   multiplicity: { source: string; target: string };
@@ -18,24 +16,24 @@ export abstract class ClassAssociation extends UMLRelationship {
   //   super(values);
   //   if (!values) return;
 
-    // if ('multiplicity' in values) {
-    //   this.multiplicity = { ...values.multiplicity };
-    //   this.role = { ...values.role };
-    // }
+  // if ('multiplicity' in values) {
+  //   this.multiplicity = { ...values.multiplicity };
+  //   this.role = { ...values.role };
+  // }
 
-    // if ('multiplicity' in values.source) {
-    //   const { multiplicity, role, ...source } = values.source;
-    //   this.source = source;
-    //   this.multiplicity = { ...this.multiplicity, source: multiplicity };
-    //   this.role = { ...this.role, source: role };
-    // }
+  // if ('multiplicity' in values.source) {
+  //   const { multiplicity, role, ...source } = values.source;
+  //   this.source = source;
+  //   this.multiplicity = { ...this.multiplicity, source: multiplicity };
+  //   this.role = { ...this.role, source: role };
+  // }
 
-    // if ('multiplicity' in values.target) {
-    //   const { multiplicity, role, ...target } = values.target;
-    //   this.target = target;
-    //   this.multiplicity = { ...this.multiplicity, target: multiplicity };
-    //   this.role = { ...this.role, target: role };
-    // }
+  // if ('multiplicity' in values.target) {
+  //   const { multiplicity, role, ...target } = values.target;
+  //   this.target = target;
+  //   this.multiplicity = { ...this.multiplicity, target: multiplicity };
+  //   this.role = { ...this.role, target: role };
+  // }
   // }
 
   // static toUMLRelationship(relationship: ClassAssociation): UMLClassAssociation {

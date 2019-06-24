@@ -1,4 +1,5 @@
 import { DeepPartial } from 'redux';
+import { UMLElementType } from '../../packages/uml-element-type';
 import { AssessmentState } from '../../services/assessment/assessment-types';
 import { EditorState } from '../../services/editor/editor-types';
 import { UMLDiagramState } from '../../services/uml-diagram/uml-diagram-types';
@@ -14,7 +15,7 @@ import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableState } from '../../services/uml-element/updatable/updatable-types';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
-import { Assessment, Selection, UMLElementType, UMLModel } from '../../typings';
+import { Assessment, Selection, UMLModel } from '../../typings';
 
 export interface ModelState {
   editor: EditorState;

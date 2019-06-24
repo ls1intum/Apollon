@@ -1,18 +1,15 @@
 import { UseCaseElementType } from '..';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
+import { ILayer } from '../../../services/layouter/layer';
+import { ILayoutable } from '../../../services/layouter/layoutable';
+import { UMLElement } from '../../../services/uml-element/uml-element';
+import { IBoundary } from '../../../utils/geometry/boundary';
+import { UMLElementType } from '../../uml-element-type';
 
 export class UseCaseActor extends UMLElement {
-  type = UseCaseElementType.UseCaseActor;
+  type: UMLElementType = UseCaseElementType.UseCaseActor;
+  bounds: IBoundary = { ...this.bounds, width: 90, height: 140 };
 
-  constructor(values?: IUMLElement) {
-    super(values);
-
-    if (!values) {
-      Object.assign(this, { bounds: { ...this.bounds, width: 90, height: 140 } });
-    }
-  }
-
-  render() {
+  render(canvas: ILayer): ILayoutable[] {
     return [this];
   }
 }

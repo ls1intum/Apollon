@@ -1,7 +1,6 @@
-import { Direction } from '../../typings';
 import { IBoundary } from '../../utils/geometry/boundary';
 import { position } from '../../utils/geometry/rect';
-import { IUMLElementPort } from '../uml-element/uml-element-port';
+import { Direction, IUMLElementPort } from '../uml-element/uml-element-port';
 
 export interface Connection {
   source: IUMLElementPort;

@@ -1,20 +1,18 @@
 import { ActivityElementType } from '..';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
+import { ILayer } from '../../../services/layouter/layer';
+import { ILayoutable } from '../../../services/layouter/layoutable';
+import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
+import { IBoundary } from '../../../utils/geometry/boundary';
+import { UMLElementType } from '../../uml-element-type';
 
 export class ActivityForkNode extends UMLElement {
-  static features = { ...UMLElement.features, editable: false };
+  static features: UMLElementFeatures = { ...UMLElement.features, updatable: false };
 
-  type = ActivityElementType.ActivityForkNode;
+  type: UMLElementType = ActivityElementType.ActivityForkNode;
+  bounds: IBoundary = { ...this.bounds, width: 20, height: 60 };
 
-  constructor(values?: IUMLElement) {
-    super(values);
-
-    if (!values) {
-      Object.assign(this, { bounds: { ...this.bounds, width: 20, height: 60 } });
-    }
-  }
-
-  render() {
+  render(canvas: ILayer): ILayoutable[] {
     return [this];
   }
 }

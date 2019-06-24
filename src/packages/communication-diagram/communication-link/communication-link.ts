@@ -1,6 +1,5 @@
 import { CommunicationMessage, CommunicationRelationshipType, UMLCommunicationLink } from '..';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { UMLRelationship as Other } from '../../../typings';
 
 export interface ICommunicationLink extends IUMLRelationship {
   messages: CommunicationMessage[];

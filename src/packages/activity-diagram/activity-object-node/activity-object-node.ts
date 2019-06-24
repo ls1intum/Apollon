@@ -1,10 +1,13 @@
 import { ActivityElementType } from '..';
+import { ILayer } from '../../../services/layouter/layer';
+import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementType } from '../../uml-element-type';
 
 export class ActivityObjectNode extends UMLElement {
-  type = ActivityElementType.ActivityObjectNode;
+  type: UMLElementType = ActivityElementType.ActivityObjectNode;
 
-  render() {
+  render(canvas: ILayer): ILayoutable[] {
     return [this];
   }
 }

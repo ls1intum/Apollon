@@ -1,8 +1,10 @@
 import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { IBoundary } from '../../../utils/geometry/boundary';
+import { NamedElement } from '../../common/named-element/named-element';
 
-export abstract class ObjectMember extends UMLElement {
-  static features = {
+export abstract class ObjectMember extends NamedElement {
+  static features: UMLElementFeatures = {
     ...UMLElement.features,
     hoverable: false,
     selectable: false,
@@ -10,7 +12,7 @@ export abstract class ObjectMember extends UMLElement {
     resizable: false,
     connectable: false,
     droppable: false,
-    editable: false,
+    updatable: false,
   };
 
   static calculateWidth = (value: string): number => {

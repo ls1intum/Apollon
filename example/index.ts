@@ -1,4 +1,5 @@
 import { ApollonEditor, ApollonOptions, SVG, UMLModel } from '../src';
+import { UMLDiagramType } from '../src/packages/diagram-type';
 import './styles.css';
 
 const container = document.getElementById('apollon')!;

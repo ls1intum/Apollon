@@ -1,5 +1,5 @@
+import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
-import { UMLElementType } from '../../typings';
 import { AsyncAction } from '../../utils/actions/actions';
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { IUMLElement } from '../uml-element/uml-element';

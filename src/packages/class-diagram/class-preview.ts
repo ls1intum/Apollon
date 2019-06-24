@@ -1,6 +1,7 @@
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { Package } from '../common/package/package';
+import { ComposePreview } from '../compose-preview';
 import { ClassAttribute } from './class-member/class-attribute/class-attribute';
 import { ClassMethod } from './class-member/class-method/class-method';
 import { AbstractClass } from './classifier/abstract-class/abstract-class';
@@ -8,7 +9,7 @@ import { Class } from './classifier/class/class';
 import { Enumeration } from './classifier/enumeration/enumeration';
 import { Interface } from './classifier/interface/interface';
 
-export const composeClassPreview = (layer: ILayer, translate: (id: string) => string): UMLElement[] => {
+export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (id: string) => string): UMLElement[] => {
   const elements: UMLElement[] = [];
 
   // Package

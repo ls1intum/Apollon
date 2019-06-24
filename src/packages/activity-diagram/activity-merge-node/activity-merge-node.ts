@@ -1,18 +1,15 @@
 import { ActivityElementType } from '..';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
+import { ILayer } from '../../../services/layouter/layer';
+import { ILayoutable } from '../../../services/layouter/layoutable';
+import { UMLElement } from '../../../services/uml-element/uml-element';
+import { IBoundary } from '../../../utils/geometry/boundary';
+import { UMLElementType } from '../../uml-element-type';
 
 export class ActivityMergeNode extends UMLElement {
-  type = ActivityElementType.ActivityMergeNode;
+  type: UMLElementType = ActivityElementType.ActivityMergeNode;
+  bounds: IBoundary = { ...this.bounds, height: 60 };
 
-  constructor(values?: IUMLElement) {
-    super(values);
-
-    if (!values) {
-      Object.assign(this, { bounds: { ...this.bounds, height: 60 } });
-    }
-  }
-
-  render() {
+  render(canvas: ILayer): ILayoutable[] {
     return [this];
   }
 }

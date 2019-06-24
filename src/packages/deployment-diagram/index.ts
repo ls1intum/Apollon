@@ -1,4 +1,4 @@
-import { UMLElement } from '../../typings';
+import { UMLElement } from '../../services/uml-element/uml-element';
 
 export enum DeploymentElementType {
   DeploymentNode = 'DeploymentNode',

@@ -1,10 +1,7 @@
 import { ObjectElementType } from '../..';
+import { UMLElementType } from '../../../uml-element-type';
 import { ObjectMember } from '../object-member';
 
 export class ObjectMethod extends ObjectMember {
-  type = ObjectElementType.ObjectMethod;
-
-  render() {
-    return [this];
-  }
+  type: UMLElementType = ObjectElementType.ObjectMethod;
 }

@@ -1,4 +1,4 @@
-import { UMLRelationship } from '../../typings';
+import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 
 export enum CommunicationRelationshipType {
   CommunicationLink = 'CommunicationLink',

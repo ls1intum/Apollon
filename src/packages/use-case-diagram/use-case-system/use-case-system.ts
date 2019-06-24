@@ -3,18 +3,20 @@ import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
+import { UMLElementType } from '../../uml-element-type';
+
 export class UseCaseSystem extends UMLContainer {
-  static features = { ...UMLContainer.features, connectable: false };
-  type = UseCaseElementType.UseCaseSystem;
+  static features: UMLElementFeatures = { ...UMLContainer.features, connectable: false };
+
+  type: UMLElementType = UseCaseElementType.UseCaseSystem;
 
   appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     return [this];
-    // return this.render([...elements, ...ownedElements]);
   }
 
   removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     return [this];
-    // return this.render([...ownedElements]);
   }
 
   render(layer: ILayer, children?: ILayoutable[]): ILayoutable[] {

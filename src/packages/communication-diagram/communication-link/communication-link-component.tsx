@@ -1,6 +1,6 @@
 import React, { SFC } from 'react';
 import { CommunicationMessage } from '..';
-import { Direction } from '../../../typings';
+import { Direction } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
 import { CommunicationLink } from './communication-link';
 

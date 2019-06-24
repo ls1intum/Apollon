@@ -1,8 +1,8 @@
 import { SagaIterator } from 'redux-saga';
 import { all, call, delay, Effect, getContext, put, race, select, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
+import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
-import { UMLElementType } from '../../typings';
 import { run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
 import { notEmpty } from '../../utils/not-empty';
