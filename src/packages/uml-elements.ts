@@ -5,12 +5,12 @@ import { ActivityForkNode } from './activity-diagram/activity-fork-node/activity
 import { ActivityInitialNode } from './activity-diagram/activity-initial-node/activity-initial-node';
 import { ActivityMergeNode } from './activity-diagram/activity-merge-node/activity-merge-node';
 import { ActivityObjectNode } from './activity-diagram/activity-object-node/activity-object-node';
-import { ClassAttribute } from './class-diagram/class-member/class-attribute/class-attribute';
-import { ClassMethod } from './class-diagram/class-member/class-method/class-method';
-import { AbstractClass } from './class-diagram/classifier/abstract-class/abstract-class';
-import { Class } from './class-diagram/classifier/class/class';
-import { Enumeration } from './class-diagram/classifier/enumeration/enumeration';
-import { Interface } from './class-diagram/classifier/interface/interface';
+import { UMLAbstractClass } from './class-diagram/uml-abstract-class/uml-abstract-class';
+import { UMLClassAttribute } from './class-diagram/uml-class-attribute/uml-class-attribute';
+import { UMLClassMethod } from './class-diagram/uml-class-method/uml-class-method';
+import { UMLClass } from './class-diagram/uml-class/uml-class';
+import { UMLEnumeration } from './class-diagram/uml-enumeration/uml-enumeration';
+import { UMLInterface } from './class-diagram/uml-interface/uml-interface';
 import { Package } from './common/package/package';
 import { ComponentInterface } from './component-diagram/component-interface/component-interface';
 import { Component } from './component-diagram/component/component';
@@ -28,12 +28,12 @@ type UMLElements = { [key in UMLElementType]: new (values: IUMLElement) => UMLEl
 
 export const UMLElements = {
   [UMLElementType.Package]: Package,
-  [UMLElementType.Class]: Class,
-  [UMLElementType.AbstractClass]: AbstractClass,
-  [UMLElementType.Interface]: Interface,
-  [UMLElementType.Enumeration]: Enumeration,
-  [UMLElementType.ClassAttribute]: ClassAttribute,
-  [UMLElementType.ClassMethod]: ClassMethod,
+  [UMLElementType.Class]: UMLClass,
+  [UMLElementType.AbstractClass]: UMLAbstractClass,
+  [UMLElementType.Interface]: UMLInterface,
+  [UMLElementType.Enumeration]: UMLEnumeration,
+  [UMLElementType.ClassAttribute]: UMLClassAttribute,
+  [UMLElementType.ClassMethod]: UMLClassMethod,
   [UMLElementType.ObjectName]: ObjectName,
   [UMLElementType.ObjectAttribute]: ObjectAttribute,
   [UMLElementType.ObjectMethod]: ObjectMethod,

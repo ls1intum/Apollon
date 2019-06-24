@@ -2,9 +2,9 @@ import { ComponentClass } from 'react';
 import { ActivityControlFlowPopup } from './activity-diagram/activity-control-flow/activity-control-flow-popup';
 import { ActivityMergeNodePopup } from './activity-diagram/activity-merge-node/activity-merge-node-popup';
 import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
-import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
 import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
+import { UMLClassifierUpdate } from './common/uml-classifier/uml-classifier-update';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
 import { ComponentAssociationPopup } from './component-diagram/component-association-popup';
 import { DeploymentAssociationPopup } from './deployment-diagram/deployment-association/deployment-association-popup';
@@ -17,10 +17,10 @@ import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentClass<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentClass<{ element: any }> | null } = {
   [UMLElementType.Package]: DefaultPopup,
-  [UMLElementType.Class]: ClassifierPopup,
-  [UMLElementType.AbstractClass]: ClassifierPopup,
-  [UMLElementType.Interface]: ClassifierPopup,
-  [UMLElementType.Enumeration]: ClassifierPopup,
+  [UMLElementType.Class]: UMLClassifierUpdate,
+  [UMLElementType.AbstractClass]: UMLClassifierUpdate,
+  [UMLElementType.Interface]: UMLClassifierUpdate,
+  [UMLElementType.Enumeration]: UMLClassifierUpdate,
   [UMLElementType.ClassAttribute]: null,
   [UMLElementType.ClassMethod]: null,
   [UMLElementType.ObjectName]: ObjectNamePopup,

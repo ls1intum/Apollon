@@ -1,7 +1,7 @@
 import React, { SFC } from 'react';
-import { ClassMember } from './class-member';
+import { UMLClassifierMember } from './uml-classifier-member';
 
-export const ClassMemberComponent: SFC<Props> = ({ element }) => (
+export const UMLClassifierMemberComponent: SFC<Props> = ({ element }) => (
   <g>
     <rect x={1} y={1} width={element.bounds.width - 2} height={element.bounds.height - 2} />
     <text x={10} y="50%" dominantBaseline="middle">
@@ -11,5 +11,5 @@ export const ClassMemberComponent: SFC<Props> = ({ element }) => (
 );
 
 interface Props {
-  element: ClassMember;
+  element: UMLClassifierMember;
 }

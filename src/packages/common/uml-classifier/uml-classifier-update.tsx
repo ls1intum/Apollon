@@ -2,7 +2,6 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
-import { ClassElementType } from '..';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { TrashIcon } from '../../../components/controls/icon/trash';
@@ -16,9 +15,10 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
-import { ClassAttribute } from '../class-member/class-attribute/class-attribute';
-import { ClassMethod } from '../class-member/class-method/class-method';
-import { Classifier } from './classifier';
+import { ClassElementType } from '../../class-diagram';
+import { UMLClassAttribute } from '../../class-diagram/uml-class-attribute/uml-class-attribute';
+import { UMLClassMethod } from '../../class-diagram/uml-class-method/uml-class-method';
+import { UMLClassifier } from './uml-classifier';
 
 const Flex = styled.div`
   display: flex;
@@ -27,7 +27,7 @@ const Flex = styled.div`
 `;
 
 interface OwnProps {
-  element: Classifier;
+  element: UMLClassifier;
 }
 
 type StateProps = {};
@@ -54,12 +54,12 @@ const enhance = compose<ComponentClass<OwnProps>>(
   ),
 );
 
-class ClassifierComponent extends Component<Props> {
+class ClassifierUpdate extends Component<Props> {
   render() {
     const { element, getById } = this.props;
     const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
-    const attributes = children.filter(child => child instanceof ClassAttribute);
-    const methods = children.filter(child => child instanceof ClassMethod);
+    const attributes = children.filter(child => child instanceof UMLClassAttribute);
+    const methods = children.filter(child => child instanceof UMLClassMethod);
 
     return (
       <div>
@@ -96,27 +96,25 @@ class ClassifierComponent extends Component<Props> {
               </Button>
             </Flex>
           ))}
-          <Textfield outline={true} value="" onSubmit={this.create(ClassAttribute)} />
+          <Textfield outline={true} value="" onSubmit={this.create(UMLClassAttribute)} />
         </section>
-        {!element.isEnumeration && (
-          <section>
-            <Divider />
-            <Header>{this.props.translate('popup.methods')}</Header>
-            {methods.map(method => (
-              <Flex key={method.id}>
-                <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
-                <Button color="link" tabIndex={-1} onClick={this.delete(method.id)}>
-                  <TrashIcon />
-                </Button>
-              </Flex>
-            ))}
-            <Textfield outline={true} value="" onSubmit={this.create(ClassMethod)} />
-          </section>
-        )}
+        <section>
+          <Divider />
+          <Header>{this.props.translate('popup.methods')}</Header>
+          {methods.map(method => (
+            <Flex key={method.id}>
+              <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
+              <Button color="link" tabIndex={-1} onClick={this.delete(method.id)}>
+                <TrashIcon />
+              </Button>
+            </Flex>
+          ))}
+          <Textfield outline={true} value="" onSubmit={this.create(UMLClassMethod)} />
+        </section>
       </div>
     );
   }
-  private create = (Clazz: typeof ClassAttribute | typeof ClassMethod) => (value: string) => {
+  private create = (Clazz: typeof UMLClassAttribute | typeof UMLClassMethod) => (value: string) => {
     const { element, create } = this.props;
     const member = new Clazz();
     member.name = value;
@@ -138,4 +136,4 @@ class ClassifierComponent extends Component<Props> {
   };
 }
 
-export const ClassifierPopup = enhance(ClassifierComponent);
+export const UMLClassifierUpdate = enhance(ClassifierUpdate);

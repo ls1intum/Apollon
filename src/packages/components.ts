@@ -7,9 +7,9 @@ import { ActivityInitialNodeComponent } from './activity-diagram/activity-initia
 import { ActivityMergeNodeComponent } from './activity-diagram/activity-merge-node/activity-merge-node-component';
 import { ActivityObjectNodeComponent } from './activity-diagram/activity-object-node/activity-object-node-component';
 import { ClassAssociationComponent } from './class-diagram/class-association/class-association-component';
-import { ClassMemberComponent } from './class-diagram/class-member/class-member-component';
-import { ClassifierComponent } from './class-diagram/classifier/classifier-component';
 import { PackageComponent } from './common/package/package-component';
+import { UMLClassifierComponent } from './common/uml-classifier/uml-classifier-component';
+import { UMLClassifierMemberComponent } from './common/uml-classifier/uml-classifier-member-component';
 import { CommunicationLinkComponent } from './communication-diagram/communication-link/communication-link-component';
 import { ComponentDependencyComponent } from './component-diagram/component-dependency/component-dependency-component';
 import { ComponentInterfaceProvidedComponent } from './component-diagram/component-interface-provided/component-interface-provided-component';
@@ -34,12 +34,12 @@ import { UseCaseComponent } from './use-case-diagram/use-case/use-case-component
 
 export const Components: { [key in UMLElementType | UMLRelationshipType]: FunctionComponent<{ element: any }> } = {
   [UMLElementType.Package]: PackageComponent,
-  [UMLElementType.Class]: ClassifierComponent,
-  [UMLElementType.AbstractClass]: ClassifierComponent,
-  [UMLElementType.Interface]: ClassifierComponent,
-  [UMLElementType.Enumeration]: ClassifierComponent,
-  [UMLElementType.ClassAttribute]: ClassMemberComponent,
-  [UMLElementType.ClassMethod]: ClassMemberComponent,
+  [UMLElementType.Class]: UMLClassifierComponent,
+  [UMLElementType.AbstractClass]: UMLClassifierComponent,
+  [UMLElementType.Interface]: UMLClassifierComponent,
+  [UMLElementType.Enumeration]: UMLClassifierComponent,
+  [UMLElementType.ClassAttribute]: UMLClassifierMemberComponent,
+  [UMLElementType.ClassMethod]: UMLClassifierMemberComponent,
   [UMLElementType.ObjectName]: ObjectNameComponent,
   [UMLElementType.ObjectAttribute]: ObjectMemberComponent,
   [UMLElementType.ObjectMethod]: ObjectMemberComponent,

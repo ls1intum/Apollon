@@ -1,31 +1,29 @@
 import React, { SFC } from 'react';
-import { Classifier } from './classifier';
+import { ClassElementType } from '../../class-diagram';
+import { UMLClassifier } from './uml-classifier';
 
-export const ClassifierComponent: SFC<Props> = ({ element, children }) => (
+export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
   <g>
     <rect width="100%" height="100%" />
-    {element.isInterface || element.isEnumeration ? (
-      <svg height={element.headerHeight}>
+    {element.stereotype ? (
+      <svg height={50}>
         <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold">
           <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
-            {element.isInterface && '«interface»'}
-            {element.isEnumeration && '«enumeration»'}
+            {`«${element.stereotype}»`}
           </tspan>
-          <tspan x="50%" dy={18} textAnchor="middle">
+          <tspan
+            x="50%"
+            dy={18}
+            textAnchor="middle"
+            fontStyle={element.type === ClassElementType.AbstractClass ? 'italic' : 'normal'}
+          >
             {element.name}
           </tspan>
         </text>
       </svg>
     ) : (
-      <svg height={element.headerHeight}>
-        <text
-          x="50%"
-          y="50%"
-          dominantBaseline="middle"
-          textAnchor="middle"
-          fontStyle={element.isAbstract ? 'italic' : 'normal'}
-          fontWeight="bold"
-        >
+      <svg height={40}>
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold">
           {element.name}
         </text>
       </svg>
@@ -38,5 +36,5 @@ export const ClassifierComponent: SFC<Props> = ({ element, children }) => (
 );
 
 interface Props {
-  element: Classifier;
+  element: UMLClassifier;
 }
