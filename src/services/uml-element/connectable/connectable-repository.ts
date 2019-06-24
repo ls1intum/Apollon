@@ -2,8 +2,9 @@ import { DefaultUMLRelationshipType, UMLRelationshipType } from '../../../packag
 import { UMLRelationships } from '../../../packages/uml-relationships';
 import { AsyncAction } from '../../../utils/actions/actions';
 import { Connection } from '../../uml-relationship/connection';
+import { UMLRelationship } from '../../uml-relationship/uml-relationship';
 import { Direction, IUMLElementPort } from '../uml-element-port';
-import { UMLElementRepository } from '../uml-element-repository';
+import { CreateAction, UMLElementActionTypes } from '../uml-element-types';
 import { ConnectableActionTypes, ConnectEndAction, ConnectStartAction } from './connectable-types';
 
 export const Connectable = {
@@ -57,7 +58,11 @@ export const Connectable = {
     const type: UMLRelationshipType = DefaultUMLRelationshipType[getState().diagram.type];
     const Classifier = UMLRelationships[type];
     const relationships = connections.map(connection => new Classifier(connection));
-    dispatch(UMLElementRepository.create(relationships));
+
+    dispatch<CreateAction<UMLRelationship>>({
+      type: UMLElementActionTypes.CREATE,
+      payload: { values: relationships },
+    });
   },
 
   endConnecting: (port?: IUMLElementPort | IUMLElementPort[]): AsyncAction => (dispatch, getState) => {
