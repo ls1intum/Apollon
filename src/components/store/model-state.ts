@@ -18,6 +18,7 @@ import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableState } from '../../services/uml-element/updatable/updatable-types';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { Assessment } from '../../typings';
+import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
 export interface ModelState {
   editor: EditorState;
@@ -59,6 +60,15 @@ export class ModelState {
     const elements = apollonElements
       .filter(element => !element.owner)
       .reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
+
+    const roots = elements.filter(element => !element.owner);
+    const bounds = computeBoundingBoxForElements(roots);
+    bounds.width = Math.ceil(bounds.width / 20) * 20;
+    bounds.height = Math.ceil(bounds.height / 20) * 20;
+    for (const element of roots) {
+      element.bounds.x -= bounds.x + bounds.width / 2;
+      element.bounds.y -= bounds.y + bounds.height / 2;
+    }
 
     // for (const apollonElement of model.elements) {
     //   const element = new UMLElements[apollonElement.type]();
@@ -145,13 +155,8 @@ export class ModelState {
     //   assessments: model.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
     // };
 
-    const reducedElements: UMLElementState = elements.reduce<UMLElementState>(
-      (acc, e) => ({ ...acc, [e.id]: { ...e } }),
-      {},
-    );
-
     return {
-      elements: reducedElements,
+      elements: elements.reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
     };
   }
 
@@ -179,6 +184,15 @@ export class ModelState {
     const apollonElements = Object.values(elements)
       .filter(element => !element.owner)
       .reduce<Apollon.UMLElement[]>((acc, val) => [...acc, ...serialize(val)], []);
+
+    const roots = apollonElements.filter(element => !element.owner);
+    const bounds = computeBoundingBoxForElements(roots);
+    bounds.width = Math.ceil(bounds.width / 20) * 20;
+    bounds.height = Math.ceil(bounds.height / 20) * 20;
+    for (const element of apollonElements) {
+      element.bounds.x -= bounds.x;// + bounds.width / 2;
+      element.bounds.y -= bounds.y;// + bounds.height / 2;
+    }
 
     // const elements: Apollon.UMLElement[] = [];
 

@@ -1,7 +1,6 @@
 import { createElement } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { Components } from '../../packages/components';
-import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { Point } from './point';
 
@@ -41,7 +40,7 @@ export function computeBoundingBox(points: Point[]): IBoundary {
   };
 }
 
-export function computeBoundingBoxForElements(elements: UMLElement[]): IBoundary {
+export function computeBoundingBoxForElements(elements: Array<{ bounds: IBoundary }>): IBoundary {
   if (!elements.length) {
     return { x: 0, y: 0, width: 0, height: 0 };
   }
