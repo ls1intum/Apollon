@@ -1,3 +1,4 @@
+import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
@@ -59,11 +60,24 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     return new Constructor(values);
   }
 
-  /** Serializes an `UMLElement` to an `IUMLElement` */
-  serialize<T extends IUMLElement>(): T {
-    const json = { ...(this as UMLElement) };
+  /** Serializes an `UMLElement` to an `Apollon.UMLElement` */
+  serialize(children?: UMLElement[]): Apollon.UMLElement {
+    return {
+      id: this.id,
+      name: this.name,
+      type: this.type as UMLElementType,
+      owner: this.owner,
+      bounds: this.bounds,
+    };
+  }
 
-    return json as T;
+  /** Deserializes an `Apollon.UMLElement` to an `UMLElement` */
+  deserialize<T extends Apollon.UMLElement>(values: T, children?: Apollon.UMLElement[]) {
+    this.id = values.id;
+    this.name = values.name;
+    this.type = values.type;
+    this.owner = values.owner;
+    this.bounds = { ...values.bounds };
   }
 
   abstract render(canvas: ILayer): ILayoutable[];

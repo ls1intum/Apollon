@@ -1,3 +1,4 @@
+import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
@@ -21,6 +22,11 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
   constructor(values?: DeepPartial<IUMLContainer>) {
     super();
     assign<IUMLContainer>(this, values);
+  }
+
+  deserialize<T extends Apollon.UMLElement>(values: T, children: Apollon.UMLElement[] = []) {
+    super.deserialize(values);
+    this.ownedElements = children.map(child => child.id);
   }
 
   abstract appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]];

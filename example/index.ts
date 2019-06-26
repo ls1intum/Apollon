@@ -1,5 +1,6 @@
-import { ApollonEditor, ApollonOptions, SVG, UMLModel } from '../src';
-import { UMLDiagramType } from '../src/packages/diagram-type';
+import { Apollon } from '@ls1intum/apollon';
+import { ApollonEditor } from '../src';
+import { ApollonOptions } from '../src/typings';
 import './styles.css';
 
 const container = document.getElementById('apollon')!;
@@ -23,7 +24,7 @@ export const onSwitch = (event: MouseEvent) => {
 export const save = () => {
   if (!editor) return;
 
-  const model: UMLModel = editor.model;
+  const model: Apollon.UMLModel = editor.model;
   localStorage.setItem('apollon', JSON.stringify(model));
   options = { ...options, model };
   return options;

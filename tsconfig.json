@@ -3,10 +3,7 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": [
-      "es2017",
-      "dom"
-    ],
+    "lib": ["es2017", "dom"],
     "jsx": "react",
     "outDir": "lib",
     "declaration": true,
@@ -17,12 +14,12 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "downlevelIteration": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ls1intum/apollon": ["@types"]
+    }
   },
-  "include": [
-    "src/index.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/index.ts", "src/example.ts"],
+  "exclude": ["node_modules"]
 }

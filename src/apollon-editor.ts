@@ -66,7 +66,6 @@ export class ApollonEditor {
   selection: Selection = { elements: [], relationships: [] };
   private assessments: Assessment[] = [];
   private application: RefObject<Application> = createRef();
-  private store: Store<ModelState, Actions> | null = null;
   private selectionSubscribers: Array<(selection: Selection) => void> = [];
   private assessmentSubscribers: Array<(assessments: Assessment[]) => void> = [];
 
@@ -141,10 +140,6 @@ export class ApollonEditor {
   private componentDidMount = () => {
     this.container.setAttribute('touch-action', 'none');
 
-    this.store =
-      this.application.current &&
-      this.application.current.store.current &&
-      this.application.current.store.current.state;
     if (this.store) {
       this.store.subscribe(this.onDispatch);
     }
@@ -175,4 +170,10 @@ export class ApollonEditor {
       this.assessments = umlAssessments;
     }
   };
+
+  private get store(): Store<ModelState, Actions> | null {
+    return (
+      this.application.current && this.application.current.store.current && this.application.current.store.current.state
+    );
+  }
 }

@@ -1,2 +1,2 @@
-export * from './typings';
+// export * from './typings';
 export * from './apollon-editor';

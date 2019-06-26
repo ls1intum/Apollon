@@ -1,3 +1,4 @@
+import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
@@ -30,7 +31,18 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
 
   constructor(values?: DeepPartial<IUMLClassifier>) {
     super();
-    assign<IUMLContainer>(this, values);
+    assign<IUMLClassifier>(this, values);
+  }
+
+  serialize(children: UMLElement[] = []): Apollon.UMLClassifier {
+    const json = {
+      ...super.serialize(),
+      attributes: children.filter(x => x instanceof UMLClassifierAttribute).map(x => x.id),
+      methods: children.filter(x => x instanceof UMLClassifierMethod).map(x => x.id),
+      ownedElements: undefined,
+    };
+
+    return json;
   }
 
   appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {

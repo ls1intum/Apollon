@@ -1,6 +1,7 @@
 import { Direction, UMLElement, UMLRelationship } from '../../typings';
 
 export enum ClassElementType {
+  Package = 'Package',
   Class = 'Class',
   AbstractClass = 'AbstractClass',
   Interface = 'Interface',

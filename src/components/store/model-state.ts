@@ -1,7 +1,10 @@
+import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
 import { UMLElementType } from '../../packages/uml-element-type';
+import { UMLElements } from '../../packages/uml-elements';
 import { AssessmentState } from '../../services/assessment/assessment-types';
 import { EditorState } from '../../services/editor/editor-types';
+import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { UMLDiagramState } from '../../services/uml-diagram/uml-diagram-types';
 import { ConnectableState } from '../../services/uml-element/connectable/connectable-types';
 import { HoverableState } from '../../services/uml-element/hoverable/hoverable-types';
@@ -9,13 +12,12 @@ import { InteractableState } from '../../services/uml-element/interactable/inter
 import { MovableState } from '../../services/uml-element/movable/movable-types';
 import { ResizableState } from '../../services/uml-element/resizable/resizable-types';
 import { SelectableState } from '../../services/uml-element/selectable/selectable-types';
-import { IUMLElement } from '../../services/uml-element/uml-element';
+import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableState } from '../../services/uml-element/updatable/updatable-types';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
-import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
-import { Assessment, Selection, UMLModel } from '../../typings';
+import { Assessment } from '../../typings';
 
 export interface ModelState {
   editor: EditorState;
@@ -32,7 +34,38 @@ export interface ModelState {
 }
 
 export class ModelState {
-  static fromModel(model: UMLModel): DeepPartial<ModelState> {
+  static fromModel(model: Apollon.UMLModel): DeepPartial<ModelState> {
+    const apollonElements = model.elements;
+
+    const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
+      const element = new UMLElements[apollonElement.type]();
+      const children: Apollon.UMLElement[] = UMLContainerRepository.isUMLContainer(element)
+        ? apollonElements
+            .filter(child => child.owner === apollonElement.id)
+            .map<Apollon.UMLElement>(val => {
+              const parent = apollonElements.find(e => e.id === val.owner)!;
+              return {
+                ...val,
+                bounds: { ...val.bounds, x: val.bounds.x - parent.bounds.x, y: val.bounds.y - parent.bounds.y },
+              };
+            })
+        : [];
+
+      element.deserialize(apollonElement, children);
+
+      return [element, ...children.reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], [])];
+    };
+
+    const elements = apollonElements
+      .filter(element => !element.owner)
+      .reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
+
+    // for (const apollonElement of model.elements) {
+    //   const element = new UMLElements[apollonElement.type]();
+    //   element.deserialize(apollonElement);
+    //   elements.push({ ...element });
+    //   console.log(element);
+    // }
     // const state = [...model.elements, ...model.relationships].reduce<UMLElementState>(
     //   (result, element) => ({
     //     ...result,
@@ -85,46 +118,91 @@ export class ModelState {
 
     // const computedBounds = { x: -width, y: -height, width: width * 2, height: height * 2 };
 
-    const elements: IUMLElement[] = [...model.elements, ...model.relationships];
+    // const elements: IUMLElement[] = [...model.elements, ...model.relationships];
 
     // const diagramElements = root.filter(element => !(element instanceof Relationship))
     //   .sort((a, b) => b.bounds.width * b.bounds.height - a.bounds.width * a.bounds.height);
 
+    // return {
+    //   diagram: {
+    //     ownedElements: model.elements.filter(e => !e.owner).map(element => element.id),
+    //     ownedRelationships: model.relationships.map(element => element.id),
+    //   },
+    //   // diagram: {
+    //   //   ...(() => {
+    //   //     const d = new UMLDiagram();
+    //   //     Object.assign(d, {
+    //   //       type: model.type,
+    //   //       bounds: computedBounds,
+    //   //     });
+    //   //     return d;
+    //   //   })(),
+    //   //   ownedElements: root.filter(element => !(element instanceof UMLRelationship)).map(element => element.id),
+    //   //   ownedRelationships: root.filter(element => element instanceof UMLRelationship).map(element => element.id),
+    //   // },
+    //   interactive: [...model.interactive.elements, ...model.interactive.relationships],
+    //   elements: elements.reduce((acc, val) => ({ ...acc, [val.id]: val }), {}),
+    //   assessments: model.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
+    // };
+
+    const reducedElements: UMLElementState = elements.reduce<UMLElementState>(
+      (acc, e) => ({ ...acc, [e.id]: { ...e } }),
+      {},
+    );
+
     return {
-      diagram: {
-        ownedElements: model.elements.filter(e => !e.owner).map(element => element.id),
-        ownedRelationships: model.relationships.map(element => element.id),
-      },
-      // diagram: {
-      //   ...(() => {
-      //     const d = new UMLDiagram();
-      //     Object.assign(d, {
-      //       type: model.type,
-      //       bounds: computedBounds,
-      //     });
-      //     return d;
-      //   })(),
-      //   ownedElements: root.filter(element => !(element instanceof UMLRelationship)).map(element => element.id),
-      //   ownedRelationships: root.filter(element => element instanceof UMLRelationship).map(element => element.id),
-      // },
-      interactive: [...model.interactive.elements, ...model.interactive.relationships],
-      elements: elements.reduce((acc, val) => ({ ...acc, [val.id]: val }), {}),
-      assessments: model.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
+      elements: reducedElements,
     };
   }
 
-  static toModel(state: ModelState): UMLModel {
-    const elements: Array<IUMLElement & { type: UMLElementType }> = [];
+  static toModel(state: ModelState): Apollon.UMLModel {
+    const elements = Object.values(state.elements)
+      .map<UMLElement | null>(element => UMLElementRepository.get(element))
+      .reduce<{ [id: string]: UMLElement }>((acc, val) => ({ ...acc, ...(val && { [val.id]: val }) }), {});
+
+    const serialize = (element: UMLElement): Apollon.UMLElement[] => {
+      const children: UMLElement[] = UMLContainerRepository.isUMLContainer(element)
+        ? element.ownedElements.map(id => elements[id])
+        : [];
+
+      return [
+        element.serialize(children),
+        ...children
+          .reduce<Apollon.UMLElement[]>((acc, val) => [...acc, ...serialize(val)], [])
+          .map<Apollon.UMLElement>(val => ({
+            ...val,
+            bounds: { ...val.bounds, x: val.bounds.x + element.bounds.x, y: val.bounds.y + element.bounds.y },
+          })),
+      ];
+    };
+
+    const apollonElements = Object.values(elements)
+      .filter(element => !element.owner)
+      .reduce<Apollon.UMLElement[]>((acc, val) => [...acc, ...serialize(val)], []);
+
+    // const elements: Apollon.UMLElement[] = [];
+
+    // for (const iElement of Object.values(state.elements)) {
+    //   const element: UMLElement | null = UMLElementRepository.get(iElement);
+    //   if (!element) {
+    //     continue;
+    //   }
+
+    // //   const json = element.serialize();
+    // //   elements.push(json);
+    // }
+
+    // const elements: Array<IUMLElement & { type: UMLElementType }> = [];
     const relationships: IUMLRelationship[] = [];
 
-    for (const element of Object.values(state.elements)) {
-      if (UMLRelationshipRepository.isUMLRelationship(element)) {
-        relationships.push({ ...element });
-      }
-      if (UMLElementRepository.isUMLElement(element)) {
-        elements.push({ ...element });
-      }
-    }
+    // for (const element of Object.values(state.elements)) {
+    //   if (UMLRelationshipRepository.isUMLRelationship(element)) {
+    //     relationships.push({ ...element });
+    //   }
+    //   if (UMLElementRepository.isUMLElement(element)) {
+    //     elements.push({ ...element });
+    //   }
+    // }
 
     // const elements = UMLElementRepository.read(state.elements).filter(element => !(element instanceof UMLRelationship));
     // const relationships = UMLRelationshipRepository.read(state.elements);
@@ -144,12 +222,12 @@ export class ModelState {
     // // );
     // const r = [] as IUMLRelationship[];
 
-    const interactive: Selection = {
-      elements: elements.filter(element => state.interactive.includes(element.id)).map<string>(element => element.id),
-      relationships: relationships
-        .filter(element => state.interactive.includes(element.id))
-        .map<string>(element => element.id),
-    };
+    // const interactive: Selection = {
+    //   elements: elements.filter(element => state.interactive.includes(element.id)).map<string>(element => element.id),
+    //   relationships: relationships
+    //     .filter(element => state.interactive.includes(element.id))
+    //     .map<string>(element => element.id),
+    // };
 
     // const bounds = computeBoundingBoxForElements(root);
     // for (const element of e) {
@@ -183,13 +261,17 @@ export class ModelState {
     }));
 
     return {
-      version: '2.0.0',
-      size,
-      type: state.diagram.type,
-      interactive,
-      elements,
-      relationships,
-      assessments,
+      elements: apollonElements,
     };
+
+    // return {
+    //   version: '2.0.0',
+    //   size,
+    //   type: state.diagram.type,
+    //   interactive,
+    //   elements,
+    //   relationships,
+    //   assessments,
+    // };
   }
 }

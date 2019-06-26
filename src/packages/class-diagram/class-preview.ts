@@ -1,10 +1,10 @@
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
-import { Package } from '../common/package/package';
 import { ComposePreview } from '../compose-preview';
 import { UMLAbstractClass } from './uml-abstract-class/uml-abstract-class';
 import { UMLClassAttribute } from './uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from './uml-class-method/uml-class-method';
+import { UMLClassPackage } from './uml-class-package/uml-class-package';
 import { UMLClass } from './uml-class/uml-class';
 import { UMLEnumeration } from './uml-enumeration/uml-enumeration';
 import { UMLInterface } from './uml-interface/uml-interface';
@@ -13,7 +13,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
   const elements: UMLElement[] = [];
 
   // UML Package
-  const umlPackage = new Package();
+  const umlPackage = new UMLClassPackage({ name: translate('packages.classDiagram.package') });
   elements.push(umlPackage);
 
   // UML Class

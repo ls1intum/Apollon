@@ -8,10 +8,10 @@ import { ActivityObjectNode } from './activity-diagram/activity-object-node/acti
 import { UMLAbstractClass } from './class-diagram/uml-abstract-class/uml-abstract-class';
 import { UMLClassAttribute } from './class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from './class-diagram/uml-class-method/uml-class-method';
+import { UMLClassPackage } from './class-diagram/uml-class-package/uml-class-package';
 import { UMLClass } from './class-diagram/uml-class/uml-class';
 import { UMLEnumeration } from './class-diagram/uml-enumeration/uml-enumeration';
 import { UMLInterface } from './class-diagram/uml-interface/uml-interface';
-import { Package } from './common/package/package';
 import { ComponentInterface } from './component-diagram/component-interface/component-interface';
 import { Component } from './component-diagram/component/component';
 import { DeploymentArtifact } from './deployment-diagram/deployment-artifact/deployment-artifact';
@@ -27,7 +27,7 @@ import { UseCase } from './use-case-diagram/use-case/use-case';
 type UMLElements = { [key in UMLElementType]: new (values: IUMLElement) => UMLElement };
 
 export const UMLElements = {
-  [UMLElementType.Package]: Package,
+  [UMLElementType.Package]: UMLClassPackage,
   [UMLElementType.Class]: UMLClass,
   [UMLElementType.AbstractClass]: UMLAbstractClass,
   [UMLElementType.Interface]: UMLInterface,
