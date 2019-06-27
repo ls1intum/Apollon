@@ -1,9 +1,9 @@
 import { ComponentClass } from 'react';
 import { ActivityControlFlowPopup } from './activity-diagram/activity-control-flow/activity-control-flow-popup';
 import { ActivityMergeNodePopup } from './activity-diagram/activity-merge-node/activity-merge-node-popup';
-import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
 import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
+import { ClassAssociationPopup } from './common/uml-association/uml-association-update';
 import { UMLClassifierUpdate } from './common/uml-classifier/uml-classifier-update';
 import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
 import { ComponentAssociationPopup } from './component-diagram/component-association-popup';

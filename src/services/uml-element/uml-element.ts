@@ -61,18 +61,18 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
   }
 
   /** Serializes an `UMLElement` to an `Apollon.UMLElement` */
-  serialize(children?: UMLElement[]): Apollon.UMLElement {
+  serialize(children?: UMLElement[]): Apollon.UMLModelElement {
     return {
       id: this.id,
       name: this.name,
-      type: this.type as UMLElementType,
+      type: this.type,
       owner: this.owner,
       bounds: this.bounds,
     };
   }
 
   /** Deserializes an `Apollon.UMLElement` to an `UMLElement` */
-  deserialize<T extends Apollon.UMLElement>(values: T, children?: Apollon.UMLElement[]) {
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]) {
     this.id = values.id;
     this.name = values.name;
     this.type = values.type;

@@ -1,8 +1,8 @@
 import React, { SFC } from 'react';
-import { ClassRelationshipType } from '..';
 import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
-import { ClassAssociation } from './class-association';
+import { ClassRelationshipType } from '../../class-diagram';
+import { UMLAssociation } from './uml-association';
 
 const Marker = {
   Arrow: (id: string) => (
@@ -65,7 +65,7 @@ const Marker = {
   ),
 };
 
-export const ClassAssociationComponent: SFC<Props> = ({ element }) => {
+export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
   const marker = (type => {
     switch (type) {
       case ClassRelationshipType.ClassDependency:
@@ -137,30 +137,22 @@ export const ClassAssociationComponent: SFC<Props> = ({ element }) => {
         markerEnd={`url(#${id})`}
         strokeDasharray={stroke}
       />
-      {element.source && (
-        <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'BOTTOM')}>
-          {element.multiplicity.source}
-        </text>
-      )}
-      {element.target && (
-        <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'BOTTOM')}>
-          {element.multiplicity.target}
-        </text>
-      )}
-      {element.source && (
-        <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'TOP')}>
-          {element.role.source}
-        </text>
-      )}
-      {element.target && (
-        <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'TOP')}>
-          {element.role.target}
-        </text>
-      )}
+      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'BOTTOM')}>
+        {element.source.multiplicity}
+      </text>
+      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'BOTTOM')}>
+        {element.target.multiplicity}
+      </text>
+      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'TOP')}>
+        {element.source.role}
+      </text>
+      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'TOP')}>
+        {element.target.role}
+      </text>
     </g>
   );
 };
 
 interface Props {
-  element: ClassAssociation;
+  element: UMLAssociation;
 }

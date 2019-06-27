@@ -6,8 +6,8 @@ import { ActivityForkNodeComponent } from './activity-diagram/activity-fork-node
 import { ActivityInitialNodeComponent } from './activity-diagram/activity-initial-node/activity-initial-node-component';
 import { ActivityMergeNodeComponent } from './activity-diagram/activity-merge-node/activity-merge-node-component';
 import { ActivityObjectNodeComponent } from './activity-diagram/activity-object-node/activity-object-node-component';
-import { ClassAssociationComponent } from './class-diagram/class-association/class-association-component';
 import { UMLClassPackageComponent } from './class-diagram/uml-class-package/uml-class-package-component';
+import { UMLAssociationComponent } from './common/uml-association/uml-association-component';
 import { UMLClassifierComponent } from './common/uml-classifier/uml-classifier-component';
 import { UMLClassifierMemberComponent } from './common/uml-classifier/uml-classifier-member-component';
 import { CommunicationLinkComponent } from './communication-diagram/communication-link/communication-link-component';
@@ -56,13 +56,13 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLElementType.ComponentInterface]: ComponentInterfaceComponent,
   [UMLElementType.DeploymentNode]: DeploymentNodeComponent,
   [UMLElementType.DeploymentArtifact]: DeploymentArtifactComponent,
-  [UMLRelationshipType.ClassAggregation]: ClassAssociationComponent,
-  [UMLRelationshipType.ClassBidirectional]: ClassAssociationComponent,
-  [UMLRelationshipType.ClassComposition]: ClassAssociationComponent,
-  [UMLRelationshipType.ClassDependency]: ClassAssociationComponent,
-  [UMLRelationshipType.ClassInheritance]: ClassAssociationComponent,
-  [UMLRelationshipType.ClassRealization]: ClassAssociationComponent,
-  [UMLRelationshipType.ClassUnidirectional]: ClassAssociationComponent,
+  [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassDependency]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassInheritance]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassRealization]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassUnidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ObjectLink]: ObjectLinkComponent,
   [UMLRelationshipType.ActivityControlFlow]: ActivityControlFlowComponent,
   [UMLRelationshipType.UseCaseAssociation]: UseCaseAssociationComponent,

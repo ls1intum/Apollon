@@ -24,7 +24,15 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
     assign<IUMLContainer>(this, values);
   }
 
-  deserialize<T extends Apollon.UMLElement>(values: T, children: Apollon.UMLElement[] = []) {
+  /** Serializes an `UMLElement` to an `Apollon.UMLElement` */
+  serialize(children?: UMLElement[]): Apollon.UMLModelElement {
+    return {
+      ...super.serialize(children),
+      type: this.type as UMLElementType,
+    };
+  }
+
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children: Apollon.UMLModelElement[] = []) {
     super.deserialize(values);
     this.ownedElements = children.map(child => child.id);
   }

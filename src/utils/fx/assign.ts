@@ -10,8 +10,8 @@ export const assign = <T extends { [key: string]: any }>(target: T, source?: Dee
       } else {
         target[key] = { ...target[key], ...assign(target[key], source[key]) };
       }
-    } else if (source[key]) {
-      if (!target) {
+    } else if (source[key] !== undefined) {
+      if (target === undefined) {
         target = {} as T;
       }
       target[key] = source[key] as T[Extract<keyof T, string>];

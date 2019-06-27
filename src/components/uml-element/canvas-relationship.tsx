@@ -40,14 +40,14 @@ export class CanvasRelationshipComponent extends Component<Props> {
 
     return (
       <svg {...props} {...relationship.bounds}>
-        {/* <ChildComponent element={UMLRelationshipRepository.get(relationship)} /> */}
+        <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
         {children}
         {/* {(hovered || selected) && (
           <rect
             x={-STROKE / 2}
             y={-STROKE / 2}
-            width={element.bounds.width + STROKE}
-            height={element.bounds.height + STROKE}
+            width={relationship.bounds.width + STROKE}
+            height={relationship.bounds.height + STROKE}
             fill="none"
             stroke="#0064ff"
             strokeOpacity="0.2"

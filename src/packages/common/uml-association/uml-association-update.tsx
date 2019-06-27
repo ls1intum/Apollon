@@ -2,11 +2,9 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
-import { ClassRelationshipType } from '..';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
-import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Body, Header } from '../../../components/controls/typography/typography';
@@ -15,9 +13,9 @@ import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
-import { ClassAssociation } from './class-association';
+import { ClassRelationshipType } from '../../class-diagram';
+import { ClassAssociation } from './old';
 
 const Flex = styled.div`
   display: flex;

@@ -1,23 +1,56 @@
+import { UMLDiagramType } from 'src/packages/diagram-type';
 import { UMLElementType } from 'src/packages/uml-element-type';
+import { UMLRelationshipType } from 'src/packages/uml-relationship-type';
+import { Direction } from 'src/services/uml-element/uml-element-port';
 import { IBoundary } from 'src/utils/geometry/boundary';
+import { IPoint } from 'src/utils/geometry/point';
 
 declare module '@ls1intum/apollon' {
   namespace Apollon {
     type UMLModel = {
       elements: UMLElement[];
+      relationships: UMLRelationship[];
     };
 
-    type UMLElement = {
+    type UMLModelElement = {
       id: string;
       name: string;
-      type: UMLElementType;
+      type: UMLElementType | UMLRelationshipType | UMLDiagramType;
       owner: string | null;
       bounds: IBoundary;
     };
 
-    type UMLClassifier = Apollon.UMLElement & {
+    type UMLElement = UMLModelElement & {
+      type: UMLElementType;
+    };
+
+    type UMLRelationship = UMLModelElement & {
+      type: UMLRelationshipType;
+      path: IPoint[];
+      source: {
+        element: string;
+        direction: Direction;
+      };
+      target: {
+        element: string;
+        direction: Direction;
+      };
+    };
+
+    type UMLClassifier = UMLElement & {
       attributes: string[];
       methods: string[];
-    }
+    };
+
+    type UMLAssociation = UMLRelationship & {
+      source: UMLRelationship['source'] & {
+        multiplicity: string;
+        role: string;
+      };
+      target: UMLRelationship['target'] & {
+        multiplicity: string;
+        role: string;
+      };
+    };
   }
 }

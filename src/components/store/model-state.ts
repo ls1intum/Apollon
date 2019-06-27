@@ -2,6 +2,7 @@ import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
+import { UMLRelationships } from '../../packages/uml-relationships';
 import { AssessmentState } from '../../services/assessment/assessment-types';
 import { EditorState } from '../../services/editor/editor-types';
 import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
@@ -16,7 +17,7 @@ import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UpdatableState } from '../../services/uml-element/updatable/updatable-types';
-import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
+import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { Assessment } from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
@@ -37,6 +38,7 @@ export interface ModelState {
 export class ModelState {
   static fromModel(model: Apollon.UMLModel): DeepPartial<ModelState> {
     const apollonElements = model.elements;
+    const apollonRelationships = model.relationships;
 
     const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
       const element = new UMLElements[apollonElement.type]();
@@ -61,7 +63,13 @@ export class ModelState {
       .filter(element => !element.owner)
       .reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
 
-    const roots = elements.filter(element => !element.owner);
+    const relationships = apollonRelationships.map<UMLRelationship>(apollonRelationship => {
+      const relationship = new UMLRelationships[apollonRelationship.type]();
+      relationship.deserialize(apollonRelationship);
+      return relationship;
+    });
+
+    const roots = [...elements.filter(element => !element.owner), ...relationships];
     const bounds = computeBoundingBoxForElements(roots);
     bounds.width = Math.ceil(bounds.width / 20) * 20;
     bounds.height = Math.ceil(bounds.height / 20) * 20;
@@ -69,23 +77,6 @@ export class ModelState {
       element.bounds.x -= bounds.x + bounds.width / 2;
       element.bounds.y -= bounds.y + bounds.height / 2;
     }
-
-    // for (const apollonElement of model.elements) {
-    //   const element = new UMLElements[apollonElement.type]();
-    //   element.deserialize(apollonElement);
-    //   elements.push({ ...element });
-    //   console.log(element);
-    // }
-    // const state = [...model.elements, ...model.relationships].reduce<UMLElementState>(
-    //   (result, element) => ({
-    //     ...result,
-    //     [element.id]: {
-    //       owner: null,
-    //       ...element,
-    //     },
-    //   }),
-    //   {},
-    // );
 
     // const elements = [
     //   ...UMLElementRepository.getByIds(state)(Object.keys(state)),
@@ -156,7 +147,7 @@ export class ModelState {
     // };
 
     return {
-      elements: elements.reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
+      elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
     };
   }
 
@@ -171,7 +162,7 @@ export class ModelState {
         : [];
 
       return [
-        element.serialize(children),
+        element.serialize(children) as Apollon.UMLElement,
         ...children
           .reduce<Apollon.UMLElement[]>((acc, val) => [...acc, ...serialize(val)], [])
           .map<Apollon.UMLElement>(val => ({
@@ -190,8 +181,8 @@ export class ModelState {
     bounds.width = Math.ceil(bounds.width / 20) * 20;
     bounds.height = Math.ceil(bounds.height / 20) * 20;
     for (const element of apollonElements) {
-      element.bounds.x -= bounds.x;// + bounds.width / 2;
-      element.bounds.y -= bounds.y;// + bounds.height / 2;
+      element.bounds.x -= bounds.x; // + bounds.width / 2;
+      element.bounds.y -= bounds.y; // + bounds.height / 2;
     }
 
     // const elements: Apollon.UMLElement[] = [];
@@ -276,6 +267,7 @@ export class ModelState {
 
     return {
       elements: apollonElements,
+      relationships: [],
     };
 
     // return {

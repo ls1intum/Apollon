@@ -7,6 +7,7 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { assign } from '../../../utils/fx/assign';
 import { Text } from '../../../utils/svg/text';
+import { UMLElementType } from '../../uml-element-type';
 import { UMLClassifierAttribute } from './uml-classifier-attribute';
 import { UMLClassifierMethod } from './uml-classifier-method';
 
@@ -35,14 +36,12 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
   }
 
   serialize(children: UMLElement[] = []): Apollon.UMLClassifier {
-    const json = {
-      ...super.serialize(),
+    return {
+      ...super.serialize(children),
+      type: this.type as UMLElementType,
       attributes: children.filter(x => x instanceof UMLClassifierAttribute).map(x => x.id),
       methods: children.filter(x => x instanceof UMLClassifierMethod).map(x => x.id),
-      ownedElements: undefined,
     };
-
-    return json;
   }
 
   appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
