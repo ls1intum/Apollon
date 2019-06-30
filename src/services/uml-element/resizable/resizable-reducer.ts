@@ -4,13 +4,13 @@ import { ResizableActions, ResizableActionTypes, ResizableState } from './resiza
 
 export const ResizableReducer: Reducer<ResizableState, ResizableActions | DeleteAction> = (state = [], action) => {
   switch (action.type) {
-    case ResizableActionTypes.RESIZE_START: {
+    case ResizableActionTypes.START: {
       const { payload } = action;
 
       return [...new Set([...payload.ids, ...state])];
     }
     case UMLElementActionTypes.DELETE:
-    case ResizableActionTypes.RESIZE_END: {
+    case ResizableActionTypes.END: {
       const { payload } = action;
 
       return state.filter(id => !payload.ids.includes(id));

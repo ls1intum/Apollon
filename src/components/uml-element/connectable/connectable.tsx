@@ -2,6 +2,7 @@ import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { Direction } from '../../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
@@ -11,11 +12,13 @@ type StateProps = {
   hovered: boolean;
   selected: boolean;
   connecting: boolean;
+  reconnecting: boolean;
 };
 
 type DispatchProps = {
   start: AsyncDispatch<typeof UMLElementRepository.startConnecting>;
   connect: AsyncDispatch<typeof UMLElementRepository.connect>;
+  reconnect: AsyncDispatch<typeof UMLRelationshipRepository.reconnect>;
 };
 
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
@@ -25,10 +28,12 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
     hovered: state.hovered[0] === props.id,
     selected: state.selected.includes(props.id),
     connecting: !!state.connecting.length,
+    reconnecting: !!Object.keys(state.reconnecting).length,
   }),
   {
     start: UMLElementRepository.startConnecting,
     connect: UMLElementRepository.connect,
+    reconnect: UMLRelationshipRepository.reconnect,
   },
 );
 
@@ -71,11 +76,11 @@ export const connectable = (
 ): ComponentClass<UMLElementComponentProps> => {
   class Connectable extends Component<Props> {
     render() {
-      const { hovered, selected, connecting, start, connect: _, ...props } = this.props;
+      const { hovered, selected, connecting, reconnecting, start, connect: _, reconnect, ...props } = this.props;
       return (
         <WrappedComponent {...props}>
           {props.children}
-          {(hovered || selected || connecting) && (
+          {(hovered || selected || connecting || reconnecting) && (
             <>
               <Handle direction={Direction.Up} onPointerDown={this.onPointerDown} onPointerUp={this.onPointerUp} />
               <Handle direction={Direction.Right} onPointerDown={this.onPointerDown} onPointerUp={this.onPointerUp} />
@@ -94,7 +99,12 @@ export const connectable = (
 
     private onPointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
       const direction = event.currentTarget.getAttribute('direction') as Direction;
-      this.props.connect({ element: this.props.id, direction });
+      if (this.props.connecting) {
+        this.props.connect({ element: this.props.id, direction });
+      }
+      if (this.props.reconnecting) {
+        this.props.reconnect({ element: this.props.id, direction });
+      }
     };
   }
 

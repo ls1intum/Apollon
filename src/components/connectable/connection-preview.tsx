@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { IUMLElementPort } from '../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
+import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext } from '../canvas/canvas-context';
@@ -17,7 +19,8 @@ type StateProps = {
 };
 
 type DispatchProps = {
-  end: AsyncDispatch<typeof UMLElementRepository.endConnecting>;
+  endConnecting: AsyncDispatch<typeof UMLElementRepository.endConnecting>;
+  endReconnecting: AsyncDispatch<typeof UMLRelationshipRepository.endReconnecting>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -26,10 +29,14 @@ const enhance = compose<ComponentType<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({
-      connecting: state.connecting,
+      connecting: [
+        ...state.connecting,
+        ...Object.keys(state.reconnecting).map(id => (state.elements[id] as IUMLRelationship)[state.reconnecting[id]]),
+      ],
     }),
     {
-      end: UMLElementRepository.endConnecting,
+      endConnecting: UMLElementRepository.endConnecting,
+      endReconnecting: UMLRelationshipRepository.endReconnecting,
     },
   ),
 );
@@ -74,7 +81,8 @@ class Preview extends Component<Props, State> {
   onPointerUp = (event: PointerEvent) => {
     document.removeEventListener('pointermove', this.onPointerMove);
     this.setState(initialState);
-    this.props.end();
+    this.props.endConnecting();
+    this.props.endReconnecting();
   };
 }
 

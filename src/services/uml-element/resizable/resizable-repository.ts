@@ -10,7 +10,7 @@ export const Resizable = {
     }
 
     dispatch<ResizeStartAction>({
-      type: ResizableActionTypes.RESIZE_START,
+      type: ResizableActionTypes.START,
       payload: { ids },
     });
   },
@@ -34,7 +34,7 @@ export const Resizable = {
     }
 
     dispatch<ResizeEndAction>({
-      type: ResizableActionTypes.RESIZE_END,
+      type: ResizableActionTypes.END,
       payload: { ids },
     });
   },

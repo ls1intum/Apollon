@@ -1,17 +1,19 @@
 import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
+import { IBoundary } from 'src/utils/geometry/boundary';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { assign } from '../../utils/fx/assign';
-import { IPoint } from '../../utils/geometry/point';
+import { IPath } from '../../utils/geometry/path';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { Direction, IUMLElementPort } from '../uml-element/uml-element-port';
+import { Connection } from './connection';
 import { UMLRelationshipFeatures } from './uml-relationship-features';
 
 export interface IUMLRelationship extends IUMLElement {
   type: UMLRelationshipType;
-  path: IPoint[];
+  path: IPath;
   source: IUMLElementPort;
   target: IUMLElementPort;
 }
@@ -20,16 +22,18 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
   static features: UMLRelationshipFeatures = {
     connectable: false,
     droppable: false,
-    hoverable: false,
+    hoverable: true,
     movable: false,
+    reconnectable: true,
     resizable: false,
-    selectable: false,
-    updatable: false,
+    selectable: true,
+    updatable: true,
     straight: false,
+    variable: true,
   };
 
   abstract type: UMLRelationshipType;
-  path: IPoint[] = [];
+  path: IPath = [{ x: 0, y: 0 }, { x: 200, y: 100 }];
   source: IUMLElementPort = {
     direction: Direction.Up,
     element: '',
@@ -67,9 +71,24 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     this.target = values.target;
   }
 
-  // TODO
-  // abstract render(canvas: ILayer): ILayoutable[];
-  render(canvas: ILayer): ILayoutable[] {
+  render(canvas: ILayer, source?: IBoundary, target?: IBoundary): ILayoutable[] {
+    if (!source || !target) {
+      return [this];
+    }
+
+    const { straight, variable } = (this.constructor as typeof UMLRelationship).features;
+    const path = Connection.computePath(
+      { bounds: source, direction: this.source.direction },
+      { bounds: target, direction: this.target.direction },
+      { isStraight: straight, isVariable: variable },
+    );
+
+    const x = Math.min(...path.map(point => point.x));
+    const y = Math.min(...path.map(point => point.y));
+    const width = Math.max(Math.max(...path.map(point => point.x)) - x, 1);
+    const height = Math.max(Math.max(...path.map(point => point.y)) - y, 1);
+    this.bounds = { x, y, width, height };
+    this.path = path.map(point => ({ x: point.x - x, y: point.y - y })) as IPath;
     return [this];
   }
 }

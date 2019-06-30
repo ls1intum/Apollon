@@ -45,7 +45,7 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, UMLDiagramActions | UML
       return {
         ...state,
         ownedElements: state.ownedElements.filter(id => !payload.ids.includes(id)),
-        ownedRelationships: state.ownedElements.filter(id => !payload.ids.includes(id)),
+        ownedRelationships: state.ownedRelationships.filter(id => !payload.ids.includes(id)),
       };
     }
     case ResizingActionTypes.RESIZE: {

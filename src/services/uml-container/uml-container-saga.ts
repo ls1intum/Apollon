@@ -160,7 +160,7 @@ function* remove(): SagaIterator {
 }
 
 function* appendAfterMove(): SagaIterator {
-  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
+  const action: MoveEndAction = yield take(MovableActionTypes.END);
   const { elements, hovered }: ModelState = yield select();
   let containerID: string | null = null;
 
@@ -187,7 +187,7 @@ function* appendAfterMove(): SagaIterator {
 }
 
 function* resizeAfterMove(): SagaIterator {
-  const action: MoveEndAction = yield take(MovableActionTypes.MOVE_END);
+  const action: MoveEndAction = yield take(MovableActionTypes.END);
   const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
@@ -212,7 +212,7 @@ function* resizeWhileResize(): SagaIterator {
 }
 
 function* resizeAfterResize(): SagaIterator {
-  const action: ResizeEndAction = yield take(ResizableActionTypes.RESIZE_END);
+  const action: ResizeEndAction = yield take(ResizableActionTypes.END);
   const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };

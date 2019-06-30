@@ -4,13 +4,13 @@ import { MovableActions, MovableActionTypes, MovableState } from './movable-type
 
 export const MovableReducer: Reducer<MovableState, MovableActions | DeleteAction> = (state = [], action) => {
   switch (action.type) {
-    case MovableActionTypes.MOVE_START: {
+    case MovableActionTypes.START: {
       const { payload } = action;
 
       return [...new Set([...payload.ids, ...state])];
     }
     case UMLElementActionTypes.DELETE:
-    case MovableActionTypes.MOVE_END: {
+    case MovableActionTypes.END: {
       const { payload } = action;
 
       return state.filter(id => !payload.ids.includes(id));

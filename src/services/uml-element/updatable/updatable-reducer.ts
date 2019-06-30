@@ -4,13 +4,13 @@ import { UpdatableActions, UpdatableActionTypes, UpdatableState } from './updata
 
 export const UpdatableReducer: Reducer<UpdatableState, UpdatableActions | DeleteAction> = (state = [], action) => {
   switch (action.type) {
-    case UpdatableActionTypes.UPDATE_START: {
+    case UpdatableActionTypes.START: {
       const { payload } = action;
 
       return [...new Set([...payload.ids, ...state])];
     }
     case UMLElementActionTypes.DELETE:
-    case UpdatableActionTypes.UPDATE_END: {
+    case UpdatableActionTypes.END: {
       const { payload } = action;
 
       return state.filter(id => !payload.ids.includes(id));

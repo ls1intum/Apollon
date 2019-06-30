@@ -1,45 +1,21 @@
 import { SagaIterator } from 'redux-saga';
-import { call, select, take } from 'redux-saga/effects';
+import { call, getContext, put, select, take } from 'redux-saga/effects';
+import { IBoundary } from 'src/utils/geometry/boundary';
 import { ModelState } from '../../components/store/model-state';
 import { run } from '../../utils/actions/sagas';
-import { CreateAction, UMLElementActionTypes } from '../uml-element/uml-element-types';
+import { diff } from '../../utils/fx/diff';
+import { ILayer } from '../layouter/layer';
+import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
+import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
+import { UMLElementRepository } from '../uml-element/uml-element-repository';
+import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from '../uml-element/uml-element-types';
+import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
+import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { UMLRelationshipRepository } from './uml-relationship-repository';
-// import { ModelState } from '../../components/store/model-state';
-// import { Boundary, computeBoundingBoxForRelationship } from '../../utils/geometry/boundary';
-// import { Point } from '../../utils/geometry/point';
-// import { notEmpty } from '../../utils/not-empty';
-// import { UMLElement } from '../uml-element/uml-element';
-// import { UMLElementRepository } from '../uml-element/uml-element-repository';
-// import {
-//   DeleteAction,
-//   MoveAction,
-//   ResizeAction,
-//   UMLElementActionTypes,
-//   UpdateAction,
-// } from '../uml-element/uml-element-types';
-// import { Connection } from './connection';
-// import { UMLRelationship } from './uml-relationship';
-// import { UMLRelationshipRepository } from './uml-relationship-repository';
-// import {
-//   ConnectAction,
-//   CreateAction,
-//   FlipAction,
-//   RedrawAction,
-//   UMLRelationshipActionTypes,
-// } from './uml-relationship-types';
-
-// export function* UMLRelationshipSaga() {
-//   yield takeEvery(UMLRelationshipActionTypes.CREATE, handleRelationshipCreation);
-//   yield takeEvery(UMLRelationshipActionTypes.CONNECT, handleRelationshipConnect);
-//   yield takeEvery(UMLRelationshipActionTypes.FLIP, handleRelationshipFlip);
-//   yield takeEvery(UMLElementActionTypes.MOVE, handleElementMove);
-//   yield takeEvery(UMLElementActionTypes.RESIZE, handleElementResize);
-//   yield takeLatest(UMLElementActionTypes.UPDATE, handleElementUpdate);
-//   yield takeLatest(UMLElementActionTypes.DELETE, handleElementDelete);
-// }
+import { LayoutAction } from './uml-relationship-types';
 
 export function* UMLRelationshipSaga() {
-  yield run([create]);
+  yield run([create, reconnect, update, layoutElement, deleteElement]);
 }
 
 function* create(): SagaIterator {
@@ -49,276 +25,92 @@ function* create(): SagaIterator {
   }
 }
 
-// function* handleRelationshipConnect(action: ConnectAction) {
-//   const { payload } = action;
-//   yield recalc(payload.id);
-// }
+function* reconnect(): SagaIterator {
+  const action: ReconnectAction = yield take(ReconnectableActionTypes.RECONNECT);
+  for (const connection of action.payload.connections) {
+    yield call(recalc, connection.id);
+  }
+}
 
-// function* handleRelationshipFlip(action: FlipAction) {
-//   const { payload } = action;
-//   yield recalc(payload.id);
-// }
+function* update(): SagaIterator {
+  const action: UpdateAction = yield take(UMLElementActionTypes.UPDATE);
+  const { elements }: ModelState = yield select();
 
-// function* handleElementMove(action: MoveAction) {
-//   const { payload } = action;
-//   if (!payload.id || payload.internal) return;
+  for (const value of action.payload.values) {
+    if (!UMLRelationshipRepository.isUMLRelationship(elements[value.id])) {
+      continue;
+    }
 
-//   const { elements }: ModelState = yield select();
-//   const element = UMLElementRepository.getById(elements)(payload.id);
-//   if (!element) return;
+    yield call(recalc, value.id);
+  }
+}
 
-//   const relationships = UMLRelationshipRepository.read(elements);
+function* layoutElement(): SagaIterator {
+  const action: MoveAction | ResizeAction = yield take([MovingActionTypes.MOVE, ResizingActionTypes.RESIZE]);
+  const { elements }: ModelState = yield select();
+  const relationships = Object.values(elements).filter(
+    (x): x is IUMLRelationship => UMLRelationshipRepository.isUMLRelationship(x),
+  );
+  const updates: string[] = [];
 
-//   loop: for (const relationship of relationships) {
-//     let source: string | null = relationship.source.element;
-//     while (source) {
-//       if (source === payload.id) {
-//         yield recalc(relationship.id);
-//         continue loop;
-//       }
-//       source = elements[source].owner;
-//     }
-//     let target: string | null = relationship.target.element;
-//     while (target) {
-//       if (target === payload.id) {
-//         yield recalc(relationship.id);
-//         continue loop;
-//       }
-//       target = elements[target].owner;
-//     }
-//   }
-// }
+  loop: for (const relationship of relationships) {
+    let source: string | null = relationship.source.element;
+    while (source) {
+      if (action.payload.ids.includes(source)) {
+        updates.push(relationship.id);
+        continue loop;
+      }
+      source = elements[source].owner;
+    }
+    let target: string | null = relationship.target.element;
+    while (target) {
+      if (action.payload.ids.includes(target)) {
+        updates.push(relationship.id);
+        continue loop;
+      }
+      target = elements[target].owner;
+    }
+  }
 
-// function* handleElementResize(action: ResizeAction) {
-//   const { payload } = action;
-//   const { elements }: ModelState = yield select();
-//   const element = UMLElementRepository.getById(elements)(payload.id);
-//   if (!element || !(element.constructor as typeof UMLElement).features.connectable) return;
+  for (const id of [...new Set([...updates])]) {
+    yield call(recalc, id);
+  }
+}
 
-//   const relationships = UMLRelationshipRepository.read(elements);
+function* deleteElement(): SagaIterator {
+  const action: DeleteAction = yield take(UMLElementActionTypes.DELETE);
+  const { elements }: ModelState = yield select();
+  const relationships = Object.values(elements)
+    .filter((x): x is IUMLRelationship => UMLRelationshipRepository.isUMLRelationship(x))
+    .filter(
+      relationship =>
+        action.payload.ids.includes(relationship.source.element) ||
+        action.payload.ids.includes(relationship.target.element),
+    )
+    .map(relationship => relationship.id);
 
-//   for (const relationship of relationships) {
-//     if (relationship.source.element === element.id) {
-//       yield recalc(relationship.id);
-//     } else if (relationship.target.element === element.id) {
-//       yield recalc(relationship.id);
-//     }
-//   }
-// }
-
-// function* handleElementUpdate(action: UpdateAction) {
-//   const { payload } = action;
-//   const { elements }: ModelState = yield select();
-//   const relationship = UMLRelationshipRepository.getById(elements)(payload.id);
-//   if (relationship instanceof UMLRelationship) {
-//     yield recalc(relationship.id);
-//   }
-// }
+  yield put(UMLElementRepository.delete(relationships));
+}
 
 function* recalc(id: string): SagaIterator {
   const { elements }: ModelState = yield select();
+  const layer: ILayer = yield getContext('layer');
   const relationship = UMLRelationshipRepository.get(elements[id]);
   if (!relationship) {
     return;
   }
 
-  // const sourcePosition = UMLElementRepository.getAbsolutePosition(elements)(relationship.source.element);
-  // const sourceBounds: Boundary = { ...elements[relationship.source.element].bounds, ...sourcePosition };
+  const sourcePosition = yield put(UMLElementRepository.getAbsolutePosition(relationship.source.element));
+  const source: IBoundary = { ...elements[relationship.source.element].bounds, ...sourcePosition };
 
-  // const targetPosition = UMLElementRepository.getAbsolutePosition(elements)(relationship.target.element);
-  // const targetBounds: Boundary = { ...elements[relationship.target.element].bounds, ...targetPosition };
+  const targetPosition = yield put(UMLElementRepository.getAbsolutePosition(relationship.target.element));
+  const target: IBoundary = { ...elements[relationship.target.element].bounds, ...targetPosition };
 
-  // const { straight } = (relationship.constructor as typeof UMLRelationship).features;
+  const original = elements[id];
+  const [updates] = relationship.render(layer, source, target) as UMLRelationship[];
 
-  // let path = Connection.computePath(
-  //   { bounds: sourceBounds, direction: relationship.source.direction },
-  //   { bounds: targetBounds, direction: relationship.target.direction },
-  //   { isStraight: straight },
-  // );
-
-  // const x = Math.min(...path.map(point => point.x));
-  // const y = Math.min(...path.map(point => point.y));
-  // const width = Math.max(...path.map(point => point.x)) - x;
-  // const height = Math.max(...path.map(point => point.y)) - y;
-  // const bounds = { x, y, width, height };
-  // path = path.map(point => new Point(point.x - x, point.y - y));
-
-  // const copy: UMLRelationship = relationship.clone();
-  // Object.assign(copy, { bounds: { ...bounds }, path: [...path] });
-  // let computedBounds: Boundary = yield computeBoundingBoxForRelationship(copy);
-  // const computedPath = copy.path.map(point => ({ x: point.x - computedBounds.x, y: point.y - computedBounds.y }));
-  // computedBounds = { ...computedBounds, x: bounds.x + computedBounds.x, y: bounds.y + computedBounds.y };
-
-  // yield put<RedrawAction>({
-  //   type: UMLRelationshipActionTypes.REDRAW,
-  //   payload: {
-  //     id: relationship.id,
-  //     path: computedPath,
-  //     bounds: computedBounds,
-  //   },
-  // });
+  const { path, bounds } = diff(original, updates) as Partial<IUMLRelationship>;
+  if (path) {
+    yield put<LayoutAction>(UMLRelationshipRepository.layout(updates.id, path, { ...original.bounds, ...bounds }));
+  }
 }
-
-// function* handleElementDelete(action: DeleteAction) {
-//   const { payload } = action;
-//   if (!payload.id) return;
-
-//   const { elements }: ModelState = yield select();
-//   const relationships = Object.values(elements)
-//     .filter(element => 'path' in element)
-//     .map<UMLRelationship | null>(element => UMLRelationshipRepository.getById(elements)(element.id))
-//     .filter(notEmpty)
-//     .filter(relationship => relationship.source.element === payload.id || relationship.target.element === payload.id);
-//   yield all(relationships.map(relationship => put(UMLElementRepository.delete(relationship.id))));
-// }
-
-
-
-// import { all, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
-// import { ModelState } from '../../components/store/model-state';
-// import { Connection } from '../../services/relationship/connection';
-// import { Boundary, computeBoundingBoxForRelationship } from '../../utils/geometry/boundary';
-// import { Point } from '../../utils/geometry/point';
-// import { notEmpty } from '../../utils/not-empty';
-// import { Element } from '../element/element';
-// import { ElementRepository } from '../element/element-repository';
-// import { DeleteAction, ElementActionTypes, MoveAction, ResizeAction, UpdateAction } from '../element/element-types';
-// import { Relationship } from './relationship';
-// import { RelationshipRepository } from './relationship-repository';
-// import { ConnectAction, CreateAction, FlipAction, RedrawAction, RelationshipActionTypes } from './relationship-types';
-
-// export function* RelationshipSaga() {
-//   yield takeEvery(RelationshipActionTypes.CREATE, handleRelationshipCreation);
-//   yield takeEvery(RelationshipActionTypes.CONNECT, handleRelationshipConnect);
-//   yield takeEvery(RelationshipActionTypes.FLIP, handleRelationshipFlip);
-//   yield takeEvery(ElementActionTypes.MOVE, handleElementMove);
-//   yield takeEvery(ElementActionTypes.RESIZE, handleElementResize);
-//   yield takeLatest(ElementActionTypes.UPDATE, handleElementUpdate);
-//   yield takeLatest(ElementActionTypes.DELETE, handleElementDelete);
-// }
-
-// function* handleRelationshipCreation(action: CreateAction) {
-//   const { payload } = action;
-//   yield recalc(payload.relationship.id);
-// }
-
-// function* handleRelationshipConnect(action: ConnectAction) {
-//   const { payload } = action;
-//   yield recalc(payload.id);
-// }
-
-// function* handleRelationshipFlip(action: FlipAction) {
-//   const { payload } = action;
-//   yield recalc(payload.id);
-// }
-
-// function* handleElementMove(action: MoveAction) {
-//   const { payload } = action;
-//   if (!payload.id || payload.internal) return;
-
-//   const { elements }: ModelState = yield select();
-//   const element = ElementRepository.getById(elements)(payload.id);
-//   if (!element) return;
-
-//   const relationships = RelationshipRepository.read(elements);
-
-//   loop: for (const relationship of relationships) {
-//     let source: string | null = relationship.source.element;
-//     while (source) {
-//       if (source === payload.id) {
-//         yield recalc(relationship.id);
-//         continue loop;
-//       }
-//       source = elements[source].owner;
-//     }
-//     let target: string | null = relationship.target.element;
-//     while (target) {
-//       if (target === payload.id) {
-//         yield recalc(relationship.id);
-//         continue loop;
-//       }
-//       target = elements[target].owner;
-//     }
-//   }
-// }
-
-// function* handleElementResize(action: ResizeAction) {
-//   const { payload } = action;
-//   const { elements }: ModelState = yield select();
-//   const element = ElementRepository.getById(elements)(payload.id);
-//   if (!element || !(element.constructor as typeof Element).features.connectable) return;
-
-//   const relationships = RelationshipRepository.read(elements);
-
-//   for (const relationship of relationships) {
-//     if (relationship.source.element === element.id) {
-//       yield recalc(relationship.id);
-//     } else if (relationship.target.element === element.id) {
-//       yield recalc(relationship.id);
-//     }
-//   }
-// }
-
-// function* handleElementUpdate(action: UpdateAction) {
-//   const { payload } = action;
-//   const { elements }: ModelState = yield select();
-//   const relationship = RelationshipRepository.getById(elements)(payload.id);
-//   if (relationship instanceof Relationship) {
-//     yield recalc(relationship.id);
-//   }
-// }
-
-// function* recalc(id: string) {
-//   const { elements }: ModelState = yield select();
-//   const relationship = RelationshipRepository.getById(elements)(id);
-//   if (!relationship) return;
-
-//   const sourcePosition = ElementRepository.getAbsolutePosition(elements)(relationship.source.element);
-//   const sourceBounds: Boundary = { ...elements[relationship.source.element].bounds, ...sourcePosition };
-
-//   const targetPosition = ElementRepository.getAbsolutePosition(elements)(relationship.target.element);
-//   const targetBounds: Boundary = { ...elements[relationship.target.element].bounds, ...targetPosition };
-
-//   const { straight, variable } = (relationship.constructor as typeof Relationship).features;
-
-//   let path = Connection.computePath(
-//     { bounds: sourceBounds, direction: relationship.source.direction },
-//     { bounds: targetBounds, direction: relationship.target.direction },
-//     { isStraight: straight, isVariable: variable },
-//   );
-
-//   const x = Math.min(...path.map(point => point.x));
-//   const y = Math.min(...path.map(point => point.y));
-//   const width = Math.max(...path.map(point => point.x)) - x;
-//   const height = Math.max(...path.map(point => point.y)) - y;
-//   const bounds = { x, y, width, height };
-//   path = path.map(point => new Point(point.x - x, point.y - y));
-
-//   const copy: Relationship = relationship.clone();
-//   Object.assign(copy, { bounds: { ...bounds }, path: [...path] });
-//   let computedBounds: Boundary = yield computeBoundingBoxForRelationship(copy);
-//   const computedPath = copy.path.map(point => ({ x: point.x - computedBounds.x, y: point.y - computedBounds.y }));
-//   computedBounds = { ...computedBounds, x: bounds.x + computedBounds.x, y: bounds.y + computedBounds.y };
-
-//   yield put<RedrawAction>({
-//     type: RelationshipActionTypes.REDRAW,
-//     payload: {
-//       id: relationship.id,
-//       path: computedPath,
-//       bounds: computedBounds,
-//     },
-//   });
-// }
-
-// function* handleElementDelete(action: DeleteAction) {
-//   const { payload } = action;
-//   if (!payload.id) return;
-
-//   const { elements }: ModelState = yield select();
-//   const relationships = Object.values(elements)
-//     .filter(element => 'path' in element)
-//     .map<Relationship | null>(element => RelationshipRepository.getById(elements)(element.id))
-//     .filter(notEmpty)
-//     .filter(relationship => relationship.source.element === payload.id || relationship.target.element === payload.id);
-//   yield all(relationships.map(relationship => put(ElementRepository.delete(relationship.id))));
-// }

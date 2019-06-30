@@ -52,29 +52,22 @@ export function computeBoundingBoxForElements(elements: Array<{ bounds: IBoundar
   return { x, y, width, height };
 }
 
-export async function computeBoundingBoxForRelationship(relationship: UMLRelationship): Promise<IBoundary> {
+export function computeBoundingBoxForRelationship(container: SVGSVGElement, relationship: UMLRelationship): IBoundary {
   const Component = Components[relationship.type];
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('x', `${relationship.bounds.x}`);
+  svg.setAttribute('y', `${relationship.bounds.y}`);
   svg.style.visibility = 'none';
-  const container = document.getElementsByClassName('apollon-editor')[0];
   container.appendChild(svg);
   const element = createElement(Component, { element: relationship });
-  return new Promise((resolve, reject) => {
-    render(element, svg, () => {
-      let bounds: IBoundary = { x: 0, y: 0, width: 0, height: 0 };
-      if (svg.firstElementChild) {
-        const parent = svg.getBoundingClientRect() as DOMRect;
-        const child = svg.firstElementChild.getBoundingClientRect() as DOMRect;
-        bounds = {
-          x: child.left - parent.left,
-          y: child.top - parent.top,
-          width: Math.max(child.width, 1),
-          height: Math.max(child.height, 1),
-        };
-      }
-      unmountComponentAtNode(svg);
-      container.removeChild(svg);
-      resolve(bounds);
-    });
-  });
+  render(element, svg);
+
+  const parent = container.getBoundingClientRect() as DOMRect;
+  const child = svg.getBoundingClientRect() as DOMRect;
+  const bounds = { x: child.left - parent.left, y: child.top - parent.top, width: child.width, height: child.height };
+
+  unmountComponentAtNode(svg);
+  container.removeChild(svg);
+
+  return bounds;
 }

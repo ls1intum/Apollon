@@ -15,6 +15,7 @@ type StateProps = {
   hovered: boolean;
   selected: boolean;
   interactive: boolean;
+  reconnecting: boolean;
   relationship: IUMLRelationship;
 };
 
@@ -27,6 +28,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     hovered: state.hovered[0] === props.id,
     selected: state.selected.includes(props.id),
     interactive: state.interactive.includes(props.id),
+    reconnecting: !!state.reconnecting[props.id],
     relationship: state.elements[props.id] as IUMLRelationship,
   }),
   {},
@@ -34,27 +36,23 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 export class CanvasRelationshipComponent extends Component<Props> {
   render() {
-    const { hovered, selected, interactive, relationship, children, ...props } = this.props;
+    const { hovered, selected, interactive, reconnecting, relationship, children, ...props } = this.props;
 
     const ChildComponent = Components[relationship.type as UMLRelationshipType];
 
+    const points = relationship.path.map(point => `${point.x} ${point.y}`).join(',');
+
     return (
-      <svg {...props} {...relationship.bounds}>
+      <svg {...props} {...relationship.bounds} visibility={reconnecting ? 'hidden' : undefined}>
         <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
+        <polyline
+          points={points}
+          stroke="#0064ff"
+          strokeOpacity={hovered || selected ? 0.2 : 0}
+          fill="none"
+          strokeWidth={15}
+        />
         {children}
-        {/* {(hovered || selected) && (
-          <rect
-            x={-STROKE / 2}
-            y={-STROKE / 2}
-            width={relationship.bounds.width + STROKE}
-            height={relationship.bounds.height + STROKE}
-            fill="none"
-            stroke="#0064ff"
-            strokeOpacity="0.2"
-            strokeWidth={STROKE}
-            pointerEvents="none"
-          />
-        )} */}
       </svg>
     );
   }

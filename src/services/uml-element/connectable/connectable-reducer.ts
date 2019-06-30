@@ -3,12 +3,12 @@ import { ConnectableActions, ConnectableActionTypes, ConnectableState } from './
 
 export const ConnectableReducer: Reducer<ConnectableState, ConnectableActions> = (state = [], action) => {
   switch (action.type) {
-    case ConnectableActionTypes.CONNECT_START: {
+    case ConnectableActionTypes.START: {
       const { payload } = action;
 
       return [...new Set([...payload.ports, ...state])];
     }
-    case ConnectableActionTypes.CONNECT_END: {
+    case ConnectableActionTypes.END: {
       const { payload } = action;
 
       return state.filter(port => !payload.ports.includes(port));

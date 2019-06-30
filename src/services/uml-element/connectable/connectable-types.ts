@@ -2,21 +2,21 @@ import { Action } from '../../../utils/actions/actions';
 import { IUMLElementPort } from '../uml-element-port';
 
 export const enum ConnectableActionTypes {
-  CONNECT_START = '@@element/connectable/CONNECT_START',
-  CONNECT_END = '@@element/connectable/CONNECT_END',
+  START = '@@element/connectable/START',
+  END = '@@element/connectable/END',
 }
 
 export type ConnectableState = IUMLElementPort[];
 
 export type ConnectableActions = ConnectStartAction | ConnectEndAction;
 
-export type ConnectStartAction = Action<ConnectableActionTypes.CONNECT_START> & {
+export type ConnectStartAction = Action<ConnectableActionTypes.START> & {
   payload: {
     ports: IUMLElementPort[];
   };
 };
 
-export type ConnectEndAction = Action<ConnectableActionTypes.CONNECT_END> & {
+export type ConnectEndAction = Action<ConnectableActionTypes.END> & {
   payload: {
     ports: IUMLElementPort[];
   };

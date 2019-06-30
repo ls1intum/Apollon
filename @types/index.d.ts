@@ -3,7 +3,7 @@ import { UMLElementType } from 'src/packages/uml-element-type';
 import { UMLRelationshipType } from 'src/packages/uml-relationship-type';
 import { Direction } from 'src/services/uml-element/uml-element-port';
 import { IBoundary } from 'src/utils/geometry/boundary';
-import { IPoint } from 'src/utils/geometry/point';
+import { IPath } from 'src/utils/geometry/path';
 
 declare module '@ls1intum/apollon' {
   namespace Apollon {
@@ -26,7 +26,7 @@ declare module '@ls1intum/apollon' {
 
     type UMLRelationship = UMLModelElement & {
       type: UMLRelationshipType;
-      path: IPoint[];
+      path: IPath;
       source: {
         element: string;
         direction: Direction;

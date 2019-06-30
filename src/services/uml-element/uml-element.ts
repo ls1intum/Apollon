@@ -76,7 +76,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     this.id = values.id;
     this.name = values.name;
     this.type = values.type;
-    this.owner = values.owner;
+    this.owner = values.owner || null;
     this.bounds = { ...values.bounds };
   }
 

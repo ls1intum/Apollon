@@ -1,6 +1,7 @@
 import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { UMLRelationshipFeatures } from 'src/services/uml-relationship/uml-relationship-features';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
@@ -13,6 +14,7 @@ import { connectable } from './connectable/connectable';
 import { droppable } from './droppable/droppable';
 import { hoverable } from './hoverable/hoverable';
 import { movable } from './movable/movable';
+import { reconnectable } from './reconnectable/reconnectable';
 import { resizable } from './resizable/resizable';
 import { selectable } from './selectable/selectable';
 import { SvgElement } from './svg-element';
@@ -23,7 +25,8 @@ export type UMLElementComponentProps = {
 };
 
 const components = {
-  canvas: (type: UMLElementType) => (type in UMLRelationshipType ? CanvasRelationship : CanvasElement),
+  canvas: (type: UMLElementType | UMLRelationshipType) =>
+    type in UMLRelationshipType ? CanvasRelationship : CanvasElement,
   svg: () => SvgElement,
 };
 
@@ -34,7 +37,7 @@ type OwnProps = {
 
 type StateProps = {
   features: UMLElementFeatures;
-  type: UMLElementType;
+  type: UMLElementType | UMLRelationshipType;
 };
 
 type DispatchProps = {};
@@ -43,16 +46,20 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
   features: state.editor.features,
-  type: state.elements[props.id].type as UMLElementType,
+  type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
 }));
 
 const getInitialState = (props: Props) => {
-  const { features } = { ...UMLElements, ...UMLRelationships }[props.type];
+  const features = { ...UMLElements, ...UMLRelationships }[props.type].features as UMLElementFeatures &
+    UMLRelationshipFeatures;
   const component = components[props.component](props.type);
   const decorators = [];
 
   if (props.features.hoverable && features.hoverable) {
     decorators.push(hoverable);
+  }
+  if (features.reconnectable) {
+    decorators.push(reconnectable);
   }
   if (props.features.selectable && features.selectable) {
     decorators.push(selectable);

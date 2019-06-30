@@ -1,21 +1,51 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import styled from 'styled-components';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
+import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
+import { styled } from '../../../components/theme/styles';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { ClassRelationshipType } from '../../class-diagram';
-import { ClassAssociation } from './old';
+import { UMLAssociation } from './uml-association';
+
+type OwnProps = {
+  element: UMLAssociation;
+};
+
+type StateProps = {};
+
+type DispatchProps = {
+  update: typeof UMLElementRepository.update;
+  delete: typeof UMLElementRepository.delete;
+  flip: typeof UMLRelationshipRepository.flip;
+  getById: (id: string) => UMLElement | null;
+};
+
+type Props = OwnProps & StateProps & DispatchProps & I18nContext;
+
+const enhance = compose<ComponentType<OwnProps>>(
+  localized,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    null,
+    {
+      update: UMLElementRepository.update,
+      delete: UMLElementRepository.delete,
+      flip: UMLRelationshipRepository.flip,
+      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
+    },
+  ),
+);
 
 const Flex = styled.div`
   display: flex;
@@ -37,9 +67,9 @@ class ClassAssociationComponent extends Component<Props> {
             <Header gutter={false} style={{ flexGrow: 1 }}>
               {this.props.translate('popup.association')}
             </Header>
-            {/* <Button color="link" onClick={() => this.props.flip(element.id)}>
+            <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />
-            </Button> */}
+            </Button>
             <Button color="link" onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -78,13 +108,13 @@ class ClassAssociationComponent extends Component<Props> {
             <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.multiplicity')}</Body>
             <Textfield
               gutter={true}
-              value={element.multiplicity.source}
+              value={element.source.multiplicity}
               onChange={this.onUpdate('multiplicity', 'source')}
             />
           </Flex>
           <Flex>
             <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.role')}</Body>
-            <Textfield value={element.role.source} onChange={this.onUpdate('role', 'source')} />
+            <Textfield value={element.source.role} onChange={this.onUpdate('role', 'source')} />
           </Flex>
           <Divider />
         </section>
@@ -94,13 +124,13 @@ class ClassAssociationComponent extends Component<Props> {
             <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.multiplicity')}</Body>
             <Textfield
               gutter={true}
-              value={element.multiplicity.target}
+              value={element.target.multiplicity}
               onChange={this.onUpdate('multiplicity', 'target')}
             />
           </Flex>
           <Flex>
             <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.role')}</Body>
-            <Textfield value={element.role.target} onChange={this.onUpdate('role', 'target')} />
+            <Textfield value={element.target.role} onChange={this.onUpdate('role', 'target')} />
           </Flex>
         </section>
       </div>
@@ -113,36 +143,8 @@ class ClassAssociationComponent extends Component<Props> {
 
   private onUpdate = (type: 'multiplicity' | 'role', end: 'source' | 'target') => (value: string) => {
     const { element, update } = this.props;
-    update(element.id, { [type]: { ...element[type], [end]: value } });
+    update<UMLAssociation>(element.id, { [end]: { ...element[end], [type]: value } });
   };
 }
-
-type OwnProps = {
-  element: ClassAssociation;
-};
-
-type StateProps = {};
-
-type DispatchProps = {
-  update: typeof UMLElementRepository.update;
-  delete: typeof UMLElementRepository.delete;
-  // flip: typeof UMLRelationshipRepository.flip;
-  getById: (id: string) => UMLElement | null;
-};
-
-type Props = OwnProps & StateProps & DispatchProps & I18nContext;
-
-const enhance = compose<ComponentClass<OwnProps>>(
-  localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      // flip: UMLRelationshipRepository.flip,
-      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
-    },
-  ),
-);
 
 export const ClassAssociationPopup = enhance(ClassAssociationComponent);

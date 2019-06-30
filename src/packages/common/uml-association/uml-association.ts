@@ -1,9 +1,11 @@
 import { DeepPartial } from 'redux';
-import { ILayer } from 'src/services/layouter/layer';
-import { ILayoutable } from 'src/services/layouter/layoutable';
+import { IPath } from 'src/utils/geometry/path';
+import { ILayer } from '../../../services/layouter/layer';
+import { ILayoutable } from '../../../services/layouter/layoutable';
 import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { assign } from '../../../utils/fx/assign';
+import { computeBoundingBoxForRelationship, IBoundary } from '../../../utils/geometry/boundary';
 
 export interface IUMLAssociation extends IUMLRelationship {
   source: IUMLElementPort & {
@@ -35,8 +37,16 @@ export abstract class UMLAssociation extends UMLRelationship implements IUMLAsso
     assign<IUMLAssociation>(this, values);
   }
 
-  render(canvas: ILayer): ILayoutable[] {
-    // TODO
+  render(canvas: ILayer, source?: IBoundary, target?: IBoundary): ILayoutable[] {
+    super.render(canvas, source, target);
+
+    const bounds = computeBoundingBoxForRelationship(canvas.layer, this);
+    this.path = this.path.map(point => ({
+      x: point.x + this.bounds.x - bounds.x,
+      y: point.y + this.bounds.y - bounds.y,
+    })) as IPath;
+    this.bounds = bounds;
+
     return [this];
   }
 }

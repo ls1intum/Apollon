@@ -12,7 +12,7 @@ export const Movable = {
     }
 
     dispatch<MoveStartAction>({
-      type: MovableActionTypes.MOVE_START,
+      type: MovableActionTypes.START,
       payload: { ids },
     });
   },
@@ -36,7 +36,7 @@ export const Movable = {
     }
 
     dispatch<MoveEndAction>({
-      type: MovableActionTypes.MOVE_END,
+      type: MovableActionTypes.END,
       payload: { ids, keyboard },
     });
   },

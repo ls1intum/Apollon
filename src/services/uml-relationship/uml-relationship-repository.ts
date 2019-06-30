@@ -1,9 +1,15 @@
+import { AsyncAction } from 'src/utils/actions/actions';
+import { IBoundary } from 'src/utils/geometry/boundary';
+import { IPath } from 'src/utils/geometry/path';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { UMLRelationships } from '../../packages/uml-relationships';
 import { IUMLElement } from '../uml-element/uml-element';
+import { Reconnectable } from './reconnectable/reconnectable-repository';
+import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
+import { LayoutAction, UMLRelationshipActionTypes } from './uml-relationship-types';
 
-export const UMLRelationshipRepository = {
+const Repository = {
   isUMLRelationship: (element: IUMLElement): element is IUMLRelationship => {
     return element.type in UMLRelationshipType;
   },
@@ -13,7 +19,7 @@ export const UMLRelationshipRepository = {
       return null;
     }
 
-    if (UMLRelationshipRepository.isUMLRelationship(element)) {
+    if (Repository.isUMLRelationship(element)) {
       const Classifier = UMLRelationships[element.type];
 
       return new Classifier(element);
@@ -22,41 +28,29 @@ export const UMLRelationshipRepository = {
     return null;
   },
 
-  // static connect = (
-  //   id: string,
-  //   { source, target }: { source?: IUMLElementPort; target?: IUMLElementPort },
-  // ): ConnectAction => ({
-  //   type: UMLRelationshipActionTypes.CONNECT,
-  //   payload: { id, source, target },
-  // });
+  layout: (id: string, path: IPath, bounds: IBoundary): LayoutAction => ({
+    type: UMLRelationshipActionTypes.LAYOUT,
+    payload: { id, path, bounds },
+  }),
 
-  // static flip = (id: string): FlipAction => ({
-  //   type: UMLRelationshipActionTypes.FLIP,
-  //   payload: { id },
-  // });
+  flip: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+    const { selected, elements } = getState();
+    const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
+    const connections = ids.map(r => {
+      const relationship = elements[r] as IUMLRelationship;
+      const source = { element: relationship.target.element, direction: relationship.target.direction };
+      const target = { element: relationship.source.element, direction: relationship.source.direction };
+      return { id: relationship.id, source, target };
+    });
 
-  // static getById = (state: UMLElementState) => (id: string): UMLRelationship | null => {
-  //   const relationship = state[id] as IUMLRelationship;
-  //   if (!relationship) return null;
+    dispatch<ReconnectAction>({
+      type: ReconnectableActionTypes.RECONNECT,
+      payload: { connections },
+    });
+  },
+};
 
-  //   const RelationshipClass = Relationships[relationship.type];
-  //   if (!RelationshipClass) return null;
-
-  //   return new RelationshipClass(relationship);
-  // };
-
-  // static getByIds = (state: UMLElementState) => (ids: string[]): UMLRelationship[] => {
-  //   return ids.map(UMLRelationshipRepository.getById(state)).filter(notEmpty);
-  // };
-
-  // static read = (state: UMLElementState): UMLRelationship[] => {
-  //   const relationships = Object.keys(state).reduce<UMLElementState>((r, e) => {
-  //     if (state[e].type in UMLRelationshipType) return { ...r, [e]: state[e] };
-  //     return r;
-  //   }, {});
-
-  //   return Object.values(relationships)
-  //     .map<UMLRelationship | null>(element => UMLRelationshipRepository.getById(state)(element.id))
-  //     .filter(notEmpty);
-  // };
+export const UMLRelationshipRepository = {
+  ...Repository,
+  ...Reconnectable,
 };

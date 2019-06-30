@@ -12,12 +12,14 @@ import { ResizingActions } from './uml-element/resizable/resizing-types';
 import { SelectableActions } from './uml-element/selectable/selectable-types';
 import { UMLElementActions } from './uml-element/uml-element-types';
 import { UpdatableActions } from './uml-element/updatable/updatable-types';
+import { ReconnectableActions } from './uml-relationship/reconnectable/reconnectable-types';
 
 export type Actions = EditorActions &
   LayouterActions &
   UMLContainerActions &
   UMLElementActions &
   ConnectableActions &
+  ReconnectableActions &
   HoverableActions &
   InteractableActions &
   MovableActions &

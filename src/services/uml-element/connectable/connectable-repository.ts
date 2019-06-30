@@ -24,7 +24,7 @@ export const Connectable = {
     }));
 
     dispatch<ConnectStartAction>({
-      type: ConnectableActionTypes.CONNECT_START,
+      type: ConnectableActionTypes.START,
       payload: { ports },
     });
   },
@@ -41,7 +41,7 @@ export const Connectable = {
 
     if (!source) {
       dispatch<ConnectEndAction>({
-        type: ConnectableActionTypes.CONNECT_END,
+        type: ConnectableActionTypes.END,
         payload: { ports: sources },
       });
     }
@@ -72,7 +72,7 @@ export const Connectable = {
     }
 
     dispatch<ConnectEndAction>({
-      type: ConnectableActionTypes.CONNECT_END,
+      type: ConnectableActionTypes.END,
       payload: { ports },
     });
   },

@@ -17,6 +17,8 @@ import { SelectableReducer } from './uml-element/selectable/selectable-reducer';
 import { UMLElementReducer } from './uml-element/uml-element-reducer';
 import { UMLElementState } from './uml-element/uml-element-types';
 import { UpdatableReducer } from './uml-element/updatable/updatable-reducer';
+import { ReconnectableReducer } from './uml-relationship/reconnectable/reconnectable-reducer';
+import { UMLRelationshipReducer } from './uml-relationship/uml-relationship-reducer';
 
 const reduce = <S, T extends Action>(intial: S, ...reducerList: Array<Reducer<S, T>>): Reducer<S, T> => (
   state = intial,
@@ -31,11 +33,13 @@ export const reducers: ReducersMapObject<ModelState, Actions> = {
   moving: MovableReducer,
   resizing: ResizableReducer,
   connecting: ConnectableReducer,
+  reconnecting: ReconnectableReducer,
   interactive: InteractableReducer,
   updating: UpdatableReducer,
   elements: reduce<UMLElementState, Actions>(
     {},
     UMLContainerReducer,
+    UMLRelationshipReducer,
     UMLElementReducer,
     ResizingReducer,
     MovingReducer,

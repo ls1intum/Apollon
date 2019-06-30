@@ -8,13 +8,13 @@ export const Updatable = {
     }
 
     dispatch<UpdateStartAction>({
-      type: UpdatableActionTypes.UPDATE_START,
+      type: UpdatableActionTypes.START,
       payload: { ids: Array.isArray(id) ? id : [id] },
     });
   },
 
   updateEnd: (id: string | string[]): UpdateEndAction => ({
-    type: UpdatableActionTypes.UPDATE_END,
+    type: UpdatableActionTypes.END,
     payload: { ids: Array.isArray(id) ? id : [id] },
   }),
 };
