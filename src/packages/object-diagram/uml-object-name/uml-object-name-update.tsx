@@ -9,13 +9,13 @@ import { Textfield } from '../../../components/controls/textfield/textfield';
 import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
+import { ModelState } from '../../../components/store/model-state';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
 import { UMLObjectAttribute } from '../uml-object-attribute/uml-object-attribute';
 import { UMLObjectMethod } from '../uml-object-method/uml-object-method';
-import { ModelState } from './../../../components/store/model-state';
 import { UMLObjectName } from './uml-object-name';
 
 const Flex = styled.div`
@@ -115,4 +115,4 @@ const enhance = compose<ComponentClass<OwnProps>>(
   ),
 );
 
-export const ObjectNamePopup = enhance(ObjectNameComponent);
+export const UMLObjectNameUpdate = enhance(ObjectNameComponent);
