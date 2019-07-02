@@ -14,7 +14,7 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, UMLDiagramActions | UML
 
       return {
         ...state,
-        ownedRelationships: [...new Set([...state.ownedRelationships, ...payload.ids])],
+        ownedRelationships: [...new Set([...payload.ids, ...state.ownedRelationships])].reverse(),
       };
     }
     case UMLDiagramActionTypes.REMOVE: {

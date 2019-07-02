@@ -1,6 +1,7 @@
 import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { ClassRelationshipType } from '..';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
@@ -16,8 +17,7 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
-import { ClassRelationshipType } from '../../class-diagram';
-import { UMLAssociation } from './uml-association';
+import { UMLAssociation } from '../../common/uml-association/uml-association';
 
 type OwnProps = {
   element: UMLAssociation;
@@ -147,4 +147,4 @@ class ClassAssociationComponent extends Component<Props> {
   };
 }
 
-export const ClassAssociationPopup = enhance(ClassAssociationComponent);
+export const UMLClassAssociationUpdate = enhance(ClassAssociationComponent);

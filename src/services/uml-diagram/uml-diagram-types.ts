@@ -13,7 +13,6 @@ export type UMLDiagramActions = AppendAction | RemoveAction;
 export type AppendAction = Action<UMLDiagramActionTypes.APPEND> & {
   payload: {
     ids: string[];
-    owner: string;
   };
 };
 
