@@ -12,6 +12,7 @@ import { UMLElementComponentProps } from '../uml-element-component';
 type StateProps = {
   path: IPath;
   reconnecting: boolean;
+  disabled: boolean;
 };
 
 type DispatchProps = {
@@ -32,6 +33,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   (state, props) => ({
     path: (state.elements[props.id] as IUMLRelationship).path,
     reconnecting: !!state.reconnecting[props.id],
+    disabled: !!Object.keys(state.reconnecting).length,
   }),
   {
     start: UMLRelationshipRepository.startReconnecting,
@@ -44,7 +46,7 @@ const Handle = styled.line.attrs({
   strokeOpacity: 0,
 })`
   cursor: move;
-  pointer-events: all;
+  /* pointer-events: all; */
 `;
 
 export const reconnectable = (
@@ -60,7 +62,7 @@ export const reconnectable = (
     }
 
     render() {
-      const { path, reconnecting, start, reconnect: _, ...props } = this.props;
+      const { path, reconnecting, start, reconnect, disabled, ...props } = this.props;
       const sourceHandle: IPath = this.composePath(path);
       const targetHandle: IPath = this.composePath([...path].reverse() as IPath);
 
@@ -74,6 +76,7 @@ export const reconnectable = (
             y2={sourceHandle[1].y}
             onPointerDown={this.onPointerDown}
             data-endpoint="target"
+            pointerEvents={disabled ? 'none' : 'all'}
           />
           <Handle
             x1={targetHandle[0].x}
@@ -82,6 +85,7 @@ export const reconnectable = (
             y2={targetHandle[1].y}
             onPointerDown={this.onPointerDown}
             data-endpoint="source"
+            pointerEvents={disabled ? 'none' : 'all'}
           />
         </WrappedComponent>
       );

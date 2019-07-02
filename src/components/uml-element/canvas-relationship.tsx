@@ -16,6 +16,7 @@ type StateProps = {
   selected: boolean;
   interactive: boolean;
   reconnecting: boolean;
+  disabled: boolean;
   relationship: IUMLRelationship;
 };
 
@@ -29,6 +30,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     selected: state.selected.includes(props.id),
     interactive: state.interactive.includes(props.id),
     reconnecting: !!state.reconnecting[props.id],
+    disabled: !!Object.keys(state.reconnecting).length,
     relationship: state.elements[props.id] as IUMLRelationship,
   }),
   {},
@@ -36,14 +38,19 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 export class CanvasRelationshipComponent extends Component<Props> {
   render() {
-    const { hovered, selected, interactive, reconnecting, relationship, children, ...props } = this.props;
+    const { hovered, selected, interactive, reconnecting, disabled, relationship, children, ...props } = this.props;
 
     const ChildComponent = Components[relationship.type as UMLRelationshipType];
 
     const points = relationship.path.map(point => `${point.x} ${point.y}`).join(',');
 
     return (
-      <svg {...props} {...relationship.bounds} visibility={reconnecting ? 'hidden' : undefined}>
+      <svg
+        {...props}
+        {...relationship.bounds}
+        visibility={reconnecting ? 'hidden' : undefined}
+        pointerEvents={disabled ? 'none' : undefined}
+      >
         <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
         <polyline
           points={points}
