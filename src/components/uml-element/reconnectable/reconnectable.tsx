@@ -53,10 +53,10 @@ export const reconnectable = (
   class Reconnectable extends Component<Props, State> {
     state = initialState;
 
-    composePath(path: IPath): IPath {
-      const line = new Path(path);
-      const distance = Math.min(line.length / 2, 40);
-      return [path[0], line.position(distance)];
+    componentWillUnmount() {
+      document.removeEventListener('pointermove', this.onPointerMove);
+      document.removeEventListener('pointerup', this.onPointerUp);
+      this.cancel();
     }
 
     render() {
@@ -112,11 +112,21 @@ export const reconnectable = (
 
     private onPointerUp = (event: PointerEvent) => {
       document.removeEventListener('pointermove', this.onPointerMove);
+      this.cancel();
+    };
+
+    private cancel = () => {
       if (!this.props.reconnecting) {
         return;
       }
 
       this.setState(initialState);
+    };
+
+    private composePath = (path: IPath): IPath => {
+      const line = new Path(path);
+      const distance = Math.min(line.length / 2, 40);
+      return [path[0], line.position(distance)];
     };
   }
 

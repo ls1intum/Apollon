@@ -64,6 +64,8 @@ export const movable = (
       const node = findDOMNode(this) as HTMLElement;
       const child = node.firstChild as HTMLElement;
       child.removeEventListener('pointerdown', this.onPointerDown);
+      document.removeEventListener('pointermove', this.onPointerMove);
+      document.removeEventListener('pointerup', this.onPointerUp);
     }
 
     render() {

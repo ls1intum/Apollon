@@ -51,6 +51,11 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
   class Resizable extends Component<Props, State> {
     state = initialState;
 
+    componentWillUnmount() {
+      document.removeEventListener('pointermove', this.onPointerMove);
+      document.removeEventListener('pointerup', this.onPointerUp);
+    }
+
     render() {
       const { start, resize, end, ...props } = this.props;
       return (
