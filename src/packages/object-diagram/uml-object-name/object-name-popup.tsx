@@ -13,10 +13,10 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
-import { ObjectAttribute } from '../object-member/object-attribute/object-attribute';
-import { ObjectMethod } from '../object-member/object-method/object-method';
+import { UMLObjectAttribute } from '../uml-object-attribute/uml-object-attribute';
+import { UMLObjectMethod } from '../uml-object-method/uml-object-method';
 import { ModelState } from './../../../components/store/model-state';
-import { ObjectName } from './object-name';
+import { UMLObjectName } from './uml-object-name';
 
 const Flex = styled.div`
   display: flex;
@@ -28,8 +28,8 @@ class ObjectNameComponent extends Component<Props> {
   render() {
     const { element, getById } = this.props;
     const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
-    const attributes = children.filter(child => child instanceof ObjectAttribute);
-    const methods = children.filter(child => child instanceof ObjectMethod);
+    const attributes = children.filter(child => child instanceof UMLObjectAttribute);
+    const methods = children.filter(child => child instanceof UMLObjectMethod);
 
     return (
       <div>
@@ -52,7 +52,7 @@ class ObjectNameComponent extends Component<Props> {
               </Button>
             </Flex>
           ))}
-          <Textfield outline={true} value="" onSubmit={this.create(ObjectAttribute)} />
+          <Textfield outline={true} value="" onSubmit={this.create(UMLObjectAttribute)} />
         </section>
         <section>
           <Divider />
@@ -65,12 +65,12 @@ class ObjectNameComponent extends Component<Props> {
               </Button>
             </Flex>
           ))}
-          <Textfield outline={true} value="" onSubmit={this.create(ObjectMethod)} />
+          <Textfield outline={true} value="" onSubmit={this.create(UMLObjectMethod)} />
         </section>
       </div>
     );
   }
-  private create = (Clazz: typeof ObjectAttribute | typeof ObjectMethod) => (value: string) => {
+  private create = (Clazz: typeof UMLObjectAttribute | typeof UMLObjectMethod) => (value: string) => {
     const { element, create } = this.props;
     const member = new Clazz();
     member.name = value;
@@ -88,7 +88,7 @@ class ObjectNameComponent extends Component<Props> {
 }
 
 interface OwnProps {
-  element: ObjectName;
+  element: UMLObjectName;
 }
 
 type StateProps = {};

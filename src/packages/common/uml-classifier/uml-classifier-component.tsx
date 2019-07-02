@@ -1,5 +1,4 @@
 import React, { SFC } from 'react';
-import { ClassElementType } from '../../class-diagram';
 import { UMLClassifier } from './uml-classifier';
 
 export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
@@ -15,7 +14,8 @@ export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
             x="50%"
             dy={18}
             textAnchor="middle"
-            fontStyle={element.type === ClassElementType.AbstractClass ? 'italic' : 'normal'}
+            fontStyle={element.italic ? 'italic' : undefined}
+            textDecoration={element.underline ? 'underline' : undefined}
           >
             {element.name}
           </tspan>
@@ -23,7 +23,15 @@ export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
       </svg>
     ) : (
       <svg height={40}>
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold">
+        <text
+          x="50%"
+          y="50%"
+          dominantBaseline="middle"
+          textAnchor="middle"
+          fontWeight="bold"
+          fontStyle={element.italic ? 'italic' : undefined}
+          textDecoration={element.underline ? 'underline' : undefined}
+        >
           {element.name}
         </text>
       </svg>

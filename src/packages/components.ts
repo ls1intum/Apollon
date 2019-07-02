@@ -20,8 +20,6 @@ import { DeploymentArtifactComponent } from './deployment-diagram/deployment-art
 import { DeploymentAssociationComponent } from './deployment-diagram/deployment-association/deployment-association-component';
 import { DeploymentNodeComponent } from './deployment-diagram/deployment-node/deployment-node-component';
 import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
-import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
-import { ObjectNameComponent } from './object-diagram/object-name/object-name-component';
 import { UMLElementType } from './uml-element-type';
 import { UMLRelationshipType } from './uml-relationship-type';
 import { UseCaseActorComponent } from './use-case-diagram/use-case-actor/use-case-actor-component';
@@ -40,9 +38,9 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLElementType.Enumeration]: UMLClassifierComponent,
   [UMLElementType.ClassAttribute]: UMLClassifierMemberComponent,
   [UMLElementType.ClassMethod]: UMLClassifierMemberComponent,
-  [UMLElementType.ObjectName]: ObjectNameComponent,
-  [UMLElementType.ObjectAttribute]: ObjectMemberComponent,
-  [UMLElementType.ObjectMethod]: ObjectMemberComponent,
+  [UMLElementType.ObjectName]: UMLClassifierComponent,
+  [UMLElementType.ObjectAttribute]: UMLClassifierMemberComponent,
+  [UMLElementType.ObjectMethod]: UMLClassifierMemberComponent,
   [UMLElementType.ActivityActionNode]: ActivityActionNodeComponent,
   [UMLElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
   [UMLElementType.ActivityForkNode]: ActivityForkNodeComponent,

@@ -16,9 +16,9 @@ import { ComponentInterface } from './component-diagram/component-interface/comp
 import { Component } from './component-diagram/component/component';
 import { DeploymentArtifact } from './deployment-diagram/deployment-artifact/deployment-artifact';
 import { DeploymentNode } from './deployment-diagram/deployment-node/deployment-node';
-import { ObjectAttribute } from './object-diagram/object-member/object-attribute/object-attribute';
-import { ObjectMethod } from './object-diagram/object-member/object-method/object-method';
-import { ObjectName } from './object-diagram/object-name/object-name';
+import { UMLObjectAttribute } from './object-diagram/uml-object-attribute/uml-object-attribute';
+import { UMLObjectMethod } from './object-diagram/uml-object-method/uml-object-method';
+import { UMLObjectName } from './object-diagram/uml-object-name/uml-object-name';
 import { UMLElementType } from './uml-element-type';
 import { UseCaseActor } from './use-case-diagram/use-case-actor/use-case-actor';
 import { UseCaseSystem } from './use-case-diagram/use-case-system/use-case-system';
@@ -34,9 +34,9 @@ export const UMLElements = {
   [UMLElementType.Enumeration]: UMLEnumeration,
   [UMLElementType.ClassAttribute]: UMLClassAttribute,
   [UMLElementType.ClassMethod]: UMLClassMethod,
-  [UMLElementType.ObjectName]: ObjectName,
-  [UMLElementType.ObjectAttribute]: ObjectAttribute,
-  [UMLElementType.ObjectMethod]: ObjectMethod,
+  [UMLElementType.ObjectName]: UMLObjectName,
+  [UMLElementType.ObjectAttribute]: UMLObjectAttribute,
+  [UMLElementType.ObjectMethod]: UMLObjectMethod,
   [UMLElementType.ActivityInitialNode]: ActivityInitialNode,
   [UMLElementType.ActivityFinalNode]: ActivityFinalNode,
   [UMLElementType.ActivityActionNode]: ActivityActionNode,

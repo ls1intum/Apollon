@@ -1,8 +1,8 @@
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { ComposePreview } from '../compose-preview';
-import { ObjectAttribute } from '../object-diagram/object-member/object-attribute/object-attribute';
-import { ObjectName } from '../object-diagram/object-name/object-name';
+import { UMLObjectAttribute } from '../object-diagram/uml-object-attribute/uml-object-attribute';
+import { UMLObjectName } from '../object-diagram/uml-object-name/uml-object-name';
 
 export const composeCommunicationPreview: ComposePreview = (
   layer: ILayer,
@@ -11,8 +11,8 @@ export const composeCommunicationPreview: ComposePreview = (
   const elements: UMLElement[] = [];
 
   // Object
-  const umlObject = new ObjectName({ name: translate('packages.objectDiagram.objectName') });
-  const umlObjectAttribute = new ObjectAttribute({
+  const umlObject = new UMLObjectName({ name: translate('packages.objectDiagram.objectName') });
+  const umlObjectAttribute = new UMLObjectAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlObject.id,
   });

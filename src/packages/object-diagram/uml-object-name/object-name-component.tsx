@@ -1,5 +1,5 @@
 import React, { SFC } from 'react';
-import { ObjectName } from './object-name';
+import { UMLObjectName } from './uml-object-name';
 
 export const ObjectNameComponent: SFC<Props> = ({ element, children }) => (
   <g>
@@ -17,5 +17,5 @@ export const ObjectNameComponent: SFC<Props> = ({ element, children }) => (
 );
 
 interface Props {
-  element: ObjectName;
+  element: UMLObjectName;
 }

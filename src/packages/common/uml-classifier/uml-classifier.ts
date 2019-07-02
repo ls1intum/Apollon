@@ -12,6 +12,8 @@ import { UMLClassifierAttribute } from './uml-classifier-attribute';
 import { UMLClassifierMethod } from './uml-classifier-method';
 
 export interface IUMLClassifier extends IUMLContainer {
+  italic: boolean;
+  underline: boolean;
   stereotype: string | null;
   deviderPosition: number;
 }
@@ -23,6 +25,8 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
     resizable: 'WIDTH',
   };
 
+  italic: boolean = false;
+  underline: boolean = false;
   stereotype: string | null = null;
   deviderPosition: number = 0;
 

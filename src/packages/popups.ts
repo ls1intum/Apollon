@@ -9,7 +9,7 @@ import { CommunicationLinkPopup } from './communication-diagram/communication-li
 import { ComponentAssociationPopup } from './component-diagram/component-association-popup';
 import { DeploymentAssociationPopup } from './deployment-diagram/deployment-association/deployment-association-popup';
 import { DeploymentNodePopup } from './deployment-diagram/deployment-node/deployment-node-popup';
-import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
+import { ObjectNamePopup } from './object-diagram/uml-object-name/object-name-popup';
 import { UMLElementType } from './uml-element-type';
 import { UMLRelationshipType } from './uml-relationship-type';
 import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
