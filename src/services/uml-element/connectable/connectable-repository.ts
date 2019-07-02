@@ -1,6 +1,7 @@
 import { DefaultUMLRelationshipType, UMLRelationshipType } from '../../../packages/uml-relationship-type';
 import { UMLRelationships } from '../../../packages/uml-relationships';
 import { AsyncAction } from '../../../utils/actions/actions';
+import { AppendAction, UMLDiagramActionTypes } from '../../uml-diagram/uml-diagram-types';
 import { Connection } from '../../uml-relationship/connection';
 import { UMLRelationship } from '../../uml-relationship/uml-relationship';
 import { Direction, IUMLElementPort } from '../uml-element-port';
@@ -62,6 +63,10 @@ export const Connectable = {
     dispatch<CreateAction<UMLRelationship>>({
       type: UMLElementActionTypes.CREATE,
       payload: { values: relationships },
+    });
+    dispatch<AppendAction>({
+      type: UMLDiagramActionTypes.APPEND,
+      payload: { ids: relationships.map(r => r.id) },
     });
   },
 

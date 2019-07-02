@@ -15,10 +15,10 @@ export const UMLDiagramRepository = {
     return new UMLDiagram(element);
   },
 
-  append: (id: string | string[], owner?: string): AsyncAction => (dispatch, getState) => {
+  append: (id: string | string[]): AsyncAction => (dispatch, getState) => {
     dispatch<AppendAction>({
       type: UMLDiagramActionTypes.APPEND,
-      payload: { ids: Array.isArray(id) ? id : [id], owner: owner || getState().diagram.id },
+      payload: { ids: Array.isArray(id) ? id : [id] },
     });
   },
 
