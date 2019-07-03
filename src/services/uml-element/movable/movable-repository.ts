@@ -1,5 +1,10 @@
+import { UMLElementType } from 'src/packages/uml-element-type';
+import { UMLRelationshipFeatures } from 'src/services/uml-relationship/uml-relationship-features';
+import { UMLElements } from '../../../packages/uml-elements';
+import { UMLRelationships } from '../../../packages/uml-relationships';
 import { AsyncAction } from '../../../utils/actions/actions';
 import { filterRoots } from '../../../utils/geometry/tree';
+import { UMLElementFeatures } from '../uml-element-features';
 import { MovableActionTypes, MoveEndAction, MoveStartAction } from './movable-types';
 import { MoveAction, MovingActionTypes } from './moving-types';
 
@@ -7,13 +12,24 @@ export const Movable = {
   startMoving: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
     const { elements, selected } = getState();
     const ids = id ? (Array.isArray(id) ? id : [id]) : filterRoots(selected, elements);
-    if (!ids.length) {
+
+    const movables = [];
+    const constructors = { ...UMLElements, ...UMLRelationships };
+    for (const i of ids) {
+      const feature = constructors[elements[i].type as UMLElementType].features as UMLElementFeatures &
+        UMLRelationshipFeatures;
+      if (feature.movable) {
+        movables.push(i);
+      }
+    }
+
+    if (!movables.length) {
       return;
     }
 
     dispatch<MoveStartAction>({
       type: MovableActionTypes.START,
-      payload: { ids },
+      payload: { ids: movables },
     });
   },
 
