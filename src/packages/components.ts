@@ -6,6 +6,7 @@ import { ActivityForkNodeComponent } from './activity-diagram/activity-fork-node
 import { ActivityInitialNodeComponent } from './activity-diagram/activity-initial-node/activity-initial-node-component';
 import { ActivityMergeNodeComponent } from './activity-diagram/activity-merge-node/activity-merge-node-component';
 import { ActivityObjectNodeComponent } from './activity-diagram/activity-object-node/activity-object-node-component';
+import { ActivityComponent } from './activity-diagram/activity/activity-component';
 import { ClassAssociationComponent } from './class-diagram/class-association/class-association-component';
 import { ClassMemberComponent } from './class-diagram/class-member/class-member-component';
 import { ClassifierComponent } from './class-diagram/classifier/classifier-component';
@@ -44,6 +45,7 @@ export const Components: { [key in ElementType | RelationshipType]: FunctionComp
   [ElementType.ObjectName]: ObjectNameComponent,
   [ElementType.ObjectAttribute]: ObjectMemberComponent,
   [ElementType.ObjectMethod]: ObjectMemberComponent,
+  [ElementType.Activity]: ActivityComponent,
   [ElementType.ActivityActionNode]: ActivityActionNodeComponent,
   [ElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
   [ElementType.ActivityForkNode]: ActivityForkNodeComponent,

@@ -1,4 +1,5 @@
 export enum ActivityElementType {
+  Activity = 'Activity',
   ActivityActionNode = 'ActivityActionNode',
   ActivityFinalNode = 'ActivityFinalNode',
   ActivityForkNode = 'ActivityForkNode',

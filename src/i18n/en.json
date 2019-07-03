@@ -45,6 +45,7 @@
       "objectAttribute": "Attribute"
     },
     "activityDiagram": {
+      "activity": "Activity",
       "actionNode": "Action",
       "objectNode": "Object",
       "condition": "Condition",

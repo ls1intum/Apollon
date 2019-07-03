@@ -8,6 +8,7 @@ import { ActivityInitialNode } from '../../packages/activity-diagram/activity-in
 import { ActivityMergeNode } from '../../packages/activity-diagram/activity-merge-node/activity-merge-node';
 import { ActivityObjectNode } from '../../packages/activity-diagram/activity-object-node/activity-object-node';
 import { ClassAttribute } from '../../packages/class-diagram/class-member/class-attribute/class-attribute';
+import { Activity } from '../../packages/activity-diagram/activity/activity';
 import { ClassMethod } from '../../packages/class-diagram/class-member/class-method/class-method';
 import { AbstractClass } from '../../packages/class-diagram/classifier/abstract-class/abstract-class';
 import { Class } from '../../packages/class-diagram/classifier/class/class';
@@ -238,6 +239,11 @@ class SidebarComponent extends Component<Props, State> {
           previews: [
             new ActivityInitialNode(),
             new ActivityFinalNode(),
+            (() => {
+              const c = new Activity();
+              c.name = this.props.translate('packages.activityDiagram.activity');
+              return c;
+            })(),
             (() => {
               const c = new ActivityActionNode();
               c.name = this.props.translate('packages.activityDiagram.actionNode');

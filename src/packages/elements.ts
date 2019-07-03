@@ -7,6 +7,7 @@ import { ActivityForkNode } from './activity-diagram/activity-fork-node/activity
 import { ActivityInitialNode } from './activity-diagram/activity-initial-node/activity-initial-node';
 import { ActivityMergeNode } from './activity-diagram/activity-merge-node/activity-merge-node';
 import { ActivityObjectNode } from './activity-diagram/activity-object-node/activity-object-node';
+import { Activity } from './activity-diagram/activity/activity';
 import { ClassAttribute } from './class-diagram/class-member/class-attribute/class-attribute';
 import { ClassMethod } from './class-diagram/class-member/class-method/class-method';
 import { AbstractClass } from './class-diagram/classifier/abstract-class/abstract-class';
@@ -40,6 +41,7 @@ export const Elements = {
   [ElementType.ObjectName]: ObjectName,
   [ElementType.ObjectAttribute]: ObjectAttribute,
   [ElementType.ObjectMethod]: ObjectMethod,
+  [ElementType.Activity]: Activity,
   [ElementType.ActivityInitialNode]: ActivityInitialNode,
   [ElementType.ActivityFinalNode]: ActivityFinalNode,
   [ElementType.ActivityActionNode]: ActivityActionNode,
