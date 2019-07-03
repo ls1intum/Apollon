@@ -32,12 +32,7 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
     // return this.render(ownedElements);
   }
 
-  render(canvas: ILayer, children?: ILayoutable[]): ILayoutable[] {
-    if (!children) {
-      this.bounds = { ...this.bounds, width: 0, height: 0 };
-      return [this];
-    }
-
+  render(canvas: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     const size = children.reduce<{ width: number; height: number }>(
       (max, element) => ({
         width: Math.max(Math.abs(element.bounds.x), Math.abs(element.bounds.x + element.bounds.width), max.width),
@@ -46,7 +41,7 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
       { width: 0, height: 0 },
     );
 
-    const bounds = { x: -size.width, y: -size.height, width: size.width * 2, height: size.height * 2 };
-    return [new UMLDiagram({ ...this, bounds })];
+    this.bounds = { x: -size.width, y: -size.height, width: size.width * 2, height: size.height * 2 };
+    return [this];
   }
 }

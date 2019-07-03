@@ -2,7 +2,10 @@ import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
 import { AsyncAction } from '../../utils/actions/actions';
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
+import { AppendRelationshipAction, UMLDiagramActionTypes } from '../uml-diagram/uml-diagram-types';
 import { IUMLElement } from '../uml-element/uml-element';
+import { UMLElementRepository } from '../uml-element/uml-element-repository';
+import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
 import { IUMLContainer, UMLContainer } from './uml-container';
 import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
 
@@ -28,10 +31,24 @@ export const UMLContainerRepository = {
   },
 
   append: (id: string | string[], owner?: string): AsyncAction => (dispatch, getState) => {
-    dispatch<AppendAction>({
-      type: UMLContainerActionTypes.APPEND,
-      payload: { ids: Array.isArray(id) ? id : [id], owner: owner || getState().diagram.id },
-    });
+    const ids = Array.isArray(id) ? id : [id];
+    const { elements, diagram } = getState();
+
+    const rels = ids.filter(x => UMLRelationshipRepository.isUMLRelationship(elements[x]));
+    if (rels.length) {
+      dispatch<AppendRelationshipAction>({
+        type: UMLDiagramActionTypes.APPEND,
+        payload: { ids: rels },
+      });
+    }
+
+    const eles = ids.filter(x => UMLElementRepository.isUMLElement(elements[x]));
+    if (eles.length) {
+      dispatch<AppendAction>({
+        type: UMLContainerActionTypes.APPEND,
+        payload: { ids: eles, owner: owner || diagram.id },
+      });
+    }
   },
 
   remove: (id: string | string[]): RemoveAction => ({

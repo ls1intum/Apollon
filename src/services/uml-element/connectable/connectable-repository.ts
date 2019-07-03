@@ -1,11 +1,9 @@
 import { DefaultUMLRelationshipType, UMLRelationshipType } from '../../../packages/uml-relationship-type';
 import { UMLRelationships } from '../../../packages/uml-relationships';
 import { AsyncAction } from '../../../utils/actions/actions';
-import { AppendAction, UMLDiagramActionTypes } from '../../uml-diagram/uml-diagram-types';
 import { Connection } from '../../uml-relationship/connection';
-import { UMLRelationship } from '../../uml-relationship/uml-relationship';
 import { Direction, IUMLElementPort } from '../uml-element-port';
-import { CreateAction, UMLElementActionTypes } from '../uml-element-types';
+import { UMLElementRepository } from '../uml-element-repository';
 import { ConnectableActionTypes, ConnectEndAction, ConnectStartAction } from './connectable-types';
 
 export const Connectable = {
@@ -40,13 +38,6 @@ export const Connectable = {
       return;
     }
 
-    if (!source) {
-      dispatch<ConnectEndAction>({
-        type: ConnectableActionTypes.END,
-        payload: { ports: sources },
-      });
-    }
-
     const connections: Connection[] = [];
     for (const [index, port] of sources.entries()) {
       if (port === targets[index]) {
@@ -60,14 +51,14 @@ export const Connectable = {
     const Classifier = UMLRelationships[type];
     const relationships = connections.map(connection => new Classifier(connection));
 
-    dispatch<CreateAction<UMLRelationship>>({
-      type: UMLElementActionTypes.CREATE,
-      payload: { values: relationships },
-    });
-    dispatch<AppendAction>({
-      type: UMLDiagramActionTypes.APPEND,
-      payload: { ids: relationships.map(r => r.id) },
-    });
+    dispatch(UMLElementRepository.create(relationships));
+
+    if (!source) {
+      dispatch<ConnectEndAction>({
+        type: ConnectableActionTypes.END,
+        payload: { ports: sources },
+      });
+    }
   },
 
   endConnecting: (port?: IUMLElementPort | IUMLElementPort[]): AsyncAction => (dispatch, getState) => {

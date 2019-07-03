@@ -3,20 +3,13 @@ import { IUMLDiagram } from './uml-diagram';
 
 export const enum UMLDiagramActionTypes {
   APPEND = '@@element/diagram/APPEND',
-  REMOVE = '@@element/diagram/REMOVE',
 }
 
 export type UMLDiagramState = IUMLDiagram;
 
-export type UMLDiagramActions = AppendAction | RemoveAction;
+export type UMLDiagramActions = AppendRelationshipAction;
 
-export type AppendAction = Action<UMLDiagramActionTypes.APPEND> & {
-  payload: {
-    ids: string[];
-  };
-};
-
-export type RemoveAction = Action<UMLDiagramActionTypes.REMOVE> & {
+export type AppendRelationshipAction = Action<UMLDiagramActionTypes.APPEND> & {
   payload: {
     ids: string[];
   };

@@ -33,9 +33,9 @@ const Repository = {
       payload: { values },
     });
 
-    const ids = values.filter(v => !v.owner).map(v => v.id);
-    if (ids.length) {
-      dispatch(UMLContainerRepository.append(ids, owner));
+    const roots = values.filter(x => !x.owner).map(x => x.id);
+    if (roots.length) {
+      dispatch(UMLContainerRepository.append(roots, owner));
     }
   },
 

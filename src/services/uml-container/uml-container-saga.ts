@@ -3,17 +3,20 @@ import { all, call, delay, Effect, getContext, put, race, select, take } from 'r
 import { ModelState } from '../../components/store/model-state';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
-import { run } from '../../utils/actions/sagas';
+import { isInternal, run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
 import { notEmpty } from '../../utils/not-empty';
 import { ILayer } from '../layouter/layer';
+import { UMLDiagram } from '../uml-diagram/uml-diagram';
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
+import { MovingActionTypes } from '../uml-element/movable/moving-types';
 import { ResizableActionTypes, ResizeEndAction } from '../uml-element/resizable/resizable-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UMLElementState, UpdateAction } from '../uml-element/uml-element-types';
+import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
 import { UMLContainer } from './uml-container';
 import { UMLContainerRepository } from './uml-container-repository';
 import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
@@ -35,28 +38,30 @@ export const updateElements = (updates: IUMLElement[], elements: UMLElementState
       (update.bounds.x !== original.bounds.x || update.bounds.y !== original.bounds.y)
     ) {
       effects.push(
-        put(
-          UMLElementRepository.move(
-            {
+        put({
+          type: MovingActionTypes.MOVE,
+          payload: {
+            ids: [update.id],
+            delta: {
               x: update.bounds.x - original.bounds.x,
               y: update.bounds.y - original.bounds.y,
             },
-            update.id,
-          ),
-        ),
+          },
+        }),
       );
     }
     if (update.bounds.width !== original.bounds.width || update.bounds.height !== original.bounds.height) {
       effects.push(
-        put(
-          UMLElementRepository.resize(
-            {
+        put({
+          type: ResizingActionTypes.RESIZE,
+          payload: {
+            ids: [update.id],
+            delta: {
               width: update.bounds.width - original.bounds.width,
               height: update.bounds.height - original.bounds.height,
             },
-            update.id,
-          ),
-        ),
+          },
+        }),
       );
       // if (isEnd && !UMLDiagramRepository.isUMLDiagram(update)) {
       //   effects.push(put(UMLElementRepository.endResizing(update.id)));
@@ -104,7 +109,10 @@ const resize = (layer: ILayer, owner: string, elements: UMLElementState, isEnd =
     return [];
   }
 
-  const ownedElements = container.ownedElements.map(id => UMLElementRepository.get(elements[id])).filter(notEmpty);
+  const ownedElements = [
+    ...container.ownedElements.map(id => UMLElementRepository.get(elements[id])),
+    ...(container as UMLDiagram).ownedRelationships.map(id => UMLRelationshipRepository.get(elements[id])),
+  ].filter(notEmpty);
   const updates = container.render(layer, ownedElements) as UMLElement[];
 
   return updateElements(updates, elements, isEnd);
@@ -190,6 +198,7 @@ function* resizeAfterMove(): SagaIterator {
   const action: MoveEndAction = yield take(MovableActionTypes.END);
   const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
+
   const elementState: UMLElementState = { ...elements, [diagram.id]: diagram };
 
   yield race({
@@ -205,6 +214,9 @@ function* resizeAfterMove(): SagaIterator {
 
 function* resizeWhileResize(): SagaIterator {
   const action: ResizeAction = yield take(ResizingActionTypes.RESIZE);
+  if (isInternal(action)) {
+    return;
+  }
 
   for (const id of action.payload.ids) {
     yield call(render, id);

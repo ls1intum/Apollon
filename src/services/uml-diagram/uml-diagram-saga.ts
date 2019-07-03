@@ -1,13 +1,22 @@
 import { SagaIterator } from 'redux-saga';
-import { put, select, take } from 'redux-saga/effects';
-import { ModelState } from 'src/components/store/model-state';
+import { getContext, put, select, take, takeLatest } from 'redux-saga/effects';
+import { ModelState } from '../../components/store/model-state';
 import { ApollonMode } from '../../typings';
 import { run } from '../../utils/actions/sagas';
+import { notEmpty } from '../../utils/not-empty';
+import { ILayer } from '../layouter/layer';
+import { ConnectableActionTypes } from '../uml-element/connectable/connectable-types';
+import { ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { SelectableActionTypes, SelectAction } from '../uml-element/selectable/selectable-types';
-import { AppendAction, UMLDiagramActionTypes } from './uml-diagram-types';
+import { UMLElementRepository } from '../uml-element/uml-element-repository';
+import { UpdatableActionTypes } from '../uml-element/updatable/updatable-types';
+import { ReconnectableActionTypes } from '../uml-relationship/reconnectable/reconnectable-types';
+import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
+import { UMLDiagramRepository } from './uml-diagram-repository';
+import { AppendRelationshipAction, UMLDiagramActionTypes } from './uml-diagram-types';
 
 export function* UMLDiagramSaga() {
-  yield run([selectRelationship]);
+  yield run([selectRelationship, resizeAfterConnectionChange]);
 }
 
 function* selectRelationship(): SagaIterator {
@@ -23,7 +32,7 @@ function* selectRelationship(): SagaIterator {
     return;
   }
 
-  yield put<AppendAction>({
+  yield put<AppendRelationshipAction>({
     type: UMLDiagramActionTypes.APPEND,
     payload: { ids },
   });
@@ -96,20 +105,9 @@ function* selectRelationship(): SagaIterator {
 //   yield recalc();
 // }
 
-// function* handleRelationshipCreation({ payload }: RelationshipCreateAction) {
-//   yield put<AddRelationshipAction>({
-//     type: DiagramActionTypes.ADD_RELATIONSHIP,
-//     payload: { id: payload.relationship.id },
-//   });
-// }
-
-// function* handleElementCreation({ payload }: ElementCreateAction) {
-//   if (payload.element.owner) return;
-//   yield put<AddElementAction>({
-//     type: DiagramActionTypes.ADD_ELEMENT,
-//     payload: { id: payload.element.id },
-//   });
-// }
+function* resizeAfterConnectionChange(): SagaIterator {
+  yield takeLatest([ConnectableActionTypes.END, ReconnectableActionTypes.END, UpdatableActionTypes.END], resize);
+}
 
 // function* handleElementDeletion({ payload }: DeleteAction) {
 //   if (!payload.id) return;
@@ -129,18 +127,28 @@ function* selectRelationship(): SagaIterator {
 //   }
 // }
 
-// function* recalc() {
-//   const { elements }: ModelState = yield select();
-//   const ids = Object.keys(elements).filter(id => !elements[id].owner);
-//   const rootElements = ElementRepository.getByIds(elements)(ids);
+function* resize(): SagaIterator {
+  const layer: ILayer = yield getContext('layer');
+  const { elements, diagram }: ModelState = yield select();
+  const children = [
+    ...diagram.ownedElements.map(id => UMLElementRepository.get(elements[id])),
+    ...diagram.ownedRelationships.map(id => UMLRelationshipRepository.get(elements[id])),
+  ].filter(notEmpty);
+  const container = UMLDiagramRepository.get(diagram);
 
-//   let width = 0;
-//   let height = 0;
-//   for (const element of rootElements) {
-//     width = Math.max(Math.abs(element.bounds.x), Math.abs(element.bounds.x + element.bounds.width), width);
-//     height = Math.max(Math.abs(element.bounds.y), Math.abs(element.bounds.y + element.bounds.height), height);
-//   }
+  if (!container) {
+    return;
+  }
 
-//   const bounds = { x: -width, y: -height, width: width * 2, height: height * 2 };
-//   yield put<UpdateBoundsAction>({ type: DiagramActionTypes.UPDATE_BOUNDS, payload: { bounds } });
-// }
+  const [updates] = container.render(layer, children);
+
+  const delta = {
+    width: updates.bounds.width - diagram.bounds.width,
+    height: updates.bounds.height - diagram.bounds.height,
+  };
+
+  yield put({
+    type: ResizingActionTypes.RESIZE,
+    payload: { ids: [diagram.id], delta },
+  });
+}

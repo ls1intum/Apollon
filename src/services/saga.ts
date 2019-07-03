@@ -11,5 +11,5 @@ export type SagaContext = {
 };
 
 export function* saga(): SagaIterator {
-  yield composeSaga([Layouter, UMLDiagramSaga, UMLContainerSaga, UMLRelationshipSaga]);
+  yield composeSaga([Layouter, UMLContainerSaga, UMLRelationshipSaga, UMLDiagramSaga]);
 }
