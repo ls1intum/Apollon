@@ -58,17 +58,6 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
           {this.layer.current && (
             <>
               <svg x="50%" y="50%">
-                {/* TODO: delete */}
-                <circle cx={0} cy={0} r={5} fill="green" fillOpacity={0.5} />
-                <rect
-                  x={-diagram.bounds.width / 2}
-                  y={-diagram.bounds.height / 2}
-                  width={diagram.bounds.width}
-                  height={diagram.bounds.height}
-                  fill="green"
-                  fillOpacity={0.1}
-                />
-                {/* end delete */}
                 {diagram.ownedElements.map(element => (
                   <UMLElementComponent key={element} id={element} component="canvas" />
                 ))}

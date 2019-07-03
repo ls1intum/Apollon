@@ -1,9 +1,11 @@
+import { ILayer } from 'src/services/layouter/layer';
+import { ILayoutable } from 'src/services/layouter/layoutable';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { IBoundary } from '../../../utils/geometry/boundary';
-import { NamedElement } from '../named-element/named-element';
+import { Text } from '../../../utils/svg/text';
 
-export abstract class UMLClassifierMember extends NamedElement {
+export abstract class UMLClassifierMember extends UMLElement {
   static features: UMLElementFeatures = {
     ...UMLElement.features,
     hoverable: false,
@@ -16,4 +18,11 @@ export abstract class UMLClassifierMember extends NamedElement {
   };
 
   bounds: IBoundary = { ...this.bounds, height: 30 };
+
+  render(layer: ILayer): ILayoutable[] {
+    const radix = 10;
+    const width = Text.width(layer, this.name) + 20;
+    this.bounds.width = Math.max(this.bounds.width, Math.round(width / radix) * radix);
+    return [this];
+  }
 }

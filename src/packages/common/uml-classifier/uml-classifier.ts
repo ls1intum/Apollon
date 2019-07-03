@@ -56,16 +56,15 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
     return [this];
   }
 
-  render(canvas: ILayer, children: ILayoutable[] = []): ILayoutable[] {
+  render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     const attributes = children.filter((x): x is UMLClassifierAttribute => x instanceof UMLClassifierAttribute);
     const methods = children.filter((x): x is UMLClassifierMethod => x instanceof UMLClassifierMethod);
 
-    const width = [this, ...attributes, ...methods].reduce(
-      (current, child) => Math.max(current, Text.width(canvas, child.name) + 20),
-      this.bounds.width,
+    const radix = 10;
+    this.bounds.width = [this, ...attributes, ...methods].reduce(
+      (current, child) => Math.max(current, Math.round((Text.width(layer, child.name) + 20) / radix) * radix),
+      Math.round(this.bounds.width / radix) * radix,
     );
-
-    this.bounds.width = Math.round(width / 10) * 10;
 
     let y = this.headerHeight;
     for (const attribute of attributes) {
