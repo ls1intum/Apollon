@@ -1,18 +1,19 @@
 import React, { SFC } from 'react';
-import {ActivityActionNode} from './activity-action-node';
+import { Multiline } from '../../../utils/svg/multiline';
+import { ActivityActionNode } from './activity-action-node';
 
 export const ActivityActionNodeComponent: SFC<Props> = ({ element }) => (
   <g>
     <rect rx={10} ry={10} width="100%" height="100%" stroke="black" />
-    <text
-      x="50%"
-      y="50%"
-      dominantBaseline="middle"
-      textAnchor="middle"
+    <Multiline
+      x={element.bounds.width / 2}
+      y={element.bounds.height / 2}
+      width={element.bounds.width}
+      height={element.bounds.height}
       fontWeight="bold"
     >
       {element.name}
-    </text>
+    </Multiline>
   </g>
 );
 
