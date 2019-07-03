@@ -4,6 +4,7 @@ import { ILayer } from './layouter/layer';
 import { Layouter } from './layouter/layouter';
 import { UMLContainerSaga } from './uml-container/uml-container-saga';
 import { UMLDiagramSaga } from './uml-diagram/uml-diagram-saga';
+import { UMLElementSaga } from './uml-element/uml-element-saga';
 import { UMLRelationshipSaga } from './uml-relationship/uml-relationship-saga';
 
 export type SagaContext = {
@@ -11,5 +12,5 @@ export type SagaContext = {
 };
 
 export function* saga(): SagaIterator {
-  yield composeSaga([Layouter, UMLContainerSaga, UMLRelationshipSaga, UMLDiagramSaga]);
+  yield composeSaga([Layouter, UMLElementSaga, UMLContainerSaga, UMLRelationshipSaga, UMLDiagramSaga]);
 }

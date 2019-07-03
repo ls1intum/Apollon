@@ -43,7 +43,8 @@ export const interactable = (
     }
 
     render() {
-      return <WrappedComponent {...this.props} />;
+      const { hovered, selected, select, deselect, ...props } = this.props;
+      return <WrappedComponent {...props} />;
     }
 
     private select = (event: PointerEvent) => {

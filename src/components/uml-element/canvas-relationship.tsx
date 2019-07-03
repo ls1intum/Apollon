@@ -2,6 +2,7 @@ import React, { Component, SVGProps } from 'react';
 import { connect } from 'react-redux';
 import { Components } from '../../packages/components';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
+import { ApollonView } from '../../services/editor/editor-types';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { ModelState } from '../store/model-state';
@@ -15,6 +16,7 @@ type StateProps = {
   hovered: boolean;
   selected: boolean;
   interactive: boolean;
+  interactable: boolean;
   reconnecting: boolean;
   disabled: boolean;
   relationship: IUMLRelationship;
@@ -29,6 +31,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     hovered: state.hovered[0] === props.id,
     selected: state.selected.includes(props.id),
     interactive: state.interactive.includes(props.id),
+    interactable: state.editor.view === ApollonView.Exporting,
     reconnecting: !!state.reconnecting[props.id],
     disabled: !!Object.keys(state.reconnecting).length,
     relationship: state.elements[props.id] as IUMLRelationship,
@@ -38,7 +41,17 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 export class CanvasRelationshipComponent extends Component<Props> {
   render() {
-    const { hovered, selected, interactive, reconnecting, disabled, relationship, children, ...props } = this.props;
+    const {
+      hovered,
+      selected,
+      interactive,
+      interactable,
+      reconnecting,
+      disabled,
+      relationship,
+      children,
+      ...props
+    } = this.props;
 
     const ChildComponent = Components[relationship.type as UMLRelationshipType];
 
@@ -51,14 +64,14 @@ export class CanvasRelationshipComponent extends Component<Props> {
         visibility={reconnecting ? 'hidden' : undefined}
         pointerEvents={disabled ? 'none' : undefined}
       >
-        <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
         <polyline
           points={points}
-          stroke="#0064ff"
-          strokeOpacity={hovered || selected ? 0.2 : 0}
+          stroke={interactable ? (interactive ? '#D0F4C5' : '#E8F9E3') : '#0064ff'}
+          strokeOpacity={hovered || selected || interactive ? (interactable ? 1 : 0.2) : 0}
           fill="none"
           strokeWidth={15}
         />
+        <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
         {children}
       </svg>
     );

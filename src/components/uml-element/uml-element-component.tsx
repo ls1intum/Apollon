@@ -1,18 +1,21 @@
 import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { UMLRelationshipFeatures } from 'src/services/uml-relationship/uml-relationship-features';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { UMLRelationships } from '../../packages/uml-relationships';
+import { ApollonView } from '../../services/editor/editor-types';
 import { UMLElementFeatures } from '../../services/uml-element/uml-element-features';
+import { UMLRelationshipFeatures } from '../../services/uml-relationship/uml-relationship-features';
+import { ApollonMode } from '../../typings';
 import { ModelState } from '../store/model-state';
 import { CanvasElement } from './canvas-element';
 import { CanvasRelationship } from './canvas-relationship';
 import { connectable } from './connectable/connectable';
 import { droppable } from './droppable/droppable';
 import { hoverable } from './hoverable/hoverable';
+import { interactable } from './interactable/interactable';
 import { movable } from './movable/movable';
 import { reconnectable } from './reconnectable/reconnectable';
 import { resizable } from './resizable/resizable';
@@ -38,6 +41,9 @@ type OwnProps = {
 type StateProps = {
   features: UMLElementFeatures;
   type: UMLElementType | UMLRelationshipType;
+  readonly: boolean;
+  view: ApollonView;
+  mode: ApollonMode;
 };
 
 type DispatchProps = {};
@@ -47,6 +53,9 @@ type Props = OwnProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
   features: state.editor.features,
   type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
+  readonly: state.editor.readonly,
+  view: state.editor.view,
+  mode: state.editor.mode,
 }));
 
 const getInitialState = (props: Props) => {
@@ -55,33 +64,41 @@ const getInitialState = (props: Props) => {
   const component = components[props.component](props.type);
   const decorators = [];
 
-  if (props.features.hoverable && features.hoverable) {
-    decorators.push(hoverable);
-  }
-  if (features.reconnectable) {
-    decorators.push(reconnectable);
-  }
-  if (props.features.selectable && features.selectable) {
-    decorators.push(selectable);
-  }
-  if (props.features.movable && features.movable) {
-    decorators.push(movable);
-  }
-  if (props.features.resizable && features.resizable) {
-    const options = {
-      preventY: features.resizable === 'WIDTH',
-      preventX: features.resizable === 'HEIGHT',
-    };
-    decorators.push(resizable(options));
-  }
-  if (props.features.connectable && features.connectable) {
-    decorators.push(connectable);
-  }
-  if (props.features.updatable && features.updatable) {
-    decorators.push(updatable);
-  }
-  if (props.features.droppable && features.droppable) {
-    decorators.push(droppable);
+  if (props.mode === ApollonMode.Assessment) {
+    decorators.push(/*assessable, */ updatable, selectable, hoverable);
+  } else if (props.readonly) {
+    decorators.push(selectable, hoverable);
+  } else if (props.view === ApollonView.Exporting || props.view === ApollonView.Highlight) {
+    decorators.push(interactable, hoverable);
+  } else if (props.view === ApollonView.Modelling) {
+    if (props.features.hoverable && features.hoverable) {
+      decorators.push(hoverable);
+    }
+    if (features.reconnectable) {
+      decorators.push(reconnectable);
+    }
+    if (props.features.selectable && features.selectable) {
+      decorators.push(selectable);
+    }
+    if (props.features.movable && features.movable) {
+      decorators.push(movable);
+    }
+    if (props.features.resizable && features.resizable) {
+      const options = {
+        preventY: features.resizable === 'WIDTH',
+        preventX: features.resizable === 'HEIGHT',
+      };
+      decorators.push(resizable(options));
+    }
+    if (props.features.connectable && features.connectable) {
+      decorators.push(connectable);
+    }
+    if (props.features.updatable && features.updatable) {
+      decorators.push(updatable);
+    }
+    if (props.features.droppable && features.droppable) {
+      decorators.push(droppable);
+    }
   }
 
   return {
@@ -93,6 +110,12 @@ type State = ReturnType<typeof getInitialState>;
 
 class UMLElementComponentC extends Component<Props, State> {
   state = getInitialState(this.props);
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps !== this.props) {
+      this.setState(getInitialState(this.props));
+    }
+  }
 
   render() {
     const { component: ElementComponent } = this.state;

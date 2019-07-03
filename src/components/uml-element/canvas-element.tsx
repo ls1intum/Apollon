@@ -2,6 +2,7 @@ import React, { Component, SVGProps } from 'react';
 import { connect } from 'react-redux';
 import { Components } from '../../packages/components';
 import { UMLElementType } from '../../packages/uml-element-type';
+import { ApollonView } from '../../services/editor/editor-types';
 import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
@@ -17,6 +18,7 @@ type StateProps = {
   selected: boolean;
   moving: boolean;
   interactive: boolean;
+  interactable: boolean;
   element: IUMLElement;
 };
 
@@ -30,6 +32,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     selected: state.selected.includes(props.id),
     moving: state.moving.includes(props.id),
     interactive: state.interactive.includes(props.id),
+    interactable: state.editor.view === ApollonView.Exporting,
     element: state.elements[props.id],
   }),
   {},
@@ -37,7 +40,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 export class CanvasElementComponent extends Component<Props> {
   render() {
-    const { hovered, selected, moving, interactive, element, children, ...props } = this.props;
+    const { hovered, selected, moving, interactive, interactable, element, children, ...props } = this.props;
 
     let elements = null;
     if (UMLContainerRepository.isUMLContainer(element)) {
@@ -46,10 +49,16 @@ export class CanvasElementComponent extends Component<Props> {
     const ChildComponent = Components[element.type as UMLElementType];
 
     return (
-      <svg {...props} {...element.bounds} pointerEvents={moving ? 'none' : undefined} fillOpacity={moving ? 0.7 : undefined}>
+      <svg
+        {...props}
+        {...element.bounds}
+        pointerEvents={moving ? 'none' : undefined}
+        fillOpacity={moving ? 0.7 : undefined}
+        fill={(interactable && ((interactive && '#D0F4C5') || (hovered && '#E8F9E3'))) || undefined}
+      >
         <ChildComponent element={UMLElementRepository.get(element)}>{elements}</ChildComponent>
         {children}
-        {(hovered || selected) && (
+        {!interactable && (hovered || selected) && (
           <rect
             x={-STROKE / 2}
             y={-STROKE / 2}

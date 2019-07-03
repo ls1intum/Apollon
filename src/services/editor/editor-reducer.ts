@@ -22,6 +22,7 @@ export const EditorReducer: Reducer<EditorState, EditorActions> = (state = initi
   switch (action.type) {
     case EditorActionTypes.CHANGE_VIEW: {
       const { payload } = action;
+
       return {
         ...state,
         view: payload.view,
