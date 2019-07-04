@@ -118,8 +118,7 @@ class ClassifierUpdate extends Component<Props> {
     const { element, create } = this.props;
     const member = new Clazz();
     member.name = value;
-    member.owner = element.id;
-    create(member);
+    create(member, element.id);
   };
 
   private rename = (id: string) => (value: string) => {

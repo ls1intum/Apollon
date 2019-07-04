@@ -26,6 +26,9 @@ function* makeInteractable(): SagaIterator {
 
 function* renderAfterUpdate(): SagaIterator {
   const action: UpdateAction = yield take(UMLElementActionTypes.UPDATE);
+  if (isInternal(action)) {
+    return;
+  }
 
   for (const value of action.payload.values) {
     yield call(render, value.id);

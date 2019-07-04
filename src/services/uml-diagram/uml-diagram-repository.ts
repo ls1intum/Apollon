@@ -1,8 +1,8 @@
-import { AsyncAction } from 'src/utils/actions/actions';
 import { UMLDiagramType } from '../../packages/diagram-type';
+import { AsyncAction } from '../../utils/actions/actions';
 import { IUMLElement } from '../uml-element/uml-element';
 import { IUMLDiagram, UMLDiagram } from './uml-diagram';
-import { AppendAction, RemoveAction, UMLDiagramActionTypes } from './uml-diagram-types';
+import { AppendRelationshipAction, UMLDiagramActionTypes } from './uml-diagram-types';
 
 export const UMLDiagramRepository = {
   isUMLDiagram: (element: IUMLElement): element is IUMLDiagram => element.type in UMLDiagramType,
@@ -16,14 +16,9 @@ export const UMLDiagramRepository = {
   },
 
   append: (id: string | string[]): AsyncAction => (dispatch, getState) => {
-    dispatch<AppendAction>({
+    dispatch<AppendRelationshipAction>({
       type: UMLDiagramActionTypes.APPEND,
       payload: { ids: Array.isArray(id) ? id : [id] },
     });
   },
-
-  remove: (id: string | string[]): RemoveAction => ({
-    type: UMLDiagramActionTypes.REMOVE,
-    payload: { ids: Array.isArray(id) ? id : [id] },
-  }),
 };

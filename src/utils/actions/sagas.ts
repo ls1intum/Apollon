@@ -29,6 +29,7 @@ export const safely = (saga: Saga): Saga => {
       yield call(saga);
     } catch (e) {
       // TODO: error handling
+      console.error(e);
     }
   }
   return safelySaga as Saga;
