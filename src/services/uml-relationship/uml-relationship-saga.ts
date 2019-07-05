@@ -92,7 +92,7 @@ function* deleteElement(): SagaIterator {
   yield put(UMLElementRepository.delete(relationships));
 }
 
-function* recalc(id: string): SagaIterator {
+export function* recalc(id: string): SagaIterator {
   const { elements }: ModelState = yield select();
   const layer: ILayer = yield getContext('layer');
   const relationship = UMLRelationshipRepository.get(elements[id]);

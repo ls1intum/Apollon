@@ -12,6 +12,7 @@ import { UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UpdateAction } from '../uml-element/uml-element-types';
 import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
+import { recalc } from '../uml-relationship/uml-relationship-saga';
 import { ILayer } from './layer';
 import { LayoutAction, LayouterActionTypes } from './layouter-types';
 
@@ -34,7 +35,12 @@ function* layout(): SagaIterator {
   yield put(UMLContainerRepository.append(ids));
 
   for (const id of Object.keys(elements)) {
-    yield call(render, id);
+    if (UMLElementRepository.isUMLElement(elements[id])) {
+      yield call(render, id);
+    }
+    if (UMLRelationshipRepository.isUMLRelationship(elements[id])) {
+      yield call(recalc, id);
+    }
   }
 }
 
