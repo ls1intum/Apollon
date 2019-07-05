@@ -18,6 +18,7 @@ import { notEmpty } from '../../../utils/not-empty';
 import { ClassElementType } from '../../class-diagram';
 import { UMLClassAttribute } from '../../class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../class-diagram/uml-class-method/uml-class-method';
+import { UMLElements } from '../../uml-elements';
 import { UMLClassifier } from './uml-classifier';
 
 const Flex = styled.div`
@@ -127,7 +128,16 @@ class ClassifierUpdate extends Component<Props> {
 
   private toggle = (type: ClassElementType) => {
     const { element, update } = this.props;
-    update(element.id, { type: element.type === type ? ClassElementType.Class : type });
+    const newType = element.type === type ? ClassElementType.Class : type;
+    const instance = new UMLElements[newType]({
+      id: element.id,
+      name: element.name,
+      type: element.type,
+      owner: element.owner,
+      bounds: element.bounds,
+      ownedElements: element.ownedElements,
+    });
+    update(element.id, instance);
   };
 
   private delete = (id: string) => () => {
