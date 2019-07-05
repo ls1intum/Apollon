@@ -40,18 +40,20 @@ export const Connectable = {
 
     const connections: Connection[] = [];
     for (const [index, port] of sources.entries()) {
-      if (port === targets[index]) {
+      if (port.element === targets[index].element && port.direction === targets[index].direction) {
         continue;
       }
 
       connections.push({ source: port, target: targets.length === 1 ? targets[0] : targets[index] });
     }
 
-    const type: UMLRelationshipType = DefaultUMLRelationshipType[getState().diagram.type];
-    const Classifier = UMLRelationships[type];
-    const relationships = connections.map(connection => new Classifier(connection));
+    if (connections.length) {
+      const type: UMLRelationshipType = DefaultUMLRelationshipType[getState().diagram.type];
+      const Classifier = UMLRelationships[type];
+      const relationships = connections.map(connection => new Classifier(connection));
 
-    dispatch(UMLElementRepository.create(relationships));
+      dispatch(UMLElementRepository.create(relationships));
+    }
 
     if (!source) {
       dispatch<ConnectEndAction>({

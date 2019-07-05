@@ -1,5 +1,6 @@
-import { IUMLElementPort } from 'src/services/uml-element/uml-element-port';
 import { AsyncAction } from '../../../utils/actions/actions';
+import { notEmpty } from '../../../utils/not-empty';
+import { IUMLElementPort } from '../../uml-element/uml-element-port';
 import { Connection } from '../connection';
 import { IUMLRelationship } from '../uml-relationship';
 import {
@@ -24,16 +25,25 @@ export const Reconnectable = {
 
   reconnect: (target: IUMLElementPort): AsyncAction => (dispatch, getState) => {
     const { reconnecting, elements } = getState();
-    const connections = Object.keys(reconnecting).map(id => {
-      const relationship = elements[id] as IUMLRelationship;
-      const endpoint1: 'source' | 'target' = reconnecting[id];
-      const endpoint2: 'source' | 'target' = endpoint1 === 'source' ? 'target' : 'source';
-      const connection = {
-        [endpoint1]: relationship[endpoint1],
-        [endpoint2]: { ...relationship[endpoint2], ...target },
-      };
-      return { id, ...connection } as { id: string } & Connection;
-    });
+    const connections = Object.keys(reconnecting)
+      .map(id => {
+        const relationship = elements[id] as IUMLRelationship;
+        const endpoint1: 'source' | 'target' = reconnecting[id];
+        const endpoint2: 'source' | 'target' = endpoint1 === 'source' ? 'target' : 'source';
+        const connection = {
+          [endpoint1]: relationship[endpoint1],
+          [endpoint2]: { ...relationship[endpoint2], ...target },
+        };
+
+        if (
+          connection.source.element === connection.target.element &&
+          connection.source.direction === connection.target.direction
+        ) {
+          return null;
+        }
+        return { id, ...connection } as { id: string } & Connection;
+      })
+      .filter(notEmpty);
 
     if (!connections.length) {
       return;
