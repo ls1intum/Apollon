@@ -84,7 +84,7 @@ export function* render(id: string): SagaIterator {
     updates = yield call(renderDiagram);
   } else if (UMLContainerRepository.isUMLContainer(state[id])) {
     updates = yield call(renderContainer, id);
-  } else {
+  } else if (UMLElementRepository.isUMLElement(state[id])) {
     updates = yield call(renderElement, id);
   }
 
