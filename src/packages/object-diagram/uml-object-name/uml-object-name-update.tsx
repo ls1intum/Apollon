@@ -70,12 +70,12 @@ class ObjectNameComponent extends Component<Props> {
       </div>
     );
   }
+
   private create = (Clazz: typeof UMLObjectAttribute | typeof UMLObjectMethod) => (value: string) => {
     const { element, create } = this.props;
     const member = new Clazz();
     member.name = value;
-    member.owner = element.id;
-    create(member);
+    create(member, element.id);
   };
 
   private rename = (id: string) => (name: string) => {

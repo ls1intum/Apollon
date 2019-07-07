@@ -19,7 +19,7 @@ import { ComponentComponent } from './component-diagram/component/component-comp
 import { DeploymentArtifactComponent } from './deployment-diagram/deployment-artifact/deployment-artifact-component';
 import { DeploymentAssociationComponent } from './deployment-diagram/deployment-association/deployment-association-component';
 import { DeploymentNodeComponent } from './deployment-diagram/deployment-node/deployment-node-component';
-import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
+import { UMLObjectLinkComponent } from './object-diagram/uml-object-link/uml-object-link-component';
 import { UMLElementType } from './uml-element-type';
 import { UMLRelationshipType } from './uml-relationship-type';
 import { UseCaseActorComponent } from './use-case-diagram/use-case-actor/use-case-actor-component';
@@ -61,7 +61,7 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLRelationshipType.ClassInheritance]: UMLAssociationComponent,
   [UMLRelationshipType.ClassRealization]: UMLAssociationComponent,
   [UMLRelationshipType.ClassUnidirectional]: UMLAssociationComponent,
-  [UMLRelationshipType.ObjectLink]: ObjectLinkComponent,
+  [UMLRelationshipType.ObjectLink]: UMLObjectLinkComponent,
   [UMLRelationshipType.ActivityControlFlow]: ActivityControlFlowComponent,
   [UMLRelationshipType.UseCaseAssociation]: UseCaseAssociationComponent,
   [UMLRelationshipType.UseCaseExtend]: UseCaseExtendComponent,

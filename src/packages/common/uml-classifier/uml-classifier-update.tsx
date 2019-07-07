@@ -115,6 +115,7 @@ class ClassifierUpdate extends Component<Props> {
       </div>
     );
   }
+
   private create = (Clazz: typeof UMLClassAttribute | typeof UMLClassMethod) => (value: string) => {
     const { element, create } = this.props;
     const member = new Clazz();

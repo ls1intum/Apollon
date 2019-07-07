@@ -12,7 +12,7 @@ import { ComponentDependency } from './component-diagram/component-dependency/co
 import { ComponentInterfaceProvided } from './component-diagram/component-interface-provided/component-interface-provided';
 import { ComponentInterfaceRequired } from './component-diagram/component-interface-required/component-interface-required';
 import { DeploymentAssociation } from './deployment-diagram/deployment-association/deployment-association';
-import { ObjectLink } from './object-diagram/object-link/object-link';
+import { UMLObjectLink } from './object-diagram/uml-object-link/uml-object-link';
 import { UMLRelationshipType } from './uml-relationship-type';
 import { UseCaseAssociation } from './use-case-diagram/use-case-association/use-case-association';
 import { UseCaseExtend } from './use-case-diagram/use-case-extend/use-case-extend';
@@ -29,7 +29,7 @@ export const UMLRelationships = {
   [UMLRelationshipType.ClassInheritance]: ClassInheritance,
   [UMLRelationshipType.ClassRealization]: ClassRealization,
   [UMLRelationshipType.ClassUnidirectional]: ClassUnidirectional,
-  [UMLRelationshipType.ObjectLink]: ObjectLink,
+  [UMLRelationshipType.ObjectLink]: UMLObjectLink,
   [UMLRelationshipType.ActivityControlFlow]: ActivityControlFlow,
   [UMLRelationshipType.UseCaseAssociation]: UseCaseAssociation,
   [UMLRelationshipType.UseCaseExtend]: UseCaseExtend,

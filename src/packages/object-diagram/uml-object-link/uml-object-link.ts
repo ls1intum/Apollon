@@ -1,6 +1,6 @@
 import { ObjectRelationshipType } from '..';
 import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 
-export class ObjectLink extends UMLRelationship {
+export class UMLObjectLink extends UMLRelationship {
   type = ObjectRelationshipType.ObjectLink;
 }
