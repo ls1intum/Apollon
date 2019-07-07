@@ -2,8 +2,7 @@ import { Reducer } from 'redux';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
 import { UMLElementState } from '../uml-element/uml-element-types';
-import { IUMLContainer } from './uml-container';
-import { UMLContainerRepository } from './uml-container-repository';
+import { IUMLContainer, UMLContainer } from './uml-container';
 import { UMLContainerActions, UMLContainerActionTypes } from './uml-container-types';
 
 export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> = (state = {}, action) => {
@@ -14,7 +13,7 @@ export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> 
       const elementState = {
         ...state,
         ...(container &&
-          UMLContainerRepository.isUMLContainer(container) && {
+          UMLContainer.isUMLContainer(container) && {
             [container.id]: {
               ...container,
               ownedElements: [...new Set([...container.ownedElements, ...payload.ids])],

@@ -1,4 +1,3 @@
-import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
@@ -15,6 +14,8 @@ export interface IUMLContainer extends IUMLElement {
 
 export abstract class UMLContainer extends UMLElement implements IUMLContainer {
   static features: UMLElementFeatures = { ...UMLElement.features, droppable: true };
+
+  static isUMLContainer = (element: IUMLElement): element is IUMLContainer => 'ownedElements' in element;
 
   abstract type: UMLElementType | UMLDiagramType;
   ownedElements: string[] = [];

@@ -1,9 +1,9 @@
-import { UMLElementType } from 'src/packages/uml-element-type';
-import { UMLRelationshipFeatures } from 'src/services/uml-relationship/uml-relationship-features';
+import { UMLElementType } from '../../../packages/uml-element-type';
 import { UMLElements } from '../../../packages/uml-elements';
 import { UMLRelationships } from '../../../packages/uml-relationships';
 import { AsyncAction } from '../../../utils/actions/actions';
 import { filterRoots } from '../../../utils/geometry/tree';
+import { UMLRelationshipFeatures } from '../../uml-relationship/uml-relationship-features';
 import { UMLElementFeatures } from '../uml-element-features';
 import { MovableActionTypes, MoveEndAction, MoveStartAction } from './movable-types';
 import { MoveAction, MovingActionTypes } from './moving-types';

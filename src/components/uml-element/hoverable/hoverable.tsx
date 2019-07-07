@@ -3,7 +3,7 @@ import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { ModelState } from '../../store/model-state';
-import { UMLElementComponentProps } from '../uml-element-component';
+import { UMLElementComponentProps } from '../uml-element-component-props';
 
 type StateProps = {};
 

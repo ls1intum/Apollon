@@ -11,7 +11,9 @@ type Props = {
   create: (element: UMLElement, owner?: string) => void;
 };
 
-export const Preview = styled(hoverable(CanvasElement))`
+export const Preview = styled(hoverable(CanvasElement)).attrs({
+  child: CanvasElement,
+})`
   margin: 5px;
   overflow: visible;
   fill: white;

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { AsyncAction, AsyncDispatch } from 'src/utils/actions/actions';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { AsyncAction, AsyncDispatch } from '../../utils/actions/actions';
 import { Button } from '../controls/button/button';
 import { ModelState } from '../store/model-state';
 import { AssessmentSection } from './assessment-section';

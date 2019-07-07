@@ -1,11 +1,12 @@
-import { Apollon } from '@ls1intum/apollon';
+// tslint:disable-next-line
+/// <reference path="../@types/index.d.ts" />
+
 import { ApollonEditor } from '../src';
-import { ApollonOptions } from '../src/typings';
 import './styles.css';
 
 const container = document.getElementById('apollon')!;
 let editor: ApollonEditor | null = null;
-let options: ApollonOptions = {
+let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
 };
 
@@ -40,7 +41,7 @@ export const draw = (mode?: 'include' | 'exclude') => {
 
   const filter: string[] = [...editor.model.interactive.elements, ...editor.model.interactive.relationships];
 
-  const { svg }: SVG = editor.exportAsSVG(mode && { [mode]: filter });
+  const { svg }: Apollon.SVG = editor.exportAsSVG(mode && { [mode]: filter });
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

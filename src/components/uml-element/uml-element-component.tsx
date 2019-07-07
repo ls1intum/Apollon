@@ -5,10 +5,9 @@ import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { UMLRelationships } from '../../packages/uml-relationships';
-import { ApollonView } from '../../services/editor/editor-types';
+import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
 import { UMLElementFeatures } from '../../services/uml-element/uml-element-features';
 import { UMLRelationshipFeatures } from '../../services/uml-relationship/uml-relationship-features';
-import { ApollonMode } from '../../typings';
 import { ModelState } from '../store/model-state';
 import { assessable } from './assessable/assessable';
 import { CanvasElement } from './canvas-element';
@@ -22,11 +21,8 @@ import { reconnectable } from './reconnectable/reconnectable';
 import { resizable } from './resizable/resizable';
 import { selectable } from './selectable/selectable';
 import { SvgElement } from './svg-element';
+import { UMLElementComponentProps } from './uml-element-component-props';
 import { updatable } from './updatable/updatable';
-
-export type UMLElementComponentProps = {
-  id: string;
-};
 
 const components = {
   canvas: (type: UMLElementType | UMLRelationshipType) =>
@@ -34,10 +30,7 @@ const components = {
   svg: () => SvgElement,
 };
 
-type OwnProps = {
-  id: string;
-  component: keyof typeof components;
-};
+type OwnProps = UMLElementComponentProps;
 
 type StateProps = {
   features: UMLElementFeatures;
@@ -62,7 +55,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
 const getInitialState = (props: Props) => {
   const features = { ...UMLElements, ...UMLRelationships }[props.type].features as UMLElementFeatures &
     UMLRelationshipFeatures;
-  const component = components[props.component](props.type);
+  const component = components[props.component || 'canvas'](props.type);
   const decorators = [];
 
   if (props.mode === ApollonMode.Assessment) {
@@ -102,8 +95,14 @@ const getInitialState = (props: Props) => {
     }
   }
 
+  type Compose = ComponentType<
+    UMLElementComponentProps & {
+      child: React.ComponentClass<Pick<Props, 'id' | 'component'>>;
+    }
+  >;
+
   return {
-    component: compose<ComponentType<UMLElementComponentProps>>(...decorators.reverse())(component),
+    component: compose<Compose>(...decorators.reverse())(component),
   };
 };
 
@@ -120,7 +119,8 @@ class UMLElementComponentC extends Component<Props, State> {
 
   render() {
     const { component: ElementComponent } = this.state;
-    return <ElementComponent id={this.props.id} />;
+
+    return <ElementComponent id={this.props.id} child={UMLElementComponent} />;
   }
 }
 

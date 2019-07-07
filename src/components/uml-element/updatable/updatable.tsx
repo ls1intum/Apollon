@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { ModelState } from '../../store/model-state';
-import { UMLElementComponentProps } from '../uml-element-component';
+import { UMLElementComponentProps } from '../uml-element-component-props';
 
 const initialState = {
   previousEvent: null as PointerEvent | null,

@@ -13,7 +13,7 @@ import { Styles } from '../components/theme/styles';
 import { Theme } from '../components/theme/theme';
 import { UpdatePane } from '../components/update-pane/update-pane';
 import { ILayer } from '../services/layouter/layer';
-import { Locale } from '../typings';
+import { Locale } from './../services/editor/editor-types';
 import { Layout } from './application-styles';
 
 type Props = {

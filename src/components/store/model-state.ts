@@ -1,12 +1,11 @@
-import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
-import { UMLRelationshipType } from 'src/packages/uml-relationship-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { UMLRelationships } from '../../packages/uml-relationships';
 import { AssessmentState } from '../../services/assessment/assessment-types';
 import { EditorState } from '../../services/editor/editor-types';
-import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
+import { UMLContainer } from '../../services/uml-container/uml-container';
 import { UMLDiagramState } from '../../services/uml-diagram/uml-diagram-types';
 import { ConnectableState } from '../../services/uml-element/connectable/connectable-types';
 import { HoverableState } from '../../services/uml-element/hoverable/hoverable-types';
@@ -45,7 +44,7 @@ export class ModelState {
 
     const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
       const element = new UMLElements[apollonElement.type]();
-      const children: Apollon.UMLElement[] = UMLContainerRepository.isUMLContainer(element)
+      const children: Apollon.UMLElement[] = UMLContainer.isUMLContainer(element)
         ? apollonElements
             .filter(child => child.owner === apollonElement.id)
             .map<Apollon.UMLElement>(val => {
@@ -117,11 +116,11 @@ export class ModelState {
       .map<UMLElement | null>(element => UMLElementRepository.get(element))
       .reduce<{ [id: string]: UMLElement }>((acc, val) => ({ ...acc, ...(val && { [val.id]: val }) }), {});
     const relationships: UMLRelationship[] = Object.values(state.elements)
-      .filter((x): x is IUMLRelationship => UMLRelationshipRepository.isUMLRelationship(x))
+      .filter((x): x is IUMLRelationship => UMLRelationship.isUMLRelationship(x))
       .map(relationship => UMLRelationshipRepository.get(relationship)!);
 
     const serialize = (element: UMLElement): Apollon.UMLElement[] => {
-      const children: UMLElement[] = UMLContainerRepository.isUMLContainer(element)
+      const children: UMLElement[] = UMLContainer.isUMLContainer(element)
         ? element.ownedElements.map(id => elements[id])
         : [];
 
@@ -179,6 +178,7 @@ export class ModelState {
     }));
 
     return {
+      interactive: { elements: [], relationships: [] },
       elements: apollonElements,
       relationships: apollonRelationships,
       assessments,

@@ -1,6 +1,17 @@
-import { ApollonMode } from '../../typings';
+
 import { Action } from '../../utils/actions/actions';
 import { UMLElementFeatures } from '../uml-element/uml-element-features';
+
+export enum Locale {
+  en = 'en',
+  de = 'de',
+}
+
+export enum ApollonMode {
+  Modelling = 'Modelling',
+  Exporting = 'Exporting',
+  Assessment = 'Assessment',
+}
 
 export const enum ApollonView {
   Modelling = 'Modelling',

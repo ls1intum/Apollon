@@ -5,7 +5,7 @@ import { UMLElementRepository } from '../../../services/uml-element/uml-element-
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
-import { UMLElementComponentProps } from '../uml-element-component';
+import { UMLElementComponentProps } from '../uml-element-component-props';
 
 type StateProps = {
   movable: boolean;

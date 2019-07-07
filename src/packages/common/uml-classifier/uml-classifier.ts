@@ -1,4 +1,3 @@
-import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';

@@ -1,9 +1,9 @@
 import { SagaIterator } from 'redux-saga';
 import { call, getContext, put, select, take } from 'redux-saga/effects';
-import { IBoundary } from 'src/utils/geometry/boundary';
 import { ModelState } from '../../components/store/model-state';
 import { run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
+import { IBoundary } from '../../utils/geometry/boundary';
 import { ILayer } from '../layouter/layer';
 import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
@@ -37,7 +37,7 @@ function* update(): SagaIterator {
   const { elements }: ModelState = yield select();
 
   for (const value of action.payload.values) {
-    if (!UMLRelationshipRepository.isUMLRelationship(elements[value.id])) {
+    if (!UMLRelationship.isUMLRelationship(elements[value.id])) {
       continue;
     }
 
@@ -49,7 +49,7 @@ function* layoutElement(): SagaIterator {
   const action: MoveAction | ResizeAction = yield take([MovingActionTypes.MOVE, ResizingActionTypes.RESIZE]);
   const { elements }: ModelState = yield select();
   const relationships = Object.values(elements).filter(
-    (x): x is IUMLRelationship => UMLRelationshipRepository.isUMLRelationship(x),
+    (x): x is IUMLRelationship => UMLRelationship.isUMLRelationship(x),
   );
   const updates: string[] = [];
 
@@ -81,7 +81,7 @@ function* deleteElement(): SagaIterator {
   const action: DeleteAction = yield take(UMLElementActionTypes.DELETE);
   const { elements }: ModelState = yield select();
   const relationships = Object.values(elements)
-    .filter((x): x is IUMLRelationship => UMLRelationshipRepository.isUMLRelationship(x))
+    .filter((x): x is IUMLRelationship => UMLRelationship.isUMLRelationship(x))
     .filter(
       relationship =>
         action.payload.ids.includes(relationship.source.element) ||

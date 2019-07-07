@@ -6,7 +6,7 @@ import { UMLRelationshipRepository } from '../../../services/uml-relationship/um
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
-import { UMLElementComponentProps } from '../uml-element-component';
+import { UMLElementComponentProps } from '../uml-element-component-props';
 
 type StateProps = {
   hovered: boolean;

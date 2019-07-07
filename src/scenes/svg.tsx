@@ -7,14 +7,13 @@ import { UMLElements } from '../packages/uml-elements';
 import { UMLRelationshipType } from '../packages/uml-relationship-type';
 import { UMLRelationships } from '../packages/uml-relationships';
 import { IUMLElement, UMLElement } from '../services/uml-element/uml-element';
-import { ExportOptions, UMLModel } from '../typings';
 import { IBoundary } from '../utils/geometry/boundary';
 import { update } from '../utils/update';
 import { Style } from './svg-styles';
 
 interface Props {
-  model: UMLModel;
-  options?: ExportOptions;
+  model: Apollon.UMLModel;
+  options?: Apollon.ExportOptions;
   styles?: DeepPartial<Styles>;
 }
 interface State {
@@ -107,7 +106,7 @@ const getInitialState = ({ model, options }: Props): State => {
   return { bounds, elements };
 };
 
-const getMargin = (margin: ExportOptions['margin']): { top: number; right: number; bottom: number; left: number } => {
+const getMargin = (margin: Apollon.ExportOptions['margin']): { top: number; right: number; bottom: number; left: number } => {
   if (typeof margin === 'number') {
     return { top: margin, right: margin, bottom: margin, left: margin };
   }

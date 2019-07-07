@@ -7,7 +7,7 @@ import { IPath, Path } from '../../../utils/geometry/path';
 import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
-import { UMLElementComponentProps } from '../uml-element-component';
+import { UMLElementComponentProps } from '../uml-element-component-props';
 
 type StateProps = {
   path: IPath;

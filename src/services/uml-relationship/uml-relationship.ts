@@ -1,8 +1,7 @@
-import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
-import { IBoundary } from 'src/utils/geometry/boundary';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { assign } from '../../utils/fx/assign';
+import { IBoundary } from '../../utils/geometry/boundary';
 import { IPath } from '../../utils/geometry/path';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
@@ -30,6 +29,10 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     updatable: true,
     straight: false,
     variable: true,
+  };
+
+  static isUMLRelationship = (element: IUMLElement): element is IUMLRelationship => {
+    return element.type in UMLRelationshipType;
   };
 
   abstract type: UMLRelationshipType;

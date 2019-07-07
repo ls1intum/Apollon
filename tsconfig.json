@@ -14,12 +14,8 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "downlevelIteration": true,
-    "resolveJsonModule": true,
-    "baseUrl": ".",
-    "paths": {
-      "@ls1intum/apollon": ["@types"]
-    }
+    "resolveJsonModule": true
   },
-  "include": ["src/index.ts", "src/example.ts"],
+  "include": ["@types/index.d.ts", "src/index.ts", "src/example.ts"],
   "exclude": ["node_modules"]
 }

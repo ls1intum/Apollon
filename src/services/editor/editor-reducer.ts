@@ -1,6 +1,5 @@
 import { Reducer } from 'redux';
-import { ApollonMode } from '../../typings';
-import { ApollonView, EditorActions, EditorActionTypes, EditorState } from './editor-types';
+import { ApollonMode, ApollonView, EditorActions, EditorActionTypes, EditorState } from './editor-types';
 
 const initialState: EditorState = {
   readonly: false,

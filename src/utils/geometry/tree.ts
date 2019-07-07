@@ -1,5 +1,4 @@
 import { UMLContainer } from '../../services/uml-container/uml-container';
-import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
 import { IUMLElement, UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 
@@ -7,7 +6,7 @@ export function filterRoots(ids: string[], elements: UMLElementState): string[] 
   const getSelection = (root: IUMLElement): string[] => {
     if (ids.includes(root.id)) return [root.id];
 
-    if (UMLContainerRepository.isUMLContainer(root)) {
+    if (UMLContainer.isUMLContainer(root)) {
       return root.ownedElements.reduce<string[]>((selection, id) => [...selection, ...getSelection(elements[id])], []);
     }
     return [];
@@ -25,7 +24,7 @@ export function getChildren(ids: string[], elements: UMLElementState): string[] 
     const owner = elements[id];
     if (!owner) continue;
 
-    if (UMLContainerRepository.isUMLContainer(owner)) {
+    if (UMLContainer.isUMLContainer(owner)) {
       result.push(...getChildren(owner.ownedElements, elements));
     }
     result.push(owner.id);
@@ -35,7 +34,7 @@ export function getChildren(ids: string[], elements: UMLElementState): string[] 
 }
 
 export function clone(element: UMLElement, elements: UMLElement[]): UMLElement[] {
-  if (!UMLContainerRepository.isUMLContainer(element)) {
+  if (!UMLContainer.isUMLContainer(element)) {
     return [element.clone()];
   }
 

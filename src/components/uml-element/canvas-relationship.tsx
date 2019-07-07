@@ -6,7 +6,7 @@ import { ApollonView } from '../../services/editor/editor-types';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { ModelState } from '../store/model-state';
-import { UMLElementComponentProps } from './uml-element-component';
+import { UMLElementComponentProps } from './uml-element-component-props';
 
 const STROKE = 5;
 

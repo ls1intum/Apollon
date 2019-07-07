@@ -8,6 +8,7 @@ import { ILayer } from '../layouter/layer';
 import { render } from '../layouter/layouter';
 import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
 import { UMLElementState } from '../uml-element/uml-element-types';
+import { UMLContainer } from './uml-container';
 import { UMLContainerRepository } from './uml-container-repository';
 import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
 
@@ -49,7 +50,7 @@ function* appendAfterMove(): SagaIterator {
     const container = elements[hovered[0]];
     if (
       !container ||
-      !UMLContainerRepository.isUMLContainer(container) ||
+      !UMLContainer.isUMLContainer(container) ||
       !UMLElements[container.type as UMLElementType].features.droppable
     ) {
       return;

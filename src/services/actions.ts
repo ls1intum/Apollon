@@ -13,11 +13,13 @@ import { SelectableActions } from './uml-element/selectable/selectable-types';
 import { UMLElementActions } from './uml-element/uml-element-types';
 import { UpdatableActions } from './uml-element/updatable/updatable-types';
 import { ReconnectableActions } from './uml-relationship/reconnectable/reconnectable-types';
+import { UMLRelationshipActions } from './uml-relationship/uml-relationship-types';
 
 export type Actions = EditorActions &
   LayouterActions &
   UMLContainerActions &
   UMLElementActions &
+  UMLRelationshipActions &
   ConnectableActions &
   ReconnectableActions &
   HoverableActions &

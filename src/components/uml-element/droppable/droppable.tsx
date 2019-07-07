@@ -1,6 +1,6 @@
 import React, { Component, ComponentClass, ComponentType } from 'react';
 import { Droppable as DragDroppable } from '../../draggable/droppable';
-import { UMLElementComponentProps } from '../uml-element-component';
+import { UMLElementComponentProps } from '../uml-element-component-props';
 
 type Props = UMLElementComponentProps;
 

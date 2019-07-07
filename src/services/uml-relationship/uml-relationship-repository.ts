@@ -1,8 +1,7 @@
-import { AsyncAction } from 'src/utils/actions/actions';
-import { IBoundary } from 'src/utils/geometry/boundary';
-import { IPath } from 'src/utils/geometry/path';
-import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { UMLRelationships } from '../../packages/uml-relationships';
+import { AsyncAction } from '../../utils/actions/actions';
+import { IBoundary } from '../../utils/geometry/boundary';
+import { IPath } from '../../utils/geometry/path';
 import { IUMLElement } from '../uml-element/uml-element';
 import { Reconnectable } from './reconnectable/reconnectable-repository';
 import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
@@ -10,16 +9,12 @@ import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { LayoutAction, UMLRelationshipActionTypes } from './uml-relationship-types';
 
 const Repository = {
-  isUMLRelationship: (element: IUMLElement): element is IUMLRelationship => {
-    return element.type in UMLRelationshipType;
-  },
-
   get: (element?: IUMLElement): UMLRelationship | null => {
     if (!element) {
       return null;
     }
 
-    if (Repository.isUMLRelationship(element)) {
+    if (UMLRelationship.isUMLRelationship(element)) {
       const Classifier = UMLRelationships[element.type];
 
       return new Classifier(element);

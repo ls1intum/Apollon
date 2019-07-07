@@ -1,4 +1,3 @@
-import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
@@ -36,6 +35,10 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     selectable: true,
     updatable: true,
   };
+
+  /** Checks whether an `IUMLElement` is of type `UMLElementType` */
+  static isUMLElement = (element: IUMLElement): element is IUMLElement & { type: UMLElementType } =>
+    element.type in UMLElementType;
 
   id = uuid();
   name = '';

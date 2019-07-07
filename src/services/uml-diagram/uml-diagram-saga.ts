@@ -1,9 +1,9 @@
 import { SagaIterator } from 'redux-saga';
 import { getContext, put, select, take, takeLatest } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
-import { ApollonMode } from '../../typings';
 import { run } from '../../utils/actions/sagas';
 import { notEmpty } from '../../utils/not-empty';
+import { ApollonMode } from '../editor/editor-types';
 import { ILayer } from '../layouter/layer';
 import { ConnectableActionTypes } from '../uml-element/connectable/connectable-types';
 import { ResizingActionTypes } from '../uml-element/resizable/resizing-types';

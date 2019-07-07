@@ -1,11 +1,11 @@
 import { DeepPartial } from 'redux';
-import { IPath } from 'src/utils/geometry/path';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { assign } from '../../../utils/fx/assign';
 import { computeBoundingBoxForRelationship, IBoundary } from '../../../utils/geometry/boundary';
+import { IPath } from '../../../utils/geometry/path';
 
 export interface IUMLAssociation extends IUMLRelationship {
   source: IUMLElementPort & {

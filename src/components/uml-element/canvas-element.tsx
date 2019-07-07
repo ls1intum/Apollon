@@ -1,17 +1,18 @@
-import React, { Component, SVGProps } from 'react';
+import React, { Component, ComponentClass, SVGProps } from 'react';
 import { connect } from 'react-redux';
 import { Components } from '../../packages/components';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { ApollonView } from '../../services/editor/editor-types';
-import { UMLContainerRepository } from '../../services/uml-container/uml-container-repository';
+import { UMLContainer } from '../../services/uml-container/uml-container';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ModelState } from '../store/model-state';
-import { UMLElementComponent, UMLElementComponentProps } from './uml-element-component';
+import { UMLElementComponentProps } from './uml-element-component-props';
 
 const STROKE = 5;
 
-type OwnProps = UMLElementComponentProps & SVGProps<SVGSVGElement>;
+type OwnProps = { child?: ComponentClass<UMLElementComponentProps> } & UMLElementComponentProps &
+  SVGProps<SVGSVGElement>;
 
 type StateProps = {
   hovered: boolean;
@@ -40,11 +41,21 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 export class CanvasElementComponent extends Component<Props> {
   render() {
-    const { hovered, selected, moving, interactive, interactable, element, children, ...props } = this.props;
+    const {
+      hovered,
+      selected,
+      moving,
+      interactive,
+      interactable,
+      element,
+      child: Child,
+      children,
+      ...props
+    } = this.props;
 
     let elements = null;
-    if (UMLContainerRepository.isUMLContainer(element)) {
-      elements = element.ownedElements.map(id => <UMLElementComponent key={id} id={id} component="canvas" />);
+    if (UMLContainer.isUMLContainer(element) && Child) {
+      elements = element.ownedElements.map(id => <Child key={id} id={id} component="canvas" />);
     }
     const ChildComponent = Components[element.type as UMLElementType];
 

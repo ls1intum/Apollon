@@ -4,6 +4,7 @@ import { ModelState } from '../../components/store/model-state';
 import { run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
 import { notEmpty } from '../../utils/not-empty';
+import { UMLContainer } from '../uml-container/uml-container';
 import { UMLContainerRepository } from '../uml-container/uml-container-repository';
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
@@ -11,6 +12,7 @@ import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resi
 import { UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UpdateAction } from '../uml-element/uml-element-types';
+import { UMLRelationship } from '../uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
 import { recalc } from '../uml-relationship/uml-relationship-saga';
 import { ILayer } from './layer';
@@ -35,10 +37,10 @@ function* layout(): SagaIterator {
   yield put(UMLContainerRepository.append(ids));
 
   for (const id of Object.keys(elements)) {
-    if (UMLElementRepository.isUMLElement(elements[id])) {
+    if (UMLElement.isUMLElement(elements[id])) {
       yield call(render, id);
     }
-    if (UMLRelationshipRepository.isUMLRelationship(elements[id])) {
+    if (UMLRelationship.isUMLRelationship(elements[id])) {
       yield call(recalc, id);
     }
   }
@@ -82,9 +84,9 @@ export function* render(id: string): SagaIterator {
   let updates: UMLElement[] = [];
   if (UMLDiagramRepository.isUMLDiagram(state[id])) {
     updates = yield call(renderDiagram);
-  } else if (UMLContainerRepository.isUMLContainer(state[id])) {
+  } else if (UMLContainer.isUMLContainer(state[id])) {
     updates = yield call(renderContainer, id);
-  } else if (UMLElementRepository.isUMLElement(state[id])) {
+  } else if (UMLElement.isUMLElement(state[id])) {
     updates = yield call(renderElement, id);
   }
 

@@ -1,12 +1,12 @@
 import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
-import { IBoundary } from 'src/utils/geometry/boundary';
 import { IAssessment } from '../../../services/assessment/assessment';
+import { IBoundary } from '../../../utils/geometry/boundary';
 import { CheckIcon } from '../../controls/icon/check';
 import { ExclamationCircleIcon } from '../../controls/icon/exclamation-circle';
 import { TimesIcon } from '../../controls/icon/times';
 import { ModelState } from '../../store/model-state';
-import { UMLElementComponentProps } from '../uml-element-component';
+import { UMLElementComponentProps } from '../uml-element-component-props';
 
 type StateProps = {
   assessment?: IAssessment;

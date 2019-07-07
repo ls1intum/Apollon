@@ -19,7 +19,7 @@
     "start": "webpack-dev-server --config ./webpack/webpack.dev.js",
     "build": "rm -rf dist && webpack --config ./webpack/webpack.prod.js",
     "lint": "yarn lint:ts && yarn lint:css",
-    "lint:ts": "tslint --force -p tsconfig.json -c tslint.yml -t stylish",
+    "lint:ts": "tslint --force -p tsconfig.json -c tslint.json -t stylish",
     "lint:css": "stylelint 'src/**/*.ts'",
     "prepare": "rm -rf lib && tsc -p .",
     "publish:patch": "yarn prepare && npm version patch && npm publish",

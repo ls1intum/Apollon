@@ -1,8 +1,8 @@
 import { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { ApollonMode } from '../../services/editor/editor-types';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { ApollonMode } from '../../typings';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { ModelState } from '../store/model-state';
 import { CanvasContext } from './canvas-context';
@@ -52,7 +52,6 @@ const enhance = compose<ComponentType<OwnProps>>(
 
 class KeyboardEventListenerComponent extends Component<Props> {
   componentDidMount() {
-
     const { layer } = this.props.canvas;
     if (!this.props.readonly && this.props.mode !== ApollonMode.Assessment) {
       layer.addEventListener('keydown', this.keyDown);
