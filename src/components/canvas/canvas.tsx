@@ -59,10 +59,10 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
             <>
               <svg x="50%" y="50%">
                 {diagram.ownedElements.map(element => (
-                  <UMLElementComponent key={element} id={element} component="canvas" />
+                  <UMLElementComponent key={element} id={element} />
                 ))}
                 {diagram.ownedRelationships.map(relationship => (
-                  <UMLElementComponent key={relationship} id={relationship} component="canvas" />
+                  <UMLElementComponent key={relationship} id={relationship} />
                 ))}
                 <ConnectionPreview />
               </svg>

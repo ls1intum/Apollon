@@ -6,89 +6,140 @@ import { UMLElementType } from '../packages/uml-element-type';
 import { UMLElements } from '../packages/uml-elements';
 import { UMLRelationshipType } from '../packages/uml-relationship-type';
 import { UMLRelationships } from '../packages/uml-relationships';
-import { IUMLElement, UMLElement } from '../services/uml-element/uml-element';
-import { IBoundary } from '../utils/geometry/boundary';
+import { ILayer } from '../services/layouter/layer';
+import { UMLContainer } from '../services/uml-container/uml-container';
+import { UMLElement } from '../services/uml-element/uml-element';
+import { UMLRelationship } from '../services/uml-relationship/uml-relationship';
+import { computeBoundingBoxForElements, IBoundary } from '../utils/geometry/boundary';
+import { Point } from '../utils/geometry/point';
 import { update } from '../utils/update';
 import { Style } from './svg-styles';
 
-interface Props {
+type Props = {
   model: Apollon.UMLModel;
   options?: Apollon.ExportOptions;
   styles?: DeepPartial<Styles>;
-}
-interface State {
+};
+
+type State = {
   bounds: IBoundary;
   elements: UMLElement[];
-}
+};
+
+const includeChildren = (
+  elements: { [id: string]: UMLElement },
+  ids: Set<string>,
+  include: Set<string>,
+): Set<string> => {
+  const result = new Set<string>();
+  for (const id of ids) {
+    const element = elements[id];
+    if (!element) continue;
+
+    const children = new Set<string>(UMLContainer.isUMLContainer(element) ? element.ownedElements : []);
+    if (include.has(id)) {
+      result.add(id);
+      include = new Set<string>([...include, ...children]);
+    }
+    includeChildren(elements, children, include).forEach(result.add, result);
+  }
+  return result;
+};
+
+const excludeChildren = (
+  elements: { [id: string]: UMLElement },
+  ids: Set<string>,
+  exclude: Set<string>,
+): Set<string> => {
+  const result = new Set<string>();
+  for (const id of ids) {
+    const element = elements[id];
+    if (!element) continue;
+
+    const children = new Set<string>(UMLContainer.isUMLContainer(element) ? element.ownedElements : []);
+    if (!exclude.has(id)) {
+      result.add(id);
+    } else {
+      exclude = new Set<string>([...exclude, ...children]);
+    }
+    excludeChildren(elements, children, exclude).forEach(result.add, result);
+  }
+  return result;
+};
 
 const getInitialState = ({ model, options }: Props): State => {
-  const keepOriginalSize = (options && options.keepOriginalSize) || false;
+  const layer: ILayer = {
+    layer: document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
+    origin: (): Point => new Point(),
+    snap: (point: Point): Point => point,
+  };
+  const apollonElements = model.elements;
+  const apollonRelationships = model.relationships;
 
-  const umlElements = [...model.elements, ...model.relationships];
-  const rootElements = [...model.elements.filter(element => !element.owner), ...model.relationships];
+  const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
+    const element = new UMLElements[apollonElement.type]();
+    const apollonChildren: Apollon.UMLElement[] = UMLContainer.isUMLContainer(element)
+      ? apollonElements.filter(child => child.owner === apollonElement.id)
+      : [];
 
-  const includeChildren = (ids: Set<string>, include: Set<string>): Set<string> => {
-    const result = new Set<string>();
-    for (const id of ids) {
-      const umlElement = umlElements.find(element => element.id === id);
-      if (!umlElement) continue;
+    element.deserialize(apollonElement, apollonChildren);
+    const children: UMLElement[] = apollonChildren.reduce<UMLElement[]>(
+      (acc, val) => [...acc, ...deserialize(val)],
+      [],
+    );
 
-      const children = new Set<string>(model.elements.filter(elem => elem.owner === id).map(elem => elem.id));
-      if (include.has(id)) {
-        result.add(id);
-        include = new Set<string>([...include, ...children]);
+    const [root, ...updates] = element.render(layer, children) as UMLElement[];
+    updates.map(x => {
+      const original = apollonChildren.find(y => y.id === x.id);
+      if (!original) {
+        return x;
       }
-      includeChildren(children, include).forEach(result.add, result);
-    }
-    return result;
+      x.bounds.x = original.bounds.x;
+      x.bounds.y = original.bounds.y;
+      return x;
+    });
+
+    return [root, ...updates];
   };
 
-  const excludeChildren = (ids: Set<string>, exclude: Set<string>): Set<string> => {
-    const result = new Set<string>();
-    for (const id of ids) {
-      const umlElement = umlElements.find(element => element.id === id);
-      if (!umlElement) continue;
+  const elements = apollonElements
+    .filter(element => !element.owner)
+    .reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
 
-      const children = new Set<string>(
-        model.elements.filter(element => element.owner === id).map(element => element.id),
-      );
-      if (!exclude.has(id)) {
-        result.add(id);
-      } else {
-        exclude = new Set<string>([...exclude, ...children]);
-      }
-      excludeChildren(children, exclude).forEach(result.add, result);
-    }
-    return result;
-  };
+  const relationships = apollonRelationships.map<UMLRelationship>(apollonRelationship => {
+    const relationship = new UMLRelationships[apollonRelationship.type]();
+    relationship.deserialize(apollonRelationship);
+    return relationship;
+  });
 
-  let layout = new Set<string>(umlElements.map(element => element.id));
+  const elementState = [...elements, ...relationships].reduce<{ [id: string]: UMLElement }>(
+    (acc, val) => ({ ...acc, [val.id]: val }),
+    {},
+  );
+  const roots = Object.values(elementState).filter(element => !element.owner);
+
+  let layout = new Set<string>(Object.values(elementState).map(x => x.id));
   if (options && options.include) {
     layout = includeChildren(
-      new Set<string>(rootElements.map(element => element.id)),
+      elementState,
+      new Set<string>(roots.map(element => element.id)),
       new Set<string>(options.include),
     );
   }
   if (options && options.exclude) {
     layout = excludeChildren(
-      new Set<string>(rootElements.map(element => element.id)),
+      elementState,
+      new Set<string>(roots.map(element => element.id)),
       new Set<string>(options.exclude),
     );
   }
 
-  let elements: UMLElement[] = [
-    ...model.elements.map(umlElement => {
-      const ElementClazz = UMLElements[umlElement.type as UMLElementType] as new (values: IUMLElement) => UMLElement;
-      return new ElementClazz(umlElement);
-    }),
-    ...model.relationships.map(umlRelationship => {
-      const RelationshipClazz = UMLRelationships[umlRelationship.type];
-      const rel = new RelationshipClazz(umlRelationship);
-      return rel;
-    }),
-  ];
+  const keepOriginalSize = (options && options.keepOriginalSize) || false;
 
-  const bounds = computeBoundingBox(elements.filter(element => keepOriginalSize || layout.has(element.id)));
+  const bounds = computeBoundingBoxForElements(
+    Object.values(elementState).filter(element => keepOriginalSize || layout.has(element.id)),
+  );
+
   if (options) {
     const margin = getMargin(options.margin);
     bounds.x -= margin.left;
@@ -96,34 +147,29 @@ const getInitialState = ({ model, options }: Props): State => {
     bounds.width += margin.left + margin.right;
     bounds.height += margin.top + margin.bottom;
   }
-  elements = elements
+
+  const state = Object.values(elementState)
     .filter(element => layout.has(element.id))
     .map(element => {
       element.bounds.x -= bounds.x;
       element.bounds.y -= bounds.y;
       return element;
     });
-  return { bounds, elements };
+
+  return {
+    elements: state,
+    bounds,
+  };
 };
 
-const getMargin = (margin: Apollon.ExportOptions['margin']): { top: number; right: number; bottom: number; left: number } => {
+const getMargin = (
+  margin: Apollon.ExportOptions['margin'],
+): { top: number; right: number; bottom: number; left: number } => {
   if (typeof margin === 'number') {
     return { top: margin, right: margin, bottom: margin, left: margin };
   }
   const result = { top: 0, right: 0, bottom: 0, left: 0 };
   return Object.assign(result, margin);
-};
-
-const computeBoundingBox = (elements: UMLElement[]): IBoundary => {
-  let x = Math.min(...elements.map(e => e.bounds.x));
-  x = x === Infinity ? 0 : x;
-  let y = Math.min(...elements.map(e => e.bounds.y));
-  y = y === Infinity ? 0 : y;
-  let width = Math.max(...elements.map(e => e.bounds.x + e.bounds.width)) - x;
-  width = width === -Infinity ? 0 : width;
-  let height = Math.max(...elements.map(e => e.bounds.y + e.bounds.height)) - y;
-  height = height === -Infinity ? 0 : height;
-  return { x, y, width, height };
 };
 
 export class Svg extends Component<Props, State> {
@@ -139,16 +185,16 @@ export class Svg extends Component<Props, State> {
         height={bounds.height + 1}
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
-        fill="white"
+        fillOpacity={0}
       >
         <defs>
           <style>{(Style[0] as any)({ theme })}</style>
         </defs>
-        {elements.map(element => {
+        {elements.map((element, index) => {
           const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
           return (
             <svg {...element.bounds} key={element.id} className={element.name}>
-              <ElementComponent element={element} />
+              <ElementComponent key={index} element={element} />
             </svg>
           );
         })}

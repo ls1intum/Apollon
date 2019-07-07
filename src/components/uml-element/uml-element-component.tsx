@@ -20,17 +20,8 @@ import { movable } from './movable/movable';
 import { reconnectable } from './reconnectable/reconnectable';
 import { resizable } from './resizable/resizable';
 import { selectable } from './selectable/selectable';
-import { SvgElement } from './svg-element';
 import { UMLElementComponentProps } from './uml-element-component-props';
 import { updatable } from './updatable/updatable';
-
-const components = {
-  canvas: (type: UMLElementType | UMLRelationshipType) =>
-    type in UMLRelationshipType ? CanvasRelationship : CanvasElement,
-  svg: () => SvgElement,
-};
-
-type OwnProps = UMLElementComponentProps;
 
 type StateProps = {
   features: UMLElementFeatures;
@@ -42,9 +33,9 @@ type StateProps = {
 
 type DispatchProps = {};
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>((state, props) => ({
   features: state.editor.features,
   type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
   readonly: state.editor.readonly,
@@ -55,7 +46,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
 const getInitialState = (props: Props) => {
   const features = { ...UMLElements, ...UMLRelationships }[props.type].features as UMLElementFeatures &
     UMLRelationshipFeatures;
-  const component = components[props.component || 'canvas'](props.type);
+  const component = props.type in UMLRelationshipType ? CanvasRelationship : CanvasElement;
   const decorators = [];
 
   if (props.mode === ApollonMode.Assessment) {
@@ -97,7 +88,7 @@ const getInitialState = (props: Props) => {
 
   type Compose = ComponentType<
     UMLElementComponentProps & {
-      child: React.ComponentClass<Pick<Props, 'id' | 'component'>>;
+      child: React.ComponentClass<UMLElementComponentProps>;
     }
   >;
 

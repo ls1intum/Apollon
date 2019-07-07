@@ -1,5 +1,5 @@
 import { SagaIterator } from 'redux-saga';
-import { call, getContext, put, select, take } from 'redux-saga/effects';
+import { call, delay, getContext, put, select, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
 import { run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
@@ -37,9 +37,11 @@ function* layout(): SagaIterator {
   yield put(UMLContainerRepository.append(ids));
 
   for (const id of Object.keys(elements)) {
+    yield delay(0);
     if (UMLElement.isUMLElement(elements[id])) {
       yield call(render, id);
     }
+
     if (UMLRelationship.isUMLRelationship(elements[id])) {
       yield call(recalc, id);
     }

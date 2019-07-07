@@ -55,7 +55,7 @@ export class CanvasElementComponent extends Component<Props> {
 
     let elements = null;
     if (UMLContainer.isUMLContainer(element) && Child) {
-      elements = element.ownedElements.map(id => <Child key={id} id={id} component="canvas" />);
+      elements = element.ownedElements.map(id => <Child key={id} id={id} />);
     }
     const ChildComponent = Components[element.type as UMLElementType];
 

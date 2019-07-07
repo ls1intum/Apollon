@@ -103,6 +103,7 @@ export class ModelState {
     // };
 
     return {
+      interactive: [...model.interactive.elements, ...model.interactive.relationships],
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
       assessments: (model.assessments || []).reduce<AssessmentState>(
         (acc, val) => ({ ...acc, [val.modelElementId]: { score: val.score, feedback: val.feedback } }),
@@ -154,12 +155,10 @@ export class ModelState {
       element.bounds.y -= bounds.y;
     }
 
-    // const interactive: Selection = {
-    //   elements: elements.filter(element => state.interactive.includes(element.id)).map<string>(element => element.id),
-    //   relationships: relationships
-    //     .filter(element => state.interactive.includes(element.id))
-    //     .map<string>(element => element.id),
-    // };
+    const interactive: Apollon.Selection = {
+      elements: state.interactive.filter(id => UMLElement.isUMLElement(state.elements[id])),
+      relationships: state.interactive.filter(id => UMLRelationship.isUMLRelationship(state.elements[id])),
+    };
 
     // const size = {
     //   width: bounds.width,
@@ -178,7 +177,7 @@ export class ModelState {
     }));
 
     return {
-      interactive: { elements: [], relationships: [] },
+      interactive,
       elements: apollonElements,
       relationships: apollonRelationships,
       assessments,
