@@ -26,6 +26,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.ObjectName]: UMLObjectNameUpdate,
   [UMLElementType.ObjectAttribute]: null,
   [UMLElementType.ObjectMethod]: null,
+  [UMLElementType.Activity]: DefaultPopup,
   [UMLElementType.ActivityActionNode]: DefaultPopup,
   [UMLElementType.ActivityFinalNode]: DefaultPopup,
   [UMLElementType.ActivityForkNode]: DefaultPopup,

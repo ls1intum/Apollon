@@ -6,6 +6,7 @@ import { ActivityForkNodeComponent } from './activity-diagram/activity-fork-node
 import { ActivityInitialNodeComponent } from './activity-diagram/activity-initial-node/activity-initial-node-component';
 import { ActivityMergeNodeComponent } from './activity-diagram/activity-merge-node/activity-merge-node-component';
 import { ActivityObjectNodeComponent } from './activity-diagram/activity-object-node/activity-object-node-component';
+import { ActivityComponent } from './activity-diagram/activity/activity-component';
 import { UMLClassPackageComponent } from './class-diagram/uml-class-package/uml-class-package-component';
 import { UMLAssociationComponent } from './common/uml-association/uml-association-component';
 import { UMLClassifierComponent } from './common/uml-classifier/uml-classifier-component';
@@ -41,6 +42,7 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLElementType.ObjectName]: UMLClassifierComponent,
   [UMLElementType.ObjectAttribute]: UMLClassifierMemberComponent,
   [UMLElementType.ObjectMethod]: UMLClassifierMemberComponent,
+  [UMLElementType.Activity]: ActivityComponent,
   [UMLElementType.ActivityActionNode]: ActivityActionNodeComponent,
   [UMLElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
   [UMLElementType.ActivityForkNode]: ActivityForkNodeComponent,

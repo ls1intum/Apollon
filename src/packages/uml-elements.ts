@@ -5,6 +5,7 @@ import { ActivityForkNode } from './activity-diagram/activity-fork-node/activity
 import { ActivityInitialNode } from './activity-diagram/activity-initial-node/activity-initial-node';
 import { ActivityMergeNode } from './activity-diagram/activity-merge-node/activity-merge-node';
 import { ActivityObjectNode } from './activity-diagram/activity-object-node/activity-object-node';
+import { Activity } from './activity-diagram/activity/activity';
 import { UMLAbstractClass } from './class-diagram/uml-abstract-class/uml-abstract-class';
 import { UMLClassAttribute } from './class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from './class-diagram/uml-class-method/uml-class-method';
@@ -37,6 +38,7 @@ export const UMLElements = {
   [UMLElementType.ObjectName]: UMLObjectName,
   [UMLElementType.ObjectAttribute]: UMLObjectAttribute,
   [UMLElementType.ObjectMethod]: UMLObjectMethod,
+  [UMLElementType.Activity]: Activity,
   [UMLElementType.ActivityInitialNode]: ActivityInitialNode,
   [UMLElementType.ActivityFinalNode]: ActivityFinalNode,
   [UMLElementType.ActivityActionNode]: ActivityActionNode,

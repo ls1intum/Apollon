@@ -7,12 +7,16 @@ import { ActivityForkNode } from './activity-fork-node/activity-fork-node';
 import { ActivityInitialNode } from './activity-initial-node/activity-initial-node';
 import { ActivityMergeNode } from './activity-merge-node/activity-merge-node';
 import { ActivityObjectNode } from './activity-object-node/activity-object-node';
+import { Activity } from './activity/activity';
 
 export const composeActivityPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
+
+  // Activity
+  elements.push(new Activity({ name: translate('packages.activityDiagram.activity') }));
 
   // Activity Initial Node
   elements.push(new ActivityInitialNode());
