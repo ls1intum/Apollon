@@ -1,5 +1,6 @@
 import React, { Component, ComponentClass, ComponentType } from 'react';
 import { connect } from 'react-redux';
+import { IBoundary } from 'src/utils/geometry/boundary';
 import { IAssessment } from '../../../services/assessment/assessment';
 import { CheckIcon } from '../../controls/icon/check';
 import { ExclamationCircleIcon } from '../../controls/icon/exclamation-circle';
@@ -7,12 +8,29 @@ import { TimesIcon } from '../../controls/icon/times';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component';
 
+type StateProps = {
+  assessment?: IAssessment;
+  bounds: IBoundary;
+};
+
+type DispatchProps = {};
+
+type Props = UMLElementComponentProps & StateProps & DispatchProps;
+
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
+  (state, props) => ({
+    assessment: state.assessments[props.id],
+    bounds: state.elements[props.id].bounds,
+  }),
+  {},
+);
+
 export const assessable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
 ): ComponentClass<UMLElementComponentProps> => {
   class Assessable extends Component<Props> {
     render() {
-      const { assessment } = this.props;
+      const { assessment, bounds, ...props } = this.props;
 
       const count: number = (assessment && Math.min(3, Math.floor(Math.abs(assessment.score)))) || 0;
       const component = assessment && assessment.score > 0 ? <CheckIcon fill="green" /> : <TimesIcon fill="red" />;
@@ -45,22 +63,12 @@ export const assessable = (
       ];
 
       return (
-        <WrappedComponent {...this.props}>
-          {/* {assessment && <g transform={`translate(${element.bounds.width - (icons.length + 1) * 12} 8)`}>{icons}</g>} */}
+        <WrappedComponent {...props}>
+          {assessment && <g transform={`translate(${bounds.width - (icons.length + 1) * 12} 8)`}>{icons}</g>}
         </WrappedComponent>
       );
     }
   }
 
-  type StateProps = {
-    assessment?: IAssessment;
-  };
-
-  type DispatchProps = {};
-
-  type Props = UMLElementComponentProps & StateProps & DispatchProps;
-
-  return connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>((state, props) => ({
-    assessment: state.assessments[props.id],
-  }))(Assessable);
+  return enhance(Assessable);
 };

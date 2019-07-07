@@ -10,6 +10,7 @@ import { UMLElementFeatures } from '../../services/uml-element/uml-element-featu
 import { UMLRelationshipFeatures } from '../../services/uml-relationship/uml-relationship-features';
 import { ApollonMode } from '../../typings';
 import { ModelState } from '../store/model-state';
+import { assessable } from './assessable/assessable';
 import { CanvasElement } from './canvas-element';
 import { CanvasRelationship } from './canvas-relationship';
 import { connectable } from './connectable/connectable';
@@ -65,7 +66,7 @@ const getInitialState = (props: Props) => {
   const decorators = [];
 
   if (props.mode === ApollonMode.Assessment) {
-    decorators.push(/*assessable, */ updatable, selectable, hoverable);
+    decorators.push(assessable, updatable, selectable, hoverable);
   } else if (props.readonly) {
     decorators.push(selectable, hoverable);
   } else if (props.view === ApollonView.Exporting || props.view === ApollonView.Highlight) {

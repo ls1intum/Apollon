@@ -10,6 +10,7 @@ declare module '@ls1intum/apollon' {
     type UMLModel = {
       elements: UMLElement[];
       relationships: UMLRelationship[];
+      assessments: Assessment[];
     };
 
     type UMLModelElement = {
@@ -52,5 +53,12 @@ declare module '@ls1intum/apollon' {
         role: string;
       };
     };
+
+    type Assessment = {
+      modelElementId: string;
+      elementType: UMLElementType | UMLRelationshipType;
+      score: number;
+      feedback?: string;
+    }
   }
 }

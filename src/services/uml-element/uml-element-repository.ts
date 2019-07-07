@@ -97,6 +97,22 @@ const Repository = {
 
     return position;
   },
+
+  getChildren: (id: string): AsyncAction<IUMLElement[]> => (dispatch, getState) => {
+    const { elements } = getState();
+    const owner = elements[id];
+    if (!owner) {
+      return [];
+    }
+
+    if (UMLContainerRepository.isUMLContainer(owner)) {
+      return owner.ownedElements.reduce<IUMLElement[]>(
+        (acc, element) => [...acc, ...dispatch(Repository.getChildren(element))],
+        [owner],
+      );
+    }
+    return [owner];
+  },
 };
 
 export const UMLElementRepository = {

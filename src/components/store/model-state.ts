@@ -1,5 +1,6 @@
 import { Apollon } from '@ls1intum/apollon';
 import { DeepPartial } from 'redux';
+import { UMLRelationshipType } from 'src/packages/uml-relationship-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
 import { UMLRelationships } from '../../packages/uml-relationships';
@@ -20,7 +21,6 @@ import { UpdatableState } from '../../services/uml-element/updatable/updatable-t
 import { ReconnectableState } from '../../services/uml-relationship/reconnectable/reconnectable-types';
 import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
-import { Assessment } from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
 export interface ModelState {
@@ -105,6 +105,10 @@ export class ModelState {
 
     return {
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
+      assessments: (model.assessments || []).reduce<AssessmentState>(
+        (acc, val) => ({ ...acc, [val.modelElementId]: { score: val.score, feedback: val.feedback } }),
+        {},
+      ),
     };
   }
 
@@ -167,9 +171,9 @@ export class ModelState {
       height: state.diagram.bounds.height,
     };
 
-    const assessments = Object.keys(state.assessments).map<Assessment>(id => ({
+    const assessments = Object.keys(state.assessments).map<Apollon.Assessment>(id => ({
       modelElementId: id,
-      elementType: state.elements[id].type as UMLElementType,
+      elementType: state.elements[id].type as UMLElementType | UMLRelationshipType,
       score: state.assessments[id].score,
       feedback: state.assessments[id].feedback,
     }));
@@ -177,6 +181,7 @@ export class ModelState {
     return {
       elements: apollonElements,
       relationships: apollonRelationships,
+      assessments,
     };
 
     // return {

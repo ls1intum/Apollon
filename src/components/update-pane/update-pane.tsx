@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass, createRef, RefObject } from 'react';
+import React, { Component, ComponentClass, ComponentType, createRef, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -6,7 +6,9 @@ import { Popups } from '../../packages/popups';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { ApollonMode } from '../../typings';
 import { AsyncDispatch } from '../../utils/actions/actions';
+import { Assessment } from '../assessment/assessment';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { Popover } from '../controls/popover/popover';
@@ -16,6 +18,8 @@ type OwnProps = {};
 
 type StateProps = {
   element: IUMLElement | null;
+  disabled: boolean;
+  mode: ApollonMode;
 };
 
 type DispatchProps = {
@@ -30,6 +34,8 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     state => ({
       element: state.elements[state.updating[0]],
+      disabled: !state.editor.enablePopups,
+      mode: state.editor.mode,
     }),
     {
       updateEnd: UMLElementRepository.updateEnd,
@@ -51,8 +57,8 @@ class UnwrappedUpdatePane extends Component<Props> {
   }
 
   render() {
-    const { element } = this.props;
-    if (!element) {
+    const { element, disabled, mode } = this.props;
+    if (!element || disabled) {
       return null;
     }
 
@@ -68,7 +74,12 @@ class UnwrappedUpdatePane extends Component<Props> {
       position.y += element.bounds.height;
     }
 
-    const CustomPopupComponent = Popups[element.type as UMLElementType];
+    let CustomPopupComponent: ComponentType<{ element: any }> | null = null;
+    if (mode === ApollonMode.Assessment) {
+      CustomPopupComponent = Assessment;
+    } else {
+      CustomPopupComponent = Popups[element.type as UMLElementType];
+    }
     if (!CustomPopupComponent) {
       return null;
     }

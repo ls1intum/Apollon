@@ -4,7 +4,7 @@ import { compose } from 'redux';
 import styled from 'styled-components';
 import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
-import { UMLElement } from '../../services/uml-element/uml-element';
+import { IUMLElement } from '../../services/uml-element/uml-element';
 import { Divider } from '../controls/divider/divider';
 import { Textfield } from '../controls/textfield/textfield';
 import { Header } from '../controls/typography/typography';
@@ -19,7 +19,7 @@ const Flex = styled.div`
 `;
 
 type OwnProps = {
-  element: UMLElement;
+  element: IUMLElement;
 };
 
 type StateProps = {
@@ -47,16 +47,24 @@ class AssessmentSectionCompoennt extends Component<Props> {
     return (
       <>
         <section>
-          <Header>{this.props.translate('assessment.assessment')} {element.name}</Header>
+          <Header>
+            {this.props.translate('assessment.assessment')} {element.name}
+          </Header>
         </section>
         <section>
           <Flex>
             <span style={{ marginRight: '0.5em' }}>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
               <span>{(assessment && assessment.score) || '-'}</span>
-              ) : (
-                <Textfield gutter={true} type="number" step={0.5} onChange={this.updateScore} value={assessment ? String(assessment.score) : ''} />
-              )}
+            ) : (
+              <Textfield
+                gutter={true}
+                type="number"
+                step={0.5}
+                onChange={this.updateScore}
+                value={assessment ? String(assessment.score) : ''}
+              />
+            )}
           </Flex>
         </section>
         {readonly ? (
