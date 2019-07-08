@@ -10,11 +10,13 @@ export const Updatable = {
     dispatch<UpdateStartAction>({
       type: UpdatableActionTypes.START,
       payload: { ids: Array.isArray(id) ? id : [id] },
+      undoable: true,
     });
   },
 
   updateEnd: (id: string | string[]): UpdateEndAction => ({
     type: UpdatableActionTypes.END,
     payload: { ids: Array.isArray(id) ? id : [id] },
+    undoable: false,
   }),
 };

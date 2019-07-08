@@ -7,6 +7,7 @@ export const Hoverable = {
     payload: {
       ids: Array.isArray(id) ? id : [id],
     },
+    undoable: false,
   }),
 
   /** Leave elements */
@@ -15,5 +16,6 @@ export const Hoverable = {
     payload: {
       ids: Array.isArray(id) ? id : [id],
     },
+    undoable: false,
   }),
 };

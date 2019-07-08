@@ -21,6 +21,7 @@ function* makeInteractable(): SagaIterator {
   yield put<DeselectAction>({
     type: InteractableActionTypes.DESELECT,
     payload: { ids: difference },
+    undoable: false,
   });
 }
 

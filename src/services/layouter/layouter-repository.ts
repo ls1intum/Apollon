@@ -6,5 +6,6 @@ export const LayouterRepository = {
     dispatch({
       type: LayouterActionTypes.LAYOUT,
       payload: {},
+      undoable: false,
     }),
 };

@@ -25,6 +25,7 @@ export const Connectable = {
     dispatch<ConnectStartAction>({
       type: ConnectableActionTypes.START,
       payload: { ports },
+      undoable: false,
     });
   },
 
@@ -59,6 +60,7 @@ export const Connectable = {
       dispatch<ConnectEndAction>({
         type: ConnectableActionTypes.END,
         payload: { ports: sources },
+        undoable: false,
       });
     }
   },
@@ -72,6 +74,7 @@ export const Connectable = {
     dispatch<ConnectEndAction>({
       type: ConnectableActionTypes.END,
       payload: { ports },
+      undoable: false,
     });
   },
 };

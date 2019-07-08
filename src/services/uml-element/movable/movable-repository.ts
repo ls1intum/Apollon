@@ -30,6 +30,7 @@ export const Movable = {
     dispatch<MoveStartAction>({
       type: MovableActionTypes.START,
       payload: { ids: movables },
+      undoable: true,
     });
   },
 
@@ -42,6 +43,7 @@ export const Movable = {
     dispatch<MoveAction>({
       type: MovingActionTypes.MOVE,
       payload: { ids, delta },
+      undoable: false,
     });
   },
 
@@ -54,6 +56,7 @@ export const Movable = {
     dispatch<MoveEndAction>({
       type: MovableActionTypes.END,
       payload: { ids, keyboard },
+      undoable: false,
     });
   },
 };

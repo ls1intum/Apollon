@@ -5,6 +5,7 @@ import { ModelState } from '../../components/store/model-state';
 
 export interface Action<T = any> extends ReduxAction<T> {
   payload: object;
+  undoable: boolean;
 }
 
 export interface RedoableAction<T = any> extends Action<T> {

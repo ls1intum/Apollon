@@ -20,6 +20,7 @@ export const UMLElementCommonRepository = {
     dispatch<CreateAction<T>>({
       type: UMLElementActionTypes.CREATE,
       payload: { values },
+      undoable: true,
     });
 
     const roots = values.filter(x => !x.owner).map(x => x.id);
@@ -54,6 +55,7 @@ export const UMLElementCommonRepository = {
   update: <T extends IUMLElement>(id: string | string[], values: Partial<T>): UpdateAction<T> => ({
     type: UMLElementActionTypes.UPDATE,
     payload: { values: (Array.isArray(id) ? id : [id]).map(i => ({ id: i, ...values })) },
+    undoable: false,
   }),
 
   /** Delete existing elements */
@@ -71,6 +73,7 @@ export const UMLElementCommonRepository = {
     dispatch<DeleteAction>({
       type: UMLElementActionTypes.DELETE,
       payload: { ids: getChildren(roots, elements) },
+      undoable: false,
     });
   },
 

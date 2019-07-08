@@ -19,6 +19,7 @@ export const UMLDiagramRepository = {
     dispatch<AppendRelationshipAction>({
       type: UMLDiagramActionTypes.APPEND,
       payload: { ids: Array.isArray(id) ? id : [id] },
+      undoable: false,
     });
   },
 };

@@ -36,6 +36,7 @@ export const UMLContainerRepository = {
       dispatch<AppendRelationshipAction>({
         type: UMLDiagramActionTypes.APPEND,
         payload: { ids: rels },
+        undoable: false,
       });
     }
 
@@ -44,6 +45,7 @@ export const UMLContainerRepository = {
       dispatch<AppendAction>({
         type: UMLContainerActionTypes.APPEND,
         payload: { ids: eles, owner: owner || diagram.id },
+        undoable: false,
       });
     }
   },
@@ -51,5 +53,6 @@ export const UMLContainerRepository = {
   remove: (id: string | string[]): RemoveAction => ({
     type: UMLContainerActionTypes.REMOVE,
     payload: { ids: Array.isArray(id) ? id : [id] },
+    undoable: true,
   }),
 };

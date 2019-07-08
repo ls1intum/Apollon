@@ -11,6 +11,7 @@ export const Selectable = {
     dispatch<SelectAction>({
       type: SelectableActionTypes.SELECT,
       payload: { ids },
+      undoable: false,
     });
   },
 
@@ -23,6 +24,7 @@ export const Selectable = {
     dispatch<DeselectAction>({
       type: SelectableActionTypes.DESELECT,
       payload: { ids },
+      undoable: false,
     });
   },
 };

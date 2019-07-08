@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { ApollonMode } from '../../services/editor/editor-types';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { UndoRepository } from '../../services/undo/undo-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { ModelState } from '../store/model-state';
 import { CanvasContext } from './canvas-context';
@@ -17,8 +18,8 @@ type StateProps = {
 
 type DispatchProps = {
   //   duplicate: typeof UMLElementRepository.duplicate;
-  //   undo: typeof UndoRepository.undo;
-  //   redo: typeof UndoRepository.redo;
+  undo: typeof UndoRepository.undo;
+  redo: typeof UndoRepository.redo;
   select: AsyncDispatch<typeof UMLElementRepository.select>;
   deselect: AsyncDispatch<typeof UMLElementRepository.deselect>;
   startMoving: AsyncDispatch<typeof UMLElementRepository.startMoving>;
@@ -38,8 +39,8 @@ const enhance = compose<ComponentType<OwnProps>>(
     }),
     {
       // duplicate: UMLElementRepository.duplicate,
-      // undo: UndoRepository.undo,
-      // redo: UndoRepository.redo,
+      undo: UndoRepository.undo,
+      redo: UndoRepository.redo,
       select: UMLElementRepository.select,
       deselect: UMLElementRepository.deselect,
       startMoving: UMLElementRepository.startMoving,
@@ -121,10 +122,10 @@ class KeyboardEventListenerComponent extends Component<Props> {
         //           event.preventDefault();
         //           this.props.selection.forEach(child => this.props.duplicate(child));
         //           break;
-        //         case 'z':
-        //           event.preventDefault();
-        //           event.shiftKey ? this.props.redo() : this.props.undo();
-        //           break;
+        case 'z':
+          event.preventDefault();
+          event.shiftKey ? this.props.redo() : this.props.undo();
+          break;
       }
     }
   };

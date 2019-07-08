@@ -72,7 +72,7 @@ export class CanvasElementComponent extends Component<Props> {
         ? theme.interactive.hovered
         : element.highlight
         ? element.highlight
-        : element.owner ? 'none' : 'white';
+        : 'white';
 
     return (
       <svg

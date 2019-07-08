@@ -35,6 +35,7 @@ function* selectRelationship(): SagaIterator {
   yield put<AppendRelationshipAction>({
     type: UMLDiagramActionTypes.APPEND,
     payload: { ids },
+    undoable: false,
   });
 }
 
@@ -150,5 +151,6 @@ function* resize(): SagaIterator {
   yield put({
     type: ResizingActionTypes.RESIZE,
     payload: { ids: [diagram.id], delta },
+    undoable: false,
   });
 }

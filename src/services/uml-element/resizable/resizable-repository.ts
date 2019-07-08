@@ -12,6 +12,7 @@ export const Resizable = {
     dispatch<ResizeStartAction>({
       type: ResizableActionTypes.START,
       payload: { ids },
+      undoable: true,
     });
   },
 
@@ -24,6 +25,7 @@ export const Resizable = {
     dispatch<ResizeAction>({
       type: ResizingActionTypes.RESIZE,
       payload: { ids, delta },
+      undoable: false,
     });
   },
 
@@ -36,6 +38,7 @@ export const Resizable = {
     dispatch<ResizeEndAction>({
       type: ResizableActionTypes.END,
       payload: { ids },
+      undoable: false,
     });
   },
 };

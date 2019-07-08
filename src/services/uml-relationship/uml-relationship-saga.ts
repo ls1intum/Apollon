@@ -1,10 +1,11 @@
 import { SagaIterator } from 'redux-saga';
-import { call, getContext, put, select, take } from 'redux-saga/effects';
+import { all, call, getContext, put, select, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
 import { run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
 import { IBoundary } from '../../utils/geometry/boundary';
 import { ILayer } from '../layouter/layer';
+import { RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
 import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
@@ -89,7 +90,18 @@ function* deleteElement(): SagaIterator {
     )
     .map(relationship => relationship.id);
 
-  yield put(UMLElementRepository.delete(relationships));
+  yield all([
+    put<RemoveAction>({
+      type: UMLContainerActionTypes.REMOVE,
+      payload: { ids: relationships },
+      undoable: false,
+    }),
+    put<DeleteAction>({
+      type: UMLElementActionTypes.DELETE,
+      payload: { ids: relationships },
+      undoable: false,
+    }),
+  ]);
 }
 
 export function* recalc(id: string): SagaIterator {

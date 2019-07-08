@@ -14,6 +14,7 @@ import { UMLElementActions } from './uml-element/uml-element-types';
 import { UpdatableActions } from './uml-element/updatable/updatable-types';
 import { ReconnectableActions } from './uml-relationship/reconnectable/reconnectable-types';
 import { UMLRelationshipActions } from './uml-relationship/uml-relationship-types';
+import { UndoActions } from './undo/undo-types';
 
 export type Actions = EditorActions &
   LayouterActions &
@@ -30,4 +31,5 @@ export type Actions = EditorActions &
   ResizingActions &
   SelectableActions &
   UpdatableActions &
-  AssessmentActions;
+  AssessmentActions &
+  UndoActions;

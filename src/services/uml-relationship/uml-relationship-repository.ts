@@ -26,6 +26,7 @@ const Repository = {
   layout: (id: string, path: IPath, bounds: IBoundary): LayoutAction => ({
     type: UMLRelationshipActionTypes.LAYOUT,
     payload: { id, path, bounds },
+    undoable: false,
   }),
 
   flip: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
@@ -41,6 +42,7 @@ const Repository = {
     dispatch<ReconnectAction>({
       type: ReconnectableActionTypes.RECONNECT,
       payload: { connections },
+      undoable: true,
     });
   },
 };

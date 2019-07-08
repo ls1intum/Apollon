@@ -5,6 +5,7 @@ export class AssessmentRepository {
   static assess = (element: string, assessment: IAssessment): AssessAction => ({
     type: AssessmentActionTypes.ASSESS,
     payload: { element, assessment },
+    undoable: false,
   });
 
   static getById = (assessments: AssessmentState) => (id: string): IAssessment | null => {

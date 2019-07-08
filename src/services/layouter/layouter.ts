@@ -106,6 +106,7 @@ export function* render(id: string): SagaIterator {
       yield put<ResizeAction>({
         type: ResizingActionTypes.RESIZE,
         payload: { ids: [update.id], delta: size },
+        undoable: false,
       });
     }
 
@@ -121,6 +122,7 @@ export function* render(id: string): SagaIterator {
       yield put<MoveAction>({
         type: MovingActionTypes.MOVE,
         payload: { ids: [update.id], delta: position },
+        undoable: false,
       });
     }
 
