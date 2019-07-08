@@ -1,15 +1,10 @@
-// tslint:disable-next-line
-/// <reference path="../@types/index.d.ts" />
-
-import { ApollonEditor } from '../src';
-import { UMLDiagramType } from '../src/packages/diagram-type';
+import * as Apollon from '../src';
 import './styles.css';
 
 const container = document.getElementById('apollon')!;
-let editor: ApollonEditor | null = null;
+let editor: Apollon.ApollonEditor | null = null;
 let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
-  type: UMLDiagramType.DeploymentDiagram,
 };
 
 export const onChange = (event: MouseEvent) => {
@@ -54,6 +49,6 @@ const render = () => {
   if (editor) {
     editor.destroy();
   }
-  editor = new ApollonEditor(container, options);
+  editor = new Apollon.ApollonEditor(container, options);
 };
 render();

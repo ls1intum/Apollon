@@ -16,6 +16,6 @@
     "downlevelIteration": true,
     "resolveJsonModule": true
   },
-  "include": ["@types/index.d.ts", "src/index.ts", "src/example.ts"],
+  "include": ["src/index.ts", "src/example.ts"],
   "exclude": ["node_modules"]
 }

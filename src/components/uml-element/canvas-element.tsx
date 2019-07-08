@@ -1,5 +1,6 @@
 import React, { Component, ComponentClass, SVGProps } from 'react';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import { Components } from '../../packages/components';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { ApollonView } from '../../services/editor/editor-types';
@@ -7,6 +8,7 @@ import { UMLContainer } from '../../services/uml-container/uml-container';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { ModelState } from '../store/model-state';
+import { withTheme, withThemeProps } from '../theme/styles';
 import { UMLElementComponentProps } from './uml-element-component-props';
 
 const STROKE = 5;
@@ -25,18 +27,21 @@ type StateProps = {
 
 type DispatchProps = {};
 
-type Props = OwnProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  (state, props) => ({
-    hovered: state.hovered[0] === props.id,
-    selected: state.selected.includes(props.id),
-    moving: state.moving.includes(props.id),
-    interactive: state.interactive.includes(props.id),
-    interactable: state.editor.view === ApollonView.Exporting,
-    element: state.elements[props.id],
-  }),
-  {},
+const enhance = compose<ComponentClass<OwnProps>>(
+  withTheme,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    (state, props) => ({
+      hovered: state.hovered[0] === props.id,
+      selected: state.selected.includes(props.id),
+      moving: state.moving.includes(props.id),
+      interactive: state.interactive.includes(props.id),
+      interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
+      element: state.elements[props.id],
+    }),
+    {},
+  ),
 );
 
 export class CanvasElementComponent extends Component<Props> {
@@ -48,16 +53,26 @@ export class CanvasElementComponent extends Component<Props> {
       interactive,
       interactable,
       element,
-      child: Child,
+      child: ChildComponent,
       children,
+      theme,
       ...props
     } = this.props;
 
     let elements = null;
-    if (UMLContainer.isUMLContainer(element) && Child) {
-      elements = element.ownedElements.map(id => <Child key={id} id={id} />);
+    if (UMLContainer.isUMLContainer(element) && ChildComponent) {
+      elements = element.ownedElements.map(id => <ChildComponent key={id} id={id} />);
     }
-    const ChildComponent = Components[element.type as UMLElementType];
+    const ElementComponent = Components[element.type as UMLElementType];
+
+    const highlight =
+      interactable && interactive
+        ? theme.interactive.normal
+        : interactable && hovered
+        ? theme.interactive.hovered
+        : element.highlight
+        ? element.highlight
+        : element.owner ? 'none' : 'white';
 
     return (
       <svg
@@ -65,9 +80,9 @@ export class CanvasElementComponent extends Component<Props> {
         {...element.bounds}
         pointerEvents={moving ? 'none' : undefined}
         fillOpacity={moving ? 0.7 : undefined}
-        fill={(interactable && ((interactive && '#D0F4C5') || (hovered && '#E8F9E3'))) || undefined}
+        fill={highlight}
       >
-        <ChildComponent element={UMLElementRepository.get(element)}>{elements}</ChildComponent>
+        <ElementComponent element={UMLElementRepository.get(element)}>{elements}</ElementComponent>
         {children}
         {!interactable && (hovered || selected) && (
           <rect

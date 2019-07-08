@@ -12,7 +12,7 @@
     "url": "https://www1.in.tum.de/krusche"
   },
   "main": "lib/index.js",
-  "typings": "@types/index.d.ts",
+  "typings": "lib/index.d.ts",
   "repository": "github:ls1intum/apollon",
   "sideEffects": false,
   "scripts": {

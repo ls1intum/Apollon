@@ -39,7 +39,6 @@ const enhance = compose<ComponentClass<OwnProps>>(
     }),
     {
       updateEnd: UMLElementRepository.updateEnd,
-      // TODO: Fix typescript issue with async actions with a return statement.
       getAbsolutePosition: (UMLElementRepository.getAbsolutePosition as any) as AsyncDispatch<
         typeof UMLElementRepository.getAbsolutePosition
       >,

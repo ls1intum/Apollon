@@ -20,6 +20,7 @@ import { UpdatableState } from '../../services/uml-element/updatable/updatable-t
 import { ReconnectableState } from '../../services/uml-relationship/reconnectable/reconnectable-types';
 import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
+import * as Apollon from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 
 export interface ModelState {
@@ -160,15 +161,6 @@ export class ModelState {
       relationships: state.interactive.filter(id => UMLRelationship.isUMLRelationship(state.elements[id])),
     };
 
-    // const size = {
-    //   width: bounds.width,
-    //   height: bounds.height,
-    // };
-    const size = {
-      width: state.diagram.bounds.width,
-      height: state.diagram.bounds.height,
-    };
-
     const assessments = Object.keys(state.assessments).map<Apollon.Assessment>(id => ({
       modelElementId: id,
       elementType: state.elements[id].type as UMLElementType | UMLRelationshipType,
@@ -177,20 +169,13 @@ export class ModelState {
     }));
 
     return {
+      version: '2.0.0',
+      type: state.diagram.type,
+      size: { width: state.diagram.bounds.width, height: state.diagram.bounds.height },
       interactive,
       elements: apollonElements,
       relationships: apollonRelationships,
       assessments,
     };
-
-    // return {
-    //   version: '2.0.0',
-    //   size,
-    //   type: state.diagram.type,
-    //   interactive,
-    //   elements,
-    //   relationships,
-    //   assessments,
-    // };
   }
 }

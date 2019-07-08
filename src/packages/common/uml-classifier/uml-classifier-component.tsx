@@ -3,7 +3,13 @@ import { UMLClassifier } from './uml-classifier';
 
 export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
   <g>
-    <rect width="100%" height="100%" />
+    <rect width="100%" height={element.stereotype ? 50 : 40} />
+    <rect
+      y={element.stereotype ? 50 : 40}
+      width="100%"
+      height={element.bounds.height - (element.stereotype ? 50 : 40)}
+      fill="white"
+    />
     {element.stereotype ? (
       <svg height={50}>
         <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold">

@@ -2,6 +2,7 @@ import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
+import * as Apollon from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { IBoundary } from '../../utils/geometry/boundary';
 import { uuid } from '../../utils/uuid';
@@ -21,6 +22,8 @@ export interface IUMLElement {
   owner: string | null;
   /** Position and sizing of the `UMLElement` */
   bounds: IBoundary;
+  /** Highlight the element with a specified color */
+  highlight?: string;
 }
 
 /** Class implementation of `IUMLElement` to use inheritance at runtime */
@@ -45,6 +48,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
   abstract type: UMLElementType | UMLRelationshipType | UMLDiagramType;
   bounds = { x: 0, y: 0, width: 200, height: 100 };
   owner = null as string | null;
+  highlight?: string;
 
   constructor(values?: DeepPartial<IUMLElement>) {
     assign<IUMLElement>(this, values);
@@ -57,7 +61,6 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
    */
   clone<T extends UMLElement>(override?: DeepPartial<IUMLElement>): T {
     const Constructor = this.constructor as new (values?: DeepPartial<IUMLElement>) => T;
-    // TODO: deep merge
     const values: IUMLElement = { ...this, ...override, id: uuid() };
 
     return new Constructor(values);
@@ -71,6 +74,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
       type: this.type,
       owner: this.owner,
       bounds: this.bounds,
+      highlight: this.highlight,
     };
   }
 
@@ -81,6 +85,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     this.type = values.type;
     this.owner = values.owner || null;
     this.bounds = { ...values.bounds };
+    this.highlight = values.highlight;
   }
 
   abstract render(canvas: ILayer): ILayoutable[];

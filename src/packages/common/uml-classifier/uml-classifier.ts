@@ -4,6 +4,7 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
+import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 import { Text } from '../../../utils/svg/text';
 import { UMLElementType } from '../../uml-element-type';
@@ -64,8 +65,9 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
       (current, child, index) =>
         Math.max(
           current,
-          Math.round((Text.size(layer, child.name, index === 0 ? { fontWeight: 'bold' } : undefined).width + 20) / radix) *
-            radix,
+          Math.round(
+            (Text.size(layer, child.name, index === 0 ? { fontWeight: 'bold' } : undefined).width + 20) / radix,
+          ) * radix,
         ),
       Math.round(this.bounds.width / radix) * radix,
     );

@@ -1,5 +1,6 @@
 import { DeepPartial } from 'redux';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
+import * as Apollon from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { IBoundary } from '../../utils/geometry/boundary';
 import { IPath } from '../../utils/geometry/path';
@@ -61,7 +62,7 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     };
   }
 
-  deserialize<T extends Apollon.UMLModelElement>(values: T) {
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]) {
     const assert = (v: Apollon.UMLModelElement): v is Apollon.UMLRelationship => v.type in UMLRelationshipType;
     if (!assert(values)) {
       return;

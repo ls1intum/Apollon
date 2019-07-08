@@ -1,6 +1,7 @@
 import { DeepPartial } from 'redux';
 import { CommunicationRelationshipType } from '..';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
+import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 
 export type CommunicationMessage = {
@@ -28,14 +29,14 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
     };
   }
 
-  deserialize<T extends Apollon.UMLModelElement>(values: T) {
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]) {
     const assert = (v: Apollon.UMLModelElement): v is Apollon.UMLCommunicationLink =>
       v.type === CommunicationRelationshipType.CommunicationLink;
     if (!assert(values)) {
       return;
     }
 
-    super.deserialize(values);
+    super.deserialize(values, children);
     this.messages = values.messages;
   }
 }

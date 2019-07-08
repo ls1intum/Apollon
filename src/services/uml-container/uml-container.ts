@@ -1,6 +1,7 @@
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
+import * as Apollon from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
@@ -43,16 +44,4 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
   abstract removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]];
 
   abstract render(canvas: ILayer, children?: ILayoutable[]): ILayoutable[];
-
-  // appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-  //   return [this, ...[...elements, ...ownedElements]];
-  // }
-
-  // removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-  //   return [this, ...ownedElements];
-  // }
-
-  // render(ownedElements?: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-  //   return [this, ...ownedElements];
-  // }
 }

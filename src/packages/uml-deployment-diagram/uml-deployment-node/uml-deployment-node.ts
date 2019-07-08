@@ -1,6 +1,7 @@
 import { DeepPartial } from 'redux';
 import { DeploymentElementType } from '..';
 import { IUMLContainer } from '../../../services/uml-container/uml-container';
+import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 import { UMLPackage } from '../../common/uml-package/uml-package';
 import { UMLElementType } from '../../uml-element-type';
@@ -26,14 +27,14 @@ export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode 
     };
   }
 
-  deserialize<T extends Apollon.UMLModelElement>(values: T) {
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]) {
     const assert = (v: Apollon.UMLModelElement): v is Apollon.UMLDeploymentNode =>
       v.type === DeploymentElementType.DeploymentNode;
     if (!assert(values)) {
       return;
     }
 
-    super.deserialize(values);
+    super.deserialize(values, children);
     this.stereotype = values.stereotype;
   }
 }

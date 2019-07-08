@@ -1,7 +1,6 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { CommunicationMessage } from '..';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { ArrowLeftIcon } from '../../../components/controls/icon/arrow-left';
@@ -17,7 +16,7 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
-import { UMLCommunicationLink } from './uml-communication-link';
+import { CommunicationMessage, UMLCommunicationLink } from './uml-communication-link';
 
 const Flex = styled.div`
   display: flex;

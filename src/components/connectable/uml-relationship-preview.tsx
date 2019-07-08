@@ -29,7 +29,6 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   }),
   {
     end: UMLElementRepository.endConnecting,
-    // TODO: Fix typescript issue with async actions with a return statement.
     getAbsolutePosition: (UMLElementRepository.getAbsolutePosition as any) as AsyncDispatch<
       typeof UMLElementRepository.getAbsolutePosition
     >,

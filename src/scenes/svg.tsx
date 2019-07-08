@@ -10,6 +10,7 @@ import { ILayer } from '../services/layouter/layer';
 import { UMLContainer } from '../services/uml-container/uml-container';
 import { UMLElement } from '../services/uml-element/uml-element';
 import { UMLRelationship } from '../services/uml-relationship/uml-relationship';
+import * as Apollon from '../typings';
 import { computeBoundingBoxForElements, IBoundary } from '../utils/geometry/boundary';
 import { Point } from '../utils/geometry/point';
 import { update } from '../utils/update';

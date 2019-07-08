@@ -7,6 +7,7 @@ import { Textfield } from '../../../components/controls/textfield/textfield';
 import { ModelState } from '../../../components/store/model-state';
 import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../../utils/actions/actions';
 import { IUMLDeploymentNode, UMLDeploymentNode } from './uml-deployment-node';
 
 const Flex = styled.div`
@@ -58,7 +59,7 @@ type StateProps = {};
 
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
-  delete: typeof UMLElementRepository.delete;
+  delete: AsyncDispatch<typeof UMLElementRepository.delete>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;

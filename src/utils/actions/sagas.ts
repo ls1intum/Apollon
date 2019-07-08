@@ -28,7 +28,6 @@ export const safely = (saga: Saga): Saga => {
     try {
       yield call(saga);
     } catch (e) {
-      // TODO: error handling
       // tslint:disable-next-line
       console.error(e);
     }

@@ -19,7 +19,6 @@ type OwnProps = PropsWithChildren<{
 
 type Props = OwnProps & CanvasContext;
 
-// TODO: Compose minimal store for readonly
 const getInitialState = (
   initialState: DeepPartial<ModelState> = {},
   layer: ILayer | null = null,
