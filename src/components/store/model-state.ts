@@ -83,28 +83,6 @@ export class ModelState {
       element.bounds.y -= bounds.y + bounds.height / 2;
     }
 
-    // return {
-    //   diagram: {
-    //     ownedElements: model.elements.filter(e => !e.owner).map(element => element.id),
-    //     ownedRelationships: model.relationships.map(element => element.id),
-    //   },
-    //   // diagram: {
-    //   //   ...(() => {
-    //   //     const d = new UMLDiagram();
-    //   //     Object.assign(d, {
-    //   //       type: model.type,
-    //   //       bounds: computedBounds,
-    //   //     });
-    //   //     return d;
-    //   //   })(),
-    //   //   ownedElements: root.filter(element => !(element instanceof UMLRelationship)).map(element => element.id),
-    //   //   ownedRelationships: root.filter(element => element instanceof UMLRelationship).map(element => element.id),
-    //   // },
-    //   interactive: [...model.interactive.elements, ...model.interactive.relationships],
-    //   elements: elements.reduce((acc, val) => ({ ...acc, [val.id]: val }), {}),
-    //   assessments: model.assessments.reduce<AssessmentState>((r, o) => ({ ...r, [o.modelElementId]: o }), {}),
-    // };
-
     return {
       interactive: [...model.interactive.elements, ...model.interactive.relationships],
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),

@@ -20,6 +20,7 @@ export const Reconnectable = {
     dispatch<ReconnectStartAction>({
       type: ReconnectableActionTypes.START,
       payload: { ids, endpoint },
+      undoable: true,
     });
   },
 
@@ -52,6 +53,7 @@ export const Reconnectable = {
     dispatch<ReconnectAction>({
       type: ReconnectableActionTypes.RECONNECT,
       payload: { connections },
+      undoable: false,
     });
   },
 
@@ -64,6 +66,7 @@ export const Reconnectable = {
     dispatch<ReconnectEndAction>({
       type: ReconnectableActionTypes.END,
       payload: { ids },
+      undoable: false,
     });
   },
 };

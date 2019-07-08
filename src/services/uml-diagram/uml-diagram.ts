@@ -24,12 +24,10 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
 
   appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
     return [this];
-    // return this.render([...elements, ...ownedElements]);
   }
 
   removeElements(elements: UMLElement[], ownedElements: UMLContainer[]): [UMLContainer, ...UMLElement[]] {
     return [this];
-    // return this.render(ownedElements);
   }
 
   render(canvas: ILayer, children: ILayoutable[] = []): ILayoutable[] {

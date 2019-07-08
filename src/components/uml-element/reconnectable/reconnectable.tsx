@@ -46,7 +46,6 @@ const Handle = styled.line.attrs({
   strokeOpacity: 0,
 })`
   cursor: move;
-  /* pointer-events: all; */
 `;
 
 export const reconnectable = (

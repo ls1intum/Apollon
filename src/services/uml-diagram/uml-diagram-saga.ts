@@ -39,94 +39,9 @@ function* selectRelationship(): SagaIterator {
   });
 }
 
-//   if (diagram.ownedElements.includes(payload.id)) {
-//     yield put<AddElementAction>({
-//       type: DiagramActionTypes.ADD_ELEMENT,
-//       payload: { id: payload.id },
-//     });
-//   } else if (diagram.ownedRelationships.includes(payload.id)) {
-//     yield put<AddRelationshipAction>({
-//       type: DiagramActionTypes.ADD_RELATIONSHIP,
-//       payload: { id: payload.id },
-//     });
-//   }
-// }
-
-// export function* DiagramSaga() {
-//   yield takeLatest(ContainerActionTypes.CHANGE_OWNER, handleOwnerChange);
-//   yield takeLatest(ElementActionTypes.CREATE, handleElementCreation);
-//   yield takeLatest(RelationshipActionTypes.CREATE, handleRelationshipCreation);
-//   yield takeLatest(ElementActionTypes.SELECT, handleElementSelection);
-//   yield takeLatest(ElementActionTypes.RESIZED, recalc);
-//   yield takeLatest(ElementActionTypes.DELETE, handleElementDeletion);
-//   yield takeLatest(DiagramActionTypes.ADD_ELEMENT, recalc);
-//   yield takeLatest(DiagramActionTypes.ADD_RELATIONSHIP, recalc);
-//   yield takeLatest(DiagramActionTypes.DELETE_ELEMENT, recalc);
-//   yield takeLatest(DiagramActionTypes.DELETE_RELATIONSHIP, recalc);
-// }
-
-// function* handleOwnerChange({ payload }: ChangeOwnerAction) {
-//   if (!payload.id || payload.id === payload.owner) return;
-
-//   const { elements }: ModelState = yield select();
-//   const selection = Object.values(elements).filter(e => e.selected);
-//   if (selection.length > 1) {
-//     yield recalc();
-//     return;
-//   }
-
-//   const element = ElementRepository.getById(elements)(payload.id);
-//   if (!element) return;
-
-//   if (payload.owner === element.owner) {
-//     yield recalc();
-//     return;
-//   }
-
-//   const owner = payload.owner && ElementRepository.getById(elements)(payload.owner);
-//   if (!owner && payload.owner && RelationshipRepository.getById(elements)(payload.owner)) {
-//     return;
-//   }
-
-//   if (owner && !(owner.constructor as typeof Container).features.droppable) return;
-
-//   if (!element.owner) {
-//     yield put<DeleteElementAction>({
-//       type: DiagramActionTypes.DELETE_ELEMENT,
-//       payload: { id: element.id },
-//     });
-//   }
-
-//   if (!payload.owner) {
-//     yield put<AddElementAction>({
-//       type: DiagramActionTypes.ADD_ELEMENT,
-//       payload: { id: element.id },
-//     });
-//   }
-//   yield recalc();
-// }
-
 function* resizeAfterConnectionChange(): SagaIterator {
   yield takeLatest([ConnectableActionTypes.END, ReconnectableActionTypes.END, UpdatableActionTypes.END], resize);
 }
-
-// function* handleElementDeletion({ payload }: DeleteAction) {
-//   if (!payload.id) return;
-
-//   const { diagram }: ModelState = yield select();
-
-//   if (diagram.ownedElements.includes(payload.id)) {
-//     yield put<DeleteElementAction>({
-//       type: DiagramActionTypes.DELETE_ELEMENT,
-//       payload: { id: payload.id },
-//     });
-//   } else if (diagram.ownedRelationships.includes(payload.id)) {
-//     yield put<DeleteRelationshipAction>({
-//       type: DiagramActionTypes.DELETE_RELATIONSHIP,
-//       payload: { id: payload.id },
-//     });
-//   }
-// }
 
 function* resize(): SagaIterator {
   const layer: ILayer = yield getContext('layer');

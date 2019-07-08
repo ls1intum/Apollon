@@ -1,7 +1,6 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import styled from 'styled-components';
 import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { IUMLElement } from '../../services/uml-element/uml-element';
@@ -11,6 +10,7 @@ import { Header } from '../controls/typography/typography';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
+import { styled } from '../theme/styles';
 
 const Flex = styled.div`
   display: flex;

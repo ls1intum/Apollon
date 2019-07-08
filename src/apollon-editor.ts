@@ -82,7 +82,6 @@ export class ApollonEditor {
       diagram: new UMLDiagram({
         ...state.diagram,
         type: options.type,
-        // bounds: { ...(options.model && options.model.size) },
       }),
       editor: {
         ...state.editor,
@@ -145,9 +144,11 @@ export class ApollonEditor {
   private componentDidMount = () => {
     this.container.setAttribute('touch-action', 'none');
 
-    if (this.store) {
-      this.store.subscribe(this.onDispatch);
-    }
+    setTimeout(() => {
+      if (this.store) {
+        this.store.subscribe(this.onDispatch);
+      }
+    });
   };
 
   private onDispatch = () => {
