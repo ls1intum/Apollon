@@ -1,6 +1,7 @@
 import { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { CopyRepository } from '../../services/copypaste/copy-repository';
 import { ApollonMode } from '../../services/editor/editor-types';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UndoRepository } from '../../services/undo/undo-repository';
@@ -17,9 +18,10 @@ type StateProps = {
 };
 
 type DispatchProps = {
-  //   duplicate: typeof UMLElementRepository.duplicate;
   undo: typeof UndoRepository.undo;
   redo: typeof UndoRepository.redo;
+  copy: typeof CopyRepository.copy;
+  paste: typeof CopyRepository.paste;
   select: AsyncDispatch<typeof UMLElementRepository.select>;
   deselect: AsyncDispatch<typeof UMLElementRepository.deselect>;
   startMoving: AsyncDispatch<typeof UMLElementRepository.startMoving>;
@@ -38,9 +40,10 @@ const enhance = compose<ComponentType<OwnProps>>(
       mode: state.editor.mode,
     }),
     {
-      // duplicate: UMLElementRepository.duplicate,
       undo: UndoRepository.undo,
       redo: UndoRepository.redo,
+      copy: CopyRepository.copy,
+      paste: CopyRepository.paste,
       select: UMLElementRepository.select,
       deselect: UMLElementRepository.deselect,
       startMoving: UMLElementRepository.startMoving,
@@ -118,10 +121,14 @@ class KeyboardEventListenerComponent extends Component<Props> {
           event.preventDefault();
           this.props.select();
           break;
-        //         case 'd':
-        //           event.preventDefault();
-        //           this.props.selection.forEach(child => this.props.duplicate(child));
-        //           break;
+        case 'c':
+          event.preventDefault();
+          this.props.copy();
+          break;
+        case 'v':
+          event.preventDefault();
+          this.props.paste();
+          break;
         case 'z':
           event.preventDefault();
           event.shiftKey ? this.props.redo() : this.props.undo();

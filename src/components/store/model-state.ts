@@ -4,6 +4,7 @@ import { UMLElements } from '../../packages/uml-elements';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { UMLRelationships } from '../../packages/uml-relationships';
 import { AssessmentState } from '../../services/assessment/assessment-types';
+import { CopyState } from '../../services/copypaste/copy-types';
 import { EditorState } from '../../services/editor/editor-types';
 import { UMLContainer } from '../../services/uml-container/uml-container';
 import { UMLDiagramState } from '../../services/uml-diagram/uml-diagram-types';
@@ -36,6 +37,7 @@ export interface ModelState {
   updating: UpdatableState;
   elements: UMLElementState;
   assessments: AssessmentState;
+  copy: CopyState;
 }
 
 export class ModelState {
