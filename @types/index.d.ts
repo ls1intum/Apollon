@@ -62,6 +62,10 @@ declare namespace Apollon {
     methods: string[];
   };
 
+  export type UMLDeploymentNode = UMLElement & {
+    stereotype: string;
+  };
+
   export type UMLAssociation = UMLRelationship & {
     source: UMLRelationship['source'] & {
       multiplicity: string;
@@ -71,6 +75,13 @@ declare namespace Apollon {
       multiplicity: string;
       role: string;
     };
+  };
+
+  export type UMLCommunicationLink = UMLRelationship & {
+    messages: Array<{
+      name: string;
+      direction: 'source' | 'target';
+    }>;
   };
 
   export type Assessment = {

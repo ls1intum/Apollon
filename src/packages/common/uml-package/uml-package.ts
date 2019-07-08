@@ -19,7 +19,7 @@ export abstract class UMLPackage extends UMLContainer {
     const nameBounds: IBoundary = {
       x: this.bounds.x,
       y: this.bounds.y,
-      width: Math.round((Text.width(layer, this.name, { fontWeight: 'bold' }) + 20) / radix) * radix,
+      width: Math.round((Text.size(layer, this.name, { fontWeight: 'bold' }).width + 20) / radix) * radix,
       height: 20,
     };
 

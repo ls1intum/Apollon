@@ -64,7 +64,7 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
       (current, child, index) =>
         Math.max(
           current,
-          Math.round((Text.width(layer, child.name, index === 0 ? { fontWeight: 'bold' } : undefined) + 20) / radix) *
+          Math.round((Text.size(layer, child.name, index === 0 ? { fontWeight: 'bold' } : undefined).width + 20) / radix) *
             radix,
         ),
       Math.round(this.bounds.width / radix) * radix,

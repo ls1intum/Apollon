@@ -21,7 +21,7 @@ export abstract class UMLClassifierMember extends UMLElement {
 
   render(layer: ILayer): ILayoutable[] {
     const radix = 10;
-    const width = Text.width(layer, this.name) + 20;
+    const width = Text.size(layer, this.name).width + 20;
     this.bounds.width = Math.max(this.bounds.width, Math.round(width / radix) * radix);
     return [this];
   }

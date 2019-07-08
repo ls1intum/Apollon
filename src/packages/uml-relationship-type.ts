@@ -1,11 +1,11 @@
-import { ActivityRelationshipType } from './activity-diagram';
-import { ClassRelationshipType } from './class-diagram';
-import { CommunicationRelationshipType } from './communication-diagram';
-import { ComponentRelationshipType } from './component-diagram';
-import { DeploymentRelationshipType } from './deployment-diagram';
 import { UMLDiagramType } from './diagram-type';
-import { ObjectRelationshipType } from './object-diagram';
-import { UseCaseRelationshipType } from './use-case-diagram';
+import { ActivityRelationshipType } from './uml-activity-diagram';
+import { ClassRelationshipType } from './uml-class-diagram';
+import { CommunicationRelationshipType } from './uml-communication-diagram';
+import { ComponentRelationshipType } from './uml-component-diagram';
+import { DeploymentRelationshipType } from './uml-deployment-diagram';
+import { ObjectRelationshipType } from './uml-object-diagram';
+import { UseCaseRelationshipType } from './uml-use-case-diagram';
 
 export type UMLRelationshipType =
   | ClassRelationshipType

@@ -1,10 +1,10 @@
-import { ActivityElementType } from './activity-diagram';
-import { ClassElementType } from './class-diagram';
 import { CommonElementType } from './common';
-import { ComponentElementType } from './component-diagram';
-import { DeploymentElementType } from './deployment-diagram';
-import { ObjectElementType } from './object-diagram';
-import { UseCaseElementType } from './use-case-diagram';
+import { ActivityElementType } from './uml-activity-diagram';
+import { ClassElementType } from './uml-class-diagram';
+import { ComponentElementType } from './uml-component-diagram';
+import { DeploymentElementType } from './uml-deployment-diagram';
+import { ObjectElementType } from './uml-object-diagram';
+import { UseCaseElementType } from './uml-use-case-diagram';
 
 export type UMLElementType =
   | CommonElementType

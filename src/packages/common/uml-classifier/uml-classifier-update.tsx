@@ -15,9 +15,10 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
-import { ClassElementType } from '../../class-diagram';
-import { UMLClassAttribute } from '../../class-diagram/uml-class-attribute/uml-class-attribute';
-import { UMLClassMethod } from '../../class-diagram/uml-class-method/uml-class-method';
+import { ClassElementType } from '../../uml-class-diagram';
+import { UMLClassAttribute } from '../../uml-class-diagram/uml-class-attribute/uml-class-attribute';
+import { UMLClassMethod } from '../../uml-class-diagram/uml-class-method/uml-class-method';
+import { UMLElementType } from '../../uml-element-type';
 import { UMLElements } from '../../uml-elements';
 import { UMLClassifier } from './uml-classifier';
 
@@ -129,7 +130,7 @@ class ClassifierUpdate extends Component<Props> {
 
   private toggle = (type: ClassElementType) => {
     const { element, update } = this.props;
-    const newType = element.type === type ? ClassElementType.Class : type;
+    const newType: UMLElementType = element.type === type ? ClassElementType.Class : type;
     const instance = new UMLElements[newType]({
       id: element.id,
       name: element.name,

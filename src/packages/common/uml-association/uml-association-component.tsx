@@ -1,7 +1,7 @@
 import React, { SFC } from 'react';
 import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
-import { ClassRelationshipType } from '../../class-diagram';
+import { ClassRelationshipType } from '../../uml-class-diagram';
 import { UMLAssociation } from './uml-association';
 
 const Marker = {
