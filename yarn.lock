@@ -291,10 +291,10 @@
     "@types/prop-types" "*"
     csstype "^2.2.0"
 
-"@types/styled-components@4.1.13":
-  version "4.1.13"
-  resolved "https://registry.yarnpkg.com/@types/styled-components/-/styled-components-4.1.13.tgz#7373e0a084dedf6982a35d5bc2ef07e023e18e2e"
-  integrity sha512-P+jc7EojMVz7S8WhX7EbCPzK1ZZvU8fzib4+CDagF2DPBiEJkLj6KE42xiDN+AZUuyiJUX2iylGMZB2N3H+Exw==
+"@types/styled-components@4.1.17":
+  version "4.1.17"
+  resolved "https://registry.yarnpkg.com/@types/styled-components/-/styled-components-4.1.17.tgz#572d96a734c98b92940b6f8ade7299bd2417d9e5"
+  integrity sha512-nH81EgZB2rVgVUplha62qTIxQrQ/Znpn/tZmsE4NzedZ5H93KTHl2u4WUndwM5o1ipEjo8f2LHAkVscriXsrPA==
   dependencies:
     "@types/react" "*"
     "@types/react-native" "*"
