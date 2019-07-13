@@ -1,80 +1,77 @@
 import { FunctionComponent } from 'react';
-import { ActivityActionNodeComponent } from './activity-diagram/activity-action-node/activity-action-node-component';
-import { ActivityControlFlowComponent } from './activity-diagram/activity-control-flow/activity-control-flow-component';
-import { ActivityFinalNodeComponent } from './activity-diagram/activity-final-node/activity-final-node-component';
-import { ActivityForkNodeComponent } from './activity-diagram/activity-fork-node/activity-fork-node-component';
-import { ActivityInitialNodeComponent } from './activity-diagram/activity-initial-node/activity-initial-node-component';
-import { ActivityMergeNodeComponent } from './activity-diagram/activity-merge-node/activity-merge-node-component';
-import { ActivityObjectNodeComponent } from './activity-diagram/activity-object-node/activity-object-node-component';
-import { ActivityComponent } from './activity-diagram/activity/activity-component';
-import { ClassAssociationComponent } from './class-diagram/class-association/class-association-component';
-import { ClassMemberComponent } from './class-diagram/class-member/class-member-component';
-import { ClassifierComponent } from './class-diagram/classifier/classifier-component';
-import { PackageComponent } from './common/package/package-component';
-import { CommunicationLinkComponent } from './communication-diagram/communication-link/communication-link-component';
-import { ComponentDependencyComponent } from './component-diagram/component-dependency/component-dependency-component';
-import { ComponentInterfaceProvidedComponent } from './component-diagram/component-interface-provided/component-interface-provided-component';
-import { ComponentInterfaceRequiredComponent } from './component-diagram/component-interface-required/component-interface-required-component';
-import { ComponentInterfaceComponent } from './component-diagram/component-interface/component-interface-component';
-import { ComponentComponent } from './component-diagram/component/component-component';
-import { DeploymentArtifactComponent } from './deployment-diagram/deployment-artifact/deployment-artifact-component';
-import { DeploymentAssociationComponent } from './deployment-diagram/deployment-association/deployment-association-component';
-import { DeploymentNodeComponent } from './deployment-diagram/deployment-node/deployment-node-component';
-import { ElementType } from './element-type';
-import { ObjectLinkComponent } from './object-diagram/object-link/object-link-component';
-import { ObjectMemberComponent } from './object-diagram/object-member/object-member-component';
-import { ObjectNameComponent } from './object-diagram/object-name/object-name-component';
-import { RelationshipType } from './relationship-type';
-import { UseCaseActorComponent } from './use-case-diagram/use-case-actor/use-case-actor-component';
-import { UseCaseAssociationComponent } from './use-case-diagram/use-case-association/use-case-association-component';
-import { UseCaseExtendComponent } from './use-case-diagram/use-case-extend/use-case-extend-component';
-import { UseCaseGeneralizationComponent } from './use-case-diagram/use-case-generalization/use-case-generalization-component';
-import { UseCaseIncludeComponent } from './use-case-diagram/use-case-include/use-case-include-component';
-import { UseCaseSystemComponent } from './use-case-diagram/use-case-system/use-case-system-component';
-import { UseCaseComponent } from './use-case-diagram/use-case/use-case-component';
+import { UMLAssociationComponent } from './common/uml-association/uml-association-component';
+import { UMLClassifierComponent } from './common/uml-classifier/uml-classifier-component';
+import { UMLClassifierMemberComponent } from './common/uml-classifier/uml-classifier-member-component';
+import { UMLActivityActionNodeComponent } from './uml-activity-diagram/uml-activity-action-node/uml-activity-action-node-component';
+import { UMLActivityControlFlowComponent } from './uml-activity-diagram/uml-activity-control-flow/uml-activity-control-flow-component';
+import { UMLActivityFinalNodeComponent } from './uml-activity-diagram/uml-activity-final-node/uml-activity-final-node-component';
+import { UMLActivityForkNodeComponent } from './uml-activity-diagram/uml-activity-fork-node/uml-activity-fork-node-component';
+import { UMLActivityInitialNodeComponent } from './uml-activity-diagram/uml-activity-initial-node/uml-activity-initial-node-component';
+import { UMLActivityMergeNodeComponent } from './uml-activity-diagram/uml-activity-merge-node/uml-activity-merge-node-component';
+import { UMLActivityObjectNodeComponent } from './uml-activity-diagram/uml-activity-object-node/uml-activity-object-node-component';
+import { UMLActivityComponent } from './uml-activity-diagram/uml-activity/uml-activity-component';
+import { UMLClassPackageComponent } from './uml-class-diagram/uml-class-package/uml-class-package-component';
+import { UMLCommunicationLinkComponent } from './uml-communication-diagram/uml-communication-link/uml-communication-link-component';
+import { UMLComponentDependencyComponent } from './uml-component-diagram/uml-component-dependency/uml-component-dependency-component';
+import { UMLComponentInterfaceProvidedComponent } from './uml-component-diagram/uml-component-interface-provided/uml-component-interface-provided-component';
+import { UMLComponentInterfaceRequiredComponent } from './uml-component-diagram/uml-component-interface-required/uml-component-interface-required-component';
+import { UMLComponentInterfaceComponent } from './uml-component-diagram/uml-component-interface/uml-component-interface-component';
+import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
+import { UMLDeploymentArtifactComponent } from './uml-deployment-diagram/uml-deployment-artifact/uml-deployment-artifact-component';
+import { UMLDeploymentAssociationComponent } from './uml-deployment-diagram/uml-deployment-association/uml-deployment-association-component';
+import { UMLDeploymentNodeComponent } from './uml-deployment-diagram/uml-deployment-node/uml-deployment-node-component';
+import { UMLElementType } from './uml-element-type';
+import { UMLObjectLinkComponent } from './uml-object-diagram/uml-object-link/uml-object-link-component';
+import { UMLRelationshipType } from './uml-relationship-type';
+import { UMLUseCaseActorComponent } from './uml-use-case-diagram/uml-use-case-actor/uml-use-case-actor-component';
+import { UMLUseCaseAssociationComponent } from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-component';
+import { UMLUseCaseExtendComponent } from './uml-use-case-diagram/uml-use-case-extend/uml-use-case-extend-component';
+import { UMLUseCaseGeneralizationComponent } from './uml-use-case-diagram/uml-use-case-generalization/uml-use-case-generalization-component';
+import { UMLUseCaseIncludeComponent } from './uml-use-case-diagram/uml-use-case-include/uml-use-case-include-component';
+import { UMLUseCaseSystemComponent } from './uml-use-case-diagram/uml-use-case-system/uml-use-case-system-component';
+import { UMLUseCaseComponent } from './uml-use-case-diagram/uml-use-case/uml-use-case-component';
 
-export const Components: { [key in ElementType | RelationshipType]: FunctionComponent<{ element: any }> } = {
-  [ElementType.Diagram]: PackageComponent,
-  [ElementType.Package]: PackageComponent,
-  [ElementType.Class]: ClassifierComponent,
-  [ElementType.AbstractClass]: ClassifierComponent,
-  [ElementType.Interface]: ClassifierComponent,
-  [ElementType.Enumeration]: ClassifierComponent,
-  [ElementType.ClassAttribute]: ClassMemberComponent,
-  [ElementType.ClassMethod]: ClassMemberComponent,
-  [ElementType.ObjectName]: ObjectNameComponent,
-  [ElementType.ObjectAttribute]: ObjectMemberComponent,
-  [ElementType.ObjectMethod]: ObjectMemberComponent,
-  [ElementType.Activity]: ActivityComponent,
-  [ElementType.ActivityActionNode]: ActivityActionNodeComponent,
-  [ElementType.ActivityFinalNode]: ActivityFinalNodeComponent,
-  [ElementType.ActivityForkNode]: ActivityForkNodeComponent,
-  [ElementType.ActivityInitialNode]: ActivityInitialNodeComponent,
-  [ElementType.ActivityMergeNode]: ActivityMergeNodeComponent,
-  [ElementType.ActivityObjectNode]: ActivityObjectNodeComponent,
-  [ElementType.UseCase]: UseCaseComponent,
-  [ElementType.UseCaseActor]: UseCaseActorComponent,
-  [ElementType.UseCaseSystem]: UseCaseSystemComponent,
-  [ElementType.Component]: ComponentComponent,
-  [ElementType.ComponentInterface]: ComponentInterfaceComponent,
-  [ElementType.DeploymentNode]: DeploymentNodeComponent,
-  [ElementType.DeploymentArtifact]: DeploymentArtifactComponent,
-  [RelationshipType.ClassAggregation]: ClassAssociationComponent,
-  [RelationshipType.ClassBidirectional]: ClassAssociationComponent,
-  [RelationshipType.ClassComposition]: ClassAssociationComponent,
-  [RelationshipType.ClassDependency]: ClassAssociationComponent,
-  [RelationshipType.ClassInheritance]: ClassAssociationComponent,
-  [RelationshipType.ClassRealization]: ClassAssociationComponent,
-  [RelationshipType.ClassUnidirectional]: ClassAssociationComponent,
-  [RelationshipType.ObjectLink]: ObjectLinkComponent,
-  [RelationshipType.ActivityControlFlow]: ActivityControlFlowComponent,
-  [RelationshipType.UseCaseAssociation]: UseCaseAssociationComponent,
-  [RelationshipType.UseCaseExtend]: UseCaseExtendComponent,
-  [RelationshipType.UseCaseGeneralization]: UseCaseGeneralizationComponent,
-  [RelationshipType.UseCaseInclude]: UseCaseIncludeComponent,
-  [RelationshipType.CommunicationLink]: CommunicationLinkComponent,
-  [RelationshipType.ComponentInterfaceProvided]: ComponentInterfaceProvidedComponent,
-  [RelationshipType.ComponentInterfaceRequired]: ComponentInterfaceRequiredComponent,
-  [RelationshipType.ComponentDependency]: ComponentDependencyComponent,
-  [RelationshipType.DeploymentAssociation]: DeploymentAssociationComponent,
+export const Components: { [key in UMLElementType | UMLRelationshipType]: FunctionComponent<{ element: any }> } = {
+  [UMLElementType.Package]: UMLClassPackageComponent,
+  [UMLElementType.Class]: UMLClassifierComponent,
+  [UMLElementType.AbstractClass]: UMLClassifierComponent,
+  [UMLElementType.Interface]: UMLClassifierComponent,
+  [UMLElementType.Enumeration]: UMLClassifierComponent,
+  [UMLElementType.ClassAttribute]: UMLClassifierMemberComponent,
+  [UMLElementType.ClassMethod]: UMLClassifierMemberComponent,
+  [UMLElementType.ObjectName]: UMLClassifierComponent,
+  [UMLElementType.ObjectAttribute]: UMLClassifierMemberComponent,
+  [UMLElementType.ObjectMethod]: UMLClassifierMemberComponent,
+  [UMLElementType.Activity]: UMLActivityComponent,
+  [UMLElementType.ActivityActionNode]: UMLActivityActionNodeComponent,
+  [UMLElementType.ActivityFinalNode]: UMLActivityFinalNodeComponent,
+  [UMLElementType.ActivityForkNode]: UMLActivityForkNodeComponent,
+  [UMLElementType.ActivityInitialNode]: UMLActivityInitialNodeComponent,
+  [UMLElementType.ActivityMergeNode]: UMLActivityMergeNodeComponent,
+  [UMLElementType.ActivityObjectNode]: UMLActivityObjectNodeComponent,
+  [UMLElementType.UseCase]: UMLUseCaseComponent,
+  [UMLElementType.UseCaseActor]: UMLUseCaseActorComponent,
+  [UMLElementType.UseCaseSystem]: UMLUseCaseSystemComponent,
+  [UMLElementType.Component]: UMLComponentComponent,
+  [UMLElementType.ComponentInterface]: UMLComponentInterfaceComponent,
+  [UMLElementType.DeploymentNode]: UMLDeploymentNodeComponent,
+  [UMLElementType.DeploymentArtifact]: UMLDeploymentArtifactComponent,
+  [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassDependency]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassInheritance]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassRealization]: UMLAssociationComponent,
+  [UMLRelationshipType.ClassUnidirectional]: UMLAssociationComponent,
+  [UMLRelationshipType.ObjectLink]: UMLObjectLinkComponent,
+  [UMLRelationshipType.ActivityControlFlow]: UMLActivityControlFlowComponent,
+  [UMLRelationshipType.UseCaseAssociation]: UMLUseCaseAssociationComponent,
+  [UMLRelationshipType.UseCaseExtend]: UMLUseCaseExtendComponent,
+  [UMLRelationshipType.UseCaseGeneralization]: UMLUseCaseGeneralizationComponent,
+  [UMLRelationshipType.UseCaseInclude]: UMLUseCaseIncludeComponent,
+  [UMLRelationshipType.CommunicationLink]: UMLCommunicationLinkComponent,
+  [UMLRelationshipType.ComponentInterfaceProvided]: UMLComponentInterfaceProvidedComponent,
+  [UMLRelationshipType.ComponentInterfaceRequired]: UMLComponentInterfaceRequiredComponent,
+  [UMLRelationshipType.ComponentDependency]: UMLComponentDependencyComponent,
+  [UMLRelationshipType.DeploymentAssociation]: UMLDeploymentAssociationComponent,
 };

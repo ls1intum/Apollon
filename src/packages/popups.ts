@@ -1,62 +1,61 @@
-import { ComponentClass } from 'react';
-import { ActivityControlFlowPopup } from './activity-diagram/activity-control-flow/activity-control-flow-popup';
-import { ActivityMergeNodePopup } from './activity-diagram/activity-merge-node/activity-merge-node-popup';
-import { ClassAssociationPopup } from './class-diagram/class-association/class-association-popup';
-import { ClassifierPopup } from './class-diagram/classifier/classifier-popup';
+import { ComponentType } from 'react';
 import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
-import { CommunicationLinkPopup } from './communication-diagram/communication-link/communication-link-popup';
-import { ComponentAssociationPopup } from './component-diagram/component-association-popup';
-import { DeploymentAssociationPopup } from './deployment-diagram/deployment-association/deployment-association-popup';
-import { DeploymentNodePopup } from './deployment-diagram/deployment-node/deployment-node-popup';
-import { ElementType } from './element-type';
-import { ObjectNamePopup } from './object-diagram/object-name/object-name-popup';
-import { RelationshipType } from './relationship-type';
-import { UseCaseAssociationPopup } from './use-case-diagram/use-case-association/use-case-association-popup';
+import { UMLClassifierUpdate } from './common/uml-classifier/uml-classifier-update';
+import { UMLActivityControlFlowUpdate } from './uml-activity-diagram/uml-activity-control-flow/uml-activity-control-flow-update';
+import { UMLActivityMergeNodeUpdate } from './uml-activity-diagram/uml-activity-merge-node/uml-activity-merge-node-update';
+import { UMLClassAssociationUpdate } from './uml-class-diagram/uml-class-association/uml-class-association-update';
+import { UMLCommunicationLinkUpdate } from './uml-communication-diagram/uml-communication-link/uml-communication-link-update';
+import { UMLComponentAssociationUpdate } from './uml-component-diagram/uml-component-association-update';
+import { UMLDeploymentAssociationUpdate } from './uml-deployment-diagram/uml-deployment-association/uml-deployment-association-update';
+import { UMLDeploymentNodeUpdate } from './uml-deployment-diagram/uml-deployment-node/uml-deployment-node-update';
+import { UMLElementType } from './uml-element-type';
+import { UMLObjectNameUpdate } from './uml-object-diagram/uml-object-name/uml-object-name-update';
+import { UMLRelationshipType } from './uml-relationship-type';
+import { UMLUseCaseAssociationUpdate } from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-update';
 
-export type Popups = { [key in ElementType | RelationshipType]: ComponentClass<{ element: any }> | null };
-export const Popups: { [key in ElementType | RelationshipType]: ComponentClass<{ element: any }> | null } = {
-  [ElementType.Diagram]: DefaultPopup,
-  [ElementType.Package]: DefaultPopup,
-  [ElementType.Class]: ClassifierPopup,
-  [ElementType.AbstractClass]: ClassifierPopup,
-  [ElementType.Interface]: ClassifierPopup,
-  [ElementType.Enumeration]: ClassifierPopup,
-  [ElementType.ClassAttribute]: null,
-  [ElementType.ClassMethod]: null,
-  [ElementType.ObjectName]: ObjectNamePopup,
-  [ElementType.ObjectAttribute]: null,
-  [ElementType.ObjectMethod]: null,
-  [ElementType.Activity]: DefaultPopup,
-  [ElementType.ActivityActionNode]: DefaultPopup,
-  [ElementType.ActivityFinalNode]: DefaultPopup,
-  [ElementType.ActivityForkNode]: DefaultPopup,
-  [ElementType.ActivityInitialNode]: DefaultPopup,
-  [ElementType.ActivityMergeNode]: ActivityMergeNodePopup,
-  [ElementType.ActivityObjectNode]: DefaultPopup,
-  [ElementType.UseCase]: DefaultPopup,
-  [ElementType.UseCaseActor]: DefaultPopup,
-  [ElementType.UseCaseSystem]: DefaultPopup,
-  [ElementType.Component]: DefaultPopup,
-  [ElementType.ComponentInterface]: DefaultPopup,
-  [ElementType.DeploymentNode]: DeploymentNodePopup,
-  [ElementType.DeploymentArtifact]: DefaultPopup,
-  [RelationshipType.ClassAggregation]: ClassAssociationPopup,
-  [RelationshipType.ClassBidirectional]: ClassAssociationPopup,
-  [RelationshipType.ClassComposition]: ClassAssociationPopup,
-  [RelationshipType.ClassDependency]: ClassAssociationPopup,
-  [RelationshipType.ClassInheritance]: ClassAssociationPopup,
-  [RelationshipType.ClassRealization]: ClassAssociationPopup,
-  [RelationshipType.ClassUnidirectional]: ClassAssociationPopup,
-  [RelationshipType.ObjectLink]: DefaultRelationshipPopup,
-  [RelationshipType.ActivityControlFlow]: ActivityControlFlowPopup,
-  [RelationshipType.UseCaseAssociation]: UseCaseAssociationPopup,
-  [RelationshipType.UseCaseExtend]: UseCaseAssociationPopup,
-  [RelationshipType.UseCaseGeneralization]: UseCaseAssociationPopup,
-  [RelationshipType.UseCaseInclude]: UseCaseAssociationPopup,
-  [RelationshipType.CommunicationLink]: CommunicationLinkPopup,
-  [RelationshipType.ComponentInterfaceProvided]: ComponentAssociationPopup,
-  [RelationshipType.ComponentInterfaceRequired]: ComponentAssociationPopup,
-  [RelationshipType.ComponentDependency]: ComponentAssociationPopup,
-  [RelationshipType.DeploymentAssociation]: DeploymentAssociationPopup,
+export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
+export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
+  [UMLElementType.Package]: DefaultPopup,
+  [UMLElementType.Class]: UMLClassifierUpdate,
+  [UMLElementType.AbstractClass]: UMLClassifierUpdate,
+  [UMLElementType.Interface]: UMLClassifierUpdate,
+  [UMLElementType.Enumeration]: UMLClassifierUpdate,
+  [UMLElementType.ClassAttribute]: null,
+  [UMLElementType.ClassMethod]: null,
+  [UMLElementType.ObjectName]: UMLObjectNameUpdate,
+  [UMLElementType.ObjectAttribute]: null,
+  [UMLElementType.ObjectMethod]: null,
+  [UMLElementType.Activity]: DefaultPopup,
+  [UMLElementType.ActivityActionNode]: DefaultPopup,
+  [UMLElementType.ActivityFinalNode]: DefaultPopup,
+  [UMLElementType.ActivityForkNode]: DefaultPopup,
+  [UMLElementType.ActivityInitialNode]: DefaultPopup,
+  [UMLElementType.ActivityMergeNode]: UMLActivityMergeNodeUpdate,
+  [UMLElementType.ActivityObjectNode]: DefaultPopup,
+  [UMLElementType.UseCase]: DefaultPopup,
+  [UMLElementType.UseCaseActor]: DefaultPopup,
+  [UMLElementType.UseCaseSystem]: DefaultPopup,
+  [UMLElementType.Component]: DefaultPopup,
+  [UMLElementType.ComponentInterface]: DefaultPopup,
+  [UMLElementType.DeploymentNode]: UMLDeploymentNodeUpdate,
+  [UMLElementType.DeploymentArtifact]: DefaultPopup,
+  [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
+  [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
+  [UMLRelationshipType.ClassComposition]: UMLClassAssociationUpdate,
+  [UMLRelationshipType.ClassDependency]: UMLClassAssociationUpdate,
+  [UMLRelationshipType.ClassInheritance]: UMLClassAssociationUpdate,
+  [UMLRelationshipType.ClassRealization]: UMLClassAssociationUpdate,
+  [UMLRelationshipType.ClassUnidirectional]: UMLClassAssociationUpdate,
+  [UMLRelationshipType.ObjectLink]: DefaultRelationshipPopup,
+  [UMLRelationshipType.ActivityControlFlow]: UMLActivityControlFlowUpdate,
+  [UMLRelationshipType.UseCaseAssociation]: UMLUseCaseAssociationUpdate,
+  [UMLRelationshipType.UseCaseExtend]: UMLUseCaseAssociationUpdate,
+  [UMLRelationshipType.UseCaseGeneralization]: UMLUseCaseAssociationUpdate,
+  [UMLRelationshipType.UseCaseInclude]: UMLUseCaseAssociationUpdate,
+  [UMLRelationshipType.CommunicationLink]: UMLCommunicationLinkUpdate,
+  [UMLRelationshipType.ComponentInterfaceProvided]: UMLComponentAssociationUpdate,
+  [UMLRelationshipType.ComponentInterfaceRequired]: UMLComponentAssociationUpdate,
+  [UMLRelationshipType.ComponentDependency]: UMLComponentAssociationUpdate,
+  [UMLRelationshipType.DeploymentAssociation]: UMLDeploymentAssociationUpdate,
 };

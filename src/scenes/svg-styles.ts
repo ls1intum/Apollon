@@ -8,6 +8,10 @@ export const Style = css(
     font-size: ${props.theme.font.size}px;
   }
 
+  marker, text {
+    fill-opacity: 1;
+  }
+
   * {
     overflow: visible;
   }

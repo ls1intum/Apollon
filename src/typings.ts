@@ -1,63 +1,58 @@
 import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
-import { DiagramType } from './packages/diagram-type';
-import { ElementType as UMLElementType } from './packages/element-type';
-import { RelationshipType as UMLRelationshipType } from './packages/relationship-type';
+import { UMLDiagramType } from './packages/diagram-type';
+import { UMLElementType } from './packages/uml-element-type';
+import { UMLRelationshipType } from './packages/uml-relationship-type';
+import { ApollonMode, Locale } from './services/editor/editor-types';
+import { Direction } from './services/uml-element/uml-element-port';
+import { IBoundary } from './utils/geometry/boundary';
+import { IPath } from './utils/geometry/path';
 
-export enum Locale {
-  en = 'en',
-  de = 'de',
-}
+export { Styles, UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 
-export type ElementType = UMLElementType | UMLRelationshipType;
+export type ApollonOptions = {
+  type?: UMLDiagramType;
+  mode?: ApollonMode;
+  readonly?: boolean;
+  enablePopups?: boolean;
+  model?: UMLModel;
+  theme?: DeepPartial<Styles>;
+  locale?: Locale;
+};
 
-export interface UMLModel {
+export type Selection = {
+  elements: string[];
+  relationships: string[];
+};
+
+export type UMLModel = {
   version: string;
-  type: DiagramType;
+  type: UMLDiagramType;
   size: { width: number; height: number };
-  interactive: Selection;
-  assessments: Assessment[];
   elements: UMLElement[];
+  interactive: Selection;
   relationships: UMLRelationship[];
-}
+  assessments: Assessment[];
+};
 
-export interface Assessment {
-  modelElementId: string;
-  elementType: ElementType;
-  score: number;
-  feedback?: string;
-}
+export type UMLModelElementType = UMLElementType | UMLRelationshipType | UMLDiagramType;
 
-export { UMLClassAssociation, UMLClassifier } from './packages/class-diagram';
-export { UMLCommunicationLink } from './packages/communication-diagram';
-export { DiagramType };
-export { UMLElementType };
-export { UMLRelationshipType };
-export type Theme = DeepPartial<Styles>;
-
-export interface Element {
+export type UMLModelElement = {
   id: string;
   name: string;
-  type: ElementType;
-  highlight?: string;
-  bounds: { x: number; y: number; width: number; height: number };
-}
-
-export interface UMLElement extends Element {
+  type: UMLModelElementType;
   owner: string | null;
+  bounds: IBoundary;
+  highlight?: string;
+};
+
+export type UMLElement = UMLModelElement & {
   type: UMLElementType;
-}
+};
 
-export enum Direction {
-  Up = 'Up',
-  Right = 'Right',
-  Down = 'Down',
-  Left = 'Left',
-}
-
-export interface UMLRelationship extends Element {
+export type UMLRelationship = UMLModelElement & {
   type: UMLRelationshipType;
-  path: Array<{ x: number; y: number }>;
+  path: IPath;
   source: {
     element: string;
     direction: Direction;
@@ -66,37 +61,50 @@ export interface UMLRelationship extends Element {
     element: string;
     direction: Direction;
   };
-}
+};
 
-export interface Selection {
-  elements: string[];
-  relationships: string[];
-}
+export type UMLClassifier = UMLElement & {
+  attributes: string[];
+  methods: string[];
+};
 
-export enum ApollonMode {
-  Modelling = 'Modelling',
-  Exporting = 'Exporting',
-  Assessment = 'Assessment',
-}
+export type UMLDeploymentNode = UMLElement & {
+  stereotype: string;
+};
 
-export interface ApollonOptions {
-  type?: DiagramType;
-  mode?: ApollonMode;
-  readonly?: boolean;
-  enablePopups?: boolean;
-  model?: UMLModel;
-  theme?: Theme;
-  locale?: Locale;
-}
+export type UMLAssociation = UMLRelationship & {
+  source: UMLRelationship['source'] & {
+    multiplicity: string;
+    role: string;
+  };
+  target: UMLRelationship['target'] & {
+    multiplicity: string;
+    role: string;
+  };
+};
 
-export interface ExportOptions {
+export type UMLCommunicationLink = UMLRelationship & {
+  messages: Array<{
+    name: string;
+    direction: 'source' | 'target';
+  }>;
+};
+
+export type Assessment = {
+  modelElementId: string;
+  elementType: UMLElementType | UMLRelationshipType;
+  score: number;
+  feedback?: string;
+};
+
+export type ExportOptions = {
   margin?: number | { top?: number; right?: number; bottom?: number; left?: number };
   keepOriginalSize?: boolean;
   include?: string[];
   exclude?: string[];
-}
+};
 
-export interface SVG {
+export type SVG = {
   svg: string;
   clip: {
     x: number;
@@ -104,4 +112,4 @@ export interface SVG {
     width: number;
     height: number;
   };
-}
+};

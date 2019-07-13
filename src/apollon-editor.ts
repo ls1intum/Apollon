@@ -4,23 +4,26 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { DeepPartial, Store } from 'redux';
 import { ModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
-import { DiagramType } from './packages/diagram-type';
+import { UMLElementType } from './packages/uml-element-type';
+import { UMLRelationshipType } from './packages/uml-relationship-type';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
-import { Diagram } from './services/diagram/diagram';
-import { ApollonView } from './services/editor/editor-types';
-import { ElementRepository } from './services/element/element-repository';
-import { ApollonMode, ApollonOptions, Assessment, ExportOptions, Locale, Selection, SVG, UMLModel } from './typings';
+import { Actions } from './services/actions';
+import { ApollonMode, ApollonView, Locale } from './services/editor/editor-types';
+import { UMLDiagram } from './services/uml-diagram/uml-diagram';
+import { UMLElementRepository } from './services/uml-element/uml-element-repository';
+import * as Apollon from './typings';
+import { Dispatch } from './utils/actions/actions';
 
 export class ApollonEditor {
-  get model(): UMLModel {
+  get model(): Apollon.UMLModel {
     if (!this.store) throw new Error('Apollon was already destroyed.');
     return ModelState.toModel(this.store.getState());
   }
 
-  set model(model: UMLModel) {
+  set model(model: Apollon.UMLModel) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
-    const state: ModelState = {
+    const state: DeepPartial<ModelState> = {
       ...ModelState.fromModel(model),
       editor: { ...this.store.getState().editor },
     };
@@ -48,41 +51,53 @@ export class ApollonEditor {
     render(element, this.container, this.componentDidMount);
   }
 
-  static exportModelAsSvg(model: UMLModel, options?: ExportOptions, theme?: DeepPartial<Styles>): SVG {
+  static exportModelAsSvg(
+    model: Apollon.UMLModel,
+    options?: Apollon.ExportOptions,
+    theme?: DeepPartial<Styles>,
+  ): Apollon.SVG {
     const div = document.createElement('div');
     const element = createElement(Svg, { model, options, styles: theme });
     const svg = render(element, div);
     const { innerHTML } = div;
     unmountComponentAtNode(div);
+
     return {
       svg: innerHTML,
       clip: svg.state.bounds,
     };
   }
 
-  selection: Selection = { elements: [], relationships: [] };
-  private assessments: Assessment[] = [];
+  selection: Apollon.Selection = { elements: [], relationships: [] };
+  private assessments: Apollon.Assessment[] = [];
   private application: RefObject<Application> = createRef();
-  private store: Store<ModelState> | null = null;
-  private selectionSubscribers: Array<(selection: Selection) => void> = [];
-  private assessmentSubscribers: Array<(assessments: Assessment[]) => void> = [];
+  private selectionSubscribers: Array<(selection: Apollon.Selection) => void> = [];
+  private assessmentSubscribers: Array<(assessments: Apollon.Assessment[]) => void> = [];
 
-  constructor(private container: HTMLElement, private options: ApollonOptions) {
+  constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
+
     state = {
       ...state,
-      diagram: (() => {
-        const d = new Diagram();
-        Object.assign(d, state.diagram);
-        d.type2 = options.type || DiagramType.ClassDiagram;
-        return d;
-      })(),
+      diagram: new UMLDiagram({
+        ...state.diagram,
+        type: options.type,
+      }),
       editor: {
         ...state.editor,
         view: ApollonView.Modelling,
         mode: options.mode || ApollonMode.Exporting,
         readonly: options.readonly || false,
         enablePopups: options.enablePopups || true,
+        features: {
+          hoverable: true,
+          selectable: true,
+          movable: !options.readonly,
+          resizable: !options.readonly,
+          connectable: !options.readonly,
+          updatable: !options.readonly,
+          droppable: !options.readonly,
+        },
       },
     };
 
@@ -99,14 +114,14 @@ export class ApollonEditor {
     unmountComponentAtNode(this.container);
   }
 
-  select(selection: Selection) {
+  select(selection: Apollon.Selection) {
     if (!this.store) return;
-    const { dispatch } = this.store;
-    dispatch(ElementRepository.select(null));
-    [...selection.elements, ...selection.relationships].map(id => dispatch(ElementRepository.select(id, false, true)));
+    const dispatch = this.store.dispatch as Dispatch;
+    dispatch(UMLElementRepository.deselect());
+    dispatch(UMLElementRepository.select([...selection.elements, ...selection.relationships]));
   }
 
-  subscribeToSelectionChange(callback: (selection: Selection) => void): number {
+  subscribeToSelectionChange(callback: (selection: Apollon.Selection) => void): number {
     return this.selectionSubscribers.push(callback) - 1;
   }
 
@@ -114,7 +129,7 @@ export class ApollonEditor {
     this.selectionSubscribers.splice(subscriptionId);
   }
 
-  subscribeToAssessmentChange(callback: (assessments: Assessment[]) => void): number {
+  subscribeToAssessmentChange(callback: (assessments: Apollon.Assessment[]) => void): number {
     return this.assessmentSubscribers.push(callback) - 1;
   }
 
@@ -122,28 +137,26 @@ export class ApollonEditor {
     this.assessmentSubscribers.splice(subscriptionId);
   }
 
-  exportAsSVG(options?: ExportOptions): SVG {
+  exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG {
     return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }
 
   private componentDidMount = () => {
     this.container.setAttribute('touch-action', 'none');
 
-    this.store =
-      this.application.current &&
-      this.application.current.store.current &&
-      this.application.current.store.current.store;
-    if (this.store) {
-      this.store.subscribe(this.onDispatch);
-    }
+    setTimeout(() => {
+      if (this.store) {
+        this.store.subscribe(this.onDispatch);
+      }
+    });
   };
 
   private onDispatch = () => {
     if (!this.store) return;
-    const { elements, assessments } = this.store.getState();
-    const selection: Selection = {
-      elements: Object.keys(elements).filter(id => elements[id].selected && !('path' in elements[id])),
-      relationships: Object.keys(elements).filter(id => elements[id].selected && 'path' in elements[id]),
+    const { elements, selected, assessments } = this.store.getState();
+    const selection: Apollon.Selection = {
+      elements: selected.filter(id => elements[id].type in UMLElementType),
+      relationships: selected.filter(id => elements[id].type in UMLRelationshipType),
     };
 
     if (JSON.stringify(this.selection) !== JSON.stringify(selection)) {
@@ -151,9 +164,9 @@ export class ApollonEditor {
       this.selection = selection;
     }
 
-    const umlAssessments = Object.keys(assessments).map<Assessment>(id => ({
+    const umlAssessments = Object.keys(assessments).map<Apollon.Assessment>(id => ({
       modelElementId: id,
-      elementType: elements[id].type,
+      elementType: elements[id].type as Apollon.UMLElementType | Apollon.UMLRelationshipType,
       score: assessments[id].score,
       feedback: assessments[id].feedback,
     }));
@@ -163,4 +176,10 @@ export class ApollonEditor {
       this.assessments = umlAssessments;
     }
   };
+
+  private get store(): Store<ModelState, Actions> | null {
+    return (
+      this.application.current && this.application.current.store.current && this.application.current.store.current.state
+    );
+  }
 }

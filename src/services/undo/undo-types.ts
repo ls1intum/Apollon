@@ -1,4 +1,4 @@
-import { Action } from 'redux';
+import { Action } from '../../utils/actions/actions';
 
 export const enum UndoActionTypes {
   UNDO = '@@undo/UNDO',
@@ -7,5 +7,5 @@ export const enum UndoActionTypes {
 
 export type UndoActions = UndoAction | RedoAction;
 
-export interface UndoAction extends Action<UndoActionTypes.UNDO> {}
-export interface RedoAction extends Action<UndoActionTypes.REDO> {}
+export type UndoAction = Action<UndoActionTypes.UNDO>;
+export type RedoAction = Action<UndoActionTypes.REDO>;

@@ -7,7 +7,7 @@ export const update: update = <T extends object>(target: T, source: DeepPartial<
 
   for (let [key, value] of Object.entries(source)) {
     if (value instanceof Object) {
-      value = update((clone as any)[key], value);
+      value = update((clone as any)[key], value as any);
     }
     clone = { ...clone, [key]: value };
   }

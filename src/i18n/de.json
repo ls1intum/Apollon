@@ -26,6 +26,7 @@
   },
   "packages": {
     "classDiagram": {
+      "package": "Paket",
       "class": "Klasse",
       "abstract": "Abstrakt",
       "interface": "Schnittstelle",

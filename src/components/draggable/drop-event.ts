@@ -1,13 +1,6 @@
-import { Element } from '../../services/element/element';
-import { Draggable } from './draggable';
+import { Point } from '../../utils/geometry/point';
 
-export interface DropAction {
-  type: 'CREATE';
-  element: Element;
-}
-
-export interface DropEvent {
-  element: Draggable;
-  position: { x: number; y: number };
-  action: DropAction | null;
-}
+export type DropEvent = {
+  owner?: string;
+  position: Point;
+};

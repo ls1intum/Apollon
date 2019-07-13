@@ -1,18 +1,17 @@
 import { createElement } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { Components } from '../../packages/components';
-import { Element } from '../../services/element/element';
-import { Relationship } from '../../services/relationship/relationship';
+import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { Point } from './point';
 
-export interface Boundary {
+export interface IBoundary {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-export function computeBoundingBox(points: Point[]): Boundary {
+export function computeBoundingBox(points: Point[]): IBoundary {
   if (points.length === 0) {
     return { x: 0, y: 0, width: 0, height: 0 };
   }
@@ -41,11 +40,11 @@ export function computeBoundingBox(points: Point[]): Boundary {
   };
 }
 
-export function computeBoundingBoxForElements(elements: Element[]): Boundary {
+export function computeBoundingBoxForElements(elements: Array<{ bounds: IBoundary }>): IBoundary {
   if (!elements.length) {
     return { x: 0, y: 0, width: 0, height: 0 };
   }
-  const boundaries: Boundary[] = elements.map<Boundary>(element => ({ ...element.bounds }));
+  const boundaries: IBoundary[] = elements.map<IBoundary>(element => ({ ...element.bounds }));
   const x = Math.min(...boundaries.map(bounds => bounds.x));
   const y = Math.min(...boundaries.map(bounds => bounds.y));
   const width = Math.max(...boundaries.map(bounds => bounds.x + bounds.width)) - x;
@@ -53,29 +52,22 @@ export function computeBoundingBoxForElements(elements: Element[]): Boundary {
   return { x, y, width, height };
 }
 
-export async function computeBoundingBoxForRelationship(relationship: Relationship): Promise<Boundary> {
+export function computeBoundingBoxForRelationship(container: SVGSVGElement, relationship: UMLRelationship): IBoundary {
   const Component = Components[relationship.type];
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('x', `${relationship.bounds.x}`);
+  svg.setAttribute('y', `${relationship.bounds.y}`);
   svg.style.visibility = 'none';
-  const container = document.getElementsByClassName('apollon-editor')[0];
   container.appendChild(svg);
   const element = createElement(Component, { element: relationship });
-  return new Promise((resolve, reject) => {
-    render(element, svg, () => {
-      let bounds: Boundary = { x: 0, y: 0, width: 0, height: 0 };
-      if (svg.firstElementChild) {
-        const parent = svg.getBoundingClientRect() as DOMRect;
-        const child = svg.firstElementChild.getBoundingClientRect() as DOMRect;
-        bounds = {
-          x: child.left - parent.left,
-          y: child.top - parent.top,
-          width: Math.max(child.width, 1),
-          height: Math.max(child.height, 1),
-        };
-      }
-      unmountComponentAtNode(svg);
-      container.removeChild(svg);
-      resolve(bounds);
-    });
-  });
+  render(element, svg);
+
+  const parent = container.getBoundingClientRect() as DOMRect;
+  const child = svg.getBoundingClientRect() as DOMRect;
+  const bounds = { x: child.left - parent.left, y: child.top - parent.top, width: child.width, height: child.height };
+
+  unmountComponentAtNode(svg);
+  container.removeChild(svg);
+
+  return bounds;
 }

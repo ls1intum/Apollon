@@ -1,67 +1,133 @@
-import { Component, ComponentClass } from 'react';
+import { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { ElementRepository } from '../../services/element/element-repository';
+import { CopyRepository } from '../../services/copypaste/copy-repository';
+import { ApollonMode } from '../../services/editor/editor-types';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UndoRepository } from '../../services/undo/undo-repository';
-import { ApollonMode } from '../../typings';
-import { PopupLayerComponent } from '../popup/popup-layer';
+import { AsyncDispatch } from '../../utils/actions/actions';
 import { ModelState } from '../store/model-state';
-import { CanvasContext, withCanvas } from './canvas-context';
+import { CanvasContext } from './canvas-context';
+import { withCanvas } from './with-canvas';
+
+type OwnProps = {};
+
+type StateProps = {
+  readonly: boolean;
+  mode: ApollonMode;
+};
+
+type DispatchProps = {
+  undo: typeof UndoRepository.undo;
+  redo: typeof UndoRepository.redo;
+  copy: typeof CopyRepository.copy;
+  paste: typeof CopyRepository.paste;
+  select: AsyncDispatch<typeof UMLElementRepository.select>;
+  deselect: AsyncDispatch<typeof UMLElementRepository.deselect>;
+  startMoving: AsyncDispatch<typeof UMLElementRepository.startMoving>;
+  move: AsyncDispatch<typeof UMLElementRepository.move>;
+  endMoving: AsyncDispatch<typeof UMLElementRepository.endMoving>;
+  delete: AsyncDispatch<typeof UMLElementRepository.delete>;
+};
+
+type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
+
+const enhance = compose<ComponentType<OwnProps>>(
+  withCanvas,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    state => ({
+      readonly: state.editor.readonly,
+      mode: state.editor.mode,
+    }),
+    {
+      undo: UndoRepository.undo,
+      redo: UndoRepository.redo,
+      copy: CopyRepository.copy,
+      paste: CopyRepository.paste,
+      select: UMLElementRepository.select,
+      deselect: UMLElementRepository.deselect,
+      startMoving: UMLElementRepository.startMoving,
+      move: UMLElementRepository.move,
+      endMoving: UMLElementRepository.endMoving,
+      delete: UMLElementRepository.delete,
+    },
+  ),
+);
 
 class KeyboardEventListenerComponent extends Component<Props> {
   componentDidMount() {
-    this.props.canvas.addEventListener('keydown', this.eventListener);
-  }
-
-  componentWillUnmount() {
-    this.props.canvas.removeEventListener('keydown', this.eventListener);
+    const { layer } = this.props.canvas;
+    if (!this.props.readonly && this.props.mode !== ApollonMode.Assessment) {
+      layer.addEventListener('keydown', this.keyDown);
+      layer.addEventListener('keyup', this.keyUp);
+    }
+    layer.addEventListener('pointerdown', this.pointerDown);
   }
 
   render() {
     return null;
   }
-  private eventListener = (event: KeyboardEvent) => {
-    if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return;
 
-    if (this.props.popup.current && this.props.popup.current.state.element) return;
+  private pointerDown = (event: PointerEvent) => {
+    if (event.target !== event.currentTarget || event.shiftKey) {
+      return;
+    }
+    this.props.deselect();
+  };
 
+  private keyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case 'ArrowUp':
         event.preventDefault();
-        this.props.move(null, { x: 0, y: -10 });
+        if (!event.repeat) {
+          this.props.startMoving();
+        }
+        this.props.move({ x: 0, y: -10 });
         break;
       case 'ArrowRight':
         event.preventDefault();
-        this.props.move(null, { x: 10, y: 0 });
+        if (!event.repeat) {
+          this.props.startMoving();
+        }
+        this.props.move({ x: 10, y: 0 });
         break;
       case 'ArrowDown':
         event.preventDefault();
-        this.props.move(null, { x: 0, y: 10 });
+        if (!event.repeat) {
+          this.props.startMoving();
+        }
+        this.props.move({ x: 0, y: 10 });
         break;
       case 'ArrowLeft':
         event.preventDefault();
-        this.props.move(null, { x: -10, y: 0 });
+        if (!event.repeat) {
+          this.props.startMoving();
+        }
+        this.props.move({ x: -10, y: 0 });
         break;
       case 'Backspace':
       case 'Delete':
         event.preventDefault();
-        this.props.delete(null);
+        this.props.delete();
         break;
       case 'Escape':
         event.preventDefault();
-        this.props.select(null);
+        this.props.deselect();
         break;
     }
-
     if (event.metaKey) {
       switch (event.key) {
         case 'a':
           event.preventDefault();
-          this.props.elements.forEach(id => this.props.select(id, false, true));
+          this.props.select();
           break;
-        case 'd':
+        case 'c':
           event.preventDefault();
-          this.props.selection.forEach(child => this.props.duplicate(child));
+          this.props.copy();
+          break;
+        case 'v':
+          event.preventDefault();
+          this.props.paste();
           break;
         case 'z':
           event.preventDefault();
@@ -70,50 +136,17 @@ class KeyboardEventListenerComponent extends Component<Props> {
       }
     }
   };
+
+  private keyUp = (event: KeyboardEvent) => {
+    switch (event.key) {
+      case 'ArrowUp':
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case 'ArrowLeft':
+        this.props.endMoving(undefined, true);
+        break;
+    }
+  };
 }
-
-interface OwnProps {
-  popup: React.RefObject<PopupLayerComponent>;
-}
-
-interface StateProps {
-  elements: string[];
-  selection: string[];
-  readonly: boolean;
-  mode: ApollonMode;
-}
-
-interface DispatchProps {
-  duplicate: typeof ElementRepository.duplicate;
-  select: typeof ElementRepository.select;
-  move: typeof ElementRepository.move;
-  delete: typeof ElementRepository.delete;
-  undo: typeof UndoRepository.undo;
-  redo: typeof UndoRepository.redo;
-}
-
-type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
-
-const enhance = compose<ComponentClass<OwnProps>>(
-  withCanvas,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({
-      elements: Object.keys(state.elements),
-      selection: Object.values(state.elements)
-        .filter(element => element.selected)
-        .map(element => element.id),
-      readonly: state.editor.readonly,
-      mode: state.editor.mode,
-    }),
-    {
-      duplicate: ElementRepository.duplicate,
-      select: ElementRepository.select,
-      move: ElementRepository.move,
-      delete: ElementRepository.delete,
-      undo: UndoRepository.undo,
-      redo: UndoRepository.redo,
-    },
-  ),
-);
 
 export const KeyboardEventListener = enhance(KeyboardEventListenerComponent);

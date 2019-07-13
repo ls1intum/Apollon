@@ -1,4 +1,9 @@
-export class Point {
+export interface IPoint {
+  x: number;
+  y: number;
+}
+
+export class Point implements IPoint {
   constructor(public x: number = 0, public y: number = 0) {}
 
   get length(): number {
@@ -31,6 +36,10 @@ export class Point {
       return new Point(this.x - x, this.y - y);
     }
     return this.clone();
+  }
+
+  round(radix: number = 10): Point {
+    return new Point(Math.round(this.x / radix) * radix, Math.round(this.y / radix) * radix);
   }
 
   scale(factor: number) {

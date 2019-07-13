@@ -4,12 +4,15 @@ import { Arrow, PopoverBody, PopoverContainer } from './popover-styles';
 export type Props = {
   children?: ReactNode;
   placement?: 'top' | 'right' | 'bottom' | 'left';
+  alignment?: 'start' | 'center' | 'end';
   position: { x: number; y: number };
 } & HTMLAttributes<HTMLDivElement>;
 
-export const Popover = forwardRef<HTMLDivElement, Props>(({ children, placement = 'right', ...props }, ref) => (
-  <PopoverContainer ref={ref} placement={placement} {...props}>
-    <Arrow placement={placement} />
-    <PopoverBody>{children}</PopoverBody>
-  </PopoverContainer>
-));
+export const Popover = forwardRef<HTMLDivElement, Props>(
+  ({ children, placement = 'right', alignment = 'center', ...props }, ref) => (
+    <PopoverContainer ref={ref} placement={placement} alignment={alignment} {...props}>
+      <Arrow placement={placement} alignment={alignment} />
+      <PopoverBody>{children}</PopoverBody>
+    </PopoverContainer>
+  ),
+);

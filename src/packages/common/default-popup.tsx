@@ -5,8 +5,9 @@ import { TrashIcon } from '../../components/controls/icon/trash';
 import { Textfield } from '../../components/controls/textfield/textfield';
 import { ModelState } from '../../components/store/model-state';
 import { styled } from '../../components/theme/styles';
-import { Element } from '../../services/element/element';
-import { ElementRepository } from '../../services/element/element-repository';
+import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
 
 const Flex = styled.div`
   display: flex;
@@ -31,21 +32,21 @@ class DefaultPopupComponent extends Component<Props> {
       </div>
     );
   }
-  private onUpdate = (value: string) => {
-    const { element, rename } = this.props;
-    rename(element.id, value);
+  private onUpdate = (name: string) => {
+    const { element, update } = this.props;
+    update(element.id, { name });
   };
 }
 
 type OwnProps = {
-  element: Element;
+  element: UMLElement;
 };
 
 type StateProps = {};
 
 type DispatchProps = {
-  rename: typeof ElementRepository.rename;
-  delete: typeof ElementRepository.delete;
+  update: typeof UMLElementRepository.update;
+  delete: AsyncDispatch<typeof UMLElementRepository.delete>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps;
@@ -53,8 +54,8 @@ type Props = OwnProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   null,
   {
-    rename: ElementRepository.rename,
-    delete: ElementRepository.delete,
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
   },
 );
 

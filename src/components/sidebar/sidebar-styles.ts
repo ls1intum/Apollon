@@ -9,8 +9,10 @@ export const Container = styled.aside`
   overflow: auto;
   display: flex;
   flex-direction: column;
-`;
 
-export const Preview = styled.div`
-  margin: 0.5em 0;
+  svg {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
 `;

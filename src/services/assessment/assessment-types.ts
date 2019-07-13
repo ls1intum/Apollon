@@ -1,4 +1,4 @@
-import { Action } from 'redux';
+import { Action } from '../../utils/actions/actions';
 import { IAssessment } from './assessment';
 
 export const enum AssessmentActionTypes {

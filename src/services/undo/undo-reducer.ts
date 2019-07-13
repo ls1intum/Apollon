@@ -1,10 +1,13 @@
-import { Action, AnyAction, Reducer } from 'redux';
-import { MoveAction, ResizeAction } from '../element/element-types';
+import { Reducer } from 'redux';
+import { ModelState } from '../../components/store/model-state';
+import { Action } from '../../utils/actions/actions';
+import { isInternal } from '../../utils/actions/sagas';
+import { Actions } from '../actions';
 import { UndoActionTypes } from './undo-types';
 
 const MAX_UNDO_STACK_SIZE = 25;
 
-export const undoable = <S = any, T extends Action = AnyAction>(reducer: Reducer<S, T>): Reducer<S, T> => {
+export const undoable = <S = ModelState, T extends Action = Actions>(reducer: Reducer<S, T>): Reducer<S, T> => {
   type Screenshot = [S, T];
   const past = new Stack<Screenshot>(MAX_UNDO_STACK_SIZE);
   const future = new Stack<Screenshot>(MAX_UNDO_STACK_SIZE);
@@ -24,25 +27,7 @@ export const undoable = <S = any, T extends Action = AnyAction>(reducer: Reducer
         return next[0];
       }
       default:
-        let ignore =
-          !!(action as any)['@@redux-saga/SAGA_ACTION'] ||
-          action.type.includes('@@redux') ||
-          action.type.includes('HOVER') ||
-          action.type.includes('LEAVE') ||
-          action.type.includes('SELECT') ||
-          action.type.includes('CHANGE_OWNER');
-
-        const latest: Screenshot | null = past.latest;
-        if (latest && latest[1].type.includes('MOVE') && action.type.includes('MOVE')) {
-          const current = (action as any) as MoveAction;
-          const previous = (latest[1] as any) as MoveAction;
-          ignore = ignore || current.payload.id === previous.payload.id;
-        }
-        if (latest && latest[1].type.includes('RESIZE') && action.type.includes('RESIZE')) {
-          const current = (action as any) as ResizeAction;
-          const previous = (latest[1] as any) as ResizeAction;
-          ignore = ignore || current.payload.id === previous.payload.id;
-        }
+        const ignore = isInternal(action) || !action.undoable;
 
         if (!ignore) {
           future.clear();

@@ -1,5 +1,17 @@
-import { Action } from 'redux';
-import { ApollonMode } from '../../typings';
+
+import { Action } from '../../utils/actions/actions';
+import { UMLElementFeatures } from '../uml-element/uml-element-features';
+
+export enum Locale {
+  en = 'en',
+  de = 'de',
+}
+
+export enum ApollonMode {
+  Modelling = 'Modelling',
+  Exporting = 'Exporting',
+  Assessment = 'Assessment',
+}
 
 export const enum ApollonView {
   Modelling = 'Modelling',
@@ -11,7 +23,7 @@ export const enum EditorActionTypes {
   CHANGE_VIEW = '@@element/CHANGE_VIEW',
 }
 
-export type Actions = ChangeViewAction;
+export type EditorActions = ChangeViewAction;
 
 export interface ChangeViewAction extends Action<EditorActionTypes.CHANGE_VIEW> {
   payload: {
@@ -24,4 +36,5 @@ export interface EditorState {
   readonly readonly: boolean;
   readonly enablePopups: boolean;
   readonly view: ApollonView;
+  readonly features: UMLElementFeatures;
 }

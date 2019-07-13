@@ -1,4 +1,4 @@
-export enum DiagramType {
+export enum UMLDiagramType {
   ClassDiagram = 'ClassDiagram',
   ObjectDiagram = 'ObjectDiagram',
   ActivityDiagram = 'ActivityDiagram',

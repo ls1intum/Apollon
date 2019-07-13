@@ -26,6 +26,7 @@
   },
   "packages": {
     "classDiagram": {
+      "package": "Package",
       "class": "Class",
       "abstract": "Abstract",
       "interface": "Interface",

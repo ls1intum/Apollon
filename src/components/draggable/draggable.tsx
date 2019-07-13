@@ -1,36 +1,39 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
-import { Consumer, Context } from './context';
+import { DraggableContext } from './draggable-context';
 import { DropEvent } from './drop-event';
+import { withDraggable } from './with-draggable';
 
-export class Draggable extends React.Component<Props> {
-  context: Context | null = null;
+type Props = {
+  onDrop?: (event: DropEvent) => void;
+  children: React.ReactNode;
+} & DraggableContext;
 
-  onDrop = (event: DropEvent) => this.props.onDrop && this.props.onDrop(event);
+const enhance = withDraggable;
 
+class DraggableComponent extends Component<Props> {
   componentDidMount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.addEventListener('pointerdown', this.context!.onPointerDown(this));
+    node.addEventListener('pointerdown', this.onDragStart);
   }
 
   componentWillUnmount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.removeEventListener('pointerdown', this.context!.onPointerDown(this));
+    node.removeEventListener('pointerdown', this.onDragStart);
   }
 
   render() {
-    return (
-      <Consumer
-        children={context => {
-          this.context = context;
-          return context && this.props.children;
-        }}
-      />
-    );
+    return this.props.children;
   }
+
+  private onDragStart = async (event: PointerEvent) => {
+    try {
+      const dropEvent = await this.props.onDragStart(event);
+      if (this.props.onDrop) {
+        this.props.onDrop(dropEvent);
+      }
+    } catch (error) {}
+  };
 }
 
-interface Props {
-  children: React.ReactElement<any>;
-  onDrop?: (event: DropEvent) => void;
-}
+export const Draggable = enhance(DraggableComponent);

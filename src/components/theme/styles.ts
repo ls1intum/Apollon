@@ -1,9 +1,12 @@
 import baseStyled, { css as baseCss, ThemedCssFunction, ThemedStyledInterface } from 'styled-components';
+export { withTheme } from 'styled-components';
 
 export type Styles = typeof defaults;
 
 export const styled = baseStyled as ThemedStyledInterface<Styles>;
 export const css = baseCss as ThemedCssFunction<Styles>;
+
+export type withThemeProps = { theme: Styles };
 
 export type Color = 'primary' | 'secondary';
 export type Size = 'sm' | 'md' | 'lg';
@@ -28,5 +31,9 @@ export const defaults = {
     color: '#212529',
     family: 'Helvetica Neue, Helvetica, Arial, sans-serif',
     size: 16,
+  },
+  interactive: {
+    normal: 'rgba(0, 220, 0, 0.3)',
+    hovered: 'rgba(0, 220, 0, 0.15)',
   },
 };
