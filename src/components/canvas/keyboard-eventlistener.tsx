@@ -115,7 +115,7 @@ class KeyboardEventListenerComponent extends Component<Props> {
         this.props.deselect();
         break;
     }
-    if (event.metaKey) {
+    if (event.metaKey || event.ctrlKey) {
       switch (event.key) {
         case 'a':
           event.preventDefault();
