@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { IUMLElement } from '../../services/uml-element/uml-element';
 import { Direction, IUMLElementPort } from '../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
-import { Point } from '../../utils/geometry/point';
+import { IPoint, Point } from '../../utils/geometry/point';
 import { ModelState } from '../store/model-state';
 
 type OwnProps = {
@@ -13,7 +12,7 @@ type OwnProps = {
 };
 
 type StateProps = {
-  element: IUMLElement;
+  ports: { [key in Direction]: Point };
 };
 
 type DispatchProps = {
@@ -25,7 +24,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state, props) => ({
-    element: state.elements[props.port.element],
+    ports: UMLElementRepository.get(state.elements[props.port.element])!.ports(),
   }),
   {
     end: UMLElementRepository.endConnecting,
@@ -37,25 +36,10 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 class RelationshipPreview extends Component<Props> {
   render() {
-    const { element, port } = this.props;
-    if (!element) {
-      return null;
-    }
+    const { port, ports } = this.props;
 
-    const { x, y } = this.props.getAbsolutePosition(element.id);
-    const { width, height } = element.bounds;
-    const position = {
-      ...(port.direction === Direction.Left
-        ? { x: 0 }
-        : port.direction === Direction.Right
-        ? { x: width }
-        : { x: width / 2 }),
-      ...(port.direction === Direction.Up
-        ? { y: 0 }
-        : port.direction === Direction.Down
-        ? { y: height }
-        : { y: height / 2 }),
-    };
+    const { x, y }: IPoint = this.props.getAbsolutePosition(port.element);
+    const position: IPoint = { ...ports[port.direction] };
 
     const source = new Point(x + position.x, y + position.y);
     const path = [source, this.props.target];

@@ -4,6 +4,7 @@ import { Direction } from '../../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
+import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
 import { UMLElementComponentProps } from '../uml-element-component-props';
@@ -13,6 +14,7 @@ type StateProps = {
   selected: boolean;
   connecting: boolean;
   reconnecting: boolean;
+  ports: { [key in Direction]: Point };
 };
 
 type DispatchProps = {
@@ -29,6 +31,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
     selected: state.selected.includes(props.id),
     connecting: !!state.connecting.length,
     reconnecting: !!Object.keys(state.reconnecting).length,
+    ports: UMLElementRepository.get(state.elements[props.id])!.ports(),
   }),
   {
     start: UMLElementRepository.startConnecting,
@@ -41,28 +44,14 @@ const Handle = styled(props => (
   <svg {...props}>
     <path d="M -20 0 A 10 10 0 0 1 20 0" />
   </svg>
-)).attrs<{ direction: Direction }>(props => {
-  const options = {
-    ...(props.direction === Direction.Left
-      ? { x: 0, rotate: -90 }
-      : props.direction === Direction.Right
-      ? { x: 100, rotate: 90 }
-      : { x: 50, rotate: 0 }),
-    ...(props.direction === Direction.Up
-      ? { y: 0, rotate: 0 }
-      : props.direction === Direction.Down
-      ? { y: 100, rotate: 180 }
-      : { y: 50 }),
-  };
-
-  return {
-    fill: '#0064ff',
-    fillOpacity: 0.2,
-    x: `${options.x}%`,
-    y: `${options.y}%`,
-    rotate: options.rotate,
-  };
-})<{ rotate: number }>`
+)).attrs<{ direction: Direction; ports: { [key in Direction]: Point } }>(({ direction, ports }) => ({
+  fill: '#0064ff',
+  fillOpacity: 0.2,
+  x: `${ports[direction].x}px`,
+  y: `${ports[direction].y}px`,
+  rotate:
+    direction === Direction.Up ? 0 : direction === Direction.Right ? 90 : direction === Direction.Down ? 180 : -90,
+}))<{ rotate: number }>`
   cursor: crosshair;
   pointer-events: all;
 
@@ -76,16 +65,36 @@ export const connectable = (
 ): ComponentClass<UMLElementComponentProps> => {
   class Connectable extends Component<Props> {
     render() {
-      const { hovered, selected, connecting, reconnecting, start, connect: _, reconnect, ...props } = this.props;
+      const { hovered, selected, connecting, reconnecting, ports, start, connect: _, reconnect, ...props } = this.props;
       return (
         <WrappedComponent {...props}>
           {props.children}
           {(hovered || selected || connecting || reconnecting) && (
             <>
-              <Handle direction={Direction.Up} onPointerDown={this.onPointerDown} onPointerUp={this.onPointerUp} />
-              <Handle direction={Direction.Right} onPointerDown={this.onPointerDown} onPointerUp={this.onPointerUp} />
-              <Handle direction={Direction.Down} onPointerDown={this.onPointerDown} onPointerUp={this.onPointerUp} />
-              <Handle direction={Direction.Left} onPointerDown={this.onPointerDown} onPointerUp={this.onPointerUp} />
+              <Handle
+                ports={ports}
+                direction={Direction.Up}
+                onPointerDown={this.onPointerDown}
+                onPointerUp={this.onPointerUp}
+              />
+              <Handle
+                ports={ports}
+                direction={Direction.Right}
+                onPointerDown={this.onPointerDown}
+                onPointerUp={this.onPointerUp}
+              />
+              <Handle
+                ports={ports}
+                direction={Direction.Down}
+                onPointerDown={this.onPointerDown}
+                onPointerUp={this.onPointerUp}
+              />
+              <Handle
+                ports={ports}
+                direction={Direction.Left}
+                onPointerDown={this.onPointerDown}
+                onPointerUp={this.onPointerUp}
+              />
             </>
           )}
         </WrappedComponent>
