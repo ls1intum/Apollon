@@ -3,7 +3,6 @@ import { all, call, getContext, put, select, take } from 'redux-saga/effects';
 import { ModelState } from '../../components/store/model-state';
 import { run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
-import { IBoundary } from '../../utils/geometry/boundary';
 import { ILayer } from '../layouter/layer';
 import { RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
 import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
@@ -112,11 +111,17 @@ export function* recalc(id: string): SagaIterator {
     return;
   }
 
+  const source = UMLElementRepository.get(elements[relationship.source.element]);
+  const target = UMLElementRepository.get(elements[relationship.target.element]);
+  if (!source || !target) {
+    return;
+  }
+
   const sourcePosition = yield put(UMLElementRepository.getAbsolutePosition(relationship.source.element));
-  const source: IBoundary = { ...elements[relationship.source.element].bounds, ...sourcePosition };
+  source.bounds = { ...source.bounds, ...sourcePosition };
 
   const targetPosition = yield put(UMLElementRepository.getAbsolutePosition(relationship.target.element));
-  const target: IBoundary = { ...elements[relationship.target.element].bounds, ...targetPosition };
+  target.bounds = { ...target.bounds, ...targetPosition };
 
   const original = elements[id];
   const [updates] = relationship.render(layer, source, target) as UMLRelationship[];

@@ -5,10 +5,12 @@ import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import * as Apollon from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { IBoundary } from '../../utils/geometry/boundary';
+import { IPoint, Point } from '../../utils/geometry/point';
 import { uuid } from '../../utils/uuid';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { UMLElementFeatures } from './uml-element-features';
+import { Direction } from './uml-element-port';
 
 /** Interface of a `UMLElement` defining the properties persisted in the internal storage */
 export interface IUMLElement {
@@ -86,6 +88,16 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     this.owner = values.owner || null;
     this.bounds = { ...values.bounds };
     this.highlight = values.highlight;
+  }
+
+  /** Calculate the position of each port for the element. */
+  ports(): { [key in Direction]: Point } {
+    return {
+      [Direction.Up]: new Point(this.bounds.width / 2, 0),
+      [Direction.Right]: new Point(this.bounds.width, this.bounds.height / 2),
+      [Direction.Down]: new Point(this.bounds.width / 2, this.bounds.height),
+      [Direction.Left]: new Point(0, this.bounds.height / 2),
+    };
   }
 
   abstract render(canvas: ILayer): ILayoutable[];

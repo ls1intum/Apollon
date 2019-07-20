@@ -2,7 +2,6 @@ import { DeepPartial } from 'redux';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import * as Apollon from '../../typings';
 import { assign } from '../../utils/fx/assign';
-import { IBoundary } from '../../utils/geometry/boundary';
 import { IPath } from '../../utils/geometry/path';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
@@ -75,15 +74,15 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     this.target = values.target;
   }
 
-  render(canvas: ILayer, source?: IBoundary, target?: IBoundary): ILayoutable[] {
+  render(canvas: ILayer, source?: UMLElement, target?: UMLElement): ILayoutable[] {
     if (!source || !target) {
       return [this];
     }
 
     const { straight, variable } = (this.constructor as typeof UMLRelationship).features;
     const path = Connection.computePath(
-      { bounds: source, direction: this.source.direction },
-      { bounds: target, direction: this.target.direction },
+      { element: source, direction: this.source.direction },
+      { element: target, direction: this.target.direction },
       { isStraight: straight, isVariable: variable },
     );
 

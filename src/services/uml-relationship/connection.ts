@@ -1,5 +1,6 @@
 import { IBoundary } from '../../utils/geometry/boundary';
-import { position } from '../../utils/geometry/rect';
+import { IPoint, Point } from '../../utils/geometry/point';
+import { UMLElement } from '../uml-element/uml-element';
 import { Direction, IUMLElementPort } from '../uml-element/uml-element-port';
 
 export interface Connection {
@@ -8,7 +9,7 @@ export interface Connection {
 }
 
 interface Endpoint {
-  bounds: IBoundary;
+  element: UMLElement;
   direction: Direction;
 }
 
@@ -16,11 +17,6 @@ const enum Orientation {
   Collinear,
   Clockwise,
   CounterClockwise,
-}
-
-interface Point {
-  x: number;
-  y: number;
 }
 
 interface Delta {
@@ -37,18 +33,24 @@ export class Connection {
     source: Endpoint,
     target: Endpoint,
     options: { isStraight: boolean; isVariable: boolean },
-  ): Point[] {
-    const startPointOnInnerEdge: Point = position(source.bounds, source.direction).point;
-    const endPointOnInnerEdge: Point = position(target.bounds, target.direction).point;
+  ): IPoint[] {
+    const sourcePortPosition = source.element.ports()[source.direction].add(
+      source.element.bounds.x,
+      source.element.bounds.y,
+    );
+    const targetPortPosition = target.element.ports()[target.direction].add(
+      target.element.bounds.x,
+      target.element.bounds.y,
+    );
 
     // If the user forced this relationship path to be a straight line,
     // directly connect the start and end points, even if that results in an angled line
     if (options.isStraight) {
-      if (startPointOnInnerEdge.x === endPointOnInnerEdge.x && startPointOnInnerEdge.y === endPointOnInnerEdge.y) {
-        endPointOnInnerEdge.x += 1;
-        endPointOnInnerEdge.y += 1;
+      if (sourcePortPosition.x === targetPortPosition.x && sourcePortPosition.y === targetPortPosition.y) {
+        targetPortPosition.x += 1;
+        targetPortPosition.y += 1;
       }
-      return [startPointOnInnerEdge, endPointOnInnerEdge];
+      return [sourcePortPosition, targetPortPosition];
     }
 
     if (options.isVariable) {
@@ -70,17 +72,45 @@ export class Connection {
 
     // Compute an enlarged version of the source and target rectangles,
     // taking into account the entity margin
-    const sourceMarginRect = enlargeRect(source.bounds, ENTITY_MARGIN);
-    const targetMarginRect = enlargeRect(target.bounds, ENTITY_MARGIN);
+    const sourceMarginRect = enlargeRect(source.element.bounds, ENTITY_MARGIN);
+    const targetMarginRect = enlargeRect(target.element.bounds, ENTITY_MARGIN);
 
     // Do the same computation again, subtracting 1 from the margin so as
     // to allow for path segments to be placed on the outline of the margin rectangle
-    const sourceMarginRect1px = enlargeRect(source.bounds, ENTITY_MARGIN - 1);
-    const targetMarginRect1px = enlargeRect(target.bounds, ENTITY_MARGIN - 1);
+    const sourceMarginRect1px = enlargeRect(source.element.bounds, ENTITY_MARGIN - 1);
+    const targetMarginRect1px = enlargeRect(target.element.bounds, ENTITY_MARGIN - 1);
 
     // Calculate the exact position of the start and end points on their respective margin rectangle
-    const startPointOnMarginBox: Point = position(sourceMarginRect, source.direction).point;
-    const endPointOnMarginBox: Point = position(targetMarginRect, target.direction).point;
+    let startPointOnMarginBox: Point = sourcePortPosition.clone();
+    switch (source.direction) {
+      case Direction.Up:
+        startPointOnMarginBox = startPointOnMarginBox.add(0, -ENTITY_MARGIN);
+        break;
+      case Direction.Right:
+        startPointOnMarginBox = startPointOnMarginBox.add(ENTITY_MARGIN, 0);
+        break;
+      case Direction.Down:
+        startPointOnMarginBox = startPointOnMarginBox.add(0, ENTITY_MARGIN);
+        break;
+      case Direction.Left:
+        startPointOnMarginBox = startPointOnMarginBox.add(-ENTITY_MARGIN, 0);
+        break;
+    }
+    let endPointOnMarginBox: Point = targetPortPosition.clone();
+    switch (target.direction) {
+      case Direction.Up:
+        endPointOnMarginBox = endPointOnMarginBox.add(0, -ENTITY_MARGIN);
+        break;
+      case Direction.Right:
+        endPointOnMarginBox = endPointOnMarginBox.add(ENTITY_MARGIN, 0);
+        break;
+      case Direction.Down:
+        endPointOnMarginBox = endPointOnMarginBox.add(0, ENTITY_MARGIN);
+        break;
+      case Direction.Left:
+        endPointOnMarginBox = endPointOnMarginBox.add(-ENTITY_MARGIN, 0);
+        break;
+    }
 
     // Determine the source corner that's closest to the point
     // on the margin box of the target entity
@@ -110,8 +140,8 @@ export class Connection {
 
     // The relationship path can be partitioned into two segments:
     // a prefix from the start point and a suffix to the end point
-    const pathFromStart = [startPointOnInnerEdge, startPointOnMarginBox];
-    const pathFromEnd = [endPointOnInnerEdge, endPointOnMarginBox];
+    const pathFromStart: IPoint[] = [sourcePortPosition, startPointOnMarginBox];
+    const pathFromEnd: IPoint[] = [targetPortPosition, endPointOnMarginBox];
 
     // We build the relationship path up both from the start and the end
     let currentStartPoint = { ...startPointOnMarginBox };
@@ -126,7 +156,7 @@ export class Connection {
       // without intersecting either entity rectangle, we add one or two more points to the relationship path,
       // depending on the axes of the two start/end path segments and exit from the loop
       if (startAndEndPointCanBeConnected) {
-        type PathSegment = [Point, Point];
+        type PathSegment = [IPoint, IPoint];
         const currentStartAxis = getAxisForPathSegment(pathFromStart.slice(-2) as PathSegment);
         const currentEndAxis = getAxisForPathSegment(pathFromEnd.slice(-2) as PathSegment);
 
@@ -166,7 +196,7 @@ export class Connection {
           // still can't be connected with a straight line. This can happen if the two entities
           // are placed closely enough to each other that their margin rectangles intersect.
           // We return a simple (and usually angled) path in this case.
-          return [startPointOnInnerEdge, startPointOnMarginBox, endPointOnMarginBox, endPointOnInnerEdge];
+          return [sourcePortPosition, startPointOnMarginBox, endPointOnMarginBox, targetPortPosition];
         }
       }
     }
@@ -180,7 +210,7 @@ export class Connection {
     return beautifyPath(path);
   }
 
-  private static tryFindStraightPath(source: Endpoint, target: Endpoint): Point[] | null {
+  private static tryFindStraightPath(source: Endpoint, target: Endpoint): IPoint[] | null {
     const OVERLAP_THRESHOLD = 40;
 
     /*
@@ -191,17 +221,17 @@ export class Connection {
     if (
       source.direction === Direction.Right &&
       target.direction === Direction.Left &&
-      target.bounds.x >= source.bounds.x + source.bounds.width
+      target.element.bounds.x >= source.element.bounds.x + source.element.bounds.width
     ) {
       const overlapY = computeOverlap(
-        [source.bounds.y, source.bounds.y + Math.max(OVERLAP_THRESHOLD, source.bounds.height)],
-        [target.bounds.y, target.bounds.y + Math.max(OVERLAP_THRESHOLD, target.bounds.height)],
+        [source.element.bounds.y, source.element.bounds.y + Math.max(OVERLAP_THRESHOLD, source.element.bounds.height)],
+        [target.element.bounds.y, target.element.bounds.y + Math.max(OVERLAP_THRESHOLD, target.element.bounds.height)],
       );
 
       if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
         const middleY = (overlapY[0] + overlapY[1]) / 2;
-        const start: Point = { x: source.bounds.x + source.bounds.width, y: middleY };
-        const end: Point = { x: target.bounds.x, y: middleY };
+        const start: IPoint = { x: source.element.bounds.x + source.element.bounds.width, y: middleY };
+        const end: IPoint = { x: target.element.bounds.x, y: middleY };
         return [start, end];
       }
     }
@@ -214,17 +244,17 @@ export class Connection {
     if (
       source.direction === Direction.Left &&
       target.direction === Direction.Right &&
-      source.bounds.x >= target.bounds.x + target.bounds.width
+      source.element.bounds.x >= target.element.bounds.x + target.element.bounds.width
     ) {
       const overlapY = computeOverlap(
-        [source.bounds.y, source.bounds.y + Math.max(OVERLAP_THRESHOLD, source.bounds.height)],
-        [target.bounds.y, target.bounds.y + Math.max(OVERLAP_THRESHOLD, target.bounds.height)],
+        [source.element.bounds.y, source.element.bounds.y + Math.max(OVERLAP_THRESHOLD, source.element.bounds.height)],
+        [target.element.bounds.y, target.element.bounds.y + Math.max(OVERLAP_THRESHOLD, target.element.bounds.height)],
       );
 
       if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
         const middleY = (overlapY[0] + overlapY[1]) / 2;
-        const start: Point = { x: source.bounds.x, y: middleY };
-        const end: Point = { x: target.bounds.x + target.bounds.width, y: middleY };
+        const start: IPoint = { x: source.element.bounds.x, y: middleY };
+        const end: IPoint = { x: target.element.bounds.x + target.element.bounds.width, y: middleY };
         return [start, end];
       }
     }
@@ -243,17 +273,17 @@ export class Connection {
     if (
       source.direction === Direction.Down &&
       target.direction === Direction.Up &&
-      target.bounds.y >= source.bounds.y + source.bounds.height
+      target.element.bounds.y >= source.element.bounds.y + source.element.bounds.height
     ) {
       const overlapX = computeOverlap(
-        [source.bounds.x, source.bounds.x + source.bounds.width],
-        [target.bounds.x, target.bounds.x + target.bounds.width],
+        [source.element.bounds.x, source.element.bounds.x + source.element.bounds.width],
+        [target.element.bounds.x, target.element.bounds.x + target.element.bounds.width],
       );
 
       if (overlapX !== null && overlapX[1] - overlapX[0] >= OVERLAP_THRESHOLD) {
         const middleX = (overlapX[0] + overlapX[1]) / 2;
-        const start: Point = { x: middleX, y: source.bounds.y + source.bounds.height };
-        const end: Point = { x: middleX, y: target.bounds.y };
+        const start: IPoint = { x: middleX, y: source.element.bounds.y + source.element.bounds.height };
+        const end: IPoint = { x: middleX, y: target.element.bounds.y };
         return [start, end];
       }
     }
@@ -272,17 +302,17 @@ export class Connection {
     if (
       source.direction === Direction.Up &&
       target.direction === Direction.Down &&
-      source.bounds.y >= target.bounds.y + target.bounds.height
+      source.element.bounds.y >= target.element.bounds.y + target.element.bounds.height
     ) {
       const overlapX = computeOverlap(
-        [source.bounds.x, source.bounds.x + source.bounds.width],
-        [target.bounds.x, target.bounds.x + target.bounds.width],
+        [source.element.bounds.x, source.element.bounds.x + source.element.bounds.width],
+        [target.element.bounds.x, target.element.bounds.x + target.element.bounds.width],
       );
 
       if (overlapX !== null && overlapX[1] - overlapX[0] >= OVERLAP_THRESHOLD) {
         const middleX = (overlapX[0] + overlapX[1]) / 2;
-        const start: Point = { x: middleX, y: source.bounds.y };
-        const end: Point = { x: middleX, y: target.bounds.y + target.bounds.height };
+        const start: IPoint = { x: middleX, y: source.element.bounds.y };
+        const end: IPoint = { x: middleX, y: target.element.bounds.y + target.element.bounds.height };
         return [start, end];
       }
     }
@@ -291,7 +321,7 @@ export class Connection {
   }
 }
 
-function findClosestPoint(candidates: Point[], target: Point) {
+function findClosestPoint(candidates: IPoint[], target: IPoint) {
   let minDistance = Infinity;
   let closestPoint = candidates[0];
 
@@ -306,13 +336,13 @@ function findClosestPoint(candidates: Point[], target: Point) {
   return closestPoint;
 }
 
-function distanceBetweenPoints(p1: Point, p2: Point): number {
+function distanceBetweenPoints(p1: IPoint, p2: IPoint): number {
   const dx = Math.abs(p1.x - p2.x);
   const dy = Math.abs(p1.y - p2.y);
   return Math.sqrt(dx ** 2 + dy ** 2);
 }
 
-function computePathLength(path: Point[]): number {
+function computePathLength(path: IPoint[]): number {
   let pathLength = 0;
 
   for (let i = 1; i < path.length; i++) {
@@ -322,7 +352,7 @@ function computePathLength(path: Point[]): number {
   return pathLength;
 }
 
-function beautifyPath(path: Point[]): Point[] {
+function beautifyPath(path: IPoint[]): IPoint[] {
   if (path.length <= 1) {
     return path;
   }
@@ -335,8 +365,8 @@ function beautifyPath(path: Point[]): Point[] {
   return path;
 }
 
-function removeConsecutiveIdenticalPoints(path: Point[]): Point[] {
-  const newPath: Point[] = [];
+function removeConsecutiveIdenticalPoints(path: IPoint[]): IPoint[] {
+  const newPath: IPoint[] = [];
   for (const point of path) {
     const previousPoint = newPath[newPath.length - 1];
     if (!previousPoint || !pointsAreEqual(point, previousPoint)) {
@@ -346,7 +376,7 @@ function removeConsecutiveIdenticalPoints(path: Point[]): Point[] {
   return newPath;
 }
 
-function removeTransitNodes(path: Point[]): Point[] {
+function removeTransitNodes(path: IPoint[]): IPoint[] {
   for (let i = 0; i < path.length - 2; i++) {
     const p = path[i];
     const q = path[i + 1];
@@ -364,19 +394,19 @@ function removeTransitNodes(path: Point[]): Point[] {
   return path;
 }
 
-function isHorizontalLineSegment(p: Point, q: Point, r: Point) {
+function isHorizontalLineSegment(p: IPoint, q: IPoint, r: IPoint) {
   return (
     areAlmostEqual(p.y, q.y) && areAlmostEqual(q.y, r.y) && ((p.x >= q.x && q.x >= r.x) || (p.x <= q.x && q.x <= r.x))
   );
 }
 
-function isVerticalLineSegment(p: Point, q: Point, r: Point) {
+function isVerticalLineSegment(p: IPoint, q: IPoint, r: IPoint) {
   return (
     areAlmostEqual(p.x, q.x) && areAlmostEqual(q.x, r.x) && ((p.y <= q.y && q.y <= r.y) || (p.y >= q.y && q.y >= r.y))
   );
 }
 
-function mergeConsecutiveSameAxisDeltas(path: Point[]): Point[] {
+function mergeConsecutiveSameAxisDeltas(path: IPoint[]): IPoint[] {
   const deltas = computePathDeltas(path);
 
   if (deltas.length <= 1) {
@@ -403,7 +433,7 @@ function mergeConsecutiveSameAxisDeltas(path: Point[]): Point[] {
   return createPathFromDeltas(path[0], newDeltas);
 }
 
-function computePathDeltas(path: Point[]): Delta[] {
+function computePathDeltas(path: IPoint[]): Delta[] {
   const deltas: Delta[] = [];
 
   for (let i = 0; i < path.length - 1; i++) {
@@ -419,7 +449,7 @@ function computePathDeltas(path: Point[]): Delta[] {
   return deltas;
 }
 
-function createPathFromDeltas(start: Point, deltas: Delta[]): Point[] {
+function createPathFromDeltas(start: IPoint, deltas: Delta[]): IPoint[] {
   const points = [start];
   let current = start;
 
@@ -444,7 +474,7 @@ function createPathFromDeltas(start: Point, deltas: Delta[]): Point[] {
  *           |                     |
  *           0                     0
  */
-function flattenWaves(path: Point[]): Point[] {
+function flattenWaves(path: IPoint[]): IPoint[] {
   if (path.length < 4) {
     return path;
   }
@@ -506,14 +536,14 @@ function isAlmostZero(value: number) {
 function areAlmostEqual(a: number, b: number) {
   return isAlmostZero(a - b);
 }
-function pointsAreEqual(p: Point, q: Point) {
+function pointsAreEqual(p: IPoint, q: IPoint) {
   const dx = Math.abs(p.x - q.x);
   const dy = Math.abs(p.y - q.y);
 
   return isAlmostZero(dx) && isAlmostZero(dy);
 }
 
-function getCorners(rect: Rect): Point[] {
+function getCorners(rect: Rect): IPoint[] {
   return [getTopLeftCorner(rect), getTopRightCorner(rect), getBottomRightCorner(rect), getBottomLeftCorner(rect)];
 }
 
@@ -524,21 +554,21 @@ function getTopLeftCorner(rect: Rect) {
   };
 }
 
-function getTopRightCorner(rect: Rect): Point {
+function getTopRightCorner(rect: Rect): IPoint {
   return {
     x: rect.x + rect.width,
     y: rect.y,
   };
 }
 
-function getBottomLeftCorner(rect: Rect): Point {
+function getBottomLeftCorner(rect: Rect): IPoint {
   return {
     x: rect.x,
     y: rect.y + rect.height,
   };
 }
 
-function getBottomRightCorner(rect: Rect): Point {
+function getBottomRightCorner(rect: Rect): IPoint {
   return {
     x: rect.x + rect.width,
     y: rect.y + rect.height,
@@ -557,11 +587,11 @@ function enlargeRect(rect: Rect, padding: number): Rect {
 function determineCornerQueue(
   rect: Rect,
   edge: RectEdge,
-  pointOnOuterEdge: Point,
-  destinationCorner: Point | null,
-): Point[] {
-  let clockwiseCornerQueue: Point[];
-  let counterClockwiseCornerQueue: Point[];
+  pointOnOuterEdge: IPoint,
+  destinationCorner: IPoint | null,
+): IPoint[] {
+  let clockwiseCornerQueue: IPoint[];
+  let counterClockwiseCornerQueue: IPoint[];
 
   // Get all corners of the rectangle
   const tl = getTopLeftCorner(rect);
@@ -622,7 +652,7 @@ function determineCornerQueue(
   return clockwisePathLength < counterClockwisePathLength ? clockwiseCornerQueue : counterClockwiseCornerQueue;
 }
 
-function lineSegmentIntersectsRect(p: Point, q: Point, rect: Rect) {
+function lineSegmentIntersectsRect(p: IPoint, q: IPoint, rect: Rect) {
   if (lineSegmentLiesWithinRect(p, q, rect)) {
     return true;
   }
@@ -643,12 +673,12 @@ function lineSegmentIntersectsRect(p: Point, q: Point, rect: Rect) {
 /**
  * Determines whether the given line lies entirely within the given rectangle.
  */
-function lineSegmentLiesWithinRect(p: Point, q: Point, rect: Rect) {
+function lineSegmentLiesWithinRect(p: IPoint, q: IPoint, rect: Rect) {
   return p.x > rect.x && p.x < rect.x + rect.height && p.y > rect.y && p.y < rect.y + rect.height;
 }
 
 // Adapted from http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
-function lineSegmentsIntersect(p1: Point, q1: Point, p2: Point, q2: Point) {
+function lineSegmentsIntersect(p1: IPoint, q1: IPoint, p2: IPoint, q2: IPoint) {
   const o1 = getOrientation(p1, q1, p2);
   const o2 = getOrientation(p1, q1, q2);
   const o3 = getOrientation(p2, q2, p1);
@@ -684,7 +714,7 @@ function lineSegmentsIntersect(p1: Point, q1: Point, p2: Point, q2: Point) {
   return false;
 }
 
-function getOrientation(p: Point, q: Point, r: Point): Orientation {
+function getOrientation(p: IPoint, q: IPoint, r: IPoint): Orientation {
   const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
   if (isAlmostZero(val)) {
@@ -697,7 +727,7 @@ function getOrientation(p: Point, q: Point, r: Point): Orientation {
 /**
  * Given three collinear points p, q, r, checks if point q lies on line segment 'p-r'
  */
-function liesOnSegment(p: Point, q: Point, r: Point) {
+function liesOnSegment(p: IPoint, q: IPoint, r: IPoint) {
   return (
     q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y)
   );
@@ -713,7 +743,7 @@ function computeOverlap(range1: [number, number], range2: [number, number]): [nu
   return largerFrom <= smallerTo ? [largerFrom, smallerTo] : null;
 }
 
-function getAxisForPathSegment(pathSegment: [Point, Point]) {
+function getAxisForPathSegment(pathSegment: [IPoint, IPoint]) {
   // Determine dx and dy
   const [p, q] = pathSegment;
   const dx = q.x - p.x;
