@@ -45,7 +45,9 @@ class DraggableLayerComponent extends Component<Props, State> {
   };
 
   onPointerMove = (event: PointerEvent) => {
-    const position = this.props.canvas.snap(new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y));
+    const position = this.props.canvas.snap(
+      new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y),
+    );
     this.setState({ position });
   };
 
@@ -54,7 +56,7 @@ class DraggableLayerComponent extends Component<Props, State> {
 
     const dropEvent: DropEvent = {
       owner,
-      position: this.state.position.subtract(this.props.canvas.origin()),
+      position: this.state.position.subtract(this.props.canvas.origin()).subtract(window.scrollX, window.scrollY),
     };
 
     if (this.state.resolve) {
