@@ -62,9 +62,20 @@ class UnwrappedUpdatePane extends Component<Props> {
     }
 
     const absolute = this.props.getAbsolutePosition(element.id);
-    const position = this.props.canvas.origin().add(absolute);
-    const placement = absolute.x + element.bounds.width / 2 < 0 ? 'right' : 'left';
-    const alignment = absolute.y + element.bounds.height / 2 < 0 ? 'start' : 'end';
+    const position = this.props.canvas
+      .origin()
+      .add(absolute)
+      .add(window.scrollX, window.scrollY);
+
+    const canvas = this.props.canvas.layer.parentElement!.getBoundingClientRect();
+    const center = this.props.canvas
+      .origin()
+      .add(absolute)
+      .add(element.bounds.width / 2, element.bounds.height / 2)
+      .subtract(canvas.left, canvas.top);
+
+    const placement = center.x < canvas.width / 2 ? 'right' : 'left';
+    const alignment = center.y < canvas.height / 2 ? 'start' : 'end';
 
     if (placement === 'right') {
       position.x += element.bounds.width;
