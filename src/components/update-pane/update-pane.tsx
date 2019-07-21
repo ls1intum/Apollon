@@ -8,6 +8,7 @@ import { ApollonMode } from '../../services/editor/editor-types';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
+import { Point } from '../../utils/geometry/point';
 import { Assessment } from '../assessment/assessment';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
@@ -46,34 +47,36 @@ const enhance = compose<ComponentClass<OwnProps>>(
   ),
 );
 
-class UnwrappedUpdatePane extends Component<Props> {
+const initialState = Object.freeze({
+  position: null as { x: number; y: number } | null,
+  placement: undefined as 'top' | 'right' | 'bottom' | 'left' | undefined,
+  alignment: undefined as 'start' | 'center' | 'end' | undefined,
+});
+
+type State = typeof initialState;
+
+class UnwrappedUpdatePane extends Component<Props, State> {
+  state: Readonly<State> = initialState;
+
   popover: RefObject<HTMLDivElement> = createRef();
 
-  componentDidUpdate() {
-    if (this.props.element) {
-      setTimeout(this.listen, 0);
+  componentDidUpdate(prevProps: Readonly<Props>): void {
+    if (!prevProps.element && this.props.element) {
+      setTimeout(this.show, 0);
+    } else if (prevProps.element && this.props.element && prevProps.element !== this.props.element) {
+      this.position(this.props);
     }
   }
 
   render() {
     const { element, disabled, mode } = this.props;
-    if (!element || disabled) {
+    const { position, alignment, placement } = this.state;
+
+    if (!element || disabled || !position) {
       return null;
     }
 
-    const absolute = this.props.getAbsolutePosition(element.id);
-    const position = this.props.canvas.origin().add(absolute);
-    const placement = absolute.x + element.bounds.width / 2 < 0 ? 'right' : 'left';
-    const alignment = absolute.y + element.bounds.height / 2 < 0 ? 'start' : 'end';
-
-    if (placement === 'right') {
-      position.x += element.bounds.width;
-    }
-    if (alignment === 'end') {
-      position.y += element.bounds.height;
-    }
-
-    let CustomPopupComponent: ComponentType<{ element: any }> | null = null;
+    let CustomPopupComponent: ComponentType<{ element: IUMLElement }> | null = null;
     if (mode === ApollonMode.Assessment) {
       CustomPopupComponent = Assessment;
     } else {
@@ -84,36 +87,78 @@ class UnwrappedUpdatePane extends Component<Props> {
     }
 
     return createPortal(
-      <Popover
-        ref={this.popover}
-        position={{ x: position.x, y: position.y }}
-        placement={placement}
-        alignment={alignment}
-      >
+      <Popover ref={this.popover} position={position} placement={placement} alignment={alignment} maxHeight={500}>
         <CustomPopupComponent element={element} />
       </Popover>,
       document.body,
     );
   }
 
-  private dismiss = () => {
-    if (!this.props.element) {
-      return;
+  private show = (): void => {
+    this.position(this.props);
+    document.addEventListener('pointerdown', this.onPointerDown);
+
+    const { parentElement: canvas }: SVGSVGElement = this.props.canvas.layer;
+    if (canvas) {
+      canvas.addEventListener('scroll', this.onScroll);
+    }
+  };
+
+  private dismiss = (): void => {
+    this.setState(initialState);
+    document.removeEventListener('pointerdown', this.onPointerDown);
+
+    const { parentElement: canvas }: SVGSVGElement = this.props.canvas.layer;
+    if (canvas) {
+      canvas.removeEventListener('scroll', this.onScroll);
     }
 
-    this.props.updateEnd(this.props.element.id);
+    if (this.props.element) {
+      this.props.updateEnd(this.props.element.id);
+    }
   };
 
-  private listen = () => {
-    document.addEventListener('pointerdown', this.onPointerDown, { once: true });
+  private position = ({ element, canvas }: Readonly<Props>): void => {
+    const container: HTMLElement | null = canvas.layer.parentElement;
+
+    if (element && container) {
+      const absolute: Point = this.props.getAbsolutePosition(element.id);
+
+      const canvasBounds: ClientRect = container.getBoundingClientRect();
+      const elementCenter: Point = this.props.canvas
+        .origin()
+        .add(absolute)
+        .add(element.bounds.width / 2, element.bounds.height / 2)
+        .subtract(canvasBounds.left, canvasBounds.top);
+
+      const position = this.props.canvas
+        .origin()
+        .add(absolute)
+        .add(window.scrollX, window.scrollY);
+
+      const placement = elementCenter.x < canvasBounds.width / 2 ? 'right' : 'left';
+      const alignment = elementCenter.y < canvasBounds.height / 2 ? 'start' : 'end';
+
+      if (placement === 'right') {
+        position.x += element.bounds.width;
+      }
+      if (alignment === 'end') {
+        position.y += element.bounds.height;
+      }
+
+      this.setState({ position, alignment, placement });
+    }
   };
 
-  private onPointerDown = (event: PointerEvent) => {
+  private onPointerDown = (event: PointerEvent): void => {
     if (this.popover.current && event.target instanceof HTMLElement && this.popover.current.contains(event.target)) {
-      this.listen();
       return;
     }
 
+    this.dismiss();
+  };
+
+  private onScroll = (event: Event) => {
     this.dismiss();
   };
 }
