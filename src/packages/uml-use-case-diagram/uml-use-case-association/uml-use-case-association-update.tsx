@@ -86,7 +86,7 @@ class UseCaseAssociationUpdate extends Component<Props> {
     this.props.update(id, { name: value });
   };
 
-  private onChange = (type: UseCaseRelationshipType) => {
+  private onChange = (type: keyof typeof UseCaseRelationshipType) => {
     const { element, update } = this.props;
     update(element.id, { type });
   };

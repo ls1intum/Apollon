@@ -1,7 +1,8 @@
 import { Reducer } from 'redux';
-import { CopyActions, CopyActionTypes, CopyState } from './copy-types';
+import { Actions } from '../actions';
+import { CopyActionTypes, CopyState } from './copy-types';
 
-export const CopyReducer: Reducer<CopyState, CopyActions> = (state = [], action) => {
+export const CopyReducer: Reducer<CopyState, Actions> = (state = [], action) => {
   switch (action.type) {
     case CopyActionTypes.COPY: {
       const { payload } = action;

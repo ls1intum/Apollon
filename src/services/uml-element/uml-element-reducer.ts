@@ -1,7 +1,8 @@
 import { Reducer } from 'redux';
-import { UMLElementActions, UMLElementActionTypes, UMLElementState } from './uml-element-types';
+import { Actions } from '../actions';
+import { UMLElementActionTypes, UMLElementState } from './uml-element-types';
 
-export const UMLElementReducer: Reducer<UMLElementState, UMLElementActions> = (state = {}, action) => {
+export const UMLElementReducer: Reducer<UMLElementState, Actions> = (state = {}, action) => {
   switch (action.type) {
     case UMLElementActionTypes.CREATE: {
       const { payload } = action;

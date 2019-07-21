@@ -1,8 +1,9 @@
 import { Reducer } from 'redux';
-import { DeleteAction, UMLElementActionTypes } from '../uml-element-types';
-import { HoverableActions, HoverableActionTypes, HoverableState } from './hoverable-types';
+import { Actions } from '../../actions';
+import { UMLElementActionTypes } from '../uml-element-types';
+import { HoverableActionTypes, HoverableState } from './hoverable-types';
 
-export const HoverableReducer: Reducer<HoverableState, HoverableActions | DeleteAction> = (state = [], action) => {
+export const HoverableReducer: Reducer<HoverableState, Actions> = (state = [], action) => {
   switch (action.type) {
     case HoverableActionTypes.HOVER: {
       const { payload } = action;

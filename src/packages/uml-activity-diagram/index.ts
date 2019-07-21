@@ -1,13 +1,13 @@
-export enum ActivityElementType {
-  Activity = 'Activity',
-  ActivityActionNode = 'ActivityActionNode',
-  ActivityFinalNode = 'ActivityFinalNode',
-  ActivityForkNode = 'ActivityForkNode',
-  ActivityInitialNode = 'ActivityInitialNode',
-  ActivityMergeNode = 'ActivityMergeNode',
-  ActivityObjectNode = 'ActivityObjectNode',
-}
+export const ActivityElementType = {
+  Activity: 'Activity',
+  ActivityActionNode: 'ActivityActionNode',
+  ActivityFinalNode: 'ActivityFinalNode',
+  ActivityForkNode: 'ActivityForkNode',
+  ActivityInitialNode: 'ActivityInitialNode',
+  ActivityMergeNode: 'ActivityMergeNode',
+  ActivityObjectNode: 'ActivityObjectNode',
+} as const;
 
-export enum ActivityRelationshipType {
-  ActivityControlFlow = 'ActivityControlFlow',
-}
+export const ActivityRelationshipType = {
+  ActivityControlFlow: 'ActivityControlFlow',
+} as const;

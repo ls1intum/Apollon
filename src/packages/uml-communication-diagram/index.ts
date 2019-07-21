@@ -1,3 +1,3 @@
-export enum CommunicationRelationshipType {
-  CommunicationLink = 'CommunicationLink',
-}
+export const CommunicationRelationshipType = {
+  CommunicationLink: 'CommunicationLink',
+} as const;

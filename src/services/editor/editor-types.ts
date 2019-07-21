@@ -1,4 +1,3 @@
-
 import { Action } from '../../utils/actions/actions';
 import { UMLElementFeatures } from '../uml-element/uml-element-features';
 
@@ -23,18 +22,18 @@ export const enum EditorActionTypes {
   CHANGE_VIEW = '@@element/CHANGE_VIEW',
 }
 
-export type EditorActions = ChangeViewAction;
-
-export interface ChangeViewAction extends Action<EditorActionTypes.CHANGE_VIEW> {
-  payload: {
-    view: ApollonView;
-  };
-}
-
-export interface EditorState {
+export type EditorState = {
   readonly mode: ApollonMode;
   readonly readonly: boolean;
   readonly enablePopups: boolean;
   readonly view: ApollonView;
   readonly features: UMLElementFeatures;
-}
+};
+
+export type EditorActions = ChangeViewAction;
+
+export type ChangeViewAction = Action<EditorActionTypes.CHANGE_VIEW> & {
+  payload: {
+    view: ApollonView;
+  };
+};

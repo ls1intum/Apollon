@@ -1,8 +1,8 @@
-export enum DeploymentElementType {
-  DeploymentNode = 'DeploymentNode',
-  DeploymentArtifact = 'DeploymentArtifact',
-}
+export const DeploymentElementType = {
+  DeploymentNode: 'DeploymentNode',
+  DeploymentArtifact: 'DeploymentArtifact',
+} as const;
 
-export enum DeploymentRelationshipType {
-  DeploymentAssociation = 'DeploymentAssociation',
-}
+export const DeploymentRelationshipType = {
+  DeploymentAssociation: 'DeploymentAssociation',
+} as const;

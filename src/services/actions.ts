@@ -3,6 +3,7 @@ import { CopyActions } from './copypaste/copy-types';
 import { EditorActions } from './editor/editor-types';
 import { LayouterActions } from './layouter/layouter-types';
 import { UMLContainerActions } from './uml-container/uml-container-types';
+import { UMLDiagramActions } from './uml-diagram/uml-diagram-types';
 import { ConnectableActions } from './uml-element/connectable/connectable-types';
 import { HoverableActions } from './uml-element/hoverable/hoverable-types';
 import { InteractableActions } from './uml-element/interactable/interactable-types';
@@ -17,21 +18,23 @@ import { ReconnectableActions } from './uml-relationship/reconnectable/reconnect
 import { UMLRelationshipActions } from './uml-relationship/uml-relationship-types';
 import { UndoActions } from './undo/undo-types';
 
-export type Actions = EditorActions &
-  LayouterActions &
-  UMLContainerActions &
-  UMLElementActions &
-  UMLRelationshipActions &
-  ConnectableActions &
-  ReconnectableActions &
-  HoverableActions &
-  InteractableActions &
-  MovableActions &
-  MovingActions &
-  ResizableActions &
-  ResizingActions &
-  SelectableActions &
-  UpdatableActions &
-  AssessmentActions &
-  UndoActions &
-  CopyActions;
+export type Actions =
+  | EditorActions
+  | LayouterActions
+  | UMLContainerActions
+  | UMLElementActions
+  | UMLRelationshipActions
+  | UMLDiagramActions
+  | ConnectableActions
+  | ReconnectableActions
+  | HoverableActions
+  | InteractableActions
+  | MovableActions
+  | MovingActions
+  | ResizableActions
+  | ResizingActions
+  | SelectableActions
+  | UpdatableActions
+  | AssessmentActions
+  | UndoActions
+  | CopyActions;

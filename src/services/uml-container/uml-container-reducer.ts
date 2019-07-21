@@ -1,11 +1,12 @@
 import { Reducer } from 'redux';
 import { Point } from '../../utils/geometry/point';
 import { notEmpty } from '../../utils/not-empty';
+import { Actions } from '../actions';
 import { UMLElementState } from '../uml-element/uml-element-types';
 import { IUMLContainer, UMLContainer } from './uml-container';
-import { UMLContainerActions, UMLContainerActionTypes } from './uml-container-types';
+import { UMLContainerActionTypes } from './uml-container-types';
 
-export const UMLContainerReducer: Reducer<UMLElementState, UMLContainerActions> = (state = {}, action) => {
+export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {}, action) => {
   switch (action.type) {
     case UMLContainerActionTypes.APPEND: {
       const { payload } = action;
