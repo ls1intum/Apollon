@@ -1,13 +1,11 @@
 import { Reducer } from 'redux';
-import { UMLContainerActions, UMLContainerActionTypes } from '../uml-container/uml-container-types';
-import { ResizingActions, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
+import { Actions } from '../actions';
+import { UMLContainerActionTypes } from '../uml-container/uml-container-types';
+import { ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { UMLDiagram } from './uml-diagram';
-import { UMLDiagramActions, UMLDiagramActionTypes, UMLDiagramState } from './uml-diagram-types';
+import { UMLDiagramActionTypes, UMLDiagramState } from './uml-diagram-types';
 
-export const UMLDiagramReducer: Reducer<UMLDiagramState, UMLDiagramActions | UMLContainerActions | ResizingActions> = (
-  state = new UMLDiagram(),
-  action,
-) => {
+export const UMLDiagramReducer: Reducer<UMLDiagramState, Actions> = (state = new UMLDiagram(), action) => {
   switch (action.type) {
     case UMLDiagramActionTypes.APPEND: {
       const { payload } = action;

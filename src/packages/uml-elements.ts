@@ -1,4 +1,3 @@
-import { IUMLElement, UMLElement } from '../services/uml-element/uml-element';
 import { UMLActivityActionNode } from './uml-activity-diagram/uml-activity-action-node/uml-activity-action-node';
 import { UMLActivityFinalNode } from './uml-activity-diagram/uml-activity-final-node/uml-activity-final-node';
 import { UMLActivityForkNode } from './uml-activity-diagram/uml-activity-fork-node/uml-activity-fork-node';
@@ -24,8 +23,6 @@ import { UMLObjectName } from './uml-object-diagram/uml-object-name/uml-object-n
 import { UMLUseCaseActor } from './uml-use-case-diagram/uml-use-case-actor/uml-use-case-actor';
 import { UMLUseCaseSystem } from './uml-use-case-diagram/uml-use-case-system/uml-use-case-system';
 import { UMLUseCase } from './uml-use-case-diagram/uml-use-case/uml-use-case';
-
-type UMLElements = { [key in UMLElementType]: new (values: IUMLElement) => UMLElement };
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,

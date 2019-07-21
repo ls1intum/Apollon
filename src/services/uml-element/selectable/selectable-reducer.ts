@@ -1,8 +1,9 @@
 import { Reducer } from 'redux';
-import { DeleteAction, UMLElementActionTypes } from '../uml-element-types';
-import { SelectableActions, SelectableActionTypes, SelectableState } from './selectable-types';
+import { Actions } from '../../actions';
+import { UMLElementActionTypes } from '../uml-element-types';
+import { SelectableActionTypes, SelectableState } from './selectable-types';
 
-export const SelectableReducer: Reducer<SelectableState, SelectableActions | DeleteAction> = (state = [], action) => {
+export const SelectableReducer: Reducer<SelectableState, Actions> = (state = [], action) => {
   switch (action.type) {
     case SelectableActionTypes.SELECT: {
       const { payload } = action;

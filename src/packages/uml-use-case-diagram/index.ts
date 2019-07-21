@@ -1,12 +1,12 @@
-export enum UseCaseElementType {
-  UseCase = 'UseCase',
-  UseCaseActor = 'UseCaseActor',
-  UseCaseSystem = 'UseCaseSystem',
-}
+export const UseCaseElementType = {
+  UseCase: 'UseCase',
+  UseCaseActor: 'UseCaseActor',
+  UseCaseSystem: 'UseCaseSystem',
+} as const;
 
-export enum UseCaseRelationshipType {
-  UseCaseAssociation = 'UseCaseAssociation',
-  UseCaseGeneralization = 'UseCaseGeneralization',
-  UseCaseInclude = 'UseCaseInclude',
-  UseCaseExtend = 'UseCaseExtend',
-}
+export const UseCaseRelationshipType = {
+  UseCaseAssociation: 'UseCaseAssociation',
+  UseCaseGeneralization: 'UseCaseGeneralization',
+  UseCaseInclude: 'UseCaseInclude',
+  UseCaseExtend: 'UseCaseExtend',
+} as const;

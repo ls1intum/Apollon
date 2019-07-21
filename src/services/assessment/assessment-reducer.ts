@@ -1,9 +1,10 @@
 import { Reducer } from 'redux';
-import { AssessmentActions, AssessmentActionTypes, AssessmentState } from './assessment-types';
+import { Actions } from '../actions';
+import { AssessmentActionTypes, AssessmentState } from './assessment-types';
 
 const initialState: AssessmentState = {};
 
-export const AssessmentReducer: Reducer<AssessmentState, AssessmentActions> = (state = initialState, action) => {
+export const AssessmentReducer: Reducer<AssessmentState, Actions> = (state = initialState, action) => {
   switch (action.type) {
     case AssessmentActionTypes.ASSESS: {
       const { payload } = action;

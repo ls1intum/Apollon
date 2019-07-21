@@ -179,7 +179,9 @@ export class ApollonEditor {
 
   private get store(): Store<ModelState, Actions> | null {
     return (
-      this.application.current && this.application.current.store.current && this.application.current.store.current.state
+      this.application.current &&
+      this.application.current.store.current &&
+      this.application.current.store.current.state.store
     );
   }
 }

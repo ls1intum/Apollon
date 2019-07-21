@@ -1,13 +1,11 @@
 import { Reducer } from 'redux';
+import { Actions } from '../actions';
 import { UMLElementState } from '../uml-element/uml-element-types';
-import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
+import { ReconnectableActionTypes } from './reconnectable/reconnectable-types';
 import { IUMLRelationship } from './uml-relationship';
-import { UMLRelationshipActions, UMLRelationshipActionTypes } from './uml-relationship-types';
+import { UMLRelationshipActionTypes } from './uml-relationship-types';
 
-export const UMLRelationshipReducer: Reducer<UMLElementState, UMLRelationshipActions | ReconnectAction> = (
-  state = {},
-  action,
-) => {
+export const UMLRelationshipReducer: Reducer<UMLElementState, Actions> = (state = {}, action) => {
   switch (action.type) {
     case ReconnectableActionTypes.RECONNECT: {
       const { payload } = action;

@@ -22,7 +22,7 @@ export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode 
   serialize(): Apollon.UMLDeploymentNode {
     return {
       ...super.serialize(),
-      type: this.type as DeploymentElementType,
+      type: this.type as keyof typeof DeploymentElementType,
       stereotype: this.stereotype,
     };
   }
