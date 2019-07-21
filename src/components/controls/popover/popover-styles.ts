@@ -66,9 +66,16 @@ export const PopoverContainer = styled.div<Props>`
   }}
 `;
 
-export const PopoverBody = styled.div`
+export const PopoverBody = styled.div<Pick<Props, 'maxHeight'>>`
   color: ${props => props.theme.font.color};
   padding: 0.5em 0.75em;
+
+  ${props =>
+    props.maxHeight &&
+    css`
+      max-height: ${props.maxHeight}px;
+      overflow: auto;
+    `}
 `;
 
 const ArrowTop = css`

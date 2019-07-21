@@ -6,13 +6,14 @@ export type Props = {
   placement?: 'top' | 'right' | 'bottom' | 'left';
   alignment?: 'start' | 'center' | 'end';
   position: { x: number; y: number };
+  maxHeight?: number;
 } & HTMLAttributes<HTMLDivElement>;
 
 export const Popover = forwardRef<HTMLDivElement, Props>(
-  ({ children, placement = 'right', alignment = 'center', ...props }, ref) => (
+  ({ children, placement = 'right', alignment = 'center', maxHeight, ...props }, ref) => (
     <PopoverContainer ref={ref} placement={placement} alignment={alignment} {...props}>
       <Arrow placement={placement} alignment={alignment} />
-      <PopoverBody>{children}</PopoverBody>
+      <PopoverBody maxHeight={maxHeight}>{children}</PopoverBody>
     </PopoverContainer>
   ),
 );
