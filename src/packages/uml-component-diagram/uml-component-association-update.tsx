@@ -43,7 +43,7 @@ class ComponentAssociationUpdate extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Dropdown value={element.type as ComponentRelationshipType} onChange={this.onChange}>
+          <Dropdown value={element.type as keyof typeof ComponentRelationshipType} onChange={this.onChange}>
             <Dropdown.Item value={ComponentRelationshipType.ComponentDependency}>
               {this.props.translate('packages.componentDiagram.dependency')}
             </Dropdown.Item>
@@ -59,7 +59,7 @@ class ComponentAssociationUpdate extends Component<Props> {
     );
   }
 
-  private onChange = (value: ComponentRelationshipType) => {
+  private onChange = (value: keyof typeof ComponentRelationshipType) => {
     const { element, update } = this.props;
     update(element.id, { type: value });
   };

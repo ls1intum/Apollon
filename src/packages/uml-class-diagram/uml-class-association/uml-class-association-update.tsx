@@ -77,7 +77,7 @@ class ClassAssociationComponent extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Dropdown value={element.type as ClassRelationshipType} onChange={this.onChange}>
+          <Dropdown value={element.type as keyof typeof ClassRelationshipType} onChange={this.onChange}>
             <Dropdown.Item value={ClassRelationshipType.ClassAggregation}>
               {this.props.translate('packages.classDiagram.aggregation')}
             </Dropdown.Item>
@@ -136,7 +136,7 @@ class ClassAssociationComponent extends Component<Props> {
       </div>
     );
   }
-  private onChange = (type: ClassRelationshipType) => {
+  private onChange = (type: keyof typeof ClassRelationshipType) => {
     const { element, update } = this.props;
     update(element.id, { type });
   };

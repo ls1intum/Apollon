@@ -75,7 +75,7 @@ class ClassifierUpdate extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Switch value={element.type as ClassElementType} onChange={this.toggle} color="primary">
+          <Switch value={element.type as keyof typeof ClassElementType} onChange={this.toggle} color="primary">
             <Switch.Item value={ClassElementType.AbstractClass}>
               {this.props.translate('packages.classDiagram.abstract')}
             </Switch.Item>
@@ -128,7 +128,7 @@ class ClassifierUpdate extends Component<Props> {
     this.props.update(id, { name: value });
   };
 
-  private toggle = (type: ClassElementType) => {
+  private toggle = (type: keyof typeof ClassElementType) => {
     const { element, update } = this.props;
     const newType: UMLElementType = element.type === type ? ClassElementType.Class : type;
     const instance = new UMLElements[newType]({

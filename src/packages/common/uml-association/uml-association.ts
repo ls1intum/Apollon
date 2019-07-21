@@ -1,6 +1,7 @@
 import { DeepPartial } from 'redux';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
+import { UMLElement } from '../../../services/uml-element/uml-element';
 import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { assign } from '../../../utils/fx/assign';
@@ -37,7 +38,7 @@ export abstract class UMLAssociation extends UMLRelationship implements IUMLAsso
     assign<IUMLAssociation>(this, values);
   }
 
-  render(canvas: ILayer, source?: IBoundary, target?: IBoundary): ILayoutable[] {
+  render(canvas: ILayer, source?: UMLElement, target?: UMLElement): ILayoutable[] {
     super.render(canvas, source, target);
 
     const bounds = computeBoundingBoxForRelationship(canvas.layer, this);

@@ -8,13 +8,13 @@ import { ObjectRelationshipType } from './uml-object-diagram';
 import { UseCaseRelationshipType } from './uml-use-case-diagram';
 
 export type UMLRelationshipType =
-  | ClassRelationshipType
-  | ObjectRelationshipType
-  | ActivityRelationshipType
-  | UseCaseRelationshipType
-  | CommunicationRelationshipType
-  | ComponentRelationshipType
-  | DeploymentRelationshipType;
+  | keyof typeof ClassRelationshipType
+  | keyof typeof ObjectRelationshipType
+  | keyof typeof ActivityRelationshipType
+  | keyof typeof UseCaseRelationshipType
+  | keyof typeof CommunicationRelationshipType
+  | keyof typeof ComponentRelationshipType
+  | keyof typeof DeploymentRelationshipType;
 
 export const UMLRelationshipType = {
   ...ClassRelationshipType,
@@ -26,7 +26,7 @@ export const UMLRelationshipType = {
   ...DeploymentRelationshipType,
 };
 
-export const DefaultUMLRelationshipType: { [type in UMLDiagramType]: UMLRelationshipType } = {
+export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelationshipType } = {
   [UMLDiagramType.ClassDiagram]: ClassRelationshipType.ClassBidirectional,
   [UMLDiagramType.ObjectDiagram]: ObjectRelationshipType.ObjectLink,
   [UMLDiagramType.ActivityDiagram]: ActivityRelationshipType.ActivityControlFlow,

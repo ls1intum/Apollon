@@ -7,7 +7,6 @@
     "jsx": "react",
     "outDir": "lib",
     "declaration": true,
-    "sourceMap": true,
     "strict": true,
     "skipLibCheck": true,
     "importHelpers": true,
@@ -16,6 +15,5 @@
     "downlevelIteration": true,
     "resolveJsonModule": true
   },
-  "include": ["src/index.ts", "src/example.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src/index.ts"]
 }

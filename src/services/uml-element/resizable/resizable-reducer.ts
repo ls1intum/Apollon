@@ -1,8 +1,9 @@
 import { Reducer } from 'redux';
-import { DeleteAction, UMLElementActionTypes } from '../uml-element-types';
-import { ResizableActions, ResizableActionTypes, ResizableState } from './resizable-types';
+import { Actions } from '../../actions';
+import { UMLElementActionTypes } from '../uml-element-types';
+import { ResizableActionTypes, ResizableState } from './resizable-types';
 
-export const ResizableReducer: Reducer<ResizableState, ResizableActions | DeleteAction> = (state = [], action) => {
+export const ResizableReducer: Reducer<ResizableState, Actions> = (state = [], action) => {
   switch (action.type) {
     case ResizableActionTypes.START: {
       const { payload } = action;

@@ -1,8 +1,9 @@
 import { Reducer } from 'redux';
-import { DeleteAction, UMLElementActionTypes } from '../uml-element-types';
-import { UpdatableActions, UpdatableActionTypes, UpdatableState } from './updatable-types';
+import { Actions } from '../../actions';
+import { UMLElementActionTypes } from '../uml-element-types';
+import { UpdatableActionTypes, UpdatableState } from './updatable-types';
 
-export const UpdatableReducer: Reducer<UpdatableState, UpdatableActions | DeleteAction> = (state = [], action) => {
+export const UpdatableReducer: Reducer<UpdatableState, Actions> = (state = [], action) => {
   switch (action.type) {
     case UpdatableActionTypes.START: {
       const { payload } = action;

@@ -1,11 +1,9 @@
-import { AsyncAction } from '../../utils/actions/actions';
-import { LayouterActionTypes } from './layouter-types';
+import { LayoutAction, LayouterActionTypes } from './layouter-types';
 
 export const LayouterRepository = {
-  layout: (): AsyncAction => dispatch =>
-    dispatch({
-      type: LayouterActionTypes.LAYOUT,
-      payload: {},
-      undoable: false,
-    }),
+  layout: (): LayoutAction => ({
+    type: LayouterActionTypes.LAYOUT,
+    payload: {},
+    undoable: false,
+  }),
 };

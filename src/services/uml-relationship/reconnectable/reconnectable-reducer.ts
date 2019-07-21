@@ -1,11 +1,9 @@
 import { Reducer } from 'redux';
-import { DeleteAction, UMLElementActionTypes } from '../../uml-element/uml-element-types';
-import { ReconnectableActions, ReconnectableActionTypes, ReconnectableState } from './reconnectable-types';
+import { Actions } from '../../actions';
+import { UMLElementActionTypes } from '../../uml-element/uml-element-types';
+import { ReconnectableActionTypes, ReconnectableState } from './reconnectable-types';
 
-export const ReconnectableReducer: Reducer<ReconnectableState, ReconnectableActions | DeleteAction> = (
-  state = {},
-  action,
-) => {
+export const ReconnectableReducer: Reducer<ReconnectableState, Actions> = (state = {}, action) => {
   switch (action.type) {
     case ReconnectableActionTypes.START: {
       const { payload } = action;

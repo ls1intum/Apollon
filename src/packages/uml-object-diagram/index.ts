@@ -1,9 +1,9 @@
-export enum ObjectElementType {
-  ObjectName = 'ObjectName',
-  ObjectAttribute = 'ObjectAttribute',
-  ObjectMethod = 'ObjectMethod',
-}
+export const ObjectElementType = {
+  ObjectName: 'ObjectName',
+  ObjectAttribute: 'ObjectAttribute',
+  ObjectMethod: 'ObjectMethod',
+} as const;
 
-export enum ObjectRelationshipType {
-  ObjectLink = 'ObjectLink',
-}
+export const ObjectRelationshipType = {
+  ObjectLink: 'ObjectLink',
+} as const;
