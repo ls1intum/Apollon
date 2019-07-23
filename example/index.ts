@@ -5,6 +5,8 @@ const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
 let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
+  mode: Apollon.ApollonMode.Assessment,
+  readonly: true,
 };
 
 export const onChange = (event: MouseEvent) => {

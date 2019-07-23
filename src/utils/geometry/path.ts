@@ -14,14 +14,17 @@ export class Path {
       );
   }
 
-  position(distance: number = 0): IPoint {
-    const v = {
-      x: this.path[1].x - this.path[0].x,
-      y: this.path[1].y - this.path[0].y,
-    };
-    const length = Math.sqrt(v.x * v.x + v.y * v.y);
-    const u = { x: v.x / length, y: v.y / length };
-    const pointOne = new Point(this.path[0].x + distance * u.x, this.path[0].y + distance * u.y);
-    return pointOne;
+  position(distance: number = 0): Point {
+    for (let index = 0; index < this.path.length - 1; index++) {
+      const current = new Point(this.path[index + 1].x, this.path[index + 1].y);
+      const next = new Point(this.path[index].x, this.path[index].y);
+      const vector = current.subtract(next);
+      if (vector.length > distance) {
+        const norm = vector.normalize();
+        return next.add(norm.scale(distance));
+      }
+      distance -= vector.length;
+    }
+    return new Point();
   }
 }
