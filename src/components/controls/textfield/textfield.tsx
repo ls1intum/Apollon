@@ -67,7 +67,6 @@ export class Textfield extends Component<Props, State> {
 
   private onKeyUp = ({ key, currentTarget }: KeyboardEvent<HTMLInputElement>) => {
     switch (key) {
-      case 'Enter':
       case 'Escape':
         currentTarget.blur();
         break;
