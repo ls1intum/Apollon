@@ -81,7 +81,7 @@ export class CanvasRelationshipComponent extends Component<Props> {
         visibility={reconnecting ? 'hidden' : undefined}
         pointerEvents={disabled ? 'none' : undefined}
       >
-        <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
+        <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} pointerEvents="stroke" />
         <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
         {children}
       </svg>
