@@ -7,7 +7,9 @@ import { UMLElementType } from '../../packages/uml-element-type';
 import { ApollonMode } from '../../services/editor/editor-types';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { AsyncDispatch } from '../../utils/actions/actions';
+import { Path } from '../../utils/geometry/path';
 import { Point } from '../../utils/geometry/point';
 import { Assessment } from '../assessment/assessment';
 import { CanvasContext } from '../canvas/canvas-context';
@@ -139,11 +141,26 @@ class UnwrappedUpdatePane extends Component<Props, State> {
       const placement = elementCenter.x < canvasBounds.width / 2 ? 'right' : 'left';
       const alignment = elementCenter.y < canvasBounds.height / 2 ? 'start' : 'end';
 
-      if (placement === 'right') {
-        position.x += element.bounds.width;
-      }
-      if (alignment === 'end') {
-        position.y += element.bounds.height;
+      if (UMLRelationship.isUMLRelationship(element)) {
+        const path = new Path(element.path);
+
+        const p = path.position(path.length / 2);
+        position.x += p.x;
+        position.y += p.y;
+
+        if (alignment === 'start') {
+          position.y -= 15;
+        }
+        if (alignment === 'end') {
+          position.y += 15;
+        }
+      } else {
+        if (placement === 'right') {
+          position.x += element.bounds.width;
+        }
+        if (alignment === 'end') {
+          position.y += element.bounds.height;
+        }
       }
 
       this.setState({ position, alignment, placement });
