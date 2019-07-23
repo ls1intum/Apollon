@@ -38,7 +38,9 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
       const next = Object.keys(elements)[index % Object.keys(elements).length];
 
       dispatch(UMLElementRepository.updateEnd(current.id));
+      dispatch(UMLElementRepository.deselect(current.id));
       dispatch(UMLElementRepository.updateStart(next));
+      dispatch(UMLElementRepository.select(next));
     },
   },
 );
