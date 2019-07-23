@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, createElement, ReactNode } from 'react';
+import { ButtonHTMLAttributes, createElement, forwardRef, ReactNode } from 'react';
 import { Color, Size } from '../../theme/styles';
 import { StyledButton } from './button-styles';
 
@@ -10,8 +10,10 @@ export const defaultProps = Object.freeze({
   size: 'sm' as Size,
 });
 
-type Props = { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement> & typeof defaultProps;
+type Props = { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement> & Partial<typeof defaultProps>;
 
-export const Button = (props: Props) => createElement(StyledButton, props);
+export const Button = forwardRef<HTMLButtonElement, Props>((props, ref) =>
+  createElement(StyledButton, { ...props, ref }),
+);
 
 Button.defaultProps = defaultProps;
