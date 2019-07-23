@@ -4,7 +4,6 @@ import { styled } from '../../theme/styles';
 type Props = SVGAttributes<SVGSVGElement>;
 
 const Svg = styled.svg`
-  fill: ${props => props.fill || props.theme.font.color};
   height: 1em;
   vertical-align: middle;
   width: 1em;

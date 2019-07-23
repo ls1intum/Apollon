@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
@@ -38,17 +38,24 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
       const next = Object.keys(elements)[index % Object.keys(elements).length];
 
       dispatch(UMLElementRepository.updateEnd(current.id));
+      dispatch(UMLElementRepository.deselect(current.id));
       dispatch(UMLElementRepository.updateStart(next));
+      dispatch(UMLElementRepository.select(next));
     },
   },
 );
 
 class AssessmentComponent extends Component<Props, State> {
   state = getInitialState(this.props);
+  container: RefObject<HTMLDivElement> = createRef();
+
+  componentDidMount() {
+    this.setFocus();
+  }
 
   componentDidUpdate(props: Props) {
     if (props.element !== this.props.element) {
-      this.setState(getInitialState(this.props));
+      this.setState(getInitialState(this.props), this.setFocus);
     }
   }
 
@@ -56,7 +63,7 @@ class AssessmentComponent extends Component<Props, State> {
     const { elements } = this.state;
 
     return (
-      <div>
+      <div ref={this.container}>
         {elements.map((element, i) => (
           <AssessmentSection key={element.id} element={element} />
         ))}
@@ -68,6 +75,19 @@ class AssessmentComponent extends Component<Props, State> {
       </div>
     );
   }
+
+  private setFocus = () => {
+    if (!this.container.current) {
+      return;
+    }
+
+    const focusable = this.container.current.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable) {
+      focusable.focus();
+    }
+  };
 
   private next = () => {
     const { assessNext, element } = this.props;

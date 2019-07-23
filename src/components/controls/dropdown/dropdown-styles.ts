@@ -1,9 +1,7 @@
 import { styled } from '../../theme/styles';
 import { Button } from '../button/button';
 
-export const StyledDropdown = styled.div`
-  position: relative;
-`;
+export const StyledDropdown = styled.div``;
 
 export type DropdownItemProps = {};
 

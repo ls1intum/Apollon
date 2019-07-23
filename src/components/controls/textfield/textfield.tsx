@@ -6,6 +6,7 @@ import { StyledTextfield } from './textfield-styled';
 export const defaultProps = Object.freeze({
   block: true,
   gutter: false,
+  multiline: false,
   outline: false,
   readonly: false,
   size: 'sm' as Size,
@@ -35,6 +36,7 @@ export class Textfield extends Component<Props, State> {
 
     return (
       <StyledTextfield
+        as={props.multiline ? 'textarea' : 'input'}
         key={this.state.key}
         {...props}
         size={modifiedSize}
@@ -67,7 +69,6 @@ export class Textfield extends Component<Props, State> {
 
   private onKeyUp = ({ key, currentTarget }: KeyboardEvent<HTMLInputElement>) => {
     switch (key) {
-      case 'Enter':
       case 'Escape':
         currentTarget.blur();
         break;

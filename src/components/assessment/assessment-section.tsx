@@ -72,6 +72,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
         ) : (
           <section>
             <Textfield
+              multiline={true}
               placeholder={this.props.translate('assessment.feedback')}
               onChange={this.updateFeedback}
               value={assessment && assessment.feedback ? assessment.feedback : ''}

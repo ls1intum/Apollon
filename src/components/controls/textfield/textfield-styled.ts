@@ -41,6 +41,11 @@ export const StyledTextfield = styled(Input)<Props>(
         margin-bottom: 0.5em;
       `}
 
+    ${props.multiline &&
+      css`
+        resize: vertical;
+      `}
+
     ${props.outline &&
       css`
         &:not(:focus) {

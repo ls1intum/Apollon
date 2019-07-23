@@ -1,4 +1,4 @@
-import React, { Children, Component, ReactElement } from 'react';
+import React, { Children, Component, createRef, ReactElement } from 'react';
 import { Color, Size } from '../../theme/styles';
 import { DropdownButton } from './dropdown-button';
 import { DropdownItem, Props as ItemProps } from './dropdown-item';
@@ -14,6 +14,9 @@ const defaultProps = Object.freeze({
 
 const intialState = Object.freeze({
   show: false,
+  top: 0,
+  left: 0,
+  width: 0,
 });
 
 type Props<T> = {
@@ -28,24 +31,26 @@ export class Dropdown<T> extends Component<Props<T>, State> {
   static defaultProps = defaultProps;
   static Item = DropdownItem;
   state = intialState;
+  activator = createRef<HTMLButtonElement>();
 
   componentWillUnmount() {
-    document.removeEventListener('click', this.close);
+    document.removeEventListener('click', this.dismiss);
   }
 
   render() {
     const { color, outline, size } = this.props;
+    const { show, top, left, width } = this.state;
     const selected = Children.toArray<ReactElement<ItemProps<T>>>(this.props.children).find(
       item => item.props.value === this.props.value,
     );
 
     return (
       <StyledDropdown>
-        <DropdownButton color={color} onClick={this.show} outline={outline} size={size}>
+        <DropdownButton ref={this.activator} color={color} onClick={this.show} outline={outline} size={size}>
           {selected ? selected.props.children : this.props.placeholder}
         </DropdownButton>
-        {this.state.show && (
-          <DropdownMenu>
+        {show && (
+          <DropdownMenu style={{ top, left, minWidth: width }}>
             {Children.map<ReactElement<DropdownItemProps>, ReactElement<ItemProps<T>>>(
               this.props.children,
               ({ props }) => this.renderItem(props),
@@ -66,7 +71,13 @@ export class Dropdown<T> extends Component<Props<T>, State> {
     );
   }
 
-  private close = () => {
+  private dismiss = () => {
+    if (this.activator.current) {
+      const parent = this.getScrollableParent(this.activator.current);
+      parent.removeEventListener('scroll', this.dismiss);
+    }
+    document.removeEventListener('click', this.dismiss);
+
     this.setState({ show: false });
   };
 
@@ -79,7 +90,38 @@ export class Dropdown<T> extends Component<Props<T>, State> {
   };
 
   private show = () => {
-    this.setState({ show: true });
-    document.addEventListener('click', this.close, { once: true });
+    if (!this.activator.current) {
+      return;
+    }
+
+    const parent = this.getScrollableParent(this.activator.current);
+    const parentBounds: ClientRect = parent.getBoundingClientRect();
+    const activatorBounds: ClientRect = this.activator.current.getBoundingClientRect();
+
+    this.setState({
+      show: true,
+      top: activatorBounds.top - parentBounds.top + activatorBounds.height,
+      left: activatorBounds.left - parentBounds.left,
+      width: activatorBounds.width,
+    });
+
+    parent.addEventListener('scroll', this.dismiss, { once: true });
+    document.addEventListener('click', this.dismiss, { once: true });
+  };
+
+  private getScrollableParent = (element: Element): Element => {
+    const style = getComputedStyle(element);
+
+    const isScrollable = /(auto|scroll)/.test([style.overflow, style.overflowY, style.overflowX].join(''));
+    if (isScrollable) {
+      return element;
+    }
+
+    const parent = element.parentElement;
+    if (parent) {
+      return this.getScrollableParent(parent);
+    }
+
+    return document.body;
   };
 }
