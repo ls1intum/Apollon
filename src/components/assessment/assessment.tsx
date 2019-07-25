@@ -68,7 +68,14 @@ class AssessmentComponent extends Component<Props, State> {
           <AssessmentSection key={element.id} element={element} />
         ))}
         <section>
-          <Button block={true} outline={true} color="primary" onClick={this.next}>
+          <Button
+            block={true}
+            outline={true}
+            color="primary"
+            onClick={this.next}
+            onKeyDown={this.onKey}
+            onKeyUp={this.onKey}
+          >
             Next Assessment
           </Button>
         </section>
@@ -88,6 +95,16 @@ class AssessmentComponent extends Component<Props, State> {
       focusable.focus();
     }
   };
+
+  private onKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Enter') {
+      if (event.type === 'keydown') {
+        event.preventDefault();
+      } else {
+        this.next();
+      }
+    }
+  }
 
   private next = () => {
     const { assessNext, element } = this.props;
