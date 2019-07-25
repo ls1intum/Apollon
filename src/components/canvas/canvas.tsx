@@ -13,6 +13,7 @@ type OwnProps = {};
 
 type StateProps = {
   diagram: IUMLDiagram;
+  isStatic: boolean;
 };
 
 type DispatchProps = {};
@@ -22,6 +23,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   state => ({
     diagram: state.diagram,
+    isStatic: state.editor.readonly,
   }),
   null,
   null,
@@ -50,11 +52,11 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
   };
 
   render() {
-    const { diagram } = this.props;
+    const { diagram, isStatic } = this.props;
 
     return (
       <Droppable>
-        <CanvasContainer width={diagram.bounds.width} height={diagram.bounds.height} ref={this.layer}>
+        <CanvasContainer width={diagram.bounds.width} height={diagram.bounds.height} isStatic={isStatic} ref={this.layer}>
           {this.layer.current && (
             <>
               <svg x="50%" y="50%">
