@@ -1,9 +1,13 @@
 import { styled } from '../theme/styles';
 
-export const CanvasContainer = styled.svg.attrs({
+type Props = {
+  isStatic: boolean;
+};
+
+export const CanvasContainer = styled.svg.attrs<Props>({
   tabIndex: -1,
-})`
-  position: absolute;
+})<Props>`
+  position: ${({ isStatic }: Props) => (isStatic ? 'static' : 'absolute')};
   top: 0;
   left: 0;
   min-width: 100%;

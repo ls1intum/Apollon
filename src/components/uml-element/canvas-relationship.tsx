@@ -37,7 +37,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
       reconnecting: !!state.reconnecting[props.id],
-      disabled: !!Object.keys(state.reconnecting).length,
+      disabled: !!Object.keys(state.reconnecting).length || !!Object.keys(state.connecting).length,
       relationship: state.elements[props.id] as IUMLRelationship,
     }),
     {},
@@ -79,9 +79,9 @@ export class CanvasRelationshipComponent extends Component<Props> {
         {...props}
         {...relationship.bounds}
         visibility={reconnecting ? 'hidden' : undefined}
-        pointerEvents={disabled ? 'none' : undefined}
+        pointerEvents={disabled ? 'none' : 'stroke'}
       >
-        <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} pointerEvents="stroke" />
+        <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
         <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
         {children}
       </svg>

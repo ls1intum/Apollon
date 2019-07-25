@@ -88,7 +88,7 @@ export class ApollonEditor {
         view: ApollonView.Modelling,
         mode: options.mode || ApollonMode.Exporting,
         readonly: options.readonly || false,
-        enablePopups: options.enablePopups || true,
+        enablePopups: options.enablePopups === true || options.enablePopups === undefined,
         features: {
           hoverable: true,
           selectable: true,

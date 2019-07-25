@@ -33,7 +33,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   (state, props) => ({
     path: (state.elements[props.id] as IUMLRelationship).path,
     reconnecting: !!state.reconnecting[props.id],
-    disabled: !!Object.keys(state.reconnecting).length,
+    disabled: !!Object.keys(state.reconnecting).length || !!Object.keys(state.connecting).length,
   }),
   {
     start: UMLRelationshipRepository.startReconnecting,
