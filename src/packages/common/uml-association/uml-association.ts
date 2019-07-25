@@ -38,16 +38,16 @@ export abstract class UMLAssociation extends UMLRelationship implements IUMLAsso
     assign<IUMLAssociation>(this, values);
   }
 
-  render(canvas: ILayer, source?: UMLElement, target?: UMLElement): ILayoutable[] {
-    super.render(canvas, source, target);
+  // render(canvas: ILayer, source?: UMLElement, target?: UMLElement): ILayoutable[] {
+  //   super.render(canvas, source, target);
 
-    const bounds = computeBoundingBoxForRelationship(canvas.layer, this);
-    this.path = this.path.map(point => ({
-      x: point.x + this.bounds.x - bounds.x,
-      y: point.y + this.bounds.y - bounds.y,
-    })) as IPath;
-    this.bounds = bounds;
+  //   const bounds = computeBoundingBoxForRelationship(canvas.layer, this);
+  //   this.path = this.path.map(point => ({
+  //     x: point.x + this.bounds.x - bounds.x,
+  //     y: point.y + this.bounds.y - bounds.y,
+  //   })) as IPath;
+  //   this.bounds = bounds;
 
-    return [this];
-  }
+  //   return [this];
+  // }
 }
