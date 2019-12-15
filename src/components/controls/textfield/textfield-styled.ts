@@ -1,4 +1,3 @@
-import { Omit } from 'react-redux';
 import { lighten } from '../../../utils/color';
 import { css, styled } from '../../theme/styles';
 import { defaultProps } from './textfield';
@@ -32,7 +31,7 @@ const Input = styled.input`
   }
 `;
 
-type Props = Omit<typeof defaultProps, 'size'>;
+type Props = typeof defaultProps;
 
 export const StyledTextfield = styled(Input)<Props>(
   props => css`
@@ -70,7 +69,7 @@ export const StyledTextfield = styled(Input)<Props>(
       `}
 
     ${props.size &&
-      props.size === -1 &&
+      props.size === 'sm' &&
       css`
         border-radius: 0.2em;
         font-size: 0.875em;
@@ -78,7 +77,7 @@ export const StyledTextfield = styled(Input)<Props>(
       `}
 
     ${props.size &&
-      props.size === 1 &&
+      props.size === 'lg' &&
       css`
         border-radius: 0.3em;
         font-size: 1.25em;

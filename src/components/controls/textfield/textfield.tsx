@@ -9,7 +9,7 @@ export const defaultProps = Object.freeze({
   multiline: false,
   outline: false,
   readonly: false,
-  size: 'sm' as Size,
+  size: 'sm' as Size
 });
 
 const initialState = {
@@ -32,14 +32,13 @@ export class Textfield extends Component<Props, State> {
 
   render() {
     const { onChange, onSubmit, size, value, ...props } = this.props;
-    const modifiedSize: number | undefined = size === 'sm' ? -1 : size === 'lg' ? 1 : undefined;
 
     return (
       <StyledTextfield
         as={props.multiline ? 'textarea' : 'input'}
         key={this.state.key}
         {...props}
-        size={modifiedSize}
+        size={size}
         defaultValue={value}
         onChange={this.onChange}
         onKeyUp={this.onKeyUp}
