@@ -45,10 +45,10 @@
     "@types/styled-components": "4.4.1",
     "@types/uuid": "3.4.6",
     "circular-dependency-plugin": "5.2.0",
-    "css-loader": "3.3.2",
+    "css-loader": "3.4.0",
     "html-webpack-plugin": "3.2.0",
-    "style-loader": "1.0.1",
-    "stylelint": "12.0.0",
+    "style-loader": "1.1.2",
+    "stylelint": "12.0.1",
     "stylelint-config-recommended": "3.0.0",
     "stylelint-config-styled-components": "0.1.1",
     "stylelint-custom-processor-loader": "0.6.0",
@@ -58,10 +58,10 @@
     "tslint-config-prettier": "1.18.0",
     "tslint-loader": "3.5.4",
     "tslint-react": "4.1.0",
-    "typescript": "3.7.3",
-    "webpack": "4.41.2",
+    "typescript": "3.7.4",
+    "webpack": "4.41.5",
     "webpack-cli": "3.3.10",
-    "webpack-dev-server": "3.9.0",
+    "webpack-dev-server": "3.10.1",
     "webpack-merge": "4.2.2"
   }
 }
