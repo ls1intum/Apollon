@@ -131,6 +131,9 @@ export const connectable = (
       if (this.props.connecting) {
         this.props.connect({ element: this.props.id, direction });
       }
+      if (this.props.reconnecting) {
+        this.props.reconnect({ element: this.props.id, direction });
+      }
     };
 
     private onPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
