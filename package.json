@@ -47,6 +47,7 @@
     "circular-dependency-plugin": "5.2.0",
     "css-loader": "3.4.0",
     "html-webpack-plugin": "3.2.0",
+    "prettier": "1.19.1",
     "style-loader": "1.1.2",
     "stylelint": "12.0.1",
     "stylelint-config-recommended": "3.0.0",
