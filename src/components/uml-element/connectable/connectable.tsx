@@ -8,6 +8,7 @@ import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
 import { UMLElementComponentProps } from '../uml-element-component-props';
+import { findDOMNode } from 'react-dom';
 
 type StateProps = {
   hovered: boolean;
@@ -64,6 +65,16 @@ export const connectable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
 ): ComponentClass<UMLElementComponentProps> => {
   class Connectable extends Component<Props> {
+    componentDidMount() {
+      const node = findDOMNode(this) as HTMLElement;
+      node.addEventListener('pointerup', this.elementOnPointerUp.bind(this));
+    }
+
+    componentWillUnmount() {
+      const node = findDOMNode(this) as HTMLElement;
+      node.addEventListener('pointerup', this.elementOnPointerUp);
+    }
+
     render() {
       const { hovered, selected, connecting, reconnecting, ports, start, connect: _, reconnect, ...props } = this.props;
       return (
@@ -100,6 +111,30 @@ export const connectable = (
         </WrappedComponent>
       );
     }
+
+    private elementOnPointerUp = (event: PointerEvent) => {
+      const node = findDOMNode(this) as HTMLElement;
+      // calculate event position relative to object position
+      const relEventPosition = {
+        x: event.pageX - node.getBoundingClientRect().x,
+        y: event.pageY - node.getBoundingClientRect().y,
+      };
+      // calculate the distances to all handles
+      const distances = Object.entries(this.props.ports).map(([key, value]) => ({
+        key: key,
+        distance: Math.sqrt(Math.pow(value.x - relEventPosition.x, 2) + Math.pow(value.y - relEventPosition.y, 2)),
+      }));
+      // use handle with min distance to connect to
+      const minDistance = Math.min(...distances.map(value => value.distance));
+      const direction = distances.filter(value => minDistance === value.distance)[0].key as Direction;
+
+      if (this.props.connecting) {
+        this.props.connect({ element: this.props.id, direction });
+      }
+      if (this.props.reconnecting) {
+        this.props.reconnect({ element: this.props.id, direction });
+      }
+    };
 
     private onPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
       const direction = event.currentTarget.getAttribute('direction') as Direction;
