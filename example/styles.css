@@ -15,6 +15,9 @@ aside.sidebar {
 aside.sidebar section {
   margin-bottom: 1em;
 }
+aside.sidebar section > div {
+  margin-bottom: 0.5em;
+}
 
 /**
  * Header
@@ -48,10 +51,11 @@ aside.sidebar section {
   background: white;
   color: #212529;
   border: 1px solid rgba(0, 0, 0, 0.15);
-  padding: 0.375rem 0.75rem;
   margin: 0;
   line-height: 1.5;
   border-radius: 0.25rem;
+  white-space: pre-wrap;
+  padding: 0.375rem 1.25rem 0.375rem 0.75rem;
 }
 .dropdown::before {
   content: '▾';
@@ -103,4 +107,12 @@ aside.sidebar section {
 .switch button:active {
   background-color: #dae0e5;
   border-color: #d3d9df;
+}
+
+/**
+ * Checkbox
+ */
+
+.checkbox {
+  vertical-align: middle;
 }
