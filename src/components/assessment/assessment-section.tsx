@@ -66,7 +66,7 @@ class AssessmentSectionCompoennt extends Component<Props, State> {
       >
         <Section pointerEventsEnabled={!this.state.dragOver}>
           <Header>
-            {this.props.translate('assessment.assessment')} {element.name} test
+            {this.props.translate('assessment.assessment')} {element.name}
           </Header>
         </Section>
         <Section pointerEventsEnabled={!this.state.dragOver}>
