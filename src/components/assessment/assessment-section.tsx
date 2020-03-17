@@ -45,7 +45,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
     const { element, assessment, readonly } = this.props;
 
     return (
-      <>
+      <div onDrop={this.onDrop} onDragOver={this.onDragOver}>
         <section>
           <Header>
             {this.props.translate('assessment.assessment')} {element.name}
@@ -80,9 +80,31 @@ class AssessmentSectionCompoennt extends Component<Props> {
           </section>
         )}
         <Divider />
-      </>
+      </div>
     );
   }
+
+  /**
+   * implement so that elements can be dropped
+   * @param ev DragEvent
+   */
+  private onDragOver = (ev: any) => {
+    ev.preventDefault();
+  };
+
+  /**
+   * Artemis instruction object can be dropped on assessment sections to automatically fill assessment
+   * @param ev DropEvent
+   */
+  private onDrop = (ev: any) => {
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData('text');
+    const instruction = JSON.parse(data);
+    const credits = instruction.credits;
+    const feedback = instruction.feedback;
+    this.updateScore(credits);
+    this.updateFeedback(feedback);
+  };
 
   private updateScore = (value: string) => {
     const { element, assessment } = this.props;
