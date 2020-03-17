@@ -18,6 +18,10 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
+const Section = styled.section<{ pointerEventsEnabled: boolean }>`
+  pointer-events: ${props => (props.pointerEventsEnabled ? 'auto' : 'none')};
+`;
+
 type OwnProps = {
   element: IUMLElement;
 };
@@ -40,18 +44,32 @@ const enhance = compose<ComponentClass<OwnProps>>(
   ),
 );
 
-class AssessmentSectionCompoennt extends Component<Props> {
+const initialState = {
+  dragOver: false,
+};
+
+type State = typeof initialState;
+
+class AssessmentSectionCompoennt extends Component<Props, State> {
+  state = initialState;
+
   render() {
     const { element, assessment, readonly } = this.props;
 
     return (
-      <div onDrop={this.onDrop} onDragOver={this.onDragOver}>
-        <section>
+      <div
+        className="artemis-instruction-dropzone"
+        onDrop={this.onDrop}
+        onDragOver={this.onDragOver}
+        onDragEnter={this.onDragEnter}
+        onDragLeave={this.onDragLeave}
+      >
+        <Section pointerEventsEnabled={!this.state.dragOver}>
           <Header>
-            {this.props.translate('assessment.assessment')} {element.name}
+            {this.props.translate('assessment.assessment')} {element.name} test
           </Header>
-        </section>
-        <section>
+        </Section>
+        <Section pointerEventsEnabled={!this.state.dragOver}>
           <Flex>
             <span style={{ marginRight: '0.5em' }}>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
@@ -66,18 +84,18 @@ class AssessmentSectionCompoennt extends Component<Props> {
               />
             )}
           </Flex>
-        </section>
+        </Section>
         {readonly ? (
           assessment && assessment.feedback && <section>{assessment.feedback}</section>
         ) : (
-          <section>
+          <Section pointerEventsEnabled={!this.state.dragOver}>
             <Textfield
               multiline={true}
               placeholder={this.props.translate('assessment.feedback')}
               onChange={this.updateFeedback}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />
-          </section>
+          </Section>
         )}
         <Divider />
       </div>
@@ -89,7 +107,32 @@ class AssessmentSectionCompoennt extends Component<Props> {
    * @param ev DragEvent
    */
   private onDragOver = (ev: any) => {
+    // prevent default to allow drop
     ev.preventDefault();
+    // disable pointer events of children
+    this.setState({ dragOver: true });
+  };
+
+  /**
+   * implement so that elements can be dropped
+   * @param ev DragEvent
+   */
+  private onDragEnter = (ev: any) => {
+    if (ev.target.className.includes('artemis-instruction-dropzone')) {
+      ev.target.style.border = 'solid';
+    }
+  };
+
+  /**
+   * implement so that elements can be dropped
+   * @param ev DragEvent
+   */
+  private onDragLeave = (ev: any) => {
+    if (ev.target.className.includes('artemis-instruction-dropzone')) {
+      ev.target.style.border = '';
+    }
+    // enable pointer events of children
+    this.setState({ dragOver: false });
   };
 
   /**
@@ -97,13 +140,20 @@ class AssessmentSectionCompoennt extends Component<Props> {
    * @param ev DropEvent
    */
   private onDrop = (ev: any) => {
+    // prevent default action (open as link for some elements)
     ev.preventDefault();
+    if (ev.target.className.includes('artemis-instruction-dropzone')) {
+      ev.target.style.border = '';
+    }
+    // enable pointer events of children
+    this.setState({ dragOver: false });
+
+    const { element, assessment } = this.props;
     const data = ev.dataTransfer.getData('text');
     const instruction = JSON.parse(data);
-    const credits = instruction.credits;
+    const score = instruction.credits;
     const feedback = instruction.feedback;
-    this.updateScore(credits);
-    this.updateFeedback(feedback);
+    this.props.assess(element.id, { ...assessment, score, feedback });
   };
 
   private updateScore = (value: string) => {
