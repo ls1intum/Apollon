@@ -14,7 +14,7 @@ type Props = {
 export const Preview = styled(hoverable(CanvasElement)).attrs({
   child: CanvasElement,
 })`
-  margin: 5px;
+  margin: 8px;
   overflow: visible;
   fill: white;
 `;
