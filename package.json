@@ -21,6 +21,7 @@
     "lint": "yarn lint:ts && yarn lint:css",
     "lint:ts": "tslint --force -p tsconfig.json -c tslint.json -t stylish",
     "lint:css": "stylelint 'src/**/*.ts'",
+    "prepare": "rm -rf lib && tsc -p .",
     "update": "yarn upgrade-interactive --latest",
     "publish:patch": "yarn prepare && npm version patch && npm publish",
     "publish:minor": "yarn prepare && npm version minor && npm publish",
