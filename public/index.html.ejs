@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Apollon</title>
 
@@ -9,7 +9,7 @@
   <body>
     <header class="navbar">
       <a class="navbar-brand logo float-left">
-        <img class="logo-img" src=<%=require("./assets/images/logo.png")%> />
+        <img class="logo-img" src=<%=require("./assets/images/logo.png")%>/>
         <span>&nbsp;&nbsp;&nbsp;</span>
         <span class="navbar-title">Apollon</span>&nbsp;&nbsp;&nbsp;<span class="navbar-version"><%=htmlWebpackPlugin.options.version%></span>
       </a>
@@ -18,7 +18,7 @@
       <main id="apollon"></main>
       <aside class="sidebar">
         <section>
-          <h class="header">Diagram Type</h>
+          <h3 class="header">Diagram Type</h3>
           <div class="dropdown">
             <select name="type" onchange="apollon.onChange(event)">
               <option value="ClassDiagram">Class Diagram</option>
@@ -32,7 +32,7 @@
           </div>
         </section>
         <section>
-          <h class="header">Language</h>
+          <h3 class="header">Language</h3>
           <div class="dropdown">
             <select name="locale" onchange="apollon.onChange(event)">
               <option value="en">English</option>
@@ -41,7 +41,7 @@
           </div>
         </section>
         <section>
-          <h class="header">Mode</h>
+          <h3 class="header">Mode</h3>
           <div class="dropdown">
             <select name="mode" onchange="apollon.onChange(event)">
               <option value="Exporting">Exporting</option>
@@ -55,7 +55,7 @@
           </label>
         </section>
         <section>
-          <h class="header">Export</h>
+          <h3 class="header">Export</h3>
           <div class="switch">
             <button onclick="apollon.draw()">All</button>
             <button onclick="apollon.draw('include')">Include</button>
@@ -63,7 +63,7 @@
           </div>
         </section>
         <section>
-          <h class="header">State</h>
+          <h3 class="header">State</h3>
           <div class="switch">
             <button onclick="apollon.save(event)">Save</button>
             <button onclick="apollon.clear(event)">Clear</button>

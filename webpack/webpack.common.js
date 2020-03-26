@@ -50,11 +50,7 @@ module.exports = {
         test: /\.(jpe?g|png|gif)$/i,
         use: [
           {
-            loader: 'url-loader',
-            options: {
-              esModule: false,
-              limit: 10 * 1024,
-            },
+            loader: 'file-loader',
           },
         ],
       },
