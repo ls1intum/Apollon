@@ -1,4 +1,5 @@
 import React, { Component, ComponentClass, ComponentType } from 'react';
+import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import { Direction } from '../../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
@@ -8,7 +9,6 @@ import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
 import { UMLElementComponentProps } from '../uml-element-component-props';
-import { findDOMNode } from 'react-dom';
 
 type StateProps = {
   hovered: boolean;
@@ -116,12 +116,12 @@ export const connectable = (
       const node = findDOMNode(this) as HTMLElement;
       // calculate event position relative to object position
       const relEventPosition = {
-        x: event.pageX - node.getBoundingClientRect().x,
-        y: event.pageY - node.getBoundingClientRect().y,
+        x: event.clientX - node.getBoundingClientRect().left,
+        y: event.clientY - node.getBoundingClientRect().top,
       };
       // calculate the distances to all handles
       const distances = Object.entries(this.props.ports).map(([key, value]) => ({
-        key: key,
+        key,
         distance: Math.sqrt(Math.pow(value.x - relEventPosition.x, 2) + Math.pow(value.y - relEventPosition.y, 2)),
       }));
       // use handle with min distance to connect to
