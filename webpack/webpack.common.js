@@ -2,9 +2,10 @@ const path = require('path');
 const webpack = require('webpack');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const appVersion = require('../package').version;
 
 module.exports = {
-  entry: './example/index.ts',
+  entry: './public/index.ts',
   output: {
     path: path.resolve(__dirname, '../dist'),
     filename: '[name].js',
@@ -44,6 +45,15 @@ module.exports = {
         test: /\.css$/,
         use: ['style-loader', 'css-loader'],
       },
+      {
+        //IMAGE LOADER
+        test: /\.(jpe?g|png|gif)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+          },
+        ],
+      },
     ],
   },
   optimization: {
@@ -61,8 +71,9 @@ module.exports = {
   plugins: [
     new CircularDependencyPlugin({ exclude: /node_modules/ }),
     new HtmlWebpackPlugin({
-      template: './example/index.html',
+      template: './public/index.html.ejs',
       xhtml: true,
+      version: appVersion,
     }),
     new webpack.HashedModuleIdsPlugin(),
   ],

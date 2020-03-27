@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Apollon</title>
 
@@ -7,11 +7,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
   </head>
   <body>
+    <header class="navbar">
+      <a class="navbar-brand logo float-left">
+        <img class="logo-img" src=<%=require("./assets/images/logo.png")%>/>
+        <span>&nbsp;&nbsp;&nbsp;</span>
+        <span class="navbar-title">Apollon</span>&nbsp;&nbsp;&nbsp;<span class="navbar-version"><%=htmlWebpackPlugin.options.version%></span>
+      </a>
+    </header>
     <div class="container">
       <main id="apollon"></main>
       <aside class="sidebar">
         <section>
-          <h class="header">Diagram Type</h>
+          <h3 class="header">Diagram Type</h3>
           <div class="dropdown">
             <select name="type" onchange="apollon.onChange(event)">
               <option value="ClassDiagram">Class Diagram</option>
@@ -25,7 +32,7 @@
           </div>
         </section>
         <section>
-          <h class="header">Language</h>
+          <h3 class="header">Language</h3>
           <div class="dropdown">
             <select name="locale" onchange="apollon.onChange(event)">
               <option value="en">English</option>
@@ -34,21 +41,21 @@
           </div>
         </section>
         <section>
-          <h class="header">Mode</h>
+          <h3 class="header">Mode</h3>
           <div class="dropdown">
             <select name="mode" onchange="apollon.onChange(event)">
               <option value="Exporting">Exporting</option>
               <option value="Modelling">Modelling</option>
               <option value="Assessment">Assessment</option>
             </select>
-            <label>
-              <input type="checkbox" name="readonly" onchange="apollon.onSwitch(event)" />
-              Readonly
-            </label>
           </div>
+          <label>
+            <input class="checkbox" type="checkbox" name="readonly" onchange="apollon.onSwitch(event)" />
+            read-only
+          </label>
         </section>
         <section>
-          <h class="header">Export</h>
+          <h3 class="header">Export</h3>
           <div class="switch">
             <button onclick="apollon.draw()">All</button>
             <button onclick="apollon.draw('include')">Include</button>
@@ -56,7 +63,7 @@
           </div>
         </section>
         <section>
-          <h class="header">State</h>
+          <h3 class="header">State</h3>
           <div class="switch">
             <button onclick="apollon.save(event)">Save</button>
             <button onclick="apollon.clear(event)">Clear</button>
