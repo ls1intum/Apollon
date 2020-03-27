@@ -2,12 +2,15 @@ const path = require('path');
 const webpack = require('webpack');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const appVersion = require('../package').version;
+
+const outputDir = path.resolve(__dirname, '../dist');
 
 module.exports = {
   entry: './public/index.ts',
   output: {
-    path: path.resolve(__dirname, '../dist'),
+    path: outputDir,
     filename: '[name].js',
     library: 'apollon',
     libraryTarget: 'umd',
@@ -45,15 +48,6 @@ module.exports = {
         test: /\.css$/,
         use: ['style-loader', 'css-loader'],
       },
-      {
-        //IMAGE LOADER
-        test: /\.(jpe?g|png|gif)$/i,
-        use: [
-          {
-            loader: 'file-loader',
-          },
-        ],
-      },
     ],
   },
   optimization: {
@@ -75,6 +69,7 @@ module.exports = {
       xhtml: true,
       version: appVersion,
     }),
+    new CopyPlugin([{ from: 'public/assets', to: outputDir }]),
     new webpack.HashedModuleIdsPlugin(),
   ],
 };
