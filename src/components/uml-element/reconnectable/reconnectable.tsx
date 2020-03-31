@@ -44,6 +44,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
 const Handle = styled.line.attrs({
   strokeWidth: 15,
   strokeOpacity: 0,
+  stroke: 'black',
 })`
   cursor: move;
 `;
