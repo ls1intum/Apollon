@@ -12,7 +12,7 @@ export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
     />
     {element.stereotype ? (
       <svg height={50}>
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
           <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
             {`«${element.stereotype}»`}
           </tspan>
@@ -37,6 +37,7 @@ export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
           fontWeight="bold"
           fontStyle={element.italic ? 'italic' : undefined}
           textDecoration={element.underline ? 'underline' : undefined}
+          pointerEvents="none"
         >
           {element.name}
         </text>

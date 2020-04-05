@@ -54,12 +54,10 @@ const render = () => {
 render();
 
 let dragged: any;
-  export const dragstart = (event: any) => {
-    console.log('dragstart');
-    event.dataTransfer.setData('text',JSON.stringify({credits: 1, feedback: 'testfeedback'}));
-    dragged = event.target;
-  };
+export const dragstart = (event: any) => {
+  console.log('dragstart');
+  event.dataTransfer.setData('text', JSON.stringify({ credits: 1, feedback: 'div_content' }));
+  dragged = event.target;
+};
 
-document.addEventListener("drag", function(event) {
-
-}, false);
+document.addEventListener('drag', () => {}, false);

@@ -19,7 +19,7 @@ const Flex = styled.div`
 `;
 
 const Section = styled.section<{ pointerEventsEnabled: boolean }>`
-  pointer-events: ${props => (props.pointerEventsEnabled ? 'auto' : 'none')};
+  pointer-events: ${(props) => (props.pointerEventsEnabled ? 'auto' : 'none')};
 `;
 
 type OwnProps = {
@@ -57,13 +57,7 @@ class AssessmentSectionCompoennt extends Component<Props, State> {
     const { element, assessment, readonly } = this.props;
 
     return (
-      <div
-        className="artemis-instruction-dropzone"
-        onDrop={this.onDrop}
-        onDragOver={this.onDragOver}
-        onDragEnter={this.onDragEnter}
-        onDragLeave={this.onDragLeave}
-      >
+      <>
         <Section pointerEventsEnabled={!this.state.dragOver}>
           <Header>
             {this.props.translate('assessment.assessment')} {element.name}
@@ -98,63 +92,9 @@ class AssessmentSectionCompoennt extends Component<Props, State> {
           </Section>
         )}
         <Divider />
-      </div>
+      </>
     );
   }
-
-  /**
-   * implement so that elements can be dropped
-   * @param ev DragEvent
-   */
-  private onDragOver = (ev: any) => {
-    // prevent default to allow drop
-    ev.preventDefault();
-    // disable pointer events of children
-    this.setState({ dragOver: true });
-  };
-
-  /**
-   * implement so that elements can be dropped
-   * @param ev DragEvent
-   */
-  private onDragEnter = (ev: any) => {
-    if (ev.target.className.includes('artemis-instruction-dropzone')) {
-      ev.target.style.border = 'solid';
-    }
-  };
-
-  /**
-   * implement so that elements can be dropped
-   * @param ev DragEvent
-   */
-  private onDragLeave = (ev: any) => {
-    if (ev.target.className.includes('artemis-instruction-dropzone')) {
-      ev.target.style.border = '';
-    }
-    // enable pointer events of children
-    this.setState({ dragOver: false });
-  };
-
-  /**
-   * Artemis instruction object can be dropped on assessment sections to automatically fill assessment
-   * @param ev DropEvent
-   */
-  private onDrop = (ev: any) => {
-    // prevent default action (open as link for some elements)
-    ev.preventDefault();
-    if (ev.target.className.includes('artemis-instruction-dropzone')) {
-      ev.target.style.border = '';
-    }
-    // enable pointer events of children
-    this.setState({ dragOver: false });
-
-    const { element, assessment } = this.props;
-    const data = ev.dataTransfer.getData('text');
-    const instruction = JSON.parse(data);
-    const score = instruction.credits;
-    const feedback = instruction.feedback;
-    this.props.assess(element.id, { ...assessment, score, feedback });
-  };
 
   private updateScore = (value: string) => {
     const { element, assessment } = this.props;

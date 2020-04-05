@@ -2,7 +2,7 @@ import React, { Component, ComponentClass, SVGProps } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Components } from '../../packages/components';
-import { UMLElementType } from '../../packages/uml-element-type';
+import { UMLElementType } from '../..';
 import { ApollonView } from '../../services/editor/editor-types';
 import { UMLContainer } from '../../services/uml-container/uml-container';
 import { IUMLElement } from '../../services/uml-element/uml-element';
@@ -75,98 +75,31 @@ export class CanvasElementComponent extends Component<Props> {
         : 'white';
 
     return (
-        <foreignObject width="400" height="400">
-          <div
-            xmlns="http://www.w3.org/1999/xhtml"
-            className="artemis-instruction-dropzone"
-            onDrop={this.onDrop}
-            onDragOver={this.onDragOver}
-            onDragEnter={this.onDragEnter}
-            onDragLeave={this.onDragLeave}
-          >
-            <svg
-              {...props}
-              {...element.bounds}
-              pointerEvents={moving ? 'none' : undefined}
-              fillOpacity={moving ? 0.7 : undefined}
-              fill={highlight}
-            >
-              <ElementComponent element={UMLElementRepository.get(element)}>{elements}</ElementComponent>
-              {children}
-              {!interactable && (hovered || selected) && (
-                <rect
-                  x={-STROKE / 2}
-                  y={-STROKE / 2}
-                  width={element.bounds.width + STROKE}
-                  height={element.bounds.height + STROKE}
-                  fill="none"
-                  stroke="#0064ff"
-                  strokeOpacity="0.2"
-                  strokeWidth={STROKE}
-                  pointerEvents="none"
-                />
-              )}
-            </svg>
-          </div>
-        </foreignObject>
+      <svg
+        {...props}
+        {...element.bounds}
+        pointerEvents={moving ? 'none' : undefined}
+        fillOpacity={moving ? 0.7 : undefined}
+        fill={highlight}
+      >
+        <ElementComponent element={UMLElementRepository.get(element)}>{elements}</ElementComponent>
+        {children}
+        {!interactable && (hovered || selected) && (
+          <rect
+            x={-STROKE / 2}
+            y={-STROKE / 2}
+            width={element.bounds.width + STROKE}
+            height={element.bounds.height + STROKE}
+            fill="none"
+            stroke="#0064ff"
+            strokeOpacity="0.2"
+            strokeWidth={STROKE}
+            pointerEvents="none"
+          />
+        )}
+      </svg>
     );
   }
-
-  /**
-   * implement so that elements can be dropped
-   * @param ev DragEvent
-   */
-  private onDragOver = (ev: any) => {
-    // prevent default to allow drop
-    ev.preventDefault();
-    // disable pointer events of children
-    this.setState({ dragOver: true });
-  };
-
-  /**
-   * implement so that elements can be dropped
-   * @param ev DragEvent
-   */
-  private onDragEnter = (ev: any) => {
-    if (ev.target.className.includes('artemis-instruction-dropzone')) {
-      ev.target.style.border = 'solid';
-    }
-  };
-
-  /**
-   * implement so that elements can be dropped
-   * @param ev DragEvent
-   */
-  private onDragLeave = (ev: any) => {
-    if (ev.target.className.includes('artemis-instruction-dropzone')) {
-      ev.target.style.border = '';
-    }
-    // enable pointer events of children
-    this.setState({ dragOver: false });
-  };
-
-  /**
-   * Artemis instruction object can be dropped on assessment sections to automatically fill assessment
-   * @param ev DropEvent
-   */
-  private onDrop = (ev: any) => {
-    // prevent default action (open as link for some elements)
-    ev.preventDefault();
-    if (ev.target.className.includes('artemis-instruction-dropzone')) {
-      ev.target.style.border = '';
-    }
-    // enable pointer events of children
-    this.setState({ dragOver: false });
-
-    // const { element, assessment } = this.props;
-    const data = ev.dataTransfer.getData('text');
-    const instruction = JSON.parse(data);
-    const score = instruction.credits;
-    const feedback = instruction.feedback;
-    // this.props.assess(element.id, { ...assessment, score, feedback });
-    console.log(score);
-    console.log(feedback);
-  };
 }
 
 export const CanvasElement = enhance(CanvasElementComponent);

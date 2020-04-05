@@ -47,7 +47,7 @@ export const UMLDeploymentAssociationComponent: SFC<Props> = ({ element }) => {
         fill="none"
         strokeWidth={1}
       />
-      <text x={position.x} y={position.y} {...layoutText(direction)}>
+      <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
         {element.name}
       </text>
     </g>
