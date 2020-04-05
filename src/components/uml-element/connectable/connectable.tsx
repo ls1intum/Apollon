@@ -72,7 +72,7 @@ export const connectable = (
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('pointerup', this.elementOnPointerUp);
+      node.removeEventListener('pointerup', this.elementOnPointerUp);
     }
 
     render() {
