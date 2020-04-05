@@ -52,12 +52,3 @@ const render = () => {
   editor = new Apollon.ApollonEditor(container, options);
 };
 render();
-
-let dragged: any;
-export const dragstart = (event: any) => {
-  console.log('dragstart');
-  event.dataTransfer.setData('text', JSON.stringify({ credits: 1, feedback: 'div_content' }));
-  dragged = event.target;
-};
-
-document.addEventListener('drag', () => {}, false);
