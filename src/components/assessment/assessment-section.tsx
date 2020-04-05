@@ -18,10 +18,6 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-const Section = styled.section<{ pointerEventsEnabled: boolean }>`
-  pointer-events: ${(props) => (props.pointerEventsEnabled ? 'auto' : 'none')};
-`;
-
 type OwnProps = {
   element: IUMLElement;
 };
@@ -44,26 +40,18 @@ const enhance = compose<ComponentClass<OwnProps>>(
   ),
 );
 
-const initialState = {
-  dragOver: false,
-};
-
-type State = typeof initialState;
-
-class AssessmentSectionCompoennt extends Component<Props, State> {
-  state = initialState;
-
+class AssessmentSectionCompoennt extends Component<Props> {
   render() {
     const { element, assessment, readonly } = this.props;
 
     return (
       <>
-        <Section pointerEventsEnabled={!this.state.dragOver}>
+        <section>
           <Header>
             {this.props.translate('assessment.assessment')} {element.name}
           </Header>
-        </Section>
-        <Section pointerEventsEnabled={!this.state.dragOver}>
+        </section>
+        <section>
           <Flex>
             <span style={{ marginRight: '0.5em' }}>{this.props.translate('assessment.score')}:</span>
             {readonly ? (
@@ -78,18 +66,18 @@ class AssessmentSectionCompoennt extends Component<Props, State> {
               />
             )}
           </Flex>
-        </Section>
+        </section>
         {readonly ? (
           assessment && assessment.feedback && <section>{assessment.feedback}</section>
         ) : (
-          <Section pointerEventsEnabled={!this.state.dragOver}>
+          <section>
             <Textfield
               multiline={true}
               placeholder={this.props.translate('assessment.feedback')}
               onChange={this.updateFeedback}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />
-          </Section>
+          </section>
         )}
         <Divider />
       </>

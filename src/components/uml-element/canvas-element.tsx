@@ -2,7 +2,7 @@ import React, { Component, ComponentClass, SVGProps } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Components } from '../../packages/components';
-import { UMLElementType } from '../..';
+import { UMLElementType } from '../../packages/uml-element-type';
 import { ApollonView } from '../../services/editor/editor-types';
 import { UMLContainer } from '../../services/uml-container/uml-container';
 import { IUMLElement } from '../../services/uml-element/uml-element';
@@ -61,7 +61,7 @@ export class CanvasElementComponent extends Component<Props> {
 
     let elements = null;
     if (UMLContainer.isUMLContainer(element) && ChildComponent) {
-      elements = element.ownedElements.map((id) => <ChildComponent key={id} id={id} />);
+      elements = element.ownedElements.map(id => <ChildComponent key={id} id={id} />);
     }
     const ElementComponent = Components[element.type as UMLElementType];
 
