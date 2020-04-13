@@ -1,7 +1,7 @@
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { assign } from '../../utils/fx/assign';
-import { computeBoundingBoxForElements, IBoundary } from '../../utils/geometry/boundary';
+import { IBoundary } from '../../utils/geometry/boundary';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../uml-container/uml-container';
@@ -31,7 +31,15 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
   }
 
   render(canvas: ILayer, children: ILayoutable[] = []): ILayoutable[] {
-    this.bounds = computeBoundingBoxForElements(children);
+    const size = children.reduce<{ width: number; height: number }>(
+      (max, element) => ({
+        width: Math.max(Math.abs(element.bounds.x), Math.abs(element.bounds.x + element.bounds.width), max.width),
+        height: Math.max(Math.abs(element.bounds.y), Math.abs(element.bounds.y + element.bounds.height), max.height),
+      }),
+      { width: 0, height: 0 },
+    );
+
+    this.bounds = { x: -size.width, y: -size.height, width: size.width * 2, height: size.height * 2 };
     return [this];
   }
 }
