@@ -21,7 +21,7 @@ export type CreateAction<T extends IUMLElement = IUMLElement> = Action<UMLElemen
 
 export type UpdateAction<T extends IUMLElement = IUMLElement> = Action<UMLElementActionTypes.UPDATE> & {
   payload: {
-    values: Array<Pick<T, 'id'> & Partial<T>>;
+    values: (Pick<T, 'id'> & Partial<T>)[];
   };
 };
 

@@ -84,10 +84,10 @@ export type UMLAssociation = UMLRelationship & {
 };
 
 export type UMLCommunicationLink = UMLRelationship & {
-  messages: Array<{
+  messages: {
     name: string;
     direction: 'source' | 'target';
-  }>;
+  }[];
 };
 
 export type Assessment = {

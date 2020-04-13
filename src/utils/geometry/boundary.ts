@@ -40,7 +40,7 @@ export function computeBoundingBox(points: Point[]): IBoundary {
   };
 }
 
-export function computeBoundingBoxForElements(elements: Array<{ bounds: IBoundary }>): IBoundary {
+export function computeBoundingBoxForElements(elements: { bounds: IBoundary }[]): IBoundary {
   if (!elements.length) {
     return { x: 0, y: 0, width: 0, height: 0 };
   }

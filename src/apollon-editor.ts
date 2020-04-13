@@ -71,8 +71,8 @@ export class ApollonEditor {
   selection: Apollon.Selection = { elements: [], relationships: [] };
   private assessments: Apollon.Assessment[] = [];
   private application: RefObject<Application> = createRef();
-  private selectionSubscribers: Array<(selection: Apollon.Selection) => void> = [];
-  private assessmentSubscribers: Array<(assessments: Apollon.Assessment[]) => void> = [];
+  private selectionSubscribers: ((selection: Apollon.Selection) => void)[] = [];
+  private assessmentSubscribers: ((assessments: Apollon.Assessment[]) => void)[] = [];
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};

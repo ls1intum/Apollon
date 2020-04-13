@@ -21,7 +21,7 @@ import { UpdatableReducer } from './uml-element/updatable/updatable-reducer';
 import { ReconnectableReducer } from './uml-relationship/reconnectable/reconnectable-reducer';
 import { UMLRelationshipReducer } from './uml-relationship/uml-relationship-reducer';
 
-const reduce = <S, T extends Action>(intial: S, ...reducerList: Array<Reducer<S, T>>): Reducer<S, T> => (
+const reduce = <S, T extends Action>(intial: S, ...reducerList: Reducer<S, T>[]): Reducer<S, T> => (
   state = intial,
   action,
 ) => reducerList.reduce<S>((newState, reducer) => reducer(newState, action), state);

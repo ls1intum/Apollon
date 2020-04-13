@@ -17,7 +17,7 @@ const defaultProps = Object.freeze({
 });
 
 const initialState = Object.freeze({
-  wordsByLines: [] as Array<{ words: string[]; width: number }>,
+  wordsByLines: [] as { words: string[]; width: number }[],
 });
 
 type Props = { children: string } & SVGProps<SVGTextElement> & typeof defaultProps;
@@ -29,7 +29,7 @@ export class Multiline extends Component<Props, State> {
   state = initialState;
 
   spaceWidth = 0;
-  wordsWithComputedWidth = [] as Array<{ word: string; width: number }>;
+  wordsWithComputedWidth = [] as { word: string; width: number }[];
 
   componentDidMount() {
     this.updateWordsByLines(this.props, true);
@@ -107,12 +107,12 @@ export class Multiline extends Component<Props, State> {
   }
 
   calculateWordsByLines(
-    wordsWithComputedWidth: Array<{ word: string; width: number }>,
+    wordsWithComputedWidth: { word: string; width: number }[],
     spaceWidth: number,
     lineWidth?: number,
-  ): Array<{ words: string[]; width: number }> {
+  ): { words: string[]; width: number }[] {
     const { scaleToFit } = this.props;
-    return wordsWithComputedWidth.reduce<Array<{ words: string[]; width: number }>>((result, { word, width }) => {
+    return wordsWithComputedWidth.reduce<{ words: string[]; width: number }[]>((result, { word, width }) => {
       const currentLine = result[result.length - 1];
 
       if (currentLine && (!lineWidth || scaleToFit || currentLine.width + width + spaceWidth < lineWidth)) {

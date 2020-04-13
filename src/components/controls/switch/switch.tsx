@@ -9,7 +9,7 @@ const defaultProps = Object.freeze({
 });
 
 type Props<T> = {
-  children: ReactElement<ItemProps<T>> | Array<ReactElement<ItemProps<T>>>;
+  children: ReactElement<ItemProps<T>> | ReactElement<ItemProps<T>>[];
   onChange?: (value: T) => void;
   value: T;
 } & typeof defaultProps;

@@ -27,6 +27,6 @@ export type ReconnectEndAction = Action<ReconnectableActionTypes.END> & {
 
 export type ReconnectAction = Action<ReconnectableActionTypes.RECONNECT> & {
   payload: {
-    connections: Array<Pick<IUMLRelationship, 'id'> & Connection>;
+    connections: (Pick<IUMLRelationship, 'id'> & Connection)[];
   };
 };
