@@ -11,7 +11,7 @@ export const UMLUseCaseActorComponent: SFC<Props> = ({ element }) => (
       <line x1="45" y1="80" x2="15" y2="110" />
       <line x1="45" y1="80" x2="75" y2="110" />
     </g>
-    <text x="45" y="130" dominantBaseline="middle" textAnchor="middle" fontWeight="bold">
+    <text x="45" y="130" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
       {element.name}
     </text>
   </g>

@@ -6,9 +6,7 @@ import { AsyncDispatch } from '../../../utils/actions/actions';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
 
-const initialState = {
-  previousEvent: null as PointerEvent | null,
-};
+const initialState = {};
 
 type StateProps = {};
 
@@ -20,12 +18,9 @@ type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
 type State = typeof initialState;
 
-const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
-  null,
-  {
-    updateStart: UMLElementRepository.updateStart,
-  },
-);
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(null, {
+  updateStart: UMLElementRepository.updateStart,
+});
 
 export const updatable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
@@ -35,12 +30,12 @@ export const updatable = (
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('pointerdown', this.onPointerDown);
+      node.addEventListener('dblclick', this.onDoubleClick);
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.removeEventListener('pointerdown', this.onPointerDown);
+      node.removeEventListener('dblclick', this.onDoubleClick);
     }
 
     render() {
@@ -48,21 +43,8 @@ export const updatable = (
       return <WrappedComponent {...props} />;
     }
 
-    private onPointerDown = (event: PointerEvent) => {
-      const { previousEvent } = this.state;
-      this.setState({ previousEvent: event });
-
-      if (!previousEvent) {
-        return;
-      }
-
-      const withinTime = event.timeStamp - previousEvent.timeStamp < 300;
-      const withinBoundsX = Math.abs(event.clientX - previousEvent.clientX) < 30;
-      const withinBoundsY = Math.abs(event.clientY - previousEvent.clientY) < 30;
-
-      if (withinTime && withinBoundsX && withinBoundsY) {
-        this.props.updateStart(this.props.id);
-      }
+    private onDoubleClick = () => {
+      this.props.updateStart(this.props.id);
     };
   }
 

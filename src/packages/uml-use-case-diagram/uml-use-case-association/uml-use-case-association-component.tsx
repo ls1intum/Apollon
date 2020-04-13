@@ -30,6 +30,7 @@ export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
           `
             : undefined
         }
+        pointerEvents="none"
       >
         <textPath xlinkHref={`#textpath-${element.id}`} startOffset="50%">
           {element.name}

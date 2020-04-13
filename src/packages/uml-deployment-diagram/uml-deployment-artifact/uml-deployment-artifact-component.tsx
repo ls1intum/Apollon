@@ -4,7 +4,7 @@ import { UMLDeploymentArtifact } from './uml-deployment-artifact';
 export const UMLDeploymentArtifactComponent: SFC<Props> = ({ element }) => (
   <g>
     <rect width="100%" height="100%" stroke="black" />
-    <text x="50%" y="28" textAnchor="middle" fontWeight="bold">
+    <text x="50%" y="28" textAnchor="middle" fontWeight="bold" pointerEvents="none">
       {element.name}
     </text>
     <g transform={`translate(${element.bounds.width - 26}, 7)`}>

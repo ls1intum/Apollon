@@ -138,16 +138,16 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
         markerEnd={`url(#${id})`}
         strokeDasharray={stroke}
       />
-      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'BOTTOM')}>
+      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'BOTTOM')} pointerEvents="none">
         {element.source.multiplicity}
       </text>
-      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'BOTTOM')}>
+      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'BOTTOM')} pointerEvents="none">
         {element.target.multiplicity}
       </text>
-      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'TOP')}>
+      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'TOP')} pointerEvents="none">
         {element.source.role}
       </text>
-      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'TOP')}>
+      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'TOP')} pointerEvents="none">
         {element.target.role}
       </text>
     </g>
