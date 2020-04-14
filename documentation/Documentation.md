@@ -119,3 +119,12 @@ services always interact with the global application state, except for the layou
 - a repository
 - types definition
 - (optional) additional classes for abstract concept of service
+
+## managing application state
+Redux is used for managing global application state. Redux provides a Store which represents the global application state,
+Actions which can be dispatched to manipulate the application state and Reducers which are called in the event of an Action (they manipulate the global application state).
+React-Redux provides functionality to map properties of the global application state and additional functions into the properties object of an React component. With that,
+you can make components dependent on the global application state and React will rerender them when the state changes.
+
+### redux-saga
+Redux saga is a middleware, which is mostly used to execute asynchronous logic in actions.
