@@ -62,7 +62,7 @@ export const UMLActivityControlFlowComponent: SFC<Props> = ({ element }) => {
         strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}
       />
-      <text x={position.x} y={position.y} {...layoutText(direction)}>
+      <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
         {element.name}
       </text>
     </g>

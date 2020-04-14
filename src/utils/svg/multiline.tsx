@@ -166,7 +166,7 @@ export class Multiline extends Component<Props, State> {
     }
 
     return (
-      <text x={x} y={y} textAnchor={textAnchor} {...textProps}>
+      <text x={x} y={y} textAnchor={textAnchor} {...textProps} pointerEvents="none">
         {wordsByLines.map((line, index) => (
           <tspan x={x} dy={index === 0 ? startDy : lineHeight} key={index}>
             {line.words.join(' ')}

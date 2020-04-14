@@ -62,6 +62,7 @@ export const UMLUseCaseIncludeComponent: SFC<Props> = ({ element }) => {
             `
             : undefined
         }
+        pointerEvents="none"
       >
         <textPath xlinkHref={`#textpath-${element.id}`} startOffset="50%">
           «include»
