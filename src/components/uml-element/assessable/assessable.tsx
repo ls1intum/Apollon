@@ -23,6 +23,7 @@ type DispatchProps = {
   select: AsyncDispatch<typeof UMLElementRepository.select>;
   deselect: AsyncDispatch<typeof UMLElementRepository.deselect>;
   assess: typeof AssessmentRepository.assess;
+  updateStart: AsyncDispatch<typeof UMLElementRepository.updateStart>;
 };
 
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
@@ -41,6 +42,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
     select: UMLElementRepository.select,
     deselect: UMLElementRepository.deselect,
     assess: AssessmentRepository.assess,
+    updateStart: UMLElementRepository.updateStart,
   },
 );
 
@@ -63,7 +65,7 @@ export const assessable = (
     }
 
     render() {
-      const { assessment, assess, select, deselect, bounds, path: ipath, ...props } = this.props;
+      const { assessment, assess, select, deselect, updateStart, bounds, path: ipath, ...props } = this.props;
 
       let position: Point;
       if (ipath) {
@@ -111,13 +113,24 @@ export const assessable = (
       // don't propagate to parents, so that most accurate element is selected only
       ev.stopPropagation();
 
-      const { id: elementId, assessment } = this.props;
       if (!!ev.dataTransfer) {
-        const data = ev.dataTransfer.getData('text');
-        const instruction = JSON.parse(data);
+        const data: string = ev.dataTransfer.getData('artemis/sgi');
+        if (data === '') {
+          console.warn('Could not get artemis sgi element from drop element');
+          return;
+        }
+        let instruction;
+        try {
+          instruction = JSON.parse(data);
+        } catch (e) {
+          console.error('Could not parse artemis sgi', e);
+          return;
+        }
+        const { id: elementId, assessment } = this.props;
         const score = instruction.credits;
         const feedback = instruction.feedback;
         this.props.assess(elementId, { ...assessment, score, feedback });
+        this.props.updateStart(elementId);
       }
     };
   }
