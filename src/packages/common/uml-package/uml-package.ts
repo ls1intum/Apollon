@@ -1,18 +1,10 @@
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
-import { UMLElement } from '../../../services/uml-element/uml-element';
 import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary';
 import { Text } from '../../../utils/svg/text';
 
 export abstract class UMLPackage extends UMLContainer {
-  appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this];
-  }
-
-  removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this];
-  }
 
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     const radix = 10;

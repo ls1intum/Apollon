@@ -48,14 +48,6 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
     };
   }
 
-  appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this];
-  }
-
-  removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this];
-  }
-
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     const attributes = children.filter((x): x is UMLClassifierAttribute => x instanceof UMLClassifierAttribute);
     const methods = children.filter((x): x is UMLClassifierMethod => x instanceof UMLClassifierMethod);

@@ -39,9 +39,5 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
     this.ownedElements = children.map(child => child.id);
   }
 
-  abstract appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]];
-
-  abstract removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]];
-
   abstract render(canvas: ILayer, children?: ILayoutable[]): ILayoutable[];
 }
