@@ -151,28 +151,34 @@ export class ApollonEditor {
     });
   };
 
+  /**
+   * Triggered whenever an action is dispatched which potentially lead to a change in the store / state tree
+   * Used to notify all the selection and assessment subscribers of Apollon
+   */
   private onDispatch = () => {
     if (!this.store) return;
     const { elements, selected, assessments } = this.store.getState();
     const selection: Apollon.Selection = {
-      elements: selected.filter(id => elements[id].type in UMLElementType),
-      relationships: selected.filter(id => elements[id].type in UMLRelationshipType),
+      elements: selected.filter((id) => elements[id].type in UMLElementType),
+      relationships: selected.filter((id) => elements[id].type in UMLRelationshipType),
     };
 
+    // check if previous selection differs from current selection, if yes -> notify subscribers
     if (JSON.stringify(this.selection) !== JSON.stringify(selection)) {
-      this.selectionSubscribers.forEach(subscriber => subscriber(selection));
+      this.selectionSubscribers.forEach((subscriber) => subscriber(selection));
       this.selection = selection;
     }
 
-    const umlAssessments = Object.keys(assessments).map<Apollon.Assessment>(id => ({
+    const umlAssessments = Object.keys(assessments).map<Apollon.Assessment>((id) => ({
       modelElementId: id,
       elementType: elements[id].type as Apollon.UMLElementType | Apollon.UMLRelationshipType,
       score: assessments[id].score,
       feedback: assessments[id].feedback,
     }));
 
+    // check if previous assessment differs from current selection, if yes -> notify subscribers
     if (JSON.stringify(this.assessments) !== JSON.stringify(umlAssessments)) {
-      this.assessmentSubscribers.forEach(subscriber => subscriber(umlAssessments));
+      this.assessmentSubscribers.forEach((subscriber) => subscriber(umlAssessments));
       this.assessments = umlAssessments;
     }
   };
