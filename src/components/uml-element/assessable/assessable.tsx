@@ -17,6 +17,7 @@ type StateProps = {
   assessment?: IAssessment;
   bounds: IBoundary;
   path?: IPath;
+  readonly: boolean;
 };
 
 type DispatchProps = {
@@ -36,6 +37,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
       assessment: state.assessments[props.id],
       bounds: element.bounds,
       path: UMLRelationship.isUMLRelationship(element) ? element.path : undefined,
+      readonly: state.editor.readonly,
     };
   },
   {
@@ -51,10 +53,12 @@ export const assessable = (
 ): ComponentClass<UMLElementComponentProps> => {
   class Assessable extends Component<Props> {
     componentDidMount() {
-      const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('dragover', this.onDragOver.bind(this));
-      node.addEventListener('dragleave', this.onDragLeave.bind(this));
-      node.addEventListener('drop', this.onDrop.bind(this));
+      if (!this.props.readonly) {
+        const node = findDOMNode(this) as HTMLElement;
+        node.addEventListener('dragover', this.onDragOver.bind(this));
+        node.addEventListener('dragleave', this.onDragLeave.bind(this));
+        node.addEventListener('drop', this.onDrop.bind(this));
+      }
     }
 
     componentWillUnmount() {
@@ -65,7 +69,7 @@ export const assessable = (
     }
 
     render() {
-      const { assessment, assess, select, deselect, updateStart, bounds, path: ipath, ...props } = this.props;
+      const { assessment, assess, select, deselect, updateStart, bounds, path: ipath, readonly, ...props } = this.props;
 
       let position: Point;
       if (ipath) {
