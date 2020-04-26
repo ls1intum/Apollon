@@ -128,3 +128,29 @@ you can make components dependent on the global application state and React will
 
 ### redux-saga
 Redux saga is a middleware, which is mostly used to execute asynchronous logic in actions.
+
+
+## Abstractions
+#### UMLDiagram
+A UMLDiagram is a set of UMLElements
+
+#### UMLElement
+A UMLElement is a generic element type which can either be a concrete UMLElement, a UMLContainer or a UMLRelationship
+
+#### UMLContainer
+A UMLElement which can contain other UMLElements
+
+#### UMLRelationship
+A connection between two UMLElements
+
+#### Idea behind the Architecture
+Every diagram consists of a set of UMLElements. The application state manages these elements (Elementstate). The elements are
+of a certain type e.g. a class of a UML class diagram. The types are defined in the packages structure. 
+A type defines how the element looks like (mapping from type to component) and which features are available for the user when 
+interacting with an component of this type. The elements are counterintuitively organized in a flat Map instead of a tree.
+I could not find out why that is the case, the only thing I could think of was performance -> faster to access element by id
+then finding an element inside a tree
+
+Interaction of user with elements is separated from the datamodel -> selection of component is managed as an array
+in the model state instead of the datamodel having a property isSelected: boolean. Maybe it would make sense to merge
+that back together and in case of serialization only serialize necessary properties
