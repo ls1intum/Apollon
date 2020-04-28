@@ -83,10 +83,24 @@ export const assessable = (
         <WrappedComponent {...props}>
           {assessment && (
             <g transform={`translate(${position.x} ${position.y})`} pointerEvents={'none'}>
-              <Container />
-              {assessment.score === 0 && <FeedbackIcon />}
-              {assessment.score > 0 && <CorrectIcon />}
-              {assessment.score < 0 && <WrongIcon />}
+              {assessment.score === 0 && !!assessment.feedback && (
+                <>
+                  <Container />
+                  <FeedbackIcon />
+                </>
+              )}
+              {assessment.score > 0 && (
+                <>
+                  <Container />
+                  <CorrectIcon />
+                </>
+              )}
+              {assessment.score < 0 && (
+                <>
+                  <Container />
+                  <WrongIcon />
+                </>
+              )}
             </g>
           )}
         </WrappedComponent>
