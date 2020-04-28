@@ -119,7 +119,7 @@ export const assessable = (
 
       if (!!ev.dataTransfer) {
         const data: string = ev.dataTransfer.getData('artemis/sgi');
-        if (data === '') {
+        if (!data) {
           console.warn('Could not get artemis sgi element from drop element');
           return;
         }
