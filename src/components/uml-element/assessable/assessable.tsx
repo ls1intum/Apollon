@@ -17,12 +17,14 @@ type StateProps = {
   assessment?: IAssessment;
   bounds: IBoundary;
   path?: IPath;
+  readonly: boolean;
 };
 
 type DispatchProps = {
   select: AsyncDispatch<typeof UMLElementRepository.select>;
   deselect: AsyncDispatch<typeof UMLElementRepository.deselect>;
   assess: typeof AssessmentRepository.assess;
+  updateStart: AsyncDispatch<typeof UMLElementRepository.updateStart>;
 };
 
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
@@ -35,12 +37,14 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
       assessment: state.assessments[props.id],
       bounds: element.bounds,
       path: UMLRelationship.isUMLRelationship(element) ? element.path : undefined,
+      readonly: state.editor.readonly,
     };
   },
   {
     select: UMLElementRepository.select,
     deselect: UMLElementRepository.deselect,
     assess: AssessmentRepository.assess,
+    updateStart: UMLElementRepository.updateStart,
   },
 );
 
@@ -49,10 +53,12 @@ export const assessable = (
 ): ComponentClass<UMLElementComponentProps> => {
   class Assessable extends Component<Props> {
     componentDidMount() {
-      const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('dragover', this.onDragOver.bind(this));
-      node.addEventListener('dragleave', this.onDragLeave.bind(this));
-      node.addEventListener('drop', this.onDrop.bind(this));
+      if (!this.props.readonly) {
+        const node = findDOMNode(this) as HTMLElement;
+        node.addEventListener('dragover', this.onDragOver.bind(this));
+        node.addEventListener('dragleave', this.onDragLeave.bind(this));
+        node.addEventListener('drop', this.onDrop.bind(this));
+      }
     }
 
     componentWillUnmount() {
@@ -63,7 +69,7 @@ export const assessable = (
     }
 
     render() {
-      const { assessment, assess, select, deselect, bounds, path: ipath, ...props } = this.props;
+      const { assessment, assess, select, deselect, updateStart, bounds, path: ipath, readonly, ...props } = this.props;
 
       let position: Point;
       if (ipath) {
@@ -77,10 +83,24 @@ export const assessable = (
         <WrappedComponent {...props}>
           {assessment && (
             <g transform={`translate(${position.x} ${position.y})`} pointerEvents={'none'}>
-              <Container />
-              {assessment.score === 0 && <FeedbackIcon />}
-              {assessment.score > 0 && <CorrectIcon />}
-              {assessment.score < 0 && <WrongIcon />}
+              {assessment.score === 0 && !!assessment.feedback && (
+                <>
+                  <Container />
+                  <FeedbackIcon />
+                </>
+              )}
+              {assessment.score > 0 && (
+                <>
+                  <Container />
+                  <CorrectIcon />
+                </>
+              )}
+              {assessment.score < 0 && (
+                <>
+                  <Container />
+                  <WrongIcon />
+                </>
+              )}
             </g>
           )}
         </WrappedComponent>
@@ -111,13 +131,24 @@ export const assessable = (
       // don't propagate to parents, so that most accurate element is selected only
       ev.stopPropagation();
 
-      const { id: elementId, assessment } = this.props;
       if (!!ev.dataTransfer) {
-        const data = ev.dataTransfer.getData('text');
-        const instruction = JSON.parse(data);
+        const data: string = ev.dataTransfer.getData('artemis/sgi');
+        if (!data) {
+          console.warn('Could not get artemis sgi element from drop element');
+          return;
+        }
+        let instruction;
+        try {
+          instruction = JSON.parse(data);
+        } catch (e) {
+          console.error('Could not parse artemis sgi', e);
+          return;
+        }
+        const { id: elementId, assessment } = this.props;
         const score = instruction.credits;
         const feedback = instruction.feedback;
         this.props.assess(elementId, { ...assessment, score, feedback });
+        this.props.updateStart(elementId);
       }
     };
   }
