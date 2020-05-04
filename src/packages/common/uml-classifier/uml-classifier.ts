@@ -2,7 +2,7 @@ import { DeepPartial } from 'redux';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
-import { UMLElement } from '../../../services/uml-element/uml-element';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
@@ -38,6 +38,8 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
     super();
     assign<IUMLClassifier>(this, values);
   }
+
+  abstract reorderChildren(children: IUMLElement[]): string[];
 
   serialize(children: UMLElement[] = []): Apollon.UMLClassifier {
     return {
