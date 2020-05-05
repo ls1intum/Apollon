@@ -5,6 +5,8 @@ import { Actions } from '../actions';
 import { UMLElementState } from '../uml-element/uml-element-types';
 import { IUMLContainer, UMLContainer } from './uml-container';
 import { UMLContainerActionTypes } from './uml-container-types';
+import { UMLElements } from '../../packages/uml-elements';
+import { UMLElementType } from '../..';
 
 export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {}, action) => {
   switch (action.type) {
@@ -17,7 +19,15 @@ export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {
           UMLContainer.isUMLContainer(container) && {
             [container.id]: {
               ...container,
-              ownedElements: [...new Set([...container.ownedElements, ...payload.ids])],
+              ownedElements: [
+                ...new Set(
+                  // TODO: find better solution for this
+                  // hacky: create new Element of Container type to reorder children. This must be done, because js prototype is lost in redux state
+                  (new UMLElements[container.type as UMLElementType]() as UMLContainer).reorderChildren(
+                    [...container.ownedElements, ...payload.ids].map((id) => state[id]),
+                  ),
+                ),
+              ],
             },
           }),
       };

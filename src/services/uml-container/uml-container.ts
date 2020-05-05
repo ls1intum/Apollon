@@ -26,6 +26,13 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
     assign<IUMLContainer>(this, values);
   }
 
+  /**
+   * reorders children -> default, do nothing
+   */
+  reorderChildren(children: IUMLElement[]): string[] {
+    return this.ownedElements;
+  }
+
   /** Serializes an `UMLElement` to an `Apollon.UMLElement` */
   serialize(children?: UMLElement[]): Apollon.UMLModelElement {
     return {
@@ -38,10 +45,6 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
     super.deserialize(values);
     this.ownedElements = children.map(child => child.id);
   }
-
-  abstract appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]];
-
-  abstract removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]];
 
   abstract render(canvas: ILayer, children?: ILayoutable[]): ILayoutable[];
 }

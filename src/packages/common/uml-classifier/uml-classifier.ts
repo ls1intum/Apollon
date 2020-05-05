@@ -2,7 +2,7 @@ import { DeepPartial } from 'redux';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
-import { UMLElement } from '../../../services/uml-element/uml-element';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
@@ -39,6 +39,8 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
     assign<IUMLClassifier>(this, values);
   }
 
+  abstract reorderChildren(children: IUMLElement[]): string[];
+
   serialize(children: UMLElement[] = []): Apollon.UMLClassifier {
     return {
       ...super.serialize(children),
@@ -46,14 +48,6 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
       attributes: children.filter(x => x instanceof UMLClassifierAttribute).map(x => x.id),
       methods: children.filter(x => x instanceof UMLClassifierMethod).map(x => x.id),
     };
-  }
-
-  appendElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this];
-  }
-
-  removeElements(elements: UMLElement[], ownedElements: UMLElement[]): [UMLContainer, ...UMLElement[]] {
-    return [this];
   }
 
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
