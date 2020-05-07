@@ -30,7 +30,7 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
    * reorders children -> default, do nothing
    */
   reorderChildren(children: IUMLElement[]): string[] {
-    return this.ownedElements;
+    return children.map(child => child.id);
   }
 
   /** Serializes an `UMLElement` to an `Apollon.UMLElement` */
