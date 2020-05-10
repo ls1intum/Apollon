@@ -35,17 +35,22 @@ type Props = typeof defaultProps;
 
 export const StyledTextfield = styled(Input)<Props>(
   props => css`
-    ${props.gutter &&
+    ${
+      props.gutter &&
       css`
         margin-bottom: 0.5em;
-      `}
+      `
+    }
 
-    ${props.multiline &&
+    ${
+      props.multiline &&
       css`
         resize: vertical;
-      `}
+      `
+    }
 
-    ${props.outline &&
+    ${
+      props.outline &&
       css`
         &:not(:focus) {
           border-style: dashed;
@@ -54,34 +59,43 @@ export const StyledTextfield = styled(Input)<Props>(
         &:not(:focus):not(:hover) {
           background: rgba(255, 255, 255, 0.5);
         }
-      `}
+      `
+    }
 
-    ${props.block &&
+    ${
+      props.block &&
       css`
         display: block;
         width: 100%;
-      `}
+      `
+    }
 
-    ${props.readonly &&
+    ${
+      props.readonly &&
       css`
         background-color: ${props.theme.color.gray200};
         opacity: 1;
-      `}
+      `
+    }
 
-    ${props.size &&
+    ${
+      props.size &&
       props.size === 'sm' &&
       css`
         border-radius: 0.2em;
         font-size: 0.875em;
         padding: 0.25em 0.5em;
-      `}
+      `
+    }
 
-    ${props.size &&
+    ${
+      props.size &&
       props.size === 'lg' &&
       css`
         border-radius: 0.3em;
         font-size: 1.25em;
         padding: 0.5em 1em;
-      `}
+      `
+    }
   `,
 );

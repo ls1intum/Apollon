@@ -38,7 +38,7 @@ export class Point implements IPoint {
     return this.clone();
   }
 
-  round(radix: number = 10): Point {
+  round(radix = 10): Point {
     return new Point(Math.round(this.x / radix) * radix, Math.round(this.y / radix) * radix);
   }
 

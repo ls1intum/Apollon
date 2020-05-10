@@ -19,7 +19,7 @@
     "start": "webpack-dev-server --config ./webpack/webpack.dev.js",
     "build": "rm -rf dist && webpack --config ./webpack/webpack.prod.js",
     "lint": "yarn lint:ts && yarn lint:css",
-    "lint:ts": "eslint */**/*.{js,jsx,ts,tsx}",
+    "lint:ts": "eslint --ext .js,.jsx,.ts,.tsx .",
     "lint:css": "stylelint 'src/**/*.ts'",
     "prepare": "rm -rf lib && tsc -p .",
     "update": "yarn upgrade-interactive --latest",

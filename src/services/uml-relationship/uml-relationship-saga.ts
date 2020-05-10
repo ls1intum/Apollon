@@ -48,8 +48,8 @@ function* update(): SagaIterator {
 function* layoutElement(): SagaIterator {
   const action: MoveAction | ResizeAction = yield take([MovingActionTypes.MOVE, ResizingActionTypes.RESIZE]);
   const { elements }: ModelState = yield select();
-  const relationships = Object.values(elements).filter(
-    (x): x is IUMLRelationship => UMLRelationship.isUMLRelationship(x),
+  const relationships = Object.values(elements).filter((x): x is IUMLRelationship =>
+    UMLRelationship.isUMLRelationship(x),
   );
   const updates: string[] = [];
 

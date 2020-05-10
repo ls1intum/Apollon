@@ -12,7 +12,7 @@ export interface IUMLDeploymentNode extends IUMLContainer {
 
 export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode {
   type: UMLElementType = DeploymentElementType.DeploymentNode;
-  stereotype: string = 'node';
+  stereotype = 'node';
 
   constructor(values?: DeepPartial<IUMLDeploymentNode>) {
     super();

@@ -26,24 +26,21 @@ const getInitialState = ({ element, getChildren }: Props) => ({
 
 type State = ReturnType<typeof getInitialState>;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  null,
-  {
-    getChildren: (UMLElementRepository.getChildren as any) as AsyncDispatch<typeof UMLElementRepository.getChildren>,
-    assessNext: (current: IUMLElement): AsyncAction => (dispatch, getState) => {
-      const { elements } = getState();
-      const children = dispatch(UMLElementRepository.getChildren(current.id));
-      const last = children.length ? children[children.length - 1] : current;
-      const index = Object.keys(elements).indexOf(last.id) + 1;
-      const next = Object.keys(elements)[index % Object.keys(elements).length];
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+  getChildren: (UMLElementRepository.getChildren as any) as AsyncDispatch<typeof UMLElementRepository.getChildren>,
+  assessNext: (current: IUMLElement): AsyncAction => (dispatch, getState) => {
+    const { elements } = getState();
+    const children = dispatch(UMLElementRepository.getChildren(current.id));
+    const last = children.length ? children[children.length - 1] : current;
+    const index = Object.keys(elements).indexOf(last.id) + 1;
+    const next = Object.keys(elements)[index % Object.keys(elements).length];
 
-      dispatch(UMLElementRepository.updateEnd(current.id));
-      dispatch(UMLElementRepository.deselect(current.id));
-      dispatch(UMLElementRepository.updateStart(next));
-      dispatch(UMLElementRepository.select(next));
-    },
+    dispatch(UMLElementRepository.updateEnd(current.id));
+    dispatch(UMLElementRepository.deselect(current.id));
+    dispatch(UMLElementRepository.updateStart(next));
+    dispatch(UMLElementRepository.select(next));
   },
-);
+});
 
 class AssessmentComponent extends Component<Props, State> {
   state = getInitialState(this.props);
@@ -64,7 +61,7 @@ class AssessmentComponent extends Component<Props, State> {
 
     return (
       <div ref={this.container}>
-        {elements.map((element, i) => (
+        {elements.map((element) => (
           <AssessmentSection key={element.id} element={element} />
         ))}
         <section>
@@ -104,7 +101,7 @@ class AssessmentComponent extends Component<Props, State> {
         this.next();
       }
     }
-  }
+  };
 
   private next = () => {
     const { assessNext, element } = this.props;

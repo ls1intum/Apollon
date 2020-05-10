@@ -5,7 +5,6 @@ import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometr
 import { Text } from '../../../utils/svg/text';
 
 export abstract class UMLPackage extends UMLContainer {
-
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     const radix = 10;
     const nameBounds: IBoundary = {

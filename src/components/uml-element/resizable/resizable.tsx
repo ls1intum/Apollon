@@ -24,14 +24,11 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
-  null,
-  {
-    start: UMLElementRepository.startResizing,
-    resize: UMLElementRepository.resize,
-    end: UMLElementRepository.endResizing,
-  },
-);
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(null, {
+  start: UMLElementRepository.startResizing,
+  resize: UMLElementRepository.resize,
+  end: UMLElementRepository.endResizing,
+});
 
 const Handle = styled.rect.attrs({
   x: '100%',

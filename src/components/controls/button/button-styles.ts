@@ -46,45 +46,58 @@ export const StyledButton = styled(Button)<typeof defaultProps>(props => {
   const color = props.color !== 'link' ? props.theme.color[props.color] : props.theme.color.primary;
 
   return css`
-    ${props.block &&
+    ${
+      props.block &&
       css`
         display: block;
         width: 100%;
-      `}
+      `
+    }
 
-    ${props.disabled &&
+    ${
+      props.disabled &&
       css`
         opacity: 0.65;
-      `}
+      `
+    }
 
-    ${props.size === 'sm' &&
+    ${
+      props.size === 'sm' &&
       css`
         border-radius: 0.2em;
         font-size: 0.875em;
         padding: 0.25em 0.5em;
-      `}
+      `
+    }
 
-    ${props.size === 'lg' &&
+    ${
+      props.size === 'lg' &&
       css`
         border-radius: 0.3em;
         font-size: 1.25em;
         padding: 0.5em 1em;
-      `}
+      `
+    }
 
-    ${props.color === 'link' &&
+    ${
+      props.color === 'link' &&
       css`
         color: ${props.theme.color.primary};
         text-decoration: none;
-      `}
+      `
+    }
 
-    ${props.color !== 'link' &&
+    ${
+      props.color !== 'link' &&
       css`
         :focus {
           box-shadow: 0 0 0 0.2em ${color}80;
         }
-      `}
+      `
+    }
 
-    ${props.color !== 'link' &&
+    ${
+      props.color !== 'link' &&
       !props.outline &&
       css`
         background-color: ${color};
@@ -100,9 +113,11 @@ export const StyledButton = styled(Button)<typeof defaultProps>(props => {
           background-color: ${darken(color, ACTIVE_BACKGROUND_DARKEN)};
           border-color: ${darken(color, ACTIVE_BORDER_DARKEN)};
         }
-      `}
+      `
+    }
 
-    ${props.color !== 'link' &&
+    ${
+      props.color !== 'link' &&
       props.outline &&
       css`
         border-color: ${color};
@@ -112,6 +127,7 @@ export const StyledButton = styled(Button)<typeof defaultProps>(props => {
           background-color: ${color};
           color: ${props.theme.color.white};
         }
-      `}
+      `
+    }
   `;
 });

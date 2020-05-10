@@ -36,7 +36,12 @@ export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
           {element.name}
         </textPath>
       </text>
-      <polyline points={element.path.map(point => `${point.x} ${point.y}`).join(',')} stroke="black" fill="none" strokeWidth={1} />
+      <polyline
+        points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
+        stroke="black"
+        fill="none"
+        strokeWidth={1}
+      />
     </g>
   );
 };

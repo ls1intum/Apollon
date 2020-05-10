@@ -62,8 +62,8 @@ export function computeBoundingBoxForRelationship(container: SVGSVGElement, rela
   const element = createElement(Component, { element: relationship });
   render(element, svg);
 
-  const parent = container.getBoundingClientRect() as DOMRect;
-  const child = svg.getBoundingClientRect() as DOMRect;
+  const parent = container.getBoundingClientRect();
+  const child = svg.getBoundingClientRect();
   const bounds = { x: child.left - parent.left, y: child.top - parent.top, width: child.width, height: child.height };
 
   unmountComponentAtNode(svg);

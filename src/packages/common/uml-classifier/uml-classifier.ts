@@ -25,10 +25,10 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
     resizable: 'WIDTH',
   };
 
-  italic: boolean = false;
-  underline: boolean = false;
+  italic = false;
+  underline = false;
   stereotype: string | null = null;
-  deviderPosition: number = 0;
+  deviderPosition = 0;
 
   get headerHeight() {
     return this.stereotype ? 50 : 40;

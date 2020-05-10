@@ -45,10 +45,7 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
   snap = (point: Point): Point => {
     const origin = this.origin();
 
-    return point
-      .subtract(origin)
-      .round()
-      .add(origin);
+    return point.subtract(origin).round().add(origin);
   };
 
   render() {
@@ -56,7 +53,12 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
 
     return (
       <Droppable>
-        <CanvasContainer width={diagram.bounds.width} height={diagram.bounds.height} isStatic={isStatic} ref={this.layer}>
+        <CanvasContainer
+          width={diagram.bounds.width}
+          height={diagram.bounds.height}
+          isStatic={isStatic}
+          ref={this.layer}
+        >
           {this.layer.current && (
             <>
               <svg x="50%" y="50%">

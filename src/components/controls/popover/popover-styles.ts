@@ -44,18 +44,18 @@ export const PopoverContainer = styled.div<Props>`
     switch (props.placement) {
       case 'top':
         x += ` - ${alignment}%`;
-        y += ` - 100% - 0.5em`;
+        y += ' - 100% - 0.5em';
         break;
       case 'right':
-        x += ` + 0.5em`;
+        x += ' + 0.5em';
         y += ` - ${alignment}%`;
         break;
       case 'bottom':
         x += ` - ${alignment}%`;
-        y += ` + 0.5em`;
+        y += ' + 0.5em';
         break;
       case 'left':
-        x += ` - 100% - 0.5em`;
+        x += ' - 100% - 0.5em';
         y += ` - ${alignment}%`;
         break;
     }

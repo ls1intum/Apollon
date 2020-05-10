@@ -12,8 +12,8 @@ function hexToHSL(hex: string): HSL {
   const b: number = parseInt(result[3], 16) / 255;
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  let h: number = 0;
-  let s: number = 0;
+  let h = 0;
+  let s = 0;
   const l: number = (max + min) / 2;
   if (max === min) {
     h = s = 0; // achromatic
@@ -37,9 +37,9 @@ function hexToHSL(hex: string): HSL {
 }
 
 function hslToHex({ h, s, l }: HSL): string {
-  let r: number = 0;
-  let g: number = 0;
-  let b: number = 0;
+  let r = 0;
+  let g = 0;
+  let b = 0;
 
   if (s === 0) {
     r = g = b = l; // achromatic

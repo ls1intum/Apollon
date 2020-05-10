@@ -7,7 +7,7 @@ import { UMLClassifierMethod } from '../../common/uml-classifier/uml-classifier-
 
 export class UMLAbstractClass extends UMLClassifier {
   type: UMLElementType = ClassElementType.AbstractClass;
-  italic: boolean = true;
+  italic = true;
   stereotype: string | null = 'abstract';
 
   reorderChildren(children: IUMLElement[]): string[] {

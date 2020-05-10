@@ -14,7 +14,7 @@ export class Path {
       );
   }
 
-  position(distance: number = 0): Point {
+  position(distance = 0): Point {
     for (let index = 0; index < this.path.length - 1; index++) {
       const current = new Point(this.path[index + 1].x, this.path[index + 1].y);
       const next = new Point(this.path[index].x, this.path[index].y);

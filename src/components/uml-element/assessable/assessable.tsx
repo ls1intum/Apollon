@@ -121,6 +121,7 @@ export const assessable = (
 
     /**
      * Artemis instruction object can be dropped on assessment sections to automatically fill assessment
+     *
      * @param ev DropEvent
      */
     private onDrop = (ev: DragEvent) => {

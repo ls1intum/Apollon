@@ -36,15 +36,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentType<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
-      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    flip: UMLRelationshipRepository.flip,
+    getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
+  }),
 );
 
 const Flex = styled.div`

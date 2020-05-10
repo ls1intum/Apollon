@@ -108,14 +108,11 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    flip: UMLRelationshipRepository.flip,
+  }),
 );
 
 export const UMLUseCaseAssociationUpdate = enhance(UseCaseAssociationUpdate);

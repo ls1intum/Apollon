@@ -59,7 +59,7 @@ export class CanvasRelationshipComponent extends Component<Props> {
       ...props
     } = this.props;
 
-    const ChildComponent = Components[relationship.type as UMLRelationshipType];
+    const ChildComponent = Components[relationship.type];
 
     const points = relationship.path.map(point => `${point.x} ${point.y}`).join(',');
 

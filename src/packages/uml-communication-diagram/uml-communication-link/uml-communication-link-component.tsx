@@ -40,7 +40,15 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
         {
           [Direction.Up]: (
             <>
-              <text x={position.x} y={position.y} dx={5} fontSize="85%" dominantBaseline="middle" textAnchor="start" pointerEvents="none">
+              <text
+                x={position.x}
+                y={position.y}
+                dx={5}
+                fontSize="85%"
+                dominantBaseline="middle"
+                textAnchor="start"
+                pointerEvents="none"
+              >
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↓' : ''}
                 </tspan>
@@ -50,7 +58,15 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} dx={-5} fontSize="85%" dominantBaseline="middle" textAnchor="end" pointerEvents="none">
+              <text
+                x={position.x}
+                y={position.y}
+                dx={-5}
+                fontSize="85%"
+                dominantBaseline="middle"
+                textAnchor="end"
+                pointerEvents="none"
+              >
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '↑' : ''}
                 </tspan>
@@ -88,7 +104,15 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
           ),
           [Direction.Down]: (
             <>
-              <text x={position.x} y={position.y} dx={5} fontSize="85%" dominantBaseline="middle" textAnchor="start" pointerEvents="none">
+              <text
+                x={position.x}
+                y={position.y}
+                dx={5}
+                fontSize="85%"
+                dominantBaseline="middle"
+                textAnchor="start"
+                pointerEvents="none"
+              >
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '↓' : ''}
                 </tspan>
@@ -98,7 +122,15 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} dx={-5} fontSize="85%" dominantBaseline="middle" textAnchor="end" pointerEvents="none">
+              <text
+                x={position.x}
+                y={position.y}
+                dx={-5}
+                fontSize="85%"
+                dominantBaseline="middle"
+                textAnchor="end"
+                pointerEvents="none"
+              >
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↑' : ''}
                 </tspan>

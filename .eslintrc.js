@@ -105,7 +105,16 @@ module.exports = {
     'arrow-parens': ['error', 'as-needed'],
     'brace-style': ['off', 'off'],
     camelcase: 'error',
-    'comma-dangle': 'off',
+    'comma-dangle': [
+      'error',
+      {
+        arrays: 'never',
+        objects: 'never',
+        imports: 'never',
+        exports: 'never',
+        functions: 'never',
+      },
+    ],
     complexity: 'off',
     'constructor-super': 'error',
     curly: ['error', 'multi-line'],

@@ -104,15 +104,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      create: UMLElementRepository.create,
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    create: UMLElementRepository.create,
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
+  }),
 );
 
 export const UMLObjectNameUpdate = enhance(ObjectNameComponent);

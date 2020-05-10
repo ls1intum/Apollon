@@ -1,5 +1,5 @@
 import React, { SFC } from 'react';
-import {UMLActivityInitialNode} from './uml-activity-initial-node';
+import { UMLActivityInitialNode } from './uml-activity-initial-node';
 
 export const UMLActivityInitialNodeComponent: SFC<Props> = ({ element }) => (
   <g>

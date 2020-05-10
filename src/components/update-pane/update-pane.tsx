@@ -133,10 +133,7 @@ class UnwrappedUpdatePane extends Component<Props, State> {
         .add(element.bounds.width / 2, element.bounds.height / 2)
         .subtract(canvasBounds.left, canvasBounds.top);
 
-      const position = this.props.canvas
-        .origin()
-        .add(absolute)
-        .add(window.scrollX, window.scrollY);
+      const position = this.props.canvas.origin().add(absolute).add(window.scrollX, window.scrollY);
 
       const placement = elementCenter.x < canvasBounds.width / 2 ? 'right' : 'left';
       const alignment = elementCenter.y < canvasBounds.height / 2 ? 'start' : 'end';

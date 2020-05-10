@@ -16,7 +16,7 @@ export function run(sagas: Saga[]): Effect {
 }
 
 export const keepAlive = (saga: Saga): Effect => {
-  return spawn(function*() {
+  return spawn(function* () {
     while (true) {
       yield call(saga);
     }

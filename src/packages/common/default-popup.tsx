@@ -51,12 +51,9 @@ type DispatchProps = {
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  null,
-  {
-    update: UMLElementRepository.update,
-    delete: UMLElementRepository.delete,
-  },
-);
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+  update: UMLElementRepository.update,
+  delete: UMLElementRepository.delete,
+});
 
 export const DefaultPopup = enhance(DefaultPopupComponent);

@@ -5,7 +5,7 @@ import { DeploymentElementType } from './uml-deployment-diagram';
 import { ObjectElementType } from './uml-object-diagram';
 import { UseCaseElementType } from './uml-use-case-diagram';
 
-export type UMLElementType = 
+export type UMLElementType =
   | keyof typeof ClassElementType
   | keyof typeof ObjectElementType
   | keyof typeof ActivityElementType

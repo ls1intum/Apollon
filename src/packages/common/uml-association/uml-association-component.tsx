@@ -89,7 +89,7 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
     }
   })(element.type);
 
-  const computeTextPosition = (alignmentPath: Point[], hasMarker: boolean = false): Point => {
+  const computeTextPosition = (alignmentPath: Point[], hasMarker = false): Point => {
     const distance = hasMarker ? 31 : 8;
     if (alignmentPath.length < 2) return new Point();
     const vector = alignmentPath[1].subtract(alignmentPath[0]);

@@ -78,7 +78,9 @@ export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {
           ...elements,
           [id]: {
             ...state[id],
-            ownedElements: (state[id] as IUMLContainer).ownedElements.filter(element => !payload.ids.includes(element)),
+            ownedElements: (state[id] as IUMLContainer).ownedElements.filter(
+              element => !payload.ids.includes(element)
+            ),
           },
         }),
         state,

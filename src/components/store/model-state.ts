@@ -121,7 +121,9 @@ export class ModelState {
       .filter(element => !element.owner)
       .reduce<Apollon.UMLElement[]>((acc, val) => [...acc, ...serialize(val)], []);
 
-    const apollonRelationships: Apollon.UMLRelationship[] = relationships.map(relationship => relationship.serialize());
+    const apollonRelationships: Apollon.UMLRelationship[] = relationships.map(relationship =>
+      relationship.serialize()
+    );
 
     const roots = [...apollonElements, ...apollonRelationships].filter(element => !element.owner);
     const bounds = computeBoundingBoxForElements(roots);

@@ -7,7 +7,7 @@ import { UMLClassifierMethod } from '../../common/uml-classifier/uml-classifier-
 
 export class UMLObjectName extends UMLClassifier {
   type: UMLElementType = ObjectElementType.ObjectName;
-  underline: boolean = true;
+  underline = true;
 
   reorderChildren(children: IUMLElement[]): string[] {
     const attributes = children.filter(
