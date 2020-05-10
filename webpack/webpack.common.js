@@ -26,7 +26,7 @@ module.exports = {
       {
         test: /\.tsx?/,
         enforce: 'pre',
-        use: ['tslint-loader', 'stylelint-custom-processor-loader'],
+        use: [ 'stylelint-custom-processor-loader'],
       },
       {
         test: /\.tsx?/,
@@ -35,7 +35,7 @@ module.exports = {
           {
             loader: 'ts-loader',
             options: {
-              transpileOnly: false,
+              transpileOnly: true,
               experimentalWatchApi: true,
               compilerOptions: {
                 declaration: false,

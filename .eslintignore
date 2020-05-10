@@ -1,0 +1,7 @@
+.github/
+.idea/
+dist/
+documentation/
+lib/
+node_modules/
+webpack/
