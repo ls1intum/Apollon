@@ -14,6 +14,7 @@ import { UMLDiagram } from './services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from './services/uml-element/uml-element-repository';
 import * as Apollon from './typings';
 import { Dispatch } from './utils/actions/actions';
+import { UMLDiagramType } from './typings';
 
 export class ApollonEditor {
   get model(): Apollon.UMLModel {
@@ -27,28 +28,26 @@ export class ApollonEditor {
       ...ModelState.fromModel(model),
       editor: { ...this.store.getState().editor },
     };
-    this.destroy();
+    this.recreateEditor(state);
+  }
 
-    const element = createElement(Application, {
-      ref: this.application,
-      state,
-      styles: this.options.theme,
-      locale: this.options.locale,
-    });
-    render(element, this.container, this.componentDidMount);
+  set type(diagramType: UMLDiagramType) {
+    if (!this.store) throw new Error('Apollon was already destroyed.');
+    const state: DeepPartial<ModelState> = {
+      ...this.store.getState(),
+      diagram: new UMLDiagram({
+        type: diagramType,
+      }),
+      elements: undefined,
+    };
+    this.recreateEditor(state);
   }
 
   set locale(locale: Locale) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
-    this.destroy();
-
-    const element = createElement(Application, {
-      ref: this.application,
-      state: this.store.getState(),
-      styles: this.options.theme,
-      locale,
-    });
-    render(element, this.container, this.componentDidMount);
+    const state = this.store.getState();
+    this.options.locale = locale;
+    this.recreateEditor(state);
   }
 
   static exportModelAsSvg(
@@ -182,6 +181,18 @@ export class ApollonEditor {
       this.assessments = umlAssessments;
     }
   };
+
+  private recreateEditor(state: DeepPartial<ModelState>) {
+    this.destroy();
+
+    const element = createElement(Application, {
+      ref: this.application,
+      state: state,
+      styles: this.options.theme,
+      locale: this.options.locale,
+    });
+    render(element, this.container, this.componentDidMount);
+  }
 
   private get store(): Store<ModelState, Actions> | null {
     return (
