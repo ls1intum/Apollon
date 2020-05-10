@@ -46,17 +46,17 @@ class AssessmentComponent extends Component<Props, State> {
   state = getInitialState(this.props);
   container: RefObject<HTMLDivElement> = createRef();
 
-  componentDidMount() {
+  componentDidMount(): void {
     this.setFocus();
   }
 
-  componentDidUpdate(props: Props) {
+  componentDidUpdate(props: Props): void {
     if (props.element !== this.props.element) {
       this.setState(getInitialState(this.props), this.setFocus);
     }
   }
 
-  render() {
+  render(): React.ReactNode {
     const { elements } = this.state;
 
     return (
@@ -80,7 +80,7 @@ class AssessmentComponent extends Component<Props, State> {
     );
   }
 
-  private setFocus = () => {
+  private setFocus = (): void => {
     if (!this.container.current) {
       return;
     }
@@ -93,7 +93,7 @@ class AssessmentComponent extends Component<Props, State> {
     }
   };
 
-  private onKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+  private onKey = (event: React.KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key === 'Enter') {
       if (event.type === 'keydown') {
         event.preventDefault();
@@ -103,7 +103,7 @@ class AssessmentComponent extends Component<Props, State> {
     }
   };
 
-  private next = () => {
+  private next = (): void => {
     const { assessNext, element } = this.props;
     assessNext(element);
   };

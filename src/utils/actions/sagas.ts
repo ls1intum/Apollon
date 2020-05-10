@@ -7,13 +7,13 @@ export const isInternal = <T extends Action>(action: T): boolean => {
   return SAGA_ACTION in action;
 };
 
-export function composeSaga(sagas: Saga[]): Effect {
+export const composeSaga = (sagas: Saga[]): Effect => {
   return all(sagas.map(spawn));
-}
+};
 
-export function run(sagas: Saga[]): Effect {
+export const run = (sagas: Saga[]): Effect => {
   return all(sagas.map(saga => keepAlive(safely(saga))));
-}
+};
 
 export const keepAlive = (saga: Saga): Effect => {
   return spawn(function* () {
@@ -28,7 +28,7 @@ export const safely = (saga: Saga): Saga => {
     try {
       yield call(saga);
     } catch (e) {
-      // tslint:disable-next-line
+      // eslint-disable-next-line
       console.error(e);
     }
   }

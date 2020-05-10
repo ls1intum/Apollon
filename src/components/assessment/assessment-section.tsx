@@ -41,7 +41,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 );
 
 class AssessmentSectionCompoennt extends Component<Props> {
-  render() {
+  render(): React.ReactNode {
     const { element, assessment, readonly } = this.props;
 
     return (
@@ -84,13 +84,13 @@ class AssessmentSectionCompoennt extends Component<Props> {
     );
   }
 
-  private updateScore = (value: string) => {
+  private updateScore = (value: string): void => {
     const { element, assessment } = this.props;
     const score = parseFloat(value) || 0;
     this.props.assess(element.id, { ...assessment, score });
   };
 
-  private updateFeedback = (value: string) => {
+  private updateFeedback = (value: string): void => {
     const { element, assessment } = this.props;
     const feedback = value.length ? value : undefined;
     this.props.assess(element.id, { score: 0, ...assessment, feedback });

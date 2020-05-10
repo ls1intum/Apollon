@@ -50,19 +50,19 @@ type State = typeof initialState;
 class Preview extends Component<Props, State> {
   state = initialState;
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: Props): void {
     if (this.props.connecting.length && prevProps.connecting !== this.props.connecting) {
       document.addEventListener('pointermove', this.onPointerMove);
       document.addEventListener('pointerup', this.onPointerUp, { once: true });
     }
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     document.removeEventListener('pointermove', this.onPointerMove);
     document.removeEventListener('pointerup', this.onPointerUp);
   }
 
-  render() {
+  render(): React.ReactNode {
     const { connecting } = this.props;
     const { position } = this.state;
     if (!connecting.length || !position) {
@@ -72,13 +72,13 @@ class Preview extends Component<Props, State> {
     return connecting.map((port, index) => <UMLRelationshipPreview key={index} port={port} target={position} />);
   }
 
-  onPointerMove = (event: PointerEvent) => {
+  onPointerMove = (event: PointerEvent): void => {
     const offset = this.props.canvas.origin();
     const position = new Point(event.clientX - offset.x, event.clientY - offset.y);
     this.setState({ position });
   };
 
-  onPointerUp = (event: PointerEvent) => {
+  onPointerUp = (event: PointerEvent): void => {
     document.removeEventListener('pointermove', this.onPointerMove);
     this.setState(initialState);
     this.props.endConnecting();

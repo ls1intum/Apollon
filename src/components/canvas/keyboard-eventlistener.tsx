@@ -131,6 +131,7 @@ class KeyboardEventListenerComponent extends Component<Props> {
           break;
         case 'z':
           event.preventDefault();
+          // eslint-disable-next-line
           event.shiftKey ? this.props.redo() : this.props.undo();
           break;
       }

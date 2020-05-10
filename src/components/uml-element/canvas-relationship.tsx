@@ -45,7 +45,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 );
 
 export class CanvasRelationshipComponent extends Component<Props> {
-  render() {
+  render(): React.ReactNode {
     const {
       hovered,
       selected,

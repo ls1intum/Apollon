@@ -5,4 +5,4 @@ export type Props<T> = {
   value: T;
 };
 
-export const SwitchItem = <T>(props: Props<T>) => null;
+export const SwitchItem = <T>(props: Props<T>): null => null;

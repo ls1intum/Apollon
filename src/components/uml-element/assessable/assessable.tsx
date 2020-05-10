@@ -52,7 +52,7 @@ export const assessable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
 ): ComponentClass<UMLElementComponentProps> => {
   class Assessable extends Component<Props> {
-    componentDidMount() {
+    componentDidMount(): void {
       if (!this.props.readonly) {
         const node = findDOMNode(this) as HTMLElement;
         node.addEventListener('dragover', this.onDragOver.bind(this));
@@ -61,14 +61,14 @@ export const assessable = (
       }
     }
 
-    componentWillUnmount() {
+    componentWillUnmount(): void {
       const node = findDOMNode(this) as HTMLElement;
       node.removeEventListener('dragover', this.onDragOver);
       node.removeEventListener('dragleave', this.onDragLeave);
       node.removeEventListener('drop', this.onDrop);
     }
 
-    render() {
+    render(): React.ReactNode {
       const { assessment, assess, select, deselect, updateStart, bounds, path: ipath, readonly, ...props } = this.props;
 
       let position: Point;
@@ -107,7 +107,7 @@ export const assessable = (
       );
     }
 
-    private onDragOver = (ev: DragEvent) => {
+    private onDragOver = (ev: DragEvent): void => {
       // prevent default to allow drop
       ev.preventDefault();
       // don't propagate to parents, so that most accurate element is selected only
@@ -115,7 +115,7 @@ export const assessable = (
       this.props.select(this.props.id);
     };
 
-    private onDragLeave = () => {
+    private onDragLeave = (): void => {
       this.props.deselect(this.props.id);
     };
 
@@ -124,7 +124,7 @@ export const assessable = (
      *
      * @param ev DropEvent
      */
-    private onDrop = (ev: DragEvent) => {
+    private onDrop = (ev: DragEvent): void => {
       // prevent default action (open as link for some elements)
       ev.preventDefault();
       // unselect current element
@@ -135,6 +135,7 @@ export const assessable = (
       if (!!ev.dataTransfer) {
         const data: string = ev.dataTransfer.getData('artemis/sgi');
         if (!data) {
+          // eslint-disable-next-line
           console.warn('Could not get artemis sgi element from drop element');
           return;
         }
@@ -142,6 +143,7 @@ export const assessable = (
         try {
           instruction = JSON.parse(data);
         } catch (e) {
+          // eslint-disable-next-line
           console.error('Could not parse artemis sgi', e);
           return;
         }

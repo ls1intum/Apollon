@@ -11,7 +11,7 @@ export interface IBoundary {
   height: number;
 }
 
-export function computeBoundingBox(points: Point[]): IBoundary {
+export const computeBoundingBox = (points: Point[]): IBoundary => {
   if (points.length === 0) {
     return { x: 0, y: 0, width: 0, height: 0 };
   }
@@ -38,9 +38,9 @@ export function computeBoundingBox(points: Point[]): IBoundary {
     width: maxX - minX,
     height: maxY - minY,
   };
-}
+};
 
-export function computeBoundingBoxForElements(elements: { bounds: IBoundary }[]): IBoundary {
+export const computeBoundingBoxForElements = (elements: { bounds: IBoundary }[]): IBoundary => {
   if (!elements.length) {
     return { x: 0, y: 0, width: 0, height: 0 };
   }
@@ -50,9 +50,12 @@ export function computeBoundingBoxForElements(elements: { bounds: IBoundary }[])
   const width = Math.max(...boundaries.map(bounds => bounds.x + bounds.width)) - x;
   const height = Math.max(...boundaries.map(bounds => bounds.y + bounds.height)) - y;
   return { x, y, width, height };
-}
+};
 
-export function computeBoundingBoxForRelationship(container: SVGSVGElement, relationship: UMLRelationship): IBoundary {
+export const computeBoundingBoxForRelationship = (
+  container: SVGSVGElement,
+  relationship: UMLRelationship,
+): IBoundary => {
   const Component = Components[relationship.type];
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('x', `${relationship.bounds.x}`);
@@ -70,4 +73,4 @@ export function computeBoundingBoxForRelationship(container: SVGSVGElement, rela
   container.removeChild(svg);
 
   return bounds;
-}
+};

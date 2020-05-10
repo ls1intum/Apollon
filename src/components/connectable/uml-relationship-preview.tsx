@@ -35,7 +35,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 );
 
 class RelationshipPreview extends Component<Props> {
-  render() {
+  render(): React.ReactNode {
     const { port, ports } = this.props;
 
     const { x, y }: IPoint = this.props.getAbsolutePosition(port.element);

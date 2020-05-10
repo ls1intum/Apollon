@@ -40,6 +40,7 @@ const getInitialState = (
     thunk as ThunkMiddleware<ModelState, Actions>,
     sagaMiddleware,
   );
+  // eslint-disable-next-line
   const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
   const enhancer = composeEnhancers(middleware);
 
@@ -58,14 +59,14 @@ type State = ReturnType<typeof getInitialState>;
 export class ModelStore extends Component<Props, State> {
   state = getInitialState(this.props.initialState, this.props.canvas);
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: Props): void {
     if (prevProps.canvas !== this.props.canvas) {
       const state: State = getInitialState(this.props.initialState, this.props.canvas);
       this.setState(state);
     }
   }
 
-  render() {
+  render(): React.ReactNode {
     return <Provider store={this.state.store}>{this.props.children}</Provider>;
   }
 }

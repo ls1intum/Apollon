@@ -12,21 +12,21 @@ type Props = {
 const enhance = withDraggable;
 
 class DraggableComponent extends Component<Props> {
-  componentDidMount() {
+  componentDidMount(): void {
     const node = findDOMNode(this) as HTMLElement;
     node.addEventListener('pointerdown', this.onDragStart);
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     const node = findDOMNode(this) as HTMLElement;
     node.removeEventListener('pointerdown', this.onDragStart);
   }
 
-  render() {
+  render(): React.ReactNode {
     return this.props.children;
   }
 
-  private onDragStart = async (event: PointerEvent) => {
+  private onDragStart = async (event: PointerEvent): Promise<void> => {
     try {
       const dropEvent = await this.props.onDragStart(event);
       if (this.props.onDrop) {

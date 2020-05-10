@@ -110,11 +110,11 @@ export class ApollonEditor {
     render(element, container, this.componentDidMount);
   }
 
-  destroy() {
+  destroy(): void {
     unmountComponentAtNode(this.container);
   }
 
-  select(selection: Apollon.Selection) {
+  select(selection: Apollon.Selection): void {
     if (!this.store) return;
     const dispatch = this.store.dispatch as Dispatch;
     dispatch(UMLElementRepository.deselect());
@@ -125,7 +125,7 @@ export class ApollonEditor {
     return this.selectionSubscribers.push(callback) - 1;
   }
 
-  unsubscribeFromSelectionChange(subscriptionId: number) {
+  unsubscribeFromSelectionChange(subscriptionId: number): void {
     this.selectionSubscribers.splice(subscriptionId);
   }
 
@@ -133,7 +133,7 @@ export class ApollonEditor {
     return this.assessmentSubscribers.push(callback) - 1;
   }
 
-  unsubscribeFromAssessmentChange(subscriptionId: number) {
+  unsubscribeFromAssessmentChange(subscriptionId: number): void {
     this.assessmentSubscribers.splice(subscriptionId);
   }
 
@@ -141,7 +141,7 @@ export class ApollonEditor {
     return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }
 
-  private componentDidMount = () => {
+  private componentDidMount = (): void => {
     this.container.setAttribute('touch-action', 'none');
 
     setTimeout(() => {
@@ -155,7 +155,7 @@ export class ApollonEditor {
    * Triggered whenever an action is dispatched which potentially lead to a change in the store / state tree
    * Used to notify all the selection and assessment subscribers of Apollon
    */
-  private onDispatch = () => {
+  private onDispatch = (): void => {
     if (!this.store) return;
     const { elements, selected, assessments } = this.store.getState();
     const selection: Apollon.Selection = {

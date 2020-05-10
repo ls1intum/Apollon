@@ -81,7 +81,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 class CreatePaneComponent extends Component<Props, State> {
   state = getInitialState(this.props);
 
-  render() {
+  render(): React.ReactNode {
     const features: UMLElementFeatures = {
       hoverable: false,
       selectable: false,
@@ -112,7 +112,7 @@ class CreatePaneComponent extends Component<Props, State> {
     );
   }
 
-  create = (preview: UMLElement, owner?: string) => {
+  create = (preview: UMLElement, owner?: string): void => {
     const elements = clone(preview, this.state.previews);
     this.props.create(elements, owner);
   };

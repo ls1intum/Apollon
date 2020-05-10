@@ -30,7 +30,7 @@ export class Textfield extends Component<Props, State> {
   static defaultProps = defaultProps;
   state = initialState;
 
-  render() {
+  render(): React.ReactNode {
     const { onChange, onSubmit, size, value, ...props } = this.props;
 
     return (
@@ -47,7 +47,7 @@ export class Textfield extends Component<Props, State> {
     );
   }
 
-  private onBlur = ({ currentTarget }: FocusEvent<HTMLInputElement>) => {
+  private onBlur = ({ currentTarget }: FocusEvent<HTMLInputElement>): void => {
     const { value } = currentTarget;
     if (!value || !this.props.onSubmit) {
       return;
@@ -57,7 +57,7 @@ export class Textfield extends Component<Props, State> {
     this.setState({ key: Date.now() });
   };
 
-  private onChange = ({ currentTarget }: FormEvent<HTMLInputElement>) => {
+  private onChange = ({ currentTarget }: FormEvent<HTMLInputElement>): void => {
     if (!this.props.onChange) {
       return;
     }
@@ -66,7 +66,7 @@ export class Textfield extends Component<Props, State> {
     this.props.onChange(value);
   };
 
-  private onKeyUp = ({ key, currentTarget }: KeyboardEvent<HTMLInputElement>) => {
+  private onKeyUp = ({ key, currentTarget }: KeyboardEvent<HTMLInputElement>): void => {
     switch (key) {
       case 'Enter':
       case 'Escape':

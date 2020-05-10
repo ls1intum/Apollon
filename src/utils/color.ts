@@ -4,7 +4,7 @@ interface HSL {
   l: number;
 }
 
-function hexToHSL(hex: string): HSL {
+const hexToHSL = (hex: string): HSL => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return { h: 0, s: 0, l: 0 };
   const r: number = parseInt(result[1], 16) / 255;
@@ -34,9 +34,9 @@ function hexToHSL(hex: string): HSL {
     h /= 6;
   }
   return { h, s, l };
-}
+};
 
-function hslToHex({ h, s, l }: HSL): string {
+const hslToHex = ({ h, s, l }: HSL): string => {
   let r = 0;
   let g = 0;
   let b = 0;
@@ -69,7 +69,7 @@ function hslToHex({ h, s, l }: HSL): string {
   };
 
   return '#' + checkHex(r.toString(16)) + checkHex(g.toString(16)) + checkHex(b.toString(16));
-}
+};
 
 const mix = (color1: string, color2: string, weight: number): string => {
   color1 = color1.replace(/#/g, '');

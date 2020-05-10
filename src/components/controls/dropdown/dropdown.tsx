@@ -33,11 +33,11 @@ export class Dropdown<T> extends Component<Props<T>, State> {
   state = intialState;
   activator = createRef<HTMLButtonElement>();
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     document.removeEventListener('click', this.dismiss);
   }
 
-  render() {
+  render(): React.ReactNode {
     const { color, outline, size } = this.props;
     const { show, top, left, width } = this.state;
     const selected = Children.toArray<ReactElement<ItemProps<T>>>(this.props.children).find(

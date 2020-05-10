@@ -319,7 +319,7 @@ export class Connection {
   }
 }
 
-function findClosestPoint(candidates: IPoint[], target: IPoint) {
+const findClosestPoint = (candidates: IPoint[], target: IPoint) => {
   let minDistance = Infinity;
   let closestPoint = candidates[0];
 
@@ -332,13 +332,13 @@ function findClosestPoint(candidates: IPoint[], target: IPoint) {
   }
 
   return closestPoint;
-}
+};
 
-function distanceBetweenPoints(p1: IPoint, p2: IPoint): number {
+const distanceBetweenPoints = (p1: IPoint, p2: IPoint): number => {
   const dx = Math.abs(p1.x - p2.x);
   const dy = Math.abs(p1.y - p2.y);
   return Math.sqrt(dx ** 2 + dy ** 2);
-}
+};
 
 function computePathLength(path: IPoint[]): number {
   let pathLength = 0;
@@ -350,7 +350,7 @@ function computePathLength(path: IPoint[]): number {
   return pathLength;
 }
 
-function beautifyPath(path: IPoint[]): IPoint[] {
+const beautifyPath = (path: IPoint[]): IPoint[] => {
   if (path.length <= 1) {
     return path;
   }
@@ -361,9 +361,9 @@ function beautifyPath(path: IPoint[]): IPoint[] {
   path = removeTransitNodes(path);
 
   return path;
-}
+};
 
-function removeConsecutiveIdenticalPoints(path: IPoint[]): IPoint[] {
+const removeConsecutiveIdenticalPoints = (path: IPoint[]): IPoint[] => {
   const newPath: IPoint[] = [];
   for (const point of path) {
     const previousPoint = newPath[newPath.length - 1];
@@ -372,9 +372,9 @@ function removeConsecutiveIdenticalPoints(path: IPoint[]): IPoint[] {
     }
   }
   return newPath;
-}
+};
 
-function removeTransitNodes(path: IPoint[]): IPoint[] {
+const removeTransitNodes = (path: IPoint[]): IPoint[] => {
   for (let i = 0; i < path.length - 2; i++) {
     const p = path[i];
     const q = path[i + 1];
@@ -390,21 +390,21 @@ function removeTransitNodes(path: IPoint[]): IPoint[] {
   }
 
   return path;
-}
+};
 
-function isHorizontalLineSegment(p: IPoint, q: IPoint, r: IPoint) {
+const isHorizontalLineSegment = (p: IPoint, q: IPoint, r: IPoint) => {
   return (
     areAlmostEqual(p.y, q.y) && areAlmostEqual(q.y, r.y) && ((p.x >= q.x && q.x >= r.x) || (p.x <= q.x && q.x <= r.x))
   );
-}
+};
 
-function isVerticalLineSegment(p: IPoint, q: IPoint, r: IPoint) {
+const isVerticalLineSegment = (p: IPoint, q: IPoint, r: IPoint) => {
   return (
     areAlmostEqual(p.x, q.x) && areAlmostEqual(q.x, r.x) && ((p.y <= q.y && q.y <= r.y) || (p.y >= q.y && q.y >= r.y))
   );
-}
+};
 
-function mergeConsecutiveSameAxisDeltas(path: IPoint[]): IPoint[] {
+const mergeConsecutiveSameAxisDeltas = (path: IPoint[]): IPoint[] => {
   const deltas = computePathDeltas(path);
 
   if (deltas.length <= 1) {
@@ -429,9 +429,9 @@ function mergeConsecutiveSameAxisDeltas(path: IPoint[]): IPoint[] {
   }
 
   return createPathFromDeltas(path[0], newDeltas);
-}
+};
 
-function computePathDeltas(path: IPoint[]): Delta[] {
+const computePathDeltas = (path: IPoint[]): Delta[] => {
   const deltas: Delta[] = [];
 
   for (let i = 0; i < path.length - 1; i++) {
@@ -445,9 +445,9 @@ function computePathDeltas(path: IPoint[]): Delta[] {
   }
 
   return deltas;
-}
+};
 
-function createPathFromDeltas(start: IPoint, deltas: Delta[]): IPoint[] {
+const createPathFromDeltas = (start: IPoint, deltas: Delta[]): IPoint[] => {
   const points = [start];
   let current = start;
 
@@ -459,7 +459,7 @@ function createPathFromDeltas(start: IPoint, deltas: Delta[]): IPoint[] {
   }
 
   return points;
-}
+};
 
 /**
  * Simplifies W-shaped path segments.
@@ -472,7 +472,7 @@ function createPathFromDeltas(start: IPoint, deltas: Delta[]): IPoint[] {
  *           |                     |
  *           0                     0
  */
-function flattenWaves(path: IPoint[]): IPoint[] {
+const flattenWaves = (path: IPoint[]): IPoint[] => {
   if (path.length < 4) {
     return path;
   }
@@ -484,9 +484,9 @@ function flattenWaves(path: IPoint[]): IPoint[] {
   const simplifiedPath = createPathFromDeltas(start, simplifiedDeltas);
 
   return simplifiedPath;
-}
+};
 
-function simplifyDeltas(deltas: Delta[]): Delta[] {
+const simplifyDeltas = (deltas: Delta[]): Delta[] => {
   for (let i = 0; i < deltas.length - 3; i++) {
     const d1 = deltas[i];
     const d2 = deltas[i + 1];
@@ -525,69 +525,69 @@ function simplifyDeltas(deltas: Delta[]): Delta[] {
   }
 
   return deltas;
-}
+};
 
-function isAlmostZero(value: number) {
+const isAlmostZero = (value: number): boolean => {
   return Math.abs(value) < 1e-6;
-}
+};
 
-function areAlmostEqual(a: number, b: number) {
+const areAlmostEqual = (a: number, b: number): boolean => {
   return isAlmostZero(a - b);
-}
-function pointsAreEqual(p: IPoint, q: IPoint) {
+};
+const pointsAreEqual = (p: IPoint, q: IPoint) => {
   const dx = Math.abs(p.x - q.x);
   const dy = Math.abs(p.y - q.y);
 
   return isAlmostZero(dx) && isAlmostZero(dy);
-}
+};
 
-function getCorners(rect: Rect): IPoint[] {
+const getCorners = (rect: Rect): IPoint[] => {
   return [getTopLeftCorner(rect), getTopRightCorner(rect), getBottomRightCorner(rect), getBottomLeftCorner(rect)];
-}
+};
 
-function getTopLeftCorner(rect: Rect) {
+const getTopLeftCorner = (rect: Rect) => {
   return {
     x: rect.x,
     y: rect.y,
   };
-}
+};
 
-function getTopRightCorner(rect: Rect): IPoint {
+const getTopRightCorner = (rect: Rect): IPoint => {
   return {
     x: rect.x + rect.width,
     y: rect.y,
   };
-}
+};
 
-function getBottomLeftCorner(rect: Rect): IPoint {
+const getBottomLeftCorner = (rect: Rect): IPoint => {
   return {
     x: rect.x,
     y: rect.y + rect.height,
   };
-}
+};
 
-function getBottomRightCorner(rect: Rect): IPoint {
+const getBottomRightCorner = (rect: Rect): IPoint => {
   return {
     x: rect.x + rect.width,
     y: rect.y + rect.height,
   };
-}
+};
 
-function enlargeRect(rect: Rect, padding: number): Rect {
+const enlargeRect = (rect: Rect, padding: number): Rect => {
   return {
     x: rect.x - padding,
     y: rect.y - padding,
     width: rect.width + 2 * padding,
     height: rect.height + 2 * padding,
   };
-}
+};
 
-function determineCornerQueue(
+const determineCornerQueue = (
   rect: Rect,
   edge: RectEdge,
   pointOnOuterEdge: IPoint,
   destinationCorner: IPoint | null,
-): IPoint[] {
+): IPoint[] => {
   let clockwiseCornerQueue: IPoint[];
   let counterClockwiseCornerQueue: IPoint[];
 
@@ -648,9 +648,9 @@ function determineCornerQueue(
 
   // Return the shorter corner queue
   return clockwisePathLength < counterClockwisePathLength ? clockwiseCornerQueue : counterClockwiseCornerQueue;
-}
+};
 
-function lineSegmentIntersectsRect(p: IPoint, q: IPoint, rect: Rect) {
+const lineSegmentIntersectsRect = (p: IPoint, q: IPoint, rect: Rect) => {
   if (lineSegmentLiesWithinRect(p, q, rect)) {
     return true;
   }
@@ -666,17 +666,17 @@ function lineSegmentIntersectsRect(p: IPoint, q: IPoint, rect: Rect) {
     lineSegmentsIntersect(p, q, topLeftCorner, bottomLeftCorner) ||
     lineSegmentsIntersect(p, q, bottomLeftCorner, bottomRightCorner)
   );
-}
+};
 
 /**
  * Determines whether the given line lies entirely within the given rectangle.
  */
-function lineSegmentLiesWithinRect(p: IPoint, q: IPoint, rect: Rect) {
+const lineSegmentLiesWithinRect = (p: IPoint, q: IPoint, rect: Rect) => {
   return p.x > rect.x && p.x < rect.x + rect.height && p.y > rect.y && p.y < rect.y + rect.height;
-}
+};
 
 // Adapted from http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
-function lineSegmentsIntersect(p1: IPoint, q1: IPoint, p2: IPoint, q2: IPoint) {
+const lineSegmentsIntersect = (p1: IPoint, q1: IPoint, p2: IPoint, q2: IPoint) => {
   const o1 = getOrientation(p1, q1, p2);
   const o2 = getOrientation(p1, q1, q2);
   const o3 = getOrientation(p2, q2, p1);
@@ -710,9 +710,9 @@ function lineSegmentsIntersect(p1: IPoint, q1: IPoint, p2: IPoint, q2: IPoint) {
 
   // Doesn't fall in any of the above cases
   return false;
-}
+};
 
-function getOrientation(p: IPoint, q: IPoint, r: IPoint): Orientation {
+const getOrientation = (p: IPoint, q: IPoint, r: IPoint): Orientation => {
   const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
   if (isAlmostZero(val)) {
@@ -720,18 +720,18 @@ function getOrientation(p: IPoint, q: IPoint, r: IPoint): Orientation {
   }
 
   return val > 0 ? Orientation.Clockwise : Orientation.CounterClockwise;
-}
+};
 
 /**
  * Given three collinear points p, q, r, checks if point q lies on line segment 'p-r'
  */
-function liesOnSegment(p: IPoint, q: IPoint, r: IPoint) {
+const liesOnSegment = (p: IPoint, q: IPoint, r: IPoint) => {
   return (
     q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y)
   );
-}
+};
 
-function computeOverlap(range1: [number, number], range2: [number, number]): [number, number] | null {
+const computeOverlap = (range1: [number, number], range2: [number, number]): [number, number] | null => {
   const [from1, to1] = range1;
   const [from2, to2] = range2;
 
@@ -739,9 +739,9 @@ function computeOverlap(range1: [number, number], range2: [number, number]): [nu
   const smallerTo = Math.min(to1, to2);
 
   return largerFrom <= smallerTo ? [largerFrom, smallerTo] : null;
-}
+};
 
-function getAxisForPathSegment(pathSegment: [IPoint, IPoint]) {
+const getAxisForPathSegment = (pathSegment: [IPoint, IPoint]) => {
   // Determine dx and dy
   const [p, q] = pathSegment;
   const dx = q.x - p.x;
@@ -759,4 +759,4 @@ function getAxisForPathSegment(pathSegment: [IPoint, IPoint]) {
 
   // We neither have a horizontal nor vertical path segment
   return null;
-}
+};

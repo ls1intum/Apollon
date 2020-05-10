@@ -15,7 +15,7 @@ export class Theme extends Component<Props> {
 
   theme: Styles = update(defaults, this.props.styles);
 
-  render() {
+  render(): React.ReactNode {
     return <ThemeProvider theme={this.theme}>{this.props.children}</ThemeProvider>;
   }
 }

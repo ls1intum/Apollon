@@ -44,14 +44,14 @@ class DraggableLayerComponent extends Component<Props, State> {
     );
   };
 
-  onPointerMove = (event: PointerEvent) => {
+  onPointerMove = (event: PointerEvent): void => {
     const position = this.props.canvas.snap(
       new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y),
     );
     this.setState({ position });
   };
 
-  onDragEnd = (owner?: string) => (event: PointerEvent) => {
+  onDragEnd = (owner?: string) => (event: PointerEvent): void => {
     if (!this.state.dragging) return;
 
     const dropEvent: DropEvent = {
@@ -64,7 +64,7 @@ class DraggableLayerComponent extends Component<Props, State> {
     }
   };
 
-  cancel = () => {
+  cancel = (): void => {
     if (this.state.reject) {
       this.state.reject();
     }
@@ -73,7 +73,7 @@ class DraggableLayerComponent extends Component<Props, State> {
     this.setState(initialState);
   };
 
-  render() {
+  render(): React.ReactNode {
     const context: DraggableContext = {
       onDragStart: this.onDragStart,
       onDragEnd: this.onDragEnd,

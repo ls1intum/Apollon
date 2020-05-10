@@ -20,7 +20,7 @@ export class I18nProvider extends Component<Props> {
     locale: defaultLocale,
   };
 
-  render() {
+  render(): React.ReactNode {
     const value: I18nContext = {
       translate: this.translate,
     };

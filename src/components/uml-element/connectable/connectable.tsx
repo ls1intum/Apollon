@@ -65,17 +65,17 @@ export const connectable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
 ): ComponentClass<UMLElementComponentProps> => {
   class Connectable extends Component<Props> {
-    componentDidMount() {
+    componentDidMount(): void {
       const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('pointerup', this.elementOnPointerUp.bind(this));
     }
 
-    componentWillUnmount() {
+    componentWillUnmount(): void {
       const node = findDOMNode(this) as HTMLElement;
       node.removeEventListener('pointerup', this.elementOnPointerUp);
     }
 
-    render() {
+    render(): React.ReactNode {
       const { hovered, selected, connecting, reconnecting, ports, start, connect: _, reconnect, ...props } = this.props;
       return (
         <WrappedComponent {...props}>
@@ -112,7 +112,7 @@ export const connectable = (
       );
     }
 
-    private elementOnPointerUp = (event: PointerEvent) => {
+    private elementOnPointerUp = (event: PointerEvent): void => {
       const node = findDOMNode(this) as HTMLElement;
       // calculate event position relative to object position
       const relEventPosition = {
@@ -136,7 +136,7 @@ export const connectable = (
       }
     };
 
-    private onPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
+    private onPointerDown = (event: React.PointerEvent<SVGSVGElement>): void => {
       const direction = event.currentTarget.getAttribute('direction') as Direction;
       this.props.start(direction);
     };

@@ -5,4 +5,4 @@ export type Props<T> = {
   value: T;
 };
 
-export const DropdownItem = <T>(props: Props<T>) => null;
+export const DropdownItem = <T>(props: Props<T>): null => null;

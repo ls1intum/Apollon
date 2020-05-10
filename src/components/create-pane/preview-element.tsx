@@ -20,7 +20,7 @@ export const Preview = styled(hoverable(CanvasElement)).attrs({
 `;
 
 export class PreviewElement extends Component<Props> {
-  render() {
+  render(): React.ReactNode {
     const { element } = this.props;
 
     return (
@@ -30,7 +30,7 @@ export class PreviewElement extends Component<Props> {
     );
   }
 
-  private onDrop = (event: DropEvent) => {
+  private onDrop = (event: DropEvent): void => {
     const element = this.props.element.clone({
       bounds: { ...this.props.element.bounds, ...event.position },
     });

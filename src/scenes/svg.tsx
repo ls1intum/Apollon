@@ -42,6 +42,7 @@ const includeChildren = (
       result.add(id);
       include = new Set<string>([...include, ...children]);
     }
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     includeChildren(elements, children, include).forEach(result.add, result);
   }
   return result;
@@ -63,6 +64,7 @@ const excludeChildren = (
     } else {
       exclude = new Set<string>([...exclude, ...children]);
     }
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     excludeChildren(elements, children, exclude).forEach(result.add, result);
   }
   return result;

@@ -11,17 +11,17 @@ type Props = {
 const enhance = withDraggable;
 
 class DroppableComponent extends Component<Props> {
-  componentDidMount() {
+  componentDidMount(): void {
     const node = findDOMNode(this) as HTMLElement;
     node.addEventListener('pointerup', this.props.onDragEnd(this.props.owner));
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     const node = findDOMNode(this) as HTMLElement;
     node.removeEventListener('pointerup', this.props.onDragEnd(this.props.owner));
   }
 
-  render() {
+  render(): React.ReactNode {
     return this.props.children;
   }
 }

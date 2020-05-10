@@ -18,7 +18,7 @@ export class Switch<T> extends Component<Props<T>> {
   static defaultProps = defaultProps;
   static Item = SwitchItem;
 
-  render() {
+  render(): React.ReactNode {
     return (
       <StyledSwitch>
         {Children.map<ReactElement<SwitchItemProps>, ReactElement<ItemProps<T>>>(this.props.children, ({ props }) =>

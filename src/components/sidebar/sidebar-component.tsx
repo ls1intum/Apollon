@@ -39,7 +39,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 );
 
 class SidebarComponent extends Component<Props> {
-  render() {
+  render(): React.ReactNode {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
 
     return (
@@ -67,7 +67,7 @@ class SidebarComponent extends Component<Props> {
     );
   }
 
-  toggleInteractiveElementsMode = (event: React.FormEvent<HTMLInputElement>) => {
+  toggleInteractiveElementsMode = (event: React.FormEvent<HTMLInputElement>): void => {
     const { checked } = event.currentTarget;
     const view: ApollonView = checked ? ApollonView.Exporting : ApollonView.Highlight;
 
