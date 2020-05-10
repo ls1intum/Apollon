@@ -9,7 +9,7 @@ export const defaultProps = Object.freeze({
   multiline: false,
   outline: false,
   readonly: false,
-  size: 'sm' as Size
+  size: 'sm' as Size,
 });
 
 const initialState = {

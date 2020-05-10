@@ -14,6 +14,6 @@ export class UMLObjectName extends UMLClassifier {
       (x): x is UMLClassifierAttribute => x.type === ObjectElementType.ObjectAttribute,
     );
     const methods = children.filter((x): x is UMLClassifierMethod => x.type === ObjectElementType.ObjectMethod);
-    return [...attributes.map((element) => element.id), ...methods.map((element) => element.id)];
+    return [...attributes.map(element => element.id), ...methods.map(element => element.id)];
   }
 }

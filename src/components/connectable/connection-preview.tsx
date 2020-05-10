@@ -31,9 +31,7 @@ const enhance = compose<ComponentType<OwnProps>>(
     state => ({
       connecting: [
         ...state.connecting,
-        ...Object.keys(state.reconnecting).map(
-          id => (state.elements[id] as IUMLRelationship)[state.reconnecting[id]]
-        ),
+        ...Object.keys(state.reconnecting).map(id => (state.elements[id] as IUMLRelationship)[state.reconnecting[id]]),
       ],
     }),
     {

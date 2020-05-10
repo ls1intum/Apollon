@@ -12,6 +12,6 @@ export class UMLEnumeration extends UMLClassifier {
   reorderChildren(children: IUMLElement[]): string[] {
     const attributes = children.filter((x): x is UMLClassifierAttribute => x.type === ClassElementType.ClassAttribute);
     const methods = children.filter((x): x is UMLClassifierMethod => x.type === ClassElementType.ClassMethod);
-    return [...attributes.map((element) => element.id), ...methods.map((element) => element.id)];
+    return [...attributes.map(element => element.id), ...methods.map(element => element.id)];
   }
 }

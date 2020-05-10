@@ -16,10 +16,14 @@ module.exports = {
     browser: true,
   },
   extends: [
+    // import rules config
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    'prettier/@typescript-eslint',
+    // enables eslint-plugin-prettier, sets prettier/prettier rule to "error" and extends the eslint-config-prettier config
     'plugin:prettier/recommended',
+    // disables rules of eslint which might conflict with prettier
+    'prettier/@typescript-eslint',
+    'prettier/react',
   ],
   ignorePatterns: [],
   parser: '@typescript-eslint/parser',
@@ -108,11 +112,11 @@ module.exports = {
     'comma-dangle': [
       'error',
       {
-        arrays: 'never',
-        objects: 'never',
-        imports: 'never',
-        exports: 'never',
-        functions: 'never',
+        arrays: 'always-multiline',
+        objects: 'always-multiline',
+        imports: 'always-multiline',
+        exports: 'always-multiline',
+        functions: 'always-multiline',
       },
     ],
     complexity: 'off',

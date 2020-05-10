@@ -38,7 +38,7 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
   abstract type: UMLRelationshipType;
   path: IPath = [
     { x: 0, y: 0 },
-    { x: 200, y: 100 }
+    { x: 200, y: 100 },
   ];
   source: IUMLElementPort = {
     direction: Direction.Up,
