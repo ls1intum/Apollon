@@ -15,6 +15,7 @@ import { UMLElementRepository } from './services/uml-element/uml-element-reposit
 import * as Apollon from './typings';
 import { Dispatch } from './utils/actions/actions';
 import { UMLDiagramType } from './typings';
+import { debounce } from './utils/debounce';
 
 export class ApollonEditor {
   get model(): Apollon.UMLModel {
@@ -72,6 +73,7 @@ export class ApollonEditor {
   private application: RefObject<Application> = createRef();
   private selectionSubscribers: ((selection: Apollon.Selection) => void)[] = [];
   private assessmentSubscribers: ((assessments: Apollon.Assessment[]) => void)[] = [];
+  private modelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
@@ -136,6 +138,14 @@ export class ApollonEditor {
     this.assessmentSubscribers.splice(subscriptionId);
   }
 
+  subscribeToModelChange(callback: () => void): number {
+    return this.modelSubscribers.push(callback) - 1;
+  }
+
+  unsubscribeFromModelChange(subscriptionId: number) {
+    this.modelSubscribers.splice(subscriptionId);
+  }
+
   exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG {
     return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }
@@ -180,7 +190,15 @@ export class ApollonEditor {
       this.assessmentSubscribers.forEach((subscriber) => subscriber(umlAssessments));
       this.assessments = umlAssessments;
     }
+
+    // notfiy that action was done
+    this.notifyModelSubscribers();
   };
+
+  private notifyModelSubscribers = debounce(() => {
+    const model = this.model;
+    this.modelSubscribers.forEach((subscriber) => subscriber(model));
+  }, 1000);
 
   private recreateEditor(state: DeepPartial<ModelState>) {
     this.destroy();
