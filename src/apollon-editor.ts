@@ -69,6 +69,7 @@ export class ApollonEditor {
   }
 
   selection: Apollon.Selection = { elements: [], relationships: [] };
+  private currentModel?: Apollon.UMLModel;
   private assessments: Apollon.Assessment[] = [];
   private application: RefObject<Application> = createRef();
   private selectionSubscribers: ((selection: Apollon.Selection) => void)[] = [];
@@ -197,8 +198,13 @@ export class ApollonEditor {
 
   private notifyModelSubscribers = debounce(() => {
     const model = this.model;
-    this.modelSubscribers.forEach((subscriber) => subscriber(model));
-  }, 1000);
+    if (this.currentModel && JSON.stringify(model) !== JSON.stringify(this.currentModel)) {
+      this.modelSubscribers.forEach((subscriber) => subscriber(model));
+      this.currentModel = model;
+    } else {
+      this.currentModel = model;
+    }
+  }, 500);
 
   private recreateEditor(state: DeepPartial<ModelState>) {
     this.destroy();
