@@ -12,7 +12,7 @@ export interface IUMLDiagram extends IUMLContainer {
 }
 
 export class UMLDiagram extends UMLContainer implements IUMLDiagram {
-  type = UMLDiagramType.ClassDiagram;
+  type = UMLDiagramType.ObjectDiagram;
   ownedRelationships: string[] = [];
   bounds: IBoundary = { ...this.bounds, width: 0, height: 0 };
 
