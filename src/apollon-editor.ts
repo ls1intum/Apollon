@@ -14,7 +14,7 @@ import { UMLDiagram } from './services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from './services/uml-element/uml-element-repository';
 import * as Apollon from './typings';
 import { Dispatch } from './utils/actions/actions';
-import { UMLDiagramType } from './typings';
+import { UMLDiagramType, UMLModel } from "./typings";
 import { debounce } from './utils/debounce';
 
 export class ApollonEditor {
@@ -139,7 +139,7 @@ export class ApollonEditor {
     this.assessmentSubscribers.splice(subscriptionId);
   }
 
-  subscribeToModelChange(callback: () => void): number {
+  subscribeToModelChange(callback: (model: UMLModel) => void): number {
     return this.modelSubscribers.push(callback) - 1;
   }
 
