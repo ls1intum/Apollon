@@ -30,7 +30,7 @@ class ActivityControlFlowUpdate extends Component<Props> {
         <section>
           <Flex>
             <Header gutter={false} style={{ flexGrow: 1 }}>
-              {this.props.translate('packages.activityDiagram.controlFlow')}
+              {this.props.translate('packages.ActivityDiagram.ActivityControlFlow')}
             </Header>
             <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />

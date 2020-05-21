@@ -12,15 +12,15 @@ export const composeDeploymentPreview: ComposePreview = (
   const elements: UMLElement[] = [];
 
   // UML Deployment Node
-  const umlDeploymentNode = new UMLDeploymentNode({ name: translate('packages.deploymentDiagram.node') });
+  const umlDeploymentNode = new UMLDeploymentNode({ name: translate('packages.DeploymentDiagram.DeploymentNode') });
   elements.push(umlDeploymentNode);
 
   // UML Component
-  const umlComponent = new UMLComponent({ name: translate('packages.componentDiagram.component') });
+  const umlComponent = new UMLComponent({ name: translate('packages.ComponentDiagram.Component') });
   elements.push(umlComponent);
 
   // UML Deployment Artifact
-  const umlDeploymentArtifact = new UMLDeploymentArtifact({ name: translate('packages.deploymentDiagram.artifact') });
+  const umlDeploymentArtifact = new UMLDeploymentArtifact({ name: translate('packages.DeploymentDiagram.DeploymentArtifact') });
   elements.push(umlDeploymentArtifact);
 
   return elements;

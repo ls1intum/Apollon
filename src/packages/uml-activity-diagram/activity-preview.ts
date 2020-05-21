@@ -16,7 +16,7 @@ export const composeActivityPreview: ComposePreview = (
   const elements: UMLElement[] = [];
 
   // Activity
-  elements.push(new UMLActivity({ name: translate('packages.activityDiagram.activity') }));
+  elements.push(new UMLActivity({ name: translate('packages.ActivityDiagram.Activity') }));
 
   // Activity Initial Node
   elements.push(new UMLActivityInitialNode());
@@ -25,15 +25,15 @@ export const composeActivityPreview: ComposePreview = (
   elements.push(new UMLActivityFinalNode());
 
   // Activity Action Node
-  const activityActionNode = new UMLActivityActionNode({ name: translate('packages.activityDiagram.actionNode') });
+  const activityActionNode = new UMLActivityActionNode({ name: translate('packages.ActivityDiagram.ActivityActionNode') });
   elements.push(activityActionNode);
 
   // Activity Object Node
-  const activityObjectNode = new UMLActivityObjectNode({ name: translate('packages.activityDiagram.objectNode') });
+  const activityObjectNode = new UMLActivityObjectNode({ name: translate('packages.ActivityDiagram.ActivityObjectNode') });
   elements.push(activityObjectNode);
 
   // Activity Merge Node
-  const activityMergeNode = new UMLActivityMergeNode({ name: translate('packages.activityDiagram.condition') });
+  const activityMergeNode = new UMLActivityMergeNode({ name: translate('packages.ActivityDiagram.ActivityMergeNode') });
   elements.push(activityMergeNode);
 
   // Activity Fork Node

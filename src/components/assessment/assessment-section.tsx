@@ -11,6 +11,7 @@ import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { styled } from '../theme/styles';
+import { UMLDiagramType } from '../..';
 
 const Flex = styled.div`
   display: flex;
@@ -25,6 +26,7 @@ type OwnProps = {
 type StateProps = {
   readonly: boolean;
   assessment: IAssessment | null;
+  diagramType: UMLDiagramType;
 };
 type DispatchProps = { assess: typeof AssessmentRepository.assess };
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
@@ -35,6 +37,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     (state, props) => ({
       readonly: state.editor.readonly,
       assessment: AssessmentRepository.getById(state.assessments)(props.element.id),
+      diagramType: state.diagram.type,
     }),
     { assess: AssessmentRepository.assess },
   ),
@@ -42,13 +45,22 @@ const enhance = compose<ComponentClass<OwnProps>>(
 
 class AssessmentSectionCompoennt extends Component<Props> {
   render() {
-    const { element, assessment, readonly } = this.props;
+    const { element, assessment, readonly, diagramType } = this.props;
 
     return (
       <>
         <section>
           <Header>
-            {this.props.translate('assessment.assessment')} {element.name}
+            {this.props.translate('assessment.assessment')}{' '}
+            {this.props.translate(`packages.${diagramType}.${element.type}`)}
+            {element.name ? (
+              <>
+                {' '}
+                <span style={{ display: 'inline-block' }}>{`\"${element.name}\"`}</span>
+              </>
+            ) : (
+              ''
+            )}
           </Header>
         </section>
         <section>

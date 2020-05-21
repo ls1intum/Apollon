@@ -12,15 +12,15 @@ export const composeUseCasePreview: ComposePreview = (
   const elements: UMLElement[] = [];
 
   // UML Use Case
-  const umlUseCase = new UMLUseCase({ name: translate('packages.useCaseDiagram.useCase') });
+  const umlUseCase = new UMLUseCase({ name: translate('packages.UseCaseDiagram.UseCase') });
   elements.push(umlUseCase);
 
   // UML Actor
-  const umlActor = new UMLUseCaseActor({ name: translate('packages.useCaseDiagram.actor') });
+  const umlActor = new UMLUseCaseActor({ name: translate('packages.UseCaseDiagram.UseCaseActor') });
   elements.push(umlActor);
 
   // UML System
-  const umlSystem = new UMLUseCaseSystem({ name: translate('packages.useCaseDiagram.system') });
+  const umlSystem = new UMLUseCaseSystem({ name: translate('packages.UseCaseDiagram.UseCaseSystem') });
   elements.push(umlSystem);
 
   return elements;

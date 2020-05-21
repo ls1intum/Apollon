@@ -35,7 +35,7 @@ class CommunicationLinkUpdate extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Header gutter={false}>{this.props.translate('packages.communicationDiagram.communicationLink')}</Header>
+            <Header gutter={false}>{this.props.translate('packages.CommunicationDiagram.CommunicationLink')}</Header>
             <Button color="link" onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
