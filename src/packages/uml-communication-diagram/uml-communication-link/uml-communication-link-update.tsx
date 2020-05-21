@@ -71,7 +71,7 @@ class CommunicationLinkUpdate extends Component<Props> {
     const { element, update } = this.props;
     if (!element.messages.find(message => message.name === value)) {
       update<UMLCommunicationLink>(element.id, {
-        messages: [...element.messages, { name: value, direction: 'target' }],
+        messages: [...element.messages, { name: value, direction: 'source' }],
       });
     }
   };

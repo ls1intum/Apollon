@@ -44,7 +44,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↓' : ''}
                 </tspan>
-                {sources.map((source, i) => (
+                {sources.reverse().map((source, i) => (
                   <tspan key={i} x={position.x + 20} dy={i === 0 ? undefined : '1.2em'}>
                     {source.name}
                   </tspan>
