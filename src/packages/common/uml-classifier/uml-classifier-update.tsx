@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
@@ -21,6 +21,7 @@ import { UMLClassMethod } from '../../uml-class-diagram/uml-class-method/uml-cla
 import { UMLElementType } from '../../uml-element-type';
 import { UMLElements } from '../../uml-elements';
 import { UMLClassifier } from './uml-classifier';
+import { ColorPicker } from '../../../components/color-picker/color-picker';
 
 const Flex = styled.div`
   display: flex;
@@ -45,32 +46,36 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      create: UMLElementRepository.create,
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    create: UMLElementRepository.create,
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
+  }),
 );
 
 class ClassifierUpdate extends Component<Props> {
+  dialog: RefObject<HTMLDivElement> = createRef();
+
   render() {
     const { element, getById } = this.props;
-    const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
-    const attributes = children.filter(child => child instanceof UMLClassAttribute);
-    const methods = children.filter(child => child instanceof UMLClassMethod);
+    const children = element.ownedElements.map((id) => getById(id)).filter(notEmpty);
+    const attributes = children.filter((child) => child instanceof UMLClassAttribute);
+    const methods = children.filter((child) => child instanceof UMLClassMethod);
 
     return (
-      <div>
+      <div ref={this.dialog}>
         <section>
           <Flex>
             <Textfield value={element.name} onChange={this.rename(element.id)} />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
+            <ColorPicker
+              hexColor={element.highlight ? element.highlight : ''}
+              onColorChange={this.changeColor(element.id)}
+              relativeTo={this.dialog}
+            />
           </Flex>
           <Divider />
         </section>
@@ -90,12 +95,17 @@ class ClassifierUpdate extends Component<Props> {
         </section>
         <section>
           <Header>{this.props.translate('popup.attributes')}</Header>
-          {attributes.map(attribute => (
+          {attributes.map((attribute) => (
             <Flex key={attribute.id}>
               <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
               <Button color="link" tabIndex={-1} onClick={this.delete(attribute.id)}>
                 <TrashIcon />
               </Button>
+              <ColorPicker
+                hexColor={attribute.highlight ? attribute.highlight : ''}
+                onColorChange={this.changeColor(attribute.id)}
+                relativeTo={this.dialog}
+              />
             </Flex>
           ))}
           <Textfield outline={true} value="" onSubmit={this.create(UMLClassAttribute)} />
@@ -103,12 +113,17 @@ class ClassifierUpdate extends Component<Props> {
         <section>
           <Divider />
           <Header>{this.props.translate('popup.methods')}</Header>
-          {methods.map(method => (
+          {methods.map((method) => (
             <Flex key={method.id}>
               <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
               <Button color="link" tabIndex={-1} onClick={this.delete(method.id)}>
                 <TrashIcon />
               </Button>
+              <ColorPicker
+                hexColor={method.highlight ? method.highlight : ''}
+                onColorChange={this.changeColor(method.id)}
+                relativeTo={this.dialog}
+              />
             </Flex>
           ))}
           <Textfield outline={true} value="" onSubmit={this.create(UMLClassMethod)} />
@@ -122,6 +137,10 @@ class ClassifierUpdate extends Component<Props> {
     const member = new Clazz();
     member.name = value;
     create(member, element.id);
+  };
+
+  private changeColor = (id: string) => (value: string) => {
+    this.props.update(id, { highlight: value });
   };
 
   private rename = (id: string) => (value: string) => {

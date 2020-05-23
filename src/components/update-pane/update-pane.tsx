@@ -35,7 +35,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({
+    (state) => ({
       element: state.elements[state.updating[0]],
       disabled: !state.editor.enablePopups,
       mode: state.editor.mode,
@@ -133,10 +133,7 @@ class UnwrappedUpdatePane extends Component<Props, State> {
         .add(element.bounds.width / 2, element.bounds.height / 2)
         .subtract(canvasBounds.left, canvasBounds.top);
 
-      const position = this.props.canvas
-        .origin()
-        .add(absolute)
-        .add(window.scrollX, window.scrollY);
+      const position = this.props.canvas.origin().add(absolute).add(window.scrollX, window.scrollY);
 
       const placement = elementCenter.x < canvasBounds.width / 2 ? 'right' : 'left';
       const alignment = elementCenter.y < canvasBounds.height / 2 ? 'start' : 'end';
@@ -168,10 +165,9 @@ class UnwrappedUpdatePane extends Component<Props, State> {
   };
 
   private onPointerDown = (event: PointerEvent): void => {
-    if (this.popover.current && event.target instanceof HTMLElement && this.popover.current.contains(event.target)) {
+    if (this.popover.current && event.target instanceof Node && this.popover.current.contains(event.target)) {
       return;
     }
-
     this.dismiss();
   };
 
