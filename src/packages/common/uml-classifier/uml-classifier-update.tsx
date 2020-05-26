@@ -77,13 +77,13 @@ class ClassifierUpdate extends Component<Props> {
         <section>
           <Switch value={element.type as keyof typeof ClassElementType} onChange={this.toggle} color="primary">
             <Switch.Item value={ClassElementType.AbstractClass}>
-              {this.props.translate('packages.classDiagram.abstract')}
+              {this.props.translate('packages.ClassDiagram.AbstractClass')}
             </Switch.Item>
             <Switch.Item value={ClassElementType.Interface}>
-              {this.props.translate('packages.classDiagram.interface')}
+              {this.props.translate('packages.ClassDiagram.Interface')}
             </Switch.Item>
             <Switch.Item value={ClassElementType.Enumeration}>
-              {this.props.translate('packages.classDiagram.enumeration')}
+              {this.props.translate('packages.ClassDiagram.Enumeration')}
             </Switch.Item>
           </Switch>
           <Divider />

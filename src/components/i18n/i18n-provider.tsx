@@ -37,6 +37,7 @@ export class I18nProvider extends Component<Props> {
       }
       return translation;
     } catch (error) {
+      console.error(error);
       return '';
     }
   };

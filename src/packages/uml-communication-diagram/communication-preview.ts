@@ -11,7 +11,7 @@ export const composeCommunicationPreview: ComposePreview = (
   const elements: UMLElement[] = [];
 
   // Object
-  const umlObject = new UMLObjectName({ name: translate('packages.objectDiagram.objectName') });
+  const umlObject = new UMLObjectName({ name: translate('packages.CommunicationDiagram.ObjectName') });
   const umlObjectAttribute = new UMLObjectAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlObject.id,

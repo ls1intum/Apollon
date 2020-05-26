@@ -43,13 +43,13 @@ class UseCaseAssociationUpdate extends Component<Props> {
                 {
                   {
                     [UseCaseRelationshipType.UseCaseAssociation]: this.props.translate(
-                      'packages.useCaseDiagram.association',
+                      'packages.UseCaseDiagram.UseCaseAssociation',
                     ),
                     [UseCaseRelationshipType.UseCaseGeneralization]: this.props.translate(
-                      'packages.useCaseDiagram.generalization',
+                      'packages.UseCaseDiagram.UseCaseGeneralization',
                     ),
-                    [UseCaseRelationshipType.UseCaseInclude]: this.props.translate('packages.useCaseDiagram.include'),
-                    [UseCaseRelationshipType.UseCaseExtend]: this.props.translate('packages.useCaseDiagram.extend'),
+                    [UseCaseRelationshipType.UseCaseInclude]: this.props.translate('packages.UseCaseDiagram.UseCaseInclude'),
+                    [UseCaseRelationshipType.UseCaseExtend]: this.props.translate('packages.UseCaseDiagram.UseCaseExtend'),
                   }[element.type]
                 }
               </Header>
@@ -66,16 +66,16 @@ class UseCaseAssociationUpdate extends Component<Props> {
           <Divider />
           <Dropdown value={element.type} onChange={this.onChange}>
             <Dropdown.Item value={UseCaseRelationshipType.UseCaseAssociation}>
-              {this.props.translate('packages.useCaseDiagram.association')}
+              {this.props.translate('packages.UseCaseDiagram.UseCaseAssociation')}
             </Dropdown.Item>
             <Dropdown.Item value={UseCaseRelationshipType.UseCaseGeneralization}>
-              {this.props.translate('packages.useCaseDiagram.generalization')}
+              {this.props.translate('packages.UseCaseDiagram.UseCaseGeneralization')}
             </Dropdown.Item>
             <Dropdown.Item value={UseCaseRelationshipType.UseCaseInclude}>
-              {this.props.translate('packages.useCaseDiagram.include')}
+              {this.props.translate('packages.UseCaseDiagram.UseCaseInclude')}
             </Dropdown.Item>
             <Dropdown.Item value={UseCaseRelationshipType.UseCaseExtend}>
-              {this.props.translate('packages.useCaseDiagram.extend')}
+              {this.props.translate('packages.UseCaseDiagram.UseCaseExtend')}
             </Dropdown.Item>
           </Dropdown>
         </section>

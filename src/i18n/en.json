@@ -25,56 +25,65 @@
     "feedback": "Feedback"
   },
   "packages": {
-    "classDiagram": {
-      "package": "Package",
-      "class": "Class",
-      "abstract": "Abstract",
-      "interface": "Interface",
-      "enumeration": "Enumeration",
-      "attribute": "Attribute",
-      "method": "Method",
-      "aggregation": "Aggregation",
-      "bidirectional": "Association (bidirectional)",
-      "composition": "Composition",
-      "dependency": "Dependency",
-      "inheritance": "Inheritance",
-      "realization": "Realization",
-      "unidirectional": "Association (unidirectional)"
+    "ClassDiagram": {
+      "Package": "Package",
+      "Class": "Class",
+      "AbstractClass": "Abstract",
+      "Interface": "Interface",
+      "Enumeration": "Enumeration",
+      "ClassAttribute": "Attribute",
+      "ClassMethod": "Method",
+      "ClassAggregation": "Aggregation",
+      "ClassBidirectional": "Association (bidirectional)",
+      "ClassComposition": "Composition",
+      "ClassDependency": "Dependency",
+      "ClassInheritance": "Inheritance",
+      "ClassRealization": "Realization",
+      "ClassUnidirectional": "Association (unidirectional)"
     },
-    "objectDiagram": {
-      "objectName": "Object",
-      "objectAttribute": "Attribute"
+    "ObjectDiagram": {
+      "ObjectName": "Object",
+      "ObjectAttribute": "Attribute",
+      "ObjectMethod": "Method",
+      "ObjectLink": "Relationship"
     },
-    "activityDiagram": {
-      "activity": "Activity",
-      "actionNode": "Action",
-      "objectNode": "Object",
-      "condition": "Condition",
-      "controlFlow": "Control Flow"
+    "ActivityDiagram": {
+      "Activity": "Activity",
+      "ActivityActionNode": "Action",
+      "ActivityFinalNode": "Final Node",
+      "ActivityForkNode": "Fork Node",
+      "ActivityInitialNode": "Initial Node",
+      "ActivityMergeNode": "Condition",
+      "ActivityObjectNode": "Object",
+      "ActivityControlFlow": "Control Flow"
     },
-    "useCaseDiagram": {
-      "useCase": "UseCase",
-      "actor": "Actor",
-      "system": "System",
-      "association": "Association",
-      "extend": "Extend",
-      "generalization": "Generalization",
-      "include": "Include"
+    "UseCaseDiagram": {
+      "UseCase": "UseCase",
+      "UseCaseActor": "Actor",
+      "UseCaseSystem": "System",
+      "UseCaseAssociation": "Association",
+      "UseCaseExtend": "Extend",
+      "UseCaseGeneralization": "Generalization",
+      "UseCaseInclude": "Include"
     },
-    "communicationDiagram": {
-      "communicationLink": "Communication Link"
+    "CommunicationDiagram": {
+      "ObjectName": "Object",
+      "ObjectAttribute": "Attribute",
+      "ObjectMethod": "Method",
+      "CommunicationLink": "Communication Link"
     },
-    "componentDiagram": {
-      "component": "Component",
-      "dependency": "Dependency",
-      "interface": "Interface",
-      "interfaceProvided": "Provided Interface",
-      "interfaceRequired": "Required Interface"
+    "ComponentDiagram": {
+      "Component": "Component",
+      "ComponentDependency": "Dependency",
+      "ComponentInterface": "Interface",
+      "ComponentInterfaceProvided": "Provided Interface",
+      "ComponentInterfaceRequired": "Required Interface"
     },
-    "deploymentDiagram": {
-      "node": "Node",
-      "artifact": "Artifact",
-      "stereotype": "Stereotype"
+    "DeploymentDiagram": {
+      "DeploymentNode": "Node",
+      "Component": "Component",
+      "DeploymentArtifact": "Artifact",
+      "DeploymentAssociation": "Deployment Association"
     }
   }
 }

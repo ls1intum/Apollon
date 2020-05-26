@@ -79,25 +79,25 @@ class ClassAssociationComponent extends Component<Props> {
         <section>
           <Dropdown value={element.type as keyof typeof ClassRelationshipType} onChange={this.onChange}>
             <Dropdown.Item value={ClassRelationshipType.ClassAggregation}>
-              {this.props.translate('packages.classDiagram.aggregation')}
+              {this.props.translate('packages.ClassDiagram.ClassAggregation')}
             </Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassUnidirectional}>
-              {this.props.translate('packages.classDiagram.unidirectional')}
+              {this.props.translate('packages.ClassDiagram.ClassUnidirectional')}
             </Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassBidirectional}>
-              {this.props.translate('packages.classDiagram.bidirectional')}
+              {this.props.translate('packages.ClassDiagram.ClassBidirectional')}
             </Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassComposition}>
-              {this.props.translate('packages.classDiagram.composition')}
+              {this.props.translate('packages.ClassDiagram.ClassComposition')}
             </Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassDependency}>
-              {this.props.translate('packages.classDiagram.dependency')}
+              {this.props.translate('packages.ClassDiagram.ClassDependency')}
             </Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassInheritance}>
-              {this.props.translate('packages.classDiagram.inheritance')}
+              {this.props.translate('packages.ClassDiagram.ClassInheritance')}
             </Dropdown.Item>
             <Dropdown.Item value={ClassRelationshipType.ClassRealization}>
-              {this.props.translate('packages.classDiagram.realization')}
+              {this.props.translate('packages.ClassDiagram.ClassRealization')}
             </Dropdown.Item>
           </Dropdown>
           <Divider />
