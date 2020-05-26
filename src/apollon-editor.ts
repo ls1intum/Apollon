@@ -14,6 +14,8 @@ import { UMLDiagram } from './services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from './services/uml-element/uml-element-repository';
 import * as Apollon from './typings';
 import { Dispatch } from './utils/actions/actions';
+import { UMLDiagramType, UMLModel } from "./typings";
+import { debounce } from './utils/debounce';
 
 export class ApollonEditor {
   get model(): Apollon.UMLModel {
@@ -27,28 +29,26 @@ export class ApollonEditor {
       ...ModelState.fromModel(model),
       editor: { ...this.store.getState().editor },
     };
-    this.destroy();
+    this.recreateEditor(state);
+  }
 
-    const element = createElement(Application, {
-      ref: this.application,
-      state,
-      styles: this.options.theme,
-      locale: this.options.locale,
-    });
-    render(element, this.container, this.componentDidMount);
+  set type(diagramType: UMLDiagramType) {
+    if (!this.store) throw new Error('Apollon was already destroyed.');
+    const state: DeepPartial<ModelState> = {
+      ...this.store.getState(),
+      diagram: new UMLDiagram({
+        type: diagramType,
+      }),
+      elements: undefined,
+    };
+    this.recreateEditor(state);
   }
 
   set locale(locale: Locale) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
-    this.destroy();
-
-    const element = createElement(Application, {
-      ref: this.application,
-      state: this.store.getState(),
-      styles: this.options.theme,
-      locale,
-    });
-    render(element, this.container, this.componentDidMount);
+    const state = this.store.getState();
+    this.options.locale = locale;
+    this.recreateEditor(state);
   }
 
   static exportModelAsSvg(
@@ -69,10 +69,12 @@ export class ApollonEditor {
   }
 
   selection: Apollon.Selection = { elements: [], relationships: [] };
+  private currentModel?: Apollon.UMLModel;
   private assessments: Apollon.Assessment[] = [];
   private application: RefObject<Application> = createRef();
   private selectionSubscribers: ((selection: Apollon.Selection) => void)[] = [];
   private assessmentSubscribers: ((assessments: Apollon.Assessment[]) => void)[] = [];
+  private modelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
@@ -137,6 +139,14 @@ export class ApollonEditor {
     this.assessmentSubscribers.splice(subscriptionId);
   }
 
+  subscribeToModelChange(callback: (model: UMLModel) => void): number {
+    return this.modelSubscribers.push(callback) - 1;
+  }
+
+  unsubscribeFromModelChange(subscriptionId: number) {
+    this.modelSubscribers.splice(subscriptionId);
+  }
+
   exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG {
     return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }
@@ -181,7 +191,32 @@ export class ApollonEditor {
       this.assessmentSubscribers.forEach(subscriber => subscriber(umlAssessments));
       this.assessments = umlAssessments;
     }
+
+    // notfiy that action was done
+    this.notifyModelSubscribers();
   };
+
+  private notifyModelSubscribers = debounce(() => {
+    const model = this.model;
+    if (this.currentModel && JSON.stringify(model) !== JSON.stringify(this.currentModel)) {
+      this.modelSubscribers.forEach((subscriber) => subscriber(model));
+      this.currentModel = model;
+    } else {
+      this.currentModel = model;
+    }
+  }, 500);
+
+  private recreateEditor(state: DeepPartial<ModelState>) {
+    this.destroy();
+
+    const element = createElement(Application, {
+      ref: this.application,
+      state: state,
+      styles: this.options.theme,
+      locale: this.options.locale,
+    });
+    render(element, this.container, this.componentDidMount);
+  }
 
   private get store(): Store<ModelState, Actions> | null {
     return (

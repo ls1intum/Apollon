@@ -25,56 +25,65 @@
     "feedback": "Bewertung"
   },
   "packages": {
-    "classDiagram": {
-      "package": "Paket",
-      "class": "Klasse",
-      "abstract": "Abstrakt",
-      "interface": "Schnittstelle",
-      "enumeration": "Aufzählung",
-      "attribute": "Attribut",
-      "method": "Methode",
-      "aggregation": "Aggregation",
-      "bidirectional": "Assoziation (bidirektional)",
-      "composition": "Komposition",
-      "dependency": "Abhängigkeit",
-      "inheritance": "Vererbung",
-      "realization": "Realisierung",
-      "unidirectional": "Assoziation (unidirektional)"
+    "ClassDiagram": {
+      "Package": "Paket",
+      "Class": "Klasse",
+      "AbstractClass": "Abstrakt",
+      "Interface": "Schnittstelle",
+      "Enumeration": "Aufzählung",
+      "ClassAttribute": "Attribut",
+      "ClassMethod": "Methode",
+      "ClassAggregation": "Aggregation",
+      "ClassBidirectional": "Assoziation (bidirektional)",
+      "ClassComposition": "Komposition",
+      "ClassDependency": "Abhängigkeit",
+      "ClassInheritance": "Vererbung",
+      "ClassRealization": "Realisierung",
+      "ClassUnidirectional": "Assoziation (unidirektional)"
     },
-    "objectDiagram": {
-      "objectName": "Objekt",
-      "objectAttribute": "Attribut"
+    "ObjectDiagram": {
+      "ObjectName": "Objekt",
+      "ObjectAttribute": "Attribut",
+      "ObjectMethod": "Methode",
+      "ObjectLink": "Beziehung"
     },
-    "activityDiagram": {
-      "activity": "Aktivität",
-      "actionNode": "Aktion",
-      "objectNode": "Objekt",
-      "condition": "Bedingung",
-      "controlFlow": "Kontrollfluss"
+    "ActivityDiagram": {
+      "Activity": "Aktivität",
+      "ActivityActionNode": "Aktion",
+      "ActivityFinalNode": "Endknoten",
+      "ActivityForkNode": "Verzweigungsknoten",
+      "ActivityInitialNode": "Startknoten",
+      "ActivityMergeNode": "Bedingung",
+      "ActivityObjectNode": "Objekt",
+      "ActivityControlFlow": "Kontrollfluss"
     },
-    "useCaseDiagram": {
-      "useCase": "Anwendungsfall",
-      "actor": "Akteur",
-      "system": "System",
-      "association": "Assoziation",
-      "extend": "Extend",
-      "generalization": "Generalisierung",
-      "include": "Include"
+    "UseCaseDiagram": {
+      "UseCase": "Anwendungsfall",
+      "UseCaseActor": "Akteur",
+      "UseCaseSystem": "System",
+      "UseCaseAssociation": "Assoziation",
+      "UseCaseExtend": "Extend",
+      "UseCaseGeneralization": "Generalisierung",
+      "UseCaseInclude": "Include"
     },
-    "communicationDiagram": {
-      "communicationLink": "Kommunikation"
+    "CommunicationDiagram": {
+      "ObjectName": "Objekt",
+      "ObjectAttribute": "Attribut",
+      "ObjectMethod": "Methode",
+      "CommunicationLink": "Kommunikation"
     },
-    "componentDiagram": {
-      "component": "Komponente",
-      "dependency": "Abhängigkeit",
-      "interface": "Schnittstelle",
-      "interfaceProvided": "Bereitgestellte Schnittstelle",
-      "interfaceRequired": "Verwendete Schnittstelle"
+    "ComponentDiagram": {
+      "Component": "Komponente",
+      "ComponentDependency": "Abhängigkeit",
+      "ComponentInterface": "Schnittstelle",
+      "ComponentInterfaceProvided": "Bereitgestellte Schnittstelle",
+      "ComponentInterfaceRequired": "Verwendete Schnittstelle"
     },
-    "deploymentDiagram": {
-      "node": "Knoten",
-      "artifact": "Artefakt",
-      "stereotype": "Stereotyp"
+    "DeploymentDiagram": {
+      "DeploymentNode": "Knoten",
+      "Component": "Komponente",
+      "DeploymentArtifact": "Artefakt",
+      "DeploymentAssociation": "Deployment Verbindung"
     }
   }
 }

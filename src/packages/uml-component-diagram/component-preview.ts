@@ -11,11 +11,11 @@ export const composeComponentPreview: ComposePreview = (
   const elements: UMLElement[] = [];
 
   // UML Component
-  const umlComponent = new UMLComponent({ name: translate('packages.componentDiagram.component') });
+  const umlComponent = new UMLComponent({ name: translate('packages.ComponentDiagram.Component') });
   elements.push(umlComponent);
 
   // UML Deployment Artifact
-  const umlComponentInterface = new UMLComponentInterface({ name: translate('packages.componentDiagram.interface') });
+  const umlComponentInterface = new UMLComponentInterface({ name: translate('packages.ComponentDiagram.ComponentInterface') });
   const [umlInterface] = umlComponentInterface.render(layer) as [UMLElement];
   elements.push(umlInterface);
 

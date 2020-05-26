@@ -23,6 +23,8 @@ import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationsh
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import * as Apollon from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
+import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
+import { UMLDiagramType } from '../../typings';
 
 export interface ModelState {
   editor: EditorState;
@@ -83,7 +85,12 @@ export class ModelState {
       element.bounds.y -= bounds.y + bounds.height / 2;
     }
 
+    // set diagram to keep diagram type
+    const diagram: UMLDiagram = new UMLDiagram();
+    diagram.type = (model.type as UMLDiagramType);
+
     return {
+      diagram: diagram,
       interactive: [...model.interactive.elements, ...model.interactive.relationships],
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
       assessments: (model.assessments || []).reduce<AssessmentState>(
