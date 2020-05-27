@@ -19,7 +19,7 @@ import { UMLDeploymentInterfaceRequired } from '../uml-deployment-interface-requ
 import { UMLDeploymentInterfaceProvided } from '../uml-deployment-interface-provided/uml-deployment-interface-provided';
 import { DeploymentElementType, DeploymentRelationshipType } from '../index';
 import { UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLDeploymentDependency } from '../uml-deployment-dependency/uml-deployment-interface-required';
+import { UMLDeploymentDependency } from '../uml-deployment-dependency/uml-deployment-dependency';
 
 const Flex = styled.div`
   display: flex;
@@ -97,8 +97,7 @@ class DeploymentAssociationUpdate extends Component<Props> {
               </Dropdown.Item>
             </Dropdown>
           </section>
-          {(element.type === DeploymentRelationshipType.DeploymentDependency ||
-            element.type === DeploymentRelationshipType.DeploymentAssociation) && (
+          {element.type === DeploymentRelationshipType.DeploymentAssociation && (
             <>
               <Divider />
               <section>

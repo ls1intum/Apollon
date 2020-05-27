@@ -1,6 +1,6 @@
 import { ComponentRelationshipType } from '..';
-import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
+import { UMLDependency } from "../../common/uml-dependency/uml-component-dependency";
 
-export class UMLComponentDependency extends UMLRelationship {
+export class UMLComponentDependency extends UMLDependency {
   type = ComponentRelationshipType.ComponentDependency;
 }

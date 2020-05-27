@@ -20,7 +20,7 @@ import { UMLUseCaseGeneralization } from './uml-use-case-diagram/uml-use-case-ge
 import { UMLUseCaseInclude } from './uml-use-case-diagram/uml-use-case-include/uml-use-case-include';
 import { UMLDeploymentInterfaceProvided } from './uml-deployment-diagram/uml-deployment-interface-provided/uml-deployment-interface-provided';
 import { UMLDeploymentInterfaceRequired } from './uml-deployment-diagram/uml-deployment-interface-required/uml-deployment-interface-required';
-import { UMLDeploymentDependency } from "./uml-deployment-diagram/uml-deployment-dependency/uml-deployment-interface-required";
+import { UMLDeploymentDependency } from "./uml-deployment-diagram/uml-deployment-dependency/uml-deployment-dependency";
 
 type UMLRelationships = { [key in UMLRelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
 

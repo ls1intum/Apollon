@@ -1,7 +1,7 @@
 import React, { SFC } from 'react';
-import { UMLComponentDependency } from './uml-component-dependency';
+import { UMLDependency } from './uml-component-dependency';
 
-export const UMLComponentDependencyComponent: SFC<Props> = ({ element }) => (
+export const UMLDependencyComponent: SFC<Props> = ({ element }) => (
   <g>
     <marker
       id={`marker-${element.id}`}
@@ -17,7 +17,7 @@ export const UMLComponentDependencyComponent: SFC<Props> = ({ element }) => (
       <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
     </marker>
     <polyline
-      points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
+      points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
       stroke="black"
       fill="none"
       strokeWidth={1}
@@ -28,5 +28,5 @@ export const UMLComponentDependencyComponent: SFC<Props> = ({ element }) => (
 );
 
 interface Props {
-  element: UMLComponentDependency;
+  element: UMLDependency;
 }

@@ -12,7 +12,6 @@ import { UMLActivityObjectNodeComponent } from './uml-activity-diagram/uml-activ
 import { UMLActivityComponent } from './uml-activity-diagram/uml-activity/uml-activity-component';
 import { UMLClassPackageComponent } from './uml-class-diagram/uml-class-package/uml-class-package-component';
 import { UMLCommunicationLinkComponent } from './uml-communication-diagram/uml-communication-link/uml-communication-link-component';
-import { UMLComponentDependencyComponent } from './uml-component-diagram/uml-component-dependency/uml-component-dependency-component';
 import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
 import { UMLDeploymentArtifactComponent } from './uml-deployment-diagram/uml-deployment-artifact/uml-deployment-artifact-component';
 import { UMLDeploymentAssociationComponent } from './uml-deployment-diagram/uml-deployment-association/uml-deployment-association-component';
@@ -30,6 +29,7 @@ import { UMLUseCaseComponent } from './uml-use-case-diagram/uml-use-case/uml-use
 import { UMLInterfaceComponent } from './common/uml-interface/uml-interface-component';
 import { UMLInterfaceProvidedComponent } from './common/uml-interface-provided/uml-interface-provided-component';
 import { UMLInterfaceRequiredComponent } from './common/uml-interface-required/uml-interface-required-component';
+import { UMLDependencyComponent } from './common/uml-dependency/uml-dependency-component';
 
 export const Components: { [key in UMLElementType | UMLRelationshipType]: FunctionComponent<{ element: any }> } = {
   [UMLElementType.Package]: UMLClassPackageComponent,
@@ -73,9 +73,9 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLRelationshipType.CommunicationLink]: UMLCommunicationLinkComponent,
   [UMLRelationshipType.ComponentInterfaceProvided]: UMLInterfaceProvidedComponent,
   [UMLRelationshipType.ComponentInterfaceRequired]: UMLInterfaceRequiredComponent,
-  [UMLRelationshipType.ComponentDependency]: UMLComponentDependencyComponent,
+  [UMLRelationshipType.ComponentDependency]: UMLDependencyComponent,
   [UMLRelationshipType.DeploymentAssociation]: UMLDeploymentAssociationComponent,
-  [UMLRelationshipType.DeploymentDependency]: UMLDeploymentAssociationComponent,
+  [UMLRelationshipType.DeploymentDependency]: UMLDependencyComponent,
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLInterfaceProvidedComponent,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
 };
