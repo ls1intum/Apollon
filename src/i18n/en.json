@@ -83,7 +83,11 @@
       "DeploymentNode": "Node",
       "Component": "Component",
       "DeploymentArtifact": "Artifact",
-      "DeploymentAssociation": "Deployment Association"
+      "DeploymentInterface": "Interface",
+      "DeploymentInterfaceProvided": "Provided Interface",
+      "DeploymentInterfaceRequired": "Required Interface",
+      "DeploymentAssociation": "Deployment Association",
+      "DeploymentDependency": "Deployment Dependency"
     }
   }
 }

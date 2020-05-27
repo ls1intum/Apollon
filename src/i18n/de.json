@@ -83,7 +83,11 @@
       "DeploymentNode": "Knoten",
       "Component": "Komponente",
       "DeploymentArtifact": "Artefakt",
-      "DeploymentAssociation": "Deployment Verbindung"
+      "DeploymentInterface": "Schnittstelle",
+      "DeploymentInterfaceProvided": "Bereitgestellte Schnittstelle",
+      "DeploymentInterfaceRequired": "Verwendete Schnittstelle",
+      "DeploymentAssociation": "Deployment Verbindung",
+      "DeploymentDependency": "Deployment Abhängigkeit"
     }
   }
 }

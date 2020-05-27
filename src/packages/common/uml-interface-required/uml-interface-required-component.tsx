@@ -1,9 +1,9 @@
 import React, { SFC } from 'react';
-import { UMLComponentInterfaceRequired } from './uml-component-interface-required';
+import { UMLInterfaceProvided } from "../uml-interface-provided/uml-interface-provided";
 
 const SIZE = 26;
 
-export const UMLComponentInterfaceRequiredComponent: SFC<Props> = ({ element }) => (
+export const UMLInterfaceRequiredComponent: SFC<Props> = ({ element }) => (
   <g>
     <marker
       id={`marker-${element.id}`}
@@ -29,5 +29,5 @@ export const UMLComponentInterfaceRequiredComponent: SFC<Props> = ({ element }) 
 );
 
 interface Props {
-  element: UMLComponentInterfaceRequired;
+  element: UMLInterfaceProvided;
 }

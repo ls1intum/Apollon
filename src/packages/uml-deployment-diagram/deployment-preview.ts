@@ -4,6 +4,7 @@ import { ComposePreview } from '../compose-preview';
 import { UMLComponent } from '../uml-component-diagram/uml-component/uml-component';
 import { UMLDeploymentArtifact } from './uml-deployment-artifact/uml-deployment-artifact';
 import { UMLDeploymentNode } from './uml-deployment-node/uml-deployment-node';
+import { UMLDeploymentInterface } from "./uml-deployment-interface/uml-component-interface";
 
 export const composeDeploymentPreview: ComposePreview = (
   layer: ILayer,
@@ -22,6 +23,10 @@ export const composeDeploymentPreview: ComposePreview = (
   // UML Deployment Artifact
   const umlDeploymentArtifact = new UMLDeploymentArtifact({ name: translate('packages.DeploymentDiagram.DeploymentArtifact') });
   elements.push(umlDeploymentArtifact);
+
+  // UML Deployment Interface
+  const umlDeploymentInterface = new UMLDeploymentInterface({ name: translate('packages.DeploymentDiagram.DeploymentInterface') });
+  elements.push(umlDeploymentInterface);
 
   return elements;
 };

@@ -1,8 +1,6 @@
 import { ComponentRelationshipType } from '..';
-import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
+import { UMLInterfaceRequired } from "../../common/uml-interface-required/uml-interface-required";
 
-export class UMLComponentInterfaceRequired extends UMLRelationship {
-  static features = { ...UMLRelationship.features, variable: false };
-
+export class UMLComponentInterfaceRequired extends UMLInterfaceRequired {
   type = ComponentRelationshipType.ComponentInterfaceRequired;
 }

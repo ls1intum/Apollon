@@ -18,6 +18,9 @@ import { UMLUseCaseAssociation } from './uml-use-case-diagram/uml-use-case-assoc
 import { UMLUseCaseExtend } from './uml-use-case-diagram/uml-use-case-extend/uml-use-case-extend';
 import { UMLUseCaseGeneralization } from './uml-use-case-diagram/uml-use-case-generalization/uml-use-case-generalization';
 import { UMLUseCaseInclude } from './uml-use-case-diagram/uml-use-case-include/uml-use-case-include';
+import { UMLDeploymentInterfaceProvided } from './uml-deployment-diagram/uml-deployment-interface-provided/uml-deployment-interface-provided';
+import { UMLDeploymentInterfaceRequired } from './uml-deployment-diagram/uml-deployment-interface-required/uml-deployment-interface-required';
+import { UMLDeploymentDependency } from "./uml-deployment-diagram/uml-deployment-dependency/uml-deployment-interface-required";
 
 type UMLRelationships = { [key in UMLRelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
 
@@ -40,4 +43,7 @@ export const UMLRelationships = {
   [UMLRelationshipType.ComponentInterfaceProvided]: UMLComponentInterfaceProvided,
   [UMLRelationshipType.ComponentInterfaceRequired]: UMLComponentInterfaceRequired,
   [UMLRelationshipType.DeploymentAssociation]: UMLDeploymentAssociation,
+  [UMLRelationshipType.DeploymentDependency]: UMLDeploymentDependency,
+  [UMLRelationshipType.DeploymentInterfaceProvided]: UMLDeploymentInterfaceProvided,
+  [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentInterfaceRequired,
 };

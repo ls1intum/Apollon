@@ -13,9 +13,6 @@ import { UMLActivityComponent } from './uml-activity-diagram/uml-activity/uml-ac
 import { UMLClassPackageComponent } from './uml-class-diagram/uml-class-package/uml-class-package-component';
 import { UMLCommunicationLinkComponent } from './uml-communication-diagram/uml-communication-link/uml-communication-link-component';
 import { UMLComponentDependencyComponent } from './uml-component-diagram/uml-component-dependency/uml-component-dependency-component';
-import { UMLComponentInterfaceProvidedComponent } from './uml-component-diagram/uml-component-interface-provided/uml-component-interface-provided-component';
-import { UMLComponentInterfaceRequiredComponent } from './uml-component-diagram/uml-component-interface-required/uml-component-interface-required-component';
-import { UMLComponentInterfaceComponent } from './uml-component-diagram/uml-component-interface/uml-component-interface-component';
 import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
 import { UMLDeploymentArtifactComponent } from './uml-deployment-diagram/uml-deployment-artifact/uml-deployment-artifact-component';
 import { UMLDeploymentAssociationComponent } from './uml-deployment-diagram/uml-deployment-association/uml-deployment-association-component';
@@ -30,6 +27,9 @@ import { UMLUseCaseGeneralizationComponent } from './uml-use-case-diagram/uml-us
 import { UMLUseCaseIncludeComponent } from './uml-use-case-diagram/uml-use-case-include/uml-use-case-include-component';
 import { UMLUseCaseSystemComponent } from './uml-use-case-diagram/uml-use-case-system/uml-use-case-system-component';
 import { UMLUseCaseComponent } from './uml-use-case-diagram/uml-use-case/uml-use-case-component';
+import { UMLInterfaceComponent } from './common/uml-interface/uml-interface-component';
+import { UMLInterfaceProvidedComponent } from './common/uml-interface-provided/uml-interface-provided-component';
+import { UMLInterfaceRequiredComponent } from './common/uml-interface-required/uml-interface-required-component';
 
 export const Components: { [key in UMLElementType | UMLRelationshipType]: FunctionComponent<{ element: any }> } = {
   [UMLElementType.Package]: UMLClassPackageComponent,
@@ -53,9 +53,10 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLElementType.UseCaseActor]: UMLUseCaseActorComponent,
   [UMLElementType.UseCaseSystem]: UMLUseCaseSystemComponent,
   [UMLElementType.Component]: UMLComponentComponent,
-  [UMLElementType.ComponentInterface]: UMLComponentInterfaceComponent,
+  [UMLElementType.ComponentInterface]: UMLInterfaceComponent,
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeComponent,
   [UMLElementType.DeploymentArtifact]: UMLDeploymentArtifactComponent,
+  [UMLElementType.DeploymentInterface]: UMLInterfaceComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,
@@ -70,8 +71,11 @@ export const Components: { [key in UMLElementType | UMLRelationshipType]: Functi
   [UMLRelationshipType.UseCaseGeneralization]: UMLUseCaseGeneralizationComponent,
   [UMLRelationshipType.UseCaseInclude]: UMLUseCaseIncludeComponent,
   [UMLRelationshipType.CommunicationLink]: UMLCommunicationLinkComponent,
-  [UMLRelationshipType.ComponentInterfaceProvided]: UMLComponentInterfaceProvidedComponent,
-  [UMLRelationshipType.ComponentInterfaceRequired]: UMLComponentInterfaceRequiredComponent,
+  [UMLRelationshipType.ComponentInterfaceProvided]: UMLInterfaceProvidedComponent,
+  [UMLRelationshipType.ComponentInterfaceRequired]: UMLInterfaceRequiredComponent,
   [UMLRelationshipType.ComponentDependency]: UMLComponentDependencyComponent,
   [UMLRelationshipType.DeploymentAssociation]: UMLDeploymentAssociationComponent,
+  [UMLRelationshipType.DeploymentDependency]: UMLDeploymentAssociationComponent,
+  [UMLRelationshipType.DeploymentInterfaceProvided]: UMLInterfaceProvidedComponent,
+  [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
 };

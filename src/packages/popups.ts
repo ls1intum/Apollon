@@ -40,6 +40,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.ComponentInterface]: DefaultPopup,
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeUpdate,
   [UMLElementType.DeploymentArtifact]: DefaultPopup,
+  [UMLElementType.DeploymentInterface]: DefaultPopup,
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassComposition]: UMLClassAssociationUpdate,
@@ -58,4 +59,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.ComponentInterfaceRequired]: UMLComponentAssociationUpdate,
   [UMLRelationshipType.ComponentDependency]: UMLComponentAssociationUpdate,
   [UMLRelationshipType.DeploymentAssociation]: UMLDeploymentAssociationUpdate,
+  [UMLRelationshipType.DeploymentDependency]: UMLDeploymentAssociationUpdate,
+  [UMLRelationshipType.DeploymentInterfaceProvided]: UMLDeploymentAssociationUpdate,
+  [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentAssociationUpdate,
 };

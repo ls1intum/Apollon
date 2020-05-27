@@ -11,6 +11,15 @@ import { ModelState } from '../../../components/store/model-state';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { UMLDeploymentAssociation } from './uml-deployment-association';
+import { Header } from '../../../components/controls/typography/typography';
+import { ExchangeIcon } from '../../../components/controls/icon/exchange';
+import { Divider } from '../../../components/controls/divider/divider';
+import { Dropdown } from '../../../components/controls/dropdown/dropdown';
+import { UMLDeploymentInterfaceRequired } from '../uml-deployment-interface-required/uml-deployment-interface-required';
+import { UMLDeploymentInterfaceProvided } from '../uml-deployment-interface-provided/uml-deployment-interface-provided';
+import { DeploymentElementType, DeploymentRelationshipType } from '../index';
+import { UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLDeploymentDependency } from '../uml-deployment-dependency/uml-deployment-interface-required';
 
 const Flex = styled.div`
   display: flex;
@@ -19,22 +28,98 @@ const Flex = styled.div`
 `;
 
 class DeploymentAssociationUpdate extends Component<Props> {
-  render() {
-    const { element } = this.props;
-
-    return (
-      <div>
-        <section>
-          <Flex>
-            <Textfield value={element.name} onChange={this.rename} />
-            <Button color="link" onClick={() => this.props.delete(element.id)}>
-              <TrashIcon />
-            </Button>
-          </Flex>
-        </section>
-      </div>
-    );
+  constructor(props: Props) {
+    super(props);
+    this.onChange = this.onChange.bind(this);
   }
+
+  render() {
+    const { element, sourceElement, targetElement } = this.props;
+    if (
+      sourceElement.type === DeploymentElementType.DeploymentInterface ||
+      targetElement.type === DeploymentElementType.DeploymentInterface
+    ) {
+      return (
+        <div>
+          <section>
+            <Flex>
+              <Header gutter={false} style={{ flexGrow: 1 }}>
+                {this.props.translate('popup.association')}
+              </Header>
+              <Button color="link" onClick={() => this.props.flip(element.id)}>
+                <ExchangeIcon />
+              </Button>
+              <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
+                <TrashIcon />
+              </Button>
+            </Flex>
+            <Divider />
+          </section>
+          <section>
+            <Dropdown value={element.type as keyof typeof DeploymentRelationshipType} onChange={this.onChange}>
+              <Dropdown.Item value={DeploymentRelationshipType.DeploymentAssociation}>
+                {this.props.translate('packages.DeploymentDiagram.DeploymentAssociation')}
+              </Dropdown.Item>
+              <Dropdown.Item value={DeploymentRelationshipType.DeploymentInterfaceProvided}>
+                {this.props.translate('packages.DeploymentDiagram.DeploymentInterfaceProvided')}
+              </Dropdown.Item>
+              <Dropdown.Item value={DeploymentRelationshipType.DeploymentInterfaceRequired}>
+                {this.props.translate('packages.DeploymentDiagram.DeploymentInterfaceRequired')}
+              </Dropdown.Item>
+            </Dropdown>
+          </section>
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          <section>
+            <Flex>
+              <Header gutter={false} style={{ flexGrow: 1 }}>
+                {this.props.translate('popup.association')}
+              </Header>
+              <Button color="link" onClick={() => this.props.flip(element.id)}>
+                <ExchangeIcon />
+              </Button>
+              <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
+                <TrashIcon />
+              </Button>
+            </Flex>
+            <Divider />
+          </section>
+          <section>
+            <Dropdown value={element.type as keyof typeof DeploymentRelationshipType} onChange={this.onChange}>
+              <Dropdown.Item value={DeploymentRelationshipType.DeploymentAssociation}>
+                {this.props.translate('packages.DeploymentDiagram.DeploymentAssociation')}
+              </Dropdown.Item>
+              <Dropdown.Item value={DeploymentRelationshipType.DeploymentDependency}>
+                {this.props.translate('packages.DeploymentDiagram.DeploymentDependency')}
+              </Dropdown.Item>
+            </Dropdown>
+          </section>
+          {(element.type === DeploymentRelationshipType.DeploymentDependency ||
+            element.type === DeploymentRelationshipType.DeploymentAssociation) && (
+            <>
+              <Divider />
+              <section>
+                <Flex>
+                  <Textfield value={element.name} onChange={this.rename} />
+                  <Button color="link" onClick={() => this.props.delete(element.id)}>
+                    <TrashIcon />
+                  </Button>
+                </Flex>
+              </section>
+            </>
+          )}
+        </div>
+      );
+    }
+  }
+
+  private onChange = (value: keyof typeof DeploymentRelationshipType) => {
+    const { element, update } = this.props;
+    update(element.id, { type: value });
+  };
 
   private rename = (value: string) => {
     const { element, update } = this.props;
@@ -43,10 +128,17 @@ class DeploymentAssociationUpdate extends Component<Props> {
 }
 
 type OwnProps = {
-  element: UMLDeploymentAssociation;
+  element:
+    | UMLDeploymentAssociation
+    | UMLDeploymentInterfaceRequired
+    | UMLDeploymentInterfaceProvided
+    | UMLDeploymentDependency;
 };
 
-type StateProps = {};
+type StateProps = {
+  sourceElement: UMLElement;
+  targetElement: UMLElement;
+};
 
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
@@ -59,7 +151,10 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
+    (state, props) => ({
+      sourceElement: UMLElementRepository.get(state.elements[props.element.source.element])!,
+      targetElement: UMLElementRepository.get(state.elements[props.element.target.element])!,
+    }),
     {
       update: UMLElementRepository.update,
       delete: UMLElementRepository.delete,
