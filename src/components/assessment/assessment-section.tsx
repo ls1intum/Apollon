@@ -87,6 +87,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
               multiline={true}
               placeholder={this.props.translate('assessment.feedback')}
               onChange={this.updateFeedback}
+              enterToSubmit={false}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />
           </section>

@@ -9,7 +9,8 @@ export const defaultProps = Object.freeze({
   multiline: false,
   outline: false,
   readonly: false,
-  size: 'sm' as Size
+  size: 'sm' as Size,
+  enterToSubmit: true,
 });
 
 const initialState = {
@@ -21,6 +22,7 @@ type Props = {
   onSubmit?: (value: string) => void;
   placeholder?: string;
   value: string;
+  enterToSubmit?: boolean;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onSubmit'> &
   typeof defaultProps;
 
@@ -69,6 +71,10 @@ export class Textfield extends Component<Props, State> {
   private onKeyUp = ({ key, currentTarget }: KeyboardEvent<HTMLInputElement>) => {
     switch (key) {
       case 'Enter':
+        if (this.props.enterToSubmit) {
+          currentTarget.blur();
+        }
+        break;
       case 'Escape':
         currentTarget.blur();
         break;
