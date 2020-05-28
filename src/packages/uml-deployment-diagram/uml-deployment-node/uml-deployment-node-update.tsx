@@ -24,7 +24,7 @@ class DeploymentNodeUpdate extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.onRename} />
+            <Textfield value={element.name} onChange={this.onRename} autoFocus />
             <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -64,12 +64,9 @@ type DispatchProps = {
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  null,
-  {
-    update: UMLElementRepository.update,
-    delete: UMLElementRepository.delete,
-  },
-);
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+  update: UMLElementRepository.update,
+  delete: UMLElementRepository.delete,
+});
 
 export const UMLDeploymentNodeUpdate = enhance(DeploymentNodeUpdate);

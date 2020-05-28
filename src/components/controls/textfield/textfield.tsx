@@ -9,11 +9,13 @@ export const defaultProps = Object.freeze({
   multiline: false,
   outline: false,
   readonly: false,
-  size: 'sm' as Size
+  size: 'sm' as Size,
+  focus: false,
 });
 
 const initialState = {
   key: Date.now(),
+  focused: false,
 };
 
 type Props = {
@@ -29,6 +31,7 @@ type State = typeof initialState;
 export class Textfield extends Component<Props, State> {
   static defaultProps = defaultProps;
   state = initialState;
+  ref = React.createRef<HTMLTextAreaElement>();
 
   render() {
     const { onChange, onSubmit, size, value, ...props } = this.props;
@@ -43,8 +46,15 @@ export class Textfield extends Component<Props, State> {
         onChange={this.onChange}
         onKeyUp={this.onKeyUp}
         onBlur={this.onBlur}
+        ref={this.ref}
       />
     );
+  }
+
+  focus() {
+    if (this.ref.current) {
+      this.ref.current.focus();
+    }
   }
 
   private onBlur = ({ currentTarget }: FocusEvent<HTMLInputElement>) => {

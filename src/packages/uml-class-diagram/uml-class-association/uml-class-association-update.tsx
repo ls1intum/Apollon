@@ -110,6 +110,7 @@ class ClassAssociationComponent extends Component<Props> {
               gutter={true}
               value={element.source.multiplicity}
               onChange={this.onUpdate('multiplicity', 'source')}
+              autoFocus
             />
           </Flex>
           <Flex>

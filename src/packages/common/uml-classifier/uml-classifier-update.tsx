@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
@@ -45,29 +45,45 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      create: UMLElementRepository.create,
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    create: UMLElementRepository.create,
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
+  }),
 );
 
-class ClassifierUpdate extends Component<Props> {
+type State = {
+  fieldToFocus?: RefObject<Textfield>;
+};
+
+const getInitialState = (): State => ({
+  fieldToFocus: undefined,
+});
+
+class ClassifierUpdate extends Component<Props, State> {
+  state = getInitialState();
+  newMethodField = createRef<Textfield>();
+  newAttributeField = createRef<Textfield>();
+
+  componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
+    if (this.state.fieldToFocus?.current) {
+      this.state.fieldToFocus.current.focus();
+      this.setState({ fieldToFocus: undefined });
+    }
+  }
+
   render() {
     const { element, getById } = this.props;
-    const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
-    const attributes = children.filter(child => child instanceof UMLClassAttribute);
-    const methods = children.filter(child => child instanceof UMLClassMethod);
+    const children = element.ownedElements.map((id) => getById(id)).filter(notEmpty);
+    const attributes = children.filter((child) => child instanceof UMLClassAttribute);
+    const methods = children.filter((child) => child instanceof UMLClassMethod);
 
     return (
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.rename(element.id)} />
+            <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -90,7 +106,7 @@ class ClassifierUpdate extends Component<Props> {
         </section>
         <section>
           <Header>{this.props.translate('popup.attributes')}</Header>
-          {attributes.map(attribute => (
+          {attributes.map((attribute) => (
             <Flex key={attribute.id}>
               <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
               <Button color="link" tabIndex={-1} onClick={this.delete(attribute.id)}>
@@ -98,12 +114,12 @@ class ClassifierUpdate extends Component<Props> {
               </Button>
             </Flex>
           ))}
-          <Textfield outline={true} value="" onSubmit={this.create(UMLClassAttribute)} />
+          <Textfield ref={this.newAttributeField} outline={true} value="" onSubmit={this.create(UMLClassAttribute)} />
         </section>
         <section>
           <Divider />
           <Header>{this.props.translate('popup.methods')}</Header>
-          {methods.map(method => (
+          {methods.map((method) => (
             <Flex key={method.id}>
               <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
               <Button color="link" tabIndex={-1} onClick={this.delete(method.id)}>
@@ -111,7 +127,21 @@ class ClassifierUpdate extends Component<Props> {
               </Button>
             </Flex>
           ))}
-          <Textfield outline={true} value="" onSubmit={this.create(UMLClassMethod)} />
+          <Textfield
+            ref={this.newMethodField}
+            outline={true}
+            value=""
+            onSubmit={this.create(UMLClassMethod)}
+            onKeyDown={(event) => {
+              // workaround when 'tab' key is pressed:
+              // prevent default and execute blur manually without switching to next tab index
+              //then set focus to method field again (componentDidUpdate)
+              if (event.keyCode == 9) {
+                event.preventDefault();
+                (event.target as HTMLElement).blur();
+              }
+            }}
+          />
         </section>
       </div>
     );
@@ -122,6 +152,15 @@ class ClassifierUpdate extends Component<Props> {
     const member = new Clazz();
     member.name = value;
     create(member, element.id);
+    if (member.type === ClassElementType.ClassAttribute) {
+      this.setState({
+        fieldToFocus: this.newAttributeField,
+      });
+    } else if (member.type === ClassElementType.ClassMethod) {
+      this.setState({
+        fieldToFocus: this.newMethodField,
+      });
+    }
   };
 
   private rename = (id: string) => (value: string) => {

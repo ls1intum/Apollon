@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Button } from '../../../components/controls/button/button';
@@ -24,7 +24,24 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class CommunicationLinkUpdate extends Component<Props> {
+type State = {
+  fieldToFocus?: RefObject<Textfield>;
+};
+
+const getInitialState = (): State => ({
+  fieldToFocus: undefined,
+});
+
+class CommunicationLinkUpdate extends Component<Props, State> {
+  state = getInitialState();
+  newCommunicationLinkField = createRef<Textfield>();
+
+  componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
+    if (this.state.fieldToFocus?.current) {
+      this.state.fieldToFocus.current.focus();
+      this.setState({ fieldToFocus: undefined });
+    }
+  }
   render() {
     const { element, getById } = this.props;
     const source = element.source && getById(element.source.element);
@@ -61,7 +78,22 @@ class CommunicationLinkUpdate extends Component<Props> {
               </Button>
             </Flex>
           ))}
-          <Textfield outline={true} value="" onSubmit={this.create} />
+          <Textfield
+            ref={this.newCommunicationLinkField}
+            outline={true}
+            value=""
+            onSubmit={this.create}
+            onKeyDown={(event) => {
+              // workaround when 'tab' key is pressed:
+              // prevent default and execute blur manually without switching to next tab index
+              //then set focus to newCommunicationLink field again (componentDidUpdate)
+              if (event.keyCode == 9) {
+                event.preventDefault();
+                (event.target as HTMLElement).blur();
+              }
+            }}
+            autoFocus
+          />
         </section>
       </div>
     );
@@ -69,9 +101,12 @@ class CommunicationLinkUpdate extends Component<Props> {
 
   private create = (value: string) => {
     const { element, update } = this.props;
-    if (!element.messages.find(message => message.name === value)) {
+    if (!element.messages.find((message) => message.name === value)) {
       update<UMLCommunicationLink>(element.id, {
         messages: [...element.messages, { name: value, direction: 'source' }],
+      });
+      this.setState({
+        fieldToFocus: this.newCommunicationLinkField,
       });
     }
   };
@@ -79,7 +114,7 @@ class CommunicationLinkUpdate extends Component<Props> {
   private rename = (value: CommunicationMessage) => (name: string) => {
     const { element, update } = this.props;
     const messages: CommunicationMessage[] = [...element.messages];
-    const index = messages.findIndex(message => message.name === value.name);
+    const index = messages.findIndex((message) => message.name === value.name);
     messages[index].name = name;
     update<UMLCommunicationLink>(element.id, { messages });
   };
@@ -87,7 +122,7 @@ class CommunicationLinkUpdate extends Component<Props> {
   private flip = (value: CommunicationMessage) => () => {
     const { element, update } = this.props;
     const messages: CommunicationMessage[] = [...element.messages];
-    const index = messages.findIndex(message => message.name === value.name);
+    const index = messages.findIndex((message) => message.name === value.name);
     messages[index].direction = messages[index].direction === 'source' ? 'target' : 'source';
     update<UMLCommunicationLink>(element.id, { messages });
   };
@@ -95,7 +130,7 @@ class CommunicationLinkUpdate extends Component<Props> {
   private delete = (value: CommunicationMessage) => () => {
     const { element, update } = this.props;
     update<UMLCommunicationLink>(element.id, {
-      messages: element.messages.filter(message => message.name !== value.name),
+      messages: element.messages.filter((message) => message.name !== value.name),
     });
   };
 }
@@ -117,15 +152,12 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
-      getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    flip: UMLRelationshipRepository.flip,
+    getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
+  }),
 );
 
 export const UMLCommunicationLinkUpdate = enhance(CommunicationLinkUpdate);
