@@ -1,5 +1,4 @@
 import { AssessmentActions } from './assessment/assessment-types';
-import { CopyActions } from './copypaste/copy-types';
 import { EditorActions } from './editor/editor-types';
 import { LayouterActions } from './layouter/layouter-types';
 import { UMLContainerActions } from './uml-container/uml-container-types';
@@ -36,5 +35,4 @@ export type Actions =
   | SelectableActions
   | UpdatableActions
   | AssessmentActions
-  | UndoActions
-  | CopyActions;
+  | UndoActions;
