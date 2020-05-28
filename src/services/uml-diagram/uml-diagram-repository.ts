@@ -2,7 +2,7 @@ import { UMLDiagramType } from '../../packages/diagram-type';
 import { AsyncAction } from '../../utils/actions/actions';
 import { IUMLElement } from '../uml-element/uml-element';
 import { IUMLDiagram, UMLDiagram } from './uml-diagram';
-import { AppendRelationshipAction, UMLDiagramActionTypes } from './uml-diagram-types';
+import { AppendRelationshipAction, ReorderElementsAction, UMLDiagramActionTypes } from './uml-diagram-types';
 
 export const UMLDiagramRepository = {
   isUMLDiagram: (element: IUMLElement): element is IUMLDiagram => element.type in UMLDiagramType,
@@ -19,6 +19,15 @@ export const UMLDiagramRepository = {
     dispatch<AppendRelationshipAction>({
       type: UMLDiagramActionTypes.APPEND,
       payload: { ids: Array.isArray(id) ? id : [id] },
+      undoable: false,
+    });
+  },
+
+  bringToFront: (id: string | string[]): AsyncAction => (dispatch, getState) => {
+    const ids = (Array.isArray(id) ? id : [id]).filter((id) => getState().diagram.ownedElements.includes(id));
+    dispatch<ReorderElementsAction>({
+      type: UMLDiagramActionTypes.BRING_TO_FRONT,
+      payload: { ids: ids },
       undoable: false,
     });
   },
