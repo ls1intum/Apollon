@@ -3,7 +3,6 @@ import { ModelState } from '../components/store/model-state';
 import { Action } from '../utils/actions/actions';
 import { Actions } from './actions';
 import { AssessmentReducer } from './assessment/assessment-reducer';
-import { CopyReducer } from './copypaste/copy-reducer';
 import { EditorReducer } from './editor/editor-reducer';
 import { UMLContainerReducer } from './uml-container/uml-container-reducer';
 import { UMLDiagramReducer } from './uml-diagram/uml-diagram-reducer';
@@ -37,7 +36,6 @@ export const reducers: ReducersMapObject<ModelState, Actions> = {
   reconnecting: ReconnectableReducer,
   interactive: InteractableReducer,
   updating: UpdatableReducer,
-  copy: CopyReducer,
   elements: reduce<UMLElementState, Actions>(
     {},
     UMLContainerReducer,
