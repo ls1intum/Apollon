@@ -7,6 +7,7 @@ import { UMLRelationshipFeatures } from '../../uml-relationship/uml-relationship
 import { UMLElementFeatures } from '../uml-element-features';
 import { MovableActionTypes, MoveEndAction, MoveStartAction } from './movable-types';
 import { MoveAction, MovingActionTypes } from './moving-types';
+import { UMLDiagramRepository } from '../../uml-diagram/uml-diagram-repository';
 
 export const Movable = {
   startMoving: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
@@ -27,6 +28,7 @@ export const Movable = {
       return;
     }
 
+    dispatch(UMLDiagramRepository.bringToFront(ids));
     dispatch<MoveStartAction>({
       type: MovableActionTypes.START,
       payload: { ids: movables },
