@@ -1,10 +1,8 @@
 import { AsyncAction } from '../../utils/actions/actions';
-import { clone, filterRoots } from '../../utils/geometry/tree';
+import { clone, filterRoots, getChildren } from '../../utils/geometry/tree';
 import { notEmpty } from '../../utils/not-empty';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
-import { uuid } from '../../utils/uuid';
-import { UMLContainer } from '../uml-container/uml-container';
 
 export class CopyRepository {
   /**
@@ -16,24 +14,11 @@ export class CopyRepository {
     CopyRepository.pasteCounter = 0;
     const { elements, selected } = getState();
     const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
-    const state = Object.values(elements)
-      .map((x) => UMLElementRepository.get(x))
-      .filter(notEmpty);
 
-    const roots = filterRoots(ids, elements);
-    const result: UMLElement[] = [];
+    // copy elements with all their child elements, because containers do not know their full children representation
+    const idsToClone = getChildren(ids, getState().elements);
 
-    for (const root of roots) {
-      const element = UMLElementRepository.get(elements[root]);
-      if (!element) {
-        continue;
-      }
-      element.owner = null;
-
-      const clones = clone(element, state);
-      result.push(...clones);
-    }
-
+    const result: UMLElement[] = idsToClone.map((id) => UMLElementRepository.get(elements[id])).filter(notEmpty);
     navigator.clipboard.writeText(JSON.stringify(result));
   };
 
@@ -43,27 +28,25 @@ export class CopyRepository {
     navigator.clipboard
       .readText()
       .then((value) => {
-        const elements: IUMLElement[] = JSON.parse(value);
-        let umlElements: IUMLElement[] = elements.filter((element) => UMLElement.isUMLElement(element));
-        // creates map old element ids -> copied elements with new ids
-        const copyMap = umlElements.reduce((map: any, element: IUMLElement) => {
-          const oldId = element.id;
-          element.id = uuid();
-          map[oldId] = element;
-          return map;
-        }, {});
+        const parsedElements: IUMLElement[] = JSON.parse(value);
+        const diagramElements: UMLElement[] = parsedElements.map((x) => UMLElementRepository.get(x)).filter(notEmpty);
 
-        // maps owned elements to new element ids
-        umlElements = umlElements.reduce((elements: IUMLElement[], element: IUMLElement) => {
-          if (UMLContainer.isUMLContainer(element)) {
-            element.bounds.x = element.bounds.x + 10 * CopyRepository.pasteCounter;
-            element.bounds.y = element.bounds.y + 10 * CopyRepository.pasteCounter;
-            element.ownedElements = element.ownedElements.map((id) => copyMap[id].id);
-          }
-          return elements;
-        }, umlElements);
+        // roots in diagram Elements
+        const roots = diagramElements.filter(
+          (element) => !element.owner || diagramElements.every((innerElement) => innerElement.id !== element.owner),
+        );
+        // flat map elements to copies
+        const copies: UMLElement[] = roots.reduce((clonedElements: UMLElement[], element: UMLElement) => {
+          element.owner = null;
+          element.bounds.x = element.bounds.x + 10 * CopyRepository.pasteCounter;
+          element.bounds.y = element.bounds.y + 10 * CopyRepository.pasteCounter;
 
-        return umlElements;
+          const clones = clone(element, diagramElements);
+          return clonedElements.concat(...clones);
+        }, []);
+
+        // map elements to serializable elements
+        return copies.map((element) => ({ ...element }));
       })
       .then((elements: IUMLElement[]) => {
         dispatch(UMLElementRepository.create(elements));

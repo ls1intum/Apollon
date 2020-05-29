@@ -10,13 +10,11 @@ export const defaultProps = Object.freeze({
   outline: false,
   readonly: false,
   size: 'sm' as Size,
-  focus: false,
   enterToSubmit: true,
 });
 
 const initialState = {
-  key: Date.now(),
-  focused: false,
+  key: Date.now()
 };
 
 type Props = {
