@@ -25,28 +25,32 @@ const Flex = styled.div`
 class ActivityMergeNodeUpdate extends Component<Props> {
   render() {
     const { element, decisions, targets } = this.props;
-
     return (
       <div>
         <section>
           <Textfield value={element.name} onChange={this.onUpdate} />
-          <Divider />
         </section>
         <section>
-          <Header>{this.props.translate('popup.condition')}</Header>
-          {decisions.map((decision, i) => (
-            <Flex key={decision.id}>
-              <Textfield
-                gutter={i < decisions.length - 1}
-                value={decision.name}
-                onChange={this.onUpdateOption(decision.id)}
-              />
-              <Button color="link" disabled={true}>
-                <ArrowRightIcon />
-              </Button>
-              <Body>{targets[i].name}</Body>
-            </Flex>
-          ))}
+          {decisions.length > 0 && (
+            <>
+              <Divider />
+              <Header>{this.props.translate('popup.condition')}</Header>
+
+              {decisions.map((decision, i) => (
+                <Flex key={decision.id}>
+                  <Textfield
+                    gutter={i < decisions.length - 1}
+                    value={decision.name}
+                    onChange={this.onUpdateOption(decision.id)}
+                  />
+                  <Button color="link" disabled={true}>
+                    <ArrowRightIcon />
+                  </Button>
+                  <Body>{targets[i].name}</Body>
+                </Flex>
+              ))}
+            </>
+          )}
         </section>
       </div>
     );
@@ -85,11 +89,11 @@ const enhance = compose<ComponentClass<OwnProps>>(
     (state, props) => {
       const decisions = Object.values(state.elements)
         .filter((x): x is IUMLRelationship => UMLRelationship.isUMLRelationship(x))
-        .filter(x => x.source.element === props.element.id);
+        .filter((x) => x.source.element === props.element.id);
 
       return {
         decisions,
-        targets: decisions.map(relationship => state.elements[relationship.target.element]),
+        targets: decisions.map((relationship) => state.elements[relationship.target.element]),
       };
     },
     {

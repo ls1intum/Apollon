@@ -17,7 +17,8 @@
     "association": "Assoziation",
     "multiplicity": "Multiziplität",
     "role": "Rolle",
-    "messages": "Nachrichten"
+    "messages": "Nachrichten",
+    "condition": "Bedingungen"
   },
   "assessment": {
     "assessment": "Bewertung für",

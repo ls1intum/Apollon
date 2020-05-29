@@ -17,7 +17,8 @@
     "association": "Association",
     "multiplicity": "Multiplicity",
     "role": "Role",
-    "messages": "Messages"
+    "messages": "Messages",
+    "condition": "Conditions"
   },
   "assessment": {
     "assessment": "Assessment for",
