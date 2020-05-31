@@ -4,19 +4,25 @@ import { Point } from '../../../utils/geometry/point';
 import { CommunicationMessage, UMLCommunicationLink } from './uml-communication-link';
 
 export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
-  const sources: CommunicationMessage[] = element.messages.filter(message => message.direction === 'source');
-  const targets: CommunicationMessage[] = element.messages.filter(message => message.direction === 'target');
+  const sources: CommunicationMessage[] = element.messages.filter((message) => message.direction === 'source');
+  const targets: CommunicationMessage[] = element.messages.filter((message) => message.direction === 'target');
 
   let position = { x: 0, y: 0 };
   let direction: Direction = Direction.Left;
-  const path = element.path.map(point => new Point(point.x, point.y));
+  // maps element.path to Point to get methods
+  // element.path contains start and end point + direction change points
+  const path = element.path.map((point) => new Point(point.x, point.y));
+  // half distance of total connection
   let distance =
     path.reduce(
       (length, point, i, points) => (i + 1 < points.length ? length + points[i + 1].subtract(point).length : length),
       0,
     ) / 2;
 
+  // finds the connection between two points of path where half distance of total connection is reached
+  // and determines the direction of the path there
   for (let index = 0; index < path.length - 1; index++) {
+    // distance between two path points
     const vector = path[index + 1].subtract(path[index]);
     if (vector.length > distance) {
       const norm = vector.normalize();
@@ -40,17 +46,33 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
         {
           [Direction.Up]: (
             <>
-              <text x={position.x} y={position.y} dx={5} fontSize="85%" dominantBaseline="middle" textAnchor="start" pointerEvents="none">
+              <text
+                x={position.x}
+                y={position.y}
+                dx={5}
+                fontSize="85%"
+                dominantBaseline="middle"
+                textAnchor="start"
+                pointerEvents="none"
+              >
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↓' : ''}
                 </tspan>
-                {sources.reverse().map((source, i) => (
+                {sources.map((source, i) => (
                   <tspan key={i} x={position.x + 20} dy={i === 0 ? undefined : '1.2em'}>
                     {source.name}
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} dx={-5} fontSize="85%" dominantBaseline="middle" textAnchor="end" pointerEvents="none">
+              <text
+                x={position.x}
+                y={position.y}
+                dx={-5}
+                fontSize="85%"
+                dominantBaseline="middle"
+                textAnchor="end"
+                pointerEvents="none"
+              >
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '↑' : ''}
                 </tspan>
@@ -68,7 +90,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '⟶' : ''}
                 </tspan>
-                {targets.map((target, i) => (
+                {targets.reverse().map((target, i) => (
                   <tspan key={i} x={position.x} dy="-1.2em">
                     {target.name}
                   </tspan>
@@ -88,17 +110,33 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
           ),
           [Direction.Down]: (
             <>
-              <text x={position.x} y={position.y} dx={5} fontSize="85%" dominantBaseline="middle" textAnchor="start" pointerEvents="none">
+              <text
+                x={position.x}
+                y={position.y}
+                dx={5}
+                fontSize="85%"
+                dominantBaseline="middle"
+                textAnchor="start"
+                pointerEvents="none"
+              >
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '↓' : ''}
                 </tspan>
-                {targets.map((target, i) => (
+                {targets.reverse().map((target, i) => (
                   <tspan key={i} x={position.x + 20} dy={i === 0 ? undefined : '1.2em'}>
                     {target.name}
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} dx={-5} fontSize="85%" dominantBaseline="middle" textAnchor="end" pointerEvents="none">
+              <text
+                x={position.x}
+                y={position.y}
+                dx={-5}
+                fontSize="85%"
+                dominantBaseline="middle"
+                textAnchor="end"
+                pointerEvents="none"
+              >
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↑' : ''}
                 </tspan>
@@ -116,7 +154,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '⟶' : ''}
                 </tspan>
-                {sources.map((source, i) => (
+                {sources.reverse().map((source, i) => (
                   <tspan key={i} x={position.x} dy="-1.2em">
                     {source.name}
                   </tspan>
@@ -138,7 +176,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
       }
 
       <polyline
-        points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
+        points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
         stroke="black"
         fill="none"
         strokeWidth={1}
