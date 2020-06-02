@@ -21,7 +21,7 @@ type DispatchProps = {};
 type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
-  state => ({
+  (state) => ({
     diagram: state.diagram,
     isStatic: state.editor.readonly,
   }),
@@ -45,10 +45,7 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
   snap = (point: Point): Point => {
     const origin = this.origin();
 
-    return point
-      .subtract(origin)
-      .round()
-      .add(origin);
+    return point.subtract(origin).round().add(origin);
   };
 
   render() {
@@ -56,15 +53,20 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
 
     return (
       <Droppable>
-        <CanvasContainer width={diagram.bounds.width} height={diagram.bounds.height} isStatic={isStatic} ref={this.layer}>
+        <CanvasContainer
+          width={diagram.bounds.width}
+          height={diagram.bounds.height}
+          isStatic={isStatic}
+          ref={this.layer}
+        >
           {this.layer.current && (
             <>
               <svg x="50%" y="50%">
-                {diagram.ownedElements.map(element => (
-                  <UMLElementComponent key={element} id={element} />
-                ))}
-                {diagram.ownedRelationships.map(relationship => (
+                {diagram.ownedRelationships.map((relationship) => (
                   <UMLElementComponent key={relationship} id={relationship} />
+                ))}
+                {diagram.ownedElements.map((element) => (
+                  <UMLElementComponent key={element} id={element} />
                 ))}
                 <ConnectionPreview />
               </svg>
