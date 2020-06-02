@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass, createRef, RefObject } from 'react';
+import React, { Component, ComponentClass, createRef} from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
@@ -54,7 +54,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 );
 
 type State = {
-  fieldToFocus?: RefObject<Textfield>;
+  fieldToFocus?: Textfield | null;
 };
 
 const getInitialState = (): State => ({
@@ -65,10 +65,12 @@ class ClassifierUpdate extends Component<Props, State> {
   state = getInitialState();
   newMethodField = createRef<Textfield>();
   newAttributeField = createRef<Textfield>();
+  attributeRefs: (Textfield | null)[] = [];
+  methodRefs: (Textfield | null)[] = [];
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
-    if (this.state.fieldToFocus?.current) {
-      this.state.fieldToFocus.current.focus();
+    if (this.state.fieldToFocus) {
+      this.state.fieldToFocus.focus();
       this.setState({ fieldToFocus: undefined });
     }
   }
@@ -106,9 +108,21 @@ class ClassifierUpdate extends Component<Props, State> {
         </section>
         <section>
           <Header>{this.props.translate('popup.attributes')}</Header>
-          {attributes.map((attribute) => (
+          {attributes.map((attribute, index) => (
             <Flex key={attribute.id}>
-              <Textfield gutter={true} value={attribute.name} onChange={this.rename(attribute.id)} />
+              <Textfield
+                ref={(ref) => (this.attributeRefs[index] = ref)}
+                gutter={true}
+                value={attribute.name}
+                onChange={this.rename(attribute.id)}
+                onSubmit={(value) =>
+                  index === attributes.length - 1
+                    ? this.newAttributeField.current?.focus()
+                    : this.setState({
+                        fieldToFocus: this.attributeRefs[index + 1],
+                      })
+                }
+              />
               <Button color="link" tabIndex={-1} onClick={this.delete(attribute.id)}>
                 <TrashIcon />
               </Button>
@@ -119,9 +133,21 @@ class ClassifierUpdate extends Component<Props, State> {
         <section>
           <Divider />
           <Header>{this.props.translate('popup.methods')}</Header>
-          {methods.map((method) => (
+          {methods.map((method, index) => (
             <Flex key={method.id}>
-              <Textfield gutter={true} value={method.name} onChange={this.rename(method.id)} />
+              <Textfield
+                ref={(ref) => (this.methodRefs[index] = ref)}
+                gutter={true}
+                value={method.name}
+                onChange={this.rename(method.id)}
+                onSubmit={(value) =>
+                  index === methods.length - 1
+                    ? this.newMethodField.current?.focus()
+                    : this.setState({
+                        fieldToFocus: this.methodRefs[index + 1],
+                      })
+                }
+              />
               <Button color="link" tabIndex={-1} onClick={this.delete(method.id)}>
                 <TrashIcon />
               </Button>
@@ -154,11 +180,11 @@ class ClassifierUpdate extends Component<Props, State> {
     create(member, element.id);
     if (member.type === ClassElementType.ClassAttribute) {
       this.setState({
-        fieldToFocus: this.newAttributeField,
+        fieldToFocus: this.newAttributeField.current,
       });
     } else if (member.type === ClassElementType.ClassMethod) {
       this.setState({
-        fieldToFocus: this.newMethodField,
+        fieldToFocus: this.newMethodField.current,
       });
     }
   };

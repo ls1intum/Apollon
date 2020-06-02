@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass, createRef, RefObject } from 'react';
+import React, { Component, ComponentClass, createRef} from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Button } from '../../../components/controls/button/button';
@@ -25,7 +25,7 @@ const Flex = styled.div`
 `;
 
 type State = {
-  fieldToFocus?: RefObject<Textfield>;
+  fieldToFocus?: Textfield | null;
 };
 
 const getInitialState = (): State => ({
@@ -35,10 +35,11 @@ const getInitialState = (): State => ({
 class CommunicationLinkUpdate extends Component<Props, State> {
   state = getInitialState();
   newCommunicationLinkField = createRef<Textfield>();
+  messageRefs: (Textfield | null)[] = [];
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
-    if (this.state.fieldToFocus?.current) {
-      this.state.fieldToFocus.current.focus();
+    if (this.state.fieldToFocus) {
+      this.state.fieldToFocus.focus();
       this.setState({ fieldToFocus: undefined });
     }
   }
@@ -69,7 +70,19 @@ class CommunicationLinkUpdate extends Component<Props, State> {
           </Header>
           {element.messages.map((message, i) => (
             <Flex key={i}>
-              <Textfield gutter={true} value={message.name} onChange={this.rename(message)} />
+              <Textfield
+                gutter={true}
+                value={message.name}
+                onChange={this.rename(message)}
+                ref={(ref) => (this.messageRefs[i] = ref)}
+                onSubmit={(value) =>
+                  i === element.messages.length - 1
+                    ? this.newCommunicationLinkField.current?.focus()
+                    : this.setState({
+                        fieldToFocus: this.messageRefs[i + 1],
+                      })
+                }
+              />
               <Button color="link" tabIndex={-1} onClick={this.flip(message)}>
                 {message.direction === 'source' ? <ArrowRightIcon /> : <ArrowLeftIcon />}
               </Button>
@@ -106,7 +119,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
         messages: [...element.messages, { name: value, direction: 'source' }],
       });
       this.setState({
-        fieldToFocus: this.newCommunicationLinkField,
+        fieldToFocus: this.newCommunicationLinkField.current,
       });
     }
   };
