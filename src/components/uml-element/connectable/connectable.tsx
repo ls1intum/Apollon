@@ -9,6 +9,11 @@ import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
 import { UMLElementComponentProps } from '../uml-element-component-props';
+import { UMLElements } from '../../../packages/uml-elements';
+import { UMLRelationships } from '../../../packages/uml-relationships';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
+import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-relationship-features';
+import { UMLElementType, UMLRelationshipType } from '../../..';
 
 type StateProps = {
   hovered: boolean;
@@ -16,6 +21,7 @@ type StateProps = {
   connecting: boolean;
   reconnecting: boolean;
   ports: { [key in Direction]: Point };
+  type: UMLElementType | UMLRelationshipType;
 };
 
 type DispatchProps = {
@@ -33,6 +39,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
     connecting: !!state.connecting.length,
     reconnecting: !!Object.keys(state.reconnecting).length,
     ports: UMLElementRepository.get(state.elements[props.id])!.ports(),
+    type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
   }),
   {
     start: UMLElementRepository.startConnecting,
@@ -41,11 +48,45 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   },
 );
 
-const Handle = styled(props => (
-  <svg {...props}>
-    <path d="M -20 0 A 10 10 0 0 1 20 0" />
-  </svg>
-)).attrs<{ direction: Direction; ports: { [key in Direction]: Point } }>(({ direction, ports }) => ({
+// alternative port visualization size
+const alternativePortHeight = 10;
+const alternativePortWidth = 5;
+const alternativePortCircleSize = 30;
+
+// default port visualization size
+const defaultPortSize = 20;
+
+const Handle = styled((props) => {
+  const { alternativePortVisualization, ...otherProps } = props;
+  if (alternativePortVisualization) {
+    return (
+      <svg {...otherProps}>
+        <path
+          d={`M ${
+            alternativePortWidth / 2
+          } 0 v -${alternativePortHeight} h -${alternativePortWidth} v ${alternativePortHeight} Z`}
+        />
+        <path
+          d={
+            `M -${alternativePortCircleSize / 2} -${alternativePortHeight + alternativePortCircleSize / 2}` +
+            ` a ${alternativePortCircleSize / 2} ${
+              alternativePortCircleSize / 2
+            } 0 0 1 ${alternativePortCircleSize} 0` +
+            ` a ${alternativePortCircleSize / 2} ${alternativePortCircleSize / 2} 0 0 1 -${alternativePortCircleSize} 0`
+          }
+        />
+      </svg>
+    );
+  } else {
+    return (
+      <svg {...otherProps}>
+        <path
+          d={`M -${defaultPortSize} 0 A ${defaultPortSize / 2} ${defaultPortSize / 2} 0 0 1 ${defaultPortSize} 0`}
+        />
+      </svg>
+    );
+  }
+}).attrs<{ direction: Direction; ports: { [key in Direction]: Point } }>(({ direction, ports }) => ({
   fill: '#0064ff',
   fillOpacity: 0.2,
   x: `${ports[direction].x}px`,
@@ -57,7 +98,7 @@ const Handle = styled(props => (
   pointer-events: all;
 
   path {
-    transform: rotate(${props => props.rotate}deg);
+    transform: rotate(${(props) => props.rotate}deg);
   }
 `;
 
@@ -76,7 +117,22 @@ export const connectable = (
     }
 
     render() {
-      const { hovered, selected, connecting, reconnecting, ports, start, connect: _, reconnect, ...props } = this.props;
+      const {
+        hovered,
+        selected,
+        connecting,
+        reconnecting,
+        ports,
+        start,
+        connect: _,
+        reconnect,
+        type,
+        ...props
+      } = this.props;
+
+      const features = { ...UMLElements, ...UMLRelationships }[type].features as UMLElementFeatures &
+        UMLRelationshipFeatures;
+
       return (
         <WrappedComponent {...props}>
           {props.children}
@@ -87,24 +143,28 @@ export const connectable = (
                 direction={Direction.Up}
                 onPointerDown={this.onPointerDown}
                 onPointerUp={this.onPointerUp}
+                alternativePortVisualization={features.alternativePortVisualization}
               />
               <Handle
                 ports={ports}
                 direction={Direction.Right}
                 onPointerDown={this.onPointerDown}
                 onPointerUp={this.onPointerUp}
+                alternativePortVisualization={features.alternativePortVisualization}
               />
               <Handle
                 ports={ports}
                 direction={Direction.Down}
                 onPointerDown={this.onPointerDown}
                 onPointerUp={this.onPointerUp}
+                alternativePortVisualization={features.alternativePortVisualization}
               />
               <Handle
                 ports={ports}
                 direction={Direction.Left}
                 onPointerDown={this.onPointerDown}
                 onPointerUp={this.onPointerUp}
+                alternativePortVisualization={features.alternativePortVisualization}
               />
             </>
           )}
@@ -114,19 +174,32 @@ export const connectable = (
 
     private elementOnPointerUp = (event: PointerEvent) => {
       const node = findDOMNode(this) as HTMLElement;
-      // calculate event position relative to object position
+      // calculate event position relative to object position in %
+      const nodeRect = node.getBoundingClientRect();
       const relEventPosition = {
-        x: event.clientX - node.getBoundingClientRect().left,
-        y: event.clientY - node.getBoundingClientRect().top,
+        x: (event.clientX - nodeRect.left) / nodeRect.width,
+        y: (event.clientY - nodeRect.top) / nodeRect.height,
       };
+
+      // relative port locations in %
+      const relativePortLocation: { [key in Direction]: Point } = {
+        [Direction.Up]: new Point(0.5, 0),
+        [Direction.Right]: new Point(1, 0.5),
+        [Direction.Down]: new Point(0.5, 1),
+        [Direction.Left]: new Point(0, 0.5),
+      };
+
       // calculate the distances to all handles
       const distances = Object.entries(this.props.ports).map(([key, value]) => ({
         key,
-        distance: Math.sqrt(Math.pow(value.x - relEventPosition.x, 2) + Math.pow(value.y - relEventPosition.y, 2)),
+        distance: Math.sqrt(
+          Math.pow(relativePortLocation[key as Direction].x - relEventPosition.x, 2) +
+            Math.pow(relativePortLocation[key as Direction].y - relEventPosition.y, 2),
+        ),
       }));
       // use handle with min distance to connect to
-      const minDistance = Math.min(...distances.map(value => value.distance));
-      const direction = distances.filter(value => minDistance === value.distance)[0].key as Direction;
+      const minDistance = Math.min(...distances.map((value) => value.distance));
+      const direction = distances.filter((value) => minDistance === value.distance)[0].key as Direction;
 
       if (this.props.connecting) {
         this.props.connect({ element: this.props.id, direction });
