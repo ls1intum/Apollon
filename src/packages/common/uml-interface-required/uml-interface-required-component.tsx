@@ -53,7 +53,7 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
       >
         {/*M -> Move to, A -> Arc radiusX, radiusY, x-axis-rotation, bow-flag, endpointX,endpointY */}
         <path
-          d={`M ${SIZE / 2 - (hasOppositeRequiredInterface ? 9 : 3)} -${
+          d={`M ${SIZE / 2 - (hasOppositeRequiredInterface ? 8 : 3)} -${
             (SIZE - (hasOppositeRequiredInterface ? 2 : 0)) / 2
           } a ${SIZE / 2},${SIZE / 2} 0 0 0 0,${SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
           fill="none"
