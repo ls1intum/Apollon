@@ -6,4 +6,5 @@ export type UMLElementFeatures = {
   connectable: boolean;
   updatable: boolean;
   droppable: boolean;
+  alternativePortVisualization: boolean;
 };
