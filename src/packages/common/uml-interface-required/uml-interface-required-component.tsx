@@ -2,7 +2,8 @@ import React, { SFC } from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLInterfaceRequired } from './uml-interface-required';
-import { getOppositeDirection } from '../../../services/uml-element/uml-element-port';
+import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
+import { Point } from '../../../utils/geometry/point';
 
 const SIZE = 26;
 
@@ -38,6 +39,24 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
 
 const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
   const { element, hasOppositeRequiredInterface } = props;
+
+  // offset for last point in paragraph, so that line ends at marker
+  let offset: Point;
+  switch (element.target.direction) {
+    case Direction.Up:
+      offset = new Point(0, -3);
+      break;
+    case Direction.Down:
+      offset = new Point(0, 3);
+      break;
+    case Direction.Right:
+      offset = new Point(3, 0);
+      break;
+    case Direction.Left:
+      offset = new Point(-3, 0);
+      break;
+  }
+
   return (
     <g>
       <marker
@@ -53,7 +72,7 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
       >
         {/*M -> Move to, A -> Arc radiusX, radiusY, x-axis-rotation, bow-flag, endpointX,endpointY */}
         <path
-          d={`M ${SIZE / 2 - (hasOppositeRequiredInterface ? 8 : 3)} -${
+          d={`M ${SIZE / 2 - (hasOppositeRequiredInterface ? 5 : 0)} -${
             (SIZE - (hasOppositeRequiredInterface ? 2 : 0)) / 2
           } a ${SIZE / 2},${SIZE / 2} 0 0 0 0,${SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
           fill="none"
@@ -62,7 +81,14 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
         />
       </marker>
       <polyline
-        points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
+        points={element.path
+          .map((point, index) => {
+            if (index === element.path.length - 1) {
+              point = new Point(point.x, point.y).add(offset);
+            }
+            return `${point.x} ${point.y}`;
+          })
+          .join(',')}
         stroke="black"
         fill="none"
         strokeWidth={1}
