@@ -16,6 +16,8 @@ import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { Popover } from '../controls/popover/popover';
 import { ModelState } from '../store/model-state';
+import { withRoot } from '../root/with-root';
+import { RootContext } from '../root/root-context';
 
 type OwnProps = {};
 
@@ -30,12 +32,13 @@ type DispatchProps = {
   getAbsolutePosition: AsyncDispatch<typeof UMLElementRepository.getAbsolutePosition>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
+type Props = OwnProps & StateProps & DispatchProps & CanvasContext & RootContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
+  withRoot,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({
+    (state) => ({
       element: state.elements[state.updating[0]],
       disabled: !state.editor.enablePopups,
       mode: state.editor.mode,
@@ -78,7 +81,7 @@ class UnwrappedUpdatePane extends Component<Props, State> {
       return null;
     }
 
-    let CustomPopupComponent: ComponentType<{ element: IUMLElement }> | null = null;
+    let CustomPopupComponent: ComponentType<{ element: IUMLElement }> | null;
     if (mode === ApollonMode.Assessment) {
       CustomPopupComponent = Assessment;
     } else {
@@ -92,7 +95,7 @@ class UnwrappedUpdatePane extends Component<Props, State> {
       <Popover ref={this.popover} position={position} placement={placement} alignment={alignment} maxHeight={500}>
         <CustomPopupComponent element={element} />
       </Popover>,
-      document.body,
+      this.props.layout,
     );
   }
 
@@ -124,7 +127,9 @@ class UnwrappedUpdatePane extends Component<Props, State> {
     const container: HTMLElement | null = canvas.layer.parentElement;
 
     if (element && container) {
-      const absolute: Point = this.props.getAbsolutePosition(element.id);
+      const layoutPosition = this.props.layout.getBoundingClientRect();
+      const offset: Point = new Point(layoutPosition.x, layoutPosition.y);
+      const absolute: Point = this.props.getAbsolutePosition(element.id).subtract(offset);
 
       const canvasBounds: ClientRect = container.getBoundingClientRect();
       const elementCenter: Point = this.props.canvas
@@ -133,10 +138,7 @@ class UnwrappedUpdatePane extends Component<Props, State> {
         .add(element.bounds.width / 2, element.bounds.height / 2)
         .subtract(canvasBounds.left, canvasBounds.top);
 
-      const position = this.props.canvas
-        .origin()
-        .add(absolute)
-        .add(window.scrollX, window.scrollY);
+      const position = this.props.canvas.origin().add(absolute).add(window.scrollX, window.scrollY);
 
       const placement = elementCenter.x < canvasBounds.width / 2 ? 'right' : 'left';
       const alignment = elementCenter.y < canvasBounds.height / 2 ? 'start' : 'end';

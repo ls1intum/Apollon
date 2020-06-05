@@ -15,6 +15,7 @@ import { UpdatePane } from '../components/update-pane/update-pane';
 import { ILayer } from '../services/layouter/layer';
 import { Locale } from './../services/editor/editor-types';
 import { Layout } from './application-styles';
+import { RootContext, RootProvider } from '../components/root/root-context';
 
 type Props = {
   state?: DeepPartial<ModelState>;
@@ -24,6 +25,7 @@ type Props = {
 
 const initialState = Object.freeze({
   canvas: null as ILayer | null,
+  root: null as HTMLDivElement | null,
 });
 
 type State = typeof initialState;
@@ -39,31 +41,42 @@ export class Application extends React.Component<Props, State> {
     }
   };
 
+  setLayout = (ref: HTMLDivElement) => {
+    if (ref) {
+      this.setState({ root: ref });
+    }
+  };
+
   render() {
-    const context: CanvasContext | null = this.state.canvas ? { canvas: this.state.canvas } : null;
+    const canvasContext: CanvasContext | null = this.state.canvas ? { canvas: this.state.canvas } : null;
+    const layoutContext: RootContext | null = this.state.root ? { layout: this.state.root } : null;
 
     return (
-      <CanvasProvider value={context}>
-        <StoreProvider ref={this.store} initialState={this.props.state}>
-          <I18nProvider locale={this.props.locale}>
-            <Theme styles={this.props.styles}>
-              <DraggableLayer>
-                <Layout className="apollon-editor">
-                  <Editor>
-                    <Canvas ref={this.setCanvas} />
-                  </Editor>
-                  {context && (
-                    <>
-                      <Sidebar />
-                      <UpdatePane />
-                      <KeyboardEventListener />
-                    </>
+      <CanvasProvider value={canvasContext}>
+        <RootProvider value={layoutContext}>
+          <StoreProvider ref={this.store} initialState={this.props.state}>
+            <I18nProvider locale={this.props.locale}>
+              <Theme styles={this.props.styles}>
+                <Layout className="apollon-editor" ref={this.setLayout}>
+                  {layoutContext && (
+                    <DraggableLayer>
+                      <Editor>
+                        <Canvas ref={this.setCanvas} />
+                      </Editor>
+                      {canvasContext && (
+                        <>
+                          <Sidebar />
+                          <UpdatePane />
+                          <KeyboardEventListener />
+                        </>
+                      )}
+                    </DraggableLayer>
                   )}
                 </Layout>
-              </DraggableLayer>
-            </Theme>
-          </I18nProvider>
-        </StoreProvider>
+              </Theme>
+            </I18nProvider>
+          </StoreProvider>
+        </RootProvider>
       </CanvasProvider>
     );
   }

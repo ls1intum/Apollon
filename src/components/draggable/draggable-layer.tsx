@@ -1,4 +1,4 @@
-import React, { Component, createRef, RefObject } from 'react';
+import React, { Component, ComponentClass, createRef, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext } from '../canvas/canvas-context';
@@ -6,8 +6,13 @@ import { withCanvas } from '../canvas/with-canvas';
 import { DraggableContext, DraggableProvider } from './draggable-context';
 import { DropEvent } from './drop-event';
 import { Ghost } from './ghost';
+import { compose } from 'redux';
+import { withRoot } from '../root/with-root';
+import { RootContext } from '../root/root-context';
 
-type Props = CanvasContext;
+type OwnProps = {};
+
+type Props = CanvasContext & RootContext;
 
 const initialState = {
   dragging: false,
@@ -19,7 +24,7 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = withCanvas;
+const enhance = compose<ComponentClass<OwnProps>>(withCanvas, withRoot);
 
 class DraggableLayerComponent extends Component<Props, State> {
   state = initialState;
@@ -82,7 +87,7 @@ class DraggableLayerComponent extends Component<Props, State> {
     return (
       <DraggableProvider value={context}>
         {this.props.children}
-        {createPortal(dragging && <Ghost ref={this.ghost} position={position} />, document.body)}
+        {createPortal(dragging && <Ghost ref={this.ghost} position={position} />, this.props.layout)}
       </DraggableProvider>
     );
   }
