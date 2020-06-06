@@ -14,12 +14,13 @@ export const defaultProps = Object.freeze({
 });
 
 const initialState = {
-  key: Date.now()
+  key: Date.now(),
 };
 
 type Props = {
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
+  onSubmitKeyUp?: (key: 'Escape' | 'Enter', value: string) => void;
   placeholder?: string;
   value: string;
   enterToSubmit?: boolean;
@@ -34,7 +35,7 @@ export class Textfield extends Component<Props, State> {
   ref = React.createRef<HTMLTextAreaElement>();
 
   render() {
-    const { onChange, onSubmit, size, value, ...props } = this.props;
+    const { onChange, onSubmit, onSubmitKeyUp, size, value, ...props } = this.props;
 
     return (
       <StyledTextfield
@@ -81,12 +82,24 @@ export class Textfield extends Component<Props, State> {
       case 'Enter':
         if (this.props.enterToSubmit) {
           currentTarget.blur();
+          this.onSubmitKeyUp(key, currentTarget.value);
         }
         break;
       case 'Escape':
         currentTarget.blur();
+        this.onSubmitKeyUp(key, currentTarget.value);
         break;
       default:
     }
+  };
+
+  private onSubmitKeyUp = (key: 'Enter' | 'Escape', value: string) => {
+    if (!this.props.onSubmitKeyUp) {
+      return;
+    }
+    if (key === 'Enter' && !this.props.enterToSubmit) {
+      return;
+    }
+    this.props.onSubmitKeyUp(key, value);
   };
 }

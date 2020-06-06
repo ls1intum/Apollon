@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass, createRef} from 'react';
+import React, { Component, ComponentClass, createRef } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Button } from '../../../components/controls/button/button';
@@ -75,7 +75,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
                 value={message.name}
                 onChange={this.rename(message)}
                 ref={(ref) => (this.messageRefs[i] = ref)}
-                onSubmit={(value) =>
+                onSubmitKeyUp={() =>
                   i === element.messages.length - 1
                     ? this.newCommunicationLinkField.current?.focus()
                     : this.setState({
@@ -96,6 +96,11 @@ class CommunicationLinkUpdate extends Component<Props, State> {
             outline={true}
             value=""
             onSubmit={this.create}
+            onSubmitKeyUp={() =>
+              this.setState({
+                fieldToFocus: this.newCommunicationLinkField.current,
+              })
+            }
             onKeyDown={(event) => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
@@ -117,9 +122,6 @@ class CommunicationLinkUpdate extends Component<Props, State> {
     if (!element.messages.find((message) => message.name === value)) {
       update<UMLCommunicationLink>(element.id, {
         messages: [...element.messages, { name: value, direction: 'source' }],
-      });
-      this.setState({
-        fieldToFocus: this.newCommunicationLinkField.current,
       });
     }
   };

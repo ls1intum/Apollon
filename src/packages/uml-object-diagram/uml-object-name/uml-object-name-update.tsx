@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass, createRef} from 'react';
+import React, { Component, ComponentClass, createRef } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
@@ -17,7 +17,6 @@ import { notEmpty } from '../../../utils/not-empty';
 import { UMLObjectAttribute } from '../uml-object-attribute/uml-object-attribute';
 import { UMLObjectMethod } from '../uml-object-method/uml-object-method';
 import { UMLObjectName } from './uml-object-name';
-import { ObjectElementType } from '../index';
 
 const Flex = styled.div`
   display: flex;
@@ -73,7 +72,7 @@ class ObjectNameComponent extends Component<Props, State> {
                 gutter={true}
                 value={attribute.name}
                 onChange={this.rename(attribute.id)}
-                onSubmit={(value) =>
+                onSubmitKeyUp={() =>
                   index === attributes.length - 1
                     ? this.newAttributeField.current?.focus()
                     : this.setState({
@@ -86,7 +85,17 @@ class ObjectNameComponent extends Component<Props, State> {
               </Button>
             </Flex>
           ))}
-          <Textfield ref={this.newAttributeField} outline={true} value="" onSubmit={this.create(UMLObjectAttribute)} />
+          <Textfield
+            ref={this.newAttributeField}
+            outline={true}
+            value=""
+            onSubmit={this.create(UMLObjectAttribute)}
+            onSubmitKeyUp={() =>
+              this.setState({
+                fieldToFocus: this.newAttributeField.current,
+              })
+            }
+          />
         </section>
         <section>
           <Divider />
@@ -98,7 +107,7 @@ class ObjectNameComponent extends Component<Props, State> {
                 gutter={true}
                 value={method.name}
                 onChange={this.rename(method.id)}
-                onSubmit={(value) =>
+                onSubmitKeyUp={() =>
                   index === methods.length - 1
                     ? this.newMethodField.current?.focus()
                     : this.setState({
@@ -116,6 +125,11 @@ class ObjectNameComponent extends Component<Props, State> {
             outline={true}
             value=""
             onSubmit={this.create(UMLObjectMethod)}
+            onSubmitKeyUp={() =>
+              this.setState({
+                fieldToFocus: this.newMethodField.current,
+              })
+            }
             onKeyDown={(event) => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
@@ -136,15 +150,6 @@ class ObjectNameComponent extends Component<Props, State> {
     const member = new Clazz();
     member.name = value;
     create(member, element.id);
-    if (member.type === ObjectElementType.ObjectAttribute) {
-      this.setState({
-        fieldToFocus: this.newAttributeField.current,
-      });
-    } else if (member.type === ObjectElementType.ObjectMethod) {
-      this.setState({
-        fieldToFocus: this.newMethodField.current,
-      });
-    }
   };
 
   private rename = (id: string) => (name: string) => {

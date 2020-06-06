@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass, createRef} from 'react';
+import React, { Component, ComponentClass, createRef } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
@@ -115,7 +115,7 @@ class ClassifierUpdate extends Component<Props, State> {
                 gutter={true}
                 value={attribute.name}
                 onChange={this.rename(attribute.id)}
-                onSubmit={(value) =>
+                onSubmitKeyUp={() =>
                   index === attributes.length - 1
                     ? this.newAttributeField.current?.focus()
                     : this.setState({
@@ -128,7 +128,17 @@ class ClassifierUpdate extends Component<Props, State> {
               </Button>
             </Flex>
           ))}
-          <Textfield ref={this.newAttributeField} outline={true} value="" onSubmit={this.create(UMLClassAttribute)} />
+          <Textfield
+            ref={this.newAttributeField}
+            outline={true}
+            value=""
+            onSubmit={this.create(UMLClassAttribute)}
+            onSubmitKeyUp={() =>
+              this.setState({
+                fieldToFocus: this.newAttributeField.current,
+              })
+            }
+          />
         </section>
         <section>
           <Divider />
@@ -140,7 +150,7 @@ class ClassifierUpdate extends Component<Props, State> {
                 gutter={true}
                 value={method.name}
                 onChange={this.rename(method.id)}
-                onSubmit={(value) =>
+                onSubmitKeyUp={() =>
                   index === methods.length - 1
                     ? this.newMethodField.current?.focus()
                     : this.setState({
@@ -158,6 +168,11 @@ class ClassifierUpdate extends Component<Props, State> {
             outline={true}
             value=""
             onSubmit={this.create(UMLClassMethod)}
+            onSubmitKeyUp={() =>
+              this.setState({
+                fieldToFocus: this.newMethodField.current,
+              })
+            }
             onKeyDown={(event) => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
@@ -178,15 +193,6 @@ class ClassifierUpdate extends Component<Props, State> {
     const member = new Clazz();
     member.name = value;
     create(member, element.id);
-    if (member.type === ClassElementType.ClassAttribute) {
-      this.setState({
-        fieldToFocus: this.newAttributeField.current,
-      });
-    } else if (member.type === ClassElementType.ClassMethod) {
-      this.setState({
-        fieldToFocus: this.newMethodField.current,
-      });
-    }
   };
 
   private rename = (id: string) => (value: string) => {
