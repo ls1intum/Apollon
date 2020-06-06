@@ -49,7 +49,7 @@ export class Application extends React.Component<Props, State> {
 
   render() {
     const canvasContext: CanvasContext | null = this.state.canvas ? { canvas: this.state.canvas } : null;
-    const layoutContext: RootContext | null = this.state.root ? { layout: this.state.root } : null;
+    const layoutContext: RootContext | null = this.state.root ? { root: this.state.root } : null;
 
     return (
       <CanvasProvider value={canvasContext}>

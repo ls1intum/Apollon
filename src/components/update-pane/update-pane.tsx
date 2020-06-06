@@ -95,7 +95,7 @@ class UnwrappedUpdatePane extends Component<Props, State> {
       <Popover ref={this.popover} position={position} placement={placement} alignment={alignment} maxHeight={500}>
         <CustomPopupComponent element={element} />
       </Popover>,
-      this.props.layout,
+      this.props.root,
     );
   }
 
@@ -127,8 +127,8 @@ class UnwrappedUpdatePane extends Component<Props, State> {
     const container: HTMLElement | null = canvas.layer.parentElement;
 
     if (element && container) {
-      const layoutPosition = this.props.layout.getBoundingClientRect();
-      const offset: Point = new Point(layoutPosition.x, layoutPosition.y);
+      const apollonEditorPosition = this.props.root.getBoundingClientRect();
+      const offset: Point = new Point(apollonEditorPosition.x, apollonEditorPosition.y);
       const absolute: Point = this.props.getAbsolutePosition(element.id).subtract(offset);
 
       const canvasBounds: ClientRect = container.getBoundingClientRect();
