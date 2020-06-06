@@ -15,6 +15,7 @@ const initialState: EditorState = {
     connectable: true,
     updatable: true,
     droppable: true,
+    alternativePortVisualization: false,
   },
 };
 

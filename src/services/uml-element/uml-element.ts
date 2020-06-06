@@ -5,7 +5,7 @@ import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import * as Apollon from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { IBoundary } from '../../utils/geometry/boundary';
-import { IPoint, Point } from '../../utils/geometry/point';
+import { Point } from '../../utils/geometry/point';
 import { uuid } from '../../utils/uuid';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
@@ -39,6 +39,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     resizable: true,
     selectable: true,
     updatable: true,
+    alternativePortVisualization: false,
   };
 
   /** Checks whether an `IUMLElement` is of type `UMLElementType` */

@@ -29,6 +29,7 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     updatable: true,
     straight: false,
     variable: true,
+    alternativePortVisualization: false,
   };
 
   static isUMLRelationship = (element: IUMLElement): element is IUMLRelationship => {
@@ -36,7 +37,10 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
   };
 
   abstract type: UMLRelationshipType;
-  path: IPath = [{ x: 0, y: 0 }, { x: 200, y: 100 }];
+  path: IPath = [
+    { x: 0, y: 0 },
+    { x: 200, y: 100 },
+  ];
   source: IUMLElementPort = {
     direction: Direction.Up,
     element: '',
@@ -86,12 +90,12 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
       { isStraight: straight, isVariable: variable },
     );
 
-    const x = Math.min(...path.map(point => point.x));
-    const y = Math.min(...path.map(point => point.y));
-    const width = Math.max(Math.max(...path.map(point => point.x)) - x, 1);
-    const height = Math.max(Math.max(...path.map(point => point.y)) - y, 1);
+    const x = Math.min(...path.map((point) => point.x));
+    const y = Math.min(...path.map((point) => point.y));
+    const width = Math.max(Math.max(...path.map((point) => point.x)) - x, 1);
+    const height = Math.max(Math.max(...path.map((point) => point.y)) - y, 1);
     this.bounds = { x, y, width, height };
-    this.path = path.map(point => ({ x: point.x - x, y: point.y - y })) as IPath;
+    this.path = path.map((point) => ({ x: point.x - x, y: point.y - y })) as IPath;
     return [this];
   }
 }
