@@ -138,6 +138,18 @@ class ClassifierUpdate extends Component<Props, State> {
                 fieldToFocus: this.newAttributeField.current,
               })
             }
+            onKeyDown={(event) => {
+              // workaround when 'tab' key is pressed:
+              // prevent default and execute blur manually without switching to next tab index
+              //then set focus to newAttributeField field again (componentDidUpdate)
+              if (event.key === 'Tab' && event.currentTarget.value) {
+                event.preventDefault();
+                event.currentTarget.blur();
+                this.setState({
+                  fieldToFocus: this.newAttributeField.current,
+                });
+              }
+            }}
           />
         </section>
         <section>
@@ -176,10 +188,13 @@ class ClassifierUpdate extends Component<Props, State> {
             onKeyDown={(event) => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
-              //then set focus to method field again (componentDidUpdate)
-              if (event.keyCode == 9) {
+              //then set focus to newMethodField field again (componentDidUpdate)
+              if (event.key === 'Tab' && event.currentTarget.value) {
                 event.preventDefault();
-                (event.target as HTMLElement).blur();
+                event.currentTarget.blur();
+                this.setState({
+                  fieldToFocus: this.newMethodField.current,
+                });
               }
             }}
           />

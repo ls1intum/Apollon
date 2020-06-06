@@ -37,6 +37,10 @@ class CommunicationLinkUpdate extends Component<Props, State> {
   newCommunicationLinkField = createRef<Textfield>();
   messageRefs: (Textfield | null)[] = [];
 
+  componentDidMount() {
+    this.setState({ fieldToFocus: this.newCommunicationLinkField.current });
+  }
+
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
     if (this.state.fieldToFocus) {
       this.state.fieldToFocus.focus();
@@ -71,10 +75,10 @@ class CommunicationLinkUpdate extends Component<Props, State> {
           {element.messages.map((message, i) => (
             <Flex key={i}>
               <Textfield
+                ref={(ref) => (this.messageRefs[i] = ref)}
                 gutter={true}
                 value={message.name}
                 onChange={this.rename(message)}
-                ref={(ref) => (this.messageRefs[i] = ref)}
                 onSubmitKeyUp={() =>
                   i === element.messages.length - 1
                     ? this.newCommunicationLinkField.current?.focus()
@@ -105,12 +109,14 @@ class CommunicationLinkUpdate extends Component<Props, State> {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
               //then set focus to newCommunicationLink field again (componentDidUpdate)
-              if (event.keyCode == 9) {
+              if (event.key === 'Tab' && event.currentTarget.value) {
                 event.preventDefault();
-                (event.target as HTMLElement).blur();
+                event.currentTarget.blur();
+                this.setState({
+                  fieldToFocus: this.newCommunicationLinkField.current,
+                });
               }
             }}
-            autoFocus
           />
         </section>
       </div>
