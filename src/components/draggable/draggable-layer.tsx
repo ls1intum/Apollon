@@ -1,4 +1,4 @@
-import React, { Component, createRef, RefObject } from 'react';
+import React, { Component, ComponentClass, createRef, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext } from '../canvas/canvas-context';
@@ -6,8 +6,13 @@ import { withCanvas } from '../canvas/with-canvas';
 import { DraggableContext, DraggableProvider } from './draggable-context';
 import { DropEvent } from './drop-event';
 import { Ghost } from './ghost';
+import { compose } from 'redux';
+import { withRoot } from '../root/with-root';
+import { RootContext } from '../root/root-context';
 
-type Props = CanvasContext;
+type OwnProps = {};
+
+type Props = CanvasContext & RootContext;
 
 const initialState = {
   dragging: false,
@@ -19,7 +24,7 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = withCanvas;
+const enhance = compose<ComponentClass<OwnProps>>(withCanvas, withRoot);
 
 class DraggableLayerComponent extends Component<Props, State> {
   state = initialState;
@@ -29,8 +34,13 @@ class DraggableLayerComponent extends Component<Props, State> {
   onDragStart = (event: PointerEvent): Promise<DropEvent> => {
     const element = event.currentTarget as HTMLElement;
     const bounds = element.getBoundingClientRect();
+    // bounds of apollon-editor on page
+    const rootBounds = this.props.root.getBoundingClientRect();
 
-    const offset = new Point(event.clientX - bounds.left, event.clientY - bounds.top);
+    const offset = new Point(
+      event.clientX - bounds.left + rootBounds.x,
+      event.clientY - bounds.top + rootBounds.y,
+    );
     const position = new Point(event.pageX - offset.x, event.pageY - offset.y);
 
     document.addEventListener('pointermove', this.onPointerMove);
@@ -54,9 +64,14 @@ class DraggableLayerComponent extends Component<Props, State> {
   onDragEnd = (owner?: string) => (event: PointerEvent) => {
     if (!this.state.dragging) return;
 
+    const rootBounds = this.props.root.getBoundingClientRect();
+
     const dropEvent: DropEvent = {
       owner,
-      position: this.state.position.subtract(this.props.canvas.origin()).subtract(window.scrollX, window.scrollY),
+      position: this.state.position
+        .subtract(this.props.canvas.origin())
+        .subtract(window.scrollX, window.scrollY)
+        .add(rootBounds.x, rootBounds.y),
     };
 
     if (this.state.resolve) {
@@ -82,7 +97,7 @@ class DraggableLayerComponent extends Component<Props, State> {
     return (
       <DraggableProvider value={context}>
         {this.props.children}
-        {createPortal(dragging && <Ghost ref={this.ghost} position={position} />, document.body)}
+        {createPortal(dragging && <Ghost ref={this.ghost} position={position} />, this.props.root)}
       </DraggableProvider>
     );
   }

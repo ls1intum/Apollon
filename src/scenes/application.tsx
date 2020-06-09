@@ -49,16 +49,16 @@ export class Application extends React.Component<Props, State> {
 
   render() {
     const canvasContext: CanvasContext | null = this.state.canvas ? { canvas: this.state.canvas } : null;
-    const layoutContext: RootContext | null = this.state.root ? { root: this.state.root } : null;
+    const rootContext: RootContext | null = this.state.root ? { root: this.state.root } : null;
 
     return (
       <CanvasProvider value={canvasContext}>
-        <RootProvider value={layoutContext}>
+        <RootProvider value={rootContext}>
           <StoreProvider ref={this.store} initialState={this.props.state}>
             <I18nProvider locale={this.props.locale}>
               <Theme styles={this.props.styles}>
                 <Layout className="apollon-editor" ref={this.setLayout}>
-                  {layoutContext && (
+                  {rootContext && (
                     <DraggableLayer>
                       <Editor>
                         <Canvas ref={this.setCanvas} />
