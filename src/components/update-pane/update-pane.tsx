@@ -127,9 +127,9 @@ class UnwrappedUpdatePane extends Component<Props, State> {
     const container: HTMLElement | null = canvas.layer.parentElement;
 
     if (element && container) {
-      const apollonEditorPosition = this.props.root.getBoundingClientRect();
-      const offset: Point = new Point(apollonEditorPosition.x, apollonEditorPosition.y);
-      const absolute: Point = this.props.getAbsolutePosition(element.id).subtract(offset);
+      const absolute: Point = this.props
+        .getAbsolutePosition(element.id)
+        .subtract(this.props.root.offsetLeft, this.props.root.offsetTop);
 
       const canvasBounds: ClientRect = container.getBoundingClientRect();
       const elementCenter: Point = this.props.canvas

@@ -38,8 +38,8 @@ class DraggableLayerComponent extends Component<Props, State> {
     const rootBounds = this.props.root.getBoundingClientRect();
 
     const offset = new Point(
-      event.clientX - bounds.left + rootBounds.x,
-      event.clientY - bounds.top + rootBounds.y,
+      event.clientX - bounds.left + rootBounds.x + window.scrollX,
+      event.clientY - bounds.top + rootBounds.y + window.scrollY,
     );
     const position = new Point(event.pageX - offset.x, event.pageY - offset.y);
 
@@ -64,14 +64,12 @@ class DraggableLayerComponent extends Component<Props, State> {
   onDragEnd = (owner?: string) => (event: PointerEvent) => {
     if (!this.state.dragging) return;
 
-    const rootBounds = this.props.root.getBoundingClientRect();
-
     const dropEvent: DropEvent = {
       owner,
       position: this.state.position
         .subtract(this.props.canvas.origin())
         .subtract(window.scrollX, window.scrollY)
-        .add(rootBounds.x, rootBounds.y),
+        .add(this.props.root.offsetLeft, this.props.root.offsetTop),
     };
 
     if (this.state.resolve) {
