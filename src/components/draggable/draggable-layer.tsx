@@ -1,5 +1,5 @@
 import React, { Component, ComponentClass, createRef, RefObject } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, findDOMNode } from 'react-dom';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
@@ -37,10 +37,7 @@ class DraggableLayerComponent extends Component<Props, State> {
     // bounds of apollon-editor on page
     const rootBounds = this.props.root.getBoundingClientRect();
 
-    const offset = new Point(
-      event.clientX - bounds.left + rootBounds.x + window.scrollX,
-      event.clientY - bounds.top + rootBounds.y + window.scrollY,
-    );
+    const offset = new Point(event.pageX - (bounds.left - rootBounds.x), event.pageY - (bounds.top - rootBounds.y));
     const position = new Point(event.pageX - offset.x, event.pageY - offset.y);
 
     document.addEventListener('pointermove', this.onPointerMove);
@@ -55,21 +52,19 @@ class DraggableLayerComponent extends Component<Props, State> {
   };
 
   onPointerMove = (event: PointerEvent) => {
-    const position = this.props.canvas.snap(
-      new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y),
-    );
+    const position = new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y);
     this.setState({ position });
   };
 
   onDragEnd = (owner?: string) => (event: PointerEvent) => {
     if (!this.state.dragging) return;
-
     const dropEvent: DropEvent = {
       owner,
-      position: this.state.position
-        .subtract(this.props.canvas.origin())
-        .subtract(window.scrollX, window.scrollY)
-        .add(this.props.root.offsetLeft, this.props.root.offsetTop),
+      position: this.state.position.subtract(
+        this.props.canvas
+          .origin()
+          .subtract(this.props.root.getBoundingClientRect().x, this.props.root.getBoundingClientRect().y),
+      ),
     };
 
     if (this.state.resolve) {
