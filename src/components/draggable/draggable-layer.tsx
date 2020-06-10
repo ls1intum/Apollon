@@ -1,5 +1,5 @@
 import React, { Component, ComponentClass, createRef, RefObject } from 'react';
-import { createPortal, findDOMNode } from 'react-dom';
+import { createPortal } from 'react-dom';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
@@ -34,9 +34,9 @@ class DraggableLayerComponent extends Component<Props, State> {
   onDragStart = (event: PointerEvent): Promise<DropEvent> => {
     const element = event.currentTarget as HTMLElement;
     const bounds = element.getBoundingClientRect();
-    // bounds of apollon-editor on page
     const rootBounds = this.props.root.getBoundingClientRect();
-
+    // bounds.left - rooBounds.x => position to origin
+    // one could delete event.pageX (a - a = 0)in for this case, but its is important to calculate the offset correctly for moving event
     const offset = new Point(event.pageX - (bounds.left - rootBounds.x), event.pageY - (bounds.top - rootBounds.y));
     const position = new Point(event.pageX - offset.x, event.pageY - offset.y);
 
@@ -60,6 +60,7 @@ class DraggableLayerComponent extends Component<Props, State> {
     if (!this.state.dragging) return;
     const dropEvent: DropEvent = {
       owner,
+      // transformation to new relational point origin, which is in the center of the canvas
       position: this.state.position.subtract(
         this.props.canvas
           .origin()

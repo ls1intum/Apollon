@@ -128,18 +128,20 @@ class UnwrappedUpdatePane extends Component<Props, State> {
 
     if (element && container) {
       const absolute: Point = this.props
+        // relative to drawing area (0,0)
         .getAbsolutePosition(element.id)
-        .subtract(this.props.root.offsetLeft, this.props.root.offsetTop);
+        .add(
+          canvas
+            .origin()
+            .subtract(this.props.root.getBoundingClientRect().x, this.props.root.getBoundingClientRect().y),
+        );
 
+      const elementCenter: Point = absolute.add(element.bounds.width / 2, element.bounds.height / 2);
+
+      const position = absolute;
+
+      // calculate if element is in half or right position of canvas (drawing area) and align popup
       const canvasBounds: ClientRect = container.getBoundingClientRect();
-      const elementCenter: Point = this.props.canvas
-        .origin()
-        .add(absolute)
-        .add(element.bounds.width / 2, element.bounds.height / 2)
-        .subtract(canvasBounds.left, canvasBounds.top);
-
-      const position = this.props.canvas.origin().add(absolute).add(window.scrollX, window.scrollY);
-
       const placement = elementCenter.x < canvasBounds.width / 2 ? 'right' : 'left';
       const alignment = elementCenter.y < canvasBounds.height / 2 ? 'start' : 'end';
 
@@ -158,9 +160,11 @@ class UnwrappedUpdatePane extends Component<Props, State> {
         }
       } else {
         if (placement === 'right') {
+          // add width to be on right side of element
           position.x += element.bounds.width;
         }
         if (alignment === 'end') {
+          // add height to be at the bottom of element
           position.y += element.bounds.height;
         }
       }
