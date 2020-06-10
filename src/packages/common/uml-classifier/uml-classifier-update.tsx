@@ -65,8 +65,6 @@ class ClassifierUpdate extends Component<Props, State> {
   state = getInitialState();
   newMethodField = createRef<Textfield>();
   newAttributeField = createRef<Textfield>();
-  attributeRefs: (Textfield | null)[] = [];
-  methodRefs: (Textfield | null)[] = [];
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
     if (this.state.fieldToFocus) {
@@ -80,6 +78,8 @@ class ClassifierUpdate extends Component<Props, State> {
     const children = element.ownedElements.map((id) => getById(id)).filter(notEmpty);
     const attributes = children.filter((child) => child instanceof UMLClassAttribute);
     const methods = children.filter((child) => child instanceof UMLClassMethod);
+    const attributeRefs: (Textfield | null)[] = [];
+    const methodRefs: (Textfield | null)[] = [];
 
     return (
       <div>
@@ -111,7 +111,7 @@ class ClassifierUpdate extends Component<Props, State> {
           {attributes.map((attribute, index) => (
             <Flex key={attribute.id}>
               <Textfield
-                ref={(ref) => (this.attributeRefs[index] = ref)}
+                ref={(ref) => (attributeRefs[index] = ref)}
                 gutter={true}
                 value={attribute.name}
                 onChange={this.rename(attribute.id)}
@@ -119,7 +119,7 @@ class ClassifierUpdate extends Component<Props, State> {
                   index === attributes.length - 1
                     ? this.newAttributeField.current?.focus()
                     : this.setState({
-                        fieldToFocus: this.attributeRefs[index + 1],
+                        fieldToFocus: attributeRefs[index + 1],
                       })
                 }
               />
@@ -133,11 +133,25 @@ class ClassifierUpdate extends Component<Props, State> {
             outline={true}
             value=""
             onSubmit={this.create(UMLClassAttribute)}
-            onSubmitKeyUp={() =>
-              this.setState({
-                fieldToFocus: this.newAttributeField.current,
-              })
-            }
+            onSubmitKeyUp={(key: string, value: string) => {
+              // if we have a value -> navigate to next field in case we want to create a new element
+              if (value) {
+                this.setState({
+                  fieldToFocus: this.newAttributeField.current,
+                });
+              } else {
+                // if we submit with empty value -> focus next element (either next method field or newMethodfield)
+                if (methodRefs && methodRefs.length > 0) {
+                  this.setState({
+                    fieldToFocus: methodRefs[0],
+                  });
+                } else {
+                  this.setState({
+                    fieldToFocus: this.newMethodField.current,
+                  });
+                }
+              }
+            }}
             onKeyDown={(event) => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
@@ -158,7 +172,7 @@ class ClassifierUpdate extends Component<Props, State> {
           {methods.map((method, index) => (
             <Flex key={method.id}>
               <Textfield
-                ref={(ref) => (this.methodRefs[index] = ref)}
+                ref={(ref) => (methodRefs[index] = ref)}
                 gutter={true}
                 value={method.name}
                 onChange={this.rename(method.id)}
@@ -166,7 +180,7 @@ class ClassifierUpdate extends Component<Props, State> {
                   index === methods.length - 1
                     ? this.newMethodField.current?.focus()
                     : this.setState({
-                        fieldToFocus: this.methodRefs[index + 1],
+                        fieldToFocus: methodRefs[index + 1],
                       })
                 }
               />
