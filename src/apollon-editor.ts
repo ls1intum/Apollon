@@ -14,7 +14,7 @@ import { UMLDiagram } from './services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from './services/uml-element/uml-element-repository';
 import * as Apollon from './typings';
 import { Dispatch } from './utils/actions/actions';
-import { UMLDiagramType, UMLModel } from "./typings";
+import { UMLDiagramType, UMLModel } from './typings';
 import { debounce } from './utils/debounce';
 
 export class ApollonEditor {
@@ -197,6 +197,9 @@ export class ApollonEditor {
   };
 
   private notifyModelSubscribers = debounce(() => {
+    // if store is not available -> apollon-editor is destroyed
+    // -> no need to emit latest changes
+    if (!this.store) return;
     const model = this.model;
     if (this.currentModel && JSON.stringify(model) !== JSON.stringify(this.currentModel)) {
       this.modelSubscribers.forEach((subscriber) => subscriber(model));
