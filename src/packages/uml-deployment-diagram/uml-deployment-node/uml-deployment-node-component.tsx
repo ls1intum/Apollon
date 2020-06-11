@@ -9,10 +9,12 @@ export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children }) =>
       <rect x="0" y="8" width={element.bounds.width - 8} height={element.bounds.height - 9} stroke="black" />
     </g>
     <text x="50%" y="30" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
-      <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
-        {`«${element.stereotype}»`}
-      </tspan>
-      <tspan x="50%" dy={18} textAnchor="middle">
+      {element.stereotype && (
+        <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
+          {`«${element.stereotype}»`}
+        </tspan>
+      )}
+      <tspan x="50%" dy={element.stereotype ? 18 : 10} textAnchor="middle">
         {element.name}
       </tspan>
     </text>
