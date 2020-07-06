@@ -201,13 +201,16 @@ export class ApollonEditor {
     // -> no need to emit latest changes
     if (!this.store) return;
     const model = this.model;
-    if (this.currentModel && JSON.stringify(model) !== JSON.stringify(this.currentModel)) {
+    if (
+      (!this.currentModel && model) ||
+      (this.currentModel && JSON.stringify(model) !== JSON.stringify(this.currentModel))
+    ) {
       this.modelSubscribers.forEach((subscriber) => subscriber(model));
       this.currentModel = model;
     } else {
       this.currentModel = model;
     }
-  }, 500);
+  }, 50);
 
   private recreateEditor(state: DeepPartial<ModelState>) {
     this.destroy();
