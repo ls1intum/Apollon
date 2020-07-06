@@ -110,6 +110,7 @@ export class ApollonEditor {
       locale: options.locale,
     });
     render(element, container, this.componentDidMount);
+    this.currentModel = this.model;
   }
 
   destroy() {
