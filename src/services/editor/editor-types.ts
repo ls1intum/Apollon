@@ -26,6 +26,7 @@ export type EditorState = {
   readonly mode: ApollonMode;
   readonly readonly: boolean;
   readonly enablePopups: boolean;
+  readonly enableCopyPasteToClipboard: boolean;
   readonly view: ApollonView;
   readonly features: UMLElementFeatures;
 };

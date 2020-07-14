@@ -24,6 +24,7 @@ import * as Apollon from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { UMLDiagramType } from '../../typings';
+import { CopyState } from "../../services/copypaste/copy-types";
 
 export interface ModelState {
   editor: EditorState;
@@ -38,6 +39,7 @@ export interface ModelState {
   updating: UpdatableState;
   elements: UMLElementState;
   assessments: AssessmentState;
+  copy: CopyState;
 }
 
 export class ModelState {
