@@ -17,7 +17,7 @@ export const UMLDependencyComponent: SFC<Props> = ({ element }) => (
       <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
     </marker>
     <polyline
-      points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
+      points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
       stroke="black"
       fill="none"
       strokeWidth={1}

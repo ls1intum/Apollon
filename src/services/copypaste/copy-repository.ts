@@ -19,7 +19,7 @@ export class CopyRepository {
     // copy elements with all their child elements, because containers do not know their full children representation
     const idsToClone = getChildren(ids, getState().elements);
 
-    const result: UMLElement[] = idsToClone.map((id) => UMLElementRepository.get(elements[id])).filter(notEmpty);
+    const result: UMLElement[] = idsToClone.map(theId => UMLElementRepository.get(elements[theId])).filter(notEmpty);
     if (getState().editor.enableCopyPasteToClipboard) {
       navigator.clipboard.writeText(JSON.stringify(result));
     } else {
@@ -37,9 +37,9 @@ export class CopyRepository {
     if (getState().editor.enableCopyPasteToClipboard) {
       navigator.clipboard
         .readText()
-        .then((value) => {
+        .then(value => {
           const parsedElements: IUMLElement[] = JSON.parse(value);
-          const diagramElements: UMLElement[] = parsedElements.map((x) => UMLElementRepository.get(x)).filter(notEmpty);
+          const diagramElements: UMLElement[] = parsedElements.map(x => UMLElementRepository.get(x)).filter(notEmpty);
           return CopyRepository.transformElementsForCopy(diagramElements);
         })
         .then((elements: IUMLElement[]) => {
@@ -48,7 +48,7 @@ export class CopyRepository {
           dispatch(
             UMLElementRepository.select(
               filterRoots(
-                elements.map((element) => element.id),
+                elements.map(element => element.id),
                 getState().elements,
               ),
             ),
@@ -59,7 +59,7 @@ export class CopyRepository {
       dispatch<PasteAction>({ type: CopyActionTypes.PASTE, payload: {}, undoable: false });
       const { elements } = getState();
       const elementsToCopy: UMLElement[] = copy
-        .map((IdOfCopyElement) => UMLElementRepository.get(elements[IdOfCopyElement]))
+        .map(IdOfCopyElement => UMLElementRepository.get(elements[IdOfCopyElement]))
         .filter(notEmpty);
       const copiedElements = CopyRepository.transformElementsForCopy(elementsToCopy);
       dispatch(UMLElementRepository.create(copiedElements));
@@ -67,7 +67,7 @@ export class CopyRepository {
       dispatch(
         UMLElementRepository.select(
           filterRoots(
-            copiedElements.map((element) => element.id),
+            copiedElements.map(element => element.id),
             getState().elements,
           ),
         ),
@@ -77,8 +77,7 @@ export class CopyRepository {
 
   private static transformElementsForCopy(umlElements: UMLElement[]): IUMLElement[] {
     // roots in diagram Elements
-    const roots = umlElements.filter(
-      (element) => !element.owner || umlElements.every((innerElement) => innerElement.id !== element.owner),
+    const roots = umlElements.filter(element => !element.owner || umlElements.every(innerElement => innerElement.id !== element.owner),
     );
     // flat map elements to copies
     const copies: UMLElement[] = roots.reduce((clonedElements: UMLElement[], element: UMLElement) => {
@@ -91,6 +90,6 @@ export class CopyRepository {
     }, []);
 
     // map elements to serializable elements
-    return copies.map((element) => ({ ...element }));
+    return copies.map(element => ({ ...element }));
   }
 }

@@ -42,7 +42,7 @@ class ActivityControlFlowUpdate extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Textfield value={element.name} onChange={this.rename} autoFocus />
+          <Textfield value={element.name} onChange={this.rename} autoFocus={true} />
         </section>
       </div>
     );

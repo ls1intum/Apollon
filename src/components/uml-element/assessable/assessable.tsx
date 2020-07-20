@@ -134,6 +134,7 @@ export const assessable = (
       if (!!ev.dataTransfer) {
         const data: string = ev.dataTransfer.getData('artemis/sgi');
         if (!data) {
+          // tslint:disable-next-line:no-console
           console.warn('Could not get artemis sgi element from drop element');
           return;
         }
@@ -141,6 +142,7 @@ export const assessable = (
         try {
           instruction = JSON.parse(data);
         } catch (e) {
+          // tslint:disable-next-line:no-console
           console.error('Could not parse artemis sgi', e);
           return;
         }

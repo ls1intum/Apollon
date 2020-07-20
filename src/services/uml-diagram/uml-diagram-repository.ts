@@ -24,10 +24,10 @@ export const UMLDiagramRepository = {
   },
 
   bringToFront: (id: string | string[]): AsyncAction => (dispatch, getState) => {
-    const ids = (Array.isArray(id) ? id : [id]).filter((id) => getState().diagram.ownedElements.includes(id));
+    const ids = (Array.isArray(id) ? id : [id]).filter(theId => getState().diagram.ownedElements.includes(theId));
     dispatch<ReorderElementsAction>({
       type: UMLDiagramActionTypes.BRING_TO_FRONT,
-      payload: { ids: ids },
+      payload: { ids },
       undoable: false,
     });
   },

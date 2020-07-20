@@ -46,9 +46,9 @@ class ObjectNameComponent extends Component<Props, State> {
 
   render() {
     const { element, getById } = this.props;
-    const children = element.ownedElements.map((id) => getById(id)).filter(notEmpty);
-    const attributes = children.filter((child) => child instanceof UMLObjectAttribute);
-    const methods = children.filter((child) => child instanceof UMLObjectMethod);
+    const children = element.ownedElements.map(id => getById(id)).filter(notEmpty);
+    const attributes = children.filter(child => child instanceof UMLObjectAttribute);
+    const methods = children.filter(child => child instanceof UMLObjectMethod);
     const attributeRefs: (Textfield | null)[] = [];
     const methodRefs: (Textfield | null)[] = [];
 
@@ -56,7 +56,7 @@ class ObjectNameComponent extends Component<Props, State> {
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
+            <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus={true} />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -68,7 +68,7 @@ class ObjectNameComponent extends Component<Props, State> {
           {attributes.map((attribute, index) => (
             <Flex key={attribute.id}>
               <Textfield
-                ref={(ref) => (attributeRefs[index] = ref)}
+                ref={ref => (attributeRefs[index] = ref)}
                 gutter={true}
                 value={attribute.name}
                 onChange={this.rename(attribute.id)}
@@ -109,10 +109,10 @@ class ObjectNameComponent extends Component<Props, State> {
                 }
               }
             }}
-            onKeyDown={(event) => {
+            onKeyDown={event => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
-              //then set focus to newAttributeField field again (componentDidUpdate)
+              // then set focus to newAttributeField field again (componentDidUpdate)
               if (event.key === 'Tab' && event.currentTarget.value) {
                 event.preventDefault();
                 event.currentTarget.blur();
@@ -129,7 +129,7 @@ class ObjectNameComponent extends Component<Props, State> {
           {methods.map((method, index) => (
             <Flex key={method.id}>
               <Textfield
-                ref={(ref) => (methodRefs[index] = ref)}
+                ref={ref => (methodRefs[index] = ref)}
                 gutter={true}
                 value={method.name}
                 onChange={this.rename(method.id)}
@@ -156,10 +156,10 @@ class ObjectNameComponent extends Component<Props, State> {
                 fieldToFocus: this.newMethodField.current,
               })
             }
-            onKeyDown={(event) => {
+            onKeyDown={event => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
-              //then set focus to newMethodField field again (componentDidUpdate)
+              // then set focus to newMethodField field again (componentDidUpdate)
               if (event.key === 'Tab' && event.currentTarget.value) {
                 event.preventDefault();
                 event.currentTarget.blur();

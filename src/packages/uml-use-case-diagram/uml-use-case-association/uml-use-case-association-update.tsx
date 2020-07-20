@@ -32,7 +32,7 @@ class UseCaseAssociationUpdate extends Component<Props> {
         <section>
           {element.type === UseCaseRelationshipType.UseCaseAssociation ? (
             <Flex>
-              <Textfield value={element.name} placeholder="..." onChange={this.rename(element.id)} autoFocus />
+              <Textfield value={element.name} placeholder="..." onChange={this.rename(element.id)} autoFocus={true} />
               <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
                 <TrashIcon />
               </Button>

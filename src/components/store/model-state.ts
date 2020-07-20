@@ -24,7 +24,7 @@ import * as Apollon from '../../typings';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { UMLDiagramType } from '../../typings';
-import { CopyState } from "../../services/copypaste/copy-types";
+import { CopyState } from '../../services/copypaste/copy-types';
 
 export interface ModelState {
   editor: EditorState;
@@ -90,7 +90,7 @@ export class ModelState {
     diagram.type = (model.type as UMLDiagramType);
 
     return {
-      diagram: diagram,
+      diagram,
       interactive: [...model.interactive.elements, ...model.interactive.relationships],
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
       assessments: (model.assessments || []).reduce<AssessmentState>(

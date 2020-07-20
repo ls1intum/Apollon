@@ -2,8 +2,8 @@ import { Action } from '../../utils/actions/actions';
 import { IUMLDiagram } from './uml-diagram';
 
 export const enum UMLDiagramActionTypes {
-  APPEND = "@@element/diagram/APPEND",
-  BRING_TO_FRONT = "BRING_TO_FRONT"
+  APPEND = '@@element/diagram/APPEND',
+  BRING_TO_FRONT = 'BRING_TO_FRONT'
 }
 
 export type UMLDiagramState = IUMLDiagram;

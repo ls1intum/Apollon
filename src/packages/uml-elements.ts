@@ -23,7 +23,7 @@ import { UMLObjectName } from './uml-object-diagram/uml-object-name/uml-object-n
 import { UMLUseCaseActor } from './uml-use-case-diagram/uml-use-case-actor/uml-use-case-actor';
 import { UMLUseCaseSystem } from './uml-use-case-diagram/uml-use-case-system/uml-use-case-system';
 import { UMLUseCase } from './uml-use-case-diagram/uml-use-case/uml-use-case';
-import { UMLDeploymentInterface } from "./uml-deployment-diagram/uml-deployment-interface/uml-component-interface";
+import { UMLDeploymentInterface } from './uml-deployment-diagram/uml-deployment-interface/uml-component-interface';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,

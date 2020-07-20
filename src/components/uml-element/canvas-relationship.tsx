@@ -61,7 +61,7 @@ export class CanvasRelationshipComponent extends Component<Props> {
     } = this.props;
 
     // increase relationship hit box in assessment mode
-    const STROKE = mode == ApollonMode.Assessment ? 35 : 15;
+    const STROKE = mode === ApollonMode.Assessment ? 35 : 15;
 
     const ChildComponent = Components[relationship.type as UMLRelationshipType];
 
