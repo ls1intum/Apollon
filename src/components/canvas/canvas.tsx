@@ -20,7 +20,8 @@ type DispatchProps = {};
 
 type Props = OwnProps & StateProps & DispatchProps;
 
-const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(state => ({
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  (state) => ({
     diagram: state.diagram,
     isStatic: state.editor.readonly,
   }),
@@ -62,10 +63,10 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
             <>
               <svg x="50%" y="50%">
                 {/* be careful to change the drawing order -> if relationships are drawn first -> relationships will not be visible in containers */}
-                {diagram.ownedElements.map(element => (
+                {diagram.ownedElements.map((element) => (
                   <UMLElementComponent key={element} id={element} />
                 ))}
-                {diagram.ownedRelationships.map(relationship => (
+                {diagram.ownedRelationships.map((relationship) => (
                   <UMLElementComponent key={relationship} id={relationship} />
                 ))}
                 <ConnectionPreview />

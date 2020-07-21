@@ -56,7 +56,7 @@ const alternativePortCircleSize = 30;
 // default port visualization size
 const defaultPortSize = 20;
 
-const Handle = styled(props => {
+const Handle = styled((props) => {
   const { alternativePortVisualization, ...otherProps } = props;
   if (alternativePortVisualization) {
     return (
@@ -98,7 +98,7 @@ const Handle = styled(props => {
   pointer-events: all;
 
   path {
-    transform: rotate(${props => props.rotate}deg);
+    transform: rotate(${(props) => props.rotate}deg);
   }
 `;
 
@@ -198,8 +198,8 @@ export const connectable = (
         ),
       }));
       // use handle with min distance to connect to
-      const minDistance = Math.min(...distances.map(value => value.distance));
-      const direction = distances.filter(value => minDistance === value.distance)[0].key as Direction;
+      const minDistance = Math.min(...distances.map((value) => value.distance));
+      const direction = distances.filter((value) => minDistance === value.distance)[0].key as Direction;
 
       if (this.props.connecting) {
         this.props.connect({ element: this.props.id, direction });

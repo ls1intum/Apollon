@@ -20,15 +20,16 @@ type Props = OwnProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => {
   // filter all UMLInterfaceRequired
   const requiredInterfaces: UMLInterfaceRequired[] = state.diagram.ownedRelationships
-    .map(relationshipId => state.elements[relationshipId])
-    .filter(relationship => UMLInterfaceRequired.isUMLInterfaceRequired(relationship))
-    .map(relationship => relationship as UMLInterfaceRequired);
+    .map((relationshipId) => state.elements[relationshipId])
+    .filter((relationship) => UMLInterfaceRequired.isUMLInterfaceRequired(relationship))
+    .map((relationship) => relationship as UMLInterfaceRequired);
 
   // check if any other UMLInterfaceRequired has the same target as this element and if the direction of the UMLInterfaceRequired is the opposite
   return {
     hasOppositeRequiredInterface: requiredInterfaces
-      .filter(element => element.id !== props.element.id)
-      .some(otherRequiredInterface =>
+      .filter((element) => element.id !== props.element.id)
+      .some(
+        (otherRequiredInterface) =>
           otherRequiredInterface.target.element === props.element.target.element &&
           otherRequiredInterface.target.direction.valueOf() ===
             getOppositeDirection(props.element.target.direction).valueOf(),

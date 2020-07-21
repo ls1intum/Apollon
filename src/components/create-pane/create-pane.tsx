@@ -68,7 +68,8 @@ type State = ReturnType<typeof getInitialState>;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   withCanvas,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(state => ({
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    (state) => ({
       type: state.diagram.type,
     }),
     {
@@ -104,7 +105,7 @@ class CreatePaneComponent extends Component<Props, State> {
     return (
       <StoreProvider initialState={{ elements, editor: { features } }}>
         {Object.values(previews)
-          .filter(preview => !preview.owner)
+          .filter((preview) => !preview.owner)
           .map((preview, index) => (
             <PreviewElement key={index} element={preview} create={this.create} />
           ))}
