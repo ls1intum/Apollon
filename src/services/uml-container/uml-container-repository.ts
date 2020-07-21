@@ -31,7 +31,7 @@ export const UMLContainerRepository = {
     const ids = Array.isArray(id) ? id : [id];
     const { elements, diagram } = getState();
 
-    const rels = ids.filter(x => UMLRelationship.isUMLRelationship(elements[x]));
+    const rels = ids.filter((x) => UMLRelationship.isUMLRelationship(elements[x]));
     if (rels.length) {
       dispatch<AppendRelationshipAction>({
         type: UMLDiagramActionTypes.APPEND,
@@ -40,7 +40,7 @@ export const UMLContainerRepository = {
       });
     }
 
-    const eles = ids.filter(x => UMLElement.isUMLElement(elements[x]));
+    const eles = ids.filter((x) => UMLElement.isUMLElement(elements[x]));
     if (eles.length) {
       dispatch<AppendAction>({
         type: UMLContainerActionTypes.APPEND,

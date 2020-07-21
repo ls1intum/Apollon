@@ -5,7 +5,7 @@ import { UMLActivityControlFlow } from './uml-activity-control-flow';
 export const UMLActivityControlFlowComponent: SFC<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
-  const path = element.path.map(point => new Point(point.x, point.y));
+  const path = element.path.map((point) => new Point(point.x, point.y));
   let distance =
     path.reduce(
       (length, point, i, points) => (i + 1 < points.length ? length + points[i + 1].subtract(point).length : length),
@@ -56,7 +56,7 @@ export const UMLActivityControlFlowComponent: SFC<Props> = ({ element }) => {
         <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
       </marker>
       <polyline
-        points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
+        points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
         stroke="black"
         fill="none"
         strokeWidth={1}

@@ -32,7 +32,7 @@ class UseCaseAssociationUpdate extends Component<Props> {
         <section>
           {element.type === UseCaseRelationshipType.UseCaseAssociation ? (
             <Flex>
-              <Textfield value={element.name} placeholder="..." onChange={this.rename(element.id)} autoFocus />
+              <Textfield value={element.name} placeholder="..." onChange={this.rename(element.id)} autoFocus={true} />
               <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
                 <TrashIcon />
               </Button>
@@ -48,8 +48,12 @@ class UseCaseAssociationUpdate extends Component<Props> {
                     [UseCaseRelationshipType.UseCaseGeneralization]: this.props.translate(
                       'packages.UseCaseDiagram.UseCaseGeneralization',
                     ),
-                    [UseCaseRelationshipType.UseCaseInclude]: this.props.translate('packages.UseCaseDiagram.UseCaseInclude'),
-                    [UseCaseRelationshipType.UseCaseExtend]: this.props.translate('packages.UseCaseDiagram.UseCaseExtend'),
+                    [UseCaseRelationshipType.UseCaseInclude]: this.props.translate(
+                      'packages.UseCaseDiagram.UseCaseInclude',
+                    ),
+                    [UseCaseRelationshipType.UseCaseExtend]: this.props.translate(
+                      'packages.UseCaseDiagram.UseCaseExtend',
+                    ),
                   }[element.type]
                 }
               </Header>
@@ -108,14 +112,11 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    flip: UMLRelationshipRepository.flip,
+  }),
 );
 
 export const UMLUseCaseAssociationUpdate = enhance(UseCaseAssociationUpdate);

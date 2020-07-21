@@ -19,7 +19,9 @@ export class CopyRepository {
     // copy elements with all their child elements, because containers do not know their full children representation
     const idsToClone = getChildren(ids, getState().elements);
 
-    const result: UMLElement[] = idsToClone.map((id) => UMLElementRepository.get(elements[id])).filter(notEmpty);
+    const result: UMLElement[] = idsToClone
+      .map((idToClone) => UMLElementRepository.get(elements[idToClone]))
+      .filter(notEmpty);
     if (getState().editor.enableCopyPasteToClipboard) {
       navigator.clipboard.writeText(JSON.stringify(result));
     } else {

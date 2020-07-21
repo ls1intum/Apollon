@@ -43,7 +43,7 @@ class RelationshipPreview extends Component<Props> {
 
     const source = new Point(x + position.x, y + position.y);
     const path = [source, this.props.target];
-    const points = path.map(p => `${p.x} ${p.y}`).join(', ');
+    const points = path.map((p) => `${p.x} ${p.y}`).join(', ');
 
     return (
       <polyline points={points} pointerEvents="none" fill="none" stroke="black" strokeWidth="1" strokeDasharray="5,5" />

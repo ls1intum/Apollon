@@ -27,7 +27,7 @@ export const Reconnectable = {
   reconnect: (target: IUMLElementPort): AsyncAction => (dispatch, getState) => {
     const { reconnecting, elements } = getState();
     const connections = Object.keys(reconnecting)
-      .map(id => {
+      .map((id) => {
         const relationship = elements[id] as IUMLRelationship;
         const endpoint1: 'source' | 'target' = reconnecting[id];
         const endpoint2: 'source' | 'target' = endpoint1 === 'source' ? 'target' : 'source';

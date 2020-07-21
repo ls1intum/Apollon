@@ -60,15 +60,15 @@ export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {
         };
       };
 
-      return payload.ids.filter(id => state[id]).reduce<UMLElementState>(reduce, elementState);
+      return payload.ids.filter((id) => state[id]).reduce<UMLElementState>(reduce, elementState);
     }
     case UMLContainerActionTypes.REMOVE: {
       const { payload } = action;
       const ids = [
         ...new Set(
           payload.ids
-            .filter(id => state[id] && state[id].owner)
-            .map(id => state[id].owner)
+            .filter((id) => state[id] && state[id].owner)
+            .map((id) => state[id].owner)
             .filter(notEmpty),
         ),
       ];
@@ -78,7 +78,9 @@ export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {
           ...elements,
           [id]: {
             ...state[id],
-            ownedElements: (state[id] as IUMLContainer).ownedElements.filter(element => !payload.ids.includes(element)),
+            ownedElements: (state[id] as IUMLContainer).ownedElements.filter(
+              (element) => !payload.ids.includes(element),
+            ),
           },
         }),
         state,

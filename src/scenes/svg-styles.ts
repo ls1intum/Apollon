@@ -1,7 +1,7 @@
 import { css } from '../components/theme/styles';
 
 export const Style = css(
-  props => `
+  (props) => `
   text {
     fill: ${props.theme.font.color};
     font-family: ${props.theme.font.family};

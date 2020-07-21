@@ -34,7 +34,9 @@ function* remove(): SagaIterator {
   const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const state: UMLElementState = { ...elements, [diagram.id]: diagram };
-  const owners = [...new Set(action.payload.ids.filter(id => id in state).map(id => state[id].owner || diagram.id))];
+  const owners = [
+    ...new Set(action.payload.ids.filter((id) => id in state).map((id) => state[id].owner || diagram.id)),
+  ];
 
   for (const owner of owners) {
     yield call(render, owner);
@@ -59,7 +61,7 @@ function* appendAfterMove(): SagaIterator {
     containerID = container.id;
   }
 
-  const movedElements = action.payload.ids.filter(id => elements[id].owner !== containerID && id !== containerID);
+  const movedElements = action.payload.ids.filter((id) => elements[id].owner !== containerID && id !== containerID);
   if (!movedElements.length || action.payload.keyboard) {
     return;
   }
@@ -76,10 +78,10 @@ function* renderAfterMove(): SagaIterator {
 
   yield race({
     append: take(UMLContainerActionTypes.APPEND),
-    resize: call(function*() {
+    resize: call(function* () {
       yield delay(0);
 
-      const owners = [...new Set(action.payload.ids.map(id => state[id].owner || diagram.id))];
+      const owners = [...new Set(action.payload.ids.map((id) => state[id].owner || diagram.id))];
       for (const owner of owners) {
         yield call(render, owner);
       }

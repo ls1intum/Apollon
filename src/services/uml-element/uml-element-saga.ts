@@ -16,7 +16,7 @@ function* makeInteractable(): SagaIterator {
   yield take(InteractableActionTypes.SELECT);
   const { interactive, elements }: ModelState = yield select();
   const roots = filterRoots(interactive, elements);
-  const difference = interactive.filter(x => !roots.includes(x));
+  const difference = interactive.filter((x) => !roots.includes(x));
 
   yield put<DeselectAction>({
     type: InteractableActionTypes.DESELECT,

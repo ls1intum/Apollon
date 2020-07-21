@@ -28,17 +28,12 @@ export class I18nProvider extends Component<Props> {
   }
 
   private translate = (key: string): string => {
-    try {
-      let translations = dictionary[this.props.locale];
-      let translation: string = key.split('.').reduce((result, current) => result[current], translations as any);
-      if (!translation) {
-        translations = dictionary[defaultLocale];
-        translation = key.split('.').reduce((result, current) => result[current], translations as any);
-      }
-      return translation;
-    } catch (error) {
-      console.error(error);
-      return '';
+    let translations = dictionary[this.props.locale];
+    let translation: string = key.split('.').reduce((result, current) => result[current], translations as any);
+    if (!translation) {
+      translations = dictionary[defaultLocale];
+      translation = key.split('.').reduce((result, current) => result[current], translations as any);
     }
+    return translation;
   };
 }

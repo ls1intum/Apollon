@@ -13,7 +13,7 @@ export function filterRoots(ids: string[], elements: UMLElementState): string[] 
   };
 
   return Object.values(elements)
-    .filter(element => !element.owner)
+    .filter((element) => !element.owner)
     .reduce<string[]>((selection, element) => [...selection, ...getSelection(element)], []);
 }
 
@@ -42,7 +42,7 @@ export function clone(element: UMLElement, elements: UMLElement[]): UMLElement[]
   const cloned = element.clone<UMLContainer>();
   const { ownedElements } = element;
   for (const id of ownedElements) {
-    const child = elements.find(prev => prev.id === id);
+    const child = elements.find((prev) => prev.id === id);
     if (!child) {
       continue;
     }
@@ -50,7 +50,7 @@ export function clone(element: UMLElement, elements: UMLElement[]): UMLElement[]
     const [clonedChild, ...clonedChildren] = clone(child, elements);
     clonedChild.owner = cloned.id;
 
-    const index = cloned.ownedElements.findIndex(x => x === id);
+    const index = cloned.ownedElements.findIndex((x) => x === id);
     cloned.ownedElements[index] = clonedChild.id;
     result.push(clonedChild, ...clonedChildren);
   }

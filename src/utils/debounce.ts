@@ -1,4 +1,4 @@
-export function debounce(func: Function, wait: number = 0) {
+export function debounce(func: (...args: any[]) => any, wait: number = 0) {
   let timeout: number | undefined;
   return function (...args: any[]) {
     // @ts-ignore

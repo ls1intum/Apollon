@@ -32,7 +32,7 @@ const Repository = {
   flip: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
     const { selected, elements } = getState();
     const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
-    const connections = ids.map(r => {
+    const connections = ids.map((r) => {
       const relationship = elements[r] as IUMLRelationship;
       const source = { element: relationship.target.element, direction: relationship.target.direction };
       const target = { element: relationship.source.element, direction: relationship.source.direction };

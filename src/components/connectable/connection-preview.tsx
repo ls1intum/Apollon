@@ -28,10 +28,12 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentType<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({
+    (state) => ({
       connecting: [
         ...state.connecting,
-        ...Object.keys(state.reconnecting).map(id => (state.elements[id] as IUMLRelationship)[state.reconnecting[id]]),
+        ...Object.keys(state.reconnecting).map(
+          (id) => (state.elements[id] as IUMLRelationship)[state.reconnecting[id]],
+        ),
       ],
     }),
     {

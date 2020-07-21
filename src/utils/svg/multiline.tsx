@@ -43,7 +43,7 @@ export class Multiline extends Component<Props, State> {
   calculateWordWidths = (props: Readonly<Props>) => {
     try {
       const words = props.children ? props.children.toString().split(/\s+/) : [];
-      const wordsWithComputedWidth = words.map(word => ({ word, width: this.getStringWidth(word, props.style) }));
+      const wordsWithComputedWidth = words.map((word) => ({ word, width: this.getStringWidth(word, props.style) }));
 
       const spaceWidth = this.getStringWidth('\u00A0', props.style);
 

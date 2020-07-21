@@ -27,7 +27,7 @@ function* selectRelationship(): SagaIterator {
     return;
   }
 
-  const ids = action.payload.ids.filter(id => diagram.ownedRelationships.includes(id));
+  const ids = action.payload.ids.filter((id) => diagram.ownedRelationships.includes(id));
   if (!ids.length) {
     return;
   }
@@ -47,8 +47,8 @@ function* resize(): SagaIterator {
   const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const children = [
-    ...diagram.ownedElements.map(id => UMLElementRepository.get(elements[id])),
-    ...diagram.ownedRelationships.map(id => UMLRelationshipRepository.get(elements[id])),
+    ...diagram.ownedElements.map((id) => UMLElementRepository.get(elements[id])),
+    ...diagram.ownedRelationships.map((id) => UMLRelationshipRepository.get(elements[id])),
   ].filter(notEmpty);
   const container = UMLDiagramRepository.get(diagram);
 

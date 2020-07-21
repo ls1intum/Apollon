@@ -12,10 +12,10 @@ export const UMLElementCommonRepository = {
   /**
    * Creates new instances of `UMLElements`
    *
-   * @param values - An array of new values for the instances to create.
+   * @param value - An array of new values for the instances to create.
    * @param [owner] - Specify the owner for the new elements.
    */
-  create: <T extends IUMLElement>(value: T | T[], owner?: string): AsyncAction => async dispatch => {
+  create: <T extends IUMLElement>(value: T | T[], owner?: string): AsyncAction => async (dispatch) => {
     const values = Array.isArray(value) ? value : [value];
     dispatch<CreateAction<T>>({
       type: UMLElementActionTypes.CREATE,
@@ -23,7 +23,7 @@ export const UMLElementCommonRepository = {
       undoable: true,
     });
 
-    const roots = values.filter(x => !x.owner).map(x => x.id);
+    const roots = values.filter((x) => !x.owner).map((x) => x.id);
     if (roots.length) {
       dispatch(UMLContainerRepository.append(roots, owner));
     }
@@ -54,7 +54,7 @@ export const UMLElementCommonRepository = {
   /** Update existing elements */
   update: <T extends IUMLElement>(id: string | string[], values: Partial<T>): UpdateAction<T> => ({
     type: UMLElementActionTypes.UPDATE,
-    payload: { values: (Array.isArray(id) ? id : [id]).map(i => ({ id: i, ...values })) },
+    payload: { values: (Array.isArray(id) ? id : [id]).map((i) => ({ id: i, ...values })) },
     undoable: false,
   }),
 

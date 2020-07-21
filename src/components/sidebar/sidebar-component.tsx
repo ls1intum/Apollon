@@ -27,7 +27,7 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({
+    (state) => ({
       readonly: state.editor.readonly,
       mode: state.editor.mode,
       view: state.editor.view,

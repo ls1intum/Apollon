@@ -44,11 +44,11 @@ export function computeBoundingBoxForElements(elements: { bounds: IBoundary }[])
   if (!elements.length) {
     return { x: 0, y: 0, width: 0, height: 0 };
   }
-  const boundaries: IBoundary[] = elements.map<IBoundary>(element => ({ ...element.bounds }));
-  const x = Math.min(...boundaries.map(bounds => bounds.x));
-  const y = Math.min(...boundaries.map(bounds => bounds.y));
-  const width = Math.max(...boundaries.map(bounds => bounds.x + bounds.width)) - x;
-  const height = Math.max(...boundaries.map(bounds => bounds.y + bounds.height)) - y;
+  const boundaries: IBoundary[] = elements.map<IBoundary>((element) => ({ ...element.bounds }));
+  const x = Math.min(...boundaries.map((bounds) => bounds.x));
+  const y = Math.min(...boundaries.map((bounds) => bounds.y));
+  const width = Math.max(...boundaries.map((bounds) => bounds.x + bounds.width)) - x;
+  const height = Math.max(...boundaries.map((bounds) => bounds.y + bounds.height)) - y;
   return { x, y, width, height };
 }
 

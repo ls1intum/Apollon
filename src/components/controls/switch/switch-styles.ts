@@ -10,7 +10,7 @@ export type SwitchItemProps = {
   selected?: boolean;
 };
 
-export const StyledSwitchItem = styled(Button).attrs<SwitchItemProps>(props => ({
+export const StyledSwitchItem = styled(Button).attrs<SwitchItemProps>((props) => ({
   outline: !props.selected,
 }))<SwitchItemProps>`
   flex: 1 1 auto;

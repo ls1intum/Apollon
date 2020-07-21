@@ -35,7 +35,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 const enhance = compose<ComponentType<OwnProps>>(
   withCanvas,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    state => ({
+    (state) => ({
       readonly: state.editor.readonly,
       mode: state.editor.mode,
     }),

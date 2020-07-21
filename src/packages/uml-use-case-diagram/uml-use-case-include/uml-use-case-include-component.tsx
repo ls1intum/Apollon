@@ -22,7 +22,7 @@ const Arrow: SFC<{ id: string } & SVGProps<SVGPathElement>> = ({ id, ...props })
 );
 
 export const UMLUseCaseIncludeComponent: SFC<Props> = ({ element }) => {
-  const [start, end] = element.path.map(p => new Point(p.x, p.y));
+  const [start, end] = element.path.map((p) => new Point(p.x, p.y));
   const line = end.subtract(start);
 
   if (line.length <= 100) {

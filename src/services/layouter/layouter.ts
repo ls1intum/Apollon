@@ -27,8 +27,8 @@ function* layout(): SagaIterator {
   const layer: ILayer = yield getContext('layer');
   const { elements, diagram }: ModelState = yield select();
   const ids = Object.values(elements)
-    .filter(x => !x.owner)
-    .map(x => x.id);
+    .filter((x) => !x.owner)
+    .map((x) => x.id);
 
   if (!ids.length) {
     return;
@@ -54,8 +54,8 @@ function* renderDiagram(): SagaIterator {
   const diagram = UMLDiagramRepository.get(original)!;
 
   const children = [
-    ...diagram.ownedElements.map(x => UMLElementRepository.get(elements[x])),
-    ...diagram.ownedRelationships.map(x => UMLRelationshipRepository.get(elements[x])),
+    ...diagram.ownedElements.map((x) => UMLElementRepository.get(elements[x])),
+    ...diagram.ownedRelationships.map((x) => UMLRelationshipRepository.get(elements[x])),
   ].filter(notEmpty);
 
   return diagram.render(canvas, children);
@@ -66,7 +66,7 @@ function* renderContainer(id: string): SagaIterator {
   const canvas: ILayer = yield getContext('layer');
   const container = UMLContainerRepository.get(elements[id])!;
 
-  const children = container.ownedElements.map(x => UMLElementRepository.get(elements[x])).filter(notEmpty);
+  const children = container.ownedElements.map((x) => UMLElementRepository.get(elements[x])).filter(notEmpty);
 
   return container.render(canvas, children);
 }
@@ -102,7 +102,7 @@ export function* render(id: string): SagaIterator {
       width: update.bounds.width - original.bounds.width,
       height: update.bounds.height - original.bounds.height,
     };
-    if (Object.values(size).some(x => x !== 0)) {
+    if (Object.values(size).some((x) => x !== 0)) {
       yield put<ResizeAction>({
         type: ResizingActionTypes.RESIZE,
         payload: { ids: [update.id], delta: size },
@@ -118,7 +118,7 @@ export function* render(id: string): SagaIterator {
       x: update.bounds.x - original.bounds.x,
       y: update.bounds.y - original.bounds.y,
     };
-    if (Object.values(position).some(x => x !== 0)) {
+    if (Object.values(position).some((x) => x !== 0)) {
       yield put<MoveAction>({
         type: MovingActionTypes.MOVE,
         payload: { ids: [update.id], delta: position },

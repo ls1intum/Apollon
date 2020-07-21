@@ -50,12 +50,9 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      delete: UMLElementRepository.delete,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    delete: UMLElementRepository.delete,
+  }),
 );
 
 export const DefaultRelationshipPopup = enhance(DefaultRelationshipPopupComponent);

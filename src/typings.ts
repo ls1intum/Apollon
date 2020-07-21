@@ -18,7 +18,7 @@ export type ApollonOptions = {
   model?: UMLModel;
   theme?: DeepPartial<Styles>;
   locale?: Locale;
-  copyPasteToClipboard?: boolean
+  copyPasteToClipboard?: boolean;
 };
 
 export type Selection = {

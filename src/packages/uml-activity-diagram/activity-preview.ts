@@ -25,11 +25,15 @@ export const composeActivityPreview: ComposePreview = (
   elements.push(new UMLActivityFinalNode());
 
   // Activity Action Node
-  const activityActionNode = new UMLActivityActionNode({ name: translate('packages.ActivityDiagram.ActivityActionNode') });
+  const activityActionNode = new UMLActivityActionNode({
+    name: translate('packages.ActivityDiagram.ActivityActionNode'),
+  });
   elements.push(activityActionNode);
 
   // Activity Object Node
-  const activityObjectNode = new UMLActivityObjectNode({ name: translate('packages.ActivityDiagram.ActivityObjectNode') });
+  const activityObjectNode = new UMLActivityObjectNode({
+    name: translate('packages.ActivityDiagram.ActivityObjectNode'),
+  });
   elements.push(activityObjectNode);
 
   // Activity Merge Node

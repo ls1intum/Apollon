@@ -14,7 +14,7 @@ export const SelectableReducer: Reducer<SelectableState, Actions> = (state = [],
     case SelectableActionTypes.DESELECT: {
       const { payload } = action;
 
-      return state.filter(id => !payload.ids.includes(id));
+      return state.filter((id) => !payload.ids.includes(id));
     }
   }
 

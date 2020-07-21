@@ -12,11 +12,11 @@ export function composeSaga(sagas: Saga[]): Effect {
 }
 
 export function run(sagas: Saga[]): Effect {
-  return all(sagas.map(saga => keepAlive(safely(saga))));
+  return all(sagas.map((saga) => keepAlive(safely(saga))));
 }
 
 export const keepAlive = (saga: Saga): Effect => {
-  return spawn(function*() {
+  return spawn(function* () {
     while (true) {
       yield call(saga);
     }

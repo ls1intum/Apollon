@@ -7,7 +7,7 @@
     "curly": [true, "ignore-same-line"],
     "member-access": [true, "no-public"],
     "semicolon": [true, "always", "ignore-bound-class-methods"],
-    "arrow-parens": [true, "ban-single-arg-parens"],
+    "arrow-parens": [true],
     "no-empty": [true, "allow-empty-catch"],
     "interface-name": false,
     "unified-signatures": false,

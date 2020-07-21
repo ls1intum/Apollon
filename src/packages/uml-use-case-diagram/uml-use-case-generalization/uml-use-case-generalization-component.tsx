@@ -17,7 +17,7 @@ export const UMLUseCaseGeneralizationComponent: SFC<Props> = ({ element }) => (
       <path d="M0,1 L0,29 L30,15 z" fill="white" stroke="black" />
     </marker>
     <polyline
-      points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
+      points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
       stroke="black"
       fill="none"
       strokeWidth={1}

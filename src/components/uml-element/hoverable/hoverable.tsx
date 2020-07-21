@@ -14,13 +14,10 @@ type DispatchProps = {
 
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
-const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
-  null,
-  {
-    hover: UMLElementRepository.hover,
-    leave: UMLElementRepository.leave,
-  },
-);
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(null, {
+  hover: UMLElementRepository.hover,
+  leave: UMLElementRepository.leave,
+});
 
 export const hoverable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,

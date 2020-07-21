@@ -15,7 +15,9 @@ export const composeComponentPreview: ComposePreview = (
   elements.push(umlComponent);
 
   // UML Deployment Artifact
-  const umlComponentInterface = new UMLComponentInterface({ name: translate('packages.ComponentDiagram.ComponentInterface') });
+  const umlComponentInterface = new UMLComponentInterface({
+    name: translate('packages.ComponentDiagram.ComponentInterface'),
+  });
   const [umlInterface] = umlComponentInterface.render(layer) as [UMLElement];
   elements.push(umlInterface);
 

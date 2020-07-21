@@ -49,7 +49,7 @@ export const movable = (
       y = Math.round(y / 10) * 10;
       if (x === 0 && y === 0) return;
 
-      this.setState(state => ({ offset: state.offset.add(x, y) }));
+      this.setState((state) => ({ offset: state.offset.add(x, y) }));
       this.props.move({ x, y });
     };
 

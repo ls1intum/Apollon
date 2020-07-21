@@ -30,7 +30,7 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
    * reorders children -> default, do nothing
    */
   reorderChildren(children: IUMLElement[]): string[] {
-    return children.map(child => child.id);
+    return children.map((child) => child.id);
   }
 
   /** Serializes an `UMLElement` to an `Apollon.UMLElement` */
@@ -43,7 +43,7 @@ export abstract class UMLContainer extends UMLElement implements IUMLContainer {
 
   deserialize<T extends Apollon.UMLModelElement>(values: T, children: Apollon.UMLModelElement[] = []) {
     super.deserialize(values);
-    this.ownedElements = children.map(child => child.id);
+    this.ownedElements = children.map((child) => child.id);
   }
 
   abstract render(canvas: ILayer, children?: ILayoutable[]): ILayoutable[];

@@ -42,7 +42,7 @@ class ActivityControlFlowUpdate extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Textfield value={element.name} onChange={this.rename} autoFocus />
+          <Textfield value={element.name} onChange={this.rename} autoFocus={true} />
         </section>
       </div>
     );
@@ -69,14 +69,11 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    null,
-    {
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    flip: UMLRelationshipRepository.flip,
+  }),
 );
 
 export const UMLActivityControlFlowUpdate = enhance(ActivityControlFlowUpdate);

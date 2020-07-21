@@ -45,8 +45,8 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
     return {
       ...super.serialize(children),
       type: this.type as UMLElementType,
-      attributes: children.filter(x => x instanceof UMLClassifierAttribute).map(x => x.id),
-      methods: children.filter(x => x instanceof UMLClassifierMethod).map(x => x.id),
+      attributes: children.filter((x) => x instanceof UMLClassifierAttribute).map((x) => x.id),
+      methods: children.filter((x) => x instanceof UMLClassifierMethod).map((x) => x.id),
     };
   }
 

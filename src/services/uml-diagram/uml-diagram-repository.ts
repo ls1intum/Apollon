@@ -23,11 +23,13 @@ export const UMLDiagramRepository = {
     });
   },
 
-  bringToFront: (id: string | string[]): AsyncAction => (dispatch, getState) => {
-    const ids = (Array.isArray(id) ? id : [id]).filter((id) => getState().diagram.ownedElements.includes(id));
+  bringToFront: (elementId: string | string[]): AsyncAction => (dispatch, getState) => {
+    const ids = (Array.isArray(elementId) ? elementId : [elementId]).filter((id) =>
+      getState().diagram.ownedElements.includes(id),
+    );
     dispatch<ReorderElementsAction>({
       type: UMLDiagramActionTypes.BRING_TO_FRONT,
-      payload: { ids: ids },
+      payload: { ids },
       undoable: false,
     });
   },

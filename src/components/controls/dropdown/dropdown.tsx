@@ -41,7 +41,7 @@ export class Dropdown<T> extends Component<Props<T>, State> {
     const { color, outline, size } = this.props;
     const { show, top, left, width } = this.state;
     const selected = Children.toArray<ReactElement<ItemProps<T>>>(this.props.children).find(
-      item => item.props.value === this.props.value,
+      (item) => item.props.value === this.props.value,
     );
 
     return (

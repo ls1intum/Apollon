@@ -80,7 +80,7 @@ const getInitialState = ({ model, options }: Props): State => {
   const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
     const element = new UMLElements[apollonElement.type]();
     const apollonChildren: Apollon.UMLElement[] = UMLContainer.isUMLContainer(element)
-      ? apollonElements.filter(child => child.owner === apollonElement.id)
+      ? apollonElements.filter((child) => child.owner === apollonElement.id)
       : [];
 
     element.deserialize(apollonElement, apollonChildren);
@@ -90,8 +90,8 @@ const getInitialState = ({ model, options }: Props): State => {
     );
 
     const [root, ...updates] = element.render(layer, children) as UMLElement[];
-    updates.map(x => {
-      const original = apollonChildren.find(y => y.id === x.id);
+    updates.map((x) => {
+      const original = apollonChildren.find((y) => y.id === x.id);
       if (!original) {
         return x;
       }
@@ -104,10 +104,10 @@ const getInitialState = ({ model, options }: Props): State => {
   };
 
   const elements = apollonElements
-    .filter(element => !element.owner)
+    .filter((element) => !element.owner)
     .reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
 
-  const relationships = apollonRelationships.map<UMLRelationship>(apollonRelationship => {
+  const relationships = apollonRelationships.map<UMLRelationship>((apollonRelationship) => {
     const relationship = new UMLRelationships[apollonRelationship.type]();
     relationship.deserialize(apollonRelationship);
     return relationship;
@@ -117,20 +117,20 @@ const getInitialState = ({ model, options }: Props): State => {
     (acc, val) => ({ ...acc, [val.id]: val }),
     {},
   );
-  const roots = Object.values(elementState).filter(element => !element.owner);
+  const roots = Object.values(elementState).filter((element) => !element.owner);
 
-  let layout = new Set<string>(Object.values(elementState).map(x => x.id));
+  let layout = new Set<string>(Object.values(elementState).map((x) => x.id));
   if (options && options.include) {
     layout = includeChildren(
       elementState,
-      new Set<string>(roots.map(element => element.id)),
+      new Set<string>(roots.map((element) => element.id)),
       new Set<string>(options.include),
     );
   }
   if (options && options.exclude) {
     layout = excludeChildren(
       elementState,
-      new Set<string>(roots.map(element => element.id)),
+      new Set<string>(roots.map((element) => element.id)),
       new Set<string>(options.exclude),
     );
   }
@@ -138,7 +138,7 @@ const getInitialState = ({ model, options }: Props): State => {
   const keepOriginalSize = (options && options.keepOriginalSize) || false;
 
   const bounds = computeBoundingBoxForElements(
-    Object.values(elementState).filter(element => keepOriginalSize || layout.has(element.id)),
+    Object.values(elementState).filter((element) => keepOriginalSize || layout.has(element.id)),
   );
 
   if (options) {
@@ -150,8 +150,8 @@ const getInitialState = ({ model, options }: Props): State => {
   }
 
   const state = Object.values(elementState)
-    .filter(element => layout.has(element.id))
-    .map(element => {
+    .filter((element) => layout.has(element.id))
+    .map((element) => {
       element.bounds.x -= bounds.x;
       element.bounds.y -= bounds.y;
       return element;

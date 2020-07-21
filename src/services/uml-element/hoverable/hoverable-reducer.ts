@@ -14,7 +14,7 @@ export const HoverableReducer: Reducer<HoverableState, Actions> = (state = [], a
     case HoverableActionTypes.LEAVE: {
       const { payload } = action;
 
-      return state.filter(id => !payload.ids.includes(id));
+      return state.filter((id) => !payload.ids.includes(id));
     }
   }
 

@@ -3,14 +3,14 @@ import { Props } from './popover';
 
 export const PopoverContainer = styled.div<Props>`
   background-clip: padding-box;
-  background-color: ${props => props.theme.color.gray100};
-  border: 1px solid ${props => props.theme.color.black}33;
+  background-color: ${(props) => props.theme.color.gray100};
+  border: 1px solid ${(props) => props.theme.color.black}33;
   border-radius: 0.3em;
   box-sizing: border-box;
   display: block;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
-  font-family: ${props => props.theme.font.family};
-  font-size: ${props => props.theme.font.size}px;
+  font-family: ${(props) => props.theme.font.family};
+  font-size: ${(props) => props.theme.font.size}px;
   font-style: normal;
   font-weight: 400;
   left: 0;
@@ -37,7 +37,7 @@ export const PopoverContainer = styled.div<Props>`
     box-sizing: inherit;
   }
 
-  ${props => {
+  ${(props) => {
     let x = `${props.position.x}px`;
     let y = `${props.position.y}px`;
     const alignment = props.alignment === 'start' ? 0 : props.alignment === 'end' ? 100 : 50;
@@ -67,10 +67,10 @@ export const PopoverContainer = styled.div<Props>`
 `;
 
 export const PopoverBody = styled.div<Pick<Props, 'maxHeight'>>`
-  color: ${props => props.theme.font.color};
+  color: ${(props) => props.theme.font.color};
   padding: 0.5em 0.75em;
 
-  ${props =>
+  ${(props) =>
     props.maxHeight &&
     css`
       max-height: ${props.maxHeight}px;
@@ -82,13 +82,13 @@ const ArrowTop = css`
   bottom: calc((0.5em + 1px) * -1);
 
   &::before {
-    border-top-color: ${props => props.theme.color.black}33;
+    border-top-color: ${(props) => props.theme.color.black}33;
     border-width: 0.5em 0.5em 0;
     bottom: 0;
   }
 
   &::after {
-    border-top-color: ${props => props.theme.color.gray100};
+    border-top-color: ${(props) => props.theme.color.gray100};
     border-width: 0.5em 0.5em 0;
     bottom: 1px;
   }
@@ -100,13 +100,13 @@ const ArrowRight = css`
   width: 0.5em;
 
   &::before {
-    border-right-color: ${props => props.theme.color.black}33;
+    border-right-color: ${(props) => props.theme.color.black}33;
     border-width: 0.5em 0.5em 0.5em 0;
     left: 0;
   }
 
   &::after {
-    border-right-color: ${props => props.theme.color.gray100};
+    border-right-color: ${(props) => props.theme.color.gray100};
     border-width: 0.5em 0.5em 0.5em 0;
     left: 1px;
   }
@@ -116,13 +116,13 @@ const ArrowBottom = css`
   top: calc((0.5em + 1px) * -1);
 
   &::before {
-    border-bottom-color: ${props => props.theme.color.black}33;
+    border-bottom-color: ${(props) => props.theme.color.black}33;
     border-width: 0 0.5em 0.5em 0.5em;
     top: 0;
   }
 
   &::after {
-    border-bottom-color: ${props => props.theme.color.gray100};
+    border-bottom-color: ${(props) => props.theme.color.gray100};
     border-width: 0 0.5em 0.5em 0.5em;
     top: 1px;
   }
@@ -134,13 +134,13 @@ const ArrowLeft = css`
   width: 0.5em;
 
   &::before {
-    border-left-color: ${props => props.theme.color.black}33;
+    border-left-color: ${(props) => props.theme.color.black}33;
     border-width: 0.5em 0 0.5em 0.5em;
     right: 0;
   }
 
   &::after {
-    border-left-color: ${props => props.theme.color.gray100};
+    border-left-color: ${(props) => props.theme.color.gray100};
     border-width: 0.5em 0 0.5em 0.5em;
     right: 1px;
   }
@@ -163,12 +163,12 @@ export const Arrow = styled.div<ArrowProps>`
     position: absolute;
   }
 
-  ${props => props.placement === 'top' && ArrowTop}
-  ${props => props.placement === 'right' && ArrowRight}
-  ${props => props.placement === 'bottom' && ArrowBottom}
-  ${props => props.placement === 'left' && ArrowLeft}
+  ${(props) => props.placement === 'top' && ArrowTop}
+  ${(props) => props.placement === 'right' && ArrowRight}
+  ${(props) => props.placement === 'bottom' && ArrowBottom}
+  ${(props) => props.placement === 'left' && ArrowLeft}
 
-  ${props =>
+  ${(props) =>
     props.placement === 'top' || props.placement === 'bottom'
       ? props.alignment === 'start'
         ? 'left: 0.3em;'

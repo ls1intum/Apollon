@@ -51,7 +51,7 @@ export const Connectable = {
     if (connections.length) {
       const type: UMLRelationshipType = DefaultUMLRelationshipType[getState().diagram.type];
       const Classifier = UMLRelationships[type];
-      const relationships = connections.map(connection => new Classifier(connection));
+      const relationships = connections.map((connection) => new Classifier(connection));
 
       dispatch(UMLElementCommonRepository.create(relationships));
     }

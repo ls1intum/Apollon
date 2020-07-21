@@ -13,8 +13,8 @@ export const Ghost = styled.div.attrs<GhostProps>(({ position }) => ({
   will-change: transform;
   pointer-events: none;
   margin: -5px;
-  font-family: ${props => props.theme.font.family};
-  font-size: ${props => props.theme.font.size}px;
+  font-family: ${(props) => props.theme.font.family};
+  font-size: ${(props) => props.theme.font.size}px;
 
   svg {
     fill-opacity: 0.7;

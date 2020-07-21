@@ -14,7 +14,7 @@ export const InteractableReducer: Reducer<InteractableState, Actions> = (state =
     case InteractableActionTypes.DESELECT: {
       const { payload } = action;
 
-      return state.filter(id => !payload.ids.includes(id));
+      return state.filter((id) => !payload.ids.includes(id));
     }
   }
 

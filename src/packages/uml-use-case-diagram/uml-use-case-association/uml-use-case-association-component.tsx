@@ -3,7 +3,7 @@ import { Point } from '../../../utils/geometry/point';
 import { UMLUseCaseAssociation } from './uml-use-case-association';
 
 export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
-  const [start, end] = element.path.map(p => new Point(p.x, p.y));
+  const [start, end] = element.path.map((p) => new Point(p.x, p.y));
   const line = end.subtract(start);
   const norm = line.normalize();
   const center = start.add(norm.scale(0.5 * line.length));
@@ -36,7 +36,12 @@ export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
           {element.name}
         </textPath>
       </text>
-      <polyline points={element.path.map(point => `${point.x} ${point.y}`).join(',')} stroke="black" fill="none" strokeWidth={1} />
+      <polyline
+        points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
+        stroke="black"
+        fill="none"
+        strokeWidth={1}
+      />
     </g>
   );
 };

@@ -85,7 +85,7 @@ class ClassifierUpdate extends Component<Props, State> {
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
+            <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus={true} />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -155,7 +155,7 @@ class ClassifierUpdate extends Component<Props, State> {
             onKeyDown={(event) => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
-              //then set focus to newAttributeField field again (componentDidUpdate)
+              // then set focus to newAttributeField field again (componentDidUpdate)
               if (event.key === 'Tab' && event.currentTarget.value) {
                 event.preventDefault();
                 event.currentTarget.blur();
@@ -202,7 +202,7 @@ class ClassifierUpdate extends Component<Props, State> {
             onKeyDown={(event) => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
-              //then set focus to newMethodField field again (componentDidUpdate)
+              // then set focus to newMethodField field again (componentDidUpdate)
               if (event.key === 'Tab' && event.currentTarget.value) {
                 event.preventDefault();
                 event.currentTarget.blur();

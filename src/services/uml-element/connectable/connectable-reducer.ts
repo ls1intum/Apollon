@@ -13,7 +13,7 @@ export const ConnectableReducer: Reducer<ConnectableState, Actions> = (state = [
     case ConnectableActionTypes.END: {
       const { payload } = action;
 
-      return state.filter(port => !payload.ports.includes(port));
+      return state.filter((port) => !payload.ports.includes(port));
     }
     case UMLElementActionTypes.DELETE: {
       const { payload } = action;

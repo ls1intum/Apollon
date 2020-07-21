@@ -24,14 +24,11 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
-  null,
-  {
-    start: UMLElementRepository.startResizing,
-    resize: UMLElementRepository.resize,
-    end: UMLElementRepository.endResizing,
-  },
-);
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(null, {
+  start: UMLElementRepository.startResizing,
+  resize: UMLElementRepository.resize,
+  end: UMLElementRepository.endResizing,
+});
 
 const Handle = styled.rect.attrs({
   x: '100%',
@@ -73,7 +70,7 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
       if (options && options.preventY) height = 0;
       if (width === 0 && height === 0) return;
 
-      this.setState(state => ({ offset: state.offset.add(width, height) }));
+      this.setState((state) => ({ offset: state.offset.add(width, height) }));
       this.props.resize({ width, height });
     };
 

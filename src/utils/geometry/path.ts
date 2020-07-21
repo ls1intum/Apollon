@@ -7,7 +7,7 @@ export class Path {
 
   get length(): number {
     return this.path
-      .map(point => new Point(point.x, point.y))
+      .map((point) => new Point(point.x, point.y))
       .reduce(
         (length, point, i, points) => (i + 1 < points.length ? length + points[i + 1].subtract(point).length : length),
         0,

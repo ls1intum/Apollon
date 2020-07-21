@@ -14,7 +14,7 @@ export const MovableReducer: Reducer<MovableState, Actions> = (state = [], actio
     case MovableActionTypes.END: {
       const { payload } = action;
 
-      return state.filter(id => !payload.ids.includes(id));
+      return state.filter((id) => !payload.ids.includes(id));
     }
   }
 

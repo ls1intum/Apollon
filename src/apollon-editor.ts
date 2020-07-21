@@ -218,7 +218,7 @@ export class ApollonEditor {
 
     const element = createElement(Application, {
       ref: this.application,
-      state: state,
+      state,
       styles: this.options.theme,
       locale: this.options.locale,
     });

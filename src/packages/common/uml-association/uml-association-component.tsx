@@ -66,7 +66,7 @@ const Marker = {
 };
 
 export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
-  const marker = (type => {
+  const marker = ((type) => {
     switch (type) {
       case ClassRelationshipType.ClassDependency:
       case ClassRelationshipType.ClassUnidirectional:
@@ -81,7 +81,7 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
     }
   })(element.type);
 
-  const stroke = (type => {
+  const stroke = ((type) => {
     switch (type) {
       case ClassRelationshipType.ClassDependency:
       case ClassRelationshipType.ClassRealization:
@@ -122,7 +122,7 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
     }
   };
 
-  const path = element.path.map(point => new Point(point.x, point.y));
+  const path = element.path.map((point) => new Point(point.x, point.y));
   const source: Point = computeTextPosition(path);
   const target: Point = computeTextPosition(path.reverse(), !!marker);
   const id = `marker-${element.id}`;
@@ -131,7 +131,7 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
     <g>
       {marker && marker(id)}
       <polyline
-        points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
+        points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
         stroke="black"
         fill="none"
         strokeWidth={1}
