@@ -41,11 +41,13 @@ export const Connectable = {
 
     const connections: Connection[] = [];
     for (const [index, port] of sources.entries()) {
-      if (port.element === targets[index].element && port.direction === targets[index].direction) {
+      // try to connect to target - if target.length === 1 -> connect to same element
+      const connectionTarget = targets.length === 1 ? targets[0] : targets[index];
+      if (port.element === connectionTarget.element && port.direction === targets[index].direction) {
         continue;
       }
 
-      connections.push({ source: port, target: targets.length === 1 ? targets[0] : targets[index] });
+      connections.push({ source: port, target: connectionTarget });
     }
 
     if (connections.length) {
