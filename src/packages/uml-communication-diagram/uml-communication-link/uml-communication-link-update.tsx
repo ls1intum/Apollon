@@ -75,7 +75,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
           {element.messages.map((message, i) => (
             <Flex key={i}>
               <Textfield
-                ref={(ref) => (this.messageRefs[i] = ref)}
+                ref={ref => (this.messageRefs[i] = ref)}
                 gutter={true}
                 value={message.name}
                 onChange={this.rename(message)}
@@ -83,8 +83,8 @@ class CommunicationLinkUpdate extends Component<Props, State> {
                   i === element.messages.length - 1
                     ? this.newCommunicationLinkField.current?.focus()
                     : this.setState({
-                        fieldToFocus: this.messageRefs[i + 1],
-                      })
+                      fieldToFocus: this.messageRefs[i + 1],
+                    })
                 }
               />
               <Button color="link" tabIndex={-1} onClick={this.flip(message)}>
@@ -105,17 +105,17 @@ class CommunicationLinkUpdate extends Component<Props, State> {
                 fieldToFocus: this.newCommunicationLinkField.current,
               })
             }
-            onKeyDown={(event) => {
+            onKeyDown={event => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
               // then set focus to newCommunicationLink field again (componentDidUpdate)
               if (event.key === 'Tab' && event.currentTarget.value) {
-                event.preventDefault();
-                event.currentTarget.blur();
-                this.setState({
-                  fieldToFocus: this.newCommunicationLinkField.current,
-                });
-              }
+              event.preventDefault();
+              event.currentTarget.blur();
+              this.setState({
+              fieldToFocus: this.newCommunicationLinkField.current,
+            });
+            }
             }}
           />
         </section>
@@ -125,7 +125,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
 
   private create = (value: string) => {
     const { element, update } = this.props;
-    if (!element.messages.find((message) => message.name === value)) {
+    if (!element.messages.find(message => message.name === value)) {
       update<UMLCommunicationLink>(element.id, {
         messages: [...element.messages, { name: value, direction: 'source' }],
       });
@@ -135,7 +135,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
   private rename = (value: CommunicationMessage) => (name: string) => {
     const { element, update } = this.props;
     const messages: CommunicationMessage[] = [...element.messages];
-    const index = messages.findIndex((message) => message.name === value.name);
+    const index = messages.findIndex(message => message.name === value.name);
     messages[index].name = name;
     update<UMLCommunicationLink>(element.id, { messages });
   };
@@ -143,7 +143,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
   private flip = (value: CommunicationMessage) => () => {
     const { element, update } = this.props;
     const messages: CommunicationMessage[] = [...element.messages];
-    const index = messages.findIndex((message) => message.name === value.name);
+    const index = messages.findIndex(message => message.name === value.name);
     messages[index].direction = messages[index].direction === 'source' ? 'target' : 'source';
     update<UMLCommunicationLink>(element.id, { messages });
   };
@@ -151,7 +151,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
   private delete = (value: CommunicationMessage) => () => {
     const { element, update } = this.props;
     update<UMLCommunicationLink>(element.id, {
-      messages: element.messages.filter((message) => message.name !== value.name),
+      messages: element.messages.filter(message => message.name !== value.name),
     });
   };
 }

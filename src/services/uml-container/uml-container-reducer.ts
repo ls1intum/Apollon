@@ -24,7 +24,7 @@ export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {
                   // TODO: find better solution for this
                   // hacky: create new Element of Container type to reorder children. This must be done, because js prototype is lost in redux state
                   (new UMLElements[container.type as UMLElementType]() as UMLContainer).reorderChildren(
-                    [...container.ownedElements, ...payload.ids].map((id) => state[id]),
+                    [...container.ownedElements, ...payload.ids].map(id => state[id]),
                   ),
                 ),
               ],

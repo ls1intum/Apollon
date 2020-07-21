@@ -37,8 +37,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext & RootContext
 const enhance = compose<ComponentClass<OwnProps>>(
   withCanvas,
   withRoot,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    (state) => ({
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(state => ({
       element: state.elements[state.updating[0]],
       disabled: !state.editor.enablePopups,
       mode: state.editor.mode,

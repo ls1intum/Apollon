@@ -1,4 +1,5 @@
-export function debounce(func: (...args: any[]) => any, wait: number = 0) {
+// tslint:disable-next-line:ban-types
+export function debounce(func: Function, wait: number = 0) {
   let timeout: number | undefined;
   return function (...args: any[]) {
     // @ts-ignore

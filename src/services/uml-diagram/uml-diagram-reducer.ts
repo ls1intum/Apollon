@@ -20,7 +20,7 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, Actions> = (state = new
       if (state.id !== payload.owner) {
         return {
           ...state,
-          ownedElements: state.ownedElements.filter((id) => !payload.ids.includes(id)),
+          ownedElements: state.ownedElements.filter(id => !payload.ids.includes(id)),
         };
       }
 
@@ -35,7 +35,7 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, Actions> = (state = new
       // order in svg 1.2 is defined by rendering order -> change rendering order to draw one element in front of another
       return {
         ...state,
-        ownedElements: [...state.ownedElements].filter((id) => !ids.includes(id)).concat(ids),
+        ownedElements: [...state.ownedElements].filter(id => !ids.includes(id)).concat(ids),
       };
     }
     case UMLContainerActionTypes.REMOVE: {
@@ -43,8 +43,8 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, Actions> = (state = new
 
       return {
         ...state,
-        ownedElements: state.ownedElements.filter((id) => !payload.ids.includes(id)),
-        ownedRelationships: state.ownedRelationships.filter((id) => !payload.ids.includes(id)),
+        ownedElements: state.ownedElements.filter(id => !payload.ids.includes(id)),
+        ownedRelationships: state.ownedRelationships.filter(id => !payload.ids.includes(id)),
       };
     }
     case ResizingActionTypes.RESIZE: {

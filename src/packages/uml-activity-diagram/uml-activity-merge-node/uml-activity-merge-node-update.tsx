@@ -89,11 +89,11 @@ const enhance = compose<ComponentClass<OwnProps>>(
     (state, props) => {
       const decisions = Object.values(state.elements)
         .filter((x): x is IUMLRelationship => UMLRelationship.isUMLRelationship(x))
-        .filter((x) => x.source.element === props.element.id);
+        .filter(x => x.source.element === props.element.id);
 
       return {
         decisions,
-        targets: decisions.map((relationship) => state.elements[relationship.target.element]),
+        targets: decisions.map(relationship => state.elements[relationship.target.element]),
       };
     },
     {

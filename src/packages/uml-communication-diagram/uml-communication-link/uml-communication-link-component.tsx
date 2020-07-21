@@ -4,14 +4,14 @@ import { Point } from '../../../utils/geometry/point';
 import { CommunicationMessage, UMLCommunicationLink } from './uml-communication-link';
 
 export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
-  const sources: CommunicationMessage[] = element.messages.filter((message) => message.direction === 'source');
-  const targets: CommunicationMessage[] = element.messages.filter((message) => message.direction === 'target');
+  const sources: CommunicationMessage[] = element.messages.filter(message => message.direction === 'source');
+  const targets: CommunicationMessage[] = element.messages.filter(message => message.direction === 'target');
 
   let position = { x: 0, y: 0 };
   let direction: Direction = Direction.Left;
   // maps element.path to Point to get methods
   // element.path contains start and end point + direction change points
-  const path = element.path.map((point) => new Point(point.x, point.y));
+  const path = element.path.map(point => new Point(point.x, point.y));
   // half distance of total connection
   let distance =
     path.reduce(
@@ -176,7 +176,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
       }
 
       <polyline
-        points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
+        points={element.path.map(point => `${point.x} ${point.y}`).join(',')}
         stroke="black"
         fill="none"
         strokeWidth={1}
