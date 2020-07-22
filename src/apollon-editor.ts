@@ -110,7 +110,11 @@ export class ApollonEditor {
       locale: options.locale,
     });
     render(element, container, this.componentDidMount);
-    this.currentModel = this.model;
+    try {
+      this.currentModel = this.model;
+    } catch (error) {
+      this.currentModel = undefined;
+    }
   }
 
   destroy() {
@@ -198,18 +202,22 @@ export class ApollonEditor {
   };
 
   private notifyModelSubscribers = debounce(() => {
-    // if store is not available -> apollon-editor is destroyed
-    // -> no need to emit latest changes
-    if (!this.store) return;
-    const model = this.model;
-    if (
-      (!this.currentModel && model) ||
-      (this.currentModel && JSON.stringify(model) !== JSON.stringify(this.currentModel))
-    ) {
-      this.modelSubscribers.forEach((subscriber) => subscriber(model));
-      this.currentModel = model;
-    } else {
-      this.currentModel = model;
+    try {
+      // if state not available -> do not emit changes
+      if (!this.store) return;
+      const model = this.model;
+      if (
+        (!this.currentModel && model) ||
+        (this.currentModel && JSON.stringify(model) !== JSON.stringify(this.currentModel))
+      ) {
+        this.modelSubscribers.forEach((subscriber) => subscriber(model));
+        this.currentModel = model;
+      } else {
+        this.currentModel = model;
+      }
+    } catch (error) {
+      // if error occured while getting current state for subscribers -> do not emit changes
+      // -> no need to emit latest changes
     }
   }, 50);
 
