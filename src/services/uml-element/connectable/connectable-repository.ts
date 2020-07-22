@@ -20,7 +20,7 @@ export const Connectable = {
       : getState()
           .selected.map((elementId) => dispatch(UMLElementCommonRepository.getById(elementId)))
           .filter((element) => element !== null)
-          .filter((element) => UMLElements[element!.type as UMLElementType].features.connectable === true)
+          .filter((element) => UMLElements[element!.type as UMLElementType].features.connectable)
           .map((element) => element!.id);
     const directions = Array.isArray(direction) ? direction : [direction];
     if (!ids.length || (directions.length !== 1 && directions.length !== ids.length)) {
@@ -53,7 +53,7 @@ export const Connectable = {
     for (const [index, port] of sources.entries()) {
       // try to connect to target - if target.length === 1 -> connect to same element
       const connectionTarget = targets.length === 1 ? targets[0] : targets[index];
-      if (port.element === connectionTarget.element && port.direction === targets[index].direction) {
+      if (port.element === connectionTarget.element && port.direction === connectionTarget.direction) {
         continue;
       }
 
