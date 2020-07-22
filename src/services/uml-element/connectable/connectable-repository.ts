@@ -5,20 +5,30 @@ import { Connection } from '../../uml-relationship/connection';
 import { UMLElementCommonRepository } from '../uml-element-common-repository';
 import { Direction, IUMLElementPort } from '../uml-element-port';
 import { ConnectableActionTypes, ConnectEndAction, ConnectStartAction } from './connectable-types';
+import { UMLElements } from '../../../packages/uml-elements';
+import { UMLElementType } from '../../..';
 
 export const Connectable = {
   startConnecting: (direction: Direction | Direction[], id?: string | string[]): AsyncAction => (
     dispatch,
     getState,
   ) => {
-    const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
+    const ids = id
+      ? Array.isArray(id)
+        ? id
+        : [id]
+      : getState()
+          .selected.map((elementId) => dispatch(UMLElementCommonRepository.getById(elementId)))
+          .filter((element) => element !== null)
+          .filter((element) => UMLElements[element!.type as UMLElementType].features.connectable === true)
+          .map((element) => element!.id);
     const directions = Array.isArray(direction) ? direction : [direction];
     if (!ids.length || (directions.length !== 1 && directions.length !== ids.length)) {
       return;
     }
 
-    const ports = ids.map<IUMLElementPort>((element, index) => ({
-      element,
+    const ports = ids.map<IUMLElementPort>((elementId, index) => ({
+      element: elementId,
       direction: directions.length === 1 ? directions[0] : directions[index],
     }));
 
