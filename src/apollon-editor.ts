@@ -17,7 +17,6 @@ import { Dispatch } from './utils/actions/actions';
 import { UMLDiagramType, UMLModel } from './typings';
 import { debounce } from './utils/debounce';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
-import { uuid } from './utils/uuid';
 
 export class ApollonEditor {
   get model(): Apollon.UMLModel {
@@ -112,12 +111,7 @@ export class ApollonEditor {
       styles: options.theme,
       locale: options.locale,
     });
-    const errorBoundary = createElement(
-      ErrorBoundary,
-      // use key to force react to redraw
-      { onError: this.onErrorOccurred.bind(this), key: uuid() },
-      element,
-    );
+    const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     render(errorBoundary, container, this.componentDidMount);
     try {
       this.currentModelState = this.store?.getState();
@@ -245,12 +239,7 @@ export class ApollonEditor {
       styles: this.options.theme,
       locale: this.options.locale,
     });
-    const errorBoundary = createElement(
-      ErrorBoundary,
-      // use key to force react to redraw
-      { onError: this.onErrorOccurred.bind(this), key: uuid() },
-      element,
-    );
+    const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     render(errorBoundary, this.container, this.componentDidMount);
   }
 

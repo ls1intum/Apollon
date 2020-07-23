@@ -15,14 +15,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.setState({ hasError: true, error: error });
+    this.setState({ hasError: true, error });
   }
 
   render() {
     if (this.state.hasError && this.state.error) {
       // restore the state immediately
       this.props.onError(this.state.error);
-      return;
+      return null;
     }
 
     return this.props.children;

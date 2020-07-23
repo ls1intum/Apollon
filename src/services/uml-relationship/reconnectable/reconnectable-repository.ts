@@ -2,17 +2,26 @@ import { AsyncAction } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
 import { IUMLElementPort } from '../../uml-element/uml-element-port';
 import { Connection } from '../connection';
-import { IUMLRelationship } from '../uml-relationship';
+import { IUMLRelationship, UMLRelationship } from '../uml-relationship';
 import {
   ReconnectableActionTypes,
   ReconnectAction,
   ReconnectEndAction,
   ReconnectStartAction,
 } from './reconnectable-types';
+import { UMLRelationshipRepository } from '../uml-relationship-repository';
 
 export const Reconnectable = {
   startReconnecting: (endpoint: 'source' | 'target', id?: string | string[]): AsyncAction => (dispatch, getState) => {
-    const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
+    const ids = id
+      ? Array.isArray(id)
+        ? id
+        : [id]
+      : getState()
+          .selected.map((elementId) => dispatch(UMLRelationshipRepository.getById(elementId)))
+          // all relationships are reconnectable + its a static property, that's why it is enough to check for relationship
+          .filter((element) => element !== null && UMLRelationship.isUMLRelationship(element))
+          .map((element) => element!.id);
     if (!ids.length) {
       return;
     }

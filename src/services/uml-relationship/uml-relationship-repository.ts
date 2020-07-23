@@ -2,7 +2,7 @@ import { UMLRelationships } from '../../packages/uml-relationships';
 import { AsyncAction } from '../../utils/actions/actions';
 import { IBoundary } from '../../utils/geometry/boundary';
 import { IPath } from '../../utils/geometry/path';
-import { IUMLElement } from '../uml-element/uml-element';
+import { IUMLElement, UMLElement } from "../uml-element/uml-element";
 import { Reconnectable } from './reconnectable/reconnectable-repository';
 import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
@@ -21,6 +21,12 @@ const Repository = {
     }
 
     return null;
+  },
+
+  getById: (id: string): AsyncAction<UMLElement | null> => (dispatch, getState) => {
+    const { elements } = getState();
+
+    return Repository.get(elements[id]);
   },
 
   layout: (id: string, path: IPath, bounds: IBoundary): LayoutAction => ({
