@@ -16,6 +16,7 @@ import * as Apollon from './typings';
 import { Dispatch } from './utils/actions/actions';
 import { UMLDiagramType, UMLModel } from './typings';
 import { debounce } from './utils/debounce';
+import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
 
 export class ApollonEditor {
   get model(): Apollon.UMLModel {
@@ -69,7 +70,7 @@ export class ApollonEditor {
   }
 
   selection: Apollon.Selection = { elements: [], relationships: [] };
-  private currentModel?: Apollon.UMLModel;
+  private currentModelState?: ModelState;
   private assessments: Apollon.Assessment[] = [];
   private application: RefObject<Application> = createRef();
   private selectionSubscribers: ((selection: Apollon.Selection) => void)[] = [];
@@ -109,12 +110,8 @@ export class ApollonEditor {
       styles: options.theme,
       locale: options.locale,
     });
-    render(element, container, this.componentDidMount);
-    try {
-      this.currentModel = this.model;
-    } catch (error) {
-      this.currentModel = undefined;
-    }
+    const errorBoundary = createElement(ErrorBoundary, { onRestoreClick: this.restoreEditor.bind(this) }, element);
+    render(errorBoundary, container, this.componentDidMount);
   }
 
   destroy() {
@@ -206,14 +203,12 @@ export class ApollonEditor {
       // if state not available -> do not emit changes
       if (!this.store) return;
       const model = this.model;
-      if (
-        (!this.currentModel && model) ||
-        (this.currentModel && JSON.stringify(model) !== JSON.stringify(this.currentModel))
-      ) {
+      const lastModel = this.currentModelState ? ModelState.toModel(this.currentModelState) : null;
+      if ((!lastModel && model) || (lastModel && JSON.stringify(model) !== JSON.stringify(lastModel))) {
         this.modelSubscribers.forEach((subscriber) => subscriber(model));
-        this.currentModel = model;
+        this.currentModelState = this.store.getState();
       } else {
-        this.currentModel = model;
+        this.currentModelState = this.store.getState();
       }
     } catch (error) {
       // if error occured while getting current state for subscribers -> do not emit changes
@@ -230,7 +225,15 @@ export class ApollonEditor {
       styles: this.options.theme,
       locale: this.options.locale,
     });
-    render(element, this.container, this.componentDidMount);
+    const errorBoundary = createElement(ErrorBoundary, { onRestoreClick: this.restoreEditor.bind(this) }, element);
+    render(errorBoundary, this.container, this.componentDidMount);
+  }
+
+  private restoreEditor() {
+    console.log('restore clicked');
+    if (this.currentModelState) {
+      this.recreateEditor(this.currentModelState);
+    }
   }
 
   private get store(): Store<ModelState, Actions> | null {
