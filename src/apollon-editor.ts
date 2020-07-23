@@ -230,9 +230,18 @@ export class ApollonEditor {
   }
 
   private restoreEditor() {
-    console.log('restore clicked');
     if (this.currentModelState) {
-      this.recreateEditor(this.currentModelState);
+      const state = {
+        ...this.currentModelState,
+        hovered: [],
+        selected: [],
+        moving: [],
+        resizing: [],
+        connecting: [],
+        reconnecting: {},
+        updating: [],
+      };
+      this.recreateEditor(state);
     }
   }
 
