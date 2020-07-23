@@ -104,6 +104,8 @@ export class ApollonEditor {
       },
     };
 
+    this.currentModelState = state as ModelState;
+
     const element = createElement(Application, {
       ref: this.application,
       state,
