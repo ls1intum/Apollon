@@ -104,8 +104,6 @@ export class ApollonEditor {
       },
     };
 
-    this.currentModelState = state as ModelState;
-
     const element = createElement(Application, {
       ref: this.application,
       state,
@@ -114,6 +112,11 @@ export class ApollonEditor {
     });
     const errorBoundary = createElement(ErrorBoundary, { onRestoreClick: this.restoreEditor.bind(this) }, element);
     render(errorBoundary, container, this.componentDidMount);
+    try {
+      this.currentModelState = this.store?.getState();
+    } catch (error) {
+      this.currentModelState = undefined;
+    }
   }
 
   destroy() {
