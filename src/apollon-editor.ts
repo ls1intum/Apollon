@@ -17,6 +17,7 @@ import { Dispatch } from './utils/actions/actions';
 import { UMLDiagramType, UMLModel } from './typings';
 import { debounce } from './utils/debounce';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
+import { uuid } from './utils/uuid';
 
 export class ApollonEditor {
   get model(): Apollon.UMLModel {
@@ -76,6 +77,7 @@ export class ApollonEditor {
   private selectionSubscribers: ((selection: Apollon.Selection) => void)[] = [];
   private assessmentSubscribers: ((assessments: Apollon.Assessment[]) => void)[] = [];
   private modelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
+  private errorSubscribers: ((error: Error) => void)[] = [];
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
@@ -110,7 +112,12 @@ export class ApollonEditor {
       styles: options.theme,
       locale: options.locale,
     });
-    const errorBoundary = createElement(ErrorBoundary, { onRestoreClick: this.restoreEditor.bind(this) }, element);
+    const errorBoundary = createElement(
+      ErrorBoundary,
+      // use key to force react to redraw
+      { onError: this.onErrorOccurred.bind(this), key: uuid() },
+      element,
+    );
     render(errorBoundary, container, this.componentDidMount);
     try {
       this.currentModelState = this.store?.getState();
@@ -152,6 +159,14 @@ export class ApollonEditor {
 
   unsubscribeFromModelChange(subscriptionId: number) {
     this.modelSubscribers.splice(subscriptionId);
+  }
+
+  subscribeToApollonErrors(callback: (error: Error) => void): number {
+    return this.errorSubscribers.push(callback) - 1;
+  }
+
+  unsubscribeToApollonErrors(subscriptionId: number) {
+    this.errorSubscribers.splice(subscriptionId);
   }
 
   exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG {
@@ -230,8 +245,18 @@ export class ApollonEditor {
       styles: this.options.theme,
       locale: this.options.locale,
     });
-    const errorBoundary = createElement(ErrorBoundary, { onRestoreClick: this.restoreEditor.bind(this) }, element);
+    const errorBoundary = createElement(
+      ErrorBoundary,
+      // use key to force react to redraw
+      { onError: this.onErrorOccurred.bind(this), key: uuid() },
+      element,
+    );
     render(errorBoundary, this.container, this.componentDidMount);
+  }
+
+  private onErrorOccurred(error: Error) {
+    this.errorSubscribers.forEach((subscriber) => subscriber(error));
+    this.restoreEditor();
   }
 
   private restoreEditor() {

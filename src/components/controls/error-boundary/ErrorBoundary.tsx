@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { ErrorInfo } from 'react';
 
-type Props = { onRestoreClick: () => void };
+type Props = { onError: (error: Error) => void };
 
 type State = {
   hasError: boolean;
+  error?: Error;
 };
 
 export class ErrorBoundary extends React.Component<Props, State> {
@@ -13,26 +14,15 @@ export class ErrorBoundary extends React.Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error) {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true };
-  }
-
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // You can also log the error to an error reporting service
-    // logErrorToMyService(error, errorInfo);
-    this.setState({ hasError: true });
+    this.setState({ hasError: true, error: error });
   }
 
   render() {
-    if (this.state.hasError) {
-      // You can render any custom fallback UI
-      return (
-        <>
-          <h1>Something went wrong.</h1>
-          <button onClick={() => this.props.onRestoreClick()}>Restore previous state</button>
-        </>
-      );
+    if (this.state.hasError && this.state.error) {
+      // restore the state immediately
+      this.props.onError(this.state.error);
+      return;
     }
 
     return this.props.children;
