@@ -9,6 +9,7 @@ export const UMLActivityInitialNodeComponent: SFC<Props> = ({ element }) => (
       r={Math.min(element.bounds.width, element.bounds.height) / 2}
       stroke="none"
       fill="black"
+      fillOpacity={1}
     />
   </g>
 );

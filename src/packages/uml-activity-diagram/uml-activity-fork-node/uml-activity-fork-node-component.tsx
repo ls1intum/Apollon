@@ -3,7 +3,13 @@ import { UMLActivityForkNode } from './uml-activity-fork-node';
 
 export const UMLActivityForkNodeComponent: SFC<Props> = ({ element }) => (
   <g>
-    <rect width="100%" height="100%" stroke="none" fill="black" />
+    <rect
+      width={element.bounds.width}
+      height={element.bounds.height}
+      stroke="none"
+      fill="black"
+      fillOpacity={1}
+    />
   </g>
 );
 

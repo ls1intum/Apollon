@@ -9,7 +9,7 @@ import {
   ReconnectEndAction,
   ReconnectStartAction,
 } from './reconnectable-types';
-import { UMLRelationshipRepository } from '../uml-relationship-repository';
+import { UMLRelationshipCommonRepository } from '../uml-relationship-common-repository';
 
 export const Reconnectable = {
   startReconnecting: (endpoint: 'source' | 'target', id?: string | string[]): AsyncAction => (dispatch, getState) => {
@@ -18,7 +18,7 @@ export const Reconnectable = {
         ? id
         : [id]
       : getState()
-          .selected.map((elementId) => dispatch(UMLRelationshipRepository.getById(elementId)))
+          .selected.map((elementId) => dispatch(UMLRelationshipCommonRepository.getById(elementId)))
           // all relationships are reconnectable + its a static property, that's why it is enough to check for relationship
           .filter((element) => element !== null && UMLRelationship.isUMLRelationship(element))
           .map((element) => element!.id);
