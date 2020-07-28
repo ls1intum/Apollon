@@ -16,20 +16,17 @@ export class UMLActivityForkNode extends UMLElement {
   type: UMLElementType = ActivityElementType.ActivityForkNode;
   bounds: IBoundary = {
     ...this.bounds,
-    width: UMLActivityForkNode.defaultWidth,
-    height: UMLActivityForkNode.defaultHeight,
   };
 
   constructor(values?: DeepPartial<IUMLElement>) {
     super();
     assign<IUMLElement>(this, values);
     this.bounds.height = (values && values.bounds && values.bounds.height) || UMLActivityForkNode.defaultHeight;
-    this.bounds.width = (values && values.bounds && values.bounds.width) || UMLActivityForkNode.defaultWidth;
+    this.bounds.width = UMLActivityForkNode.defaultWidth;
   }
 
   render(layer: ILayer): ILayoutable[] {
     this.bounds.height = Math.max(this.bounds.height, UMLActivityForkNode.defaultHeight);
-    this.bounds.width = Math.max(this.bounds.width, UMLActivityForkNode.defaultWidth);
     return [this];
   }
 }
