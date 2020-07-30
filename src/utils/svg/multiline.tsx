@@ -16,17 +16,18 @@ const defaultProps = Object.freeze({
   verticalAnchor: 'middle' as 'start' | 'middle' | 'end',
 });
 
-const initialState = Object.freeze({
-  wordsByLines: [] as { words: string[]; width: number }[],
-});
+const getInitialState = (props: Props) =>  {
+  const words = props.children ? props.children.toString().split(/\s+/) : [];
+  return { wordsByLines: [{ words, width: 0 }] }
+};
 
 type Props = { children: string } & SVGProps<SVGTextElement> & typeof defaultProps;
 
-type State = typeof initialState;
+type State = typeof getInitialState;
 
 export class Multiline extends Component<Props, State> {
   static defaultProps = defaultProps;
-  state = initialState;
+  state = getInitialState(this.props);
 
   spaceWidth = 0;
   wordsWithComputedWidth = [] as { word: string; width: number }[];
@@ -35,9 +36,11 @@ export class Multiline extends Component<Props, State> {
     this.updateWordsByLines(this.props, true);
   }
 
-  componentWillReceiveProps(nextProps: Readonly<Props>) {
-    const needCalculate = this.props.children !== nextProps.children || this.props.style !== nextProps.style;
-    this.updateWordsByLines(nextProps, needCalculate);
+  componentDidUpdate(previousProps: Readonly<Props>) {
+    const needCalculate = previousProps.children !== this.props.children || previousProps.style !== this.props.style;
+    if (needCalculate) {
+      this.updateWordsByLines(this.props, needCalculate);
+    }
   }
 
   calculateWordWidths = (props: Readonly<Props>) => {
