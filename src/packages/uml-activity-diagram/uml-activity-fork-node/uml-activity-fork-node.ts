@@ -19,8 +19,7 @@ export class UMLActivityForkNode extends UMLElement {
   };
 
   constructor(values?: DeepPartial<IUMLElement>) {
-    super();
-    assign<IUMLElement>(this, values);
+    super(values);
     this.bounds.height = (values && values.bounds && values.bounds.height) || UMLActivityForkNode.defaultHeight;
     this.bounds.width = UMLActivityForkNode.defaultWidth;
   }

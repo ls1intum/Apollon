@@ -7,7 +7,7 @@ import { UMLElementType } from '../../uml-element-type';
 
 export class UMLActivityMergeNode extends UMLElement {
   type: UMLElementType = ActivityElementType.ActivityMergeNode;
-  bounds: IBoundary = { ...this.bounds, height: 60 };
+  bounds: IBoundary = { ...this.bounds };
 
   render(canvas: ILayer): ILayoutable[] {
     return [this];
