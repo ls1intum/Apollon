@@ -6,7 +6,6 @@ import { UMLElementFeatures } from '../../../services/uml-element/uml-element-fe
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
 import { DeepPartial } from 'redux';
-import { assign } from '../../../utils/fx/assign';
 
 export class UMLActivityForkNode extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, updatable: false };
