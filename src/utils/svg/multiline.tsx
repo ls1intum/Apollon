@@ -16,9 +16,9 @@ const defaultProps = Object.freeze({
   verticalAnchor: 'middle' as 'start' | 'middle' | 'end',
 });
 
-const getInitialState = (props: Props) =>  {
+const getInitialState = (props: Props) => {
   const words = props.children ? props.children.toString().split(/\s+/) : [];
-  return { wordsByLines: [{ words, width: 0 }] }
+  return { wordsByLines: [{ words, width: 0 }] };
 };
 
 type Props = { children: string } & SVGProps<SVGTextElement> & typeof defaultProps;
