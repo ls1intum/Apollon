@@ -38,7 +38,10 @@ class DraggableLayerComponent extends Component<Props, State> {
     // bounds.left - rooBounds.x => position to origin
     // one could delete event.pageX (a - a = 0)in for this case, but its is important to calculate the offset correctly for moving event
     const offset = new Point(event.pageX - (bounds.left - rootBounds.x), event.pageY - (bounds.top - rootBounds.y));
-    const position = new Point(event.pageX - offset.x, event.pageY - offset.y);
+    const position = new Point(
+      Math.round((event.pageX - offset.x) / 10) * 10,
+      Math.round((event.pageY - offset.y) / 10) * 10,
+    );
 
     document.addEventListener('pointermove', this.onPointerMove);
     document.addEventListener('pointerup', this.cancel, { once: true });
@@ -53,6 +56,9 @@ class DraggableLayerComponent extends Component<Props, State> {
 
   onPointerMove = (event: PointerEvent) => {
     const position = new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y);
+    // snapping behavior on moving
+    position.x = Math.round(position.x / 10) * 10;
+    position.y = Math.round(position.y / 10) * 10;
     this.setState({ position });
   };
 
@@ -67,6 +73,10 @@ class DraggableLayerComponent extends Component<Props, State> {
           .subtract(this.props.root.getBoundingClientRect().x, this.props.root.getBoundingClientRect().y),
       ),
     };
+
+    // snapping behavior when dropped
+    dropEvent.position.x = Math.round(dropEvent.position.x / 10) * 10;
+    dropEvent.position.y = Math.round(dropEvent.position.y / 10) * 10;
 
     if (this.state.resolve) {
       this.state.resolve(dropEvent);
