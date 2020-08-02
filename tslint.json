@@ -13,7 +13,8 @@
     "unified-signatures": false,
     "object-literal-sort-keys": false,
     "interface-over-type-literal": false,
-    "jsx-no-lambda": false
+    "jsx-no-lambda": false,
+    "jsx-boolean-value": [true, "never"]
   },
   "rulesDirectory": []
 }

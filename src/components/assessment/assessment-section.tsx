@@ -70,7 +70,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
               <span>{(assessment && assessment.score) || '-'}</span>
             ) : (
               <Textfield
-                gutter={true}
+                gutter
                 type="number"
                 step={0.5}
                 onChange={this.updateScore}
