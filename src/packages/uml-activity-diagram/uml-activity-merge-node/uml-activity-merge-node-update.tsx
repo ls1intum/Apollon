@@ -43,7 +43,7 @@ class ActivityMergeNodeUpdate extends Component<Props> {
                     value={decision.name}
                     onChange={this.onUpdateOption(decision.id)}
                   />
-                  <Button color="link" disabled={true}>
+                  <Button color="link" disabled>
                     <ArrowRightIcon />
                   </Button>
                   <Body>{targets[i].name}</Body>

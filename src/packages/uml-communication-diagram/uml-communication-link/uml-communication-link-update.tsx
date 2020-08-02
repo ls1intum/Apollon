@@ -76,7 +76,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
             <Flex key={i}>
               <Textfield
                 ref={(ref) => (this.messageRefs[i] = ref)}
-                gutter={true}
+                gutter
                 value={message.name}
                 onChange={this.rename(message)}
                 onSubmitKeyUp={() =>
@@ -97,7 +97,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
           ))}
           <Textfield
             ref={this.newCommunicationLinkField}
-            outline={true}
+            outline
             value=""
             onSubmit={this.create}
             onSubmitKeyUp={() =>

@@ -85,7 +85,7 @@ class ClassifierUpdate extends Component<Props, State> {
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus={true} />
+            <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -112,7 +112,7 @@ class ClassifierUpdate extends Component<Props, State> {
             <Flex key={attribute.id}>
               <Textfield
                 ref={(ref) => (attributeRefs[index] = ref)}
-                gutter={true}
+                gutter
                 value={attribute.name}
                 onChange={this.rename(attribute.id)}
                 onSubmitKeyUp={() =>
@@ -130,7 +130,7 @@ class ClassifierUpdate extends Component<Props, State> {
           ))}
           <Textfield
             ref={this.newAttributeField}
-            outline={true}
+            outline
             value=""
             onSubmit={this.create(UMLClassAttribute)}
             onSubmitKeyUp={(key: string, value: string) => {
@@ -173,7 +173,7 @@ class ClassifierUpdate extends Component<Props, State> {
             <Flex key={method.id}>
               <Textfield
                 ref={(ref) => (methodRefs[index] = ref)}
-                gutter={true}
+                gutter
                 value={method.name}
                 onChange={this.rename(method.id)}
                 onSubmitKeyUp={() =>
@@ -191,7 +191,7 @@ class ClassifierUpdate extends Component<Props, State> {
           ))}
           <Textfield
             ref={this.newMethodField}
-            outline={true}
+            outline
             value=""
             onSubmit={this.create(UMLClassMethod)}
             onSubmitKeyUp={() =>

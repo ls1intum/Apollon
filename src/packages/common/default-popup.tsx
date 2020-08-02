@@ -23,7 +23,7 @@ class DefaultPopupComponent extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.onUpdate} autoFocus={true} />
+            <Textfield value={element.name} onChange={this.onUpdate} autoFocus />
             <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>

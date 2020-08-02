@@ -24,7 +24,7 @@ class DeploymentNodeUpdate extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.onRename} autoFocus={true} />
+            <Textfield value={element.name} onChange={this.onRename} autoFocus />
             <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>

@@ -66,8 +66,8 @@ class AssessmentComponent extends Component<Props, State> {
         ))}
         <section>
           <Button
-            block={true}
-            outline={true}
+            block
+            outline
             color="primary"
             onClick={this.next}
             onKeyDown={this.onKey}

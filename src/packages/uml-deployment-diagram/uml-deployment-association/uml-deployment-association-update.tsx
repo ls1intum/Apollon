@@ -102,7 +102,7 @@ class DeploymentAssociationUpdate extends Component<Props> {
               <Divider />
               <section>
                 <Flex>
-                  <Textfield value={element.name} onChange={this.rename} autoFocus={true} />
+                  <Textfield value={element.name} onChange={this.rename} autoFocus />
                   <Button color="link" onClick={() => this.props.delete(element.id)}>
                     <TrashIcon />
                   </Button>

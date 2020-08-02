@@ -104,10 +104,10 @@ class ClassAssociationComponent extends Component<Props> {
           <Flex>
             <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.multiplicity')}</Body>
             <Textfield
-              gutter={true}
+              gutter
               value={element.source.multiplicity}
               onChange={this.onUpdate('multiplicity', 'source')}
-              autoFocus={true}
+              autoFocus
             />
           </Flex>
           <Flex>
@@ -121,7 +121,7 @@ class ClassAssociationComponent extends Component<Props> {
           <Flex>
             <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.multiplicity')}</Body>
             <Textfield
-              gutter={true}
+              gutter
               value={element.target.multiplicity}
               onChange={this.onUpdate('multiplicity', 'target')}
             />

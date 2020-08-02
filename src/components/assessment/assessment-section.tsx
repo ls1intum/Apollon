@@ -84,7 +84,7 @@ class AssessmentSectionCompoennt extends Component<Props> {
         ) : (
           <section>
             <Textfield
-              multiline={true}
+              multiline
               placeholder={this.props.translate('assessment.feedback')}
               onChange={this.updateFeedback}
               enterToSubmit={false}
