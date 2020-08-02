@@ -1,0 +1,13 @@
+{
+  "presets": [
+    [
+      "@babel/env",
+      {
+        "modules": false
+      }
+    ],
+    "@babel/react",
+    "@babel/typescript"
+  ],
+  "plugins": ["const-enum", "@babel/proposal-class-properties", "@babel/proposal-object-rest-spread", "@babel/plugin-transform-runtime"]
+}
