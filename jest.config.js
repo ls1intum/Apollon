@@ -15,10 +15,10 @@ module.exports = {
   clearMocks: true,
 
   // Indicates whether the coverage information should be collected while executing the test
-  // collectCoverage: false,
+  collectCoverage: true,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  // collectCoverageFrom: undefined,
+  collectCoverageFrom: ['src/main/**/*.ts', 'src/main/**/*.tsx'],
 
   // The directory where Jest should output its coverage files
   coverageDirectory: 'coverage',
@@ -91,7 +91,7 @@ module.exports = {
   // notifyMode: "failure-change",
 
   // A preset that is used as a base for Jest's configuration
-  // preset: undefined,
+  preset: 'ts-jest',
 
   // Run tests from one or more projects
   // projects: undefined,
@@ -155,7 +155,7 @@ module.exports = {
   // testRegex: [],
 
   // This option allows the use of a custom results processor
-  // testResultsProcessor: undefined,
+  // testResultsProcessor: 'ts-jest',
 
   // This option allows use of a custom test runner
   // testRunner: "jasmine2",
@@ -167,7 +167,7 @@ module.exports = {
   // timers: "real",
 
   // A map from regular expressions to paths to transformers
-  transform: { '^.+\\.tsx?$': 'babel-jest' },
+  // transform: { '.(js|jsx|ts|tsx)': 'ts-jest' },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [
