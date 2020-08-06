@@ -2,7 +2,6 @@ import * as React from 'react';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { ModelState } from '../../../../main/components/store/model-state';
 import { DeepPartial } from 'redux';
-import { IUMLElement } from '../../../../main/services/uml-element/uml-element';
 import { UMLClassAttribute } from '../../../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
 import { render, fireEvent } from '@testing-library/react';
@@ -10,13 +9,8 @@ import { hoverable } from '../../../../main/components/uml-element/hoverable/hov
 import { UMLElementComponentProps } from '../../../../main/components/uml-element/uml-element-component-props';
 import { MockStoreEnhanced } from 'redux-mock-store';
 import { Provider } from 'react-redux';
-import { ApollonMode } from '../../../../main';
-import { ApollonView, EditorState } from '../../../../main/services/editor/editor-types';
-import thunk, { ThunkDispatch } from 'redux-thunk';
-import { Actions } from '../../../../main/services/actions';
-import createMockStore from 'redux-mock-store';
-import { UMLDiagram } from '../../../../main/services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from '../../../../main/services/uml-element/uml-element-repository';
+import { getMockedStore } from '../../../test-utils/test-utils';
 
 class MockComponent extends React.Component<UMLElementComponentProps> {
   render() {
@@ -24,18 +18,13 @@ class MockComponent extends React.Component<UMLElementComponentProps> {
   }
 }
 
-type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
-
-const middleware = [thunk];
-const mockStore = createMockStore<ModelState, DispatchExts>(middleware);
-
-describe(' hoverable higher order component', () => {
+describe('test hoverable HOC', () => {
   let store: MockStoreEnhanced<DeepPartial<ModelState>, any>;
-  let serializedClass: IUMLElement;
+  let umlClass: UMLClass;
   const HoverableMockComponent = hoverable(MockComponent);
 
   beforeEach(() => {
-    const umlClass = new UMLClass({ name: 'test-element' });
+    umlClass = new UMLClass({ name: 'test-element' });
     const umlClassAttribute = new UMLClassAttribute({
       name: 'attribute',
       owner: umlClass.id,
@@ -44,54 +33,16 @@ describe(' hoverable higher order component', () => {
       name: 'classMethod',
       owner: umlClass.id,
     });
-    umlClass.ownedElements = [];
-    serializedClass = umlClass.serialize([]);
+    umlClass.ownedElements = [umlClassAttribute.id, umlClassMethod.id];
     // make sure element is hoverable
     expect(UMLClass.features.hoverable).toBeTruthy();
-
-    // initial store
-    const modelState: ModelState = {
-      assessments: {},
-      connecting: [],
-      copy: [],
-      diagram: new UMLDiagram({}),
-      interactive: [],
-      moving: [],
-      reconnecting: {},
-      resizing: [],
-      selected: [],
-      updating: [],
-      hovered: [],
-      editor: {
-        mode: ApollonMode.Modelling,
-        readonly: false,
-        enablePopups: true,
-        enableCopyPasteToClipboard: false,
-        view: ApollonView.Modelling,
-        features: {
-          hoverable: true,
-          selectable: true,
-          movable: true,
-          resizable: true,
-          connectable: true,
-          updatable: true,
-          droppable: true,
-        },
-      } as EditorState,
-      elements: {
-        [umlClass.id]: { ...umlClass },
-        [umlClassAttribute.id]: { ...umlClassAttribute },
-        [umlClassMethod.id]: { ...umlClassMethod },
-      },
-    };
-
-    store = mockStore(modelState);
+    store = getMockedStore([umlClass, umlClassAttribute, umlClassMethod]);
   });
-  it('hover over hoverable component', () => {
-    const expectedAction = UMLElementRepository.hover(serializedClass.id);
+  it('hover component triggers HoverAction', () => {
+    const expectedAction = UMLElementRepository.hover(umlClass.id);
     const { container } = render(
       <Provider store={store}>
-        <HoverableMockComponent id={serializedClass.id} />
+        <HoverableMockComponent id={umlClass.id} />
       </Provider>,
     );
 
@@ -105,18 +56,18 @@ describe(' hoverable higher order component', () => {
     expect(store.getActions()[0]).toEqual(expectedAction);
   });
 
-  it('unhover component', () => {
-    const expectedAction = UMLElementRepository.leave(serializedClass.id);
+  it('unhover component triggers LeaveAction', () => {
+    const expectedAction = UMLElementRepository.leave(umlClass.id);
     const { container } = render(
       <Provider store={store}>
-        <HoverableMockComponent id={serializedClass.id} />
+        <HoverableMockComponent id={umlClass.id} />
       </Provider>,
     );
 
     const sut = container.firstChild;
     expect(sut).not.toBeNull();
 
-    // simulate hover
+    // simulate unhover
     fireEvent.pointerLeave(sut as Element);
 
     expect(store.getActions()).toHaveLength(1);
