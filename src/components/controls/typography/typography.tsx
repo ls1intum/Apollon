@@ -11,7 +11,10 @@ export const Header = (props: Props) => <Typography variant="header" as="h1" {..
 
 Header.defaultProps = defaultProps;
 
-export const Body = (props: Props) => <Typography variant="body" as="span" gutter={false} {...props} />;
+export const Body = (props: Props) => {
+  const { gutter, ...typographyProps } = props;
+  return <Typography variant="body" as="span" gutter={false} {...typographyProps} />;
+};
 
 Body.defaultProps = {
   gutter: false,

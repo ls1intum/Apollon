@@ -133,11 +133,23 @@ export class Multiline extends Component<Props, State> {
   }
 
   render() {
-    const { dx, dy, textAnchor, verticalAnchor, scaleToFit, angle, lineHeight, capHeight, ...textProps } = this.props;
+    const {
+      x,
+      y,
+      dx,
+      dy,
+      textAnchor,
+      verticalAnchor,
+      scaleToFit,
+      angle,
+      lineHeight,
+      capHeight,
+      ...textProps
+    } = this.props;
     const { wordsByLines } = this.state;
 
-    const x = textProps.x + dx;
-    const y = textProps.y + dy;
+    const xPosition = x + dx;
+    const yPosition = y + dy;
 
     let startDy: string | number | undefined;
     switch (verticalAnchor) {
@@ -157,21 +169,21 @@ export class Multiline extends Component<Props, State> {
       const lineWidth = wordsByLines[0].width;
       const sx = (this.props.width || 0) / lineWidth;
       const sy = sx;
-      const originX = x - sx * x;
-      const originY = y - sy * y;
+      const originX = xPosition - sx * xPosition;
+      const originY = yPosition - sy * yPosition;
       transforms.push(`matrix(${sx}, 0, 0, ${sy}, ${originX}, ${originY})`);
     }
     if (angle) {
-      transforms.push(`rotate(${angle}, ${x}, ${y})`);
+      transforms.push(`rotate(${angle}, ${xPosition}, ${yPosition})`);
     }
     if (transforms.length) {
       textProps.transform = transforms.join(' ');
     }
 
     return (
-      <text x={x} y={y} textAnchor={textAnchor} {...textProps} pointerEvents="none">
+      <text x={xPosition} y={yPosition} textAnchor={textAnchor} {...textProps} pointerEvents="none">
         {wordsByLines.map((line, index) => (
-          <tspan x={x} dy={index === 0 ? startDy : lineHeight} key={index}>
+          <tspan x={xPosition} dy={index === 0 ? startDy : lineHeight} key={index}>
             {line.words.join(' ')}
           </tspan>
         ))}
