@@ -1,6 +1,6 @@
-import React, { Component, ComponentClass, ComponentType } from 'react';
+import React, { Component, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
-import { connect } from 'react-redux';
+import { connect, ConnectedComponent } from 'react-redux';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
@@ -21,7 +21,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
 
 export const hoverable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
-): ComponentClass<UMLElementComponentProps> => {
+): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
   class Hoverable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;

@@ -479,10 +479,10 @@
     "@types/prop-types" "*"
     "@types/react" "*"
 
-"@types/react-redux@7.1.3":
-  version "7.1.3"
-  resolved "https://registry.yarnpkg.com/@types/react-redux/-/react-redux-7.1.3.tgz#7efc1e36267e9bf8b24ec89ac30a27a65c94cd25"
-  integrity sha512-coaQFfn6XrHF/4CSF8eBM9rUbi5TX6qVhS+KF89Z2nC9YdTKTckOpJLJyQocYLrXF0IFX+/ZUJwMvbZ0nNmkDg==
+"@types/react-redux@7.1.9":
+  version "7.1.9"
+  resolved "https://registry.yarnpkg.com/@types/react-redux/-/react-redux-7.1.9.tgz#280c13565c9f13ceb727ec21e767abe0e9b4aec3"
+  integrity sha512-mpC0jqxhP4mhmOl3P4ipRsgTgbNofMRXJb08Ms6gekViLj61v1hOZEKWDCyWsdONr6EjEA6ZHXC446wdywDe0w==
   dependencies:
     "@types/hoist-non-react-statics" "^3.3.0"
     "@types/react" "*"
@@ -4875,10 +4875,10 @@ react-is@^16.9.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.10.2.tgz#984120fd4d16800e9a738208ab1fba422d23b5ab"
   integrity sha512-INBT1QEgtcCCgvccr5/86CfD71fw9EPmDxgiJX4I2Ddr6ZsV6iFXsuby+qWJPtmNuMY0zByTsG4468P7nHuNWA==
 
-react-redux@7.2.0:
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/react-redux/-/react-redux-7.2.0.tgz#f970f62192b3981642fec46fd0db18a074fe879d"
-  integrity sha512-EvCAZYGfOLqwV7gh849xy9/pt55rJXPwmYvI4lilPM5rUT/1NxuuN59ipdBksRVSvz0KInbPnp4IfoXJXCqiDA==
+react-redux@7.2.1:
+  version "7.2.1"
+  resolved "https://registry.yarnpkg.com/react-redux/-/react-redux-7.2.1.tgz#8dedf784901014db2feca1ab633864dee68ad985"
+  integrity sha512-T+VfD/bvgGTUA74iW9d2i5THrDQWbweXP0AVNI8tNd1Rk5ch1rnMiJkDD67ejw7YBKM4+REvcvqRuWJb7BLuEg==
   dependencies:
     "@babel/runtime" "^7.5.5"
     hoist-non-react-statics "^3.3.0"
@@ -4972,7 +4972,15 @@ redux-thunk@2.3.0:
   resolved "https://registry.yarnpkg.com/redux-thunk/-/redux-thunk-2.3.0.tgz#51c2c19a185ed5187aaa9a2d08b666d0d6467622"
   integrity sha512-km6dclyFnmcvxhAcrQV2AkZmPQjzPDjgVlQtR0EQjxZPyJ0BnMf3in1ryuR8A2qU0HldVRfxYXbFSKlI3N7Slw==
 
-redux@4.0.4, redux@^4.0.0, redux@^4.0.4:
+redux@4.0.5:
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/redux/-/redux-4.0.5.tgz#4db5de5816e17891de8a80c424232d06f051d93f"
+  integrity sha512-VSz1uMAH24DM6MF72vcojpYPtrTUu3ByVWfPL1nPfVRb5mZVTve5GnNCUV53QM/BZ66xfWrm0CTWoM+Xlz8V1w==
+  dependencies:
+    loose-envify "^1.4.0"
+    symbol-observable "^1.2.0"
+
+redux@^4.0.0, redux@^4.0.4:
   version "4.0.4"
   resolved "https://registry.yarnpkg.com/redux/-/redux-4.0.4.tgz#4ee1aeb164b63d6a1bcc57ae4aa0b6e6fa7a3796"
   integrity sha512-vKv4WdiJxOWKxK0yRoaK3Y4pxxB0ilzVx6dszU2W8wLxlb2yikRph4iV/ymtdJ6ZxpBLFbyrxklnT5yBbQSl3Q==
@@ -6035,10 +6043,10 @@ ts-loader@8.0.2:
     micromatch "^4.0.0"
     semver "^6.0.0"
 
-tslib@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.0.0.tgz#18d13fc2dce04051e20f074cc8387fd8089ce4f3"
-  integrity sha512-lTqkx847PI7xEDYJntxZH89L2/aXInsyF2luSafe/+0fHOMjlBNXdH6th7f70qxLDhul7KZK0zC8V5ZIyHl0/g==
+tslib@2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.0.1.tgz#410eb0d113e5b6356490eec749603725b021b43e"
+  integrity sha512-SgIkNheinmEBgx1IUNirK0TUD4X9yjjBRTqqjggWCU3pUEqIk3/Uwl3yRixYKT6WjQuGiwDv4NomL3wqRCj+CQ==
 
 tslib@^1.10.0:
   version "1.11.1"

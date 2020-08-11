@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
@@ -26,6 +25,8 @@ import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { UMLDiagramType } from '../../typings';
 import { CopyState } from '../../services/copypaste/copy-types';
 
+export type PartialModelState = Omit<Partial<ModelState>, 'editor'> & { editor?: Partial<EditorState> };
+
 export interface ModelState {
   editor: EditorState;
   diagram: UMLDiagramState;
@@ -43,7 +44,7 @@ export interface ModelState {
 }
 
 export class ModelState {
-  static fromModel(model: Apollon.UMLModel): DeepPartial<ModelState> {
+  static fromModel(model: Apollon.UMLModel): PartialModelState {
     const apollonElements = model.elements;
     const apollonRelationships = model.relationships;
 

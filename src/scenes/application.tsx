@@ -7,7 +7,7 @@ import { KeyboardEventListener } from '../components/canvas/keyboard-eventlisten
 import { DraggableLayer } from '../components/draggable/draggable-layer';
 import { I18nProvider } from '../components/i18n/i18n-provider';
 import { Sidebar } from '../components/sidebar/sidebar-component';
-import { ModelState } from '../components/store/model-state';
+import { PartialModelState } from '../components/store/model-state';
 import { ModelStore, StoreProvider } from '../components/store/model-store';
 import { Styles } from '../components/theme/styles';
 import { Theme } from '../components/theme/theme';
@@ -18,7 +18,7 @@ import { Layout } from './application-styles';
 import { RootContext, RootProvider } from '../components/root/root-context';
 
 type Props = {
-  state?: DeepPartial<ModelState>;
+  state?: PartialModelState;
   styles?: DeepPartial<Styles>;
   locale?: Locale;
 };

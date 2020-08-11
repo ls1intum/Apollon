@@ -30,12 +30,12 @@ import { UMLInterfaceComponent } from './common/uml-interface/uml-interface-comp
 import { UMLInterfaceProvidedComponent } from './common/uml-interface-provided/uml-interface-provided-component';
 import { UMLInterfaceRequiredComponent } from './common/uml-interface-required/uml-interface-required-component';
 import { UMLDependencyComponent } from './common/uml-dependency/uml-dependency-component';
-import { ConnectedComponentClass } from 'react-redux';
+import { ConnectedComponent } from 'react-redux';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
     | FunctionComponent<{ element: any }>
-    | ConnectedComponentClass<SFC<any>, { element: any }>;
+    | ConnectedComponent<SFC<any>, { element: any }>;
 } = {
   [UMLElementType.Package]: UMLClassPackageComponent,
   [UMLElementType.Class]: UMLClassifierComponent,

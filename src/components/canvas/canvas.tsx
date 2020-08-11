@@ -1,5 +1,5 @@
-import React, { Component, createRef, RefObject } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType, createRef, Ref, RefObject } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { ILayer } from '../../services/layouter/layer';
 import { IUMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { Point } from '../../utils/geometry/point';
@@ -79,4 +79,6 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
   }
 }
 
-export const Canvas = enhance(CanvasComponent);
+export const Canvas: ConnectedComponent<ComponentType<Props>, OwnProps & { ref: Ref<CanvasComponent> }> = enhance(
+  CanvasComponent,
+);

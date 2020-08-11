@@ -1,5 +1,5 @@
 import React, { Component, ComponentType } from 'react';
-import { connect } from 'react-redux';
+import { connect, ConnectedComponent } from 'react-redux';
 import { compose } from 'redux';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLElements } from '../../packages/uml-elements';
@@ -86,10 +86,13 @@ const getInitialState = (props: Props) => {
     }
   }
 
-  type Compose = ComponentType<
-    UMLElementComponentProps & {
-      child: React.ComponentClass<UMLElementComponentProps>;
-    }
+  type Compose = ConnectedComponent<
+    ComponentType<
+      UMLElementComponentProps & {
+        child: React.ComponentClass<any>;
+      }
+    >,
+    any
   >;
 
   return {
@@ -115,4 +118,6 @@ class UMLElementComponentC extends Component<Props, State> {
   }
 }
 
-export const UMLElementComponent = enhance(UMLElementComponentC);
+export const UMLElementComponent: ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> = enhance(
+  UMLElementComponentC,
+);

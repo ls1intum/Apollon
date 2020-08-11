@@ -1,5 +1,5 @@
-import React, { Component, ComponentClass, ComponentType } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { IUMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
@@ -51,7 +51,7 @@ const Handle = styled.line.attrs({
 
 export const reconnectable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
-): ComponentClass<UMLElementComponentProps> => {
+): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
   class Reconnectable extends Component<Props, State> {
     state = initialState;
 
