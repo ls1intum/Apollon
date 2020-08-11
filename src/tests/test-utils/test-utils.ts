@@ -13,31 +13,35 @@ type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
 const middleware = [thunk];
 const mockStore = createMockStore<ModelState, DispatchExts>(middleware);
 
+type PartialModelState = Partial<Omit<ModelState, 'editor'>> & {
+  editor?: Partial<EditorState>;
+};
+
 export const getMockedStore = (
+  modelState?: PartialModelState,
   elements?: IUMLElement[],
-  selected: string[] = [],
-  updating: string[] = [],
-  hovered: string[] = [],
 ): MockStoreEnhanced<ModelState, DispatchExts> => {
   // initial state
-  const modelState: ModelState = {
-    assessments: {},
-    connecting: [],
-    copy: [],
-    diagram: new UMLDiagram({}),
-    interactive: [],
-    moving: [],
-    reconnecting: {},
-    resizing: [],
-    selected: selected,
-    updating: updating,
-    hovered: hovered,
+  const storeState: ModelState = {
+    assessments: modelState?.assessments ? { ...modelState.assessments } : {},
+    connecting: modelState?.connecting ? modelState.connecting : [],
+    copy: modelState?.copy ? modelState.copy : [],
+    diagram: modelState?.diagram ? modelState.diagram : new UMLDiagram({}),
+    interactive: modelState?.interactive ? modelState.interactive : [],
+    moving: modelState?.moving ? modelState.moving : [],
+    reconnecting: modelState?.reconnecting ? modelState.reconnecting : {},
+    resizing: modelState?.resizing ? modelState.resizing : [],
+    selected: modelState?.selected ? modelState.selected : [],
+    updating: modelState?.updating ? modelState.updating : [],
+    hovered: modelState?.hovered ? modelState.hovered : [],
     editor: {
-      mode: ApollonMode.Modelling,
-      readonly: false,
-      enablePopups: true,
-      enableCopyPasteToClipboard: false,
-      view: ApollonView.Modelling,
+      mode: modelState?.editor?.mode ? modelState.editor.mode : ApollonMode.Modelling,
+      readonly: modelState?.editor?.readonly ? modelState.editor?.readonly : false,
+      enablePopups: modelState?.editor?.enablePopups ? modelState.editor?.enablePopups : true,
+      enableCopyPasteToClipboard: modelState?.editor?.enableCopyPasteToClipboard
+        ? modelState.editor?.enableCopyPasteToClipboard
+        : false,
+      view: modelState?.editor?.view ? modelState.editor?.view : ApollonView.Modelling,
       features: {
         hoverable: true,
         selectable: true,
@@ -59,5 +63,5 @@ export const getMockedStore = (
       : {},
   };
 
-  return mockStore(modelState);
+  return mockStore(storeState);
 };

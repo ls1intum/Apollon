@@ -36,7 +36,7 @@ describe('test hoverable HOC', () => {
     umlClass.ownedElements = [umlClassAttribute.id, umlClassMethod.id];
     // make sure element is hoverable
     expect(UMLClass.features.hoverable).toBeTruthy();
-    store = getMockedStore([umlClass, umlClassAttribute, umlClassMethod]);
+    store = getMockedStore(undefined,[umlClass, umlClassAttribute, umlClassMethod]);
   });
   it('hover component triggers HoverAction', () => {
     const expectedAction = UMLElementRepository.hover(umlClass.id);
