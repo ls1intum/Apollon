@@ -13,6 +13,8 @@ import { ILayer } from '../../main/services/layouter/layer';
 import { UMLClass } from '../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { UMLClassAttribute } from '../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
+import { UMLPackage } from '../../main/packages/common/uml-package/uml-package';
+import { UMLClassPackage } from '../../main/packages/uml-class-diagram/uml-class-package/uml-class-package';
 
 type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
 

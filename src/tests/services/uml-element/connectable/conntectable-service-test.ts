@@ -5,38 +5,40 @@ import { Connectable } from '../../../../main/services/uml-element/connectable/c
 import { Direction } from '../../../../main/services/uml-element/uml-element-port';
 import { UMLRelationship } from '../../../../main/services/uml-relationship/uml-relationship';
 
-const elements: UMLElement[] = [];
-let srcElement: UMLClass;
-let targetElement: UMLClass;
+describe('test redux state update when connecting elements', () => {
+  const elements: UMLElement[] = [];
+  let srcElement: UMLClass;
+  let targetElement: UMLClass;
 
-beforeEach(() => {
-  // initialize copy objects
-  const srcClassElements = createUMLClassWithAttributeAndMethod();
-  srcElement = srcClassElements[0] as UMLClass;
-  const targetClassElements = createUMLClassWithAttributeAndMethod();
-  targetElement = targetClassElements[0] as UMLClass;
-});
+  beforeEach(() => {
+    // initialize copy objects
+    const srcClassElements = createUMLClassWithAttributeAndMethod();
+    srcElement = srcClassElements[0] as UMLClass;
+    const targetClassElements = createUMLClassWithAttributeAndMethod();
+    targetElement = targetClassElements[0] as UMLClass;
+  });
 
-it('connect two elements', () => {
-  // disable copy to clipboard
-  const store = getRealStore(
-    {},
-    elements.map((element) => ({ ...element })),
-  );
-  expect(store.getState().diagram.ownedRelationships).toHaveLength(0);
+  it('connect two elements', () => {
+    // disable copy to clipboard
+    const store = getRealStore(
+      {},
+      elements.map((element) => ({ ...element })),
+    );
+    expect(store.getState().diagram.ownedRelationships).toHaveLength(0);
 
-  const srcPort = { element: srcElement.id, direction: Direction.Up, multiplicity: '', role: '' };
-  const targetPort = { element: targetElement.id, direction: Direction.Up, multiplicity: '', role: '' };
+    const srcPort = { element: srcElement.id, direction: Direction.Up, multiplicity: '', role: '' };
+    const targetPort = { element: targetElement.id, direction: Direction.Up, multiplicity: '', role: '' };
 
-  store.dispatch(Connectable.startConnecting(Direction.Up, srcElement.id));
-  store.dispatch(Connectable.connect(targetPort));
-  store.dispatch(Connectable.endConnecting(targetPort));
+    store.dispatch(Connectable.startConnecting(Direction.Up, srcElement.id));
+    store.dispatch(Connectable.connect(targetPort));
+    store.dispatch(Connectable.endConnecting(targetPort));
 
-  expect(store.getState().diagram.ownedRelationships).toHaveLength(1);
-  expect((store.getState().elements[store.getState().diagram.ownedRelationships[0]] as UMLRelationship).source).toEqual(
-    srcPort,
-  );
-  expect((store.getState().elements[store.getState().diagram.ownedRelationships[0]] as UMLRelationship).target).toEqual(
-    targetPort,
-  );
+    expect(store.getState().diagram.ownedRelationships).toHaveLength(1);
+    expect(
+      (store.getState().elements[store.getState().diagram.ownedRelationships[0]] as UMLRelationship).source,
+    ).toEqual(srcPort);
+    expect(
+      (store.getState().elements[store.getState().diagram.ownedRelationships[0]] as UMLRelationship).target,
+    ).toEqual(targetPort);
+  });
 });
