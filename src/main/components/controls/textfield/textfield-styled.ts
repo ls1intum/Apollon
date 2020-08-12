@@ -1,10 +1,10 @@
 import { lighten } from '../../../utils/color';
-import { css, styled } from '../../theme/styles';
+import { css, styled, Styles } from '../../theme/styles';
 import { defaultProps } from './textfield';
 
 const FOCUS_BORDER_LIGHTEN = 25;
 
-const Input = styled.input`
+const Input = styled.textarea`
   background-clip: padding-box;
   background-color: ${(props) => props.theme.color.white};
   border: 1px solid ${(props) => props.theme.color.gray400};
@@ -34,7 +34,7 @@ const Input = styled.input`
 type Props = typeof defaultProps;
 
 export const StyledTextfield = styled(Input)<Props>(
-  (props) => css`
+  (props: Props & { theme: Styles }) => css`
     ${
       props.gutter &&
       css`

@@ -1,5 +1,5 @@
-import React, { Component, ComponentClass, ComponentType } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { IAssessment } from '../../../services/assessment/assessment';
 import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { IBoundary } from '../../../utils/geometry/boundary';
@@ -50,7 +50,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
 
 export const assessable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
-): ComponentClass<UMLElementComponentProps> => {
+): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
   class Assessable extends Component<Props> {
     componentDidMount() {
       if (!this.props.readonly) {

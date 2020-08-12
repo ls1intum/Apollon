@@ -194,7 +194,7 @@ export class Svg extends Component<Props, State> {
         {elements.map((element, index) => {
           const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
           return (
-            <svg {...element.bounds} key={element.id} className={element.name ? element.name.replace(/<|>/, ''): ''}>
+            <svg {...element.bounds} key={element.id} className={element.name ? element.name.replace(/<|>/, '') : ''}>
               <ElementComponent key={index} element={element} />
             </svg>
           );

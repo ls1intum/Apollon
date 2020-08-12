@@ -5,7 +5,7 @@ import {
   combineReducers,
   compose,
   createStore,
-  DeepPartial,
+  PreloadedState,
   Reducer,
   Store,
   StoreEnhancer,
@@ -21,16 +21,16 @@ import { undoable } from '../../services/undo/undo-reducer';
 import { Dispatch } from '../../utils/actions/actions';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
-import { ModelState } from './model-state';
+import { ModelState, PartialModelState } from './model-state';
 
 type OwnProps = PropsWithChildren<{
-  initialState?: DeepPartial<ModelState>;
+  initialState?: PreloadedState<PartialModelState>;
 }>;
 
 type Props = OwnProps & CanvasContext;
 
 const getInitialState = (
-  initialState: DeepPartial<ModelState> = {},
+  initialState: PreloadedState<PartialModelState> = {},
   layer: ILayer | null = null,
 ): { store: Store<ModelState, Actions> } => {
   const reducer: Reducer<ModelState, Actions> = undoable(combineReducers<ModelState, Actions>(reducers));
@@ -43,7 +43,7 @@ const getInitialState = (
   const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
   const enhancer = composeEnhancers(middleware);
 
-  const store: Store<ModelState, Actions> = createStore(reducer, initialState, enhancer);
+  const store: Store<ModelState, Actions> = createStore(reducer, initialState as ModelState, enhancer);
 
   if (layer) {
     sagaMiddleware.run(saga);

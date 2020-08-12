@@ -1,6 +1,6 @@
-import React, { Component, ComponentClass, ComponentType } from 'react';
+import React, { Component, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
-import { connect } from 'react-redux';
+import { connect, ConnectedComponent } from 'react-redux';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { ModelState } from '../../store/model-state';
@@ -24,7 +24,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
 
 export const updatable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
-): ComponentClass<UMLElementComponentProps> => {
+): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
   class Updatable extends Component<Props, State> {
     state = initialState;
 

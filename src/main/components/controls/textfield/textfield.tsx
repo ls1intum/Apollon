@@ -1,4 +1,4 @@
-import React, { Component, FocusEvent, FormEvent, InputHTMLAttributes, KeyboardEvent } from 'react';
+import React, { Component, FormEvent, InputHTMLAttributes, KeyboardEvent } from 'react';
 import { Omit } from 'react-redux';
 import { Size } from '../../theme/styles';
 import { StyledTextfield } from './textfield-styled';
@@ -24,7 +24,7 @@ type Props = {
   placeholder?: string;
   value: string;
   enterToSubmit?: boolean;
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onSubmit'> &
+} & Omit<InputHTMLAttributes<HTMLTextAreaElement>, 'onChange' | 'onSubmit' | 'value' | 'size'> &
   typeof defaultProps;
 
 type State = typeof initialState;
@@ -58,7 +58,7 @@ export class Textfield extends Component<Props, State> {
     }
   }
 
-  private onBlur = ({ currentTarget }: FocusEvent<HTMLInputElement>) => {
+  private onBlur = ({ currentTarget }: FormEvent<HTMLTextAreaElement>) => {
     const { value } = currentTarget;
     if (!value || !this.props.onSubmit) {
       return;
@@ -68,7 +68,7 @@ export class Textfield extends Component<Props, State> {
     this.setState({ key: Date.now() });
   };
 
-  private onChange = ({ currentTarget }: FormEvent<HTMLInputElement>) => {
+  private onChange = ({ currentTarget }: FormEvent<HTMLTextAreaElement>) => {
     if (!this.props.onChange) {
       return;
     }
@@ -77,7 +77,7 @@ export class Textfield extends Component<Props, State> {
     this.props.onChange(value);
   };
 
-  private onKeyUp = ({ key, currentTarget }: KeyboardEvent<HTMLInputElement>) => {
+  private onKeyUp = ({ key, currentTarget }: KeyboardEvent<HTMLTextAreaElement>) => {
     switch (key) {
       case 'Enter':
         if (this.props.enterToSubmit) {

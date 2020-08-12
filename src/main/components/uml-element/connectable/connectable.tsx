@@ -1,6 +1,6 @@
-import React, { Component, ComponentClass, ComponentType } from 'react';
+import React, { Component, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
-import { connect } from 'react-redux';
+import { connect, ConnectedComponent } from 'react-redux';
 import { Direction } from '../../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
@@ -104,7 +104,7 @@ const Handle = styled((props) => {
 
 export const connectable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
-): ComponentClass<UMLElementComponentProps> => {
+): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
   class Connectable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;

@@ -1,5 +1,5 @@
-import React, { Component, ComponentClass, ComponentType } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { Point } from '../../../utils/geometry/point';
@@ -44,7 +44,7 @@ const Handle = styled.rect.attrs({
 
 export const resizable = (options?: { preventX: boolean; preventY: boolean }) => (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
-): ComponentClass<UMLElementComponentProps> => {
+): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
   class Resizable extends Component<Props, State> {
     state = initialState;
 

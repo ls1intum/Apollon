@@ -2,7 +2,7 @@ import 'pepjs';
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { DeepPartial, Store } from 'redux';
-import { ModelState } from './components/store/model-state';
+import { ModelState, PartialModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
 import { UMLElementType } from './packages/uml-element-type';
 import { UMLRelationshipType } from './packages/uml-relationship-type';
@@ -26,7 +26,7 @@ export class ApollonEditor {
 
   set model(model: Apollon.UMLModel) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
-    const state: DeepPartial<ModelState> = {
+    const state: PartialModelState = {
       ...ModelState.fromModel(model),
       editor: { ...this.store.getState().editor },
     };
@@ -35,7 +35,7 @@ export class ApollonEditor {
 
   set type(diagramType: UMLDiagramType) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
-    const state: DeepPartial<ModelState> = {
+    const state: PartialModelState = {
       ...this.store.getState(),
       diagram: new UMLDiagram({
         type: diagramType,
@@ -79,7 +79,7 @@ export class ApollonEditor {
   private errorSubscribers: ((error: Error) => void)[] = [];
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
-    let state: DeepPartial<ModelState> | undefined = options.model ? ModelState.fromModel(options.model) : {};
+    let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
 
     state = {
       ...state,
@@ -101,6 +101,7 @@ export class ApollonEditor {
           connectable: !options.readonly,
           updatable: !options.readonly,
           droppable: !options.readonly,
+          alternativePortVisualization: false,
         },
       },
     };
@@ -230,7 +231,7 @@ export class ApollonEditor {
     }
   }, 50);
 
-  private recreateEditor(state: DeepPartial<ModelState>) {
+  private recreateEditor(state: PartialModelState) {
     this.destroy();
 
     const element = createElement(Application, {
