@@ -1,47 +1,48 @@
-import { ModelState } from '../../main/components/store/model-state';
+import { ModelState, PartialModelState } from '../../main/components/store/model-state';
 import { UMLDiagram } from '../../main/services/uml-diagram/uml-diagram';
 import { ApollonMode } from '../../main';
 import { ApollonView, EditorState } from '../../main/services/editor/editor-types';
-import { IUMLElement } from '../../main/services/uml-element/uml-element';
+import { IUMLElement, UMLElement } from '../../main/services/uml-element/uml-element';
 import { UMLElementState } from '../../main/services/uml-element/uml-element-types';
 import thunk, { ThunkDispatch } from 'redux-thunk';
 import { Actions } from '../../main/services/actions';
 import createMockStore, { MockStoreEnhanced } from 'redux-mock-store';
+import { Store } from 'redux';
+import { createReduxStore } from '../../main/components/store/model-store';
+import { ILayer } from '../../main/services/layouter/layer';
+import { UMLClass } from '../../main/packages/uml-class-diagram/uml-class/uml-class';
+import { UMLClassAttribute } from '../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
+import { UMLClassMethod } from '../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
 
 type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
 
 const middleware = [thunk];
 const mockStore = createMockStore<ModelState, DispatchExts>(middleware);
 
-type PartialModelState = Partial<Omit<ModelState, 'editor'>> & {
-  editor?: Partial<EditorState>;
-};
-
-export const getMockedStore = (
-  modelState?: PartialModelState,
+const createModelStateFromPartialModelState = (
+  partialModelState?: PartialModelState,
   elements?: IUMLElement[],
-): MockStoreEnhanced<ModelState, DispatchExts> => {
-  // initial state
-  const storeState: ModelState = {
-    assessments: modelState?.assessments ? { ...modelState.assessments } : {},
-    connecting: modelState?.connecting ? modelState.connecting : [],
-    copy: modelState?.copy ? modelState.copy : [],
-    diagram: modelState?.diagram ? modelState.diagram : new UMLDiagram({}),
-    interactive: modelState?.interactive ? modelState.interactive : [],
-    moving: modelState?.moving ? modelState.moving : [],
-    reconnecting: modelState?.reconnecting ? modelState.reconnecting : {},
-    resizing: modelState?.resizing ? modelState.resizing : [],
-    selected: modelState?.selected ? modelState.selected : [],
-    updating: modelState?.updating ? modelState.updating : [],
-    hovered: modelState?.hovered ? modelState.hovered : [],
+): ModelState => {
+  const modelState: ModelState = {
+    assessments: partialModelState?.assessments ? { ...partialModelState.assessments } : {},
+    connecting: partialModelState?.connecting ? partialModelState.connecting : [],
+    copy: partialModelState?.copy ? partialModelState.copy : [],
+    diagram: partialModelState?.diagram ? partialModelState.diagram : new UMLDiagram({}),
+    interactive: partialModelState?.interactive ? partialModelState.interactive : [],
+    moving: partialModelState?.moving ? partialModelState.moving : [],
+    reconnecting: partialModelState?.reconnecting ? partialModelState.reconnecting : {},
+    resizing: partialModelState?.resizing ? partialModelState.resizing : [],
+    selected: partialModelState?.selected ? partialModelState.selected : [],
+    updating: partialModelState?.updating ? partialModelState.updating : [],
+    hovered: partialModelState?.hovered ? partialModelState.hovered : [],
     editor: {
-      mode: modelState?.editor?.mode ? modelState.editor.mode : ApollonMode.Modelling,
-      readonly: modelState?.editor?.readonly ? modelState.editor?.readonly : false,
-      enablePopups: modelState?.editor?.enablePopups ? modelState.editor?.enablePopups : true,
-      enableCopyPasteToClipboard: modelState?.editor?.enableCopyPasteToClipboard
-        ? modelState.editor?.enableCopyPasteToClipboard
+      mode: partialModelState?.editor?.mode ? partialModelState.editor.mode : ApollonMode.Modelling,
+      readonly: partialModelState?.editor?.readonly ? partialModelState.editor?.readonly : false,
+      enablePopups: partialModelState?.editor?.enablePopups ? partialModelState.editor?.enablePopups : true,
+      enableCopyPasteToClipboard: partialModelState?.editor?.enableCopyPasteToClipboard
+        ? partialModelState.editor?.enableCopyPasteToClipboard
         : false,
-      view: modelState?.editor?.view ? modelState.editor?.view : ApollonView.Modelling,
+      view: partialModelState?.editor?.view ? partialModelState.editor?.view : ApollonView.Modelling,
       features: {
         hoverable: true,
         selectable: true,
@@ -62,6 +63,38 @@ export const getMockedStore = (
         )
       : {},
   };
+  return modelState;
+};
 
+export const getMockedStore = (
+  modelState?: PartialModelState,
+  elements?: IUMLElement[],
+): MockStoreEnhanced<ModelState, DispatchExts> => {
+  // initial state
+  const storeState = createModelStateFromPartialModelState(modelState, elements);
   return mockStore(storeState);
+};
+
+export const getRealStore = (
+  modelState?: PartialModelState,
+  elements: IUMLElement[] = [],
+  layer: ILayer | null = null,
+): Store<ModelState, any> => {
+  const storeState = createModelStateFromPartialModelState(modelState, elements);
+  return createReduxStore(storeState, layer);
+};
+
+// ClassDiagram
+export const createUMLClassWithAttributeAndMethod = (): UMLElement[] => {
+  const umlClass = new UMLClass({ name: 'test-element' });
+  const umlClassAttribute = new UMLClassAttribute({
+    name: 'attribute',
+    owner: umlClass.id,
+  });
+  const umlClassMethod = new UMLClassMethod({
+    name: 'classMethod',
+    owner: umlClass.id,
+  });
+  umlClass.ownedElements = [umlClassAttribute.id, umlClassMethod.id];
+  return [umlClass, umlClassAttribute, umlClassMethod];
 };
