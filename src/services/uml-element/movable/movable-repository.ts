@@ -9,6 +9,10 @@ import { MovableActionTypes, MoveAction, MoveEndAction, MoveStartAction } from '
 import { UMLDiagramRepository } from '../../uml-diagram/uml-diagram-repository';
 import { MovingActionTypes, MovingEndAction } from './moving-types';
 
+// when moving an element, it is copied from the elements of the redux state and handled in the moving state separately
+// we do this, because it enables us to not do a full shallow copy of all elements in the state, when a pointer move event is triggered
+// but just update the position of elements which are actually moved
+// that is why there is the the separation of movable and moving reducer
 export const Movable = {
   startMoving: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
     const { elements, selected } = getState();
