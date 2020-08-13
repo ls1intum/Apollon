@@ -5,7 +5,6 @@ import { run } from '../../utils/actions/sagas';
 import { diff } from '../../utils/fx/diff';
 import { ILayer } from '../layouter/layer';
 import { RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
-import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from '../uml-element/uml-element-types';
@@ -13,6 +12,7 @@ import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/recon
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { UMLRelationshipRepository } from './uml-relationship-repository';
 import { LayoutAction } from './uml-relationship-types';
+import { MovableActionTypes, MoveAction } from "../uml-element/movable/movable-types";
 
 export function* UMLRelationshipSaga() {
   yield run([create, reconnect, update, layoutElement, deleteElement]);
@@ -46,7 +46,7 @@ function* update(): SagaIterator {
 }
 
 function* layoutElement(): SagaIterator {
-  const action: MoveAction | ResizeAction = yield take([MovingActionTypes.MOVE, ResizingActionTypes.RESIZE]);
+  const action: MoveAction | ResizeAction = yield take([MovableActionTypes.MOVE, ResizingActionTypes.RESIZE]);
   const { elements }: ModelState = yield select();
   const relationships = Object.values(elements).filter((x): x is IUMLRelationship =>
     UMLRelationship.isUMLRelationship(x),

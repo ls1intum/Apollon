@@ -31,7 +31,6 @@ export const reducers: ReducersMapObject<ModelState, Actions> = {
   diagram: UMLDiagramReducer,
   hovered: HoverableReducer,
   selected: SelectableReducer,
-  moving: MovableReducer,
   resizing: ResizableReducer,
   connecting: ConnectableReducer,
   reconnecting: ReconnectableReducer,
@@ -46,5 +45,6 @@ export const reducers: ReducersMapObject<ModelState, Actions> = {
     ResizingReducer,
     MovingReducer,
   ),
+  moving: MovableReducer,
   assessments: AssessmentReducer,
 };

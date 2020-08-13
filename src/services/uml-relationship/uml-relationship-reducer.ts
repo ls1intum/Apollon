@@ -11,7 +11,7 @@ export const UMLRelationshipReducer: Reducer<UMLElementState, Actions> = (state 
       const { payload } = action;
 
       return payload.connections.reduce(
-        (acc, connection) => ({
+        (acc: UMLElementState, connection: any) => ({
           ...acc,
           [connection.id]: {
             ...state[connection.id],

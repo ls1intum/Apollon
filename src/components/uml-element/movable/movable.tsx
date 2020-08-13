@@ -29,7 +29,7 @@ type State = typeof initialState;
 const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
   (state, props) => ({
     movable: state.selected.includes(props.id) && !state.resizing.includes(props.id) && !state.connecting.length,
-    moving: state.moving.includes(props.id),
+    moving: Object.keys(state.moving).includes(props.id),
   }),
   {
     start: UMLElementRepository.startMoving,
