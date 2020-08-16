@@ -1,17 +1,20 @@
 import { Action } from '../../../utils/actions/actions';
 import { UMLElementState } from '../uml-element-types';
-import { IUMLElement } from '../uml-element';
 
 export const enum MovingActionTypes {
-  END = '@@element/moving/END',
+  MOVE = '@@element/movable/MOVE',
 }
 
 export type MovingState = UMLElementState;
 
-export type MovingActions = MovingEndAction;
+export type MovingActions = MoveAction;
 
-export type MovingEndAction = Action<MovingActionTypes.END> & {
+export type MoveAction = Action<MovingActionTypes.MOVE> & {
   payload: {
-    elements: IUMLElement[];
+    ids: string[];
+    delta: {
+      x: number;
+      y: number;
+    };
   };
 };

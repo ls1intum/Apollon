@@ -31,17 +31,17 @@ type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   withTheme,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => {
-    const moving = Object.keys(state.moving).includes(props.id);
-    return {
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    (state, props) => ({
       hovered: state.hovered[0] === props.id,
       selected: state.selected.includes(props.id),
-      moving,
+      moving: state.moving.includes(props.id),
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
-      element: moving ? state.moving[props.id] : state.elements[props.id],
-    };
-  }, {}),
+      element: state.elements[props.id],
+    }),
+    {},
+  ),
 );
 
 export class CanvasElementComponent extends Component<Props> {

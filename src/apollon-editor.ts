@@ -251,11 +251,11 @@ export class ApollonEditor {
 
   private restoreEditor() {
     if (this.currentModelState) {
-      const state: PartialModelState = {
+      const state = {
         ...this.currentModelState,
         hovered: [],
         selected: [],
-        moving: {},
+        moving: [],
         resizing: [],
         connecting: [],
         reconnecting: {},

@@ -7,6 +7,7 @@ import { notEmpty } from '../../utils/not-empty';
 import { UMLContainer } from '../uml-container/uml-container';
 import { UMLContainerRepository } from '../uml-container/uml-container-repository';
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
+import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 import { UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
@@ -16,7 +17,6 @@ import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-
 import { recalc } from '../uml-relationship/uml-relationship-saga';
 import { ILayer } from './layer';
 import { LayoutAction, LayouterActionTypes } from './layouter-types';
-import { MovableActionTypes, MoveAction } from '../uml-element/movable/movable-types';
 
 export function* Layouter() {
   yield run([layout]);
@@ -120,7 +120,7 @@ export function* render(id: string): SagaIterator {
     };
     if (Object.values(position).some((x) => x !== 0)) {
       yield put<MoveAction>({
-        type: MovableActionTypes.MOVE,
+        type: MovingActionTypes.MOVE,
         payload: { ids: [update.id], delta: position },
         undoable: false,
       });

@@ -8,7 +8,7 @@ export const ReconnectableReducer: Reducer<ReconnectableState, Actions> = (state
     case ReconnectableActionTypes.START: {
       const { payload } = action;
 
-      return payload.ids.reduce((ids: ReconnectableState, id: string) => ({ ...ids, [id]: payload.endpoint }), state);
+      return payload.ids.reduce<ReconnectableState>((ids, id) => ({ ...ids, [id]: payload.endpoint }), state);
     }
     case UMLElementActionTypes.DELETE:
     case ReconnectableActionTypes.END: {

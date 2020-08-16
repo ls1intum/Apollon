@@ -1,23 +1,22 @@
 import { Reducer } from 'redux';
 import { Actions } from '../actions';
 import { UMLElementActionTypes, UMLElementState } from './uml-element-types';
-import { IUMLElement } from './uml-element';
 
 export const UMLElementReducer: Reducer<UMLElementState, Actions> = (state = {}, action) => {
   switch (action.type) {
     case UMLElementActionTypes.CREATE: {
       const { payload } = action;
 
-      return payload.values.reduce(
-        (elements: UMLElementState, values: IUMLElement) => ({ ...elements, [values.id]: values }),
+      return payload.values.reduce<UMLElementState>(
+        (elements, values) => ({ ...elements, [values.id]: values }),
         state,
       );
     }
     case UMLElementActionTypes.UPDATE: {
       const { payload } = action;
 
-      return payload.values.reduce(
-        (elements: UMLElementState, values: any) => ({
+      return payload.values.reduce<UMLElementState>(
+        (elements, values) => ({
           ...elements,
           [values.id]: {
             ...elements[values.id],

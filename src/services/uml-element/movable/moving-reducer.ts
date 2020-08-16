@@ -4,13 +4,25 @@ import { MovingActionTypes, MovingState } from './moving-types';
 
 export const MovingReducer: Reducer<MovingState, Actions> = (state = {}, action) => {
   switch (action.type) {
-    case MovingActionTypes.END: {
+    case MovingActionTypes.MOVE: {
       const { payload } = action;
 
-      return {
-        ...state,
-        ...payload.elements.reduce((elements, element) => ({ ...elements, [element.id]: element }), {}),
-      };
+      return payload.ids.reduce<MovingState>(
+        (elements, id) => ({
+          ...elements,
+          ...(id in elements && {
+            [id]: {
+              ...elements[id],
+              bounds: {
+                ...elements[id].bounds,
+                x: elements[id].bounds.x + payload.delta.x,
+                y: elements[id].bounds.y + payload.delta.y,
+              },
+            },
+          }),
+        }),
+        state,
+      );
     }
   }
 
