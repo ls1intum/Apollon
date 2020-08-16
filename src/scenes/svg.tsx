@@ -72,7 +72,6 @@ const getInitialState = ({ model, options }: Props): State => {
   const layer: ILayer = {
     layer: document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
     origin: (): Point => new Point(),
-    snap: (point: Point): Point => point,
   };
   const apollonElements = model.elements;
   const apollonRelationships = model.relationships;

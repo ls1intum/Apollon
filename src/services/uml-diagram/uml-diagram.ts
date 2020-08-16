@@ -22,6 +22,7 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
   }
 
   render(canvas: ILayer, children: ILayoutable[] = []): ILayoutable[] {
+    const margin = 40;
     // calculates the most distant svg point from diagram center
     const size = children.reduce<{ width: number; height: number }>(
       (max, element) => ({
@@ -34,7 +35,12 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
     // updates diagram bound
     // sets origin to new location
     // make size at least 2 times most distant point -> all points are inside the diagram
-    this.bounds = { x: -size.width, y: -size.height, width: size.width * 2, height: size.height * 2 };
+    this.bounds = {
+      x: -size.width - margin,
+      y: -size.height - margin,
+      width: size.width * 2 + margin,
+      height: size.height * 2 + margin,
+    };
     return [this];
   }
 }
