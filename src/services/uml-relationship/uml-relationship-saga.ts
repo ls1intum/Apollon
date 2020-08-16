@@ -12,7 +12,7 @@ import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/recon
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { UMLRelationshipRepository } from './uml-relationship-repository';
 import { LayoutAction } from './uml-relationship-types';
-import { MovableActionTypes, MoveAction } from "../uml-element/movable/movable-types";
+import { MovableActionTypes, MoveAction } from '../uml-element/movable/movable-types';
 
 export function* UMLRelationshipSaga() {
   yield run([create, reconnect, update, layoutElement, deleteElement]);

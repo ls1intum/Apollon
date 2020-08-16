@@ -1,6 +1,6 @@
 import { Action } from '../../../utils/actions/actions';
-import { UMLElementState } from "../uml-element-types";
-import { IUMLElement } from "../uml-element";
+import { UMLElementState } from '../uml-element-types';
+import { IUMLElement } from '../uml-element';
 
 export const enum MovableActionTypes {
   START = '@@element/movable/START',

@@ -35,7 +35,7 @@ export const Movable = {
     dispatch(UMLDiagramRepository.bringToFront(ids));
     dispatch<MoveStartAction>({
       type: MovableActionTypes.START,
-      payload: { elements: movables.map((id) => getState().elements[id]) },
+      payload: { elements: movables.map((elementId) => getState().elements[elementId]) },
       undoable: true,
     });
   },
@@ -60,7 +60,7 @@ export const Movable = {
     }
     dispatch<MovingEndAction>({
       type: MovingActionTypes.END,
-      payload: { elements: ids.map((id) => getState().moving[id]) },
+      payload: { elements: ids.map((elementId) => getState().moving[elementId]) },
       undoable: false,
     });
 

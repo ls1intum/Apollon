@@ -1,6 +1,7 @@
 import { UMLContainer } from '../../services/uml-container/uml-container';
 import { IUMLElement, UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
+import { ModelState } from '../../components/store/model-state';
 
 export function filterRoots(ids: string[], elements: UMLElementState): string[] {
   const getSelection = (root: IUMLElement): string[] => {
@@ -15,6 +16,20 @@ export function filterRoots(ids: string[], elements: UMLElementState): string[] 
   return Object.values(elements)
     .filter((element) => !element.owner)
     .reduce<string[]>((selection, element) => [...selection, ...getSelection(element)], []);
+}
+
+/**
+ * returns the ids of all elements in the hierarchy above the element with the specified id
+ * @param id element id which parents should be found
+ * @param elements elements in state
+ */
+export function getAllParents(id: string, elements: UMLElementState): string[] {
+  const getParents = (element: IUMLElement): string[] => {
+    // reached top
+    if (element.owner === null) return [];
+    return [element.owner, ...getParents(elements[element.owner])];
+  };
+  return getParents(elements[id]);
 }
 
 export function getChildren(ids: string[], elements: UMLElementState): string[] {

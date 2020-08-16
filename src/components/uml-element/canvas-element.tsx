@@ -36,7 +36,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     return {
       hovered: state.hovered[0] === props.id,
       selected: state.selected.includes(props.id),
-      moving: moving,
+      moving,
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
       element: moving ? state.moving[props.id] : state.elements[props.id],
