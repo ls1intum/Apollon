@@ -29,10 +29,10 @@ type OwnProps = PropsWithChildren<{
 
 type Props = OwnProps & CanvasContext;
 
-const getInitialState = (
+export const createReduxStore = (
   initialState: PreloadedState<PartialModelState> = {},
   layer: ILayer | null = null,
-): { store: Store<ModelState, Actions> } => {
+): Store<ModelState, Actions> => {
   const reducer: Reducer<ModelState, Actions> = undoable(combineReducers<ModelState, Actions>(reducers));
   const sagaMiddleware: SagaMiddleware<SagaContext> = createSagaMiddleware<SagaContext>({ context: { layer } });
 
@@ -49,7 +49,14 @@ const getInitialState = (
     sagaMiddleware.run(saga);
     store.dispatch(LayouterRepository.layout());
   }
+  return store;
+};
 
+const getInitialState = (
+  initialState: PreloadedState<PartialModelState> = {},
+  layer: ILayer | null = null,
+): { store: Store<ModelState, Actions> } => {
+  const store = createReduxStore(initialState, layer);
   return { store };
 };
 

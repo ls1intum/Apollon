@@ -70,9 +70,7 @@ module.exports = {
       version: appVersion,
     }),
     new CopyPlugin({
-      patterns: [
-        { from: 'public/assets', to: outputDir },
-      ],
+      patterns: [{ from: 'public/assets', to: outputDir }],
     }),
     new webpack.HashedModuleIdsPlugin(),
   ],

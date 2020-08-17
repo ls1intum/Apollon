@@ -8,7 +8,7 @@ import { CopyActionTypes, CopyState } from './copy-types';
  * @param action
  * @constructor
  */
-export const CopyReducer: Reducer<CopyState, Actions> = (state = [], action) => {
+export const CopyReducer: Reducer<CopyState, Actions> = (state = [], action: Actions) => {
   switch (action.type) {
     case CopyActionTypes.COPY: {
       const { payload } = action;

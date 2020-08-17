@@ -1,4 +1,4 @@
-import * as Apollon from '../src';
+import * as Apollon from '../src/main';
 import './styles.css';
 
 const container = document.getElementById('apollon')!;

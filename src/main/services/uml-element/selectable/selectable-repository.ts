@@ -8,7 +8,7 @@ export const Selectable = {
       return;
     }
 
-    dispatch<SelectAction>({
+    return dispatch<SelectAction>({
       type: SelectableActionTypes.SELECT,
       payload: { ids },
       undoable: false,
@@ -21,7 +21,7 @@ export const Selectable = {
       return;
     }
 
-    dispatch<DeselectAction>({
+    return dispatch<DeselectAction>({
       type: SelectableActionTypes.DESELECT,
       payload: { ids },
       undoable: false,

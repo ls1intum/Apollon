@@ -11,7 +11,7 @@ export class CopyRepository {
    */
   static pasteCounter = 0;
 
-  static copy = (id?: string | string[]): AsyncAction => (dispatch, getState) => {
+  static copy = (id?: string | string[]): AsyncAction => (dispatch, getState): CopyAction | undefined => {
     CopyRepository.pasteCounter = 0;
     const { elements, selected } = getState();
     const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
@@ -24,8 +24,9 @@ export class CopyRepository {
       .filter(notEmpty);
     if (getState().editor.enableCopyPasteToClipboard) {
       navigator.clipboard.writeText(JSON.stringify(result));
+      return;
     } else {
-      dispatch<CopyAction>({
+      return dispatch<CopyAction>({
         type: CopyActionTypes.COPY,
         payload: idsToClone,
         undoable: false,
