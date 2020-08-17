@@ -6,7 +6,7 @@ import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../uml-container/uml-container';
 
-const DIAGRAM_MARGIN = 40
+const DIAGRAM_MARGIN = 40;
 
 export interface IUMLDiagram extends IUMLContainer {
   type: UMLDiagramType;
