@@ -44,7 +44,7 @@
     "@types/react-dom": "16.9.8",
     "@types/react-redux": "7.1.9",
     "@types/styled-components": "5.1.2",
-    "@types/uuid": "8.0.1",
+    "@types/uuid": "8.3.0",
     "circular-dependency-plugin": "5.2.0",
     "copy-webpack-plugin": "6.0.3",
     "css-loader": "4.2.1",
