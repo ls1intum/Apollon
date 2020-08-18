@@ -1,0 +1,94 @@
+{
+  "views": {
+    "modelling": "Modeling",
+    "exporting": "Interactive",
+    "highlight": "Show interactive elements"
+  },
+  "sidebar": {
+    "classAttribute": "+ attribute: Type",
+    "classMethod": "+ method()",
+    "enumAttribute": "Case",
+    "objectAttribute": "attribute = value"
+  },
+  "popup": {
+    "attributes": "Attributes",
+    "methods": "Methods",
+    "relationship": "Relationship",
+    "association": "Association",
+    "multiplicity": "Multiplicity",
+    "role": "Role",
+    "messages": "Messages",
+    "condition": "Conditions"
+  },
+  "assessment": {
+    "assessment": "Assessment for",
+    "score": "Score",
+    "feedback": "Feedback"
+  },
+  "packages": {
+    "ClassDiagram": {
+      "Package": "Package",
+      "Class": "Class",
+      "AbstractClass": "Abstract",
+      "Interface": "Interface",
+      "Enumeration": "Enumeration",
+      "ClassAttribute": "Attribute",
+      "ClassMethod": "Method",
+      "ClassAggregation": "Aggregation",
+      "ClassBidirectional": "Association (bidirectional)",
+      "ClassComposition": "Composition",
+      "ClassDependency": "Dependency",
+      "ClassInheritance": "Inheritance",
+      "ClassRealization": "Realization",
+      "ClassUnidirectional": "Association (unidirectional)"
+    },
+    "ObjectDiagram": {
+      "ObjectName": "Object",
+      "ObjectAttribute": "Attribute",
+      "ObjectMethod": "Method",
+      "ObjectLink": "Relationship"
+    },
+    "ActivityDiagram": {
+      "Activity": "Activity",
+      "ActivityActionNode": "Action",
+      "ActivityFinalNode": "Final Node",
+      "ActivityForkNode": "Fork Node",
+      "ActivityInitialNode": "Initial Node",
+      "ActivityMergeNode": "Condition",
+      "ActivityObjectNode": "Object",
+      "ActivityControlFlow": "Control Flow"
+    },
+    "UseCaseDiagram": {
+      "UseCase": "UseCase",
+      "UseCaseActor": "Actor",
+      "UseCaseSystem": "System",
+      "UseCaseAssociation": "Association",
+      "UseCaseExtend": "Extend",
+      "UseCaseGeneralization": "Generalization",
+      "UseCaseInclude": "Include"
+    },
+    "CommunicationDiagram": {
+      "ObjectName": "Object",
+      "ObjectAttribute": "Attribute",
+      "ObjectMethod": "Method",
+      "CommunicationLink": "Communication Link"
+    },
+    "ComponentDiagram": {
+      "Component": "Component",
+      "ComponentDependency": "Dependency",
+      "ComponentInterface": "Interface",
+      "ComponentInterfaceProvided": "Provided Interface",
+      "ComponentInterfaceRequired": "Required Interface"
+    },
+    "DeploymentDiagram": {
+      "DeploymentNode": "Node",
+      "Component": "Component",
+      "DeploymentArtifact": "Artifact",
+      "DeploymentInterface": "Interface",
+      "DeploymentInterfaceProvided": "Provided Interface",
+      "DeploymentInterfaceRequired": "Required Interface",
+      "DeploymentAssociation": "Deployment Association",
+      "DeploymentDependency": "Deployment Dependency"
+    }
+  }
+}

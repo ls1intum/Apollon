@@ -1,0 +1,94 @@
+{
+  "views": {
+    "modelling": "Modellierung",
+    "exporting": "Interaktiv",
+    "highlight": "Zeige interaktive Elemente"
+  },
+  "sidebar": {
+    "classAttribute": "+ attribut: Typ",
+    "classMethod": "+ methode()",
+    "enumAttribute": "Fall",
+    "objectAttribute": "attribut = Wert"
+  },
+  "popup": {
+    "attributes": "Attribute",
+    "methods": "Methoden",
+    "relationship": "Beziehung",
+    "association": "Assoziation",
+    "multiplicity": "Multiziplität",
+    "role": "Rolle",
+    "messages": "Nachrichten",
+    "condition": "Bedingungen"
+  },
+  "assessment": {
+    "assessment": "Bewertung für",
+    "score": "Punkte",
+    "feedback": "Bewertung"
+  },
+  "packages": {
+    "ClassDiagram": {
+      "Package": "Paket",
+      "Class": "Klasse",
+      "AbstractClass": "Abstrakt",
+      "Interface": "Schnittstelle",
+      "Enumeration": "Aufzählung",
+      "ClassAttribute": "Attribut",
+      "ClassMethod": "Methode",
+      "ClassAggregation": "Aggregation",
+      "ClassBidirectional": "Assoziation (bidirektional)",
+      "ClassComposition": "Komposition",
+      "ClassDependency": "Abhängigkeit",
+      "ClassInheritance": "Vererbung",
+      "ClassRealization": "Realisierung",
+      "ClassUnidirectional": "Assoziation (unidirektional)"
+    },
+    "ObjectDiagram": {
+      "ObjectName": "Objekt",
+      "ObjectAttribute": "Attribut",
+      "ObjectMethod": "Methode",
+      "ObjectLink": "Beziehung"
+    },
+    "ActivityDiagram": {
+      "Activity": "Aktivität",
+      "ActivityActionNode": "Aktion",
+      "ActivityFinalNode": "Endknoten",
+      "ActivityForkNode": "Verzweigungsknoten",
+      "ActivityInitialNode": "Startknoten",
+      "ActivityMergeNode": "Bedingung",
+      "ActivityObjectNode": "Objekt",
+      "ActivityControlFlow": "Kontrollfluss"
+    },
+    "UseCaseDiagram": {
+      "UseCase": "Anwendungsfall",
+      "UseCaseActor": "Akteur",
+      "UseCaseSystem": "System",
+      "UseCaseAssociation": "Assoziation",
+      "UseCaseExtend": "Extend",
+      "UseCaseGeneralization": "Generalisierung",
+      "UseCaseInclude": "Include"
+    },
+    "CommunicationDiagram": {
+      "ObjectName": "Objekt",
+      "ObjectAttribute": "Attribut",
+      "ObjectMethod": "Methode",
+      "CommunicationLink": "Kommunikation"
+    },
+    "ComponentDiagram": {
+      "Component": "Komponente",
+      "ComponentDependency": "Abhängigkeit",
+      "ComponentInterface": "Schnittstelle",
+      "ComponentInterfaceProvided": "Bereitgestellte Schnittstelle",
+      "ComponentInterfaceRequired": "Verwendete Schnittstelle"
+    },
+    "DeploymentDiagram": {
+      "DeploymentNode": "Knoten",
+      "Component": "Komponente",
+      "DeploymentArtifact": "Artefakt",
+      "DeploymentInterface": "Schnittstelle",
+      "DeploymentInterfaceProvided": "Bereitgestellte Schnittstelle",
+      "DeploymentInterfaceRequired": "Verwendete Schnittstelle",
+      "DeploymentAssociation": "Deployment Verbindung",
+      "DeploymentDependency": "Deployment Abhängigkeit"
+    }
+  }
+}
