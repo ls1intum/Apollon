@@ -41,6 +41,8 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeUpdate,
   [UMLElementType.DeploymentArtifact]: DefaultPopup,
   [UMLElementType.DeploymentInterface]: DefaultPopup,
+  [UMLElementType.PetriNetPlace]: DefaultPopup,
+  [UMLElementType.PetriNetTransition]: DefaultPopup,
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassComposition]: UMLClassAssociationUpdate,
@@ -62,4 +64,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.DeploymentDependency]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentAssociationUpdate,
+  [UMLRelationshipType.PetriNetArc]: DefaultPopup,
 };

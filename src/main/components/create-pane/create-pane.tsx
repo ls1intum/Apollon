@@ -21,6 +21,7 @@ import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { StoreProvider } from '../store/model-store';
 import { PreviewElement } from './preview-element';
+import { composePetriNetPreview } from '../../packages/uml-petri-net/petri-net-preview';
 
 type OwnProps = {};
 
@@ -57,6 +58,9 @@ const getInitialState = ({ type, canvas, translate }: Props) => {
       break;
     case UMLDiagramType.DeploymentDiagram:
       previews.push(...composeDeploymentPreview(canvas, translate));
+      break;
+    case UMLDiagramType.PetriNet:
+      previews.push(...composePetriNetPreview(canvas, translate));
       break;
   }
 

@@ -24,6 +24,8 @@ import { UMLUseCaseActor } from './uml-use-case-diagram/uml-use-case-actor/uml-u
 import { UMLUseCaseSystem } from './uml-use-case-diagram/uml-use-case-system/uml-use-case-system';
 import { UMLUseCase } from './uml-use-case-diagram/uml-use-case/uml-use-case';
 import { UMLDeploymentInterface } from './uml-deployment-diagram/uml-deployment-interface/uml-component-interface';
+import { UMLPetriNetTransition } from "./uml-petri-net/uml-petri-net-transition/uml-petri-net-transition";
+import { UMLPetriNetPlace } from "./uml-petri-net/uml-petri-net-place/uml-petri-net-place";
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -51,4 +53,6 @@ export const UMLElements = {
   [UMLElementType.DeploymentNode]: UMLDeploymentNode,
   [UMLElementType.DeploymentArtifact]: UMLDeploymentArtifact,
   [UMLElementType.DeploymentInterface]: UMLDeploymentInterface,
+  [UMLElementType.PetriNetPlace]: UMLPetriNetPlace,
+  [UMLElementType.PetriNetTransition]: UMLPetriNetTransition,
 };

@@ -4,6 +4,7 @@ import { ComponentElementType } from './uml-component-diagram';
 import { DeploymentElementType } from './uml-deployment-diagram';
 import { ObjectElementType } from './uml-object-diagram';
 import { UseCaseElementType } from './uml-use-case-diagram';
+import { PetriNetElementType } from './uml-petri-net';
 
 export type UMLElementType =
   | keyof typeof ClassElementType
@@ -11,7 +12,8 @@ export type UMLElementType =
   | keyof typeof ActivityElementType
   | keyof typeof UseCaseElementType
   | keyof typeof ComponentElementType
-  | keyof typeof DeploymentElementType;
+  | keyof typeof DeploymentElementType
+  | keyof typeof PetriNetElementType;
 
 export const UMLElementType = {
   ...ClassElementType,
@@ -20,4 +22,5 @@ export const UMLElementType = {
   ...UseCaseElementType,
   ...ComponentElementType,
   ...DeploymentElementType,
+  ...PetriNetElementType,
 };

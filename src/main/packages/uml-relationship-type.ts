@@ -6,6 +6,7 @@ import { ComponentRelationshipType } from './uml-component-diagram';
 import { DeploymentRelationshipType } from './uml-deployment-diagram';
 import { ObjectRelationshipType } from './uml-object-diagram';
 import { UseCaseRelationshipType } from './uml-use-case-diagram';
+import { PetriNetRelationshipType } from './uml-petri-net';
 
 export type UMLRelationshipType =
   | keyof typeof ClassRelationshipType
@@ -14,7 +15,8 @@ export type UMLRelationshipType =
   | keyof typeof UseCaseRelationshipType
   | keyof typeof CommunicationRelationshipType
   | keyof typeof ComponentRelationshipType
-  | keyof typeof DeploymentRelationshipType;
+  | keyof typeof DeploymentRelationshipType
+  | keyof typeof PetriNetRelationshipType;
 
 export const UMLRelationshipType = {
   ...ClassRelationshipType,
@@ -24,6 +26,7 @@ export const UMLRelationshipType = {
   ...CommunicationRelationshipType,
   ...ComponentRelationshipType,
   ...DeploymentRelationshipType,
+  ...PetriNetRelationshipType,
 };
 
 export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelationshipType } = {
@@ -34,4 +37,5 @@ export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelations
   [UMLDiagramType.CommunicationDiagram]: CommunicationRelationshipType.CommunicationLink,
   [UMLDiagramType.ComponentDiagram]: ComponentRelationshipType.ComponentInterfaceProvided,
   [UMLDiagramType.DeploymentDiagram]: DeploymentRelationshipType.DeploymentAssociation,
+  [UMLDiagramType.PetriNet]: PetriNetRelationshipType.PetriNetArc,
 };
