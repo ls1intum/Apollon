@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass, createRef } from 'react';
+import React, { Component, ComponentClass, createRef, RefObject } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
@@ -21,6 +21,7 @@ import { UMLClassMethod } from '../../uml-class-diagram/uml-class-method/uml-cla
 import { UMLElementType } from '../../uml-element-type';
 import { UMLElements } from '../../uml-elements';
 import { UMLClassifier } from './uml-classifier';
+import { ColorPicker } from '../../../components/color-picker/color-picker';
 
 const Flex = styled.div`
   display: flex;
@@ -62,6 +63,7 @@ const getInitialState = (): State => ({
 });
 
 class ClassifierUpdate extends Component<Props, State> {
+  dialog: RefObject<HTMLDivElement> = createRef();
   state = getInitialState();
   newMethodField = createRef<Textfield>();
   newAttributeField = createRef<Textfield>();
@@ -82,13 +84,18 @@ class ClassifierUpdate extends Component<Props, State> {
     const methodRefs: (Textfield | null)[] = [];
 
     return (
-      <div>
+      <div ref={this.dialog}>
         <section>
           <Flex>
             <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
+            <ColorPicker
+              hexColor={element.highlight ? element.highlight : ''}
+              onColorChange={this.changeColor(element.id)}
+              relativeTo={this.dialog}
+            />
           </Flex>
           <Divider />
         </section>
@@ -126,6 +133,11 @@ class ClassifierUpdate extends Component<Props, State> {
               <Button color="link" tabIndex={-1} onClick={this.delete(attribute.id)}>
                 <TrashIcon />
               </Button>
+              <ColorPicker
+                hexColor={attribute.highlight ? attribute.highlight : ''}
+                onColorChange={this.changeColor(attribute.id)}
+                relativeTo={this.dialog}
+              />
             </Flex>
           ))}
           <Textfield
@@ -187,6 +199,11 @@ class ClassifierUpdate extends Component<Props, State> {
               <Button color="link" tabIndex={-1} onClick={this.delete(method.id)}>
                 <TrashIcon />
               </Button>
+              <ColorPicker
+                hexColor={method.highlight ? method.highlight : ''}
+                onColorChange={this.changeColor(method.id)}
+                relativeTo={this.dialog}
+              />
             </Flex>
           ))}
           <Textfield
@@ -222,6 +239,10 @@ class ClassifierUpdate extends Component<Props, State> {
     const member = new Clazz();
     member.name = value;
     create(member, element.id);
+  };
+
+  private changeColor = (id: string) => (value: string) => {
+    this.props.update(id, { highlight: value });
   };
 
   private rename = (id: string) => (value: string) => {

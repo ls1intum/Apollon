@@ -79,7 +79,7 @@ export class ColorPicker extends React.Component<Props, State> {
   render() {
     return (
       <button style={{ backgroundColor: 'transparent', border: 'none' }} ref={this.colorPickerButton}>
-        <ColorPickerIcon onClick={this.togglePicker}></ColorPickerIcon>
+        <ColorPickerIcon onClick={this.togglePicker}/>
         {this.state.open && (
           <div
             style={{ position: 'absolute', left: this.state.position.x, top: this.state.position.y }}

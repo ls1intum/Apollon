@@ -21,7 +21,7 @@ export const ColorPickerIcon = (props: Props) => (
           <rect x="0" y="0" width="10587" height="10587" />
         </clipPath>
       </defs>
-      <defs className="TextShapeIndex"></defs>
+      <defs className="TextShapeIndex"/>
       <defs className="EmbeddedBulletChars">
         <g id="bullet-char-template57356" transform="scale(0.00048828125,-0.00048828125)">
           <path d="M 580,1141 L 1163,571 580,0 -4,571 580,1141 Z" />
