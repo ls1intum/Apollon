@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass} from 'react';
+import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Button } from '../../../components/controls/button/button';
@@ -13,6 +13,7 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { UMLPetriNetPlace } from './uml-petri-net-place';
+import { Body } from '../../../components/controls/typography/typography';
 
 interface OwnProps {
   element: UMLPetriNetPlace;
@@ -60,7 +61,11 @@ class UmlPetriNetPlaceUpdateComponent extends Component<Props> {
           </Flex>
           <Divider />
         </section>
-        <Textfield value={element.amountOfTokens} type="number" onChange={this.changeTokenAmount(element.id)} />
+
+        <Flex>
+          <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.tokens')}</Body>
+          <Textfield value={element.amountOfTokens} type="number" onChange={this.changeTokenAmount(element.id)} />
+        </Flex>
       </div>
     );
   }

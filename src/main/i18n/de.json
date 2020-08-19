@@ -18,7 +18,8 @@
     "multiplicity": "Multiziplität",
     "role": "Rolle",
     "messages": "Nachrichten",
-    "condition": "Bedingungen"
+    "condition": "Bedingungen",
+    "tokens": "Tokens"
   },
   "assessment": {
     "assessment": "Bewertung für",

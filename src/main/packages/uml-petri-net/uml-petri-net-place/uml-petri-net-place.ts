@@ -6,6 +6,7 @@ import { UMLElementFeatures } from '../../../services/uml-element/uml-element-fe
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
 import { DeepPartial } from 'redux';
+import * as Apollon from '../../../typings';
 
 export class UMLPetriNetPlace extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };
@@ -17,6 +18,25 @@ export class UMLPetriNetPlace extends UMLElement {
   constructor(values?: DeepPartial<UMLPetriNetPlace>) {
     super(values);
     this.amountOfTokens = (values && values.amountOfTokens) || this.amountOfTokens;
+  }
+
+  serialize(children?: UMLElement[]): Apollon.UMLPetriNetPlace {
+    return {
+      ...super.serialize(),
+      type: this.type as keyof typeof PetriNetElementType,
+      amountOfTokens: this.amountOfTokens,
+    };
+  }
+
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]) {
+    const assert = (v: Apollon.UMLModelElement): v is Apollon.UMLPetriNetPlace =>
+      v.type === PetriNetElementType.PetriNetPlace;
+    if (!assert(values)) {
+      return;
+    }
+
+    super.deserialize(values, children);
+    this.amountOfTokens = values.amountOfTokens;
   }
 
   render(canvas: ILayer): ILayoutable[] {

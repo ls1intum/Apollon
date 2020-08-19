@@ -73,6 +73,10 @@ export type UMLDeploymentNode = UMLElement & {
   stereotype: string;
 };
 
+export type UMLPetriNetPlace = UMLElement & {
+  amountOfTokens: number;
+};
+
 export type UMLAssociation = UMLRelationship & {
   source: UMLRelationship['source'] & {
     multiplicity: string;

@@ -3,7 +3,8 @@ import { UMLPetriNetPlace } from './uml-petri-net-place';
 import { Point } from '../../../utils/geometry/point';
 
 const maxAmountCircles = 5;
-const tokenToBoundaryDistance = 4;
+const tokenToBoundaryDistance = 10;
+const tokenToTokenDistance = 5;
 
 const calculateTokenRadius = (amountOfTokens: number, outerRadius: number) => {
   if (amountOfTokens <= 2) {
@@ -20,8 +21,9 @@ const calculatePositions = (amountOfTokens: number, outerRadius: number): Point[
     positions.push(new Point(0, 0));
   } else {
     const degreeFraction = (2 * Math.PI) / amountOfTokens;
-    const tokenRadius = calculateTokenRadius(amountOfTokens, outerRadius);
-    const tokenCenterCircleRadius = outerRadius - tokenRadius;
+    const tokenRadius = calculateTokenRadius(maxAmountCircles, outerRadius);
+    const tokenCenterCircleRadius =
+      outerRadius + (tokenToTokenDistance * amountOfTokens) / maxAmountCircles - tokenRadius;
     for (let i = 0; i < amountOfTokens; i++) {
       const degree = i * degreeFraction + (1 / 2) * Math.PI;
       positions.push(new Point(Math.cos(degree) * tokenCenterCircleRadius, Math.sin(degree) * tokenCenterCircleRadius));
@@ -42,7 +44,7 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
     if (!displayTokenAsNumber) {
       const radiusWithPadding = radius - tokenToBoundaryDistance;
       tokenPositions = calculatePositions(element.amountOfTokens, radiusWithPadding);
-      tokenRadius = calculateTokenRadius(element.amountOfTokens, radiusWithPadding);
+      tokenRadius = calculateTokenRadius(maxAmountCircles, radiusWithPadding);
     }
   }
   return (
