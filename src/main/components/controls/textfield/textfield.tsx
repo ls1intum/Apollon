@@ -13,23 +13,25 @@ export const defaultProps = Object.freeze({
   enterToSubmit: true,
 });
 
+type TextfieldValue = string | number;
+
 const initialState = {
   key: Date.now(),
 };
 
-type Props = {
-  onChange?: (value: string) => void;
-  onSubmit?: (value: string) => void;
-  onSubmitKeyUp?: (key: 'Escape' | 'Enter', value: string) => void;
+type Props<T extends TextfieldValue> = {
+  onChange?: (value: T) => void;
+  onSubmit?: (value: T) => void;
+  onSubmitKeyUp?: (key: 'Escape' | 'Enter', value: T) => void;
   placeholder?: string;
-  value: string;
+  value: T;
   enterToSubmit?: boolean;
 } & Omit<InputHTMLAttributes<HTMLTextAreaElement>, 'onChange' | 'onSubmit' | 'value' | 'size'> &
   typeof defaultProps;
 
 type State = typeof initialState;
 
-export class Textfield extends Component<Props, State> {
+export class Textfield<T extends TextfieldValue> extends Component<Props<T>, State> {
   static defaultProps = defaultProps;
   state = initialState;
   ref = React.createRef<HTMLTextAreaElement>();
@@ -59,7 +61,7 @@ export class Textfield extends Component<Props, State> {
   }
 
   private onBlur = ({ currentTarget }: FormEvent<HTMLTextAreaElement>) => {
-    const { value } = currentTarget;
+    const value: T = typeof this.props.value === 'number' ? (+currentTarget.value as T) : (currentTarget.value as T);
     if (!value || !this.props.onSubmit) {
       return;
     }
@@ -73,27 +75,28 @@ export class Textfield extends Component<Props, State> {
       return;
     }
 
-    const { value } = currentTarget;
+    const value: T = typeof this.props.value === 'number' ? (+currentTarget.value as T) : (currentTarget.value as T);
     this.props.onChange(value);
   };
 
   private onKeyUp = ({ key, currentTarget }: KeyboardEvent<HTMLTextAreaElement>) => {
+    const value: T = typeof this.props.value === 'number' ? (+currentTarget.value as T) : (currentTarget.value as T);
     switch (key) {
       case 'Enter':
         if (this.props.enterToSubmit) {
           currentTarget.blur();
-          this.onSubmitKeyUp(key, currentTarget.value);
+          this.onSubmitKeyUp(key, value);
         }
         break;
       case 'Escape':
         currentTarget.blur();
-        this.onSubmitKeyUp(key, currentTarget.value);
+        this.onSubmitKeyUp(key, value);
         break;
       default:
     }
   };
 
-  private onSubmitKeyUp = (key: 'Enter' | 'Escape', value: string) => {
+  private onSubmitKeyUp = (key: 'Enter' | 'Escape', value: T) => {
     if (!this.props.onSubmitKeyUp) {
       return;
     }

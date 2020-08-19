@@ -13,9 +13,11 @@ import { UMLElementType } from './uml-element-type';
 import { UMLObjectNameUpdate } from './uml-object-diagram/uml-object-name/uml-object-name-update';
 import { UMLRelationshipType } from './uml-relationship-type';
 import { UMLUseCaseAssociationUpdate } from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-update';
+import { UMLPetriNetPlaceUpdate } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
+  // Elements
   [UMLElementType.Package]: DefaultPopup,
   [UMLElementType.Class]: UMLClassifierUpdate,
   [UMLElementType.AbstractClass]: UMLClassifierUpdate,
@@ -41,8 +43,9 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeUpdate,
   [UMLElementType.DeploymentArtifact]: DefaultPopup,
   [UMLElementType.DeploymentInterface]: DefaultPopup,
-  [UMLElementType.PetriNetPlace]: DefaultPopup,
+  [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceUpdate,
   [UMLElementType.PetriNetTransition]: DefaultPopup,
+  // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassComposition]: UMLClassAssociationUpdate,

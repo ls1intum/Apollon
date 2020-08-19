@@ -49,7 +49,7 @@ export const hoverable = (
     }
 
     render() {
-      const { hover, leave, ...props } = this.props;
+      const { hover, leave, moving, ...props } = this.props;
       return <WrappedComponent {...props} />;
     }
 

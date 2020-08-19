@@ -89,6 +89,9 @@
       "DeploymentInterfaceRequired": "Verwendete Schnittstelle",
       "DeploymentAssociation": "Deployment Verbindung",
       "DeploymentDependency": "Deployment Abhängigkeit"
+    },
+    "PetriNet": {
+      "PetriNetPlace": "Platz"
     }
   }
 }

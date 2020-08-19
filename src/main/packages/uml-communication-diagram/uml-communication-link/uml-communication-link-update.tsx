@@ -25,7 +25,7 @@ const Flex = styled.div`
 `;
 
 type State = {
-  fieldToFocus?: Textfield | null;
+  fieldToFocus?: Textfield<string> | null;
 };
 
 const getInitialState = (): State => ({
@@ -34,8 +34,8 @@ const getInitialState = (): State => ({
 
 class CommunicationLinkUpdate extends Component<Props, State> {
   state = getInitialState();
-  newCommunicationLinkField = createRef<Textfield>();
-  messageRefs: (Textfield | null)[] = [];
+  newCommunicationLinkField = createRef<Textfield<string>>();
+  messageRefs: (Textfield<string> | null)[] = [];
 
   componentDidMount() {
     this.setState({ fieldToFocus: this.newCommunicationLinkField.current });

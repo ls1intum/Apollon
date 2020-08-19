@@ -89,6 +89,9 @@
       "DeploymentInterfaceRequired": "Required Interface",
       "DeploymentAssociation": "Deployment Association",
       "DeploymentDependency": "Deployment Dependency"
+    },
+    "PetriNet": {
+      "PetriNetPlace": "Place"
     }
   }
 }

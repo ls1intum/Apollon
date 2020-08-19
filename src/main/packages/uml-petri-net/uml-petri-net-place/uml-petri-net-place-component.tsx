@@ -1,19 +1,75 @@
 import React, { SFC } from 'react';
 import { UMLPetriNetPlace } from './uml-petri-net-place';
+import { Point } from '../../../utils/geometry/point';
 
-export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => (
-  <g>
-    <circle
-      cx="50%"
-      cy="50%"
-      r={Math.min(element.bounds.width, element.bounds.height) / 2}
-      stroke="black"
-      strokeWidth={2}
-      fill="white"
-      fillOpacity={1}
-    />
-  </g>
-);
+const maxAmountCircles = 5;
+const tokenToBoundaryDistance = 4;
+
+const calculateTokenRadius = (amountOfTokens: number, outerRadius: number) => {
+  if (amountOfTokens <= 2) {
+    return outerRadius / 2;
+  } else {
+    // only works for 3 - 9 circles !!
+    return outerRadius / (1 + 1 / Math.sin(Math.PI / amountOfTokens));
+  }
+};
+
+const calculatePositions = (amountOfTokens: number, outerRadius: number): Point[] => {
+  const positions: Point[] = [];
+  if (amountOfTokens === 1) {
+    positions.push(new Point(0, 0));
+  } else {
+    const degreeFraction = (2 * Math.PI) / amountOfTokens;
+    const tokenRadius = calculateTokenRadius(amountOfTokens, outerRadius);
+    const tokenCenterCircleRadius = outerRadius - tokenRadius;
+    for (let i = 0; i < amountOfTokens; i++) {
+      const degree = i * degreeFraction + (1 / 2) * Math.PI;
+      positions.push(new Point(Math.cos(degree) * tokenCenterCircleRadius, Math.sin(degree) * tokenCenterCircleRadius));
+    }
+  }
+  return positions;
+};
+
+export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
+  // radius of the outer circle
+  const radius = Math.min(element.bounds.width, element.bounds.height) / 2;
+  const displayTokenAsNumber = element.amountOfTokens > 0 && element.amountOfTokens > maxAmountCircles;
+  // positions of tokens in UI
+  let tokenPositions: Point[] = [];
+  let tokenRadius: number;
+  // calculate token props
+  if (element.amountOfTokens > 0) {
+    if (!displayTokenAsNumber) {
+      const radiusWithPadding = radius - tokenToBoundaryDistance;
+      tokenPositions = calculatePositions(element.amountOfTokens, radiusWithPadding);
+      tokenRadius = calculateTokenRadius(element.amountOfTokens, radiusWithPadding);
+    }
+  }
+  return (
+    <g>
+      <circle cx="50%" cy="50%" r={radius} stroke="black" strokeWidth={2} fill="white" fillOpacity={1} />
+      {!displayTokenAsNumber &&
+        tokenPositions.map((position, index) => (
+          <circle key={index} cx={radius + position.x} cy={radius + position.y} r={tokenRadius} fill="black" />
+        ))}
+      {displayTokenAsNumber && (
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
+          {element.amountOfTokens}
+        </text>
+      )}
+      <text
+        x="50%"
+        y={element.bounds.height + 15}
+        dominantBaseline="middle"
+        textAnchor="middle"
+        fontWeight="bold"
+        pointerEvents="none"
+      >
+        {element.name}
+      </text>
+    </g>
+  );
+};
 
 interface Props {
   element: UMLPetriNetPlace;

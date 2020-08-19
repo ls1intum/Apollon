@@ -10,11 +10,11 @@ export const composePetriNetPreview: ComposePreview = (
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 
-  // Petri Net Place
-  elements.push(new UMLPetriNetPlace({ name: translate('packages.ActivityDiagram.Activity') }));
-
   // Petri Net Transition
   elements.push(new UMLPetriNetTransition());
+
+  // Petri Net Place
+  elements.push(new UMLPetriNetPlace({ name: translate('packages.PetriNet.PetriNetPlace') }));
 
   return elements;
 };
