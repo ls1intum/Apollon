@@ -20,8 +20,9 @@ import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { StoreProvider } from '../store/model-store';
-import { PreviewElement } from './preview-element';
+import { PreviewElementComponent } from './preview-element-component';
 import { composePetriNetPreview } from '../../packages/uml-petri-net/petri-net-preview';
+import { PreviewElement } from '../../packages/compose-preview';
 
 type OwnProps = {};
 
@@ -36,7 +37,7 @@ type DispatchProps = {
 type Props = OwnProps & StateProps & DispatchProps & I18nContext & CanvasContext;
 
 const getInitialState = ({ type, canvas, translate }: Props) => {
-  const previews: UMLElement[] = [];
+  const previews: PreviewElement[] = [];
   switch (type) {
     case UMLDiagramType.ClassDiagram:
       previews.push(...composeClassPreview(canvas, translate));
@@ -110,9 +111,14 @@ class CreatePaneComponent extends Component<Props, State> {
       <StoreProvider initialState={{ elements, editor: { features } }}>
         {Object.values(previews)
           .filter((preview) => !preview.owner)
-          .map((preview, index) => (
-            <PreviewElement key={index} element={preview} create={this.create} />
-          ))}
+          .map((preview, index) => {
+            const { styles: previewStyles } = preview;
+            return (
+              <div style={previewStyles} key={index}>
+                <PreviewElementComponent element={preview} create={this.create} />
+              </div>
+            );
+          })}
       </StoreProvider>
     );
   }

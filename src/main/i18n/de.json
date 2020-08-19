@@ -92,7 +92,8 @@
       "DeploymentDependency": "Deployment Abhängigkeit"
     },
     "PetriNet": {
-      "PetriNetPlace": "Platz"
+      "PetriNetPlace": "Platz",
+      "PetriNetTransition": "Transition"
     }
   }
 }

@@ -14,6 +14,7 @@ import { UMLObjectNameUpdate } from './uml-object-diagram/uml-object-name/uml-ob
 import { UMLRelationshipType } from './uml-relationship-type';
 import { UMLUseCaseAssociationUpdate } from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-update';
 import { UMLPetriNetPlaceUpdate } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-update';
+import { UMLPetriNetArcUpdate } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -67,5 +68,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.DeploymentDependency]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentAssociationUpdate,
-  [UMLRelationshipType.PetriNetArc]: DefaultPopup,
+  [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcUpdate,
 };

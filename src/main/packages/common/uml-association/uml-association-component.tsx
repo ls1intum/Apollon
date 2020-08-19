@@ -3,7 +3,6 @@ import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-el
 import { Point } from '../../../utils/geometry/point';
 import { ClassRelationshipType } from '../../uml-class-diagram';
 import { UMLAssociation } from './uml-association';
-import { PetriNetRelationshipType } from '../../uml-petri-net';
 
 const Marker = {
   Arrow: (id: string) => (
@@ -69,7 +68,6 @@ const Marker = {
 export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
   const marker = ((type) => {
     switch (type) {
-      case PetriNetRelationshipType.PetriNetArc:
       case ClassRelationshipType.ClassDependency:
       case ClassRelationshipType.ClassUnidirectional:
         return Marker.Arrow;

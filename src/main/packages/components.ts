@@ -33,6 +33,7 @@ import { UMLDependencyComponent } from './common/uml-dependency/uml-dependency-c
 import { ConnectedComponent } from 'react-redux';
 import { UMLPetriNetPlaceComponent } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-component';
 import { UMLPetriNetTransitionComponent } from './uml-petri-net/uml-petri-net-transition/uml-petri-net-transition-component';
+import { UMLPetriNetArcComponent } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -87,5 +88,5 @@ export const Components: {
   [UMLRelationshipType.DeploymentDependency]: UMLDependencyComponent,
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLInterfaceProvidedComponent,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
-  [UMLRelationshipType.PetriNetArc]: UMLAssociationComponent,
+  [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcComponent,
 };

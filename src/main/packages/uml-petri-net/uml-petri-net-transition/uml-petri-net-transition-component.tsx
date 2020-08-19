@@ -3,7 +3,7 @@ import { UMLPetriNetTransition } from './uml-petri-net-transition';
 
 export const UMLPetriNetTransitionComponent: SFC<Props> = ({ element }) => (
   <g>
-    <text x="50%" y="-20%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
+    <text x="50%" y="-15" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
       {element.name}
     </text>
     <rect
