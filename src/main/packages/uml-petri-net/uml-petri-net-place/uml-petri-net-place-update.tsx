@@ -12,6 +12,7 @@ import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLPetriNetPlace } from './uml-petri-net-place';
 import { Body } from '../../../components/controls/typography/typography';
+import { InfiniteIcon } from '../../../components/controls/icon/infinite';
 
 interface OwnProps {
   element: UMLPetriNetPlace;
@@ -64,7 +65,26 @@ class UmlPetriNetPlaceUpdateComponent extends Component<Props> {
         <section>
           <Flex style={{ marginTop: '0.5em' }}>
             <Body style={{ marginRight: '0.5em', minWidth: '70px' }}>{this.props.translate('popup.capacity')}</Body>
-            <Textfield value={element.capacity} type="number" onChange={this.changeCapacity(element.id)} />
+            <form style={{ display: 'inherit' }}>
+              <div style={{ position: 'relative' }}>
+                <Textfield
+                  value={element.capacity}
+                  type="number"
+                  onChange={this.changeCapacity(element.id)}
+                />
+                {!isFinite(element.capacity) && (
+                  <InfiniteIcon style={{ position: 'absolute', top: '25%', left: '5%' }} />
+                )}
+              </div>
+              <Button
+                color="link"
+                type="reset"
+                tabIndex={-1}
+                onClick={(event) => this.changeCapacity(element.id)(Number.POSITIVE_INFINITY)}
+              >
+                <InfiniteIcon />
+              </Button>
+            </form>
           </Flex>
         </section>
       </div>

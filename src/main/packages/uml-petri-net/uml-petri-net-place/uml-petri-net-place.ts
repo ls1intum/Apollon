@@ -10,7 +10,7 @@ import { PetriNetElementType } from '../index';
 
 export class UMLPetriNetPlace extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };
-  static defaultCapacity = 1;
+  static defaultCapacity = Number.POSITIVE_INFINITY;
 
   type: UMLElementType = PetriNetElementType.PetriNetPlace;
   bounds: IBoundary = { ...this.bounds, width: 60, height: 60 };
@@ -19,8 +19,9 @@ export class UMLPetriNetPlace extends UMLElement {
 
   constructor(values?: DeepPartial<UMLPetriNetPlace>) {
     super(values);
-    this.amountOfTokens = (values && values.amountOfTokens) || this.amountOfTokens;
-    this.capacity = (values && values.capacity) || this.capacity;
+    this.amountOfTokens =
+      values?.amountOfTokens || values?.amountOfTokens === 0 ? values.amountOfTokens : this.amountOfTokens;
+    this.capacity = values?.capacity || values?.capacity === 0 ? values.capacity : this.capacity;
   }
 
   serialize(children?: UMLElement[]): Apollon.UMLPetriNetPlace {
