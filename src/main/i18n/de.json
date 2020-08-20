@@ -19,7 +19,8 @@
     "role": "Rolle",
     "messages": "Nachrichten",
     "condition": "Bedingungen",
-    "tokens": "Tokens"
+    "tokens": "Tokens",
+    "capacity": "Kapazität"
   },
   "assessment": {
     "assessment": "Bewertung für",

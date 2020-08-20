@@ -19,7 +19,8 @@
     "role": "Role",
     "messages": "Messages",
     "condition": "Conditions",
-    "tokens": "Tokens"
+    "tokens": "Tokens",
+    "capacity": "Capacity"
   },
   "assessment": {
     "assessment": "Assessment for",

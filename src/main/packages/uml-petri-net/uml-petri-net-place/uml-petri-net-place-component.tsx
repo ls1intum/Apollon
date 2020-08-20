@@ -36,6 +36,7 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
   // radius of the outer circle
   const radius = Math.min(element.bounds.width, element.bounds.height) / 2;
   const displayTokenAsNumber = element.amountOfTokens > 0 && element.amountOfTokens > maxAmountCircles;
+  const displayCapacity = element.capacity !== UMLPetriNetPlace.defaultCapacity;
   // positions of tokens in UI
   let tokenPositions: Point[] = [];
   let tokenRadius: number;
@@ -57,6 +58,11 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
       {displayTokenAsNumber && (
         <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
           {element.amountOfTokens}
+        </text>
+      )}
+      {displayCapacity && (
+        <text x="95%" y="5" pointerEvents="none">
+          C={element.capacity}
         </text>
       )}
       <text

@@ -55,11 +55,18 @@ class UmlPetriNetPlaceUpdateComponent extends Component<Props> {
           </Flex>
           <Divider />
         </section>
-
-        <Flex>
-          <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.tokens')}</Body>
-          <Textfield value={element.amountOfTokens} type="number" onChange={this.changeTokenAmount(element.id)} />
-        </Flex>
+        <section>
+          <Flex>
+            <Body style={{ marginRight: '0.5em', minWidth: '70px' }}>{this.props.translate('popup.tokens')}</Body>
+            <Textfield value={element.amountOfTokens} type="number" onChange={this.changeTokenAmount(element.id)} />
+          </Flex>
+        </section>
+        <section>
+          <Flex style={{ marginTop: '0.5em' }}>
+            <Body style={{ marginRight: '0.5em', minWidth: '70px' }}>{this.props.translate('popup.capacity')}</Body>
+            <Textfield value={element.capacity} type="number" onChange={this.changeCapacity(element.id)} />
+          </Flex>
+        </section>
       </div>
     );
   }
@@ -70,6 +77,10 @@ class UmlPetriNetPlaceUpdateComponent extends Component<Props> {
 
   private changeTokenAmount = (id: string) => (value: number) => {
     this.props.update<UMLPetriNetPlace>(id, { amountOfTokens: value });
+  };
+
+  private changeCapacity = (id: string) => (value: number) => {
+    this.props.update<UMLPetriNetPlace>(id, { capacity: value });
   };
 
   private delete = (id: string) => () => {
