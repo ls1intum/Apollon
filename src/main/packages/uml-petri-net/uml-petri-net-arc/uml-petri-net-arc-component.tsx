@@ -8,6 +8,8 @@ export const UMLPetriNetArcComponent: SFC<Props> = ({ element }) => {
   const norm = line.normalize();
   const center = start.add(norm.scale(0.5 * line.length));
 
+  const displayMultiplicity = element.name !== UMLPetriNetArc.defaultMultiplicity;
+
   return (
     <g>
       <marker
@@ -21,7 +23,7 @@ export const UMLPetriNetArcComponent: SFC<Props> = ({ element }) => {
         markerUnits="strokeWidth"
         strokeDasharray="1,0"
       >
-        <path d="M0,1 L0,29 L30,15 z" fill="black"/>
+        <path d="M0,1 L0,29 L30,15 z" fill="black" />
       </marker>
       <path
         id={`textpath-${element.id}`}
@@ -30,25 +32,27 @@ export const UMLPetriNetArcComponent: SFC<Props> = ({ element }) => {
         L ${end.x} ${end.y - 10}
     `}
       />
-      <text
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontWeight="bold"
-        transform={
-          norm.x < 0
-            ? `
+      {displayMultiplicity && (
+        <text
+          dominantBaseline="middle"
+          textAnchor="middle"
+          fontWeight="bold"
+          transform={
+            norm.x < 0
+              ? `
             translate(${center.x}, ${center.y})
             rotate(180)
             translate(${-center.x}, ${-center.y})
           `
-            : undefined
-        }
-        pointerEvents="none"
-      >
-        <textPath xlinkHref={`#textpath-${element.id}`} startOffset="50%">
-          {element.name}
-        </textPath>
-      </text>
+              : undefined
+          }
+          pointerEvents="none"
+        >
+          <textPath xlinkHref={`#textpath-${element.id}`} startOffset="50%">
+            {element.name}
+          </textPath>
+        </text>
+      )}
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
         stroke="black"
