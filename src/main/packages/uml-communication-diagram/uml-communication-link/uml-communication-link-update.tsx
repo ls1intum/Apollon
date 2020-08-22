@@ -73,7 +73,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
             )
           </Header>
           {element.messages.map((message, i) => (
-            <Flex key={i}>
+            <Flex key={i + message.name}>
               <Textfield
                 ref={(ref) => (this.messageRefs[i] = ref)}
                 gutter
