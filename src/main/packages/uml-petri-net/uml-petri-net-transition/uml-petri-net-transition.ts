@@ -20,7 +20,7 @@ export class UMLPetriNetTransition extends UMLElement {
   constructor(values?: DeepPartial<IUMLElement>) {
     super(values);
     this.bounds.height = (values && values.bounds && values.bounds.height) || UMLPetriNetTransition.defaultHeight;
-    this.bounds.width =(values && values.bounds && values.bounds.width) || UMLPetriNetTransition.defaultWidth;
+    this.bounds.width = (values && values.bounds && values.bounds.width) || UMLPetriNetTransition.defaultWidth;
   }
 
   render(layer: ILayer): ILayoutable[] {

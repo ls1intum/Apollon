@@ -23,6 +23,7 @@
     "lint:css": "stylelint 'src/**/*.ts'",
     "prepare": "yarn test && rm -rf lib && tsc -p .",
     "prettier:check": "prettier --check 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
+    "prettier:write": "prettier --write 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
     "test": "jest",
     "test:coverage": "jest --collectCoverage",
     "test:watch": "jest --watch",

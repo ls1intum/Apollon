@@ -67,11 +67,7 @@ class UmlPetriNetPlaceUpdateComponent extends Component<Props> {
             <Body style={{ marginRight: '0.5em', minWidth: '70px' }}>{this.props.translate('popup.capacity')}</Body>
             <form style={{ display: 'inherit' }}>
               <div style={{ position: 'relative' }}>
-                <Textfield
-                  value={element.capacity}
-                  type="number"
-                  onChange={this.changeCapacity(element.id)}
-                />
+                <Textfield value={element.capacity} type="number" onChange={this.changeCapacity(element.id)} />
                 {!isFinite(element.capacity) && (
                   <InfiniteIcon style={{ position: 'absolute', top: '25%', left: '5%' }} />
                 )}
