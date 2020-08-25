@@ -9,4 +9,5 @@ export const UMLDiagramType = {
   ComponentDiagram: 'ComponentDiagram',
   DeploymentDiagram: 'DeploymentDiagram',
   PetriNet: 'PetriNet',
+  SyntaxTree: 'SyntaxTree',
 } as const;

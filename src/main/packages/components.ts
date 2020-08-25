@@ -34,6 +34,9 @@ import { ConnectedComponent } from 'react-redux';
 import { UMLPetriNetPlaceComponent } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-component';
 import { UMLPetriNetTransitionComponent } from './uml-petri-net/uml-petri-net-transition/uml-petri-net-transition-component';
 import { UMLPetriNetArcComponent } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-component';
+import { SyntaxTreeTerminalComponent } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
+import { SyntaxTreeNonterminalComponent } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-component';
+import { SyntaxTreeLinkComponent } from './syntax-tree/syntax-tree-link/syntax-tree-link-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -67,6 +70,8 @@ export const Components: {
   [UMLElementType.DeploymentInterface]: UMLInterfaceComponent,
   [UMLElementType.PetriNetTransition]: UMLPetriNetTransitionComponent,
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceComponent,
+  [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminalComponent,
+  [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminalComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,
@@ -89,4 +94,5 @@ export const Components: {
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLInterfaceProvidedComponent,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcComponent,
+  [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLinkComponent,
 };
