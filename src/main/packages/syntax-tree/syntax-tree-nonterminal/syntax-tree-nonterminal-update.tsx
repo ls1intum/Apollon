@@ -26,7 +26,12 @@ class SyntaxTreeNonterminalUpdateComponent extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} placeholder={this.props.translate('packages.SyntaxTree.SyntaxTreeNonterminal')} onChange={this.onUpdate} autoFocus />
+            <Textfield
+              value={element.name}
+              placeholder={this.props.translate('packages.SyntaxTree.SyntaxTreeNonterminal')}
+              onChange={this.onUpdate}
+              autoFocus
+            />
             <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
@@ -57,8 +62,9 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
-  update: UMLElementRepository.update,
-  delete: UMLElementRepository.delete,
-}));
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+  }),
+);
 
 export const SyntaxTreeNonterminalUpdate = enhance(SyntaxTreeNonterminalUpdateComponent);
