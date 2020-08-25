@@ -17,6 +17,7 @@ import { UMLElementRepository } from '../../../services/uml-element/uml-element-
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { CommunicationMessage, UMLCommunicationLink } from './uml-communication-link';
+import { uuid } from '../../../utils/uuid';
 
 const Flex = styled.div`
   display: flex;
@@ -73,7 +74,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
             )
           </Header>
           {element.messages.map((message, i) => (
-            <Flex key={i + message.name}>
+            <Flex key={message.id}>
               <Textfield
                 ref={(ref) => (this.messageRefs[i] = ref)}
                 gutter
@@ -127,7 +128,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
     const { element, update } = this.props;
     if (!element.messages.find((message) => message.name === value)) {
       update<UMLCommunicationLink>(element.id, {
-        messages: [...element.messages, { name: value, direction: 'source' }],
+        messages: [...element.messages, { id: uuid(), name: value, direction: 'source' }],
       });
     }
   };
