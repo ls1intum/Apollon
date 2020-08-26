@@ -45,7 +45,6 @@ type OwnProps = {
 type StateProps = {};
 
 type DispatchProps = {
-  update: typeof UMLElementRepository.update;
   delete: typeof UMLElementRepository.delete;
 };
 
@@ -54,7 +53,6 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
-    update: UMLElementRepository.update,
     delete: UMLElementRepository.delete,
   }),
 );
