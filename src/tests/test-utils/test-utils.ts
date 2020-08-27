@@ -68,6 +68,11 @@ const createModelStateFromPartialModelState = (
   return modelState;
 };
 
+/**
+ * returns a mocked store, which does not execute reducers. It is made for test repositories only
+ * @param modelState
+ * @param elements
+ */
 export const getMockedStore = (
   modelState?: PartialModelState,
   elements?: IUMLElement[],
@@ -77,6 +82,13 @@ export const getMockedStore = (
   return mockStore(storeState);
 };
 
+/**
+ * creates a real redux store from the partial modelState.
+ * Reducers are executed and state changes can be checked
+ * @param modelState partial model state
+ * @param elements
+ * @param layer
+ */
 export const getRealStore = (
   modelState?: PartialModelState,
   elements: IUMLElement[] = [],

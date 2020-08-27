@@ -6,7 +6,6 @@ import { Direction } from '../../../../main/services/uml-element/uml-element-por
 import { UMLRelationship } from '../../../../main/services/uml-relationship/uml-relationship';
 
 describe('test redux state update when connecting elements', () => {
-  const elements: UMLElement[] = [];
   let srcElement: UMLClass;
   let targetElement: UMLClass;
 
@@ -20,19 +19,20 @@ describe('test redux state update when connecting elements', () => {
 
   it('connect two elements', () => {
     // disable copy to clipboard
-    const store = getRealStore(
-      {},
-      elements.map((element) => ({ ...element })),
-    );
+    const store = getRealStore({});
     expect(store.getState().diagram.ownedRelationships).toHaveLength(0);
 
     const srcPort = { element: srcElement.id, direction: Direction.Up, multiplicity: '', role: '' };
     const targetPort = { element: targetElement.id, direction: Direction.Up, multiplicity: '', role: '' };
 
+    // test startConnecting
     store.dispatch(Connectable.startConnecting(Direction.Up, srcElement.id));
-    store.dispatch(Connectable.connect(targetPort));
-    store.dispatch(Connectable.endConnecting(targetPort));
+    expect(store.getState().connecting).toHaveLength(1);
+    expect(store.getState().connecting[0].direction).toEqual(srcPort.direction);
+    expect(store.getState().connecting[0].element).toEqual(srcPort.element);
 
+    // test connect
+    store.dispatch(Connectable.connect(targetPort));
     expect(store.getState().diagram.ownedRelationships).toHaveLength(1);
     expect(
       (store.getState().elements[store.getState().diagram.ownedRelationships[0]] as UMLRelationship).source,
@@ -40,5 +40,9 @@ describe('test redux state update when connecting elements', () => {
     expect(
       (store.getState().elements[store.getState().diagram.ownedRelationships[0]] as UMLRelationship).target,
     ).toEqual(targetPort);
+
+    // test endConnecting
+    store.dispatch(Connectable.endConnecting(targetPort));
+    expect(store.getState().connecting).toHaveLength(0);
   });
 });
