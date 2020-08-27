@@ -4,24 +4,37 @@ import { connect, ConnectedComponent } from 'react-redux';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
+import { getAllParents } from '../../../utils/geometry/tree';
 
-type StateProps = {};
+type OwnProps = UMLElementComponentProps;
+
+type StateProps = { moving: boolean };
 
 type DispatchProps = {
   hover: typeof UMLElementRepository.hover;
   leave: typeof UMLElementRepository.leave;
 };
 
-type Props = UMLElementComponentProps & StateProps & DispatchProps;
+type Props = OwnProps & StateProps & DispatchProps;
 
-const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(null, {
-  hover: UMLElementRepository.hover,
-  leave: UMLElementRepository.leave,
-});
+const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
+  (state, props) => {
+    const parents = getAllParents(props.id, state.elements);
+    return {
+      moving:
+        Object.keys(state.moving).includes(props.id) ||
+        Object.keys(state.moving).some((elementId) => parents.includes(elementId)),
+    };
+  },
+  {
+    hover: UMLElementRepository.hover,
+    leave: UMLElementRepository.leave,
+  },
+);
 
 export const hoverable = (
   WrappedComponent: ComponentType<UMLElementComponentProps>,
-): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
+): ConnectedComponent<ComponentType<Props>, OwnProps> => {
   class Hoverable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
@@ -36,13 +49,17 @@ export const hoverable = (
     }
 
     render() {
-      const { hover, leave, ...props } = this.props;
+      const { hover, leave, moving, ...props } = this.props;
       return <WrappedComponent {...props} />;
     }
 
-    private enter = () => this.props.hover(this.props.id);
+    private enter = () => {
+      if (!this.props.moving) this.props.hover(this.props.id);
+    };
 
-    private leave = () => this.props.leave(this.props.id);
+    private leave = () => {
+      if (!this.props.moving) this.props.leave(this.props.id);
+    };
   }
 
   return enhance(Hoverable);

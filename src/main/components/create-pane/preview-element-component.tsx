@@ -19,7 +19,7 @@ export const Preview = styled(hoverable(CanvasElement)).attrs({
   fill: white;
 `;
 
-export class PreviewElement extends Component<Props> {
+export class PreviewElementComponent extends Component<Props> {
   render() {
     const { element } = this.props;
 

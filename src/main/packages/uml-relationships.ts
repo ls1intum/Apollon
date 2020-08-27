@@ -21,6 +21,7 @@ import { UMLUseCaseInclude } from './uml-use-case-diagram/uml-use-case-include/u
 import { UMLDeploymentInterfaceProvided } from './uml-deployment-diagram/uml-deployment-interface-provided/uml-deployment-interface-provided';
 import { UMLDeploymentInterfaceRequired } from './uml-deployment-diagram/uml-deployment-interface-required/uml-deployment-interface-required';
 import { UMLDeploymentDependency } from './uml-deployment-diagram/uml-deployment-dependency/uml-deployment-dependency';
+import { UMLPetriNetArc } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc';
 
 type UMLRelationships = { [key in UMLRelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
 
@@ -46,4 +47,5 @@ export const UMLRelationships = {
   [UMLRelationshipType.DeploymentDependency]: UMLDeploymentDependency,
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLDeploymentInterfaceProvided,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentInterfaceRequired,
+  [UMLRelationshipType.PetriNetArc]: UMLPetriNetArc,
 };

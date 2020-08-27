@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { Direction, IUMLElementPort } from '../../services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
@@ -51,4 +51,4 @@ class RelationshipPreview extends Component<Props> {
   }
 }
 
-export const UMLRelationshipPreview = enhance(RelationshipPreview);
+export const UMLRelationshipPreview: ConnectedComponent<ComponentType<Props>, OwnProps> = enhance(RelationshipPreview);

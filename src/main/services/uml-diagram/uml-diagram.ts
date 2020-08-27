@@ -6,6 +6,8 @@ import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../uml-container/uml-container';
 
+const DIAGRAM_MARGIN = 40;
+
 export interface IUMLDiagram extends IUMLContainer {
   type: UMLDiagramType;
   ownedRelationships: string[];
@@ -34,7 +36,12 @@ export class UMLDiagram extends UMLContainer implements IUMLDiagram {
     // updates diagram bound
     // sets origin to new location
     // make size at least 2 times most distant point -> all points are inside the diagram
-    this.bounds = { x: -size.width, y: -size.height, width: size.width * 2, height: size.height * 2 };
+    this.bounds = {
+      x: -size.width - DIAGRAM_MARGIN,
+      y: -size.height - DIAGRAM_MARGIN,
+      width: size.width * 2 + DIAGRAM_MARGIN,
+      height: size.height * 2 + DIAGRAM_MARGIN,
+    };
     return [this];
   }
 }

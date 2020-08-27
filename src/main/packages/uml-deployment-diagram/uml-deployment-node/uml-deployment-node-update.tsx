@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { TrashIcon } from '../../../components/controls/icon/trash';
@@ -69,4 +69,6 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
   delete: UMLElementRepository.delete,
 });
 
-export const UMLDeploymentNodeUpdate = enhance(DeploymentNodeUpdate);
+export const UMLDeploymentNodeUpdate: ConnectedComponent<ComponentType<Props>, OwnProps> = enhance(
+  DeploymentNodeUpdate,
+);

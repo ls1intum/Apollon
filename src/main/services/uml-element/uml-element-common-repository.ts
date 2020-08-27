@@ -80,6 +80,8 @@ export const UMLElementCommonRepository = {
   /** Composes the absolute position of an element */
   getAbsolutePosition: (id: string): AsyncAction<Point> => (dispatch, getState) => {
     const { elements } = getState();
+    // if the element is currently moving the position update is only done in moving redux state
+    // thus take the elements from moving to calculate absolute position
     let element = elements[id];
     let position = new Point(element.bounds.x, element.bounds.y);
     while (element.owner) {

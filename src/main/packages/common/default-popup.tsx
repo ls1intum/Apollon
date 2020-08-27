@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { Button } from '../../components/controls/button/button';
 import { TrashIcon } from '../../components/controls/icon/trash';
 import { Textfield } from '../../components/controls/textfield/textfield';
@@ -56,4 +56,4 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
   delete: UMLElementRepository.delete,
 });
 
-export const DefaultPopup = enhance(DefaultPopupComponent);
+export const DefaultPopup: ConnectedComponent<ComponentType<Props>, OwnProps> = enhance(DefaultPopupComponent);

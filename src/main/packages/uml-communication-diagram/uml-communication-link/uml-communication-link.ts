@@ -5,6 +5,7 @@ import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 
 export type CommunicationMessage = {
+  id: string;
   name: string;
   direction: 'source' | 'target';
 };

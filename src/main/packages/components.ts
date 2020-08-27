@@ -31,6 +31,9 @@ import { UMLInterfaceProvidedComponent } from './common/uml-interface-provided/u
 import { UMLInterfaceRequiredComponent } from './common/uml-interface-required/uml-interface-required-component';
 import { UMLDependencyComponent } from './common/uml-dependency/uml-dependency-component';
 import { ConnectedComponent } from 'react-redux';
+import { UMLPetriNetPlaceComponent } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-component';
+import { UMLPetriNetTransitionComponent } from './uml-petri-net/uml-petri-net-transition/uml-petri-net-transition-component';
+import { UMLPetriNetArcComponent } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -62,6 +65,8 @@ export const Components: {
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeComponent,
   [UMLElementType.DeploymentArtifact]: UMLDeploymentArtifactComponent,
   [UMLElementType.DeploymentInterface]: UMLInterfaceComponent,
+  [UMLElementType.PetriNetTransition]: UMLPetriNetTransitionComponent,
+  [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,
@@ -83,4 +88,5 @@ export const Components: {
   [UMLRelationshipType.DeploymentDependency]: UMLDependencyComponent,
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLInterfaceProvidedComponent,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
+  [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcComponent,
 };

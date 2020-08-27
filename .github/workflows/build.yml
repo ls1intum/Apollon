@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+env:
+  node: 14.x
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Node.js '${{ env.node }}'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '${{ env.node }}'
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+      # see prepare script
+      - name: Install Dependencies, Test and Build Library
+        run: yarn install
+      - name: TypeScript Formatting
+        run: yarn prettier:check
+        if: success() || failure()
+      - name: TypeScript Code Style
+        run: yarn lint
+        if: success() || failure()

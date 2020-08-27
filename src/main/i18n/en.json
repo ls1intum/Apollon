@@ -18,7 +18,9 @@
     "multiplicity": "Multiplicity",
     "role": "Role",
     "messages": "Messages",
-    "condition": "Conditions"
+    "condition": "Conditions",
+    "tokens": "Tokens",
+    "capacity": "Capacity"
   },
   "assessment": {
     "assessment": "Assessment for",
@@ -89,6 +91,10 @@
       "DeploymentInterfaceRequired": "Required Interface",
       "DeploymentAssociation": "Deployment Association",
       "DeploymentDependency": "Deployment Dependency"
+    },
+    "PetriNet": {
+      "PetriNetPlace": "Place",
+      "PetriNetTransition": "Transition"
     }
   }
 }

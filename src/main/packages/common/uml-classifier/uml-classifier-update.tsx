@@ -54,7 +54,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 );
 
 type State = {
-  fieldToFocus?: Textfield | null;
+  fieldToFocus?: Textfield<string> | null;
 };
 
 const getInitialState = (): State => ({
@@ -63,8 +63,8 @@ const getInitialState = (): State => ({
 
 class ClassifierUpdate extends Component<Props, State> {
   state = getInitialState();
-  newMethodField = createRef<Textfield>();
-  newAttributeField = createRef<Textfield>();
+  newMethodField = createRef<Textfield<string>>();
+  newAttributeField = createRef<Textfield<string>>();
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
     if (this.state.fieldToFocus) {
@@ -78,8 +78,8 @@ class ClassifierUpdate extends Component<Props, State> {
     const children = element.ownedElements.map((id) => getById(id)).filter(notEmpty);
     const attributes = children.filter((child) => child instanceof UMLClassAttribute);
     const methods = children.filter((child) => child instanceof UMLClassMethod);
-    const attributeRefs: (Textfield | null)[] = [];
-    const methodRefs: (Textfield | null)[] = [];
+    const attributeRefs: (Textfield<string> | null)[] = [];
+    const methodRefs: (Textfield<string> | null)[] = [];
 
     return (
       <div>

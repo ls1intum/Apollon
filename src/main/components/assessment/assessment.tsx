@@ -1,5 +1,5 @@
-import React, { Component, createRef, RefObject } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType, createRef, RefObject } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncAction, AsyncDispatch } from '../../utils/actions/actions';
@@ -65,14 +65,7 @@ class AssessmentComponent extends Component<Props, State> {
           <AssessmentSection key={element.id} element={element} />
         ))}
         <section>
-          <Button
-            block
-            outline
-            color="primary"
-            onClick={this.next}
-            onKeyDown={this.onKey}
-            onKeyUp={this.onKey}
-          >
+          <Button block outline color="primary" onClick={this.next} onKeyDown={this.onKey} onKeyUp={this.onKey}>
             Next Assessment
           </Button>
         </section>
@@ -109,4 +102,4 @@ class AssessmentComponent extends Component<Props, State> {
   };
 }
 
-export const Assessment = enhance(AssessmentComponent);
+export const Assessment: ConnectedComponent<ComponentType<Props>, OwnProps> = enhance(AssessmentComponent);
