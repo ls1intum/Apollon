@@ -4,7 +4,6 @@ import { compose } from 'redux';
 import styled from 'styled-components';
 import { Button } from '../../../components/controls/button/button';
 import { TrashIcon } from '../../../components/controls/icon/trash';
-import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
@@ -25,9 +24,6 @@ class SyntaxTreeLinkUpdateComponent extends Component<Props> {
       <div>
         <section>
           <Flex>
-            <Header gutter={false} style={{ flexGrow: 1 }}>
-              {this.props.translate('packages.SyntaxTree.SyntaxTreeLink')}
-            </Header>
             <Button color="link" onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
