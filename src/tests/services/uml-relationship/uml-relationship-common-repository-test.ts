@@ -1,12 +1,14 @@
-import { UMLRelationship } from '../../../main';
 import { UMLClassBidirectional } from '../../../main/packages/uml-class-diagram/uml-class-bidirectional/uml-class-bidirectional';
 import { createUMLClassWithAttributeAndMethod, getRealStore } from '../../test-utils/test-utils';
 import { UMLClass } from '../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { Direction } from '../../../main/services/uml-element/uml-element-port';
 import { UMLRelationshipCommonRepository } from '../../../main/services/uml-relationship/uml-relationship-common-repository';
+import { UMLRelationship } from '../../../main/services/uml-relationship/uml-relationship';
+import { UMLElement } from '../../../main/services/uml-element/uml-element';
 
 describe('test UMLRelationshipCommonRepository', () => {
   const realtionships: UMLRelationship[] = [];
+  const elements: UMLElement[] = [];
   let umlRelationship: UMLClassBidirectional;
 
   beforeEach(() => {
@@ -21,6 +23,8 @@ describe('test UMLRelationshipCommonRepository', () => {
       target: { element: targetElement.id, direction: Direction.Up },
     });
     realtionships.push(umlRelationship);
+    elements.push(...srcClassElements);
+    elements.push(...targetClassElements);
   });
 
   it('get relationship from state', () => {
@@ -61,5 +65,14 @@ describe('test UMLRelationshipCommonRepository', () => {
     const relationshipAfterFlip = store.getState().elements[umlRelationship.id] as UMLRelationship;
     expect(relationshipAfterFlip.source).toEqual(relationshipBeforeFlip.target);
     expect(relationshipAfterFlip.target).toEqual(relationshipBeforeFlip.source);
+  });
+
+  it('UMLRelationshipCommonRepository layout Relationship', () => {
+    const store = getRealStore({}, [
+      ...realtionships.map((element) => ({ ...element })),
+      ...elements.map((element) => ({ ...element })),
+    ]);
+
+    // TODO: layout
   });
 });

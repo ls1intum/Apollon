@@ -13,8 +13,8 @@ import { ILayer } from '../../main/services/layouter/layer';
 import { UMLClass } from '../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { UMLClassAttribute } from '../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
-import { UMLPackage } from '../../main/packages/common/uml-package/uml-package';
-import { UMLClassPackage } from '../../main/packages/uml-class-diagram/uml-class-package/uml-class-package';
+import { Point } from '../../main/utils/geometry/point';
+import * as React from 'react';
 
 type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
 
@@ -82,6 +82,11 @@ export const getMockedStore = (
   return mockStore(storeState);
 };
 
+const createSVG = (): SVGSVGElement => {
+  const test = React.createElement<SVGSVGElement>('SVGSVGElement')
+  return test.props;
+};
+
 /**
  * creates a real redux store from the partial modelState.
  * Reducers are executed and state changes can be checked
@@ -92,7 +97,12 @@ export const getMockedStore = (
 export const getRealStore = (
   modelState?: PartialModelState,
   elements: IUMLElement[] = [],
-  layer: ILayer | null = null,
+  layer: ILayer = {
+    layer: createSVG(),
+    origin(): Point {
+      return new Point(0, 0);
+    },
+  },
 ): Store<ModelState, any> => {
   const storeState = createModelStateFromPartialModelState(modelState, elements);
   return createReduxStore(storeState, layer);

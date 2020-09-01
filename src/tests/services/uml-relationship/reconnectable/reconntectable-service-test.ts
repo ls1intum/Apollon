@@ -19,11 +19,11 @@ describe('test redux state update when reconnecting uml relationships', () => {
     const targetClassElements = createUMLClassWithAttributeAndMethod();
     targetElement = targetClassElements[0] as UMLClass;
     // add existing relationship
-    (umlRelationship = new UMLClassBidirectional({
+    umlRelationship = new UMLClassBidirectional({
       source: { element: srcElement.id, direction: Direction.Up },
       target: { element: targetElement.id, direction: Direction.Up },
-    })),
-      elements.push(umlRelationship);
+    });
+    elements.push(umlRelationship, ...srcClassElements, ...targetClassElements);
   });
 
   it('reconnect existing connection between two elements', () => {
@@ -32,7 +32,7 @@ describe('test redux state update when reconnecting uml relationships', () => {
       {},
       elements.map((element) => ({ ...element })),
     );
-    expect(store.getState().diagram.ownedRelationships).toHaveLength(0);
+    expect(store.getState().diagram.ownedRelationships).toHaveLength(1);
 
     const newSrcPort = { element: srcElement.id, direction: Direction.Down, multiplicity: '', role: '' };
     // the endpoint which should be part of the new connection, the other one is replaced
