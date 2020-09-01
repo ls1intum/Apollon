@@ -8,6 +8,7 @@ import { UMLRelationship } from '../../../../main/services/uml-relationship/uml-
 describe('test redux state update when connecting elements', () => {
   let srcElement: UMLClass;
   let targetElement: UMLClass;
+  const elements: UMLElement[] = [];
 
   beforeEach(() => {
     // initialize copy objects
@@ -15,11 +16,12 @@ describe('test redux state update when connecting elements', () => {
     srcElement = srcClassElements[0] as UMLClass;
     const targetClassElements = createUMLClassWithAttributeAndMethod();
     targetElement = targetClassElements[0] as UMLClass;
+    elements.push(...srcClassElements, ...targetClassElements);
   });
 
   it('connect two elements', () => {
     // disable copy to clipboard
-    const store = getRealStore({});
+    const store = getRealStore({}, elements.map(element => ({...element})));
     expect(store.getState().diagram.ownedRelationships).toHaveLength(0);
 
     const srcPort = { element: srcElement.id, direction: Direction.Up, multiplicity: '', role: '' };
