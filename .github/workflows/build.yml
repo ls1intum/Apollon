@@ -30,6 +30,14 @@ jobs:
       # see prepare script
       - name: Install Dependencies, Test and Build Library
         run: yarn install
+      - name: TypeScript Tests
+        run: yarn test:coverage --ci
+      - name: "Codacy: Report coverage"
+        uses: codacy/codacy-coverage-reporter-action@master
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage/lcov.info
+        if: success() || failure()
       - name: TypeScript Formatting
         run: yarn prettier:check
         if: success() || failure()
