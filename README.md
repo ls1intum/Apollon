@@ -1,5 +1,7 @@
 # Apollon
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ff48bab36a924471abcf61566563ffe6)](https://app.codacy.com/gh/ls1intum/Apollon?utm_source=github.com&utm_medium=referral&utm_content=ls1intum/Apollon&utm_campaign=Badge_Grade_Dashboard)
+
 A UML modeling editor written in React and TypeScript.
 
 ## Usage
