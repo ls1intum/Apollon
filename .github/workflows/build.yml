@@ -28,7 +28,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node_modules-
       # see prepare script
-      - name: Install Dependencies, Test and Build Library
+      - name: Install Dependencies and Build Library
         run: yarn install
       - name: TypeScript Tests
         run: yarn test:coverage --ci

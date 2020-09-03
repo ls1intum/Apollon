@@ -21,7 +21,10 @@ describe('test redux state update when connecting elements', () => {
 
   it('connect two elements', () => {
     // disable copy to clipboard
-    const store = getRealStore({}, elements.map(element => ({...element})));
+    const store = getRealStore(
+      {},
+      elements.map((element) => ({ ...element })),
+    );
     expect(store.getState().diagram.ownedRelationships).toHaveLength(0);
 
     const srcPort = { element: srcElement.id, direction: Direction.Up, multiplicity: '', role: '' };

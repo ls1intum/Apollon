@@ -27,7 +27,6 @@ describe('test AssessmentSection', () => {
     elements.push(umlClass, umlClassAttribute, umlClassMethod);
   });
   it('it can be rendered', () => {
-
     const { container } = render(
       <StoreProvider
         initialState={{
@@ -51,7 +50,7 @@ describe('test AssessmentSection', () => {
   });
   it('it can be scored', () => {
     const store: RefObject<ModelStore> = createRef();
-    const elementToScore = elements[0]
+    const elementToScore = elements[0];
     const score = 5;
 
     const { getByText } = render(
@@ -87,8 +86,8 @@ describe('test AssessmentSection', () => {
   });
   it('it can be given feedback', () => {
     const store: RefObject<ModelStore> = createRef();
-    const elementToGiveFeedback = elements[0]
-    const feedback = "Nicely Done!";
+    const elementToGiveFeedback = elements[0];
+    const feedback = 'Nicely Done!';
 
     const { getByPlaceholderText } = render(
       <StoreProvider

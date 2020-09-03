@@ -83,7 +83,7 @@ export const getMockedStore = (
 };
 
 const createSVG = (): SVGSVGElement => {
-  const test = React.createElement<SVGSVGElement>('SVGSVGElement')
+  const test = React.createElement<SVGSVGElement>('SVGSVGElement');
   return test.props;
 };
 
