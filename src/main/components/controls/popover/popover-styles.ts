@@ -165,7 +165,8 @@ export const Arrow = styled.div<ArrowProps>`
 
   ${(props) => props.placement === 'top' && ArrowTop}
   ${(props) => props.placement === 'right' && ArrowRight}
-  ${(props) => props.placement === 'bottom' && ArrowBottom}
+  ${(props) =>
+    props.placement === 'bottom' && ArrowBottom}
   ${(props) => props.placement === 'left' && ArrowLeft}
 
   ${(props) =>

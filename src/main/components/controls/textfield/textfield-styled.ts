@@ -35,67 +35,53 @@ type Props = typeof defaultProps;
 
 export const StyledTextfield = styled(Input)<Props>(
   (props: Props & { theme: Styles }) => css`
-    ${
-      props.gutter &&
-      css`
-        margin-bottom: 0.5em;
-      `
-    }
+    ${props.gutter &&
+    css`
+      margin-bottom: 0.5em;
+    `}
 
-    ${
-      props.multiline &&
-      css`
-        resize: vertical;
-      `
-    }
+    ${props.multiline &&
+    css`
+      resize: vertical;
+    `}
 
-    ${
-      props.outline &&
-      css`
-        &:not(:focus) {
-          border-style: dashed;
-        }
+    ${props.outline &&
+    css`
+      &:not(:focus) {
+        border-style: dashed;
+      }
 
-        &:not(:focus):not(:hover) {
-          background: rgba(255, 255, 255, 0.5);
-        }
-      `
-    }
+      &:not(:focus):not(:hover) {
+        background: rgba(255, 255, 255, 0.5);
+      }
+    `}
 
-    ${
-      props.block &&
-      css`
-        display: block;
-        width: 100%;
-      `
-    }
+    ${props.block &&
+    css`
+      display: block;
+      width: 100%;
+    `}
 
-    ${
-      props.readonly &&
-      css`
-        background-color: ${props.theme.color.gray200};
-        opacity: 1;
-      `
-    }
+    ${props.readonly &&
+    css`
+      background-color: ${props.theme.color.gray200};
+      opacity: 1;
+    `}
 
-    ${
-      props.size &&
-      props.size === 'sm' &&
-      css`
-        border-radius: 0.2em;
-        font-size: 0.875em;
-        padding: 0.25em 0.5em;
-      `
-    }
+    ${props.size &&
+    props.size === 'sm' &&
+    css`
+      border-radius: 0.2em;
+      font-size: 0.875em;
+      padding: 0.25em 0.5em;
+    `}
 
-    ${
-      props.size &&
-      props.size === 'lg' &&
-      css`
-        border-radius: 0.3em;
-        font-size: 1.25em;
-        padding: 0.5em 1em;
-      `
-    }
+    ${props.size &&
+    props.size === 'lg' &&
+    css`
+      border-radius: 0.3em;
+      font-size: 1.25em;
+      padding: 0.5em 1em;
+    `}
   `,
 );
