@@ -22,7 +22,6 @@
     "lint:ts": "tslint --force -p tsconfig.json -c tslint.json -t stylish",
     "lint:css": "stylelint 'src/**/*.ts'",
     "prepare": "rm -rf lib && tsc -p .",
-    "prepublish": "yarn test",
     "prettier:check": "prettier --check 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
     "prettier:write": "prettier --write 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
     "test": "jest",
