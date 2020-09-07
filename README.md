@@ -1,6 +1,11 @@
 # Apollon
 
+[![GitHub Actions Status](https://github.com/ls1intum/Apollon/workflows/Build/badge.svg)](https://github.com/ls1intum/Artemis/actions?query=branch%3Adevelop+workflow%3ABuild)
+[![Dependencies status](https://img.shields.io/david/ls1intum/Apollon)](package.json)
+[![DevDependencies status](https://img.shields.io/david/dev/ls1intum/Apollon)](package.json)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ff48bab36a924471abcf61566563ffe6)](https://app.codacy.com/gh/ls1intum/Apollon?utm_source=github.com&utm_medium=referral&utm_content=ls1intum/Apollon&utm_campaign=Badge_Grade_Dashboard)
+
+[![Latest version)](https://img.shields.io/github/v/tag/ls1intum/Apollon?label=%20Latest%20version&sort=semver)](https://github.com/ls1intum/Apollon/releases/latest)
 
 A UML modeling editor written in React and TypeScript.
 
