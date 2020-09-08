@@ -75,7 +75,7 @@ export type UMLDeploymentNode = UMLElement & {
 
 export type UMLPetriNetPlace = UMLElement & {
   amountOfTokens: number;
-  capacity: number;
+  capacity: number | string;
 };
 
 export type UMLAssociation = UMLRelationship & {

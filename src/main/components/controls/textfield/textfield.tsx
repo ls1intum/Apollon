@@ -36,6 +36,13 @@ export class Textfield<T extends TextfieldValue> extends Component<Props<T>, Sta
   state = initialState;
   ref = React.createRef<HTMLTextAreaElement>();
 
+  componentDidUpdate(prevProps: Readonly<Props<T>>, prevState: Readonly<State>, snapshot?: any) {
+    // workaround for infinity values -> if set to infinity -> change key of component to avoid problems with textfield
+    if (Number.isFinite(prevProps.value) && !Number.isFinite(this.props.value)) {
+      this.setState({ key: Date.now() });
+    }
+  }
+
   render() {
     const { onChange, onSubmit, onSubmitKeyUp, size, value, ...props } = this.props;
 
