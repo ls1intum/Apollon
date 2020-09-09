@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
 import { DraggableContext } from './draggable-context';
 import { withDraggable } from './with-draggable';
+import isMobile from 'is-mobile';
 
 type Props = {
   owner?: string;
@@ -13,12 +14,20 @@ const enhance = withDraggable;
 class DroppableComponent extends Component<Props> {
   componentDidMount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.addEventListener('pointerup', this.props.onDragEnd(this.props.owner));
+    if (isMobile({tablet: true})) {
+      node.addEventListener('touchend', this.props.onDragEnd(this.props.owner));
+    } else {
+      node.addEventListener('pointerup', this.props.onDragEnd(this.props.owner));
+    }
   }
 
   componentWillUnmount() {
     const node = findDOMNode(this) as HTMLElement;
-    node.removeEventListener('pointerup', this.props.onDragEnd(this.props.owner));
+    if (isMobile({tablet: true})) {
+      node.removeEventListener('touchend', this.props.onDragEnd(this.props.owner));
+    } else {
+      node.removeEventListener('pointerup', this.props.onDragEnd(this.props.owner));
+    }
   }
 
   render() {
