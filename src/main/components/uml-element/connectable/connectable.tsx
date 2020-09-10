@@ -14,6 +14,7 @@ import { UMLRelationships } from '../../../packages/uml-relationships';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-relationship-features';
 import { UMLElementType, UMLRelationshipType } from '../../..';
+import { disableScroll, enableScroll } from '../../../services/scrolling/scrolling-repository';
 
 type StateProps = {
   hovered: boolean;
@@ -108,12 +109,14 @@ export const connectable = (
   class Connectable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.addEventListener('pointerup', this.elementOnPointerUp.bind(this));
+      // node.addEventListener('pointerup', this.elementOnPointerUp.bind(this));
+      node.addEventListener('touchend', this.elementOnPointerUp.bind(this));
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      node.removeEventListener('pointerup', this.elementOnPointerUp);
+      // node.removeEventListener('pointerup', this.elementOnPointerUp);
+      node.removeEventListener('touchend', this.elementOnPointerUp);
     }
 
     render() {
@@ -172,13 +175,62 @@ export const connectable = (
       );
     }
 
-    private elementOnPointerUp = (event: PointerEvent) => {
+    private elementOnPointerUp = (event: PointerEvent | TouchEvent) => {
       const node = findDOMNode(this) as HTMLElement;
+      console.log('test');
+      console.log(event);
+
+      // create own touch events in order to follow connection logic
+      // own touch event has the element at the end of touch as target, not the start element
+      // -> connection logic for desktop can be applied
+      if (event instanceof TouchEvent && event.changedTouches.length > 0) {
+        enableScroll();
+        console.log('create own touch event');
+        const target = document.elementFromPoint(
+          event.changedTouches[event.changedTouches.length - 1].pageX,
+          event.changedTouches[event.changedTouches.length - 1].pageY,
+        );
+
+        if (!target) {
+          return;
+        }
+
+        // copy the last touch that happened
+        // only replace target and add identifier (must have)
+        const touch = new Touch({
+          ...event.changedTouches[event.changedTouches.length - 1],
+          identifier: 999,
+          target: target,
+        });
+        console.log(event.changedTouches[event.changedTouches.length - 1]);
+        console.log(touch);
+
+        // creating touchend event
+        const touchEvent = new TouchEvent('touchend', {
+          touches: [touch],
+          view: window,
+          cancelable: true,
+          bubbles: true,
+        });
+
+        // dispatching on target
+        // when it bubbles up -> it reaches the connectable HOC of the target (that we actually want)
+        target.dispatchEvent(touchEvent);
+        return;
+      }
+
+      console.log('connect');
+
       // calculate event position relative to object position in %
       const nodeRect = node.getBoundingClientRect();
+
+      // touch events are our own created touch events, see above
+      const eventClientX = event instanceof PointerEvent ? event.clientX : event.touches[0].clientX;
+      const eventClientY = event instanceof PointerEvent ? event.clientY : event.touches[0].clientY;
+
       const relEventPosition = {
-        x: (event.clientX - nodeRect.left) / nodeRect.width,
-        y: (event.clientY - nodeRect.top) / nodeRect.height,
+        x: (eventClientX - nodeRect.left) / nodeRect.width,
+        y: (eventClientY - nodeRect.top) / nodeRect.height,
       };
 
       // relative port locations in %
@@ -212,6 +264,7 @@ export const connectable = (
     private onPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
       const direction = event.currentTarget.getAttribute('direction') as Direction;
       this.props.start(direction);
+      disableScroll();
     };
 
     private onPointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -222,6 +275,7 @@ export const connectable = (
       if (this.props.reconnecting) {
         this.props.reconnect({ element: this.props.id, direction });
       }
+      enableScroll();
     };
   }
 

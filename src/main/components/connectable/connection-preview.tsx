@@ -11,6 +11,8 @@ import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { ModelState } from '../store/model-state';
 import { UMLRelationshipPreview } from './uml-relationship-preview';
+import isMobile from 'is-mobile';
+import { enableScroll } from '../../services/scrolling/scrolling-repository';
 
 type OwnProps = {};
 
@@ -54,14 +56,24 @@ class Preview extends Component<Props, State> {
 
   componentDidUpdate(prevProps: Props) {
     if (this.props.connecting.length && prevProps.connecting !== this.props.connecting) {
-      document.addEventListener('pointermove', this.onPointerMove);
-      document.addEventListener('pointerup', this.onPointerUp, { once: true });
+      if (isMobile({ tablet: true })) {
+        document.addEventListener('touchmove', this.onPointerMove);
+        document.addEventListener('touchend', this.onPointerUp, { once: true });
+      } else {
+        document.addEventListener('pointermove', this.onPointerMove);
+        document.addEventListener('pointerup', this.onPointerUp, { once: true });
+      }
     }
   }
 
   componentWillUnmount() {
-    document.removeEventListener('pointermove', this.onPointerMove);
-    document.removeEventListener('pointerup', this.onPointerUp);
+    if (isMobile({ tablet: true })) {
+      document.removeEventListener('touchmove', this.onPointerMove);
+      document.removeEventListener('touchend', this.onPointerUp);
+    } else {
+      document.removeEventListener('pointermove', this.onPointerMove);
+      document.removeEventListener('pointerup', this.onPointerUp);
+    }
   }
 
   render() {
@@ -74,14 +86,23 @@ class Preview extends Component<Props, State> {
     return connecting.map((port, index) => <UMLRelationshipPreview key={index} port={port} target={position} />);
   }
 
-  onPointerMove = (event: PointerEvent) => {
+  onPointerMove = (event: PointerEvent | TouchEvent) => {
     const offset = this.props.canvas.origin();
-    const position = new Point(event.clientX - offset.x, event.clientY - offset.y);
+    let position: Point;
+    if (event instanceof PointerEvent) {
+      position = new Point(event.clientX - offset.x, event.clientY - offset.y);
+    } else {
+      position = new Point(event.targetTouches[0].clientX - offset.x, event.targetTouches[0].clientY - offset.y);
+    }
     this.setState({ position });
   };
 
-  onPointerUp = (event: PointerEvent) => {
-    document.removeEventListener('pointermove', this.onPointerMove);
+  onPointerUp = (event: PointerEvent | TouchEvent) => {
+    if (isMobile({ tablet: true })) {
+      document.removeEventListener('touchend', this.onPointerMove);
+    } else {
+      document.removeEventListener('pointermove', this.onPointerMove);
+    }
     this.setState(initialState);
     this.props.endConnecting();
     this.props.endReconnecting();
