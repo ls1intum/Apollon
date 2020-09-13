@@ -1,7 +1,6 @@
 var keys: { [key: number]: number } = { 37: 1, 38: 1, 39: 1, 40: 1 };
 
 function preventDefault(e: Event) {
-  window.scrollTo(0, 1);
   e.preventDefault();
   e.stopPropagation();
 }
