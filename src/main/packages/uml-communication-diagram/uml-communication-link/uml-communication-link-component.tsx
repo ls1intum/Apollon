@@ -60,7 +60,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   {sources.length ? '↓' : ''}
                 </tspan>
                 {sources.map((source, i) => (
-                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
+                  <tspan key={i} x={source.bounds.x} dy={source.bounds.y}>
                     {source.name}
                   </tspan>
                 ))}
@@ -78,7 +78,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   {targets.length ? '↑' : ''}
                 </tspan>
                 {targets.map((target, i) => (
-                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
+                  <tspan key={i} x={target.bounds.x} dy={target.bounds.y}>
                     {target.name}
                   </tspan>
                 ))}
@@ -92,7 +92,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   {targets.length ? '⟶' : ''}
                 </tspan>
                 {targets.reverse().map((target, i) => (
-                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
+                  <tspan key={i} x={target.bounds.x} dy={target.bounds.y}>
                     {target.name}
                   </tspan>
                 ))}
@@ -102,7 +102,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   {sources.length ? '⟵' : ''}
                 </tspan>
                 {sources.map((source, i) => (
-                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
+                  <tspan key={i} x={source.bounds.x} dy={source.bounds.y}>
                     {source.name}
                   </tspan>
                 ))}
@@ -124,7 +124,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   {targets.length ? '↓' : ''}
                 </tspan>
                 {targets.reverse().map((target, i) => (
-                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
+                  <tspan key={i} x={target.bounds.x} dy={target.bounds.y}>
                     {target.name}
                   </tspan>
                 ))}
@@ -142,7 +142,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   {sources.length ? '↑' : ''}
                 </tspan>
                 {sources.map((source, i) => (
-                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
+                  <tspan key={i} x={source.bounds.x} dy={source.bounds.y}>
                     {source.name}
                   </tspan>
                 ))}
@@ -156,7 +156,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   {sources.length ? '⟶' : ''}
                 </tspan>
                 {sources.reverse().map((source, i) => (
-                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
+                  <tspan key={i} x={source.bounds.x} dy={source.bounds.y}>
                     {source.name}
                   </tspan>
                 ))}
@@ -166,7 +166,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   {targets.length ? '⟵' : ''}
                 </tspan>
                 {targets.map((target, i) => (
-                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
+                  <tspan key={i} x={target.bounds.x} dy={target.bounds.y}>
                     {target.name}
                   </tspan>
                 ))}
