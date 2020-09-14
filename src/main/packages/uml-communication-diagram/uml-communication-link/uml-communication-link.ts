@@ -9,7 +9,7 @@ import { ILayer } from '../../../services/layouter/layer';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { Point } from '../../../utils/geometry/point';
-import { Direction } from '../../../services/uml-element/uml-element-port';
+import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Text } from '../../../utils/svg/text';
 
 export interface IUMLCommunicationLink extends IUMLRelationship {
@@ -43,8 +43,6 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
     this.messages = values.messages.map((message) => new CommunicationLinkMessage(message));
   }
 
-  //  TODO: add render method which layouts the messages
-
   render(canvas: ILayer, source?: UMLElement, target?: UMLElement): ILayoutable[] {
     // computes bounds for path only
     super.render(canvas, source, target);
@@ -63,7 +61,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       ) / 2;
 
     // direction in which the arrow is pointing
-    let direction: Direction | undefined;
+    let sourceArrowDirection: Direction | undefined;
     let messagePosition: Point | undefined;
 
     // finds the connection between two points of path where half distance of total connection is reached
@@ -73,7 +71,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       const vector = path[index + 1].subtract(path[index]);
       if (vector.length > distance) {
         const norm = vector.normalize();
-        direction =
+        sourceArrowDirection =
           Math.abs(norm.x) > Math.abs(norm.y)
             ? norm.x > 0
               ? Direction.Left
@@ -87,44 +85,58 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       distance -= vector.length;
     }
 
-    if (!direction || !messagePosition) {
+    if (!sourceArrowDirection || !messagePosition) {
       throw Error(
-        `Could not determine direction or messagePosition for CommunicationLink. \n MessagePosition: ${messagePosition} \n Direction: ${direction}`,
+        `Could not determine direction or messagePosition for CommunicationLink. \n MessagePosition: ${messagePosition} \n Direction: ${sourceArrowDirection}`,
       );
     }
 
     // compute position of message
-    const sourceElements = this.messages.filter((message) => message.direction === 'source').map(element => new CommunicationLinkMessage(element));
-    const targetElements = this.messages.filter((message) => message.direction === 'target').map(element => new CommunicationLinkMessage(element));;
+    const sourceElements = this.messages.filter((message) => message.direction === 'source');
+    const targetElements = this.messages.filter((message) => message.direction === 'target');
 
-    const targetMessagesBoundingBox = this.computeBoundingBoxForMessages(
-      canvas,
-      messagePosition,
-      targetElements,
-      direction,
-      'target',
-    );
-    const sourceMessagesBoundingBox = this.computeBoundingBoxForMessages(
-      canvas,
-      messagePosition,
-      sourceElements,
-      direction,
-      'source',
-    );
+    const elementsForBoundingBoxCalculation: { bounds: IBoundary }[] = [{ bounds: pathBounds }];
+
+    if (sourceElements && sourceElements.length > 0) {
+      const sourceMessagesBoundingBox = this.computeBoundingBoxForMessages(
+        canvas,
+        messagePosition,
+        sourceElements,
+        sourceArrowDirection,
+      );
+      elementsForBoundingBoxCalculation.push({ bounds: sourceMessagesBoundingBox });
+    }
+
+    if (targetElements && targetElements.length > 0) {
+      const targetMessagesBoundingBox = this.computeBoundingBoxForMessages(
+        canvas,
+        messagePosition,
+        targetElements,
+        getOppositeDirection(sourceArrowDirection),
+      );
+      elementsForBoundingBoxCalculation.push({ bounds: targetMessagesBoundingBox });
+    }
+
+    console.log(elementsForBoundingBoxCalculation);
 
     // merge bounding box of path with bounding box of messages
-    this.bounds = computeBoundingBoxForElements([
-      this,
-      { bounds: sourceMessagesBoundingBox },
-      { bounds: targetMessagesBoundingBox },
-    ]);
+    this.bounds = computeBoundingBoxForElements(elementsForBoundingBoxCalculation);
 
     this.path.forEach((point) => {
       point.x = point.x + pathBounds.x - this.bounds.x;
       point.y = point.y + pathBounds.y - this.bounds.y;
     });
 
-    return [this, ...sourceElements, ...targetElements];
+    this.messages.forEach((message) => {
+      message.bounds = {
+        x: message.bounds.x + pathBounds.x - this.bounds.x,
+        y: message.bounds.y + pathBounds.y - this.bounds.y,
+        height: message.bounds.height,
+        width: message.bounds.width,
+      };
+    });
+
+    return [this];
   }
 
   computeBoundingBoxForMessages(
@@ -132,29 +144,49 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
     messagePosition: Point,
     messages: ICommunicationLinkMessage[],
     arrowDirection: Direction,
-    direction: 'source' | 'target',
   ): IBoundary {
     const arrowSize = Text.size(canvas, '⟶', { fontWeight: 'bold', fontSize: '120%' });
 
-    let y = 0;
+    // let y =
+    //   arrowDirection === Direction.Left
+    //     ? messagePosition.y - arrowSize.height
+    //     : arrowDirection === Direction.Right
+    //     ? messagePosition.y + arrowSize.height
+    //     : messagePosition.y;
+    //
+    // const x =
+    //   arrowDirection === Direction.Up
+    //     ? messagePosition.x + arrowSize.width
+    //     : arrowDirection === Direction.Down
+    //     ? messagePosition.x - arrowSize.width
+    //     : messagePosition.x;
+
+    let y = messagePosition.y;
+
+    const x = messagePosition.x;
 
     for (const message of messages) {
-      message.bounds.x = this.bounds.x + messagePosition.x;
-      message.bounds.y = this.bounds.y + y;
-      const messageSize = Text.size(canvas, 'test', { fontSize: '1.2em' });
-      message.bounds.width = messageSize.width;
-      message.bounds.height = messageSize.height;
-      y += messageSize.height;
+      console.log(message.direction);
+      console.log(arrowDirection);
+      const messageSize = Text.size(canvas, message.name, { fontSize: '1.2em' });
+
+      if (arrowDirection === Direction.Right) {
+        message.bounds.x = x;
+        message.bounds.y = y;
+        message.bounds.width = messageSize.width;
+        message.bounds.height = messageSize.height;
+        // y += messageSize.height;
+      } else if (arrowDirection === Direction.Down) {
+      } else if (arrowDirection === Direction.Up) {
+      } else if (arrowDirection === Direction.Left) {
+        message.bounds.x = x;
+        message.bounds.y = y;
+        message.bounds.width = messageSize.width;
+        message.bounds.height = messageSize.height;
+        // y -= messageSize.height;
+      }
     }
 
-    const messageBounds = computeBoundingBoxForElements(messages);
-    // const heightInDirection =
-    //   arrowDirection === Direction.Up || arrowDirection === Direction.Down
-    //     ? height
-    //     : direction === 'target'
-    //     ? -1 * height
-    //     : height;
-
-    return messageBounds;
+    return computeBoundingBoxForElements(messages);
   }
 }

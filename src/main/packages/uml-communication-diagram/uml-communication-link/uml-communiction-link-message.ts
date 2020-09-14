@@ -2,7 +2,7 @@ import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-eleme
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { DeepPartial } from 'redux';
-import { CommunicationRelationshipType } from '../index';
+import { CommunicationElementType } from '../index';
 
 export interface ICommunicationLinkMessage extends IUMLElement {
   direction: 'source' | 'target';
@@ -10,9 +10,9 @@ export interface ICommunicationLinkMessage extends IUMLElement {
 
 export class CommunicationLinkMessage extends UMLElement implements ICommunicationLinkMessage {
   direction: 'source' | 'target';
-  type = CommunicationRelationshipType.CommunicationLink;
+  type = CommunicationElementType.CommunicationLinkMessage;
 
-  constructor(values?: DeepPartial<CommunicationLinkMessage>) {
+  constructor(values?: DeepPartial<ICommunicationLinkMessage>) {
     super(values);
     this.direction = values?.direction || 'target';
   }
