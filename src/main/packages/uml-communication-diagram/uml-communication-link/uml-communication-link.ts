@@ -3,20 +3,15 @@ import { CommunicationRelationshipType } from '..';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
-
-export type CommunicationMessage = {
-  id: string;
-  name: string;
-  direction: 'source' | 'target';
-};
+import { CommunicationLinkMessage, ICommunicationLinkMessage } from './uml-communiction-link-message';
 
 export interface IUMLCommunicationLink extends IUMLRelationship {
-  messages: CommunicationMessage[];
+  messages: ICommunicationLinkMessage[];
 }
 
 export class UMLCommunicationLink extends UMLRelationship implements IUMLCommunicationLink {
   type = CommunicationRelationshipType.CommunicationLink;
-  messages: CommunicationMessage[] = [];
+  messages: ICommunicationLinkMessage[] = [];
 
   constructor(values?: DeepPartial<IUMLCommunicationLink>) {
     super();
@@ -38,6 +33,8 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
     }
 
     super.deserialize(values, children);
-    this.messages = values.messages;
+    this.messages = values.messages.map((message) => new CommunicationLinkMessage(message));
   }
+
+  //  TODO: add render method which layouts the messages
 }
