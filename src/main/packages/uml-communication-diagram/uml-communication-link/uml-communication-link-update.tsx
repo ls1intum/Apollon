@@ -16,8 +16,9 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
-import { CommunicationMessage, UMLCommunicationLink } from './uml-communication-link';
+import { UMLCommunicationLink } from './uml-communication-link';
 import { uuid } from '../../../utils/uuid';
+import { CommunicationLinkMessage, ICommunicationLinkMessage } from './uml-communiction-link-message';
 
 const Flex = styled.div`
   display: flex;
@@ -128,28 +129,28 @@ class CommunicationLinkUpdate extends Component<Props, State> {
     const { element, update } = this.props;
     if (!element.messages.find((message) => message.name === value)) {
       update<UMLCommunicationLink>(element.id, {
-        messages: [...element.messages, { id: uuid(), name: value, direction: 'source' }],
+        messages: [...element.messages, new CommunicationLinkMessage({ id: uuid(), name: value, direction: 'source' })],
       });
     }
   };
 
-  private rename = (value: CommunicationMessage) => (name: string) => {
+  private rename = (value: ICommunicationLinkMessage) => (name: string) => {
     const { element, update } = this.props;
-    const messages: CommunicationMessage[] = [...element.messages];
+    const messages: ICommunicationLinkMessage[] = [...element.messages];
     const index = messages.findIndex((message) => message.name === value.name);
     messages[index].name = name;
     update<UMLCommunicationLink>(element.id, { messages });
   };
 
-  private flip = (value: CommunicationMessage) => () => {
+  private flip = (value: ICommunicationLinkMessage) => () => {
     const { element, update } = this.props;
-    const messages: CommunicationMessage[] = [...element.messages];
+    const messages: ICommunicationLinkMessage[] = [...element.messages];
     const index = messages.findIndex((message) => message.name === value.name);
     messages[index].direction = messages[index].direction === 'source' ? 'target' : 'source';
     update<UMLCommunicationLink>(element.id, { messages });
   };
 
-  private delete = (value: CommunicationMessage) => () => {
+  private delete = (value: ICommunicationLinkMessage) => () => {
     const { element, update } = this.props;
     update<UMLCommunicationLink>(element.id, {
       messages: element.messages.filter((message) => message.name !== value.name),

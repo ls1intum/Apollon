@@ -67,6 +67,7 @@ export const Components: {
   [UMLElementType.DeploymentInterface]: UMLInterfaceComponent,
   [UMLElementType.PetriNetTransition]: UMLPetriNetTransitionComponent,
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceComponent,
+  [UMLElementType.CommunicationLinkMessage]: UMLClassifierMemberComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,

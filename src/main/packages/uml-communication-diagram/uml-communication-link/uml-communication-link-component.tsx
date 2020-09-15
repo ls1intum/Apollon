@@ -1,11 +1,12 @@
 import React, { SFC } from 'react';
 import { Direction } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
-import { CommunicationMessage, UMLCommunicationLink } from './uml-communication-link';
+import { UMLCommunicationLink } from './uml-communication-link';
+import { ICommunicationLinkMessage } from './uml-communiction-link-message';
 
 export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
-  const sources: CommunicationMessage[] = element.messages.filter((message) => message.direction === 'source');
-  const targets: CommunicationMessage[] = element.messages.filter((message) => message.direction === 'target');
+  const sources: ICommunicationLinkMessage[] = element.messages.filter((message) => message.direction === 'source');
+  const targets: ICommunicationLinkMessage[] = element.messages.filter((message) => message.direction === 'target');
 
   let position = { x: 0, y: 0 };
   let direction: Direction = Direction.Left;
@@ -46,38 +47,22 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
         {
           [Direction.Up]: (
             <>
-              <text
-                x={position.x}
-                y={position.y}
-                dx={5}
-                fontSize="85%"
-                dominantBaseline="middle"
-                textAnchor="start"
-                pointerEvents="none"
-              >
+              <text x={position.x + 8} y={position.y} fontSize="85%" pointerEvents="none">
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↓' : ''}
                 </tspan>
                 {sources.map((source, i) => (
-                  <tspan key={i} x={position.x + 20} dy={i === 0 ? undefined : '1.2em'}>
+                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
                     {source.name}
                   </tspan>
                 ))}
               </text>
-              <text
-                x={position.x}
-                y={position.y}
-                dx={-5}
-                fontSize="85%"
-                dominantBaseline="middle"
-                textAnchor="end"
-                pointerEvents="none"
-              >
+              <text x={position.x - 16} y={position.y} fontSize="85%" pointerEvents="none">
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '↑' : ''}
                 </tspan>
                 {targets.map((target, i) => (
-                  <tspan key={i} x={position.x - 20} dy={i === 0 ? undefined : '1.2em'}>
+                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
                     {target.name}
                   </tspan>
                 ))}
@@ -86,22 +71,22 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
           ),
           [Direction.Right]: (
             <>
-              <text x={position.x} y={position.y} dy={-6} fontSize="85%" textAnchor="middle" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
+              <text x={position.x} y={position.y} fontSize="85%" pointerEvents="none">
+                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
                   {targets.length ? '⟶' : ''}
                 </tspan>
-                {targets.reverse().map((target, i) => (
-                  <tspan key={i} x={position.x} dy="-1.2em">
+                {targets.map((target, i) => (
+                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
                     {target.name}
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} dy={18} fontSize="85%" textAnchor="middle" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
+              <text x={position.x} y={position.y + 16} fontSize="85%" pointerEvents="none">
+                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
                   {sources.length ? '⟵' : ''}
                 </tspan>
                 {sources.map((source, i) => (
-                  <tspan key={i} x={position.x} dy="1.2em">
+                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
                     {source.name}
                   </tspan>
                 ))}
@@ -110,38 +95,22 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
           ),
           [Direction.Down]: (
             <>
-              <text
-                x={position.x}
-                y={position.y}
-                dx={5}
-                fontSize="85%"
-                dominantBaseline="middle"
-                textAnchor="start"
-                pointerEvents="none"
-              >
+              <text x={position.x + 8} y={position.y} fontSize="85%" pointerEvents="none">
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '↓' : ''}
                 </tspan>
-                {targets.reverse().map((target, i) => (
-                  <tspan key={i} x={position.x + 20} dy={i === 0 ? undefined : '1.2em'}>
+                {targets.map((target, i) => (
+                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
                     {target.name}
                   </tspan>
                 ))}
               </text>
-              <text
-                x={position.x}
-                y={position.y}
-                dx={-5}
-                fontSize="85%"
-                dominantBaseline="middle"
-                textAnchor="end"
-                pointerEvents="none"
-              >
+              <text x={position.x - 16} y={position.y} fontSize="85%" pointerEvents="none">
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↑' : ''}
                 </tspan>
                 {sources.map((source, i) => (
-                  <tspan key={i} x={position.x - 20} dy={i === 0 ? undefined : '1.2em'}>
+                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
                     {source.name}
                   </tspan>
                 ))}
@@ -150,22 +119,22 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
           ),
           [Direction.Left]: (
             <>
-              <text x={position.x} y={position.y} dy={-6} fontSize="85%" textAnchor="middle" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
+              <text x={position.x} y={position.y} fontSize="85%" pointerEvents="none">
+                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
                   {sources.length ? '⟶' : ''}
                 </tspan>
-                {sources.reverse().map((source, i) => (
-                  <tspan key={i} x={position.x} dy="-1.2em">
+                {sources.map((source, i) => (
+                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
                     {source.name}
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} dy={18} fontSize="85%" textAnchor="middle" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
+              <text x={position.x} y={position.y + 16} fontSize="85%" pointerEvents="none">
+                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
                   {targets.length ? '⟵' : ''}
                 </tspan>
                 {targets.map((target, i) => (
-                  <tspan key={i} x={position.x} dy="1.2em">
+                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
                     {target.name}
                   </tspan>
                 ))}
