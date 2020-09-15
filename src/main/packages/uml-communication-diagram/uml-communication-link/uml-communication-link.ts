@@ -91,7 +91,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       );
     }
 
-    // add this to make the message Position absolut and not relative to path origin
+    // add this to make the messagePosition absolute and not relative to path origin
     messagePosition = messagePosition.add(pathBounds.x, pathBounds.y);
 
     // compute position of message
@@ -133,7 +133,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       point.y += verticalTranslation;
     });
 
-    // depiction is relative to path origin -> subtract pathBounds
+    // depiction in UMLCommunicationLinkComponent is relative to path origin -> subtract pathBounds to make it relative again
     this.messages.forEach((message) => {
       message.bounds.x += horizontalTranslation - pathBounds.x;
       message.bounds.y += verticalTranslation - pathBounds.y;
@@ -174,6 +174,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
         message.bounds.height = messageSize.height;
         y += messageSize.height;
       } else if (arrowDirection === Direction.Down) {
+        // drawing from left to right
         message.bounds.x = x - messageSize.width;
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
@@ -190,6 +191,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
         message.bounds.height = messageSize.height;
+        // drawing from top to bottom
         y -= messageSize.height;
       }
     }
