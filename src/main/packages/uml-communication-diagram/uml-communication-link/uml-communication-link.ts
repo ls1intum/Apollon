@@ -91,6 +91,9 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       );
     }
 
+    // add this to make the message Position absolut and not relative to path origin
+    messagePosition = messagePosition.add(pathBounds.x, pathBounds.y);
+
     // compute position of message
     const sourceElements = this.messages.filter((message) => message.direction === 'source');
     const targetElements = this.messages.filter((message) => message.direction === 'target');
@@ -117,23 +120,23 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       elementsForBoundingBoxCalculation.push({ bounds: targetMessagesBoundingBox });
     }
 
-    console.log(elementsForBoundingBoxCalculation);
-
     // merge bounding box of path with bounding box of messages
     this.bounds = computeBoundingBoxForElements(elementsForBoundingBoxCalculation);
 
+    const horizontalTranslation = pathBounds.x - this.bounds.x;
+    const verticalTranslation = pathBounds.y - this.bounds.y;
+
+    // translation of path points, because they are relative to their own bounding box
+    // the bounding may be different now -> translation to correct this
     this.path.forEach((point) => {
-      point.x = point.x + pathBounds.x - this.bounds.x;
-      point.y = point.y + pathBounds.y - this.bounds.y;
+      point.x += horizontalTranslation;
+      point.y += verticalTranslation;
     });
 
+    // depiction is relative to path origin -> subtract pathBounds
     this.messages.forEach((message) => {
-      message.bounds = {
-        x: message.bounds.x + pathBounds.x - this.bounds.x,
-        y: message.bounds.y + pathBounds.y - this.bounds.y,
-        height: message.bounds.height,
-        width: message.bounds.width,
-      };
+      message.bounds.x += horizontalTranslation - pathBounds.x;
+      message.bounds.y += verticalTranslation - pathBounds.y;
     });
 
     return [this];
@@ -147,43 +150,47 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
   ): IBoundary {
     const arrowSize = Text.size(canvas, '⟶', { fontWeight: 'bold', fontSize: '120%' });
 
-    // let y =
-    //   arrowDirection === Direction.Left
-    //     ? messagePosition.y - arrowSize.height
-    //     : arrowDirection === Direction.Right
-    //     ? messagePosition.y + arrowSize.height
-    //     : messagePosition.y;
-    //
-    // const x =
-    //   arrowDirection === Direction.Up
-    //     ? messagePosition.x + arrowSize.width
-    //     : arrowDirection === Direction.Down
-    //     ? messagePosition.x - arrowSize.width
-    //     : messagePosition.x;
+    let y =
+      arrowDirection === Direction.Left
+        ? messagePosition.y - arrowSize.height
+        : arrowDirection === Direction.Right
+        ? messagePosition.y + arrowSize.height
+        : messagePosition.y;
 
-    let y = messagePosition.y;
-
-    const x = messagePosition.x;
+    const x =
+      arrowDirection === Direction.Up
+        ? messagePosition.x + arrowSize.width
+        : arrowDirection === Direction.Down
+        ? messagePosition.x - arrowSize.width
+        : messagePosition.x;
 
     for (const message of messages) {
-      console.log(message.direction);
-      console.log(arrowDirection);
-      const messageSize = Text.size(canvas, message.name, { fontSize: '1.2em' });
+      const messageSize = Text.size(canvas, message.name);
 
       if (arrowDirection === Direction.Right) {
         message.bounds.x = x;
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
         message.bounds.height = messageSize.height;
-        // y += messageSize.height;
+        y += messageSize.height;
       } else if (arrowDirection === Direction.Down) {
+        message.bounds.x = x - messageSize.width;
+        message.bounds.y = y;
+        message.bounds.width = messageSize.width;
+        message.bounds.height = messageSize.height;
+        y += messageSize.height;
       } else if (arrowDirection === Direction.Up) {
+        message.bounds.x = x;
+        message.bounds.y = y;
+        message.bounds.width = messageSize.width;
+        message.bounds.height = messageSize.height;
+        y += messageSize.height;
       } else if (arrowDirection === Direction.Left) {
         message.bounds.x = x;
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
         message.bounds.height = messageSize.height;
-        // y -= messageSize.height;
+        y -= messageSize.height;
       }
     }
 
