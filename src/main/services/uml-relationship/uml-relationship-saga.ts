@@ -14,7 +14,6 @@ import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { UMLRelationshipRepository } from './uml-relationship-repository';
 import { LayoutAction } from './uml-relationship-types';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
-import { CommunicationLinkMessage } from '../../packages/uml-communication-diagram/uml-communication-link/uml-communiction-link-message';
 import { IUMLCommunicationLink } from '../../packages/uml-communication-diagram/uml-communication-link/uml-communication-link';
 
 export function* UMLRelationshipSaga() {
@@ -133,6 +132,7 @@ export function* recalc(id: string): SagaIterator {
   if (path) {
     yield put<LayoutAction>(UMLRelationshipRepository.layout(updates.id, path, { ...original.bounds, ...bounds }));
   }
+  // layout messages of CommunicationLink
   if (updates.type === UMLRelationshipType.CommunicationLink) {
     yield put<UpdateAction>(UMLElementRepository.update<IUMLCommunicationLink>(updates.id, updates));
   }
