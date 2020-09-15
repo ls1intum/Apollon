@@ -110,12 +110,15 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       elementsForBoundingBoxCalculation.push({ bounds: sourceMessagesBoundingBox });
     }
 
+    // arrow of targets are in the opposite direction
+    const targetArrowDirection = getOppositeDirection(sourceArrowDirection);
+
     if (targetElements && targetElements.length > 0) {
       const targetMessagesBoundingBox = this.computeBoundingBoxForMessages(
         canvas,
         messagePosition,
         targetElements,
-        getOppositeDirection(sourceArrowDirection),
+        targetArrowDirection,
       );
       elementsForBoundingBoxCalculation.push({ bounds: targetMessagesBoundingBox });
     }
@@ -168,12 +171,14 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       const messageSize = Text.size(canvas, message.name);
 
       if (arrowDirection === Direction.Right) {
+        // ⟵ messages with this displayed arrow
         message.bounds.x = x;
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
         message.bounds.height = messageSize.height;
         y += messageSize.height;
       } else if (arrowDirection === Direction.Down) {
+        // ⟶ messages with this displayed arrow
         // drawing from left to right
         message.bounds.x = x - messageSize.width;
         message.bounds.y = y;
@@ -181,12 +186,14 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
         message.bounds.height = messageSize.height;
         y += messageSize.height;
       } else if (arrowDirection === Direction.Up) {
+        // ↓ messages with this displayed arrow
         message.bounds.x = x;
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
         message.bounds.height = messageSize.height;
         y += messageSize.height;
       } else if (arrowDirection === Direction.Left) {
+        // ↑ messages with this displayed arrow
         message.bounds.x = x;
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
