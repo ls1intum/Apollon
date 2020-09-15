@@ -16,6 +16,11 @@ export interface IUMLRelationship extends IUMLElement {
   target: IUMLElementPort;
 }
 
+// TODO: this is a ugly solution, which is needed, becasue we want to maintain backwards compatability of diagrams. It would be cleaner to add a general concept to relationships
+// what is ugly about this? we calculate the bounding box of the whole relationship (relationship + description) here, but do not use it to display the message
+// it is also calculated in the components which display the description on the relationship
+// at some point, when the compatibility cannot be maintained anyway, we should change this
+
 export abstract class UMLRelationshipCenteredDescription extends UMLRelationship {
   render(canvas: ILayer, source?: UMLElement, target?: UMLElement): ILayoutable[] {
     super.render(canvas, source, target);
