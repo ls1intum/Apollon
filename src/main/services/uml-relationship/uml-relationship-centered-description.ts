@@ -8,6 +8,7 @@ import { Point } from '../../utils/geometry/point';
 import { Text } from '../../utils/svg/text';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 import { UMLRelationship } from './uml-relationship';
+import { DIAGRAM_MARGIN } from '../uml-diagram/uml-diagram';
 
 export interface IUMLRelationship extends IUMLElement {
   type: UMLRelationshipType;
@@ -54,16 +55,17 @@ export abstract class UMLRelationshipCenteredDescription extends UMLRelationship
 
       const descriptionSize = Text.size(canvas, this.name);
 
-      const test = {
+      // subtracting DIAGRAM_MARGIN from y only works, because we do not use these values to display the description
+      const descriptionBoundingBox = {
         bounds: {
           x: direction === 'v' ? descriptionPosition.x + 5 : descriptionPosition.x - descriptionSize.width / 2,
-          y: 'v' ? descriptionPosition.y + 5 : descriptionPosition.y,
+          y: 'v' ? descriptionPosition.y - DIAGRAM_MARGIN : descriptionPosition.y,
           width: descriptionSize.width,
           height: descriptionSize.height,
         },
       };
 
-      this.bounds = computeBoundingBoxForElements([this, test]);
+      this.bounds = computeBoundingBoxForElements([this, descriptionBoundingBox]);
 
       const horizontalTranslation = pathBounds.x - this.bounds.x;
       const verticalTranslation = pathBounds.y - this.bounds.y;
