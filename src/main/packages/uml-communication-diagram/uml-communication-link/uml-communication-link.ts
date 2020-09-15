@@ -157,7 +157,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       arrowDirection === Direction.Left
         ? messagePosition.y - arrowSize.height
         : arrowDirection === Direction.Right
-        ? messagePosition.y + arrowSize.height
+        ? messagePosition.y + Text.size(canvas, messages[0].name).height + arrowSize.height
         : messagePosition.y;
 
     const x =
@@ -172,13 +172,14 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
 
       if (arrowDirection === Direction.Right) {
         // ⟵ messages with this displayed arrow
-        message.bounds.x = x;
+        // center message
+        message.bounds.x = x - messageSize.width / 2;
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
         message.bounds.height = messageSize.height;
         y += messageSize.height;
       } else if (arrowDirection === Direction.Down) {
-        // ⟶ messages with this displayed arrow
+        // ↑ messages with this displayed arrow
         // drawing from left to right
         message.bounds.x = x - messageSize.width;
         message.bounds.y = y;
@@ -193,8 +194,9 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
         message.bounds.height = messageSize.height;
         y += messageSize.height;
       } else if (arrowDirection === Direction.Left) {
-        // ↑ messages with this displayed arrow
-        message.bounds.x = x;
+        // ⟶ messages with this displayed arrow
+        // center message
+        message.bounds.x = x - messageSize.width / 2;
         message.bounds.y = y;
         message.bounds.width = messageSize.width;
         message.bounds.height = messageSize.height;

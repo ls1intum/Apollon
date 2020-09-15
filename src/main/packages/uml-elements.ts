@@ -26,7 +26,7 @@ import { UMLUseCase } from './uml-use-case-diagram/uml-use-case/uml-use-case';
 import { UMLDeploymentInterface } from './uml-deployment-diagram/uml-deployment-interface/uml-component-interface';
 import { UMLPetriNetTransition } from './uml-petri-net/uml-petri-net-transition/uml-petri-net-transition';
 import { UMLPetriNetPlace } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place';
-import { CommunicationLinkMessage } from "./uml-communication-diagram/uml-communication-link/uml-communiction-link-message";
+import { CommunicationLinkMessage } from './uml-communication-diagram/uml-communication-link/uml-communiction-link-message';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,

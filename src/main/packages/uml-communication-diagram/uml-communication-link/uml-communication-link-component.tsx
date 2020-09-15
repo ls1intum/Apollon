@@ -47,14 +47,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
         {
           [Direction.Up]: (
             <>
-              <text
-                x={position.x}
-                y={position.y}
-                fontSize="85%"
-                dominantBaseline="middle"
-                textAnchor="start"
-                pointerEvents="none"
-              >
+              <text x={position.x + 8} y={position.y} fontSize="85%" pointerEvents="none">
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↓' : ''}
                 </tspan>
@@ -64,14 +57,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   </tspan>
                 ))}
               </text>
-              <text
-                x={position.x}
-                y={position.y}
-                fontSize="85%"
-                dominantBaseline="middle"
-                textAnchor="end"
-                pointerEvents="none"
-              >
+              <text x={position.x - 16} y={position.y} fontSize="85%" pointerEvents="none">
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '↑' : ''}
                 </tspan>
@@ -85,8 +71,8 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
           ),
           [Direction.Right]: (
             <>
-              <text x={position.x} y={position.y} fontSize="85%" textAnchor="middle" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
+              <text x={position.x} y={position.y} fontSize="85%" pointerEvents="none">
+                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
                   {targets.length ? '⟶' : ''}
                 </tspan>
                 {targets.map((target, i) => (
@@ -95,8 +81,8 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} fontSize="85%" textAnchor="middle" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
+              <text x={position.x} y={position.y + 16} fontSize="85%" pointerEvents="none">
+                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
                   {sources.length ? '⟵' : ''}
                 </tspan>
                 {sources.map((source, i) => (
@@ -109,14 +95,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
           ),
           [Direction.Down]: (
             <>
-              <text
-                x={position.x}
-                y={position.y}
-                fontSize="85%"
-                dominantBaseline="middle"
-                textAnchor="start"
-                pointerEvents="none"
-              >
+              <text x={position.x + 8} y={position.y} fontSize="85%" pointerEvents="none">
                 <tspan fontWeight="bold" fontSize="120%">
                   {targets.length ? '↓' : ''}
                 </tspan>
@@ -126,7 +105,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} fontSize="85%" pointerEvents="none">
+              <text x={position.x - 16} y={position.y} fontSize="85%" pointerEvents="none">
                 <tspan fontWeight="bold" fontSize="120%">
                   {sources.length ? '↑' : ''}
                 </tspan>
@@ -140,8 +119,8 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
           ),
           [Direction.Left]: (
             <>
-              <text x={position.x} y={position.y} fontSize="85%" textAnchor="middle" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
+              <text x={position.x} y={position.y} fontSize="85%" pointerEvents="none">
+                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
                   {sources.length ? '⟶' : ''}
                 </tspan>
                 {sources.map((source, i) => (
@@ -150,8 +129,8 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
                   </tspan>
                 ))}
               </text>
-              <text x={position.x} y={position.y} fontSize="85%" textAnchor="middle" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
+              <text x={position.x} y={position.y + 16} fontSize="85%" pointerEvents="none">
+                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
                   {targets.length ? '⟵' : ''}
                 </tspan>
                 {targets.map((target, i) => (
