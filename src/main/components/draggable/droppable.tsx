@@ -17,7 +17,6 @@ const enhance = withDraggable;
 class DroppableComponent extends Component<Props> {
   componentDidMount() {
     const node = findDOMNode(this) as HTMLElement;
-    console.log(node);
     if (isMobile({ tablet: true })) {
       node.addEventListener('touchend', this.props.onDragEnd(this.props.owner));
     } else {

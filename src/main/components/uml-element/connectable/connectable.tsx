@@ -177,14 +177,12 @@ export const connectable = (
 
     private elementOnPointerUp = (event: PointerEvent | TouchEvent) => {
       const node = findDOMNode(this) as HTMLElement;
-      console.log('test');
-      console.log(event);
+      enableScroll();
 
       // create own touch events in order to follow connection logic
       // own touch event has the element at the end of touch as target, not the start element
       // -> connection logic for desktop can be applied
       if (event instanceof TouchEvent && event.changedTouches.length > 0) {
-        enableScroll();
         const target = document.elementFromPoint(
           event.changedTouches[event.changedTouches.length - 1].pageX,
           event.changedTouches[event.changedTouches.length - 1].pageY,
@@ -216,8 +214,6 @@ export const connectable = (
         return;
       }
 
-      console.log('connect');
-
       // calculate event position relative to object position in %
       const nodeRect = node.getBoundingClientRect();
 
@@ -246,6 +242,7 @@ export const connectable = (
             Math.pow(relativePortLocation[key as Direction].y - relEventPosition.y, 2),
         ),
       }));
+
       // use handle with min distance to connect to
       const minDistance = Math.min(...distances.map((value) => value.distance));
       const direction = distances.filter((value) => minDistance === value.distance)[0].key as Direction;

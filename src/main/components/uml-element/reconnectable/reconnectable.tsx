@@ -8,6 +8,8 @@ import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
 import { UMLElementComponentProps } from '../uml-element-component-props';
+import isMobile from 'is-mobile';
+import { createTouchEndEvent, getClientEventCoordinates } from '../../../utils/touch-event';
 
 type StateProps = {
   path: IPath;
@@ -56,8 +58,13 @@ export const reconnectable = (
     state = initialState;
 
     componentWillUnmount() {
-      document.removeEventListener('pointermove', this.onPointerMove);
-      document.removeEventListener('pointerup', this.onPointerUp);
+      if (isMobile({ tablet: true })) {
+        document.removeEventListener('touchmove', this.onPointerMove);
+        document.removeEventListener('touchend', this.onPointerUp);
+      } else {
+        document.removeEventListener('pointermove', this.onPointerMove);
+        document.removeEventListener('pointerup', this.onPointerUp);
+      }
       this.cancel();
     }
 
@@ -98,13 +105,19 @@ export const reconnectable = (
 
       const endpoint = event.currentTarget.dataset.endpoint as 'source' | 'target';
       this.setState({ endpoint, offset: new Point(event.clientX, event.clientY) });
-      document.addEventListener('pointermove', this.onPointerMove);
-      document.addEventListener('pointerup', this.onPointerUp, { once: true });
+      if (isMobile({ tablet: true })) {
+        document.addEventListener('touchmove', this.onPointerMove);
+        document.addEventListener('touchend', this.onPointerUp, { once: true });
+      } else {
+        document.addEventListener('pointermove', this.onPointerMove);
+        document.addEventListener('pointerup', this.onPointerUp, { once: true });
+      }
     };
 
-    private onPointerMove = (event: PointerEvent) => {
-      const x = event.clientX - this.state.offset.x;
-      const y = event.clientY - this.state.offset.y;
+    private onPointerMove = (event: PointerEvent | TouchEvent) => {
+      const clientEventCoordinates = getClientEventCoordinates(event);
+      const x = clientEventCoordinates.clientX - this.state.offset.x;
+      const y = clientEventCoordinates.clientY - this.state.offset.y;
 
       const { endpoint } = this.state;
       if (!this.props.reconnecting && endpoint) {
@@ -114,8 +127,16 @@ export const reconnectable = (
       }
     };
 
-    private onPointerUp = (event: PointerEvent) => {
-      document.removeEventListener('pointermove', this.onPointerMove);
+    private onPointerUp = (event: PointerEvent | TouchEvent) => {
+      if (event instanceof TouchEvent) {
+        createTouchEndEvent(event);
+        return;
+      }
+      if (isMobile({ tablet: true })) {
+        document.removeEventListener('touchmove', this.onPointerMove);
+      } else {
+        document.removeEventListener('pointermove', this.onPointerMove);
+      }
       this.cancel();
     };
 
