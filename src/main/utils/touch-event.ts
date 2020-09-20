@@ -40,3 +40,10 @@ export function createTouchEndEvent(event: TouchEvent) {
     return;
   }
 }
+
+export function getClientEventCoordinates(event: PointerEvent | TouchEvent): { clientX: number; clientY: number } {
+  // touch events are our own created touch events, see above
+  const eventClientX = event instanceof PointerEvent ? event.clientX : event.touches[0].clientX;
+  const eventClientY = event instanceof PointerEvent ? event.clientY : event.touches[0].clientY;
+  return { clientX: eventClientX, clientY: eventClientY };
+}
