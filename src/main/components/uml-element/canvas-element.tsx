@@ -44,7 +44,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   ),
 );
 
-export class CanvasElementComponent extends Component<Props> {
+class CanvasElementComponent extends Component<Props> {
   render() {
     const {
       hovered,

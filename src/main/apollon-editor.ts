@@ -19,11 +19,18 @@ import { debounce } from './utils/debounce';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
 
 export class ApollonEditor {
+  /**
+   * Returns the current model of the Apollon Editor
+   */
   get model(): Apollon.UMLModel {
     if (!this.store) throw new Error('Apollon was already destroyed.');
     return ModelState.toModel(this.store.getState());
   }
 
+  /**
+   * Sets a model as the current model of the Apollon Editor
+   * @param model valid Apollon Editor Model
+   */
   set model(model: Apollon.UMLModel) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
     const state: PartialModelState = {
@@ -33,6 +40,10 @@ export class ApollonEditor {
     this.recreateEditor(state);
   }
 
+  /**
+   * Sets the diagram type of the current Apollon Editor. This changes the selection of elements the user can chose from on the sidebar.
+   * @param diagramType the new diagram type
+   */
   set type(diagramType: UMLDiagramType) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
     const state: PartialModelState = {
@@ -45,6 +56,10 @@ export class ApollonEditor {
     this.recreateEditor(state);
   }
 
+  /**
+   * Sets the current locale of the Apollon Editor.
+   * @param locale supported locale
+   */
   set locale(locale: Locale) {
     if (!this.store) throw new Error('Apollon was already destroyed.');
     const state = this.store.getState();
@@ -52,6 +67,12 @@ export class ApollonEditor {
     this.recreateEditor(state);
   }
 
+  /**
+   * renders a model as a svg and returns it. Therefore the svg is temporarily added to the dom and removed after it has been rendered.
+   * @param model the apollon model to export as a svg
+   * @param options options to change the export behavior (add margin, exclude element ...)
+   * @param theme the theme which should be applied on the svg
+   */
   static exportModelAsSvg(
     model: Apollon.UMLModel,
     options?: Apollon.ExportOptions,
@@ -121,10 +142,17 @@ export class ApollonEditor {
     }
   }
 
+  /**
+   * Destroys the Apollon Editor and unmounts it from its container
+   */
   destroy() {
     unmountComponentAtNode(this.container);
   }
 
+  /**
+   * Selects the by their id identified UMLElements and UMLRelationships
+   * @param selection contains ids of the elements and relationships which should be selected
+   */
   select(selection: Apollon.Selection) {
     if (!this.store) return;
     const dispatch = this.store.dispatch as Dispatch;
@@ -132,38 +160,79 @@ export class ApollonEditor {
     dispatch(UMLElementRepository.select([...selection.elements, ...selection.relationships]));
   }
 
+  /**
+   * Register callback which is executed when the selection of elements and relationships changes
+   * @param callback function which is called when selection changes
+   * @return returns the subscription identifier which can be used to unsubscribe
+   */
   subscribeToSelectionChange(callback: (selection: Apollon.Selection) => void): number {
     return this.selectionSubscribers.push(callback) - 1;
   }
 
+  /**
+   * Remove selection subscription, so that the corresponding callback is no longer executed when the selection of elements is changed.
+   * @param subscriptionId subscription identifier
+   */
   unsubscribeFromSelectionChange(subscriptionId: number) {
     this.selectionSubscribers.splice(subscriptionId);
   }
 
+  /**
+   * Register callback which is executed when the assessment of elements and relationships are changed
+   * @param callback function which is called when assessment changes
+   * @return returns the subscription identifier which can be used to unsubscribe
+   */
   subscribeToAssessmentChange(callback: (assessments: Apollon.Assessment[]) => void): number {
     return this.assessmentSubscribers.push(callback) - 1;
   }
 
+  /**
+   * Remove assessment subscription, so that the corresponding callback is no longer executed when the assessment of elements are changed.
+   * @param subscriptionId subscription identifier
+   */
   unsubscribeFromAssessmentChange(subscriptionId: number) {
     this.assessmentSubscribers.splice(subscriptionId);
   }
 
+  /**
+   * Register callback which is executed when the model changes
+   * @param callback function which is called when the model changes
+   * @return returns the subscription identifier which can be used to unsubscribe
+   */
   subscribeToModelChange(callback: (model: UMLModel) => void): number {
     return this.modelSubscribers.push(callback) - 1;
   }
 
+  /**
+   * Remove assessment subscription, so that the corresponding callback is no longer executed when the assessment of elements are changed.
+   * @param subscriptionId subscription identifier
+   */
   unsubscribeFromModelChange(subscriptionId: number) {
     this.modelSubscribers.splice(subscriptionId);
   }
 
+  /**
+   * Register callback which is executed when an error occurs in the editor. Apollon will try to recreate the latest working state when an error occurs, so that it is less visible to user / less interrupting.
+   * A registered callback would be called anyway, giving the full error, so that the application which uses Apollon can decide what to do next.
+   * @param callback callback function which is called when an error occurs
+   * @return returns the subscription identifier which can be used to unsubscribe
+   */
   subscribeToApollonErrors(callback: (error: Error) => void): number {
     return this.errorSubscribers.push(callback) - 1;
   }
 
+  /**
+   * Removes error subscription, so that the corresponding callback is no longer executed when an error occurs.
+   * @param subscriptionId subscription identifier
+   */
   unsubscribeToApollonErrors(subscriptionId: number) {
     this.errorSubscribers.splice(subscriptionId);
   }
 
+  /**
+   * exports current model as svg
+   * @param options options to change the export behavior (add margin, exclude element ...)
+   */
   exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG {
     return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }

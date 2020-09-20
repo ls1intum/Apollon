@@ -35,6 +35,10 @@ class DraggableComponent extends Component<Props> {
     return this.props.children;
   }
 
+  /**
+   * connects drag start to drop event. After the promise of onDragStart is resolved -> the onDrop method given to this component is invoked
+   * @param event pointer event which starts the dragging
+   */
   private onDragStart = async (event: PointerEvent | TouchEvent) => {
     try {
       const dropEvent = await this.props.onDragStart(event);
