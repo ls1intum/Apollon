@@ -185,7 +185,6 @@ export const connectable = (
       // -> connection logic for desktop can be applied
       if (event instanceof TouchEvent && event.changedTouches.length > 0) {
         enableScroll();
-        console.log('create own touch event');
         const target = document.elementFromPoint(
           event.changedTouches[event.changedTouches.length - 1].pageX,
           event.changedTouches[event.changedTouches.length - 1].pageY,
@@ -202,8 +201,6 @@ export const connectable = (
           identifier: 999,
           target: target,
         });
-        console.log(event.changedTouches[event.changedTouches.length - 1]);
-        console.log(touch);
 
         // creating touchend event
         const touchEvent = new TouchEvent('touchend', {

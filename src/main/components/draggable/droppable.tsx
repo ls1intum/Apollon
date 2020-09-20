@@ -17,7 +17,8 @@ const enhance = withDraggable;
 class DroppableComponent extends Component<Props> {
   componentDidMount() {
     const node = findDOMNode(this) as HTMLElement;
-    if (isMobile({tablet: true})) {
+    console.log(node);
+    if (isMobile({ tablet: true })) {
       node.addEventListener('touchend', this.props.onDragEnd(this.props.owner));
     } else {
       node.addEventListener('pointerup', this.props.onDragEnd(this.props.owner));
@@ -26,7 +27,7 @@ class DroppableComponent extends Component<Props> {
 
   componentWillUnmount() {
     const node = findDOMNode(this) as HTMLElement;
-    if (isMobile({tablet: true})) {
+    if (isMobile({ tablet: true })) {
       node.removeEventListener('touchend', this.props.onDragEnd(this.props.owner));
     } else {
       node.removeEventListener('pointerup', this.props.onDragEnd(this.props.owner));

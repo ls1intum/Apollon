@@ -73,12 +73,13 @@ class DraggableLayerComponent extends Component<Props, State> {
 
     if (isMobile({ tablet: true })) {
       document.addEventListener('touchmove', this.onPointerMove);
-      document.addEventListener('touchcancel', this.cancel, { once: true });
+      document.addEventListener('touchend', this.cancel, { once: true });
     } else {
       document.addEventListener('pointermove', this.onPointerMove);
       // if pointer up event occur outside of Droppable element -> cancel dragging
-    // this works, because the events bubble up (onDragEnd is invoked before cancel)
-    // nevertheless cancel is important, because it removes the pointerup listener on the documentdocument.addEventListener('pointerup', this.cancel, { once: true });
+      // this works, because the events bubble up (onDragEnd is invoked before cancel)
+      // nevertheless cancel is important, because it removes the pointerup listener on the documentdocument.addEventListener('pointerup', this.cancel, { once: true });
+      document.addEventListener('pointerup', this.cancel, { once: true });
     }
 
     return new Promise<DropEvent>((resolve, reject) =>
@@ -123,9 +124,6 @@ class DraggableLayerComponent extends Component<Props, State> {
 
     if (this.state.resolve) {
       this.state.resolve(dropEvent);
-    }
-    if (isMobile({ tablet: true })) {
-      this.cancel();
     }
   };
 
