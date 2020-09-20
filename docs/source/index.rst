@@ -9,6 +9,14 @@ Welcome to Apollon's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+.. toctree::
+   :caption: User Guide
+   :includehidden:
+   :maxdepth: 3
+
+   user/getting-started
+   user/api
    
 .. toctree::
    :caption: Contributor Guide
@@ -19,6 +27,7 @@ Welcome to Apollon's documentation!
    dev/repository-overview
    dev/general-concepts
    dev/adding-another-diagram-type
+   dev/examples
 
 
 Indices and tables

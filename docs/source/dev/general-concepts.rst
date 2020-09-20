@@ -2,17 +2,17 @@
 General Concepts
 #################
 
+The ApollonEditor is a UML modeling editor which can be used to visualize and
+modify UML Diagrams. It can load and
+save diagrams. A Diagram consists of Elements, Containers and Relationships.
+
 .. figure:: model.png
    :alt: Model
    :align: center
 
    Apollon Data Model
 
-**Diagram**:  The Diagram represents a UML diagram which is visualized and
-modified using the ApollonEditor. The ApollonEditor can load and
-save diagrams. A Diagram consists of Elements, Containers and Relationships.
-Each diagram type consists of individual subclasses of UMLContainer, UMLElement
-and UMLRelationship.
+TODO explain model
 
 **UMLElement**: The Element is part of a UML diagram. It has a unique identifier,
 name, position, size and color.
@@ -27,30 +27,65 @@ identifier, name and the connected elements as source and target attributes.
 UML Element Structure
 **********************
 
-UML elements consist of 3 parts:
+UML elements (whether UML-Element, UML-Container or UML-Relationship) consist of 3 parts:
 
 #. the model which stores the properties of the element (a subclass of a UMLElement, UMLRelationship or a UMLContainer)
    and its visual representation
 
-#. the interaction of the user with the element
+#. the components which implement the user interaction with the element
 
 #. the service which defines what is happening when a user interacts with a component
 
 Functionality is split as follows:
 
-* `src/main/components/uml-element` contains higher order components (HOCs), which describe the user-interaction which will trigger a state update (redux action)
+* `src/main/components/uml-element` contains higher order components (`HOCs <https://reactjs.org/docs/higher-order-components.html>`_), which implement the user-interaction which will trigger a state update (redux action)
 
 * `src/main/services` implements services which perform the actual state update e.g. hover -> element.id is inserted in modelstate.hovered (and thereby marked as hovered)
 
 * `src/main/components/uml-element/canvas-element` describes the representation of uml-element states e.g. if an element is hovered it is highlighted
 
-The Model and Representation of an Element
-___________________________________________
+The Model and Visual Representation of an Element
+=================================================
 
-The properties of an element are described together with it's representation in the src/main/packages folder.
-The model itself defines the functionality which should be available to the user. Different element types provide different functionality.
+The properties of an element are described together with it's representation in the `src/main/packages` folder.
+Every UMLElement extends the `IUMLElement` and `ILayoutable` interface.
 
-**UML-Element**:
+The IUMLElement interface defines the properties which every UMLElement should have:
+
+.. code-block:: typescript
+
+    /** Interface of a `UMLElement` defining the properties persisted in the internal storage */
+    export interface IUMLElement {
+      /** Unique Identifier of the `UMLElement` */
+      id: string;
+      /** Visual name of the `UMLElement` */
+      name: string;
+      /** Distinct type to recreate the `UMLElement` */
+      type: UMLElementType | UMLRelationshipType | UMLDiagramType;
+      /** Optional owner of the `UMLElement` */
+      owner: string | null;
+      /** Position and sizing of the `UMLElement` */
+      bounds: IBoundary;
+      /** Highlight the element with a specified color */
+      highlight?: string;
+    }
+
+The ILayoutable interface defines properties which are necessary to layout and element:
+
+.. code-block::
+
+    export interface ILayoutable {
+      /** Position and sizing of the `UMLElement` */
+      bounds: { x: number; y: number; width: number; height: number };
+
+      render(layer: ILayer): ILayoutable[];
+    }
+
+
+Besides its properties for visual representation the model also describes the functionality which should be available to the user when interacting with the element.
+Different element types (UML-Element or UML-Relationship) provide different functionality. The available functionality for UML-Elements and UML-Relationships is listed here:
+
+**UML-Element features**:
 
 * **hoverable** determines whether the element is hoverable or not
 
@@ -68,111 +103,109 @@ The model itself defines the functionality which should be available to the user
 
 * **alternativePortVisualization** determines if an alternative representation should be used for the places uml-elements can be connected to
 
-**UML-Relationship**:
+**UML-Relationship features**:
 
-* additional features:
+in **addition** to the UML-Element features, the UML-Relationships have these other features:
 
-    * **reconnectable**: determines whether a relationship can be reconnected to a new connection point
+* **reconnectable**: determines whether a relationship can be reconnected to a new connection point
 
-    * **straight**: determines whether a relationship is drawn as straight (higher priority than variable)
+* **straight**: determines whether a relationship is drawn as straight (higher priority than variable)
 
-    * **variable**: determines whether a relationship is drawn with corners
+* **variable**: determines whether a relationship is drawn with corners
 
-For example the abstract UMLClassifier class
-which is the super method of all class like elements:
+The current state of each element is stored in the global application state.
 
-.. code-block:: typescript
-
-    export abstract class UMLClassifier extends UMLContainer implements IUMLClassifier {
-      static features: UMLElementFeatures = {
-        ...UMLContainer.features,
-        droppable: false,
-        resizable: 'WIDTH',
-      };
-
-    ...
-
-    }
-
-We can see, that some of the available features of UMLElements are disabled, such as droppable, and resizable is limited to width only.
-That means that the user will not be able to interact with the components in that way. For more information on how the code which defines
-what happens on user interaction is added to the element, read the next paragraph.
-The representation is the defined in the corresponding component class, in our example `UMLClassifierComponent`.
-
-.. code-block:: typescript
-
-   export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
-      <g>
-        <rect width="100%" height={element.stereotype ? 50 : 40} />
-        <rect
-          y={element.stereotype ? 50 : 40}
-          width="100%"
-          height={element.bounds.height - (element.stereotype ? 50 : 40)}
-          fill="white"
-        />
-        {element.stereotype ? (
-          <svg height={50}>
-            <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
-              <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
-                {`«${element.stereotype}»`}
-              </tspan>
-              <tspan
-                x="50%"
-                dy={18}
-                textAnchor="middle"
-                fontStyle={element.italic ? 'italic' : undefined}
-                textDecoration={element.underline ? 'underline' : undefined}
-              >
-                {element.name}
-              </tspan>
-            </text>
-          </svg>
-        ) : (
-          <svg height={40}>
-            <text
-              x="50%"
-              y="50%"
-              dominantBaseline="middle"
-              textAnchor="middle"
-              fontWeight="bold"
-              fontStyle={element.italic ? 'italic' : undefined}
-              textDecoration={element.underline ? 'underline' : undefined}
-              pointerEvents="none"
-            >
-              {element.name}
-            </text>
-          </svg>
-        )}
-        {children}
-        <rect width="100%" height="100%" stroke="black" fill="none" pointerEvents="none" />
-        <path d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} stroke="black" />
-        <path d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} stroke="black" />
-      </g>
-    );
-
-It implements the visual representation, which always made up of svg elements.
+.. _user-interaction-with-elements:
 
 User Interaction with Elements
-_______________________________
+================================
 
-The user interaction is assembled based on the in the model class determined functionality.
-Based on the functionality a React component with different higher order components (`HOC <https://reactjs.org/docs/higher-order-components.html>`_) is assembled.
-The implementation of the HOCs for user interaction can be found in `src/main/components/uml-element`.
-A HOC in this directory always describes how user interaction is mapped to a service, i.e. which then executes the state update.
-Therefore the HOCs always add event listeners (e.g. MouseEventListeners) in the `componentDidMount`
-and remove them in `componentDidUnmount` React lifecycle methods.
+A component is assembled together with the classes which implement the user interaction,
+based on the in the model class determined functionality. The implementation follows the decorator pattern:
+
+.. image:: decorator_pattern.svg
+   :target: dev/decorator_pattern.svg
+
+Based on the functionality a React component with different higher order components (`HOC <https://reactjs.org/docs/higher-order-components.html>`_) is composed. The
+HOCs are the `Decorators`, see :ref:`user-interaction-hoc-decorator`. The following code snippet shows the composition of a element with its decorators (can be found in `src/main/components/uml-element/uml-element-component.tsx`).
+
+.. code-block:: typescript
+
+    const features = { ...UMLElements, ...UMLRelationships }[props.type].features as UMLElementFeatures &
+    UMLRelationshipFeatures;
+    const component = props.type in UMLRelationshipType ? CanvasRelationship : CanvasElement;
+    const decorators = [];
+
+    if (props.mode === ApollonMode.Assessment) {
+        decorators.push(assessable, updatable, selectable, hoverable);
+    } else if (props.readonly) {
+        decorators.push(selectable, hoverable);
+    } else if (props.view === ApollonView.Exporting || props.view === ApollonView.Highlight) {
+        decorators.push(interactable, hoverable);
+    } else if (props.view === ApollonView.Modelling) {
+        if (props.features.hoverable && features.hoverable) {
+            decorators.push(hoverable);
+        }
+        if (features.reconnectable) {
+            decorators.push(reconnectable);
+        }
+        if (props.features.selectable && features.selectable) {
+            decorators.push(selectable);
+        }
+        if (props.features.movable && features.movable) {
+            decorators.push(movable);
+        }
+        if (props.features.resizable && features.resizable) {
+            const options = {
+                preventY: features.resizable === 'WIDTH',
+                preventX: features.resizable === 'HEIGHT',
+            };
+            decorators.push(resizable(options));
+        }
+        if (props.features.connectable && features.connectable) {
+            decorators.push(connectable);
+        }
+        if (props.features.updatable && features.updatable) {
+            decorators.push(updatable);
+        }
+        if (props.features.droppable && features.droppable) {
+            decorators.push(droppable);
+        }
+    }
+
+    type Compose = ConnectedComponent<
+        ComponentType<
+            UMLElementComponentProps & {
+                child: React.ComponentClass<any>;
+            }
+        >,
+        any
+    >;
+
+    // reverse, because compose creates one function by composing the given functions from right to left
+    return {
+        component: compose<Compose>(...decorators.reverse())(component),
+    };
+
+The resulting component has all the user interaction functionality of the applied decorators.
 
 Service Structure
-__________________
-Service always perform the state update which must be done as a result of the user interaction. A typical service contains:
+------------------
 
-* a reducer
+Service perform the state update which must be done to implement a user interaction, e.g. if a user hovers over a component, it must be marked as hovered
+so that the user can the effect, i.e. highlighting of the component. A typical service contains:
 
-* a repository
+* a repository, which defines methods to create actions which will trigger a global state update
 
-* service type definitions
+* a reducer, which receives the action and returns a new state for the action
 
-* (optional) additional classes for abstract concept of service
+* service type definitions, which define the types of the actions, their payload and how the state which is managed by the reducer is defined
+
+Side Effects of Actions
+------------------------
+
+In Apollon exist two libraries to manage side effects of actions. `Redux thunk <https://github.com/reduxjs/redux-thunk>`_ and `Redux-Saga <https://github.com/redux-saga/redux-saga>` are middlewares for Redux.
+which is mostly used to execute asynchronous logic in actions.
 
 *******************************
 Managing the Application State
@@ -180,6 +213,32 @@ Managing the Application State
 Redux is used for managing global application state. Redux provides a `Store` which represents the global application state,
 `Actions` which can be dispatched to manipulate the application state and `Reducers` which are called in the event of an `Action` (they manipulate the global application state), for more information read up in the
 `Redux Documentation <https://redux.js.org/introduction>`_.
+
+The global application state definition can be found in `src/main/components/store/model-state.ts`. It looks like this:
+
+.. code-block:: typescript
+
+    export interface ModelState {
+        editor: EditorState;
+        diagram: UMLDiagramState;
+        hovered: HoverableState;
+        selected: SelectableState;
+        moving: MovableState;
+        resizing: ResizableState;
+        connecting: ConnectableState;
+        reconnecting: ReconnectableState;
+        interactive: InteractableState;
+        updating: UpdatableState;
+        elements: UMLElementState;
+        assessments: AssessmentState;
+        copy: CopyState;
+    }
+
+
+
+Design Decisions
+================
+
 Understanding the redux design guidelines is important to understand some design decisions of the application state in this application.
 Here are some of the implications of sticking to these guidelines listed:
 
@@ -203,67 +262,12 @@ Here are some of the implications of sticking to these guidelines listed:
 
   | This snippet comes used from the `UMLElementCommonRepository` which already implements a method to return a UMLElement for exactly this use case.
 
-The global application state definition can be found in `src/main/components/store/model-state.ts`. It looks like this:
+Connecting Global Application State to Components
+=================================================
 
-.. code-block::
-
-    export interface ModelState {
-        editor: EditorState;
-        diagram: UMLDiagramState;
-        hovered: HoverableState;
-        selected: SelectableState;
-        moving: MovableState;
-        resizing: ResizableState;
-        connecting: ConnectableState;
-        reconnecting: ReconnectableState;
-        interactive: InteractableState;
-        updating: UpdatableState;
-        elements: UMLElementState;
-        assessments: AssessmentState;
-        copy: CopyState;
-    }
-
-
-
-To make the global application state accessible in the components, `React-Redux` is used. It provides functionality to 'connect' components to the global application state
+To make the global application state accessible in the components, `React-Redux <https://react-redux.js.org/introduction/quick-start>`_ is used. It provides functionality to 'connect' components to the global application state
 and thereby making global application state properties available in the component props. It will also make sure that
-components receive the state updates from the global application state just like normal react props. For example the `src/main/components/uml-element/uml-element-component.tsx`:
-
-.. code-block:: typescript
-
-    const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>((state, props) => ({
-        features: state.editor.features,
-        type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
-        readonly: state.editor.readonly,
-        view: state.editor.view,
-        mode: state.editor.mode,
-    }));
-
-### redux-saga
-Redux saga is a middleware, which is mostly used to execute asynchronous logic in actions.
+components receive the state updates from the global application state just like normal react props. For more information see :ref:`react-redux-connecting-component-to-global-state`
 
 
-## Abstractions
-#### UMLDiagram
-A UMLDiagram is a set of UMLElements
 
-#### UMLElement
-A UMLElement is a generic element type which can either be a concrete UMLElement, a UMLContainer or a UMLRelationship
-
-#### UMLContainer
-A UMLElement which can contain other UMLElements
-
-#### UMLRelationship
-A connection between two UMLElements
-
-#### Idea behind the Architecture
-Every diagram consists of a set of UMLElements. The application state manages these elements (Elementstate). The elements are
-of a certain type e.g. a class of a UML class diagram. The types are defined in the packages structure. 
-A type defines how the element looks like (mapping from type to component) and which features are available for the user when 
-interacting with an component of this type. The elements are counterintuitively organized in a flat Map instead of a tree.
-I could not find out why that is the case, the only thing I could think of was performance -> faster to access element by id
-then finding an element inside a tree
-
-Interaction of user with elements is separated from the datamodel -> selection of component is managed as an array
-in the model state instead of the datamodel having a property isSelected: boolean. Maybe it would make sense to merge
-that back together and in case of serialization only serialize necessary properties

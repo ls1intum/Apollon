@@ -18,6 +18,7 @@
   "scripts": {
     "start": "webpack-dev-server --config ./webpack/webpack.dev.js",
     "build": "rm -rf dist && webpack --config ./webpack/webpack.prod.js",
+    "copyAPIToDoc": "cp lib/apollon-editor.d.ts lib/typings.d.ts docs/source/user/api",
     "lint": "yarn lint:ts && yarn lint:css",
     "lint:ts": "tslint --force -p tsconfig.json -c tslint.json -t stylish",
     "lint:css": "stylelint 'src/**/*.ts'",
@@ -28,9 +29,9 @@
     "test:coverage": "jest --collectCoverage",
     "test:watch": "jest --watch",
     "update": "yarn upgrade-interactive --latest",
-    "publish:patch": "yarn prepare && npm version patch && npm publish",
-    "publish:minor": "yarn prepare && npm version minor && npm publish",
-    "publish:major": "yarn prepare && npm version major && npm publish"
+    "publish:patch": "yarn prepare && copyAPIToDoc && npm version patch && npm publish",
+    "publish:minor": "yarn prepare && copyAPIToDoc && npm version minor && npm publish",
+    "publish:major": "yarn prepare && copyAPIToDoc && npm version major && npm publish"
   },
   "dependencies": {
     "pepjs": "0.5.2",

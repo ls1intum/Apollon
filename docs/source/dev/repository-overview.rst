@@ -14,7 +14,7 @@ src/main
 
 On the top level we have the separation between `components`, `i18n`, `packages`, `scenes`, `services` and `utils`.
 
-#. `components` contains all non diagram specific react components. It contains all the components the user uses to interact with.
+#. `components` contains all non diagram type specific react components. It contains all the components the user uses to interact with.
 
 #. `i18n` contains the json files with the translations of string keys in different languages
 
