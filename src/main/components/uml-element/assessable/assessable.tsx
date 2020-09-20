@@ -107,6 +107,11 @@ export const assessable = (
       );
     }
 
+    // TODO: the following code is Artemis specific and should be refactored
+      // TODO: extend the API so that external application can create a Apollon Draggable element
+      // TODO: extend the API so that callbacks can be registered which should be called when a draggable element was dropped
+      // TODO: the benefit of that would be, that we could remove the artemis specific code from apollon
+
     private onDragOver = (ev: DragEvent) => {
       // prevent default to allow drop
       ev.preventDefault();

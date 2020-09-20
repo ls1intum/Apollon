@@ -10,6 +10,9 @@ type Props = {
 
 const enhance = withDraggable;
 
+/**
+ * This component adds events listener to determine when a drop is done
+ */
 class DroppableComponent extends Component<Props> {
   componentDidMount() {
     const node = findDOMNode(this) as HTMLElement;

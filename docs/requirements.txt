@@ -1,2 +1,3 @@
 Sphinx==3.0.3
 sphinx-rtd-theme==0.4.3
+sphinx-copybutton==0.3.0

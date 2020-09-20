@@ -26,11 +26,25 @@ type State = typeof initialState;
 
 const enhance = compose<ComponentClass<OwnProps>>(withCanvas, withRoot);
 
+/**
+ * Manages the intermediate state of drag and drop events.
+ * On drag start it adds the dragged HTMLElement to the ghost (container with dragged HTMLElement)
+ * and thereby a preview of the HTML element is displayed.
+ * On moving around it updates the position of the ghost element
+ * On drag end (invoked on pointerup in droppable) it takes the current position of the ghost element and
+ * creates a {@link DropEvent} with the last position of the ghost
+ */
 class DraggableLayerComponent extends Component<Props, State> {
   state = initialState;
 
   ghost: RefObject<HTMLDivElement> = createRef();
 
+  /**
+   * 'implementation' of the onDragStart of {@link DraggableContext}. It returns a promise with the resulting {@link DropEvent}.
+   * The by this method returned promise is resolved in the {@link onDragEnd} method where the final drop is created. If a pointerup event
+   * occurs outside of the Droppable component -> {@link cancel} is invoked which terminates the dragging and rejects the promise
+   * @param event that started the dragging
+   */
   onDragStart = (event: PointerEvent): Promise<DropEvent> => {
     const element = event.currentTarget as HTMLElement;
     const bounds = element.getBoundingClientRect();
@@ -44,6 +58,9 @@ class DraggableLayerComponent extends Component<Props, State> {
     );
 
     document.addEventListener('pointermove', this.onPointerMove);
+    // if pointer up event occur outside of Droppable element -> cancel dragging
+    // this works, because the events bubble up (onDragEnd is invoked before cancel)
+    // nevertheless cancel is important, because it removes the pointerup listener on the document
     document.addEventListener('pointerup', this.cancel, { once: true });
 
     return new Promise<DropEvent>((resolve, reject) =>

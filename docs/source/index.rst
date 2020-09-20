@@ -9,7 +9,16 @@ Welcome to Apollon's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
+   
+.. toctree::
+   :caption: Contributor Guide
+   :includehidden:
+   :maxdepth: 3
+   
+   dev/setup
+   dev/repository-overview
+   dev/general-concepts
+   dev/adding-another-diagram-type
 
 
 Indices and tables
@@ -17,3 +26,5 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`search`
+
+
