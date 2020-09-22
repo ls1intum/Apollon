@@ -114,6 +114,7 @@ export class ApollonEditor {
         mode: options.mode || ApollonMode.Exporting,
         readonly: options.readonly || false,
         enablePopups: options.enablePopups === true || options.enablePopups === undefined,
+        enableCopyPasteToClipboard: options.copyPasteToClipboard === true,
         features: {
           hoverable: true,
           selectable: true,
