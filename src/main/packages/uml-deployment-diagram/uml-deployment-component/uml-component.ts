@@ -5,8 +5,8 @@ export class UMLDeploymentComponent extends UMLComponent {
   static supportedRelationships = [
     DeploymentRelationshipType.DeploymentAssociation,
     DeploymentRelationshipType.DeploymentDependency,
-    DeploymentRelationshipType.DeploymentInterfaceRequired,
     DeploymentRelationshipType.DeploymentInterfaceProvided,
+    DeploymentRelationshipType.DeploymentInterfaceRequired,
   ];
   type = DeploymentElementType.DeploymentComponent;
 }

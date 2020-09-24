@@ -18,9 +18,7 @@ import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { UMLDeploymentInterfaceRequired } from '../uml-deployment-interface-required/uml-deployment-interface-required';
 import { UMLDeploymentInterfaceProvided } from '../uml-deployment-interface-provided/uml-deployment-interface-provided';
 import { DeploymentRelationshipType } from '../index';
-import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLDeploymentDependency } from '../uml-deployment-dependency/uml-deployment-dependency';
-import { UMLRelationshipCommonRepository } from '../../../services/uml-relationship/uml-relationship-common-repository';
 
 const Flex = styled.div`
   display: flex;
@@ -35,11 +33,8 @@ class DeploymentAssociationUpdate extends Component<Props> {
   }
 
   render() {
-    const { element, sourceElement, targetElement } = this.props;
-    const supportedRelationshipTypes = UMLRelationshipCommonRepository.getSupportedConnectionsForElements([
-      sourceElement,
-      targetElement,
-    ]);
+    const { element } = this.props;
+
     return (
       <div>
         <section>
@@ -58,11 +53,18 @@ class DeploymentAssociationUpdate extends Component<Props> {
         </section>
         <section>
           <Dropdown value={element.type as keyof typeof DeploymentRelationshipType} onChange={this.onChange}>
-            {supportedRelationshipTypes.map((supportedRelationship) => (
-              <Dropdown.Item value={supportedRelationship} key={supportedRelationship}>
-                {this.props.translate(`packages.DeploymentDiagram.${supportedRelationship}`)}
-              </Dropdown.Item>
-            ))}
+            <Dropdown.Item value={DeploymentRelationshipType.DeploymentAssociation}>
+              {this.props.translate('packages.DeploymentDiagram.DeploymentAssociation')}
+            </Dropdown.Item>
+            <Dropdown.Item value={DeploymentRelationshipType.DeploymentDependency}>
+              {this.props.translate('packages.DeploymentDiagram.DeploymentDependency')}
+            </Dropdown.Item>
+            <Dropdown.Item value={DeploymentRelationshipType.DeploymentInterfaceProvided}>
+              {this.props.translate('packages.DeploymentDiagram.DeploymentInterfaceProvided')}
+            </Dropdown.Item>
+            <Dropdown.Item value={DeploymentRelationshipType.DeploymentInterfaceRequired}>
+              {this.props.translate('packages.DeploymentDiagram.DeploymentInterfaceRequired')}
+            </Dropdown.Item>
           </Dropdown>
         </section>
         {element.type === DeploymentRelationshipType.DeploymentAssociation && (
@@ -101,10 +103,7 @@ type OwnProps = {
     | UMLDeploymentDependency;
 };
 
-type StateProps = {
-  sourceElement: UMLElement;
-  targetElement: UMLElement;
-};
+type StateProps = {};
 
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
@@ -116,17 +115,11 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(
-    (state, props) => ({
-      sourceElement: UMLElementRepository.get(state.elements[props.element.source.element])!,
-      targetElement: UMLElementRepository.get(state.elements[props.element.target.element])!,
-    }),
-    {
-      update: UMLElementRepository.update,
-      delete: UMLElementRepository.delete,
-      flip: UMLRelationshipRepository.flip,
-    },
-  ),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
+    update: UMLElementRepository.update,
+    delete: UMLElementRepository.delete,
+    flip: UMLRelationshipRepository.flip,
+  }),
 );
 
 export const UMLDeploymentAssociationUpdate = enhance(DeploymentAssociationUpdate);

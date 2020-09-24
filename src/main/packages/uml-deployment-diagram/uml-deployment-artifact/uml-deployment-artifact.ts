@@ -11,8 +11,8 @@ export class UMLDeploymentArtifact extends UMLElement {
   static supportedRelationships = [
     DeploymentRelationshipType.DeploymentAssociation,
     DeploymentRelationshipType.DeploymentDependency,
-    DeploymentRelationshipType.DeploymentInterfaceRequired,
     DeploymentRelationshipType.DeploymentInterfaceProvided,
+    DeploymentRelationshipType.DeploymentInterfaceRequired,
   ];
   type: UMLElementType = DeploymentElementType.DeploymentArtifact;
   bounds: IBoundary = { ...this.bounds, height: 40 };

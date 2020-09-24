@@ -14,8 +14,8 @@ export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode 
   static supportedRelationships = [
     DeploymentRelationshipType.DeploymentAssociation,
     DeploymentRelationshipType.DeploymentDependency,
-    DeploymentRelationshipType.DeploymentInterfaceRequired,
     DeploymentRelationshipType.DeploymentInterfaceProvided,
+    DeploymentRelationshipType.DeploymentInterfaceRequired,
   ];
   type: UMLElementType = DeploymentElementType.DeploymentNode;
   stereotype: string = 'node';
