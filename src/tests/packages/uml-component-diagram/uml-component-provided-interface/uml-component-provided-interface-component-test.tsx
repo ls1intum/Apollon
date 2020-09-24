@@ -6,6 +6,7 @@ import { UMLComponentInterfaceProvided } from '../../../../main/packages/uml-com
 
 it('render the uml-component-interface-provided-component', () => {
   const umlComponentInterfaceProvided: UMLComponentInterfaceProvided = new UMLComponentInterfaceProvided({
+    id: "d37b8ce3-17d2-4432-8fff-6c38ff2a1334",
     path: [new Point(0, 0), new Point(100, 100)],
   });
   const { getByText, baseElement } = render(

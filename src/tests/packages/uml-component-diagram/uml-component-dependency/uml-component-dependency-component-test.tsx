@@ -6,6 +6,7 @@ import { UMLComponentDependency } from '../../../../main/packages/uml-component-
 
 it('render the uml-component-dependency-component', () => {
   const dependency: UMLComponentDependency = new UMLComponentDependency({
+    id: '77f00db7-ab65-41fb-9e87-aa123c7705c0',
     path: [new Point(0, 0), new Point(100, 100)],
   });
   const { getByText, baseElement } = render(

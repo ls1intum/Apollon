@@ -6,7 +6,7 @@ exports[`render the uml-deplyoment-dependency-component 1`] = `
     <svg>
       <g>
         <marker
-          id="marker-d37b8ce3-17d2-4432-8fff-6c38ff2a1334"
+          id="marker-f19e4479-d393-4239-bfdd-e2022b0853af"
           markerHeight="30"
           markerUnits="strokeWidth"
           markerWidth="22"
@@ -24,7 +24,7 @@ exports[`render the uml-deplyoment-dependency-component 1`] = `
         </marker>
         <polyline
           fill="none"
-          marker-end="url(#marker-d37b8ce3-17d2-4432-8fff-6c38ff2a1334)"
+          marker-end="url(#marker-f19e4479-d393-4239-bfdd-e2022b0853af)"
           points="0 0,100 100"
           stroke="black"
           stroke-dasharray="7"

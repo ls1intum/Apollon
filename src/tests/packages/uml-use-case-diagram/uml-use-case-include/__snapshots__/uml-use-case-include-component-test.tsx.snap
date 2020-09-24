@@ -7,7 +7,7 @@ exports[`render the uml-use-case-include-component 1`] = `
       <g>
         <g>
           <marker
-            id="marker-813dc42a-fb13-42e2-814c-f4ee1eefda10"
+            id="marker-459d9deb-2a40-4024-b01b-00960d1c2707"
             markerHeight="30"
             markerUnits="strokeWidth"
             markerWidth="22"
@@ -28,7 +28,7 @@ exports[`render the uml-use-case-include-component 1`] = `
           M 0 0 L 21.715728752538098 21.715728752538098
           M 78.2842712474619 78.2842712474619 L 100 100
         "
-            marker-end="url(#marker-813dc42a-fb13-42e2-814c-f4ee1eefda10)"
+            marker-end="url(#marker-459d9deb-2a40-4024-b01b-00960d1c2707)"
             stroke="black"
             stroke-dasharray="7"
           />
@@ -38,7 +38,7 @@ exports[`render the uml-use-case-include-component 1`] = `
           M 21.715728752538098 21.715728752538098
           L 78.2842712474619 78.2842712474619
         "
-          id="textpath-813dc42a-fb13-42e2-814c-f4ee1eefda10"
+          id="textpath-459d9deb-2a40-4024-b01b-00960d1c2707"
         />
         <text
           dominant-baseline="middle"
@@ -48,7 +48,7 @@ exports[`render the uml-use-case-include-component 1`] = `
         >
           <textpath
             startOffset="50%"
-            xlink:href="#textpath-813dc42a-fb13-42e2-814c-f4ee1eefda10"
+            xlink:href="#textpath-459d9deb-2a40-4024-b01b-00960d1c2707"
           >
             «include»
           </textpath>

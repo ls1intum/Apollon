@@ -10,7 +10,7 @@ exports[`render the uml-use-case-extend-component 1`] = `
         M 0 -10
         L 100 90
     "
-          id="textpath-516e57ef-ae31-4311-8d9d-2aeb6c97f924"
+          id="textpath-d37b8ce3-17d2-4432-8fff-6c38ff2a1334"
         />
         <text
           dominant-baseline="middle"
@@ -20,7 +20,7 @@ exports[`render the uml-use-case-extend-component 1`] = `
         >
           <textpath
             startOffset="50%"
-            xlink:href="#textpath-516e57ef-ae31-4311-8d9d-2aeb6c97f924"
+            xlink:href="#textpath-d37b8ce3-17d2-4432-8fff-6c38ff2a1334"
           />
         </text>
         <polyline

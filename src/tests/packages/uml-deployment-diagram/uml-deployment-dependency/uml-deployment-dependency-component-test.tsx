@@ -6,6 +6,7 @@ import { Point } from '../../../../main/utils/geometry/point';
 
 it('render the uml-deplyoment-dependency-component', () => {
   const dependency: UMLDeploymentDependency = new UMLDeploymentDependency({
+    id: "f19e4479-d393-4239-bfdd-e2022b0853af",
     path: [new Point(0, 0), new Point(100, 100)],
   });
   const { getByText, baseElement } = render(

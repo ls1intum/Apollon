@@ -7,7 +7,7 @@ import { ILayer } from '../main/services/layouter/layer';
 import testClassDiagram from './test-resources/class-diagram.json';
 import { Selection } from '../../docs/source/user/api/typings';
 import fn = jest.fn;
-import { Assessment, UMLModel } from '../main';
+import { Assessment, UMLDiagramType, UMLModel } from '../main';
 import { getRealStore } from './test-utils/test-utils';
 import { AssessmentRepository } from '../main/services/assessment/assessment-repository';
 import { IAssessment } from '../main/services/assessment/assessment';
@@ -75,8 +75,8 @@ describe('test apollon editor ', () => {
       setTimeout(() => {
         expect(selectionCallback).toBeCalledTimes(1);
         done();
-      }, 100);
-    }, 100);
+      }, 500);
+    }, 500);
   });
   it('unsubscribeFromSelectionValidation', (done) => {
     // same test as above, but don't unsubscribe
@@ -102,8 +102,8 @@ describe('test apollon editor ', () => {
         // should be called twice
         expect(selectionCallback).toBeCalledTimes(2);
         done();
-      }, 100);
-    }, 100);
+      }, 500);
+    }, 500);
   });
 
   it('subscribeToAssessmentChange', (done) => {
@@ -182,8 +182,8 @@ describe('test apollon editor ', () => {
       setTimeout(() => {
         expect(assessmentChangedCallback).toBeCalledTimes(1);
         done();
-      }, 100);
-    }, 100);
+      }, 500);
+    }, 500);
   });
   it('unsubscribeFromAssessmentValidation', (done) => {
     const { container } = testLibraryRender(<div />);
@@ -226,8 +226,8 @@ describe('test apollon editor ', () => {
         // should be called twice
         expect(assessmentChangedCallback).toBeCalledTimes(2);
         done();
-      }, 100);
-    }, 100);
+      }, 500);
+    }, 500);
   });
 
   it('subscribeToModelChange', (done) => {
@@ -287,8 +287,8 @@ describe('test apollon editor ', () => {
       setTimeout(() => {
         expect(modelChangedCallback).toBeCalledTimes(1);
         done();
-      }, 100);
-    }, 100);
+      }, 500);
+    }, 500);
   });
   it('unsubscribeFromModelChangesValidation', (done) => {
     const { container } = testLibraryRender(<div />);
@@ -319,7 +319,71 @@ describe('test apollon editor ', () => {
       setTimeout(() => {
         expect(modelChangedCallback).toBeCalledTimes(2);
         done();
-      }, 100);
-    }, 100);
+      }, 500);
+    }, 500);
+  });
+  it('set type to UseCaseDiagram', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.UseCaseDiagram;
+    expect(editor.model.type).toEqual(UMLDiagramType.UseCaseDiagram);
+  });
+  it('set type to CommunicationDiagram', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.CommunicationDiagram;
+    expect(editor.model.type).toEqual(UMLDiagramType.CommunicationDiagram);
+  });
+  it('set type to ComponentDiagram', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.ComponentDiagram;
+    expect(editor.model.type).toEqual(UMLDiagramType.ComponentDiagram);
+  });
+  it('set type to DeploymentDiagram', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.DeploymentDiagram;
+    expect(editor.model.type).toEqual(UMLDiagramType.DeploymentDiagram);
+  });
+  it('set type to PetriNet', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.PetriNet;
+    expect(editor.model.type).toEqual(UMLDiagramType.PetriNet);
+  });
+  it('set type to ActivityDiagram', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.ActivityDiagram;
+    expect(editor.model.type).toEqual(UMLDiagramType.ActivityDiagram);
+  });
+  it('set type to ObjectDiagram', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.ObjectDiagram;
+    expect(editor.model.type).toEqual(UMLDiagramType.ObjectDiagram);
+  });
+  it('set type to ClassDiagram', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.ClassDiagram;
+    expect(editor.model.type).toEqual(UMLDiagramType.ClassDiagram);
   });
 });

@@ -6,6 +6,7 @@ import { UMLUseCaseGeneralization } from '../../../../main/packages/uml-use-case
 
 it('render the uml-use-case-generalization-component', () => {
   const umlUseCaseGeneralization: UMLUseCaseGeneralization = new UMLUseCaseGeneralization({
+    id: '516e57ef-ae31-4311-8d9d-2aeb6c97f924',
     path: [new Point(0, 0), new Point(100, 100)],
   });
   const { getByText, baseElement } = render(

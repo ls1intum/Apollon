@@ -6,6 +6,7 @@ import { UMLUseCaseAssociation } from '../../../../main/packages/uml-use-case-di
 
 it('render the uml-use-case-extend-component', () => {
   const umlUseCaseAssociation: UMLUseCaseAssociation = new UMLUseCaseAssociation({
+    id: "d37b8ce3-17d2-4432-8fff-6c38ff2a1334",
     path: [new Point(0, 0), new Point(100, 100)],
   });
   const { getByText, baseElement } = render(

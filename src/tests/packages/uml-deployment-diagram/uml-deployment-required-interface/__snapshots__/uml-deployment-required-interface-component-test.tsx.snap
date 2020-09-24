@@ -6,7 +6,7 @@ exports[`render the uml-deplyoment-required-interface-component 1`] = `
     <svg>
       <g>
         <marker
-          id="marker-f19e4479-d393-4239-bfdd-e2022b0853af"
+          id="marker-05a6f05d-404a-4f38-ade1-d46c9f02902b"
           markerHeight="26"
           markerUnits="strokeWidth"
           markerWidth="26"
@@ -25,7 +25,7 @@ exports[`render the uml-deplyoment-required-interface-component 1`] = `
         </marker>
         <polyline
           fill="none"
-          marker-end="url(#marker-f19e4479-d393-4239-bfdd-e2022b0853af)"
+          marker-end="url(#marker-05a6f05d-404a-4f38-ade1-d46c9f02902b)"
           points="0 0,100 97"
           stroke="black"
           stroke-width="1"
