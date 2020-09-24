@@ -8,10 +8,11 @@ it('render the uml-use-case-extend-component', () => {
   const umlUseCaseExtend: UMLUseCaseExtend = new UMLUseCaseExtend({
     path: [new Point(0, 0), new Point(100, 100)],
   });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLUseCaseExtendComponent element={umlUseCaseExtend} />
     </svg>,
   );
   expect(getByText('«extend»')).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

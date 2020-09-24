@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-component-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <circle
+          cx="10px"
+          cy="50%"
+          r="10"
+          stroke="black"
+          stroke-width="2"
+        />
+        <text
+          font-weight="bold"
+          pointer-events="none"
+          x="25px"
+        >
+          TestComponentComponent
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

@@ -8,11 +8,12 @@ it('render the uml-use-case-generalization-component', () => {
   const umlUseCaseGeneralization: UMLUseCaseGeneralization = new UMLUseCaseGeneralization({
     path: [new Point(0, 0), new Point(100, 100)],
   });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLUseCaseGeneralizationComponent element={umlUseCaseGeneralization} />
     </svg>,
   );
   // TODO: expect
   // expect(getByText('«extend»')).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

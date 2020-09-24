@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-object-name-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          height="40"
+          width="100%"
+        />
+        <rect
+          fill="white"
+          height="60"
+          width="100%"
+          y="40"
+        />
+        <svg
+          height="40"
+        >
+          <text
+            dominant-baseline="middle"
+            font-weight="bold"
+            pointer-events="none"
+            text-anchor="middle"
+            text-decoration="underline"
+            x="50%"
+            y="50%"
+          >
+            TestObjectComponent
+          </text>
+        </svg>
+        <rect
+          fill="none"
+          height="100%"
+          pointer-events="none"
+          stroke="black"
+          width="100%"
+        />
+        <path
+          d="M 0 40 H 200"
+          stroke="black"
+        />
+        <path
+          d="M 0 0 H 200"
+          stroke="black"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

@@ -5,10 +5,11 @@ import { UMLComponentComponent } from '../../../../main/packages/common/uml-comp
 
 it('render the uml-component-component', () => {
   const component: UMLComponent = new UMLComponent({ name: 'TestComponentComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLComponentComponent element={component} />
     </svg>,
   );
   expect(getByText(component.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

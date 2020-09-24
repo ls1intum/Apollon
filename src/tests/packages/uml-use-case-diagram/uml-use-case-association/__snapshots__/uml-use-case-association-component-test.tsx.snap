@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-use-case-extend-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <path
+          d="
+        M 0 -10
+        L 100 90
+    "
+          id="textpath-516e57ef-ae31-4311-8d9d-2aeb6c97f924"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+        >
+          <textpath
+            startOffset="50%"
+            xlink:href="#textpath-516e57ef-ae31-4311-8d9d-2aeb6c97f924"
+          />
+        </text>
+        <polyline
+          fill="none"
+          points="0 0,100 100"
+          stroke="black"
+          stroke-width="1"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

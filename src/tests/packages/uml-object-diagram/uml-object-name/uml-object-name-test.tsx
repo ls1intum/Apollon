@@ -5,10 +5,11 @@ import { UMLClassifierComponent } from '../../../../main/packages/common/uml-cla
 
 it('render the uml-object-name-component', () => {
   const objectName: UMLObjectName = new UMLObjectName({ name: 'TestObjectComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLClassifierComponent element={objectName} />
     </svg>,
   );
   expect(getByText(objectName.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

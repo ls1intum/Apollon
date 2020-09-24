@@ -8,11 +8,12 @@ it('render the uml-deplyoment-interface-provided-component', () => {
   const umlDeploymentInterfaceProvided: UMLDeploymentInterfaceProvided = new UMLDeploymentInterfaceProvided({
     path: [new Point(0, 0), new Point(100, 100)],
   });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLInterfaceProvidedComponent element={umlDeploymentInterfaceProvided} />
     </svg>,
   );
   // TODO: expect
   // expect(getByText(artifact.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

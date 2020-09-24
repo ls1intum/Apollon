@@ -9,7 +9,7 @@ it('render the uml-component-required-interface-component', () => {
   const umlComponentInterfaceRequired: UMLComponentInterfaceRequired = new UMLComponentInterfaceRequired({
     path: [new Point(0, 0), new Point(100, 100)],
   });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <StoreProvider
       initialState={{ elements: { [umlComponentInterfaceRequired.id]: { ...umlComponentInterfaceRequired } } }}
     >
@@ -20,4 +20,5 @@ it('render the uml-component-required-interface-component', () => {
   );
   // TODO: expect
   // expect(getByText(umlDeploymentInterfaceRequired.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

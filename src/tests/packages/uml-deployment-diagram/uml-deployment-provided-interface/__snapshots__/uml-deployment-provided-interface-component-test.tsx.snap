@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-deplyoment-interface-provided-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <polyline
+          fill="none"
+          points="0 0,100 100"
+          stroke="black"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

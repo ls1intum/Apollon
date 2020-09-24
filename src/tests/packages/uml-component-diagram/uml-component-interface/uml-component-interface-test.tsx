@@ -5,10 +5,11 @@ import { UMLInterfaceComponent } from '../../../../main/packages/common/uml-inte
 
 it('render the uml-component-component', () => {
   const umlInterface: UMLComponentInterface = new UMLComponentInterface({ name: 'TestComponentComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLInterfaceComponent element={umlInterface} />
     </svg>,
   );
   expect(getByText(umlInterface.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

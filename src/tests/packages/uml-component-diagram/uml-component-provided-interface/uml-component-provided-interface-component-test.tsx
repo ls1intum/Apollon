@@ -8,11 +8,12 @@ it('render the uml-component-interface-provided-component', () => {
   const umlComponentInterfaceProvided: UMLComponentInterfaceProvided = new UMLComponentInterfaceProvided({
     path: [new Point(0, 0), new Point(100, 100)],
   });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLInterfaceProvidedComponent element={umlComponentInterfaceProvided} />
     </svg>,
   );
   // TODO: expect
   // expect(getByText(artifact.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

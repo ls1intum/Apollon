@@ -1,0 +1,61 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-use-case-actor-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          fill="none"
+          height="100%"
+          width="100%"
+        />
+        <g
+          stroke="black"
+          stroke-width="2"
+        >
+          <circle
+            cx="45"
+            cy="25"
+            r="15"
+          />
+          <line
+            x1="45"
+            x2="45"
+            y1="40"
+            y2="80"
+          />
+          <line
+            x1="15"
+            x2="75"
+            y1="55"
+            y2="55"
+          />
+          <line
+            x1="45"
+            x2="15"
+            y1="80"
+            y2="110"
+          />
+          <line
+            x1="45"
+            x2="75"
+            y1="80"
+            y2="110"
+          />
+        </g>
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="45"
+          y="130"
+        >
+          TestUseCaseComponent
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

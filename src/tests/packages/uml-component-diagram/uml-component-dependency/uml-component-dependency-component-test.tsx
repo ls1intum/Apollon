@@ -8,11 +8,12 @@ it('render the uml-component-dependency-component', () => {
   const dependency: UMLComponentDependency = new UMLComponentDependency({
     path: [new Point(0, 0), new Point(100, 100)],
   });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLDependencyComponent element={dependency} />
     </svg>,
   );
   // TODO: expect
   // expect(getByText(dependency.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

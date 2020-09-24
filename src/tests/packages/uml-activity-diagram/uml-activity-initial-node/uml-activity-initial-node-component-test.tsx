@@ -5,10 +5,11 @@ import { UMLActivityInitialNodeComponent } from '../../../../main/packages/uml-a
 
 it('render the uml-activity-intial-node-component', () => {
   const initialNode: UMLActivityInitialNode = new UMLActivityInitialNode({ name: 'TestActivityComponent' });
-  const { container } = render(
+  const { container, baseElement } = render(
     <svg>
       <UMLActivityInitialNodeComponent element={initialNode} />
     </svg>,
   );
   expect(container.querySelector('circle')).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

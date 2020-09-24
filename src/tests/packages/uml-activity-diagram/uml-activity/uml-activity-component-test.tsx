@@ -5,10 +5,11 @@ import { render } from '@testing-library/react';
 
 it('render the uml-activity-component', () => {
   const activity: UMLActivity = new UMLActivity({ name: 'TestActivityComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLActivityComponent element={activity} />
     </svg>,
   );
   expect(getByText(activity.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

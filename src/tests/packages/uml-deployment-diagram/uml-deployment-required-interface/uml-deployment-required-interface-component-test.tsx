@@ -9,7 +9,7 @@ it('render the uml-deplyoment-required-interface-component', () => {
   const umlDeploymentInterfaceRequired: UMLDeploymentInterfaceRequired = new UMLDeploymentInterfaceRequired({
     path: [new Point(0, 0), new Point(100, 100)],
   });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <StoreProvider
         initialState={{ elements: { [umlDeploymentInterfaceRequired.id]: { ...umlDeploymentInterfaceRequired } } }}
@@ -20,4 +20,5 @@ it('render the uml-deplyoment-required-interface-component', () => {
   );
   // TODO: expect
   // expect(getByText(umlDeploymentInterfaceRequired.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

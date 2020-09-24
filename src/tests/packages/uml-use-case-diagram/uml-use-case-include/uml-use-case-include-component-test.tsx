@@ -8,10 +8,11 @@ it('render the uml-use-case-include-component', () => {
   const umlUseCaseInclude: UMLUseCaseInclude = new UMLUseCaseInclude({
     path: [new Point(0, 0), new Point(100, 100)],
   });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLUseCaseIncludeComponent element={umlUseCaseInclude} />
     </svg>,
   );
   expect(getByText('«include»')).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

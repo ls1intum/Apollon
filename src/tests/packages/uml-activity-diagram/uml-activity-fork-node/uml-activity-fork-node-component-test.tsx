@@ -5,10 +5,11 @@ import { UMLActivityForkNodeComponent } from '../../../../main/packages/uml-acti
 
 it('render the uml-activity-fork-node-component', () => {
   const forkNode: UMLActivityForkNode = new UMLActivityForkNode({ name: 'TestActivityComponent' });
-  const { container } = render(
+  const { container, baseElement } = render(
     <svg>
       <UMLActivityForkNodeComponent element={forkNode} />
     </svg>,
   );
   expect(container.querySelector('rect')).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });
