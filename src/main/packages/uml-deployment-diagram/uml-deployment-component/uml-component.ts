@@ -1,4 +1,4 @@
-import { DeploymentElementType, DeploymentRelationshipType } from "..";
+import { DeploymentElementType, DeploymentRelationshipType } from '..';
 import { UMLComponent } from '../../common/uml-component/uml-component';
 
 export class UMLDeploymentComponent extends UMLComponent {
