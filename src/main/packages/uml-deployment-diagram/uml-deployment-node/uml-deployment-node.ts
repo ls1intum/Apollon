@@ -1,5 +1,5 @@
 import { DeepPartial } from 'redux';
-import { DeploymentElementType } from '..';
+import { DeploymentElementType, DeploymentRelationshipType } from '..';
 import { IUMLContainer } from '../../../services/uml-container/uml-container';
 import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
@@ -11,6 +11,12 @@ export interface IUMLDeploymentNode extends IUMLContainer {
 }
 
 export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode {
+  static supportedRelationships = [
+    DeploymentRelationshipType.DeploymentAssociation,
+    DeploymentRelationshipType.DeploymentDependency,
+    DeploymentRelationshipType.DeploymentInterfaceRequired,
+    DeploymentRelationshipType.DeploymentInterfaceProvided,
+  ];
   type: UMLElementType = DeploymentElementType.DeploymentNode;
   stereotype: string = 'node';
 

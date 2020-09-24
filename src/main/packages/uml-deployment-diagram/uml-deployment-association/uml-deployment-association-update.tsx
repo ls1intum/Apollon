@@ -17,9 +17,10 @@ import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { UMLDeploymentInterfaceRequired } from '../uml-deployment-interface-required/uml-deployment-interface-required';
 import { UMLDeploymentInterfaceProvided } from '../uml-deployment-interface-provided/uml-deployment-interface-provided';
-import { DeploymentElementType, DeploymentRelationshipType } from '../index';
+import { DeploymentRelationshipType } from '../index';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLDeploymentDependency } from '../uml-deployment-dependency/uml-deployment-dependency';
+import { UMLRelationshipCommonRepository } from '../../../services/uml-relationship/uml-relationship-common-repository';
 
 const Flex = styled.div`
   display: flex;
@@ -35,84 +36,50 @@ class DeploymentAssociationUpdate extends Component<Props> {
 
   render() {
     const { element, sourceElement, targetElement } = this.props;
-    if (
-      sourceElement.type === DeploymentElementType.DeploymentInterface ||
-      targetElement.type === DeploymentElementType.DeploymentInterface
-    ) {
-      return (
-        <div>
-          <section>
-            <Flex>
-              <Header gutter={false} style={{ flexGrow: 1 }}>
-                {this.props.translate('popup.association')}
-              </Header>
-              <Button color="link" onClick={() => this.props.flip(element.id)}>
-                <ExchangeIcon />
-              </Button>
-              <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
-                <TrashIcon />
-              </Button>
-            </Flex>
+    const supportedRelationshipTypes = UMLRelationshipCommonRepository.getSupportedConnectionsForElements([
+      sourceElement,
+      targetElement,
+    ]);
+    return (
+      <div>
+        <section>
+          <Flex>
+            <Header gutter={false} style={{ flexGrow: 1 }}>
+              {this.props.translate('popup.association')}
+            </Header>
+            <Button color="link" onClick={() => this.props.flip(element.id)}>
+              <ExchangeIcon />
+            </Button>
+            <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
+              <TrashIcon />
+            </Button>
+          </Flex>
+          <Divider />
+        </section>
+        <section>
+          <Dropdown value={element.type as keyof typeof DeploymentRelationshipType} onChange={this.onChange}>
+            {supportedRelationshipTypes.map((supportedRelationship) => (
+              <Dropdown.Item value={supportedRelationship} key={supportedRelationship}>
+                {this.props.translate(`packages.DeploymentDiagram.${supportedRelationship}`)}
+              </Dropdown.Item>
+            ))}
+          </Dropdown>
+        </section>
+        {element.type === DeploymentRelationshipType.DeploymentAssociation && (
+          <>
             <Divider />
-          </section>
-          <section>
-            <Dropdown value={element.type as keyof typeof DeploymentRelationshipType} onChange={this.onChange}>
-              <Dropdown.Item value={DeploymentRelationshipType.DeploymentAssociation}>
-                {this.props.translate('packages.DeploymentDiagram.DeploymentAssociation')}
-              </Dropdown.Item>
-              <Dropdown.Item value={DeploymentRelationshipType.DeploymentInterfaceProvided}>
-                {this.props.translate('packages.DeploymentDiagram.DeploymentInterfaceProvided')}
-              </Dropdown.Item>
-              <Dropdown.Item value={DeploymentRelationshipType.DeploymentInterfaceRequired}>
-                {this.props.translate('packages.DeploymentDiagram.DeploymentInterfaceRequired')}
-              </Dropdown.Item>
-            </Dropdown>
-          </section>
-        </div>
-      );
-    } else {
-      return (
-        <div>
-          <section>
-            <Flex>
-              <Header gutter={false} style={{ flexGrow: 1 }}>
-                {this.props.translate('popup.association')}
-              </Header>
-              <Button color="link" onClick={() => this.props.flip(element.id)}>
-                <ExchangeIcon />
-              </Button>
-              <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
-                <TrashIcon />
-              </Button>
-            </Flex>
-            <Divider />
-          </section>
-          <section>
-            <Dropdown value={element.type as keyof typeof DeploymentRelationshipType} onChange={this.onChange}>
-              <Dropdown.Item value={DeploymentRelationshipType.DeploymentAssociation}>
-                {this.props.translate('packages.DeploymentDiagram.DeploymentAssociation')}
-              </Dropdown.Item>
-              <Dropdown.Item value={DeploymentRelationshipType.DeploymentDependency}>
-                {this.props.translate('packages.DeploymentDiagram.DeploymentDependency')}
-              </Dropdown.Item>
-            </Dropdown>
-          </section>
-          {element.type === DeploymentRelationshipType.DeploymentAssociation && (
-            <>
-              <Divider />
-              <section>
-                <Flex>
-                  <Textfield value={element.name} onChange={this.rename} autoFocus />
-                  <Button color="link" onClick={() => this.props.delete(element.id)}>
-                    <TrashIcon />
-                  </Button>
-                </Flex>
-              </section>
-            </>
-          )}
-        </div>
-      );
-    }
+            <section>
+              <Flex>
+                <Textfield value={element.name} onChange={this.rename} autoFocus />
+                <Button color="link" onClick={() => this.props.delete(element.id)}>
+                  <TrashIcon />
+                </Button>
+              </Flex>
+            </section>
+          </>
+        )}
+      </div>
+    );
   }
 
   private onChange = (value: keyof typeof DeploymentRelationshipType) => {

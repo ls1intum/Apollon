@@ -42,6 +42,8 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     alternativePortVisualization: false,
   };
 
+  static supportedRelationships: UMLRelationshipType[] = [];
+
   /** Checks whether an `IUMLElement` is of type `UMLElementType` */
   static isUMLElement = (element: IUMLElement): element is IUMLElement & { type: UMLElementType } =>
     element.type in UMLElementType;

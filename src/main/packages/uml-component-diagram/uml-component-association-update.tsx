@@ -12,9 +12,11 @@ import { I18nContext } from '../../components/i18n/i18n-context';
 import { localized } from '../../components/i18n/localized';
 import { ModelState } from '../../components/store/model-state';
 import { styled } from '../../components/theme/styles';
-import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
+import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
+import { UMLRelationshipCommonRepository } from '../../services/uml-relationship/uml-relationship-common-repository';
+import { UMLElement } from '../../services/uml-element/uml-element';
 
 const Flex = styled.div`
   display: flex;
@@ -24,7 +26,11 @@ const Flex = styled.div`
 
 class ComponentAssociationUpdate extends Component<Props> {
   render() {
-    const { element } = this.props;
+    const { element, sourceElement, targetElement } = this.props;
+    const supportedRelationshipTypes = UMLRelationshipCommonRepository.getSupportedConnectionsForElements([
+      sourceElement,
+      targetElement,
+    ]);
 
     return (
       <div>
@@ -44,15 +50,11 @@ class ComponentAssociationUpdate extends Component<Props> {
         </section>
         <section>
           <Dropdown value={element.type as keyof typeof ComponentRelationshipType} onChange={this.onChange}>
-            <Dropdown.Item value={ComponentRelationshipType.ComponentDependency}>
-              {this.props.translate('packages.ComponentDiagram.ComponentDependency')}
-            </Dropdown.Item>
-            <Dropdown.Item value={ComponentRelationshipType.ComponentInterfaceProvided}>
-              {this.props.translate('packages.ComponentDiagram.ComponentInterfaceProvided')}
-            </Dropdown.Item>
-            <Dropdown.Item value={ComponentRelationshipType.ComponentInterfaceRequired}>
-              {this.props.translate('packages.ComponentDiagram.ComponentInterfaceRequired')}
-            </Dropdown.Item>
+            {supportedRelationshipTypes.map((supportedRelationship) => (
+              <Dropdown.Item value={supportedRelationship} key={supportedRelationship}>
+                {this.props.translate(`packages.ComponentDiagram.${supportedRelationship}`)}
+              </Dropdown.Item>
+            ))}
           </Dropdown>
         </section>
       </div>
@@ -66,10 +68,13 @@ class ComponentAssociationUpdate extends Component<Props> {
 }
 
 type OwnProps = {
-  element: UMLElement;
+  element: UMLRelationship;
 };
 
-type StateProps = {};
+type StateProps = {
+  sourceElement: UMLElement;
+  targetElement: UMLElement;
+};
 
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
@@ -81,11 +86,17 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
-    update: UMLElementRepository.update,
-    delete: UMLElementRepository.delete,
-    flip: UMLRelationshipRepository.flip,
-  }),
+  connect<StateProps, DispatchProps, OwnProps, ModelState>(
+    (state, props) => ({
+      sourceElement: UMLElementRepository.get(state.elements[props.element.source.element])!,
+      targetElement: UMLElementRepository.get(state.elements[props.element.target.element])!,
+    }),
+    {
+      update: UMLElementRepository.update,
+      delete: UMLElementRepository.delete,
+      flip: UMLRelationshipRepository.flip,
+    },
+  ),
 );
 
 export const UMLComponentAssociationUpdate = enhance(ComponentAssociationUpdate);
