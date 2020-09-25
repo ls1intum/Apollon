@@ -1,9 +1,10 @@
 import { UMLElement } from '../../../../main/services/uml-element/uml-element';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
-import { createUMLClassWithAttributeAndMethod, getRealStore } from '../../../test-utils/test-utils';
+import { getRealStore } from '../../../test-utils/test-utils';
 import { Connectable } from '../../../../main/services/uml-element/connectable/connectable-repository';
 import { Direction } from '../../../../main/services/uml-element/uml-element-port';
 import { UMLRelationship } from '../../../../main/services/uml-relationship/uml-relationship';
+import { createUMLClassWithAttributeAndMethod } from '../../../test-utils/test-data';
 
 describe('test redux state update when connecting elements', () => {
   let srcElement: UMLClass;

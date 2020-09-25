@@ -1,10 +1,11 @@
 import { UMLElement } from '../../../../main/services/uml-element/uml-element';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
-import { createUMLClassWithAttributeAndMethod, getRealStore } from '../../../test-utils/test-utils';
+import { getRealStore } from '../../../test-utils/test-utils';
 import { Direction } from '../../../../main/services/uml-element/uml-element-port';
 import { UMLRelationship } from '../../../../main/services/uml-relationship/uml-relationship';
 import { Reconnectable } from '../../../../main/services/uml-relationship/reconnectable/reconnectable-repository';
 import { UMLClassBidirectional } from '../../../../main/packages/uml-class-diagram/uml-class-bidirectional/uml-class-bidirectional';
+import { createUMLClassWithAttributeAndMethod } from '../../../test-utils/test-data';
 
 describe('test redux state update when reconnecting uml relationships', () => {
   const elements: UMLElement[] = [];

@@ -1,10 +1,11 @@
 import { UMLClassBidirectional } from '../../../main/packages/uml-class-diagram/uml-class-bidirectional/uml-class-bidirectional';
-import { createUMLClassWithAttributeAndMethod, getRealStore } from '../../test-utils/test-utils';
+import { getRealStore } from '../../test-utils/test-utils';
 import { UMLClass } from '../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { Direction } from '../../../main/services/uml-element/uml-element-port';
 import { UMLRelationshipCommonRepository } from '../../../main/services/uml-relationship/uml-relationship-common-repository';
 import { UMLRelationship } from '../../../main/services/uml-relationship/uml-relationship';
 import { UMLElement } from '../../../main/services/uml-element/uml-element';
+import { createUMLClassWithAttributeAndMethod } from '../../test-utils/test-data';
 
 describe('test UMLRelationshipCommonRepository', () => {
   const realtionships: UMLRelationship[] = [];
