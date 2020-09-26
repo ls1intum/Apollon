@@ -36,38 +36,3 @@ exports[`render the uml-use-case-association 1`] = `
   </div>
 </body>
 `;
-
-exports[`render the uml-use-case-extend-component 1`] = `
-<body>
-  <div>
-    <svg>
-      <g>
-        <path
-          d="
-        M 0 -10
-        L 100 90
-    "
-          id="textpath-d37b8ce3-17d2-4432-8fff-6c38ff2a1334"
-        />
-        <text
-          dominant-baseline="middle"
-          font-weight="bold"
-          pointer-events="none"
-          text-anchor="middle"
-        >
-          <textpath
-            startOffset="50%"
-            xlink:href="#textpath-d37b8ce3-17d2-4432-8fff-6c38ff2a1334"
-          />
-        </text>
-        <polyline
-          fill="none"
-          points="0 0,100 100"
-          stroke="black"
-          stroke-width="1"
-        />
-      </g>
-    </svg>
-  </div>
-</body>
-`;
