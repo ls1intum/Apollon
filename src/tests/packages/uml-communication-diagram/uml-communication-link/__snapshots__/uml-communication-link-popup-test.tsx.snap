@@ -1,0 +1,310 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test communication link popup render 1`] = `
+<body>
+  <div>
+    <div>
+      <section>
+        <div
+          class="sc-iJCRLp dqvmHv"
+        >
+          <h1
+            class="sc-bkbjAj dyFuyY"
+          >
+            Communication Link
+          </h1>
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+        <hr
+          class="sc-dIvqjp cJMUUR"
+        />
+      </section>
+      <section>
+        <h1
+          class="sc-bkbjAj hFQBLR"
+        >
+          Messages
+           (
+          <small>
+            
+             ⟶ 
+            
+          </small>
+          )
+        </h1>
+        <div
+          class="sc-iJCRLp dqvmHv"
+        >
+          <input
+            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            value="CommunicationSourceLinkMessage0"
+          />
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M311.03 131.515l-7.071 7.07c-4.686 4.686-4.686 12.284 0 16.971L387.887 239H12c-6.627 0-12 5.373-12 12v10c0 6.627 5.373 12 12 12h375.887l-83.928 83.444c-4.686 4.686-4.686 12.284 0 16.971l7.071 7.07c4.686 4.686 12.284 4.686 16.97 0l116.485-116c4.686-4.686 4.686-12.284 0-16.971L328 131.515c-4.686-4.687-12.284-4.687-16.97 0z"
+              />
+            </svg>
+          </button>
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="sc-iJCRLp dqvmHv"
+        >
+          <input
+            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            value="CommunicationSourceLinkMessage1"
+          />
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M311.03 131.515l-7.071 7.07c-4.686 4.686-4.686 12.284 0 16.971L387.887 239H12c-6.627 0-12 5.373-12 12v10c0 6.627 5.373 12 12 12h375.887l-83.928 83.444c-4.686 4.686-4.686 12.284 0 16.971l7.071 7.07c4.686 4.686 12.284 4.686 16.97 0l116.485-116c4.686-4.686 4.686-12.284 0-16.971L328 131.515c-4.686-4.687-12.284-4.687-16.97 0z"
+              />
+            </svg>
+          </button>
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="sc-iJCRLp dqvmHv"
+        >
+          <input
+            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            value="CommunicationSourceLinkMessage2"
+          />
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M311.03 131.515l-7.071 7.07c-4.686 4.686-4.686 12.284 0 16.971L387.887 239H12c-6.627 0-12 5.373-12 12v10c0 6.627 5.373 12 12 12h375.887l-83.928 83.444c-4.686 4.686-4.686 12.284 0 16.971l7.071 7.07c4.686 4.686 12.284 4.686 16.97 0l116.485-116c4.686-4.686 4.686-12.284 0-16.971L328 131.515c-4.686-4.687-12.284-4.687-16.97 0z"
+              />
+            </svg>
+          </button>
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="sc-iJCRLp dqvmHv"
+        >
+          <input
+            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            value="CommunicationTargetLinkMessage0"
+          />
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M136.97 380.485l7.071-7.07c4.686-4.686 4.686-12.284 0-16.971L60.113 273H436c6.627 0 12-5.373 12-12v-10c0-6.627-5.373-12-12-12H60.113l83.928-83.444c4.686-4.686 4.686-12.284 0-16.971l-7.071-7.07c-4.686-4.686-12.284-4.686-16.97 0l-116.485 116c-4.686 4.686-4.686 12.284 0 16.971l116.485 116c4.686 4.686 12.284 4.686 16.97-.001z"
+              />
+            </svg>
+          </button>
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="sc-iJCRLp dqvmHv"
+        >
+          <input
+            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            value="CommunicationTargetLinkMessage1"
+          />
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M136.97 380.485l7.071-7.07c4.686-4.686 4.686-12.284 0-16.971L60.113 273H436c6.627 0 12-5.373 12-12v-10c0-6.627-5.373-12-12-12H60.113l83.928-83.444c4.686-4.686 4.686-12.284 0-16.971l-7.071-7.07c-4.686-4.686-12.284-4.686-16.97 0l-116.485 116c-4.686 4.686-4.686 12.284 0 16.971l116.485 116c4.686 4.686 12.284 4.686 16.97-.001z"
+              />
+            </svg>
+          </button>
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="sc-iJCRLp dqvmHv"
+        >
+          <input
+            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            value="CommunicationTargetLinkMessage2"
+          />
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M136.97 380.485l7.071-7.07c4.686-4.686 4.686-12.284 0-16.971L60.113 273H436c6.627 0 12-5.373 12-12v-10c0-6.627-5.373-12-12-12H60.113l83.928-83.444c4.686-4.686 4.686-12.284 0-16.971l-7.071-7.07c-4.686-4.686-12.284-4.686-16.97 0l-116.485 116c-4.686 4.686-4.686 12.284 0 16.971l116.485 116c4.686 4.686 12.284 4.686 16.97-.001z"
+              />
+            </svg>
+          </button>
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+        <input
+          class="sc-hBMVcZ sc-fnVYJo cgkWeF dmprUH"
+          value=""
+        />
+      </section>
+    </div>
+  </div>
+</body>
+`;

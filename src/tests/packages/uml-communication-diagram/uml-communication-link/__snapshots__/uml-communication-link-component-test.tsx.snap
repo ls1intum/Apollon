@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test uml-communication-link component render 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <text
+          font-size="85%"
+          pointer-events="none"
+          x="100"
+          y="50"
+        >
+          <tspan
+            font-size="120%"
+            font-weight="bold"
+            text-anchor="middle"
+          >
+            ⟶
+          </tspan>
+          <tspan
+            x="0"
+            y="0"
+          >
+            CommunicationSourceLinkMessage0
+          </tspan>
+          <tspan
+            x="0"
+            y="0"
+          >
+            CommunicationSourceLinkMessage1
+          </tspan>
+          <tspan
+            x="0"
+            y="0"
+          >
+            CommunicationSourceLinkMessage2
+          </tspan>
+        </text>
+        <text
+          font-size="85%"
+          pointer-events="none"
+          x="100"
+          y="66"
+        >
+          <tspan
+            font-size="120%"
+            font-weight="bold"
+            text-anchor="middle"
+          >
+            ⟵
+          </tspan>
+          <tspan
+            x="0"
+            y="0"
+          >
+            CommunicationTargetLinkMessage0
+          </tspan>
+          <tspan
+            x="0"
+            y="0"
+          >
+            CommunicationTargetLinkMessage1
+          </tspan>
+          <tspan
+            x="0"
+            y="0"
+          >
+            CommunicationTargetLinkMessage2
+          </tspan>
+        </text>
+        <polyline
+          fill="none"
+          points="0 0,200 100"
+          stroke="black"
+          stroke-width="1"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

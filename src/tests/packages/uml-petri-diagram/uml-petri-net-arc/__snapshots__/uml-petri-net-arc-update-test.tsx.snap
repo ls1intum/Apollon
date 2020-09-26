@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test petri net arc update render 1`] = `
+<body>
+  <div>
+    <div>
+      <section>
+        <div
+          class="sc-hiKfjK ckZnQs"
+        >
+          <input
+            class="sc-hBMVcZ sc-fnVYJo cgkWeF lpqGps"
+            value="UMLClassBidirectional"
+          />
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 512 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M508.485 184.485l-92.485 92c-4.687 4.686-12.284 4.686-16.97 0l-7.071-7.07c-4.687-4.686-4.687-12.284 0-16.971L452.893 192H12c-6.627 0-12-5.373-12-12v-8c0-6.627 5.373-12 12-12h440.905l-60.946-60.444c-4.687-4.686-4.687-12.284 0-16.971l7.07-7.07c4.687-4.686 12.284-4.686 16.971 0l92.485 92c4.687 4.686 4.686 12.284 0 16.97zm-504.97 160l92.485 92c4.687 4.686 12.284 4.686 16.971 0l7.07-7.07c4.687-4.686 4.687-12.284 0-16.971L59.095 352H500c6.627 0 12-5.373 12-12v-8c0-6.627-5.373-12-12-12H59.107l60.934-60.444c4.687-4.686 4.687-12.284 0-16.971l-7.071-7.07c-4.686-4.686-12.284-4.687-16.97 0l-92.485 92c-4.686 4.686-4.687 12.284 0 16.97z"
+              />
+            </svg>
+          </button>
+          <button
+            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            color="link"
+            tabindex="-1"
+          >
+            <svg
+              class="sc-bdnylx cZAqPP"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+`;

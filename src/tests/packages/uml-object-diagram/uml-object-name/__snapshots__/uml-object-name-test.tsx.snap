@@ -3,50 +3,63 @@
 exports[`render the uml-object-name-component 1`] = `
 <body>
   <div>
-    <svg>
-      <g>
-        <rect
-          height="40"
-          width="100%"
-        />
-        <rect
-          fill="white"
-          height="60"
-          width="100%"
-          y="40"
-        />
-        <svg
-          height="40"
+    <div>
+      <section>
+        <div
+          class="sc-iCoHVE aftwX"
         >
-          <text
-            dominant-baseline="middle"
-            font-weight="bold"
-            pointer-events="none"
-            text-anchor="middle"
-            text-decoration="underline"
-            x="50%"
-            y="50%"
+          <input
+            class="sc-eCApGN sc-jSFkmK bZgsyz bMsAsM"
+            value="TestObjectComponent"
+          />
+          <button
+            class="sc-bdnylx sc-gtssRu kKckbu gGTNnq"
+            color="link"
+            tabindex="-1"
           >
-            TestObjectComponent
-          </text>
-        </svg>
-        <rect
-          fill="none"
-          height="100%"
-          pointer-events="none"
-          stroke="black"
-          width="100%"
+            <svg
+              class="sc-hKFyIo jkYfmc"
+              height="16px"
+              viewBox="0 0 448 512"
+              width="16px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M440 64H336l-33.6-44.8A48 48 0 0 0 264 0h-80a48 48 0 0 0-38.4 19.2L112 64H8a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h18.9l33.2 372.3a48 48 0 0 0 47.8 43.7h232.2a48 48 0 0 0 47.8-43.7L421.1 96H440a8 8 0 0 0 8-8V72a8 8 0 0 0-8-8zM171.2 38.4A16.1 16.1 0 0 1 184 32h80a16.1 16.1 0 0 1 12.8 6.4L296 64H152zm184.8 427a15.91 15.91 0 0 1-15.9 14.6H107.9A15.91 15.91 0 0 1 92 465.4L59 96h330z"
+              />
+            </svg>
+          </button>
+        </div>
+        <hr
+          class="sc-dlnjPT icghRV"
         />
-        <path
-          d="M 0 40 H 200"
-          stroke="black"
+      </section>
+      <section>
+        <h1
+          class="sc-gKAblj cexJGm"
+        >
+          Attributes
+        </h1>
+        <input
+          class="sc-eCApGN sc-jSFkmK bZgsyz dwzQsX"
+          value=""
         />
-        <path
-          d="M 0 0 H 200"
-          stroke="black"
+      </section>
+      <section>
+        <hr
+          class="sc-dlnjPT icghRV"
         />
-      </g>
-    </svg>
+        <h1
+          class="sc-gKAblj cexJGm"
+        >
+          Methods
+        </h1>
+        <input
+          class="sc-eCApGN sc-jSFkmK bZgsyz dwzQsX"
+          value=""
+        />
+      </section>
+    </div>
   </div>
 </body>
 `;
