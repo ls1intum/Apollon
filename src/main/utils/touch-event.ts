@@ -10,33 +10,28 @@ export function createTouchEndEvent(event: TouchEvent) {
   // -> connection logic for desktop can be applied
   if (event instanceof TouchEvent && event.changedTouches.length > 0) {
     const target = document.elementFromPoint(
-      event.changedTouches[event.changedTouches.length - 1].pageX,
-      event.changedTouches[event.changedTouches.length - 1].pageY,
+      event.changedTouches[event.changedTouches.length - 1].clientX,
+      event.changedTouches[event.changedTouches.length - 1].clientY,
     );
 
     if (!target) {
       return;
     }
 
-    // copy the last touch that happened
-    // only replace target and add identifier (must have)
-    const touch = new Touch({
-      ...event.changedTouches[event.changedTouches.length - 1],
-      identifier: 999,
-      target: target,
-    });
-
-    // creating touchend event
-    const touchEvent = new TouchEvent('touchend', {
-      touches: [touch],
+    // creating pointerup event
+    const pointerEvent = new PointerEvent('pointerup', {
       view: window,
       cancelable: true,
       bubbles: true,
+      screenX: event.changedTouches[event.changedTouches.length - 1].pageX,
+      screenY: event.changedTouches[event.changedTouches.length - 1].pageY,
+      clientX: event.changedTouches[event.changedTouches.length - 1].clientX,
+      clientY: event.changedTouches[event.changedTouches.length - 1].clientY,
     });
 
     // dispatching on target
     // when it bubbles up -> it reaches the connectable HOC of the target (that we actually want)
-    target.dispatchEvent(touchEvent);
+    target.dispatchEvent(pointerEvent);
     return;
   }
 }

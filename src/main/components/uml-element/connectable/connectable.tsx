@@ -15,6 +15,8 @@ import { UMLElementFeatures } from '../../../services/uml-element/uml-element-fe
 import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-relationship-features';
 import { UMLElementType, UMLRelationshipType } from '../../..';
 import { disableScroll, enableScroll } from '../../../services/scrolling/scrolling-repository';
+import { createTouchEndEvent } from '../../../utils/touch-event';
+import isMobile from 'is-mobile';
 
 type StateProps = {
   hovered: boolean;
@@ -109,14 +111,18 @@ export const connectable = (
   class Connectable extends Component<Props> {
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
-      // node.addEventListener('pointerup', this.elementOnPointerUp.bind(this));
-      node.addEventListener('touchend', this.elementOnPointerUp.bind(this));
+      node.addEventListener('pointerup', this.elementOnPointerUp.bind(this));
+      if (isMobile({ tablet: true })) {
+        node.addEventListener('touchend', this.elementOnPointerUp.bind(this));
+      }
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
-      // node.removeEventListener('pointerup', this.elementOnPointerUp);
-      node.removeEventListener('touchend', this.elementOnPointerUp);
+      node.removeEventListener('pointerup', this.elementOnPointerUp);
+      if (isMobile({ tablet: true })) {
+        node.removeEventListener('touchend', this.elementOnPointerUp);
+      }
     }
 
     render() {
@@ -179,39 +185,11 @@ export const connectable = (
       const node = findDOMNode(this) as HTMLElement;
       enableScroll();
 
-      // create own touch events in order to follow connection logic
-      // own touch event has the element at the end of touch as target, not the start element
+      // create pointer up event in order to follow connection logic
+      // created pointer up event has the correct target, (touchend triggered on same element as touchstart)
       // -> connection logic for desktop can be applied
-      if (event instanceof TouchEvent && event.changedTouches.length > 0) {
-        const target = document.elementFromPoint(
-          event.changedTouches[event.changedTouches.length - 1].pageX,
-          event.changedTouches[event.changedTouches.length - 1].pageY,
-        );
-
-        if (!target) {
-          return;
-        }
-
-        // copy the last touch that happened
-        // only replace target and add identifier (must have)
-        const touch = new Touch({
-          ...event.changedTouches[event.changedTouches.length - 1],
-          identifier: 999,
-          target: target,
-        });
-
-        // creating touchend event
-        const touchEvent = new TouchEvent('touchend', {
-          touches: [touch],
-          view: window,
-          cancelable: true,
-          bubbles: true,
-        });
-
-        // dispatching on target
-        // when it bubbles up -> it reaches the connectable HOC of the target (that we actually want)
-        target.dispatchEvent(touchEvent);
-        return;
+      if (event instanceof TouchEvent) {
+        createTouchEndEvent(event);
       }
 
       // calculate event position relative to object position in %

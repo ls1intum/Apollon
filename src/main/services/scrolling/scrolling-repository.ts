@@ -1,4 +1,4 @@
-var keys: { [key: number]: number } = { 37: 1, 38: 1, 39: 1, 40: 1 };
+const keys: { [key: number]: number } = { 37: 1, 38: 1, 39: 1, 40: 1 };
 
 function preventDefault(e: Event) {
   e.preventDefault();
@@ -13,21 +13,21 @@ function preventDefaultForScrollKeys(e: KeyboardEvent) {
 }
 
 // modern Chrome requires { passive: false } when adding event
-var supportsPassive = false;
+let supportsPassive = false;
 try {
   window.addEventListener(
     'test' as any,
     null as any,
     Object.defineProperty({}, 'passive', {
-      get: function () {
+      get: () => {
         supportsPassive = true;
       },
     }),
   );
 } catch (e) {}
 
-var wheelOpt: boolean | AddEventListenerOptions = supportsPassive ? { passive: false } : false;
-var wheelEvent: 'wheel' | 'mousewheel' = 'onwheel' in document.createElement('div') ? 'wheel' : 'mousewheel';
+const wheelOpt: boolean | AddEventListenerOptions = supportsPassive ? { passive: false } : false;
+const wheelEvent: 'wheel' | 'mousewheel' = 'onwheel' in document.createElement('div') ? 'wheel' : 'mousewheel';
 
 // call this to Disable
 export function disableScroll() {

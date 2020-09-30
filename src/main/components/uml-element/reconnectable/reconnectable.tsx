@@ -61,6 +61,7 @@ export const reconnectable = (
       if (isMobile({ tablet: true })) {
         document.removeEventListener('touchmove', this.onPointerMove);
         document.removeEventListener('touchend', this.onPointerUp);
+        document.removeEventListener('pointerup', this.onPointerUp);
       } else {
         document.removeEventListener('pointermove', this.onPointerMove);
         document.removeEventListener('pointerup', this.onPointerUp);
@@ -108,6 +109,7 @@ export const reconnectable = (
       if (isMobile({ tablet: true })) {
         document.addEventListener('touchmove', this.onPointerMove);
         document.addEventListener('touchend', this.onPointerUp, { once: true });
+        document.addEventListener('pointerup', this.onPointerUp, { once: true });
       } else {
         document.addEventListener('pointermove', this.onPointerMove);
         document.addEventListener('pointerup', this.onPointerUp, { once: true });
