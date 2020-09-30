@@ -15,7 +15,7 @@ import { UMLElementFeatures } from '../../../services/uml-element/uml-element-fe
 import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-relationship-features';
 import { UMLElementType, UMLRelationshipType } from '../../..';
 import { disableScroll, enableScroll } from '../../../services/scrolling/scrolling-repository';
-import { createTouchEndEvent } from '../../../utils/touch-event';
+import { convertTouchEndIntoPointerUp } from '../../../utils/touch-event';
 import isMobile from 'is-mobile';
 
 type StateProps = {
@@ -189,7 +189,7 @@ export const connectable = (
       // created pointer up event has the correct target, (touchend triggered on same element as touchstart)
       // -> connection logic for desktop can be applied
       if (event instanceof TouchEvent) {
-        createTouchEndEvent(event);
+        convertTouchEndIntoPointerUp(event);
       }
 
       // calculate event position relative to object position in %

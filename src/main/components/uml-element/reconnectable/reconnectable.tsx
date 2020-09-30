@@ -9,7 +9,7 @@ import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
 import { UMLElementComponentProps } from '../uml-element-component-props';
 import isMobile from 'is-mobile';
-import { createTouchEndEvent, getClientEventCoordinates } from '../../../utils/touch-event';
+import { convertTouchEndIntoPointerUp, getClientEventCoordinates } from '../../../utils/touch-event';
 
 type StateProps = {
   path: IPath;
@@ -131,7 +131,7 @@ export const reconnectable = (
 
     private onPointerUp = (event: PointerEvent | TouchEvent) => {
       if (event instanceof TouchEvent) {
-        createTouchEndEvent(event);
+        convertTouchEndIntoPointerUp(event);
         return;
       }
       if (isMobile({ tablet: true })) {

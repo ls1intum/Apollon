@@ -1,13 +1,9 @@
 /**
  * touchend events are always invoked on the elements which also have the touchstart event.
- * This function creates a synthetic touchend event which is invoked on the actual target
+ * This function creates and dispatches a pointerup event on the actual target
  * @param event originally invoked touchend event
- * @returns synthetic touchend event on target
  */
-export function createTouchEndEvent(event: TouchEvent) {
-  // create own touch events in order to follow connection logic
-  // own touch event has the element at the end of touch as target, not the start element
-  // -> connection logic for desktop can be applied
+export function convertTouchEndIntoPointerUp(event: TouchEvent) {
   if (event instanceof TouchEvent && event.changedTouches.length > 0) {
     const target = document.elementFromPoint(
       event.changedTouches[event.changedTouches.length - 1].clientX,

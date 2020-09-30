@@ -4,7 +4,7 @@ import { DraggableContext } from './draggable-context';
 import { DropEvent } from './drop-event';
 import { withDraggable } from './with-draggable';
 import isMobile from 'is-mobile';
-import { createTouchEndEvent } from '../../utils/touch-event';
+import { convertTouchEndIntoPointerUp } from '../../utils/touch-event';
 
 type Props = {
   onDrop?: (event: DropEvent) => void;
@@ -18,7 +18,7 @@ class DraggableComponent extends Component<Props> {
     const node = findDOMNode(this) as HTMLElement;
     if (isMobile({ tablet: true })) {
       node.addEventListener('touchstart', this.onDragStart);
-      node.addEventListener('touchend', createTouchEndEvent);
+      node.addEventListener('touchend', convertTouchEndIntoPointerUp);
     } else {
       node.addEventListener('pointerdown', this.onDragStart);
     }
