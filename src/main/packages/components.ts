@@ -12,7 +12,6 @@ import { UMLActivityObjectNodeComponent } from './uml-activity-diagram/uml-activ
 import { UMLActivityComponent } from './uml-activity-diagram/uml-activity/uml-activity-component';
 import { UMLClassPackageComponent } from './uml-class-diagram/uml-class-package/uml-class-package-component';
 import { UMLCommunicationLinkComponent } from './uml-communication-diagram/uml-communication-link/uml-communication-link-component';
-import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
 import { UMLDeploymentArtifactComponent } from './uml-deployment-diagram/uml-deployment-artifact/uml-deployment-artifact-component';
 import { UMLDeploymentAssociationComponent } from './uml-deployment-diagram/uml-deployment-association/uml-deployment-association-component';
 import { UMLDeploymentNodeComponent } from './uml-deployment-diagram/uml-deployment-node/uml-deployment-node-component';
@@ -34,6 +33,7 @@ import { ConnectedComponent } from 'react-redux';
 import { UMLPetriNetPlaceComponent } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-component';
 import { UMLPetriNetTransitionComponent } from './uml-petri-net/uml-petri-net-transition/uml-petri-net-transition-component';
 import { UMLPetriNetArcComponent } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-component';
+import { UMLComponentComponent } from './common/uml-component/uml-component-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -63,6 +63,7 @@ export const Components: {
   [UMLElementType.Component]: UMLComponentComponent,
   [UMLElementType.ComponentInterface]: UMLInterfaceComponent,
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeComponent,
+  [UMLElementType.DeploymentComponent]: UMLComponentComponent,
   [UMLElementType.DeploymentArtifact]: UMLDeploymentArtifactComponent,
   [UMLElementType.DeploymentInterface]: UMLInterfaceComponent,
   [UMLElementType.PetriNetTransition]: UMLPetriNetTransitionComponent,

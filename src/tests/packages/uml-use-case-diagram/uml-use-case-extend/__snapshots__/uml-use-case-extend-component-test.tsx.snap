@@ -1,0 +1,60 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-use-case-extend-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <g>
+          <marker
+            id="marker-225bb7a6-5af4-4473-ba96-7a30b02545c4"
+            markerHeight="30"
+            markerUnits="strokeWidth"
+            markerWidth="22"
+            orient="auto"
+            refX="30"
+            refY="15"
+            stroke-dasharray="1,0"
+            viewBox="0 0 30 30"
+          >
+            <path
+              d="M0,29 L30,15 L0,1"
+              fill="none"
+              stroke="black"
+            />
+          </marker>
+          <path
+            d="
+          M 0 0 L 21.715728752538098 21.715728752538098
+          M 78.2842712474619 78.2842712474619 L 100 100
+        "
+            marker-end="url(#marker-225bb7a6-5af4-4473-ba96-7a30b02545c4)"
+            stroke="black"
+            stroke-dasharray="7"
+          />
+        </g>
+        <path
+          d="
+          M 21.715728752538098 21.715728752538098
+          L 78.2842712474619 78.2842712474619
+        "
+          id="textpath-225bb7a6-5af4-4473-ba96-7a30b02545c4"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+        >
+          <textpath
+            startOffset="50%"
+            xlink:href="#textpath-225bb7a6-5af4-4473-ba96-7a30b02545c4"
+          >
+            «extend»
+          </textpath>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

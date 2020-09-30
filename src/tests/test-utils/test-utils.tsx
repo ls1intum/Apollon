@@ -2,7 +2,7 @@ import { ModelState, PartialModelState } from '../../main/components/store/model
 import { UMLDiagram } from '../../main/services/uml-diagram/uml-diagram';
 import { ApollonMode } from '../../main';
 import { ApollonView, EditorState } from '../../main/services/editor/editor-types';
-import { IUMLElement, UMLElement } from '../../main/services/uml-element/uml-element';
+import { IUMLElement } from '../../main/services/uml-element/uml-element';
 import { UMLElementState } from '../../main/services/uml-element/uml-element-types';
 import thunk, { ThunkDispatch } from 'redux-thunk';
 import { Actions } from '../../main/services/actions';
@@ -10,13 +10,10 @@ import createMockStore, { MockStoreEnhanced } from 'redux-mock-store';
 import { Store } from 'redux';
 import { createReduxStore } from '../../main/components/store/model-store';
 import { ILayer } from '../../main/services/layouter/layer';
-import { UMLClass } from '../../main/packages/uml-class-diagram/uml-class/uml-class';
-import { UMLClassAttribute } from '../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
-import { UMLClassMethod } from '../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
 import { Point } from '../../main/utils/geometry/point';
 import * as React from 'react';
 
-type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
+export type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
 
 const middleware = [thunk];
 const mockStore = createMockStore<ModelState, DispatchExts>(middleware);
@@ -106,19 +103,4 @@ export const getRealStore = (
 ): Store<ModelState, any> => {
   const storeState = createModelStateFromPartialModelState(modelState, elements);
   return createReduxStore(storeState, layer);
-};
-
-// ClassDiagram
-export const createUMLClassWithAttributeAndMethod = (): UMLElement[] => {
-  const umlClass = new UMLClass({ name: 'test-element' });
-  const umlClassAttribute = new UMLClassAttribute({
-    name: 'attribute',
-    owner: umlClass.id,
-  });
-  const umlClassMethod = new UMLClassMethod({
-    name: 'classMethod',
-    owner: umlClass.id,
-  });
-  umlClass.ownedElements = [umlClassAttribute.id, umlClassMethod.id];
-  return [umlClass, umlClassAttribute, umlClassMethod];
 };

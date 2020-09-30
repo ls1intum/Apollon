@@ -5,10 +5,11 @@ import { UMLUseCaseComponent } from '../../../../main/packages/uml-use-case-diag
 
 it('render the uml-use-case-component', () => {
   const component: UMLUseCase = new UMLUseCase({ name: 'TestUseCaseComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLUseCaseComponent element={component} />
     </svg>,
   );
   expect(getByText(component.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

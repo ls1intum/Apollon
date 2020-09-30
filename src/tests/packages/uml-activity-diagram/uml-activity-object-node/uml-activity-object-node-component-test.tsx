@@ -13,11 +13,12 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 describe('test', () => {
   it('render the uml-activity-object-node-component', () => {
     const objectNode: UMLActivityObjectNode = new UMLActivityObjectNode({ name: 'TestActivityComponent' });
-    const { getByText } = render(
+    const { getByText, baseElement } = render(
       <svg>
         <UMLActivityObjectNodeComponent element={objectNode} />
       </svg>,
     );
     expect(getByText(objectNode.name)).toBeInTheDocument();
+    expect(baseElement).toMatchSnapshot();
   });
 });

@@ -5,10 +5,11 @@ import { UMLInterfaceComponent } from '../../../../main/packages/common/uml-inte
 
 it('render the uml-deployment-interface-component', () => {
   const component: UMLDeploymentInterface = new UMLDeploymentInterface({ name: 'TestDeploymentComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLInterfaceComponent element={component} />
     </svg>,
   );
   expect(getByText(component.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

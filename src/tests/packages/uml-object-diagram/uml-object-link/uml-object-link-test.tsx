@@ -6,11 +6,12 @@ import { UMLObjectLinkComponent } from '../../../../main/packages/uml-object-dia
 
 it('render the uml-object-link-component', () => {
   const umlObjectLink: UMLObjectLink = new UMLObjectLink({ path: [new Point(0, 0), new Point(100, 100)] });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLObjectLinkComponent element={umlObjectLink} />
     </svg>,
   );
   // TODO: expect
   // expect(getByText(umlObjectLink.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

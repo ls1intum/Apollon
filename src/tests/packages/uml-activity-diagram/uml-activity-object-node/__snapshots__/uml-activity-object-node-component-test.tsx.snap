@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test render the uml-activity-object-node-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          height="100%"
+          stroke="black"
+          width="100%"
+        />
+        <text
+          font-weight="bold"
+          height="100"
+          pointer-events="none"
+          text-anchor="middle"
+          width="200"
+          x="100"
+          y="50"
+        >
+          <tspan
+            dy="5.5"
+            x="100"
+          >
+            TestActivityComponent
+          </tspan>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

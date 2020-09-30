@@ -12,10 +12,11 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 
 it('render the uml-activity-merge-node-component', () => {
   const mergeNode: UMLActivityMergeNode = new UMLActivityMergeNode({ name: 'TestActivityComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLActivityMergeNodeComponent element={mergeNode} />
     </svg>,
   );
   expect(getByText(mergeNode.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

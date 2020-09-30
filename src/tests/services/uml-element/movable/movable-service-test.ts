@@ -1,7 +1,8 @@
 import { UMLElement } from '../../../../main/services/uml-element/uml-element';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
-import { createUMLClassWithAttributeAndMethod, getRealStore } from '../../../test-utils/test-utils';
+import { getRealStore } from '../../../test-utils/test-utils';
 import { Movable } from '../../../../main/services/uml-element/movable/movable-repository';
+import { createUMLClassWithAttributeAndMethod } from '../../../test-utils/test-data';
 
 describe('test redux state update when moving elements', () => {
   let elements: UMLElement[] = [];

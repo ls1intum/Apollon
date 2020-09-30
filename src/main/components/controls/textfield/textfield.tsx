@@ -15,9 +15,10 @@ export const defaultProps = Object.freeze({
 
 type TextfieldValue = string | number;
 
-const initialState = {
+const getInitialState = <T extends TextfieldValue>() => ({
   key: Date.now(),
-};
+  currentValue: undefined,
+});
 
 type Props<T extends TextfieldValue> = {
   onChange?: (value: T) => void;
@@ -29,18 +30,29 @@ type Props<T extends TextfieldValue> = {
 } & Omit<InputHTMLAttributes<HTMLTextAreaElement>, 'onChange' | 'onSubmit' | 'value' | 'size'> &
   typeof defaultProps;
 
-type State = typeof initialState;
+type State<T extends TextfieldValue> = {
+  key: number;
+  currentValue?: T;
+};
 
-export class Textfield<T extends TextfieldValue> extends Component<Props<T>, State> {
+export class Textfield<T extends TextfieldValue> extends Component<Props<T>, State<T>> {
   static defaultProps = defaultProps;
-  state = initialState;
+  state = getInitialState<T>();
   ref = React.createRef<HTMLTextAreaElement>();
 
-  componentDidUpdate(prevProps: Readonly<Props<T>>, prevState: Readonly<State>, snapshot?: any) {
+  componentDidUpdate(prevProps: Readonly<Props<T>>, prevState: Readonly<State<T>>, snapshot?: any) {
     // workaround for infinity values -> if set to infinity -> change key of component to avoid problems with textfield
     if (Number.isFinite(prevProps.value) && !Number.isFinite(this.props.value)) {
       this.setState({ key: Date.now() });
     }
+  }
+
+  componentWillUnmount() {
+    if (!this.state.currentValue || !this.props.onSubmit) {
+      return;
+    }
+
+    this.props.onSubmit(this.state.currentValue!);
   }
 
   render() {
@@ -74,15 +86,17 @@ export class Textfield<T extends TextfieldValue> extends Component<Props<T>, Sta
     }
 
     this.props.onSubmit(value);
-    this.setState({ key: Date.now() });
+    this.setState(getInitialState());
   };
 
   private onChange = ({ currentTarget }: FormEvent<HTMLTextAreaElement>) => {
+    const value: T = typeof this.props.value === 'number' ? (+currentTarget.value as T) : (currentTarget.value as T);
+    this.setState({ currentValue: value });
+
     if (!this.props.onChange) {
       return;
     }
 
-    const value: T = typeof this.props.value === 'number' ? (+currentTarget.value as T) : (currentTarget.value as T);
     this.props.onChange(value);
   };
 

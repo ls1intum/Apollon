@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-deplyoment-association-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <polyline
+          fill="none"
+          points="0 0,100 100"
+          stroke="black"
+          stroke-width="1"
+        />
+        <text
+          dominant-baseline="middle"
+          dx="5"
+          pointer-events="none"
+          text-anchor="start"
+          x="50"
+          y="50"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

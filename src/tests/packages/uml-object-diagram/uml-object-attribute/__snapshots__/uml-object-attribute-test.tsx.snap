@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-object-attribute-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          height="100%"
+          width="100%"
+        />
+        <text
+          dominant-baseline="middle"
+          pointer-events="none"
+          x="10"
+          y="50%"
+        >
+          TestObjectComponent
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

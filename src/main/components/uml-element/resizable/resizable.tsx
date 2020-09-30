@@ -64,8 +64,8 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
     }
 
     private resize = (width: number, height: number) => {
-      width = Math.round(width / 10) * 10;
-      height = Math.round(height / 10) * 10;
+      width = Math.round(width / 20) * 20;
+      height = Math.round(height / 20) * 20;
       if (options && options.preventX) width = 0;
       if (options && options.preventY) height = 0;
       if (width === 0 && height === 0) return;

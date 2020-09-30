@@ -5,10 +5,11 @@ import { UMLObjectMethod } from '../../../../main/packages/uml-object-diagram/um
 
 it('render the uml-object-method-component', () => {
   const attribute: UMLObjectMethod = new UMLObjectMethod({ name: 'TestObjectComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLClassifierMemberComponent element={attribute} />
     </svg>,
   );
   expect(getByText(attribute.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

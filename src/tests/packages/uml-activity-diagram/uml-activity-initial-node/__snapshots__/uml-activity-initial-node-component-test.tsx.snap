@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-activity-intial-node-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <circle
+          cx="50%"
+          cy="50%"
+          fill="black"
+          fill-opacity="1"
+          r="22.5"
+          stroke="none"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

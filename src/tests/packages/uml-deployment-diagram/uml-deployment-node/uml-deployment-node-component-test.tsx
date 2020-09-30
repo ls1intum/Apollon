@@ -5,10 +5,11 @@ import { UMLDeploymentNodeComponent } from '../../../../main/packages/uml-deploy
 
 it('render the uml-deployment-node-component', () => {
   const deploymentNode: UMLDeploymentNode = new UMLDeploymentNode({ name: 'TestDeploymentComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLDeploymentNodeComponent element={deploymentNode} />
     </svg>,
   );
   expect(getByText(deploymentNode.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

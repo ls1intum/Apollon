@@ -1,5 +1,6 @@
 export const DeploymentElementType = {
   DeploymentNode: 'DeploymentNode',
+  DeploymentComponent: 'DeploymentComponent',
   DeploymentArtifact: 'DeploymentArtifact',
   DeploymentInterface: 'DeploymentInterface',
 } as const;

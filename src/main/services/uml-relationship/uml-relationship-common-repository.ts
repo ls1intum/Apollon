@@ -6,6 +6,8 @@ import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { LayoutAction, UMLRelationshipActionTypes } from './uml-relationship-types';
+import { UMLElementType, UMLRelationshipType } from '../..';
+import { UMLElements } from '../../packages/uml-elements';
 
 export const UMLRelationshipCommonRepository = {
   get: (element?: IUMLElement): UMLRelationship | null => {
@@ -26,6 +28,23 @@ export const UMLRelationshipCommonRepository = {
     const { elements } = getState();
 
     return UMLRelationshipCommonRepository.get(elements[id]);
+  },
+
+  getSupportedConnectionsForElements: (elements: UMLElement | UMLElement[]): UMLRelationshipType[] => {
+    const elementsArray = Array.isArray(elements) ? elements : [elements];
+
+    if (!(elementsArray.length > 0)) {
+      return [];
+    }
+
+    // determine the common supported connection types
+    return elementsArray.reduce((supportedConnections: UMLRelationshipType[], element: UMLElement) => {
+      const elementSupportedConnections: UMLRelationshipType[] =
+        UMLElements[element.type as UMLElementType].supportedRelationships;
+      return supportedConnections.filter((supportedConnection) =>
+        elementSupportedConnections.includes(supportedConnection),
+      );
+    }, UMLElements[elementsArray[0].type as UMLElementType].supportedRelationships as UMLRelationshipType[]);
   },
 
   layout: (id: string, path: IPath, bounds: IBoundary): LayoutAction => ({

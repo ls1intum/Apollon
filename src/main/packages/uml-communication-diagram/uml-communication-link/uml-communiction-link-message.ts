@@ -17,6 +17,11 @@ export class CommunicationLinkMessage extends UMLElement implements ICommunicati
     this.direction = values?.direction || 'target';
   }
 
+  /**
+   * Needs to be implemented, because it is a abstract method of {@link UMLElement}
+   * Does not do anything -> CommunicationLinkMessage is aligned in parent {@link UMLCommunicationLink}
+   * @param canvas
+   */
   render(canvas: ILayer): ILayoutable[] {
     return [this];
   }

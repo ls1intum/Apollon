@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-deplyoment-dependency-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <marker
+          id="marker-f19e4479-d393-4239-bfdd-e2022b0853af"
+          markerHeight="30"
+          markerUnits="strokeWidth"
+          markerWidth="22"
+          orient="auto"
+          refX="30"
+          refY="15"
+          stroke-dasharray="1,0"
+          viewBox="0 0 30 30"
+        >
+          <path
+            d="M0,29 L30,15 L0,1"
+            fill="none"
+            stroke="black"
+          />
+        </marker>
+        <polyline
+          fill="none"
+          marker-end="url(#marker-f19e4479-d393-4239-bfdd-e2022b0853af)"
+          points="0 0,100 100"
+          stroke="black"
+          stroke-dasharray="7"
+          stroke-width="1"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;
