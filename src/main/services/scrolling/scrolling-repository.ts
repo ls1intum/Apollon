@@ -31,14 +31,14 @@ const wheelEvent: 'wheel' | 'mousewheel' = 'onwheel' in document.createElement('
 
 // call this to Disable
 export function disableScroll() {
-  // window.addEventListener('DOMMouseScroll', preventDefault, false); // older FF
-  // window.addEventListener(wheelEvent, preventDefault, wheelOpt); // modern desktop
+  window.addEventListener('DOMMouseScroll', preventDefault, false); // older FF
+  window.addEventListener(wheelEvent, preventDefault, wheelOpt); // modern desktop
   document.addEventListener('touchmove', preventDefault); // mobile
   // window.addEventListener('scroll', preventDefault); // mobile
   // window.addEventListener('keydown', preventDefaultForScrollKeys, false);
-  document.body.style.overflow = 'hidden';
-  document.body.style.margin = '0';
-  document.body.style.height = '100%';
+  // document.body.style.overflow = 'hidden';
+  // document.body.style.margin = '0';
+  // document.body.style.height = '100%';
 }
 
 // call this to Enable
