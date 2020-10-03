@@ -16,7 +16,6 @@ export function convertTouchEndIntoPointerUp(event: TouchEvent) {
 
     // creating pointerup event
     const pointerEvent = new PointerEvent('pointerup', {
-      view: window,
       cancelable: true,
       bubbles: true,
       screenX: event.changedTouches[event.changedTouches.length - 1].pageX,

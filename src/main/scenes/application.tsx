@@ -30,8 +30,6 @@ const initialState = Object.freeze({
 
 type State = typeof initialState;
 
-const SCROLL_BORDER = 200;
-
 export class Application extends React.Component<Props, State> {
   state = initialState;
 
@@ -62,11 +60,7 @@ export class Application extends React.Component<Props, State> {
                 <Layout className="apollon-editor" ref={this.setLayout}>
                   {rootContext && (
                     <DraggableLayer>
-                      <Editor
-                        onTouchStart={this.deactivateScrolling}
-                        onTouchMove={this.preventDefault}
-                        onTouchEnd={this.activateScrolling}
-                      >
+                      <Editor>
                         <Canvas ref={this.setCanvas} />
                       </Editor>
                       {canvasContext && (
@@ -86,58 +80,6 @@ export class Application extends React.Component<Props, State> {
       </CanvasProvider>
     );
   }
-
-  preventDefault = (event: React.TouchEvent) => {
-    const target = event.currentTarget;
-    if (target) {
-      const clientRect = target.getBoundingClientRect();
-
-      const scrollDistance = SCROLL_BORDER + 5;
-
-      const touch = event.touches[event.touches.length - 1];
-
-      // scroll when on the edge of the element
-      const scrollHorizontally =
-        touch.clientX < clientRect.x - SCROLL_BORDER || touch.clientX > clientRect.x + clientRect.width - SCROLL_BORDER
-          ? scrollDistance
-          : 0;
-      const scrollVertically =
-        touch.clientY < clientRect.y - SCROLL_BORDER || touch.clientY > clientRect.y + clientRect.height - SCROLL_BORDER
-          ? scrollDistance
-          : 0;
-      // target.scrollBy(scrollHorizontally, scrollVertically);
-    }
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  activateScrolling = (event: React.TouchEvent) => {
-    const target = event.currentTarget;
-    if (target) {
-      (target as HTMLElement).style.overflow = 'auto';
-      // document.body.style.overflowY = 'auto';
-      (target as HTMLElement).style.overscrollBehavior = 'auto';
-    }
-  };
-
-  deactivateScrolling = (event: React.TouchEvent) => {
-    const target = event.currentTarget;
-    // delay it by a cycle -> state is correctly updated
-    if (target && this.store.current && this.store.current.state.store) {
-      const modelState: ModelState = this.store.current!.state.store.getState();
-
-      const deactivateScroll =
-        modelState.moving.length > 0 ||
-        modelState.connecting.length > 0 ||
-        Object.keys(modelState.reconnecting).length > 0;
-
-      if (true) {
-        (target as HTMLElement).style.overflow = 'hidden';
-        // document.body.style.overflowY = 'hidden';
-        (target as HTMLElement).style.overscrollBehavior = 'none';
-      }
-    }
-  };
 
   scroll = (event: React.UIEvent<HTMLDivElement, UIEvent>) => {
     // prevent site refresh
