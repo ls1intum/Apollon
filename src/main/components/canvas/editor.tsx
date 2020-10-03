@@ -42,7 +42,7 @@ type DispatchProps = { move: AsyncDispatch<typeof UMLElementRepository.move> };
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state) => ({
-    moving: state.moving,
+    moving: [...state.moving],
     connecting: state.connecting.length > 0,
     reconnecting: Object.keys(state.reconnecting).length > 0,
   }),
