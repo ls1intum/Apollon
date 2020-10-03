@@ -12,7 +12,7 @@ import { CanvasContext, CanvasProvider } from '../../../main/components/canvas/c
 import { RootContext, RootProvider } from '../../../main/components/root/root-context';
 import { Layout } from '../../../main/scenes/application-styles';
 import { DraggableLayer } from '../../../main/components/draggable/draggable-layer';
-import { Editor } from '../../../main/components/canvas/container';
+import { Editor } from '../../../main/components/canvas/editor';
 import { KeyboardEventListener } from '../../../main/components/canvas/keyboard-eventlistener';
 import { UMLElement } from '../../../main/services/uml-element/uml-element';
 import { UMLClassAttribute } from '../../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';

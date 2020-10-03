@@ -2,12 +2,12 @@ import React, { createRef, RefObject } from 'react';
 import { DeepPartial } from 'redux';
 import { Canvas, CanvasComponent } from '../components/canvas/canvas';
 import { CanvasContext, CanvasProvider } from '../components/canvas/canvas-context';
-import { Editor } from '../components/canvas/container';
+import { Editor } from '../components/canvas/editor';
 import { KeyboardEventListener } from '../components/canvas/keyboard-eventlistener';
 import { DraggableLayer } from '../components/draggable/draggable-layer';
 import { I18nProvider } from '../components/i18n/i18n-provider';
 import { Sidebar } from '../components/sidebar/sidebar-component';
-import { ModelState, PartialModelState } from '../components/store/model-state';
+import { PartialModelState } from '../components/store/model-state';
 import { ModelStore, StoreProvider } from '../components/store/model-store';
 import { Styles } from '../components/theme/styles';
 import { Theme } from '../components/theme/theme';
@@ -80,19 +80,4 @@ export class Application extends React.Component<Props, State> {
       </CanvasProvider>
     );
   }
-
-  scroll = (event: React.UIEvent<HTMLDivElement, UIEvent>) => {
-    // prevent site refresh
-    // event.currentTarget.style.overflow = 'hidden';
-    if (this.store.current && this.store.current.state.store) {
-      console.log('scrolling');
-
-      const modelState: ModelState = this.store.current.state.store.getState();
-      const shouldScroll = modelState.moving.length > 0;
-
-      if (shouldScroll) {
-        console.log('scrolling');
-      }
-    }
-  };
 }

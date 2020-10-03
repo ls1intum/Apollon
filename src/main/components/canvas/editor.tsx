@@ -2,8 +2,9 @@ import { styled } from '../theme/styles';
 import React, { Component, createRef, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from '../store/model-state';
-import { EditorRepository } from '../../services/editor/editor-repository';
 import isMobile from 'is-mobile';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
 
 const grid = 10;
 const color1 = '#e5e5e5';
@@ -35,18 +36,18 @@ const StyledEditor = styled.div`
 
 type OwnProps = { children: ReactNode };
 
-type StateProps = { moving: boolean; connecting: boolean; reconnecting: boolean };
+type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean };
 
-type DispatchProps = {};
+type DispatchProps = { move: AsyncDispatch<typeof UMLElementRepository.move> };
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state) => ({
-    moving: state.moving.length > 0,
+    moving: state.moving,
     connecting: state.connecting.length > 0,
     reconnecting: Object.keys(state.reconnecting).length > 0,
   }),
   {
-    changeView: EditorRepository.changeView,
+    move: UMLElementRepository.move,
   },
 );
 
@@ -62,6 +63,7 @@ const getInitialState = () => {
 type State = typeof getInitialState;
 
 const SCROLL_BORDER = 100;
+const SCROLL_DISTANCE = 5;
 
 class EditorComponent extends Component<Props, State> {
   state = getInitialState();
@@ -71,7 +73,7 @@ class EditorComponent extends Component<Props, State> {
     if (this.state.isMobile) {
       if (this.editor.current) {
         const { moving, connecting, reconnecting } = this.props;
-        const deactivateScroll = moving || connecting || reconnecting;
+        const deactivateScroll = moving.length > 0 || connecting || reconnecting;
         // deactivate default scrolling and use custom scrolling
         if (deactivateScroll && !this.state.scrollingDisabled) {
           this.deactivateScrolling(this.editor.current);
@@ -91,28 +93,28 @@ class EditorComponent extends Component<Props, State> {
   }
 
   customScrolling = (event: React.TouchEvent) => {
-    const target = event.currentTarget as HTMLElement;
-    if (target) {
-      const clientRect = target.getBoundingClientRect();
-
-      const scrollDistance = 5;
+    if (this.editor.current) {
+      const clientRect = this.editor.current.getBoundingClientRect();
 
       const touch = event.touches[event.touches.length - 1];
 
       // scroll when on the edge of the element
       const scrollHorizontally =
         touch.clientX < clientRect.x + SCROLL_BORDER
-          ? -scrollDistance
+          ? -SCROLL_DISTANCE
           : touch.clientX > clientRect.x + clientRect.width - SCROLL_BORDER
-          ? scrollDistance
+          ? SCROLL_DISTANCE
           : 0;
       const scrollVertically =
         touch.clientY < clientRect.y + SCROLL_BORDER
-          ? -scrollDistance
+          ? -SCROLL_DISTANCE
           : touch.clientY > clientRect.y + clientRect.height - SCROLL_BORDER
-          ? scrollDistance
+          ? SCROLL_DISTANCE
           : 0;
-      target.scrollBy(scrollHorizontally, scrollVertically);
+      this.editor.current.scrollBy(scrollHorizontally, scrollVertically);
+      if (this.props.moving) {
+        this.props.move({ x: scrollHorizontally, y: scrollVertically }, this.props.moving);
+      }
     }
     event.preventDefault();
     event.stopPropagation();
