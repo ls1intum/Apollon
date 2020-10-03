@@ -12,7 +12,6 @@ import { withCanvas } from '../canvas/with-canvas';
 import { ModelState } from '../store/model-state';
 import { UMLRelationshipPreview } from './uml-relationship-preview';
 import isMobile from 'is-mobile';
-import { enableScroll } from '../../services/scrolling/scrolling-repository';
 
 type OwnProps = {};
 
