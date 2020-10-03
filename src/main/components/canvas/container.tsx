@@ -3,6 +3,7 @@ import React, { Component, createRef, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from '../store/model-state';
 import { EditorRepository } from '../../services/editor/editor-repository';
+import isMobile from 'is-mobile';
 
 const grid = 10;
 const color1 = '#e5e5e5';
@@ -54,6 +55,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 const getInitialState = () => {
   return {
     scrollingDisabled: false,
+    isMobile: isMobile({ tablet: true }),
   };
 };
 
@@ -66,20 +68,26 @@ class EditorComponent extends Component<Props, State> {
   editor = createRef<HTMLDivElement>();
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
-    if (this.editor.current) {
-      const { moving, connecting, reconnecting } = this.props;
-      const deactivateScroll = moving || connecting || reconnecting;
-      // deactivate default scrolling and use custom scrolling
-      if (deactivateScroll && !this.state.scrollingDisabled) {
-        this.deactivateScrolling(this.editor.current);
-      } else if (!deactivateScroll && this.state.scrollingDisabled) {
-        this.activateScrolling(this.editor.current);
+    if (this.state.isMobile) {
+      if (this.editor.current) {
+        const { moving, connecting, reconnecting } = this.props;
+        const deactivateScroll = moving || connecting || reconnecting;
+        // deactivate default scrolling and use custom scrolling
+        if (deactivateScroll && !this.state.scrollingDisabled) {
+          this.deactivateScrolling(this.editor.current);
+        } else if (!deactivateScroll && this.state.scrollingDisabled) {
+          this.activateScrolling(this.editor.current);
+        }
       }
     }
   }
 
   render() {
-    return <StyledEditor ref={this.editor} {...this.props} onTouchMove={this.customScrolling} />;
+    if (this.state.isMobile) {
+      return <StyledEditor ref={this.editor} {...this.props} onTouchMove={this.customScrolling} />;
+    } else {
+      return <StyledEditor {...this.props} />;
+    }
   }
 
   customScrolling = (event: React.TouchEvent) => {
