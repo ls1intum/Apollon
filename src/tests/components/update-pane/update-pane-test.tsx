@@ -117,6 +117,22 @@ describe('test update pane', () => {
     jest.useRealTimers();
   });
 
+  it('dismiss', () => {
+    // somehow the tests are interfering with each other
+    // this test needs to run first, so that no console error is thrown
+    const store = getRealStore({ updating: [] }, elements);
+
+    const { container } = wrappedRender(<UpdatePaneTestComponent />, { store });
+
+    const updateAction = UMLElementRepository.updateStart(umlClass.id);
+    store.dispatch(updateAction);
+
+    jest.runAllTimers();
+    fireEvent.pointerDown(container.querySelector('svg')!);
+
+    expect(store.getState().updating).toHaveLength(0);
+  });
+
   it('render with element', () => {
     const store = getRealStore({ updating: [] }, elements);
 
@@ -139,19 +155,5 @@ describe('test update pane', () => {
 
     jest.runAllTimers();
     expect(baseElement).toMatchSnapshot();
-  });
-
-  it('dismiss', () => {
-    const store = getRealStore({ updating: [] }, elements);
-
-    const { container } = wrappedRender(<UpdatePaneTestComponent />, { store });
-
-    const updateAction = UMLElementRepository.updateStart(umlClass.id);
-    store.dispatch(updateAction);
-
-    jest.runAllTimers();
-    fireEvent.pointerDown(container.querySelector('svg')!);
-
-    expect(store.getState().updating).toHaveLength(0);
   });
 });
