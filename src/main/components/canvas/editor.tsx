@@ -1,6 +1,6 @@
 import { styled } from '../theme/styles';
-import React, { Component, createRef, ReactNode } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, ComponentType, createRef, ReactNode } from 'react';
+import { connect, ConnectedComponent } from 'react-redux';
 import { ModelState } from '../store/model-state';
 import isMobile from 'is-mobile';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
@@ -85,10 +85,11 @@ class EditorComponent extends Component<Props, State> {
   }
 
   render() {
+    const { moving, connecting, reconnecting, ...props } = this.props;
     if (this.state.isMobile) {
-      return <StyledEditor ref={this.editor} {...this.props} onTouchMove={this.customScrolling} />;
+      return <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} />;
     } else {
-      return <StyledEditor {...this.props} />;
+      return <StyledEditor {...props} />;
     }
   }
 
@@ -143,4 +144,4 @@ class EditorComponent extends Component<Props, State> {
   };
 }
 
-export const Editor = enhance(EditorComponent);
+export const Editor: ConnectedComponent<ComponentType<Props>, OwnProps> = enhance(EditorComponent);
