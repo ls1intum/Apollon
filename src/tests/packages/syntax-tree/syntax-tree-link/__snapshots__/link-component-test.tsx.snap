@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the syntax-tree-link-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <polyline
+          fill="none"
+          points="0 0,100 100"
+          stroke="black"
+          stroke-width="1"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

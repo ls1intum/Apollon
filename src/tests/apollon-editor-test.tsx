@@ -386,4 +386,12 @@ describe('test apollon editor ', () => {
     editor.type = UMLDiagramType.ClassDiagram;
     expect(editor.model.type).toEqual(UMLDiagramType.ClassDiagram);
   });
+  it('set type to SyntaxTree', () => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container, {});
+
+    editor.model = testClassDiagram as any;
+    editor.type = UMLDiagramType.SyntaxTree;
+    expect(editor.model.type).toEqual(UMLDiagramType.SyntaxTree);
+  });
 });

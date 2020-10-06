@@ -15,9 +15,6 @@ import { UMLRelationshipType } from './uml-relationship-type';
 import { UMLUseCaseAssociationUpdate } from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-update';
 import { UMLPetriNetPlaceUpdate } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-update';
 import { UMLPetriNetArcUpdate } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-update';
-import { SyntaxTreeLinkUpdate } from './syntax-tree/syntax-tree-link/syntax-tree-link-update';
-import { SyntaxTreeTerminalUpdate } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-update';
-import { SyntaxTreeNonterminalUpdate } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -51,8 +48,8 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceUpdate,
   [UMLElementType.PetriNetTransition]: DefaultPopup,
   [UMLElementType.CommunicationLinkMessage]: null,
-  [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminalUpdate,
-  [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminalUpdate,
+  [UMLElementType.SyntaxTreeTerminal]: DefaultPopup,
+  [UMLElementType.SyntaxTreeNonterminal]: DefaultPopup,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
@@ -76,5 +73,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcUpdate,
-  [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLinkUpdate,
+  [UMLRelationshipType.SyntaxTreeLink]: DefaultRelationshipPopup,
 };
