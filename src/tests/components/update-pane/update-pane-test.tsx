@@ -21,7 +21,7 @@ import { UMLClassBidirectional } from '../../../main/packages/uml-class-diagram/
 import { Direction } from '../../../main/services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../../main/services/uml-element/uml-element-repository';
 import { fireEvent } from '@testing-library/react';
-import 'jest-styled-components'
+import 'jest-styled-components';
 
 Text.size = (layer: ILayer, value: string, styles?: Partial<CSSStyleDeclaration>) => {
   return { width: 0, height: 0 };
