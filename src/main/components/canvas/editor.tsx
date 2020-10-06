@@ -85,7 +85,7 @@ class EditorComponent extends Component<Props, State> {
   }
 
   render() {
-    const {moving, connecting, reconnecting, ...props} = this.props
+    const { moving, connecting, reconnecting, ...props } = this.props;
     if (this.state.isMobile) {
       return <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} />;
     } else {
