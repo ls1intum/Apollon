@@ -1,46 +1,426 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`test update pane render with element 1`] = `
+.c11 {
+  height: 1em;
+  vertical-align: middle;
+  width: 1em;
+}
+
+.c2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  outline: none;
+  overflow: visible;
+  -webkit-transform-origin: center center;
+  -ms-transform-origin: center center;
+  transform-origin: center center;
+  fill: white;
+}
+
+.c1 {
+  display: block;
+  width: 100%;
+  position: relative;
+  min-height: inherit;
+  max-height: inherit;
+  max-width: inherit;
+  overflow: auto;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+  border: 1px solid #adb5bd;
+  background-position: calc(50% + 25px) calc(50% + 25px);
+  background-size: 50px 50px,50px 50px, 10px 10px,10px 10px;
+  background-image: linear-gradient(to right,#e5e5e5 1px,transparent 1px), linear-gradient(to bottom,#e5e5e5 1px,transparent 1px), linear-gradient(to right,#f5f5f5 1px,transparent 1px), linear-gradient(to bottom,#f5f5f5 1px,transparent 1px);
+  background-repeat: repeat;
+  background-attachment: local;
+}
+
+.c9 {
+  -webkit-appearance: button;
+  -moz-appearance: button;
+  appearance: button;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25em;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0;
+  overflow: visible;
+  padding: 0.375em 0.75em;
+  text-transform: none;
+  -webkit-transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.c9 svg {
+  pointer-events: none;
+}
+
+.c9::-moz-focus-inner {
+  border-style: none;
+  padding: 0;
+}
+
+.c9:focus {
+  outline: 0;
+}
+
+.c9:not(:disabled) {
+  cursor: pointer;
+}
+
+.c10 {
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+  color: #2a8fbd;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+}
+
+.c14 {
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+  border-color: #2a8fbd;
+  color: #2a8fbd;
+}
+
+.c14:focus {
+  box-shadow: 0 0 0 0.2em #2a8fbd80;
+}
+
+.c14:hover {
+  background-color: #2a8fbd;
+  color: #fff;
+}
+
+.c13 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  min-height: 1.9rem;
+}
+
+.c15 {
+  -webkit-flex: 1 1 auto;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.c15:not(:first-child) {
+  margin-left: -1px;
+}
+
+.c15:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.c15:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.c15:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+.c7 {
+  background-clip: padding-box;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0.25em;
+  color: #495057;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0;
+  overflow: visible;
+  padding: 0.375em 0.75em;
+  -webkit-transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
+}
+
+.c7:focus {
+  border-color: #83c5e3;
+  outline: 0;
+  box-shadow: 0 0 0 0.2em #2a8fbd40;
+}
+
+.c7::-webkit-input-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+.c7::-moz-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+.c7:-ms-input-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+.c7::placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+.c8 {
+  display: block;
+  width: 100%;
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+}
+
+.c17 {
+  margin-bottom: 0.5em;
+  display: block;
+  width: 100%;
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+}
+
+.c18 {
+  display: block;
+  width: 100%;
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+}
+
+.c18:not(:focus) {
+  border-style: dashed;
+}
+
+.c18:not(:focus):not(:hover) {
+  background: rgba(255,255,255,0.5);
+}
+
+.c16 {
+  margin-top: 0;
+  font-size: 1.25em;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 0.5em;
+}
+
+.c12 {
+  border: 0;
+  border-top: 1px solid #212529;
+  box-sizing: content-box;
+  height: 0;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  overflow: visible;
+}
+
+.c6 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: baseline;
+  -webkit-box-align: baseline;
+  -ms-flex-align: baseline;
+  align-items: baseline;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.c3 {
+  background-clip: padding-box;
+  background-color: #f8f9fa;
+  border: 1px solid #21252933;
+  border-radius: 0.3em;
+  box-sizing: border-box;
+  display: block;
+  -webkit-filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  left: 0;
+  -webkit-letter-spacing: normal;
+  -moz-letter-spacing: normal;
+  -ms-letter-spacing: normal;
+  letter-spacing: normal;
+  line-break: auto;
+  line-height: 1.5;
+  max-width: 276px;
+  position: absolute;
+  text-align: left;
+  text-align: start;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  text-transform: none;
+  text-shadow: none;
+  top: 0;
+  will-change: transform;
+  white-space: normal;
+  word-break: normal;
+  word-spacing: normal;
+  word-wrap: break-word;
+  -webkit-transform: translate(calc(0px - 100% - 0.5em),calc(100px - 100%));
+  -ms-transform: translate(calc(0px - 100% - 0.5em),calc(100px - 100%));
+  transform: translate(calc(0px - 100% - 0.5em),calc(100px - 100%));
+}
+
+.c3 *,
+.c3 *:before,
+.c3 *:after {
+  box-sizing: inherit;
+}
+
+.c5 {
+  color: #212529;
+  padding: 0.5em 0.75em;
+  max-height: 500px;
+  overflow: auto;
+}
+
+.c4 {
+  display: block;
+  height: 0.5em;
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  right: calc((0.5em + 1px) * -1);
+  width: 0.5em;
+  bottom: 0.3em;
+}
+
+.c4::before,
+.c4::after {
+  content: '';
+  border-color: transparent;
+  border-style: solid;
+  display: block;
+  position: absolute;
+}
+
+.c4::before {
+  border-left-color: #21252933;
+  border-width: 0.5em 0 0.5em 0.5em;
+  right: 0;
+}
+
+.c4::after {
+  border-left-color: #f8f9fa;
+  border-width: 0.5em 0 0.5em 0.5em;
+  right: 1px;
+}
+
+.c0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: inherit;
+  min-height: inherit;
+  max-width: inherit;
+  max-height: inherit;
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  touch-action: none;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-size: 16px;
+  color: #212529;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.c0 *,
+.c0 *:before,
+.c0 *:after {
+  box-sizing: inherit;
+}
+
+.c0 svg text {
+  fill: #212529;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-size: 16px;
+}
+
+.c0 svg marker,
+.c0 svg text {
+  fill-opacity: 1;
+}
+
+.c0 svg * {
+  overflow: visible;
+}
+
 <body>
   <div>
     <div
-      class="sc-carGAA iGiJRg apollon-editor"
+      class="c0 apollon-editor"
     >
       <div
-        class="sc-pNWxx ghOgUd"
+        class="c1"
       >
         <svg
-          class="sc-fujyUd bgrLIw"
+          class="c2"
           height="640"
           tabindex="-1"
           width="840"
         />
       </div>
       <div
-        class="sc-cBoprd ebqcMg"
+        class="c3"
       >
         <div
-          class="sc-jcwofb fYviJN"
+          class="c4"
         />
         <div
-          class="sc-ciSmjq cSxvEJ"
+          class="c5"
         >
           <div>
             <section>
               <div
-                class="sc-hHEjAm ksVhyu"
+                class="c6"
               >
                 <input
-                  class="sc-hBMVcZ sc-fnVYJo cgkWeF lpqGps"
+                  class="c7 c8"
                   value=""
                 />
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+                  class="c9 c10"
                   color="link"
                   tabindex="-1"
                 >
                   <svg
-                    class="sc-bdnylx cZAqPP"
+                    class="c11"
                     height="16px"
                     viewBox="0 0 448 512"
                     width="16px"
@@ -53,56 +433,56 @@ exports[`test update pane render with element 1`] = `
                 </button>
               </div>
               <hr
-                class="sc-dIvqjp cJMUUR"
+                class="c12"
               />
             </section>
             <section>
               <div
-                class="sc-crzoUp loJTLj"
+                class="c13"
               >
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF fXGTky sc-dIsAE fXtuIx"
+                  class="c9 c14 c15"
                   color="primary"
                 >
                   Abstract
                 </button>
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF fXGTky sc-dIsAE fXtuIx"
+                  class="c9 c14 c15"
                   color="primary"
                 >
                   Interface
                 </button>
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF fXGTky sc-dIsAE fXtuIx"
+                  class="c9 c14 c15"
                   color="primary"
                 >
                   Enumeration
                 </button>
               </div>
               <hr
-                class="sc-dIvqjp cJMUUR"
+                class="c12"
               />
             </section>
             <section>
               <h1
-                class="sc-bkbjAj hFQBLR"
+                class="c16"
               >
                 Attributes
               </h1>
               <div
-                class="sc-hHEjAm ksVhyu"
+                class="c6"
               >
                 <input
-                  class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+                  class="c7 c17"
                   value=""
                 />
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+                  class="c9 c10"
                   color="link"
                   tabindex="-1"
                 >
                   <svg
-                    class="sc-bdnylx cZAqPP"
+                    class="c11"
                     height="16px"
                     viewBox="0 0 448 512"
                     width="16px"
@@ -115,33 +495,33 @@ exports[`test update pane render with element 1`] = `
                 </button>
               </div>
               <input
-                class="sc-hBMVcZ sc-fnVYJo cgkWeF dmprUH"
+                class="c7 c18"
                 value=""
               />
             </section>
             <section>
               <hr
-                class="sc-dIvqjp cJMUUR"
+                class="c12"
               />
               <h1
-                class="sc-bkbjAj hFQBLR"
+                class="c16"
               >
                 Methods
               </h1>
               <div
-                class="sc-hHEjAm ksVhyu"
+                class="c6"
               >
                 <input
-                  class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+                  class="c7 c17"
                   value=""
                 />
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+                  class="c9 c10"
                   color="link"
                   tabindex="-1"
                 >
                   <svg
-                    class="sc-bdnylx cZAqPP"
+                    class="c11"
                     height="16px"
                     viewBox="0 0 448 512"
                     width="16px"
@@ -154,7 +534,7 @@ exports[`test update pane render with element 1`] = `
                 </button>
               </div>
               <input
-                class="sc-hBMVcZ sc-fnVYJo cgkWeF dmprUH"
+                class="c7 c18"
                 value=""
               />
             </section>
@@ -168,46 +548,405 @@ exports[`test update pane render with element 1`] = `
 
 exports[`test update pane render with relationship 1`] = `
 <body>
-  <div>
+  .c10 {
+  height: 1em;
+  vertical-align: middle;
+  width: 1em;
+}
+
+.c2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  outline: none;
+  overflow: visible;
+  -webkit-transform-origin: center center;
+  -ms-transform-origin: center center;
+  transform-origin: center center;
+  fill: white;
+}
+
+.c1 {
+  display: block;
+  width: 100%;
+  position: relative;
+  min-height: inherit;
+  max-height: inherit;
+  max-width: inherit;
+  overflow: auto;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+  border: 1px solid #adb5bd;
+  background-position: calc(50% + 25px) calc(50% + 25px);
+  background-size: 50px 50px,50px 50px, 10px 10px,10px 10px;
+  background-image: linear-gradient(to right,#e5e5e5 1px,transparent 1px), linear-gradient(to bottom,#e5e5e5 1px,transparent 1px), linear-gradient(to right,#f5f5f5 1px,transparent 1px), linear-gradient(to bottom,#f5f5f5 1px,transparent 1px);
+  background-repeat: repeat;
+  background-attachment: local;
+}
+
+.c8 {
+  -webkit-appearance: button;
+  -moz-appearance: button;
+  appearance: button;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25em;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0;
+  overflow: visible;
+  padding: 0.375em 0.75em;
+  text-transform: none;
+  -webkit-transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.c8 svg {
+  pointer-events: none;
+}
+
+.c8::-moz-focus-inner {
+  border-style: none;
+  padding: 0;
+}
+
+.c8:focus {
+  outline: 0;
+}
+
+.c8:not(:disabled) {
+  cursor: pointer;
+}
+
+.c9 {
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+  color: #2a8fbd;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+}
+
+.c12 {
+  display: block;
+  width: 100%;
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+  border-color: #2a8fbd;
+  color: #2a8fbd;
+}
+
+.c12:focus {
+  box-shadow: 0 0 0 0.2em #2a8fbd80;
+}
+
+.c12:hover {
+  background-color: #2a8fbd;
+  color: #fff;
+}
+
+.c16 {
+  background-clip: padding-box;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0.25em;
+  color: #495057;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0;
+  overflow: visible;
+  padding: 0.375em 0.75em;
+  -webkit-transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
+}
+
+.c16:focus {
+  border-color: #83c5e3;
+  outline: 0;
+  box-shadow: 0 0 0 0.2em #2a8fbd40;
+}
+
+.c16::-webkit-input-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+.c16::-moz-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+.c16:-ms-input-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+.c16::placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+.c17 {
+  margin-bottom: 0.5em;
+  display: block;
+  width: 100%;
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+}
+
+.c18 {
+  display: block;
+  width: 100%;
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+}
+
+.c7 {
+  margin-top: 0;
+  font-size: 1.25em;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 0.5em;
+  margin-bottom: 0;
+}
+
+.c14 {
+  margin-top: 0;
+  font-size: 1.25em;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 0.5em;
+}
+
+.c15 {
+  margin-top: 0;
+  margin-bottom: 1em;
+  margin-bottom: 0;
+}
+
+.c11 {
+  border: 0;
+  border-top: 1px solid #212529;
+  box-sizing: content-box;
+  height: 0;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  overflow: visible;
+}
+
+.c13::after {
+  border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+  content: '';
+  display: inline-block;
+  height: 0;
+  margin-left: 0.255em;
+  vertical-align: 0.255em;
+  width: 0;
+}
+
+.c6 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: baseline;
+  -webkit-box-align: baseline;
+  -ms-flex-align: baseline;
+  align-items: baseline;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.c3 {
+  background-clip: padding-box;
+  background-color: #f8f9fa;
+  border: 1px solid #21252933;
+  border-radius: 0.3em;
+  box-sizing: border-box;
+  display: block;
+  -webkit-filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  left: 0;
+  -webkit-letter-spacing: normal;
+  -moz-letter-spacing: normal;
+  -ms-letter-spacing: normal;
+  letter-spacing: normal;
+  line-break: auto;
+  line-height: 1.5;
+  max-width: 276px;
+  position: absolute;
+  text-align: left;
+  text-align: start;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  text-transform: none;
+  text-shadow: none;
+  top: 0;
+  will-change: transform;
+  white-space: normal;
+  word-break: normal;
+  word-spacing: normal;
+  word-wrap: break-word;
+  -webkit-transform: translate(calc(100px - 100% - 0.5em),calc(65px - 100%));
+  -ms-transform: translate(calc(100px - 100% - 0.5em),calc(65px - 100%));
+  transform: translate(calc(100px - 100% - 0.5em),calc(65px - 100%));
+}
+
+.c3 *,
+.c3 *:before,
+.c3 *:after {
+  box-sizing: inherit;
+}
+
+.c5 {
+  color: #212529;
+  padding: 0.5em 0.75em;
+  max-height: 500px;
+  overflow: auto;
+}
+
+.c4 {
+  display: block;
+  height: 0.5em;
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  right: calc((0.5em + 1px) * -1);
+  width: 0.5em;
+  bottom: 0.3em;
+}
+
+.c4::before,
+.c4::after {
+  content: '';
+  border-color: transparent;
+  border-style: solid;
+  display: block;
+  position: absolute;
+}
+
+.c4::before {
+  border-left-color: #21252933;
+  border-width: 0.5em 0 0.5em 0.5em;
+  right: 0;
+}
+
+.c4::after {
+  border-left-color: #f8f9fa;
+  border-width: 0.5em 0 0.5em 0.5em;
+  right: 1px;
+}
+
+.c0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: inherit;
+  min-height: inherit;
+  max-width: inherit;
+  max-height: inherit;
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  touch-action: none;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-size: 16px;
+  color: #212529;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.c0 *,
+.c0 *:before,
+.c0 *:after {
+  box-sizing: inherit;
+}
+
+.c0 svg text {
+  fill: #212529;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-size: 16px;
+}
+
+.c0 svg marker,
+.c0 svg text {
+  fill-opacity: 1;
+}
+
+.c0 svg * {
+  overflow: visible;
+}
+
+<div>
     <div
-      class="sc-carGAA iGiJRg apollon-editor"
+      class="c0 apollon-editor"
     >
       <div
-        class="sc-pNWxx ghOgUd"
+        class="c1"
       >
         <svg
-          class="sc-fujyUd bgrLIw"
+          class="c2"
           height="640"
           tabindex="-1"
           width="840"
         />
       </div>
       <div
-        class="sc-cBoprd ekIVH"
+        class="c3"
       >
         <div
-          class="sc-jcwofb fYviJN"
+          class="c4"
         />
         <div
-          class="sc-ciSmjq cSxvEJ"
+          class="c5"
         >
           <div>
             <section>
               <div
-                class="sc-lmgQde ezbzXn"
+                class="c6"
               >
                 <h1
-                  class="sc-bkbjAj dyFuyY"
+                  class="c7"
                   style="flex-grow: 1;"
                 >
                   Association
                 </h1>
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+                  class="c8 c9"
                   color="link"
                 >
                   <svg
-                    class="sc-bdnylx cZAqPP"
+                    class="c10"
                     height="16px"
                     viewBox="0 0 512 512"
                     width="16px"
@@ -219,11 +958,11 @@ exports[`test update pane render with relationship 1`] = `
                   </svg>
                 </button>
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+                  class="c8 c9"
                   color="link"
                 >
                   <svg
-                    class="sc-bdnylx cZAqPP"
+                    class="c10"
                     height="16px"
                     viewBox="0 0 448 512"
                     width="16px"
@@ -236,89 +975,89 @@ exports[`test update pane render with relationship 1`] = `
                 </button>
               </div>
               <hr
-                class="sc-dIvqjp cJMUUR"
+                class="c11"
               />
             </section>
             <section>
               <div
-                class="sc-iwaifL"
+                class=""
               >
                 <button
-                  class="sc-kEqYlL sc-iqAbSa kDGpF Aqkkt sc-fKgIGh VbMqX"
+                  class="c8 c12 c13"
                   color="primary"
                 >
                   Association (bidirectional)
                 </button>
               </div>
               <hr
-                class="sc-dIvqjp cJMUUR"
+                class="c11"
               />
             </section>
             <section>
               <h1
-                class="sc-bkbjAj hFQBLR"
+                class="c14"
               />
               <div
-                class="sc-lmgQde ezbzXn"
+                class="c6"
               >
                 <span
-                  class="sc-bkbjAj kkpsiY"
+                  class="c15"
                   style="margin-right: 0.5em;"
                 >
                   Multiplicity
                 </span>
                 <input
-                  class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+                  class="c16 c17"
                   value=""
                 />
               </div>
               <div
-                class="sc-lmgQde ezbzXn"
+                class="c6"
               >
                 <span
-                  class="sc-bkbjAj kkpsiY"
+                  class="c15"
                   style="margin-right: 0.5em;"
                 >
                   Role
                 </span>
                 <input
-                  class="sc-hBMVcZ sc-fnVYJo cgkWeF lpqGps"
+                  class="c16 c18"
                   value=""
                 />
               </div>
               <hr
-                class="sc-dIvqjp cJMUUR"
+                class="c11"
               />
             </section>
             <section>
               <h1
-                class="sc-bkbjAj hFQBLR"
+                class="c14"
               />
               <div
-                class="sc-lmgQde ezbzXn"
+                class="c6"
               >
                 <span
-                  class="sc-bkbjAj kkpsiY"
+                  class="c15"
                   style="margin-right: 0.5em;"
                 >
                   Multiplicity
                 </span>
                 <input
-                  class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+                  class="c16 c17"
                   value=""
                 />
               </div>
               <div
-                class="sc-lmgQde ezbzXn"
+                class="c6"
               >
                 <span
-                  class="sc-bkbjAj kkpsiY"
+                  class="c15"
                   style="margin-right: 0.5em;"
                 >
                   Role
                 </span>
                 <input
-                  class="sc-hBMVcZ sc-fnVYJo cgkWeF lpqGps"
+                  class="c16 c18"
                   value=""
                 />
               </div>
