@@ -28,6 +28,8 @@ import { UMLPetriNetPlace } from './uml-petri-net/uml-petri-net-place/uml-petri-
 import { CommunicationLinkMessage } from './uml-communication-diagram/uml-communication-link/uml-communiction-link-message';
 import { UMLDeploymentComponent } from './uml-deployment-diagram/uml-deployment-component/uml-component';
 import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
+import { SyntaxTreeTerminal } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal';
+import { SyntaxTreeNonterminal } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -59,4 +61,6 @@ export const UMLElements = {
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlace,
   [UMLElementType.PetriNetTransition]: UMLPetriNetTransition,
   [UMLElementType.CommunicationLinkMessage]: CommunicationLinkMessage,
+  [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminal,
+  [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminal,
 };

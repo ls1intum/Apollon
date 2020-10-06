@@ -95,6 +95,11 @@
     "PetriNet": {
       "PetriNetPlace": "Place",
       "PetriNetTransition": "Transition"
+    },
+    "SyntaxTree": {
+      "SyntaxTreeTerminal": "Terminal",
+      "SyntaxTreeNonterminal": "Nonterminal",
+      "SyntaxTreeLink": "Link"
     }
   }
 }

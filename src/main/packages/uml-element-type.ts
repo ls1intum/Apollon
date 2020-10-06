@@ -7,6 +7,7 @@ import { UseCaseElementType } from './uml-use-case-diagram';
 import { PetriNetElementType } from './uml-petri-net';
 import { CommunicationElementType } from './uml-communication-diagram';
 import { UMLDiagramType } from './diagram-type';
+import { SyntaxTreeElementType } from './syntax-tree';
 
 export type UMLElementType =
   | keyof typeof ClassElementType
@@ -16,7 +17,8 @@ export type UMLElementType =
   | keyof typeof CommunicationElementType
   | keyof typeof ComponentElementType
   | keyof typeof DeploymentElementType
-  | keyof typeof PetriNetElementType;
+  | keyof typeof PetriNetElementType
+  | keyof typeof SyntaxTreeElementType;
 
 export const UMLElementType = {
   ...ClassElementType,
@@ -27,6 +29,7 @@ export const UMLElementType = {
   ...ComponentElementType,
   ...DeploymentElementType,
   ...PetriNetElementType,
+  ...SyntaxTreeElementType,
 };
 
 export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
@@ -38,4 +41,5 @@ export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
   [UMLDiagramType.ComponentDiagram]: ComponentElementType,
   [UMLDiagramType.DeploymentDiagram]: DeploymentElementType,
   [UMLDiagramType.PetriNet]: PetriNetElementType,
+  [UMLDiagramType.SyntaxTree]: SyntaxTreeElementType,
 };
