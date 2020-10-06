@@ -5,10 +5,11 @@ import { UMLDeploymentArtifactComponent } from '../../../../main/packages/uml-de
 
 it('render the uml-deplyoment-artifact-component', () => {
   const artifact: UMLDeploymentArtifact = new UMLDeploymentArtifact({ name: 'TestDeploymentComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLDeploymentArtifactComponent element={artifact} />
     </svg>,
   );
   expect(getByText(artifact.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

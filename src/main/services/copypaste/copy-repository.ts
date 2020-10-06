@@ -4,6 +4,7 @@ import { notEmpty } from '../../utils/not-empty';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { CopyAction, CopyActionTypes, PasteAction } from './copy-types';
+import { UMLElementsForDiagram } from '../../packages/uml-element-type';
 
 export class CopyRepository {
   /**
@@ -42,7 +43,12 @@ export class CopyRepository {
         .readText()
         .then((value) => {
           const parsedElements: IUMLElement[] = JSON.parse(value);
-          const diagramElements: UMLElement[] = parsedElements.map((x) => UMLElementRepository.get(x)).filter(notEmpty);
+          const currentDiagramType = getState().diagram.type;
+          // all elements must be supported Apollon elements and part of the current diagram type
+          const diagramElements: UMLElement[] = parsedElements
+            .map((x) => UMLElementRepository.get(x))
+            .filter(notEmpty)
+            .filter((element) => element.type in UMLElementsForDiagram[currentDiagramType]);
           return CopyRepository.transformElementsForCopy(diagramElements);
         })
         .then((elements: IUMLElement[]) => {

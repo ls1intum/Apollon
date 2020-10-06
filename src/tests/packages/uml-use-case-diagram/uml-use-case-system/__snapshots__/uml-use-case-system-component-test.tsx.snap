@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-use-case-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          height="100%"
+          stroke="black"
+          width="100%"
+        />
+        <text
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="50%"
+          y="16"
+        >
+          TestUseCaseComponent
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

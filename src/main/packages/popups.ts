@@ -45,10 +45,12 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.Component]: DefaultPopup,
   [UMLElementType.ComponentInterface]: DefaultPopup,
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeUpdate,
+  [UMLElementType.DeploymentComponent]: DefaultPopup,
   [UMLElementType.DeploymentArtifact]: DefaultPopup,
   [UMLElementType.DeploymentInterface]: DefaultPopup,
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceUpdate,
   [UMLElementType.PetriNetTransition]: DefaultPopup,
+  [UMLElementType.CommunicationLinkMessage]: null,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminalUpdate,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminalUpdate,
   // Relationships

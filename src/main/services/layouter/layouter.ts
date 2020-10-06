@@ -127,6 +127,7 @@ export function* render(id: string): SagaIterator {
     }
 
     if (index === 0) {
+      // TODO: this is constantly causing problems, not sure what it is needed for, once we have more test cases we can try to remove it
       const { id: _, name, owner, type, bounds, ownedElements, ...difference } = diff(original, update) as any;
       if (Object.keys(difference).length) {
         yield put<UpdateAction>(UMLElementRepository.update(update.id, { ...difference }));

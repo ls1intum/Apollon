@@ -1,0 +1,68 @@
+import * as React from 'react';
+import { fireEvent } from '@testing-library/react';
+import { UMLElement } from '../../../../../main';
+import { UMLDeploymentNode } from '../../../../../main/packages/uml-deployment-diagram/uml-deployment-node/uml-deployment-node';
+import { getRealStore } from '../../../../test-utils/test-utils';
+import { wrappedRender } from '../../../../test-utils/render';
+import { UMLDeploymentNodeUpdate } from '../../../../../main/packages/uml-deployment-diagram/uml-deployment-node/uml-deployment-node-update';
+import { Text } from '../../../../../main/utils/svg/text';
+import { ILayer } from '../../../../../main/services/layouter/layer';
+
+// has to be overridden, because jsdom does not provide a getBBox() function for SVGTextElements
+Text.size = (layer: ILayer, value: string, styles?: Partial<CSSStyleDeclaration>) => {
+  return { width: 0, height: 0 };
+};
+
+describe('test deployment node popup', () => {
+  let elements: UMLElement[] = [];
+  let deploymentNode: UMLDeploymentNode;
+
+  beforeEach(() => {
+    // initialize  objects
+    deploymentNode = new UMLDeploymentNode({ id: 'source-test-id' });
+    elements.push(deploymentNode);
+  });
+
+  it('render', () => {
+    const store = getRealStore(undefined, elements);
+
+    const { baseElement } = wrappedRender(<UMLDeploymentNodeUpdate element={deploymentNode} />, { store });
+    expect(baseElement).toMatchSnapshot();
+  });
+
+  it('delete', () => {
+    const store = getRealStore(undefined, elements);
+
+    const { getAllByRole } = wrappedRender(<UMLDeploymentNodeUpdate element={deploymentNode} />, { store: store });
+    const buttons = getAllByRole('button');
+    buttons[0].click();
+
+    expect(store.getState().elements).not.toContain(deploymentNode.id);
+  });
+
+  it('rename', () => {
+    const store = getRealStore(undefined, elements);
+
+    const { getAllByRole } = wrappedRender(<UMLDeploymentNodeUpdate element={deploymentNode} />, { store: store });
+    const textboxes = getAllByRole('textbox');
+    const newName = 'UpdatedName';
+    fireEvent.change(textboxes[0], { target: { value: newName } });
+
+    expect(store.getState().elements[deploymentNode.id].name).toEqual(newName);
+  });
+
+  it('rename stereotype', () => {
+    const store = getRealStore(undefined, elements);
+
+    const { getAllByRole } = wrappedRender(<UMLDeploymentNodeUpdate element={deploymentNode} />, {
+      store: store,
+    });
+    const textboxes = getAllByRole('textbox');
+    const updatedStereotype = 'UpdatedStereotype';
+    fireEvent.change(textboxes[1], { target: { value: updatedStereotype } });
+
+    const updatedElement = store.getState().elements[deploymentNode.id] as UMLDeploymentNode;
+
+    expect(updatedElement.stereotype).toEqual(updatedStereotype);
+  });
+});

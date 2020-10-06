@@ -6,6 +6,8 @@ import { AsyncDispatch } from '../../../utils/actions/actions';
 import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
+import isMobile from 'is-mobile';
+import { getClientEventCoordinates } from '../../../utils/touch-event';
 
 type StateProps = {
   movable: boolean;
@@ -57,15 +59,26 @@ export const movable = (
       const node = findDOMNode(this) as HTMLElement;
       node.style.cursor = 'move';
       const child = node.firstChild as HTMLElement;
-      child.addEventListener('pointerdown', this.onPointerDown);
+      if (isMobile({ tablet: true })) {
+        child.addEventListener('touchstart', this.onPointerDown);
+      } else {
+        child.addEventListener('pointerdown', this.onPointerDown);
+      }
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
       const child = node.firstChild as HTMLElement;
-      child.removeEventListener('pointerdown', this.onPointerDown);
-      document.removeEventListener('pointermove', this.onPointerMove);
-      document.removeEventListener('pointerup', this.onPointerUp);
+
+      if (isMobile({ tablet: true })) {
+        child.removeEventListener('touchstart', this.onPointerDown);
+        document.removeEventListener('touchmove', this.onPointerMove);
+        document.removeEventListener('touchend', this.onPointerUp);
+      } else {
+        child.removeEventListener('pointerdown', this.onPointerDown);
+        document.removeEventListener('pointermove', this.onPointerMove);
+        document.removeEventListener('pointerup', this.onPointerUp);
+      }
     }
 
     render() {
@@ -73,20 +86,28 @@ export const movable = (
       return <WrappedComponent {...props} />;
     }
 
-    private onPointerDown = (event: PointerEvent) => {
+    private onPointerDown = (event: PointerEvent | TouchEvent) => {
       if (event.which && event.which !== 1) {
         return;
       }
 
-      this.setState({ offset: new Point(event.clientX, event.clientY) });
-      document.addEventListener('pointermove', this.onPointerMove);
-      document.addEventListener('pointerup', this.onPointerUp, { once: true });
+      const clientEventCoordinates = getClientEventCoordinates(event);
+
+      this.setState({ offset: new Point(clientEventCoordinates.clientX, clientEventCoordinates.clientY) });
+      if (isMobile({ tablet: true })) {
+        document.addEventListener('touchmove', this.onPointerMove);
+        document.addEventListener('touchend', this.onPointerUp, { once: true });
+      } else {
+        document.addEventListener('pointermove', this.onPointerMove);
+        document.addEventListener('pointerup', this.onPointerUp, { once: true });
+      }
       setTimeout(() => !this.props.movable && this.onPointerUp(), 0);
     };
 
-    private onPointerMove = (event: PointerEvent) => {
-      const x = event.clientX - this.state.offset.x;
-      const y = event.clientY - this.state.offset.y;
+    private onPointerMove = (event: PointerEvent | TouchEvent) => {
+      const clientEventCoordinates = getClientEventCoordinates(event);
+      const x = clientEventCoordinates.clientX - this.state.offset.x;
+      const y = clientEventCoordinates.clientY - this.state.offset.y;
 
       if (!this.props.moving) {
         if (Math.abs(x) > 5 || Math.abs(y) > 5) {
@@ -98,7 +119,11 @@ export const movable = (
     };
 
     private onPointerUp = () => {
-      document.removeEventListener('pointermove', this.onPointerMove);
+      if (isMobile({ tablet: true })) {
+        document.removeEventListener('touchmove', this.onPointerMove);
+      } else {
+        document.removeEventListener('pointermove', this.onPointerMove);
+      }
       if (!this.props.moving) {
         return;
       }

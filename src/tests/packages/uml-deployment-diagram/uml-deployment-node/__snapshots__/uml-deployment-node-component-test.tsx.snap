@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-deployment-node-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <g>
+          <path
+            d="M 0 8 l 8 -8 H 200 l -8 8 Z"
+            stroke="black"
+          />
+          <path
+            d="M 200 0 V 92 l -8 8 V 8 Z"
+            stroke="black"
+          />
+          <rect
+            height="91"
+            stroke="black"
+            width="192"
+            x="0"
+            y="8"
+          />
+        </g>
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="50%"
+          y="30"
+        >
+          <tspan
+            dy="-8"
+            font-size="85%"
+            text-anchor="middle"
+            x="50%"
+          >
+            «node»
+          </tspan>
+          <tspan
+            dy="18"
+            text-anchor="middle"
+            x="50%"
+          >
+            TestDeploymentComponent
+          </tspan>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

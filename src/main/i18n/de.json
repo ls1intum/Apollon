@@ -84,7 +84,7 @@
     },
     "DeploymentDiagram": {
       "DeploymentNode": "Knoten",
-      "Component": "Komponente",
+      "DeploymentComponent": "Komponente",
       "DeploymentArtifact": "Artefakt",
       "DeploymentInterface": "Schnittstelle",
       "DeploymentInterfaceProvided": "Bereitgestellte Schnittstelle",

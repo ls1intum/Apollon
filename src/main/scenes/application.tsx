@@ -2,7 +2,7 @@ import React, { createRef, RefObject } from 'react';
 import { DeepPartial } from 'redux';
 import { Canvas, CanvasComponent } from '../components/canvas/canvas';
 import { CanvasContext, CanvasProvider } from '../components/canvas/canvas-context';
-import { Editor } from '../components/canvas/container';
+import { Editor } from '../components/canvas/editor';
 import { KeyboardEventListener } from '../components/canvas/keyboard-eventlistener';
 import { DraggableLayer } from '../components/draggable/draggable-layer';
 import { I18nProvider } from '../components/i18n/i18n-provider';

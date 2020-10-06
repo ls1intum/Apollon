@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-petri-net-transition-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="50%"
+          y="-15"
+        >
+          Example Description
+        </text>
+        <rect
+          fill="white"
+          fill-opacity="1"
+          height="60"
+          stroke="black"
+          stroke-width="2"
+          width="20"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

@@ -43,7 +43,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   ),
 );
 
-class AssessmentSectionCompoennt extends Component<Props> {
+class AssessmentSectionComponent extends Component<Props> {
   render() {
     const { element, assessment, readonly, diagramType } = this.props;
 
@@ -110,4 +110,4 @@ class AssessmentSectionCompoennt extends Component<Props> {
   };
 }
 
-export const AssessmentSection = enhance(AssessmentSectionCompoennt);
+export const AssessmentSection = enhance(AssessmentSectionComponent);

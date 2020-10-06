@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-use-case-generalization-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <marker
+          id="marker-516e57ef-ae31-4311-8d9d-2aeb6c97f924"
+          markerHeight="30"
+          markerUnits="strokeWidth"
+          markerWidth="22"
+          orient="auto"
+          refX="30"
+          refY="15"
+          stroke-dasharray="1,0"
+          viewBox="0 0 30 30"
+        >
+          <path
+            d="M0,1 L0,29 L30,15 z"
+            fill="white"
+            stroke="black"
+          />
+        </marker>
+        <polyline
+          fill="none"
+          marker-end="url(#marker-516e57ef-ae31-4311-8d9d-2aeb6c97f924)"
+          points="0 0,100 100"
+          stroke="black"
+          stroke-width="1"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

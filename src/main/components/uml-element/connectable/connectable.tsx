@@ -14,6 +14,8 @@ import { UMLRelationships } from '../../../packages/uml-relationships';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-relationship-features';
 import { UMLElementType, UMLRelationshipType } from '../../..';
+import { convertTouchEndIntoPointerUp } from '../../../utils/touch-event';
+import isMobile from 'is-mobile';
 
 type StateProps = {
   hovered: boolean;
@@ -109,11 +111,17 @@ export const connectable = (
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
       node.addEventListener('pointerup', this.elementOnPointerUp.bind(this));
+      if (isMobile({ tablet: true })) {
+        node.addEventListener('touchend', this.elementOnPointerUp.bind(this));
+      }
     }
 
     componentWillUnmount() {
       const node = findDOMNode(this) as HTMLElement;
       node.removeEventListener('pointerup', this.elementOnPointerUp);
+      if (isMobile({ tablet: true })) {
+        node.removeEventListener('touchend', this.elementOnPointerUp);
+      }
     }
 
     render() {
@@ -172,10 +180,20 @@ export const connectable = (
       );
     }
 
-    private elementOnPointerUp = (event: PointerEvent) => {
+    private elementOnPointerUp = (event: PointerEvent | TouchEvent) => {
       const node = findDOMNode(this) as HTMLElement;
+
+      // create pointer up event in order to follow connection logic
+      // created pointer up event has the correct target, (touchend triggered on same element as touchstart)
+      // -> connection logic for desktop can be applied
+      if (event instanceof TouchEvent) {
+        convertTouchEndIntoPointerUp(event);
+        return;
+      }
+
       // calculate event position relative to object position in %
       const nodeRect = node.getBoundingClientRect();
+
       const relEventPosition = {
         x: (event.clientX - nodeRect.left) / nodeRect.width,
         y: (event.clientY - nodeRect.top) / nodeRect.height,
@@ -197,6 +215,7 @@ export const connectable = (
             Math.pow(relativePortLocation[key as Direction].y - relEventPosition.y, 2),
         ),
       }));
+
       // use handle with min distance to connect to
       const minDistance = Math.min(...distances.map((value) => value.distance));
       const direction = distances.filter((value) => minDistance === value.distance)[0].key as Direction;

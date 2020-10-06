@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-petri-net-arc-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <marker
+          id="marker-test-id"
+          markerHeight="30"
+          markerUnits="strokeWidth"
+          markerWidth="22"
+          orient="auto"
+          refX="30"
+          refY="15"
+          stroke-dasharray="1,0"
+          viewBox="0 0 30 30"
+        >
+          <path
+            d="M0,1 L0,29 L30,15 z"
+            fill="black"
+          />
+        </marker>
+        <path
+          d="
+        M 0 -10
+        L 200 90
+    "
+          id="textpath-test-id"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+        >
+          <textpath
+            startOffset="50%"
+            xlink:href="#textpath-test-id"
+          >
+            TestPetriNetArc
+          </textpath>
+        </text>
+        <polyline
+          fill="none"
+          marker-end="url(#marker-test-id)"
+          points="0 0,200 100"
+          stroke="black"
+          stroke-width="1"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

@@ -2,7 +2,7 @@ import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
 import { ComposePreview } from '../compose-preview';
 import { UMLComponentInterface } from './uml-component-interface/uml-component-interface';
-import { UMLComponent } from './uml-component/uml-component';
+import { UMLComponentComponent } from './uml-component/uml-component-component';
 
 export const composeComponentPreview: ComposePreview = (
   layer: ILayer,
@@ -11,7 +11,7 @@ export const composeComponentPreview: ComposePreview = (
   const elements: UMLElement[] = [];
 
   // UML Component
-  const umlComponent = new UMLComponent({ name: translate('packages.ComponentDiagram.Component') });
+  const umlComponent = new UMLComponentComponent({ name: translate('packages.ComponentDiagram.Component') });
   elements.push(umlComponent);
 
   // UML Deployment Artifact

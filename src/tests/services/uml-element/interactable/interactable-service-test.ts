@@ -1,7 +1,8 @@
 import { UMLElement } from '../../../../main/services/uml-element/uml-element';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
-import { createUMLClassWithAttributeAndMethod, getRealStore } from '../../../test-utils/test-utils';
+import { getRealStore } from '../../../test-utils/test-utils';
 import { Interactable } from '../../../../main/services/uml-element/interactable/interactable-repository';
+import { createUMLClassWithAttributeAndMethod } from '../../../test-utils/test-data';
 
 describe('test redux state update when marking elements as interactive', () => {
   let elements: UMLElement[] = [];

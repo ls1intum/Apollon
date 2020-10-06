@@ -5,10 +5,11 @@ import { UMLActivityFinalNodeComponent } from '../../../../main/packages/uml-act
 
 it('render the uml-activity-final-node-component', () => {
   const finalNode: UMLActivityFinalNode = new UMLActivityFinalNode({ name: 'TestActivityComponent' });
-  const { container } = render(
+  const { container, baseElement } = render(
     <svg>
       <UMLActivityFinalNodeComponent element={finalNode} />
     </svg>,
   );
   expect(container.querySelector('circle')).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

@@ -59,17 +59,23 @@ class UmlPetriNetPlaceUpdateComponent extends Component<Props> {
         <section>
           <Flex>
             <Body style={{ marginRight: '0.5em', minWidth: '70px' }}>{this.props.translate('popup.tokens')}</Body>
-            <Textfield value={element.amountOfTokens} type="number" onChange={this.changeTokenAmount(element.id)} />
+            {/*Textfield minWidth=0 is fix for firefox not to overflow the element*/}
+            <Textfield
+              style={{ minWidth: 0 }}
+              value={element.amountOfTokens}
+              type="number"
+              onChange={this.changeTokenAmount(element.id)}
+            />
           </Flex>
         </section>
         <section>
-          <Flex style={{ marginTop: '0.5em' }}>
+          <Flex style={{ marginTop: '0.5em', alignItems: 'center' }}>
             <Body style={{ marginRight: '0.5em', minWidth: '70px' }}>{this.props.translate('popup.capacity')}</Body>
             <form style={{ display: 'inherit' }}>
               <div style={{ position: 'relative' }}>
                 <Textfield value={element.capacity} type="number" onChange={this.changeCapacity(element.id)} />
                 {!isFinite(element.capacity) && (
-                  <InfiniteIcon style={{ position: 'absolute', top: '25%', left: '5%' }} />
+                  <InfiniteIcon style={{ position: 'absolute', top: '25%', left: '5%' }} key={element.capacity} />
                 )}
               </div>
               <Button

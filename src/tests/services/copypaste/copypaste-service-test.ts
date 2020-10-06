@@ -1,19 +1,15 @@
-import { MockStoreEnhanced } from 'redux-mock-store';
-import { ModelState } from '../../../main/components/store/model-state';
 import { UMLClass } from '../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { UMLClassAttribute } from '../../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
-import { getMockedStore, getRealStore } from '../../test-utils/test-utils';
+import { getRealStore } from '../../test-utils/test-utils';
 import { UMLInterface } from '../../../main/packages/uml-class-diagram/uml-interface/uml-interface';
 import { CopyRepository } from '../../../main/services/copypaste/copy-repository';
-import { CopyReducer } from '../../../main/services/copypaste/copy-reducer';
 import { UMLElement } from '../../../main/services/uml-element/uml-element';
 import { UMLContainer } from '../../../main/services/uml-container/uml-container';
 
 describe('test copy paste functionality', () => {
   const elements: UMLElement[] = [];
   const elementsToCopy: UMLElement[] = [];
-  let store: MockStoreEnhanced<ModelState, any>;
 
   beforeEach(() => {
     // initialize copy objects
@@ -50,7 +46,7 @@ describe('test copy paste functionality', () => {
 
   it('copy apollon internally', () => {
     // disable copy to clipboard
-    store = getMockedStore(
+    const store = getRealStore(
       {
         editor: {
           enableCopyPasteToClipboard: false,
@@ -58,21 +54,14 @@ describe('test copy paste functionality', () => {
       },
       elements.map((element) => ({ ...element })),
     );
-    const expectedAction = CopyRepository.copy(elementsToCopy.map((element) => element.id))(
-      store.dispatch,
-      store.getState,
-      undefined,
-    );
     const copyAction = CopyRepository.copy(elementsToCopy.map((element) => element.id));
     store.dispatch(copyAction);
-    expect(store.getActions()).toHaveLength(2);
-    expect(store.getActions()[1]).toEqual(expectedAction);
     // assume max elements with 1 hierarchy
     const expectdCopyState = elementsToCopy.reduce<string[]>((ids: string[], element: UMLElement) => {
       const ownedElements = UMLContainer.isUMLContainer(element) ? (element as UMLContainer).ownedElements : [];
       return [...ids, ...ownedElements, element.id];
     }, []);
-    expect(CopyReducer([], store.getActions()[1])).toEqual(expectdCopyState);
+    expect(store.getState().copy).toEqual(expectdCopyState);
   });
   it('paste apollon internally', () => {
     // assume max elements with 1 hierarchy

@@ -12,16 +12,17 @@ export class UMLPetriNetPlace extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };
   static defaultCapacity = Number.POSITIVE_INFINITY;
 
+  // currently we need to add this, because otherwise this will be recognized as update in layouter and for every update action on component, antoher update is triggerd
+  highlight: string | undefined = undefined;
   type: UMLElementType = PetriNetElementType.PetriNetPlace;
   bounds: IBoundary = { ...this.bounds, width: 60, height: 60 };
-  amountOfTokens = 0;
-  capacity = UMLPetriNetPlace.defaultCapacity;
+  amountOfTokens: number;
+  capacity: number;
 
   constructor(values?: DeepPartial<UMLPetriNetPlace>) {
     super(values);
-    this.amountOfTokens =
-      values?.amountOfTokens || values?.amountOfTokens === 0 ? values.amountOfTokens : this.amountOfTokens;
-    this.capacity = values?.capacity || values?.capacity === 0 ? values.capacity : this.capacity;
+    this.amountOfTokens = values?.amountOfTokens || values?.amountOfTokens === 0 ? values.amountOfTokens : 0;
+    this.capacity = values?.capacity || values?.capacity === 0 ? values.capacity : UMLPetriNetPlace.defaultCapacity;
   }
 
   serialize(children?: UMLElement[]): Apollon.UMLPetriNetPlace {
@@ -29,7 +30,7 @@ export class UMLPetriNetPlace extends UMLElement {
       ...super.serialize(),
       type: this.type as keyof typeof PetriNetElementType,
       amountOfTokens: this.amountOfTokens,
-      capacity: this.capacity,
+      capacity: !isFinite(this.capacity) ? this.capacity.toString() : this.capacity,
     };
   }
 
@@ -42,7 +43,8 @@ export class UMLPetriNetPlace extends UMLElement {
 
     super.deserialize(values, children);
     this.amountOfTokens = values.amountOfTokens;
-    this.capacity = values.capacity;
+    this.capacity =
+      values.capacity === Number.POSITIVE_INFINITY.toString() ? Number.POSITIVE_INFINITY : (values.capacity as number);
   }
 
   render(canvas: ILayer): ILayoutable[] {

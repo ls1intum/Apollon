@@ -12,9 +12,9 @@ import { I18nContext } from '../../components/i18n/i18n-context';
 import { localized } from '../../components/i18n/localized';
 import { ModelState } from '../../components/store/model-state';
 import { styled } from '../../components/theme/styles';
-import { UMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
+import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 
 const Flex = styled.div`
   display: flex;
@@ -66,7 +66,7 @@ class ComponentAssociationUpdate extends Component<Props> {
 }
 
 type OwnProps = {
-  element: UMLElement;
+  element: UMLRelationship;
 };
 
 type StateProps = {};

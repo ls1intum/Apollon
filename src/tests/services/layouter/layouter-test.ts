@@ -1,7 +1,7 @@
-import { createUMLClassWithAttributeAndMethod, getRealStore } from '../../test-utils/test-utils';
+import { getRealStore } from '../../test-utils/test-utils';
 import { UMLElement } from '../../../main/services/uml-element/uml-element';
 import { UMLClassPackage } from '../../../main/packages/uml-class-diagram/uml-class-package/uml-class-package';
-import { render } from '../../../main/services/layouter/layouter';
+import { createUMLClassWithAttributeAndMethod } from '../../test-utils/test-data';
 
 describe('test layouting of elements', () => {
   let elements: UMLElement[] = [];

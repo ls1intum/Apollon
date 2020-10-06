@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "type": "ActivityDiagram",
+  "size": { "width": 900, "height": 380 },
+  "interactive": { "elements": [], "relationships": [] },
+  "elements": [
+    {
+      "id": "b414ac67-6563-44a1-b3f7-54d701c306f0",
+      "name": "Activity",
+      "type": "Activity",
+      "owner": null,
+      "bounds": { "x": 0, "y": 0, "width": 200, "height": 100 }
+    },
+    {
+      "id": "61c541d4-174c-4d55-bbf9-342159e5588f",
+      "name": "Activity",
+      "type": "Activity",
+      "owner": null,
+      "bounds": { "x": 390, "y": 0, "width": 200, "height": 100 }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "9960facc-f8d4-4e90-90ad-b423845ffa77",
+      "name": "",
+      "type": "ActivityControlFlow",
+      "owner": null,
+      "bounds": { "x": 200, "y": 50, "width": 190, "height": 1 },
+      "path": [
+        { "x": 0, "y": 0 },
+        { "x": 190, "y": 0 }
+      ],
+      "source": { "direction": "Right", "element": "b414ac67-6563-44a1-b3f7-54d701c306f0" },
+      "target": { "direction": "Left", "element": "61c541d4-174c-4d55-bbf9-342159e5588f" }
+    }
+  ],
+  "assessments": []
+}

@@ -84,7 +84,7 @@
     },
     "DeploymentDiagram": {
       "DeploymentNode": "Node",
-      "Component": "Component",
+      "DeploymentComponent": "Component",
       "DeploymentArtifact": "Artifact",
       "DeploymentInterface": "Interface",
       "DeploymentInterfaceProvided": "Provided Interface",

@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`uml-petri-net-arc-component render the uml-petri-net-arc-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <circle
+          cx="50%"
+          cy="50%"
+          fill="white"
+          fill-opacity="1"
+          r="30"
+          stroke="black"
+          stroke-width="2"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="50%"
+          y="75"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

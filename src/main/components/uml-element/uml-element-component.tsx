@@ -95,6 +95,7 @@ const getInitialState = (props: Props) => {
     any
   >;
 
+  // reverse, because compose creates one function by composing the given functions from right to left
   return {
     component: compose<Compose>(...decorators.reverse())(component),
   };

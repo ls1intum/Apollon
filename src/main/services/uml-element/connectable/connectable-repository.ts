@@ -7,6 +7,7 @@ import { Direction, IUMLElementPort } from '../uml-element-port';
 import { ConnectableActionTypes, ConnectEndAction, ConnectStartAction } from './connectable-types';
 import { UMLElements } from '../../../packages/uml-elements';
 import { UMLElementType } from '../../..';
+import { UMLRelationshipCommonRepository } from '../../uml-relationship/uml-relationship-common-repository';
 
 export const Connectable = {
   startConnecting: (direction: Direction | Direction[], id?: string | string[]): AsyncAction => (
@@ -60,11 +61,29 @@ export const Connectable = {
       connections.push({ source: port, target: connectionTarget });
     }
 
+    const relationships = connections.map((connection) => {
+      const sourceElement = dispatch(UMLElementCommonRepository.getById(connection.source.element));
+      const targetElement = dispatch(UMLElementCommonRepository.getById(connection.target.element));
+      let relationshipType: UMLRelationshipType;
+      // determine the common supported connection types and choose one for the connection
+      if (sourceElement && targetElement) {
+        const commonSupportedConnections = UMLRelationshipCommonRepository.getSupportedConnectionsForElements([
+          sourceElement,
+          targetElement,
+        ]);
+        // take the first common supported connection type or default diagram type
+        relationshipType =
+          commonSupportedConnections.length > 0
+            ? commonSupportedConnections[0]
+            : DefaultUMLRelationshipType[getState().diagram.type];
+      } else {
+        // take default diagram type
+        relationshipType = DefaultUMLRelationshipType[getState().diagram.type];
+      }
+      const Classifier = UMLRelationships[relationshipType];
+      return new Classifier(connection);
+    });
     if (connections.length) {
-      const type: UMLRelationshipType = DefaultUMLRelationshipType[getState().diagram.type];
-      const Classifier = UMLRelationships[type];
-      const relationships = connections.map((connection) => new Classifier(connection));
-
       dispatch(UMLElementCommonRepository.create(relationships));
     }
 

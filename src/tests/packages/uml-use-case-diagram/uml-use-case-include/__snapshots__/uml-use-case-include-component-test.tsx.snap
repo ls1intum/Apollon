@@ -1,0 +1,60 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-use-case-include-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <g>
+          <marker
+            id="marker-459d9deb-2a40-4024-b01b-00960d1c2707"
+            markerHeight="30"
+            markerUnits="strokeWidth"
+            markerWidth="22"
+            orient="auto"
+            refX="30"
+            refY="15"
+            stroke-dasharray="1,0"
+            viewBox="0 0 30 30"
+          >
+            <path
+              d="M0,29 L30,15 L0,1"
+              fill="none"
+              stroke="black"
+            />
+          </marker>
+          <path
+            d="
+          M 0 0 L 21.715728752538098 21.715728752538098
+          M 78.2842712474619 78.2842712474619 L 100 100
+        "
+            marker-end="url(#marker-459d9deb-2a40-4024-b01b-00960d1c2707)"
+            stroke="black"
+            stroke-dasharray="7"
+          />
+        </g>
+        <path
+          d="
+          M 21.715728752538098 21.715728752538098
+          L 78.2842712474619 78.2842712474619
+        "
+          id="textpath-459d9deb-2a40-4024-b01b-00960d1c2707"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+        >
+          <textpath
+            startOffset="50%"
+            xlink:href="#textpath-459d9deb-2a40-4024-b01b-00960d1c2707"
+          >
+            «include»
+          </textpath>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

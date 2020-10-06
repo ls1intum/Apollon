@@ -5,10 +5,11 @@ import { UMLUseCaseSystemComponent } from '../../../../main/packages/uml-use-cas
 
 it('render the uml-use-case-component', () => {
   const useCaseSystem: UMLUseCaseSystem = new UMLUseCaseSystem({ name: 'TestUseCaseComponent' });
-  const { getByText } = render(
+  const { getByText, baseElement } = render(
     <svg>
       <UMLUseCaseSystemComponent element={useCaseSystem} />
     </svg>,
   );
   expect(getByText(useCaseSystem.name)).toBeInTheDocument();
+  expect(baseElement).toMatchSnapshot();
 });

@@ -1,6 +1,6 @@
 import { DeploymentRelationshipType } from '..';
-import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
+import { UMLRelationshipCenteredDescription } from '../../../services/uml-relationship/uml-relationship-centered-description';
 
-export class UMLDeploymentAssociation extends UMLRelationship {
+export class UMLDeploymentAssociation extends UMLRelationshipCenteredDescription {
   type = DeploymentRelationshipType.DeploymentAssociation;
 }
