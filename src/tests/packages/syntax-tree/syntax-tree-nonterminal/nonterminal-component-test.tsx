@@ -2,8 +2,8 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { SyntaxTreeNonterminal } from '../../../../main/packages/syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal';
 import { SyntaxTreeNonterminalComponent } from '../../../../main/packages/syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-component';
-import { Multiline } from "../../../../main/utils/svg/multiline";
-import { CSSProperties } from "react";
+import { Multiline } from '../../../../main/utils/svg/multiline';
+import { CSSProperties } from 'react';
 
 // override getStringWidth, because it uses by jsdom unsupported SVGElement methods
 Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
