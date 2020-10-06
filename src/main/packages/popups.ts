@@ -15,8 +15,8 @@ import { UMLRelationshipType } from './uml-relationship-type';
 import { UMLUseCaseAssociationUpdate } from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-update';
 import { UMLPetriNetPlaceUpdate } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-update';
 import { UMLPetriNetArcUpdate } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-update';
-import { SyntaxTreeTerminalUpdate } from "./syntax-tree/syntax-tree-terminal/syntax-tree-terminal-update";
-import { SyntaxTreeNonterminalUpdate } from "./syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-update";
+import { SyntaxTreeTerminalUpdate } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-update';
+import { SyntaxTreeNonterminalUpdate } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
