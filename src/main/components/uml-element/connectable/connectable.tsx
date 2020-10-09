@@ -186,7 +186,7 @@ export const connectable = (
       // create pointer up event in order to follow connection logic
       // created pointer up event has the correct target, (touchend triggered on same element as touchstart)
       // -> connection logic for desktop can be applied
-      if (event instanceof TouchEvent) {
+      if (!(event instanceof PointerEvent)) {
         convertTouchEndIntoPointerUp(event);
         return;
       }

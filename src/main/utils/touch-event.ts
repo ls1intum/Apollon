@@ -4,7 +4,7 @@
  * @param event originally invoked touchend event
  */
 export function convertTouchEndIntoPointerUp(event: TouchEvent) {
-  if (event instanceof TouchEvent && event.changedTouches.length > 0) {
+  if (event.changedTouches.length > 0) {
     const target = document.elementFromPoint(
       event.changedTouches[event.changedTouches.length - 1].clientX,
       event.changedTouches[event.changedTouches.length - 1].clientY,

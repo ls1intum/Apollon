@@ -130,7 +130,7 @@ export const reconnectable = (
     };
 
     private onPointerUp = (event: PointerEvent | TouchEvent) => {
-      if (event instanceof TouchEvent) {
+      if (!(event instanceof PointerEvent)) {
         convertTouchEndIntoPointerUp(event);
         return;
       }

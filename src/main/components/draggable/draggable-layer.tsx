@@ -54,7 +54,13 @@ class DraggableLayerComponent extends Component<Props, State> {
     // one could delete event.pageX (a - a = 0)in for this case, but its is important to calculate the offset correctly for moving event
     let offset: Point;
     let position: Point;
-    if (event instanceof TouchEvent) {
+    if (event instanceof PointerEvent) {
+      offset = new Point(event.pageX - (bounds.left - rootBounds.x), event.pageY - (bounds.top - rootBounds.y));
+      position = new Point(
+        Math.round((event.pageX - offset.x) / 10) * 10,
+        Math.round((event.pageY - offset.y) / 10) * 10,
+      );
+    } else {
       offset = new Point(
         event.targetTouches[0].pageX - (bounds.left - rootBounds.x),
         event.targetTouches[0].pageY - (bounds.top - rootBounds.y),
@@ -62,12 +68,6 @@ class DraggableLayerComponent extends Component<Props, State> {
       position = new Point(
         Math.round((event.targetTouches[0].pageX - offset.x) / 10) * 10,
         Math.round((event.targetTouches[0].pageY - offset.y) / 10) * 10,
-      );
-    } else {
-      offset = new Point(event.pageX - (bounds.left - rootBounds.x), event.pageY - (bounds.top - rootBounds.y));
-      position = new Point(
-        Math.round((event.pageX - offset.x) / 10) * 10,
-        Math.round((event.pageY - offset.y) / 10) * 10,
       );
     }
 
@@ -81,7 +81,6 @@ class DraggableLayerComponent extends Component<Props, State> {
       // nevertheless cancel is important, because it removes the pointerup listener on the documentdocument.addEventListener('pointerup', this.cancel, { once: true });
       document.addEventListener('pointerup', this.cancel, { once: true });
     }
-
     return new Promise<DropEvent>((resolve, reject) =>
       this.setState({ dragging: true, offset, position, resolve, reject }, () => {
         const container = this.ghost.current as HTMLDivElement;
@@ -92,13 +91,13 @@ class DraggableLayerComponent extends Component<Props, State> {
 
   onPointerMove = (event: PointerEvent | TouchEvent) => {
     let position: Point;
-    if (event instanceof TouchEvent) {
+    if (event instanceof PointerEvent) {
+      position = new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y);
+    } else {
       position = new Point(
         event.targetTouches[0].pageX - this.state.offset.x,
         event.targetTouches[0].pageY - this.state.offset.y,
       );
-    } else {
-      position = new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y);
     }
     // snapping behavior on moving
     position.x = Math.round(position.x / 10) * 10;
