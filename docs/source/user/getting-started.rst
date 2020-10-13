@@ -14,9 +14,9 @@ Install the `@ls1intum/apollon` npm package using either `yarn <https://yarnpkg.
 
     yarn add @ls1intum/apollon
 
-************
+*******
 Usage
-************
+*******
 
 Import the `ApollonEditor` class, which is the default export of the npm package:
 
