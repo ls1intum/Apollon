@@ -99,7 +99,7 @@ export const computeTextPositionForUMLAssociation = (alignmentPath: Point[], has
   return alignmentPath[0].add(vector.normalize().scale(distance));
 };
 
-export const getMarkerForTypeForUMLAssociation = (type: UMLRelationshipType) => {
+export const getMarkerForTypeForUMLAssociation = (relationshipType: UMLRelationshipType) => {
   return ((type) => {
     switch (type) {
       case ClassRelationshipType.ClassDependency:
@@ -113,7 +113,7 @@ export const getMarkerForTypeForUMLAssociation = (type: UMLRelationshipType) => 
       case ClassRelationshipType.ClassRealization:
         return Marker.Triangle;
     }
-  })(type);
+  })(relationshipType);
 };
 
 export const UMLAssociationComponent: SFC<Props> = ({ element }) => {

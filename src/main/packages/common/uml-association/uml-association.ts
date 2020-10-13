@@ -75,8 +75,8 @@ export abstract class UMLAssociation extends UMLRelationship implements IUMLAsso
     const targetMultiplicity = layoutTextForUMLAssociation(this.target.direction, 'BOTTOM');
 
     // roles
-    const sourceRole = layoutTextForUMLAssociation(this.source.direction, 'BOTTOM');
-    const targetRole = layoutTextForUMLAssociation(this.target.direction, 'BOTTOM');
+    const sourceRole = layoutTextForUMLAssociation(this.source.direction, 'TOP');
+    const targetRole = layoutTextForUMLAssociation(this.target.direction, 'TOP');
 
     // calculate anchor points
     // anchor point = endOfPath + this.position
