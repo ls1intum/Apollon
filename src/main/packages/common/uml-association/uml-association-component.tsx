@@ -3,6 +3,7 @@ import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-el
 import { Point } from '../../../utils/geometry/point';
 import { ClassRelationshipType } from '../../uml-class-diagram';
 import { UMLAssociation } from './uml-association';
+import { UMLRelationshipType } from '../../uml-relationship-type';
 
 const Marker = {
   Arrow: (id: string) => (
@@ -65,8 +66,41 @@ const Marker = {
   ),
 };
 
-export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
-  const marker = ((type) => {
+export const layoutTextForUMLAssociation = (location: IUMLElementPort['direction'], position: 'TOP' | 'BOTTOM') => {
+  switch (location) {
+    case Direction.Up:
+      return {
+        dx: position === 'TOP' ? -5 : 5,
+        textAnchor: position === 'TOP' ? 'end' : 'start',
+      };
+    case Direction.Right:
+      return {
+        dy: position === 'TOP' ? -10 : 21,
+        textAnchor: 'start',
+      };
+    case Direction.Down:
+      return {
+        dx: position === 'TOP' ? -5 : 5,
+        dy: 10,
+        textAnchor: position === 'TOP' ? 'end' : 'start',
+      };
+    case Direction.Left:
+      return {
+        dy: position === 'TOP' ? -10 : 21,
+        textAnchor: 'end',
+      };
+  }
+};
+
+export const computeTextPositionForUMLAssociation = (alignmentPath: Point[], hasMarker: boolean = false): Point => {
+  const distance = hasMarker ? 31 : 8;
+  if (alignmentPath.length < 2) return new Point();
+  const vector = alignmentPath[1].subtract(alignmentPath[0]);
+  return alignmentPath[0].add(vector.normalize().scale(distance));
+};
+
+export const getMarkerForTypeForUMLAssociation = (type: UMLRelationshipType) => {
+  return ((type) => {
     switch (type) {
       case ClassRelationshipType.ClassDependency:
       case ClassRelationshipType.ClassUnidirectional:
@@ -79,7 +113,11 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
       case ClassRelationshipType.ClassRealization:
         return Marker.Triangle;
     }
-  })(element.type);
+  })(type);
+};
+
+export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
+  const marker = getMarkerForTypeForUMLAssociation(element.type);
 
   const stroke = ((type) => {
     switch (type) {
@@ -89,42 +127,9 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
     }
   })(element.type);
 
-  const computeTextPosition = (alignmentPath: Point[], hasMarker: boolean = false): Point => {
-    const distance = hasMarker ? 31 : 8;
-    if (alignmentPath.length < 2) return new Point();
-    const vector = alignmentPath[1].subtract(alignmentPath[0]);
-    return alignmentPath[0].add(vector.normalize().scale(distance));
-  };
-
-  const layoutText = (location: IUMLElementPort['direction'], position: 'TOP' | 'BOTTOM') => {
-    switch (location) {
-      case Direction.Up:
-        return {
-          dx: position === 'TOP' ? -5 : 5,
-          textAnchor: position === 'TOP' ? 'end' : 'start',
-        };
-      case Direction.Right:
-        return {
-          dy: position === 'TOP' ? -10 : 21,
-          textAnchor: 'start',
-        };
-      case Direction.Down:
-        return {
-          dx: position === 'TOP' ? -5 : 5,
-          dy: 10,
-          textAnchor: position === 'TOP' ? 'end' : 'start',
-        };
-      case Direction.Left:
-        return {
-          dy: position === 'TOP' ? -10 : 21,
-          textAnchor: 'end',
-        };
-    }
-  };
-
   const path = element.path.map((point) => new Point(point.x, point.y));
-  const source: Point = computeTextPosition(path);
-  const target: Point = computeTextPosition(path.reverse(), !!marker);
+  const source: Point = computeTextPositionForUMLAssociation(path);
+  const target: Point = computeTextPositionForUMLAssociation(path.reverse(), !!marker);
   const id = `marker-${element.id}`;
 
   return (
@@ -138,16 +143,36 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
         markerEnd={`url(#${id})`}
         strokeDasharray={stroke}
       />
-      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'BOTTOM')} pointerEvents="none">
+      <text
+        x={source.x}
+        y={source.y}
+        {...layoutTextForUMLAssociation(element.source.direction, 'BOTTOM')}
+        pointerEvents="none"
+      >
         {element.source.multiplicity}
       </text>
-      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'BOTTOM')} pointerEvents="none">
+      <text
+        x={target.x}
+        y={target.y}
+        {...layoutTextForUMLAssociation(element.target.direction, 'BOTTOM')}
+        pointerEvents="none"
+      >
         {element.target.multiplicity}
       </text>
-      <text x={source.x} y={source.y} {...layoutText(element.source.direction, 'TOP')} pointerEvents="none">
+      <text
+        x={source.x}
+        y={source.y}
+        {...layoutTextForUMLAssociation(element.source.direction, 'TOP')}
+        pointerEvents="none"
+      >
         {element.source.role}
       </text>
-      <text x={target.x} y={target.y} {...layoutText(element.target.direction, 'TOP')} pointerEvents="none">
+      <text
+        x={target.x}
+        y={target.y}
+        {...layoutTextForUMLAssociation(element.target.direction, 'TOP')}
+        pointerEvents="none"
+      >
         {element.target.role}
       </text>
     </g>
