@@ -6,7 +6,11 @@ import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-el
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { assign } from '../../../utils/fx/assign';
 import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary';
-import { computeTextPositionForUMLAssociation, getMarkerForTypeForUMLAssociation, layoutTextForUMLAssociation } from './uml-association-component';
+import {
+  computeTextPositionForUMLAssociation,
+  getMarkerForTypeForUMLAssociation,
+  layoutTextForUMLAssociation,
+} from './uml-association-component';
 import { Text } from '../../../utils/svg/text';
 import { Point } from '../../../utils/geometry/point';
 
@@ -79,7 +83,10 @@ export abstract class UMLAssociation extends UMLRelationship implements IUMLAsso
     const marker = getMarkerForTypeForUMLAssociation(this.type);
     const path = this.path.map((point) => new Point(point.x, point.y));
     const sourceAnchor: Point = computeTextPositionForUMLAssociation(path).add(this.bounds.x, this.bounds.y);
-    const targetAnchor: Point = computeTextPositionForUMLAssociation(path.reverse(), !!marker).add(this.bounds.x, this.bounds.y);
+    const targetAnchor: Point = computeTextPositionForUMLAssociation(path.reverse(), !!marker).add(
+      this.bounds.x,
+      this.bounds.y,
+    );
 
     const boundingElements = [
       textWithLayoutPropertiesToBounds(canvas, sourceAnchor, this.source.multiplicity, sourceMultiplicity),
