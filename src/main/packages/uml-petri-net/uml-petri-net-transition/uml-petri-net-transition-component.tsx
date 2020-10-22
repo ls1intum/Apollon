@@ -11,7 +11,6 @@ export const UMLPetriNetTransitionComponent: SFC<Props> = ({ element }) => (
       height={element.bounds.height}
       stroke="black"
       strokeWidth={2}
-      fill="white"
       fillOpacity={1}
     />
   </g>
