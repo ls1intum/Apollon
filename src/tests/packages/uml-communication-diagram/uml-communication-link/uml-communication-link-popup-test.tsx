@@ -8,12 +8,6 @@ import { UMLObjectName } from '../../../../main/packages/uml-object-diagram/uml-
 import { UMLCommunicationLink } from '../../../../main/packages/uml-communication-diagram/uml-communication-link/uml-communication-link';
 import { UMLCommunicationLinkUpdate } from '../../../../main/packages/uml-communication-diagram/uml-communication-link/uml-communication-link-update';
 import { CommunicationLinkMessage } from '../../../../main/packages/uml-communication-diagram/uml-communication-link/uml-communiction-link-message';
-import { Text } from '../../../../main/utils/svg/text';
-import { ILayer } from '../../../../main/services/layouter/layer';
-
-Text.size = (layer: ILayer, value: string, styles?: Partial<CSSStyleDeclaration>) => {
-  return { width: 0, height: 0 };
-};
 
 describe('test communication link popup', () => {
   let elements: UMLElement[] = [];

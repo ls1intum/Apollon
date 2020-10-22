@@ -16,7 +16,6 @@ exports[`render the uml-petri-net-transition-component 1`] = `
           Example Description
         </text>
         <rect
-          fill="white"
           fill-opacity="1"
           height="60"
           stroke="black"

@@ -1,9 +1,7 @@
 // @ts-ignore
 import * as React from 'react';
-import { Text } from '../main/utils/svg/text';
 import { render as testLibraryRender } from '@testing-library/react';
 import * as Apollon from '../main/apollon-editor';
-import { ILayer } from '../main/services/layouter/layer';
 import testClassDiagram from './test-resources/class-diagram.json';
 import { Selection } from '../../docs/source/user/api/typings';
 import fn = jest.fn;
@@ -16,11 +14,6 @@ import { UMLElementCommonRepository } from '../main/services/uml-element/uml-ele
 import { UMLClass } from '../main/packages/uml-class-diagram/uml-class/uml-class';
 
 const testClassDiagramAsSVG = require('./test-resources/class-diagram-as-svg.json') as string;
-
-// has to be overridden, because jsdom does not provide a getBBox() function for SVGTextElements
-Text.size = (layer: ILayer, value: string, styles?: Partial<CSSStyleDeclaration>) => {
-  return { width: 0, height: 0 };
-};
 
 describe('test apollon editor ', () => {
   it('get and set model', () => {

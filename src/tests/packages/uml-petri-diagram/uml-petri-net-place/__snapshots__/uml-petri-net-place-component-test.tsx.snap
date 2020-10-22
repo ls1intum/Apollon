@@ -8,7 +8,6 @@ exports[`uml-petri-net-arc-component render the uml-petri-net-arc-component 1`] 
         <circle
           cx="50%"
           cy="50%"
-          fill="white"
           fill-opacity="1"
           r="30"
           stroke="black"

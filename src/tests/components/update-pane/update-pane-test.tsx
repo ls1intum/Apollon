@@ -3,7 +3,6 @@ import { wrappedRender } from '../../test-utils/render';
 import * as React from 'react';
 import { UMLClass } from '../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { UpdatePane } from '../../../main/components/update-pane/update-pane';
-import { Text } from '../../../main/utils/svg/text';
 import { ILayer } from '../../../main/services/layouter/layer';
 import { createRef, RefObject } from 'react';
 import { ModelStore } from '../../../main/components/store/model-store';
@@ -22,10 +21,6 @@ import { Direction } from '../../../main/services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../../main/services/uml-element/uml-element-repository';
 import { fireEvent } from '@testing-library/react';
 import 'jest-styled-components';
-
-Text.size = (layer: ILayer, value: string, styles?: Partial<CSSStyleDeclaration>) => {
-  return { width: 0, height: 0 };
-};
 
 const initialState = Object.freeze({
   canvas: null as ILayer | null,
