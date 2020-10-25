@@ -29,9 +29,9 @@
     "test:coverage": "jest --collectCoverage",
     "test:watch": "jest --watch",
     "update": "yarn upgrade-interactive --latest",
-    "publish:patch": "yarn prepare && yarn copyAPIToDoc && npm version patch && npm publish",
-    "publish:minor": "yarn prepare && yarn copyAPIToDoc && npm version minor && npm publish",
-    "publish:major": "yarn prepare && yarn copyAPIToDoc && npm version major && npm publish"
+    "publish:patch": "yarn prepare && yarn test && yarn copyAPIToDoc && npm version patch && npm publish",
+    "publish:minor": "yarn prepare && yarn test && yarn copyAPIToDoc && npm version minor && npm publish",
+    "publish:major": "yarn prepare && yarn test && yarn copyAPIToDoc && npm version major && npm publish"
   },
   "dependencies": {
     "is-mobile": "2.2.2",
