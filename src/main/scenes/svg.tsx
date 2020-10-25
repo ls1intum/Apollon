@@ -15,6 +15,9 @@ import { computeBoundingBoxForElements, IBoundary } from '../utils/geometry/boun
 import { Point } from '../utils/geometry/point';
 import { update } from '../utils/update';
 import { Style } from './svg-styles';
+import { StoreProvider } from '../components/store/model-store';
+import { ModelState } from '../components/store/model-state';
+import { ThemeProvider } from 'styled-components';
 
 type Props = {
   model: Apollon.UMLModel;
@@ -179,26 +182,38 @@ export class Svg extends Component<Props, State> {
     const { bounds, elements } = this.state;
     const theme: Styles = update(defaults, this.props.styles || {});
 
+    // connect exported svg to redux state, so that connected components can retrieve properties from state
+    const state = ModelState.fromModel(this.props.model);
+
     return (
-      <svg
-        width={bounds.width + 1}
-        height={bounds.height + 1}
-        xmlns="http://www.w3.org/2000/svg"
-        xmlnsXlink="http://www.w3.org/1999/xlink"
-        fillOpacity={0}
-      >
-        <defs>
-          <style>{(Style[0] as any)({ theme })}</style>
-        </defs>
-        {elements.map((element, index) => {
-          const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
-          return (
-            <svg {...element.bounds} key={element.id} className={element.name ? element.name.replace(/<|>/, '') : ''}>
-              <ElementComponent key={index} element={element} />
-            </svg>
-          );
-        })}
-      </svg>
+      <StoreProvider initialState={state}>
+        <ThemeProvider theme={theme}>
+          <svg
+            width={bounds.width + 1}
+            height={bounds.height + 1}
+            xmlns="http://www.w3.org/2000/svg"
+            xmlnsXlink="http://www.w3.org/1999/xlink"
+            fillOpacity={0}
+            fill="white"
+          >
+            <defs>
+              <style>{(Style[0] as any)({ theme })}</style>
+            </defs>
+            {elements.map((element, index) => {
+              const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
+              return (
+                <svg
+                  {...element.bounds}
+                  key={element.id}
+                  className={element.name ? element.name.replace(/[<>]/, '') : ''}
+                >
+                  <ElementComponent key={index} element={element} />
+                </svg>
+              );
+            })}
+          </svg>
+        </ThemeProvider>
+      </StoreProvider>
     );
   }
 }
