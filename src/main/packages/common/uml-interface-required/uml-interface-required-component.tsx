@@ -74,7 +74,9 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
         <path
           d={`M ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2) - (hasOppositeRequiredInterface ? 5 : 0)} -${
             (REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)) / 2
-          } a ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2)},${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2)} 0 0 0 0,${REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
+          } a ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2)},${Math.floor(
+            REQUIRED_INTERFACE_MARKER_SIZE / 2,
+          )} 0 0 0 0,${REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
           fill="none"
           stroke="black"
           strokeWidth={2}

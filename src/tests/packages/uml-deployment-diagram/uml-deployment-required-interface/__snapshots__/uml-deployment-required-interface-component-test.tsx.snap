@@ -7,17 +7,17 @@ exports[`render the uml-deplyoment-required-interface-component 1`] = `
       <g>
         <marker
           id="marker-05a6f05d-404a-4f38-ade1-d46c9f02902b"
-          markerHeight="26"
+          markerHeight="27"
           markerUnits="strokeWidth"
-          markerWidth="26"
+          markerWidth="27"
           orient="auto"
           refX="0"
           refY="0"
           stroke-dasharray="1,0"
-          viewBox="0 0 26 26"
+          viewBox="0 0 27 27"
         >
           <path
-            d="M 13 -13 a 13,13 0 0 0 0,26"
+            d="M 13 -13.5 a 13,13 0 0 0 0,27"
             fill="none"
             stroke="black"
             stroke-width="2"
