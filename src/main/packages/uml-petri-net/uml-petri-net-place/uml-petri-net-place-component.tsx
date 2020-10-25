@@ -53,7 +53,7 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
       <circle cx="50%" cy="50%" r={radius} stroke="black" strokeWidth={2} fillOpacity={1} />
       {!displayTokenAsNumber &&
         tokenPositions.map((position, index) => (
-          <circle key={index} cx={radius + position.x} cy={radius + position.y} r={tokenRadius} fill="black" />
+          <circle key={index} cx={radius + position.x} cy={radius + position.y} r={tokenRadius} fill="black" fillOpacity={1}/>
         ))}
       {displayTokenAsNumber && (
         <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">

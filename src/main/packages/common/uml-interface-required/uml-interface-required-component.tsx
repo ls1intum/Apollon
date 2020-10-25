@@ -5,7 +5,7 @@ import { UMLInterfaceRequired } from './uml-interface-required';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
 
-const SIZE = 26;
+export const REQUIRED_INTERFACE_MARKER_SIZE = 27;
 
 type OwnProps = {
   element: UMLInterfaceRequired;
@@ -61,9 +61,9 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
     <g>
       <marker
         id={`marker-${element.id}`}
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        markerWidth={SIZE}
-        markerHeight={SIZE}
+        viewBox={`0 0 ${REQUIRED_INTERFACE_MARKER_SIZE} ${REQUIRED_INTERFACE_MARKER_SIZE}`}
+        markerWidth={REQUIRED_INTERFACE_MARKER_SIZE}
+        markerHeight={REQUIRED_INTERFACE_MARKER_SIZE}
         refX="0"
         refY="0"
         orient="auto"
@@ -72,9 +72,9 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
       >
         {/*M -> Move to, A -> Arc radiusX, radiusY, x-axis-rotation, bow-flag, endpointX,endpointY */}
         <path
-          d={`M ${SIZE / 2 - (hasOppositeRequiredInterface ? 5 : 0)} -${
-            (SIZE - (hasOppositeRequiredInterface ? 2 : 0)) / 2
-          } a ${SIZE / 2},${SIZE / 2} 0 0 0 0,${SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
+          d={`M ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2) - (hasOppositeRequiredInterface ? 5 : 0)} -${
+            (REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)) / 2
+          } a ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2)},${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2)} 0 0 0 0,${REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
           fill="none"
           stroke="black"
           strokeWidth={2}
