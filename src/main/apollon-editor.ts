@@ -23,7 +23,10 @@ export class ApollonEditor {
    * Returns the current model of the Apollon Editor
    */
   get model(): Apollon.UMLModel {
-    if (!this.store) throw new Error('Apollon was already destroyed.');
+    if (!this.store) {
+      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
+      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
+    }
     return ModelState.toModel(this.store.getState());
   }
 
@@ -32,7 +35,10 @@ export class ApollonEditor {
    * @param model valid Apollon Editor Model
    */
   set model(model: Apollon.UMLModel) {
-    if (!this.store) throw new Error('Apollon was already destroyed.');
+    if (!this.store) {
+      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
+      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
+    }
     const state: PartialModelState = {
       ...ModelState.fromModel(model),
       editor: { ...this.store.getState().editor },
@@ -45,7 +51,10 @@ export class ApollonEditor {
    * @param diagramType the new diagram type
    */
   set type(diagramType: UMLDiagramType) {
-    if (!this.store) throw new Error('Apollon was already destroyed.');
+    if (!this.store) {
+      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
+      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
+    }
     const state: PartialModelState = {
       ...this.store.getState(),
       diagram: new UMLDiagram({
@@ -61,7 +70,10 @@ export class ApollonEditor {
    * @param locale supported locale
    */
   set locale(locale: Locale) {
-    if (!this.store) throw new Error('Apollon was already destroyed.');
+    if (!this.store) {
+      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
+      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
+    }
     const state = this.store.getState();
     this.options.locale = locale;
     this.recreateEditor(state);
