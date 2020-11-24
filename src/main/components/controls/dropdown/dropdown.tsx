@@ -46,7 +46,13 @@ export class Dropdown<T> extends Component<Props<T>, State> {
 
     return (
       <StyledDropdown>
-        <DropdownButton ref={this.activator} color={color} onClick={this.show} outline={outline} size={size}>
+        <DropdownButton
+          ref={this.activator}
+          color={color}
+          onClick={(event) => this.show(event)}
+          outline={outline}
+          size={size}
+        >
           {selected ? selected.props.children : this.props.placeholder}
         </DropdownButton>
         {show && (
@@ -89,7 +95,7 @@ export class Dropdown<T> extends Component<Props<T>, State> {
     this.props.onChange(value);
   };
 
-  private show = () => {
+  private show = (event: React.MouseEvent) => {
     if (!this.activator.current) {
       return;
     }
@@ -107,6 +113,7 @@ export class Dropdown<T> extends Component<Props<T>, State> {
 
     parent.addEventListener('scroll', this.dismiss, { once: true });
     document.addEventListener('click', this.dismiss, { once: true });
+    event.stopPropagation();
   };
 
   private getScrollableParent = (element: Element): Element => {
