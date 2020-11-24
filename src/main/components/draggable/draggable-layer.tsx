@@ -19,7 +19,7 @@ const initialState = {
   dragging: false,
   offset: new Point(),
   position: new Point(),
-  resolve: null as ((value?: DropEvent) => void) | null,
+  resolve: null as ((value: DropEvent | PromiseLike<DropEvent>) => void) | null,
   reject: null as ((reason?: any) => void) | null,
 };
 
