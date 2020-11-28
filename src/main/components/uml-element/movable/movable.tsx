@@ -8,6 +8,7 @@ import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
 import isMobile from 'is-mobile';
 import { getClientEventCoordinates } from '../../../utils/touch-event';
+import { debounce } from '../../../utils/debounce';
 
 type StateProps = {
   movable: boolean;
@@ -45,6 +46,7 @@ export const movable = (
 ): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
   class Movable extends Component<Props, State> {
     state = initialState;
+    moveWindow: { x: number; y: number } = { x: 0, y: 0 };
 
     move = (x: number, y: number) => {
       x = Math.round(x / 10) * 10;
@@ -52,8 +54,14 @@ export const movable = (
       if (x === 0 && y === 0) return;
 
       this.setState((state) => ({ offset: state.offset.add(x, y) }));
-      this.props.move({ x, y });
+      this.moveWindow = { x: this.moveWindow.x + x, y: this.moveWindow.y + y };
+      this.debouncedMove(this.moveWindow);
     };
+
+    private debouncedMove = debounce(() => {
+      this.props.move(this.moveWindow);
+      this.moveWindow = { x: 0, y: 0 };
+    }, 2);
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;

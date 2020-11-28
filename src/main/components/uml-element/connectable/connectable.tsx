@@ -16,13 +16,15 @@ import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-
 import { UMLElementType, UMLRelationshipType } from '../../..';
 import { convertTouchEndIntoPointerUp } from '../../../utils/touch-event';
 import isMobile from 'is-mobile';
+import { getPortsForElement, IUMLElement } from "../../../services/uml-element/uml-element";
 
 type StateProps = {
   hovered: boolean;
   selected: boolean;
   connecting: boolean;
+  moving: boolean;
   reconnecting: boolean;
-  ports: { [key in Direction]: Point };
+  element: IUMLElement;
   type: UMLElementType | UMLRelationshipType;
 };
 
@@ -35,14 +37,17 @@ type DispatchProps = {
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
-  (state, props) => ({
-    hovered: state.hovered[0] === props.id,
-    selected: state.selected.includes(props.id),
-    connecting: !!state.connecting.length,
-    reconnecting: !!Object.keys(state.reconnecting).length,
-    ports: UMLElementRepository.get(state.elements[props.id])!.ports(),
-    type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
-  }),
+  (state, props) => {
+    return {
+      hovered: state.hovered[0] === props.id,
+      selected: state.selected.includes(props.id),
+      moving: state.moving.includes(props.id),
+      connecting: !!state.connecting.length,
+      reconnecting: !!Object.keys(state.reconnecting).length,
+      element: state.elements[props.id],
+      type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
+    };
+  },
   {
     start: UMLElementRepository.startConnecting,
     connect: UMLElementRepository.connect,
@@ -124,22 +129,32 @@ export const connectable = (
       }
     }
 
+    shouldComponentUpdate(nextProps: Readonly<Props>, nextState: Readonly<{}>, nextContext: any): boolean {
+      if(super.shouldComponentUpdate){
+        console.log('called');
+        return super.shouldComponentUpdate(nextProps, nextState, nextContext) && !this.props.moving
+      }
+      return !this.props.moving;
+    }
+
     render() {
       const {
         hovered,
         selected,
         connecting,
         reconnecting,
-        ports,
         start,
         connect: _,
         reconnect,
         type,
+        element,
         ...props
       } = this.props;
 
       const features = { ...UMLElements, ...UMLRelationships }[type].features as UMLElementFeatures &
         UMLRelationshipFeatures;
+
+      const ports = getPortsForElement(element);
 
       return (
         <WrappedComponent {...props}>
@@ -207,8 +222,10 @@ export const connectable = (
         [Direction.Left]: new Point(0, 0.5),
       };
 
+      const ports = getPortsForElement(this.props.element);
+
       // calculate the distances to all handles
-      const distances = Object.entries(this.props.ports).map(([key, value]) => ({
+      const distances = Object.entries(ports).map(([key, value]) => ({
         key,
         distance: Math.sqrt(
           Math.pow(relativePortLocation[key as Direction].x - relEventPosition.x, 2) +

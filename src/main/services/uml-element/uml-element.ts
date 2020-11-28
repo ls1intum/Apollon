@@ -28,6 +28,15 @@ export interface IUMLElement {
   highlight?: string;
 }
 
+export const getPortsForElement = (element: IUMLElement): { [key in Direction]: Point } => {
+  return {
+    [Direction.Up]: new Point(element.bounds.width / 2, 0),
+    [Direction.Right]: new Point(element.bounds.width, element.bounds.height / 2),
+    [Direction.Down]: new Point(element.bounds.width / 2, element.bounds.height),
+    [Direction.Left]: new Point(0, element.bounds.height / 2),
+  };
+};
+
 /** Class implementation of `IUMLElement` to use inheritance at runtime */
 export abstract class UMLElement implements IUMLElement, ILayoutable {
   /** `UMLElement` type specific feature flags */
@@ -91,16 +100,6 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     this.owner = values.owner || null;
     this.bounds = { ...values.bounds };
     this.highlight = values.highlight;
-  }
-
-  /** Calculate the position of each port for the element. */
-  ports(): { [key in Direction]: Point } {
-    return {
-      [Direction.Up]: new Point(this.bounds.width / 2, 0),
-      [Direction.Right]: new Point(this.bounds.width, this.bounds.height / 2),
-      [Direction.Down]: new Point(this.bounds.width / 2, this.bounds.height),
-      [Direction.Left]: new Point(0, this.bounds.height / 2),
-    };
   }
 
   abstract render(canvas: ILayer): ILayoutable[];

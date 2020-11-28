@@ -5,6 +5,7 @@ import { UMLElementRepository } from '../../services/uml-element/uml-element-rep
 import { AsyncDispatch } from '../../utils/actions/actions';
 import { IPoint, Point } from '../../utils/geometry/point';
 import { ModelState } from '../store/model-state';
+import { getPortsForElement } from '../../services/uml-element/uml-element';
 
 type OwnProps = {
   port: IUMLElementPort;
@@ -24,7 +25,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state, props) => ({
-    ports: UMLElementRepository.get(state.elements[props.port.element])!.ports(),
+    ports: getPortsForElement(UMLElementRepository.get(state.elements[props.port.element])!),
   }),
   {
     end: UMLElementRepository.endConnecting,

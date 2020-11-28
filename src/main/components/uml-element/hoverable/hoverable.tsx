@@ -5,10 +5,11 @@ import { UMLElementRepository } from '../../../services/uml-element/uml-element-
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
 import { getAllParents } from '../../../utils/geometry/tree';
+import { UMLContainer } from '../../../services/uml-container/uml-container';
 
 type OwnProps = UMLElementComponentProps;
 
-type StateProps = { moving: boolean };
+type StateProps = { cannotBeHovered: boolean };
 
 type DispatchProps = {
   hover: typeof UMLElementRepository.hover;
@@ -21,9 +22,12 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state, props) => {
     const parents = getAllParents(props.id, state.elements);
     return {
-      moving:
+      // cannot emit hover events when the object or a parent of the object is moving or
+      // when any object is moving and the object is not a UMLContainer
+      cannotBeHovered:
         Object.keys(state.moving).includes(props.id) ||
-        Object.keys(state.moving).some((elementId) => parents.includes(elementId)),
+        Object.keys(state.moving).some((elementId) => parents.includes(elementId)) ||
+        (state.moving.length > 0 && !UMLContainer.isUMLContainer(state.elements[props.id])),
     };
   },
   {
@@ -49,16 +53,18 @@ export const hoverable = (
     }
 
     render() {
-      const { hover, leave, moving, ...props } = this.props;
+      const { hover, leave, cannotBeHovered, ...props } = this.props;
       return <WrappedComponent {...props} />;
     }
 
-    private enter = () => {
-      if (!this.props.moving) this.props.hover(this.props.id);
+    private enter = (event: MouseEvent) => {
+      if (!this.props.cannotBeHovered) this.props.hover(this.props.id);
+      event.stopPropagation();
     };
 
-    private leave = () => {
-      if (!this.props.moving) this.props.leave(this.props.id);
+    private leave = (event: MouseEvent) => {
+      if (!this.props.cannotBeHovered) this.props.leave(this.props.id);
+      event.stopPropagation();
     };
   }
 

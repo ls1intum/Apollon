@@ -1,6 +1,6 @@
 import { IBoundary } from '../../utils/geometry/boundary';
 import { IPoint, Point } from '../../utils/geometry/point';
-import { UMLElement } from '../uml-element/uml-element';
+import { getPortsForElement, UMLElement } from '../uml-element/uml-element';
 import { Direction, IUMLElementPort } from '../uml-element/uml-element-port';
 
 export interface Connection {
@@ -34,12 +34,14 @@ export class Connection {
     target: Endpoint,
     options: { isStraight: boolean; isVariable: boolean },
   ): IPoint[] {
-    const sourcePortPosition = source.element
-      .ports()
-      [source.direction].add(source.element.bounds.x, source.element.bounds.y);
-    const targetPortPosition = target.element
-      .ports()
-      [target.direction].add(target.element.bounds.x, target.element.bounds.y);
+    const sourcePortPosition = getPortsForElement(source.element)[source.direction].add(
+      source.element.bounds.x,
+      source.element.bounds.y,
+    );
+    const targetPortPosition = getPortsForElement(target.element)[target.direction].add(
+      target.element.bounds.x,
+      target.element.bounds.y,
+    );
 
     // If the user forced this relationship path to be a straight line,
     // directly connect the start and end points, even if that results in an angled line
