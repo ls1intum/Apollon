@@ -91,6 +91,7 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
       const width = event.clientX - this.state.offset.x;
       const height = event.clientY - this.state.offset.y;
       this.resize(width, height);
+      event.stopPropagation();
     };
 
     private onPointerUp = (event: PointerEvent) => {
@@ -103,6 +104,7 @@ export const resizable = (options?: { preventX: boolean; preventY: boolean }) =>
       element.removeEventListener('pointermove', this.onPointerMove);
       this.setState(initialState);
       this.props.end();
+      event.stopPropagation();
     };
   }
 
