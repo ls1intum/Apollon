@@ -16,7 +16,7 @@ import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-
 import { UMLElementType, UMLRelationshipType } from '../../..';
 import { convertTouchEndIntoPointerUp } from '../../../utils/touch-event';
 import isMobile from 'is-mobile';
-import { getPortsForElement, IUMLElement } from "../../../services/uml-element/uml-element";
+import { getPortsForElement, IUMLElement } from '../../../services/uml-element/uml-element';
 
 type StateProps = {
   hovered: boolean;
@@ -130,9 +130,9 @@ export const connectable = (
     }
 
     shouldComponentUpdate(nextProps: Readonly<Props>, nextState: Readonly<{}>, nextContext: any): boolean {
-      if(super.shouldComponentUpdate){
+      if (super.shouldComponentUpdate) {
         console.log('called');
-        return super.shouldComponentUpdate(nextProps, nextState, nextContext) && !this.props.moving
+        return super.shouldComponentUpdate(nextProps, nextState, nextContext) && !this.props.moving;
       }
       return !this.props.moving;
     }
