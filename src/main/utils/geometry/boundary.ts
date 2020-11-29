@@ -1,7 +1,3 @@
-import { createElement } from 'react';
-import { render, unmountComponentAtNode } from 'react-dom';
-import { Components } from '../../packages/components';
-import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { Point } from './point';
 
 export interface IBoundary {
@@ -50,26 +46,4 @@ export function computeBoundingBoxForElements(elements: { bounds: IBoundary }[])
   const width = Math.max(...boundaries.map((bounds) => bounds.x + bounds.width)) - x;
   const height = Math.max(...boundaries.map((bounds) => bounds.y + bounds.height)) - y;
   return { x, y, width, height };
-}
-
-// does currently not work on firefox -> SVGs are sized differently which lead to major usability issues when using this method
-// problem is the adding of the svg to the dom and measuring its size, it will output a much to big size for the element
-export function computeBoundingBoxForRelationship(container: SVGSVGElement, relationship: UMLRelationship): IBoundary {
-  const Component = Components[relationship.type];
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('x', `${relationship.bounds.x}`);
-  svg.setAttribute('y', `${relationship.bounds.y}`);
-  svg.style.visibility = 'none';
-  container.appendChild(svg);
-  const element = createElement(Component, { element: relationship });
-  render(element, svg);
-
-  const parent = container.getBoundingClientRect() as DOMRect;
-  const child = svg.getBoundingClientRect() as DOMRect;
-  const bounds = { x: child.left - parent.left, y: child.top - parent.top, width: child.width, height: child.height };
-
-  unmountComponentAtNode(svg);
-  container.removeChild(svg);
-
-  return bounds;
 }

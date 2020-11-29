@@ -4,9 +4,9 @@ import { ComponentRelationshipType } from '../../uml-component-diagram';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
-import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-required-component';
 import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
 import { Point } from '../../../utils/geometry/point';
+import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
 
 export abstract class UMLInterfaceRequired extends UMLRelationship {
   static features = { ...UMLRelationship.features, variable: false };

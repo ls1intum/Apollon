@@ -4,8 +4,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { UMLInterfaceRequired } from './uml-interface-required';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
-
-export const REQUIRED_INTERFACE_MARKER_SIZE = 27;
+import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
 
 type OwnProps = {
   element: UMLInterfaceRequired;

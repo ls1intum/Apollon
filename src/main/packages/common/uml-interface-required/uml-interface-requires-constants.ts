@@ -1,0 +1,1 @@
+export const REQUIRED_INTERFACE_MARKER_SIZE = 27;
