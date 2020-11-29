@@ -4,7 +4,6 @@ import { connect, ConnectedComponent } from 'react-redux';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
-import { getAllParents } from '../../../utils/geometry/tree';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 
 type OwnProps = UMLElementComponentProps;
@@ -20,14 +19,9 @@ type Props = OwnProps & StateProps & DispatchProps;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state, props) => {
-    const parents = getAllParents(props.id, state.elements);
     return {
-      // cannot emit hover events when the object or a parent of the object is moving or
-      // when any object is moving and the object is not a UMLContainer
-      cannotBeHovered:
-        Object.keys(state.moving).includes(props.id) ||
-        Object.keys(state.moving).some((elementId) => parents.includes(elementId)) ||
-        (state.moving.length > 0 && !UMLContainer.isUMLContainer(state.elements[props.id])),
+      // cannot emmit hover events when any object is moving and the object is not a UMLContainer
+      cannotBeHovered: state.moving.length > 0 && !UMLContainer.isUMLContainer(state.elements[props.id]),
     };
   },
   {
