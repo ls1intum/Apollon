@@ -22,7 +22,6 @@ type StateProps = {
   hovered: boolean;
   selected: boolean;
   connecting: boolean;
-  moving: boolean;
   reconnecting: boolean;
   element: IUMLElement;
   type: UMLElementType | UMLRelationshipType;
@@ -41,7 +40,6 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
     return {
       hovered: state.hovered[0] === props.id,
       selected: state.selected.includes(props.id),
-      moving: state.moving.includes(props.id),
       connecting: !!state.connecting.length,
       reconnecting: !!Object.keys(state.reconnecting).length,
       element: state.elements[props.id],
@@ -127,14 +125,6 @@ export const connectable = (
       if (isMobile({ tablet: true })) {
         node.removeEventListener('touchend', this.elementOnPointerUp);
       }
-    }
-
-    shouldComponentUpdate(nextProps: Readonly<Props>, nextState: Readonly<{}>, nextContext: any): boolean {
-      if (super.shouldComponentUpdate) {
-        console.log('called');
-        return super.shouldComponentUpdate(nextProps, nextState, nextContext) && !this.props.moving;
-      }
-      return !this.props.moving;
     }
 
     render() {
