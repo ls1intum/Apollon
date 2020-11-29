@@ -81,6 +81,7 @@ exports[`test class association popup render 1`] = `
           </span>
           <input
             class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            style="min-width: 0;"
             value=""
           />
         </div>
@@ -117,6 +118,7 @@ exports[`test class association popup render 1`] = `
           </span>
           <input
             class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            style="min-width: 0;"
             value=""
           />
         </div>
