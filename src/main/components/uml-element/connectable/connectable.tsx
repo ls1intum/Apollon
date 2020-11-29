@@ -230,8 +230,9 @@ export const connectable = (
       if (this.props.connecting) {
         this.props.connect({ element: this.props.id, direction });
       }
-      if (this.props.reconnecting) {
+      if (this.props.reconnecting && !event.defaultPrevented) {
         this.props.reconnect({ element: this.props.id, direction });
+        event.preventDefault();
       }
     };
 
