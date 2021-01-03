@@ -71,22 +71,20 @@ class UmlPetriNetPlaceUpdateComponent extends Component<Props> {
         <section>
           <Flex style={{ marginTop: '0.5em', alignItems: 'center' }}>
             <Body style={{ marginRight: '0.5em', minWidth: '70px' }}>{this.props.translate('popup.capacity')}</Body>
-            <form style={{ display: 'inherit' }}>
-              <div style={{ position: 'relative' }}>
-                <Textfield value={element.capacity} type="number" onChange={this.changeCapacity(element.id)} />
-                {!isFinite(element.capacity) && (
-                  <InfiniteIcon style={{ position: 'absolute', top: '25%', left: '5%' }} key={element.capacity} />
-                )}
-              </div>
-              <Button
-                color="link"
-                type="reset"
-                tabIndex={-1}
-                onClick={(event) => this.changeCapacity(element.id)(Number.POSITIVE_INFINITY)}
-              >
-                <InfiniteIcon />
-              </Button>
-            </form>
+            <div style={{ position: 'relative' }}>
+              <Textfield value={element.capacity} type="number" onChange={this.changeCapacity(element.id)} />
+              {!isFinite(element.capacity) && (
+                <InfiniteIcon style={{ position: 'absolute', top: '25%', left: '5%' }} key={element.capacity} />
+              )}
+            </div>
+            <Button
+              color="link"
+              type="reset"
+              tabIndex={-1}
+              onClick={(event) => this.changeCapacity(element.id)(Number.POSITIVE_INFINITY)}
+            >
+              <InfiniteIcon />
+            </Button>
           </Flex>
         </section>
       </div>
