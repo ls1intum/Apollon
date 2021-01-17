@@ -17,6 +17,6 @@ export const SyntaxTreeTerminalComponent: SFC<Props> = ({ element }) => (
   </g>
 );
 
-interface Props {
+export interface Props {
   element: SyntaxTreeTerminal;
 }
