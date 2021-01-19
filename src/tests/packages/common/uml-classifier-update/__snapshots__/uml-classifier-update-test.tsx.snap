@@ -6,19 +6,19 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-hHEjAm ksVhyu"
+          class="sc-hHftDr bgTNPE"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF lpqGps"
+            class="sc-hBEYos sc-fodVxV ieXhri ZAFIW"
             value=""
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -31,56 +31,56 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-dIvqjp cJMUUR"
+          class="sc-dIUggk kNGbrD"
         />
       </section>
       <section>
         <div
-          class="sc-crzoUp loJTLj"
+          class="sc-crrsfI juINEA"
         >
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF fXGTky sc-dIsAE fXtuIx"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ imjqpY sc-dQppl ioJrxb"
             color="primary"
           >
             Abstract
           </button>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF fXGTky sc-dIsAE fXtuIx"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ imjqpY sc-dQppl ioJrxb"
             color="primary"
           >
             Interface
           </button>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF fXGTky sc-dIsAE fXtuIx"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ imjqpY sc-dQppl ioJrxb"
             color="primary"
           >
             Enumeration
           </button>
         </div>
         <hr
-          class="sc-dIvqjp cJMUUR"
+          class="sc-dIUggk kNGbrD"
         />
       </section>
       <section>
         <h1
-          class="sc-bkbjAj hFQBLR"
+          class="sc-bkzZxe BoTnS"
         >
           Attributes
         </h1>
         <div
-          class="sc-hHEjAm ksVhyu"
+          class="sc-hHftDr bgTNPE"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            class="sc-hBEYos sc-fodVxV ieXhri ysQjI"
             value="attribute"
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -93,33 +93,33 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-hBMVcZ sc-fnVYJo cgkWeF dmprUH"
+          class="sc-hBEYos sc-fodVxV ieXhri hbYHbB"
           value=""
         />
       </section>
       <section>
         <hr
-          class="sc-dIvqjp cJMUUR"
+          class="sc-dIUggk kNGbrD"
         />
         <h1
-          class="sc-bkbjAj hFQBLR"
+          class="sc-bkzZxe BoTnS"
         >
           Methods
         </h1>
         <div
-          class="sc-hHEjAm ksVhyu"
+          class="sc-hHftDr bgTNPE"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            class="sc-hBEYos sc-fodVxV ieXhri ysQjI"
             value="classMethod"
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -132,7 +132,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-hBMVcZ sc-fnVYJo cgkWeF dmprUH"
+          class="sc-hBEYos sc-fodVxV ieXhri hbYHbB"
           value=""
         />
       </section>
