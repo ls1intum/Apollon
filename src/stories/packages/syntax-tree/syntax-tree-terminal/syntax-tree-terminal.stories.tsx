@@ -1,10 +1,10 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import React from 'react';
-import { SyntaxTreeTerminal } from '../../../main/packages/syntax-tree/syntax-tree-terminal/syntax-tree-terminal';
+import { SyntaxTreeTerminal } from '../../../../main/packages/syntax-tree/syntax-tree-terminal/syntax-tree-terminal';
 import {
   SyntaxTreeTerminalComponent,
   Props,
-} from '../../../main/packages/syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
+} from '../../../../main/packages/syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
 
 export default {
   title: 'Packages/Syntax Tree/Syntax Tree Terminal',

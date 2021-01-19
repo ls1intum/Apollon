@@ -74,6 +74,7 @@
     "@types/styled-components": "5.1.7",
     "@types/uuid": "8.3.0",
     "babel-loader": "^8.2.2",
+    "babel-plugin-const-enum": "1.0.1",
     "chai": "4.2.0",
     "circular-dependency-plugin": "5.2.2",
     "copy-webpack-plugin": "6.3.2",
