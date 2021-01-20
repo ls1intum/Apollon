@@ -12,7 +12,7 @@ export const composeControlFlowPreview: ComposePreview = (
   translate: (id: string) => string,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150, height: 75 };
+  const defaultBounds: IBoundary = { x: 0, y: 0, width: 100, height: 50 };
 
   elements.push(
     new ControlFlowTerminal({
