@@ -16,7 +16,7 @@ export const decorators = [
     context.args.isSvg ? (
       <svg
         width={200}
-        height={200}
+        height={100}
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
         fill="white"

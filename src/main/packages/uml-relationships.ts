@@ -23,6 +23,7 @@ import { UMLDeploymentInterfaceRequired } from './uml-deployment-diagram/uml-dep
 import { UMLDeploymentDependency } from './uml-deployment-diagram/uml-deployment-dependency/uml-deployment-dependency';
 import { UMLPetriNetArc } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc';
 import { SyntaxTreeLink } from './syntax-tree/syntax-tree-link/syntax-tree-link';
+import { ControlFlowFlowLine } from './control-flow-diagram/control-flow-flow-line/control-flow-flow-line';
 
 type UMLRelationships = { [key in UMLRelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
 
@@ -50,4 +51,5 @@ export const UMLRelationships = {
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentInterfaceRequired,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArc,
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLink,
+  [UMLRelationshipType.ControlFlowFlowLine]: ControlFlowFlowLine,
 };

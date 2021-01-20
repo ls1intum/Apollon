@@ -100,6 +100,14 @@
       "SyntaxTreeTerminal": "Terminal",
       "SyntaxTreeNonterminal": "Nichtterminal",
       "SyntaxTreeLink": "Verbindung"
+    },
+    "ControlFlowDiagram": {
+      "ControlFlowTerminal": "Terminator",
+      "ControlFlowDecision": "Entscheidung",
+      "ControlFlowProcess": "Operation",
+      "ControlFlowFunctionCall": "Unterprogramm ausführen",
+      "ControlFlowInputOutput": "Ein- und Ausgabe",
+      "ControlFlowFlowLine": "Verbindung"
     }
   }
 }

@@ -30,6 +30,11 @@ import { UMLDeploymentComponent } from './uml-deployment-diagram/uml-deployment-
 import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
 import { SyntaxTreeTerminal } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal';
 import { SyntaxTreeNonterminal } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal';
+import { ControlFlowTerminal } from './control-flow-diagram/control-flow-terminal/control-flow-terminal';
+import { ControlFlowFunctionCall } from './control-flow-diagram/control-flow-function-call/control-flow-function-call';
+import { ControlFlowDecision } from './control-flow-diagram/control-flow-decision/control-flow-decision';
+import { ControlFlowProcess } from './control-flow-diagram/control-flow-process/control-flow-process';
+import { ControlFlowInputOutput } from './control-flow-diagram/control-flow-input-output/control-flow-input-output';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -63,4 +68,9 @@ export const UMLElements = {
   [UMLElementType.CommunicationLinkMessage]: CommunicationLinkMessage,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminal,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminal,
+  [UMLElementType.ControlFlowTerminal]: ControlFlowTerminal,
+  [UMLElementType.ControlFlowFunctionCall]: ControlFlowFunctionCall,
+  [UMLElementType.ControlFlowProcess]: ControlFlowProcess,
+  [UMLElementType.ControlFlowDecision]: ControlFlowDecision,
+  [UMLElementType.ControlFlowInputOutput]: ControlFlowInputOutput,
 };

@@ -17,6 +17,12 @@ import { UMLPetriNetPlaceUpdate } from './uml-petri-net/uml-petri-net-place/uml-
 import { UMLPetriNetArcUpdate } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-update';
 import { SyntaxTreeTerminalUpdate } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-update';
 import { SyntaxTreeNonterminalUpdate } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-update';
+import { ControlFlowTerminalUpdate } from './control-flow-diagram/control-flow-terminal/control-flow-terminal-update';
+import { ControlFlowProcessUpdate } from './control-flow-diagram/control-flow-process/control-flow-process-update';
+import { ControlFlowDecisionUpdate } from './control-flow-diagram/control-flow-decision/control-flow-decision-update';
+import { ControlFlowFunctionCallUpdate } from './control-flow-diagram/control-flow-function-call/control-flow-function-call-update';
+import { ControlFlowInputOutputUpdate } from './control-flow-diagram/control-flow-input-output/control-flow-input-output-update';
+import { ControlFlowFlowLineUpdate } from './control-flow-diagram/control-flow-flow-line/control-flow-flow-line-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -52,6 +58,11 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.CommunicationLinkMessage]: null,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminalUpdate,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminalUpdate,
+  [UMLElementType.ControlFlowTerminal]: ControlFlowTerminalUpdate,
+  [UMLElementType.ControlFlowProcess]: ControlFlowProcessUpdate,
+  [UMLElementType.ControlFlowDecision]: ControlFlowDecisionUpdate,
+  [UMLElementType.ControlFlowFunctionCall]: ControlFlowFunctionCallUpdate,
+  [UMLElementType.ControlFlowInputOutput]: ControlFlowInputOutputUpdate,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
@@ -76,4 +87,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcUpdate,
   [UMLRelationshipType.SyntaxTreeLink]: DefaultRelationshipPopup,
+  [UMLRelationshipType.ControlFlowFlowLine]: ControlFlowFlowLineUpdate,
 };

@@ -8,6 +8,7 @@ import { ObjectRelationshipType } from './uml-object-diagram';
 import { UseCaseRelationshipType } from './uml-use-case-diagram';
 import { PetriNetRelationshipType } from './uml-petri-net';
 import { SyntaxTreeRelationshipType } from './syntax-tree';
+import { ControlFlowRelationshipType } from './control-flow-diagram';
 
 export type UMLRelationshipType =
   | keyof typeof ClassRelationshipType
@@ -18,7 +19,8 @@ export type UMLRelationshipType =
   | keyof typeof ComponentRelationshipType
   | keyof typeof DeploymentRelationshipType
   | keyof typeof PetriNetRelationshipType
-  | keyof typeof SyntaxTreeRelationshipType;
+  | keyof typeof SyntaxTreeRelationshipType
+  | keyof typeof ControlFlowRelationshipType;
 
 export const UMLRelationshipType = {
   ...ClassRelationshipType,
@@ -30,6 +32,7 @@ export const UMLRelationshipType = {
   ...DeploymentRelationshipType,
   ...PetriNetRelationshipType,
   ...SyntaxTreeRelationshipType,
+  ...ControlFlowRelationshipType,
 };
 
 export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelationshipType } = {
@@ -42,4 +45,5 @@ export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelations
   [UMLDiagramType.DeploymentDiagram]: DeploymentRelationshipType.DeploymentAssociation,
   [UMLDiagramType.PetriNet]: PetriNetRelationshipType.PetriNetArc,
   [UMLDiagramType.SyntaxTree]: SyntaxTreeRelationshipType.SyntaxTreeLink,
+  [UMLDiagramType.ControlFlowDiagram]: ControlFlowRelationshipType.ControlFlowFlowLine,
 };

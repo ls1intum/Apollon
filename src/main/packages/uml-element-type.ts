@@ -8,6 +8,7 @@ import { PetriNetElementType } from './uml-petri-net';
 import { CommunicationElementType } from './uml-communication-diagram';
 import { UMLDiagramType } from './diagram-type';
 import { SyntaxTreeElementType } from './syntax-tree';
+import { ControlFlowElementType } from './control-flow-diagram';
 
 export type UMLElementType =
   | keyof typeof ClassElementType
@@ -18,7 +19,8 @@ export type UMLElementType =
   | keyof typeof ComponentElementType
   | keyof typeof DeploymentElementType
   | keyof typeof PetriNetElementType
-  | keyof typeof SyntaxTreeElementType;
+  | keyof typeof SyntaxTreeElementType
+  | keyof typeof ControlFlowElementType;
 
 export const UMLElementType = {
   ...ClassElementType,
@@ -30,6 +32,7 @@ export const UMLElementType = {
   ...DeploymentElementType,
   ...PetriNetElementType,
   ...SyntaxTreeElementType,
+  ...ControlFlowElementType,
 };
 
 export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
@@ -42,4 +45,5 @@ export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
   [UMLDiagramType.DeploymentDiagram]: DeploymentElementType,
   [UMLDiagramType.PetriNet]: PetriNetElementType,
   [UMLDiagramType.SyntaxTree]: SyntaxTreeElementType,
+  [UMLDiagramType.ControlFlowDiagram]: ControlFlowElementType,
 };

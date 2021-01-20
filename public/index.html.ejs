@@ -9,9 +9,11 @@
   <body>
     <header class="navbar">
       <a class="navbar-brand logo float-left">
-        <img class="logo-img" src="images/logo.png"/>
+        <img class="logo-img" src="images/logo.png" />
         <span>&nbsp;&nbsp;&nbsp;</span>
-        <span class="navbar-title">Apollon</span>&nbsp;&nbsp;&nbsp;<span class="navbar-version"><%=htmlWebpackPlugin.options.version%></span>
+        <span class="navbar-title">Apollon</span>&nbsp;&nbsp;&nbsp;<span class="navbar-version">
+          <%=htmlWebpackPlugin.options.version%>
+        </span>
       </a>
     </header>
     <div class="container">
@@ -30,6 +32,7 @@
               <option value="DeploymentDiagram">Deployment Diagram</option>
               <option value="PetriNet">Petri Net</option>
               <option value="SyntaxTree">Syntax Tree</option>
+              <option value="ControlFlowDiagram">Control Flow Diagram</option>
             </select>
           </div>
         </section>
