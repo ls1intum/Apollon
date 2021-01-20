@@ -6,19 +6,19 @@ exports[`test communication link popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-iJCRLp dqvmHv"
+          class="sc-iJuUWI igCBFF"
         >
           <h1
-            class="sc-bkbjAj dyFuyY"
+            class="sc-bkzZxe hXuEjz"
           >
             Communication Link
           </h1>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -31,12 +31,12 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-dIvqjp cJMUUR"
+          class="sc-dIUggk kNGbrD"
         />
       </section>
       <section>
         <h1
-          class="sc-bkbjAj hFQBLR"
+          class="sc-bkzZxe BoTnS"
         >
           Messages
            (
@@ -48,19 +48,19 @@ exports[`test communication link popup render 1`] = `
           )
         </h1>
         <div
-          class="sc-iJCRLp dqvmHv"
+          class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationSourceLinkMessage0"
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -72,12 +72,12 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -90,19 +90,19 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-iJCRLp dqvmHv"
+          class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationSourceLinkMessage1"
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -114,12 +114,12 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -132,19 +132,19 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-iJCRLp dqvmHv"
+          class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationSourceLinkMessage2"
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -156,12 +156,12 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -174,19 +174,19 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-iJCRLp dqvmHv"
+          class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationTargetLinkMessage0"
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -198,12 +198,12 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -216,19 +216,19 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-iJCRLp dqvmHv"
+          class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationTargetLinkMessage1"
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -240,12 +240,12 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -258,19 +258,19 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-iJCRLp dqvmHv"
+          class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBMVcZ sc-fnVYJo cgkWeF eJIYrS"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationTargetLinkMessage2"
           />
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -282,12 +282,12 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-kEqYlL sc-iqAbSa kDGpF kNjZWP"
+            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnylx cZAqPP"
+              class="sc-bdfBwQ KSdSD"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -300,7 +300,7 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-hBMVcZ sc-fnVYJo cgkWeF dmprUH"
+          class="sc-hBEYos sc-fodVxV ekTNQr hbYHbB"
           value=""
         />
       </section>
