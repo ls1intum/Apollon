@@ -3,7 +3,7 @@ import React from 'react';
 import { Button, defaultProps, Props } from '../../../main/components/controls/button/button';
 
 export default {
-  title: 'Controls/Buttovn',
+  title: 'Controls/Button',
   component: Button,
   argTypes: {
     color: { control: { type: 'select', options: ['primary', 'secondary', 'link'] } },
