@@ -145,7 +145,7 @@ exports[`test update pane render with element 1`] = `
   border: 1px solid #ced4da;
   border-radius: 0.25em;
   color: #495057;
-  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif,sans-serif;
   font-size: 1em;
   font-weight: 400;
   line-height: 1.5;
@@ -257,7 +257,7 @@ exports[`test update pane render with element 1`] = `
   display: block;
   -webkit-filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
-  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif,sans-serif;
   font-size: 16px;
   font-style: normal;
   font-weight: 400;
@@ -350,7 +350,7 @@ exports[`test update pane render with element 1`] = `
   user-select: none;
   position: relative;
   touch-action: none;
-  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif,sans-serif;
   font-size: 16px;
   color: #212529;
   font-weight: 400;
@@ -659,7 +659,7 @@ exports[`test update pane render with relationship 1`] = `
   border: 1px solid #ced4da;
   border-radius: 0.25em;
   color: #495057;
-  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif,sans-serif;
   font-size: 1em;
   font-weight: 400;
   line-height: 1.5;
@@ -783,7 +783,7 @@ exports[`test update pane render with relationship 1`] = `
   display: block;
   -webkit-filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
-  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif,sans-serif;
   font-size: 16px;
   font-style: normal;
   font-weight: 400;
@@ -876,7 +876,7 @@ exports[`test update pane render with relationship 1`] = `
   user-select: none;
   position: relative;
   touch-action: none;
-  font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-family: Helvetica Neue,Helvetica,Arial,sans-serif,sans-serif;
   font-size: 16px;
   color: #212529;
   font-weight: 400;
