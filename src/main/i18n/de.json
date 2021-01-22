@@ -101,13 +101,13 @@
       "SyntaxTreeNonterminal": "Nichtterminal",
       "SyntaxTreeLink": "Verbindung"
     },
-    "ControlFlowDiagram": {
-      "ControlFlowTerminal": "Terminator",
-      "ControlFlowDecision": "Entscheidung",
-      "ControlFlowProcess": "Operation",
-      "ControlFlowFunctionCall": "Unterprogramm ausführen",
-      "ControlFlowInputOutput": "Ein- und Ausgabe",
-      "ControlFlowFlowLine": "Verbindung"
+    "Flowchart": {
+      "FlowchartTerminal": "Terminator",
+      "FlowchartDecision": "Entscheidung",
+      "FlowchartProcess": "Operation",
+      "FlowchartFunctionCall": "Unterprogramm ausführen",
+      "FlowchartInputOutput": "Ein- und Ausgabe",
+      "FlowchartFlowLine": "Verbindung"
     }
   }
 }

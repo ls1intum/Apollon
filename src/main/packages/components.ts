@@ -37,12 +37,12 @@ import { UMLComponentComponent } from './common/uml-component/uml-component-comp
 import { SyntaxTreeTerminalComponent } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
 import { SyntaxTreeNonterminalComponent } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-component';
 import { SyntaxTreeLinkComponent } from './syntax-tree/syntax-tree-link/syntax-tree-link-component';
-import { ControlFlowFlowLineComponent } from './control-flow-diagram/control-flow-flow-line/control-flow-flow-line-component';
-import { ControlFlowTerminalComponent } from './control-flow-diagram/control-flow-terminal/control-flow-terminal-component';
-import { ControlFlowProcessComponent } from './control-flow-diagram/control-flow-process/control-flow-process-component';
-import { ControlFlowDecisionComponent } from './control-flow-diagram/control-flow-decision/control-flow-decision-component';
-import { ControlFlowFunctionCallComponent } from './control-flow-diagram/control-flow-function-call/control-flow-function-call-component';
-import { ControlFlowInputOutputComponent } from './control-flow-diagram/control-flow-input-output/control-flow-input-output-component';
+import { FlowchartFlowLineComponent } from './flowchart/flowchart-flow-line/flowchart-flow-line-component';
+import { FlowchartTerminalComponent } from './flowchart/flowchart-terminal/flowchart-terminal-component';
+import { FlowchartProcessComponent } from './flowchart/flowchart-process/flowchart-process-component';
+import { FlowchartDecisionComponent } from './flowchart/flowchart-decision/flowchart-decision-component';
+import { FlowchartFunctionCallComponent } from './flowchart/flowchart-function-call/flowchart-function-call-component';
+import { FlowchartInputOutputComponent } from './flowchart/flowchart-input-output/flowchart-input-output-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -80,11 +80,11 @@ export const Components: {
   [UMLElementType.CommunicationLinkMessage]: UMLClassifierMemberComponent,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminalComponent,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminalComponent,
-  [UMLElementType.ControlFlowTerminal]: ControlFlowTerminalComponent,
-  [UMLElementType.ControlFlowDecision]: ControlFlowDecisionComponent,
-  [UMLElementType.ControlFlowProcess]: ControlFlowProcessComponent,
-  [UMLElementType.ControlFlowInputOutput]: ControlFlowInputOutputComponent,
-  [UMLElementType.ControlFlowFunctionCall]: ControlFlowFunctionCallComponent,
+  [UMLElementType.FlowchartTerminal]: FlowchartTerminalComponent,
+  [UMLElementType.FlowchartDecision]: FlowchartDecisionComponent,
+  [UMLElementType.FlowchartProcess]: FlowchartProcessComponent,
+  [UMLElementType.FlowchartInputOutput]: FlowchartInputOutputComponent,
+  [UMLElementType.FlowchartFunctionCall]: FlowchartFunctionCallComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,
@@ -108,5 +108,5 @@ export const Components: {
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcComponent,
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLinkComponent,
-  [UMLRelationshipType.ControlFlowFlowLine]: ControlFlowFlowLineComponent,
+  [UMLRelationshipType.FlowchartFlowLine]: FlowchartFlowLineComponent,
 };
