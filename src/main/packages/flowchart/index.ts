@@ -13,7 +13,7 @@ export const FlowchartElementType = {
 } as const;
 
 export const FlowchartRelationshipType = {
-  FlowchartFlowLine: 'FlowchartFlowLine',
+  FlowchartFlowline: 'FlowchartFlowline',
 } as const;
 
 export type FlowchartElement =

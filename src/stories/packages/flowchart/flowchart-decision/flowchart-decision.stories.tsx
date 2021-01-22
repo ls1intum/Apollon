@@ -7,7 +7,7 @@ import {
 } from '../../../../main/packages/flowchart/flowchart-decision/flowchart-decision-component';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Decision',
+  title: 'Packages/Flowchart/Flowchart Decision',
   component: FlowchartDecisionComponent,
   args: { isSvg: true },
 } as Meta;

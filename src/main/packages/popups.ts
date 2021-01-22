@@ -22,7 +22,7 @@ import { FlowchartProcessUpdate } from './flowchart/flowchart-process/flowchart-
 import { FlowchartDecisionUpdate } from './flowchart/flowchart-decision/flowchart-decision-update';
 import { FlowchartFunctionCallUpdate } from './flowchart/flowchart-function-call/flowchart-function-call-update';
 import { FlowchartInputOutputUpdate } from './flowchart/flowchart-input-output/flowchart-input-output-update';
-import { FlowchartFlowLineUpdate } from './flowchart/flowchart-flow-line/flowchart-flow-line-update';
+import { FlowchartFlowlineUpdate } from './flowchart/flowchart-flowline/flowchart-flowline-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -87,5 +87,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcUpdate,
   [UMLRelationshipType.SyntaxTreeLink]: DefaultRelationshipPopup,
-  [UMLRelationshipType.FlowchartFlowLine]: FlowchartFlowLineUpdate,
+  [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineUpdate,
 };

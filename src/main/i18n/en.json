@@ -107,7 +107,7 @@
       "FlowchartProcess": "Process",
       "FlowchartFunctionCall": "Function Call",
       "FlowchartInputOutput": "Input Output",
-      "FlowchartFlowLine": "Flow Line"
+      "FlowchartFlowline": "Flowline"
     }
   }
 }

@@ -1,13 +1,13 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import React from 'react';
-import { FlowchartProcess } from '../../../../main/packages/flowchart/flowchart-process/control-flow-process';
+import { FlowchartProcess } from '../../../../main/packages/flowchart/flowchart-process/flowchart-process';
 import {
   FlowchartProcessUpdate,
   Props,
 } from '../../../../main/packages/flowchart/flowchart-process/flowchart-process-update';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Process Update',
+  title: 'Packages/Flowchart/Flowchart Process Update',
   component: FlowchartProcessUpdate,
 } as Meta;
 

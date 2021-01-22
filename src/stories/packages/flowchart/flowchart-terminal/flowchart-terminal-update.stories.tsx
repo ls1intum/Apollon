@@ -7,7 +7,7 @@ import {
 } from '../../../../main/packages/flowchart/flowchart-terminal/flowchart-terminal-update';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Terminal Update',
+  title: 'Packages/Flowchart/Flowchart Terminal Update',
   component: FlowchartTerminalUpdate,
 } as Meta;
 
@@ -18,7 +18,7 @@ Primary.args = {
   element: new FlowchartTerminal({
     bounds: { x: 0, y: 0, width: 200, height: 100 },
     id: '',
-    name: 'Flowchart Diagram',
+    name: 'Flowchart',
     owner: null,
   }),
 };

@@ -7,7 +7,7 @@ import {
 } from '../../../../main/packages/flowchart/flowchart-input-output/flowchart-input-output-component';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Input Output',
+  title: 'Packages/Flowchart/Flowchart Input Output',
   component: FlowchartInputOutputComponent,
   args: { isSvg: true },
 } as Meta;

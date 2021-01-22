@@ -1,8 +1,8 @@
 import React, { SFC } from 'react';
 import { Point } from '../../../utils/geometry/point';
-import { FlowchartFlowLine } from './flowchart-flow-line';
+import { FlowchartFlowline } from './flowchart-flowline';
 
-export const FlowchartFlowLineComponent: SFC<Props> = ({ element }) => {
+export const FlowchartFlowlineComponent: SFC<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
   const path = element.path.map((point) => new Point(point.x, point.y));
@@ -70,5 +70,5 @@ export const FlowchartFlowLineComponent: SFC<Props> = ({ element }) => {
 };
 
 interface Props {
-  element: FlowchartFlowLine;
+  element: FlowchartFlowline;
 }

@@ -7,7 +7,7 @@ import {
 } from '../../../../main/packages/flowchart/flowchart-terminal/flowchart-terminal-component';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Terminal',
+  title: 'Packages/Flowchart/Flowchart Terminal',
   component: FlowchartTerminalComponent,
   args: { isSvg: true },
 } as Meta;

@@ -107,7 +107,7 @@
       "FlowchartProcess": "Operation",
       "FlowchartFunctionCall": "Unterprogramm ausführen",
       "FlowchartInputOutput": "Ein- und Ausgabe",
-      "FlowchartFlowLine": "Verbindung"
+      "FlowchartFlowline": "Verbindung"
     }
   }
 }

@@ -7,7 +7,7 @@ import {
 } from '../../../../main/packages/flowchart/flowchart-input-output/flowchart-input-output-update';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Input Output Update',
+  title: 'Packages/Flowchart/Flowchart Input Output Update',
   component: FlowchartInputOutputUpdate,
 } as Meta;
 
@@ -18,7 +18,7 @@ Primary.args = {
   element: new FlowchartInputOutput({
     bounds: { x: 0, y: 0, width: 200, height: 100 },
     id: '',
-    name: 'Flowchart Diagram',
+    name: 'Flowchart',
     owner: null,
   }),
 };

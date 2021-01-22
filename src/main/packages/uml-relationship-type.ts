@@ -45,5 +45,5 @@ export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelations
   [UMLDiagramType.DeploymentDiagram]: DeploymentRelationshipType.DeploymentAssociation,
   [UMLDiagramType.PetriNet]: PetriNetRelationshipType.PetriNetArc,
   [UMLDiagramType.SyntaxTree]: SyntaxTreeRelationshipType.SyntaxTreeLink,
-  [UMLDiagramType.Flowchart]: FlowchartRelationshipType.FlowchartFlowLine,
+  [UMLDiagramType.Flowchart]: FlowchartRelationshipType.FlowchartFlowline,
 };

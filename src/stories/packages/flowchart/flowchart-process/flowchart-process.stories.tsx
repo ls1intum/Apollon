@@ -7,7 +7,7 @@ import {
 } from '../../../../main/packages/flowchart/flowchart-process/flowchart-process-component';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Process',
+  title: 'Packages/Flowchart/Flowchart Process',
   component: FlowchartProcessComponent,
   args: { isSvg: true },
 } as Meta;

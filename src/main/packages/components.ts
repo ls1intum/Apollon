@@ -37,7 +37,7 @@ import { UMLComponentComponent } from './common/uml-component/uml-component-comp
 import { SyntaxTreeTerminalComponent } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
 import { SyntaxTreeNonterminalComponent } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-component';
 import { SyntaxTreeLinkComponent } from './syntax-tree/syntax-tree-link/syntax-tree-link-component';
-import { FlowchartFlowLineComponent } from './flowchart/flowchart-flow-line/flowchart-flow-line-component';
+import { FlowchartFlowlineComponent } from './flowchart/flowchart-flowline/flowchart-flowline-component';
 import { FlowchartTerminalComponent } from './flowchart/flowchart-terminal/flowchart-terminal-component';
 import { FlowchartProcessComponent } from './flowchart/flowchart-process/flowchart-process-component';
 import { FlowchartDecisionComponent } from './flowchart/flowchart-decision/flowchart-decision-component';
@@ -108,5 +108,5 @@ export const Components: {
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcComponent,
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLinkComponent,
-  [UMLRelationshipType.FlowchartFlowLine]: FlowchartFlowLineComponent,
+  [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineComponent,
 };

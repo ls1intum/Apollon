@@ -7,7 +7,7 @@ import {
 } from '../../../../main/packages/flowchart/flowchart-function-call/flowchart-function-call-component';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Function Call',
+  title: 'Packages/Flowchart/Flowchart Function Call',
   component: FlowchartFunctionCallComponent,
   args: { isSvg: true },
 } as Meta;

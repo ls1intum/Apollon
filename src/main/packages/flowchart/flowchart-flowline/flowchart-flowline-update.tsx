@@ -13,7 +13,7 @@ import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
-import { FlowchartFlowLine } from './flowchart-flow-line';
+import { FlowchartFlowline } from './flowchart-flowline';
 
 const Flex = styled.div`
   display: flex;
@@ -21,7 +21,7 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class FlowchartFlowLineUpdateComponent extends Component<Props> {
+class FlowchartFlowlineUpdateComponent extends Component<Props> {
   render() {
     const { element } = this.props;
 
@@ -30,7 +30,7 @@ class FlowchartFlowLineUpdateComponent extends Component<Props> {
         <section>
           <Flex>
             <Header gutter={false} style={{ flexGrow: 1 }}>
-              {this.props.translate('packages.Flowchart.FlowchartFlowLine')}
+              {this.props.translate('packages.Flowchart.FlowchartFlowline')}
             </Header>
             <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />
@@ -54,7 +54,7 @@ class FlowchartFlowLineUpdateComponent extends Component<Props> {
 }
 
 type OwnProps = {
-  element: FlowchartFlowLine;
+  element: FlowchartFlowline;
 };
 
 type StateProps = {};
@@ -76,4 +76,4 @@ const enhance = compose<ComponentClass<OwnProps>>(
   }),
 );
 
-export const FlowchartFlowLineUpdate = enhance(FlowchartFlowLineUpdateComponent);
+export const FlowchartFlowlineUpdate = enhance(FlowchartFlowlineUpdateComponent);

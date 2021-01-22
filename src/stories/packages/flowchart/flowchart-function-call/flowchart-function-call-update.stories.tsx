@@ -7,7 +7,7 @@ import {
 } from '../../../../main/packages/flowchart/flowchart-function-call/flowchart-function-call-update';
 
 export default {
-  title: 'Packages/Flowchart Diagram/Flowchart Function Call Update',
+  title: 'Packages/Flowchart/Flowchart Function Call Update',
   component: FlowchartFunctionCallUpdate,
 } as Meta;
 
