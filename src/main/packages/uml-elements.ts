@@ -30,6 +30,11 @@ import { UMLDeploymentComponent } from './uml-deployment-diagram/uml-deployment-
 import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
 import { SyntaxTreeTerminal } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal';
 import { SyntaxTreeNonterminal } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal';
+import { FlowchartTerminal } from './flowchart/flowchart-terminal/flowchart-terminal';
+import { FlowchartFunctionCall } from './flowchart/flowchart-function-call/flowchart-function-call';
+import { FlowchartDecision } from './flowchart/flowchart-decision/flowchart-decision';
+import { FlowchartProcess } from './flowchart/flowchart-process/flowchart-process';
+import { FlowchartInputOutput } from './flowchart/flowchart-input-output/flowchart-input-output';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -63,4 +68,9 @@ export const UMLElements = {
   [UMLElementType.CommunicationLinkMessage]: CommunicationLinkMessage,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminal,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminal,
+  [UMLElementType.FlowchartTerminal]: FlowchartTerminal,
+  [UMLElementType.FlowchartFunctionCall]: FlowchartFunctionCall,
+  [UMLElementType.FlowchartProcess]: FlowchartProcess,
+  [UMLElementType.FlowchartDecision]: FlowchartDecision,
+  [UMLElementType.FlowchartInputOutput]: FlowchartInputOutput,
 };

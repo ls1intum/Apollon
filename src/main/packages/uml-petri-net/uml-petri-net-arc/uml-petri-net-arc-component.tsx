@@ -64,6 +64,6 @@ export const UMLPetriNetArcComponent: SFC<Props> = ({ element }) => {
   );
 };
 
-interface Props {
+export interface Props {
   element: UMLPetriNetArc;
 }

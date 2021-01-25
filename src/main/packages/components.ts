@@ -37,6 +37,12 @@ import { UMLComponentComponent } from './common/uml-component/uml-component-comp
 import { SyntaxTreeTerminalComponent } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
 import { SyntaxTreeNonterminalComponent } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-component';
 import { SyntaxTreeLinkComponent } from './syntax-tree/syntax-tree-link/syntax-tree-link-component';
+import { FlowchartFlowlineComponent } from './flowchart/flowchart-flowline/flowchart-flowline-component';
+import { FlowchartTerminalComponent } from './flowchart/flowchart-terminal/flowchart-terminal-component';
+import { FlowchartProcessComponent } from './flowchart/flowchart-process/flowchart-process-component';
+import { FlowchartDecisionComponent } from './flowchart/flowchart-decision/flowchart-decision-component';
+import { FlowchartFunctionCallComponent } from './flowchart/flowchart-function-call/flowchart-function-call-component';
+import { FlowchartInputOutputComponent } from './flowchart/flowchart-input-output/flowchart-input-output-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -74,6 +80,11 @@ export const Components: {
   [UMLElementType.CommunicationLinkMessage]: UMLClassifierMemberComponent,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminalComponent,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminalComponent,
+  [UMLElementType.FlowchartTerminal]: FlowchartTerminalComponent,
+  [UMLElementType.FlowchartDecision]: FlowchartDecisionComponent,
+  [UMLElementType.FlowchartProcess]: FlowchartProcessComponent,
+  [UMLElementType.FlowchartInputOutput]: FlowchartInputOutputComponent,
+  [UMLElementType.FlowchartFunctionCall]: FlowchartFunctionCallComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,
@@ -97,4 +108,5 @@ export const Components: {
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcComponent,
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLinkComponent,
+  [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineComponent,
 };

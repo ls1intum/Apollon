@@ -57,7 +57,7 @@ type DispatchProps = {
   delete: AsyncDispatch<typeof UMLElementRepository.delete>;
 };
 
-type Props = OwnProps & StateProps & DispatchProps & I18nContext;
+export type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,

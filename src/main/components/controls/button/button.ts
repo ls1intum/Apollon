@@ -10,7 +10,7 @@ export const defaultProps = Object.freeze({
   size: 'sm' as Size,
 });
 
-type Props = { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement> & Partial<typeof defaultProps>;
+export type Props = { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement> & Partial<typeof defaultProps>;
 
 export const Button = forwardRef<HTMLButtonElement, Props>((props, ref) =>
   createElement(StyledButton, { ...props, ref }),

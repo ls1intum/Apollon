@@ -19,7 +19,7 @@ const intialState = Object.freeze({
   width: 0,
 });
 
-type Props<T> = {
+export type Props<T> = {
   children: ReactElement<ItemProps<T>> | ReactElement<ItemProps<T>>[];
   onChange?: (value: T) => void;
   value: T;

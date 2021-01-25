@@ -17,6 +17,6 @@ export const SyntaxTreeNonterminalComponent: SFC<Props> = ({ element }) => (
   </g>
 );
 
-interface Props {
+export interface Props {
   element: SyntaxTreeNonterminal;
 }

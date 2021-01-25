@@ -100,6 +100,14 @@
       "SyntaxTreeTerminal": "Terminal",
       "SyntaxTreeNonterminal": "Nichtterminal",
       "SyntaxTreeLink": "Verbindung"
+    },
+    "Flowchart": {
+      "FlowchartTerminal": "Terminator",
+      "FlowchartDecision": "Entscheidung",
+      "FlowchartProcess": "Operation",
+      "FlowchartFunctionCall": "Unterprogramm ausführen",
+      "FlowchartInputOutput": "Ein- und Ausgabe",
+      "FlowchartFlowline": "Verbindung"
     }
   }
 }

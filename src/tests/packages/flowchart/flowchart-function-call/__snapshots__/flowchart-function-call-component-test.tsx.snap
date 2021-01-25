@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the flowchart-function-call-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          height="100%"
+          stroke="black"
+          width="10px"
+          x="0"
+        />
+        <rect
+          height="100%"
+          stroke="black"
+          width="calc(100% - 20px)"
+          x="10"
+        />
+        <rect
+          height="100%"
+          stroke="black"
+          width="10px"
+          x="calc(100% - 10px)"
+        />
+        <text
+          font-weight="bold"
+          height="100"
+          pointer-events="none"
+          text-anchor="middle"
+          width="200"
+          x="100"
+          y="50"
+        >
+          <tspan
+            dy="5.5"
+            x="100"
+          >
+            TestFunctionCallComponent
+          </tspan>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

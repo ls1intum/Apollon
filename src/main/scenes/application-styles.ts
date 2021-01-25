@@ -14,7 +14,7 @@ export const Layout = styled.div`
   position: relative;
   touch-action: none;
 
-  font-family: ${({ theme }) => theme.font.family};
+  font-family: ${({ theme }) => theme.font.family}, sans-serif;
   font-size: ${({ theme }) => theme.font.size}px;
   color: ${({ theme }) => theme.font.color};
   font-weight: 400;

@@ -24,6 +24,7 @@ import { PreviewElementComponent } from './preview-element-component';
 import { composePetriNetPreview } from '../../packages/uml-petri-net/petri-net-preview';
 import { PreviewElement } from '../../packages/compose-preview';
 import { composeSyntaxTreePreview } from '../../packages/syntax-tree/syntax-tree-preview';
+import { composeFlowchartPreview } from '../../packages/flowchart/flowchart-diagram-preview';
 
 type OwnProps = {};
 
@@ -67,6 +68,8 @@ const getInitialState = ({ type, canvas, translate }: Props) => {
     case UMLDiagramType.SyntaxTree:
       previews.push(...composeSyntaxTreePreview(canvas, translate));
       break;
+    case UMLDiagramType.Flowchart:
+      previews.push(...composeFlowchartPreview(canvas, translate));
   }
 
   return { previews };

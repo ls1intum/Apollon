@@ -100,6 +100,14 @@
       "SyntaxTreeTerminal": "Terminal",
       "SyntaxTreeNonterminal": "Nonterminal",
       "SyntaxTreeLink": "Link"
+    },
+    "Flowchart": {
+      "FlowchartTerminal": "Terminal",
+      "FlowchartDecision": "Decision",
+      "FlowchartProcess": "Process",
+      "FlowchartFunctionCall": "Function Call",
+      "FlowchartInputOutput": "Input Output",
+      "FlowchartFlowline": "Flowline"
     }
   }
 }

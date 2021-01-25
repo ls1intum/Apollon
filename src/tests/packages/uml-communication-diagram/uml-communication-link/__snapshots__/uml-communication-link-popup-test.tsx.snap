@@ -51,7 +51,7 @@ exports[`test communication link popup render 1`] = `
           class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBEYos sc-fodVxV ieXhri ysQjI"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationSourceLinkMessage0"
           />
           <button
@@ -93,7 +93,7 @@ exports[`test communication link popup render 1`] = `
           class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBEYos sc-fodVxV ieXhri ysQjI"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationSourceLinkMessage1"
           />
           <button
@@ -135,7 +135,7 @@ exports[`test communication link popup render 1`] = `
           class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBEYos sc-fodVxV ieXhri ysQjI"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationSourceLinkMessage2"
           />
           <button
@@ -177,7 +177,7 @@ exports[`test communication link popup render 1`] = `
           class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBEYos sc-fodVxV ieXhri ysQjI"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationTargetLinkMessage0"
           />
           <button
@@ -219,7 +219,7 @@ exports[`test communication link popup render 1`] = `
           class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBEYos sc-fodVxV ieXhri ysQjI"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationTargetLinkMessage1"
           />
           <button
@@ -261,7 +261,7 @@ exports[`test communication link popup render 1`] = `
           class="sc-iJuUWI igCBFF"
         >
           <input
-            class="sc-hBEYos sc-fodVxV ieXhri ysQjI"
+            class="sc-hBEYos sc-fodVxV ekTNQr ysQjI"
             value="CommunicationTargetLinkMessage2"
           />
           <button
@@ -300,7 +300,7 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-hBEYos sc-fodVxV ieXhri hbYHbB"
+          class="sc-hBEYos sc-fodVxV ekTNQr hbYHbB"
           value=""
         />
       </section>

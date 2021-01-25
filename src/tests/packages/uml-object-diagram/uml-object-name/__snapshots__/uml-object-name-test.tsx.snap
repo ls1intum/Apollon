@@ -9,7 +9,7 @@ exports[`render the uml-object-name-component 1`] = `
           class="sc-iBPRYJ cEvHtW"
         >
           <input
-            class="sc-eCssSg sc-jSgupP lfHwNO dDUIug"
+            class="sc-eCssSg sc-jSgupP cLEjzT dDUIug"
             value="TestObjectComponent"
           />
           <button
@@ -41,7 +41,7 @@ exports[`render the uml-object-name-component 1`] = `
           Attributes
         </h1>
         <input
-          class="sc-eCssSg sc-jSgupP lfHwNO eULCMP"
+          class="sc-eCssSg sc-jSgupP cLEjzT eULCMP"
           value=""
         />
       </section>
@@ -55,7 +55,7 @@ exports[`render the uml-object-name-component 1`] = `
           Methods
         </h1>
         <input
-          class="sc-eCssSg sc-jSgupP lfHwNO eULCMP"
+          class="sc-eCssSg sc-jSgupP cLEjzT eULCMP"
           value=""
         />
       </section>
