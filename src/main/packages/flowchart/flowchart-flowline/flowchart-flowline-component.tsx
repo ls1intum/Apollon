@@ -69,6 +69,6 @@ export const FlowchartFlowlineComponent: SFC<Props> = ({ element }) => {
   );
 };
 
-interface Props {
+export interface Props {
   element: FlowchartFlowline;
 }

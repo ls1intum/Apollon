@@ -2,10 +2,9 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import React from 'react';
 import { UMLPetriNetArc } from '../../../../main/packages/uml-petri-net/uml-petri-net-arc/uml-petri-net-arc';
 import {
-  UMLPetriNetArcComponent,
   Props,
+  UMLPetriNetArcComponent,
 } from '../../../../main/packages/uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-component';
-import { Point } from '../../../../main/utils/geometry/point';
 
 export default {
   title: 'Packages/UML Petri Net/UML Petri Net Arc',
