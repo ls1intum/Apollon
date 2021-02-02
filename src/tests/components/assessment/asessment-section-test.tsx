@@ -73,7 +73,7 @@ describe('test AssessmentSection', () => {
     );
 
     // assumption: Textfield immediately after label
-    const sut = getByText('Score:').nextSibling;
+    const sut = getByText('Points:').nextSibling;
     if (!sut) {
       throw Error('SUT could not be found');
     }
