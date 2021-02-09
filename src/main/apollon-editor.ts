@@ -91,7 +91,7 @@ export class ApollonEditor {
     theme?: DeepPartial<Styles>,
   ): Apollon.SVG {
     const div = document.createElement('div');
-    const element = createElement(Svg, { model, options, styles: theme });
+    const element = createElement(Svg, { model, options: { margin: 15, ...options }, styles: theme });
     const svg = render(element, div);
     const { innerHTML } = div;
     unmountComponentAtNode(div);
