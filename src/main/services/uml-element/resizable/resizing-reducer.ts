@@ -6,23 +6,20 @@ export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, act
   switch (action.type) {
     case ResizingActionTypes.RESIZE: {
       const { payload } = action;
-
-      return payload.ids.reduce<ResizingState>(
-        (elements, id) => ({
-          ...elements,
-          ...(id in elements && {
-            [id]: {
-              ...elements[id],
-              bounds: {
-                ...elements[id].bounds,
-                width: Math.max(elements[id].bounds.width + payload.delta.width, 0),
-                height: Math.max(elements[id].bounds.height + payload.delta.height, 0),
-              },
+      const elements = { ...state };
+      payload.ids.forEach((id) => {
+        if (id in elements) {
+          elements[id] = {
+            ...elements[id],
+            bounds: {
+              ...elements[id].bounds,
+              width: Math.max(elements[id].bounds.width + payload.delta.width, 0),
+              height: Math.max(elements[id].bounds.height + payload.delta.height, 0),
             },
-          }),
-        }),
-        state,
-      );
+          };
+        }
+      });
+      return elements;
     }
   }
 

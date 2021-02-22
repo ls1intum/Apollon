@@ -13,7 +13,10 @@ import { UMLElementComponentProps } from './uml-element-component-props';
 
 const STROKE = 5;
 
-type OwnProps = { child?: ComponentClass<UMLElementComponentProps> } & UMLElementComponentProps &
+type OwnProps = {
+  pos?: { x: number; y: number };
+  child?: ComponentClass<UMLElementComponentProps>;
+} & UMLElementComponentProps &
   SVGProps<SVGSVGElement>;
 
 type StateProps = {
@@ -58,7 +61,6 @@ class CanvasElementComponent extends Component<Props> {
       theme,
       ...props
     } = this.props;
-
     let elements = null;
     if (UMLContainer.isUMLContainer(element) && ChildComponent) {
       elements = element.ownedElements.map((id) => <ChildComponent key={id} id={id} />);
@@ -74,10 +76,11 @@ class CanvasElementComponent extends Component<Props> {
         ? element.highlight
         : 'white';
 
+    const position = props.pos ? props.pos : element.bounds;
     return (
       <svg
         {...props}
-        {...element.bounds}
+        {...position}
         pointerEvents={moving ? 'none' : undefined}
         fillOpacity={moving ? 0.7 : undefined}
         fill={highlight}

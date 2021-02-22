@@ -4455,6 +4455,11 @@ cp-file@^7.0.0:
     nested-error-stacks "^2.0.0"
     p-event "^4.1.0"
 
+cpu-benchmark@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/cpu-benchmark/-/cpu-benchmark-1.0.1.tgz#6f59584599563563193ffad803a5c193f2e624c8"
+  integrity sha512-b6FmkWdWvwKySXIdMFjXqh9xkWl5MCDq5EZv26/PxzlSoY+/pugsA8wx2rUJ4/w7MhtU/GqmKmifr+uufgMFnw==
+
 cpy@^8.1.1:
   version "8.1.1"
   resolved "https://registry.yarnpkg.com/cpy/-/cpy-8.1.1.tgz#066ed4c6eaeed9577df96dae4db9438c1a90df62"

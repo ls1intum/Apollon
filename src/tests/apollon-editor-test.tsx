@@ -1,4 +1,3 @@
-// @ts-ignore
 import * as React from 'react';
 import { render as testLibraryRender } from '@testing-library/react';
 import * as Apollon from '../main/apollon-editor';

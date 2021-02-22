@@ -17,6 +17,8 @@ import { Dispatch } from './utils/actions/actions';
 import { UMLDiagramType, UMLModel } from './typings';
 import { debounce } from './utils/debounce';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
+// @ts-ignore
+import { dist } from 'cpu-benchmark';
 
 export class ApollonEditor {
   /**
@@ -114,6 +116,8 @@ export class ApollonEditor {
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
 
+    let performance = this.getPerformance();
+
     state = {
       ...state,
       diagram: new UMLDiagram({
@@ -122,6 +126,7 @@ export class ApollonEditor {
       }),
       editor: {
         ...state.editor,
+        performance,
         view: ApollonView.Modelling,
         mode: options.mode || ApollonMode.Exporting,
         readonly: options.readonly || false,
@@ -248,6 +253,25 @@ export class ApollonEditor {
    */
   exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG {
     return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
+  }
+
+  /**
+   * measures performance of the computer the apollon editor is opened
+   * @returns number of operations that can be done in 100 milliseconds
+   */
+  private getPerformance(): number {
+    let performance;
+    if (window && window.localStorage) {
+      let performanceString = window.localStorage.getItem('apollon_performance');
+      if (!performanceString) {
+        performance = dist(100);
+      } else {
+        performance = Number.parseInt(performanceString);
+      }
+    } else {
+      performance = dist(100);
+    }
+    return performance;
   }
 
   private componentDidMount = () => {

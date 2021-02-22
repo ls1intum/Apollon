@@ -8,6 +8,7 @@ const initialState: EditorState = {
   enableCopyPasteToClipboard: false,
   mode: ApollonMode.Exporting,
   view: ApollonView.Modelling,
+  performance: 1000,
   features: {
     hoverable: true,
     selectable: true,

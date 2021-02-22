@@ -45,6 +45,7 @@
     "*.{ts,tsx,js,css,md}": "prettier --write"
   },
   "dependencies": {
+    "cpu-benchmark": "1.0.1",
     "is-mobile": "2.2.2",
     "pepjs": "0.5.3",
     "react": "17.0.1",
