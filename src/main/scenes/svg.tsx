@@ -143,13 +143,11 @@ const getInitialState = ({ model, options }: Props): State => {
     Object.values(elementState).filter((element) => keepOriginalSize || layout.has(element.id)),
   );
 
-  if (options) {
-    const margin = getMargin(options.margin);
-    bounds.x -= margin.left;
-    bounds.y -= margin.top;
-    bounds.width += margin.left + margin.right;
-    bounds.height += margin.top + margin.bottom;
-  }
+  const margin = getMargin(options?.margin);
+  bounds.x -= margin.left;
+  bounds.y -= margin.top;
+  bounds.width += margin.left + margin.right;
+  bounds.height += margin.top + margin.bottom;
 
   const state = Object.values(elementState)
     .filter((element) => layout.has(element.id))
@@ -166,7 +164,7 @@ const getInitialState = ({ model, options }: Props): State => {
 };
 
 const getMargin = (
-  margin: Apollon.ExportOptions['margin'],
+  margin: Apollon.ExportOptions['margin'] = 15,
 ): { top: number; right: number; bottom: number; left: number } => {
   if (typeof margin === 'number') {
     return { top: margin, right: margin, bottom: margin, left: margin };
