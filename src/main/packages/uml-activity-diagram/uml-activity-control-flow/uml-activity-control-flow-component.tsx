@@ -51,7 +51,6 @@ export const UMLActivityControlFlowComponent: SFC<Props> = ({ element }) => {
         refY="15"
         orient="auto"
         markerUnits="strokeWidth"
-        strokeDasharray="1,0"
       >
         <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
       </marker>
