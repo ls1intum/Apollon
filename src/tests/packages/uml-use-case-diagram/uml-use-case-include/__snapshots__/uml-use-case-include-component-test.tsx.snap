@@ -14,7 +14,6 @@ exports[`render the uml-use-case-include-component 1`] = `
             orient="auto"
             refX="30"
             refY="15"
-            stroke-dasharray="1,0"
             viewBox="0 0 30 30"
           >
             <path

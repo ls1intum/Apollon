@@ -13,7 +13,6 @@ exports[`render the uml-component-required-interface-component 1`] = `
           orient="auto"
           refX="0"
           refY="0"
-          stroke-dasharray="1,0"
           viewBox="0 0 27 27"
         >
           <path
