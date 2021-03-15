@@ -16,7 +16,6 @@ const Marker = {
       refY="15"
       orient="auto"
       markerUnits="strokeWidth"
-      strokeDasharray="1,0"
     >
       <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
     </marker>
@@ -59,7 +58,6 @@ const Marker = {
       refY="15"
       orient="auto"
       markerUnits="strokeWidth"
-      strokeDasharray="1,0"
     >
       <path d="M0,1 L0,29 L30,15 z" fill="white" stroke="black" />
     </marker>

@@ -67,7 +67,6 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
         refY="0"
         orient="auto"
         markerUnits="strokeWidth"
-        strokeDasharray="1,0"
       >
         {/*M -> Move to, A -> Arc radiusX, radiusY, x-axis-rotation, bow-flag, endpointX,endpointY */}
         <path
