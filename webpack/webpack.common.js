@@ -54,7 +54,7 @@ module.exports = {
     runtimeChunk: 'single',
     splitChunks: {
       cacheGroups: {
-        vendor: {
+        defaultVendors: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
           chunks: 'all',
@@ -72,6 +72,5 @@ module.exports = {
     new CopyPlugin({
       patterns: [{ from: 'public/assets', to: outputDir }],
     }),
-    new webpack.HashedModuleIdsPlugin(),
   ],
 };
