@@ -86,12 +86,28 @@ const getInitialState = ({ model, options }: Props): State => {
       : [];
 
     element.deserialize(apollonElement, apollonChildren);
-    const [root, ...updates] = element.render(layer, []) as UMLElement[];
+    const children: UMLElement[] = apollonChildren.reduce<UMLElement[]>(
+      (acc, val) => [...acc, ...deserialize(val)],
+      [],
+    );
+
+    const [root, ...updates] = element.render(layer, children) as UMLElement[];
+    updates.map((x) => {
+      const original = apollonChildren.find((y) => y.id === x.id);
+      if (!original) {
+        return x;
+      }
+      x.bounds.x = original.bounds.x;
+      x.bounds.y = original.bounds.y;
+      return x;
+    });
 
     return [root, ...updates];
   };
 
-  const elements = apollonElements.reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
+  const elements = apollonElements
+    .filter((element) => !element.owner)
+    .reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
 
   const relationships = apollonRelationships.map<UMLRelationship>((apollonRelationship) => {
     const relationship = new UMLRelationships[apollonRelationship.type]();
