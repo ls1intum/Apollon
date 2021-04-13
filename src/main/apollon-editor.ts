@@ -109,6 +109,7 @@ export class ApollonEditor {
   private selectionSubscribers: ((selection: Apollon.Selection) => void)[] = [];
   private assessmentSubscribers: ((assessments: Apollon.Assessment[]) => void)[] = [];
   private modelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
+  private discreteModelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
   private errorSubscribers: ((error: Error) => void)[] = [];
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
@@ -225,6 +226,23 @@ export class ApollonEditor {
   }
 
   /**
+   * Register callback which is executed when the model changes
+   * @param callback function which is called when the model changes
+   * @return returns the subscription identifier which can be used to unsubscribe
+   */
+  subscribeToModelDiscreteChange(callback: (model: UMLModel) => void): number {
+    return this.discreteModelSubscribers.push(callback) - 1;
+  }
+
+  /**
+   * Remove assessment subscription, so that the corresponding callback is no longer executed when the assessment of elements are changed.
+   * @param subscriptionId subscription identifier
+   */
+  unsubscribeFromDiscreteModelChange(subscriptionId: number) {
+    this.discreteModelSubscribers.splice(subscriptionId);
+  }
+
+  /**
    * Register callback which is executed when an error occurs in the editor. Apollon will try to recreate the latest working state when an error occurs, so that it is less visible to user / less interrupting.
    * A registered callback would be called anyway, giving the full error, so that the application which uses Apollon can decide what to do next.
    * @param callback callback function which is called when an error occurs
@@ -293,6 +311,22 @@ export class ApollonEditor {
 
     // notfiy that action was done
     this.notifyModelSubscribers();
+    this.notifyDiscreteModelSubscribers();
+  };
+
+  private notifyDiscreteModelSubscribers = () => {
+    try {
+      // if state not available -> do not emit changes
+      if (!this.store) return;
+      const model = this.model;
+      if (this.store.getState().lastAction.lastAction.endsWith('END')) {
+        const lastModel = ModelState.toModel(this.store.getState());
+        this.discreteModelSubscribers.forEach((subscriber) => subscriber(lastModel));
+      }
+    } catch (error) {
+      // if error occured while getting current state for subscribers -> do not emit changes
+      // -> no need to emit latest changes
+    }
   };
 
   private notifyModelSubscribers = debounce(() => {
