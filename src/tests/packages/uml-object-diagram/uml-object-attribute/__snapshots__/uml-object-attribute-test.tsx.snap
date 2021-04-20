@@ -7,7 +7,6 @@ exports[`render the uml-object-attribute-component 1`] = `
       <g>
         <rect
           height="100%"
-          stroke="black"
           width="100%"
         />
         <text

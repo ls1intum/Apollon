@@ -12,8 +12,7 @@ module.exports = {
   output: {
     path: outputDir,
     filename: '[name].js',
-    library: 'apollon',
-    libraryTarget: 'umd',
+    library: { name: 'apollon', type: 'umd' },
   },
   resolve: {
     extensions: ['.js', '.ts', '.tsx'],
@@ -51,10 +50,9 @@ module.exports = {
     ],
   },
   optimization: {
-    runtimeChunk: 'single',
     splitChunks: {
       cacheGroups: {
-        vendor: {
+        defaultVendors: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
           chunks: 'all',
@@ -72,6 +70,5 @@ module.exports = {
     new CopyPlugin({
       patterns: [{ from: 'public/assets', to: outputDir }],
     }),
-    new webpack.HashedModuleIdsPlugin(),
   ],
 };

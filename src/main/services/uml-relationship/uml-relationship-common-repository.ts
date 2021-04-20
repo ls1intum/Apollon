@@ -26,7 +26,6 @@ export const UMLRelationshipCommonRepository = {
 
   getById: (id: string): AsyncAction<UMLElement | null> => (dispatch, getState) => {
     const { elements } = getState();
-
     return UMLRelationshipCommonRepository.get(elements[id]);
   },
 

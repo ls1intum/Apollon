@@ -16,7 +16,7 @@ module.exports = merge(common, {
     removeEmptyChunks: false,
   },
   devServer: {
-    contentBase: path.join(__dirname, 'public'),
+    static: path.join(__dirname, 'public'),
     host: '0.0.0.0',
     port: 8888,
   },
@@ -26,5 +26,5 @@ module.exports = merge(common, {
       // eslint: true,
     }),
     new ForkTsCheckerNotifierWebpackPlugin({ title: 'Apollon Standalone', excludeWarnings: false }),
-  ]
+  ],
 });
