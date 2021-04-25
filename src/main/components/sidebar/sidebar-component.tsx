@@ -5,17 +5,19 @@ import { EditorRepository } from '../../services/editor/editor-repository';
 import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
 import { Switch } from '../controls/switch/switch';
 import { CreatePane } from '../create-pane/create-pane';
+import { StylePane } from '../style-pane/style-pane';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { Container } from './sidebar-styles';
-
+import {SelectableState} from '../../services/uml-element/selectable/selectable-types';
 type OwnProps = {};
 
 type StateProps = {
   readonly: boolean;
   mode: ApollonMode;
   view: ApollonView;
+  selected: SelectableState;
 };
 
 type DispatchProps = {
@@ -31,6 +33,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       readonly: state.editor.readonly,
       mode: state.editor.mode,
       view: state.editor.view,
+      selected: state.selected,
     }),
     {
       changeView: EditorRepository.changeView,
@@ -51,7 +54,11 @@ class SidebarComponent extends Component<Props> {
           </Switch>
         )}
         {this.props.view === ApollonView.Modelling ? (
-          <CreatePane />
+          <>
+          {this.props.selected.length>0?
+          <StylePane/>:
+          <CreatePane />}
+          </>
         ) : (
           <label htmlFor="toggleInteractiveElementsMode">
             <input
