@@ -1,11 +1,12 @@
 import React, { SFC } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { UMLPetriNetTransition } from './uml-petri-net-transition';
 
 export const UMLPetriNetTransitionComponent: SFC<Props> = ({ element }) => (
   <g>
-    <text x="50%" y="-15" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
+    <Text y="-15" fill={element.color?.text}>
       {element.name}
-    </text>
+    </Text>
     <rect
       width={element.bounds.width}
       height={element.bounds.height}

@@ -1,6 +1,7 @@
 import React, { SFC } from 'react';
 import { UMLPetriNetPlace } from './uml-petri-net-place';
 import { Point } from '../../../utils/geometry/point';
+import { Text } from '../../../components/controls/text/text';
 
 const maxAmountCircles = 5;
 const tokenToBoundaryDistance = 10;
@@ -62,26 +63,15 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
             fillOpacity={1}
           />
         ))}
-      {displayTokenAsNumber && (
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
-          {element.amountOfTokens}
-        </text>
-      )}
+      {displayTokenAsNumber && <Text fill={element.color?.text}>{element.amountOfTokens}</Text>}
       {displayCapacity && (
         <text x="95%" y="5" pointerEvents="none">
           C={element.capacity}
         </text>
       )}
-      <text
-        x="50%"
-        y={element.bounds.height + 15}
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontWeight="bold"
-        pointerEvents="none"
-      >
+      <Text fill={element.color?.text} y={element.bounds.height + 15}>
         {element.name}
-      </text>
+      </Text>
     </g>
   );
 };
