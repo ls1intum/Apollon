@@ -1,4 +1,5 @@
 import React, { SFC } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { UMLDeploymentNode } from './uml-deployment-node';
 
 export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children }) => (
@@ -17,7 +18,7 @@ export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children }) =>
         stroke={element.color?.stroke || 'black'}
       />
     </g>
-    <text x="50%" y="30" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
+    <Text y="30" fill={element.color?.text}>
       {element.stereotype && (
         <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
           {`«${element.stereotype}»`}
@@ -26,7 +27,7 @@ export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children }) =>
       <tspan x="50%" dy={element.stereotype ? 18 : 10} textAnchor="middle">
         {element.name}
       </tspan>
-    </text>
+    </Text>
     {children}
   </g>
 );

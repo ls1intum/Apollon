@@ -1,4 +1,5 @@
 import React, { SFC } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLDeploymentAssociation } from './uml-deployment-association';
 
@@ -47,9 +48,9 @@ export const UMLDeploymentAssociationComponent: SFC<Props> = ({ element }) => {
         fill="none"
         strokeWidth={1}
       />
-      <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
+      <Text fill={element.color?.text} x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
         {element.name}
-      </text>
+      </Text>
     </g>
   );
 };
