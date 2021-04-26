@@ -4,7 +4,7 @@ import { SyntaxTreeTerminal } from './syntax-tree-terminal';
 
 export const SyntaxTreeTerminalComponent: SFC<Props> = ({ element }) => (
   <g>
-    <rect width="100%" height="100%" stroke="black" />
+    <rect width="100%" height="100%" stroke={element.color?.stroke || 'black'} />
     <Multiline
       x={element.bounds.width / 2}
       y={element.bounds.height / 2}

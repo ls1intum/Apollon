@@ -3,7 +3,7 @@ import { UMLComponent } from './uml-component';
 
 export const UMLComponentComponent: SFC<Props> = ({ element, children }) => (
   <g>
-    <rect width="100%" height="100%" stroke="black" />
+    <rect width="100%" height="100%" stroke={element.color?.stroke || 'black'} />
     <text x="50%" y="25px" textAnchor="middle" fontWeight="bold" pointerEvents="none">
       {element.name}
     </text>

@@ -72,6 +72,8 @@ class CanvasElementComponent extends Component<Props> {
         ? theme.interactive.hovered
         : element.highlight
         ? element.highlight
+        : element.color?.fill
+        ? element.color?.fill
         : 'white';
 
     return (

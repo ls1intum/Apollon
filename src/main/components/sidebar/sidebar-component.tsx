@@ -10,7 +10,7 @@ import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { Container } from './sidebar-styles';
-import {SelectableState} from '../../services/uml-element/selectable/selectable-types';
+import { SelectableState } from '../../services/uml-element/selectable/selectable-types';
 type OwnProps = {};
 
 type StateProps = {
@@ -54,11 +54,7 @@ class SidebarComponent extends Component<Props> {
           </Switch>
         )}
         {this.props.view === ApollonView.Modelling ? (
-          <>
-          {this.props.selected.length>0?
-          <StylePane/>:
-          <CreatePane />}
-          </>
+          <>{this.props.selected.length > 0 ? <StylePane /> : <CreatePane />}</>
         ) : (
           <label htmlFor="toggleInteractiveElementsMode">
             <input

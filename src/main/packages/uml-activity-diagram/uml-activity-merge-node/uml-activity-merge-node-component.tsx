@@ -8,7 +8,7 @@ export const UMLActivityMergeNodeComponent: SFC<Props> = ({ element }) => (
       points={`${element.bounds.width / 2} 0, ${element.bounds.width} ${element.bounds.height / 2}, ${
         element.bounds.width / 2
       } ${element.bounds.height}, 0 ${element.bounds.height / 2}, ${element.bounds.width / 2} 0`}
-      stroke="black"
+      stroke={element.color?.stroke || 'black'}
     />
     <Multiline
       x={element.bounds.width / 2}

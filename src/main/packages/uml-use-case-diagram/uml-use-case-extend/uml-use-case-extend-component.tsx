@@ -1,8 +1,9 @@
 import React, { SFC, SVGProps } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLUseCaseExtend } from './uml-use-case-extend';
 
-const Arrow: SFC<{ id: string } & SVGProps<SVGPathElement>> = ({ id, ...props }) => (
+const Arrow: SFC<{ id: string; color?: string } & SVGProps<SVGPathElement>> = ({ id, color, ...props }) => (
   <g>
     <marker
       id={`marker-${id}`}
@@ -14,9 +15,9 @@ const Arrow: SFC<{ id: string } & SVGProps<SVGPathElement>> = ({ id, ...props })
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
+      <path d="M0,29 L30,15 L0,1" fill="none" stroke={color || 'black'} />
     </marker>
-    <path {...props} stroke="black" strokeDasharray={7} markerEnd={`url(#marker-${id})`} />
+    <path {...props} stroke={color || 'black'} strokeDasharray={7} markerEnd={`url(#marker-${id})`} />
   </g>
 );
 
@@ -25,7 +26,7 @@ export const UMLUseCaseExtendComponent: SFC<Props> = ({ element }) => {
   const line = end.subtract(start);
 
   if (line.length <= 100) {
-    return <Arrow id={element.id} d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`} />;
+    return <Arrow id={element.id} color={element.color?.stroke} d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`} />;
   }
 
   const norm = line.normalize();
@@ -35,6 +36,7 @@ export const UMLUseCaseExtendComponent: SFC<Props> = ({ element }) => {
   return (
     <g>
       <Arrow
+        color={element.color?.stroke}
         id={element.id}
         d={`
           M ${start.x} ${start.y} L ${startSection.x} ${startSection.y}
@@ -48,10 +50,10 @@ export const UMLUseCaseExtendComponent: SFC<Props> = ({ element }) => {
           L ${endSection.x} ${endSection.y}
         `}
       />
-      <text
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontWeight="bold"
+      <Text
+        noX
+        noY
+        fill={element.color?.text}
         transform={
           norm.x < 0
             ? `
@@ -61,12 +63,11 @@ export const UMLUseCaseExtendComponent: SFC<Props> = ({ element }) => {
             `
             : undefined
         }
-        pointerEvents="none"
       >
         <textPath xlinkHref={`#textpath-${element.id}`} startOffset="50%">
           «extend»
         </textPath>
-      </text>
+      </Text>
     </g>
   );
 };

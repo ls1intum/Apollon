@@ -1,4 +1,5 @@
 import React, { SFC } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLUseCaseAssociation } from './uml-use-case-association';
 
@@ -17,10 +18,10 @@ export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
         L ${end.x} ${end.y - 10}
     `}
       />
-      <text
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontWeight="bold"
+      <Text
+        noX
+        noY
+        fill={element.color?.text}
         transform={
           norm.x < 0
             ? `
@@ -30,15 +31,14 @@ export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
           `
             : undefined
         }
-        pointerEvents="none"
       >
         <textPath xlinkHref={`#textpath-${element.id}`} startOffset="50%">
           {element.name}
         </textPath>
-      </text>
+      </Text>
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke="black"
+        stroke={element.color?.stroke || 'black'}
         fill="none"
         strokeWidth={1}
       />

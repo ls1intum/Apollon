@@ -1,12 +1,13 @@
 import React, { SFC } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { UMLUseCaseSystem } from './uml-use-case-system';
 
 export const UMLUseCaseSystemComponent: SFC<Props> = ({ element, children }) => (
   <g>
-    <rect width="100%" height="100%" stroke="black" />
-    <text x="50%" y={16} textAnchor="middle" fontWeight="bold" pointerEvents="none">
+    <rect width="100%" height="100%" stroke={element.color?.stroke || 'black'} />
+    <Text fill={element.color?.text} y={16}>
       {element.name}
-    </text>
+    </Text>
     {children}
   </g>
 );
