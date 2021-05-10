@@ -102,6 +102,7 @@ export type Assessment = {
   elementType: UMLElementType | UMLRelationshipType;
   score: number;
   feedback?: string;
+  additionalInfo?: any;
 };
 
 export type ExportOptions = {
