@@ -156,6 +156,8 @@ export class ModelState {
       elementType: state.elements[id].type as UMLElementType | UMLRelationshipType,
       score: state.assessments[id].score,
       feedback: state.assessments[id].feedback,
+      label: state.assessments[id].label,
+      labelColor: state.assessments[id].labelColor,
     }));
 
     return {

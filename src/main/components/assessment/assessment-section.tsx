@@ -25,7 +25,7 @@ type BadgeProps = {
 
 const Badge = styled.div<BadgeProps>`
   color: white;
-  background-color: ${(props) => props.color || 'gray'};
+  background-color: ${(props) => props.color || 'orange'};
   text-align: center;
   margin: 0.4rem auto 0 auto;
   padding: 0.25em 0.4em;
@@ -104,8 +104,6 @@ class AssessmentSectionComponent extends Component<Props> {
               enterToSubmit={false}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />
-              testing
-              {assessment?.label}
               {assessment?.label ?
                   <Flex>
                       <Badge color={assessment?.labelColor}>
