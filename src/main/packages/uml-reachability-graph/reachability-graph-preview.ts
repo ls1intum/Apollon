@@ -9,8 +9,11 @@ export const composeReachabilityGraphPreview: ComposePreview = (
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 
-  // Reachability Graph Marking
-  elements.push(new UMLReachabilityGraphMarking({ name: translate('packages.ReachabilityGraph.ReachabilityGraphMarking') }));
+  const umlReachabilityGraphMarking = new UMLReachabilityGraphMarking({
+    name: translate('packages.ReachabilityGraph.ReachabilityGraphMarking'),
+  });
+
+  elements.push(umlReachabilityGraphMarking);
 
   return elements;
 };
