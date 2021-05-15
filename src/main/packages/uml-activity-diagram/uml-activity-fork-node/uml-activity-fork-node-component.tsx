@@ -25,7 +25,7 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
 );
 
 const UMLActivityForkNodeC: SFC<Props> = ({ element, interactive, interactable, theme }) => {
-  const fill = element.color?.fill || 'black';
+  const fill = element.fillColor || 'black';
 
   return (
     <g>

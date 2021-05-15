@@ -3,8 +3,8 @@ import { UMLClassPackage } from './uml-class-package';
 
 export const UMLClassPackageComponent: SFC<Props> = ({ element, children }) => (
   <g>
-    <path d={`M 0 10 V 0 H 40 V 10`} stroke={element.color?.stroke || 'black'} />
-    <rect y="10" width="100%" height={element.bounds.height - 10} stroke={element.color?.stroke || 'black'} />
+    <path d={`M 0 10 V 0 H 40 V 10`} stroke={element.strokeColor || 'black'} />
+    <rect y="10" width="100%" height={element.bounds.height - 10} stroke={element.strokeColor || 'black'} />
     <text
       x="50%"
       y="20"
@@ -12,7 +12,7 @@ export const UMLClassPackageComponent: SFC<Props> = ({ element, children }) => (
       textAnchor="middle"
       fontWeight="bold"
       pointerEvents="none"
-      style={element.color?.text ? { fill: element.color?.text } : {}}
+      style={element.textColor ? { fill: element.textColor } : {}}
     >
       {element.name}
     </text>

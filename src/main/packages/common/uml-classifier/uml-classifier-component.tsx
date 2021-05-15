@@ -13,7 +13,7 @@ export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
     />
     {element.stereotype ? (
       <svg height={50}>
-        <Text fill={element.color?.text}>
+        <Text fill={element.textColor}>
           <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
             {`«${element.stereotype}»`}
           </tspan>
@@ -31,7 +31,7 @@ export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
     ) : (
       <svg height={40}>
         <Text
-          fill={element.color?.text}
+          fill={element.textColor}
           fontStyle={element.italic ? 'italic' : undefined}
           textDecoration={element.underline ? 'underline' : undefined}
         >
@@ -40,9 +40,9 @@ export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
       </svg>
     )}
     {children}
-    <rect width="100%" height="100%" stroke={element.color?.stroke || 'black'} fill="none" pointerEvents="none" />
-    <path d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} stroke={element.color?.stroke || 'black'} />
-    <path d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} stroke={element.color?.stroke || 'black'} />
+    <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} fill="none" pointerEvents="none" />
+    <path d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} stroke={element.strokeColor || 'black'} />
+    <path d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} stroke={element.strokeColor || 'black'} />
   </g>
 );
 

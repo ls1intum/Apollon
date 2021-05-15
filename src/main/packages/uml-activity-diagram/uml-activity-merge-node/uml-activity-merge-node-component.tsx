@@ -8,7 +8,7 @@ export const UMLActivityMergeNodeComponent: SFC<Props> = ({ element }) => (
       points={`${element.bounds.width / 2} 0, ${element.bounds.width} ${element.bounds.height / 2}, ${
         element.bounds.width / 2
       } ${element.bounds.height}, 0 ${element.bounds.height / 2}, ${element.bounds.width / 2} 0`}
-      stroke={element.color?.stroke || 'black'}
+      stroke={element.strokeColor || 'black'}
     />
     <Multiline
       x={element.bounds.width / 2}
@@ -16,7 +16,7 @@ export const UMLActivityMergeNodeComponent: SFC<Props> = ({ element }) => (
       width={element.bounds.width}
       height={element.bounds.height}
       fontWeight="bold"
-      fill={element.color?.text}
+      fill={element.textColor}
     >
       {element.name}
     </Multiline>

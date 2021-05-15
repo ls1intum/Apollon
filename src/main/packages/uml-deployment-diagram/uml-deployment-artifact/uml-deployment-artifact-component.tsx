@@ -4,22 +4,22 @@ import { UMLDeploymentArtifact } from './uml-deployment-artifact';
 
 export const UMLDeploymentArtifactComponent: SFC<Props> = ({ element }) => (
   <g>
-    <rect width="100%" height="100%" stroke={element.color?.stroke || 'black'} />
-    <Text y="28" dominantBaseline="auto" fill={element.color?.text}>
+    <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} />
+    <Text y="28" dominantBaseline="auto" fill={element.textColor}>
       {element.name}
     </Text>
     <g transform={`translate(${element.bounds.width - 26}, 7)`}>
       <path
         d="M 0 0 L 13 0 L 19.2 7.25 L 19.2 24 L 0 24 L 0 0 Z"
-        fill={element.color?.fill || '#ffffff'}
-        stroke={element.color?.stroke || 'black'}
+        fill={element.fillColor || '#ffffff'}
+        stroke={element.strokeColor || 'black'}
         strokeWidth="1.2"
         strokeMiterlimit="10"
       />
       <path
         d="M 13 0 L 13 7.25 L 19.2 7.25"
         fill="none"
-        stroke={element.color?.stroke || 'black'}
+        stroke={element.strokeColor || 'black'}
         strokeWidth="1.2"
         strokeMiterlimit="10"
       />

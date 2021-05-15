@@ -44,11 +44,11 @@ export const UMLDeploymentAssociationComponent: SFC<Props> = ({ element }) => {
     <g>
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.color?.stroke || 'black'}
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
       />
-      <Text fill={element.color?.text} x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
+      <Text fill={element.textColor} x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
         {element.name}
       </Text>
     </g>

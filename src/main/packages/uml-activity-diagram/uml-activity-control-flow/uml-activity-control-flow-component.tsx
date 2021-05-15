@@ -40,7 +40,7 @@ export const UMLActivityControlFlowComponent: SFC<Props> = ({ element }) => {
     }
   };
 
-  const fill = element.color?.text ? { fill: element.color?.text } : {};
+  const fill = element.textColor ? { fill: element.textColor } : {};
 
   return (
     <g>
@@ -54,11 +54,11 @@ export const UMLActivityControlFlowComponent: SFC<Props> = ({ element }) => {
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <path d="M0,29 L30,15 L0,1" fill="none" stroke={element.color?.stroke || 'black'} />
+        <path d="M0,29 L30,15 L0,1" fill="none" stroke={element.strokeColor || 'black'} />
       </marker>
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.color?.stroke || 'black'}
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}

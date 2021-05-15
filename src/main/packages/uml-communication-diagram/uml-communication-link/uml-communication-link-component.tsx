@@ -51,14 +51,14 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
               <UmlCommunicationLinkTextComponent
                 x={position.x + 8}
                 y={position.y}
-                fill={element.color?.text}
+                fill={element.textColor}
                 directionIcon="↓"
                 messages={sources}
               />
               <UmlCommunicationLinkTextComponent
                 x={position.x - 16}
                 y={position.y}
-                fill={element.color?.text}
+                fill={element.textColor}
                 directionIcon="↑"
                 messages={targets}
               />
@@ -69,7 +69,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
               <UmlCommunicationLinkTextComponent
                 x={position.x}
                 y={position.y}
-                fill={element.color?.text}
+                fill={element.textColor}
                 directionIcon="⟶"
                 messages={targets}
                 textCentered
@@ -77,7 +77,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
               <UmlCommunicationLinkTextComponent
                 x={position.x}
                 y={position.y + 16}
-                fill={element.color?.text}
+                fill={element.textColor}
                 directionIcon="⟵"
                 messages={sources}
                 textCentered
@@ -89,14 +89,14 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
               <UmlCommunicationLinkTextComponent
                 x={position.x + 8}
                 y={position.y}
-                fill={element.color?.text}
+                fill={element.textColor}
                 directionIcon="↓"
                 messages={targets}
               />
               <UmlCommunicationLinkTextComponent
                 x={position.x - 16}
                 y={position.y}
-                fill={element.color?.text}
+                fill={element.textColor}
                 directionIcon="↑"
                 messages={sources}
               />
@@ -107,7 +107,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
               <UmlCommunicationLinkTextComponent
                 x={position.x}
                 y={position.y}
-                fill={element.color?.text}
+                fill={element.textColor}
                 directionIcon="⟶"
                 messages={sources}
                 textCentered
@@ -115,7 +115,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
               <UmlCommunicationLinkTextComponent
                 x={position.x}
                 y={position.y + 16}
-                fill={element.color?.text}
+                fill={element.textColor}
                 directionIcon="⟵"
                 messages={targets}
                 textCentered
@@ -127,7 +127,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
 
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.color?.stroke || 'black'}
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
       />

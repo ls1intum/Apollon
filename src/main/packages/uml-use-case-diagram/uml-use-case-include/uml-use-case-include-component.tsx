@@ -26,7 +26,7 @@ export const UMLUseCaseIncludeComponent: SFC<Props> = ({ element }) => {
   const line = end.subtract(start);
 
   if (line.length <= 100) {
-    return <Arrow id={element.id} color={element.color?.stroke} d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`} />;
+    return <Arrow id={element.id} color={element.strokeColor} d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`} />;
   }
 
   const norm = line.normalize();
@@ -37,7 +37,7 @@ export const UMLUseCaseIncludeComponent: SFC<Props> = ({ element }) => {
     <g>
       <Arrow
         id={element.id}
-        color={element.color?.stroke}
+        color={element.strokeColor}
         d={`
           M ${start.x} ${start.y} L ${startSection.x} ${startSection.y}
           M ${endSection.x} ${endSection.y} L ${end.x} ${end.y}
@@ -53,7 +53,7 @@ export const UMLUseCaseIncludeComponent: SFC<Props> = ({ element }) => {
       <Text
         noX
         noY
-        fill={element.color?.text}
+        fill={element.textColor}
         transform={
           norm.x < 0
             ? `

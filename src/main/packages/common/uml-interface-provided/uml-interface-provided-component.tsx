@@ -5,7 +5,7 @@ export const UMLInterfaceProvidedComponent: SFC<Props> = ({ element }) => (
   <g>
     <polyline
       points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-      stroke={element.color?.stroke || 'black'}
+      stroke={element.strokeColor || 'black'}
       fill="none"
     />
   </g>

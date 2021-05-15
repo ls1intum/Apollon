@@ -8,7 +8,7 @@ export const FlowchartInputOutputComponent: FunctionComponent<Props> = ({ elemen
       points={`${1.1 * element.bounds.width} 0, ${0.9 * element.bounds.width} ${element.bounds.height}, ${
         -0.1 * element.bounds.width
       } ${element.bounds.height}, ${0.1 * element.bounds.width} 0, ${1.1 * element.bounds.width} 0`}
-      stroke={element.color?.stroke || 'black'}
+      stroke={element.strokeColor || 'black'}
     />
   </FlowchartComponent>
 );

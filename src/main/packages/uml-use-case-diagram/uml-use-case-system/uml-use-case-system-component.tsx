@@ -4,8 +4,8 @@ import { UMLUseCaseSystem } from './uml-use-case-system';
 
 export const UMLUseCaseSystemComponent: SFC<Props> = ({ element, children }) => (
   <g>
-    <rect width="100%" height="100%" stroke={element.color?.stroke || 'black'} />
-    <Text fill={element.color?.text} y={16}>
+    <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} />
+    <Text fill={element.textColor} y={16}>
       {element.name}
     </Text>
     {children}

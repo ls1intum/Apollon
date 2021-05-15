@@ -35,12 +35,12 @@ export const Text: React.FC<Props & Record<string, any>> = ({
   }
   return (
     <text
+      {...pos}
       style={fill ? { fill } : {}}
       dominantBaseline={dominantBaseline}
       textAnchor={textAnchor}
       fontWeight={fontWeight}
       pointerEvents={pointerEvents}
-      {...pos}
       {...props}
     >
       {children}

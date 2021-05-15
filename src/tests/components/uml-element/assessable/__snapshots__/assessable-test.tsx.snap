@@ -9,13 +9,13 @@ exports[`test assessable HOC display negative score 1`] = `
         transform="translate(200 0)"
       >
         <circle
-          class="sc-gsDJrp"
+          class="sc-gsTCUz"
           fill="#e9ecef"
           fill-opacity="0.8"
           r="16"
         />
         <svg
-          class="sc-bdvvaa xcZOT sc-hKwCoD loOfqT"
+          class="sc-bdfBwQ KSdSD sc-hKgILt iSSyco"
           height="24"
           viewBox="0 0 352 512"
           width="24"
@@ -45,13 +45,13 @@ exports[`test assessable HOC display neutral score 1`] = `
         transform="translate(200 0)"
       >
         <circle
-          class="sc-gsDJrp"
+          class="sc-gsTCUz"
           fill="#e9ecef"
           fill-opacity="0.8"
           r="16"
         />
         <svg
-          class="sc-bdvvaa xcZOT sc-eCImvq dOnewX"
+          class="sc-bdfBwQ KSdSD sc-eCssSg fBexFG"
           height="24"
           viewBox="0 0 192 512"
           width="24"
@@ -81,13 +81,13 @@ exports[`test assessable HOC display positive score 1`] = `
         transform="translate(200 0)"
       >
         <circle
-          class="sc-gsDJrp"
+          class="sc-gsTCUz"
           fill="#e9ecef"
           fill-opacity="0.8"
           r="16"
         />
         <svg
-          class="sc-bdvvaa xcZOT sc-dkPtyc cOCYsW"
+          class="sc-bdfBwQ KSdSD sc-dlfnbm gdvqom"
           height="24"
           viewBox="0 0 512 512"
           width="24"

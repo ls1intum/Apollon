@@ -6,7 +6,7 @@ export const Updatable = {
     if (getState().updating.length) {
       return null;
     }
-
+    console.log('updateStart', id);
     dispatch<UpdateStartAction>({
       type: UpdatableActionTypes.START,
       payload: { ids: Array.isArray(id) ? id : [id] },

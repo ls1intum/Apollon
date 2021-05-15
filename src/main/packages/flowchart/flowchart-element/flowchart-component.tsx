@@ -11,7 +11,7 @@ export const FlowchartComponent: FunctionComponent<Props> = ({ element, children
       width={element.bounds.width}
       height={element.bounds.height}
       fontWeight="bold"
-      fill={element.color?.text}
+      fill={element.textColor}
     >
       {element.name}
     </Multiline>

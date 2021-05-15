@@ -6,19 +6,19 @@ exports[`render the uml-object-name-component 1`] = `
     <div>
       <section>
         <div
-          class="sc-iCfLBT hfGryI"
+          class="sc-iBPRYJ cEvHtW"
         >
           <input
-            class="sc-eCImvq sc-jRQAMF dIvUyK oPoLy"
+            class="sc-eCssSg sc-jSgupP cLEjzT dDUIug"
             value="TestObjectComponent"
           />
           <button
-            class="sc-bdvvaa sc-gsDJrp cXRBNm dDdycd"
+            class="sc-bdfBwQ sc-gsTCUz bvWLxS jiumsv"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-hKwCoD jLPRZB"
+              class="sc-hKgILt dNNoXy"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -31,31 +31,31 @@ exports[`render the uml-object-name-component 1`] = `
           </button>
         </div>
         <hr
-          class="sc-dkPtyc kmLmkz"
+          class="sc-dlfnbm canxCD"
         />
       </section>
       <section>
         <h1
-          class="sc-gKckTs hEpUnX"
+          class="sc-gKsewC ePnLng"
         >
           Attributes
         </h1>
         <input
-          class="sc-eCImvq sc-jRQAMF dIvUyK jyllUJ"
+          class="sc-eCssSg sc-jSgupP cLEjzT eULCMP"
           value=""
         />
       </section>
       <section>
         <hr
-          class="sc-dkPtyc kmLmkz"
+          class="sc-dlfnbm canxCD"
         />
         <h1
-          class="sc-gKckTs hEpUnX"
+          class="sc-gKsewC ePnLng"
         >
           Methods
         </h1>
         <input
-          class="sc-eCImvq sc-jRQAMF dIvUyK jyllUJ"
+          class="sc-eCssSg sc-jSgupP cLEjzT eULCMP"
           value=""
         />
       </section>

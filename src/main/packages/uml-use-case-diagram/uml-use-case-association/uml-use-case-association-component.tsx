@@ -21,7 +21,7 @@ export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
       <Text
         noX
         noY
-        fill={element.color?.text}
+        fill={element.textColor}
         transform={
           norm.x < 0
             ? `
@@ -38,7 +38,7 @@ export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
       </Text>
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.color?.stroke || 'black'}
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
       />

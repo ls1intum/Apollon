@@ -17,12 +17,13 @@ type OwnProps = {};
 
 type StateProps = {
   type: UMLDiagramType;
-  selected?: string;
+  selected?: string[];
   elements: UMLElementState;
 };
 
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
+  updateStart: typeof UMLElementRepository.updateStart;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext & CanvasContext;
@@ -41,10 +42,11 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     (state) => ({
       type: state.diagram.type,
-      selected: state.selected[0],
+      selected: state.selected,
       elements: state.elements,
     }),
     {
+      updateStart: UMLElementRepository.updateStart,
       update: UMLElementRepository.update,
     },
   ),
@@ -54,35 +56,35 @@ class StylePaneComponent extends Component<Props, State> {
   state = getInitialState();
 
   handleFillColorChange = (color: string) => {
-    const element = this.props.selected ? this.props.elements[this.props.selected] : undefined;
-    this.props.update(this.props.selected!, { color: { ...element?.color, fill: color } });
+    this.props.updateStart(this.props.selected!);
+    this.props.update(this.props.selected!, { fillColor: color });
   };
   handleStrokeColorChange = (color: string) => {
-    const element = this.props.selected ? this.props.elements[this.props.selected] : undefined;
-    this.props.update(this.props.selected!, { color: { ...element?.color, stroke: color } });
+    this.props.updateStart(this.props.selected!);
+    this.props.update(this.props.selected!, { strokeColor: color });
   };
   handleTextColorChange = (color: string) => {
-    const element = this.props.selected ? this.props.elements[this.props.selected] : undefined;
-    this.props.update(this.props.selected!, { color: { ...element?.color, text: color } });
+    this.props.updateStart(this.props.selected!);
+    this.props.update(this.props.selected!, { textColor: color });
   };
 
   render() {
-    const element = this.props.selected ? this.props.elements[this.props.selected] : undefined;
+    const element = this.props.selected ? this.props.elements[this.props.selected[0]] : undefined;
 
     return (
       <div>
         <Row>
           <span>Fill</span>
-          <ColorSelector color={element?.color?.fill} onColorChange={this.handleFillColorChange} />
+          <ColorSelector color={element?.fillColor} onColorChange={this.handleFillColorChange} />
         </Row>
 
         <Row>
           <span>Stroke</span>
-          <ColorSelector color={element?.color?.stroke} onColorChange={this.handleStrokeColorChange} />
+          <ColorSelector color={element?.strokeColor} onColorChange={this.handleStrokeColorChange} />
         </Row>
         <Row>
           <span>Text</span>
-          <ColorSelector color={element?.color?.text} onColorChange={this.handleTextColorChange} />
+          <ColorSelector color={element?.textColor} onColorChange={this.handleTextColorChange} />
         </Row>
       </div>
     );

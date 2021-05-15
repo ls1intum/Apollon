@@ -4,7 +4,7 @@ import { FlowchartProcess } from './flowchart-process';
 
 export const FlowchartProcessComponent: FunctionComponent<Props> = ({ element }) => (
   <FlowchartComponent element={element}>
-    <rect width="100%" height="100%" stroke={element.color?.stroke || 'black'} />
+    <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} />
   </FlowchartComponent>
 );
 

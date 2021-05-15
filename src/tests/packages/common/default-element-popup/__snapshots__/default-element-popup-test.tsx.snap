@@ -7,18 +7,18 @@ exports[`test default element popup render 1`] = `
       <div>
         <section>
           <div
-            class="sc-jRQAMF bLeXIp"
+            class="sc-jSgupP dLyApH"
           >
             <input
-              class="sc-hKwCoD sc-eCImvq fTUujj fjcUmk"
+              class="sc-hKgILt sc-eCssSg eUOIhQ ioAaV"
             />
             <button
-              class="sc-bdvvaa sc-gsDJrp cXRBNm dDdycd"
+              class="sc-bdfBwQ sc-gsTCUz bvWLxS jiumsv"
               color="link"
               tabindex="-1"
             >
               <svg
-                class="sc-dkPtyc jnPWYc"
+                class="sc-dlfnbm gmXyFQ"
                 height="16px"
                 viewBox="0 0 448 512"
                 width="16px"

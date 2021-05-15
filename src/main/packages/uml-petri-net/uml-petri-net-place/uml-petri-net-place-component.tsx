@@ -51,7 +51,7 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
   }
   return (
     <g>
-      <circle cx="50%" cy="50%" r={radius} stroke={element.color?.stroke || 'black'} strokeWidth={2} fillOpacity={1} />
+      <circle cx="50%" cy="50%" r={radius} stroke={element.strokeColor || 'black'} strokeWidth={2} fillOpacity={1} />
       {!displayTokenAsNumber &&
         tokenPositions.map((position, index) => (
           <circle
@@ -63,13 +63,13 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
             fillOpacity={1}
           />
         ))}
-      {displayTokenAsNumber && <Text fill={element.color?.text}>{element.amountOfTokens}</Text>}
+      {displayTokenAsNumber && <Text fill={element.textColor}>{element.amountOfTokens}</Text>}
       {displayCapacity && (
         <text x="95%" y="5" pointerEvents="none">
           C={element.capacity}
         </text>
       )}
-      <Text fill={element.color?.text} y={element.bounds.height + 15}>
+      <Text fill={element.textColor} y={element.bounds.height + 15}>
         {element.name}
       </Text>
     </g>

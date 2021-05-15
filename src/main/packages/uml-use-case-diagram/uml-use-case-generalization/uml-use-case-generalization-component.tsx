@@ -13,11 +13,11 @@ export const UMLUseCaseGeneralizationComponent: SFC<Props> = ({ element }) => (
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,1 L0,29 L30,15 z" fill="white" stroke={element.color?.stroke || 'black'} />
+      <path d="M0,1 L0,29 L30,15 z" fill="white" stroke={element.strokeColor || 'black'} />
     </marker>
     <polyline
       points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-      stroke={element.color?.stroke || 'black'}
+      stroke={element.strokeColor || 'black'}
       fill="none"
       strokeWidth={1}
       markerEnd={`url(#marker-${element.id})`}

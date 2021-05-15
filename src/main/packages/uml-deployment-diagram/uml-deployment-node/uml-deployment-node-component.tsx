@@ -5,20 +5,20 @@ import { UMLDeploymentNode } from './uml-deployment-node';
 export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children }) => (
   <g>
     <g>
-      <path d={`M 0 8 l 8 -8 H ${element.bounds.width} l -8 8 Z`} stroke={element.color?.stroke || 'black'} />
+      <path d={`M 0 8 l 8 -8 H ${element.bounds.width} l -8 8 Z`} stroke={element.strokeColor || 'black'} />
       <path
         d={`M ${element.bounds.width} 0 V ${element.bounds.height - 8} l -8 8 V 8 Z`}
-        stroke={element.color?.stroke || 'black'}
+        stroke={element.strokeColor || 'black'}
       />
       <rect
         x="0"
         y="8"
         width={element.bounds.width - 8}
         height={element.bounds.height - 9}
-        stroke={element.color?.stroke || 'black'}
+        stroke={element.strokeColor || 'black'}
       />
     </g>
-    <Text y="30" fill={element.color?.text}>
+    <Text y="30" fill={element.textColor}>
       {element.stereotype && (
         <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
           {`«${element.stereotype}»`}
