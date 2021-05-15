@@ -11,6 +11,7 @@ export const SyntaxTreeTerminalComponent: SFC<Props> = ({ element }) => (
       width={element.bounds.width}
       height={element.bounds.height}
       fontWeight="bold"
+      fill={element.color?.text}
     >
       {element.name}
     </Multiline>

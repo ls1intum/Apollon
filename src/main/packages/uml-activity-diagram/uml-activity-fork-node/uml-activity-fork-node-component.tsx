@@ -24,16 +24,20 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-const UMLActivityForkNodeC: SFC<Props> = ({ element, interactive, interactable, theme }) => (
-  <g>
-    <rect
-      width={element.bounds.width}
-      height={element.bounds.height}
-      stroke="none"
-      fill={interactive && interactable ? theme.interactive.normal : 'black'}
-      fillOpacity={1}
-    />
-  </g>
-);
+const UMLActivityForkNodeC: SFC<Props> = ({ element, interactive, interactable, theme }) => {
+  const fill = element.color?.fill || 'black';
+
+  return (
+    <g>
+      <rect
+        width={element.bounds.width}
+        height={element.bounds.height}
+        stroke="none"
+        fill={interactive && interactable ? theme.interactive.normal : fill}
+        fillOpacity={1}
+      />
+    </g>
+  );
+};
 
 export const UMLActivityForkNodeComponent = enhance(UMLActivityForkNodeC);

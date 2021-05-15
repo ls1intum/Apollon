@@ -6,7 +6,7 @@ type Props = {
   x: number;
   y: number;
   messages: ICommunicationLinkMessage[];
-  fill: string;
+  fill?: string;
   directionIcon: string;
   textCentered?: boolean;
 };

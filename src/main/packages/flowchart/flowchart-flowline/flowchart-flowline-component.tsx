@@ -39,6 +39,7 @@ export const FlowchartFlowlineComponent: SFC<Props> = ({ element }) => {
         };
     }
   };
+  const fill = element.color?.text ? { fill: element.color?.text } : {};
 
   return (
     <g>
@@ -61,7 +62,7 @@ export const FlowchartFlowlineComponent: SFC<Props> = ({ element }) => {
         strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}
       />
-      <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
+      <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none" style={{ ...fill }}>
         {element.name}
       </text>
     </g>
