@@ -283,7 +283,7 @@ export class ApollonEditor {
       elementType: elements[id].type as Apollon.UMLElementType | Apollon.UMLRelationshipType,
       score: assessments[id].score,
       feedback: assessments[id].feedback,
-      additionalInfo: assessments[id].additionalInfo,
+      dropInfo: assessments[id].dropInfo,
     }));
 
     // check if previous assessment differs from current selection, if yes -> notify subscribers

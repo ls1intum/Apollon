@@ -154,8 +154,8 @@ export const assessable = (
         const { id: elementId, assessment } = this.props;
         const score = instruction.credits;
         const feedback = instruction.feedback;
-        const additionalInfo = { instructionId: instruction.id };
-        this.props.assess(elementId, { ...assessment, score, feedback, additionalInfo });
+        const dropInfo = { instructionId: instruction.id };
+        this.props.assess(elementId, { ...assessment, score, feedback, dropInfo }, 'DROPPED');
         this.props.updateStart(elementId);
       }
     };
