@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`uml-reachability-graph-marking-component render the uml-reachability-graph-marking-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          height="100%"
+          rx="10"
+          ry="10"
+          stroke="black"
+          width="100%"
+        />
+        <text
+          font-weight="bold"
+          height="100"
+          pointer-events="none"
+          text-anchor="middle"
+          width="200"
+          x="100"
+          y="50"
+        >
+          <tspan>
+             
+          </tspan>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;
