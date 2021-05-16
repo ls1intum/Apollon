@@ -22,6 +22,7 @@ import { ModelState } from '../store/model-state';
 import { StoreProvider } from '../store/model-store';
 import { PreviewElementComponent } from './preview-element-component';
 import { composePetriNetPreview } from '../../packages/uml-petri-net/petri-net-preview';
+import { composeReachabilityGraphPreview } from '../../packages/uml-reachability-graph/reachability-graph-preview';
 import { PreviewElement } from '../../packages/compose-preview';
 import { composeSyntaxTreePreview } from '../../packages/syntax-tree/syntax-tree-preview';
 import { composeFlowchartPreview } from '../../packages/flowchart/flowchart-diagram-preview';
@@ -64,6 +65,9 @@ const getInitialState = ({ type, canvas, translate }: Props) => {
       break;
     case UMLDiagramType.PetriNet:
       previews.push(...composePetriNetPreview(canvas, translate));
+      break;
+    case UMLDiagramType.ReachabilityGraph:
+      previews.push(...composeReachabilityGraphPreview(canvas, translate));
       break;
     case UMLDiagramType.SyntaxTree:
       previews.push(...composeSyntaxTreePreview(canvas, translate));

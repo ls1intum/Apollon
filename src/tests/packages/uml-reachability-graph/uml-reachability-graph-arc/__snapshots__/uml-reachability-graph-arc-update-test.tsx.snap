@@ -1,19 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`test flowchart flowline update render 1`] = `
+exports[`test reachability graph arc update render 1`] = `
 <body>
   <div>
     <div>
       <section>
         <div
-          class="sc-iUKrWq inEzrJ"
+          class="sc-gWXaA-D dwiBOv"
         >
-          <h1
-            class="sc-bkkfTU hfKudc"
-            style="flex-grow: 1;"
-          >
-            Flowline
-          </h1>
+          <input
+            class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
+            value="UMLClassBidirectional"
+          />
           <button
             class="sc-kDThTU sc-iqsfdx bmjioK iJozYQ"
             color="link"
@@ -33,6 +31,7 @@ exports[`test flowchart flowline update render 1`] = `
           <button
             class="sc-kDThTU sc-iqsfdx bmjioK iJozYQ"
             color="link"
+            tabindex="-1"
           >
             <svg
               class="sc-bdvvaa xcZOT"
@@ -47,15 +46,6 @@ exports[`test flowchart flowline update render 1`] = `
             </svg>
           </button>
         </div>
-        <hr
-          class="sc-dJjZJu dhDoEz"
-        />
-      </section>
-      <section>
-        <input
-          class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
-          value="FlowchartFlowline"
-        />
       </section>
     </div>
   </div>

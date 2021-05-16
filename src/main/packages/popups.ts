@@ -15,6 +15,8 @@ import { UMLRelationshipType } from './uml-relationship-type';
 import { UMLUseCaseAssociationUpdate } from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-update';
 import { UMLPetriNetPlaceUpdate } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-update';
 import { UMLPetriNetArcUpdate } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-update';
+import { UMLReachabilityGraphArcUpdate } from './uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc-update';
+import { UMLReachabilityGraphMarkingUpdate } from './uml-reachability-graph/uml-reachability-graph-marking/uml-reachability-graph-marking-update';
 import { SyntaxTreeTerminalUpdate } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-update';
 import { SyntaxTreeNonterminalUpdate } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-update';
 import { FlowchartTerminalUpdate } from './flowchart/flowchart-terminal/flowchart-terminal-update';
@@ -55,6 +57,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.DeploymentInterface]: DefaultPopup,
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceUpdate,
   [UMLElementType.PetriNetTransition]: DefaultPopup,
+  [UMLElementType.ReachabilityGraphMarking]: UMLReachabilityGraphMarkingUpdate,
   [UMLElementType.CommunicationLinkMessage]: null,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminalUpdate,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminalUpdate,
@@ -86,6 +89,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentAssociationUpdate,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcUpdate,
+  [UMLRelationshipType.ReachabilityGraphArc]: UMLReachabilityGraphArcUpdate,
   [UMLRelationshipType.SyntaxTreeLink]: DefaultRelationshipPopup,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineUpdate,
 };
