@@ -18,7 +18,7 @@ exports[`render the uml-activity-component 1`] = `
           pointer-events="none"
           text-anchor="middle"
           x="50%"
-          y="20%"
+          y="20"
         >
           TestActivityComponent
         </text>

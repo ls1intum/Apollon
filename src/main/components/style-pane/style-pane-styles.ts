@@ -17,7 +17,7 @@ export const Color = styled.button.attrs<Props>({})<Props>`
   position: absolute;
   top: 0;
   right: 0;
-  border: none;
+  border: 2px solid #353d47;
 `;
 
 export const Row = styled.div`
@@ -40,6 +40,8 @@ export const ColorPickerContainer = styled.div`
   border: 2px solid #353d47;
   padding: 16px;
   border-radius: 5px;
+  display: flex;
+  flex-direction: column;
   &::after {
     border-radius: 2px;
     content: '';
@@ -54,4 +56,17 @@ export const ColorPickerContainer = styled.div`
     transform: rotate(-45deg);
     background-color: white;
   }
+`;
+
+export const Button = styled.button`
+  background: white;
+  color: #212529;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0.375rem 0.75rem;
+  margin: 0;
+  margin-top: 0.75rem;
+  line-height: 1.5;
+  outline: none;
+  align-self: center;
+  cursor: pointer;
 `;

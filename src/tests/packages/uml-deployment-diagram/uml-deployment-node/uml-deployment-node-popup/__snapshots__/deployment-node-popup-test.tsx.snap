@@ -6,19 +6,19 @@ exports[`test deployment node popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-hiSbYr dvhvPz"
+          class="sc-gWXaA-D dwiBOv"
         >
           <input
-            class="sc-idOhPF sc-dIUggk fRtIsx evrA-Dk"
+            class="sc-dJjZJu sc-hGPAah bMrIQy fXWaCy"
             value=""
           />
           <button
-            class="sc-kEjbxe sc-iqHYGH knrHfJ YcFVB"
+            class="sc-kDThTU sc-iqsfdx bmjioK iJozYQ"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdfBwQ KSdSD"
+              class="sc-bdvvaa xcZOT"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -33,13 +33,13 @@ exports[`test deployment node popup render 1`] = `
       </section>
       <section>
         <hr
-          class="sc-fKFyDc iWhBjd"
+          class="sc-bBHwJV drZWsl"
         />
         <div
-          class="sc-hiSbYr dvhvPz"
+          class="sc-gWXaA-D dwiBOv"
         >
           <input
-            class="sc-idOhPF sc-dIUggk fRtIsx evrA-Dk"
+            class="sc-dJjZJu sc-hGPAah bMrIQy fXWaCy"
             value="node"
           />
         </div>

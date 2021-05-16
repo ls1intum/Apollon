@@ -6,7 +6,7 @@ import { UMLAssociation } from './uml-association';
 import { UMLRelationshipType } from '../../uml-relationship-type';
 
 const Marker = {
-  Arrow: (id: string) => (
+  Arrow: (id: string, color?: string) => (
     <marker
       id={id}
       viewBox="0 0 30 30"
@@ -17,10 +17,10 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
+      <path d="M0,29 L30,15 L0,1" fill="none" stroke={color || 'black'} />
     </marker>
   ),
-  Rhombus: (id: string) => (
+  Rhombus: (id: string, color?: string) => (
     <marker
       id={id}
       viewBox="0 0 30 30"
@@ -31,10 +31,10 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,15 L15,22 L30,15 L15,8 z" fill="white" stroke="black" />
+      <path d="M0,15 L15,22 L30,15 L15,8 z" fill="white" stroke={color || 'black'} />
     </marker>
   ),
-  RhombusFilled: (id: string) => (
+  RhombusFilled: (id: string, color?: string) => (
     <marker
       id={id}
       viewBox="0 0 30 30"
@@ -45,10 +45,10 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,15 L15,22 L30,15 L15,8 z" fill="black" />
+      <path d="M0,15 L15,22 L30,15 L15,8 z" fill={color || 'black'} />
     </marker>
   ),
-  Triangle: (id: string) => (
+  Triangle: (id: string, color?: string) => (
     <marker
       id={id}
       viewBox="0 0 30 30"
@@ -59,7 +59,7 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,1 L0,29 L30,15 z" fill="white" stroke="black" />
+      <path d="M0,1 L0,29 L30,15 z" fill="white" stroke={color || 'black'} />
     </marker>
   ),
 };
@@ -130,12 +130,14 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
   const target: Point = computeTextPositionForUMLAssociation(path.reverse(), !!marker);
   const id = `marker-${element.id}`;
 
+  const textFill = element.textColor ? { fill: element.textColor } : {};
+
   return (
     <g>
-      {marker && marker(id)}
+      {marker && marker(id, element.strokeColor)}
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke="black"
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
         markerEnd={`url(#${id})`}
@@ -146,6 +148,7 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
         y={source.y}
         {...layoutTextForUMLAssociation(element.source.direction, 'BOTTOM')}
         pointerEvents="none"
+        style={{ ...textFill }}
       >
         {element.source.multiplicity}
       </text>
@@ -154,6 +157,7 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
         y={target.y}
         {...layoutTextForUMLAssociation(element.target.direction, 'BOTTOM')}
         pointerEvents="none"
+        style={{ ...textFill }}
       >
         {element.target.multiplicity}
       </text>
@@ -162,6 +166,7 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
         y={source.y}
         {...layoutTextForUMLAssociation(element.source.direction, 'TOP')}
         pointerEvents="none"
+        style={{ ...textFill }}
       >
         {element.source.role}
       </text>
@@ -170,6 +175,7 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
         y={target.y}
         {...layoutTextForUMLAssociation(element.target.direction, 'TOP')}
         pointerEvents="none"
+        style={{ ...textFill }}
       >
         {element.target.role}
       </text>

@@ -1,18 +1,18 @@
 import React, { Component, ComponentClass } from 'react';
-import { CirclePicker } from 'react-color';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
+import { IUMLContainer, UMLContainer } from '../../services/uml-container/uml-container';
+import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
+import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
-import { Color, ColorPickerContainer, Row } from './style-pane-styles';
 import { ColorSelector } from './color-selector';
-import { UMLElement } from '../../typings';
-import { UMLElementState } from '../../services/uml-element/uml-element-types';
+import { Row } from './style-pane-styles';
 type OwnProps = {};
 
 type StateProps = {
@@ -24,6 +24,7 @@ type StateProps = {
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
   updateStart: typeof UMLElementRepository.updateStart;
+  updateEnd: typeof UMLElementRepository.updateEnd;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext & CanvasContext;
@@ -48,6 +49,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     {
       updateStart: UMLElementRepository.updateStart,
       update: UMLElementRepository.update,
+      updateEnd: UMLElementRepository.updateEnd,
     },
   ),
 );
@@ -55,22 +57,39 @@ const enhance = compose<ComponentClass<OwnProps>>(
 class StylePaneComponent extends Component<Props, State> {
   state = getInitialState();
 
-  handleFillColorChange = (color: string) => {
-    this.props.updateStart(this.props.selected!);
-    this.props.update(this.props.selected!, { fillColor: color });
+  getUpdateElements = () => {
+    const allOwnedElements = Object.values(this.props.elements)
+      .filter(
+        (el) =>
+          UMLContainer.isUMLContainer(el) &&
+          el.type !== 'Package' &&
+          el.type !== 'Activity' &&
+          this.props.selected?.includes(el.id),
+      )
+      .reduce((acc, cur) => {
+        return acc.concat((cur as IUMLContainer).ownedElements);
+      }, [] as string[]);
+    return [...this.props.selected!, ...allOwnedElements];
   };
-  handleStrokeColorChange = (color: string) => {
-    this.props.updateStart(this.props.selected!);
-    this.props.update(this.props.selected!, { strokeColor: color });
+
+  handleFillColorChange = (color: string | undefined) => {
+    this.props.updateStart(this.getUpdateElements());
+    this.props.update(this.getUpdateElements(), { fillColor: color });
+    this.props.updateEnd(this.getUpdateElements());
   };
-  handleTextColorChange = (color: string) => {
-    this.props.updateStart(this.props.selected!);
-    this.props.update(this.props.selected!, { textColor: color });
+  handleStrokeColorChange = (color: string | undefined) => {
+    this.props.updateStart(this.getUpdateElements());
+    this.props.update(this.getUpdateElements(), { strokeColor: color });
+    this.props.updateEnd(this.getUpdateElements());
+  };
+  handleTextColorChange = (color: string | undefined) => {
+    this.props.updateStart(this.getUpdateElements());
+    this.props.update(this.getUpdateElements(), { textColor: color });
+    this.props.updateEnd(this.getUpdateElements());
   };
 
   render() {
     const element = this.props.selected ? this.props.elements[this.props.selected[0]] : undefined;
-
     return (
       <div>
         <Row>

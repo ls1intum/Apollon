@@ -11,7 +11,9 @@ exports[`render the uml-object-method-component 1`] = `
         />
         <text
           dominant-baseline="middle"
+          font-weight="normal"
           pointer-events="none"
+          text-anchor="start"
           x="10"
           y="50%"
         >
