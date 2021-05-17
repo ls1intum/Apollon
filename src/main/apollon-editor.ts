@@ -320,7 +320,11 @@ export class ApollonEditor {
       // if state not available -> do not emit changes
       if (!this.store) return;
       const model = this.model;
-      if (this.store.getState().lastAction.lastAction.endsWith('END')) {
+      if (
+        this.store.getState().lastAction.lastAction.endsWith('END') ||
+        this.store.getState().lastAction.lastAction.endsWith('REMOVE') ||
+        this.store.getState().lastAction.lastAction.endsWith('DELETE')
+      ) {
         const lastModel = ModelState.toModel(this.store.getState());
         this.discreteModelSubscribers.forEach((subscriber) => subscriber(lastModel));
       }
