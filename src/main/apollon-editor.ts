@@ -322,7 +322,6 @@ export class ApollonEditor {
       const model = this.model;
       if (
         this.store.getState().lastAction.lastAction.endsWith('END') ||
-        this.store.getState().lastAction.lastAction.endsWith('REMOVE') ||
         this.store.getState().lastAction.lastAction.endsWith('DELETE')
       ) {
         const lastModel = ModelState.toModel(this.store.getState());
