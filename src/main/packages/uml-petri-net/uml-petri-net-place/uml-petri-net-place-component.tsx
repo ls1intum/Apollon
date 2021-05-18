@@ -59,7 +59,7 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
             cx={radius + position.x}
             cy={radius + position.y}
             r={tokenRadius}
-            fill="black"
+            fill={element.strokeColor || 'black'}
             fillOpacity={1}
           />
         ))}

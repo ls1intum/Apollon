@@ -175,7 +175,6 @@ const getMargin = (
 
 export class Svg extends Component<Props, State> {
   state = getInitialState(this.props);
-
   render() {
     const { bounds, elements } = this.state;
     const theme: Styles = update(defaults, this.props.styles || {});
@@ -191,7 +190,6 @@ export class Svg extends Component<Props, State> {
             height={bounds.height + 1}
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
-            fillOpacity={0}
             fill="white"
           >
             <defs>
@@ -204,6 +202,7 @@ export class Svg extends Component<Props, State> {
                   {...element.bounds}
                   key={element.id}
                   className={element.name ? element.name.replace(/[<>]/, '') : ''}
+                  fill={element.fillColor || 'white'}
                 >
                   <ElementComponent key={index} element={element} />
                 </svg>

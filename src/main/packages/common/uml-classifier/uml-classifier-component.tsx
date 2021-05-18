@@ -9,7 +9,6 @@ export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
       y={element.stereotype ? 50 : 40}
       width="100%"
       height={element.bounds.height - (element.stereotype ? 50 : 40)}
-      fill="white"
     />
     {element.stereotype ? (
       <svg height={50}>
