@@ -81,6 +81,10 @@ export type UMLPetriNetPlace = UMLElement & {
   capacity: number | string;
 };
 
+export type UMLReachabilityGraphMarking = UMLElement & {
+  isInitialMarking: boolean;
+};
+
 export type UMLAssociation = UMLRelationship & {
   source: UMLRelationship['source'] & {
     multiplicity: string;
@@ -105,6 +109,7 @@ export type Assessment = {
   elementType: UMLElementType | UMLRelationshipType;
   score: number;
   feedback?: string;
+  dropInfo?: any;
 };
 
 export type ExportOptions = {

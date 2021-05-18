@@ -96,6 +96,10 @@
       "PetriNetPlace": "Platz",
       "PetriNetTransition": "Transition"
     },
+    "ReachabilityGraph": {
+      "ReachabilityGraphIsInitialMarking": "Ist Anfangsmarkierung",
+      "ReachabilityGraphMarking": "Markierung"
+    },
     "SyntaxTree": {
       "SyntaxTreeTerminal": "Terminal",
       "SyntaxTreeNonterminal": "Nichtterminal",

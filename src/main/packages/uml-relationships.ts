@@ -22,6 +22,7 @@ import { UMLDeploymentInterfaceProvided } from './uml-deployment-diagram/uml-dep
 import { UMLDeploymentInterfaceRequired } from './uml-deployment-diagram/uml-deployment-interface-required/uml-deployment-interface-required';
 import { UMLDeploymentDependency } from './uml-deployment-diagram/uml-deployment-dependency/uml-deployment-dependency';
 import { UMLPetriNetArc } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc';
+import { UMLReachabilityGraphArc } from './uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc';
 import { SyntaxTreeLink } from './syntax-tree/syntax-tree-link/syntax-tree-link';
 import { FlowchartFlowline } from './flowchart/flowchart-flowline/flowchart-flowline';
 
@@ -50,6 +51,7 @@ export const UMLRelationships = {
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLDeploymentInterfaceProvided,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLDeploymentInterfaceRequired,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArc,
+  [UMLRelationshipType.ReachabilityGraphArc]: UMLReachabilityGraphArc,
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLink,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowline,
 };

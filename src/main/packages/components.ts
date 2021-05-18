@@ -33,6 +33,8 @@ import { ConnectedComponent } from 'react-redux';
 import { UMLPetriNetPlaceComponent } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-component';
 import { UMLPetriNetTransitionComponent } from './uml-petri-net/uml-petri-net-transition/uml-petri-net-transition-component';
 import { UMLPetriNetArcComponent } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-component';
+import { UMLReachabilityGraphArcComponent } from './uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc-component';
+import { UMLReachabilityGraphMarkingComponent } from './uml-reachability-graph/uml-reachability-graph-marking/uml-reachability-graph-marking-component';
 import { UMLComponentComponent } from './common/uml-component/uml-component-component';
 import { SyntaxTreeTerminalComponent } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
 import { SyntaxTreeNonterminalComponent } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-component';
@@ -77,6 +79,7 @@ export const Components: {
   [UMLElementType.DeploymentInterface]: UMLInterfaceComponent,
   [UMLElementType.PetriNetTransition]: UMLPetriNetTransitionComponent,
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceComponent,
+  [UMLElementType.ReachabilityGraphMarking]: UMLReachabilityGraphMarkingComponent,
   [UMLElementType.CommunicationLinkMessage]: UMLClassifierMemberComponent,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminalComponent,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminalComponent,
@@ -107,6 +110,7 @@ export const Components: {
   [UMLRelationshipType.DeploymentInterfaceProvided]: UMLInterfaceProvidedComponent,
   [UMLRelationshipType.DeploymentInterfaceRequired]: UMLInterfaceRequiredComponent,
   [UMLRelationshipType.PetriNetArc]: UMLPetriNetArcComponent,
+  [UMLRelationshipType.ReachabilityGraphArc]: UMLReachabilityGraphArcComponent,
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLinkComponent,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineComponent,
 };
