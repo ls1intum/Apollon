@@ -25,7 +25,7 @@ type BadgeProps = {
 
 const Badge = styled.div<BadgeProps>`
   color: white;
-  background-color: ${(props) => props.color || 'orange'};
+  background-color: ${(props) => props.color || 'grey'};
   text-align: center;
   margin: 0.4rem auto 0 auto;
   padding: 0.25em 0.4em;
