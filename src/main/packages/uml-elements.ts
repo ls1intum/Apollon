@@ -25,6 +25,7 @@ import { UMLUseCase } from './uml-use-case-diagram/uml-use-case/uml-use-case';
 import { UMLDeploymentInterface } from './uml-deployment-diagram/uml-deployment-interface/uml-component-interface';
 import { UMLPetriNetTransition } from './uml-petri-net/uml-petri-net-transition/uml-petri-net-transition';
 import { UMLPetriNetPlace } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place';
+import { UMLReachabilityGraphMarking } from './uml-reachability-graph/uml-reachability-graph-marking/uml-reachability-graph-marking';
 import { CommunicationLinkMessage } from './uml-communication-diagram/uml-communication-link/uml-communiction-link-message';
 import { UMLDeploymentComponent } from './uml-deployment-diagram/uml-deployment-component/uml-component';
 import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
@@ -65,6 +66,7 @@ export const UMLElements = {
   [UMLElementType.DeploymentInterface]: UMLDeploymentInterface,
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlace,
   [UMLElementType.PetriNetTransition]: UMLPetriNetTransition,
+  [UMLElementType.ReachabilityGraphMarking]: UMLReachabilityGraphMarking,
   [UMLElementType.CommunicationLinkMessage]: CommunicationLinkMessage,
   [UMLElementType.SyntaxTreeTerminal]: SyntaxTreeTerminal,
   [UMLElementType.SyntaxTreeNonterminal]: SyntaxTreeNonterminal,

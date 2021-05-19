@@ -9,6 +9,7 @@ import { CommunicationElementType } from './uml-communication-diagram';
 import { UMLDiagramType } from './diagram-type';
 import { SyntaxTreeElementType } from './syntax-tree';
 import { FlowchartElementType } from './flowchart';
+import { ReachabilityGraphElementType } from './uml-reachability-graph';
 
 export type UMLElementType =
   | keyof typeof ClassElementType
@@ -19,6 +20,7 @@ export type UMLElementType =
   | keyof typeof ComponentElementType
   | keyof typeof DeploymentElementType
   | keyof typeof PetriNetElementType
+  | keyof typeof ReachabilityGraphElementType
   | keyof typeof SyntaxTreeElementType
   | keyof typeof FlowchartElementType;
 
@@ -31,6 +33,7 @@ export const UMLElementType = {
   ...ComponentElementType,
   ...DeploymentElementType,
   ...PetriNetElementType,
+  ...ReachabilityGraphElementType,
   ...SyntaxTreeElementType,
   ...FlowchartElementType,
 };
@@ -44,6 +47,7 @@ export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
   [UMLDiagramType.ComponentDiagram]: ComponentElementType,
   [UMLDiagramType.DeploymentDiagram]: DeploymentElementType,
   [UMLDiagramType.PetriNet]: PetriNetElementType,
+  [UMLDiagramType.ReachabilityGraph]: ReachabilityGraphElementType,
   [UMLDiagramType.SyntaxTree]: SyntaxTreeElementType,
   [UMLDiagramType.Flowchart]: FlowchartElementType,
 };
