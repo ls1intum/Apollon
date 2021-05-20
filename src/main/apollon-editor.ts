@@ -226,7 +226,8 @@ export class ApollonEditor {
   }
 
   /**
-   * Register callback which is executed when the model changes
+   * Register callback which is executed at the end of each update of the model and ignores the changes during and update
+   * For example: moving of an element is ignored until user releases the element
    * @param callback function which is called when the model changes
    * @return returns the subscription identifier which can be used to unsubscribe
    */
@@ -235,7 +236,7 @@ export class ApollonEditor {
   }
 
   /**
-   * Remove assessment subscription, so that the corresponding callback is no longer executed when the assessment of elements are changed.
+   * Remove model change subscription, so that the corresponding callback is no longer executed when the model changed.
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromDiscreteModelChange(subscriptionId: number) {
@@ -315,12 +316,19 @@ export class ApollonEditor {
     this.notifyDiscreteModelSubscribers();
   };
 
+  /**
+   * Triggered whenever an action is dispatched which potentially lead to a change in the store / state tree
+   * Used to notify all the selection and assessment subscribers of Apollon if the action ends with END or DELETE
+   */
   private notifyDiscreteModelSubscribers = () => {
     try {
       // if state not available -> do not emit changes
       if (!this.store) return;
       const model = this.model;
       if (
+        // At the end of each update operation there is an action that ends with END except DELETE
+        // First lastAction is for selecting the state for lastAction and the second one is the property inside it
+        // Function is called with every redux action but only notifies subscribers if the action ends with given words
         this.store.getState().lastAction.lastAction.endsWith('END') ||
         this.store.getState().lastAction.lastAction.endsWith('DELETE')
       ) {
