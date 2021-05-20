@@ -1,1 +1,1 @@
-export type LastActionState = { lastAction: string };
+export type LastActionState = string;

@@ -23,7 +23,7 @@ const createModelStateFromPartialModelState = (
   elements?: IUMLElement[],
 ): ModelState => {
   const modelState: ModelState = {
-    lastAction: partialModelState?.lastAction ? { ...partialModelState.lastAction } : { lastAction: '' },
+    lastAction: partialModelState?.lastAction ? partialModelState.lastAction : '',
     assessments: partialModelState?.assessments ? { ...partialModelState.assessments } : {},
     connecting: partialModelState?.connecting ? partialModelState.connecting : [],
     copy: partialModelState?.copy ? partialModelState.copy : [],

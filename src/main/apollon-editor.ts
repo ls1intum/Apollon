@@ -327,10 +327,9 @@ export class ApollonEditor {
       const model = this.model;
       if (
         // At the end of each update operation there is an action that ends with END except DELETE
-        // First lastAction is for selecting the state for lastAction and the second one is the property inside it
         // Function is called with every redux action but only notifies subscribers if the action ends with given words
-        this.store.getState().lastAction.lastAction.endsWith('END') ||
-        this.store.getState().lastAction.lastAction.endsWith('DELETE')
+        this.store.getState().lastAction.endsWith('END') ||
+        this.store.getState().lastAction.endsWith('DELETE')
       ) {
         const lastModel = ModelState.toModel(this.store.getState());
         this.discreteModelSubscribers.forEach((subscriber) => subscriber(lastModel));
