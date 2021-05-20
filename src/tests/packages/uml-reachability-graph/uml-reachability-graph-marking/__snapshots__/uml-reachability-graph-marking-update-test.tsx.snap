@@ -1,16 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`test flowchart function call update render 1`] = `
+exports[`test reachability graph arc update render 1`] = `
 <body>
   <div>
     <div>
       <section>
         <div
-          class="sc-caiKgP dAplQB"
+          class="sc-cCcYRi iuPvJz"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
-            placeholder="Decision"
             value=""
           />
           <button
@@ -31,6 +30,20 @@ exports[`test flowchart function call update render 1`] = `
             </svg>
           </button>
         </div>
+        <hr
+          class="sc-dJjZJu dhDoEz"
+        />
+      </section>
+      <section>
+        <label
+          for="toggleIsInitialMarking"
+        >
+          <input
+            id="toggleIsInitialMarking"
+            type="checkbox"
+          />
+          Is initial marking
+        </label>
       </section>
     </div>
   </div>

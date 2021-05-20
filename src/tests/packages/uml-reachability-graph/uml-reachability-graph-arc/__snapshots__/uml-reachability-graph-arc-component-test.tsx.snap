@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the uml-reachability-graph-arc-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <marker
+          id="marker-test-id"
+          markerHeight="30"
+          markerUnits="strokeWidth"
+          markerWidth="22"
+          orient="auto"
+          refX="30"
+          refY="15"
+          viewBox="0 0 30 30"
+        >
+          <path
+            d="M0,29 L30,15 L0,1"
+            fill="none"
+            stroke="black"
+          />
+        </marker>
+        <polyline
+          fill="none"
+          marker-end="url(#marker-test-id)"
+          points="0 0,200 100"
+          stroke="black"
+          stroke-width="1"
+        />
+        <text
+          dominant-baseline="text-after-edge"
+          dy="-5"
+          pointer-events="none"
+          text-anchor="middle"
+          x="100"
+          y="50"
+        >
+          TestReachabilityGraphArc
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;
