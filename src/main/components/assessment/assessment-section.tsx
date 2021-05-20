@@ -19,6 +19,21 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
+type BadgeProps = {
+  color?: string;
+};
+
+const Badge = styled.div<BadgeProps>`
+  color: white;
+  background-color: ${(props) => props.color || 'grey'};
+  text-align: center;
+  margin: 0.4rem auto 0 auto;
+  padding: 0.25em 0.4em;
+  border-radius: 0.15rem;
+  font-size: 12px;
+  font-weight: bold;
+`;
+
 type OwnProps = {
   element: IUMLElement;
 };
@@ -46,7 +61,6 @@ const enhance = compose<ComponentClass<OwnProps>>(
 class AssessmentSectionComponent extends Component<Props> {
   render() {
     const { element, assessment, readonly, diagramType } = this.props;
-
     return (
       <>
         <section>
@@ -90,6 +104,11 @@ class AssessmentSectionComponent extends Component<Props> {
               enterToSubmit={false}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />
+            {assessment?.label ? (
+              <Flex>
+                <Badge color={assessment?.labelColor}>{assessment?.label}</Badge>
+              </Flex>
+            ) : null}
           </section>
         )}
         <Divider />
