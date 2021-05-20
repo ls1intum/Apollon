@@ -20,7 +20,7 @@ const Flex = styled.div`
 `;
 
 type BadgeProps = {
-    color?: string;
+  color?: string;
 };
 
 const Badge = styled.div<BadgeProps>`
@@ -104,14 +104,11 @@ class AssessmentSectionComponent extends Component<Props> {
               enterToSubmit={false}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
             />
-              {assessment?.label ?
-                  <Flex>
-                      <Badge color={assessment?.labelColor}>
-                          {assessment?.label}
-                      </Badge>
-                  </Flex>
-                  : null
-              }
+            {assessment?.label ? (
+              <Flex>
+                <Badge color={assessment?.labelColor}>{assessment?.label}</Badge>
+              </Flex>
+            ) : null}
           </section>
         )}
         <Divider />

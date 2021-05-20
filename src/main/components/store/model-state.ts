@@ -95,7 +95,15 @@ export class ModelState {
       interactive: [...model.interactive.elements, ...model.interactive.relationships],
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
       assessments: (model.assessments || []).reduce<AssessmentState>(
-        (acc, val) => ({ ...acc, [val.modelElementId]: { score: val.score, feedback: val.feedback, label: val.label, labelColor: val.labelColor } }),
+        (acc, val) => ({
+          ...acc,
+          [val.modelElementId]: {
+            score: val.score,
+            feedback: val.feedback,
+            label: val.label,
+            labelColor: val.labelColor,
+          },
+        }),
         {},
       ),
     };
