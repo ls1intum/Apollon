@@ -226,7 +226,7 @@ export class ApollonEditor {
   }
 
   /**
-   * Register callback which is executed at the end of each update of the model and ignores the changes during and update
+   * Register callback which is executed at the end of each user action and ignores the changes during a user action
    * For example: moving of an element is ignored until user releases the element
    * @param callback function which is called when the model changes
    * @return returns the subscription identifier which can be used to unsubscribe
@@ -236,7 +236,7 @@ export class ApollonEditor {
   }
 
   /**
-   * Remove model change subscription, so that the corresponding callback is no longer executed when the model changed.
+   * Remove model change subscription, so that the corresponding callback is no longer executed when the model is changed.
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromDiscreteModelChange(subscriptionId: number) {
