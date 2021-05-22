@@ -5,6 +5,7 @@ import { Button } from '../../../components/controls/button/button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { ArrowRightIcon } from '../../../components/controls/icon/arrow-right';
 import { Textfield } from '../../../components/controls/textfield/textfield';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
@@ -28,8 +29,12 @@ class ActivityMergeNodeUpdate extends Component<Props> {
     return (
       <div>
         <section>
-          <Textfield value={element.name} onChange={this.onUpdate} />
+          <Flex>
+            <Textfield value={element.name} onChange={this.onUpdate} />
+            <ColorButton />
+          </Flex>
         </section>
+
         <section>
           {decisions.length > 0 && (
             <>
