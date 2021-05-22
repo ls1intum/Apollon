@@ -24,6 +24,7 @@ import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { UMLDiagramType } from '../../typings';
 import { CopyState } from '../../services/copypaste/copy-types';
+import { LastActionState } from '../../services/last-action/last-action-types';
 
 export type PartialModelState = Omit<Partial<ModelState>, 'editor'> & { editor?: Partial<EditorState> };
 
@@ -41,6 +42,7 @@ export interface ModelState {
   elements: UMLElementState;
   assessments: AssessmentState;
   copy: CopyState;
+  lastAction: LastActionState;
 }
 
 export class ModelState {
