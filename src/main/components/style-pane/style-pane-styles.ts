@@ -2,7 +2,17 @@ import styled from 'styled-components';
 
 type Props = {
   color?: string;
+  selected?: boolean;
 };
+
+export const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+  background-color: white;
+  border: 1px solid lightgray;
+`;
 
 export const ColorContainer = styled.div`
   position: relative;
@@ -14,10 +24,24 @@ export const Color = styled.button.attrs<Props>({})<Props>`
   background-color: ${({ color }: Props) => color || 'black'};
   border-radius: 14px;
   cursor: pointer;
-  position: absolute;
-  top: 0;
-  right: 0;
-  border: 2px solid #353d47;
+  border: none;
+  position: relative;
+  &:after,
+  &:before {
+    content: '';
+    width: 2px;
+    height: 100%;
+    background: white;
+    position: absolute;
+    border-radius: 100%;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%) rotate(45deg);
+    display: ${({ selected }: Props) => (selected ? 'block' : 'none')};
+  }
+  &:before {
+    transform: translate(-50%) rotate(-45deg);
+  }
 `;
 
 export const Row = styled.div`
@@ -25,10 +49,17 @@ export const Row = styled.div`
   width: 100%;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid #353d47;
+  /* border-bottom: 1px solid #353d47; */
+  font-weight: bold;
   &:last-of-type {
     border-bottom: none;
   }
+`;
+
+export const Divider = styled.div`
+  width: 100%;
+  background: #353d47;
+  height: 1px;
 `;
 
 export const ColorPickerContainer = styled.div`

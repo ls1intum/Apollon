@@ -12,14 +12,17 @@ import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { ColorSelector } from './color-selector';
-import { Row } from './style-pane-styles';
-type OwnProps = {};
-
-type StateProps = {
-  type: UMLDiagramType;
-  selected?: string[];
-  elements: UMLElementState;
+import { Row, Container, Color, Divider } from './style-pane-styles';
+type OwnProps = {
+  open: boolean;
+  element: IUMLElement;
+  onColorChange: (id: string, values: { fillColor?: string; textColor?: string; strokeColor?: string }) => void;
+  fillColor?: boolean;
+  lineColor?: boolean;
+  textColor?: boolean;
 };
+
+type StateProps = {};
 
 type DispatchProps = {
   update: typeof UMLElementRepository.update;
@@ -57,57 +60,112 @@ const enhance = compose<ComponentClass<OwnProps>>(
 class StylePaneComponent extends Component<Props, State> {
   state = getInitialState();
 
-  getUpdateElements = () => {
-    const allOwnedElements = Object.values(this.props.elements)
-      .filter(
-        (el) =>
-          UMLContainer.isUMLContainer(el) &&
-          el.type !== 'Package' &&
-          el.type !== 'Activity' &&
-          this.props.selected?.includes(el.id),
-      )
-      .reduce((acc, cur) => {
-        return acc.concat((cur as IUMLContainer).ownedElements);
-      }, [] as string[]);
-    return [...this.props.selected!, ...allOwnedElements];
-  };
+  // getUpdateElements = () => {
+  //   const allOwnedElements = Object.values(this.props.elements)
+  //     .filter(
+  //       (el) =>
+  //         UMLContainer.isUMLContainer(el) &&
+  //         el.type !== 'Package' &&
+  //         el.type !== 'Activity' &&
+  //         this.props.selected?.includes(el.id),
+  //     )
+  //     .reduce((acc, cur) => {
+  //       return acc.concat((cur as IUMLContainer).ownedElements);
+  //     }, [] as string[]);
+  //   return [...this.props.selected!, ...allOwnedElements];
+  // };
 
   handleFillColorChange = (color: string | undefined) => {
-    this.props.updateStart(this.getUpdateElements());
-    this.props.update(this.getUpdateElements(), { fillColor: color });
-    this.props.updateEnd(this.getUpdateElements());
+    const { element, onColorChange } = this.props;
+    onColorChange(element.id, { fillColor: color });
   };
-  handleStrokeColorChange = (color: string | undefined) => {
-    this.props.updateStart(this.getUpdateElements());
-    this.props.update(this.getUpdateElements(), { strokeColor: color });
-    this.props.updateEnd(this.getUpdateElements());
+  handleLineColorChange = (color: string | undefined) => {
+    const { element, onColorChange } = this.props;
+    onColorChange(element.id, { strokeColor: color });
   };
   handleTextColorChange = (color: string | undefined) => {
-    this.props.updateStart(this.getUpdateElements());
-    this.props.update(this.getUpdateElements(), { textColor: color });
-    this.props.updateEnd(this.getUpdateElements());
+    const { element, onColorChange } = this.props;
+    onColorChange(element.id, { textColor: color });
+  };
+
+  toggleFillSelect = () => {
+    this.setState((prevState) => ({
+      fillSelectOpen: !prevState.fillSelectOpen,
+      strokeSelectOpen: false,
+      textSelectOpen: false,
+    }));
+  };
+
+  toggleLineSelect = () => {
+    this.setState((prevState) => ({
+      strokeSelectOpen: !prevState.strokeSelectOpen,
+      fillSelectOpen: false,
+      textSelectOpen: false,
+    }));
+  };
+
+  toggleTextSelect = () => {
+    this.setState((prevState) => ({
+      textSelectOpen: !prevState.textSelectOpen,
+      strokeSelectOpen: false,
+      fillSelectOpen: false,
+    }));
   };
 
   render() {
-    const element = this.props.selected ? this.props.elements[this.props.selected[0]] : undefined;
-    return (
-      <div>
-        <Row>
-          <span>Fill</span>
-          <ColorSelector color={element?.fillColor} onColorChange={this.handleFillColorChange} />
-        </Row>
+    const { fillSelectOpen, strokeSelectOpen, textSelectOpen } = this.state;
+    const { open, element, fillColor, lineColor, textColor } = this.props;
+    const noneOpen = !fillSelectOpen && !strokeSelectOpen && !textSelectOpen;
 
-        <Row>
-          <span>Stroke</span>
-          <ColorSelector color={element?.strokeColor} onColorChange={this.handleStrokeColorChange} />
-        </Row>
-        <Row>
-          <span>Text</span>
-          <ColorSelector color={element?.textColor} onColorChange={this.handleTextColorChange} />
-        </Row>
-      </div>
+    if (!open) return null;
+
+    return (
+      <Container>
+        <ColorRow
+          title="Fill Color"
+          condition={fillColor && (fillSelectOpen || noneOpen)}
+          color={element?.fillColor}
+          open={fillSelectOpen}
+          onToggle={this.toggleFillSelect}
+          onColorChange={this.handleFillColorChange}
+          noDivider={!textColor && !lineColor}
+        />
+        <ColorRow
+          title="Line Color"
+          condition={lineColor && (strokeSelectOpen || noneOpen)}
+          color={element?.strokeColor}
+          open={strokeSelectOpen}
+          onToggle={this.toggleLineSelect}
+          onColorChange={this.handleLineColorChange}
+          noDivider={!textColor}
+        />
+        <ColorRow
+          title="Text Color"
+          condition={textColor && (textSelectOpen || noneOpen)}
+          color={element?.textColor}
+          open={textSelectOpen}
+          onToggle={this.toggleTextSelect}
+          onColorChange={this.handleTextColorChange}
+          noDivider
+        />
+      </Container>
     );
   }
 }
+
+const ColorRow = ({ condition, title, open, onToggle, onColorChange, color, noDivider }: any) => {
+  if (!condition) return null;
+
+  return (
+    <>
+      <Row>
+        <span>{title}</span>
+        <Color color={color} selected={open} onClick={onToggle} />
+      </Row>
+      <ColorSelector open={open} color={color} onColorChange={onColorChange} />
+      {!open && !noDivider ? <Divider /> : null}
+    </>
+  );
+};
 
 export const StylePane = enhance(StylePaneComponent);

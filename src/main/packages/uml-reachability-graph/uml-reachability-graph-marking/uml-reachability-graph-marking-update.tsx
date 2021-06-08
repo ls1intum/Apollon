@@ -11,6 +11,8 @@ import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking';
 import { Divider } from '../../../components/controls/divider/divider';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
+import { StylePane } from '../../../components/style-pane/style-pane';
 
 interface OwnProps {
   element: UMLReachabilityGraphMarking;
@@ -39,7 +41,17 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class UmlReachabilityGraphMarkingUpdate extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class UmlReachabilityGraphMarkingUpdate extends Component<Props, State> {
+  state = { colorOpen: false };
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
+
   render() {
     const { element } = this.props;
 
@@ -48,12 +60,21 @@ class UmlReachabilityGraphMarkingUpdate extends Component<Props> {
         <section>
           <Flex>
             <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
           </Flex>
           <Divider />
         </section>
+        <StylePane
+          open={this.state.colorOpen}
+          element={element}
+          onColorChange={this.props.update}
+          lineColor
+          textColor
+          fillColor
+        />
         <section>
           <label htmlFor="toggleIsInitialMarking">
             <input

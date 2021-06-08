@@ -65,7 +65,7 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
         ))}
       {displayTokenAsNumber && <Text fill={element.strokeColor}>{element.amountOfTokens}</Text>}
       {displayCapacity && (
-        <text x="95%" y="5" pointerEvents="none">
+        <text x="95%" y="5" pointerEvents="none" style={element.textColor ? { fill: element.textColor } : {}}>
           C={element.capacity}
         </text>
       )}

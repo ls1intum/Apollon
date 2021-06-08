@@ -2,14 +2,15 @@ import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Button } from '../../../components/controls/button/button';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { ArrowRightIcon } from '../../../components/controls/icon/arrow-right';
 import { Textfield } from '../../../components/controls/textfield/textfield';
-import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Body, Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
+import { StylePane } from '../../../components/style-pane/style-pane';
 import { styled } from '../../../components/theme/styles';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
@@ -23,16 +24,44 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class ActivityMergeNodeUpdate extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class ActivityMergeNodeUpdate extends Component<Props, State> {
+  state = { colorOpen: false };
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
+
+  private onUpdate = (name: string) => {
+    const { element, update } = this.props;
+    update(element.id, { name });
+  };
+
+  private onUpdateOption = (id: string) => (name: string) => {
+    const { update } = this.props;
+    update(id, { name });
+  };
+
   render() {
-    const { element, decisions, targets } = this.props;
+    const { element, decisions, targets, update } = this.props;
     return (
       <div>
         <section>
           <Flex>
             <Textfield value={element.name} onChange={this.onUpdate} />
-            <ColorButton />
+            <ColorButton onClick={this.toggleColor} />
           </Flex>
+          <StylePane
+            open={this.state.colorOpen}
+            element={element}
+            onColorChange={update}
+            fillColor
+            lineColor
+            textColor
+          />
         </section>
 
         <section>
@@ -60,16 +89,6 @@ class ActivityMergeNodeUpdate extends Component<Props> {
       </div>
     );
   }
-
-  private onUpdate = (name: string) => {
-    const { element, update } = this.props;
-    update(element.id, { name });
-  };
-
-  private onUpdateOption = (id: string) => (name: string) => {
-    const { update } = this.props;
-    update(id, { name });
-  };
 }
 
 type OwnProps = {

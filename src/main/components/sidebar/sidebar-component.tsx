@@ -5,7 +5,6 @@ import { EditorRepository } from '../../services/editor/editor-repository';
 import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
 import { Switch } from '../controls/switch/switch';
 import { CreatePane } from '../create-pane/create-pane';
-import { StylePane } from '../style-pane/style-pane';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
@@ -54,7 +53,7 @@ class SidebarComponent extends Component<Props> {
           </Switch>
         )}
         {this.props.view === ApollonView.Modelling ? (
-          <>{this.props.selected.length > 0 ? <StylePane /> : <CreatePane />}</>
+          <CreatePane />
         ) : (
           <label htmlFor="toggleInteractiveElementsMode">
             <input

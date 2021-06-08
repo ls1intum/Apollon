@@ -46,10 +46,7 @@ export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {
           position = position.subtract(current.bounds.x, current.bounds.y);
           current = current.owner ? elements[current.owner] : null;
         }
-        const color =
-          container && container.type !== 'Package' && container.type !== 'Activity'
-            ? { fillColor: container.fillColor, textColor: container.textColor, strokeColor: container.strokeColor }
-            : {};
+
         return {
           ...elements,
           [id]: {
@@ -59,7 +56,6 @@ export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {
               ...element.bounds,
               ...position,
             },
-            ...color,
           },
         };
       };

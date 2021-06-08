@@ -15,6 +15,8 @@ import { styled } from '../../components/theme/styles';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
+import { ColorButton } from '../../components/controls/color-button/color-button';
+import { StylePane } from '../../components/style-pane/style-pane';
 
 const Flex = styled.div`
   display: flex;
@@ -22,7 +24,17 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class ComponentAssociationUpdate extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class ComponentAssociationUpdate extends Component<Props, State> {
+  state = { colorOpen: false };
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
+
   render() {
     const { element } = this.props;
 
@@ -33,6 +45,7 @@ class ComponentAssociationUpdate extends Component<Props> {
             <Header gutter={false} style={{ flexGrow: 1 }}>
               {this.props.translate('popup.association')}
             </Header>
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />
             </Button>
@@ -40,6 +53,7 @@ class ComponentAssociationUpdate extends Component<Props> {
               <TrashIcon />
             </Button>
           </Flex>
+          <StylePane open={this.state.colorOpen} element={element} onColorChange={this.props.update} lineColor />
           <Divider />
         </section>
         <section>

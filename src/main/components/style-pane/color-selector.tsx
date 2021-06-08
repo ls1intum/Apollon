@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CirclePicker } from 'react-color';
-import { ColorContainer, Color, ColorPickerContainer, Button } from './style-pane-styles';
+import { Color, ColorPickerContainer, Button } from './style-pane-styles';
+import styled from 'styled-components';
 
-type Props = { color?: string; onColorChange: (hex: string | undefined) => void };
+type Props = { color?: string; onColorChange: (hex: string | undefined) => void; open: boolean };
 
 const colors = [
   '#fc5c65',
@@ -19,25 +20,34 @@ const colors = [
   'black',
 ];
 
-export function ColorSelector({ onColorChange, color }: Props) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+const ColorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  width: 100%;
+  margin-bottom: 10px;
+`;
 
-  useEffect(() => {
-    const clickedOutside = (event: any) => {
-      if (ref.current && !ref.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', clickedOutside);
-    return () => {
-      document.removeEventListener('mousedown', clickedOutside);
-    };
-  }, [ref]);
+export function ColorSelector({ onColorChange, color, open }: Props) {
+  // const [open, setOpen] = useState(false);
+  // const ref = useRef<HTMLDivElement>(null);
 
-  const togglePopup = () => {
-    setOpen(!open);
-  };
+  // useEffect(() => {
+  //   // const clickedOutside = (event: any) => {
+  //   //   if (ref.current && !ref.current.contains(event.target)) {
+  //   //     setOpen(false);
+  //   //   }
+  //   // };
+  //   document.addEventListener('mousedown', clickedOutside);
+  //   return () => {
+  //     document.removeEventListener('mousedown', clickedOutside);
+  //   };
+  // }, [ref]);
+
+  // const togglePopup = () => {
+  //   setOpen(!open);
+  // };
 
   const handleColorChange = (newColor: any) => {
     onColorChange(newColor.hex);
@@ -47,15 +57,16 @@ export function ColorSelector({ onColorChange, color }: Props) {
     onColorChange(undefined);
   };
 
+  if (!open) return null;
+
   return (
-    <ColorContainer>
-      <Color onClick={togglePopup} color={color} />
+    <>
       {open ? (
-        <ColorPickerContainer ref={ref}>
+        <ColorContainer>
           <CirclePicker colors={colors} width="168px" onChangeComplete={handleColorChange} />
           <Button onClick={reset}>Reset</Button>
-        </ColorPickerContainer>
+        </ColorContainer>
       ) : null}
-    </ColorContainer>
+    </>
   );
 }
