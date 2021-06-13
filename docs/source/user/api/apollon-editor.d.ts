@@ -40,6 +40,7 @@ export declare class ApollonEditor {
     private selectionSubscribers;
     private assessmentSubscribers;
     private modelSubscribers;
+    private discreteModelSubscribers;
     private errorSubscribers;
     constructor(container: HTMLElement, options: Apollon.ApollonOptions);
     /**
@@ -85,6 +86,18 @@ export declare class ApollonEditor {
      */
     unsubscribeFromModelChange(subscriptionId: number): void;
     /**
+     * Register callback which is executed at the end of each user action and ignores the changes during a user action
+     * For example: moving of an element is ignored until user releases the element
+     * @param callback function which is called when the model changes
+     * @return returns the subscription identifier which can be used to unsubscribe
+     */
+    subscribeToModelDiscreteChange(callback: (model: UMLModel) => void): number;
+    /**
+     * Remove model change subscription, so that the corresponding callback is no longer executed when the model is changed.
+     * @param subscriptionId subscription identifier
+     */
+    unsubscribeFromDiscreteModelChange(subscriptionId: number): void;
+    /**
      * Register callback which is executed when an error occurs in the editor. Apollon will try to recreate the latest working state when an error occurs, so that it is less visible to user / less interrupting.
      * A registered callback would be called anyway, giving the full error, so that the application which uses Apollon can decide what to do next.
      * @param callback callback function which is called when an error occurs
@@ -107,6 +120,11 @@ export declare class ApollonEditor {
      * Used to notify all the selection and assessment subscribers of Apollon
      */
     private onDispatch;
+    /**
+     * Triggered whenever an action is dispatched which potentially lead to a change in the store / state tree
+     * Used to notify all the selection and assessment subscribers of Apollon if the action ends with END or DELETE
+     */
+    private notifyDiscreteModelSubscribers;
     private notifyModelSubscribers;
     private recreateEditor;
     private onErrorOccurred;

@@ -110,6 +110,8 @@ export type Assessment = {
   score: number;
   feedback?: string;
   dropInfo?: any;
+  label?: string;
+  labelColor?: string;
 };
 
 export type ExportOptions = {

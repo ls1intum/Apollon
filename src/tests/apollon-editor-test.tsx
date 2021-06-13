@@ -12,6 +12,7 @@ import { IAssessment } from '../main/services/assessment/assessment';
 import { ModelState } from '../main/components/store/model-state';
 import { UMLElementCommonRepository } from '../main/services/uml-element/uml-element-common-repository';
 import { UMLClass } from '../main/packages/uml-class-diagram/uml-class/uml-class';
+import { UMLContainerRepository } from '../main/services/uml-container/uml-container-repository';
 
 const testClassDiagramAsSVG = require('./test-resources/class-diagram-as-svg.json') as string;
 
@@ -315,6 +316,106 @@ describe('test apollon editor ', () => {
       }, 500);
     }, 500);
   });
+
+  it('subscribeToDiscreteModelChange', (done) => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container as HTMLElement, {});
+
+    // create store to inject into apollon editor, so that actions can be dispatched
+    const state = ModelState.fromModel(testClassDiagram as any);
+    const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
+    const store = getRealStore(state, elements);
+    // inject store
+    Object.defineProperty(editor, 'store', { value: store });
+
+    // expected data
+    const element: UMLClass = new UMLClass({ name: 'TestClass' });
+
+    const modelChangedCallback = (model: UMLModel) => {
+      // created element should be included in model
+      expect(model.elements.filter((e) => e.id === element.id)).toHaveLength(1);
+      done();
+    };
+    // subscribe to model changes
+    editor.subscribeToModelDiscreteChange(modelChangedCallback);
+
+    setTimeout(() => {
+      // after create element append action is dispatched automatically which triggers discrete model change
+      const createElementAction = UMLElementCommonRepository.create<UMLClass>(element);
+      store.dispatch(createElementAction);
+    }, 500);
+  });
+
+  it('unsubscribeFromDiscreteModelChanges', (done) => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container as HTMLElement, {});
+
+    // create store to inject into apollon editor, so that actions can be dispatched
+    const state = ModelState.fromModel(testClassDiagram as any);
+    const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
+    const store = getRealStore(state, elements);
+    // inject store
+    Object.defineProperty(editor, 'store', { value: store });
+
+    // expected data
+    const element: UMLClass = new UMLClass({ name: 'TestClass' });
+    const anotherElement: UMLClass = new UMLClass({ name: 'TestClass' });
+
+    const modelChangedCallback = fn((model: UMLModel) => {});
+    // subscribe model changes
+    const modelChangeSubscription = editor.subscribeToModelDiscreteChange(modelChangedCallback);
+
+    setTimeout(() => {
+      // create element
+      const createElementAction = UMLElementCommonRepository.create<UMLClass>(element);
+      store.dispatch(createElementAction);
+
+      // unsubscribe and create another element -> should not be called again
+      editor.unsubscribeFromDiscreteModelChange(modelChangeSubscription);
+      const createElementActionAnother = UMLElementCommonRepository.create<UMLClass>(anotherElement);
+      store.dispatch(createElementActionAnother);
+
+      setTimeout(() => {
+        expect(modelChangedCallback).toBeCalledTimes(1);
+        expect(store.getState().lastAction.endsWith('APPEND')).toBe(true);
+        done();
+      }, 500);
+    }, 500);
+  });
+
+  it('unsubscribeFromDiscreteModelChangesValidation', (done) => {
+    const { container } = testLibraryRender(<div />);
+    const editor = new Apollon.ApollonEditor(container as HTMLElement, {});
+
+    // create store to inject into apollon editor, so that actions can be dispatched
+    const state = ModelState.fromModel(testClassDiagram as any);
+    const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
+    const store = getRealStore(state, elements);
+    // inject store
+    Object.defineProperty(editor, 'store', { value: store });
+
+    // expected data
+    const element: UMLClass = new UMLClass({ name: 'TestClass' });
+    const anotherElement: UMLClass = new UMLClass({ name: 'TestClass' });
+
+    const modelChangedCallback = fn((model: UMLModel) => {});
+    // subscribe to model changes
+    editor.subscribeToModelDiscreteChange(modelChangedCallback);
+
+    setTimeout(() => {
+      // create element
+      const createElementAction = UMLElementCommonRepository.create<UMLClass>(element);
+      store.dispatch(createElementAction);
+      const createElementActionAnother = UMLElementCommonRepository.create<UMLClass>(anotherElement);
+      store.dispatch(createElementActionAnother);
+      setTimeout(() => {
+        expect(modelChangedCallback).toBeCalledTimes(2);
+        expect(store.getState().lastAction.endsWith('APPEND')).toBe(true);
+        done();
+      }, 500);
+    }, 500);
+  });
+
   it('set type to UseCaseDiagram', () => {
     const { container } = testLibraryRender(<div />);
     const editor = new Apollon.ApollonEditor(container as HTMLElement, {});

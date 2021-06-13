@@ -95,6 +95,8 @@ export declare type Assessment = {
     score: number;
     feedback?: string;
     dropInfo?: any;
+    label?: string;
+    labelColor?: string;
 };
 export declare type ExportOptions = {
     margin?: number | {

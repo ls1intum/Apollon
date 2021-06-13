@@ -20,6 +20,7 @@ import { UpdatableReducer } from './uml-element/updatable/updatable-reducer';
 import { ReconnectableReducer } from './uml-relationship/reconnectable/reconnectable-reducer';
 import { UMLRelationshipReducer } from './uml-relationship/uml-relationship-reducer';
 import { CopyReducer } from './copypaste/copy-reducer';
+import { LastActionReducer } from './last-action/last-action-reducer';
 
 const reduce = <S, T extends Action>(intial: S, ...reducerList: Reducer<S, T>[]): Reducer<S, T> => (
   state = intial,
@@ -38,6 +39,7 @@ export const reducers: ReducersMapObject<ModelState, Actions> = {
   interactive: InteractableReducer,
   updating: UpdatableReducer,
   copy: CopyReducer,
+  lastAction: LastActionReducer,
   elements: reduce<UMLElementState, Actions>(
     {},
     UMLContainerReducer,
