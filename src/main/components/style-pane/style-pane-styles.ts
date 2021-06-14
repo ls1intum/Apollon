@@ -21,7 +21,7 @@ export const ColorContainer = styled.div`
 export const Color = styled.button.attrs<Props>({})<Props>`
   height: 28px;
   width: 28px;
-  background-color: ${({ color }: Props) => color || 'black'};
+  background-color: ${({ color, selected }: Props) => (selected ? 'transparent' : color || 'black')};
   border-radius: 14px;
   cursor: pointer;
   border: none;
@@ -31,9 +31,8 @@ export const Color = styled.button.attrs<Props>({})<Props>`
     content: '';
     width: 2px;
     height: 100%;
-    background: white;
+    background: black;
     position: absolute;
-    border-radius: 100%;
     top: 0;
     left: 50%;
     transform: translate(-50%) rotate(45deg);

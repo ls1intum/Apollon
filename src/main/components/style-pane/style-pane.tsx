@@ -60,21 +60,6 @@ const enhance = compose<ComponentClass<OwnProps>>(
 class StylePaneComponent extends Component<Props, State> {
   state = getInitialState();
 
-  // getUpdateElements = () => {
-  //   const allOwnedElements = Object.values(this.props.elements)
-  //     .filter(
-  //       (el) =>
-  //         UMLContainer.isUMLContainer(el) &&
-  //         el.type !== 'Package' &&
-  //         el.type !== 'Activity' &&
-  //         this.props.selected?.includes(el.id),
-  //     )
-  //     .reduce((acc, cur) => {
-  //       return acc.concat((cur as IUMLContainer).ownedElements);
-  //     }, [] as string[]);
-  //   return [...this.props.selected!, ...allOwnedElements];
-  // };
-
   handleFillColorChange = (color: string | undefined) => {
     const { element, onColorChange } = this.props;
     onColorChange(element.id, { fillColor: color });

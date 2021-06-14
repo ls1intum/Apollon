@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CirclePicker } from 'react-color';
-import { Color, ColorPickerContainer, Button } from './style-pane-styles';
+import { ColorPickerContainer, Button } from './style-pane-styles';
 import styled from 'styled-components';
 
 type Props = { color?: string; onColorChange: (hex: string | undefined) => void; open: boolean };
@@ -13,10 +13,10 @@ const colors = [
   '#2bcbba',
   '#45aaf2',
   '#4b7bec',
+  '#6a89cc',
   '#a55eea',
   '#d1d8e0',
   '#778ca3',
-  '#f1f2f6',
   'black',
 ];
 
@@ -29,28 +29,33 @@ const ColorContainer = styled.div`
   margin-bottom: 10px;
 `;
 
+const Flex = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+`;
+
+type ColorProps = {
+  color?: string;
+  selected?: boolean;
+};
+
+const Color = styled.button.attrs<ColorProps>({})<ColorProps>`
+  height: 28px;
+  width: 28px;
+  background-color: ${({ color }: ColorProps) => color || 'black'};
+  border-radius: 14px;
+  cursor: pointer;
+  border: none;
+  position: relative;
+  margin: 10px;
+  box-shadow: ${({ color, selected }: ColorProps) => (selected ? `0px 0px 10px ${color}` : 'none')};
+`;
+
 export function ColorSelector({ onColorChange, color, open }: Props) {
-  // const [open, setOpen] = useState(false);
-  // const ref = useRef<HTMLDivElement>(null);
-
-  // useEffect(() => {
-  //   // const clickedOutside = (event: any) => {
-  //   //   if (ref.current && !ref.current.contains(event.target)) {
-  //   //     setOpen(false);
-  //   //   }
-  //   // };
-  //   document.addEventListener('mousedown', clickedOutside);
-  //   return () => {
-  //     document.removeEventListener('mousedown', clickedOutside);
-  //   };
-  // }, [ref]);
-
-  // const togglePopup = () => {
-  //   setOpen(!open);
-  // };
-
   const handleColorChange = (newColor: any) => {
-    onColorChange(newColor.hex);
+    onColorChange(newColor);
   };
 
   const reset = () => {
@@ -63,7 +68,16 @@ export function ColorSelector({ onColorChange, color, open }: Props) {
     <>
       {open ? (
         <ColorContainer>
-          <CirclePicker colors={colors} width="168px" onChangeComplete={handleColorChange} />
+          {/* <CirclePicker colors={colors} width="168px" onChangeComplete={handleColorChange} /> */}
+          <Flex>
+            {colors.map((colorOption) => (
+              <Color
+                color={colorOption}
+                onClick={() => handleColorChange(colorOption)}
+                selected={colorOption === color}
+              />
+            ))}
+          </Flex>
           <Button onClick={reset}>Reset</Button>
         </ColorContainer>
       ) : null}
