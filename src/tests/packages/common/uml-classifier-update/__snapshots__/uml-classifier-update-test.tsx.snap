@@ -6,10 +6,10 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-iwjezw kxMkHe"
+          class="sc-giYgFv eeSsqe"
         >
           <input
-            class="sc-dJjZJu sc-hGPAah bMrIQy fXWaCy"
+            class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
             value=""
           />
           <button
@@ -31,7 +31,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-bBHwJV drZWsl"
+          class="sc-llYToB jhiKOW"
         />
       </section>
       <section>
@@ -58,20 +58,20 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-bBHwJV drZWsl"
+          class="sc-llYToB jhiKOW"
         />
       </section>
       <section>
         <h1
-          class="sc-kfPtPH kbjeOh"
+          class="sc-iwjezw ieXwbw"
         >
           Attributes
         </h1>
         <div
-          class="sc-iwjezw kxMkHe"
+          class="sc-iJKOzS gnTTgI"
         >
           <input
-            class="sc-dJjZJu sc-hGPAah bMrIQy fUImrI"
+            class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
             value="attribute"
           />
           <button
@@ -93,24 +93,24 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-dJjZJu sc-hGPAah bMrIQy bciECp"
+          class="sc-hBURRC sc-fotPbf ezKeeT cmsRNf"
           value=""
         />
       </section>
       <section>
         <hr
-          class="sc-bBHwJV drZWsl"
+          class="sc-llYToB jhiKOW"
         />
         <h1
-          class="sc-kfPtPH kbjeOh"
+          class="sc-iwjezw ieXwbw"
         >
           Methods
         </h1>
         <div
-          class="sc-iwjezw kxMkHe"
+          class="sc-iJKOzS gnTTgI"
         >
           <input
-            class="sc-dJjZJu sc-hGPAah bMrIQy fUImrI"
+            class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
             value="classMethod"
           />
           <button
@@ -132,7 +132,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-dJjZJu sc-hGPAah bMrIQy bciECp"
+          class="sc-hBURRC sc-fotPbf ezKeeT cmsRNf"
           value=""
         />
       </section>

@@ -45,6 +45,7 @@ import { FlowchartProcessComponent } from './flowchart/flowchart-process/flowcha
 import { FlowchartDecisionComponent } from './flowchart/flowchart-decision/flowchart-decision-component';
 import { FlowchartFunctionCallComponent } from './flowchart/flowchart-function-call/flowchart-function-call-component';
 import { FlowchartInputOutputComponent } from './flowchart/flowchart-input-output/flowchart-input-output-component';
+import { ColorLegendComponent } from './common/color-legend/color-legend-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -88,6 +89,7 @@ export const Components: {
   [UMLElementType.FlowchartProcess]: FlowchartProcessComponent,
   [UMLElementType.FlowchartInputOutput]: FlowchartInputOutputComponent,
   [UMLElementType.FlowchartFunctionCall]: FlowchartFunctionCallComponent,
+  [UMLElementType.ColorLegend]: ColorLegendComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,

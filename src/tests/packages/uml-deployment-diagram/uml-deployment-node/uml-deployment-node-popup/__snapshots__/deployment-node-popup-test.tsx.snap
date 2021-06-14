@@ -6,10 +6,10 @@ exports[`test deployment node popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-gWXaA-D dwiBOv"
+          class="sc-caiKgP dAplQB"
         >
           <input
-            class="sc-dJjZJu sc-hGPAah bMrIQy fXWaCy"
+            class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
             value=""
           />
           <button
@@ -33,13 +33,13 @@ exports[`test deployment node popup render 1`] = `
       </section>
       <section>
         <hr
-          class="sc-bBHwJV drZWsl"
+          class="sc-llYToB jhiKOW"
         />
         <div
-          class="sc-gWXaA-D dwiBOv"
+          class="sc-caiKgP dAplQB"
         >
           <input
-            class="sc-dJjZJu sc-hGPAah bMrIQy fXWaCy"
+            class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
             value="node"
           />
         </div>

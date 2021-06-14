@@ -19,6 +19,7 @@ export type ApollonOptions = {
   theme?: DeepPartial<Styles>;
   locale?: Locale;
   copyPasteToClipboard?: boolean;
+  colorEnabled?: boolean;
 };
 
 export type Selection = {

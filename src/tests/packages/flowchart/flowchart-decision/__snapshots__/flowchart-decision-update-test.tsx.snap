@@ -6,10 +6,10 @@ exports[`test flowchart decision update render 1`] = `
     <div>
       <section>
         <div
-          class="sc-jObXwK kzzfDZ"
+          class="sc-AjmZR fUuryA"
         >
           <input
-            class="sc-dJjZJu sc-hGPAah bMrIQy fXWaCy"
+            class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
             placeholder="Decision"
             value=""
           />
