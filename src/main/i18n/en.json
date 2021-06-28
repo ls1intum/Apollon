@@ -25,7 +25,9 @@
   "assessment": {
     "assessment": "Assessment for",
     "score": "Points",
-    "feedback": "Feedback"
+    "feedback": "Feedback",
+    "removeDropInfo": "Do you want to remove the link to the grading instruction?",
+    "dropInfo": "Grading Instruction: "
   },
   "packages": {
     "ClassDiagram": {
