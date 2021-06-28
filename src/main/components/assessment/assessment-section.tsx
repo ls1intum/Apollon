@@ -12,6 +12,7 @@ import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { styled } from '../theme/styles';
 import { UMLDiagramType } from '../..';
+import { AssessmentDropInfoTooltip } from './assessment-dropInfo-tooltip';
 
 const Flex = styled.div`
   display: flex;
@@ -76,6 +77,7 @@ class AssessmentSectionComponent extends Component<Props> {
               ''
             )}
           </Header>
+          {assessment?.dropInfo ? <AssessmentDropInfoTooltip assessment={assessment} element={element} /> : null}
         </section>
         <section>
           <Flex>
