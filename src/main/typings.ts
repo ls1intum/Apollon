@@ -45,6 +45,7 @@ export type UMLModelElement = {
   owner: string | null;
   bounds: IBoundary;
   highlight?: string;
+  assessmentNote?: string;
 };
 
 export type UMLElement = UMLModelElement & {
