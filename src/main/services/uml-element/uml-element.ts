@@ -30,6 +30,8 @@ export interface IUMLElement {
   fillColor?: string;
   strokeColor?: string;
   textColor?: string;
+  /** Note to show for element's assessment */
+  assessmentNote?: string;
 }
 
 export const getPortsForElement = (element: IUMLElement): { [key in Direction]: Point } => {
@@ -70,6 +72,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
   fillColor?: string;
   strokeColor?: string;
   textColor?: string;
+  assessmentNote?: string;
 
   constructor(values?: DeepPartial<IUMLElement>) {
     assign<IUMLElement>(this, values);
@@ -99,6 +102,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
       fillColor: this.fillColor,
       strokeColor: this.strokeColor,
       textColor: this.textColor,
+      assessmentNote: this.assessmentNote,
     };
   }
 
@@ -113,6 +117,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     this.fillColor = values.fillColor;
     this.strokeColor = values.strokeColor;
     this.textColor = values.textColor;
+    this.assessmentNote = values.assessmentNote;
   }
 
   abstract render(canvas: ILayer): ILayoutable[];

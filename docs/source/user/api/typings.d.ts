@@ -42,6 +42,7 @@ export declare type UMLModelElement = {
     owner: string | null;
     bounds: IBoundary;
     highlight?: string;
+    assessmentNote?: string;
 };
 export declare type UMLElement = UMLModelElement & {
     type: UMLElementType;
