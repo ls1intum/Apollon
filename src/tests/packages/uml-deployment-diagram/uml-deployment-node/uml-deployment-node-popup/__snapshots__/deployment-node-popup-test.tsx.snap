@@ -6,7 +6,7 @@ exports[`test deployment node popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-caiKgP dAplQB"
+          class="sc-iAKVOt iIzA-do"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
@@ -33,10 +33,10 @@ exports[`test deployment node popup render 1`] = `
       </section>
       <section>
         <hr
-          class="sc-llYToB jhiKOW"
+          class="sc-giYgFv YKKtu"
         />
         <div
-          class="sc-caiKgP dAplQB"
+          class="sc-iAKVOt iIzA-do"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"

@@ -6,10 +6,10 @@ exports[`test communication link popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-cCcYRi iuPvJz"
+          class="sc-jcFkyM hsUmja"
         >
           <h1
-            class="sc-iwjezw cELDOx"
+            class="sc-llYToB iIOfmB"
           >
             Communication Link
           </h1>
@@ -31,12 +31,12 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-llYToB jhiKOW"
+          class="sc-giYgFv YKKtu"
         />
       </section>
       <section>
         <h1
-          class="sc-iwjezw ieXwbw"
+          class="sc-llYToB iuseuM"
         >
           Messages
            (
@@ -48,7 +48,7 @@ exports[`test communication link popup render 1`] = `
           )
         </h1>
         <div
-          class="sc-cCcYRi iuPvJz"
+          class="sc-jcFkyM hsUmja"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
@@ -90,7 +90,7 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-cCcYRi iuPvJz"
+          class="sc-jcFkyM hsUmja"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
@@ -132,7 +132,7 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-cCcYRi iuPvJz"
+          class="sc-jcFkyM hsUmja"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
@@ -174,7 +174,7 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-cCcYRi iuPvJz"
+          class="sc-jcFkyM hsUmja"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
@@ -216,7 +216,7 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-cCcYRi iuPvJz"
+          class="sc-jcFkyM hsUmja"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
@@ -258,7 +258,7 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <div
-          class="sc-cCcYRi iuPvJz"
+          class="sc-jcFkyM hsUmja"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
