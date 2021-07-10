@@ -190,7 +190,7 @@ exports[`test update pane render with element 1`] = `
   padding: 0.25em 0.5em;
 }
 
-.c17 {
+.c18 {
   margin-bottom: 0.5em;
   display: block;
   width: 100%;
@@ -199,7 +199,7 @@ exports[`test update pane render with element 1`] = `
   padding: 0.25em 0.5em;
 }
 
-.c18 {
+.c19 {
   display: block;
   width: 100%;
   border-radius: 0.2em;
@@ -207,11 +207,11 @@ exports[`test update pane render with element 1`] = `
   padding: 0.25em 0.5em;
 }
 
-.c18:not(:focus) {
+.c19:not(:focus) {
   border-style: dashed;
 }
 
-.c18:not(:focus):not(:hover) {
+.c19:not(:focus):not(:hover) {
   background: rgba(255,255,255,0.5);
 }
 
@@ -231,6 +231,21 @@ exports[`test update pane render with element 1`] = `
   margin-top: 0.75em;
   margin-bottom: 0.75em;
   overflow: visible;
+}
+
+.c17 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: baseline;
+  -webkit-box-align: baseline;
+  -ms-flex-align: baseline;
+  align-items: baseline;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
 }
 
 .c6 {
@@ -470,10 +485,10 @@ exports[`test update pane render with element 1`] = `
                 Attributes
               </h1>
               <div
-                class="c6"
+                class="c17"
               >
                 <input
-                  class="c7 c17"
+                  class="c7 c18"
                   value=""
                 />
                 <button
@@ -495,7 +510,7 @@ exports[`test update pane render with element 1`] = `
                 </button>
               </div>
               <input
-                class="c7 c18"
+                class="c7 c19"
                 value=""
               />
             </section>
@@ -509,10 +524,10 @@ exports[`test update pane render with element 1`] = `
                 Methods
               </h1>
               <div
-                class="c6"
+                class="c17"
               >
                 <input
-                  class="c7 c17"
+                  class="c7 c18"
                   value=""
                 />
                 <button
@@ -534,7 +549,7 @@ exports[`test update pane render with element 1`] = `
                 </button>
               </div>
               <input
-                class="c7 c18"
+                class="c7 c19"
                 value=""
               />
             </section>

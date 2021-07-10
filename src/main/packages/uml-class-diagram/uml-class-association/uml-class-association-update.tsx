@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { ClassRelationshipType } from '..';
 import { Button } from '../../../components/controls/button/button';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
@@ -12,6 +13,7 @@ import { Body, Header } from '../../../components/controls/typography/typography
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
+import { StylePane } from '../../../components/style-pane/style-pane';
 import { styled } from '../../../components/theme/styles';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
@@ -50,7 +52,17 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class ClassAssociationComponent extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class ClassAssociationComponent extends Component<Props, State> {
+  state = { colorOpen: false };
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
+
   render() {
     const { element, getById } = this.props;
     const source = element.source && getById(element.source.element);
@@ -64,6 +76,7 @@ class ClassAssociationComponent extends Component<Props> {
             <Header gutter={false} style={{ flexGrow: 1 }}>
               {this.props.translate('popup.association')}
             </Header>
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />
             </Button>
@@ -71,6 +84,13 @@ class ClassAssociationComponent extends Component<Props> {
               <TrashIcon />
             </Button>
           </Flex>
+          <StylePane
+            open={this.state.colorOpen}
+            element={element}
+            onColorChange={this.props.update}
+            lineColor
+            textColor
+          />
           <Divider />
         </section>
         <section>

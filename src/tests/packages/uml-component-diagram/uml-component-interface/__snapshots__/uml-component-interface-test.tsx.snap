@@ -13,8 +13,10 @@ exports[`render the uml-component-component 1`] = `
           stroke-width="2"
         />
         <text
+          dominant-baseline="auto"
           font-weight="bold"
           pointer-events="none"
+          text-anchor="start"
           x="25px"
         >
           TestComponentComponent

@@ -26,11 +26,13 @@ import { composeReachabilityGraphPreview } from '../../packages/uml-reachability
 import { PreviewElement } from '../../packages/compose-preview';
 import { composeSyntaxTreePreview } from '../../packages/syntax-tree/syntax-tree-preview';
 import { composeFlowchartPreview } from '../../packages/flowchart/flowchart-diagram-preview';
+import { ColorLegend } from '../../packages/common/color-legend/color-legend';
 
 type OwnProps = {};
 
 type StateProps = {
   type: UMLDiagramType;
+  colorEnabled: boolean;
 };
 
 type DispatchProps = {
@@ -39,7 +41,7 @@ type DispatchProps = {
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext & CanvasContext;
 
-const getInitialState = ({ type, canvas, translate }: Props) => {
+const getInitialState = ({ type, canvas, translate, colorEnabled }: Props) => {
   const previews: PreviewElement[] = [];
   switch (type) {
     case UMLDiagramType.ClassDiagram:
@@ -75,6 +77,13 @@ const getInitialState = ({ type, canvas, translate }: Props) => {
     case UMLDiagramType.Flowchart:
       previews.push(...composeFlowchartPreview(canvas, translate));
   }
+  if (colorEnabled) {
+    previews.push(
+      new ColorLegend({
+        name: translate('packages.ColorLegend.ColorLegend'),
+      }),
+    );
+  }
 
   return { previews };
 };
@@ -87,6 +96,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     (state) => ({
       type: state.diagram.type,
+      colorEnabled: state.editor.colorEnabled,
     }),
     {
       create: UMLElementRepository.create,

@@ -19,6 +19,8 @@ import { UMLDeploymentInterfaceRequired } from '../uml-deployment-interface-requ
 import { UMLDeploymentInterfaceProvided } from '../uml-deployment-interface-provided/uml-deployment-interface-provided';
 import { DeploymentRelationshipType } from '../index';
 import { UMLDeploymentDependency } from '../uml-deployment-dependency/uml-deployment-dependency';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
+import { StylePane } from '../../../components/style-pane/style-pane';
 
 const Flex = styled.div`
   display: flex;
@@ -26,11 +28,21 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class DeploymentAssociationUpdate extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class DeploymentAssociationUpdate extends Component<Props, State> {
+  state = { colorOpen: false };
+
   constructor(props: Props) {
     super(props);
     this.onChange = this.onChange.bind(this);
   }
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
 
   render() {
     const { element } = this.props;
@@ -42,6 +54,7 @@ class DeploymentAssociationUpdate extends Component<Props> {
             <Header gutter={false} style={{ flexGrow: 1 }}>
               {this.props.translate('popup.association')}
             </Header>
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />
             </Button>
@@ -49,6 +62,13 @@ class DeploymentAssociationUpdate extends Component<Props> {
               <TrashIcon />
             </Button>
           </Flex>
+          <StylePane
+            open={this.state.colorOpen}
+            element={element}
+            onColorChange={this.props.update}
+            lineColor
+            textColor={element.type === DeploymentRelationshipType.DeploymentAssociation}
+          />
           <Divider />
         </section>
         <section>

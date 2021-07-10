@@ -6,8 +6,11 @@ exports[`test uml-communication-link component render 1`] = `
     <svg>
       <g>
         <text
+          dominant-baseline="auto"
           font-size="85%"
+          font-weight="normal"
           pointer-events="none"
+          text-anchor="start"
           x="100"
           y="50"
         >
@@ -38,8 +41,11 @@ exports[`test uml-communication-link component render 1`] = `
           </tspan>
         </text>
         <text
+          dominant-baseline="auto"
           font-size="85%"
+          font-weight="normal"
           pointer-events="none"
+          text-anchor="start"
           x="100"
           y="66"
         >

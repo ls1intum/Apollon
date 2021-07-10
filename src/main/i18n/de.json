@@ -112,6 +112,9 @@
       "FlowchartFunctionCall": "Unterprogramm ausführen",
       "FlowchartInputOutput": "Ein- und Ausgabe",
       "FlowchartFlowline": "Verbindung"
+    },
+    "ColorLegend": {
+      "ColorLegend": "Farbe Beschreibung"
     }
   }
 }

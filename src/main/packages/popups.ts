@@ -25,6 +25,7 @@ import { FlowchartDecisionUpdate } from './flowchart/flowchart-decision/flowchar
 import { FlowchartFunctionCallUpdate } from './flowchart/flowchart-function-call/flowchart-function-call-update';
 import { FlowchartInputOutputUpdate } from './flowchart/flowchart-input-output/flowchart-input-output-update';
 import { FlowchartFlowlineUpdate } from './flowchart/flowchart-flowline/flowchart-flowline-update';
+import { ColorLegendUpdate } from './common/color-legend/color-legend-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -66,6 +67,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.FlowchartDecision]: FlowchartDecisionUpdate,
   [UMLElementType.FlowchartFunctionCall]: FlowchartFunctionCallUpdate,
   [UMLElementType.FlowchartInputOutput]: FlowchartInputOutputUpdate,
+  [UMLElementType.ColorLegend]: ColorLegendUpdate,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,

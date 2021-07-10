@@ -1,4 +1,5 @@
 import React, { SFC } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLPetriNetArc } from './uml-petri-net-arc';
 
@@ -22,7 +23,7 @@ export const UMLPetriNetArcComponent: SFC<Props> = ({ element }) => {
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <path d="M0,1 L0,29 L30,15 z" fill="black" />
+        <path d="M0,1 L0,29 L30,15 z" fill={element.strokeColor || 'black'} />
       </marker>
       <path
         id={`textpath-${element.id}`}
@@ -32,10 +33,10 @@ export const UMLPetriNetArcComponent: SFC<Props> = ({ element }) => {
     `}
       />
       {displayMultiplicity && (
-        <text
-          dominantBaseline="middle"
-          textAnchor="middle"
-          fontWeight="bold"
+        <Text
+          noX
+          noY
+          fill={element.textColor}
           transform={
             norm.x < 0
               ? `
@@ -45,16 +46,15 @@ export const UMLPetriNetArcComponent: SFC<Props> = ({ element }) => {
           `
               : undefined
           }
-          pointerEvents="none"
         >
           <textPath xlinkHref={`#textpath-${element.id}`} startOffset="50%">
             {element.name}
           </textPath>
-        </text>
+        </Text>
       )}
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke="black"
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}

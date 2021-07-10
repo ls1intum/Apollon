@@ -12,6 +12,8 @@ import { UMLElementRepository } from '../../../services/uml-element/uml-element-
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { UMLReachabilityGraphArc } from './uml-reachability-graph-arc';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
+import { StylePane } from '../../../components/style-pane/style-pane';
 
 interface OwnProps {
   element: UMLReachabilityGraphArc;
@@ -42,7 +44,17 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class UMLReachabilityGraphArcUpdateComponent extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class UMLReachabilityGraphArcUpdateComponent extends Component<Props, State> {
+  state = { colorOpen: false };
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
+
   render() {
     const { element } = this.props;
 
@@ -51,6 +63,7 @@ class UMLReachabilityGraphArcUpdateComponent extends Component<Props> {
         <section>
           <Flex>
             <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />
             </Button>
@@ -59,6 +72,13 @@ class UMLReachabilityGraphArcUpdateComponent extends Component<Props> {
             </Button>
           </Flex>
         </section>
+        <StylePane
+          open={this.state.colorOpen}
+          element={element}
+          onColorChange={this.props.update}
+          lineColor
+          textColor
+        />
       </div>
     );
   }

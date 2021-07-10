@@ -19,6 +19,7 @@ export type ApollonOptions = {
   theme?: DeepPartial<Styles>;
   locale?: Locale;
   copyPasteToClipboard?: boolean;
+  colorEnabled?: boolean;
 };
 
 export type Selection = {
@@ -45,6 +46,9 @@ export type UMLModelElement = {
   owner: string | null;
   bounds: IBoundary;
   highlight?: string;
+  fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
   assessmentNote?: string;
 };
 

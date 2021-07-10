@@ -5,6 +5,7 @@ const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
 let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
+  colorEnabled: true,
 };
 
 export const onChange = (event: MouseEvent) => {

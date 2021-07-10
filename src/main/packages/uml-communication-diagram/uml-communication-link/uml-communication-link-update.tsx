@@ -19,6 +19,8 @@ import { AsyncDispatch } from '../../../utils/actions/actions';
 import { UMLCommunicationLink } from './uml-communication-link';
 import { uuid } from '../../../utils/uuid';
 import { CommunicationLinkMessage, ICommunicationLinkMessage } from './uml-communiction-link-message';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
+import { StylePane } from '../../../components/style-pane/style-pane';
 
 const Flex = styled.div`
   display: flex;
@@ -28,16 +30,24 @@ const Flex = styled.div`
 
 type State = {
   fieldToFocus?: Textfield<string> | null;
+  colorOpen: boolean;
 };
 
 const getInitialState = (): State => ({
   fieldToFocus: undefined,
+  colorOpen: false,
 });
 
 class CommunicationLinkUpdate extends Component<Props, State> {
   state = getInitialState();
   newCommunicationLinkField = createRef<Textfield<string>>();
   messageRefs: (Textfield<string> | null)[] = [];
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
 
   componentDidMount() {
     this.setState({ fieldToFocus: this.newCommunicationLinkField.current });
@@ -60,10 +70,18 @@ class CommunicationLinkUpdate extends Component<Props, State> {
         <section>
           <Flex>
             <Header gutter={false}>{this.props.translate('packages.CommunicationDiagram.CommunicationLink')}</Header>
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
           </Flex>
+          <StylePane
+            open={this.state.colorOpen}
+            element={element}
+            onColorChange={this.props.update}
+            lineColor
+            textColor
+          />
           <Divider />
         </section>
         <section>

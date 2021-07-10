@@ -40,6 +40,8 @@ export const UMLReachabilityGraphArcComponent: SFC<Props> = ({ element }) => {
     }
   };
 
+  const textColor = element.textColor ? { fill: element.textColor } : {};
+
   return (
     <g>
       <marker
@@ -52,16 +54,16 @@ export const UMLReachabilityGraphArcComponent: SFC<Props> = ({ element }) => {
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <path d="M0,29 L30,15 L0,1" fill="none" stroke="black" />
+        <path d="M0,29 L30,15 L0,1" fill="none" stroke={element.strokeColor || 'black'} />
       </marker>
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke="black"
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}
       />
-      <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
+      <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none" style={{ ...textColor }}>
         {element.name}
       </text>
     </g>

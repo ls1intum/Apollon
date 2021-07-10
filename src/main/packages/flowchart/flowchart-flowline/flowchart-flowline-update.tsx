@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { Button } from '../../../components/controls/button/button';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { TrashIcon } from '../../../components/controls/icon/trash';
@@ -11,6 +12,7 @@ import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
+import { StylePane } from '../../../components/style-pane/style-pane';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 import { FlowchartFlowline } from './flowchart-flowline';
@@ -21,7 +23,17 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class FlowchartFlowlineUpdateComponent extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class FlowchartFlowlineUpdateComponent extends Component<Props, State> {
+  state = { colorOpen: false };
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
+
   render() {
     const { element } = this.props;
 
@@ -32,6 +44,7 @@ class FlowchartFlowlineUpdateComponent extends Component<Props> {
             <Header gutter={false} style={{ flexGrow: 1 }}>
               {this.props.translate('packages.Flowchart.FlowchartFlowline')}
             </Header>
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" onClick={() => this.props.flip(element.id)}>
               <ExchangeIcon />
             </Button>
@@ -39,6 +52,13 @@ class FlowchartFlowlineUpdateComponent extends Component<Props> {
               <TrashIcon />
             </Button>
           </Flex>
+          <StylePane
+            open={this.state.colorOpen}
+            element={element}
+            onColorChange={this.props.update}
+            lineColor
+            textColor
+          />
           <Divider />
         </section>
         <section>

@@ -1,4 +1,5 @@
 import React, { SFC } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLDeploymentAssociation } from './uml-deployment-association';
 
@@ -43,13 +44,13 @@ export const UMLDeploymentAssociationComponent: SFC<Props> = ({ element }) => {
     <g>
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke="black"
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
       />
-      <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
+      <Text fill={element.textColor} x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">
         {element.name}
-      </text>
+      </Text>
     </g>
   );
 };
