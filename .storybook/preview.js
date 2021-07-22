@@ -22,7 +22,7 @@ export const decorators = [
         fill="white"
       >
         <defs>
-          <style>{Style[0]({ theme: defaults })}</style>
+          <style>{Style[0]({ theme: defaults(1.0) })}</style>
         </defs>
         <Story />
       </svg>
@@ -30,7 +30,7 @@ export const decorators = [
       <Story />
     ),
   (Story) => (
-    <ThemeProvider theme={defaults}>
+    <ThemeProvider theme={defaults(1.0)}>
       <Story />
     </ThemeProvider>
   ),

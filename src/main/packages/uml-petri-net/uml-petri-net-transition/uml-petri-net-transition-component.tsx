@@ -1,17 +1,17 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent, SFC } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLPetriNetTransition } from './uml-petri-net-transition';
 
-export const UMLPetriNetTransitionComponent: SFC<Props> = ({ element }) => (
+export const UMLPetriNetTransitionComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
-    <Text y="-15" fill={element.textColor}>
+    <Text y={-15 * scale} fill={element.textColor}>
       {element.name}
     </Text>
     <rect
       width={element.bounds.width}
       height={element.bounds.height}
       stroke={element.strokeColor || 'black'}
-      strokeWidth={2}
+      strokeWidth={2 * scale}
       fillOpacity={1}
     />
   </g>
@@ -19,4 +19,5 @@ export const UMLPetriNetTransitionComponent: SFC<Props> = ({ element }) => (
 
 interface Props {
   element: UMLPetriNetTransition;
+  scale: number;
 }

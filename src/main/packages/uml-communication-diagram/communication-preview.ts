@@ -7,11 +7,17 @@ import { UMLObjectName } from '../uml-object-diagram/uml-object-name/uml-object-
 export const composeCommunicationPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
+  scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 
   // Object
   const umlObject = new UMLObjectName({ name: translate('packages.CommunicationDiagram.ObjectName') });
+  umlObject.bounds = {
+    ...umlObject.bounds,
+    width: umlObject.bounds.width * scale,
+    height: umlObject.bounds.height * scale,
+  };
   const umlObjectAttribute = new UMLObjectAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlObject.id,

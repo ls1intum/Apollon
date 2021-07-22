@@ -49,8 +49,8 @@ import { ColorLegendComponent } from './common/color-legend/color-legend-compone
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
-    | FunctionComponent<{ element: any }>
-    | ConnectedComponent<SFC<any>, { element: any }>;
+    | FunctionComponent<{ element: any; scale: number }>
+    | ConnectedComponent<SFC<any>, { element: any; scale: number }>;
 } = {
   [UMLElementType.Package]: UMLClassPackageComponent,
   [UMLElementType.Class]: UMLClassifierComponent,

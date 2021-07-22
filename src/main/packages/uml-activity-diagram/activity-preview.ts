@@ -12,32 +12,56 @@ import { UMLActivity } from './uml-activity/uml-activity';
 export const composeActivityPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
+  scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 
   // Activity
-  elements.push(new UMLActivity({ name: translate('packages.ActivityDiagram.Activity') }));
+  const activity = new UMLActivity({ name: translate('packages.ActivityDiagram.Activity') });
+  activity.bounds = {
+    ...activity.bounds,
+    width: activity.bounds.width * scale,
+    height: activity.bounds.height * scale,
+  };
+  elements.push(activity);
 
   // Activity Initial Node
-  elements.push(new UMLActivityInitialNode());
+  const activityInitialNode = new UMLActivityInitialNode();
+  elements.push(activityInitialNode);
 
   // Activity Final Node
-  elements.push(new UMLActivityFinalNode());
+  const activityFinalNode = new UMLActivityFinalNode();
+  elements.push(activityFinalNode);
 
   // Activity Action Node
   const activityActionNode = new UMLActivityActionNode({
     name: translate('packages.ActivityDiagram.ActivityActionNode'),
   });
+  activityActionNode.bounds = {
+    ...activityActionNode.bounds,
+    width: activityActionNode.bounds.width * scale,
+    height: activityActionNode.bounds.height * scale,
+  };
   elements.push(activityActionNode);
 
   // Activity Object Node
   const activityObjectNode = new UMLActivityObjectNode({
     name: translate('packages.ActivityDiagram.ActivityObjectNode'),
   });
+  activityObjectNode.bounds = {
+    ...activityObjectNode.bounds,
+    width: activityObjectNode.bounds.width * scale,
+    height: activityObjectNode.bounds.height * scale,
+  };
   elements.push(activityObjectNode);
 
   // Activity Merge Node
   const activityMergeNode = new UMLActivityMergeNode({ name: translate('packages.ActivityDiagram.ActivityMergeNode') });
+  activityMergeNode.bounds = {
+    ...activityMergeNode.bounds,
+    width: activityMergeNode.bounds.width * scale,
+    height: activityMergeNode.bounds.height * scale,
+  };
   elements.push(activityMergeNode);
 
   // Activity Fork Node

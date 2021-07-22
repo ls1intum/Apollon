@@ -7,23 +7,33 @@ import { CSSProperties } from 'react';
 export const composePetriNetPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
+  scale: number,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
 
+  const petriNetTransition = new UMLPetriNetTransition({ name: translate('packages.PetriNet.PetriNetTransition') });
+  petriNetTransition.bounds = {
+    ...petriNetTransition.bounds,
+    width: petriNetTransition.bounds.width * scale,
+    height: petriNetTransition.bounds.height * scale,
+  };
   // Petri Net Transition
   elements.push(
-    Object.assign<UMLPetriNetTransition, { styles?: CSSProperties }>(
-      new UMLPetriNetTransition({ name: translate('packages.PetriNet.PetriNetTransition') }),
-      {
-        styles: {
-          marginTop: '25px',
-        },
+    Object.assign<UMLPetriNetTransition, { styles?: CSSProperties }>(petriNetTransition, {
+      styles: {
+        marginTop: '25px',
       },
-    ),
+    }),
   );
 
   // Petri Net Place
-  elements.push(new UMLPetriNetPlace({ name: translate('packages.PetriNet.PetriNetPlace') }));
+  const petriNetPlace = new UMLPetriNetPlace({ name: translate('packages.PetriNet.PetriNetPlace') });
+  petriNetPlace.bounds = {
+    ...petriNetPlace.bounds,
+    width: petriNetPlace.bounds.width * scale,
+    height: petriNetPlace.bounds.height * scale,
+  };
+  elements.push(petriNetPlace);
 
   return elements;
 };

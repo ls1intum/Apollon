@@ -2,29 +2,34 @@ import React, { SFC } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLDeploymentNode } from './uml-deployment-node';
 
-export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children }) => (
+export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children, scale }) => (
   <g>
     <g>
-      <path d={`M 0 8 l 8 -8 H ${element.bounds.width} l -8 8 Z`} stroke={element.strokeColor || 'black'} />
       <path
-        d={`M ${element.bounds.width} 0 V ${element.bounds.height - 8} l -8 8 V 8 Z`}
+        d={`M 0 ${8 * scale} l ${8 * scale} -${8 * scale} H ${element.bounds.width} l -${8 * scale} ${8 * scale} Z`}
+        stroke={element.strokeColor || 'black'}
+      />
+      <path
+        d={`M ${element.bounds.width} 0 V ${element.bounds.height - 8 * scale} l -${8 * scale} ${8 * scale} V ${
+          8 * scale
+        } Z`}
         stroke={element.strokeColor || 'black'}
       />
       <rect
         x="0"
-        y="8"
-        width={element.bounds.width - 8}
-        height={element.bounds.height - 9}
+        y={8 * scale}
+        width={element.bounds.width - 8 * scale}
+        height={element.bounds.height - 9 * scale}
         stroke={element.strokeColor || 'black'}
       />
     </g>
-    <Text y="30" fill={element.textColor}>
+    <Text y={30 * scale} fill={element.textColor}>
       {element.stereotype && (
-        <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
+        <tspan x="50%" dy={-8 * scale} textAnchor="middle" fontSize="85%">
           {`«${element.stereotype}»`}
         </tspan>
       )}
-      <tspan x="50%" dy={element.stereotype ? 18 : 10} textAnchor="middle">
+      <tspan x="50%" dy={element.stereotype ? 18 * scale : 10 * scale} textAnchor="middle">
         {element.name}
       </tspan>
     </Text>
@@ -34,4 +39,5 @@ export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children }) =>
 
 interface Props {
   element: UMLDeploymentNode;
+  scale: number;
 }
