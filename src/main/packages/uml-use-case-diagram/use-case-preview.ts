@@ -11,7 +11,6 @@ export const composeUseCasePreview: ComposePreview = (
   scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
-
   // UML Use Case
   const umlUseCase = new UMLUseCase({ name: translate('packages.UseCaseDiagram.UseCase') });
   umlUseCase.bounds = {
@@ -19,15 +18,14 @@ export const composeUseCasePreview: ComposePreview = (
     width: umlUseCase.bounds.width * scale,
     height: umlUseCase.bounds.height * scale,
   };
+
   elements.push(umlUseCase);
 
   // UML Actor
-  const umlActor = new UMLUseCaseActor({ name: translate('packages.UseCaseDiagram.UseCaseActor') });
-  umlActor.bounds = {
-    ...umlActor.bounds,
-    width: umlActor.bounds.width * scale,
-    height: umlActor.bounds.height * scale,
-  };
+  const umlActor = new UMLUseCaseActor({
+    name: translate('packages.UseCaseDiagram.UseCaseActor'),
+    bounds: { x: 0, y: 0, width: 90 * scale, height: 140 * scale },
+  });
   elements.push(umlActor);
 
   // UML System
@@ -38,6 +36,7 @@ export const composeUseCasePreview: ComposePreview = (
     height: umlSystem.bounds.height * scale,
   };
   elements.push(umlSystem);
+  console.log(elements);
 
   return elements;
 };

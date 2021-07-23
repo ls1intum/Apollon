@@ -131,7 +131,7 @@ class CreatePaneComponent extends Component<Props, State> {
     );
 
     return (
-      <StoreProvider initialState={{ elements, editor: { features } }}>
+      <StoreProvider initialState={{ elements, editor: { features, scale: this.props.scale } }}>
         {Object.values(previews)
           .filter((preview) => !preview.owner)
           .map((preview, index) => {

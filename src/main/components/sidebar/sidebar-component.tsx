@@ -17,6 +17,7 @@ type StateProps = {
   mode: ApollonMode;
   view: ApollonView;
   selected: SelectableState;
+  scale: number;
 };
 
 type DispatchProps = {
@@ -33,6 +34,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       mode: state.editor.mode,
       view: state.editor.view,
       selected: state.selected,
+      scale: state.editor.scale,
     }),
     {
       changeView: EditorRepository.changeView,

@@ -38,7 +38,9 @@ const unscaledDefaults = {
   },
 };
 
-export const defaults = (scale: number = 1.0) => ({
-  ...unscaledDefaults,
-  font: { ...unscaledDefaults.font, size: unscaledDefaults.font.size * scale },
-});
+export const defaults = (scale: number = 1.0) => {
+  return {
+    ...unscaledDefaults,
+    font: { ...unscaledDefaults.font, size: unscaledDefaults.font.size * scale },
+  };
+};
