@@ -38,7 +38,8 @@ class AssessmentDropInfoTooltipComponent extends Component<Props, State> {
 
   render() {
     const { assessment } = this.props;
-    const message = this.props.translate('assessment.dropInfo') + assessment?.dropInfo.instruction.instructionDescription;
+    const message =
+      this.props.translate('assessment.dropInfo') + assessment?.dropInfo.instruction.instructionDescription;
     return (
       <div>
         {this.state.showLinkIcon ? (
