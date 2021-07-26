@@ -6,10 +6,10 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-llYToB fcFAeu"
+          class="sc-cidCJl ffkSVd"
         >
           <h1
-            class="sc-bkkfTU hfKudc"
+            class="sc-llYToB iIOfmB"
             style="flex-grow: 1;"
           >
             Association
@@ -48,33 +48,33 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-dJjZJu dhDoEz"
+          class="sc-giYgFv YKKtu"
         />
       </section>
       <section>
         <div
-          class="sc-iwjezw"
+          class="sc-gWXaA-D"
         >
           <button
-            class="sc-kDThTU sc-iqsfdx bmjioK fuOGzm sc-fKVsgm LmGYu"
+            class="sc-kDThTU sc-iqsfdx bmjioK fuOGzm sc-jJoQpE emeIvX"
             color="primary"
           >
             Association (bidirectional)
           </button>
         </div>
         <hr
-          class="sc-dJjZJu dhDoEz"
+          class="sc-giYgFv YKKtu"
         />
       </section>
       <section>
         <h1
-          class="sc-bkkfTU ljyjcB"
+          class="sc-llYToB iuseuM"
         />
         <div
-          class="sc-llYToB fcFAeu"
+          class="sc-cidCJl ffkSVd"
         >
           <span
-            class="sc-bkkfTU ghacMM"
+            class="sc-llYToB kXNwSl"
             style="margin-right: 0.5em;"
           >
             Multiplicity
@@ -86,10 +86,10 @@ exports[`test class association popup render 1`] = `
           />
         </div>
         <div
-          class="sc-llYToB fcFAeu"
+          class="sc-cidCJl ffkSVd"
         >
           <span
-            class="sc-bkkfTU ghacMM"
+            class="sc-llYToB kXNwSl"
             style="margin-right: 0.5em;"
           >
             Role
@@ -100,18 +100,18 @@ exports[`test class association popup render 1`] = `
           />
         </div>
         <hr
-          class="sc-dJjZJu dhDoEz"
+          class="sc-giYgFv YKKtu"
         />
       </section>
       <section>
         <h1
-          class="sc-bkkfTU ljyjcB"
+          class="sc-llYToB iuseuM"
         />
         <div
-          class="sc-llYToB fcFAeu"
+          class="sc-cidCJl ffkSVd"
         >
           <span
-            class="sc-bkkfTU ghacMM"
+            class="sc-llYToB kXNwSl"
             style="margin-right: 0.5em;"
           >
             Multiplicity
@@ -123,10 +123,10 @@ exports[`test class association popup render 1`] = `
           />
         </div>
         <div
-          class="sc-llYToB fcFAeu"
+          class="sc-cidCJl ffkSVd"
         >
           <span
-            class="sc-bkkfTU ghacMM"
+            class="sc-llYToB kXNwSl"
             style="margin-right: 0.5em;"
           >
             Role

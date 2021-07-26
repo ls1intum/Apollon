@@ -6,7 +6,7 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-hGPAah eElzet"
+          class="sc-bYoCmx gLDJAU"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT ictcNQ"
@@ -31,7 +31,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-dJjZJu dhDoEz"
+          class="sc-giYgFv YKKtu"
         />
       </section>
       <section>
@@ -58,17 +58,17 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-dJjZJu dhDoEz"
+          class="sc-giYgFv YKKtu"
         />
       </section>
       <section>
         <h1
-          class="sc-bkkfTU ljyjcB"
+          class="sc-llYToB iuseuM"
         >
           Attributes
         </h1>
         <div
-          class="sc-hGPAah eElzet"
+          class="sc-ezbkgU fFYuUO"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"
@@ -99,15 +99,15 @@ exports[`test class association popup render 1`] = `
       </section>
       <section>
         <hr
-          class="sc-dJjZJu dhDoEz"
+          class="sc-giYgFv YKKtu"
         />
         <h1
-          class="sc-bkkfTU ljyjcB"
+          class="sc-llYToB iuseuM"
         >
           Methods
         </h1>
         <div
-          class="sc-hGPAah eElzet"
+          class="sc-ezbkgU fFYuUO"
         >
           <input
             class="sc-hBURRC sc-fotPbf ezKeeT cYRiYa"

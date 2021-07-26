@@ -4,6 +4,7 @@ import { compose } from 'redux';
 import styled from 'styled-components';
 import { UseCaseRelationshipType } from '..';
 import { Button } from '../../../components/controls/button/button';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
@@ -13,8 +14,12 @@ import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
+import { StylePane } from '../../../components/style-pane/style-pane';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
+import { UMLUseCaseExtend } from '../uml-use-case-extend/uml-use-case-extend';
+import { UMLUseCaseGeneralization } from '../uml-use-case-generalization/uml-use-case-generalization';
+import { UMLUseCaseInclude } from '../uml-use-case-include/uml-use-case-include';
 import { UMLUseCaseAssociation } from './uml-use-case-association';
 
 const Flex = styled.div`
@@ -23,7 +28,17 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class UseCaseAssociationUpdate extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class UseCaseAssociationUpdate extends Component<Props, State> {
+  state = { colorOpen: false };
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
+
   render() {
     const { element } = this.props;
 
@@ -33,6 +48,7 @@ class UseCaseAssociationUpdate extends Component<Props> {
           {element.type === UseCaseRelationshipType.UseCaseAssociation ? (
             <Flex>
               <Textfield value={element.name} placeholder="..." onChange={this.rename(element.id)} autoFocus />
+              <ColorButton onClick={this.toggleColor} />
               <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
                 <TrashIcon />
               </Button>
@@ -57,6 +73,7 @@ class UseCaseAssociationUpdate extends Component<Props> {
                   }[element.type]
                 }
               </Header>
+              <ColorButton onClick={this.toggleColor} />
               <Button color="link" tabIndex={-1} onClick={() => this.props.flip(element.id)}>
                 <ExchangeIcon />
               </Button>
@@ -83,6 +100,13 @@ class UseCaseAssociationUpdate extends Component<Props> {
             </Dropdown.Item>
           </Dropdown>
         </section>
+        <StylePane
+          open={this.state.colorOpen}
+          element={element}
+          onColorChange={this.props.update}
+          lineColor
+          textColor={element.type !== UseCaseRelationshipType.UseCaseGeneralization}
+        />
       </div>
     );
   }
@@ -97,7 +121,7 @@ class UseCaseAssociationUpdate extends Component<Props> {
 }
 
 type OwnProps = {
-  element: UMLUseCaseAssociation;
+  element: UMLUseCaseAssociation | UMLUseCaseGeneralization | UMLUseCaseInclude | UMLUseCaseExtend;
 };
 
 type StateProps = {};

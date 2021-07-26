@@ -1,6 +1,7 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { UMLDiagramType } from '../..';
 import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { IUMLElement } from '../../services/uml-element/uml-element';
@@ -11,13 +12,17 @@ import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { styled } from '../theme/styles';
-import { UMLDiagramType } from '../..';
 import { AssessmentDropInfoTooltip } from './assessment-dropInfo-tooltip';
 
 const Flex = styled.div`
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+`;
+
+const Action = styled.span`
+  margin-top: 10px;
+  font-size: 12px;
 `;
 
 type BadgeProps = {
@@ -109,6 +114,11 @@ class AssessmentSectionComponent extends Component<Props> {
             {assessment?.label ? (
               <Flex>
                 <Badge color={assessment?.labelColor}>{assessment?.label}</Badge>
+              </Flex>
+            ) : null}
+            {element?.assessmentNote ? (
+              <Flex>
+                <Action>{element.assessmentNote}</Action>
               </Flex>
             ) : null}
           </section>

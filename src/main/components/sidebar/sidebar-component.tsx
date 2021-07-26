@@ -9,13 +9,14 @@ import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { Container } from './sidebar-styles';
-
+import { SelectableState } from '../../services/uml-element/selectable/selectable-types';
 type OwnProps = {};
 
 type StateProps = {
   readonly: boolean;
   mode: ApollonMode;
   view: ApollonView;
+  selected: SelectableState;
 };
 
 type DispatchProps = {
@@ -31,6 +32,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       readonly: state.editor.readonly,
       mode: state.editor.mode,
       view: state.editor.view,
+      selected: state.selected,
     }),
     {
       changeView: EditorRepository.changeView,

@@ -1,9 +1,10 @@
 import React, { SFC } from 'react';
+import { Text } from '../../../components/controls/text/text';
 import { Direction } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
 import { UMLCommunicationLink } from './uml-communication-link';
 import { ICommunicationLinkMessage } from './uml-communiction-link-message';
-
+import { UmlCommunicationLinkTextComponent } from './uml-communication-link-text-component';
 export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
   const sources: ICommunicationLinkMessage[] = element.messages.filter((message) => message.direction === 'source');
   const targets: ICommunicationLinkMessage[] = element.messages.filter((message) => message.direction === 'target');
@@ -47,98 +48,78 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
         {
           [Direction.Up]: (
             <>
-              <text x={position.x + 8} y={position.y} fontSize="85%" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
-                  {sources.length ? '↓' : ''}
-                </tspan>
-                {sources.map((source, i) => (
-                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
-                    {source.name}
-                  </tspan>
-                ))}
-              </text>
-              <text x={position.x - 16} y={position.y} fontSize="85%" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
-                  {targets.length ? '↑' : ''}
-                </tspan>
-                {targets.map((target, i) => (
-                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
-                    {target.name}
-                  </tspan>
-                ))}
-              </text>
+              <UmlCommunicationLinkTextComponent
+                x={position.x + 8}
+                y={position.y}
+                fill={element.textColor}
+                directionIcon="↓"
+                messages={sources}
+              />
+              <UmlCommunicationLinkTextComponent
+                x={position.x - 16}
+                y={position.y}
+                fill={element.textColor}
+                directionIcon="↑"
+                messages={targets}
+              />
             </>
           ),
           [Direction.Right]: (
             <>
-              <text x={position.x} y={position.y} fontSize="85%" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
-                  {targets.length ? '⟶' : ''}
-                </tspan>
-                {targets.map((target, i) => (
-                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
-                    {target.name}
-                  </tspan>
-                ))}
-              </text>
-              <text x={position.x} y={position.y + 16} fontSize="85%" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
-                  {sources.length ? '⟵' : ''}
-                </tspan>
-                {sources.map((source, i) => (
-                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
-                    {source.name}
-                  </tspan>
-                ))}
-              </text>
+              <UmlCommunicationLinkTextComponent
+                x={position.x}
+                y={position.y}
+                fill={element.textColor}
+                directionIcon="⟶"
+                messages={targets}
+                textCentered
+              />
+              <UmlCommunicationLinkTextComponent
+                x={position.x}
+                y={position.y + 16}
+                fill={element.textColor}
+                directionIcon="⟵"
+                messages={sources}
+                textCentered
+              />
             </>
           ),
           [Direction.Down]: (
             <>
-              <text x={position.x + 8} y={position.y} fontSize="85%" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
-                  {targets.length ? '↓' : ''}
-                </tspan>
-                {targets.map((target, i) => (
-                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
-                    {target.name}
-                  </tspan>
-                ))}
-              </text>
-              <text x={position.x - 16} y={position.y} fontSize="85%" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%">
-                  {sources.length ? '↑' : ''}
-                </tspan>
-                {sources.map((source, i) => (
-                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
-                    {source.name}
-                  </tspan>
-                ))}
-              </text>
+              <UmlCommunicationLinkTextComponent
+                x={position.x + 8}
+                y={position.y}
+                fill={element.textColor}
+                directionIcon="↓"
+                messages={targets}
+              />
+              <UmlCommunicationLinkTextComponent
+                x={position.x - 16}
+                y={position.y}
+                fill={element.textColor}
+                directionIcon="↑"
+                messages={sources}
+              />
             </>
           ),
           [Direction.Left]: (
             <>
-              <text x={position.x} y={position.y} fontSize="85%" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
-                  {sources.length ? '⟶' : ''}
-                </tspan>
-                {sources.map((source, i) => (
-                  <tspan key={i} x={source.bounds.x} y={source.bounds.y}>
-                    {source.name}
-                  </tspan>
-                ))}
-              </text>
-              <text x={position.x} y={position.y + 16} fontSize="85%" pointerEvents="none">
-                <tspan fontWeight="bold" fontSize="120%" textAnchor="middle">
-                  {targets.length ? '⟵' : ''}
-                </tspan>
-                {targets.map((target, i) => (
-                  <tspan key={i} x={target.bounds.x} y={target.bounds.y}>
-                    {target.name}
-                  </tspan>
-                ))}
-              </text>
+              <UmlCommunicationLinkTextComponent
+                x={position.x}
+                y={position.y}
+                fill={element.textColor}
+                directionIcon="⟶"
+                messages={sources}
+                textCentered
+              />
+              <UmlCommunicationLinkTextComponent
+                x={position.x}
+                y={position.y + 16}
+                fill={element.textColor}
+                directionIcon="⟵"
+                messages={targets}
+                textCentered
+              />
             </>
           ),
         }[direction]
@@ -146,7 +127,7 @@ export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
 
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke="black"
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
       />

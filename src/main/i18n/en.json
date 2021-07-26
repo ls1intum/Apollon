@@ -114,6 +114,9 @@
       "FlowchartFunctionCall": "Function Call",
       "FlowchartInputOutput": "Input Output",
       "FlowchartFlowline": "Flowline"
+    },
+    "ColorLegend": {
+      "ColorLegend": "Color Description"
     }
   }
 }

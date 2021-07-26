@@ -144,6 +144,7 @@ export class Multiline extends Component<Props, State> {
       angle,
       lineHeight,
       capHeight,
+      fill,
       ...textProps
     } = this.props;
     const { wordsByLines } = this.state;
@@ -181,7 +182,14 @@ export class Multiline extends Component<Props, State> {
     }
 
     return (
-      <text x={xPosition} y={yPosition} textAnchor={textAnchor} {...textProps} pointerEvents="none">
+      <text
+        style={fill ? { fill } : {}}
+        x={xPosition}
+        y={yPosition}
+        textAnchor={textAnchor}
+        {...textProps}
+        pointerEvents="none"
+      >
         {wordsByLines.map((line, index) => (
           <tspan x={xPosition} dy={index === 0 ? startDy : lineHeight} key={index}>
             {line.words.join(' ')}

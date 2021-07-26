@@ -26,6 +26,12 @@ export interface IUMLElement {
   bounds: IBoundary;
   /** Highlight the element with a specified color */
   highlight?: string;
+  /** Colors of the element */
+  fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
+  /** Note to show for element's assessment */
+  assessmentNote?: string;
 }
 
 export const getPortsForElement = (element: IUMLElement): { [key in Direction]: Point } => {
@@ -63,6 +69,10 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
   bounds = { x: 0, y: 0, width: 200, height: 100 };
   owner = null as string | null;
   highlight?: string;
+  fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
+  assessmentNote?: string;
 
   constructor(values?: DeepPartial<IUMLElement>) {
     assign<IUMLElement>(this, values);
@@ -89,6 +99,10 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
       owner: this.owner,
       bounds: this.bounds,
       highlight: this.highlight,
+      fillColor: this.fillColor,
+      strokeColor: this.strokeColor,
+      textColor: this.textColor,
+      assessmentNote: this.assessmentNote,
     };
   }
 
@@ -100,6 +114,10 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     this.owner = values.owner || null;
     this.bounds = { ...values.bounds };
     this.highlight = values.highlight;
+    this.fillColor = values.fillColor;
+    this.strokeColor = values.strokeColor;
+    this.textColor = values.textColor;
+    this.assessmentNote = values.assessmentNote;
   }
 
   abstract render(canvas: ILayer): ILayoutable[];

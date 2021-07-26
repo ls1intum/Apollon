@@ -76,7 +76,7 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
             REQUIRED_INTERFACE_MARKER_SIZE / 2,
           )} 0 0 0 0,${REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
           fill="none"
-          stroke="black"
+          stroke={element.strokeColor || 'black'}
           strokeWidth={2}
         />
       </marker>
@@ -89,7 +89,7 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
             return `${point.x} ${point.y}`;
           })
           .join(',')}
-        stroke="black"
+        stroke={element.strokeColor || 'black'}
         fill="none"
         strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}

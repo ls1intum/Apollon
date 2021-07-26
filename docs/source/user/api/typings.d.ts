@@ -17,6 +17,7 @@ export declare type ApollonOptions = {
     theme?: DeepPartial<Styles>;
     locale?: Locale;
     copyPasteToClipboard?: boolean;
+    colorEnabled?: boolean;
 };
 export declare type Selection = {
     elements: string[];
@@ -42,6 +43,10 @@ export declare type UMLModelElement = {
     owner: string | null;
     bounds: IBoundary;
     highlight?: string;
+    fillColor?: string;
+    strokeColor?: string;
+    textColor?: string;
+    assessmentNote?: string;
 };
 export declare type UMLElement = UMLModelElement & {
     type: UMLElementType;

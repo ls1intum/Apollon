@@ -9,6 +9,7 @@ import { CommunicationElementType } from './uml-communication-diagram';
 import { UMLDiagramType } from './diagram-type';
 import { SyntaxTreeElementType } from './syntax-tree';
 import { FlowchartElementType } from './flowchart';
+import { ColorLegendElementType } from './common/color-legend/index';
 import { ReachabilityGraphElementType } from './uml-reachability-graph';
 
 export type UMLElementType =
@@ -22,7 +23,8 @@ export type UMLElementType =
   | keyof typeof PetriNetElementType
   | keyof typeof ReachabilityGraphElementType
   | keyof typeof SyntaxTreeElementType
-  | keyof typeof FlowchartElementType;
+  | keyof typeof FlowchartElementType
+  | keyof typeof ColorLegendElementType;
 
 export const UMLElementType = {
   ...ClassElementType,
@@ -36,18 +38,22 @@ export const UMLElementType = {
   ...ReachabilityGraphElementType,
   ...SyntaxTreeElementType,
   ...FlowchartElementType,
+  ...ColorLegendElementType,
 };
 
 export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
-  [UMLDiagramType.ClassDiagram]: ClassElementType,
-  [UMLDiagramType.ObjectDiagram]: ObjectElementType,
-  [UMLDiagramType.ActivityDiagram]: ActivityElementType,
-  [UMLDiagramType.UseCaseDiagram]: UseCaseElementType,
-  [UMLDiagramType.CommunicationDiagram]: CommunicationElementType,
-  [UMLDiagramType.ComponentDiagram]: ComponentElementType,
-  [UMLDiagramType.DeploymentDiagram]: DeploymentElementType,
-  [UMLDiagramType.PetriNet]: PetriNetElementType,
-  [UMLDiagramType.ReachabilityGraph]: ReachabilityGraphElementType,
-  [UMLDiagramType.SyntaxTree]: SyntaxTreeElementType,
-  [UMLDiagramType.Flowchart]: FlowchartElementType,
+  ...{
+    [UMLDiagramType.ClassDiagram]: ClassElementType,
+    [UMLDiagramType.ObjectDiagram]: ObjectElementType,
+    [UMLDiagramType.ActivityDiagram]: ActivityElementType,
+    [UMLDiagramType.UseCaseDiagram]: UseCaseElementType,
+    [UMLDiagramType.CommunicationDiagram]: CommunicationElementType,
+    [UMLDiagramType.ComponentDiagram]: ComponentElementType,
+    [UMLDiagramType.DeploymentDiagram]: DeploymentElementType,
+    [UMLDiagramType.PetriNet]: PetriNetElementType,
+    [UMLDiagramType.ReachabilityGraph]: ReachabilityGraphElementType,
+    [UMLDiagramType.SyntaxTree]: SyntaxTreeElementType,
+    [UMLDiagramType.Flowchart]: FlowchartElementType,
+  },
+  ...ColorLegendElementType,
 };

@@ -6,7 +6,7 @@ exports[`render the uml-object-name-component 1`] = `
     <div>
       <section>
         <div
-          class="sc-iCfLBT hfGryI"
+          class="sc-fotPbf hBIPtH"
         >
           <input
             class="sc-eCImvq sc-jRQAMF dIvUyK oPoLy"
@@ -18,7 +18,7 @@ exports[`render the uml-object-name-component 1`] = `
             tabindex="-1"
           >
             <svg
-              class="sc-hKwCoD jLPRZB"
+              class="sc-dkPtyc jnPWYc"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -31,7 +31,7 @@ exports[`render the uml-object-name-component 1`] = `
           </button>
         </div>
         <hr
-          class="sc-dkPtyc kmLmkz"
+          class="sc-hKwCoD kAnsym"
         />
       </section>
       <section>
@@ -47,7 +47,7 @@ exports[`render the uml-object-name-component 1`] = `
       </section>
       <section>
         <hr
-          class="sc-dkPtyc kmLmkz"
+          class="sc-hKwCoD kAnsym"
         />
         <h1
           class="sc-gKckTs hEpUnX"

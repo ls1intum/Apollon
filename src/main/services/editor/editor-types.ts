@@ -29,6 +29,7 @@ export type EditorState = {
   readonly enableCopyPasteToClipboard: boolean;
   readonly view: ApollonView;
   readonly features: UMLElementFeatures;
+  readonly colorEnabled: boolean;
 };
 
 export type EditorActions = ChangeViewAction;

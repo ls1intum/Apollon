@@ -11,6 +11,7 @@ exports[`render the uml-component-component 1`] = `
           width="100%"
         />
         <text
+          dominant-baseline="auto"
           font-weight="bold"
           pointer-events="none"
           text-anchor="middle"

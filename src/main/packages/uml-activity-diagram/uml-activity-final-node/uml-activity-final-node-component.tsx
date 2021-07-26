@@ -24,24 +24,28 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-export const UMLActivityFinalNodeC: SFC<Props> = ({ element, interactive, interactable, theme }) => (
-  <g>
-    <circle
-      cx="50%"
-      cy="50%"
-      r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5}
-      stroke={interactable && interactive ? theme.interactive.normal : 'black'}
-      strokeWidth="5"
-    />
-    <circle
-      cx="50%"
-      cy="50%"
-      r={Math.min(element.bounds.width, element.bounds.height) / 2 - 7.5}
-      stroke="none"
-      fill={interactive && interactable ? theme.interactive.normal : 'black'}
-      fillOpacity={1}
-    />
-  </g>
-);
+export const UMLActivityFinalNodeC: SFC<Props> = ({ element, interactive, interactable, theme }) => {
+  const fill = element.fillColor || 'black';
+  return (
+    <g>
+      <circle
+        cx="50%"
+        cy="50%"
+        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5}
+        stroke={interactable && interactive ? theme.interactive.normal : fill}
+        strokeWidth="5"
+        fill="white"
+      />
+      <circle
+        cx="50%"
+        cy="50%"
+        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 7.5}
+        stroke="none"
+        fill={interactive && interactable ? theme.interactive.normal : fill}
+        fillOpacity={1}
+      />
+    </g>
+  );
+};
 
 export const UMLActivityFinalNodeComponent = enhance(UMLActivityFinalNodeC);

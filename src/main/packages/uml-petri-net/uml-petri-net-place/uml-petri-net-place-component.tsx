@@ -1,6 +1,7 @@
 import React, { SFC } from 'react';
 import { UMLPetriNetPlace } from './uml-petri-net-place';
 import { Point } from '../../../utils/geometry/point';
+import { Text } from '../../../components/controls/text/text';
 
 const maxAmountCircles = 5;
 const tokenToBoundaryDistance = 10;
@@ -50,7 +51,7 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
   }
   return (
     <g>
-      <circle cx="50%" cy="50%" r={radius} stroke="black" strokeWidth={2} fillOpacity={1} />
+      <circle cx="50%" cy="50%" r={radius} stroke={element.strokeColor || 'black'} strokeWidth={2} fillOpacity={1} />
       {!displayTokenAsNumber &&
         tokenPositions.map((position, index) => (
           <circle
@@ -58,30 +59,19 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
             cx={radius + position.x}
             cy={radius + position.y}
             r={tokenRadius}
-            fill="black"
+            fill={element.strokeColor || 'black'}
             fillOpacity={1}
           />
         ))}
-      {displayTokenAsNumber && (
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
-          {element.amountOfTokens}
-        </text>
-      )}
+      {displayTokenAsNumber && <Text fill={element.strokeColor}>{element.amountOfTokens}</Text>}
       {displayCapacity && (
-        <text x="95%" y="5" pointerEvents="none">
+        <text x="95%" y="5" pointerEvents="none" style={element.textColor ? { fill: element.textColor } : {}}>
           C={element.capacity}
         </text>
       )}
-      <text
-        x="50%"
-        y={element.bounds.height + 15}
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontWeight="bold"
-        pointerEvents="none"
-      >
+      <Text fill={element.textColor} y={element.bounds.height + 15}>
         {element.name}
-      </text>
+      </Text>
     </g>
   );
 };

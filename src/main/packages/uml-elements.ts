@@ -36,6 +36,7 @@ import { FlowchartFunctionCall } from './flowchart/flowchart-function-call/flowc
 import { FlowchartDecision } from './flowchart/flowchart-decision/flowchart-decision';
 import { FlowchartProcess } from './flowchart/flowchart-process/flowchart-process';
 import { FlowchartInputOutput } from './flowchart/flowchart-input-output/flowchart-input-output';
+import { ColorLegend } from './common/color-legend/color-legend';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -75,4 +76,5 @@ export const UMLElements = {
   [UMLElementType.FlowchartProcess]: FlowchartProcess,
   [UMLElementType.FlowchartDecision]: FlowchartDecision,
   [UMLElementType.FlowchartInputOutput]: FlowchartInputOutput,
+  [UMLElementType.ColorLegend]: ColorLegend,
 };

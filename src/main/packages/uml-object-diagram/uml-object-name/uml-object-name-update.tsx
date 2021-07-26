@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { Button } from '../../../components/controls/button/button';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Divider } from '../../../components/controls/divider/divider';
 import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';
@@ -10,6 +11,7 @@ import { Header } from '../../../components/controls/typography/typography';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
+import { StylePane } from '../../../components/style-pane/style-pane';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
@@ -17,7 +19,7 @@ import { notEmpty } from '../../../utils/not-empty';
 import { UMLObjectAttribute } from '../uml-object-attribute/uml-object-attribute';
 import { UMLObjectMethod } from '../uml-object-method/uml-object-method';
 import { UMLObjectName } from './uml-object-name';
-
+import UmlAttributeUpdate from '../../common/uml-classifier/uml-classifier-attribute-update';
 const Flex = styled.div`
   display: flex;
   align-items: baseline;
@@ -26,16 +28,24 @@ const Flex = styled.div`
 
 type State = {
   fieldToFocus?: Textfield<string> | null;
+  colorOpen: boolean;
 };
 
 const getInitialState = (): State => ({
   fieldToFocus: undefined,
+  colorOpen: false,
 });
 
 class ObjectNameComponent extends Component<Props, State> {
   state = getInitialState();
   newMethodField = createRef<Textfield<string>>();
   newAttributeField = createRef<Textfield<string>>();
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any) {
     if (this.state.fieldToFocus) {
@@ -57,33 +67,40 @@ class ObjectNameComponent extends Component<Props, State> {
         <section>
           <Flex>
             <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
           </Flex>
+          <StylePane
+            open={this.state.colorOpen}
+            element={element}
+            onColorChange={this.props.update}
+            fillColor
+            lineColor
+            textColor
+          />
           <Divider />
         </section>
         <section>
           <Header>{this.props.translate('popup.attributes')}</Header>
           {attributes.map((attribute, index) => (
-            <Flex key={attribute.id}>
-              <Textfield
-                ref={(ref) => (attributeRefs[index] = ref)}
-                gutter
-                value={attribute.name}
-                onChange={this.rename(attribute.id)}
-                onSubmitKeyUp={() =>
-                  index === attributes.length - 1
-                    ? this.newAttributeField.current?.focus()
-                    : this.setState({
-                        fieldToFocus: attributeRefs[index + 1],
-                      })
-                }
-              />
-              <Button color="link" tabIndex={-1} onClick={this.delete(attribute.id)}>
-                <TrashIcon />
-              </Button>
-            </Flex>
+            <UmlAttributeUpdate
+              id={attribute.id}
+              key={attribute.id}
+              value={attribute.name}
+              onChange={this.props.update}
+              onSubmitKeyUp={() =>
+                index === attributes.length - 1
+                  ? this.newAttributeField.current?.focus()
+                  : this.setState({
+                      fieldToFocus: attributeRefs[index + 1],
+                    })
+              }
+              onDelete={this.delete}
+              onRefChange={(ref) => (attributeRefs[index] = ref)}
+              element={attribute}
+            />
           ))}
           <Textfield
             ref={this.newAttributeField}
@@ -127,24 +144,22 @@ class ObjectNameComponent extends Component<Props, State> {
           <Divider />
           <Header>{this.props.translate('popup.methods')}</Header>
           {methods.map((method, index) => (
-            <Flex key={method.id}>
-              <Textfield
-                ref={(ref) => (methodRefs[index] = ref)}
-                gutter
-                value={method.name}
-                onChange={this.rename(method.id)}
-                onSubmitKeyUp={() =>
-                  index === methods.length - 1
-                    ? this.newMethodField.current?.focus()
-                    : this.setState({
-                        fieldToFocus: methodRefs[index + 1],
-                      })
-                }
-              />
-              <Button color="link" tabIndex={-1} onClick={this.delete(method.id)}>
-                <TrashIcon />
-              </Button>
-            </Flex>
+            <UmlAttributeUpdate
+              id={method.id}
+              key={method.id}
+              value={method.name}
+              onChange={this.props.update}
+              onSubmitKeyUp={() =>
+                index === methods.length - 1
+                  ? this.newMethodField.current?.focus()
+                  : this.setState({
+                      fieldToFocus: methodRefs[index + 1],
+                    })
+              }
+              onDelete={this.delete}
+              onRefChange={(ref) => (methodRefs[index] = ref)}
+              element={method}
+            />
           ))}
           <Textfield
             ref={this.newMethodField}
