@@ -25,9 +25,7 @@
   "assessment": {
     "assessment": "Bewertung für",
     "score": "Punkte",
-    "feedback": "Feedback",
-    "removeDropInfo": "Möchtest du den Link zum Bewertungsanweisung entfernen?",
-    "dropInfo": "Bewertungsanweisung: "
+    "feedback": "Feedback"
   },
   "packages": {
     "ClassDiagram": {

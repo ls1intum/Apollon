@@ -38,8 +38,7 @@ class AssessmentDropInfoTooltipComponent extends Component<Props, State> {
 
   render() {
     const { assessment } = this.props;
-    const message =
-      this.props.translate('assessment.dropInfo') + assessment?.dropInfo.instruction.instructionDescription;
+    const message = assessment?.dropInfo.tooltipMessage;
     return (
       <div>
         {this.state.showLinkIcon ? (
@@ -60,7 +59,7 @@ class AssessmentDropInfoTooltipComponent extends Component<Props, State> {
         )}
 
         <ReactTooltip id="tooltip" place="right" effect="solid">
-          {this.state.showLinkIcon ? message : this.props.translate('assessment.removeDropInfo')}
+          {this.state.showLinkIcon ? message : assessment?.dropInfo.removeMessage}
         </ReactTooltip>
       </div>
     );
