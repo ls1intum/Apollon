@@ -24,6 +24,8 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
     droppable: false,
     resizable: 'WIDTH',
   };
+  static stereotypeHeaderHeight = 50;
+  static nonStereotypeHeaderHeight = 40;
 
   italic: boolean = false;
   underline: boolean = false;
@@ -31,7 +33,7 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
   deviderPosition: number = 0;
 
   get headerHeight() {
-    return this.stereotype ? 50 : 40;
+    return this.stereotype ? UMLClassifier.stereotypeHeaderHeight : UMLClassifier.nonStereotypeHeaderHeight;
   }
 
   constructor(values?: DeepPartial<IUMLClassifier>) {

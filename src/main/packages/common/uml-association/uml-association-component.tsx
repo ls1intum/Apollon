@@ -6,23 +6,24 @@ import { UMLAssociation } from './uml-association';
 import { UMLRelationshipType } from '../../uml-relationship-type';
 
 const Marker = {
-  Arrow: (id: string, color?: string) => (
+  Arrow: (id: string, color?: string, scale: number = 1.0) => (
     <marker
       id={id}
-      viewBox="0 0 30 30"
-      markerWidth="22"
-      markerHeight="30"
-      refX="30"
-      refY="15"
+      viewBox={`0 0 ${30 * scale} ${30 * scale}`}
+      markerWidth={22 * scale}
+      markerHeight={30 * scale}
+      refX={30 * scale}
+      refY={15 * scale}
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,29 L30,15 L0,1" fill="none" stroke={color || 'black'} />
+      <path d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`} fill="none" stroke={color || 'black'} />
     </marker>
   ),
-  Rhombus: (id: string, color?: string) => (
+  Rhombus: (id: string, color?: string, scale: number = 1.0) => (
     <marker
       id={id}
+      style={{ transform: `scale(${scale})` }}
       viewBox="0 0 30 30"
       markerWidth="30"
       markerHeight="30"
@@ -34,9 +35,10 @@ const Marker = {
       <path d="M0,15 L15,22 L30,15 L15,8 z" fill="white" stroke={color || 'black'} />
     </marker>
   ),
-  RhombusFilled: (id: string, color?: string) => (
+  RhombusFilled: (id: string, color?: string, scale: number = 1.0) => (
     <marker
       id={id}
+      style={{ transform: `scale(${scale})` }}
       viewBox="0 0 30 30"
       markerWidth="30"
       markerHeight="30"
@@ -48,9 +50,10 @@ const Marker = {
       <path d="M0,15 L15,22 L30,15 L15,8 z" fill={color || 'black'} />
     </marker>
   ),
-  Triangle: (id: string, color?: string) => (
+  Triangle: (id: string, color?: string, scale: number = 1.0) => (
     <marker
       id={id}
+      style={{ transform: `scale(${scale})` }}
       viewBox="0 0 30 30"
       markerWidth="22"
       markerHeight="30"
@@ -114,7 +117,7 @@ export const getMarkerForTypeForUMLAssociation = (relationshipType: UMLRelations
   })(relationshipType);
 };
 
-export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
+export const UMLAssociationComponent: SFC<Props> = ({ element, scale }) => {
   const marker = getMarkerForTypeForUMLAssociation(element.type);
 
   const stroke = ((type) => {
@@ -131,10 +134,10 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
   const id = `marker-${element.id}`;
 
   const textFill = element.textColor ? { fill: element.textColor } : {};
-
+  console.log('marker', scale);
   return (
     <g>
-      {marker && marker(id, element.strokeColor)}
+      {marker && marker(id, element.strokeColor, scale)}
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
         stroke={element.strokeColor || 'black'}
@@ -185,4 +188,5 @@ export const UMLAssociationComponent: SFC<Props> = ({ element }) => {
 
 interface Props {
   element: UMLAssociation;
+  scale: number;
 }

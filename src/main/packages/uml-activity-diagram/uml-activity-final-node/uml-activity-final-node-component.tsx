@@ -8,6 +8,7 @@ import { ApollonView } from '../../../services/editor/editor-types';
 
 type OwnProps = {
   element: UMLActivityFinalNode;
+  scale: number;
 };
 
 type StateProps = { interactive: boolean; interactable: boolean };
@@ -24,22 +25,22 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-export const UMLActivityFinalNodeC: SFC<Props> = ({ element, interactive, interactable, theme }) => {
+export const UMLActivityFinalNodeC: SFC<Props> = ({ element, interactive, interactable, theme, scale }) => {
   const fill = element.fillColor || 'black';
   return (
     <g>
       <circle
         cx="50%"
         cy="50%"
-        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5}
+        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5 * scale}
         stroke={interactable && interactive ? theme.interactive.normal : fill}
-        strokeWidth="5"
+        strokeWidth={5 * scale}
         fill="white"
       />
       <circle
         cx="50%"
         cy="50%"
-        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 7.5}
+        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 7.5 * scale}
         stroke="none"
         fill={interactive && interactable ? theme.interactive.normal : fill}
         fillOpacity={1}

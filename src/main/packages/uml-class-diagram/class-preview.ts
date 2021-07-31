@@ -1,5 +1,6 @@
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
+import { UMLClassifier } from '../common/uml-classifier/uml-classifier';
 import { ComposePreview } from '../compose-preview';
 import { UMLAbstractClass } from './uml-abstract-class/uml-abstract-class';
 import { UMLClassAttribute } from './uml-class-attribute/uml-class-attribute';
@@ -15,7 +16,10 @@ export const composeClassPreview: ComposePreview = (
   scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
-  console.log(scale);
+  console.log();
+  UMLClassifier.stereotypeHeaderHeight = 50 * scale;
+  UMLClassifier.nonStereotypeHeaderHeight = 40 * scale;
+
   // UML Package
   const umlPackage = new UMLClassPackage({ name: translate('packages.ClassDiagram.Package') });
   umlPackage.bounds = {

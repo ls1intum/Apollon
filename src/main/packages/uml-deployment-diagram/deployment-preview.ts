@@ -47,6 +47,11 @@ export const composeDeploymentPreview: ComposePreview = (
   const umlDeploymentInterface = new UMLDeploymentInterface({
     name: translate('packages.DeploymentDiagram.DeploymentInterface'),
   });
+  umlDeploymentInterface.bounds = {
+    ...umlDeploymentInterface.bounds,
+    width: umlDeploymentInterface.bounds.width * scale,
+    height: umlDeploymentInterface.bounds.height * scale,
+  };
   elements.push(umlDeploymentInterface);
 
   return elements;

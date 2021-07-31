@@ -15,7 +15,8 @@ export const composeActivityPreview: ComposePreview = (
   scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
-
+  UMLActivityForkNode.defaultWidth = 20 * scale;
+  UMLActivityForkNode.defaultHeight = 60 * scale;
   // Activity
   const activity = new UMLActivity({ name: translate('packages.ActivityDiagram.Activity') });
   activity.bounds = {
@@ -26,11 +27,16 @@ export const composeActivityPreview: ComposePreview = (
   elements.push(activity);
 
   // Activity Initial Node
-  const activityInitialNode = new UMLActivityInitialNode();
+  const activityInitialNode = new UMLActivityInitialNode({
+    bounds: { x: 0, y: 0, width: 45 * scale, height: 45 * scale },
+  });
+
   elements.push(activityInitialNode);
 
   // Activity Final Node
-  const activityFinalNode = new UMLActivityFinalNode();
+  const activityFinalNode = new UMLActivityFinalNode({
+    bounds: { x: 0, y: 0, width: 45 * scale, height: 45 * scale },
+  });
   elements.push(activityFinalNode);
 
   // Activity Action Node
