@@ -15,7 +15,7 @@ it('render the uml-component-required-interface-component', () => {
       initialState={{ elements: { [umlComponentInterfaceRequired.id]: { ...umlComponentInterfaceRequired } } }}
     >
       <svg>
-        <UMLInterfaceRequiredComponent element={umlComponentInterfaceRequired} />
+        <UMLInterfaceRequiredComponent element={umlComponentInterfaceRequired} scale={1.0} />
       </svg>
     </StoreProvider>,
   );

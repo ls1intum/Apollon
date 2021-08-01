@@ -57,7 +57,6 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
 
 const Handle = styled((props) => {
   const { alternativePortVisualization, scale, ...otherProps } = props;
-  console.log('ports', scale);
   // alternative port visualization size
   const alternativePortHeight = 10 * scale;
   const alternativePortWidth = 5 * scale;

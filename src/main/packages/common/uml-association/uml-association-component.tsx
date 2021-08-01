@@ -134,7 +134,6 @@ export const UMLAssociationComponent: SFC<Props> = ({ element, scale }) => {
   const id = `marker-${element.id}`;
 
   const textFill = element.textColor ? { fill: element.textColor } : {};
-  console.log('marker', scale);
   return (
     <g>
       {marker && marker(id, element.strokeColor, scale)}

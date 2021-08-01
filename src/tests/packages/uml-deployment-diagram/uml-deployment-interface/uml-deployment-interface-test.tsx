@@ -7,7 +7,7 @@ it('render the uml-deployment-interface-component', () => {
   const component: UMLDeploymentInterface = new UMLDeploymentInterface({ name: 'TestDeploymentComponent' });
   const { getByText, baseElement } = render(
     <svg>
-      <UMLInterfaceComponent element={component} />
+      <UMLInterfaceComponent element={component} scale={1.0} />
     </svg>,
   );
   expect(getByText(component.name)).toBeInTheDocument();

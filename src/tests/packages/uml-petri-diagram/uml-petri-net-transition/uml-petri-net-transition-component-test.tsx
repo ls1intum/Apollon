@@ -7,7 +7,7 @@ it('render the uml-petri-net-transition-component', () => {
   const element: UMLPetriNetTransition = new UMLPetriNetTransition({ name: 'Example Description' });
   const { getByText, baseElement } = render(
     <svg>
-      <UMLPetriNetTransitionComponent element={element} />
+      <UMLPetriNetTransitionComponent element={element} scale={1.0} />
     </svg>,
   );
   expect(getByText(element.name)).toBeInTheDocument();

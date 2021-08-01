@@ -36,7 +36,6 @@ export const composeUseCasePreview: ComposePreview = (
     height: umlSystem.bounds.height * scale,
   };
   elements.push(umlSystem);
-  console.log(elements);
 
   return elements;
 };

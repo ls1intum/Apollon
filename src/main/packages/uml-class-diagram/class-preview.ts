@@ -16,7 +16,6 @@ export const composeClassPreview: ComposePreview = (
   scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
-  console.log();
   UMLClassifier.stereotypeHeaderHeight = 50 * scale;
   UMLClassifier.nonStereotypeHeaderHeight = 40 * scale;
 

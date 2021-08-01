@@ -49,7 +49,6 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
       tokenRadius = calculateTokenRadius(maxAmountCircles, radiusWithPadding);
     }
   }
-  console.log('place', scale);
   return (
     <g>
       <circle cx="50%" cy="50%" r={radius} stroke={element.strokeColor || 'black'} strokeWidth={2} fillOpacity={1} />
