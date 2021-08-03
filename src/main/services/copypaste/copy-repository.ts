@@ -107,9 +107,10 @@ export class CopyRepository {
     }
   };
 
-  private static transformElementsForCopy(
-    umlElements: UMLElement[],
-  ): { copiedElements: IUMLElement[]; cloneMap: { [key: string]: string } } {
+  private static transformElementsForCopy(umlElements: UMLElement[]): {
+    copiedElements: IUMLElement[];
+    cloneMap: { [key: string]: string };
+  } {
     // roots in diagram Elements
     const roots = umlElements.filter(
       (element) => !element.owner || umlElements.every((innerElement) => innerElement.id !== element.owner),
