@@ -40,9 +40,9 @@ export class Dropdown<T> extends Component<Props<T>, State> {
   render() {
     const { color, outline, size } = this.props;
     const { show, top, left, width } = this.state;
-    const selected: ReactElement<ItemProps<T>> | undefined = (Children.toArray(this.props.children) as ReactElement<
-      ItemProps<T>
-    >[]).find((item: ReactElement<ItemProps<T>>) => item.props.value === this.props.value);
+    const selected: ReactElement<ItemProps<T>> | undefined = (
+      Children.toArray(this.props.children) as ReactElement<ItemProps<T>>[]
+    ).find((item: ReactElement<ItemProps<T>>) => item.props.value === this.props.value);
 
     return (
       <StyledDropdown>

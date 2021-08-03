@@ -133,20 +133,8 @@ export class Multiline extends Component<Props, State> {
   }
 
   render() {
-    const {
-      x,
-      y,
-      dx,
-      dy,
-      textAnchor,
-      verticalAnchor,
-      scaleToFit,
-      angle,
-      lineHeight,
-      capHeight,
-      fill,
-      ...textProps
-    } = this.props;
+    const { x, y, dx, dy, textAnchor, verticalAnchor, scaleToFit, angle, lineHeight, capHeight, fill, ...textProps } =
+      this.props;
     const { wordsByLines } = this.state;
 
     const xPosition = x + dx;

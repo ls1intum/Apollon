@@ -15,22 +15,26 @@ export const UMLDiagramRepository = {
     return new UMLDiagram(element);
   },
 
-  append: (id: string | string[]): AsyncAction => (dispatch, getState) => {
-    dispatch<AppendRelationshipAction>({
-      type: UMLDiagramActionTypes.APPEND,
-      payload: { ids: Array.isArray(id) ? id : [id] },
-      undoable: false,
-    });
-  },
+  append:
+    (id: string | string[]): AsyncAction =>
+    (dispatch, getState) => {
+      dispatch<AppendRelationshipAction>({
+        type: UMLDiagramActionTypes.APPEND,
+        payload: { ids: Array.isArray(id) ? id : [id] },
+        undoable: false,
+      });
+    },
 
-  bringToFront: (elementId: string | string[]): AsyncAction => (dispatch, getState) => {
-    const ids = (Array.isArray(elementId) ? elementId : [elementId]).filter((id) =>
-      getState().diagram.ownedElements.includes(id),
-    );
-    dispatch<ReorderElementsAction>({
-      type: UMLDiagramActionTypes.BRING_TO_FRONT,
-      payload: { ids },
-      undoable: false,
-    });
-  },
+  bringToFront:
+    (elementId: string | string[]): AsyncAction =>
+    (dispatch, getState) => {
+      const ids = (Array.isArray(elementId) ? elementId : [elementId]).filter((id) =>
+        getState().diagram.ownedElements.includes(id),
+      );
+      dispatch<ReorderElementsAction>({
+        type: UMLDiagramActionTypes.BRING_TO_FRONT,
+        payload: { ids },
+        undoable: false,
+      });
+    },
 };

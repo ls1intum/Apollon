@@ -14,9 +14,11 @@ export class AssessmentRepository {
     };
   };
 
-  static getById = (assessments: AssessmentState) => (id: string): IAssessment | null => {
-    const assessment = assessments[id];
-    if (!assessment) return null;
-    return assessment;
-  };
+  static getById =
+    (assessments: AssessmentState) =>
+    (id: string): IAssessment | null => {
+      const assessment = assessments[id];
+      if (!assessment) return null;
+      return assessment;
+    };
 }
