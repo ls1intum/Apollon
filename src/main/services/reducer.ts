@@ -22,10 +22,10 @@ import { UMLRelationshipReducer } from './uml-relationship/uml-relationship-redu
 import { CopyReducer } from './copypaste/copy-reducer';
 import { LastActionReducer } from './last-action/last-action-reducer';
 
-const reduce = <S, T extends Action>(intial: S, ...reducerList: Reducer<S, T>[]): Reducer<S, T> => (
-  state = intial,
-  action,
-) => reducerList.reduce<S>((newState, reducer) => reducer(newState, action), state);
+const reduce =
+  <S, T extends Action>(intial: S, ...reducerList: Reducer<S, T>[]): Reducer<S, T> =>
+  (state = intial, action) =>
+    reducerList.reduce<S>((newState, reducer) => reducer(newState, action), state);
 
 export const reducers: ReducersMapObject<ModelState, Actions> = {
   editor: EditorReducer,

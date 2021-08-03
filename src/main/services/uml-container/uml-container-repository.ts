@@ -27,28 +27,30 @@ export const UMLContainerRepository = {
     return null;
   },
 
-  append: (id: string | string[], owner?: string): AsyncAction => (dispatch, getState) => {
-    const ids = Array.isArray(id) ? id : [id];
-    const { elements, diagram } = getState();
+  append:
+    (id: string | string[], owner?: string): AsyncAction =>
+    (dispatch, getState) => {
+      const ids = Array.isArray(id) ? id : [id];
+      const { elements, diagram } = getState();
 
-    const rels = ids.filter((x) => UMLRelationship.isUMLRelationship(elements[x]));
-    if (rels.length) {
-      dispatch<AppendRelationshipAction>({
-        type: UMLDiagramActionTypes.APPEND,
-        payload: { ids: rels },
-        undoable: false,
-      });
-    }
+      const rels = ids.filter((x) => UMLRelationship.isUMLRelationship(elements[x]));
+      if (rels.length) {
+        dispatch<AppendRelationshipAction>({
+          type: UMLDiagramActionTypes.APPEND,
+          payload: { ids: rels },
+          undoable: false,
+        });
+      }
 
-    const eles = ids.filter((x) => UMLElement.isUMLElement(elements[x]));
-    if (eles.length) {
-      dispatch<AppendAction>({
-        type: UMLContainerActionTypes.APPEND,
-        payload: { ids: eles, owner: owner || diagram.id },
-        undoable: false,
-      });
-    }
-  },
+      const eles = ids.filter((x) => UMLElement.isUMLElement(elements[x]));
+      if (eles.length) {
+        dispatch<AppendAction>({
+          type: UMLContainerActionTypes.APPEND,
+          payload: { ids: eles, owner: owner || diagram.id },
+          undoable: false,
+        });
+      }
+    },
 
   remove: (id: string | string[]): RemoveAction => ({
     type: UMLContainerActionTypes.REMOVE,

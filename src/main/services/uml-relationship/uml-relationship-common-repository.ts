@@ -24,10 +24,12 @@ export const UMLRelationshipCommonRepository = {
     return null;
   },
 
-  getById: (id: string): AsyncAction<UMLElement | null> => (dispatch, getState) => {
-    const { elements } = getState();
-    return UMLRelationshipCommonRepository.get(elements[id]);
-  },
+  getById:
+    (id: string): AsyncAction<UMLElement | null> =>
+    (dispatch, getState) => {
+      const { elements } = getState();
+      return UMLRelationshipCommonRepository.get(elements[id]);
+    },
 
   getSupportedConnectionsForElements: (elements: UMLElement | UMLElement[]): UMLRelationshipType[] => {
     const elementsArray = Array.isArray(elements) ? elements : [elements];
@@ -52,20 +54,22 @@ export const UMLRelationshipCommonRepository = {
     undoable: false,
   }),
 
-  flip: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
-    const { selected, elements } = getState();
-    const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
-    const connections = ids.map((r) => {
-      const relationship = elements[r] as IUMLRelationship;
-      const source = { element: relationship.target.element, direction: relationship.target.direction };
-      const target = { element: relationship.source.element, direction: relationship.source.direction };
-      return { id: relationship.id, source, target };
-    });
+  flip:
+    (id?: string | string[]): AsyncAction =>
+    (dispatch, getState) => {
+      const { selected, elements } = getState();
+      const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
+      const connections = ids.map((r) => {
+        const relationship = elements[r] as IUMLRelationship;
+        const source = { element: relationship.target.element, direction: relationship.target.direction };
+        const target = { element: relationship.source.element, direction: relationship.source.direction };
+        return { id: relationship.id, source, target };
+      });
 
-    dispatch<ReconnectAction>({
-      type: ReconnectableActionTypes.RECONNECT,
-      payload: { connections },
-      undoable: true,
-    });
-  },
+      dispatch<ReconnectAction>({
+        type: ReconnectableActionTypes.RECONNECT,
+        payload: { connections },
+        undoable: true,
+      });
+    },
 };

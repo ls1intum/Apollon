@@ -3,42 +3,48 @@ import { ResizableActionTypes, ResizeEndAction, ResizeStartAction } from './resi
 import { ResizeAction, ResizingActionTypes } from './resizing-types';
 
 export const Resizable = {
-  startResizing: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
-    const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
-    if (!ids.length) {
-      return;
-    }
+  startResizing:
+    (id?: string | string[]): AsyncAction =>
+    (dispatch, getState) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
+      if (!ids.length) {
+        return;
+      }
 
-    dispatch<ResizeStartAction>({
-      type: ResizableActionTypes.START,
-      payload: { ids },
-      undoable: true,
-    });
-  },
+      dispatch<ResizeStartAction>({
+        type: ResizableActionTypes.START,
+        payload: { ids },
+        undoable: true,
+      });
+    },
 
-  resize: (delta: { width: number; height: number }, id?: string | string[]): AsyncAction => (dispatch, getState) => {
-    const ids = id ? (Array.isArray(id) ? id : [id]) : getState().resizing;
-    if (!ids.length) {
-      return;
-    }
+  resize:
+    (delta: { width: number; height: number }, id?: string | string[]): AsyncAction =>
+    (dispatch, getState) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().resizing;
+      if (!ids.length) {
+        return;
+      }
 
-    dispatch<ResizeAction>({
-      type: ResizingActionTypes.RESIZE,
-      payload: { ids, delta },
-      undoable: false,
-    });
-  },
+      dispatch<ResizeAction>({
+        type: ResizingActionTypes.RESIZE,
+        payload: { ids, delta },
+        undoable: false,
+      });
+    },
 
-  endResizing: (id?: string | string[]): AsyncAction => (dispatch, getState) => {
-    const ids = id ? (Array.isArray(id) ? id : [id]) : getState().resizing;
-    if (!ids.length) {
-      return;
-    }
+  endResizing:
+    (id?: string | string[]): AsyncAction =>
+    (dispatch, getState) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().resizing;
+      if (!ids.length) {
+        return;
+      }
 
-    dispatch<ResizeEndAction>({
-      type: ResizableActionTypes.END,
-      payload: { ids },
-      undoable: false,
-    });
-  },
+      dispatch<ResizeEndAction>({
+        type: ResizableActionTypes.END,
+        payload: { ids },
+        undoable: false,
+      });
+    },
 };

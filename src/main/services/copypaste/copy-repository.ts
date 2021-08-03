@@ -17,28 +17,30 @@ export class CopyRepository {
    */
   static pasteCounter = 0;
 
-  static copy = (id?: string | string[]): AsyncAction => (dispatch, getState): CopyAction | undefined => {
-    CopyRepository.pasteCounter = 0;
-    const { elements, selected } = getState();
-    const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
+  static copy =
+    (id?: string | string[]): AsyncAction =>
+    (dispatch, getState): CopyAction | undefined => {
+      CopyRepository.pasteCounter = 0;
+      const { elements, selected } = getState();
+      const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
 
-    // copy elements with all their child elements, because containers do not know their full children representation
-    const idsToClone = getChildren(ids, getState().elements);
+      // copy elements with all their child elements, because containers do not know their full children representation
+      const idsToClone = getChildren(ids, getState().elements);
 
-    const result: UMLElement[] = idsToClone
-      .map((idToClone) => UMLElementRepository.get(elements[idToClone]))
-      .filter(notEmpty);
-    if (getState().editor.enableCopyPasteToClipboard) {
-      navigator.clipboard.writeText(JSON.stringify(result));
-      return;
-    } else {
-      return dispatch<CopyAction>({
-        type: CopyActionTypes.COPY,
-        payload: idsToClone,
-        undoable: false,
-      });
-    }
-  };
+      const result: UMLElement[] = idsToClone
+        .map((idToClone) => UMLElementRepository.get(elements[idToClone]))
+        .filter(notEmpty);
+      if (getState().editor.enableCopyPasteToClipboard) {
+        navigator.clipboard.writeText(JSON.stringify(result));
+        return;
+      } else {
+        return dispatch<CopyAction>({
+          type: CopyActionTypes.COPY,
+          payload: idsToClone,
+          undoable: false,
+        });
+      }
+    };
 
   static paste = (): AsyncAction => (dispatch, getState) => {
     CopyRepository.pasteCounter++;
