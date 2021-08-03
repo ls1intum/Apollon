@@ -6,10 +6,10 @@ exports[`test flowchart flowline update render 1`] = `
     <div>
       <section>
         <div
-          class="sc-jgPyTC cncajb"
+          class="sc-gSYDnn frQOQh"
         >
           <h1
-            class="sc-lmgQwP hLcCkH"
+            class="sc-iJCRrE lcgfou"
             style="flex-grow: 1;"
           >
             Flowline
@@ -48,12 +48,12 @@ exports[`test flowchart flowline update render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-giAqHp bsDlHq"
+          class="sc-ezzafa huOvzT"
         />
       </section>
       <section>
         <input
-          class="sc-hBMUJo sc-fnVZcZ iyNQCe bphWPS"
+          class="sc-fnVZcZ sc-fFSPTT jezyHk itWhGU"
           value="FlowchartFlowline"
         />
       </section>
