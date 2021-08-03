@@ -68,21 +68,21 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
 
     let y = this.headerHeight;
     for (const attribute of attributes) {
-      attribute.bounds.x = 0;
-      attribute.bounds.y = y;
-      attribute.bounds.width = this.bounds.width;
+      attribute.bounds.x = 0.5;
+      attribute.bounds.y = y + 0.5;
+      attribute.bounds.width = this.bounds.width - 1;
       y += attribute.bounds.height;
     }
-
+    y += 1;
     this.deviderPosition = y;
     for (const method of methods) {
-      method.bounds.x = 0;
-      method.bounds.y = y;
-      method.bounds.width = this.bounds.width;
+      method.bounds.x = 0.5;
+      method.bounds.y = y + 0.5;
+      method.bounds.width = this.bounds.width - 1;
       y += method.bounds.height;
     }
 
-    this.bounds.height = y;
+    this.bounds.height = y + 1;
     return [this, ...attributes, ...methods];
   }
 }
