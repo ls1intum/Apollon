@@ -27,7 +27,7 @@ import { PreviewElement } from '../../packages/compose-preview';
 import { composeSyntaxTreePreview } from '../../packages/syntax-tree/syntax-tree-preview';
 import { composeFlowchartPreview } from '../../packages/flowchart/flowchart-diagram-preview';
 import { ColorLegend } from '../../packages/common/color-legend/color-legend';
-
+import { Separator } from './create-pane-styles';
 type OwnProps = {};
 
 type StateProps = {
@@ -43,6 +43,8 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext & CanvasContext
 
 const getInitialState = ({ type, canvas, translate, colorEnabled }: Props) => {
   const previews: PreviewElement[] = [];
+  const utils: PreviewElement[] = [];
+
   switch (type) {
     case UMLDiagramType.ClassDiagram:
       previews.push(...composeClassPreview(canvas, translate));
@@ -78,14 +80,14 @@ const getInitialState = ({ type, canvas, translate, colorEnabled }: Props) => {
       previews.push(...composeFlowchartPreview(canvas, translate));
   }
   if (colorEnabled) {
-    previews.push(
+    utils.push(
       new ColorLegend({
         name: translate('packages.ColorLegend.ColorLegend'),
       }),
     );
   }
 
-  return { previews };
+  return { previews, utils };
 };
 
 type State = ReturnType<typeof getInitialState>;
@@ -107,6 +109,19 @@ const enhance = compose<ComponentClass<OwnProps>>(
 class CreatePaneComponent extends Component<Props, State> {
   state = getInitialState(this.props);
 
+  getElementArray = (previews: PreviewElement[]) => {
+    return Object.values(previews)
+      .filter((preview) => !preview.owner)
+      .map((preview, index) => {
+        const { styles: previewStyles } = preview;
+        return (
+          <div style={previewStyles} key={index}>
+            <PreviewElementComponent element={preview} create={this.create} />
+          </div>
+        );
+      });
+  };
+
   render() {
     const features: UMLElementFeatures = {
       hoverable: false,
@@ -119,8 +134,8 @@ class CreatePaneComponent extends Component<Props, State> {
       alternativePortVisualization: false,
     };
 
-    const { previews } = this.state;
-    const elements = previews.reduce<UMLElementState>(
+    const { previews, utils } = this.state;
+    const elements = [...previews, ...utils].reduce<UMLElementState>(
       (state, preview) => ({
         ...state,
         [preview.id]: { ...preview },
@@ -130,16 +145,13 @@ class CreatePaneComponent extends Component<Props, State> {
 
     return (
       <StoreProvider initialState={{ elements, editor: { features } }}>
-        {Object.values(previews)
-          .filter((preview) => !preview.owner)
-          .map((preview, index) => {
-            const { styles: previewStyles } = preview;
-            return (
-              <div style={previewStyles} key={index}>
-                <PreviewElementComponent element={preview} create={this.create} />
-              </div>
-            );
-          })}
+        {this.getElementArray(previews)}
+        {utils && utils.length > 0 ? (
+          <>
+            <Separator />
+            {this.getElementArray(utils)}
+          </>
+        ) : null}
       </StoreProvider>
     );
   }

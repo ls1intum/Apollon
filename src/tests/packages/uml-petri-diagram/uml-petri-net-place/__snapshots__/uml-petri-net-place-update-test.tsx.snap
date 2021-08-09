@@ -6,10 +6,10 @@ exports[`test petri net arc update render 1`] = `
     <div>
       <section>
         <div
-          class="sc-jNnpgg jOCJZW"
+          class="sc-dPaNzc ibxutO"
         >
           <input
-            class="sc-hBMUJo sc-fnVZcZ iyNQCe bphWPS"
+            class="sc-fnVZcZ sc-fFSPTT jezyHk itWhGU"
             value=""
           />
           <button
@@ -31,21 +31,21 @@ exports[`test petri net arc update render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-giAqHp bsDlHq"
+          class="sc-ezzafa huOvzT"
         />
       </section>
       <section>
         <div
-          class="sc-jNnpgg jOCJZW"
+          class="sc-dPaNzc ibxutO"
         >
           <span
-            class="sc-lmgQwP jqVoAb"
+            class="sc-iJCRrE iEEJDi"
             style="margin-right: 0.5em; min-width: 70px;"
           >
             Tokens
           </span>
           <input
-            class="sc-hBMUJo sc-fnVZcZ iyNQCe bphWPS"
+            class="sc-fnVZcZ sc-fFSPTT jezyHk itWhGU"
             style="min-width: 0;"
             type="number"
             value="0"
@@ -54,11 +54,11 @@ exports[`test petri net arc update render 1`] = `
       </section>
       <section>
         <div
-          class="sc-jNnpgg jOCJZW"
+          class="sc-dPaNzc ibxutO"
           style="margin-top: 0.5em; align-items: center;"
         >
           <span
-            class="sc-lmgQwP jqVoAb"
+            class="sc-iJCRrE iEEJDi"
             style="margin-right: 0.5em; min-width: 70px;"
           >
             Capacity
@@ -67,7 +67,7 @@ exports[`test petri net arc update render 1`] = `
             style="position: relative;"
           >
             <input
-              class="sc-hBMUJo sc-fnVZcZ iyNQCe bphWPS"
+              class="sc-fnVZcZ sc-fFSPTT jezyHk itWhGU"
               type="number"
               value="Infinity"
             />
