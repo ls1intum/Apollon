@@ -42,71 +42,73 @@ const Handle = styled.rect.attrs({
   pointer-events: all;
 `;
 
-export const resizable = (options?: { preventX: boolean; preventY: boolean }) => (
-  WrappedComponent: ComponentType<UMLElementComponentProps>,
-): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
-  class Resizable extends Component<Props, State> {
-    state = initialState;
+export const resizable =
+  (options?: { preventX: boolean; preventY: boolean }) =>
+  (
+    WrappedComponent: ComponentType<UMLElementComponentProps>,
+  ): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
+    class Resizable extends Component<Props, State> {
+      state = initialState;
 
-    componentWillUnmount() {
-      document.removeEventListener('pointermove', this.onPointerMove);
-      document.removeEventListener('pointerup', this.onPointerUp);
-    }
-
-    render() {
-      const { start, resize, end, ...props } = this.props;
-      return (
-        <WrappedComponent {...props}>
-          {props.children}
-          <Handle onPointerDown={this.onPointerDown} />
-        </WrappedComponent>
-      );
-    }
-
-    private resize = (width: number, height: number) => {
-      width = Math.round(width / 20) * 20;
-      height = Math.round(height / 20) * 20;
-      if (options && options.preventX) width = 0;
-      if (options && options.preventY) height = 0;
-      if (width === 0 && height === 0) return;
-
-      this.setState((state) => ({ offset: state.offset.add(width, height) }));
-      this.props.resize({ width, height });
-    };
-
-    private onPointerDown = (event: React.PointerEvent<SVGElement>) => {
-      if (event.nativeEvent.which && event.nativeEvent.which !== 1) {
-        return;
+      componentWillUnmount() {
+        document.removeEventListener('pointermove', this.onPointerMove);
+        document.removeEventListener('pointerup', this.onPointerUp);
       }
 
-      this.setState({ resizing: true, offset: new Point(event.clientX, event.clientY) });
-      this.props.start();
-      const element = event.currentTarget;
-      element.setPointerCapture(event.pointerId);
-      element.addEventListener('pointermove', this.onPointerMove);
-      element.addEventListener('pointerup', this.onPointerUp, { once: true });
-    };
-
-    private onPointerMove = (event: PointerEvent) => {
-      const width = event.clientX - this.state.offset.x;
-      const height = event.clientY - this.state.offset.y;
-      this.resize(width, height);
-      event.stopPropagation();
-    };
-
-    private onPointerUp = (event: PointerEvent) => {
-      const element = event.currentTarget as HTMLDivElement;
-      if (!element) {
-        return;
+      render() {
+        const { start, resize, end, ...props } = this.props;
+        return (
+          <WrappedComponent {...props}>
+            {props.children}
+            <Handle onPointerDown={this.onPointerDown} />
+          </WrappedComponent>
+        );
       }
 
-      element.releasePointerCapture(event.pointerId);
-      element.removeEventListener('pointermove', this.onPointerMove);
-      this.setState(initialState);
-      this.props.end();
-      event.stopPropagation();
-    };
-  }
+      private resize = (width: number, height: number) => {
+        width = Math.round(width / 20) * 20;
+        height = Math.round(height / 20) * 20;
+        if (options && options.preventX) width = 0;
+        if (options && options.preventY) height = 0;
+        if (width === 0 && height === 0) return;
 
-  return enhance(Resizable);
-};
+        this.setState((state) => ({ offset: state.offset.add(width, height) }));
+        this.props.resize({ width, height });
+      };
+
+      private onPointerDown = (event: React.PointerEvent<SVGElement>) => {
+        if (event.nativeEvent.which && event.nativeEvent.which !== 1) {
+          return;
+        }
+
+        this.setState({ resizing: true, offset: new Point(event.clientX, event.clientY) });
+        this.props.start();
+        const element = event.currentTarget;
+        element.setPointerCapture(event.pointerId);
+        element.addEventListener('pointermove', this.onPointerMove);
+        element.addEventListener('pointerup', this.onPointerUp, { once: true });
+      };
+
+      private onPointerMove = (event: PointerEvent) => {
+        const width = event.clientX - this.state.offset.x;
+        const height = event.clientY - this.state.offset.y;
+        this.resize(width, height);
+        event.stopPropagation();
+      };
+
+      private onPointerUp = (event: PointerEvent) => {
+        const element = event.currentTarget as HTMLDivElement;
+        if (!element) {
+          return;
+        }
+
+        element.releasePointerCapture(event.pointerId);
+        element.removeEventListener('pointermove', this.onPointerMove);
+        this.setState(initialState);
+        this.props.end();
+        event.stopPropagation();
+      };
+    }
+
+    return enhance(Resizable);
+  };

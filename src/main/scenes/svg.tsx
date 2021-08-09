@@ -91,7 +91,7 @@ const getInitialState = ({ model, options }: Props): State => {
       [],
     );
 
-    const [root, ...updates] = element.render(layer, children) as UMLElement[];
+    const [root, ...updates] = element.render(layer, children, true) as UMLElement[];
     updates.map((x) => {
       const original = apollonChildren.find((y) => y.id === x.id);
       if (!original) {

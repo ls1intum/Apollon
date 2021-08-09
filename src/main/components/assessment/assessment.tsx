@@ -27,19 +27,21 @@ const getInitialState = ({ element, getChildren }: Props) => ({
 type State = ReturnType<typeof getInitialState>;
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
-  getChildren: (UMLElementRepository.getChildren as any) as AsyncDispatch<typeof UMLElementRepository.getChildren>,
-  assessNext: (current: IUMLElement): AsyncAction => (dispatch, getState) => {
-    const { elements } = getState();
-    const children = dispatch(UMLElementRepository.getChildren(current.id));
-    const last = children.length ? children[children.length - 1] : current;
-    const index = Object.keys(elements).indexOf(last.id) + 1;
-    const next = Object.keys(elements)[index % Object.keys(elements).length];
+  getChildren: UMLElementRepository.getChildren as any as AsyncDispatch<typeof UMLElementRepository.getChildren>,
+  assessNext:
+    (current: IUMLElement): AsyncAction =>
+    (dispatch, getState) => {
+      const { elements } = getState();
+      const children = dispatch(UMLElementRepository.getChildren(current.id));
+      const last = children.length ? children[children.length - 1] : current;
+      const index = Object.keys(elements).indexOf(last.id) + 1;
+      const next = Object.keys(elements)[index % Object.keys(elements).length];
 
-    dispatch(UMLElementRepository.updateEnd(current.id));
-    dispatch(UMLElementRepository.deselect(current.id));
-    dispatch(UMLElementRepository.updateStart(next));
-    dispatch(UMLElementRepository.select(next));
-  },
+      dispatch(UMLElementRepository.updateEnd(current.id));
+      dispatch(UMLElementRepository.deselect(current.id));
+      dispatch(UMLElementRepository.updateStart(next));
+      dispatch(UMLElementRepository.select(next));
+    },
 });
 
 class AssessmentComponent extends Component<Props, State> {

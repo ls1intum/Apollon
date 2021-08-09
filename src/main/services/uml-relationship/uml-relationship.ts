@@ -9,6 +9,7 @@ import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { Direction, IUMLElementPort } from '../uml-element/uml-element-port';
 import { Connection } from './connection';
 import { UMLRelationshipFeatures } from './uml-relationship-features';
+import { uuid } from '../../utils/uuid';
 
 export interface IUMLRelationship extends IUMLElement {
   type: UMLRelationshipType;
@@ -97,5 +98,17 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     this.bounds = { x, y, width, height };
     this.path = path.map((point) => ({ x: point.x - x, y: point.y - y })) as IPath;
     return [this];
+  }
+
+  /**
+   * Clones an instance of `UMLRelationship`
+   *
+   * @param override - Override existing properties.
+   */
+  cloneRelationship<T extends UMLRelationship>(override?: DeepPartial<IUMLRelationship>): T {
+    const Constructor = this.constructor as new (values?: DeepPartial<IUMLRelationship>) => T;
+    const values: IUMLRelationship = { ...this, ...override, id: uuid() };
+
+    return new Constructor(values);
   }
 }
