@@ -5,7 +5,7 @@ import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometr
 import { Text } from '../../../utils/svg/text';
 
 export abstract class UMLPackage extends UMLContainer {
-  render(layer: ILayer, children: ILayoutable[] = [], noChildren?: boolean): ILayoutable[] {
+  render(layer: ILayer, children: ILayoutable[] = [], calculateWithoutChildren?: boolean): ILayoutable[] {
     const radix = 10;
     const nameBounds: IBoundary = {
       x: this.bounds.x,
@@ -20,7 +20,7 @@ export abstract class UMLPackage extends UMLContainer {
       return element;
     });
     let bounds = computeBoundingBoxForElements([this, { bounds: nameBounds }, ...absoluteElements]);
-    if (noChildren) {
+    if (calculateWithoutChildren) {
       bounds = computeBoundingBoxForElements([this, { bounds: nameBounds }]);
     }
     const relativeElements = absoluteElements.map((element) => {
