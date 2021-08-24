@@ -107,6 +107,15 @@ export type UMLCommunicationLink = UMLRelationship & {
   }[];
 };
 
+export enum FeedbackCorrectionErrorType {
+  INCORRECT_SCORE = 'INCORRECT_SCORE',
+  UNNECESSARY_FEEDBACK = 'UNNECESSARY_FEEDBACK',
+  MISSING_GRADING_INSTRUCTION = 'MISSING_GRADING_INSTRUCTION',
+  INCORRECT_GRADING_INSTRUCTION = 'INCORRECT_GRADING_INSTRUCTION',
+}
+
+export type FeedbackCorrectionStatus = FeedbackCorrectionErrorType | "CORRECT";
+
 export type Assessment = {
   modelElementId: string;
   elementType: UMLElementType | UMLRelationshipType;
@@ -115,6 +124,7 @@ export type Assessment = {
   dropInfo?: any;
   label?: string;
   labelColor?: string;
+  correctionStatus?: FeedbackCorrectionStatus;
 };
 
 export type ExportOptions = {

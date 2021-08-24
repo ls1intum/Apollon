@@ -119,6 +119,14 @@ class AssessmentSectionComponent extends Component<Props> {
                 <Action>{element.assessmentNote}</Action>
               </Flex>
             ) : null}
+
+            {assessment?.correctionStatus ?
+              (
+                <Flex>
+                  <span>{this.props.translate(`assessment.correctionType.${assessment.correctionStatus}`)}</span>
+                </Flex>
+              ) : null
+            }
           </section>
         )}
         <Divider />
@@ -129,7 +137,7 @@ class AssessmentSectionComponent extends Component<Props> {
   private updateScore = (value: string) => {
     const { element, assessment } = this.props;
     const score = parseFloat(value) || 0;
-    this.props.assess(element.id, { ...assessment, score });
+    this.props.assess(element.id, { ...assessment, correctionStatus: undefined, score });
   };
 
   private updateFeedback = (value: string) => {
