@@ -8,6 +8,7 @@ import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constan
 
 type OwnProps = {
   element: UMLInterfaceRequired;
+  scale: number;
 };
 type StateProps = {
   hasOppositeRequiredInterface: boolean;
@@ -37,22 +38,22 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
 }, {});
 
 const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
-  const { element, hasOppositeRequiredInterface } = props;
+  const { element, hasOppositeRequiredInterface, scale } = props;
 
   // offset for last point in paragraph, so that line ends at marker
   let offset: Point;
   switch (element.target.direction) {
     case Direction.Up:
-      offset = new Point(0, -3);
+      offset = new Point(0, -3 * scale);
       break;
     case Direction.Down:
-      offset = new Point(0, 3);
+      offset = new Point(0, 3 * scale);
       break;
     case Direction.Right:
-      offset = new Point(3, 0);
+      offset = new Point(3 * scale, 0);
       break;
     case Direction.Left:
-      offset = new Point(-3, 0);
+      offset = new Point(-3 * scale, 0);
       break;
   }
 
@@ -77,7 +78,7 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
           )} 0 0 0 0,${REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
           fill="none"
           stroke={element.strokeColor || 'black'}
-          strokeWidth={2}
+          strokeWidth={2 * scale}
         />
       </marker>
       <polyline
@@ -91,7 +92,7 @@ const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
           .join(',')}
         stroke={element.strokeColor || 'black'}
         fill="none"
-        strokeWidth={1}
+        strokeWidth={1 * scale}
         markerEnd={`url(#marker-${element.id})`}
       />
     </g>

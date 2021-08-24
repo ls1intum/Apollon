@@ -5,7 +5,8 @@ const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
 let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
-  colorEnabled: true,
+  colorEnabled: false,
+  scale: 0.75,
 };
 
 export const onChange = (event: MouseEvent) => {
@@ -39,7 +40,7 @@ export const draw = (mode?: 'include' | 'exclude') => {
 
   const filter: string[] = [...editor.model.interactive.elements, ...editor.model.interactive.relationships];
 
-  const { svg }: Apollon.SVG = editor.exportAsSVG(mode && { [mode]: filter });
+  const { svg }: Apollon.SVG = editor.exportAsSVG(mode && { [mode]: filter, scale: 0.5 });
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

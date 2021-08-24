@@ -21,6 +21,7 @@ type StateProps = {
   disabled: boolean;
   relationship: IUMLRelationship;
   mode: ApollonMode;
+  scale: number;
 };
 
 type DispatchProps = {};
@@ -39,6 +40,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       disabled: !!Object.keys(state.reconnecting).length || !!Object.keys(state.connecting).length,
       relationship: state.elements[props.id] as IUMLRelationship,
       mode: state.editor.mode as ApollonMode,
+      scale: state.editor.scale || 1.0,
     }),
     {},
   ),
@@ -57,6 +59,7 @@ export class CanvasRelationshipComponent extends Component<Props> {
       children,
       theme,
       mode,
+      scale,
       ...props
     } = this.props;
 
@@ -86,7 +89,7 @@ export class CanvasRelationshipComponent extends Component<Props> {
         pointerEvents={disabled ? 'none' : 'stroke'}
       >
         <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
-        <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
+        <ChildComponent scale={scale} element={UMLRelationshipRepository.get(relationship)} />
         {children}
       </svg>
     );

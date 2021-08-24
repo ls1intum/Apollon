@@ -16,7 +16,7 @@ it('render the uml-reachability-graph-arc-component', () => {
   });
   const { getByText, baseElement } = render(
     <svg>
-      <UMLReachabilityGraphArcComponent element={element} />
+      <UMLReachabilityGraphArcComponent element={element} scale={1.0} />
     </svg>,
   );
   expect(getByText(element.name)).toBeInTheDocument();

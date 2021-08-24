@@ -10,9 +10,10 @@ import { FlowchartTerminal } from './flowchart-terminal/flowchart-terminal';
 export const composeFlowchartPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
+  scale: number,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150, height: 75 };
+  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150 * scale, height: 75 * scale };
 
   elements.push(
     new FlowchartTerminal({

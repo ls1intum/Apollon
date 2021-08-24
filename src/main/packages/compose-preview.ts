@@ -4,4 +4,4 @@ import { CSSProperties } from 'react';
 
 export type PreviewElement = UMLElement & { styles?: CSSProperties };
 
-export type ComposePreview = (layer: ILayer, translate: (id: string) => string) => PreviewElement[];
+export type ComposePreview = (layer: ILayer, translate: (id: string) => string, scale: number) => PreviewElement[];

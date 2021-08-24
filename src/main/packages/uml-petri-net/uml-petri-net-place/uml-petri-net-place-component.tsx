@@ -1,11 +1,11 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent, SFC } from 'react';
 import { UMLPetriNetPlace } from './uml-petri-net-place';
 import { Point } from '../../../utils/geometry/point';
 import { Text } from '../../../components/controls/text/text';
 
 const maxAmountCircles = 5;
-const tokenToBoundaryDistance = 10;
-const tokenToTokenDistance = 5;
+const tokenToBoundaryDistance = 5;
+const tokenToTokenDistance = 2.5;
 
 const calculateTokenRadius = (amountOfTokens: number, outerRadius: number) => {
   if (amountOfTokens <= 2) {
@@ -16,7 +16,7 @@ const calculateTokenRadius = (amountOfTokens: number, outerRadius: number) => {
   }
 };
 
-const calculatePositions = (amountOfTokens: number, outerRadius: number): Point[] => {
+const calculatePositions = (amountOfTokens: number, outerRadius: number, scale: number): Point[] => {
   const positions: Point[] = [];
   if (amountOfTokens === 1) {
     positions.push(new Point(0, 0));
@@ -24,7 +24,7 @@ const calculatePositions = (amountOfTokens: number, outerRadius: number): Point[
     const degreeFraction = (2 * Math.PI) / amountOfTokens;
     const tokenRadius = calculateTokenRadius(maxAmountCircles, outerRadius);
     const tokenCenterCircleRadius =
-      outerRadius + (tokenToTokenDistance * amountOfTokens) / maxAmountCircles - tokenRadius;
+      outerRadius + (tokenToTokenDistance * scale * amountOfTokens) / maxAmountCircles - tokenRadius;
     for (let i = 0; i < amountOfTokens; i++) {
       const degree = i * degreeFraction + (1 / 2) * Math.PI;
       positions.push(new Point(Math.cos(degree) * tokenCenterCircleRadius, Math.sin(degree) * tokenCenterCircleRadius));
@@ -33,7 +33,7 @@ const calculatePositions = (amountOfTokens: number, outerRadius: number): Point[
   return positions;
 };
 
-export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
+export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, scale }) => {
   // radius of the outer circle
   const radius = Math.min(element.bounds.width, element.bounds.height) / 2;
   const displayTokenAsNumber = element.amountOfTokens > 0 && element.amountOfTokens > maxAmountCircles;
@@ -44,8 +44,8 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
   // calculate token props
   if (element.amountOfTokens > 0) {
     if (!displayTokenAsNumber) {
-      const radiusWithPadding = radius - tokenToBoundaryDistance;
-      tokenPositions = calculatePositions(element.amountOfTokens, radiusWithPadding);
+      const radiusWithPadding = radius - tokenToBoundaryDistance * scale;
+      tokenPositions = calculatePositions(element.amountOfTokens, radiusWithPadding, scale);
       tokenRadius = calculateTokenRadius(maxAmountCircles, radiusWithPadding);
     }
   }
@@ -65,7 +65,7 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
         ))}
       {displayTokenAsNumber && <Text fill={element.strokeColor}>{element.amountOfTokens}</Text>}
       {displayCapacity && (
-        <text x="95%" y="5" pointerEvents="none" style={element.textColor ? { fill: element.textColor } : {}}>
+        <text x="95%" y={5 * scale} pointerEvents="none" style={element.textColor ? { fill: element.textColor } : {}}>
           C={element.capacity}
         </text>
       )}
@@ -78,4 +78,5 @@ export const UMLPetriNetPlaceComponent: SFC<Props> = ({ element }) => {
 
 interface Props {
   element: UMLPetriNetPlace;
+  scale: number;
 }

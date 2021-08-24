@@ -18,6 +18,7 @@ export declare type ApollonOptions = {
     locale?: Locale;
     copyPasteToClipboard?: boolean;
     colorEnabled?: boolean;
+    scale?: number;
 };
 export declare type Selection = {
     elements: string[];
@@ -113,6 +114,7 @@ export declare type ExportOptions = {
     keepOriginalSize?: boolean;
     include?: string[];
     exclude?: string[];
+    scale?: number;
 };
 export declare type SVG = {
     svg: string;

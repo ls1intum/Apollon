@@ -7,7 +7,7 @@ it('render the uml-use-case-component', () => {
   const useCaseSystem: UMLUseCaseSystem = new UMLUseCaseSystem({ name: 'TestUseCaseComponent' });
   const { getByText, baseElement } = render(
     <svg>
-      <UMLUseCaseSystemComponent element={useCaseSystem} />
+      <UMLUseCaseSystemComponent element={useCaseSystem} scale={1.0} />
     </svg>,
   );
   expect(getByText(useCaseSystem.name)).toBeInTheDocument();

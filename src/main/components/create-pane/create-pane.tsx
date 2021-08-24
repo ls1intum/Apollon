@@ -33,6 +33,7 @@ type OwnProps = {};
 type StateProps = {
   type: UMLDiagramType;
   colorEnabled: boolean;
+  scale: number;
 };
 
 type DispatchProps = {
@@ -41,43 +42,43 @@ type DispatchProps = {
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext & CanvasContext;
 
-const getInitialState = ({ type, canvas, translate, colorEnabled }: Props) => {
+const getInitialState = ({ type, canvas, translate, colorEnabled, scale }: Props) => {
   const previews: PreviewElement[] = [];
   const utils: PreviewElement[] = [];
 
   switch (type) {
     case UMLDiagramType.ClassDiagram:
-      previews.push(...composeClassPreview(canvas, translate));
+      previews.push(...composeClassPreview(canvas, translate, scale));
       break;
     case UMLDiagramType.ObjectDiagram:
-      previews.push(...composeObjectPreview(canvas, translate));
+      previews.push(...composeObjectPreview(canvas, translate, scale));
       break;
     case UMLDiagramType.ActivityDiagram:
-      previews.push(...composeActivityPreview(canvas, translate));
+      previews.push(...composeActivityPreview(canvas, translate, scale));
       break;
     case UMLDiagramType.UseCaseDiagram:
-      previews.push(...composeUseCasePreview(canvas, translate));
+      previews.push(...composeUseCasePreview(canvas, translate, scale));
       break;
     case UMLDiagramType.CommunicationDiagram:
-      previews.push(...composeCommunicationPreview(canvas, translate));
+      previews.push(...composeCommunicationPreview(canvas, translate, scale));
       break;
     case UMLDiagramType.ComponentDiagram:
-      previews.push(...composeComponentPreview(canvas, translate));
+      previews.push(...composeComponentPreview(canvas, translate, scale));
       break;
     case UMLDiagramType.DeploymentDiagram:
-      previews.push(...composeDeploymentPreview(canvas, translate));
+      previews.push(...composeDeploymentPreview(canvas, translate, scale));
       break;
     case UMLDiagramType.PetriNet:
-      previews.push(...composePetriNetPreview(canvas, translate));
+      previews.push(...composePetriNetPreview(canvas, translate, scale));
       break;
     case UMLDiagramType.ReachabilityGraph:
-      previews.push(...composeReachabilityGraphPreview(canvas, translate));
+      previews.push(...composeReachabilityGraphPreview(canvas, translate, scale));
       break;
     case UMLDiagramType.SyntaxTree:
-      previews.push(...composeSyntaxTreePreview(canvas, translate));
+      previews.push(...composeSyntaxTreePreview(canvas, translate, scale));
       break;
     case UMLDiagramType.Flowchart:
-      previews.push(...composeFlowchartPreview(canvas, translate));
+      previews.push(...composeFlowchartPreview(canvas, translate, scale));
   }
   if (colorEnabled) {
     utils.push(
@@ -99,6 +100,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     (state) => ({
       type: state.diagram.type,
       colorEnabled: state.editor.colorEnabled,
+      scale: state.editor.scale,
     }),
     {
       create: UMLElementRepository.create,
@@ -144,7 +146,7 @@ class CreatePaneComponent extends Component<Props, State> {
     );
 
     return (
-      <StoreProvider initialState={{ elements, editor: { features } }}>
+      <StoreProvider initialState={{ elements, editor: { features, scale: this.props.scale } }}>
         {this.getElementArray(previews)}
         {utils && utils.length > 0 ? (
           <>

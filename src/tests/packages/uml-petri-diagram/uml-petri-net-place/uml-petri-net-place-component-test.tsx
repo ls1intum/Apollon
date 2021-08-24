@@ -12,7 +12,7 @@ describe('uml-petri-net-arc-component', () => {
   it('render the uml-petri-net-arc-component', () => {
     const { baseElement } = render(
       <svg>
-        <UMLPetriNetPlaceComponent element={element} />
+        <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
     );
     expect(baseElement).toMatchSnapshot();
@@ -22,7 +22,7 @@ describe('uml-petri-net-arc-component', () => {
     element.amountOfTokens = 1;
     const { container } = render(
       <svg>
-        <UMLPetriNetPlaceComponent element={element} />
+        <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
     );
     // place has circle, and token has a circle
@@ -33,7 +33,7 @@ describe('uml-petri-net-arc-component', () => {
     element.amountOfTokens = 2;
     const { container } = render(
       <svg>
-        <UMLPetriNetPlaceComponent element={element} />
+        <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
     );
     // place has circle, and 2 tokens as circle
@@ -44,7 +44,7 @@ describe('uml-petri-net-arc-component', () => {
     element.amountOfTokens = 3;
     const { container } = render(
       <svg>
-        <UMLPetriNetPlaceComponent element={element} />
+        <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
     );
     // place has circle,  and 3 tokens as circle
@@ -55,7 +55,7 @@ describe('uml-petri-net-arc-component', () => {
     element.amountOfTokens = 4;
     const { container } = render(
       <svg>
-        <UMLPetriNetPlaceComponent element={element} />
+        <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
     );
     // place has circle and 4 tokens as circle
@@ -66,7 +66,7 @@ describe('uml-petri-net-arc-component', () => {
     element.amountOfTokens = 5;
     const { container } = render(
       <svg>
-        <UMLPetriNetPlaceComponent element={element} />
+        <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
     );
     // place has circle and 5 tokens as circle
@@ -77,7 +77,7 @@ describe('uml-petri-net-arc-component', () => {
     element.amountOfTokens = 6;
     const { container, getByText } = render(
       <svg>
-        <UMLPetriNetPlaceComponent element={element} />
+        <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
     );
     // 6 is displayed as number, not as token anymore

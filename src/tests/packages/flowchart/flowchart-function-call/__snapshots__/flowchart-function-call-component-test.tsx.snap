@@ -8,20 +8,20 @@ exports[`render the flowchart-function-call-component 1`] = `
         <rect
           height="100%"
           stroke="black"
-          width="10px"
+          width="10"
           x="0"
         />
         <rect
           height="100%"
           stroke="black"
-          width="calc(100% - 20px)"
+          width="180"
           x="10"
         />
         <rect
           height="100%"
           stroke="black"
-          width="10px"
-          x="calc(100% - 10px)"
+          width="10"
+          x="190"
         />
         <text
           font-weight="bold"
