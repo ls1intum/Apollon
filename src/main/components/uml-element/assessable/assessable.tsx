@@ -7,7 +7,7 @@ import { IPath, Path } from '../../../utils/geometry/path';
 import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
-import { Container, CorrectIcon, FeedbackIcon, WrongIcon } from './assessment-styles';
+import { ICON_SIZE, Container, CorrectIcon, FeedbackIcon, Triangle, WarningIcon, WrongIcon } from './assessment-styles';
 import { findDOMNode } from 'react-dom';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
@@ -81,6 +81,16 @@ export const assessable = (
 
       return (
         <WrappedComponent {...props}>
+          {assessment && assessment.correctionStatus != undefined && assessment.correctionStatus !== 'CORRECT' && (
+            <g transform={`translate(${position.x - ICON_SIZE * 2} ${position.y})`} pointerEvents={'none'}>
+              <>
+                <Container />
+                <Triangle />
+                <WarningIcon />
+              </>
+            </g>
+          )}
+
           {assessment && (
             <g transform={`translate(${position.x} ${position.y})`} pointerEvents={'none'}>
               {assessment.score === 0 && !!assessment.feedback && (

@@ -114,7 +114,7 @@ export enum FeedbackCorrectionErrorType {
   INCORRECT_GRADING_INSTRUCTION = 'INCORRECT_GRADING_INSTRUCTION',
 }
 
-export type FeedbackCorrectionStatus = FeedbackCorrectionErrorType | "CORRECT";
+export type FeedbackCorrectionStatus = FeedbackCorrectionErrorType | 'CORRECT';
 
 export type Assessment = {
   modelElementId: string;

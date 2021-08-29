@@ -120,13 +120,11 @@ class AssessmentSectionComponent extends Component<Props> {
               </Flex>
             ) : null}
 
-            {assessment?.correctionStatus ?
-              (
-                <Flex>
-                  <span>{this.props.translate(`assessment.correctionType.${assessment.correctionStatus}`)}</span>
-                </Flex>
-              ) : null
-            }
+            {assessment?.correctionStatus ? (
+              <Flex>
+                <span>{this.props.translate(`assessment.correctionType.${assessment.correctionStatus}`)}</span>
+              </Flex>
+            ) : null}
           </section>
         )}
         <Divider />

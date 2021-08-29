@@ -27,11 +27,11 @@
     "score": "Punkte",
     "feedback": "Bewertung",
     "correctionType": {
-      "CORRECT": "Richtiges Feedback ✅",
-      "INCORRECT_SCORE": "Falsche Punktzahl ❌",
-      "UNNECESSARY_FEEDBACK": "Redundantes Feedback ❌",
-      "MISSING_GRADING_INSTRUCTION": "Fehlende Bewertungsanweisung ❌",
-      "INCORRECT_GRADING_INSTRUCTION": "Falsche Bewertungsanweisung ❌"
+      "CORRECT": "Richtiges Feedback 👍",
+      "INCORRECT_SCORE": "Falsche Punktzahl ⚠",
+      "UNNECESSARY_FEEDBACK": "Redundantes Feedback ⚠",
+      "MISSING_GRADING_INSTRUCTION": "Fehlende Bewertungsanweisung ⚠",
+      "INCORRECT_GRADING_INSTRUCTION": "Falsche Bewertungsanweisung ⚠"
     }
   },
   "packages": {
