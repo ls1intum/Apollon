@@ -6,19 +6,19 @@ exports[`test reachability graph arc update render 1`] = `
     <div>
       <section>
         <div
-          class="sc-Arkif kXASyX"
+          class="sc-Azgjq iKWcYy"
         >
           <input
-            class="sc-fnVZcZ sc-fFSPTT jezyHk itWhGU"
+            class="sc-fodVek sc-fFucqa bZnAoF jKMQKQ"
             value=""
           />
           <button
-            class="sc-kEqXSa sc-iqAclL gaVGuP bUNBGB"
+            class="sc-kEjbQP sc-iqHYmW eyuTgc jqorvV"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdnxRM feykAo"
+              class="sc-bdfBQB hgmLEb"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -31,7 +31,7 @@ exports[`test reachability graph arc update render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-ezzafa huOvzT"
+          class="sc-ezredP tTwEx"
         />
       </section>
       <section>
