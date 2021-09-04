@@ -72,17 +72,20 @@ export const assessable = (
       const { assessment, assess, select, deselect, updateStart, bounds, path: ipath, readonly, ...props } = this.props;
 
       let position: Point;
+      let assessmentWarningPosition: Point;
       if (ipath) {
         const path = new Path(ipath);
         position = path.position(path.length / 2);
+        assessmentWarningPosition = path.position(path.length / 2 - ICON_SIZE * 2);
       } else {
         position = new Point(bounds.width, 0);
+        assessmentWarningPosition = new Point(position.x - ICON_SIZE * 2, position.y);
       }
 
       return (
         <WrappedComponent {...props}>
           {assessment && assessment.correctionStatus != undefined && assessment.correctionStatus !== 'CORRECT' && (
-            <g transform={`translate(${position.x - ICON_SIZE * 2} ${position.y})`} pointerEvents={'none'}>
+            <g transform={`translate(${assessmentWarningPosition.x} ${assessmentWarningPosition.y})`} pointerEvents={'none'}>
               <>
                 <Container />
                 <Triangle />
