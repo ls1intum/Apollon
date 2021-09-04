@@ -15,7 +15,7 @@ exports[`test assessable HOC display negative score 1`] = `
           r="16"
         />
         <svg
-          class="sc-bdfBQB hgmLEb sc-hKgJUU hkEMBW"
+          class="sc-bdfBQB hgmLEb sc-eCstlR bDJRJX"
           height="24"
           viewBox="0 0 352 512"
           width="24"
@@ -51,7 +51,7 @@ exports[`test assessable HOC display neutral score 1`] = `
           r="16"
         />
         <svg
-          class="sc-bdfBQB hgmLEb sc-eCstlR cfGonm"
+          class="sc-bdfBQB hgmLEb sc-jSgvzq hCDAKC"
           height="24"
           viewBox="0 0 192 512"
           width="24"
@@ -87,7 +87,7 @@ exports[`test assessable HOC display positive score 1`] = `
           r="16"
         />
         <svg
-          class="sc-bdfBQB hgmLEb sc-dlfnuX liqjqx"
+          class="sc-bdfBQB hgmLEb sc-hKgJUU klkxly"
           height="24"
           viewBox="0 0 512 512"
           width="24"
