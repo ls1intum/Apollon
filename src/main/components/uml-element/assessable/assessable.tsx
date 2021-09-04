@@ -85,7 +85,10 @@ export const assessable = (
       return (
         <WrappedComponent {...props}>
           {assessment && assessment.correctionStatus != undefined && assessment.correctionStatus !== 'CORRECT' && (
-            <g transform={`translate(${assessmentWarningPosition.x} ${assessmentWarningPosition.y})`} pointerEvents={'none'}>
+            <g
+              transform={`translate(${assessmentWarningPosition.x} ${assessmentWarningPosition.y})`}
+              pointerEvents={'none'}
+            >
               <>
                 <Container />
                 <Triangle />
