@@ -197,7 +197,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     update: UMLElementRepository.update,
     delete: UMLElementRepository.delete,
     flip: UMLRelationshipRepository.flip,
-    getById: (UMLElementRepository.getById as any) as AsyncDispatch<typeof UMLElementRepository.getById>,
+    getById: UMLElementRepository.getById as any as AsyncDispatch<typeof UMLElementRepository.getById>,
   }),
 );
 

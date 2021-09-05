@@ -20,6 +20,7 @@ export type ApollonOptions = {
   locale?: Locale;
   copyPasteToClipboard?: boolean;
   colorEnabled?: boolean;
+  scale?: number;
 };
 
 export type Selection = {
@@ -121,6 +122,7 @@ export type ExportOptions = {
   keepOriginalSize?: boolean;
   include?: string[];
   exclude?: string[];
+  scale?: number;
 };
 
 export type SVG = {

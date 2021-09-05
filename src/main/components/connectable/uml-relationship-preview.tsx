@@ -29,7 +29,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   }),
   {
     end: UMLElementRepository.endConnecting,
-    getAbsolutePosition: (UMLElementRepository.getAbsolutePosition as any) as AsyncDispatch<
+    getAbsolutePosition: UMLElementRepository.getAbsolutePosition as any as AsyncDispatch<
       typeof UMLElementRepository.getAbsolutePosition
     >,
   },

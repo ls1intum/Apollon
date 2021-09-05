@@ -14,7 +14,7 @@ it('render the flowchart-decision-component', () => {
   const decision: FlowchartDecision = new FlowchartDecision({ name: 'TestDecisionComponent' });
   const { getByText, baseElement } = render(
     <svg>
-      <FlowchartDecisionComponent element={decision} />
+      <FlowchartDecisionComponent element={decision} scale={1.0} />
     </svg>,
   );
   expect(getByText(decision.name)).toBeInTheDocument();

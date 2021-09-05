@@ -56,7 +56,7 @@ export class Application extends React.Component<Props, State> {
         <RootProvider value={rootContext}>
           <StoreProvider ref={this.store} initialState={this.props.state}>
             <I18nProvider locale={this.props.locale}>
-              <Theme styles={this.props.styles}>
+              <Theme styles={this.props.styles} scale={this.props.state?.editor?.scale}>
                 <Layout className="apollon-editor" ref={this.setLayout}>
                   {rootContext && (
                     <DraggableLayer>

@@ -91,7 +91,7 @@ const getInitialState = ({ model, options }: Props): State => {
       [],
     );
 
-    const [root, ...updates] = element.render(layer, children) as UMLElement[];
+    const [root, ...updates] = element.render(layer, children, true) as UMLElement[];
     updates.map((x) => {
       const original = apollonChildren.find((y) => y.id === x.id);
       if (!original) {
@@ -177,7 +177,7 @@ export class Svg extends Component<Props, State> {
   state = getInitialState(this.props);
   render() {
     const { bounds, elements } = this.state;
-    const theme: Styles = update(defaults, this.props.styles || {});
+    const theme: Styles = update(defaults(this.props.options?.scale), this.props.styles || {});
 
     // connect exported svg to redux state, so that connected components can retrieve properties from state
     const state = ModelState.fromModel(this.props.model);
@@ -204,7 +204,7 @@ export class Svg extends Component<Props, State> {
                   className={element.name ? element.name.replace(/[<>]/, '') : ''}
                   fill={element.fillColor || 'white'}
                 >
-                  <ElementComponent key={index} element={element} />
+                  <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
                 </svg>
               );
             })}

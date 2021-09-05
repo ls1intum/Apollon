@@ -2,17 +2,17 @@ import React, { SFC } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLUseCaseActor } from './uml-use-case-actor';
 
-export const UMLUseCaseActorComponent: SFC<Props> = ({ element }) => (
+export const UMLUseCaseActorComponent: SFC<Props> = ({ element, scale }) => (
   <g>
     <rect width="100%" height="100%" fill="none" />
     <g stroke={element.strokeColor || 'black'} strokeWidth={2}>
-      <circle cx="45" cy="25" r="15" />
-      <line x1="45" y1="40" x2="45" y2="80" />
-      <line x1="15" y1="55" x2="75" y2="55" />
-      <line x1="45" y1="80" x2="15" y2="110" />
-      <line x1="45" y1="80" x2="75" y2="110" />
+      <circle cx={45 * scale} cy={25 * scale} r={15 * scale} />
+      <line x1={45 * scale} y1={40 * scale} x2={45 * scale} y2={80 * scale} />
+      <line x1={15 * scale} y1={55 * scale} x2={75 * scale} y2={55 * scale} />
+      <line x1={45 * scale} y1={80 * scale} x2={15 * scale} y2={110 * scale} />
+      <line x1={45 * scale} y1={80 * scale} x2={75 * scale} y2={110 * scale} />
     </g>
-    <Text fill={element.textColor} x="45" y="130">
+    <Text fill={element.textColor} x={45 * scale} y={130 * scale}>
       {element.name}
     </Text>
   </g>
@@ -20,4 +20,5 @@ export const UMLUseCaseActorComponent: SFC<Props> = ({ element }) => (
 
 interface Props {
   element: UMLUseCaseActor;
+  scale: number;
 }

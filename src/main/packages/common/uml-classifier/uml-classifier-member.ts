@@ -1,7 +1,10 @@
+import { DeepPartial } from 'redux';
+import { Application } from '../../../scenes/application';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
-import { UMLElement } from '../../../services/uml-element/uml-element';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
+import { assign } from '../../../utils/fx/assign';
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { Text } from '../../../utils/svg/text';
 
@@ -18,6 +21,11 @@ export abstract class UMLClassifierMember extends UMLElement {
   };
 
   bounds: IBoundary = { ...this.bounds, height: 30 };
+
+  constructor(values?: DeepPartial<IUMLElement>) {
+    super(values);
+    assign<IUMLElement>(this, values);
+  }
 
   render(layer: ILayer): ILayoutable[] {
     const radix = 10;

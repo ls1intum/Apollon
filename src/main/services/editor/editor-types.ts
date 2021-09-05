@@ -30,6 +30,7 @@ export type EditorState = {
   readonly view: ApollonView;
   readonly features: UMLElementFeatures;
   readonly colorEnabled: boolean;
+  readonly scale: number;
 };
 
 export type EditorActions = ChangeViewAction;

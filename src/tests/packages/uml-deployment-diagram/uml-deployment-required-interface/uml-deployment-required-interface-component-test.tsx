@@ -15,7 +15,7 @@ it('render the uml-deplyoment-required-interface-component', () => {
       <StoreProvider
         initialState={{ elements: { [umlDeploymentInterfaceRequired.id]: { ...umlDeploymentInterfaceRequired } } }}
       >
-        <UMLInterfaceRequiredComponent element={umlDeploymentInterfaceRequired} />
+        <UMLInterfaceRequiredComponent element={umlDeploymentInterfaceRequired} scale={1.0} />
       </StoreProvider>
     </svg>,
   );

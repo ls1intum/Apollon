@@ -2,7 +2,7 @@ import React, { SFC } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { UMLReachabilityGraphArc } from './uml-reachability-graph-arc';
 
-export const UMLReachabilityGraphArcComponent: SFC<Props> = ({ element }) => {
+export const UMLReachabilityGraphArcComponent: SFC<Props> = ({ element, scale }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
   const path = element.path.map((point) => new Point(point.x, point.y));
@@ -27,13 +27,13 @@ export const UMLReachabilityGraphArcComponent: SFC<Props> = ({ element }) => {
     switch (dir) {
       case 'v':
         return {
-          dx: 5,
+          dx: 5 * scale,
           dominantBaseline: 'middle',
           textAnchor: 'start',
         };
       case 'h':
         return {
-          dy: -5,
+          dy: -5 * scale,
           dominantBaseline: 'text-after-edge',
           textAnchor: 'middle',
         };
@@ -46,21 +46,25 @@ export const UMLReachabilityGraphArcComponent: SFC<Props> = ({ element }) => {
     <g>
       <marker
         id={`marker-${element.id}`}
-        viewBox="0 0 30 30"
-        markerWidth="22"
-        markerHeight="30"
-        refX="30"
-        refY="15"
+        viewBox={`0 0 ${30 * scale} ${30 * scale}`}
+        markerWidth={22 * scale}
+        markerHeight={30 * scale}
+        refX={30 * scale}
+        refY={15 * scale}
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <path d="M0,29 L30,15 L0,1" fill="none" stroke={element.strokeColor || 'black'} />
+        <path
+          d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`}
+          fill="none"
+          stroke={element.strokeColor || 'black'}
+        />
       </marker>
       <polyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
         stroke={element.strokeColor || 'black'}
         fill="none"
-        strokeWidth={1}
+        strokeWidth={1 * scale}
         markerEnd={`url(#marker-${element.id})`}
       />
       <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none" style={{ ...textColor }}>
@@ -72,4 +76,5 @@ export const UMLReachabilityGraphArcComponent: SFC<Props> = ({ element }) => {
 
 interface Props {
   element: UMLReachabilityGraphArc;
+  scale: number;
 }

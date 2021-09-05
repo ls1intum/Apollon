@@ -17,6 +17,7 @@ type StateProps = {
   mode: ApollonMode;
   view: ApollonView;
   selected: SelectableState;
+  scale: number;
 };
 
 type DispatchProps = {
@@ -33,6 +34,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       mode: state.editor.mode,
       view: state.editor.view,
       selected: state.selected,
+      scale: state.editor.scale,
     }),
     {
       changeView: EditorRepository.changeView,
@@ -45,7 +47,7 @@ class SidebarComponent extends Component<Props> {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
 
     return (
-      <Container>
+      <Container scale={this.props.scale}>
         {this.props.mode === ApollonMode.Exporting && (
           <Switch value={this.props.view} onChange={this.props.changeView} color="primary">
             <Switch.Item value={ApollonView.Modelling}>{this.props.translate('views.modelling')}</Switch.Item>

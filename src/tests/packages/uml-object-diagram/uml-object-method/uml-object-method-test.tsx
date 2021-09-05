@@ -7,7 +7,7 @@ it('render the uml-object-method-component', () => {
   const attribute: UMLObjectMethod = new UMLObjectMethod({ name: 'TestObjectComponent' });
   const { getByText, baseElement } = render(
     <svg>
-      <UMLClassifierMemberComponent element={attribute} />
+      <UMLClassifierMemberComponent element={attribute} scale={1.0} />
     </svg>,
   );
   expect(getByText(attribute.name)).toBeInTheDocument();

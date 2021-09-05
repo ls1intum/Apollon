@@ -14,7 +14,7 @@ it('render the flowchart-function-call-component', () => {
   const functionCall: FlowchartFunctionCall = new FlowchartFunctionCall({ name: 'TestFunctionCallComponent' });
   const { getByText, baseElement } = render(
     <svg>
-      <FlowchartFunctionCallComponent element={functionCall} />
+      <FlowchartFunctionCallComponent element={functionCall} scale={1.0} />
     </svg>,
   );
   expect(getByText(functionCall.name)).toBeInTheDocument();

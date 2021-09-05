@@ -45,7 +45,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     }),
     {
       updateEnd: UMLElementRepository.updateEnd,
-      getAbsolutePosition: (UMLElementRepository.getAbsolutePosition as any) as AsyncDispatch<
+      getAbsolutePosition: UMLElementRepository.getAbsolutePosition as any as AsyncDispatch<
         typeof UMLElementRepository.getAbsolutePosition
       >,
     },
