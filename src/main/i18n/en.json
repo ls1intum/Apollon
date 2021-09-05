@@ -25,14 +25,7 @@
   "assessment": {
     "assessment": "Assessment for",
     "score": "Points",
-    "feedback": "Feedback",
-    "correctionType": {
-      "CORRECT": "Correct assessment 👍",
-      "INCORRECT_SCORE": "Incorrect score ⚠️",
-      "UNNECESSARY_FEEDBACK": "Unneccessary feedback ⚠️",
-      "MISSING_GRADING_INSTRUCTION": "Missing assessment instruction ⚠️",
-      "INCORRECT_GRADING_INSTRUCTION": "Incorrect assessment instruction ⚠️"
-    }
+    "feedback": "Feedback"
   },
   "packages": {
     "ClassDiagram": {

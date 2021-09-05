@@ -5,13 +5,17 @@ import { UMLDiagramType } from '../..';
 import { IAssessment } from '../../services/assessment/assessment';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { IUMLElement } from '../../services/uml-element/uml-element';
+import { FeedbackCorrectionStatus } from '../../typings';
 import { Divider } from '../controls/divider/divider';
 import { Textfield } from '../controls/textfield/textfield';
+import { TrashIcon } from '../../components/controls/icon/trash';
+import { Button } from '../controls/button/button';
 import { Header } from '../controls/typography/typography';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { styled } from '../theme/styles';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 
 const Flex = styled.div`
   display: flex;
@@ -48,7 +52,11 @@ type StateProps = {
   assessment: IAssessment | null;
   diagramType: UMLDiagramType;
 };
-type DispatchProps = { assess: typeof AssessmentRepository.assess };
+type DispatchProps = {
+  assess: typeof AssessmentRepository.assess;
+  delete: typeof AssessmentRepository.delete;
+  updateEnd: typeof UMLElementRepository.updateEnd;
+};
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
@@ -59,7 +67,11 @@ const enhance = compose<ComponentClass<OwnProps>>(
       assessment: AssessmentRepository.getById(state.assessments)(props.element.id),
       diagramType: state.diagram.type,
     }),
-    { assess: AssessmentRepository.assess },
+    {
+      assess: AssessmentRepository.assess,
+      delete: AssessmentRepository.delete,
+      updateEnd: UMLElementRepository.updateEnd,
+    },
   ),
 );
 
@@ -96,6 +108,9 @@ class AssessmentSectionComponent extends Component<Props> {
                 value={assessment ? String(assessment.score) : ''}
               />
             )}
+            <Button color="link" onClick={this.deleteFeedback}>
+              <TrashIcon />
+            </Button>
           </Flex>
         </section>
         {readonly ? (
@@ -120,9 +135,9 @@ class AssessmentSectionComponent extends Component<Props> {
               </Flex>
             ) : null}
 
-            {assessment?.correctionStatus ? (
+            {assessment?.correctionStatus?.description ? (
               <Flex>
-                <span>{this.props.translate(`assessment.correctionType.${assessment.correctionStatus}`)}</span>
+                <span>{assessment.correctionStatus.description}</span>
               </Flex>
             ) : null}
           </section>
@@ -135,13 +150,26 @@ class AssessmentSectionComponent extends Component<Props> {
   private updateScore = (value: string) => {
     const { element, assessment } = this.props;
     const score = parseFloat(value) || 0;
-    this.props.assess(element.id, { ...assessment, correctionStatus: undefined, score });
+    const newCorrectionStatus: FeedbackCorrectionStatus = {
+      description: undefined,
+      status: 'NOT_VALIDATED',
+    };
+    this.props.assess(element.id, {
+      ...assessment,
+      correctionStatus: newCorrectionStatus,
+      score,
+    });
   };
 
   private updateFeedback = (value: string) => {
     const { element, assessment } = this.props;
     const feedback = value.length ? value : undefined;
     this.props.assess(element.id, { score: 0, ...assessment, feedback });
+  };
+
+  private deleteFeedback = () => {
+    this.props.updateEnd(this.props.element.id);
+    this.props.delete(this.props.element.id);
   };
 }
 
