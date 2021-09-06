@@ -1,5 +1,5 @@
 import { AsyncAction } from '../../../utils/actions/actions';
-import { UpdatableActionTypes, UpdateEndAction, UpdateStartAction } from './updatable-types';
+import { UpdatableActionTypes, UpdateEndAction, UpdateEndAllAction, UpdateStartAction } from './updatable-types';
 
 export const Updatable = {
   updateStart:
@@ -20,4 +20,10 @@ export const Updatable = {
     payload: { ids: Array.isArray(id) ? id : [id] },
     undoable: false,
   }),
+
+  updateEndAll: (): UpdateEndAllAction => ({
+    type: UpdatableActionTypes.ENDALL,
+    payload: {},
+    undoable: false,
+  })
 };

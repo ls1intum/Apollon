@@ -55,7 +55,7 @@ type StateProps = {
 type DispatchProps = {
   assess: typeof AssessmentRepository.assess;
   delete: typeof AssessmentRepository.delete;
-  updateEnd: typeof UMLElementRepository.updateEnd;
+  updateEndAll: typeof UMLElementRepository.updateEndAll;
 };
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
@@ -70,7 +70,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     {
       assess: AssessmentRepository.assess,
       delete: AssessmentRepository.delete,
-      updateEnd: UMLElementRepository.updateEnd,
+      updateEndAll: UMLElementRepository.updateEndAll,
     },
   ),
 );
@@ -108,9 +108,9 @@ class AssessmentSectionComponent extends Component<Props> {
                 value={assessment ? String(assessment.score) : ''}
               />
             )}
-            <Button color="link" onClick={this.deleteFeedback}>
+            {!readonly ? <Button color="link" onClick={this.deleteFeedback}>
               <TrashIcon />
-            </Button>
+            </Button> : null}
           </Flex>
         </section>
         {readonly ? (
@@ -168,7 +168,7 @@ class AssessmentSectionComponent extends Component<Props> {
   };
 
   private deleteFeedback = () => {
-    this.props.updateEnd(this.props.element.id);
+    this.props.updateEndAll();
     this.props.delete(this.props.element.id);
   };
 }
