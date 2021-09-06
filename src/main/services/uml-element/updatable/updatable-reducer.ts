@@ -16,7 +16,8 @@ export const UpdatableReducer: Reducer<UpdatableState, Actions> = (state = [], a
 
       return state.filter((id) => !payload.ids.includes(id));
     }
-    case UpdatableActionTypes.ENDALL: return []
+    case UpdatableActionTypes.ENDALL:
+      return [];
   }
 
   return state;

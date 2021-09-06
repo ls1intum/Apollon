@@ -25,5 +25,5 @@ export const Updatable = {
     type: UpdatableActionTypes.ENDALL,
     payload: {},
     undoable: false,
-  })
+  }),
 };

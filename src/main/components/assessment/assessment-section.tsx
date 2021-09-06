@@ -108,9 +108,11 @@ class AssessmentSectionComponent extends Component<Props> {
                 value={assessment ? String(assessment.score) : ''}
               />
             )}
-            {!readonly ? <Button color="link" onClick={this.deleteFeedback}>
-              <TrashIcon />
-            </Button> : null}
+            {!readonly ? (
+              <Button color="link" onClick={this.deleteFeedback}>
+                <TrashIcon />
+              </Button>
+            ) : null}
           </Flex>
         </section>
         {readonly ? (

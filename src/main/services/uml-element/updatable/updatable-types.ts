@@ -23,5 +23,5 @@ export type UpdateEndAction = Action<UpdatableActionTypes.END> & {
 };
 
 export type UpdateEndAllAction = Action<UpdatableActionTypes.ENDALL> & {
-  payload: {}
-}
+  payload: {};
+};
