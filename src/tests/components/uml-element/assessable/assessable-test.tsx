@@ -12,6 +12,7 @@ import { getMockedStore } from '../../../test-utils/test-utils';
 import { assessable } from '../../../../main/components/uml-element/assessable/assessable';
 import { IAssessment } from '../../../../main/services/assessment/assessment';
 import { Theme } from '../../../../main/components/theme/theme';
+import { UMLClassInheritance } from '../../../../main/packages/uml-class-diagram/uml-class-inheritance/uml-class-inheritance'
 
 class MockComponent extends React.Component<UMLElementComponentProps> {
   render() {
@@ -23,7 +24,6 @@ class MockComponent extends React.Component<UMLElementComponentProps> {
     );
   }
 }
-let body: RenderResult;
 
 describe('test assessable HOC', () => {
   let store: MockStoreEnhanced<DeepPartial<ModelState>, any>;
@@ -98,6 +98,42 @@ describe('test assessable HOC', () => {
       <Provider store={store}>
         <Theme styles={undefined}>
           <AssessableMockComponent id={assessedElement.id} />
+        </Theme>
+      </Provider>,
+    );
+    expect(baseElement).toMatchSnapshot();
+  });
+  it('display warning icon for incorrect assessment for the path', () => {
+    // Another assessment element and UML relationship definition.
+    let assessedElementSubclass = new UMLClass({ name: 'subclass' });
+    let relationship = new UMLClassInheritance({
+      source: {
+        element: assessedElement.id
+      },
+      target: {
+        element: assessedElementSubclass.id
+      }
+    });
+    assessment = { score: 1, feedback: 'Okay!', correctionStatus: { description: "ABC", status: 'INCORRECT' } };
+
+    store = getMockedStore(
+      {
+        assessments: {
+          [relationship.id]: assessment,
+        },
+      },
+      [assessedElement, assessedElementSubclass, relationship],
+    );
+    const { baseElement } = render(
+      <Provider store={store}>
+        <Theme styles={undefined}>
+          <AssessableMockComponent id={assessedElement.id} />
+        </Theme>
+        <Theme styles={undefined}>
+          <AssessableMockComponent id={assessedElementSubclass.id} />
+        </Theme>
+        <Theme styles={undefined}>
+          <AssessableMockComponent id={relationship.id} />
         </Theme>
       </Provider>,
     );
