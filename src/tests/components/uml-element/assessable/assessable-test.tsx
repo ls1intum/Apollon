@@ -12,7 +12,7 @@ import { getMockedStore } from '../../../test-utils/test-utils';
 import { assessable } from '../../../../main/components/uml-element/assessable/assessable';
 import { IAssessment } from '../../../../main/services/assessment/assessment';
 import { Theme } from '../../../../main/components/theme/theme';
-import { UMLClassInheritance } from '../../../../main/packages/uml-class-diagram/uml-class-inheritance/uml-class-inheritance'
+import { UMLClassInheritance } from '../../../../main/packages/uml-class-diagram/uml-class-inheritance/uml-class-inheritance';
 
 class MockComponent extends React.Component<UMLElementComponentProps> {
   render() {
@@ -108,13 +108,13 @@ describe('test assessable HOC', () => {
     let assessedElementSubclass = new UMLClass({ name: 'subclass' });
     let relationship = new UMLClassInheritance({
       source: {
-        element: assessedElement.id
+        element: assessedElement.id,
       },
       target: {
-        element: assessedElementSubclass.id
-      }
+        element: assessedElementSubclass.id,
+      },
     });
-    assessment = { score: 1, feedback: 'Okay!', correctionStatus: { description: "ABC", status: 'INCORRECT' } };
+    assessment = { score: 1, feedback: 'Okay!', correctionStatus: { description: 'ABC', status: 'INCORRECT' } };
 
     store = getMockedStore(
       {
