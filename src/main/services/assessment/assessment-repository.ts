@@ -1,5 +1,5 @@
 import { IAssessment } from './assessment';
-import { AssessAction, AssessmentActionTypes, AssessmentState } from './assessment-types';
+import { AssessAction, AssessmentActionTypes, AssessmentState, DeleteAction } from './assessment-types';
 
 export class AssessmentRepository {
   static assess = (element: string, assessment: IAssessment, assessmentType?: 'MANUAL' | 'DROPPED'): AssessAction => {
@@ -10,6 +10,14 @@ export class AssessmentRepository {
     return {
       type: AssessmentActionTypes.ASSESS,
       payload: { element, assessment: payloadAssessment },
+      undoable: false,
+    };
+  };
+
+  static delete = (element: string): DeleteAction => {
+    return {
+      type: AssessmentActionTypes.DELETE,
+      payload: { element },
       undoable: false,
     };
   };

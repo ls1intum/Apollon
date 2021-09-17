@@ -95,6 +95,10 @@ export declare type UMLCommunicationLink = UMLRelationship & {
         direction: 'source' | 'target';
     }[];
 };
+export declare type FeedbackCorrectionStatus = {
+    description?: string;
+    status: 'CORRECT' | 'INCORRECT' | 'NOT_VALIDATED';
+};
 export declare type Assessment = {
     modelElementId: string;
     elementType: UMLElementType | UMLRelationshipType;
@@ -103,6 +107,7 @@ export declare type Assessment = {
     dropInfo?: any;
     label?: string;
     labelColor?: string;
+    correctionStatus?: FeedbackCorrectionStatus;
 };
 export declare type ExportOptions = {
     margin?: number | {
