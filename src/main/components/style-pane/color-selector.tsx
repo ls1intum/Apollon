@@ -40,7 +40,7 @@ type ColorProps = {
   selected?: boolean;
 };
 
-const Color = styled.button.attrs<ColorProps>({}) <ColorProps>`
+const Color = styled.button.attrs<ColorProps>({})<ColorProps>`
   height: 28px;
   width: 28px;
   background-color: ${({ color }: ColorProps) => color || 'black'};
