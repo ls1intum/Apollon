@@ -30,8 +30,8 @@ const UmlAttributeUpdate = ({ id, onRefChange, value, onChange, onSubmitKeyUp, o
     setColorOpen(!colorOpen);
   };
 
-  const handleNameChange = (value: string) => {
-    onChange(id, { name: value });
+  const handleNameChange = (newName: string) => {
+    onChange(id, { name: newName });
   };
 
   const handleDelete = () => {

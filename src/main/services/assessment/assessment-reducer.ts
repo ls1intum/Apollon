@@ -16,7 +16,7 @@ export const AssessmentReducer: Reducer<AssessmentState, Actions> = (state = ini
     }
     case AssessmentActionTypes.DELETE: {
       const { payload } = action;
-      let newState = { ...state };
+      const newState = { ...state };
       delete newState[payload.element];
       return newState;
     }

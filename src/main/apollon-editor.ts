@@ -24,6 +24,7 @@ export class ApollonEditor {
    */
   get model(): Apollon.UMLModel {
     if (!this.store) {
+      // tslint:disable-next-line:no-console
       console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
       throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
     }
@@ -36,6 +37,7 @@ export class ApollonEditor {
    */
   set model(model: Apollon.UMLModel) {
     if (!this.store) {
+      // tslint:disable-next-line:no-console
       console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
       throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
     }
@@ -52,6 +54,7 @@ export class ApollonEditor {
    */
   set type(diagramType: UMLDiagramType) {
     if (!this.store) {
+      // tslint:disable-next-line:no-console
       console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
       throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
     }
@@ -71,6 +74,7 @@ export class ApollonEditor {
    */
   set locale(locale: Locale) {
     if (!this.store) {
+      // tslint:disable-next-line:no-console
       console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
       throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
     }
