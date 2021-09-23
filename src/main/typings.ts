@@ -107,6 +107,11 @@ export type UMLCommunicationLink = UMLRelationship & {
   }[];
 };
 
+export type FeedbackCorrectionStatus = {
+  description?: string;
+  status: 'CORRECT' | 'INCORRECT' | 'NOT_VALIDATED';
+};
+
 export type Assessment = {
   modelElementId: string;
   elementType: UMLElementType | UMLRelationshipType;
@@ -115,6 +120,7 @@ export type Assessment = {
   dropInfo?: any;
   label?: string;
   labelColor?: string;
+  correctionStatus?: FeedbackCorrectionStatus;
 };
 
 export type ExportOptions = {

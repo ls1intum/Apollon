@@ -147,7 +147,7 @@ const ColorRow = ({ condition, title, open, onToggle, onColorChange, color, noDi
         <span>{title}</span>
         <Color color={color} selected={open} onClick={onToggle} />
       </Row>
-      <ColorSelector open={open} color={color} onColorChange={onColorChange} />
+      <ColorSelector open={open} color={color} onColorChange={onColorChange} key={title} />
       {!open && !noDivider ? <Divider /> : null}
     </>
   );

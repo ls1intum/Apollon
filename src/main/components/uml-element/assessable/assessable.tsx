@@ -7,7 +7,7 @@ import { IPath, Path } from '../../../utils/geometry/path';
 import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
-import { Container, CorrectIcon, FeedbackIcon, WrongIcon } from './assessment-styles';
+import { ICON_SIZE, Container, CorrectIcon, FeedbackIcon, Triangle, WarningIcon, WrongIcon } from './assessment-styles';
 import { findDOMNode } from 'react-dom';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
@@ -72,15 +72,31 @@ export const assessable = (
       const { assessment, assess, select, deselect, updateStart, bounds, path: ipath, readonly, ...props } = this.props;
 
       let position: Point;
+      let assessmentWarningPosition: Point;
       if (ipath) {
         const path = new Path(ipath);
         position = path.position(path.length / 2);
+        assessmentWarningPosition = path.position(path.length / 2 - ICON_SIZE * 2);
       } else {
         position = new Point(bounds.width, 0);
+        assessmentWarningPosition = new Point(position.x - ICON_SIZE * 2, position.y);
       }
 
       return (
         <WrappedComponent {...props}>
+          {assessment && assessment.correctionStatus && assessment.correctionStatus.status === 'INCORRECT' && (
+            <g
+              transform={`translate(${assessmentWarningPosition.x} ${assessmentWarningPosition.y})`}
+              pointerEvents={'none'}
+            >
+              <>
+                <Container />
+                <Triangle />
+                <WarningIcon />
+              </>
+            </g>
+          )}
+
           {assessment && (
             <g transform={`translate(${position.x} ${position.y})`} pointerEvents={'none'}>
               {assessment.score === 0 && !!assessment.feedback && (

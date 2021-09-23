@@ -6,14 +6,14 @@ exports[`test petri net arc update render 1`] = `
     <div>
       <section>
         <div
-          class="sc-dOSRxR hUjRLZ"
+          class="sc-cOajNj kfvdMC"
         >
           <input
-            class="sc-fodVek sc-fFucqa bZnAoF jKMQKQ"
+            class="sc-bkzYnD sc-idOiZg ectxYQ cdAWDg"
             value=""
           />
           <button
-            class="sc-kEjbQP sc-iqHYmW eyuTgc jqorvV"
+            class="sc-crrszt sc-dQoVA iBVwDV jQmibj"
             color="link"
             tabindex="-1"
           >
@@ -31,21 +31,21 @@ exports[`test petri net arc update render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-ezredP tTwEx"
+          class="sc-kLgnNl iKYKMN"
         />
       </section>
       <section>
         <div
-          class="sc-dOSRxR hUjRLZ"
+          class="sc-cOajNj kfvdMC"
         >
           <span
-            class="sc-iJuVqt dzXSzP"
+            class="sc-ezredP fRANUC"
             style="margin-right: 0.5em; min-width: 70px;"
           >
             Tokens
           </span>
           <input
-            class="sc-fodVek sc-fFucqa bZnAoF jKMQKQ"
+            class="sc-bkzYnD sc-idOiZg ectxYQ cdAWDg"
             style="min-width: 0;"
             type="number"
             value="0"
@@ -54,11 +54,11 @@ exports[`test petri net arc update render 1`] = `
       </section>
       <section>
         <div
-          class="sc-dOSRxR hUjRLZ"
+          class="sc-cOajNj kfvdMC"
           style="margin-top: 0.5em; align-items: center;"
         >
           <span
-            class="sc-iJuVqt dzXSzP"
+            class="sc-ezredP fRANUC"
             style="margin-right: 0.5em; min-width: 70px;"
           >
             Capacity
@@ -67,7 +67,7 @@ exports[`test petri net arc update render 1`] = `
             style="position: relative;"
           >
             <input
-              class="sc-fodVek sc-fFucqa bZnAoF jKMQKQ"
+              class="sc-bkzYnD sc-idOiZg ectxYQ cdAWDg"
               type="number"
               value="Infinity"
             />
@@ -90,7 +90,7 @@ exports[`test petri net arc update render 1`] = `
             </svg>
           </div>
           <button
-            class="sc-kEjbQP sc-iqHYmW eyuTgc jqorvV"
+            class="sc-crrszt sc-dQoVA iBVwDV jQmibj"
             color="link"
             tabindex="-1"
             type="reset"

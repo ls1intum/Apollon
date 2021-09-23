@@ -104,6 +104,7 @@ export class ModelState {
             feedback: val.feedback,
             label: val.label,
             labelColor: val.labelColor,
+            correctionStatus: val.correctionStatus,
           },
         }),
         {},
@@ -168,6 +169,7 @@ export class ModelState {
       feedback: state.assessments[id].feedback,
       label: state.assessments[id].label,
       labelColor: state.assessments[id].labelColor,
+      correctionStatus: state.assessments[id].correctionStatus,
     }));
 
     return {

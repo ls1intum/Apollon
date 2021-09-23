@@ -119,4 +119,43 @@ describe('test AssessmentSection', () => {
     expect(Object.keys(store.current!.state.store.getState().assessments)).toHaveLength(1);
     expect(store.current!.state.store.getState().assessments[elementToGiveFeedback.id].feedback).toEqual(feedback);
   });
+  it('it can be deleted', () => {
+    const store: RefObject<ModelStore> = createRef();
+    const elementToDelete = elements[0];
+    const { getByRole, getByPlaceholderText } = render(
+      <StoreProvider
+        ref={store}
+        initialState={{
+          elements: {
+            [elements[0].id]: { ...elements[0] },
+            [elements[1].id]: { ...elements[1] },
+            [elements[2].id]: { ...elements[2] },
+          },
+        }}
+      >
+        <I18nProvider locale={Locale.en}>
+          <Theme styles={undefined}>
+            <AssessmentSection element={elementToDelete} />
+          </Theme>
+        </I18nProvider>
+      </StoreProvider>,
+    );
+
+    // Trigger the creation of the new assessment.
+    const feedback = getByPlaceholderText('Feedback');
+    fireEvent.change(feedback, {
+      target: { value: 'text' },
+    });
+
+    // There should exist one assessment.
+    let state = store.current!.state.store.getState();
+    expect(Object.keys(state.assessments)).toHaveLength(1);
+
+    const deleteButton = getByRole('button');
+    deleteButton.click();
+
+    // Upon deletion the assessment has to be removed.
+    state = store.current!.state.store.getState();
+    expect(Object.keys(state.assessments)).toHaveLength(0);
+  });
 });

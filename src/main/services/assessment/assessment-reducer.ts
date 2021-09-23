@@ -14,6 +14,12 @@ export const AssessmentReducer: Reducer<AssessmentState, Actions> = (state = ini
         [payload.element]: payload.assessment,
       };
     }
+    case AssessmentActionTypes.DELETE: {
+      const { payload } = action;
+      const newState = { ...state };
+      delete newState[payload.element];
+      return newState;
+    }
     case UMLElementActionTypes.DELETE: {
       const { payload } = action;
       return Object.keys(state).reduce<AssessmentState>(

@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { CirclePicker } from 'react-color';
-import { ColorPickerContainer, Button } from './style-pane-styles';
+import React from 'react';
+import { Button } from './style-pane-styles';
 import styled from 'styled-components';
 
-type Props = { color?: string; onColorChange: (hex: string | undefined) => void; open: boolean };
+type Props = { color?: string; onColorChange: (hex: string | undefined) => void; open: boolean; key: string };
 
 const colors = [
   '#fc5c65',
@@ -53,7 +52,7 @@ const Color = styled.button.attrs<ColorProps>({})<ColorProps>`
   box-shadow: ${({ color, selected }: ColorProps) => (selected ? `0px 0px 10px ${color}` : 'none')};
 `;
 
-export function ColorSelector({ onColorChange, color, open }: Props) {
+export function ColorSelector({ onColorChange, color, open, key }: Props) {
   const handleColorChange = (newColor: any) => {
     onColorChange(newColor);
   };
@@ -68,10 +67,10 @@ export function ColorSelector({ onColorChange, color, open }: Props) {
     <>
       {open ? (
         <ColorContainer>
-          {/* <CirclePicker colors={colors} width="168px" onChangeComplete={handleColorChange} /> */}
           <Flex>
             {colors.map((colorOption) => (
               <Color
+                key={key}
                 color={colorOption}
                 onClick={() => handleColorChange(colorOption)}
                 selected={colorOption === color}

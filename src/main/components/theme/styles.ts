@@ -15,6 +15,7 @@ const unscaledDefaults = {
   color: {
     primary: '#2a8fbd',
     secondary: '#6c757d',
+    warningYellow: '#ffc800',
     white: '#fff',
     gray100: '#f8f9fa',
     gray200: '#e9ecef',
