@@ -94,7 +94,9 @@ class AssessmentSectionComponent extends Component<Props> {
               ''
             )}
           </Header>
-          {assessment?.dropInfo ? <AssessmentDropInfoTooltip assessment={assessment} element={element} /> : null}
+          {assessment?.dropInfo ? (
+            <AssessmentDropInfoTooltip assessment={assessment} element={element} readonly={readonly} />
+          ) : null}
         </section>
         <section>
           <Flex>
