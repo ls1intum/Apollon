@@ -15,6 +15,7 @@ import { IUMLElement } from '../../services/uml-element/uml-element';
 type OwnProps = {
   assessment: IAssessment | null;
   element: IUMLElement;
+  readonly: boolean;
 };
 
 type StateProps = {};
@@ -37,11 +38,15 @@ class AssessmentDropInfoTooltipComponent extends Component<Props, State> {
   state = initialState;
 
   render() {
-    const { assessment } = this.props;
+    const { assessment, readonly } = this.props;
     const message = assessment?.dropInfo.tooltipMessage;
     return (
       <div>
-        {this.state.showLinkIcon ? (
+        {readonly ? (
+          <Button color="link" tabIndex={-1} data-tip data-for="tooltip">
+            <LinkIcon />
+          </Button>
+        ) : this.state.showLinkIcon ? (
           <Button color="link" tabIndex={-1} data-tip data-for="tooltip" onClick={this.toggle}>
             <LinkIcon />
           </Button>
