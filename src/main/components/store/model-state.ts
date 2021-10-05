@@ -105,6 +105,7 @@ export class ModelState {
             label: val.label,
             labelColor: val.labelColor,
             correctionStatus: val.correctionStatus,
+            dropInfo: val.dropInfo,
           },
         }),
         {},
@@ -170,6 +171,7 @@ export class ModelState {
       label: state.assessments[id].label,
       labelColor: state.assessments[id].labelColor,
       correctionStatus: state.assessments[id].correctionStatus,
+      dropInfo: state.assessments[id].dropInfo,
     }));
 
     return {

@@ -167,10 +167,13 @@ export const assessable = (
           console.error('Could not parse artemis sgi', e);
           return;
         }
+        // TODO: following messages should be received from Artemis
+        const removeMessage = 'Do you want to remove the link to the assessment instruction?';
+        const tooltipMessage = 'Assessment Instruction: ' + instruction.instructionDescription;
         const { id: elementId, assessment } = this.props;
         const score = instruction.credits;
         const feedback = instruction.feedback;
-        const dropInfo = { instruction };
+        const dropInfo = { instruction, removeMessage, tooltipMessage };
         this.props.assess(elementId, { ...assessment, score, feedback, dropInfo }, 'DROPPED');
         this.props.updateStart(elementId);
       }
