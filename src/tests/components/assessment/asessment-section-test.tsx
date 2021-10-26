@@ -159,7 +159,7 @@ describe('test AssessmentSection', () => {
     state = store.current!.state.store.getState();
     expect(Object.keys(state.assessments)).toHaveLength(0);
   });
-  it('it should switch feedback placeholder', () => {
+  it('it should switch feedback placeholder when dropInfo is available', () => {
     const store: RefObject<ModelStore> = createRef();
     const elementToDelete = elements[0];
     const instruction = {
