@@ -25,7 +25,9 @@
   "assessment": {
     "assessment": "Bewertung für",
     "score": "Punkte",
-    "feedback": "Feedback"
+    "feedback": "Feedback",
+    "feedbackPlaceholder": "Du kannst hier Feedback abgeben...",
+    "additionalFeedbackPlaceholder": "Du kannst hier zusätzliches Feedback abgeben..."
   },
   "packages": {
     "ClassDiagram": {

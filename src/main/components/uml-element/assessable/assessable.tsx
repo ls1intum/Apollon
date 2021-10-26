@@ -170,11 +170,12 @@ export const assessable = (
         // TODO: following messages should be received from Artemis
         const removeMessage = 'Do you want to remove the link to the assessment instruction?';
         const tooltipMessage = 'Assessment Instruction: ' + instruction.instructionDescription;
+        const feedbackHint =
+          'This feedback is associated with the assessment instruction. You can provide additional feedback for this submission element. Student will see combined feedback during the review.';
         const { id: elementId, assessment } = this.props;
         const score = instruction.credits;
-        const feedback = instruction.feedback;
-        const dropInfo = { instruction, removeMessage, tooltipMessage };
-        this.props.assess(elementId, { ...assessment, score, feedback, dropInfo }, 'DROPPED');
+        const dropInfo = { instruction, removeMessage, tooltipMessage, feedbackHint };
+        this.props.assess(elementId, { ...assessment, score, dropInfo }, 'DROPPED');
         this.props.updateStart(elementId);
       }
     };

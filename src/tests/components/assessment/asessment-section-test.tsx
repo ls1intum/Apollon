@@ -9,6 +9,7 @@ import { Theme } from '../../../main/components/theme/theme';
 import { I18nProvider } from '../../../main/components/i18n/i18n-provider';
 import { ModelStore, StoreProvider } from '../../../main/components/store/model-store';
 import { Locale } from '../../../main';
+import { IAssessment } from '../../../main/services/assessment/assessment';
 
 describe('test AssessmentSection', () => {
   const elements: IUMLElement[] = [];
@@ -108,7 +109,7 @@ describe('test AssessmentSection', () => {
       </StoreProvider>,
     );
 
-    const sut = getByPlaceholderText('Feedback');
+    const sut = getByPlaceholderText('You can enter feedback here...');
     if (!sut) {
       throw Error('SUT could not be found');
     }
@@ -142,7 +143,7 @@ describe('test AssessmentSection', () => {
     );
 
     // Trigger the creation of the new assessment.
-    const feedback = getByPlaceholderText('Feedback');
+    const feedback = getByPlaceholderText('You can enter feedback here...');
     fireEvent.change(feedback, {
       target: { value: 'text' },
     });
@@ -157,5 +158,51 @@ describe('test AssessmentSection', () => {
     // Upon deletion the assessment has to be removed.
     state = store.current!.state.store.getState();
     expect(Object.keys(state.assessments)).toHaveLength(0);
+  });
+  it('it should switch feedback placeholder', () => {
+    const store: RefObject<ModelStore> = createRef();
+    const elementToDelete = elements[0];
+    const instruction = {
+      feedback: 'default feedback from instruction',
+    };
+    const dropInfo = {
+      instruction,
+      tooltipMessage: 'message',
+      removeMessage: 'remove message',
+      feedbackHint: 'feedback tooltip',
+    };
+    const assessment = {
+      score: 2,
+      feedback: 'feedback',
+      dropInfo,
+    } as IAssessment;
+    const { getByPlaceholderText, getByText } = render(
+      <StoreProvider
+        ref={store}
+        initialState={{
+          elements: {
+            [elements[0].id]: { ...elements[0] },
+            [elements[1].id]: { ...elements[1] },
+            [elements[2].id]: { ...elements[2] },
+          },
+          assessments: {
+            [elementToDelete.id]: assessment,
+          },
+        }}
+      >
+        <I18nProvider locale={Locale.en}>
+          <Theme styles={undefined}>
+            <AssessmentSection element={elementToDelete} />
+          </Theme>
+        </I18nProvider>
+      </StoreProvider>,
+    );
+
+    const icon = getByText('Feedback').nextSibling;
+    const helpButton = icon?.firstChild;
+    const additionalFeedbackPlaceholder = getByPlaceholderText('You can enter additional feedback here...');
+
+    expect(helpButton).not.toBeNull();
+    expect(additionalFeedbackPlaceholder).not.toBeNull();
   });
 });
