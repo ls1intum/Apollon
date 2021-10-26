@@ -121,7 +121,7 @@ class AssessmentSectionComponent extends Component<Props> {
             ) : null}
           </Flex>
         </section>
-        <span  style={{ display: 'inline' }}>{this.props.translate('assessment.feedback')}</span>
+        <span style={{ display: 'inline' }}>{this.props.translate('assessment.feedback')}</span>
         {assessment?.dropInfo && assessment?.dropInfo.instruction ? (
           <div style={{ display: 'inline' }}>
             <Button color="link" tabIndex={-1} data-tip data-for="tooltip-feedback-hint">
