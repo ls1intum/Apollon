@@ -70,7 +70,7 @@
     "@storybook/addon-links": "6.3.9",
     "@storybook/react": "6.3.9",
     "@testing-library/jest-dom": "5.14.1",
-    "@testing-library/react": "12.1.2",
+    "@testing-library/react": "12.1.0",
     "@types/chai": "4.2.22",
     "@types/jest": "27.0.2",
     "@types/react": "17.0.26",
