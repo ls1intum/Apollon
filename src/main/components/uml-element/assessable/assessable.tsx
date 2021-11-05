@@ -153,7 +153,7 @@ export const assessable = (
       ev.stopPropagation();
 
       if (!!ev.dataTransfer) {
-        const data: string = ev.dataTransfer.getData('artemis/sgi');
+        const data: string = ev.dataTransfer.getData('text/plain');
         if (!data) {
           // tslint:disable-next-line:no-console
           console.warn('Could not get artemis sgi element from drop element');
