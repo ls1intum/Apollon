@@ -9,6 +9,7 @@ import { FeedbackCorrectionStatus } from '../../typings';
 import { Divider } from '../controls/divider/divider';
 import { Textfield } from '../controls/textfield/textfield';
 import { TrashIcon } from '../../components/controls/icon/trash';
+import { HelpIcon } from '../../components/controls/icon/help';
 import { Button } from '../controls/button/button';
 import { Header } from '../controls/typography/typography';
 import { I18nContext } from '../i18n/i18n-context';
@@ -17,6 +18,7 @@ import { ModelState } from '../store/model-state';
 import { styled } from '../theme/styles';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AssessmentDropInfoTooltip } from './assessment-dropInfo-tooltip';
+import ReactTooltip from 'react-tooltip';
 
 const Flex = styled.div`
   display: flex;
@@ -119,13 +121,29 @@ class AssessmentSectionComponent extends Component<Props> {
             ) : null}
           </Flex>
         </section>
+        <span style={{ display: 'inline' }}>{this.props.translate('assessment.feedback')}</span>
+        {assessment?.dropInfo && assessment?.dropInfo.instruction ? (
+          <div style={{ display: 'inline' }}>
+            <Button color="link" tabIndex={-1} data-tip data-for="tooltip-feedback-hint">
+              <HelpIcon />
+            </Button>
+            <ReactTooltip id="tooltip-feedback-hint" place="right" effect="solid">
+              {assessment.dropInfo.feedbackHint}
+            </ReactTooltip>
+            {assessment.dropInfo.instruction.feedback}
+          </div>
+        ) : null}
         {readonly ? (
           assessment && assessment.feedback && <section>{assessment.feedback}</section>
         ) : (
           <section>
             <Textfield
               multiline
-              placeholder={this.props.translate('assessment.feedback')}
+              placeholder={
+                assessment?.dropInfo
+                  ? this.props.translate('assessment.additionalFeedbackPlaceholder')
+                  : this.props.translate('assessment.feedbackPlaceholder')
+              }
               onChange={this.updateFeedback}
               enterToSubmit={false}
               value={assessment && assessment.feedback ? assessment.feedback : ''}
@@ -170,7 +188,8 @@ class AssessmentSectionComponent extends Component<Props> {
   private updateFeedback = (value: string) => {
     const { element, assessment } = this.props;
     const feedback = value.length ? value : undefined;
-    this.props.assess(element.id, { score: 0, ...assessment, feedback });
+    const assessmentType = assessment?.dropInfo ? 'DROPPED' : 'MANUAL';
+    this.props.assess(element.id, { score: 0, ...assessment, feedback }, assessmentType);
   };
 
   private deleteFeedback = () => {
