@@ -46,8 +46,11 @@ class SidebarComponent extends Component<Props> {
   render() {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
 
+    /*
+     * The data-cy selector is added for the github.com/ls1intum/Artemis cypress e2e tests to find the object more easily
+     */
     return (
-      <Container scale={this.props.scale}>
+      <Container scale={this.props.scale} data-cy="modeling-editor-sidebar">
         {this.props.mode === ApollonMode.Exporting && (
           <Switch value={this.props.view} onChange={this.props.changeView} color="primary">
             <Switch.Item value={ApollonView.Modelling}>{this.props.translate('views.modelling')}</Switch.Item>
