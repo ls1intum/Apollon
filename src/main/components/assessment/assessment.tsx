@@ -65,7 +65,7 @@ class AssessmentComponent extends Component<Props, State> {
      * The data-cy selector is added for the github.com/ls1intum/Artemis cypress e2e tests to find the object more easily
      */
     return (
-      <div ref={this.container} data-cy="modeling-assessment-container">
+      <div ref={this.container} id="modeling-assessment-container">
         {elements.map((element) => (
           <AssessmentSection key={element.id} element={element} />
         ))}
