@@ -52,7 +52,7 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
     const { diagram, isStatic } = this.props;
 
     /*
-     * The data-cy selector is added for the github.com/ls1intum/Artemis cypress e2e tests to find the object more easily
+     * The id selector is added for the github.com/ls1intum/Artemis cypress e2e tests to find the object more easily
      */
     return (
       <Droppable>

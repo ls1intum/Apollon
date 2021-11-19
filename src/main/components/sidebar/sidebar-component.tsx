@@ -47,7 +47,7 @@ class SidebarComponent extends Component<Props> {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
 
     /*
-     * The data-cy selector is added for the github.com/ls1intum/Artemis cypress e2e tests to find the object more easily
+     * The id selector is added for the github.com/ls1intum/Artemis cypress e2e tests to find the object more easily
      */
     return (
       <Container scale={this.props.scale} id="modeling-editor-sidebar">
