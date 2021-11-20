@@ -19,6 +19,7 @@ export const UMLUseCaseAssociationComponent: SFC<Props> = ({ element }) => {
     `}
       />
       <Text
+        dy="20px"
         noX
         noY
         fill={element.textColor}
