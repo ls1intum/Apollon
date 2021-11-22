@@ -61,9 +61,6 @@ class AssessmentComponent extends Component<Props, State> {
   render() {
     const { elements } = this.state;
 
-    /*
-     * The id selector is added for the github.com/ls1intum/Artemis cypress e2e tests to find the object more easily
-     */
     return (
       <div ref={this.container} id="modeling-assessment-container">
         {elements.map((element) => (

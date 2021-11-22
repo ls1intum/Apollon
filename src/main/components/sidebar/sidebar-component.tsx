@@ -45,10 +45,6 @@ const enhance = compose<ComponentClass<OwnProps>>(
 class SidebarComponent extends Component<Props> {
   render() {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
-
-    /*
-     * The id selector is added for the github.com/ls1intum/Artemis cypress e2e tests to find the object more easily
-     */
     return (
       <Container scale={this.props.scale} id="modeling-editor-sidebar">
         {this.props.mode === ApollonMode.Exporting && (
