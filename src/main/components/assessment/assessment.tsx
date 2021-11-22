@@ -62,7 +62,7 @@ class AssessmentComponent extends Component<Props, State> {
     const { elements } = this.state;
 
     return (
-      <div ref={this.container}>
+      <div ref={this.container} id="modeling-assessment-container">
         {elements.map((element) => (
           <AssessmentSection key={element.id} element={element} />
         ))}

@@ -54,6 +54,7 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
     return (
       <Droppable>
         <CanvasContainer
+          id="modeling-editor-canvas"
           width={diagram.bounds.width}
           height={diagram.bounds.height}
           isStatic={isStatic}
