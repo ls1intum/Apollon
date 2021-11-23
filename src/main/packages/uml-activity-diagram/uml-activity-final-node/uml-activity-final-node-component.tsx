@@ -25,7 +25,13 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-export const UMLActivityFinalNodeC: FunctionComponent<Props> = ({ element, interactive, interactable, theme, scale }) => {
+export const UMLActivityFinalNodeC: FunctionComponent<Props> = ({
+  element,
+  interactive,
+  interactable,
+  theme,
+  scale,
+}) => {
   const fill = element.fillColor || 'black';
   return (
     <g>

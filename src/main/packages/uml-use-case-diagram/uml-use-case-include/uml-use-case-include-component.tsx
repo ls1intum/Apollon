@@ -3,7 +3,11 @@ import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLUseCaseInclude } from './uml-use-case-include';
 
-const Arrow: FunctionComponent<{ id: string; color?: string } & SVGProps<SVGPathElement>> = ({ id, color, ...props }) => (
+const Arrow: FunctionComponent<{ id: string; color?: string } & SVGProps<SVGPathElement>> = ({
+  id,
+  color,
+  ...props
+}) => (
   <g>
     <marker
       id={`marker-${id}`}
