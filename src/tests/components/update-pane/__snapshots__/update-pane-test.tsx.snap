@@ -563,8 +563,7 @@ exports[`test update pane render with element 1`] = `
 `;
 
 exports[`test update pane render with relationship 1`] = `
-<body>
-  .c10 {
+.c10 {
   height: 1em;
   vertical-align: middle;
   width: 1em;
@@ -923,7 +922,8 @@ exports[`test update pane render with relationship 1`] = `
   overflow: visible;
 }
 
-<div>
+<body>
+  <div>
     <div
       class="c0 apollon-editor"
     >
