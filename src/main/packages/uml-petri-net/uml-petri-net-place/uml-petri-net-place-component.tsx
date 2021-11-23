@@ -1,4 +1,4 @@
-import React, { FunctionComponent, SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { UMLPetriNetPlace } from './uml-petri-net-place';
 import { Point } from '../../../utils/geometry/point';
 import { Text } from '../../../components/controls/text/text';

@@ -1,7 +1,7 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { UMLObjectLink } from './uml-object-link';
 
-export const UMLObjectLinkComponent: SFC<Props> = ({ element }) => (
+export const UMLObjectLinkComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
     <polyline
       points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}

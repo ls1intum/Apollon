@@ -1,11 +1,11 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { Direction } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
 import { UMLCommunicationLink } from './uml-communication-link';
 import { ICommunicationLinkMessage } from './uml-communiction-link-message';
 import { UmlCommunicationLinkTextComponent } from './uml-communication-link-text-component';
-export const UMLCommunicationLinkComponent: SFC<Props> = ({ element }) => {
+export const UMLCommunicationLinkComponent: FunctionComponent<Props> = ({ element }) => {
   const sources: ICommunicationLinkMessage[] = element.messages.filter((message) => message.direction === 'source');
   const targets: ICommunicationLinkMessage[] = element.messages.filter((message) => message.direction === 'target');
 

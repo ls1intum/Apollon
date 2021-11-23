@@ -1,4 +1,4 @@
-import React, { ComponentType, SFC } from 'react';
+import React, { ComponentType, FunctionComponent } from 'react';
 import { UMLActivityInitialNode } from './uml-activity-initial-node';
 import { connect, ConnectedComponent } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
@@ -24,7 +24,7 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-const UMLActivityInitialNodeC: SFC<Props> = ({ element, interactive, interactable, theme }) => {
+const UMLActivityInitialNodeC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
   const fill = element.fillColor || 'black';
 
   return (

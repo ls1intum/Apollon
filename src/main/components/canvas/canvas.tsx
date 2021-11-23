@@ -5,8 +5,8 @@ import { IUMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { Point } from '../../utils/geometry/point';
 import { Droppable } from '../draggable/droppable';
 import { ModelState } from '../store/model-state';
-import { ConnectionPreview } from './../connectable/connection-preview';
-import { UMLElementComponent } from './../uml-element/uml-element-component';
+import { ConnectionPreview } from '../connectable/connection-preview';
+import { UMLElementComponent } from '../uml-element/uml-element-component';
 import { CanvasContainer } from './canvas-styles';
 
 type OwnProps = {};

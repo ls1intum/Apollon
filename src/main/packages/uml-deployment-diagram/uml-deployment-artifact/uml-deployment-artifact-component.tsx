@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLDeploymentArtifact } from './uml-deployment-artifact';
 
-export const UMLDeploymentArtifactComponent: SFC<Props> = ({ element, scale }) => (
+export const UMLDeploymentArtifactComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
     <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} />
     <Text y={28 * scale} dominantBaseline="auto" fill={element.textColor}>

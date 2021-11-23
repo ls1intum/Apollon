@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLDeploymentNode } from './uml-deployment-node';
 
-export const UMLDeploymentNodeComponent: SFC<Props> = ({ element, children, scale }) => (
+export const UMLDeploymentNodeComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
   <g>
     <g>
       <path

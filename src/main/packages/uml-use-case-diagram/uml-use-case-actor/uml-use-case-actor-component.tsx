@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLUseCaseActor } from './uml-use-case-actor';
 
-export const UMLUseCaseActorComponent: SFC<Props> = ({ element, scale }) => (
+export const UMLUseCaseActorComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
     <rect width="100%" height="100%" fill="none" />
     <g stroke={element.strokeColor || 'black'} strokeWidth={2}>

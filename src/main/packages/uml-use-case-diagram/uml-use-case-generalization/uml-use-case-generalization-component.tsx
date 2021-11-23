@@ -1,7 +1,7 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { UMLUseCaseGeneralization } from './uml-use-case-generalization';
 
-export const UMLUseCaseGeneralizationComponent: SFC<Props> = ({ element }) => (
+export const UMLUseCaseGeneralizationComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
     <marker
       id={`marker-${element.id}`}

@@ -1,9 +1,9 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLPetriNetArc } from './uml-petri-net-arc';
 
-export const UMLPetriNetArcComponent: SFC<Props> = ({ element }) => {
+export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) => {
   const [start, end] = element.path.map((p) => new Point(p.x, p.y));
   const line = end.subtract(start);
   const norm = line.normalize();

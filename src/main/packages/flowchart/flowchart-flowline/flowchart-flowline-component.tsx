@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { FlowchartFlowline } from './flowchart-flowline';
 
-export const FlowchartFlowlineComponent: SFC<Props> = ({ element }) => {
+export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
   const path = element.path.map((point) => new Point(point.x, point.y));

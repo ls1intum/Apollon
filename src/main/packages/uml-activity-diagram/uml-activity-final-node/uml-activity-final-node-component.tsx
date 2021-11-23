@@ -1,4 +1,4 @@
-import React, { ComponentType, SFC } from 'react';
+import React, { ComponentType, FunctionComponent } from 'react';
 import { UMLActivityFinalNode } from './uml-activity-final-node';
 import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { compose } from 'redux';
@@ -25,7 +25,7 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-export const UMLActivityFinalNodeC: SFC<Props> = ({ element, interactive, interactable, theme, scale }) => {
+export const UMLActivityFinalNodeC: FunctionComponent<Props> = ({ element, interactive, interactable, theme, scale }) => {
   const fill = element.fillColor || 'black';
   return (
     <g>

@@ -1,7 +1,7 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { UMLDependency } from './uml-component-dependency';
 
-export const UMLDependencyComponent: SFC<Props> = ({ element }) => (
+export const UMLDependencyComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
     <marker
       id={`marker-${element.id}`}

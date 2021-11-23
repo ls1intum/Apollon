@@ -1,11 +1,8 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { UMLDiagramType } from '../../packages/diagram-type';
-import { IUMLContainer, UMLContainer } from '../../services/uml-container/uml-container';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { I18nContext } from '../i18n/i18n-context';

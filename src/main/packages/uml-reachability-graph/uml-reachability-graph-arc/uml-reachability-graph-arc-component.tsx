@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { UMLReachabilityGraphArc } from './uml-reachability-graph-arc';
 
-export const UMLReachabilityGraphArcComponent: SFC<Props> = ({ element, scale }) => {
+export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ element, scale }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
   const path = element.path.map((point) => new Point(point.x, point.y));

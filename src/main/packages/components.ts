@@ -1,4 +1,4 @@
-import { FunctionComponent, SFC } from 'react';
+import { FunctionComponent } from 'react';
 import { UMLAssociationComponent } from './common/uml-association/uml-association-component';
 import { UMLClassifierComponent } from './common/uml-classifier/uml-classifier-component';
 import { UMLClassifierMemberComponent } from './common/uml-classifier/uml-classifier-member-component';
@@ -50,7 +50,7 @@ import { ColorLegendComponent } from './common/color-legend/color-legend-compone
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
     | FunctionComponent<{ element: any; scale: number }>
-    | ConnectedComponent<SFC<any>, { element: any; scale: number }>;
+    | ConnectedComponent<FunctionComponent<any>, { element: any; scale: number }>;
 } = {
   [UMLElementType.Package]: UMLClassPackageComponent,
   [UMLElementType.Class]: UMLClassifierComponent,

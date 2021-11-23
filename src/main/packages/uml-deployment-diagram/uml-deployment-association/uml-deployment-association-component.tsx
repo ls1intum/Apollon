@@ -1,9 +1,9 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLDeploymentAssociation } from './uml-deployment-association';
 
-export const UMLDeploymentAssociationComponent: SFC<Props> = ({ element }) => {
+export const UMLDeploymentAssociationComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
   const path = element.path.map((point) => new Point(point.x, point.y));

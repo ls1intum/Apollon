@@ -1,4 +1,4 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLInterfaceRequired } from './uml-interface-required';
@@ -37,7 +37,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
   };
 }, {});
 
-const UMLInterfaceRequiredC: SFC<Props> = (props: Props) => {
+const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
   const { element, hasOppositeRequiredInterface, scale } = props;
 
   // offset for last point in paragraph, so that line ends at marker

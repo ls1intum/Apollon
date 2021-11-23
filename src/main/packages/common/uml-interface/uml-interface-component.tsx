@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLInterface } from './uml-interface';
 
-export const UMLInterfaceComponent: SFC<Props> = ({ element, scale }) => (
+export const UMLInterfaceComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
     <circle
       cx={`${10 * scale}px`}

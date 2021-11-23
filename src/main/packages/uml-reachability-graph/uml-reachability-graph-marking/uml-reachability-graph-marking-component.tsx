@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking';
 import { Multiline } from '../../../utils/svg/multiline';
 
-export const UMLReachabilityGraphMarkingComponent: SFC<Props> = ({ element, scale }) => (
+export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
     <rect rx={10 * scale} ry={10 * scale} width="100%" height="100%" stroke={element.strokeColor || 'black'} />
     <Multiline

@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Multiline } from '../../../utils/svg/multiline';
 import { UMLActivityObjectNode } from './uml-activity-object-node';
 
-export const UMLActivityObjectNodeComponent: SFC<Props> = ({ element }) => (
+export const UMLActivityObjectNodeComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
     <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} />
     <Multiline

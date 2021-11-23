@@ -1,7 +1,7 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { SyntaxTreeLink } from './syntax-tree-link';
 
-export const SyntaxTreeLinkComponent: SFC<Props> = ({ element }) => {
+export const SyntaxTreeLinkComponent: FunctionComponent<Props> = ({ element }) => {
   return (
     <g>
       <polyline

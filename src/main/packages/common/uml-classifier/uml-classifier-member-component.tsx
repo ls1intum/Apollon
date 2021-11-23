@@ -1,4 +1,4 @@
-import React, { FunctionComponent, SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import { Text } from '../../../components/controls/text/text';
 import { ModelState } from '../../../components/store/model-state';

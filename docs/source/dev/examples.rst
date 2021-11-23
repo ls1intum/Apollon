@@ -37,7 +37,7 @@ The representation is the defined in the corresponding component class, in our e
 
 .. code-block:: typescript
 
-   export const UMLClassifierComponent: SFC<Props> = ({ element, children }) => (
+   export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, children }) => (
       <g>
         <rect width="100%" height={element.stereotype ? 50 : 40} />
         <rect

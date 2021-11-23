@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLClassifier } from './uml-classifier';
 
-export const UMLClassifierComponent: SFC<Props> = ({ element, scale, children }) => {
+export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scale, children }) => {
   return (
     <g>
       <rect width="100%" height={element.stereotype ? 50 * scale : 40 * scale} />

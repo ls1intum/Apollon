@@ -1,4 +1,4 @@
-import React, { ComponentType, SFC } from 'react';
+import React, { ComponentType, FunctionComponent } from 'react';
 import { UMLActivityForkNode } from './uml-activity-fork-node';
 import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { compose } from 'redux';
@@ -24,7 +24,7 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-const UMLActivityForkNodeC: SFC<Props> = ({ element, interactive, interactable, theme }) => {
+const UMLActivityForkNodeC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
   const fill = element.fillColor || 'black';
 
   return (

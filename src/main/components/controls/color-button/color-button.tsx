@@ -1,7 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { ModelState } from '../../store/model-state';
-import { styled } from '../../theme/styles';
 import { Button } from '../button/button';
 import { RollerIcon } from '../icon/roller';
 

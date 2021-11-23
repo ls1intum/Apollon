@@ -1,4 +1,4 @@
-import React, { FunctionComponent, SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLActivity } from './uml-activity';
 

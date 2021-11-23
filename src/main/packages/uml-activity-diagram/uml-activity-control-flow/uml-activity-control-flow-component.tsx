@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { UMLActivityControlFlow } from './uml-activity-control-flow';
 
-export const UMLActivityControlFlowComponent: SFC<Props> = ({ element }) => {
+export const UMLActivityControlFlowComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
   const path = element.path.map((point) => new Point(point.x, point.y));

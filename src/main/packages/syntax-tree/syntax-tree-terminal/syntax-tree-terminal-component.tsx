@@ -1,8 +1,8 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Multiline } from '../../../utils/svg/multiline';
 import { SyntaxTreeTerminal } from './syntax-tree-terminal';
 
-export const SyntaxTreeTerminalComponent: SFC<Props> = ({ element, scale }) => (
+export const SyntaxTreeTerminalComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
     <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} />
     <Multiline

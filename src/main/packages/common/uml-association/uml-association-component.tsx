@@ -1,4 +1,4 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
 import { ClassRelationshipType } from '../../uml-class-diagram';
@@ -117,7 +117,7 @@ export const getMarkerForTypeForUMLAssociation = (relationshipType: UMLRelations
   })(relationshipType);
 };
 
-export const UMLAssociationComponent: SFC<Props> = ({ element, scale }) => {
+export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, scale }) => {
   const marker = getMarkerForTypeForUMLAssociation(element.type);
 
   const stroke = ((type) => {

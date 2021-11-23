@@ -14,10 +14,6 @@ export const Container = styled.div`
   border: 1px solid lightgray;
 `;
 
-export const ColorContainer = styled.div`
-  position: relative;
-`;
-
 export const Color = styled.button.attrs<Props>({})<Props>`
   height: 28px;
   width: 28px;
@@ -59,33 +55,6 @@ export const Divider = styled.div`
   width: 100%;
   background: #353d47;
   height: 1px;
-`;
-
-export const ColorPickerContainer = styled.div`
-  position: absolute;
-  top: 40px;
-  right: -8px;
-  background-color: white;
-  z-index: 2;
-  border: 2px solid #353d47;
-  padding: 16px;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  &::after {
-    border-radius: 2px;
-    content: '';
-    position: absolute;
-    height: 16px;
-    width: 16px;
-    top: -9.5px;
-    right: 14px;
-    border: 2px solid #353d47;
-    border-left: none;
-    border-bottom: none;
-    transform: rotate(-45deg);
-    background-color: white;
-  }
 `;
 
 export const Button = styled.button`

@@ -1,9 +1,9 @@
-import React, { SFC, SVGProps } from 'react';
+import React, { FunctionComponent, SVGProps } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLUseCaseExtend } from './uml-use-case-extend';
 
-const Arrow: SFC<{ id: string; color?: string } & SVGProps<SVGPathElement>> = ({ id, color, ...props }) => (
+const Arrow: FunctionComponent<{ id: string; color?: string } & SVGProps<SVGPathElement>> = ({ id, color, ...props }) => (
   <g>
     <marker
       id={`marker-${id}`}
@@ -21,7 +21,7 @@ const Arrow: SFC<{ id: string; color?: string } & SVGProps<SVGPathElement>> = ({
   </g>
 );
 
-export const UMLUseCaseExtendComponent: SFC<Props> = ({ element }) => {
+export const UMLUseCaseExtendComponent: FunctionComponent<Props> = ({ element }) => {
   const [start, end] = element.path.map((p) => new Point(p.x, p.y));
   const line = end.subtract(start);
 

@@ -1,7 +1,7 @@
-import React, { SFC } from 'react';
+import React, { FunctionComponent } from 'react';
 import { UMLClassPackage } from './uml-class-package';
 
-export const UMLClassPackageComponent: SFC<Props> = ({ element, children, scale }) => (
+export const UMLClassPackageComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
   <g>
     <path style={{ transform: `scale(${scale})` }} d={`M 0 10 V 0 H 40 V 10`} stroke={element.strokeColor || 'black'} />
     <rect
