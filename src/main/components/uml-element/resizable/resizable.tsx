@@ -13,6 +13,10 @@ type DispatchProps = {
   start: AsyncDispatch<typeof UMLElementRepository.startResizing>;
   resize: AsyncDispatch<typeof UMLElementRepository.resize>;
   end: AsyncDispatch<typeof UMLElementRepository.endResizing>;
+  startMoving: AsyncDispatch<typeof UMLElementRepository.startMoving>;
+  move: AsyncDispatch<typeof UMLElementRepository.move>;
+  endMoving: AsyncDispatch<typeof UMLElementRepository.endMoving>;
+  
 };
 
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
@@ -20,6 +24,7 @@ type Props = UMLElementComponentProps & StateProps & DispatchProps;
 const initialState = {
   resizing: false,
   offset: new Point(),
+  position: new Point(),
 };
 
 type State = typeof initialState;
@@ -28,6 +33,9 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   start: UMLElementRepository.startResizing,
   resize: UMLElementRepository.resize,
   end: UMLElementRepository.endResizing,
+  startMoving: UMLElementRepository.startMoving,
+  move: UMLElementRepository.move,
+  endMoving: UMLElementRepository.endMoving,
 });
 
 const Handle = styled.rect.attrs({
@@ -36,7 +44,19 @@ const Handle = styled.rect.attrs({
   width: 15,
   height: 15,
   transform: 'translate(-10, -10)',
-  fill: 'none',
+  fill: 'red',
+})`
+  cursor: nwse-resize;
+  pointer-events: all;
+`;
+
+const Handle2 = styled.rect.attrs({
+  x: '0%',
+  y: '0%',
+  width: 15,
+  height: 15,
+  transform: 'translate(-10, -10)',
+  fill: 'red',
 })`
   cursor: nwse-resize;
   pointer-events: all;
@@ -56,22 +76,44 @@ export const resizable =
       }
 
       render() {
-        const { start, resize, end, ...props } = this.props;
+        const { start, resize, end, startMoving, move,endMoving, ...props } = this.props;
         return (
           <WrappedComponent {...props}>
             {props.children}
             <Handle onPointerDown={this.onPointerDown} />
+            <Handle2 onPointerDown={this.onPointerDown} />
           </WrappedComponent>
         );
       }
 
-      private resize = (width: number, height: number) => {
+      private updatePosition = (event: PointerEvent | TouchEvent) => {
+        let position: Point;
+        if (event instanceof PointerEvent) {
+          position = new Point(event.pageX + this.state.offset.x, event.pageY + this.state.offset.y);
+        } else {
+          position = new Point(
+            event.targetTouches[0].pageX - this.state.offset.x,
+            event.targetTouches[0].pageY - this.state.offset.y,
+          );
+        }
+        position.x = Math.round(position.x / 20) * 20;
+        position.y = Math.round(position.y / 20) * 20;
+      
+        this.props.startMoving();
+        this.props.move({x:position.x,y:position.y});
+        this.props.endMoving();
+        
+      };
+    
+
+      private resize = (width: number, height: number, event: PointerEvent) => {
         width = Math.round(width / 20) * 20;
         height = Math.round(height / 20) * 20;
         if (options && options.preventX) width = 0;
         if (options && options.preventY) height = 0;
         if (width === 0 && height === 0) return;
 
+        this.updatePosition(event);
         this.setState((state) => ({ offset: state.offset.add(width, height) }));
         this.props.resize({ width, height });
       };
@@ -81,7 +123,7 @@ export const resizable =
           return;
         }
 
-        this.setState({ resizing: true, offset: new Point(event.clientX, event.clientY) });
+        this.setState({ resizing: true, offset: new Point(-event.clientX, -event.clientY) });
         this.props.start();
         const element = event.currentTarget;
         element.setPointerCapture(event.pointerId);
@@ -90,9 +132,9 @@ export const resizable =
       };
 
       private onPointerMove = (event: PointerEvent) => {
-        const width = event.clientX - this.state.offset.x;
-        const height = event.clientY - this.state.offset.y;
-        this.resize(width, height);
+        const width = - event.clientX - this.state.offset.x;
+        const height = - event.clientY - this.state.offset.y;
+        this.resize(width, height, event);
         event.stopPropagation();
       };
 
@@ -101,6 +143,7 @@ export const resizable =
         if (!element) {
           return;
         }
+
 
         element.releasePointerCapture(event.pointerId);
         element.removeEventListener('pointermove', this.onPointerMove);
