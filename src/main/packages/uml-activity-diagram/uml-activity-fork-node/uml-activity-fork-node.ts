@@ -9,7 +9,7 @@ import { DeepPartial } from 'redux';
 
 export class UMLActivityForkNode extends UMLElement {
   static supportedRelationships = [ActivityRelationshipType.ActivityControlFlow];
-  static features: UMLElementFeatures = { ...UMLElement.features, updatable: false };
+  static features: UMLElementFeatures = { ...UMLElement.features, resizable:'HEIGHT', updatable: false };
   static defaultWidth = 20;
   static defaultHeight = 60;
 
