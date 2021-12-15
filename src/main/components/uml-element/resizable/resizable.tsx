@@ -124,8 +124,8 @@ export const resizable =
           position = new Point(event.pageX + this.state.offset.x, event.pageY + this.state.offset.y);
         } else {
           position = new Point(
-            event.targetTouches[0].pageX - this.state.offset.x,
-            event.targetTouches[0].pageY - this.state.offset.y,
+            event.targetTouches[0].pageX + this.state.offset.x,
+            event.targetTouches[0].pageY + this.state.offset.y,
           );
         }
         position.x = Math.round(position.x / 20) * 20;
@@ -144,8 +144,8 @@ export const resizable =
           position = new Point(0, -(-event.pageY - this.state.offset.y));
         } else {
           position = new Point(
-            event.targetTouches[0].pageX - this.state.offset.x,
-            event.targetTouches[0].pageY - this.state.offset.y,
+            0,
+            -(-event.targetTouches[0].pageY - this.state.offset.y),
           );
         }
         position.x = Math.round(position.x / 20) * 20;
@@ -166,8 +166,8 @@ export const resizable =
 
         } else {
           position = new Point(
-            event.targetTouches[0].pageX - this.state.offset.x,
-            event.targetTouches[0].pageY - this.state.offset.y,
+            -(-event.targetTouches[0].pageX - this.state.offset.x),
+            0,
           );
         }
         position.x = Math.round(position.x / 20) * 20;
