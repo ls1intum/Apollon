@@ -43,20 +43,24 @@ describe('test resizable', () => {
   it('resizing component triggers store actions', () => {
     const elementToSelect = elements[0];
     store = getMockedStore({ resizing: [elementToSelect.id] }, elements);
-    const triggerResizing = UMLElementRepository.resize({width:10, height:10})(store.dispatch, store.getState, undefined);
-    const expectedValue = [{"payload": {"delta": {"height": 10, "width": 10 }}, "type": "@@element/resizable/RESIZE", "undoable": false}];
+    const triggerResizing = UMLElementRepository.resize({ width: 10, height: 10 })(
+      store.dispatch,
+      store.getState,
+      undefined,
+    );
+    const expectedValue = [
+      { payload: { delta: { height: 10, width: 10 } }, type: '@@element/resizable/RESIZE', undoable: false },
+    ];
 
     const { container } = render(
       <Provider store={store}>
         <ResizableMockComponent id={elements[0].id} />
-      </Provider>,  
+      </Provider>,
     );
 
     const rut = container.firstChild;
     expect(rut).not.toBeNull();
     expect(store.getActions()).toHaveLength(1);
     expect(store.getActions()).toHaveLength(expectedValue.length);
-
   });
-
 });

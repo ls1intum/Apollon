@@ -16,7 +16,6 @@ type DispatchProps = {
   startMoving: AsyncDispatch<typeof UMLElementRepository.startMoving>;
   move: AsyncDispatch<typeof UMLElementRepository.move>;
   endMoving: AsyncDispatch<typeof UMLElementRepository.endMoving>;
-  
 };
 
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
@@ -106,7 +105,7 @@ export const resizable =
       }
 
       render() {
-        const { start, resize, end, startMoving, move,endMoving, ...props } = this.props;
+        const { start, resize, end, startMoving, move, endMoving, ...props } = this.props;
         return (
           <WrappedComponent {...props}>
             {props.children}
@@ -133,55 +132,43 @@ export const resizable =
         if (options && options.preventX) position.x = 0;
         if (options && options.preventY) position.y = 0;
         this.props.startMoving();
-        this.props.move({x:position.x,y:position.y});
+        this.props.move({ x: position.x, y: position.y });
         this.props.endMoving();
-        
       };
 
-      private updatePositionTopRight = (event: PointerEvent | TouchEvent) => {  
+      private updatePositionTopRight = (event: PointerEvent | TouchEvent) => {
         let position: Point;
         if (event instanceof PointerEvent) {
           position = new Point(0, -(-event.pageY - this.state.offset.y));
         } else {
-          position = new Point(
-            0,
-            -(-event.targetTouches[0].pageY - this.state.offset.y),
-          );
+          position = new Point(0, -(-event.targetTouches[0].pageY - this.state.offset.y));
         }
         position.x = Math.round(position.x / 20) * 20;
         position.y = Math.round(position.y / 20) * 20;
-      
+
         if (options && options.preventX) position.x = 0;
         if (options && options.preventY) position.y = 0;
         this.props.startMoving();
-        this.props.move({x:position.x,y:position.y});
+        this.props.move({ x: position.x, y: position.y });
         this.props.endMoving();
-        
       };
 
-      private updatePositionBottomLeft = (event: PointerEvent | TouchEvent) => {  
+      private updatePositionBottomLeft = (event: PointerEvent | TouchEvent) => {
         let position: Point;
         if (event instanceof PointerEvent) {
           position = new Point(-(-event.pageX - this.state.offset.x), 0);
-
         } else {
-          position = new Point(
-            -(-event.targetTouches[0].pageX - this.state.offset.x),
-            0,
-          );
+          position = new Point(-(-event.targetTouches[0].pageX - this.state.offset.x), 0);
         }
         position.x = Math.round(position.x / 20) * 20;
         position.y = Math.round(position.y / 20) * 20;
-      
+
         if (options && options.preventX) position.x = 0;
         if (options && options.preventY) position.y = 0;
         this.props.startMoving();
-        this.props.move({x:position.x,y:position.y});
+        this.props.move({ x: position.x, y: position.y });
         this.props.endMoving();
-        
       };
-
-    
 
       private resizeTopLeft = (width: number, height: number, event: PointerEvent) => {
         width = Math.round(width / 20) * 20;
@@ -205,7 +192,7 @@ export const resizable =
         this.setState((state) => ({ offset: state.offset.add(width, height) }));
         this.props.resize({ width, height });
       };
-      
+
       private resizeTopRight = (width: number, height: number, event: PointerEvent) => {
         width = Math.round(width / 20) * 20;
         height = Math.round(height / 20) * 20;
@@ -225,15 +212,10 @@ export const resizable =
         if (options && options.preventY) height = 0;
         if (width === 0 && height === 0) return;
 
-        this.updatePositionBottomLeft(event); 
+        this.updatePositionBottomLeft(event);
         this.setState((state) => ({ offset: state.offset.add(width, height) }));
         this.props.resize({ width, height });
       };
-
-
-      
-      
-      
 
       private onTopLeftPointerDown = (event: React.PointerEvent<SVGElement>) => {
         if (event.nativeEvent.which && event.nativeEvent.which !== 1) {
@@ -260,7 +242,7 @@ export const resizable =
         element.addEventListener('pointermove', this.onBottomRightPointerMove);
         element.addEventListener('pointerup', this.onBottomRightPointerUp, { once: true });
       };
-      
+
       private onTopRightPointerDown = (event: React.PointerEvent<SVGElement>) => {
         if (event.nativeEvent.which && event.nativeEvent.which !== 1) {
           return;
@@ -279,7 +261,7 @@ export const resizable =
           return;
         }
 
-        this.setState({ resizing: true, offset: new Point(-event.clientX, event.clientY) }); 
+        this.setState({ resizing: true, offset: new Point(-event.clientX, event.clientY) });
         this.props.start();
         const element = event.currentTarget;
         element.setPointerCapture(event.pointerId);
@@ -287,14 +269,9 @@ export const resizable =
         element.addEventListener('pointerup', this.onBottomLeftPointerUp, { once: true });
       };
 
-      
-
-      
-      
-
       private onTopLeftPointerMove = (event: PointerEvent) => {
-        const width = - event.clientX - this.state.offset.x;
-        const height = - event.clientY - this.state.offset.y;
+        const width = -event.clientX - this.state.offset.x;
+        const height = -event.clientY - this.state.offset.y;
         this.resizeTopLeft(width, height, event);
         event.stopPropagation();
       };
@@ -307,31 +284,24 @@ export const resizable =
       };
 
       private onTopRightPointerMove = (event: PointerEvent) => {
-        const width = (event.clientX - this.state.offset.x);
-        const height = (- event.clientY - this.state.offset.y);
+        const width = event.clientX - this.state.offset.x;
+        const height = -event.clientY - this.state.offset.y;
         this.resizeTopRight(width, height, event);
         event.stopPropagation();
       };
 
       private onBottomLeftPointerMove = (event: PointerEvent) => {
-        const width = (- event.clientX - this.state.offset.x); 
-        const height = (event.clientY - this.state.offset.y); 
+        const width = -event.clientX - this.state.offset.x;
+        const height = event.clientY - this.state.offset.y;
         this.resizeBottomLeft(width, height, event);
         event.stopPropagation();
       };
-
-      
-
-      
-
-      
 
       private onTopLeftPointerUp = (event: PointerEvent) => {
         const element = event.currentTarget as HTMLDivElement;
         if (!element) {
           return;
         }
-
 
         element.releasePointerCapture(event.pointerId);
         element.removeEventListener('pointermove', this.onTopLeftPointerMove);
@@ -378,12 +348,6 @@ export const resizable =
         this.props.end();
         event.stopPropagation();
       };
-
-      
-
-      
-
-      
     }
 
     return enhance(Resizable);
