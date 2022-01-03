@@ -19,6 +19,7 @@ export const UMLUseCaseAssociationComponent: FunctionComponent<Props> = ({ eleme
     `}
       />
       <Text
+        dy="20px"
         noX
         noY
         fill={element.textColor}

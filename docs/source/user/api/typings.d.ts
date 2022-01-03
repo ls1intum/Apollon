@@ -7,7 +7,8 @@ import { ApollonMode, Locale } from './services/editor/editor-types';
 import { Direction } from './services/uml-element/uml-element-port';
 import { IBoundary } from './utils/geometry/boundary';
 import { IPath } from './utils/geometry/path';
-export { Styles, UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
+export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
+export type { Styles };
 export declare type ApollonOptions = {
     type?: UMLDiagramType;
     mode?: ApollonMode;

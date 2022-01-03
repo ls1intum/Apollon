@@ -9,7 +9,7 @@ import { CommunicationElementType } from './uml-communication-diagram';
 import { UMLDiagramType } from './diagram-type';
 import { SyntaxTreeElementType } from './syntax-tree';
 import { FlowchartElementType } from './flowchart';
-import { ColorLegendElementType } from './common/color-legend/index';
+import { ColorLegendElementType } from './common/color-legend';
 import { ReachabilityGraphElementType } from './uml-reachability-graph';
 
 export type UMLElementType =

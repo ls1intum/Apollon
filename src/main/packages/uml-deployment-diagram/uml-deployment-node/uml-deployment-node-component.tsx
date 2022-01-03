@@ -29,7 +29,7 @@ export const UMLDeploymentNodeComponent: FunctionComponent<Props> = ({ element, 
           {`«${element.stereotype}»`}
         </tspan>
       )}
-      <tspan x="50%" dy={element.stereotype ? 18 * scale : 10 * scale} textAnchor="middle">
+      <tspan x="50%" dy={element.stereotype ? 18 * scale : 10 * scale} textDecoration="underline" textAnchor="middle">
         {element.name}
       </tspan>
     </Text>
