@@ -29,6 +29,7 @@ exports[`render the uml-petri-net-arc-component 1`] = `
         />
         <text
           dominant-baseline="middle"
+          dy="20px"
           font-weight="bold"
           pointer-events="none"
           text-anchor="middle"

@@ -34,6 +34,7 @@ export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) =
       />
       {displayMultiplicity && (
         <Text
+          dy="20px"
           noX
           noY
           fill={element.textColor}
