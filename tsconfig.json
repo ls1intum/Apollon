@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    "target": "es2021",
+    "module": "es2020",
     "moduleResolution": "node",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2021", "dom"],
     "jsx": "react",
     "outDir": "lib",
     "declaration": true,
     "strict": true,
+    "strictNullChecks": true,
     "skipLibCheck": true,
     "importHelpers": true,
     "esModuleInterop": true,
