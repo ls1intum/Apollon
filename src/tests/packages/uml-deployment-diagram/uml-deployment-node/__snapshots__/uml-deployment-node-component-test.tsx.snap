@@ -41,6 +41,7 @@ exports[`render the uml-deployment-node-component 1`] = `
           <tspan
             dy="18"
             text-anchor="middle"
+            text-decoration="underline"
             x="50%"
           >
             TestDeploymentComponent
