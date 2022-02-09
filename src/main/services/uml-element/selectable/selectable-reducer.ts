@@ -1,7 +1,7 @@
 import { Reducer } from 'redux';
-import { Actions } from '../../actions';
-import { UMLElementActionTypes } from '../uml-element-types';
-import { SelectableActionTypes, SelectableState } from './selectable-types';
+import { Actions } from '../../actions.js';
+import { UMLElementActionTypes } from '../uml-element-types.js';
+import { SelectableActionTypes, SelectableState } from './selectable-types.js';
 
 export const SelectableReducer: Reducer<SelectableState, Actions> = (state = [], action) => {
   switch (action.type) {

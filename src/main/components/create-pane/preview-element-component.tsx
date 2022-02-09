@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import { UMLElement } from '../../services/uml-element/uml-element';
-import { Draggable } from '../draggable/draggable';
-import { DropEvent } from '../draggable/drop-event';
-import { styled } from '../theme/styles';
-import { CanvasElement } from '../uml-element/canvas-element';
-import { hoverable } from '../uml-element/hoverable/hoverable';
+import { UMLElement } from '../../services/uml-element/uml-element.js';
+import { Draggable } from '../draggable/draggable.js';
+import { DropEvent } from '../draggable/drop-event.js';
+import { styled } from '../theme/styles.js';
+import { CanvasElement } from '../uml-element/canvas-element.js';
+import { hoverable } from '../uml-element/hoverable/hoverable.js';
 
 type Props = {
   element: UMLElement;

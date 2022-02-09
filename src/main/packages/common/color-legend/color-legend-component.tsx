@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Multiline } from '../../../utils/svg/multiline';
-import { ColorLegend } from './color-legend';
+import { Multiline } from '../../../utils/svg/multiline.js';
+import { ColorLegend } from './color-legend.js';
 
 export const ColorLegendComponent: FunctionComponent<Props> = ({ element }) => (
   <g>

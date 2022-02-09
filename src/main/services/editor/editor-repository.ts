@@ -1,4 +1,4 @@
-import { ApollonView, ChangeViewAction, EditorActionTypes } from './editor-types';
+import { ApollonView, ChangeViewAction, EditorActionTypes } from './editor-types.js';
 
 export class EditorRepository {
   static changeView = (view: ApollonView): ChangeViewAction => ({

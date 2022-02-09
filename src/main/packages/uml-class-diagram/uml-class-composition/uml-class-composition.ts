@@ -1,5 +1,5 @@
 import { ClassRelationshipType } from '..';
-import { UMLAssociation } from '../../common/uml-association/uml-association';
+import { UMLAssociation } from '../../common/uml-association/uml-association.js';
 
 export class UMLClassComposition extends UMLAssociation {
   type = ClassRelationshipType.ClassComposition;

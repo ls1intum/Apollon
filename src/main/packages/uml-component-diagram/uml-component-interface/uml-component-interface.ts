@@ -1,6 +1,6 @@
 import { ComponentElementType, ComponentRelationshipType } from '..';
-import { UMLElementType } from '../../uml-element-type';
-import { UMLInterface } from '../../common/uml-interface/uml-interface';
+import { UMLElementType } from '../../uml-element-type.js';
+import { UMLInterface } from '../../common/uml-interface/uml-interface.js';
 
 export class UMLComponentInterface extends UMLInterface {
   static supportedRelationships = [

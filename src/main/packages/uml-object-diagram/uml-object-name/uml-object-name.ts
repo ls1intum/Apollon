@@ -1,9 +1,9 @@
 import { ObjectElementType } from '..';
-import { UMLClassifier } from '../../common/uml-classifier/uml-classifier';
-import { UMLElementType } from '../../uml-element-type';
-import { IUMLElement } from '../../../services/uml-element/uml-element';
-import { UMLClassifierAttribute } from '../../common/uml-classifier/uml-classifier-attribute';
-import { UMLClassifierMethod } from '../../common/uml-classifier/uml-classifier-method';
+import { UMLClassifier } from '../../common/uml-classifier/uml-classifier.js';
+import { UMLElementType } from '../../uml-element-type.js';
+import { IUMLElement } from '../../../services/uml-element/uml-element.js';
+import { UMLClassifierAttribute } from '../../common/uml-classifier/uml-classifier-attribute.js';
+import { UMLClassifierMethod } from '../../common/uml-classifier/uml-classifier-method.js';
 
 export class UMLObjectName extends UMLClassifier {
   type: UMLElementType = ObjectElementType.ObjectName;

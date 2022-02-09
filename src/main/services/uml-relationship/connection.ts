@@ -1,7 +1,7 @@
-import { IBoundary } from '../../utils/geometry/boundary';
-import { IPoint, Point } from '../../utils/geometry/point';
-import { getPortsForElement, UMLElement } from '../uml-element/uml-element';
-import { Direction, IUMLElementPort } from '../uml-element/uml-element-port';
+import { IBoundary } from '../../utils/geometry/boundary.js';
+import { IPoint, Point } from '../../utils/geometry/point.js';
+import { getPortsForElement, UMLElement } from '../uml-element/uml-element.js';
+import { Direction, IUMLElementPort } from '../uml-element/uml-element-port.js';
 
 export interface Connection {
   source: IUMLElementPort;

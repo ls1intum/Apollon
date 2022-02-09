@@ -1,6 +1,6 @@
 import { UMLElementType } from '../../uml-element-type';
-import { DeploymentElementType, DeploymentRelationshipType } from '../index';
-import { UMLInterface } from '../../common/uml-interface/uml-interface';
+import { DeploymentElementType, DeploymentRelationshipType } from '../index.js';
+import { UMLInterface } from '../../common/uml-interface/uml-interface.js';
 
 export class UMLDeploymentInterface extends UMLInterface {
   static supportedRelationships = [

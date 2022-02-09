@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Multiline } from '../../../utils/svg/multiline';
-import { UMLActivityObjectNode } from './uml-activity-object-node';
+import { Multiline } from '../../../utils/svg/multiline.js';
+import { UMLActivityObjectNode } from './uml-activity-object-node.js';
 
 export const UMLActivityObjectNodeComponent: FunctionComponent<Props> = ({ element }) => (
   <g>

@@ -1,6 +1,6 @@
 import { Reducer } from 'redux';
-import { Actions } from '../../actions';
-import { MovingActionTypes, MovingState } from './moving-types';
+import { Actions } from '../../actions.js';
+import { MovingActionTypes, MovingState } from './moving-types.js';
 
 export const MovingReducer: Reducer<MovingState, Actions> = (state = {}, action) => {
   switch (action.type) {

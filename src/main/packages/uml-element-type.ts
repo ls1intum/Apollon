@@ -1,16 +1,16 @@
-import { ActivityElementType } from './uml-activity-diagram';
-import { ClassElementType } from './uml-class-diagram';
-import { ComponentElementType } from './uml-component-diagram';
-import { DeploymentElementType } from './uml-deployment-diagram';
-import { ObjectElementType } from './uml-object-diagram';
-import { UseCaseElementType } from './uml-use-case-diagram';
-import { PetriNetElementType } from './uml-petri-net';
-import { CommunicationElementType } from './uml-communication-diagram';
-import { UMLDiagramType } from './diagram-type';
-import { SyntaxTreeElementType } from './syntax-tree';
-import { FlowchartElementType } from './flowchart';
-import { ColorLegendElementType } from './common/color-legend';
-import { ReachabilityGraphElementType } from './uml-reachability-graph';
+import { ActivityElementType } from './uml-activity-diagram/index.js';
+import { ClassElementType } from './uml-class-diagram/index.js';
+import { ComponentElementType } from './uml-component-diagram/index.js';
+import { DeploymentElementType } from './uml-deployment-diagram/index.js';
+import { ObjectElementType } from './uml-object-diagram/index.js';
+import { UseCaseElementType } from './uml-use-case-diagram/index.js';
+import { PetriNetElementType } from './uml-petri-net/index.js';
+import { CommunicationElementType } from './uml-communication-diagram/index.js';
+import { UMLDiagramType } from './diagram-type.js';
+import { SyntaxTreeElementType } from './syntax-tree/index.js';
+import { FlowchartElementType } from './flowchart/index.js';
+import { ColorLegendElementType } from './common/color-legend/index.js';
+import { ReachabilityGraphElementType } from './uml-reachability-graph/index.js';
 
 export type UMLElementType =
   | keyof typeof ClassElementType

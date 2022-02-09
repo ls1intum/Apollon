@@ -1,14 +1,14 @@
 import React, { Component, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect, ConnectedComponent } from 'react-redux';
-import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../../utils/actions/actions';
-import { Point } from '../../../utils/geometry/point';
-import { ModelState } from '../../store/model-state';
-import { UMLElementComponentProps } from '../uml-element-component-props';
 import isMobile from 'is-mobile';
-import { getClientEventCoordinates } from '../../../utils/touch-event';
-import { debounce } from '../../../utils/debounce';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository.js';
+import { AsyncDispatch } from '../../../utils/actions/actions.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { ModelState } from '../../store/model-state.js';
+import { UMLElementComponentProps } from '../uml-element-component-props.js';
+import { getClientEventCoordinates } from '../../../utils/touch-event.js';
+import { debounce } from '../../../utils/debounce.js';
 
 type StateProps = {
   movable: boolean;

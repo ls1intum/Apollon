@@ -1,4 +1,4 @@
-import { styled } from '../../theme/styles';
+import { styled } from '../../theme/styles.js';
 
 export const Divider = styled.hr`
   border: 0;

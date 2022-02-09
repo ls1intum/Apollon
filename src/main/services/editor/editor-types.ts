@@ -1,5 +1,5 @@
-import { Action } from '../../utils/actions/actions';
-import { UMLElementFeatures } from '../uml-element/uml-element-features';
+import { Action } from '../../utils/actions/actions.js';
+import { UMLElementFeatures } from '../uml-element/uml-element-features.js';
 
 export enum Locale {
   en = 'en',

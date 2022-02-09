@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
-import { DraggableContext } from './draggable-context';
-import { DropEvent } from './drop-event';
-import { withDraggable } from './with-draggable';
+import { DraggableContext } from './draggable-context.js';
+import { DropEvent } from './drop-event.js';
+import { withDraggable } from './with-draggable.js';
 import isMobile from 'is-mobile';
-import { convertTouchEndIntoPointerUp } from '../../utils/touch-event';
+import { convertTouchEndIntoPointerUp } from '../../utils/touch-event.js';
 
 type Props = {
   onDrop?: (event: DropEvent) => void;

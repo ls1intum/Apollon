@@ -1,4 +1,4 @@
-import { Action } from '../../utils/actions/actions';
+import { Action } from '../../utils/actions/actions.js';
 
 export const enum UndoActionTypes {
   UNDO = '@@undo/UNDO',

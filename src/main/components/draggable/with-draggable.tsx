@@ -1,5 +1,5 @@
 import React, { ComponentType } from 'react';
-import { DraggableConsumer, DraggableContext } from './draggable-context';
+import { DraggableConsumer, DraggableContext } from './draggable-context.js';
 
 /**
  * used to add DraggableContext properties to component properties, i.e. {@link DraggableContext.onDragStart} and {@link DraggableContext.onDragEnd}

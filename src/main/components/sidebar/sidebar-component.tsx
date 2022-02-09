@@ -1,15 +1,15 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { EditorRepository } from '../../services/editor/editor-repository';
-import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
-import { Switch } from '../controls/switch/switch';
-import { CreatePane } from '../create-pane/create-pane';
-import { I18nContext } from '../i18n/i18n-context';
-import { localized } from '../i18n/localized';
-import { ModelState } from '../store/model-state';
-import { Container } from './sidebar-styles';
-import { SelectableState } from '../../services/uml-element/selectable/selectable-types';
+import { EditorRepository } from '../../services/editor/editor-repository.js';
+import { ApollonMode, ApollonView } from '../../services/editor/editor-types.js';
+import { Switch } from '../controls/switch/switch.js';
+import { CreatePane } from '../create-pane/create-pane.js';
+import { I18nContext } from '../i18n/i18n-context.js';
+import { localized } from '../i18n/localized.js';
+import { ModelState } from '../store/model-state.js';
+import { Container } from './sidebar-styles.js';
+import { SelectableState } from '../../services/uml-element/selectable/selectable-types.js';
 type OwnProps = {};
 
 type StateProps = {

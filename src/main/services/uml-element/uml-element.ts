@@ -1,16 +1,16 @@
 import { DeepPartial } from 'redux';
-import { UMLDiagramType } from '../../packages/diagram-type';
-import { UMLElementType } from '../../packages/uml-element-type';
-import { UMLRelationshipType } from '../../packages/uml-relationship-type';
-import * as Apollon from '../../typings';
-import { assign } from '../../utils/fx/assign';
-import { IBoundary } from '../../utils/geometry/boundary';
-import { Point } from '../../utils/geometry/point';
-import { uuid } from '../../utils/uuid';
-import { ILayer } from '../layouter/layer';
-import { ILayoutable } from '../layouter/layoutable';
-import { UMLElementFeatures } from './uml-element-features';
-import { Direction } from './uml-element-port';
+import { UMLDiagramType } from '../../packages/diagram-type.js';
+import { UMLElementType } from '../../packages/uml-element-type.js';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type.js';
+import * as Apollon from '../../typings.js';
+import { assign } from '../../utils/fx/assign.js';
+import { IBoundary } from '../../utils/geometry/boundary.js';
+import { Point } from '../../utils/geometry/point.js';
+import { uuid } from '../../utils/uuid.js';
+import { ILayer } from '../layouter/layer.js';
+import { ILayoutable } from '../layouter/layoutable.js';
+import { UMLElementFeatures } from './uml-element-features.js';
+import { Direction } from './uml-element-port.js';
 
 /** Interface of a `UMLElement` defining the properties persisted in the internal storage */
 export interface IUMLElement {

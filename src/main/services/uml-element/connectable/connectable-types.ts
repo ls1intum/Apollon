@@ -1,5 +1,5 @@
-import { Action } from '../../../utils/actions/actions';
-import { IUMLElementPort } from '../uml-element-port';
+import { Action } from '../../../utils/actions/actions.js';
+import { IUMLElementPort } from '../uml-element-port.js';
 
 export const enum ConnectableActionTypes {
   START = '@@element/connectable/START',

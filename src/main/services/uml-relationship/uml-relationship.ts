@@ -1,15 +1,15 @@
 import { DeepPartial } from 'redux';
-import { UMLRelationshipType } from '../../packages/uml-relationship-type';
-import * as Apollon from '../../typings';
-import { assign } from '../../utils/fx/assign';
-import { IPath } from '../../utils/geometry/path';
-import { ILayer } from '../layouter/layer';
-import { ILayoutable } from '../layouter/layoutable';
-import { IUMLElement, UMLElement } from '../uml-element/uml-element';
-import { Direction, IUMLElementPort } from '../uml-element/uml-element-port';
-import { Connection } from './connection';
-import { UMLRelationshipFeatures } from './uml-relationship-features';
-import { uuid } from '../../utils/uuid';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type.js';
+import * as Apollon from '../../typings.js';
+import { assign } from '../../utils/fx/assign.js';
+import { IPath } from '../../utils/geometry/path.js';
+import { ILayer } from '../layouter/layer.js';
+import { ILayoutable } from '../layouter/layoutable.js';
+import { IUMLElement, UMLElement } from '../uml-element/uml-element.js';
+import { Direction, IUMLElementPort } from '../uml-element/uml-element-port.js';
+import { Connection } from './connection.js';
+import { UMLRelationshipFeatures } from './uml-relationship-features.js';
+import { uuid } from '../../utils/uuid.js';
 
 export interface IUMLRelationship extends IUMLElement {
   type: UMLRelationshipType;

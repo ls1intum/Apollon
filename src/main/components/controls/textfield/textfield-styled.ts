@@ -1,6 +1,6 @@
-import { lighten } from '../../../utils/color';
-import { css, styled, Styles } from '../../theme/styles';
-import { defaultProps } from './textfield';
+import { lighten } from '../../../utils/color.js';
+import { css, styled, Styles } from '../../theme/styles.js';
+import { defaultProps } from './textfield.js';
 
 const FOCUS_BORDER_LIGHTEN = 25;
 

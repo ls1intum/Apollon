@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking';
-import { Multiline } from '../../../utils/svg/multiline';
+import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking.js';
+import { Multiline } from '../../../utils/svg/multiline.js';
 
 export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>

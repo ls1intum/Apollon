@@ -1,6 +1,6 @@
-import { Direction } from '../../services/uml-element/uml-element-port';
-import { IBoundary } from './boundary';
-import { Point } from './point';
+import { Direction } from '../../services/uml-element/uml-element-port.js';
+import { IBoundary } from './boundary.js';
+import { Point } from './point.js';
 
 export function position(
   bounds: IBoundary,

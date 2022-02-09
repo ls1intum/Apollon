@@ -1,10 +1,10 @@
 import React, { FunctionComponent } from 'react';
 import { connect } from 'react-redux';
-import { ModelState } from '../../../components/store/model-state';
-import { UMLInterfaceRequired } from './uml-interface-required';
-import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
-import { Point } from '../../../utils/geometry/point';
-import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
+import { ModelState } from '../../../components/store/model-state.js';
+import { UMLInterfaceRequired } from './uml-interface-required.js';
+import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants.js';
 
 type OwnProps = {
   element: UMLInterfaceRequired;

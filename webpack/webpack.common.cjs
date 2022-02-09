@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const ResolveTypeScriptPlugin = require("resolve-typescript-plugin");
 const appVersion = require('../package').version;
 
 const outputDir = path.resolve(__dirname, '../dist');
@@ -16,6 +17,7 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.ts', '.tsx'],
+    plugins: [new ResolveTypeScriptPlugin()],
   },
   performance: {
     hints: false,

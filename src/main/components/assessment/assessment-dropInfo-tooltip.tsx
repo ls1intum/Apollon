@@ -1,16 +1,16 @@
 import React, { Component, ComponentClass } from 'react';
-import { IAssessment } from '../../services/assessment/assessment';
-import { Button } from '../controls/button/button';
-import { LinkIcon } from '../controls/icon/link';
-import { TrashIcon } from '../controls/icon/trash';
-import { I18nContext } from '../i18n/i18n-context';
+import { IAssessment } from '../../services/assessment/assessment.js';
+import { Button } from '../controls/button/button.js';
+import { LinkIcon } from '../controls/icon/link.js';
+import { TrashIcon } from '../controls/icon/trash.js';
+import { I18nContext } from '../i18n/i18n-context.js';
 import ReactTooltip from 'react-tooltip';
-import { AssessmentRepository } from '../../services/assessment/assessment-repository';
+import { AssessmentRepository } from '../../services/assessment/assessment-repository.js';
 import { compose } from 'redux';
-import { localized } from '../i18n/localized';
+import { localized } from '../i18n/localized.js';
 import { connect } from 'react-redux';
-import { ModelState } from '../store/model-state';
-import { IUMLElement } from '../../services/uml-element/uml-element';
+import { ModelState } from '../store/model-state.js';
+import { IUMLElement } from '../../services/uml-element/uml-element.js';
 
 type OwnProps = {
   assessment: IAssessment | null;

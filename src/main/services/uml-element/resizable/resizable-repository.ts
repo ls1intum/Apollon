@@ -1,6 +1,6 @@
-import { AsyncAction } from '../../../utils/actions/actions';
-import { ResizableActionTypes, ResizeEndAction, ResizeStartAction } from './resizable-types';
-import { ResizeAction, ResizingActionTypes } from './resizing-types';
+import { AsyncAction } from '../../../utils/actions/actions.js';
+import { ResizableActionTypes, ResizeEndAction, ResizeStartAction } from './resizable-types.js';
+import { ResizeAction, ResizingActionTypes } from './resizing-types.js';
 
 export const Resizable = {
   startResizing:

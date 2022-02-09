@@ -1,12 +1,12 @@
-import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { DeploymentRelationshipType } from '../../uml-deployment-diagram';
-import { ComponentRelationshipType } from '../../uml-component-diagram';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
-import { ILayer } from '../../../services/layouter/layer';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
-import { Point } from '../../../utils/geometry/point';
-import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
+import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship.js';
+import { DeploymentRelationshipType } from '../../uml-deployment-diagram/index.js';
+import { ComponentRelationshipType } from '../../uml-component-diagram/index.js';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element.js';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants.js';
 
 export abstract class UMLInterfaceRequired extends UMLRelationship {
   static features = { ...UMLRelationship.features, variable: false };

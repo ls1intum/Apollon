@@ -1,16 +1,16 @@
 import { DeepPartial } from 'redux';
 import { CommunicationRelationshipType } from '..';
-import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import * as Apollon from '../../../typings';
-import { assign } from '../../../utils/fx/assign';
-import { CommunicationLinkMessage, ICommunicationLinkMessage } from './uml-communiction-link-message';
-import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary';
-import { ILayer } from '../../../services/layouter/layer';
-import { UMLElement } from '../../../services/uml-element/uml-element';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { Point } from '../../../utils/geometry/point';
-import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
-import { Text } from '../../../utils/svg/text';
+import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship.js';
+import * as Apollon from '../../../typings.js';
+import { assign } from '../../../utils/fx/assign.js';
+import { CommunicationLinkMessage, ICommunicationLinkMessage } from './uml-communiction-link-message.js';
+import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary.js';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { UMLElement } from '../../../services/uml-element/uml-element.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port.js';
+import { Text } from '../../../utils/svg/text.js';
 
 export interface IUMLCommunicationLink extends IUMLRelationship {
   messages: ICommunicationLinkMessage[];

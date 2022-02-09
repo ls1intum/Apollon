@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Point } from '../../../utils/geometry/point';
-import { UMLReachabilityGraphArc } from './uml-reachability-graph-arc';
+import { Point } from '../../../utils/geometry/point.js';
+import { UMLReachabilityGraphArc } from './uml-reachability-graph-arc.js';
 
 export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ element, scale }) => {
   let position = { x: 0, y: 0 };

@@ -1,8 +1,8 @@
-import { FlowchartDecision } from './flowchart-decision/flowchart-decision';
-import { FlowchartProcess } from './flowchart-process/flowchart-process';
+import { FlowchartDecision } from './flowchart-decision/flowchart-decision.js';
+import { FlowchartProcess } from './flowchart-process/flowchart-process.js';
 import { FlowchartTerminal } from './flowchart-terminal/flowchart-terminal';
-import { FlowchartInputOutput } from './flowchart-input-output/flowchart-input-output';
-import { FlowchartFunctionCall } from './flowchart-function-call/flowchart-function-call';
+import { FlowchartInputOutput } from './flowchart-input-output/flowchart-input-output.js';
+import { FlowchartFunctionCall } from './flowchart-function-call/flowchart-function-call.js';
 
 export const FlowchartElementType = {
   FlowchartTerminal: 'FlowchartTerminal',

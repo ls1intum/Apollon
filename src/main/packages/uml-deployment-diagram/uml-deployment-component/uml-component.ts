@@ -1,5 +1,5 @@
 import { DeploymentElementType, DeploymentRelationshipType } from '..';
-import { UMLComponent } from '../../common/uml-component/uml-component';
+import { UMLComponent } from '../../common/uml-component/uml-component.js';
 
 export class UMLDeploymentComponent extends UMLComponent {
   static supportedRelationships = [

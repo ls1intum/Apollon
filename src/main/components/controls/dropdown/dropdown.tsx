@@ -1,9 +1,9 @@
 import React, { Children, Component, createRef, ReactElement } from 'react';
-import { Color, Size } from '../../theme/styles';
-import { DropdownButton } from './dropdown-button';
-import { DropdownItem, Props as ItemProps } from './dropdown-item';
-import { DropdownMenu } from './dropdown-menu';
-import { DropdownItemProps, StyledDropdown, StyledDropdownItem } from './dropdown-styles';
+import { Color, Size } from '../../theme/styles.js';
+import { DropdownButton } from './dropdown-button.js';
+import { DropdownItem, Props as ItemProps } from './dropdown-item.js';
+import { DropdownMenu } from './dropdown-menu.js';
+import { DropdownItemProps, StyledDropdown, StyledDropdownItem } from './dropdown-styles.js';
 
 const defaultProps = Object.freeze({
   color: 'primary' as Color,

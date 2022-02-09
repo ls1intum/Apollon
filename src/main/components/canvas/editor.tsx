@@ -1,10 +1,10 @@
-import { styled } from '../theme/styles';
+import { styled } from '../theme/styles.js';
 import React, { Component, ComponentType, createRef, ReactNode } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
-import { ModelState } from '../store/model-state';
+import { ModelState } from '../store/model-state.js';
 import isMobile from 'is-mobile';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../utils/actions/actions';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { AsyncDispatch } from '../../utils/actions/actions.js';
 
 const grid = 10;
 const color1 = '#e5e5e5';

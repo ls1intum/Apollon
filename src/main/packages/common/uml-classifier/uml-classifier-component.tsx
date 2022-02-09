@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { UMLClassifier } from './uml-classifier';
+import { Text } from '../../../components/controls/text/text.js';
+import { UMLClassifier } from './uml-classifier.js';
 
 export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scale, children }) => {
   return (

@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { UMLDependency } from './uml-component-dependency';
+import { UMLDependency } from './uml-component-dependency.js';
 
 export const UMLDependencyComponent: FunctionComponent<Props> = ({ element }) => (
   <g>

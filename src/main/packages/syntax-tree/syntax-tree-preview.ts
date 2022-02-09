@@ -1,8 +1,8 @@
-import { ILayer } from '../../services/layouter/layer';
-import { IBoundary } from '../../utils/geometry/boundary';
-import { ComposePreview, PreviewElement } from '../compose-preview';
-import { SyntaxTreeTerminal } from './syntax-tree-terminal/syntax-tree-terminal';
-import { SyntaxTreeNonterminal } from './syntax-tree-nonterminal/syntax-tree-nonterminal';
+import { ILayer } from '../../services/layouter/layer.js';
+import { IBoundary } from '../../utils/geometry/boundary.js';
+import { ComposePreview, PreviewElement } from '../compose-preview.js';
+import { SyntaxTreeTerminal } from './syntax-tree-terminal/syntax-tree-terminal.js';
+import { SyntaxTreeNonterminal } from './syntax-tree-nonterminal/syntax-tree-nonterminal.js';
 
 export const composeSyntaxTreePreview: ComposePreview = (
   layer: ILayer,

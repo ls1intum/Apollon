@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
-import { DraggableContext } from './draggable-context';
-import { withDraggable } from './with-draggable';
+import { DraggableContext } from './draggable-context.js';
+import { withDraggable } from './with-draggable.js';
 
 type Props = {
   owner?: string;

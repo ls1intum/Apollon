@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { UMLInterfaceProvided } from './uml-interface-provided';
+import { UMLInterfaceProvided } from './uml-interface-provided.js';
 
 export const UMLInterfaceProvidedComponent: FunctionComponent<Props> = ({ element }) => (
   <g>

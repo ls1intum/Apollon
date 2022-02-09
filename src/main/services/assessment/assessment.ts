@@ -1,4 +1,4 @@
-import { FeedbackCorrectionStatus } from '../../typings';
+import { FeedbackCorrectionStatus } from '../../typings.js';
 
 export interface IAssessment {
   score: number;

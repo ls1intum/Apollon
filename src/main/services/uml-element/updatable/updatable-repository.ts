@@ -1,5 +1,5 @@
-import { AsyncAction } from '../../../utils/actions/actions';
-import { UpdatableActionTypes, UpdateEndAction, UpdateEndAllAction, UpdateStartAction } from './updatable-types';
+import { AsyncAction } from '../../../utils/actions/actions.js';
+import { UpdatableActionTypes, UpdateEndAction, UpdateEndAllAction, UpdateStartAction } from './updatable-types.js';
 
 export const Updatable = {
   updateStart:

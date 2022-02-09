@@ -1,15 +1,15 @@
 import React, { Component, ComponentType } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
-import { IUMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
-import { AsyncDispatch } from '../../../utils/actions/actions';
-import { IPath, Path } from '../../../utils/geometry/path';
-import { Point } from '../../../utils/geometry/point';
-import { ModelState } from '../../store/model-state';
-import { styled } from '../../theme/styles';
-import { UMLElementComponentProps } from '../uml-element-component-props';
 import isMobile from 'is-mobile';
-import { convertTouchEndIntoPointerUp, getClientEventCoordinates } from '../../../utils/touch-event';
+import { IUMLRelationship } from '../../../services/uml-relationship/uml-relationship.js';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository.js';
+import { AsyncDispatch } from '../../../utils/actions/actions.js';
+import { IPath, Path } from '../../../utils/geometry/path.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { ModelState } from '../../store/model-state.js';
+import { styled } from '../../theme/styles.js';
+import { UMLElementComponentProps } from '../uml-element-component-props.js';
+import { convertTouchEndIntoPointerUp, getClientEventCoordinates } from '../../../utils/touch-event.js';
 
 type StateProps = {
   path: IPath;

@@ -1,13 +1,13 @@
-import { UMLElementType } from '../../../packages/uml-element-type';
-import { UMLElements } from '../../../packages/uml-elements';
-import { UMLRelationships } from '../../../packages/uml-relationships';
-import { AsyncAction } from '../../../utils/actions/actions';
-import { filterRoots } from '../../../utils/geometry/tree';
-import { UMLRelationshipFeatures } from '../../uml-relationship/uml-relationship-features';
-import { UMLElementFeatures } from '../uml-element-features';
-import { MovableActionTypes, MoveEndAction, MoveStartAction } from './movable-types';
-import { MoveAction, MovingActionTypes } from './moving-types';
-import { UMLDiagramRepository } from '../../uml-diagram/uml-diagram-repository';
+import { UMLElementType } from '../../../packages/uml-element-type.js';
+import { UMLElements } from '../../../packages/uml-elements.js';
+import { UMLRelationships } from '../../../packages/uml-relationships.js';
+import { AsyncAction } from '../../../utils/actions/actions.js';
+import { filterRoots } from '../../../utils/geometry/tree.js';
+import { UMLRelationshipFeatures } from '../../uml-relationship/uml-relationship-features.js';
+import { UMLElementFeatures } from '../uml-element-features.js';
+import { MovableActionTypes, MoveEndAction, MoveStartAction } from './movable-types.js';
+import { MoveAction, MovingActionTypes } from './moving-types.js';
+import { UMLDiagramRepository } from '../../uml-diagram/uml-diagram-repository.js';
 
 // when moving an element, it is copied from the elements of the redux state and handled in the moving state separately
 // we do this, because it enables us to not do a full shallow copy of all elements in the state, when a pointer move event is triggered

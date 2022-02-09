@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { SyntaxTreeLink } from './syntax-tree-link';
+import { SyntaxTreeLink } from './syntax-tree-link.js';
 
 export const SyntaxTreeLinkComponent: FunctionComponent<Props> = ({ element }) => {
   return (

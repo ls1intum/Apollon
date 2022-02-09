@@ -1,4 +1,4 @@
-import { css } from '../components/theme/styles';
+import { css } from '../components/theme/styles.js';
 
 export const Style = css(
   (props) => `

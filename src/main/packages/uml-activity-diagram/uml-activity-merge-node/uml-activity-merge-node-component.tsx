@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Multiline } from '../../../utils/svg/multiline';
-import { UMLActivityMergeNode } from './uml-activity-merge-node';
+import { Multiline } from '../../../utils/svg/multiline.js';
+import { UMLActivityMergeNode } from './uml-activity-merge-node.js';
 
 export const UMLActivityMergeNodeComponent: FunctionComponent<Props> = ({ element }) => (
   <g>

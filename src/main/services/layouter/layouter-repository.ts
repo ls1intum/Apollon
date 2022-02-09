@@ -1,4 +1,4 @@
-import { LayoutAction, LayouterActionTypes } from './layouter-types';
+import { LayoutAction, LayouterActionTypes } from './layouter-types.js';
 
 export const LayouterRepository = {
   layout: (): LayoutAction => ({

@@ -1,10 +1,10 @@
-import { ILayer } from '../../services/layouter/layer';
-import { UMLElement } from '../../services/uml-element/uml-element';
-import { ComposePreview } from '../compose-preview';
-import { UMLDeploymentArtifact } from './uml-deployment-artifact/uml-deployment-artifact';
-import { UMLDeploymentNode } from './uml-deployment-node/uml-deployment-node';
-import { UMLDeploymentInterface } from './uml-deployment-interface/uml-component-interface';
-import { UMLDeploymentComponent } from './uml-deployment-component/uml-component';
+import { ILayer } from '../../services/layouter/layer.js';
+import { UMLElement } from '../../services/uml-element/uml-element.js';
+import { ComposePreview } from '../compose-preview.js';
+import { UMLDeploymentArtifact } from './uml-deployment-artifact/uml-deployment-artifact.js';
+import { UMLDeploymentNode } from './uml-deployment-node/uml-deployment-node.js';
+import { UMLDeploymentInterface } from './uml-deployment-interface/uml-component-interface.js';
+import { UMLDeploymentComponent } from './uml-deployment-component/uml-component.js';
 
 export const composeDeploymentPreview: ComposePreview = (
   layer: ILayer,

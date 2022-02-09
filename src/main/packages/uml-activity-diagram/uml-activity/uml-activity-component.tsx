@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { UMLActivity } from './uml-activity';
+import { Text } from '../../../components/controls/text/text.js';
+import { UMLActivity } from './uml-activity.js';
 
 export const UMLActivityComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
   <g>

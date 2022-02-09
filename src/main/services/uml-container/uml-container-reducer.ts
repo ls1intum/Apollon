@@ -1,11 +1,11 @@
 import { Reducer } from 'redux';
-import { Point } from '../../utils/geometry/point';
-import { notEmpty } from '../../utils/not-empty';
-import { Actions } from '../actions';
-import { UMLElementState } from '../uml-element/uml-element-types';
-import { IUMLContainer, UMLContainer } from './uml-container';
-import { UMLContainerActionTypes } from './uml-container-types';
-import { UMLElements } from '../../packages/uml-elements';
+import { Point } from '../../utils/geometry/point.js';
+import { notEmpty } from '../../utils/not-empty.js';
+import { Actions } from '../actions.js';
+import { UMLElementState } from '../uml-element/uml-element-types.js';
+import { IUMLContainer, UMLContainer } from './uml-container.js';
+import { UMLContainerActionTypes } from './uml-container-types.js';
+import { UMLElements } from '../../packages/uml-elements.js';
 import { UMLElementType } from '../..';
 
 export const UMLContainerReducer: Reducer<UMLElementState, Actions> = (state = {}, action) => {

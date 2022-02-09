@@ -1,12 +1,12 @@
 import { DeepPartial } from 'redux';
-import { Styles } from './components/theme/styles';
-import { UMLDiagramType } from './packages/diagram-type';
-import { UMLElementType } from './packages/uml-element-type';
-import { UMLRelationshipType } from './packages/uml-relationship-type';
-import { ApollonMode, Locale } from './services/editor/editor-types';
-import { Direction } from './services/uml-element/uml-element-port';
-import { IBoundary } from './utils/geometry/boundary';
-import { IPath } from './utils/geometry/path';
+import { Styles } from './components/theme/styles.js';
+import { UMLDiagramType } from './packages/diagram-type.js';
+import { UMLElementType } from './packages/uml-element-type.js';
+import { UMLRelationshipType } from './packages/uml-relationship-type.js';
+import { ApollonMode, Locale } from './services/editor/editor-types.js';
+import { Direction } from './services/uml-element/uml-element-port.js';
+import { IBoundary } from './utils/geometry/boundary.js';
+import { IPath } from './utils/geometry/path.js';
 
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };

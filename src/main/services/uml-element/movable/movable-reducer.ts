@@ -1,7 +1,7 @@
 import { Reducer } from 'redux';
-import { Actions } from '../../actions';
-import { UMLElementActionTypes } from '../uml-element-types';
-import { MovableActionTypes, MovableState } from './movable-types';
+import { Actions } from '../../actions.js';
+import { UMLElementActionTypes } from '../uml-element-types.js';
+import { MovableActionTypes, MovableState } from './movable-types.js';
 
 export const MovableReducer: Reducer<MovableState, Actions> = (state = [], action) => {
   switch (action.type) {

@@ -1,7 +1,7 @@
-import { ReachabilityGraphRelationshipType } from '..';
-import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { DeepPartial } from 'redux';
-import { UMLRelationshipCenteredDescription } from '../../../services/uml-relationship/uml-relationship-centered-description';
+import { ReachabilityGraphRelationshipType } from '..';
+import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship.js';
+import { UMLRelationshipCenteredDescription } from '../../../services/uml-relationship/uml-relationship-centered-description.js';
 
 export class UMLReachabilityGraphArc extends UMLRelationshipCenteredDescription {
   static features = { ...UMLRelationship.features };

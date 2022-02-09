@@ -1,7 +1,7 @@
-import { CheckIcon } from '../../controls/icon/check';
-import { ExclamationIcon } from '../../controls/icon/exclamation';
-import { TimesIcon } from '../../controls/icon/times';
-import { styled } from '../../theme/styles';
+import { CheckIcon } from '../../controls/icon/check.js';
+import { ExclamationIcon } from '../../controls/icon/exclamation.js';
+import { TimesIcon } from '../../controls/icon/times.js';
+import { styled } from '../../theme/styles.js';
 
 export const ICON_SIZE = 24;
 

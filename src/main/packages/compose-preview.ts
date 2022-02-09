@@ -1,6 +1,6 @@
-import { ILayer } from '../services/layouter/layer';
-import { UMLElement } from '../services/uml-element/uml-element';
 import { CSSProperties } from 'react';
+import { ILayer } from '../services/layouter/layer.js';
+import { UMLElement } from '../services/uml-element/uml-element.js';
 
 export type PreviewElement = UMLElement & { styles?: CSSProperties };
 

@@ -1,4 +1,4 @@
-import { ILayer } from './layer';
+import { ILayer } from './layer.js';
 
 export interface ILayoutable {
   /** Position and sizing of the `UMLElement` */

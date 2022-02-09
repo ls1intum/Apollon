@@ -1,9 +1,9 @@
 import { Reducer } from 'redux';
-import { Actions } from '../actions';
-import { UMLContainerActionTypes } from '../uml-container/uml-container-types';
-import { ResizingActionTypes } from '../uml-element/resizable/resizing-types';
-import { UMLDiagram } from './uml-diagram';
-import { UMLDiagramActionTypes, UMLDiagramState } from './uml-diagram-types';
+import { Actions } from '../actions.js';
+import { UMLContainerActionTypes } from '../uml-container/uml-container-types.js';
+import { ResizingActionTypes } from '../uml-element/resizable/resizing-types.js';
+import { UMLDiagram } from './uml-diagram.js';
+import { UMLDiagramActionTypes, UMLDiagramState } from './uml-diagram-types.js';
 
 export const UMLDiagramReducer: Reducer<UMLDiagramState, Actions> = (state = new UMLDiagram(), action) => {
   switch (action.type) {

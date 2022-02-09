@@ -1,6 +1,6 @@
 import { Reducer } from 'redux';
-import { Actions } from '../actions';
-import { CopyActionTypes, CopyState } from './copy-types';
+import { Actions } from '../actions.js';
+import { CopyActionTypes, CopyState } from './copy-types.js';
 
 /**
  * only uses for copy paste without clipboard

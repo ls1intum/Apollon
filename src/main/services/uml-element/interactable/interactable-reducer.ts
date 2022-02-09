@@ -1,7 +1,7 @@
 import { Reducer } from 'redux';
-import { Actions } from '../../actions';
-import { UMLElementActionTypes } from '../uml-element-types';
-import { InteractableActionTypes, InteractableState } from './interactable-types';
+import { Actions } from '../../actions.js';
+import { UMLElementActionTypes } from '../uml-element-types.js';
+import { InteractableActionTypes, InteractableState } from './interactable-types.js';
 
 export const InteractableReducer: Reducer<InteractableState, Actions> = (state = [], action) => {
   switch (action.type) {

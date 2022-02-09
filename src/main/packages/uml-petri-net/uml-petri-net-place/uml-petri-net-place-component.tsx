@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
-import { UMLPetriNetPlace } from './uml-petri-net-place';
-import { Point } from '../../../utils/geometry/point';
-import { Text } from '../../../components/controls/text/text';
+import { UMLPetriNetPlace } from './uml-petri-net-place.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { Text } from '../../../components/controls/text/text.js';
 
 const maxAmountCircles = 5;
 const tokenToBoundaryDistance = 5;

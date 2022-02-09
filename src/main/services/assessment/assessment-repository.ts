@@ -1,5 +1,5 @@
-import { IAssessment } from './assessment';
-import { AssessAction, AssessmentActionTypes, AssessmentState, DeleteAction } from './assessment-types';
+import { IAssessment } from './assessment.js';
+import { AssessAction, AssessmentActionTypes, AssessmentState, DeleteAction } from './assessment-types.js';
 
 export class AssessmentRepository {
   static assess = (element: string, assessment: IAssessment, assessmentType?: 'MANUAL' | 'DROPPED'): AssessAction => {

@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Multiline } from '../../../utils/svg/multiline';
-import { FlowchartElement } from '../index';
+import { Multiline } from '../../../utils/svg/multiline.js';
+import { FlowchartElement } from '../index.js';
 
 export const FlowchartComponent: FunctionComponent<Props> = ({ element, scale = 1.0, children }) => (
   <g>

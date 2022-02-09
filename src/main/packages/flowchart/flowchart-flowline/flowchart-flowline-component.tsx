@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Point } from '../../../utils/geometry/point';
-import { FlowchartFlowline } from './flowchart-flowline';
+import { Point } from '../../../utils/geometry/point.js';
+import { FlowchartFlowline } from './flowchart-flowline.js';
 
 export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };

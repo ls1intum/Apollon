@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { FlowchartComponent } from '../flowchart-element/flowchart-component';
-import { FlowchartFunctionCall } from './flowchart-function-call';
+import { FlowchartComponent } from '../flowchart-element/flowchart-component.js';
+import { FlowchartFunctionCall } from './flowchart-function-call.js';
 
 export const FlowchartFunctionCallComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <FlowchartComponent element={element} scale={scale}>

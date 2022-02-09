@@ -1,4 +1,4 @@
-import { HoverableActionTypes, HoverAction, LeaveAction } from './hoverable-types';
+import { HoverableActionTypes, HoverAction, LeaveAction } from './hoverable-types.js';
 
 export const Hoverable = {
   /** Hover elements */

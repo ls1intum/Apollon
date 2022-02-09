@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { ILayer } from '../../services/layouter/layer';
+import { ILayer } from '../../services/layouter/layer.js';
 
 export type CanvasContext = {
   canvas: ILayer;

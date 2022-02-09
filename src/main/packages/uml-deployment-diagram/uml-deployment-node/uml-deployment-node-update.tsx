@@ -1,16 +1,16 @@
 import React, { Component, ComponentType } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
-import { Button } from '../../../components/controls/button/button';
-import { ColorButton } from '../../../components/controls/color-button/color-button';
-import { Divider } from '../../../components/controls/divider/divider';
-import { TrashIcon } from '../../../components/controls/icon/trash';
-import { Textfield } from '../../../components/controls/textfield/textfield';
-import { ModelState } from '../../../components/store/model-state';
-import { StylePane } from '../../../components/style-pane/style-pane';
-import { styled } from '../../../components/theme/styles';
-import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../../utils/actions/actions';
-import { IUMLDeploymentNode, UMLDeploymentNode } from './uml-deployment-node';
+import { Button } from '../../../components/controls/button/button.js';
+import { ColorButton } from '../../../components/controls/color-button/color-button.js';
+import { Divider } from '../../../components/controls/divider/divider.js';
+import { TrashIcon } from '../../../components/controls/icon/trash.js';
+import { Textfield } from '../../../components/controls/textfield/textfield.js';
+import { ModelState } from '../../../components/store/model-state.js';
+import { StylePane } from '../../../components/style-pane/style-pane.js';
+import { styled } from '../../../components/theme/styles.js';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository.js';
+import { AsyncDispatch } from '../../../utils/actions/actions.js';
+import { IUMLDeploymentNode, UMLDeploymentNode } from './uml-deployment-node.js';
 
 const Flex = styled.div`
   display: flex;

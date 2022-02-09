@@ -11020,6 +11020,13 @@ resolve-from@^5.0.0:
   resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-5.0.0.tgz#c35225843df8f776df21c57557bc087e9dfdfc69"
   integrity sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==
 
+resolve-typescript-plugin@1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/resolve-typescript-plugin/-/resolve-typescript-plugin-1.1.5.tgz#f6a44b68573898d93c640e65a3369d429801331f"
+  integrity sha512-EpRRTcn2AjTD7jeJPxeBSPfbdNR2/O3HGR5sNub2IvBdGytguVh4gh0B2HHLx6wyYmaCUSlk91IwARbg/5q7zg==
+  dependencies:
+    tslib "2.3.1"
+
 resolve-url@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/resolve-url/-/resolve-url-0.2.1.tgz#2c637fe77c893afd2a663fe21aa9080068e2052a"

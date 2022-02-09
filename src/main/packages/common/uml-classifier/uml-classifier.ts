@@ -1,15 +1,15 @@
 import { DeepPartial } from 'redux';
-import { ILayer } from '../../../services/layouter/layer';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import * as Apollon from '../../../typings';
-import { assign } from '../../../utils/fx/assign';
-import { Text } from '../../../utils/svg/text';
-import { UMLElementType } from '../../uml-element-type';
-import { UMLClassifierAttribute } from './uml-classifier-attribute';
-import { UMLClassifierMethod } from './uml-classifier-method';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container.js';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element.js';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features.js';
+import * as Apollon from '../../../typings.js';
+import { assign } from '../../../utils/fx/assign.js';
+import { Text } from '../../../utils/svg/text.js';
+import { UMLElementType } from '../../uml-element-type.js';
+import { UMLClassifierAttribute } from './uml-classifier-attribute.js';
+import { UMLClassifierMethod } from './uml-classifier-method.js';
 
 export interface IUMLClassifier extends IUMLContainer {
   italic: boolean;

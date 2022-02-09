@@ -1,5 +1,5 @@
 import { ActivityElementType, ActivityRelationshipType } from '..';
-import { UMLPackage } from '../../common/uml-package/uml-package';
+import { UMLPackage } from '../../common/uml-package/uml-package.js';
 
 export class UMLActivity extends UMLPackage {
   static supportedRelationships = [ActivityRelationshipType.ActivityControlFlow];

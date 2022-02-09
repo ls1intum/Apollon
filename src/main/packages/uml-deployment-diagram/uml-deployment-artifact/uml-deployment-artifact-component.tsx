@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { UMLDeploymentArtifact } from './uml-deployment-artifact';
+import { Text } from '../../../components/controls/text/text.js';
+import { UMLDeploymentArtifact } from './uml-deployment-artifact.js';
 
 export const UMLDeploymentArtifactComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>

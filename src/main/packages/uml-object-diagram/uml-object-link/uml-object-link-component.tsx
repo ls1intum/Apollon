@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { UMLObjectLink } from './uml-object-link';
+import { UMLObjectLink } from './uml-object-link.js';
 
 export const UMLObjectLinkComponent: FunctionComponent<Props> = ({ element }) => (
   <g>

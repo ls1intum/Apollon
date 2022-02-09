@@ -1,10 +1,10 @@
 import { DeepPartial } from 'redux';
 import { DeploymentElementType, DeploymentRelationshipType } from '..';
-import { IUMLContainer } from '../../../services/uml-container/uml-container';
-import * as Apollon from '../../../typings';
-import { assign } from '../../../utils/fx/assign';
-import { UMLPackage } from '../../common/uml-package/uml-package';
-import { UMLElementType } from '../../uml-element-type';
+import { IUMLContainer } from '../../../services/uml-container/uml-container.js';
+import * as Apollon from '../../../typings.js';
+import { assign } from '../../../utils/fx/assign.js';
+import { UMLPackage } from '../../common/uml-package/uml-package.js';
+import { UMLElementType } from '../../uml-element-type.js';
 
 export interface IUMLDeploymentNode extends IUMLContainer {
   stereotype: string;

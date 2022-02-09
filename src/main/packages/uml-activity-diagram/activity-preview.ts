@@ -1,13 +1,13 @@
-import { ILayer } from '../../services/layouter/layer';
-import { UMLElement } from '../../services/uml-element/uml-element';
-import { ComposePreview } from '../compose-preview';
-import { UMLActivityActionNode } from './uml-activity-action-node/uml-activity-action-node';
-import { UMLActivityFinalNode } from './uml-activity-final-node/uml-activity-final-node';
-import { UMLActivityForkNode } from './uml-activity-fork-node/uml-activity-fork-node';
-import { UMLActivityInitialNode } from './uml-activity-initial-node/uml-activity-initial-node';
-import { UMLActivityMergeNode } from './uml-activity-merge-node/uml-activity-merge-node';
-import { UMLActivityObjectNode } from './uml-activity-object-node/uml-activity-object-node';
-import { UMLActivity } from './uml-activity/uml-activity';
+import { ILayer } from '../../services/layouter/layer.js';
+import { UMLElement } from '../../services/uml-element/uml-element.js';
+import { ComposePreview } from '../compose-preview.js';
+import { UMLActivityActionNode } from './uml-activity-action-node/uml-activity-action-node.js';
+import { UMLActivityFinalNode } from './uml-activity-final-node/uml-activity-final-node.js';
+import { UMLActivityForkNode } from './uml-activity-fork-node/uml-activity-fork-node.js';
+import { UMLActivityInitialNode } from './uml-activity-initial-node/uml-activity-initial-node.js';
+import { UMLActivityMergeNode } from './uml-activity-merge-node/uml-activity-merge-node.js';
+import { UMLActivityObjectNode } from './uml-activity-object-node/uml-activity-object-node.js';
+import { UMLActivity } from './uml-activity/uml-activity.js';
 
 export const composeActivityPreview: ComposePreview = (
   layer: ILayer,

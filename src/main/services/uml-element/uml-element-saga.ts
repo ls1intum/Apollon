@@ -1,12 +1,12 @@
 import { SagaIterator } from 'redux-saga';
 import { call, put, select, take } from 'redux-saga/effects';
-import { ModelState } from '../../components/store/model-state';
-import { isInternal, run } from '../../utils/actions/sagas';
-import { filterRoots } from '../../utils/geometry/tree';
-import { render } from '../layouter/layouter';
-import { DeselectAction, InteractableActionTypes } from './interactable/interactable-types';
-import { ResizeAction, ResizingActionTypes } from './resizable/resizing-types';
-import { UMLElementActionTypes, UpdateAction } from './uml-element-types';
+import { ModelState } from '../../components/store/model-state.js';
+import { isInternal, run } from '../../utils/actions/sagas.js';
+import { filterRoots } from '../../utils/geometry/tree.js';
+import { render } from '../layouter/layouter.js';
+import { DeselectAction, InteractableActionTypes } from './interactable/interactable-types.js';
+import { ResizeAction, ResizingActionTypes } from './resizable/resizing-types.js';
+import { UMLElementActionTypes, UpdateAction } from './uml-element-types.js';
 
 export function* UMLElementSaga() {
   yield run([makeInteractable, renderAfterUpdate, renderWhileResize]);

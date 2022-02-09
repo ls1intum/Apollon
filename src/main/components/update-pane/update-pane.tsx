@@ -2,22 +2,22 @@ import React, { Component, ComponentClass, ComponentType, createRef, RefObject }
 import { createPortal } from 'react-dom';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Popups } from '../../packages/popups';
-import { UMLElementType } from '../../packages/uml-element-type';
-import { ApollonMode } from '../../services/editor/editor-types';
-import { IUMLElement } from '../../services/uml-element/uml-element';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
-import { AsyncDispatch } from '../../utils/actions/actions';
-import { Path } from '../../utils/geometry/path';
-import { Point } from '../../utils/geometry/point';
-import { Assessment } from '../assessment/assessment';
-import { CanvasContext } from '../canvas/canvas-context';
-import { withCanvas } from '../canvas/with-canvas';
-import { Popover } from '../controls/popover/popover';
-import { ModelState } from '../store/model-state';
-import { withRoot } from '../root/with-root';
-import { RootContext } from '../root/root-context';
+import { Popups } from '../../packages/popups.js';
+import { UMLElementType } from '../../packages/uml-element-type.js';
+import { ApollonMode } from '../../services/editor/editor-types.js';
+import { IUMLElement } from '../../services/uml-element/uml-element.js';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { UMLRelationship } from '../../services/uml-relationship/uml-relationship.js';
+import { AsyncDispatch } from '../../utils/actions/actions.js';
+import { Path } from '../../utils/geometry/path.js';
+import { Point } from '../../utils/geometry/point.js';
+import { Assessment } from '../assessment/assessment.js';
+import { CanvasContext } from '../canvas/canvas-context.js';
+import { withCanvas } from '../canvas/with-canvas.js';
+import { Popover } from '../controls/popover/popover.js';
+import { ModelState } from '../store/model-state.js';
+import { withRoot } from '../root/with-root.js';
+import { RootContext } from '../root/root-context.js';
 
 type OwnProps = {};
 

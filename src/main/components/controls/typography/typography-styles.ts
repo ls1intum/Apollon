@@ -1,5 +1,5 @@
-import { css, styled } from '../../theme/styles';
-import { defaultProps } from './typography';
+import { css, styled } from '../../theme/styles.js';
+import { defaultProps } from './typography.js';
 
 type Props = {
   variant: 'header' | 'body';

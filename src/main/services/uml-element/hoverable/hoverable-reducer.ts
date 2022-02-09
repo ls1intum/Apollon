@@ -1,7 +1,7 @@
 import { Reducer } from 'redux';
-import { Actions } from '../../actions';
-import { UMLElementActionTypes } from '../uml-element-types';
-import { HoverableActionTypes, HoverableState } from './hoverable-types';
+import { Actions } from '../../actions.js';
+import { UMLElementActionTypes } from '../uml-element-types.js';
+import { HoverableActionTypes, HoverableState } from './hoverable-types.js';
 
 export const HoverableReducer: Reducer<HoverableState, Actions> = (state = [], action) => {
   switch (action.type) {

@@ -1,5 +1,5 @@
-import { PetriNetRelationshipType } from '../index';
-import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
+import { PetriNetRelationshipType } from '../index.js';
+import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship.js';
 import { DeepPartial } from 'redux';
 
 export class UMLPetriNetArc extends UMLRelationship {

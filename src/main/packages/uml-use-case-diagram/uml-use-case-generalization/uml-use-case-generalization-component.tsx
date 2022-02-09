@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { UMLUseCaseGeneralization } from './uml-use-case-generalization';
+import { UMLUseCaseGeneralization } from './uml-use-case-generalization.js';
 
 export const UMLUseCaseGeneralizationComponent: FunctionComponent<Props> = ({ element }) => (
   <g>

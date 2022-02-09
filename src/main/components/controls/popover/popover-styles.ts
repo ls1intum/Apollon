@@ -1,5 +1,5 @@
-import { css, styled } from '../../theme/styles';
-import { Props } from './popover';
+import { css, styled } from '../../theme/styles.js';
+import { Props } from './popover.js';
 
 export const PopoverContainer = styled.div<Props>`
   background-clip: padding-box;

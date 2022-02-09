@@ -1,5 +1,5 @@
-import { Action } from '../../../utils/actions/actions';
-import { UMLElementState } from '../uml-element-types';
+import { Action } from '../../../utils/actions/actions.js';
+import { UMLElementState } from '../uml-element-types.js';
 
 export const enum MovingActionTypes {
   MOVE = '@@element/movable/MOVE',

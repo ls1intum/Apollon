@@ -1,4 +1,4 @@
-import { ColorLegend } from './color-legend';
+import { ColorLegend } from './color-legend.js';
 
 export const ColorLegendElementType = {
   ColorLegend: 'ColorLegend',

@@ -1,14 +1,14 @@
 import React, { Component, ComponentClass, createRef, RefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { Point } from '../../utils/geometry/point';
-import { CanvasContext } from '../canvas/canvas-context';
-import { withCanvas } from '../canvas/with-canvas';
-import { DraggableContext, DraggableProvider } from './draggable-context';
-import { DropEvent } from './drop-event';
-import { Ghost } from './ghost';
+import { Point } from '../../utils/geometry/point.js';
+import { CanvasContext } from '../canvas/canvas-context.js';
+import { withCanvas } from '../canvas/with-canvas.js';
+import { DraggableContext, DraggableProvider } from './draggable-context.js';
+import { DropEvent } from './drop-event.js';
+import { Ghost } from './ghost.js';
 import { compose } from 'redux';
-import { withRoot } from '../root/with-root';
-import { RootContext } from '../root/root-context';
+import { withRoot } from '../root/with-root.js';
+import { RootContext } from '../root/root-context.js';
 import isMobile from 'is-mobile';
 
 type OwnProps = {};

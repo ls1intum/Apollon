@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { Point } from '../../../utils/geometry/point';
-import { UMLDeploymentAssociation } from './uml-deployment-association';
+import { Text } from '../../../components/controls/text/text.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { UMLDeploymentAssociation } from './uml-deployment-association.js';
 
 export const UMLDeploymentAssociationComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };

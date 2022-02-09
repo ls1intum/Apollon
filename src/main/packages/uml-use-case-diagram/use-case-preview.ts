@@ -1,9 +1,9 @@
-import { ILayer } from '../../services/layouter/layer';
-import { UMLElement } from '../../services/uml-element/uml-element';
-import { ComposePreview } from '../compose-preview';
-import { UMLUseCaseActor } from './uml-use-case-actor/uml-use-case-actor';
-import { UMLUseCaseSystem } from './uml-use-case-system/uml-use-case-system';
-import { UMLUseCase } from './uml-use-case/uml-use-case';
+import { ILayer } from '../../services/layouter/layer.js';
+import { UMLElement } from '../../services/uml-element/uml-element.js';
+import { ComposePreview } from '../compose-preview.js';
+import { UMLUseCaseActor } from './uml-use-case-actor/uml-use-case-actor.js';
+import { UMLUseCaseSystem } from './uml-use-case-system/uml-use-case-system.js';
+import { UMLUseCase } from './uml-use-case/uml-use-case.js';
 
 export const composeUseCasePreview: ComposePreview = (
   layer: ILayer,

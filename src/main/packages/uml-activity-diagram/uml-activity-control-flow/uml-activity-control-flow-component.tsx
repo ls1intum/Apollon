@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Point } from '../../../utils/geometry/point';
-import { UMLActivityControlFlow } from './uml-activity-control-flow';
+import { Point } from '../../../utils/geometry/point.js';
+import { UMLActivityControlFlow } from './uml-activity-control-flow.js';
 
 export const UMLActivityControlFlowComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import de from '../../i18n/de.json';
 import en from '../../i18n/en.json';
-import { Locale } from '../../services/editor/editor-types';
-import { I18nContext, I18nProvider as Provider } from './i18n-context';
+import { Locale } from '../../services/editor/editor-types.js';
+import { I18nContext, I18nProvider as Provider } from './i18n-context.js';
 
 const defaultLocale = Locale.en;
 

@@ -1,17 +1,17 @@
 import React, { Component, ComponentType } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
-import { IAssessment } from '../../../services/assessment/assessment';
-import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { IBoundary } from '../../../utils/geometry/boundary';
-import { IPath, Path } from '../../../utils/geometry/path';
-import { Point } from '../../../utils/geometry/point';
-import { ModelState } from '../../store/model-state';
-import { UMLElementComponentProps } from '../uml-element-component-props';
-import { ICON_SIZE, Container, CorrectIcon, FeedbackIcon, Triangle, WarningIcon, WrongIcon } from './assessment-styles';
 import { findDOMNode } from 'react-dom';
-import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../../utils/actions/actions';
-import { AssessmentRepository } from '../../../services/assessment/assessment-repository';
+import { IAssessment } from '../../../services/assessment/assessment.js';
+import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship.js';
+import { IBoundary } from '../../../utils/geometry/boundary.js';
+import { IPath, Path } from '../../../utils/geometry/path.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { ModelState } from '../../store/model-state.js';
+import { UMLElementComponentProps } from '../uml-element-component-props.js';
+import { ICON_SIZE, Container, CorrectIcon, FeedbackIcon, Triangle, WarningIcon, WrongIcon } from './assessment-styles.js';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository.js';
+import { AsyncDispatch } from '../../../utils/actions/actions.js';
+import { AssessmentRepository } from '../../../services/assessment/assessment-repository.js';
 
 type StateProps = {
   assessment?: IAssessment;

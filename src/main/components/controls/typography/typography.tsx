@@ -1,5 +1,5 @@
 import React, { HTMLAttributes } from 'react';
-import { Typography } from './typography-styles';
+import { Typography } from './typography-styles.js';
 
 export const defaultProps = {
   gutter: true,

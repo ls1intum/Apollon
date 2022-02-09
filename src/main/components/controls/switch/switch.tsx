@@ -1,7 +1,7 @@
 import React, { Children, Component, ReactElement } from 'react';
-import { Color, Size } from '../../theme/styles';
-import { Props as ItemProps, SwitchItem } from './switch-item';
-import { StyledSwitch, StyledSwitchItem, SwitchItemProps } from './switch-styles';
+import { Color, Size } from '../../theme/styles.js';
+import { Props as ItemProps, SwitchItem } from './switch-item.js';
+import { StyledSwitch, StyledSwitchItem, SwitchItemProps } from './switch-styles.js';
 
 const defaultProps = Object.freeze({
   color: 'primary' as Color,

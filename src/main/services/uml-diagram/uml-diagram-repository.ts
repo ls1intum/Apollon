@@ -1,8 +1,8 @@
-import { UMLDiagramType } from '../../packages/diagram-type';
-import { AsyncAction } from '../../utils/actions/actions';
-import { IUMLElement } from '../uml-element/uml-element';
-import { IUMLDiagram, UMLDiagram } from './uml-diagram';
-import { AppendRelationshipAction, ReorderElementsAction, UMLDiagramActionTypes } from './uml-diagram-types';
+import { UMLDiagramType } from '../../packages/diagram-type.js';
+import { AsyncAction } from '../../utils/actions/actions.js';
+import { IUMLElement } from '../uml-element/uml-element.js';
+import { IUMLDiagram, UMLDiagram } from './uml-diagram.js';
+import { AppendRelationshipAction, ReorderElementsAction, UMLDiagramActionTypes } from './uml-diagram-types.js';
 
 export const UMLDiagramRepository = {
   isUMLDiagram: (element: IUMLElement): element is IUMLDiagram => element.type in UMLDiagramType,

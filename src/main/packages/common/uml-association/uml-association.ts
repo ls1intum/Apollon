@@ -1,18 +1,18 @@
 import { DeepPartial } from 'redux';
-import { ILayer } from '../../../services/layouter/layer';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { UMLElement } from '../../../services/uml-element/uml-element';
-import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port';
-import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { assign } from '../../../utils/fx/assign';
-import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { UMLElement } from '../../../services/uml-element/uml-element.js';
+import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port.js';
+import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship.js';
+import { assign } from '../../../utils/fx/assign.js';
+import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary.js';
 import {
   computeTextPositionForUMLAssociation,
   getMarkerForTypeForUMLAssociation,
   layoutTextForUMLAssociation,
-} from './uml-association-component';
-import { Text } from '../../../utils/svg/text';
-import { Point } from '../../../utils/geometry/point';
+} from './uml-association-component.js';
+import { Text } from '../../../utils/svg/text.js';
+import { Point } from '../../../utils/geometry/point.js';
 
 export interface IUMLAssociation extends IUMLRelationship {
   source: IUMLElementPort & {

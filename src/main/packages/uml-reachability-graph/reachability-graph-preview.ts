@@ -1,7 +1,7 @@
-import { ILayer } from '../../services/layouter/layer';
-import { UMLElement } from '../../services/uml-element/uml-element';
-import { ComposePreview } from '../compose-preview';
-import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking/uml-reachability-graph-marking';
+import { ILayer } from '../../services/layouter/layer.js';
+import { UMLElement } from '../../services/uml-element/uml-element.js';
+import { ComposePreview } from '../compose-preview.js';
+import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking/uml-reachability-graph-marking.js';
 
 export const composeReachabilityGraphPreview: ComposePreview = (
   layer: ILayer,

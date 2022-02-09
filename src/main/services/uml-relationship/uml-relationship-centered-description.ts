@@ -1,14 +1,14 @@
-import { UMLRelationshipType } from '../../packages/uml-relationship-type';
-import { IPath } from '../../utils/geometry/path';
-import { ILayer } from '../layouter/layer';
-import { ILayoutable } from '../layouter/layoutable';
-import { IUMLElement, UMLElement } from '../uml-element/uml-element';
-import { IUMLElementPort } from '../uml-element/uml-element-port';
-import { Point } from '../../utils/geometry/point';
-import { Text } from '../../utils/svg/text';
-import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
-import { UMLRelationship } from './uml-relationship';
-import { DIAGRAM_MARGIN } from '../uml-diagram/uml-diagram';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type.js';
+import { IPath } from '../../utils/geometry/path.js';
+import { ILayer } from '../layouter/layer.js';
+import { ILayoutable } from '../layouter/layoutable.js';
+import { IUMLElement, UMLElement } from '../uml-element/uml-element.js';
+import { IUMLElementPort } from '../uml-element/uml-element-port.js';
+import { Point } from '../../utils/geometry/point.js';
+import { Text } from '../../utils/svg/text.js';
+import { computeBoundingBoxForElements } from '../../utils/geometry/boundary.js';
+import { UMLRelationship } from './uml-relationship.js';
+import { DIAGRAM_MARGIN } from '../uml-diagram/uml-diagram.js';
 
 export interface IUMLRelationship extends IUMLElement {
   type: UMLRelationshipType;

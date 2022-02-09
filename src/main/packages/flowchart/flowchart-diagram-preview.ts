@@ -1,11 +1,11 @@
-import { ILayer } from '../../services/layouter/layer';
-import { IBoundary } from '../../utils/geometry/boundary';
-import { ComposePreview, PreviewElement } from '../compose-preview';
-import { FlowchartDecision } from './flowchart-decision/flowchart-decision';
-import { FlowchartFunctionCall } from './flowchart-function-call/flowchart-function-call';
-import { FlowchartInputOutput } from './flowchart-input-output/flowchart-input-output';
-import { FlowchartProcess } from './flowchart-process/flowchart-process';
-import { FlowchartTerminal } from './flowchart-terminal/flowchart-terminal';
+import { ILayer } from '../../services/layouter/layer.js';
+import { IBoundary } from '../../utils/geometry/boundary.js';
+import { ComposePreview, PreviewElement } from '../compose-preview.js';
+import { FlowchartDecision } from './flowchart-decision/flowchart-decision.js';
+import { FlowchartFunctionCall } from './flowchart-function-call/flowchart-function-call.js';
+import { FlowchartInputOutput } from './flowchart-input-output/flowchart-input-output.js';
+import { FlowchartProcess } from './flowchart-process/flowchart-process.js';
+import { FlowchartTerminal } from './flowchart-terminal/flowchart-terminal.js';
 
 export const composeFlowchartPreview: ComposePreview = (
   layer: ILayer,

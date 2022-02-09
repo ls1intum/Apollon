@@ -1,8 +1,8 @@
-import { ILayer } from '../../../services/layouter/layer';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { UMLContainer } from '../../../services/uml-container/uml-container';
-import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary';
-import { Text } from '../../../utils/svg/text';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { UMLContainer } from '../../../services/uml-container/uml-container.js';
+import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary.js';
+import { Text } from '../../../utils/svg/text.js';
 
 export abstract class UMLPackage extends UMLContainer {
   render(layer: ILayer, children: ILayoutable[] = [], calculateWithoutChildren?: boolean): ILayoutable[] {

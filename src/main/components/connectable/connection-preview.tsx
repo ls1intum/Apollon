@@ -1,16 +1,16 @@
 import React, { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { IUMLElementPort } from '../../services/uml-element/uml-element-port';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
-import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
-import { AsyncDispatch } from '../../utils/actions/actions';
-import { Point } from '../../utils/geometry/point';
-import { CanvasContext } from '../canvas/canvas-context';
-import { withCanvas } from '../canvas/with-canvas';
-import { ModelState } from '../store/model-state';
-import { UMLRelationshipPreview } from './uml-relationship-preview';
+import { IUMLElementPort } from '../../services/uml-element/uml-element-port.js';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship.js';
+import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository.js';
+import { AsyncDispatch } from '../../utils/actions/actions.js';
+import { Point } from '../../utils/geometry/point.js';
+import { CanvasContext } from '../canvas/canvas-context.js';
+import { withCanvas } from '../canvas/with-canvas.js';
+import { ModelState } from '../store/model-state.js';
+import { UMLRelationshipPreview } from './uml-relationship-preview.js';
 import isMobile from 'is-mobile';
 
 type OwnProps = {};

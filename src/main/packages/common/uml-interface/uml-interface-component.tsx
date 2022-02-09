@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { UMLInterface } from './uml-interface';
+import { Text } from '../../../components/controls/text/text.js';
+import { UMLInterface } from './uml-interface.js';
 
 export const UMLInterfaceComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>

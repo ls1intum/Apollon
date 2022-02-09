@@ -1,12 +1,12 @@
 import { DeepPartial } from 'redux';
-import { UMLDiagramType } from '../../packages/diagram-type';
-import { UMLElementType } from '../../packages/uml-element-type';
-import * as Apollon from '../../typings';
-import { assign } from '../../utils/fx/assign';
-import { ILayer } from '../layouter/layer';
-import { ILayoutable } from '../layouter/layoutable';
-import { IUMLElement, UMLElement } from '../uml-element/uml-element';
-import { UMLElementFeatures } from '../uml-element/uml-element-features';
+import { UMLDiagramType } from '../../packages/diagram-type.js';
+import { UMLElementType } from '../../packages/uml-element-type.js';
+import * as Apollon from '../../typings.js';
+import { assign } from '../../utils/fx/assign.js';
+import { ILayer } from '../layouter/layer.js';
+import { ILayoutable } from '../layouter/layoutable.js';
+import { IUMLElement, UMLElement } from '../uml-element/uml-element.js';
+import { UMLElementFeatures } from '../uml-element/uml-element-features.js';
 
 export interface IUMLContainer extends IUMLElement {
   type: UMLElementType | UMLDiagramType;

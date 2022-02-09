@@ -1,11 +1,11 @@
 import React, { Component, ComponentType, createRef, RefObject } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
-import { IUMLElement } from '../../services/uml-element/uml-element';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { AsyncAction, AsyncDispatch } from '../../utils/actions/actions';
-import { Button } from '../controls/button/button';
-import { ModelState } from '../store/model-state';
-import { AssessmentSection } from './assessment-section';
+import { IUMLElement } from '../../services/uml-element/uml-element.js';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { AsyncAction, AsyncDispatch } from '../../utils/actions/actions.js';
+import { Button } from '../controls/button/button.js';
+import { ModelState } from '../store/model-state.js';
+import { AssessmentSection } from './assessment-section.js';
 
 type OwnProps = {
   element: IUMLElement;

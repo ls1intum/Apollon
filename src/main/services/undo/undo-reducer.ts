@@ -1,9 +1,9 @@
 import { Reducer } from 'redux';
-import { ModelState } from '../../components/store/model-state';
-import { Action } from '../../utils/actions/actions';
-import { isInternal } from '../../utils/actions/sagas';
-import { Actions } from '../actions';
-import { UndoActionTypes } from './undo-types';
+import { ModelState } from '../../components/store/model-state.js';
+import { Action } from '../../utils/actions/actions.js';
+import { isInternal } from '../../utils/actions/sagas.js';
+import { Actions } from '../actions.js';
+import { UndoActionTypes } from './undo-types.js';
 
 const MAX_UNDO_STACK_SIZE = 25;
 

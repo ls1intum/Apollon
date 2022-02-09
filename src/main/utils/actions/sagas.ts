@@ -1,7 +1,7 @@
 import { SAGA_ACTION } from '@redux-saga/symbols';
 import { Saga, SagaIterator } from 'redux-saga';
 import { all, call, Effect, spawn } from 'redux-saga/effects';
-import { Action } from './actions';
+import { Action } from './actions.js';
 
 export const isInternal = <T extends Action>(action: T): boolean => {
   return SAGA_ACTION in action;

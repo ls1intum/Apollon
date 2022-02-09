@@ -1,4 +1,4 @@
-import { DeselectAction, InteractableActionTypes, SelectAction } from './interactable-types';
+import { DeselectAction, InteractableActionTypes, SelectAction } from './interactable-types.js';
 
 export const Interactable = {
   makeInteractive: (id: string): SelectAction => ({

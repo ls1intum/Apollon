@@ -1,12 +1,12 @@
-import { UMLElementType } from '../../packages/uml-element-type';
-import { UMLElements } from '../../packages/uml-elements';
-import { AsyncAction } from '../../utils/actions/actions';
-import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
-import { AppendRelationshipAction, UMLDiagramActionTypes } from '../uml-diagram/uml-diagram-types';
-import { IUMLElement, UMLElement } from '../uml-element/uml-element';
-import { UMLRelationship } from '../uml-relationship/uml-relationship';
-import { UMLContainer } from './uml-container';
-import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
+import { UMLElementType } from '../../packages/uml-element-type.js';
+import { UMLElements } from '../../packages/uml-elements.js';
+import { AsyncAction } from '../../utils/actions/actions.js';
+import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository.js';
+import { AppendRelationshipAction, UMLDiagramActionTypes } from '../uml-diagram/uml-diagram-types.js';
+import { IUMLElement, UMLElement } from '../uml-element/uml-element.js';
+import { UMLRelationship } from '../uml-relationship/uml-relationship.js';
+import { UMLContainer } from './uml-container.js';
+import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types.js';
 
 export const UMLContainerRepository = {
   get: (element?: IUMLElement): UMLContainer | null => {

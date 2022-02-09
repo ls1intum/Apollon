@@ -1,16 +1,16 @@
 import { SagaIterator } from 'redux-saga';
 import { call, delay, getContext, put, race, select, take } from 'redux-saga/effects';
-import { ModelState } from '../../components/store/model-state';
-import { UMLElementType } from '../../packages/uml-element-type';
-import { UMLElements } from '../../packages/uml-elements';
-import { run } from '../../utils/actions/sagas';
-import { ILayer } from '../layouter/layer';
-import { render } from '../layouter/layouter';
-import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types';
-import { UMLElementState } from '../uml-element/uml-element-types';
-import { UMLContainer } from './uml-container';
-import { UMLContainerRepository } from './uml-container-repository';
-import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types';
+import { ModelState } from '../../components/store/model-state.js';
+import { UMLElementType } from '../../packages/uml-element-type.js';
+import { UMLElements } from '../../packages/uml-elements.js';
+import { run } from '../../utils/actions/sagas.js';
+import { ILayer } from '../layouter/layer.js';
+import { render } from '../layouter/layouter.js';
+import { MovableActionTypes, MoveEndAction } from '../uml-element/movable/movable-types.js';
+import { UMLElementState } from '../uml-element/uml-element-types.js';
+import { UMLContainer } from './uml-container.js';
+import { UMLContainerRepository } from './uml-container-repository.js';
+import { AppendAction, RemoveAction, UMLContainerActionTypes } from './uml-container-types.js';
 
 export function* UMLContainerSaga(): SagaIterator {
   yield run([append, remove, appendAfterMove, renderAfterMove]);

@@ -1,14 +1,14 @@
 import React, { Component, ComponentClass, SVGProps } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Components } from '../../packages/components';
-import { UMLRelationshipType } from '../../packages/uml-relationship-type';
-import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
-import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
-import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
-import { ModelState } from '../store/model-state';
-import { withTheme, withThemeProps } from '../theme/styles';
-import { UMLElementComponentProps } from './uml-element-component-props';
+import { Components } from '../../packages/components.js';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type.js';
+import { ApollonMode, ApollonView } from '../../services/editor/editor-types.js';
+import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship.js';
+import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository.js';
+import { ModelState } from '../store/model-state.js';
+import { withTheme, withThemeProps } from '../theme/styles.js';
+import { UMLElementComponentProps } from './uml-element-component-props.js';
 
 type OwnProps = UMLElementComponentProps & SVGProps<SVGSVGElement>;
 

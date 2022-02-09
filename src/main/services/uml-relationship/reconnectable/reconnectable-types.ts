@@ -1,6 +1,6 @@
-import { Action } from '../../../utils/actions/actions';
-import { Connection } from '../connection';
-import { IUMLRelationship } from '../uml-relationship';
+import { Action } from '../../../utils/actions/actions.js';
+import { Connection } from '../connection.js';
+import { IUMLRelationship } from '../uml-relationship.js';
 
 export const enum ReconnectableActionTypes {
   START = '@@element/reconnectable/START',

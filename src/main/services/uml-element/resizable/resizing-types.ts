@@ -1,5 +1,5 @@
-import { Action } from '../../../utils/actions/actions';
-import { UMLElementState } from '../uml-element-types';
+import { Action } from '../../../utils/actions/actions.js';
+import { UMLElementState } from '../uml-element-types.js';
 
 export const enum ResizingActionTypes {
   RESIZE = '@@element/resizable/RESIZE',

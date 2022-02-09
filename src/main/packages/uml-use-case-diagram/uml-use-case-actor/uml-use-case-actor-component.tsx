@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { UMLUseCaseActor } from './uml-use-case-actor';
+import { Text } from '../../../components/controls/text/text.js';
+import { UMLUseCaseActor } from './uml-use-case-actor.js';
 
 export const UMLUseCaseActorComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>

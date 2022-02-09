@@ -1,5 +1,5 @@
 import { DeploymentRelationshipType } from '..';
-import { UMLInterfaceRequired } from '../../common/uml-interface-required/uml-interface-required';
+import { UMLInterfaceRequired } from '../../common/uml-interface-required/uml-interface-required.js';
 
 export class UMLDeploymentInterfaceRequired extends UMLInterfaceRequired {
   type = DeploymentRelationshipType.DeploymentInterfaceRequired;

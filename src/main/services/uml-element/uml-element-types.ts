@@ -1,5 +1,5 @@
-import { Action } from '../../utils/actions/actions';
-import { IUMLElement } from './uml-element';
+import { Action } from '../../utils/actions/actions.js';
+import { IUMLElement } from './uml-element.js';
 
 export const enum UMLElementActionTypes {
   CREATE = '@@element/CREATE',

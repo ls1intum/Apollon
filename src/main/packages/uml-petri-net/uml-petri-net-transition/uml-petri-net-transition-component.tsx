@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { UMLPetriNetTransition } from './uml-petri-net-transition';
+import { Text } from '../../../components/controls/text/text.js';
+import { UMLPetriNetTransition } from './uml-petri-net-transition.js';
 
 export const UMLPetriNetTransitionComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>

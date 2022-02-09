@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Button } from '../../../components/controls/button/button';
-import { ColorButton } from '../../../components/controls/color-button/color-button';
+import { Button } from '../../../components/controls/button/button.js';
+import { ColorButton } from '../../../components/controls/color-button/color-button.js';
 import { TrashIcon } from '../../../components/controls/icon/trash';
-import { Textfield } from '../../../components/controls/textfield/textfield';
-import { StylePane } from '../../../components/style-pane/style-pane';
-import { IUMLElement } from '../../../services/uml-element/uml-element';
+import { Textfield } from '../../../components/controls/textfield/textfield.js';
+import { StylePane } from '../../../components/style-pane/style-pane.js';
+import { IUMLElement } from '../../../services/uml-element/uml-element.js';
 
 const Flex = styled.div`
   display: flex;

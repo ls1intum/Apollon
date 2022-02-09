@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Multiline } from '../../../utils/svg/multiline';
-import { SyntaxTreeTerminal } from './syntax-tree-terminal';
+import { Multiline } from '../../../utils/svg/multiline.js';
+import { SyntaxTreeTerminal } from './syntax-tree-terminal.js';
 
 export const SyntaxTreeTerminalComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>

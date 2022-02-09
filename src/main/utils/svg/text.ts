@@ -1,4 +1,4 @@
-import { ILayer } from '../../services/layouter/layer';
+import { ILayer } from '../../services/layouter/layer.js';
 
 export class Text {
   static size = (

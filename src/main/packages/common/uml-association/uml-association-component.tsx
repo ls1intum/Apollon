@@ -1,9 +1,9 @@
 import React, { FunctionComponent } from 'react';
-import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port';
-import { Point } from '../../../utils/geometry/point';
-import { ClassRelationshipType } from '../../uml-class-diagram';
-import { UMLAssociation } from './uml-association';
-import { UMLRelationshipType } from '../../uml-relationship-type';
+import { Direction, IUMLElementPort } from '../../../services/uml-element/uml-element-port.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { ClassRelationshipType } from '../../uml-class-diagram/index.js';
+import { UMLAssociation } from './uml-association.js';
+import { UMLRelationshipType } from '../../uml-relationship-type.js';
 
 const Marker = {
   Arrow: (id: string, color?: string, scale: number = 1.0) => (

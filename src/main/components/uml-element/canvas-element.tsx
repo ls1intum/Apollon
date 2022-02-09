@@ -1,15 +1,15 @@
 import React, { Component, ComponentClass, SVGProps } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Components } from '../../packages/components';
-import { UMLElementType } from '../../packages/uml-element-type';
-import { ApollonView } from '../../services/editor/editor-types';
-import { UMLContainer } from '../../services/uml-container/uml-container';
-import { IUMLElement } from '../../services/uml-element/uml-element';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { ModelState } from '../store/model-state';
-import { withTheme, withThemeProps } from '../theme/styles';
-import { UMLElementComponentProps } from './uml-element-component-props';
+import { Components } from '../../packages/components.js';
+import { UMLElementType } from '../../packages/uml-element-type.js';
+import { ApollonView } from '../../services/editor/editor-types.js';
+import { UMLContainer } from '../../services/uml-container/uml-container.js';
+import { IUMLElement } from '../../services/uml-element/uml-element.js';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { ModelState } from '../store/model-state.js';
+import { withTheme, withThemeProps } from '../theme/styles.js';
+import { UMLElementComponentProps } from './uml-element-component-props.js';
 
 const STROKE = 5;
 

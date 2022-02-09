@@ -1,7 +1,7 @@
 import React, { Component, FormEvent, InputHTMLAttributes, KeyboardEvent } from 'react';
 import { Omit } from 'react-redux';
-import { Size } from '../../theme/styles';
-import { StyledTextfield } from './textfield-styled';
+import { Size } from '../../theme/styles.js';
+import { StyledTextfield } from './textfield-styled.js';
 
 export const defaultProps = Object.freeze({
   block: true,

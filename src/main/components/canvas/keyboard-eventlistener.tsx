@@ -1,14 +1,14 @@
 import { Component, ComponentType } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { CopyRepository } from '../../services/copypaste/copy-repository';
-import { ApollonMode } from '../../services/editor/editor-types';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { UndoRepository } from '../../services/undo/undo-repository';
-import { AsyncDispatch } from '../../utils/actions/actions';
-import { ModelState } from '../store/model-state';
-import { CanvasContext } from './canvas-context';
-import { withCanvas } from './with-canvas';
+import { CopyRepository } from '../../services/copypaste/copy-repository.js';
+import { ApollonMode } from '../../services/editor/editor-types.js';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { UndoRepository } from '../../services/undo/undo-repository.js';
+import { AsyncDispatch } from '../../utils/actions/actions.js';
+import { ModelState } from '../store/model-state.js';
+import { CanvasContext } from './canvas-context.js';
+import { withCanvas } from './with-canvas.js';
 
 type OwnProps = {};
 

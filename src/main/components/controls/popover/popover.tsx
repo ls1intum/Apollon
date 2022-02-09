@@ -1,5 +1,5 @@
 import React, { forwardRef, HTMLAttributes, ReactNode } from 'react';
-import { Arrow, PopoverBody, PopoverContainer } from './popover-styles';
+import { Arrow, PopoverBody, PopoverContainer } from './popover-styles.js';
 
 export type Props = {
   children?: ReactNode;

@@ -1,5 +1,5 @@
-import { styled } from '../components/theme/styles';
-import { Style } from './svg-styles';
+import { styled } from '../components/theme/styles.js';
+import { Style } from './svg-styles.js';
 
 export const Layout = styled.div`
   display: flex;

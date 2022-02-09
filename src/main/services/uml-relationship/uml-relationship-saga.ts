@@ -1,20 +1,20 @@
 import { SagaIterator } from 'redux-saga';
 import { all, call, getContext, put, select, take } from 'redux-saga/effects';
-import { ModelState } from '../../components/store/model-state';
-import { run } from '../../utils/actions/sagas';
-import { diff } from '../../utils/fx/diff';
-import { ILayer } from '../layouter/layer';
-import { RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types';
-import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
-import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
-import { UMLElementRepository } from '../uml-element/uml-element-repository';
-import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from '../uml-element/uml-element-types';
-import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
-import { IUMLRelationship, UMLRelationship } from './uml-relationship';
-import { UMLRelationshipRepository } from './uml-relationship-repository';
-import { LayoutAction } from './uml-relationship-types';
-import { UMLRelationshipType } from '../../packages/uml-relationship-type';
-import { IUMLCommunicationLink } from '../../packages/uml-communication-diagram/uml-communication-link/uml-communication-link';
+import { ModelState } from '../../components/store/model-state.js';
+import { run } from '../../utils/actions/sagas.js';
+import { diff } from '../../utils/fx/diff.js';
+import { ILayer } from '../layouter/layer.js';
+import { RemoveAction, UMLContainerActionTypes } from '../uml-container/uml-container-types.js';
+import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types.js';
+import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types.js';
+import { UMLElementRepository } from '../uml-element/uml-element-repository.js';
+import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from '../uml-element/uml-element-types.js';
+import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types.js';
+import { IUMLRelationship, UMLRelationship } from './uml-relationship.js';
+import { UMLRelationshipRepository } from './uml-relationship-repository.js';
+import { LayoutAction } from './uml-relationship-types.js';
+import { UMLRelationshipType } from '../../packages/uml-relationship-type.js';
+import { IUMLCommunicationLink } from '../../packages/uml-communication-diagram/uml-communication-link/uml-communication-link.js';
 
 export function* UMLRelationshipSaga() {
   yield run([create, reconnect, update, layoutElement, deleteElement]);

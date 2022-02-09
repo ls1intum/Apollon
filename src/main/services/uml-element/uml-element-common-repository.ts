@@ -1,12 +1,12 @@
-import { UMLElements } from '../../packages/uml-elements';
-import { AsyncAction } from '../../utils/actions/actions';
-import { Point } from '../../utils/geometry/point';
-import { filterRoots, getChildren } from '../../utils/geometry/tree';
-import { UMLContainer } from '../uml-container/uml-container';
-import { UMLContainerRepository } from '../uml-container/uml-container-repository';
-import { RemoveAction } from '../uml-container/uml-container-types';
-import { IUMLElement, UMLElement } from './uml-element';
-import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from './uml-element-types';
+import { UMLElements } from '../../packages/uml-elements.js';
+import { AsyncAction } from '../../utils/actions/actions.js';
+import { Point } from '../../utils/geometry/point.js';
+import { filterRoots, getChildren } from '../../utils/geometry/tree.js';
+import { UMLContainer } from '../uml-container/uml-container.js';
+import { UMLContainerRepository } from '../uml-container/uml-container-repository.js';
+import { RemoveAction } from '../uml-container/uml-container-types.js';
+import { IUMLElement, UMLElement } from './uml-element.js';
+import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from './uml-element-types.js';
 
 export const UMLElementCommonRepository = {
   /**

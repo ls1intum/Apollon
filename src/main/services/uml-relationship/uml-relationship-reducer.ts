@@ -1,9 +1,9 @@
 import { Reducer } from 'redux';
-import { Actions } from '../actions';
-import { UMLElementState } from '../uml-element/uml-element-types';
-import { ReconnectableActionTypes } from './reconnectable/reconnectable-types';
-import { IUMLRelationship } from './uml-relationship';
-import { UMLRelationshipActionTypes } from './uml-relationship-types';
+import { Actions } from '../actions.js';
+import { UMLElementState } from '../uml-element/uml-element-types.js';
+import { ReconnectableActionTypes } from './reconnectable/reconnectable-types.js';
+import { IUMLRelationship } from './uml-relationship.js';
+import { UMLRelationshipActionTypes } from './uml-relationship-types.js';
 
 export const UMLRelationshipReducer: Reducer<UMLElementState, Actions> = (state = {}, action) => {
   switch (action.type) {

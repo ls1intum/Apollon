@@ -1,13 +1,13 @@
-import { UMLRelationships } from '../../packages/uml-relationships';
-import { AsyncAction } from '../../utils/actions/actions';
-import { IBoundary } from '../../utils/geometry/boundary';
-import { IPath } from '../../utils/geometry/path';
-import { IUMLElement, UMLElement } from '../uml-element/uml-element';
-import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
-import { IUMLRelationship, UMLRelationship } from './uml-relationship';
-import { LayoutAction, UMLRelationshipActionTypes } from './uml-relationship-types';
+import { UMLRelationships } from '../../packages/uml-relationships.js';
+import { AsyncAction } from '../../utils/actions/actions.js';
+import { IBoundary } from '../../utils/geometry/boundary.js';
+import { IPath } from '../../utils/geometry/path.js';
+import { IUMLElement, UMLElement } from '../uml-element/uml-element.js';
+import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types.js';
+import { IUMLRelationship, UMLRelationship } from './uml-relationship.js';
+import { LayoutAction, UMLRelationshipActionTypes } from './uml-relationship-types.js';
 import { UMLElementType, UMLRelationshipType } from '../..';
-import { UMLElements } from '../../packages/uml-elements';
+import { UMLElements } from '../../packages/uml-elements.js';
 
 export const UMLRelationshipCommonRepository = {
   get: (element?: IUMLElement): UMLRelationship | null => {

@@ -1,4 +1,4 @@
-import { styled } from '../theme/styles';
+import { styled } from '../theme/styles.js';
 
 type Props = {
   isStatic: boolean;

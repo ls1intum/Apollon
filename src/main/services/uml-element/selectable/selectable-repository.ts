@@ -1,5 +1,5 @@
-import { AsyncAction } from '../../../utils/actions/actions';
-import { DeselectAction, SelectableActionTypes, SelectAction } from './selectable-types';
+import { AsyncAction } from '../../../utils/actions/actions.js';
+import { DeselectAction, SelectableActionTypes, SelectAction } from './selectable-types.js';
 
 export const Selectable = {
   select:

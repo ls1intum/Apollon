@@ -1,5 +1,5 @@
-import { Reconnectable } from './reconnectable/reconnectable-repository';
-import { UMLRelationshipCommonRepository } from './uml-relationship-common-repository';
+import { Reconnectable } from './reconnectable/reconnectable-repository.js';
+import { UMLRelationshipCommonRepository } from './uml-relationship-common-repository.js';
 
 export const UMLRelationshipRepository = {
   ...UMLRelationshipCommonRepository,

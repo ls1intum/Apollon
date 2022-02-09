@@ -1,21 +1,21 @@
 import React, { createRef, RefObject } from 'react';
 import { DeepPartial } from 'redux';
-import { Canvas, CanvasComponent } from '../components/canvas/canvas';
-import { CanvasContext, CanvasProvider } from '../components/canvas/canvas-context';
-import { Editor } from '../components/canvas/editor';
-import { KeyboardEventListener } from '../components/canvas/keyboard-eventlistener';
-import { DraggableLayer } from '../components/draggable/draggable-layer';
-import { I18nProvider } from '../components/i18n/i18n-provider';
-import { Sidebar } from '../components/sidebar/sidebar-component';
-import { PartialModelState } from '../components/store/model-state';
-import { ModelStore, StoreProvider } from '../components/store/model-store';
-import { Styles } from '../components/theme/styles';
-import { Theme } from '../components/theme/theme';
-import { UpdatePane } from '../components/update-pane/update-pane';
-import { ILayer } from '../services/layouter/layer';
-import { Locale } from '../services/editor/editor-types';
-import { Layout } from './application-styles';
-import { RootContext, RootProvider } from '../components/root/root-context';
+import { Canvas, CanvasComponent } from '../components/canvas/canvas.js';
+import { CanvasContext, CanvasProvider } from '../components/canvas/canvas-context.js';
+import { Editor } from '../components/canvas/editor.js';
+import { KeyboardEventListener } from '../components/canvas/keyboard-eventlistener.js';
+import { DraggableLayer } from '../components/draggable/draggable-layer.js';
+import { I18nProvider } from '../components/i18n/i18n-provider.js';
+import { Sidebar } from '../components/sidebar/sidebar-component.js';
+import { PartialModelState } from '../components/store/model-state.js';
+import { ModelStore, StoreProvider } from '../components/store/model-store.js';
+import { Styles } from '../components/theme/styles.js';
+import { Theme } from '../components/theme/theme.js';
+import { UpdatePane } from '../components/update-pane/update-pane.js';
+import { ILayer } from '../services/layouter/layer.js';
+import { Locale } from '../services/editor/editor-types.js';
+import { Layout } from './application-styles.js';
+import { RootContext, RootProvider } from '../components/root/root-context.js';
 
 type Props = {
   state?: PartialModelState;

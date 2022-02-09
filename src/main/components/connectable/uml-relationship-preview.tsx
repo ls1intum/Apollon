@@ -1,11 +1,11 @@
 import React, { Component, ComponentType } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
-import { Direction, IUMLElementPort } from '../../services/uml-element/uml-element-port';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../utils/actions/actions';
-import { IPoint, Point } from '../../utils/geometry/point';
-import { ModelState } from '../store/model-state';
-import { getPortsForElement } from '../../services/uml-element/uml-element';
+import { Direction, IUMLElementPort } from '../../services/uml-element/uml-element-port.js';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { AsyncDispatch } from '../../utils/actions/actions.js';
+import { IPoint, Point } from '../../utils/geometry/point.js';
+import { ModelState } from '../store/model-state.js';
+import { getPortsForElement } from '../../services/uml-element/uml-element.js';
 
 type OwnProps = {
   port: IUMLElementPort;

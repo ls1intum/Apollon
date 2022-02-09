@@ -1,5 +1,5 @@
-import { styled } from '../../theme/styles';
-import { Button } from '../button/button';
+import { styled } from '../../theme/styles.js';
+import { Button } from '../button/button.js';
 
 export const DropdownButton = styled(Button).attrs({
   block: true,

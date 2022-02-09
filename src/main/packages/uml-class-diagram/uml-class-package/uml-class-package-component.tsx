@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { UMLClassPackage } from './uml-class-package';
+import { UMLClassPackage } from './uml-class-package.js';
 
 export const UMLClassPackageComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
   <g>

@@ -1,7 +1,7 @@
 import React, { FunctionComponent, SVGProps } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { Point } from '../../../utils/geometry/point';
-import { UMLUseCaseExtend } from './uml-use-case-extend';
+import { Text } from '../../../components/controls/text/text.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { UMLUseCaseExtend } from './uml-use-case-extend.js';
 
 const Arrow: FunctionComponent<{ id: string; color?: string } & SVGProps<SVGPathElement>> = ({
   id,

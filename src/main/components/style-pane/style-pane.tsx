@@ -1,15 +1,16 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { IUMLElement } from '../../services/uml-element/uml-element';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { CanvasContext } from '../canvas/canvas-context';
-import { withCanvas } from '../canvas/with-canvas';
-import { I18nContext } from '../i18n/i18n-context';
-import { localized } from '../i18n/localized';
-import { ModelState } from '../store/model-state';
-import { ColorSelector } from './color-selector';
-import { Row, Container, Color, Divider } from './style-pane-styles';
+import { IUMLElement } from '../../services/uml-element/uml-element.js';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { CanvasContext } from '../canvas/canvas-context.js';
+import { withCanvas } from '../canvas/with-canvas.js';
+import { I18nContext } from '../i18n/i18n-context.js';
+import { localized } from '../i18n/localized.js';
+import { ModelState } from '../store/model-state.js';
+import { ColorSelector } from './color-selector.js';
+import { Row, Container, Color, Divider } from './style-pane-styles.js';
+
 type OwnProps = {
   open: boolean;
   element: IUMLElement;

@@ -1,4 +1,4 @@
-import { IPoint, Point } from './point';
+import { IPoint, Point } from './point.js';
 
 export type IPath = [IPoint, IPoint, ...IPoint[]];
 

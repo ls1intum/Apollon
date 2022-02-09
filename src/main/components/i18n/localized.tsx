@@ -1,5 +1,5 @@
 import React, { ComponentType } from 'react';
-import { I18nConsumer, I18nContext } from './i18n-context';
+import { I18nConsumer, I18nContext } from './i18n-context.js';
 
 export function localized<P extends I18nContext>(Component: ComponentType<P>) {
   return function LocalizedComponent(props: Pick<P, Exclude<keyof P, keyof I18nContext>>) {

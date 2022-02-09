@@ -1,18 +1,18 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Button } from '../../../components/controls/button/button';
-import { TrashIcon } from '../../../components/controls/icon/trash';
-import { Textfield } from '../../../components/controls/textfield/textfield';
-import { I18nContext } from '../../../components/i18n/i18n-context';
-import { localized } from '../../../components/i18n/localized';
-import { ModelState } from '../../../components/store/model-state';
-import { styled } from '../../../components/theme/styles';
-import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking';
-import { Divider } from '../../../components/controls/divider/divider';
-import { ColorButton } from '../../../components/controls/color-button/color-button';
-import { StylePane } from '../../../components/style-pane/style-pane';
+import { Button } from '../../../components/controls/button/button.js';
+import { TrashIcon } from '../../../components/controls/icon/trash.js';
+import { Textfield } from '../../../components/controls/textfield/textfield.js';
+import { I18nContext } from '../../../components/i18n/i18n-context.js';
+import { localized } from '../../../components/i18n/localized.js';
+import { ModelState } from '../../../components/store/model-state.js';
+import { styled } from '../../../components/theme/styles.js';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository.js';
+import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking.js';
+import { Divider } from '../../../components/controls/divider/divider.js';
+import { ColorButton } from '../../../components/controls/color-button/color-button.js';
+import { StylePane } from '../../../components/style-pane/style-pane.js';
 
 interface OwnProps {
   element: UMLReachabilityGraphMarking;

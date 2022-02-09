@@ -1,19 +1,19 @@
 import { SagaIterator } from 'redux-saga';
 import { getContext, put, select, take, takeLatest } from 'redux-saga/effects';
-import { ModelState } from '../../components/store/model-state';
-import { run } from '../../utils/actions/sagas';
-import { notEmpty } from '../../utils/not-empty';
-import { ApollonMode } from '../editor/editor-types';
-import { ILayer } from '../layouter/layer';
-import { ConnectableActionTypes } from '../uml-element/connectable/connectable-types';
-import { ResizingActionTypes } from '../uml-element/resizable/resizing-types';
-import { SelectableActionTypes, SelectAction } from '../uml-element/selectable/selectable-types';
-import { UMLElementRepository } from '../uml-element/uml-element-repository';
-import { UpdatableActionTypes } from '../uml-element/updatable/updatable-types';
-import { ReconnectableActionTypes } from '../uml-relationship/reconnectable/reconnectable-types';
-import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
-import { UMLDiagramRepository } from './uml-diagram-repository';
-import { AppendRelationshipAction, UMLDiagramActionTypes } from './uml-diagram-types';
+import { ModelState } from '../../components/store/model-state.js';
+import { run } from '../../utils/actions/sagas.js';
+import { notEmpty } from '../../utils/not-empty.js';
+import { ApollonMode } from '../editor/editor-types.js';
+import { ILayer } from '../layouter/layer.js';
+import { ConnectableActionTypes } from '../uml-element/connectable/connectable-types.js';
+import { ResizingActionTypes } from '../uml-element/resizable/resizing-types.js';
+import { SelectableActionTypes, SelectAction } from '../uml-element/selectable/selectable-types.js';
+import { UMLElementRepository } from '../uml-element/uml-element-repository.js';
+import { UpdatableActionTypes } from '../uml-element/updatable/updatable-types.js';
+import { ReconnectableActionTypes } from '../uml-relationship/reconnectable/reconnectable-types.js';
+import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository.js';
+import { UMLDiagramRepository } from './uml-diagram-repository.js';
+import { AppendRelationshipAction, UMLDiagramActionTypes } from './uml-diagram-types.js';
 
 export function* UMLDiagramSaga() {
   yield run([selectRelationship, resizeAfterConnectionChange]);

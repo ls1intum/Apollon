@@ -1,5 +1,5 @@
-import { Action } from '../../utils/actions/actions';
-import { IAssessment } from './assessment';
+import { Action } from '../../utils/actions/actions.js';
+import { IAssessment } from './assessment.js';
 
 export const enum AssessmentActionTypes {
   ASSESS = '@@element/ASSESS',

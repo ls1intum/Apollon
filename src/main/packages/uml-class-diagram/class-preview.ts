@@ -1,14 +1,14 @@
-import { ILayer } from '../../services/layouter/layer';
-import { UMLElement } from '../../services/uml-element/uml-element';
-import { UMLClassifier } from '../common/uml-classifier/uml-classifier';
-import { ComposePreview } from '../compose-preview';
-import { UMLAbstractClass } from './uml-abstract-class/uml-abstract-class';
-import { UMLClassAttribute } from './uml-class-attribute/uml-class-attribute';
-import { UMLClassMethod } from './uml-class-method/uml-class-method';
-import { UMLClassPackage } from './uml-class-package/uml-class-package';
-import { UMLClass } from './uml-class/uml-class';
-import { UMLEnumeration } from './uml-enumeration/uml-enumeration';
-import { UMLInterface } from './uml-interface/uml-interface';
+import { ILayer } from '../../services/layouter/layer.js';
+import { UMLElement } from '../../services/uml-element/uml-element.js';
+import { UMLClassifier } from '../common/uml-classifier/uml-classifier.js';
+import { ComposePreview } from '../compose-preview.js';
+import { UMLAbstractClass } from './uml-abstract-class/uml-abstract-class.js';
+import { UMLClassAttribute } from './uml-class-attribute/uml-class-attribute.js';
+import { UMLClassMethod } from './uml-class-method/uml-class-method.js';
+import { UMLClassPackage } from './uml-class-package/uml-class-package.js';
+import { UMLClass } from './uml-class/uml-class.js';
+import { UMLEnumeration } from './uml-enumeration/uml-enumeration.js';
+import { UMLInterface } from './uml-interface/uml-interface.js';
 
 export const composeClassPreview: ComposePreview = (
   layer: ILayer,

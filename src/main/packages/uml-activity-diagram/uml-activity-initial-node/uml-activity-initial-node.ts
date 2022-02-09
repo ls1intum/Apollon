@@ -1,12 +1,12 @@
 import { DeepPartial } from 'redux';
 import { ActivityElementType, ActivityRelationshipType } from '..';
-import { ILayer } from '../../../services/layouter/layer';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import { assign } from '../../../utils/fx/assign';
-import { IBoundary } from '../../../utils/geometry/boundary';
-import { UMLElementType } from '../../uml-element-type';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element.js';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features.js';
+import { assign } from '../../../utils/fx/assign.js';
+import { IBoundary } from '../../../utils/geometry/boundary.js';
+import { UMLElementType } from '../../uml-element-type.js';
 
 export class UMLActivityInitialNode extends UMLElement {
   static supportedRelationships = [ActivityRelationshipType.ActivityControlFlow];

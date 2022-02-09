@@ -1,5 +1,5 @@
 import React from 'react';
-import { DropEvent } from './drop-event';
+import { DropEvent } from './drop-event.js';
 
 export type DraggableContext = {
   /**

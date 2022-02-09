@@ -1,15 +1,15 @@
-import { AsyncAction } from '../../../utils/actions/actions';
-import { notEmpty } from '../../../utils/not-empty';
-import { IUMLElementPort } from '../../uml-element/uml-element-port';
-import { Connection } from '../connection';
-import { IUMLRelationship, UMLRelationship } from '../uml-relationship';
+import { AsyncAction } from '../../../utils/actions/actions.js';
+import { notEmpty } from '../../../utils/not-empty.js';
+import { IUMLElementPort } from '../../uml-element/uml-element-port.js';
+import { Connection } from '../connection.js';
+import { IUMLRelationship, UMLRelationship } from '../uml-relationship.js';
 import {
   ReconnectableActionTypes,
   ReconnectAction,
   ReconnectEndAction,
   ReconnectStartAction,
-} from './reconnectable-types';
-import { UMLRelationshipCommonRepository } from '../uml-relationship-common-repository';
+} from './reconnectable-types.js';
+import { UMLRelationshipCommonRepository } from '../uml-relationship-common-repository.js';
 
 export const Reconnectable = {
   /**

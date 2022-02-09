@@ -1,11 +1,11 @@
-import { ActivityElementType, ActivityRelationshipType } from '..';
-import { ILayer } from '../../../services/layouter/layer';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import { IBoundary } from '../../../utils/geometry/boundary';
-import { UMLElementType } from '../../uml-element-type';
 import { DeepPartial } from 'redux';
+import { ActivityElementType, ActivityRelationshipType } from '..';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element.js';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features.js';
+import { IBoundary } from '../../../utils/geometry/boundary.js';
+import { UMLElementType } from '../../uml-element-type.js';
 
 export class UMLActivityForkNode extends UMLElement {
   static supportedRelationships = [ActivityRelationshipType.ActivityControlFlow];

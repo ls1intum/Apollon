@@ -1,10 +1,10 @@
 import React, { ComponentType, FunctionComponent } from 'react';
-import { UMLActivityFinalNode } from './uml-activity-final-node';
-import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { compose } from 'redux';
 import { connect, ConnectedComponent } from 'react-redux';
-import { ModelState } from '../../../components/store/model-state';
-import { ApollonView } from '../../../services/editor/editor-types';
+import { UMLActivityFinalNode } from './uml-activity-final-node.js';
+import { withTheme, withThemeProps } from '../../../components/theme/styles.js';
+import { ModelState } from '../../../components/store/model-state.js';
+import { ApollonView } from '../../../services/editor/editor-types.js';
 
 type OwnProps = {
   element: UMLActivityFinalNode;

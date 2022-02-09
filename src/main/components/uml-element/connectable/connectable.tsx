@@ -1,22 +1,22 @@
 import React, { Component, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect, ConnectedComponent } from 'react-redux';
-import { Direction } from '../../../services/uml-element/uml-element-port';
-import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
-import { AsyncDispatch } from '../../../utils/actions/actions';
-import { Point } from '../../../utils/geometry/point';
-import { ModelState } from '../../store/model-state';
-import { styled } from '../../theme/styles';
-import { UMLElementComponentProps } from '../uml-element-component-props';
-import { UMLElements } from '../../../packages/uml-elements';
-import { UMLRelationships } from '../../../packages/uml-relationships';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-relationship-features';
-import { UMLElementType, UMLRelationshipType } from '../../..';
-import { convertTouchEndIntoPointerUp } from '../../../utils/touch-event';
 import isMobile from 'is-mobile';
-import { getPortsForElement, IUMLElement } from '../../../services/uml-element/uml-element';
+import { Direction } from '../../../services/uml-element/uml-element-port.js';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository.js';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository.js';
+import { AsyncDispatch } from '../../../utils/actions/actions.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { ModelState } from '../../store/model-state.js';
+import { styled } from '../../theme/styles.js';
+import { UMLElementComponentProps } from '../uml-element-component-props.js';
+import { UMLElements } from '../../../packages/uml-elements.js';
+import { UMLRelationships } from '../../../packages/uml-relationships.js';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features.js';
+import { UMLRelationshipFeatures } from '../../../services/uml-relationship/uml-relationship-features.js';
+import { UMLElementType, UMLRelationshipType } from '../../..';
+import { convertTouchEndIntoPointerUp } from '../../../utils/touch-event.js';
+import { getPortsForElement, IUMLElement } from '../../../services/uml-element/uml-element.js';
 
 type StateProps = {
   hovered: boolean;

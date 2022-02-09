@@ -1,8 +1,8 @@
-import { ILayer } from '../../services/layouter/layer';
-import { ComposePreview, PreviewElement } from '../compose-preview';
-import { UMLPetriNetPlace } from './uml-petri-net-place/uml-petri-net-place';
-import { UMLPetriNetTransition } from './uml-petri-net-transition/uml-petri-net-transition';
 import { CSSProperties } from 'react';
+import { ILayer } from '../../services/layouter/layer.js';
+import { ComposePreview, PreviewElement } from '../compose-preview.js';
+import { UMLPetriNetPlace } from './uml-petri-net-place/uml-petri-net-place.js';
+import { UMLPetriNetTransition } from './uml-petri-net-transition/uml-petri-net-transition.js';
 
 export const composePetriNetPreview: ComposePreview = (
   layer: ILayer,

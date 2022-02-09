@@ -1,15 +1,15 @@
 import React, { Component, ComponentType } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
-import { Button } from '../../components/controls/button/button';
-import { ColorButton } from '../../components/controls/color-button/color-button';
-import { TrashIcon } from '../../components/controls/icon/trash';
-import { Textfield } from '../../components/controls/textfield/textfield';
-import { ModelState } from '../../components/store/model-state';
-import { StylePane } from '../../components/style-pane/style-pane';
-import { styled } from '../../components/theme/styles';
-import { UMLElement } from '../../services/uml-element/uml-element';
-import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../utils/actions/actions';
+import { Button } from '../../components/controls/button/button.js';
+import { ColorButton } from '../../components/controls/color-button/color-button.js';
+import { TrashIcon } from '../../components/controls/icon/trash.js';
+import { Textfield } from '../../components/controls/textfield/textfield.js';
+import { ModelState } from '../../components/store/model-state.js';
+import { StylePane } from '../../components/style-pane/style-pane.js';
+import { styled } from '../../components/theme/styles.js';
+import { UMLElement } from '../../services/uml-element/uml-element.js';
+import { UMLElementRepository } from '../../services/uml-element/uml-element-repository.js';
+import { AsyncDispatch } from '../../utils/actions/actions.js';
 
 const Flex = styled.div`
   display: flex;

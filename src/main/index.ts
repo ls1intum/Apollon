@@ -1,2 +1,2 @@
-export * from './typings';
-export * from './apollon-editor';
+export * from './typings.js';
+export * from './apollon-editor.js';

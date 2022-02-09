@@ -1,6 +1,6 @@
 import React from 'react';
-import { ICommunicationLinkMessage } from './uml-communiction-link-message';
-import { Text } from '../../../components/controls/text/text';
+import { ICommunicationLinkMessage } from './uml-communiction-link-message.js';
+import { Text } from '../../../components/controls/text/text.js';
 
 type Props = {
   x: number;

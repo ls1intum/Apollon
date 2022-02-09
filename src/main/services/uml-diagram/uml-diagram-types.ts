@@ -1,5 +1,5 @@
-import { Action } from '../../utils/actions/actions';
-import { IUMLDiagram } from './uml-diagram';
+import { Action } from '../../utils/actions/actions.js';
+import { IUMLDiagram } from './uml-diagram.js';
 
 export const enum UMLDiagramActionTypes {
   APPEND = '@@element/diagram/APPEND',

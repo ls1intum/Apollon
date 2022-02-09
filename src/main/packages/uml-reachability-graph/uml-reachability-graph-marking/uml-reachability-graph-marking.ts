@@ -1,10 +1,10 @@
-import { ILayer } from '../../../services/layouter/layer';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLElementType } from '../../uml-element-type';
-import * as Apollon from '../../../typings';
-import { ReachabilityGraphElementType } from '..';
 import { DeepPartial } from 'redux';
+import { ReachabilityGraphElementType } from '..';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { UMLElement } from '../../../services/uml-element/uml-element.js';
+import { UMLElementType } from '../../uml-element-type.js';
+import * as Apollon from '../../../typings.js';
 
 export class UMLReachabilityGraphMarking extends UMLElement {
   type: UMLElementType = ReachabilityGraphElementType.ReachabilityGraphMarking;

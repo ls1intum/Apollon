@@ -1,15 +1,13 @@
-import { AsyncAction } from '../../utils/actions/actions';
-import { clone, filterRoots, getChildren } from '../../utils/geometry/tree';
-import { IPoint } from '../../utils/geometry/point';
-import { notEmpty } from '../../utils/not-empty';
-import { IUMLElement, UMLElement } from '../uml-element/uml-element';
-import { UMLElementRepository } from '../uml-element/uml-element-repository';
-import { CopyAction, CopyActionTypes, PasteAction } from './copy-types';
-import { UMLElementsForDiagram } from '../../packages/uml-element-type';
-import { IUMLRelationship, UMLRelationship } from '../uml-relationship/uml-relationship';
-import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
-import { UMLElementState } from '../uml-element/uml-element-types';
-import { Reconnectable } from '../uml-relationship/reconnectable/reconnectable-repository';
+import { AsyncAction } from '../../utils/actions/actions.js';
+import { clone, filterRoots, getChildren } from '../../utils/geometry/tree.js';
+import { IPoint } from '../../utils/geometry/point.js';
+import { notEmpty } from '../../utils/not-empty.js';
+import { IUMLElement, UMLElement } from '../uml-element/uml-element.js';
+import { UMLElementRepository } from '../uml-element/uml-element-repository.js';
+import { CopyAction, CopyActionTypes, PasteAction } from './copy-types.js';
+import { UMLElementsForDiagram } from '../../packages/uml-element-type.js';
+import { IUMLRelationship, UMLRelationship } from '../uml-relationship/uml-relationship.js';
+import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository.js';
 
 export class CopyRepository {
   /**

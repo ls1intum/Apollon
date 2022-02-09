@@ -2,21 +2,21 @@ import 'pepjs';
 import { createElement, createRef, RefObject } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { DeepPartial, Store } from 'redux';
-import { ModelState, PartialModelState } from './components/store/model-state';
-import { Styles } from './components/theme/styles';
-import { UMLElementType } from './packages/uml-element-type';
-import { UMLRelationshipType } from './packages/uml-relationship-type';
-import { Application } from './scenes/application';
-import { Svg } from './scenes/svg';
-import { Actions } from './services/actions';
-import { ApollonMode, ApollonView, Locale } from './services/editor/editor-types';
-import { UMLDiagram } from './services/uml-diagram/uml-diagram';
-import { UMLElementRepository } from './services/uml-element/uml-element-repository';
-import * as Apollon from './typings';
-import { Dispatch } from './utils/actions/actions';
-import { UMLDiagramType, UMLModel } from './typings';
-import { debounce } from './utils/debounce';
-import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
+import { ModelState, PartialModelState } from './components/store/model-state.js';
+import { Styles } from './components/theme/styles.js';
+import { UMLElementType } from './packages/uml-element-type.js';
+import { UMLRelationshipType } from './packages/uml-relationship-type.js';
+import { Application } from './scenes/application.js';
+import { Svg } from './scenes/svg.js';
+import { Actions } from './services/actions.js';
+import { ApollonMode, ApollonView, Locale } from './services/editor/editor-types.js';
+import { UMLDiagram } from './services/uml-diagram/uml-diagram.js';
+import { UMLElementRepository } from './services/uml-element/uml-element-repository.js';
+import * as Apollon from './typings.js';
+import { Dispatch } from './utils/actions/actions.js';
+import { UMLDiagramType, UMLModel } from './typings.js';
+import { debounce } from './utils/debounce.js';
+import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary.js';
 
 export class ApollonEditor {
   /**

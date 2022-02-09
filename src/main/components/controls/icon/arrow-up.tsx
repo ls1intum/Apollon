@@ -1,5 +1,5 @@
 import React, { SVGAttributes } from 'react';
-import { Icon } from './icon';
+import { Icon } from './icon.js';
 
 type Props = SVGAttributes<SVGSVGElement>;
 

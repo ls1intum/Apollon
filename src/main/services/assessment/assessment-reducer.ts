@@ -1,7 +1,7 @@
 import { Reducer } from 'redux';
-import { Actions } from '../actions';
-import { AssessmentActionTypes, AssessmentState } from './assessment-types';
-import { UMLElementActionTypes } from '../uml-element/uml-element-types';
+import { Actions } from '../actions.js';
+import { AssessmentActionTypes, AssessmentState } from './assessment-types.js';
+import { UMLElementActionTypes } from '../uml-element/uml-element-types.js';
 
 const initialState: AssessmentState = {};
 

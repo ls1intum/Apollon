@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { ModelState } from '../../store/model-state';
-import { Button } from '../button/button';
-import { RollerIcon } from '../icon/roller';
+import { ModelState } from '../../store/model-state.js';
+import { Button } from '../button/button.js';
+import { RollerIcon } from '../icon/roller.js';
 
 type Props = { onClick: any; colorEnabled?: boolean };
 

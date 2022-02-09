@@ -1,6 +1,6 @@
 import { Reducer } from 'redux';
-import { Actions } from '../../actions';
-import { ResizingActionTypes, ResizingState } from './resizing-types';
+import { Actions } from '../../actions.js';
+import { ResizingActionTypes, ResizingState } from './resizing-types.js';
 
 export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, action) => {
   switch (action.type) {

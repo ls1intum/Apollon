@@ -1,10 +1,10 @@
 import React, { Component, ComponentType } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect, ConnectedComponent } from 'react-redux';
-import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { AsyncDispatch } from '../../../utils/actions/actions';
-import { ModelState } from '../../store/model-state';
-import { UMLElementComponentProps } from '../uml-element-component-props';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository.js';
+import { AsyncDispatch } from '../../../utils/actions/actions.js';
+import { ModelState } from '../../store/model-state.js';
+import { UMLElementComponentProps } from '../uml-element-component-props.js';
 
 const initialState = {};
 

@@ -1,5 +1,5 @@
 import React, { SVGAttributes } from 'react';
-import { styled } from '../../theme/styles';
+import { styled } from '../../theme/styles.js';
 
 type Props = SVGAttributes<SVGSVGElement>;
 

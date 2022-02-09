@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { Point } from '../../../utils/geometry/point';
-import { UMLUseCaseAssociation } from './uml-use-case-association';
+import { Text } from '../../../components/controls/text/text.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { UMLUseCaseAssociation } from './uml-use-case-association.js';
 
 export const UMLUseCaseAssociationComponent: FunctionComponent<Props> = ({ element }) => {
   const [start, end] = element.path.map((p) => new Point(p.x, p.y));

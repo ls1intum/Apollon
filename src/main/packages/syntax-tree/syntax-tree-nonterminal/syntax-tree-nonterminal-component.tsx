@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { Multiline } from '../../../utils/svg/multiline';
-import { SyntaxTreeNonterminal } from './syntax-tree-nonterminal';
+import { Multiline } from '../../../utils/svg/multiline.js';
+import { SyntaxTreeNonterminal } from './syntax-tree-nonterminal.js';
 
 export const SyntaxTreeNonterminalComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>

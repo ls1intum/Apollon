@@ -1,4 +1,4 @@
-import { RedoAction, UndoAction, UndoActionTypes } from './undo-types';
+import { RedoAction, UndoAction, UndoActionTypes } from './undo-types.js';
 
 export class UndoRepository {
   static undo = (): UndoAction => ({ type: UndoActionTypes.UNDO, payload: {}, undoable: false });

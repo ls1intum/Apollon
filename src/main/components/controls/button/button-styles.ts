@@ -1,6 +1,6 @@
-import { darken } from '../../../utils/color';
-import { css, styled } from '../../theme/styles';
-import { defaultProps } from './button';
+import { darken } from '../../../utils/color.js';
+import { css, styled } from '../../theme/styles.js';
+import { defaultProps } from './button.js';
 
 const HOVER_BACKGROUND_DARKEN = 7.5;
 const HOVER_BORDER_DARKEN = 10;

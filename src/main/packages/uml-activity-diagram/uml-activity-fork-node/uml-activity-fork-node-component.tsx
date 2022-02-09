@@ -1,10 +1,10 @@
 import React, { ComponentType, FunctionComponent } from 'react';
-import { UMLActivityForkNode } from './uml-activity-fork-node';
-import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { compose } from 'redux';
 import { connect, ConnectedComponent } from 'react-redux';
-import { ModelState } from '../../../components/store/model-state';
-import { ApollonView } from '../../../services/editor/editor-types';
+import { UMLActivityForkNode } from './uml-activity-fork-node.js';
+import { withTheme, withThemeProps } from '../../../components/theme/styles.js';
+import { ModelState } from '../../../components/store/model-state.js';
+import { ApollonView } from '../../../services/editor/editor-types.js';
 
 type OwnProps = {
   element: UMLActivityForkNode;

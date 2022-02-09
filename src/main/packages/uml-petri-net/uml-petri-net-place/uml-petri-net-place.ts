@@ -1,13 +1,13 @@
-import { ILayer } from '../../../services/layouter/layer';
-import { ILayoutable } from '../../../services/layouter/layoutable';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import { IBoundary } from '../../../utils/geometry/boundary';
-import { UMLElementType } from '../../uml-element-type';
 import { DeepPartial } from 'redux';
-import * as Apollon from '../../../typings';
-import { PetriNetElementType } from '../index';
-import { assign } from '../../../utils/fx/assign';
+import { ILayer } from '../../../services/layouter/layer.js';
+import { ILayoutable } from '../../../services/layouter/layoutable.js';
+import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element.js';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features.js';
+import { IBoundary } from '../../../utils/geometry/boundary.js';
+import { UMLElementType } from '../../uml-element-type.js';
+import * as Apollon from '../../../typings.js';
+import { PetriNetElementType } from '../index.js';
+import { assign } from '../../../utils/fx/assign.js';
 
 export class UMLPetriNetPlace extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };

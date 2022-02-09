@@ -1,8 +1,8 @@
-import { ILayer } from '../../services/layouter/layer';
-import { UMLElement } from '../../services/uml-element/uml-element';
-import { ComposePreview } from '../compose-preview';
-import { UMLComponentInterface } from './uml-component-interface/uml-component-interface';
-import { UMLComponentComponent } from './uml-component/uml-component-component';
+import { ILayer } from '../../services/layouter/layer.js';
+import { UMLElement } from '../../services/uml-element/uml-element.js';
+import { ComposePreview } from '../compose-preview.js';
+import { UMLComponentInterface } from './uml-component-interface/uml-component-interface.js';
+import { UMLComponentComponent } from './uml-component/uml-component-component.js';
 
 export const composeComponentPreview: ComposePreview = (
   layer: ILayer,

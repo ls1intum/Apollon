@@ -1,13 +1,13 @@
 import React, { Component, ComponentType, createRef, Ref, RefObject } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
-import { ILayer } from '../../services/layouter/layer';
-import { IUMLDiagram } from '../../services/uml-diagram/uml-diagram';
-import { Point } from '../../utils/geometry/point';
-import { Droppable } from '../draggable/droppable';
-import { ModelState } from '../store/model-state';
-import { ConnectionPreview } from '../connectable/connection-preview';
-import { UMLElementComponent } from '../uml-element/uml-element-component';
-import { CanvasContainer } from './canvas-styles';
+import { ILayer } from '../../services/layouter/layer.js';
+import { IUMLDiagram } from '../../services/uml-diagram/uml-diagram.js';
+import { Point } from '../../utils/geometry/point.js';
+import { Droppable } from '../draggable/droppable.js';
+import { ModelState } from '../store/model-state.js';
+import { ConnectionPreview } from '../connectable/connection-preview.js';
+import { UMLElementComponent } from '../uml-element/uml-element-component.js';
+import { CanvasContainer } from './canvas-styles.js';
 
 type OwnProps = {};
 

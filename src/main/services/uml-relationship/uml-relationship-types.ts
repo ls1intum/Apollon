@@ -1,6 +1,6 @@
-import { Action } from '../../utils/actions/actions';
-import { IBoundary } from '../../utils/geometry/boundary';
-import { IPath } from '../../utils/geometry/path';
+import { Action } from '../../utils/actions/actions.js';
+import { IBoundary } from '../../utils/geometry/boundary.js';
+import { IPath } from '../../utils/geometry/path.js';
 
 export const enum UMLRelationshipActionTypes {
   LAYOUT = '@@relationship/LAYOUT',

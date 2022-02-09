@@ -1,5 +1,5 @@
 import React, { Component, ComponentType, forwardRef } from 'react';
-import { CanvasConsumer, CanvasContext } from './canvas-context';
+import { CanvasConsumer, CanvasContext } from './canvas-context.js';
 
 export const withCanvas = <P extends CanvasContext, C extends Component>(WrappedComponent: ComponentType<P>) =>
   forwardRef<C, Pick<P, Exclude<keyof P, keyof CanvasContext>>>((props, ref) => (

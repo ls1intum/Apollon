@@ -1,13 +1,13 @@
-import { DefaultUMLRelationshipType, UMLRelationshipType } from '../../../packages/uml-relationship-type';
-import { UMLRelationships } from '../../../packages/uml-relationships';
-import { AsyncAction } from '../../../utils/actions/actions';
-import { Connection } from '../../uml-relationship/connection';
-import { UMLElementCommonRepository } from '../uml-element-common-repository';
-import { Direction, IUMLElementPort } from '../uml-element-port';
-import { ConnectableActionTypes, ConnectEndAction, ConnectStartAction } from './connectable-types';
-import { UMLElements } from '../../../packages/uml-elements';
+import { DefaultUMLRelationshipType, UMLRelationshipType } from '../../../packages/uml-relationship-type.js';
+import { UMLRelationships } from '../../../packages/uml-relationships.js';
+import { AsyncAction } from '../../../utils/actions/actions.js';
+import { Connection } from '../../uml-relationship/connection.js';
+import { UMLElementCommonRepository } from '../uml-element-common-repository.js';
+import { Direction, IUMLElementPort } from '../uml-element-port.js';
+import { ConnectableActionTypes, ConnectEndAction, ConnectStartAction } from './connectable-types.js';
+import { UMLElements } from '../../../packages/uml-elements.js';
 import { UMLElementType } from '../../..';
-import { UMLRelationshipCommonRepository } from '../../uml-relationship/uml-relationship-common-repository';
+import { UMLRelationshipCommonRepository } from '../../uml-relationship/uml-relationship-common-repository.js';
 
 export const Connectable = {
   startConnecting:

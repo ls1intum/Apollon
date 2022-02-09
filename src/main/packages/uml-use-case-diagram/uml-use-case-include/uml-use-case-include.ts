@@ -1,5 +1,5 @@
 import { UseCaseRelationshipType } from '..';
-import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
+import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship.js';
 
 export class UMLUseCaseInclude extends UMLRelationship {
   static features = { ...UMLRelationship.features, straight: true };

@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
-import { Point } from '../../../utils/geometry/point';
-import { UMLPetriNetArc } from './uml-petri-net-arc';
+import { Text } from '../../../components/controls/text/text.js';
+import { Point } from '../../../utils/geometry/point.js';
+import { UMLPetriNetArc } from './uml-petri-net-arc.js';
 
 export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) => {
   const [start, end] = element.path.map((p) => new Point(p.x, p.y));

@@ -12,16 +12,16 @@ import {
 } from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
 import thunk, { ThunkMiddleware } from 'redux-thunk';
-import { Actions } from '../../services/actions';
-import { ILayer } from '../../services/layouter/layer';
-import { LayouterRepository } from '../../services/layouter/layouter-repository';
-import { reducers } from '../../services/reducer';
-import { saga, SagaContext } from '../../services/saga';
-import { undoable } from '../../services/undo/undo-reducer';
-import { Dispatch } from '../../utils/actions/actions';
-import { CanvasContext } from '../canvas/canvas-context';
-import { withCanvas } from '../canvas/with-canvas';
-import { ModelState, PartialModelState } from './model-state';
+import { Actions } from '../../services/actions.js';
+import { ILayer } from '../../services/layouter/layer.js';
+import { LayouterRepository } from '../../services/layouter/layouter-repository.js';
+import { reducers } from '../../services/reducer.js';
+import { saga, SagaContext } from '../../services/saga.js';
+import { undoable } from '../../services/undo/undo-reducer.js';
+import { Dispatch } from '../../utils/actions/actions.js';
+import { CanvasContext } from '../canvas/canvas-context.js';
+import { withCanvas } from '../canvas/with-canvas.js';
+import { ModelState, PartialModelState } from './model-state.js';
 
 type OwnProps = PropsWithChildren<{
   initialState?: PreloadedState<PartialModelState>;

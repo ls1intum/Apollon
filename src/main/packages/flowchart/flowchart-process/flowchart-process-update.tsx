@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { FlowchartUpdateComponent, enhance, GeneralProps } from '../flowchart-element/flowchart-update';
-import { FlowchartProcess } from './flowchart-process';
+import { FlowchartUpdateComponent, enhance, GeneralProps } from '../flowchart-element/flowchart-update.js';
+import { FlowchartProcess } from './flowchart-process.js';
 
 export const FlowchartProcessUpdateComponent: FunctionComponent<Props> = (props) => {
   return <FlowchartUpdateComponent {...props} />;
