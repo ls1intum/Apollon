@@ -5,7 +5,7 @@
     "moduleResolution": "node",
     "lib": ["es2021", "dom"],
     "jsx": "react",
-    "outDir": "lib",
+    "outDir": "lib/es6",
     "declaration": true,
     "strict": true,
     "strictNullChecks": true,
