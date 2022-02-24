@@ -30,8 +30,7 @@ preferred-citation:
   title: "An Interactive Learning Method to Engage Students in Modeling"
   doi: "10.1145/3377814.3381701"
   year: 2020
-  conference: 
-    - name: "42nd International Conference on Software Engineering, Software Engineering Education and Training"
+  conference: "42nd International Conference on Software Engineering, Software Engineering Education and Training"
   pages: 10
   start: 12
   end: 22
