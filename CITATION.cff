@@ -1,0 +1,37 @@
+authors:
+  -
+    affiliation: "Technische Universität München"
+    family-names: Krusche
+    given-names: Stephan
+cff-version: 1.2.0
+license: MIT
+message: "If you want to reference Apollon in your work, please cite this paper."
+repository-code: "https://github.com/ls1intum/Apollon/"
+title: "Apollon"
+preferred-citation:
+  type: conference-paper
+  authors:
+    -
+      affiliation: "Technische Universität München"
+      family-names: Krusche
+      given-names: Stephan
+    -
+      affiliation: "Technische Universität München"
+      family-names: von Frankenberg
+      given-names: Nadine
+    -
+      affiliation: "Technische Universität München"
+      family-names: Reimer
+      given-names: Lara Marie
+    -
+      affiliation: "Technische Universität München"
+      family-names: Bruegge
+      given-names: Bernd            
+  title: "An Interactive Learning Method to Engage Students in Modeling"
+  doi: "10.1145/3377814.3381701"
+  year: 2020
+  conference: "42nd International Conference on Software Engineering, Software Engineering Education and Training"
+  publisher: ACM
+  pages: 10
+  start: 12
+  end: 22
