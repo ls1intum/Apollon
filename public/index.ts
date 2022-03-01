@@ -1,5 +1,5 @@
 import * as Apollon from '../src/main';
-import './styles.css';
+import('./styles.css'); 
 
 const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
