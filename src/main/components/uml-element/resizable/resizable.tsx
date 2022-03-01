@@ -85,6 +85,9 @@ const HandleBottomLeft = styled.rect.attrs({
   pointer-events: all;
 `;
 
+let bottomRightHandleId: any;
+let topRightHandleId: any;
+let bottomLeftHandleId: any;
 export const resizable =
   (options?: { preventX: boolean; preventY: boolean }) =>
   (
@@ -109,10 +112,13 @@ export const resizable =
         return (
           <WrappedComponent {...props}>
             {props.children}
-            <HandleBottomRight onPointerDown={this.onBottomRightPointerDown} />
+            <HandleBottomRight
+              id={'bottomRightHandleId-' + this.props.id}
+              onPointerDown={this.onBottomRightPointerDown}
+            />
             <HandleTopLeft onPointerDown={this.onTopLeftPointerDown} />
-            <HandleTopRight onPointerDown={this.onTopRightPointerDown} />
-            <HandleBottomLeft onPointerDown={this.onBottomLeftPointerDown} />
+            <HandleTopRight id={'topRightHandleId-' + this.props.id} onPointerDown={this.onTopRightPointerDown} />
+            <HandleBottomLeft id={'bottomLeftHandleId-' + this.props.id} onPointerDown={this.onBottomLeftPointerDown} />
           </WrappedComponent>
         );
       }
@@ -127,8 +133,7 @@ export const resizable =
             event.targetTouches[0].pageY + this.state.offset.y,
           );
         }
-        position.x = Math.round(position.x / 20) * 20;
-        position.y = Math.round(position.y / 20) * 20;
+        position = this.fineTweakPosition(position, bottomRightHandleId, 'bottomRightHandleId');
         if (options && options.preventX) position.x = 0;
         if (options && options.preventY) position.y = 0;
         this.props.startMoving();
@@ -143,8 +148,7 @@ export const resizable =
         } else {
           position = new Point(0, -(-event.targetTouches[0].pageY - this.state.offset.y));
         }
-        position.x = Math.round(position.x / 20) * 20;
-        position.y = Math.round(position.y / 20) * 20;
+        position = this.fineTweakPosition(position, bottomLeftHandleId, 'bottomLeftHandleId');
 
         if (options && options.preventX) position.x = 0;
         if (options && options.preventY) position.y = 0;
@@ -160,8 +164,7 @@ export const resizable =
         } else {
           position = new Point(-(-event.targetTouches[0].pageX - this.state.offset.x), 0);
         }
-        position.x = Math.round(position.x / 20) * 20;
-        position.y = Math.round(position.y / 20) * 20;
+        position = this.fineTweakPosition(position, topRightHandleId, 'topRightHandleId');
 
         if (options && options.preventX) position.x = 0;
         if (options && options.preventY) position.y = 0;
@@ -228,6 +231,8 @@ export const resizable =
         element.setPointerCapture(event.pointerId);
         element.addEventListener('pointermove', this.onTopLeftPointerMove);
         element.addEventListener('pointerup', this.onTopLeftPointerUp, { once: true });
+        // Get Element of opposite Handle Id
+        bottomRightHandleId = document.getElementById('bottomRightHandleId-' + this.props.id)?.getBoundingClientRect();
       };
 
       private onBottomRightPointerDown = (event: React.PointerEvent<SVGElement>) => {
@@ -254,6 +259,8 @@ export const resizable =
         element.setPointerCapture(event.pointerId);
         element.addEventListener('pointermove', this.onTopRightPointerMove);
         element.addEventListener('pointerup', this.onTopRightPointerUp, { once: true });
+        // Get Element of opposite Handle Id
+        bottomLeftHandleId = document.getElementById('bottomLeftHandleId-' + this.props.id)?.getBoundingClientRect();
       };
 
       private onBottomLeftPointerDown = (event: React.PointerEvent<SVGElement>) => {
@@ -267,6 +274,8 @@ export const resizable =
         element.setPointerCapture(event.pointerId);
         element.addEventListener('pointermove', this.onBottomLeftPointerMove);
         element.addEventListener('pointerup', this.onBottomLeftPointerUp, { once: true });
+        // Get Element of opposite Handle Id
+        topRightHandleId = document.getElementById('topRightHandleId-' + this.props.id)?.getBoundingClientRect();
       };
 
       private onTopLeftPointerMove = (event: PointerEvent) => {
@@ -347,6 +356,28 @@ export const resizable =
         this.setState(initialState);
         this.props.end();
         event.stopPropagation();
+      };
+
+      private fineTweakPosition = (position: Point, oppositeHandleId: any, oppositeHandleString: string) => {
+        if (Math.round(position.x / 20) * 20 === 0 && position.x === -10) {
+          position.x = -20 + Math.round(position.x / 20) * 20;
+          position.y = Math.round(position.y / 20) * 20;
+        } else if (Math.round(position.y / 20) * 20 === 0 && position.y === -10) {
+          position.x = Math.round(position.x / 20) * 20;
+          position.y = -20 + Math.round(position.y / 20) * 20;
+        } else {
+          position.x = Math.round(position.x / 20) * 20;
+          position.y = Math.round(position.y / 20) * 20;
+        }
+
+        const tempHandleId = document
+          .getElementById(oppositeHandleString + '-' + this.props.id)
+          ?.getBoundingClientRect();
+
+        position.x = ((oppositeHandleId.x - tempHandleId!.x) / 20) * 20 + position.x;
+        position.y = ((oppositeHandleId.y - tempHandleId!.y) / 20) * 20 + position.y;
+
+        return position;
       };
     }
 
