@@ -1,14 +1,15 @@
 import React, { FunctionComponent } from 'react';
 import { Multiline } from '../../../utils/svg/multiline';
 import { UMLActivityMergeNode } from './uml-activity-merge-node';
+import { ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const UMLActivityMergeNodeComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
-    <polyline
+    <ThemedPolyline
       points={`${element.bounds.width / 2} 0, ${element.bounds.width} ${element.bounds.height / 2}, ${
         element.bounds.width / 2
       } ${element.bounds.height}, 0 ${element.bounds.height / 2}, ${element.bounds.width / 2} 0`}
-      stroke={element.strokeColor || 'black'}
+      strokeColor={element.strokeColor}
     />
     <Multiline
       x={element.bounds.width / 2}

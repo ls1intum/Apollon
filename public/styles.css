@@ -1,6 +1,7 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif,
     Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  color: #faf8f8; 
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -8,9 +9,10 @@ body {
 }
 
 .container {
+  background-color: #1b2121;
   display: flex;
   flex-grow: 2;
-  margin: 20px;
+  padding: 20px;
 }
 
 main {
@@ -95,8 +97,8 @@ aside.sidebar section > div {
 
 .dropdown select {
   width: 100%;
-  background: white;
-  color: #212529;
+  background: #4269a0;
+  color: #faf8f8;
   border: 1px solid rgba(0, 0, 0, 0.15);
   margin: 0;
   line-height: 1.5;

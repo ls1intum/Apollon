@@ -1,10 +1,11 @@
 import React, { FunctionComponent } from 'react';
 import { Multiline } from '../../../utils/svg/multiline';
 import { UMLActivityObjectNode } from './uml-activity-object-node';
+import { ThemedRect } from '../../../components/theme/themedComponents';
 
 export const UMLActivityObjectNodeComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
-    <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} />
+    <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} />
     <Multiline
       x={element.bounds.width / 2}
       y={element.bounds.height / 2}

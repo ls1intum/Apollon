@@ -1,6 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { FlowchartFlowline } from './flowchart-flowline';
+import { ThemedPolyline, ThemedPath } from '../../../components/theme/themedComponents';
 
 export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
@@ -53,12 +54,12 @@ export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <path d="M0,29 L30,15 L0,1" fill="none" stroke={element.strokeColor || 'black'} />
+        <ThemedPath d="M0,29 L30,15 L0,1" fillColor="none" strokeColor={element.strokeColor} />
       </marker>
-      <polyline
+      <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.strokeColor || 'black'}
-        fill="none"
+        strokeColor={element.strokeColor}
+        fillColor="none"
         strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}
       />

@@ -1,6 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLClassifier } from './uml-classifier';
+import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
 export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scale, children }) => {
   return (
@@ -40,9 +41,9 @@ export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scal
         </svg>
       )}
       {children}
-      <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} fill="none" pointerEvents="none" />
-      <path d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} stroke={element.strokeColor || 'black'} />
-      <path d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} stroke={element.strokeColor || 'black'} />
+      <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} fillColor="none" pointerEvents="none" />
+      <ThemedPath d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} strokeColor={element.strokeColor} />
+      <ThemedPath d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} strokeColor={element.strokeColor} />
     </g>
   );
 };

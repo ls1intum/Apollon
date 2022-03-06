@@ -89,7 +89,7 @@ export const StyledButton = styled(Button)<typeof defaultProps>((props) => {
     css`
       background-color: ${color};
       border-color: ${color};
-      color: ${props.theme.color.white};
+      color: ${props.theme.color.background};
 
       :hover {
         background-color: ${darken(color, HOVER_BACKGROUND_DARKEN)};
@@ -110,7 +110,7 @@ export const StyledButton = styled(Button)<typeof defaultProps>((props) => {
 
       :hover {
         background-color: ${color};
-        color: ${props.theme.color.white};
+        color: ${props.theme.color.background};
       }
     `}
   `;

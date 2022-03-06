@@ -5,6 +5,7 @@ import { UMLInterfaceRequired } from './uml-interface-required';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
 import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
+import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 type OwnProps = {
   element: UMLInterfaceRequired;
@@ -70,18 +71,18 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
         markerUnits="strokeWidth"
       >
         {/*M -> Move to, A -> Arc radiusX, radiusY, x-axis-rotation, bow-flag, endpointX,endpointY */}
-        <path
+        <ThemedPath
           d={`M ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2) - (hasOppositeRequiredInterface ? 5 : 0)} -${
             (REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)) / 2
           } a ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2)},${Math.floor(
             REQUIRED_INTERFACE_MARKER_SIZE / 2,
           )} 0 0 0 0,${REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
-          fill="none"
-          stroke={element.strokeColor || 'black'}
+          fillColor="none"
+          strokeColor={element.strokeColor}
           strokeWidth={2 * scale}
         />
       </marker>
-      <polyline
+      <ThemedPolyline
         points={element.path
           .map((point, index) => {
             if (index === element.path.length - 1) {
@@ -90,8 +91,8 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
             return `${point.x} ${point.y}`;
           })
           .join(',')}
-        stroke={element.strokeColor || 'black'}
-        fill="none"
+        strokeColor={element.strokeColor}
+        fillColor="none"
         strokeWidth={1 * scale}
         markerEnd={`url(#marker-${element.id})`}
       />

@@ -4,6 +4,7 @@ import { Point } from '../../../utils/geometry/point';
 import { ClassRelationshipType } from '../../uml-class-diagram';
 import { UMLAssociation } from './uml-association';
 import { UMLRelationshipType } from '../../uml-relationship-type';
+import { ThemedPath, ThemedPathContrast, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 const Marker = {
   Arrow: (id: string, color?: string, scale: number = 1.0) => (
@@ -17,7 +18,7 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`} fill="none" stroke={color || 'black'} />
+      <ThemedPath d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`} fillColor="none" strokeColor={color} />
     </marker>
   ),
   Rhombus: (id: string, color?: string, scale: number = 1.0) => (
@@ -32,7 +33,7 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,15 L15,22 L30,15 L15,8 z" fill="white" stroke={color || 'black'} />
+      <ThemedPath d="M0,15 L15,22 L30,15 L15,8 z" strokeColor={color} />
     </marker>
   ),
   RhombusFilled: (id: string, color?: string, scale: number = 1.0) => (
@@ -47,7 +48,7 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,15 L15,22 L30,15 L15,8 z" fill={color || 'black'} />
+      <ThemedPathContrast d="M0,15 L15,22 L30,15 L15,8 z" fillColor={color} />
     </marker>
   ),
   Triangle: (id: string, color?: string, scale: number = 1.0) => (
@@ -62,10 +63,11 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,1 L0,29 L30,15 z" fill="white" stroke={color || 'black'} />
+      <ThemedPath d="M0,1 L0,29 L30,15 z" strokeColor={color} />
     </marker>
   ),
 };
+
 
 export const layoutTextForUMLAssociation = (location: IUMLElementPort['direction'], position: 'TOP' | 'BOTTOM') => {
   switch (location) {
@@ -137,10 +139,10 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, sca
   return (
     <g>
       {marker && marker(id, element.strokeColor, scale)}
-      <polyline
+      <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.strokeColor || 'black'}
-        fill="none"
+        strokeColor={element.strokeColor}
+        fillColor="none"
         strokeWidth={1}
         markerEnd={`url(#${id})`}
         strokeDasharray={stroke}
