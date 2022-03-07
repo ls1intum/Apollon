@@ -1,12 +1,13 @@
-import React, { FunctionComponent, SVGProps } from 'react';
+import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLUseCaseExtend } from './uml-use-case-extend';
+import { ThemedPath } from '../../../components/theme/themedComponents';
 
-const Arrow: FunctionComponent<{ id: string; color?: string } & SVGProps<SVGPathElement>> = ({
+const Arrow: FunctionComponent<{ id: string; color?: string; d: string }> = ({
   id,
   color,
-  ...props
+  d,
 }) => (
   <g>
     <marker
@@ -19,9 +20,9 @@ const Arrow: FunctionComponent<{ id: string; color?: string } & SVGProps<SVGPath
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <path d="M0,29 L30,15 L0,1" fill="none" stroke={color || 'black'} />
+      <ThemedPath d="M0,29 L30,15 L0,1" fillColor="none" strokeColor={color} />
     </marker>
-    <path {...props} stroke={color || 'black'} strokeDasharray={7} markerEnd={`url(#marker-${id})`} />
+    <ThemedPath d={d} strokeDasharray={7} markerEnd={`url(#marker-${id})`} strokeColor={color} />
   </g>
 );
 

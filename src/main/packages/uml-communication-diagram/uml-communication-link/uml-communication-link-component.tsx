@@ -5,6 +5,8 @@ import { Point } from '../../../utils/geometry/point';
 import { UMLCommunicationLink } from './uml-communication-link';
 import { ICommunicationLinkMessage } from './uml-communiction-link-message';
 import { UmlCommunicationLinkTextComponent } from './uml-communication-link-text-component';
+import { ThemedPolyline } from '../../../components/theme/themedComponents';
+
 export const UMLCommunicationLinkComponent: FunctionComponent<Props> = ({ element }) => {
   const sources: ICommunicationLinkMessage[] = element.messages.filter((message) => message.direction === 'source');
   const targets: ICommunicationLinkMessage[] = element.messages.filter((message) => message.direction === 'target');
@@ -125,10 +127,10 @@ export const UMLCommunicationLinkComponent: FunctionComponent<Props> = ({ elemen
         }[direction]
       }
 
-      <polyline
+      <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.strokeColor || 'black'}
-        fill="none"
+        strokeColor={element.strokeColor}
+        fillColor="none"
         strokeWidth={1}
       />
     </g>

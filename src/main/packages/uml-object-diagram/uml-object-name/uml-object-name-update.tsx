@@ -20,6 +20,7 @@ import { UMLObjectAttribute } from '../uml-object-attribute/uml-object-attribute
 import { UMLObjectMethod } from '../uml-object-method/uml-object-method';
 import { UMLObjectName } from './uml-object-name';
 import UmlAttributeUpdate from '../../common/uml-classifier/uml-classifier-attribute-update';
+
 const Flex = styled.div`
   display: flex;
   align-items: baseline;

@@ -5,7 +5,7 @@ import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponen
 
 export const UMLComponentComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
   <g>
-    <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} fillColor="black"/>
+    <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} />
     <Text fill={element.textColor} y={`${25 * scale}px`} dominantBaseline="auto">
       {element.name}
     </Text>
@@ -21,8 +21,8 @@ export const UMLComponentComponent: FunctionComponent<Props> = ({ element, child
       <ThemedPath
         style={{ transform: `scale(${scale})` }}
         d="M 4.8 4.8 L 9.6 4.8 L 9.6 9.6 L 4.8 9.6 M 4.8 14.4 L 9.6 14.4 L 9.6 19.2 L 4.8 19.2"
-        fill="none"
-        stroke={element.strokeColor}
+        fillColor="none"
+        strokeColor={element.strokeColor}
         strokeWidth="1.2"
         strokeMiterlimit="10"
       />
