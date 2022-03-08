@@ -143,11 +143,13 @@ export const resizable =
         this.props.start();
         const element = event.currentTarget;
         element.setPointerCapture(event.pointerId);
-        element.addEventListener('pointermove', (e: PointerEvent) => {this.onPointerMove(e, resizeFrom);} );
+        element.addEventListener('pointermove', this.onPointerMove);
+        element.setAttribute('resizeFrom', resizeFrom);
         element.addEventListener('pointerup', this.onPointerUp, { once: true });
       };
 
-      private onPointerMove = (event: PointerEvent, resizeFrom = 'all') => {
+      private onPointerMove = (event: any) => {
+        const resizeFrom = event.currentTarget.getAttribute('resizeFrom');
         let width = 0;
         let height = 0;
         switch (resizeFrom) {
