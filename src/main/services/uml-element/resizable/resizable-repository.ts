@@ -1,6 +1,6 @@
 import { AsyncAction } from '../../../utils/actions/actions';
 import { ResizableActionTypes, ResizeEndAction, ResizeStartAction } from './resizable-types';
-import { ResizeAction, ResizingActionTypes } from './resizing-types';
+import { ResizeAction, ResizeRepositionAction, ResizingActionTypes } from './resizing-types';
 
 export const Resizable = {
   startResizing:
@@ -32,6 +32,21 @@ export const Resizable = {
         undoable: false,
       });
     },
+
+    resizeWithReposition:
+      (delta: { width: number; height: number }, resizeFrom: string, id?: string | string[]): AsyncAction =>
+      (dispatch, getState) => {
+        const ids = id ? (Array.isArray(id) ? id : [id]) : getState().resizing;
+        if (!ids.length) {
+          return;
+        }
+
+        dispatch<ResizeRepositionAction>({
+          type: ResizingActionTypes.RESIZE_WITH_REPOSITION,
+          payload: { ids, delta, resizeFrom},
+          undoable: false,
+        });
+      },
 
   endResizing:
     (id?: string | string[]): AsyncAction =>
