@@ -37,7 +37,7 @@ function* renderAfterUpdate(): SagaIterator {
 }
 
 function* renderWhileResize(): SagaIterator {
-  const action: ResizeAction = yield take(ResizingActionTypes.RESIZE);
+  const action: ResizeAction = yield take([ResizingActionTypes.RESIZE, ResizingActionTypes.RESIZE_WITH_REPOSITION]);
   if (isInternal(action)) {
     return;
   }
