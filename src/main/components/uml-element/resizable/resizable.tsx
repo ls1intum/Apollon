@@ -12,7 +12,6 @@ type StateProps = {};
 type DispatchProps = {
   start: AsyncDispatch<typeof UMLElementRepository.startResizing>;
   resize: AsyncDispatch<typeof UMLElementRepository.resize>;
-  resizeWithReposition: AsyncDispatch<typeof UMLElementRepository.resizeWithReposition>;
   end: AsyncDispatch<typeof UMLElementRepository.endResizing>;
 };
 
@@ -28,7 +27,6 @@ type State = typeof initialState;
 const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(null, {
   start: UMLElementRepository.startResizing,
   resize: UMLElementRepository.resize,
-  resizeWithReposition: UMLElementRepository.resizeWithReposition,
   end: UMLElementRepository.endResizing,
 });
 
@@ -90,7 +88,7 @@ export const resizable =
       }
 
       render() {
-        const { start, resize, resizeWithReposition, end, ...props } = this.props;
+        const { start, resize, end, ...props } = this.props;
         return (
           <WrappedComponent {...props}>
             {props.children}
@@ -111,13 +109,7 @@ export const resizable =
 
         this.setState((state) => ({ offset: state.offset.add(width, height) }));
 
-        if(resizeFrom === 'bottomRight') {
-          this.props.resize({ width, height });
-        } else {
-          this.props.resizeWithReposition({width, height}, resizeFrom);
-        }
-        
-        
+        this.props.resize({ width, height }, resizeFrom);
       };
 
       private onPointerDown = (event: React.PointerEvent<SVGElement>, resizeFrom: string) => {

@@ -105,7 +105,7 @@ export function* render(id: string): SagaIterator {
     if (Object.values(size).some((x) => x !== 0)) {
       yield put<ResizeAction>({
         type: ResizingActionTypes.RESIZE,
-        payload: { ids: [update.id], delta: size },
+        payload: { ids: [update.id], resizeFrom: 'bottomRight', delta: size },
         undoable: false,
       });
     }
