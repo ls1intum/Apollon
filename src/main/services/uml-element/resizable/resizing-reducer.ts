@@ -27,8 +27,8 @@ export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, act
         obj.y = elem.y;
         break;
       default:
-        obj.x = elem.x - payload.delta.width;
-        obj.y = elem.y - payload.delta.height;
+        obj.x = elem.x;
+        obj.y = elem.y;
         break;
     }
     return obj;
@@ -53,6 +53,7 @@ export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, act
                 width: Math.max(elements[id].bounds.width + payload.delta.width, 0),
                 height: Math.max(elements[id].bounds.height + payload.delta.height, 0),
               },
+              resizeFrom: payload.resizeFrom
             },
           }),
         }),
