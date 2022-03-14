@@ -123,7 +123,6 @@ export const resizable =
         if (width === 0 && height === 0) return;
 
         this.setState((state) => ({ offset: state.offset.add(width, height) }));
-
         this.props.resize({ width, height }, resizeFrom);
       };
 
