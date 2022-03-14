@@ -73,7 +73,6 @@ const HandleBottomLeft = styled.rect.attrs({
   pointer-events: all;
 `;
 
-
 export const resizable =
   (options?: { preventX: boolean; preventY: boolean }) =>
   (
@@ -92,10 +91,26 @@ export const resizable =
         return (
           <WrappedComponent {...props}>
             {props.children}
-            <HandleBottomRight onPointerDown={(e) => {this.onPointerDown(e, 'bottomRight');}} />
-            <HandleTopLeft onPointerDown={(e) => {this.onPointerDown(e, 'topLeft');}} />
-            <HandleTopRight onPointerDown={(e) => {this.onPointerDown(e, 'topRight');}} />
-            <HandleBottomLeft onPointerDown={(e) => {this.onPointerDown(e, 'bottomLeft');}} />
+            <HandleBottomRight
+              onPointerDown={(e) => {
+                this.onPointerDown(e, 'bottomRight');
+              }}
+            />
+            <HandleTopLeft
+              onPointerDown={(e) => {
+                this.onPointerDown(e, 'topLeft');
+              }}
+            />
+            <HandleTopRight
+              onPointerDown={(e) => {
+                this.onPointerDown(e, 'topRight');
+              }}
+            />
+            <HandleBottomLeft
+              onPointerDown={(e) => {
+                this.onPointerDown(e, 'bottomLeft');
+              }}
+            />
           </WrappedComponent>
         );
       }

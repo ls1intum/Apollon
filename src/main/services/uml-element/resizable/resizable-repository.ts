@@ -28,7 +28,7 @@ export const Resizable = {
 
       dispatch<ResizeAction>({
         type: ResizingActionTypes.RESIZE,
-        payload: { ids, delta, resizeFrom},
+        payload: { ids, delta, resizeFrom },
         undoable: false,
       });
     },

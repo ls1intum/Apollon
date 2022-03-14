@@ -7,8 +7,6 @@ export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, act
   const obj = { x: 0, y: 0 };
 
   const getUpdatedPosition = (elem: IBoundary, payload: any, resizeFrom: string) => {
-
-
     switch (resizeFrom) {
       case 'topLeft':
         obj.x = elem.x - payload.delta.width;
@@ -34,8 +32,6 @@ export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, act
     return obj;
   };
 
-
-
   switch (action.type) {
     case ResizingActionTypes.RESIZE: {
       const { payload } = action;
@@ -53,7 +49,7 @@ export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, act
                 width: Math.max(elements[id].bounds.width + payload.delta.width, 0),
                 height: Math.max(elements[id].bounds.height + payload.delta.height, 0),
               },
-              resizeFrom: payload.resizeFrom
+              resizeFrom: payload.resizeFrom,
             },
           }),
         }),
