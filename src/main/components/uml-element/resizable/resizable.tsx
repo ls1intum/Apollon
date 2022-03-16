@@ -116,8 +116,8 @@ export const resizable =
       }
 
       private resize = (width: number, height: number, resizeFrom: string) => {
-        width = Math.round(width / 20) * 20;
-        height = Math.round(height / 20) * 20;
+        width = Math.round(width / 5) * 5;
+        height = Math.round(height / 5) * 5;
         if (options && options.preventX) width = 0;
         if (options && options.preventY) height = 0;
         if (width === 0 && height === 0) return;
