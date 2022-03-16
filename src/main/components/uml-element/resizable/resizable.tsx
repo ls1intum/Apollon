@@ -131,21 +131,23 @@ export const resizable =
           return;
         }
 
+        let offset = new Point();
         switch (resizeFrom) {
           case 'bottomRight':
-            this.setState({ resizing: true, offset: new Point(event.clientX, event.clientY) });
+            offset = new Point(event.clientX, event.clientY);
             break;
           case 'topLeft':
-            this.setState({ resizing: true, offset: new Point(-event.clientX, -event.clientY) });
+            offset = new Point(-event.clientX, -event.clientY);
             break;
           case 'topRight':
-            this.setState({ resizing: true, offset: new Point(event.clientX, -event.clientY) });
+            offset = new Point(event.clientX, -event.clientY);
             break;
           case 'bottomLeft':
-            this.setState({ resizing: true, offset: new Point(-event.clientX, event.clientY) });
+            offset = new Point(-event.clientX, event.clientY);
             break;
         }
 
+        this.setState({ resizing: true, offset });
         this.props.start();
         const element = event.currentTarget;
         element.setPointerCapture(event.pointerId);
