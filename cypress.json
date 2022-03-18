@@ -1,0 +1,5 @@
+{
+    "baseUrl": "http://localhost:8888",
+    "integrationFolder": "./src/tests/e2e/specs",
+    "supportFile": "./src/tests/e2e/support/index.ts"
+}

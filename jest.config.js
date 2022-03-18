@@ -124,7 +124,7 @@ module.exports = {
   // setupFiles: [],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect', './src/tests/test-utils/setup-test.ts'],
+  setupFilesAfterEnv: ['@testing-library/jest-dom/extend-expect', './src/tests/unit/test-utils/setup-test.ts'],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,
@@ -142,10 +142,10 @@ module.exports = {
   // testLocationInResults: false,
 
   // The glob patterns Jest uses to detect test files
-  testMatch: ['**/tests/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[tj]s?(x)'],
+  testMatch: ['**/tests/unit/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[tj]s?(x)'],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  testPathIgnorePatterns: ['.*\\/tests\\/test-utils\\/.*'],
+  testPathIgnorePatterns: ['.*\\/tests/unit\\/test-utils\\/.*'],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
   // testRegex: [],
