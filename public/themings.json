@@ -10,12 +10,12 @@
         "--apollon-gray-variant": "#343a40"
     },
     "dark": {
-        "--apollon-primary": "#4269a0",
+        "--apollon-primary": "#51a2a2",
         "--apollon-primary-contrast": "#eae1e1",
         "--apollon-secondary": "#6f85c2",
         "--apollon-warning-yellow": "#ffc800",
         "--apollon-background": "#1B2121",
-        "--apollon-background-variant": "#3d4b4b",
+        "--apollon-background-variant": "#3e4c4c",
         "--apollon-gray": "#343a40",
         "--apollon-gray-variant": "#6c757d"
     }
