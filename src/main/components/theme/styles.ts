@@ -23,7 +23,7 @@ const apollonTheme = {
     grayAccent: 'var(--gray-variant)',
   },
   font: {
-    color: 'var(--primary',
+    color: 'var(--primary-contrast)',
     family: 'Helvetica Neue, Helvetica, Arial, sans-serif',
     size: 16,
   },

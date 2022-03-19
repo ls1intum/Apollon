@@ -15,7 +15,7 @@
         "--secondary": "#6f85c2",
         "--warning-yellow": "#ffc800",
         "--background": "#1B2121",
-        "--background-variant": "#9BB5BB",
+        "--background-variant": "#3d4b4b",
         "--gray": "#343a40",
         "--gray-variant": "#6c757d"
     }
