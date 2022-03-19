@@ -1,15 +1,26 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif,
     Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
-  color: #faf8f8; 
+  color: var(--primary-contrast); 
   display: flex;
   flex-direction: column;
   height: 100vh;
   margin: 0;
 }
 
+:root {
+  --primary: #4269a0;
+  --primary-contrast: #faf8f8;
+  --secondary: #6f85c2;
+  --warning-yellow: #ffc800;
+  --background: #1B2121;
+  --background-variant: #9BB5BB;
+  --gray: #343a40;
+  --gray-variant: #6c757d;
+}
+
 .container {
-  background-color: #1b2121;
+  background-color: var(--background);
   display: flex;
   flex-grow: 2;
   padding: 20px;
@@ -37,7 +48,7 @@ aside.sidebar section > div {
  */
 
 .navbar {
-  background-color: #353d47;
+  background-color: var(--gray);
   line-height: 1.5;
   font-size: 0.9rem;
   font-weight: 300;
@@ -49,7 +60,7 @@ aside.sidebar section > div {
   vertical-align: middle;
   font-weight: 700;
   font-size: 1.125rem;
-  color: #ffffff;
+  color: var(--primary-contrast);
 }
 
 .navbar-brand.logo {
@@ -97,8 +108,8 @@ aside.sidebar section > div {
 
 .dropdown select {
   width: 100%;
-  background: #4269a0;
-  color: #faf8f8;
+  background: var(--primary);
+  color: var(--primary-contrast);
   border: 1px solid rgba(0, 0, 0, 0.15);
   margin: 0;
   line-height: 1.5;
@@ -135,7 +146,7 @@ aside.sidebar section > div {
 
 .switch button {
   width: 100%;
-  background: white;
+  background: var(--primary-contrast);
   color: #212529;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-left: none;
@@ -157,13 +168,13 @@ aside.sidebar section > div {
 }
 
 .switch button:hover {
-  background-color: #e2e6ea;
-  border-color: #dae0e5;
+  background-color: var(--gray-variant);
+  border-color: var(--gray);
 }
 
 .switch button:active {
-  background-color: #dae0e5;
-  border-color: #d3d9df;
+  background-color: var(--gray-variant);
+  border-color: var(--gray);
 }
 
 /**
