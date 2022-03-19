@@ -13,17 +13,17 @@ export type Size = 'sm' | 'md' | 'lg';
 
 const apollonTheme = {
   color: {
-    primary: 'var(--apollon-primary)',
-    secondary: 'var(--apollon-secondary)',
-    warningYellow: 'var(--apollon-warning-yellow)',
-    background: 'var(--apollon-background)',
-    backgroundVariant: 'var(--apollon-background-variant)',
-    primaryContrast: 'var(--apollon-primary-contrast)',
-    gray: 'var(--apollon-gray)',
-    grayAccent: 'var(--apollon-gray-variant)',
+    primary: 'var(--apollon-primary, #2a8fbd)',
+    secondary: 'var(--apollon-secondary, #6c757d)',
+    warningYellow: 'var(--apollon-warning-yellow, #ffc800)',
+    background: 'var(--apollon-background, #ffffff)',
+    backgroundVariant: 'var(--apollon-background-variant, #e5e5e5)',
+    primaryContrast: 'var(--apollon-primary-contrast, #212529)',
+    gray: 'var(--apollon-gray, #e9ecef)',
+    grayAccent: 'var(--apollon-gray-variant, #343a40)',
   },
   font: {
-    color: 'var(--apollon-primary-contrast)',
+    color: 'var(--apollon-primary-contrast, #212529)',
     family: 'Helvetica Neue, Helvetica, Arial, sans-serif',
     size: 16,
   },
