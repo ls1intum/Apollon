@@ -8,7 +8,7 @@ import { ThemedRect } from '../../../components/theme/themedComponents';
 export const UMLClassifierMemberComponent: FunctionComponent<Props> = ({ element, scale }) => {
   return (
     <g>
-      <ThemedRect width="100%" height="100%" />
+      <ThemedRect strokeColor="none" width="100%" height="100%" />
       <Text x={10 * scale} fill={element.textColor} fontWeight="normal" textAnchor="start">
         {element.name}
       </Text>
