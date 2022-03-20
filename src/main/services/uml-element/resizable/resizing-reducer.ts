@@ -9,15 +9,15 @@ export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, act
   const getUpdatedPosition = (elem: IBoundary, payload: any, resizeFrom: string) => {
     switch (resizeFrom) {
       case 'topLeft':
-        obj.x = elem.x - payload.delta.width;
-        obj.y = elem.y - payload.delta.height;
+        obj.x = Math.min(elem.x - payload.delta.width, elem.x + elem.width);
+        obj.y = Math.min(elem.y - payload.delta.height, elem.y + elem.height);
         break;
       case 'topRight':
         obj.x = elem.x;
-        obj.y = elem.y - payload.delta.height;
+        obj.y = Math.min(elem.y - payload.delta.height, elem.y + elem.height);
         break;
       case 'bottomLeft':
-        obj.x = elem.x - payload.delta.width;
+        obj.x = Math.min(elem.x - payload.delta.width, elem.x + elem.width);
         obj.y = elem.y;
         break;
       case 'bottomRight':
