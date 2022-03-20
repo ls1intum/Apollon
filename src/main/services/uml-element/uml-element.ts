@@ -38,7 +38,7 @@ export const enum ResizeFrom {
   TOPLEFT = 'topLeft',
   TOPRIGHT = 'topRight',
   BOTTOMLEFT = 'bottomLeft',
-  BOTTOMRIGHT = 'bottomRight'
+  BOTTOMRIGHT = 'bottomRight',
 }
 
 export const getPortsForElement = (element: IUMLElement): { [key in Direction]: Point } => {
