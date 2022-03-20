@@ -1,26 +1,27 @@
 import { Reducer } from 'redux';
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { Actions } from '../../actions';
+import { ResizeFrom } from '../uml-element';
 import { ResizingActionTypes, ResizingState } from './resizing-types';
 
 export const ResizingReducer: Reducer<ResizingState, Actions> = (state = {}, action) => {
   const obj = { x: 0, y: 0 };
 
-  const getUpdatedPosition = (elem: IBoundary, payload: any, resizeFrom: string) => {
+  const getUpdatedPosition = (elem: IBoundary, payload: any, resizeFrom: ResizeFrom) => {
     switch (resizeFrom) {
-      case 'topLeft':
+      case ResizeFrom.TOPLEFT:
         obj.x = Math.min(elem.x - payload.delta.width, elem.x + elem.width);
         obj.y = Math.min(elem.y - payload.delta.height, elem.y + elem.height);
         break;
-      case 'topRight':
+      case ResizeFrom.TOPRIGHT:
         obj.x = elem.x;
         obj.y = Math.min(elem.y - payload.delta.height, elem.y + elem.height);
         break;
-      case 'bottomLeft':
+      case ResizeFrom.BOTTOMLEFT:
         obj.x = Math.min(elem.x - payload.delta.width, elem.x + elem.width);
         obj.y = elem.y;
         break;
-      case 'bottomRight':
+      case ResizeFrom.BOTTOMRIGHT:
         obj.x = elem.x;
         obj.y = elem.y;
         break;

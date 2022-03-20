@@ -34,6 +34,13 @@ export interface IUMLElement {
   assessmentNote?: string;
 }
 
+export const enum ResizeFrom {
+  TOPLEFT = 'topLeft',
+  TOPRIGHT = 'topRight',
+  BOTTOMLEFT = 'bottomLeft',
+  BOTTOMRIGHT = 'bottomRight'
+}
+
 export const getPortsForElement = (element: IUMLElement): { [key in Direction]: Point } => {
   return {
     [Direction.Up]: new Point(element.bounds.width / 2, 0),
@@ -73,7 +80,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
   strokeColor?: string;
   textColor?: string;
   assessmentNote?: string;
-  resizeFrom = '';
+  resizeFrom: ResizeFrom = ResizeFrom.BOTTOMRIGHT;
 
   constructor(values?: DeepPartial<IUMLElement>) {
     assign<IUMLElement>(this, values);

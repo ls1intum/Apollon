@@ -1,4 +1,5 @@
 import { AsyncAction } from '../../../utils/actions/actions';
+import { ResizeFrom } from '../uml-element';
 import { ResizableActionTypes, ResizeEndAction, ResizeStartAction } from './resizable-types';
 import { ResizeAction, ResizingActionTypes } from './resizing-types';
 
@@ -19,7 +20,7 @@ export const Resizable = {
     },
 
   resize:
-    (delta: { width: number; height: number }, resizeFrom: string, id?: string | string[]): AsyncAction =>
+    (delta: { width: number; height: number }, resizeFrom: ResizeFrom, id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
       const ids = id ? (Array.isArray(id) ? id : [id]) : getState().resizing;
       if (!ids.length) {

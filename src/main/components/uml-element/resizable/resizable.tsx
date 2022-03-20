@@ -1,5 +1,6 @@
 import React, { Component, ComponentType } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
+import { ResizeFrom } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { Point } from '../../../utils/geometry/point';
@@ -93,29 +94,29 @@ export const resizable =
             {props.children}
             <HandleBottomRight
               onPointerDown={(e) => {
-                this.onPointerDown(e, 'bottomRight');
+                this.onPointerDown(e, ResizeFrom.BOTTOMRIGHT);
               }}
             />
             <HandleTopLeft
               onPointerDown={(e) => {
-                this.onPointerDown(e, 'topLeft');
+                this.onPointerDown(e, ResizeFrom.TOPLEFT);
               }}
             />
             <HandleTopRight
               onPointerDown={(e) => {
-                this.onPointerDown(e, 'topRight');
+                this.onPointerDown(e, ResizeFrom.TOPRIGHT);
               }}
             />
             <HandleBottomLeft
               onPointerDown={(e) => {
-                this.onPointerDown(e, 'bottomLeft');
+                this.onPointerDown(e, ResizeFrom.BOTTOMLEFT);
               }}
             />
           </WrappedComponent>
         );
       }
 
-      private resize = (width: number, height: number, resizeFrom: string) => {
+      private resize = (width: number, height: number, resizeFrom: ResizeFrom) => {
         width = Math.round(width / 5) * 5;
         height = Math.round(height / 5) * 5;
         if (options && options.preventX) width = 0;
@@ -126,23 +127,23 @@ export const resizable =
         this.props.resize({ width, height }, resizeFrom);
       };
 
-      private onPointerDown = (event: React.PointerEvent<SVGElement>, resizeFrom: string) => {
+      private onPointerDown = (event: React.PointerEvent<SVGElement>, resizeFrom: ResizeFrom) => {
         if (event.nativeEvent.which && event.nativeEvent.which !== 1) {
           return;
         }
 
         let offset = new Point();
         switch (resizeFrom) {
-          case 'bottomRight':
+          case ResizeFrom.BOTTOMRIGHT:
             offset = new Point(event.clientX, event.clientY);
             break;
-          case 'topLeft':
+          case ResizeFrom.TOPLEFT:
             offset = new Point(-event.clientX, -event.clientY);
             break;
-          case 'topRight':
+          case ResizeFrom.TOPRIGHT:
             offset = new Point(event.clientX, -event.clientY);
             break;
-          case 'bottomLeft':
+          case ResizeFrom.BOTTOMLEFT:
             offset = new Point(-event.clientX, event.clientY);
             break;
         }
@@ -161,19 +162,19 @@ export const resizable =
         let width = 0;
         let height = 0;
         switch (resizeFrom) {
-          case 'bottomRight':
+          case ResizeFrom.BOTTOMRIGHT:
             width = event.clientX - this.state.offset.x;
             height = event.clientY - this.state.offset.y;
             break;
-          case 'topLeft':
+          case ResizeFrom.TOPLEFT:
             width = -event.clientX - this.state.offset.x;
             height = -event.clientY - this.state.offset.y;
             break;
-          case 'topRight':
+          case ResizeFrom.TOPRIGHT:
             width = event.clientX - this.state.offset.x;
             height = -event.clientY - this.state.offset.y;
             break;
-          case 'bottomLeft':
+          case ResizeFrom.BOTTOMLEFT:
             width = -event.clientX - this.state.offset.x;
             height = event.clientY - this.state.offset.y;
             break;
