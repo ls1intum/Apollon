@@ -5,6 +5,7 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { assign } from '../../../utils/fx/assign';
 import { IBoundary } from '../../../utils/geometry/boundary';
+import { calculateNameBounds } from '../../../utils/name-bounds';
 import { UMLElementType } from '../../uml-element-type';
 
 export class UMLDeploymentArtifact extends UMLElement {
@@ -25,6 +26,8 @@ export class UMLDeploymentArtifact extends UMLElement {
 
   render(layer: ILayer): ILayoutable[] {
     this.bounds.height = Math.max(this.bounds.height, 40);
+    const namedBounds = calculateNameBounds(this, layer);
+    this.bounds = namedBounds;
     return [this];
   }
 }

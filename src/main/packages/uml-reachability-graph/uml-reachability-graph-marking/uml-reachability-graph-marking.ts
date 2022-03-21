@@ -5,6 +5,7 @@ import { UMLElementType } from '../../uml-element-type';
 import * as Apollon from '../../../typings';
 import { ReachabilityGraphElementType } from '..';
 import { DeepPartial } from 'redux';
+import { calculateNameBounds } from '../../../utils/name-bounds';
 
 export class UMLReachabilityGraphMarking extends UMLElement {
   type: UMLElementType = ReachabilityGraphElementType.ReachabilityGraphMarking;
@@ -35,6 +36,8 @@ export class UMLReachabilityGraphMarking extends UMLElement {
   }
 
   render(canvas: ILayer): ILayoutable[] {
+    const namedBounds = calculateNameBounds(this, canvas);
+    this.bounds = namedBounds;
     return [this];
   }
 }
