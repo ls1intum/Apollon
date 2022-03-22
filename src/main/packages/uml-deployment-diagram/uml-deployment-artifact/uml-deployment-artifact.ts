@@ -26,8 +26,7 @@ export class UMLDeploymentArtifact extends UMLElement {
 
   render(layer: ILayer): ILayoutable[] {
     this.bounds.height = Math.max(this.bounds.height, 40);
-    const namedBounds = calculateNameBounds(this, layer);
-    this.bounds = namedBounds;
+    this.bounds = calculateNameBounds(this, layer);
     return [this];
   }
 }

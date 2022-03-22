@@ -9,8 +9,7 @@ export class UMLUseCase extends UMLElement {
   type: UMLElementType = UseCaseElementType.UseCase;
 
   render(canvas: ILayer): ILayoutable[] {
-    const namedBounds = calculateNameBounds(this, canvas);
-    this.bounds = namedBounds;
+    this.bounds = calculateNameBounds(this, canvas);
     return [this];
   }
 }

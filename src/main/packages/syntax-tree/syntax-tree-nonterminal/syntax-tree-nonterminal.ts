@@ -9,8 +9,7 @@ export class SyntaxTreeNonterminal extends UMLElement {
   type: UMLElementType = SyntaxTreeElementType.SyntaxTreeNonterminal;
 
   render(canvas: ILayer): ILayoutable[] {
-    const namedBounds = calculateNameBounds(this, canvas);
-    this.bounds = namedBounds;
+    this.bounds = calculateNameBounds(this, canvas);
     return [this];
   }
 }

@@ -10,8 +10,7 @@ export class UMLActivityActionNode extends UMLElement {
   type: UMLElementType = ActivityElementType.ActivityActionNode;
 
   render(canvas: ILayer): ILayoutable[] {
-    const namedBounds = calculateNameBounds(this, canvas);
-    this.bounds = namedBounds;
+    this.bounds = calculateNameBounds(this, canvas);
     return [this];
   }
 }

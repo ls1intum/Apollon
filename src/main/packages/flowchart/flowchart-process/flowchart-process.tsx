@@ -9,8 +9,7 @@ export class FlowchartProcess extends UMLElement {
   type: UMLElementType = FlowchartElementType.FlowchartProcess;
 
   render(canvas: ILayer): ILayoutable[] {
-    const namedBounds = calculateNameBounds(this, canvas);
-    this.bounds = namedBounds;
+    this.bounds = calculateNameBounds(this, canvas);
     return [this];
   }
 }

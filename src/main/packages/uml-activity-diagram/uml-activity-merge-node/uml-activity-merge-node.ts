@@ -13,8 +13,7 @@ export class UMLActivityMergeNode extends UMLElement {
   bounds: IBoundary = { ...this.bounds };
 
   render(canvas: ILayer): ILayoutable[] {
-    const namedBounds = calculateNameBounds(this, canvas);
-    this.bounds = namedBounds;
+    this.bounds = calculateNameBounds(this, canvas);
     return [this];
   }
 }
