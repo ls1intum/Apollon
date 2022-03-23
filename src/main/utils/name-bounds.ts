@@ -9,7 +9,7 @@ export function calculateNameBounds(element: any, layer: ILayer): IBoundary {
     x: element.bounds.x,
     y: element.bounds.y,
     width: Math.round((Text.size(layer, element.name, { fontWeight: 'bold' }).width + 20) / radix) * radix,
-    height: 20,
+    height: Math.round((Text.size(layer, element.name, { fontWeight: 'bold' }).height + 20) / radix) * radix,
   };
 
   return computeBoundingBoxForElements([element, { bounds: nameBounds }]);
