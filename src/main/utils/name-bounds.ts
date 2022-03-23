@@ -2,7 +2,7 @@ import { ILayer } from '../services/layouter/layer';
 import { IBoundary, computeBoundingBoxForElements } from '../utils/geometry/boundary';
 import { Text } from '../utils/svg/text';
 
-export function calculateNameBounds(element: any, layer: ILayer) {
+export function calculateNameBounds(element: any, layer: ILayer): IBoundary {
   const radix = 10;
 
   const nameBounds: IBoundary = {
