@@ -5,7 +5,7 @@
       "types": ["cypress", "cypress-real-events"],
     },
     "include": [
-      "../node_modules/cypress",
+      "../../node_modules/cypress",
       "**/*.ts"
     ]
 }
