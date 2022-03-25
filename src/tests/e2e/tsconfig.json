@@ -1,11 +1,8 @@
 {
-    "compilerOptions": {
-      "target": "es5",
-      "lib": ["es6", "dom"],
-      "types": ["cypress", "cypress-real-events"],
-    },
-    "include": [
-      "../../node_modules/cypress",
-      "**/*.ts"
-    ]
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["es6", "dom"],
+    "types": ["cypress", "cypress-real-events"]
+  },
+  "include": ["../../node_modules/cypress", "**/*.ts"]
 }
