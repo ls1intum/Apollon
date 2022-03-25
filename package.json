@@ -92,6 +92,7 @@
     "copy-webpack-plugin": "10.2.4",
     "css-loader": "6.6.0",
     "cypress": "9.5.2",
+    "cypress-real-events": "1.7.0",
     "ejs-loader": "0.5.0",
     "fork-ts-checker-notifier-webpack-plugin": "4.0.0",
     "fork-ts-checker-webpack-plugin": "6.5.0",

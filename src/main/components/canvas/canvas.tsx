@@ -59,6 +59,7 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
           height={diagram.bounds.height}
           isStatic={isStatic}
           ref={this.layer}
+          data-cy="modeling-editor-canvas"
         >
           {this.layer.current && (
             <>

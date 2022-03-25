@@ -3,7 +3,7 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLComponent } from './uml-component';
 
 export const UMLComponentComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
-  <g>
+  <g data-cy="uml-component">
     <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} />
     <Text fill={element.textColor} y={`${25 * scale}px`} dominantBaseline="auto">
       {element.name}

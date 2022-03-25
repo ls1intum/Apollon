@@ -1,5 +1,8 @@
 import './commands';
 
+// real-events
+import "cypress-real-events/support";
+
 declare global {
     namespace Cypress {
       interface Chainable<Subject = any> {
@@ -7,7 +10,9 @@ declare global {
          * Custom command to select DOM element by data-cy attribute.
          * @example cy.dataCy('greeting')
          */
-        dataCy(): Chainable<JQuery<HTMLElement>>
+         visitAndWait(delay?: number): Chainable<JQuery<HTMLElement>>
+         selectModelType(typeToSelect: string): Chainable<JQuery<HTMLElement>>
+         dragElementIntoCanvas(typeToSelect: number): Chainable<JQuery<HTMLElement>>
       }
     }
 }
