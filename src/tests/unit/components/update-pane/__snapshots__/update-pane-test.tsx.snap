@@ -406,6 +406,7 @@ exports[`test update pane render with element 1`] = `
       >
         <svg
           class="c2"
+          data-cy="modeling-editor-canvas"
           height="640"
           id="modeling-editor-canvas"
           tabindex="-1"
@@ -932,6 +933,7 @@ exports[`test update pane render with relationship 1`] = `
       >
         <svg
           class="c2"
+          data-cy="modeling-editor-canvas"
           height="640"
           id="modeling-editor-canvas"
           tabindex="-1"

@@ -4,7 +4,9 @@ exports[`render the uml-component-component 1`] = `
 <body>
   <div>
     <svg>
-      <g>
+      <g
+        data-cy="uml-component"
+      >
         <rect
           height="100%"
           stroke="black"
