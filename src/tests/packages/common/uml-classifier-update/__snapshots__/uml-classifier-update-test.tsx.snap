@@ -6,14 +6,14 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-kLwhqv dzDqNU"
+          class="sc-hiCibw bDVCqB"
         >
           <input
-            class="sc-bkkeKt sc-ieecCq MxCiy envupA"
+            class="sc-hGPBjI sc-dlVxhl cVfAbk jCUhym"
             value=""
           />
           <button
-            class="sc-crHmcD sc-egiyK fSRBqm fMuhMJ"
+            class="sc-ksdxgE sc-hBUSln flQSpD kMHSFq"
             color="link"
             tabindex="-1"
           >
@@ -31,51 +31,51 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-ezbkAF ilalyW"
+          class="sc-ikJyIC ccBSzw"
         />
       </section>
       <section>
         <div
-          class="sc-bqiRlB jFkzca"
+          class="sc-fotOHu eItcz"
         >
           <button
-            class="sc-crHmcD sc-egiyK fSRBqm gTVDwA sc-ksdxgE iRqsfD"
+            class="sc-ksdxgE sc-hBUSln flQSpD IKOlz sc-fFeiMQ ezOASh"
             color="primary"
           >
             Abstract
           </button>
           <button
-            class="sc-crHmcD sc-egiyK fSRBqm gTVDwA sc-ksdxgE iRqsfD"
+            class="sc-ksdxgE sc-hBUSln flQSpD IKOlz sc-fFeiMQ ezOASh"
             color="primary"
           >
             Interface
           </button>
           <button
-            class="sc-crHmcD sc-egiyK fSRBqm gTVDwA sc-ksdxgE iRqsfD"
+            class="sc-ksdxgE sc-hBUSln flQSpD IKOlz sc-fFeiMQ ezOASh"
             color="primary"
           >
             Enumeration
           </button>
         </div>
         <hr
-          class="sc-ezbkAF ilalyW"
+          class="sc-ikJyIC ccBSzw"
         />
       </section>
       <section>
         <h1
-          class="sc-iJKOTD iFwWaa"
+          class="sc-bYoBSM jiPAMh"
         >
           Attributes
         </h1>
         <div
-          class="sc-bYoBSM crSzgf"
+          class="sc-jJoQJp dbShar"
         >
           <input
-            class="sc-bkkeKt sc-ieecCq MxCiy gktGUG"
+            class="sc-hGPBjI sc-dlVxhl cVfAbk dWDXys"
             value="attribute"
           />
           <button
-            class="sc-crHmcD sc-egiyK fSRBqm fMuhMJ"
+            class="sc-ksdxgE sc-hBUSln flQSpD kMHSFq"
             color="link"
             tabindex="-1"
           >
@@ -93,28 +93,28 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-bkkeKt sc-ieecCq MxCiy izDtXn"
+          class="sc-hGPBjI sc-dlVxhl cVfAbk fackjx"
           value=""
         />
       </section>
       <section>
         <hr
-          class="sc-ezbkAF ilalyW"
+          class="sc-ikJyIC ccBSzw"
         />
         <h1
-          class="sc-iJKOTD iFwWaa"
+          class="sc-bYoBSM jiPAMh"
         >
           Methods
         </h1>
         <div
-          class="sc-bYoBSM crSzgf"
+          class="sc-jJoQJp dbShar"
         >
           <input
-            class="sc-bkkeKt sc-ieecCq MxCiy gktGUG"
+            class="sc-hGPBjI sc-dlVxhl cVfAbk dWDXys"
             value="classMethod"
           />
           <button
-            class="sc-crHmcD sc-egiyK fSRBqm fMuhMJ"
+            class="sc-ksdxgE sc-hBUSln flQSpD kMHSFq"
             color="link"
             tabindex="-1"
           >
@@ -132,7 +132,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-bkkeKt sc-ieecCq MxCiy izDtXn"
+          class="sc-hGPBjI sc-dlVxhl cVfAbk fackjx"
           value=""
         />
       </section>
