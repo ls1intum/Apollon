@@ -1,27 +1,21 @@
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
-import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary';
-import { Text } from '../../../utils/svg/text';
+import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
+import { calculateNameBounds } from '../../../utils/name-bounds';
 
 export abstract class UMLPackage extends UMLContainer {
   render(layer: ILayer, children: ILayoutable[] = [], calculateWithoutChildren?: boolean): ILayoutable[] {
-    const radix = 10;
-    const nameBounds: IBoundary = {
-      x: this.bounds.x,
-      y: this.bounds.y,
-      width: Math.round((Text.size(layer, this.name, { fontWeight: 'bold' }).width + 20) / radix) * radix,
-      height: 20,
-    };
+    const calculatedNamedBounds = calculateNameBounds(this, layer);
 
     const absoluteElements = children.map((element) => {
       element.bounds.x += this.bounds.x;
       element.bounds.y += this.bounds.y;
       return element;
     });
-    let bounds = computeBoundingBoxForElements([this, { bounds: nameBounds }, ...absoluteElements]);
+    let bounds = computeBoundingBoxForElements([{ bounds: calculatedNamedBounds }, ...absoluteElements]);
     if (calculateWithoutChildren) {
-      bounds = computeBoundingBoxForElements([this, { bounds: nameBounds }]);
+      bounds = calculatedNamedBounds;
     }
     const relativeElements = absoluteElements.map((element) => {
       element.bounds.x -= this.bounds.x;
