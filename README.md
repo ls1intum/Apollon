@@ -43,7 +43,7 @@ For a complete overview of the API, please refer to the [lib/es6/index.d.ts](htt
 ### ESModules and CommonJs
 
 Apollon provides both an ESModules, as well as CommonJS version to be included. 
-The lay in `lib/es6` and `lib/es5` and the correct version should be resolved automatically.
+They lay in `lib/es6` and `lib/es5` and the correct version should be resolved automatically.
 
 ## Development Setup
 
