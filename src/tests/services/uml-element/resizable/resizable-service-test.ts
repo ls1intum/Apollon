@@ -1,4 +1,4 @@
-import { UMLElement } from '../../../../main/services/uml-element/uml-element';
+import { ResizeFrom, UMLElement } from '../../../../main/services/uml-element/uml-element';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { Resizable } from '../../../../main/services/uml-element/resizable/resizable-repository';
@@ -26,7 +26,7 @@ describe('test redux state update when resizing elements', () => {
     expect(store.getState().resizing).toHaveLength(1);
     expect(store.getState().resizing[0]).toEqual(elementToResize.id);
     const delta = { width: 10, height: 10 };
-    store.dispatch(Resizable.resize(delta, elementToResize.id));
+    store.dispatch(Resizable.resize(delta, ResizeFrom.BOTTOMRIGHT, elementToResize.id));
     expect(store.getState().elements[store.getState().resizing[0]].bounds.width).toEqual(
       elementToResize.bounds.width + delta.width,
     );
