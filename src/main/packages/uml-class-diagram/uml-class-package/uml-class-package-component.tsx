@@ -1,13 +1,13 @@
 import React, { FunctionComponent } from 'react';
 import { UMLClassPackage } from './uml-class-package';
-import { ThemedRect } from '../../../components/theme/themedComponents';
+import { ThemedRect, ThemedPath } from '../../../components/theme/themedComponents';
 
 export const UMLClassPackageComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
   <g>
-    <ThemedRect 
+    <ThemedPath 
       style={{ transform: `scale(${scale})` }}
       d={`M 0 10 V 0 H 40 V 10`}
-      strokeColor={element.strokeColor} 
+      strokeColor={element.strokeColor}
     />
     <ThemedRect
       y={10 * scale}
