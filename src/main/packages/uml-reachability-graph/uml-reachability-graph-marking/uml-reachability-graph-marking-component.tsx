@@ -5,13 +5,7 @@ import { ThemedRect, ThemedPath, ThemedPolyline } from '../../../components/them
 
 export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
-    <ThemedRect
-      rx={10 * scale}
-      ry={10 * scale}
-      width="100%"
-      height="100%"
-      strokeColor={element.strokeColor}
-    />
+    <ThemedRect rx={10 * scale} ry={10 * scale} width="100%" height="100%" strokeColor={element.strokeColor} />
     <Multiline
       x={element.bounds.width / 2}
       y={element.bounds.height / 2}

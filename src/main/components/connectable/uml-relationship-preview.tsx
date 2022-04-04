@@ -8,7 +8,6 @@ import { ModelState } from '../store/model-state';
 import { getPortsForElement } from '../../services/uml-element/uml-element';
 import { styled } from '../theme/styles';
 
-
 type OwnProps = {
   port: IUMLElementPort;
   target: Point;
@@ -37,10 +36,10 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   },
 );
 
-const Polyline = styled.polyline` 
+const Polyline = styled.polyline`
   stroke: ${(props) => props.theme.color.primaryContrast};
-  fill: "none";
-  pointer-events: "none";
+  fill: 'none';
+  pointer-events: 'none';
 `;
 
 class RelationshipPreview extends Component<Props> {
@@ -54,9 +53,7 @@ class RelationshipPreview extends Component<Props> {
     const path = [source, this.props.target];
     const points = path.map((p) => `${p.x} ${p.y}`).join(', ');
 
-    return (
-      <Polyline points={points} strokeDasharray="5,5" />
-    );
+    return <Polyline points={points} strokeDasharray="5,5" />;
   }
 }
 

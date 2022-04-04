@@ -18,7 +18,11 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <ThemedPath d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`} fillColor="none" strokeColor={color} />
+      <ThemedPath
+        d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`}
+        fillColor="none"
+        strokeColor={color}
+      />
     </marker>
   ),
   Rhombus: (id: string, color?: string, scale: number = 1.0) => (
@@ -67,7 +71,6 @@ const Marker = {
     </marker>
   ),
 };
-
 
 export const layoutTextForUMLAssociation = (location: IUMLElementPort['direction'], position: 'TOP' | 'BOTTOM') => {
   switch (location) {

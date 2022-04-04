@@ -5,13 +5,7 @@ import { ThemedEllipse } from '../../../components/theme/themedComponents';
 
 export const UMLUseCaseComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
-    <ThemedEllipse 
-      cx="50%"
-      cy="50%"
-      rx="50%"
-      ry="50%"
-      strokeColor={element.strokeColor}
-    />
+    <ThemedEllipse cx="50%" cy="50%" rx="50%" ry="50%" strokeColor={element.strokeColor} />
     <Text fill={element.textColor}>{element.name}</Text>
   </g>
 );

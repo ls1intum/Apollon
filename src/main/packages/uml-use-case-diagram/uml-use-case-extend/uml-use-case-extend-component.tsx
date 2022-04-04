@@ -4,11 +4,7 @@ import { Point } from '../../../utils/geometry/point';
 import { UMLUseCaseExtend } from './uml-use-case-extend';
 import { ThemedPath } from '../../../components/theme/themedComponents';
 
-const Arrow: FunctionComponent<{ id: string; color?: string; d: string }> = ({
-  id,
-  color,
-  d,
-}) => (
+const Arrow: FunctionComponent<{ id: string; color?: string; d: string }> = ({ id, color, d }) => (
   <g>
     <marker
       id={`marker-${id}`}

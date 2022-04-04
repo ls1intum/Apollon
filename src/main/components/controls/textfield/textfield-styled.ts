@@ -53,7 +53,7 @@ export const StyledTextfield = styled(Input)<Props>(
 
       &:not(:focus):not(:hover) {
         background: ${props.theme.color.background};
-        opacity: .5;
+        opacity: 0.5;
       }
     `}
 
