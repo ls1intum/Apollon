@@ -38,11 +38,11 @@ To unmount the editor instance, call its `destroy()` method:
 editor.destroy();
 ```
 
-For a complete overview of the API, please refer to the [lib/es6/index.d.ts](https://github.com/ls1intum/Apollon/blob/master/lib/index.d.ts) file.
+For a complete overview of the API, please refer to the [lib/es6/index.d.ts] file.
 
 ### ESModules and CommonJs
 
-Apollon provides both an ESModules, as well as CommonJS version to be included. 
+Apollon provides both an ESModules, as well as CommonJS version to be included.
 They lay in `lib/es6` and `lib/es5` and the correct version should be resolved automatically.
 
 ## Development Setup
