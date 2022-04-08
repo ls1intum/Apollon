@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+      "target": "ES5",
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "lib": ["es2021", "dom"],
+      "jsx": "react",
+      "outDir": "lib/es5",
+      "declaration": true,
+      "strict": true,
+      "strictNullChecks": true,
+      "skipLibCheck": true,
+      "importHelpers": true,
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "downlevelIteration": true,
+      "resolveJsonModule": true,
+      "sourceMap": true
+    },
+    "include": ["src/main/index.ts"]
+  }
