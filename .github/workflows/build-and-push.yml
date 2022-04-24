@@ -69,6 +69,6 @@ jobs:
         if: ${{ steps.compute-tag.outputs.result != 'FALSE' }}
         with:
           context: .
-          tags: ghcr.io/ls1intum/Apollon:${{ steps.compute-tag.outputs.result }}
+          tags: ghcr.io/ls1intum/apollon:${{ steps.compute-tag.outputs.result }}
           platforms: linux/amd64,linux/arm64/v8
           push: ${{ !startsWith(steps.compute-tag.outputs.result, 'pr-') }}
