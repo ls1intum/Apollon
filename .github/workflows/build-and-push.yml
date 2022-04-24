@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - feature/dockerize
+      - develop
       - release/*
     tags: '*'
   release:
@@ -33,7 +33,7 @@ jobs:
               if (context.ref === "refs/heads/main") {
                 return "latest";
               }
-              if (context.ref === "refs/heads/feature/dockerize") {
+              if (context.ref === "refs/heads/develop") {
                 return "dev";
               }
             }
