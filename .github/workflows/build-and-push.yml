@@ -34,7 +34,7 @@ jobs:
                 return "stable";
               }
               if (context.ref === "refs/heads/develop") {
-                return "dev";
+                return "latest";
               }
             }
             return "FALSE";
