@@ -31,7 +31,7 @@ jobs:
                 return context.ref.slice(10);
               }
               if (context.ref === "refs/heads/main") {
-                return "latest";
+                return "stable";
               }
               if (context.ref === "refs/heads/develop") {
                 return "dev";
