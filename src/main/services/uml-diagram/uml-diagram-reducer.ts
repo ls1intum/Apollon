@@ -60,6 +60,7 @@ export const UMLDiagramReducer: Reducer<UMLDiagramState, Actions> = (state = new
           width: state.bounds.width + payload.delta.width,
           height: state.bounds.height + payload.delta.height,
         },
+        resizeFrom: payload.resizeFrom,
       };
     }
   }

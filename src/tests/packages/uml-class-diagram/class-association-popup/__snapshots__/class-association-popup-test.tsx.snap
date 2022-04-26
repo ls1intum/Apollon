@@ -6,16 +6,16 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-AjmGg kCqhbF"
+          class="sc-jgrJph egxDCO"
         >
           <h1
-            class="sc-cidDSM krGAAg"
+            class="sc-iUKqMP gWHOpv"
             style="flex-grow: 1;"
           >
             Association
           </h1>
           <button
-            class="sc-hGPBjI sc-dlVxhl bGTeRv ggQQDc"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
             color="link"
           >
             <svg
@@ -31,7 +31,7 @@ exports[`test class association popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hGPBjI sc-dlVxhl bGTeRv ggQQDc"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
             color="link"
           >
             <svg
@@ -48,91 +48,91 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-caiLqq hqLjBJ"
+          class="sc-efQSVx fUCFgF"
         />
       </section>
       <section>
         <div
-          class="sc-bBHHxi"
+          class="sc-khQegj"
         >
           <button
-            class="sc-hGPBjI sc-dlVxhl bGTeRv jFrfHC sc-jObWnj kqMqnh"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk gvNraH sc-cNKqjZ UNdJm"
             color="primary"
           >
             Association (bidirectional)
           </button>
         </div>
         <hr
-          class="sc-caiLqq hqLjBJ"
+          class="sc-efQSVx fUCFgF"
         />
       </section>
       <section>
         <h1
-          class="sc-cidDSM jmCgIB"
+          class="sc-iUKqMP gqYEuC"
         />
         <div
-          class="sc-AjmGg kCqhbF"
+          class="sc-jgrJph egxDCO"
         >
           <span
-            class="sc-cidDSM uNsds"
+            class="sc-iUKqMP cvoInD"
             style="margin-right: 0.5em;"
           >
             Multiplicity
           </span>
           <input
-            class="sc-llYSUQ sc-iJKOTD hbtdLq euXfBl"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx efoXLu"
             style="min-width: 0;"
             value=""
           />
         </div>
         <div
-          class="sc-AjmGg kCqhbF"
+          class="sc-jgrJph egxDCO"
         >
           <span
-            class="sc-cidDSM uNsds"
+            class="sc-iUKqMP cvoInD"
             style="margin-right: 0.5em;"
           >
             Role
           </span>
           <input
-            class="sc-llYSUQ sc-iJKOTD hbtdLq iIvruj"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx hZHUNQ"
             value=""
           />
         </div>
         <hr
-          class="sc-caiLqq hqLjBJ"
+          class="sc-efQSVx fUCFgF"
         />
       </section>
       <section>
         <h1
-          class="sc-cidDSM jmCgIB"
+          class="sc-iUKqMP gqYEuC"
         />
         <div
-          class="sc-AjmGg kCqhbF"
+          class="sc-jgrJph egxDCO"
         >
           <span
-            class="sc-cidDSM uNsds"
+            class="sc-iUKqMP cvoInD"
             style="margin-right: 0.5em;"
           >
             Multiplicity
           </span>
           <input
-            class="sc-llYSUQ sc-iJKOTD hbtdLq euXfBl"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx efoXLu"
             style="min-width: 0;"
             value=""
           />
         </div>
         <div
-          class="sc-AjmGg kCqhbF"
+          class="sc-jgrJph egxDCO"
         >
           <span
-            class="sc-cidDSM uNsds"
+            class="sc-iUKqMP cvoInD"
             style="margin-right: 0.5em;"
           >
             Role
           </span>
           <input
-            class="sc-llYSUQ sc-iJKOTD hbtdLq iIvruj"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx hZHUNQ"
             value=""
           />
         </div>
