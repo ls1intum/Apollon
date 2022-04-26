@@ -71,4 +71,4 @@ jobs:
           context: .
           tags: ghcr.io/ls1intum/apollon:${{ steps.compute-tag.outputs.result }}
           platforms: linux/amd64,linux/arm64/v8
-          push: ${{ !startsWith(steps.compute-tag.outputs.result, 'pr-') }}
+          push: true
