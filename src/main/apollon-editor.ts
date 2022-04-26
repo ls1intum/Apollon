@@ -17,6 +17,7 @@ import { Dispatch } from './utils/actions/actions';
 import { UMLDiagramType, UMLModel } from './typings';
 import { debounce } from './utils/debounce';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
+import { replaceColorVariables } from './utils/replace-color-variables';
 
 export class ApollonEditor {
   /**
@@ -101,7 +102,7 @@ export class ApollonEditor {
     unmountComponentAtNode(div);
 
     return {
-      svg: innerHTML,
+      svg: replaceColorVariables(innerHTML),
       clip: svg.state.bounds,
     };
   }

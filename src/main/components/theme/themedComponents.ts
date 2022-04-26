@@ -1,10 +1,11 @@
 import { styled } from './styles';
-import { SVGProps } from 'react';
 
 export const ThemedPolyline = styled.polyline.attrs(
   (props: { fillColor: string | undefined; strokeColor: string | undefined }) => ({
     fillColor: props.fillColor,
     strokeColor: props.strokeColor,
+    stroke: props.strokeColor || 'black',
+    fill: props.fillColor || 'white',
   }),
 )`
   fill: ${(props) => props.fillColor || props.theme.color.background};
@@ -15,6 +16,8 @@ export const ThemedPath = styled.path.attrs(
   (props: { fillColor: string | undefined; strokeColor: string | undefined }) => ({
     fillColor: props.fillColor,
     strokeColor: props.strokeColor,
+    stroke: props.strokeColor || 'black',
+    fill: props.fillColor || 'white',
   }),
 )`
   fill: ${(props) => props.fillColor || props.theme.color.background};
@@ -25,6 +28,8 @@ export const ThemedPathContrast = styled.path.attrs(
   (props: { fillColor: string | undefined; strokeColor: string | undefined }) => ({
     fillColor: props.fillColor,
     strokeColor: props.strokeColor,
+    stroke: props.strokeColor || 'white',
+    fill: props.fillColor || 'black',
   }),
 )`
   fill: ${(props) => props.fillColor || props.theme.color.primaryContrast};
@@ -35,6 +40,8 @@ export const ThemedRect = styled.rect.attrs(
   (props: { fillColor: string | undefined; strokeColor: string | undefined }) => ({
     fillColor: props.fillColor,
     strokeColor: props.strokeColor,
+    stroke: props.strokeColor || 'black',
+    fill: props.fillColor || 'white',
   }),
 )`
   fill: ${(props) => props.fillColor || props.theme.color.background};
@@ -45,6 +52,8 @@ export const ThemedRectContrast = styled.rect.attrs(
   (props: { fillColor: string | undefined; strokeColor: string | undefined }) => ({
     fillColor: props.fillColor,
     strokeColor: props.strokeColor,
+    stroke: props.strokeColor || 'white',
+    fill: props.fillColor || 'black',
   }),
 )`
   fill: ${(props) => props.fillColor || props.theme.color.primaryContrast};
@@ -55,6 +64,8 @@ export const ThemedCircle = styled.circle.attrs(
   (props: { fillColor: string | undefined; strokeColor: string | undefined }) => ({
     fillColor: props.fillColor,
     strokeColor: props.strokeColor,
+    stroke: props.strokeColor || 'black',
+    fill: props.fillColor || 'white',
   }),
 )`
   fill: ${(props) => props.fillColor || props.theme.color.background};
@@ -65,6 +76,8 @@ export const ThemedCircleContrast = styled.circle.attrs(
   (props: { fillColor: string | undefined; strokeColor: string | undefined }) => ({
     fillColor: props.fillColor,
     strokeColor: props.strokeColor,
+    stroke: props.strokeColor || 'white',
+    fill: props.fillColor || 'black',
   }),
 )`
   fill: ${(props) => props.fillColor || props.theme.color.primaryContrast};
@@ -75,6 +88,8 @@ export const ThemedEllipse = styled.ellipse.attrs(
   (props: { fillColor: string | undefined; strokeColor: string | undefined }) => ({
     fillColor: props.fillColor,
     strokeColor: props.strokeColor,
+    stroke: props.strokeColor || 'black',
+    fill: props.fillColor || 'white',
   }),
 )`
   fill: ${(props) => props.fillColor || props.theme.color.background};
@@ -82,7 +97,7 @@ export const ThemedEllipse = styled.ellipse.attrs(
 `;
 
 export const ThemedLine = styled.line.attrs((props: { strokeColor: string | undefined }) => ({
-  strokeColor: props.strokeColor,
+  strokeColor: props.strokeColor || 'black',
 }))`
   stroke: ${(props) => props.strokeColor || props.theme.color.primaryContrast};
 `;

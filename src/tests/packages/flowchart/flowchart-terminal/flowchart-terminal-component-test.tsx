@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { FlowchartTerminal } from '../../../../main/packages/flowchart/flowchart-terminal/flowchart-terminal';
 import { FlowchartTerminalComponent } from '../../../../main/packages/flowchart/flowchart-terminal/flowchart-terminal-component';
 import { Multiline } from '../../../../main/utils/svg/multiline';
@@ -12,7 +12,7 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 
 it('render the flowchart-terminal-component', () => {
   const terminal: FlowchartTerminal = new FlowchartTerminal({ name: 'TestTerminalComponent' });
-  const { getByText, baseElement } = render(
+  const { getByText, baseElement } = wrappedRender(
     <svg>
       <FlowchartTerminalComponent element={terminal} scale={1.0} />
     </svg>,

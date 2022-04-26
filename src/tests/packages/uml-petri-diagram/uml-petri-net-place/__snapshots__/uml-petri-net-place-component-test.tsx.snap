@@ -6,8 +6,10 @@ exports[`uml-petri-net-arc-component render the uml-petri-net-arc-component 1`] 
     <svg>
       <g>
         <circle
+          class="sc-jRQBWg cSVyHD"
           cx="50%"
           cy="50%"
+          fill="white"
           fill-opacity="1"
           r="30"
           stroke="black"

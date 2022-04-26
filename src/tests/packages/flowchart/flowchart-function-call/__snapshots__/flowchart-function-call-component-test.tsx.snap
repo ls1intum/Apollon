@@ -6,18 +6,24 @@ exports[`render the flowchart-function-call-component 1`] = `
     <svg>
       <g>
         <rect
+          class="sc-hKwDye ljGHEE"
+          fill="white"
           height="100%"
           stroke="black"
           width="10"
           x="0"
         />
         <rect
+          class="sc-hKwDye ljGHEE"
+          fill="white"
           height="100%"
           stroke="black"
           width="180"
           x="10"
         />
         <rect
+          class="sc-hKwDye ljGHEE"
+          fill="white"
           height="100%"
           stroke="black"
           width="10"

@@ -38,8 +38,8 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 const Polyline = styled.polyline`
   stroke: ${(props) => props.theme.color.primaryContrast};
-  fill: 'none';
-  pointer-events: 'none';
+  fill: "none";
+  pointer-events: "none";
 `;
 
 class RelationshipPreview extends Component<Props> {
@@ -53,7 +53,7 @@ class RelationshipPreview extends Component<Props> {
     const path = [source, this.props.target];
     const points = path.map((p) => `${p.x} ${p.y}`).join(', ');
 
-    return <Polyline points={points} strokeDasharray="5,5" />;
+    return <Polyline points={points} pointer-events="none" stroke="black" fill="none" strokeDasharray="5,5" />;
   }
 }
 

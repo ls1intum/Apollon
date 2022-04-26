@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import * as React from 'react';
 import { SyntaxTreeNonterminal } from '../../../../main/packages/syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal';
 import { SyntaxTreeNonterminalComponent } from '../../../../main/packages/syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-component';
@@ -12,7 +12,7 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 
 it('render the syntax-tree-nonterminal-component', () => {
   const syntaxTreeNonterminal: SyntaxTreeNonterminal = new SyntaxTreeNonterminal({ name: 'TestActivityComponent' });
-  const { getByText, baseElement } = render(
+  const { getByText, baseElement } = wrappedRender(
     <svg>
       <SyntaxTreeNonterminalComponent element={syntaxTreeNonterminal} scale={1.0} />
     </svg>,

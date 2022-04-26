@@ -60,6 +60,7 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
             cx={radius + position.x}
             cy={radius + position.y}
             r={tokenRadius}
+            strokeColor="none"
             fillColor={element.strokeColor}
             fillOpacity={1}
           />

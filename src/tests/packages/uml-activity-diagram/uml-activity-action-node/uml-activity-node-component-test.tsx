@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { UMLActivityActionNode } from '../../../../main/packages/uml-activity-diagram/uml-activity-action-node/uml-activity-action-node';
 import { UMLActivityActionNodeComponent } from '../../../../main/packages/uml-activity-diagram/uml-activity-action-node/uml-activity-action-node-component';
 import { Multiline } from '../../../../main/utils/svg/multiline';
@@ -12,7 +12,7 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 
 it('render the uml-activity-action-node-component', () => {
   const actionNode: UMLActivityActionNode = new UMLActivityActionNode({ name: 'TestActivityComponent' });
-  const { getByText } = render(
+  const { getByText } = wrappedRender(
     <svg>
       <UMLActivityActionNodeComponent element={actionNode} scale={1.0} />
     </svg>,

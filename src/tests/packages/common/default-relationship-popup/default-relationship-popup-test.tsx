@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { Provider } from 'react-redux';
 import { Theme } from '../../../../main/components/theme/theme';
@@ -16,7 +17,7 @@ describe('test default relationship popup', () => {
 
     const store = getRealStore();
 
-    const { baseElement } = render(
+    const { baseElement } = wrappedRender(
       <I18nProvider>
         <Provider store={store}>
           <Theme>
@@ -37,7 +38,7 @@ describe('test default relationship popup', () => {
 
     const store = getRealStore(undefined, [element]);
 
-    const { getByRole } = render(
+    const { getByRole } = wrappedRender(
       <I18nProvider>
         <Provider store={store}>
           <Theme>

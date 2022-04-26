@@ -9,13 +9,13 @@ exports[`test assessable HOC display negative score 1`] = `
         transform="translate(200 0)"
       >
         <circle
-          class="sc-gsDKAQ"
-          fill="#e9ecef"
+          class="sc-kDTinF"
+          fill="var(--apollon-gray, #e9ecef)"
           fill-opacity="0.8"
           r="16"
         />
         <svg
-          class="sc-bdvvtL fjJROu sc-eCImPb iiaSzC"
+          class="sc-jrQzAO eCAavd sc-egiyK hGDENn"
           height="24"
           viewBox="0 0 352 512"
           width="24"
@@ -45,13 +45,13 @@ exports[`test assessable HOC display neutral score 1`] = `
         transform="translate(200 0)"
       >
         <circle
-          class="sc-gsDKAQ"
-          fill="#e9ecef"
+          class="sc-kDTinF"
+          fill="var(--apollon-gray, #e9ecef)"
           fill-opacity="0.8"
           r="16"
         />
         <svg
-          class="sc-bdvvtL fjJROu sc-jRQBWg bvvhzs"
+          class="sc-jrQzAO eCAavd sc-bqiRlB dwSdVV"
           height="24"
           viewBox="0 0 192 512"
           width="24"
@@ -81,13 +81,13 @@ exports[`test assessable HOC display positive score 1`] = `
         transform="translate(200 0)"
       >
         <circle
-          class="sc-gsDKAQ"
-          fill="#e9ecef"
+          class="sc-kDTinF"
+          fill="var(--apollon-gray, #e9ecef)"
           fill-opacity="0.8"
           r="16"
         />
         <svg
-          class="sc-bdvvtL fjJROu sc-hKwDye edjbty"
+          class="sc-jrQzAO eCAavd sc-crHmcD fepbyl"
           height="24"
           viewBox="0 0 512 512"
           width="24"
@@ -127,18 +127,18 @@ exports[`test assessable HOC display warning icon for incorrect assessment for t
         transform="translate(57.06749483200404 28.53374741600202)"
       >
         <circle
-          class="sc-gsDKAQ"
-          fill="#e9ecef"
+          class="sc-kDTinF"
+          fill="var(--apollon-gray, #e9ecef)"
           fill-opacity="0.8"
           r="16"
         />
         <polygon
-          class="sc-dkPtRN"
-          fill="#ffc800"
+          class="sc-iqseJM"
+          fill="var(--apollon-warning-yellow, #ffc800)"
           points="-10,8 0,-10 10,8"
         />
         <svg
-          class="sc-bdvvtL fjJROu sc-gKclnd gfiMiD"
+          class="sc-jrQzAO eCAavd sc-ksdxgE cMCTKs"
           height="12"
           viewBox="0 0 192 512"
           width="12"
@@ -156,13 +156,13 @@ exports[`test assessable HOC display warning icon for incorrect assessment for t
         transform="translate(100 50)"
       >
         <circle
-          class="sc-gsDKAQ"
-          fill="#e9ecef"
+          class="sc-kDTinF"
+          fill="var(--apollon-gray, #e9ecef)"
           fill-opacity="0.8"
           r="16"
         />
         <svg
-          class="sc-bdvvtL fjJROu sc-hKwDye edjbty"
+          class="sc-jrQzAO eCAavd sc-crHmcD fepbyl"
           height="24"
           viewBox="0 0 512 512"
           width="24"

@@ -16,6 +16,7 @@ exports[`render the uml-deplyoment-required-interface-component 1`] = `
           viewBox="0 0 27 27"
         >
           <path
+            class="sc-gsDKAQ datHse"
             d="M 13 -13.5 a 13,13 0 0 0 0,27"
             fill="none"
             stroke="black"
@@ -23,6 +24,7 @@ exports[`render the uml-deplyoment-required-interface-component 1`] = `
           />
         </marker>
         <polyline
+          class="sc-bdvvtL gRMJsX"
           fill="none"
           marker-end="url(#marker-05a6f05d-404a-4f38-ade1-d46c9f02902b)"
           points="0 0,100 97"
