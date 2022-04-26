@@ -38,8 +38,8 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 
 const Polyline = styled.polyline`
   stroke: ${(props) => props.theme.color.primaryContrast};
-  fill: "none";
-  pointer-events: "none";
+  fill: 'none';
+  pointer-events: 'none';
 `;
 
 class RelationshipPreview extends Component<Props> {

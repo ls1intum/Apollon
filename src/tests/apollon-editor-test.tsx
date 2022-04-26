@@ -20,22 +20,22 @@ const ignoreSVGClassNames = (svgString: string): string => {
   const classesToKeep = ['Class', 'Package'];
   const classes = svgString.match(classPattern)?.filter((element) => {
     let isIncluded = false;
-    classesToKeep.forEach((classToKeep)  => {
+    classesToKeep.forEach((classToKeep) => {
       if (element.includes(classToKeep)) {
         isIncluded = true;
       }
-    })
+    });
     return !isIncluded;
   });
-  
+
   if (!classes) {
     return svgString;
   }
-  
+
   for (const elem of classes) {
-    svgString = svgString.replace(elem, "");
+    svgString = svgString.replace(elem, '');
   }
-  
+
   return svgString;
 };
 

@@ -16,9 +16,12 @@ type CustomOptions = {
   store: MockStoreEnhanced<ModelState, DispatchExts> | Store<ModelState, any>;
 };
 
-export function wrappedRender(ui: ReactElement, options: CustomOptions = {
-  store: getMockedStore(),
-}) {
+export function wrappedRender(
+  ui: ReactElement,
+  options: CustomOptions = {
+    store: getMockedStore(),
+  },
+) {
   function AllProviders(props: AllProvidersProps): ReactElement {
     return (
       <Provider store={options.store}>
