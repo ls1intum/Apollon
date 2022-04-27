@@ -44,3 +44,10 @@ jobs:
       - name: TypeScript Code Style
         run: yarn lint
         if: success() || failure()
+      - name: Build application
+        run: yarn build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: apollon-standalone
+          path: build
