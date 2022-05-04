@@ -199,7 +199,10 @@ export class Svg extends Component<Props, State> {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
               return (
                 <svg
-                  {...element.bounds}
+                  x={element.bounds.x}
+                  y={element.bounds.y}
+                  width={element.bounds.width}
+                  height={element.bounds.height}
                   key={element.id}
                   className={element.name ? element.name.replace(/[<>]/, '') : ''}
                   fill={element.fillColor || theme.color.background}
