@@ -101,7 +101,7 @@
     "prettier": "2.6.2",
     "redux-mock-store": "1.5.4",
     "style-loader": "3.3.1",
-    "stylelint": "14.8.1",
+    "stylelint": "14.8.2",
     "stylelint-config-recommended": "6.0.0",
     "stylelint-config-styled-components": "0.1.1",
     "stylelint-custom-processor-loader": "0.6.0",
