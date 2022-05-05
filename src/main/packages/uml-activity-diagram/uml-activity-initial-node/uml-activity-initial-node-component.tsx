@@ -5,6 +5,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { compose } from 'redux';
 import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { ApollonView } from '../../../services/editor/editor-types';
+import { ThemedCircleContrast } from '../../../components/theme/themedComponents';
 
 type OwnProps = {
   element: UMLActivityInitialNode;
@@ -25,16 +26,14 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
 );
 
 const UMLActivityInitialNodeC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
-  const fill = element.fillColor || 'black';
-
   return (
     <g>
-      <circle
+      <ThemedCircleContrast
         cx="50%"
         cy="50%"
         r={Math.min(element.bounds.width, element.bounds.height) / 2}
-        stroke="none"
-        fill={interactive && interactable ? theme.interactive.normal : fill}
+        strokeColor="none"
+        fillColor={interactive && interactable ? theme.interactive.normal : element.fillColor}
         fillOpacity={1}
       />
     </g>

@@ -16,6 +16,6 @@ export const StyledDropdownItem = styled(Button).attrs<DropdownItemProps>({
 
   :hover {
     text-decoration: none;
-    background-color: ${(props) => props.theme.color.gray100};
+    background-color: ${(props) => props.theme.color.gray};
   }
 `;

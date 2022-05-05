@@ -6,10 +6,10 @@ const FOCUS_BORDER_LIGHTEN = 25;
 
 const Input = styled.textarea`
   background-clip: padding-box;
-  background-color: ${(props) => props.theme.color.white};
-  border: 1px solid ${(props) => props.theme.color.gray400};
+  background-color: ${(props) => props.theme.color.background};
+  border: 1px solid ${(props) => props.theme.color.grayAccent};
   border-radius: 0.25em;
-  color: ${(props) => props.theme.color.gray700};
+  color: ${(props) => props.theme.color.grayAccent};
   font-family: ${(props) => props.theme.font.family}, sans-serif;
   font-size: 1em;
   font-weight: 400;
@@ -26,7 +26,7 @@ const Input = styled.textarea`
   }
 
   ::placeholder {
-    color: ${(props) => props.theme.color.gray600};
+    color: ${(props) => props.theme.color.grayAccent};
     opacity: 1;
   }
 `;
@@ -52,7 +52,8 @@ export const StyledTextfield = styled(Input)<Props>(
       }
 
       &:not(:focus):not(:hover) {
-        background: rgba(255, 255, 255, 0.5);
+        background: ${props.theme.color.background};
+        opacity: 0.5;
       }
     `}
 
@@ -64,7 +65,7 @@ export const StyledTextfield = styled(Input)<Props>(
 
     ${props.readonly &&
     css`
-      background-color: ${props.theme.color.gray200};
+      background-color: ${props.theme.color.gray};
       opacity: 1;
     `}
 

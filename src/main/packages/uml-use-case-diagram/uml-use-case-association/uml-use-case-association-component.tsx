@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLUseCaseAssociation } from './uml-use-case-association';
+import { ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const UMLUseCaseAssociationComponent: FunctionComponent<Props> = ({ element }) => {
   const [start, end] = element.path.map((p) => new Point(p.x, p.y));
@@ -37,10 +38,10 @@ export const UMLUseCaseAssociationComponent: FunctionComponent<Props> = ({ eleme
           {element.name}
         </textPath>
       </Text>
-      <polyline
+      <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.strokeColor || 'black'}
-        fill="none"
+        strokeColor={element.strokeColor}
+        fillColor="none"
         strokeWidth={1}
       />
     </g>

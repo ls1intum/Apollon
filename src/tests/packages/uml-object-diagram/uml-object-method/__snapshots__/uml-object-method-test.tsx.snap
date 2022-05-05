@@ -6,7 +6,10 @@ exports[`render the uml-object-method-component 1`] = `
     <svg>
       <g>
         <rect
+          class="sc-hKwDye zkYYr"
+          fill="white"
           height="100%"
+          stroke="none"
           width="100%"
         />
         <text

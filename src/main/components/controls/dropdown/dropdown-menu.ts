@@ -2,7 +2,7 @@ import { styled } from '../../theme/styles';
 
 export const DropdownMenu = styled.div`
   background-clip: padding-box;
-  background-color: ${(props) => props.theme.color.white};
+  background-color: ${(props) => props.theme.color.background};
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 0.25em;
   list-style: none;

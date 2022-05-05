@@ -4,6 +4,7 @@ import { Point } from '../../../../main/utils/geometry/point';
 import { UMLInterfaceRequiredComponent } from '../../../../main/packages/common/uml-interface-required/uml-interface-required-component';
 import { UMLComponentInterfaceRequired } from '../../../../main/packages/uml-component-diagram/uml-component-interface-required/uml-component-interface-required';
 import { StoreProvider } from '../../../../main/components/store/model-store';
+import { Theme } from '../../../../main/components/theme/theme';
 
 it('render the uml-component-required-interface-component', () => {
   const umlComponentInterfaceRequired: UMLComponentInterfaceRequired = new UMLComponentInterfaceRequired({
@@ -14,9 +15,11 @@ it('render the uml-component-required-interface-component', () => {
     <StoreProvider
       initialState={{ elements: { [umlComponentInterfaceRequired.id]: { ...umlComponentInterfaceRequired } } }}
     >
-      <svg>
-        <UMLInterfaceRequiredComponent element={umlComponentInterfaceRequired} scale={1.0} />
-      </svg>
+      <Theme styles={undefined}>
+        <svg>
+          <UMLInterfaceRequiredComponent element={umlComponentInterfaceRequired} scale={1.0} />
+        </svg>
+      </Theme>
     </StoreProvider>,
   );
   // TODO: expect

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { FlowchartInputOutput } from '../../../../main/packages/flowchart/flowchart-input-output/flowchart-input-output';
 import { FlowchartInputOutputComponent } from '../../../../main/packages/flowchart/flowchart-input-output/flowchart-input-output-component';
 import { Multiline } from '../../../../main/utils/svg/multiline';
@@ -12,7 +12,7 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 
 it('render the flowchart-input-output-component', () => {
   const inputOutput: FlowchartInputOutput = new FlowchartInputOutput({ name: 'TestInputOutputComponent' });
-  const { getByText, baseElement } = render(
+  const { getByText, baseElement } = wrappedRender(
     <svg>
       <FlowchartInputOutputComponent element={inputOutput} scale={1.0} />
     </svg>,

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { FlowchartFunctionCall } from '../../../../main/packages/flowchart/flowchart-function-call/flowchart-function-call';
 import { FlowchartFunctionCallComponent } from '../../../../main/packages/flowchart/flowchart-function-call/flowchart-function-call-component';
 import { Multiline } from '../../../../main/utils/svg/multiline';
@@ -12,7 +12,7 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 
 it('render the flowchart-function-call-component', () => {
   const functionCall: FlowchartFunctionCall = new FlowchartFunctionCall({ name: 'TestFunctionCallComponent' });
-  const { getByText, baseElement } = render(
+  const { getByText, baseElement } = wrappedRender(
     <svg>
       <FlowchartFunctionCallComponent element={functionCall} scale={1.0} />
     </svg>,

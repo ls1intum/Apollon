@@ -6,18 +6,18 @@ exports[`test petri net arc update render 1`] = `
     <div>
       <section>
         <div
-          class="sc-khQegj gKhEDB"
+          class="sc-ehCJOs bwBVin"
         >
           <input
-            class="sc-hGPBjI sc-dlVxhl cVfAbk jCUhym"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx hZHUNQ"
             value="UMLClassBidirectional"
           />
           <button
-            class="sc-ksdxgE sc-hBUSln flQSpD kMHSFq"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
           >
             <svg
-              class="sc-bdvvtL fjJROu"
+              class="sc-jrQzAO eCAavd"
               height="16px"
               viewBox="0 0 512 512"
               width="16px"
@@ -29,12 +29,12 @@ exports[`test petri net arc update render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-ksdxgE sc-hBUSln flQSpD kMHSFq"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-bdvvtL fjJROu"
+              class="sc-jrQzAO eCAavd"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"

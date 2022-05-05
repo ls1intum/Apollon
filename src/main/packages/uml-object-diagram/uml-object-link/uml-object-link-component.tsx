@@ -1,12 +1,13 @@
 import React, { FunctionComponent } from 'react';
 import { UMLObjectLink } from './uml-object-link';
+import { ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const UMLObjectLinkComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
-    <polyline
+    <ThemedPolyline
       points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-      stroke={element.strokeColor || 'black'}
-      fill="none"
+      strokeColor={element.strokeColor}
+      fillColor="none"
       strokeWidth={1}
     />
   </g>
