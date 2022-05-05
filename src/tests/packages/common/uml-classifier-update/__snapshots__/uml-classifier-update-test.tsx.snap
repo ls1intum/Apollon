@@ -13,7 +13,7 @@ exports[`test class association popup render 1`] = `
             value=""
           />
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
             tabindex="-1"
           >
@@ -75,7 +75,7 @@ exports[`test class association popup render 1`] = `
             value="attribute"
           />
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
             tabindex="-1"
           >
@@ -114,7 +114,7 @@ exports[`test class association popup render 1`] = `
             value="classMethod"
           />
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
             tabindex="-1"
           >

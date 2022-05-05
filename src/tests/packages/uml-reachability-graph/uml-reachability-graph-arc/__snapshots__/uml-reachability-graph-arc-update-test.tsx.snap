@@ -13,7 +13,7 @@ exports[`test reachability graph arc update render 1`] = `
             value="UMLClassBidirectional"
           />
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
           >
             <svg
@@ -29,7 +29,7 @@ exports[`test reachability graph arc update render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
             tabindex="-1"
           >

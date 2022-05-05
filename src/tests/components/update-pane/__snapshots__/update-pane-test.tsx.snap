@@ -85,6 +85,7 @@ exports[`test update pane render with element 1`] = `
   color: var(--apollon-primary,#2a8fbd);
   -webkit-text-decoration: none;
   text-decoration: none;
+  fill: var(--apollon-primary-contrast,#212529);
 }
 
 .c14 {
@@ -648,6 +649,7 @@ exports[`test update pane render with relationship 1`] = `
   color: var(--apollon-primary,#2a8fbd);
   -webkit-text-decoration: none;
   text-decoration: none;
+  fill: var(--apollon-primary-contrast,#212529);
 }
 
 .c12 {

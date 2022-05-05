@@ -13,7 +13,7 @@ exports[`test petri net arc update render 1`] = `
             value=""
           />
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
             tabindex="-1"
           >
@@ -90,7 +90,7 @@ exports[`test petri net arc update render 1`] = `
             </svg>
           </div>
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
             tabindex="-1"
             type="reset"

@@ -15,7 +15,7 @@ exports[`test class association popup render 1`] = `
             Association
           </h1>
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
           >
             <svg
@@ -31,7 +31,7 @@ exports[`test class association popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-fKVqWL sc-bBHxTw dsyxTk jDoyrd"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
           >
             <svg
