@@ -75,6 +75,7 @@ export const StyledButton = styled(Button)<typeof defaultProps>((props) => {
     css`
       color: ${props.theme.color.primary};
       text-decoration: none;
+      fill: ${props.theme.color.primaryContrast};
     `}
 
     ${props.color !== 'link' &&
