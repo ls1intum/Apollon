@@ -97,7 +97,8 @@ export const ThemedEllipse = styled.ellipse.attrs(
 `;
 
 export const ThemedLine = styled.line.attrs((props: { strokeColor: string | undefined }) => ({
-  strokeColor: props.strokeColor || 'black',
+  strokeColor: props.strokeColor,
+  stroke: props.strokeColor || 'black',
 }))`
   stroke: ${(props) => props.strokeColor || props.theme.color.primaryContrast};
 `;
