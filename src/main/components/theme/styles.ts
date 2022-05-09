@@ -1,7 +1,7 @@
 import baseStyled, { css as baseCss, ThemedCssFunction, ThemedStyledInterface } from 'styled-components';
 export { withTheme } from 'styled-components';
 
-export type Styles = typeof unscaledDefaults;
+export type Styles = typeof apollonTheme;
 
 export const styled = baseStyled as ThemedStyledInterface<Styles>;
 export const css = baseCss as ThemedCssFunction<Styles>;
@@ -11,25 +11,19 @@ export type withThemeProps = { theme: Styles };
 export type Color = 'primary' | 'secondary';
 export type Size = 'sm' | 'md' | 'lg';
 
-const unscaledDefaults = {
+const apollonTheme = {
   color: {
-    primary: '#2a8fbd',
-    secondary: '#6c757d',
-    warningYellow: '#ffc800',
-    white: '#fff',
-    gray100: '#f8f9fa',
-    gray200: '#e9ecef',
-    gray300: '#dee2e6',
-    gray400: '#ced4da',
-    gray500: '#adb5bd',
-    gray600: '#6c757d',
-    gray700: '#495057',
-    gray800: '#343a40',
-    gray900: '#212529',
-    black: '#212529',
+    primary: 'var(--apollon-primary, #2a8fbd)',
+    secondary: 'var(--apollon-secondary, #6c757d)',
+    warningYellow: 'var(--apollon-warning-yellow, #ffc800)',
+    background: 'var(--apollon-background, #ffffff)',
+    backgroundVariant: 'var(--apollon-background-variant, #e5e5e5)',
+    primaryContrast: 'var(--apollon-primary-contrast, #212529)',
+    gray: 'var(--apollon-gray, #e9ecef)',
+    grayAccent: 'var(--apollon-gray-variant, #343a40)',
   },
   font: {
-    color: '#212529',
+    color: 'var(--apollon-primary-contrast, #212529)',
     family: 'Helvetica Neue, Helvetica, Arial, sans-serif',
     size: 16,
   },
@@ -41,7 +35,7 @@ const unscaledDefaults = {
 
 export const defaults = (scale: number = 1.0) => {
   return {
-    ...unscaledDefaults,
-    font: { ...unscaledDefaults.font, size: unscaledDefaults.font.size * scale },
+    ...apollonTheme,
+    font: { ...apollonTheme.font, size: apollonTheme.font.size * scale },
   };
 };

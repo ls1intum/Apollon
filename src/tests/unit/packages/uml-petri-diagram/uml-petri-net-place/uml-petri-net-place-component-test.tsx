@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { UMLPetriNetPlace } from '../../../../../main/packages/uml-petri-net/uml-petri-net-place/uml-petri-net-place';
 import { UMLPetriNetPlaceComponent } from '../../../../../main/packages/uml-petri-net/uml-petri-net-place/uml-petri-net-place-component';
 
@@ -10,7 +10,7 @@ describe('uml-petri-net-arc-component', () => {
   });
 
   it('render the uml-petri-net-arc-component', () => {
-    const { baseElement } = render(
+    const { baseElement } = wrappedRender(
       <svg>
         <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
@@ -20,7 +20,7 @@ describe('uml-petri-net-arc-component', () => {
 
   it('render with amountOfTokens 1', () => {
     element.amountOfTokens = 1;
-    const { container } = render(
+    const { container } = wrappedRender(
       <svg>
         <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
@@ -31,7 +31,7 @@ describe('uml-petri-net-arc-component', () => {
 
   it('render with amountOfTokens 2', () => {
     element.amountOfTokens = 2;
-    const { container } = render(
+    const { container } = wrappedRender(
       <svg>
         <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
@@ -42,7 +42,7 @@ describe('uml-petri-net-arc-component', () => {
 
   it('render with amountOfTokens 3', () => {
     element.amountOfTokens = 3;
-    const { container } = render(
+    const { container } = wrappedRender(
       <svg>
         <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
@@ -53,7 +53,7 @@ describe('uml-petri-net-arc-component', () => {
 
   it('render with amountOfTokens 4', () => {
     element.amountOfTokens = 4;
-    const { container } = render(
+    const { container } = wrappedRender(
       <svg>
         <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
@@ -64,7 +64,7 @@ describe('uml-petri-net-arc-component', () => {
 
   it('render with amountOfTokens 5', () => {
     element.amountOfTokens = 5;
-    const { container } = render(
+    const { container } = wrappedRender(
       <svg>
         <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,
@@ -75,7 +75,7 @@ describe('uml-petri-net-arc-component', () => {
 
   it('render with amountOfTokens 6', () => {
     element.amountOfTokens = 6;
-    const { container, getByText } = render(
+    const { container, getByText } = wrappedRender(
       <svg>
         <UMLPetriNetPlaceComponent element={element} scale={1.0} />
       </svg>,

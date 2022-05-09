@@ -8,7 +8,7 @@ export const ICON_SIZE = 24;
 export const Container = styled.circle.attrs((props) => ({
   r: ICON_SIZE / 2 + 4,
   fillOpacity: 0.8,
-  fill: props.theme.color.gray200,
+  fill: props.theme.color.gray,
 }))``;
 
 export const Triangle = styled.polygon.attrs((props) => ({

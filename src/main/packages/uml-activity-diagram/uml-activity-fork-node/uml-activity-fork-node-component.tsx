@@ -5,6 +5,7 @@ import { compose } from 'redux';
 import { connect, ConnectedComponent } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
 import { ApollonView } from '../../../services/editor/editor-types';
+import { ThemedRectContrast } from '../../../components/theme/themedComponents';
 
 type OwnProps = {
   element: UMLActivityForkNode;
@@ -25,15 +26,13 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
 );
 
 const UMLActivityForkNodeC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
-  const fill = element.fillColor || 'black';
-
   return (
     <g>
-      <rect
+      <ThemedRectContrast
         width={element.bounds.width}
         height={element.bounds.height}
-        stroke="none"
-        fill={interactive && interactable ? theme.interactive.normal : fill}
+        strokeColor="none"
+        fillColor={interactive && interactable ? theme.interactive.normal : element.fillColor}
         fillOpacity={1}
       />
     </g>

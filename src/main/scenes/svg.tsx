@@ -190,7 +190,7 @@ export class Svg extends Component<Props, State> {
             height={bounds.height + 1}
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
-            fill="white"
+            fill={theme.color.background}
           >
             <defs>
               <style>{(Style[0] as any)({ theme })}</style>
@@ -199,10 +199,13 @@ export class Svg extends Component<Props, State> {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
               return (
                 <svg
-                  {...element.bounds}
+                  x={element.bounds.x}
+                  y={element.bounds.y}
+                  width={element.bounds.width}
+                  height={element.bounds.height}
                   key={element.id}
                   className={element.name ? element.name.replace(/[<>]/, '') : ''}
-                  fill={element.fillColor || 'white'}
+                  fill={element.fillColor || theme.color.background}
                 >
                   <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
                 </svg>

@@ -4,6 +4,7 @@ import { Point } from '../../../../../main/utils/geometry/point';
 import { UMLDeploymentInterfaceRequired } from '../../../../../main/packages/uml-deployment-diagram/uml-deployment-interface-required/uml-deployment-interface-required';
 import { UMLInterfaceRequiredComponent } from '../../../../../main/packages/common/uml-interface-required/uml-interface-required-component';
 import { StoreProvider } from '../../../../../main/components/store/model-store';
+import { Theme } from '../../../../../main/components/theme/theme';
 
 it('render the uml-deplyoment-required-interface-component', () => {
   const umlDeploymentInterfaceRequired: UMLDeploymentInterfaceRequired = new UMLDeploymentInterfaceRequired({
@@ -15,7 +16,9 @@ it('render the uml-deplyoment-required-interface-component', () => {
       <StoreProvider
         initialState={{ elements: { [umlDeploymentInterfaceRequired.id]: { ...umlDeploymentInterfaceRequired } } }}
       >
-        <UMLInterfaceRequiredComponent element={umlDeploymentInterfaceRequired} scale={1.0} />
+        <Theme styles={undefined}>
+          <UMLInterfaceRequiredComponent element={umlDeploymentInterfaceRequired} scale={1.0} />
+        </Theme>
       </StoreProvider>
     </svg>,
   );

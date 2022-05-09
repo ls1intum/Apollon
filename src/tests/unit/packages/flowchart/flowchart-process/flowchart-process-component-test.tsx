@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { FlowchartProcess } from '../../../../../main/packages/flowchart/flowchart-process/flowchart-process';
 import { FlowchartProcessComponent } from '../../../../../main/packages/flowchart/flowchart-process/flowchart-process-component';
 import { Multiline } from '../../../../../main/utils/svg/multiline';
@@ -12,7 +12,7 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 
 it('render the flowchart-process-component', () => {
   const process: FlowchartProcess = new FlowchartProcess({ name: 'TestProcessComponent' });
-  const { getByText, baseElement } = render(
+  const { getByText, baseElement } = wrappedRender(
     <svg>
       <FlowchartProcessComponent element={process} scale={1.0} />
     </svg>,

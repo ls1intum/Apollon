@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { UMLPetriNetPlace } from './uml-petri-net-place';
 import { Point } from '../../../utils/geometry/point';
 import { Text } from '../../../components/controls/text/text';
+import { ThemedCircle, ThemedCircleContrast } from '../../../components/theme/themedComponents';
 
 const maxAmountCircles = 5;
 const tokenToBoundaryDistance = 5;
@@ -51,15 +52,16 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
   }
   return (
     <g>
-      <circle cx="50%" cy="50%" r={radius} stroke={element.strokeColor || 'black'} strokeWidth={2} fillOpacity={1} />
+      <ThemedCircle cx="50%" cy="50%" r={radius} strokeColor={element.strokeColor} strokeWidth={2} fillOpacity={1} />
       {!displayTokenAsNumber &&
         tokenPositions.map((position, index) => (
-          <circle
+          <ThemedCircleContrast
             key={index}
             cx={radius + position.x}
             cy={radius + position.y}
             r={tokenRadius}
-            fill={element.strokeColor || 'black'}
+            strokeColor="none"
+            fillColor={element.strokeColor}
             fillOpacity={1}
           />
         ))}

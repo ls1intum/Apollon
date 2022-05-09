@@ -15,6 +15,30 @@ import { UMLClass } from '../../main/packages/uml-class-diagram/uml-class/uml-cl
 
 const testClassDiagramAsSVG = require('./test-resources/class-diagram-as-svg.json') as string;
 
+const ignoreSVGClassNames = (svgString: string): string => {
+  const classPattern = /class="[a-zA-Z0-9 -]+"/g;
+  const classesToKeep = ['Class', 'Package'];
+  const classes = svgString.match(classPattern)?.filter((element) => {
+    let isIncluded = false;
+    classesToKeep.forEach((classToKeep) => {
+      if (element.includes(classToKeep)) {
+        isIncluded = true;
+      }
+    });
+    return !isIncluded;
+  });
+
+  if (!classes) {
+    return svgString;
+  }
+
+  for (const elem of classes) {
+    svgString = svgString.replace(elem, '');
+  }
+
+  return svgString;
+};
+
 describe('test apollon editor ', () => {
   it('get and set model', () => {
     const { container } = testLibraryRender(<div />);
@@ -27,7 +51,7 @@ describe('test apollon editor ', () => {
     const editor = new Apollon.ApollonEditor(container as HTMLElement, {});
     editor.model = testClassDiagram as any;
     const svg = editor.exportAsSVG();
-    expect(svg.svg).toEqual(testClassDiagramAsSVG);
+    expect(ignoreSVGClassNames(svg.svg)).toEqual(testClassDiagramAsSVG);
   });
 
   it('subscribeToSelection', (done) => {

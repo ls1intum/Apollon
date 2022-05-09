@@ -1,0 +1,22 @@
+{
+    "light": {
+        "--apollon-primary": "#2a8fbd",
+        "--apollon-primary-contrast": "#212529",
+        "--apollon-secondary": "#6c757d",
+        "--apollon-warning-yellow": "#ffc800",
+        "--apollon-background": "#ffffff",
+        "--apollon-background-variant": "#e5e5e5",
+        "--apollon-gray": "#e9ecef",
+        "--apollon-gray-variant": "#343a40"
+    },
+    "dark": {
+        "--apollon-primary": "#51a2a2",
+        "--apollon-primary-contrast": "#eae1e1",
+        "--apollon-secondary": "#6f85c2",
+        "--apollon-warning-yellow": "#ffc800",
+        "--apollon-background": "#1B2121",
+        "--apollon-background-variant": "#3e4c4c",
+        "--apollon-gray": "#343a40",
+        "--apollon-gray-variant": "#6c757d"
+    }
+}

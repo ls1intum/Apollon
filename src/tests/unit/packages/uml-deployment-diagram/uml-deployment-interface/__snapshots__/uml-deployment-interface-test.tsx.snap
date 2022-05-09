@@ -6,8 +6,10 @@ exports[`render the uml-deployment-interface-component 1`] = `
     <svg>
       <g>
         <circle
+          class="sc-jRQBWg cSVyHD"
           cx="10px"
           cy="50%"
+          fill="white"
           r="10"
           stroke="black"
           stroke-width="2"

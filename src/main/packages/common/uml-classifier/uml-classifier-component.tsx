@@ -1,15 +1,17 @@
 import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLClassifier } from './uml-classifier';
+import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
 export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scale, children }) => {
   return (
     <g>
-      <rect width="100%" height={element.stereotype ? 50 * scale : 40 * scale} />
-      <rect
+      <ThemedRect strokeColor="none" width="100%" height={element.stereotype ? 50 * scale : 40 * scale} />
+      <ThemedRect
         y={element.stereotype ? 50 * scale : 40 * scale}
         width="100%"
         height={element.bounds.height - (element.stereotype ? 50 * scale : 40 * scale)}
+        strokeColor="none"
       />
       {element.stereotype ? (
         <svg height={50 * scale}>
@@ -40,9 +42,9 @@ export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scal
         </svg>
       )}
       {children}
-      <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} fill="none" pointerEvents="none" />
-      <path d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} stroke={element.strokeColor || 'black'} />
-      <path d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} stroke={element.strokeColor || 'black'} />
+      <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} fillColor="none" pointer-events="none" />
+      <ThemedPath d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} strokeColor={element.strokeColor} />
+      <ThemedPath d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} strokeColor={element.strokeColor} />
     </g>
   );
 };

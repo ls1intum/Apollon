@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { UMLActivityObjectNode } from '../../../../../main/packages/uml-activity-diagram/uml-activity-object-node/uml-activity-object-node';
 import { UMLActivityObjectNodeComponent } from '../../../../../main/packages/uml-activity-diagram/uml-activity-object-node/uml-activity-object-node-component';
 import { Multiline } from '../../../../../main/utils/svg/multiline';
@@ -13,7 +13,7 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 describe('test', () => {
   it('render the uml-activity-object-node-component', () => {
     const objectNode: UMLActivityObjectNode = new UMLActivityObjectNode({ name: 'TestActivityComponent' });
-    const { getByText, baseElement } = render(
+    const { getByText, baseElement } = wrappedRender(
       <svg>
         <UMLActivityObjectNodeComponent element={objectNode} />
       </svg>,

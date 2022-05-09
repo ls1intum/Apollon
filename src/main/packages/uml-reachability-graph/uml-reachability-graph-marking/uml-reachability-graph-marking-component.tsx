@@ -1,10 +1,11 @@
 import React, { FunctionComponent } from 'react';
 import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking';
 import { Multiline } from '../../../utils/svg/multiline';
+import { ThemedRect, ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
-    <rect rx={10 * scale} ry={10 * scale} width="100%" height="100%" stroke={element.strokeColor || 'black'} />
+    <ThemedRect rx={10 * scale} ry={10 * scale} width="100%" height="100%" strokeColor={element.strokeColor} />
     <Multiline
       x={element.bounds.width / 2}
       y={element.bounds.height / 2}
@@ -29,16 +30,16 @@ export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({
           orient="auto"
           markerUnits="strokeWidth"
         >
-          <path
+          <ThemedPath
             d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`}
-            fill="none"
-            stroke={element.strokeColor || 'black'}
+            fillColor="none"
+            strokeColor={element.strokeColor}
           />
         </marker>
-        <polyline
+        <ThemedPolyline
           points={`-${50 * scale},-${50 * scale} ${3 * scale},${3 * scale}`}
-          stroke={element.strokeColor || 'black'}
-          fill="none"
+          strokeColor={element.strokeColor}
+          fillColor="none"
           strokeWidth={1 * scale}
           markerEnd={`url(#marker-${element.id})`}
         />

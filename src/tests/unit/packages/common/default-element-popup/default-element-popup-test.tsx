@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import { DefaultPopup } from '../../../../../main/packages/common/default-popup';
 import { UMLActivityActionNode } from '../../../../../main/packages/uml-activity-diagram/uml-activity-action-node/uml-activity-action-node';
 import { getRealStore } from '../../../test-utils/test-utils';
@@ -15,7 +16,7 @@ describe('test default element popup', () => {
 
     const store = getRealStore();
 
-    const { baseElement } = render(
+    const { baseElement } = wrappedRender(
       <Provider store={store}>
         <Theme>
           <svg>
@@ -34,7 +35,7 @@ describe('test default element popup', () => {
 
     const store = getRealStore(undefined, [element]);
 
-    const { getByRole } = render(
+    const { getByRole } = wrappedRender(
       <Provider store={store}>
         <Theme>
           <svg>

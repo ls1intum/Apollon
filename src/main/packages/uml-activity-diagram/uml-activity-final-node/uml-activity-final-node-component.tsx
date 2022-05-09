@@ -5,6 +5,7 @@ import { compose } from 'redux';
 import { connect, ConnectedComponent } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
 import { ApollonView } from '../../../services/editor/editor-types';
+import { ThemedCircle, ThemedCircleContrast } from '../../../components/theme/themedComponents';
 
 type OwnProps = {
   element: UMLActivityFinalNode;
@@ -32,23 +33,21 @@ export const UMLActivityFinalNodeC: FunctionComponent<Props> = ({
   theme,
   scale,
 }) => {
-  const fill = element.fillColor || 'black';
   return (
     <g>
-      <circle
+      <ThemedCircle
         cx="50%"
         cy="50%"
         r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5 * scale}
-        stroke={interactable && interactive ? theme.interactive.normal : fill}
+        strokeColor={interactable && interactive ? theme.interactive.normal : element.fillColor}
         strokeWidth={5 * scale}
-        fill="white"
       />
-      <circle
+      <ThemedCircleContrast
         cx="50%"
         cy="50%"
         r={Math.min(element.bounds.width, element.bounds.height) / 2 - 7.5 * scale}
-        stroke="none"
-        fill={interactive && interactable ? theme.interactive.normal : fill}
+        strokeColor="none"
+        fillColor={interactive && interactable ? theme.interactive.normal : element.fillColor}
         fillOpacity={1}
       />
     </g>
