@@ -6,7 +6,7 @@ exports[`render the syntax-tree-link-component 1`] = `
     <svg>
       <g>
         <polyline
-          class="sc-bdvvtL gRMJsX"
+          class="sc-bczRLJ gQkeMM"
           fill="none"
           points="0 0,100 100"
           stroke="black"

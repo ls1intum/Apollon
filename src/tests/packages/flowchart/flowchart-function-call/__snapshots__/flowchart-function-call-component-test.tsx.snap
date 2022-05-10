@@ -6,7 +6,7 @@ exports[`render the flowchart-function-call-component 1`] = `
     <svg>
       <g>
         <rect
-          class="sc-hKwDye ljGHEE"
+          class="sc-hKMtZM kFuMUP"
           fill="white"
           height="100%"
           stroke="black"
@@ -14,7 +14,7 @@ exports[`render the flowchart-function-call-component 1`] = `
           x="0"
         />
         <rect
-          class="sc-hKwDye ljGHEE"
+          class="sc-hKMtZM kFuMUP"
           fill="white"
           height="100%"
           stroke="black"
@@ -22,7 +22,7 @@ exports[`render the flowchart-function-call-component 1`] = `
           x="10"
         />
         <rect
-          class="sc-hKwDye ljGHEE"
+          class="sc-hKMtZM kFuMUP"
           fill="white"
           height="100%"
           stroke="black"
