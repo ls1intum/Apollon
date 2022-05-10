@@ -1,20 +1,21 @@
 import React, { FunctionComponent } from 'react';
 import { FlowchartComponent } from '../flowchart-element/flowchart-component';
 import { FlowchartFunctionCall } from './flowchart-function-call';
+import { ThemedRect } from '../../../components/theme/themedComponents';
 
 export const FlowchartFunctionCallComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <FlowchartComponent element={element} scale={scale}>
-    <rect width={10 * scale} height="100%" stroke={element.strokeColor || 'black'} x="0" />
-    <rect
+    <ThemedRect width={10 * scale} height="100%" strokeColor={element.strokeColor} x="0" />
+    <ThemedRect
       width={element.bounds.width - 20 * scale}
       height="100%"
-      stroke={element.strokeColor || 'black'}
+      strokeColor={element.strokeColor}
       x={10 * scale}
     />
-    <rect
+    <ThemedRect
       width={10 * scale}
       height="100%"
-      stroke={element.strokeColor || 'black'}
+      strokeColor={element.strokeColor}
       x={element.bounds.width - 10 * scale}
     />
   </FlowchartComponent>

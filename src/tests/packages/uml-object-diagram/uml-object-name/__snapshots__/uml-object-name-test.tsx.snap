@@ -6,14 +6,14 @@ exports[`render the uml-object-name-component 1`] = `
     <div>
       <section>
         <div
-          class="sc-ksZaOG fLJTze"
+          class="sc-kfPuZi bkUGdI"
         >
           <input
-            class="sc-eCYdqJ sc-jSMfEi cqwvKM bixmYE"
+            class="sc-eCImPb sc-jRQBWg hCMOMc eOpVFj"
             value="TestObjectComponent"
           />
           <button
-            class="sc-bczRLJ sc-gsnTZi bvNgAE blwJKj"
+            class="sc-bdvvtL sc-gsDKAQ bwIElv ghfhVI"
             color="link"
             tabindex="-1"
           >
@@ -31,7 +31,7 @@ exports[`render the uml-object-name-component 1`] = `
           </button>
         </div>
         <hr
-          class="sc-hKMtZM jDSHYc"
+          class="sc-hKwDye fvnQWK"
         />
       </section>
       <section>
@@ -41,13 +41,13 @@ exports[`render the uml-object-name-component 1`] = `
           Attributes
         </h1>
         <input
-          class="sc-eCYdqJ sc-jSMfEi cqwvKM jJqRjn"
+          class="sc-eCImPb sc-jRQBWg hCMOMc iqvWHk"
           value=""
         />
       </section>
       <section>
         <hr
-          class="sc-hKMtZM jDSHYc"
+          class="sc-hKwDye fvnQWK"
         />
         <h1
           class="sc-gKXOVf cnrMAY"
@@ -55,7 +55,7 @@ exports[`render the uml-object-name-component 1`] = `
           Methods
         </h1>
         <input
-          class="sc-eCYdqJ sc-jSMfEi cqwvKM jJqRjn"
+          class="sc-eCImPb sc-jRQBWg hCMOMc iqvWHk"
           value=""
         />
       </section>

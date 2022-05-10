@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLPetriNetArc } from './uml-petri-net-arc';
+import { ThemedPathContrast, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) => {
   const [start, end] = element.path.map((p) => new Point(p.x, p.y));
@@ -23,7 +24,7 @@ export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) =
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <path d="M0,1 L0,29 L30,15 z" fill={element.strokeColor || 'black'} />
+        <ThemedPathContrast d="M0,1 L0,29 L30,15 z" fill={element.strokeColor} />
       </marker>
       <path
         id={`textpath-${element.id}`}
@@ -53,10 +54,10 @@ export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) =
           </textPath>
         </Text>
       )}
-      <polyline
+      <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.strokeColor || 'black'}
-        fill="none"
+        strokeColor={element.strokeColor}
+        fillColor="none"
         strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}
       />

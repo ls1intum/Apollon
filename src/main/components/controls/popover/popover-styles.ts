@@ -3,8 +3,8 @@ import { Props } from './popover';
 
 export const PopoverContainer = styled.div<Props>`
   background-clip: padding-box;
-  background-color: ${(props) => props.theme.color.gray100};
-  border: 1px solid ${(props) => props.theme.color.black}33;
+  background-color: ${(props) => props.theme.color.backgroundVariant};
+  border: 1px solid ${(props) => props.theme.color.primaryContrast}33;
   border-radius: 0.3em;
   box-sizing: border-box;
   display: block;
@@ -82,13 +82,13 @@ const ArrowTop = css`
   bottom: calc((0.5em + 1px) * -1);
 
   &::before {
-    border-top-color: ${(props) => props.theme.color.black}33;
+    border-top-color: ${(props) => props.theme.color.primaryContrast}33;
     border-width: 0.5em 0.5em 0;
     bottom: 0;
   }
 
   &::after {
-    border-top-color: ${(props) => props.theme.color.gray100};
+    border-top-color: ${(props) => props.theme.color.gray};
     border-width: 0.5em 0.5em 0;
     bottom: 1px;
   }
@@ -100,13 +100,13 @@ const ArrowRight = css`
   width: 0.5em;
 
   &::before {
-    border-right-color: ${(props) => props.theme.color.black}33;
+    border-right-color: ${(props) => props.theme.color.primaryContrast}33;
     border-width: 0.5em 0.5em 0.5em 0;
     left: 0;
   }
 
   &::after {
-    border-right-color: ${(props) => props.theme.color.gray100};
+    border-right-color: ${(props) => props.theme.color.gray};
     border-width: 0.5em 0.5em 0.5em 0;
     left: 1px;
   }
@@ -116,13 +116,13 @@ const ArrowBottom = css`
   top: calc((0.5em + 1px) * -1);
 
   &::before {
-    border-bottom-color: ${(props) => props.theme.color.black}33;
+    border-bottom-color: ${(props) => props.theme.color.primaryContrast}33;
     border-width: 0 0.5em 0.5em 0.5em;
     top: 0;
   }
 
   &::after {
-    border-bottom-color: ${(props) => props.theme.color.gray100};
+    border-bottom-color: ${(props) => props.theme.color.gray};
     border-width: 0 0.5em 0.5em 0.5em;
     top: 1px;
   }
@@ -134,13 +134,13 @@ const ArrowLeft = css`
   width: 0.5em;
 
   &::before {
-    border-left-color: ${(props) => props.theme.color.black}33;
+    border-left-color: ${(props) => props.theme.color.primaryContrast}33;
     border-width: 0.5em 0 0.5em 0.5em;
     right: 0;
   }
 
   &::after {
-    border-left-color: ${(props) => props.theme.color.gray100};
+    border-left-color: ${(props) => props.theme.color.gray};
     border-width: 0.5em 0 0.5em 0.5em;
     right: 1px;
   }

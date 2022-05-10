@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { wrappedRender } from '../../../test-utils/render';
 import * as React from 'react';
 import { SyntaxTreeTerminal } from '../../../../main/packages/syntax-tree/syntax-tree-terminal/syntax-tree-terminal';
 import { SyntaxTreeTerminalComponent } from '../../../../main/packages/syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
@@ -12,7 +12,7 @@ Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {
 
 it('render the syntax-tree-terminal-component', () => {
   const syntaxTreeTerminal: SyntaxTreeTerminal = new SyntaxTreeTerminal({ name: 'SyntaxTreeTerminal' });
-  const { getByText, baseElement } = render(
+  const { getByText, baseElement } = wrappedRender(
     <svg>
       <SyntaxTreeTerminalComponent element={syntaxTreeTerminal} scale={1.0} />
     </svg>,

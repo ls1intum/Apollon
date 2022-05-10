@@ -1,26 +1,27 @@
 import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLDeploymentNode } from './uml-deployment-node';
+import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
 export const UMLDeploymentNodeComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
   <g>
     <g>
-      <path
+      <ThemedPath
         d={`M 0 ${8 * scale} l ${8 * scale} -${8 * scale} H ${element.bounds.width} l -${8 * scale} ${8 * scale} Z`}
-        stroke={element.strokeColor || 'black'}
+        strokeColor={element.strokeColor}
       />
-      <path
+      <ThemedPath
         d={`M ${element.bounds.width} 0 V ${element.bounds.height - 8 * scale} l -${8 * scale} ${8 * scale} V ${
           8 * scale
         } Z`}
-        stroke={element.strokeColor || 'black'}
+        strokeColor={element.strokeColor}
       />
-      <rect
+      <ThemedRect
         x="0"
         y={8 * scale}
         width={element.bounds.width - 8 * scale}
         height={element.bounds.height - 9 * scale}
-        stroke={element.strokeColor || 'black'}
+        strokeColor={element.strokeColor}
       />
     </g>
     <Text y={30 * scale} fill={element.textColor}>

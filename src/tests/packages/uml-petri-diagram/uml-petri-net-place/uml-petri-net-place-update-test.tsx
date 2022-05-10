@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { UMLElement } from '../../../../main/services/uml-element/uml-element';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { wrappedRender } from '../../../test-utils/render';

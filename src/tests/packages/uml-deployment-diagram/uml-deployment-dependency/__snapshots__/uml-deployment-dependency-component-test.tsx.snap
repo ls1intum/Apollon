@@ -16,12 +16,14 @@ exports[`render the uml-deplyoment-dependency-component 1`] = `
           viewBox="0 0 30 30"
         >
           <path
+            class="sc-gsDKAQ datHse"
             d="M0,29 L30,15 L0,1"
             fill="none"
             stroke="black"
           />
         </marker>
         <polyline
+          class="sc-bdvvtL gRMJsX"
           fill="none"
           marker-end="url(#marker-f19e4479-d393-4239-bfdd-e2022b0853af)"
           points="0 0,100 100"

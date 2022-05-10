@@ -6,6 +6,7 @@ import { AsyncDispatch } from '../../utils/actions/actions';
 import { IPoint, Point } from '../../utils/geometry/point';
 import { ModelState } from '../store/model-state';
 import { getPortsForElement } from '../../services/uml-element/uml-element';
+import { styled } from '../theme/styles';
 
 type OwnProps = {
   port: IUMLElementPort;
@@ -35,6 +36,12 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   },
 );
 
+const Polyline = styled.polyline`
+  stroke: ${(props) => props.theme.color.primaryContrast};
+  fill: 'none';
+  pointer-events: 'none';
+`;
+
 class RelationshipPreview extends Component<Props> {
   render() {
     const { port, ports } = this.props;
@@ -46,9 +53,7 @@ class RelationshipPreview extends Component<Props> {
     const path = [source, this.props.target];
     const points = path.map((p) => `${p.x} ${p.y}`).join(', ');
 
-    return (
-      <polyline points={points} pointerEvents="none" fill="none" stroke="black" strokeWidth="1" strokeDasharray="5,5" />
-    );
+    return <Polyline points={points} pointer-events="none" stroke="black" fill="none" strokeDasharray="5,5" />;
   }
 }
 

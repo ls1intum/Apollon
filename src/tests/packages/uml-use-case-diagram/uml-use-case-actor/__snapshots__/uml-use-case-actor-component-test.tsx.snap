@@ -15,29 +15,40 @@ exports[`render the uml-use-case-actor-component 1`] = `
           stroke-width="2"
         >
           <circle
+            class="sc-jRQBWg cSVyHD"
             cx="45"
             cy="25"
+            fill="white"
             r="15"
+            stroke="black"
           />
           <line
+            class="sc-furwcr TUFlT"
+            stroke="black"
             x1="45"
             x2="45"
             y1="40"
             y2="80"
           />
           <line
+            class="sc-furwcr TUFlT"
+            stroke="black"
             x1="15"
             x2="75"
             y1="55"
             y2="55"
           />
           <line
+            class="sc-furwcr TUFlT"
+            stroke="black"
             x1="45"
             x2="15"
             y1="80"
             y2="110"
           />
           <line
+            class="sc-furwcr TUFlT"
+            stroke="black"
             x1="45"
             x2="75"
             y1="80"

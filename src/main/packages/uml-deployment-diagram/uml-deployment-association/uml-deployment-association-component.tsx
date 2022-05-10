@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLDeploymentAssociation } from './uml-deployment-association';
+import { ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const UMLDeploymentAssociationComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
@@ -42,10 +43,10 @@ export const UMLDeploymentAssociationComponent: FunctionComponent<Props> = ({ el
 
   return (
     <g>
-      <polyline
+      <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.strokeColor || 'black'}
-        fill="none"
+        strokeColor={element.strokeColor}
+        fillColor="none"
         strokeWidth={1}
       />
       <Text fill={element.textColor} x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none">

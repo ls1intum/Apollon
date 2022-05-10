@@ -1,22 +1,23 @@
 import React, { FunctionComponent } from 'react';
 import { Multiline } from '../../../utils/svg/multiline';
 import { ColorLegend } from './color-legend';
+import { ThemedPath } from '../../../components/theme/themedComponents';
 
 export const ColorLegendComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
-    <path
+    <ThemedPath
       d={`M 0 0 L ${element.bounds.width - 15} 0 L ${element.bounds.width} 15 L ${element.bounds.width} ${
         element.bounds.height
       } L 0 ${element.bounds.height} L 0 0 Z`}
-      fill={element.fillColor || '#ffffff'}
-      stroke={element.strokeColor || 'black'}
+      fillColor={element.fillColor}
+      strokeColor={element.strokeColor}
       strokeWidth="1.2"
       strokeMiterlimit="10"
     />
-    <path
+    <ThemedPath
       d={`M ${element.bounds.width - 15} 0 L ${element.bounds.width - 15} 15 L ${element.bounds.width} 15`}
-      fill="none"
-      stroke={element.strokeColor || 'black'}
+      fillColor="none"
+      strokeColor={element.strokeColor}
       strokeWidth="1.2"
       strokeMiterlimit="10"
     />

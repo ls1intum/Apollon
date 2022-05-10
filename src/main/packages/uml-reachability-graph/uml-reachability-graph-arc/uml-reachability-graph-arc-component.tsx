@@ -1,6 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { UMLReachabilityGraphArc } from './uml-reachability-graph-arc';
+import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ element, scale }) => {
   let position = { x: 0, y: 0 };
@@ -54,16 +55,16 @@ export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ ele
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <path
+        <ThemedPath
           d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`}
-          fill="none"
-          stroke={element.strokeColor || 'black'}
+          fillColor="none"
+          strokeColor={element.strokeColor}
         />
       </marker>
-      <polyline
+      <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
-        stroke={element.strokeColor || 'black'}
-        fill="none"
+        strokeColor={element.strokeColor}
+        fillColor="none"
         strokeWidth={1 * scale}
         markerEnd={`url(#marker-${element.id})`}
       />

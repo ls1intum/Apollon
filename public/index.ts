@@ -1,4 +1,5 @@
 import * as Apollon from '../src/main';
+import * as themings from './themings.json';
 import('./styles.css'); 
 
 const container = document.getElementById('apollon')!;
@@ -33,6 +34,13 @@ export const save = () => {
 export const clear = () => {
   localStorage.removeItem('apollon');
   options = { ...options, model: undefined };
+};
+
+export const setTheming = (theming: string) => {
+  const root = document.documentElement;
+  for (const themingVar of Object.keys(themings[theming])) {
+    root.style.setProperty(themingVar, themings[theming][themingVar]);
+  }
 };
 
 export const draw = (mode?: 'include' | 'exclude') => {

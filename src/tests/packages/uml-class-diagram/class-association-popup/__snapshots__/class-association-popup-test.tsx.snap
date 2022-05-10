@@ -6,20 +6,20 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-iAvgwm jqlpkO"
+          class="sc-jgrJph egxDCO"
         >
           <h1
-            class="sc-bZkfAO jCmpkV"
+            class="sc-iUKqMP gWHOpv"
             style="flex-grow: 1;"
           >
             Association
           </h1>
           <button
-            class="sc-ksZaOG sc-hAZoDl kYmaKY iUfQeW"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
           >
             <svg
-              class="sc-bczRLJ frhHoR"
+              class="sc-jrQzAO eCAavd"
               height="16px"
               viewBox="0 0 512 512"
               width="16px"
@@ -31,11 +31,11 @@ exports[`test class association popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-ksZaOG sc-hAZoDl kYmaKY iUfQeW"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
             color="link"
           >
             <svg
-              class="sc-bczRLJ frhHoR"
+              class="sc-jrQzAO eCAavd"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -48,91 +48,91 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-ikZpkk iutskx"
+          class="sc-efQSVx fUCFgF"
         />
       </section>
       <section>
         <div
-          class="sc-bZnhIo"
+          class="sc-khQegj"
         >
           <button
-            class="sc-ksZaOG sc-hAZoDl kYmaKY KRnec sc-ciZhAO jvlGOV"
+            class="sc-fKVqWL sc-bBHxTw dsyxTk gvNraH sc-cNKqjZ UNdJm"
             color="primary"
           >
             Association (bidirectional)
           </button>
         </div>
         <hr
-          class="sc-ikZpkk iutskx"
+          class="sc-efQSVx fUCFgF"
         />
       </section>
       <section>
         <h1
-          class="sc-bZkfAO hOlnDw"
+          class="sc-iUKqMP gqYEuC"
         />
         <div
-          class="sc-iAvgwm jqlpkO"
+          class="sc-jgrJph egxDCO"
         >
           <span
-            class="sc-bZkfAO cSrneh"
+            class="sc-iUKqMP cvoInD"
             style="margin-right: 0.5em;"
           >
             Multiplicity
           </span>
           <input
-            class="sc-hHLeRK sc-dmRaPn haabCw dhcElg"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx efoXLu"
             style="min-width: 0;"
             value=""
           />
         </div>
         <div
-          class="sc-iAvgwm jqlpkO"
+          class="sc-jgrJph egxDCO"
         >
           <span
-            class="sc-bZkfAO cSrneh"
+            class="sc-iUKqMP cvoInD"
             style="margin-right: 0.5em;"
           >
             Role
           </span>
           <input
-            class="sc-hHLeRK sc-dmRaPn haabCw bbDasu"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx hZHUNQ"
             value=""
           />
         </div>
         <hr
-          class="sc-ikZpkk iutskx"
+          class="sc-efQSVx fUCFgF"
         />
       </section>
       <section>
         <h1
-          class="sc-bZkfAO hOlnDw"
+          class="sc-iUKqMP gqYEuC"
         />
         <div
-          class="sc-iAvgwm jqlpkO"
+          class="sc-jgrJph egxDCO"
         >
           <span
-            class="sc-bZkfAO cSrneh"
+            class="sc-iUKqMP cvoInD"
             style="margin-right: 0.5em;"
           >
             Multiplicity
           </span>
           <input
-            class="sc-hHLeRK sc-dmRaPn haabCw dhcElg"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx efoXLu"
             style="min-width: 0;"
             value=""
           />
         </div>
         <div
-          class="sc-iAvgwm jqlpkO"
+          class="sc-jgrJph egxDCO"
         >
           <span
-            class="sc-bZkfAO cSrneh"
+            class="sc-iUKqMP cvoInD"
             style="margin-right: 0.5em;"
           >
             Role
           </span>
           <input
-            class="sc-hHLeRK sc-dmRaPn haabCw bbDasu"
+            class="sc-ezbkAF sc-bYoBSM bIzFbx hZHUNQ"
             value=""
           />
         </div>

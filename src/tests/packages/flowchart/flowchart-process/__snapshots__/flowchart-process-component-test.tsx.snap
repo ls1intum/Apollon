@@ -6,6 +6,8 @@ exports[`render the flowchart-process-component 1`] = `
     <svg>
       <g>
         <rect
+          class="sc-hKwDye ljGHEE"
+          fill="white"
           height="100%"
           stroke="black"
           width="100%"
