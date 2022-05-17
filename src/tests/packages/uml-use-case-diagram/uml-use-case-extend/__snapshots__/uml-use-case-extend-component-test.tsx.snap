@@ -17,14 +17,14 @@ exports[`render the uml-use-case-extend-component 1`] = `
             viewBox="0 0 30 30"
           >
             <path
-              class="sc-gsDKAQ datHse"
+              class="sc-gsnTZi iAPApG"
               d="M0,29 L30,15 L0,1"
               fill="none"
               stroke="black"
             />
           </marker>
           <path
-            class="sc-gsDKAQ ebiVBv"
+            class="sc-gsnTZi hgfdOH"
             d="
           M 0 0 L 21.715728752538098 21.715728752538098
           M 78.2842712474619 78.2842712474619 L 100 100
