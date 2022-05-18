@@ -6,8 +6,8 @@ exports[`render the uml-component-interface-provided-component 1`] = `
     <svg>
       <g>
         <polyline
-          class="sc-bczRLJ gQkeMM"
-          fill="none"
+          class="sc-bczRLJ fCdTGt"
+          fill="white"
           points="0 0,100 100"
           stroke="black"
         />
