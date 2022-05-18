@@ -10,6 +10,7 @@ export const UMLActivityMergeNodeComponent: FunctionComponent<Props> = ({ elemen
         element.bounds.width / 2
       } ${element.bounds.height}, 0 ${element.bounds.height / 2}, ${element.bounds.width / 2} 0`}
       strokeColor={element.strokeColor}
+      fillColor={element.fillColor}
     />
     <Multiline
       x={element.bounds.width / 2}

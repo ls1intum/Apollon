@@ -5,7 +5,14 @@ import { ThemedRect } from '../../../components/theme/themedComponents';
 
 export const FlowchartTerminalComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <FlowchartComponent element={element} scale={scale}>
-    <ThemedRect rx={10 * scale} ry={10 * scale} width="100%" height="100%" strokeColor={element.strokeColor} />
+    <ThemedRect
+      fillColor={element.fillColor}
+      rx={10 * scale}
+      ry={10 * scale}
+      width="100%"
+      height="100%"
+      strokeColor={element.strokeColor}
+    />
   </FlowchartComponent>
 );
 

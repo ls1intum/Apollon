@@ -5,7 +5,7 @@ import { ThemedRect } from '../../../components/theme/themedComponents';
 
 export const UMLActivityObjectNodeComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
-    <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} />
+    <ThemedRect width="100%" height="100%" fillColor={element.fillColor} strokeColor={element.strokeColor} />
     <Multiline
       x={element.bounds.width / 2}
       y={element.bounds.height / 2}

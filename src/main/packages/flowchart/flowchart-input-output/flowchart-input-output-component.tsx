@@ -10,6 +10,7 @@ export const FlowchartInputOutputComponent: FunctionComponent<Props> = ({ elemen
         -0.1 * element.bounds.width
       } ${element.bounds.height}, ${0.1 * element.bounds.width} 0, ${1.1 * element.bounds.width} 0`}
       strokeColor={element.strokeColor}
+      fillColor={element.fillColor}
     />
   </FlowchartComponent>
 );

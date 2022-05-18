@@ -5,7 +5,7 @@ import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponen
 
 export const UMLDeploymentArtifactComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <g>
-    <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} />
+    <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} fillColor={element.fillColor} />
     <Text y={28 * scale} dominantBaseline="auto" fill={element.textColor}>
       {element.name}
     </Text>

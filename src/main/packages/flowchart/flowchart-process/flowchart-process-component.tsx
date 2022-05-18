@@ -5,7 +5,7 @@ import { ThemedRect } from '../../../components/theme/themedComponents';
 
 export const FlowchartProcessComponent: FunctionComponent<Props> = ({ element, scale }) => (
   <FlowchartComponent element={element} scale={scale}>
-    <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} />
+    <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} fillColor={element.fillColor} />
   </FlowchartComponent>
 );
 
