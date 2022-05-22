@@ -7,20 +7,20 @@ exports[`test default relationship popup render 1`] = `
       <div>
         <section>
           <div
-            class="sc-iAKWXU jPGCHi"
+            class="sc-iAvgwm jqlpkO"
           >
             <h1
-              class="sc-iUKqMP gqYEuC"
+              class="sc-iTONeN dUeXVQ"
             >
               Relationship
             </h1>
             <button
-              class="sc-fKVqWL sc-bBHxTw dsyxTk cJRANA"
+              class="sc-fLlhyt sc-bBrHrO isqEak bBoMhO"
               color="link"
               tabindex="-1"
             >
               <svg
-                class="sc-jrQzAO eCAavd"
+                class="sc-jqUVSM iZiiCQ"
                 height="16px"
                 viewBox="0 0 448 512"
                 width="16px"
