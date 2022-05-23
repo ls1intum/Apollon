@@ -6,7 +6,12 @@ import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponen
 export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scale, children }) => {
   return (
     <g>
-      <ThemedRect strokeColor="none" width="100%" height={element.stereotype ? 50 * scale : 40 * scale} />
+      <ThemedRect
+        fillColor="element.fillColor"
+        strokeColor="none"
+        width="100%"
+        height={element.stereotype ? 50 * scale : 40 * scale}
+      />
       <ThemedRect
         y={element.stereotype ? 50 * scale : 40 * scale}
         width="100%"
