@@ -7,7 +7,7 @@ export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scal
   return (
     <g>
       <ThemedRect
-        fillColor="element.fillColor"
+        fillColor={element.fillColor}
         strokeColor="none"
         width="100%"
         height={element.stereotype ? 50 * scale : 40 * scale}
