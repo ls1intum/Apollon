@@ -4,7 +4,8 @@ import { UMLComponent } from './uml-component';
 import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
 export const UMLComponentComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
-  <g>
+
+  <g data-cy="uml-component">
     <ThemedRect width="100%" height="100%" strokeColor={element.strokeColor} fillColor={element.fillColor} />
     <Text fill={element.textColor} y={`${25 * scale}px`} dominantBaseline="auto">
       {element.name}

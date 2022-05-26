@@ -5,3 +5,4 @@ dist/
 /apollon.iml
 /coverage/
 /docs/build/
+cypress

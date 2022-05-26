@@ -47,7 +47,7 @@ class SidebarComponent extends Component<Props> {
     if (this.props.readonly || this.props.mode === ApollonMode.Assessment) return null;
 
     return (
-      <Container scale={this.props.scale} id="modeling-editor-sidebar">
+      <Container scale={this.props.scale} id="modeling-editor-sidebar" data-cy="modeling-editor-sidebar">
         {this.props.mode === ApollonMode.Exporting && (
           <Switch value={this.props.view} onChange={this.props.changeView} color="primary">
             <Switch.Item value={ApollonView.Modelling}>{this.props.translate('views.modelling')}</Switch.Item>

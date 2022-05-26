@@ -1,0 +1,12 @@
+{
+    "baseUrl": "http://localhost:8888",
+    "numTestsKeptInMemory": 1,
+    "viewportWidth": 1800,
+    "viewportHeight": 920,
+    "video": false,
+    "screenshotOnRunFailure": false,
+    "integrationFolder": "./src/tests/e2e/specs",
+    "fixturesFolder": "./src/tests/e2e/fixture",
+    "pluginsFile": false,
+    "supportFile": "./src/tests/e2e/support/index.ts"
+}
