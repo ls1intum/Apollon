@@ -202,36 +202,47 @@ export const connectable = (
         return;
       }
 
-      // calculate event position relative to object position in %
-      const nodeRect = node.getBoundingClientRect();
+      let direction;
 
-      const relEventPosition = {
-        x: (event.clientX - nodeRect.left) / nodeRect.width,
-        y: (event.clientY - nodeRect.top) / nodeRect.height,
-      };
+      // if available, we can get the direction from the event target
+      if (event.target instanceof SVGElement && event.target.parentElement != null
+          && event.target.parentElement.hasAttribute('direction')) {
+        direction = event.target.parentElement.getAttribute('direction') as Direction;
+      }
 
-      // relative port locations in %
-      const relativePortLocation: { [key in Direction]: Point } = {
-        [Direction.Up]: new Point(0.5, 0),
-        [Direction.Right]: new Point(1, 0.5),
-        [Direction.Down]: new Point(0.5, 1),
-        [Direction.Left]: new Point(0, 0.5),
-      };
+      // otherwise get the direction the old way
+      if (direction == null) {
+        // calculate event position relative to object position in %
+        const nodeRect = node.getBoundingClientRect();
 
-      const ports = getPortsForElement(this.props.element);
+        const relEventPosition = {
+          x: (event.clientX - nodeRect.left) / nodeRect.width,
+          y: (event.clientY - nodeRect.top) / nodeRect.height,
+        };
 
-      // calculate the distances to all handles
-      const distances = Object.entries(ports).map(([key, value]) => ({
-        key,
-        distance: Math.sqrt(
-          Math.pow(relativePortLocation[key as Direction].x - relEventPosition.x, 2) +
-            Math.pow(relativePortLocation[key as Direction].y - relEventPosition.y, 2),
-        ),
-      }));
+        // relative port locations in %
+        const relativePortLocation: { [key in Direction]: Point } = {
+          [Direction.Up]: new Point(0.5, 0),
+          [Direction.Right]: new Point(1, 0.5),
+          [Direction.Down]: new Point(0.5, 1),
+          [Direction.Left]: new Point(0, 0.5),
+        };
 
-      // use handle with min distance to connect to
-      const minDistance = Math.min(...distances.map((value) => value.distance));
-      const direction = distances.filter((value) => minDistance === value.distance)[0].key as Direction;
+        const ports = getPortsForElement(this.props.element);
+
+        // calculate the distances to all handles
+        const distances = Object.entries(ports).map(([key, value]) => ({
+          key,
+          distance: Math.sqrt(
+            Math.pow(relativePortLocation[key as Direction].x - relEventPosition.x, 2) +
+              Math.pow(relativePortLocation[key as Direction].y - relEventPosition.y, 2),
+          ),
+        }));
+
+        // use handle with min distance to connect to
+        const minDistance = Math.min(...distances.map((value) => value.distance));
+        direction = distances.filter((value) => minDistance === value.distance)[0].key as Direction;
+      }
 
       if (this.props.connecting) {
         this.props.connect({ element: this.props.id, direction });
