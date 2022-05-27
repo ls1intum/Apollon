@@ -205,8 +205,11 @@ export const connectable = (
       let direction;
 
       // if available, we can get the direction from the event target
-      if (event.target instanceof SVGElement && event.target.parentElement != null
-          && event.target.parentElement.hasAttribute('direction')) {
+      if (
+        event.target instanceof SVGElement &&
+        event.target.parentElement != null &&
+        event.target.parentElement.hasAttribute('direction')
+      ) {
         direction = event.target.parentElement.getAttribute('direction') as Direction;
       }
 
