@@ -4,12 +4,18 @@ import { ThemedRect, ThemedPath } from '../../../components/theme/themedComponen
 
 export const UMLClassPackageComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
   <g>
-    <ThemedPath style={{ transform: `scale(${scale})` }} d={`M 0 10 V 0 H 40 V 10`} strokeColor={element.strokeColor} />
+    <ThemedPath
+      style={{ transform: `scale(${scale})` }}
+      d={`M 0 10 V 0 H 40 V 10`}
+      strokeColor={element.strokeColor}
+      fillColor={element.fillColor}
+    />
     <ThemedRect
       y={10 * scale}
       width="100%"
       height={element.bounds.height - 10 * scale}
       strokeColor={element.strokeColor}
+      fillColor={element.fillColor}
     />
     <text
       x="50%"
