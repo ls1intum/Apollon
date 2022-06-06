@@ -32,6 +32,7 @@ export interface IUMLElement {
   textColor?: string;
   /** Note to show for element's assessment */
   assessmentNote?: string;
+  selectedBy?: any;
 }
 
 export const enum ResizeFrom {
@@ -80,6 +81,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
   strokeColor?: string;
   textColor?: string;
   assessmentNote?: string;
+  selectedBy?: any;
   resizeFrom: ResizeFrom = ResizeFrom.BOTTOMRIGHT;
 
   constructor(values?: DeepPartial<IUMLElement>) {
@@ -111,6 +113,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
       strokeColor: this.strokeColor,
       textColor: this.textColor,
       assessmentNote: this.assessmentNote,
+      selectedBy: this.selectedBy,
     };
   }
 
@@ -126,6 +129,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
     this.strokeColor = values.strokeColor;
     this.textColor = values.textColor;
     this.assessmentNote = values.assessmentNote;
+    this.selectedBy = values.selectedBy;
   }
 
   abstract render(canvas: ILayer): ILayoutable[];

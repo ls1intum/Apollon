@@ -52,6 +52,7 @@ export type UMLModelElement = {
   strokeColor?: string;
   textColor?: string;
   assessmentNote?: string;
+  selectedBy?: any;
 };
 
 export type UMLElement = UMLModelElement & {

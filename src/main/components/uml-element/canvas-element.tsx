@@ -78,6 +78,7 @@ class CanvasElementComponent extends Component<Props> {
         ? element.fillColor
         : 'white';
 
+    const selectedBy = element.selectedBy;
     return (
       <svg
         {...props}
@@ -98,6 +99,19 @@ class CanvasElementComponent extends Component<Props> {
             height={element.bounds.height + STROKE}
             fill="none"
             stroke="#0064ff"
+            strokeOpacity="0.2"
+            strokeWidth={STROKE}
+            pointerEvents="none"
+          />
+        )}
+        {selectedBy && (
+          <rect
+            x={-STROKE / 2}
+            y={-STROKE / 2}
+            width={element.bounds.width + STROKE}
+            height={element.bounds.height + STROKE}
+            fill="none"
+            stroke="#232323"
             strokeOpacity="0.2"
             strokeWidth={STROKE}
             pointerEvents="none"
