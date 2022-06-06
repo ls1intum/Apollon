@@ -1,5 +1,6 @@
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
+import { UMLElementSelectorType } from '../../packages/uml-element-selector-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import * as Apollon from '../../typings';
@@ -32,7 +33,7 @@ export interface IUMLElement {
   textColor?: string;
   /** Note to show for element's assessment */
   assessmentNote?: string;
-  selectedBy?: any;
+  selectedBy?: UMLElementSelectorType;
 }
 
 export const enum ResizeFrom {
@@ -81,7 +82,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
   strokeColor?: string;
   textColor?: string;
   assessmentNote?: string;
-  selectedBy?: any;
+  selectedBy?: UMLElementSelectorType;
   resizeFrom: ResizeFrom = ResizeFrom.BOTTOMRIGHT;
 
   constructor(values?: DeepPartial<IUMLElement>) {

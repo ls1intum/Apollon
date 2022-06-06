@@ -105,17 +105,28 @@ class CanvasElementComponent extends Component<Props> {
           />
         )}
         {selectedBy && (
-          <rect
-            x={-STROKE / 2}
-            y={-STROKE / 2}
-            width={element.bounds.width + STROKE}
-            height={element.bounds.height + STROKE}
-            fill="none"
-            stroke="#232323"
-            strokeOpacity="0.2"
-            strokeWidth={STROKE}
-            pointerEvents="none"
-          />
+          <>
+            <rect
+              x={-STROKE / 2}
+              y={-STROKE / 2}
+              width={element.bounds.width + STROKE}
+              height={element.bounds.height + STROKE}
+              fill="none"
+              stroke={selectedBy.color}
+              strokeOpacity="0.2"
+              strokeWidth={STROKE}
+              pointerEvents="none"
+            />
+
+            <g transform="translate(195 0)" pointer-events="none">
+              <circle r="16" fill-opacity="0.8" fill={selectedBy.color}></circle>
+              <text y="5">
+                <tspan text-anchor="middle">{selectedBy.name}</tspan>
+              </text>
+            </g>
+
+          </>
+
         )}
       </svg>
     );
