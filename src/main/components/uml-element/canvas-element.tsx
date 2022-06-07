@@ -104,7 +104,7 @@ class CanvasElementComponent extends Component<Props> {
             pointerEvents="none"
           />
         )}
-        {selectedBy && (
+        {selectedBy && !(hovered || selected) && (
           <>
             <rect
               x={-STROKE / 2}
@@ -124,9 +124,7 @@ class CanvasElementComponent extends Component<Props> {
                 <tspan text-anchor="middle">{selectedBy.name}</tspan>
               </text>
             </g>
-
           </>
-
         )}
       </svg>
     );
