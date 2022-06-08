@@ -11,7 +11,7 @@ export const Container = styled.div`
   align-items: center;
   margin: 10px 0;
   background-color: white;
-  border: 1px solid lightgray;
+  border: 1px solid ${(props) => props.theme.color.gray};
 `;
 
 export const Color = styled.button.attrs<Props>({})<Props>`
@@ -27,7 +27,7 @@ export const Color = styled.button.attrs<Props>({})<Props>`
     content: '';
     width: 2px;
     height: 100%;
-    background: black;
+    background: ${(props) => props.theme.color.primaryContrast};
     position: absolute;
     top: 0;
     left: 50%;
@@ -46,6 +46,8 @@ export const Row = styled.div`
   padding: 16px;
   /* border-bottom: 1px solid #353d47; */
   font-weight: bold;
+  background-color: ${(props) => props.theme.color.background};
+  color: ${(props) => props.theme.color.primaryContrast};
   &:last-of-type {
     border-bottom: none;
   }
@@ -53,7 +55,7 @@ export const Row = styled.div`
 
 export const Divider = styled.div`
   width: 100%;
-  background: #353d47;
+  background: ${(props) => props.theme.color.backgroundVariant};
   height: 1px;
 `;
 
