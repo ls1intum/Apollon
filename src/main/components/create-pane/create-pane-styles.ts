@@ -5,5 +5,5 @@ export const Separator = styled.div`
   text-align: center;
   margin: 1rem 0;
   height: 2px;
-  background-color: black;
+  background-color: ${(props) => props.theme.color.primaryContrast};
 `;
