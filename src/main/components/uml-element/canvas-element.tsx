@@ -119,7 +119,7 @@ class CanvasElementComponent extends Component<Props> {
             />
 
             <g transform="translate(195 0)" pointer-events="none">
-              <circle r="16" fill-opacity="0.8" fill={selectedBy.color}></circle>
+              <circle r="16" fill-opacity="0.8" fill={selectedBy.color} />
               <text y="5">
                 <tspan text-anchor="middle">{selectedBy.name}</tspan>
               </text>
