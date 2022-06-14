@@ -50,7 +50,7 @@ export declare type UMLModelElement = {
     strokeColor?: string;
     textColor?: string;
     assessmentNote?: string;
-    selectedBy?: UMLElementSelectorType;
+    selectedBy?: UMLElementSelectorType[];
 };
 export declare type UMLElement = UMLModelElement & {
     type: UMLElementType;

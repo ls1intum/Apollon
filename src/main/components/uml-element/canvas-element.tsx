@@ -78,7 +78,8 @@ class CanvasElementComponent extends Component<Props> {
         ? element.fillColor
         : 'white';
 
-    const selectedBy = element.selectedBy;
+    const selectedBy =
+      element.selectedBy && element.selectedBy?.length > 0 ? element.selectedBy[0] : { name: '', color: '' };
     return (
       <svg
         {...props}
