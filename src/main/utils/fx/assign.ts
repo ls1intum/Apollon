@@ -3,8 +3,8 @@ import { DeepPartial } from 'redux';
 export const assign = <T extends { [key: string]: any }>(target: T, source?: DeepPartial<T>): T => {
   for (const key in source) {
     if (Array.isArray(source[key])) {
-      if(key === 'selectedBy' && target[key] === undefined) {
-        target[key] = [...assign({...target, selectedBy: []}[key], source[key])] as any;
+      if (key === 'selectedBy' && target[key] === undefined) {
+        target[key] = [...assign({ ...target, selectedBy: [] }[key], source[key])] as any;
       } else {
         target[key] = [...assign(target[key], source[key])] as any;
       }
