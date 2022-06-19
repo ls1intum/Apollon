@@ -23,9 +23,9 @@ const ColorContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: white;
+  background-color: ${(props) => props.theme.color.background};
   width: 100%;
-  margin-bottom: 10px;
+  padding-bottom: 10px;
 `;
 
 const Flex = styled.div`
