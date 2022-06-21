@@ -204,7 +204,7 @@ export class Svg extends Component<Props, State> {
                   width={element.bounds.width}
                   height={element.bounds.height}
                   key={element.id}
-                  className={element.name ? element.name.replace(/[<>]/, '') : ''}
+                  className={element.name ? element.name.replace(/[<>]/g, '') : ''}
                   fill={element.fillColor || theme.color.background}
                 >
                   <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
