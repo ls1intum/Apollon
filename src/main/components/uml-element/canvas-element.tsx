@@ -123,15 +123,16 @@ class CanvasElementComponent extends Component<Props> {
                   />
 
                   <g transform={indicatorPosition} pointerEvents="none">
-                    <text
-                      fillOpacity="0.8"
-                      stroke={selectedBy.color}
-                      strokeWidth="0.5em"
-                      fill="black"
-                      paintOrder="stroke"
-                      strokeLinejoin="round"
-                      y="5"
-                    >
+                    <rect
+                      fillOpacity="0.2"
+                      rx="10"
+                      x="-40"
+                      y="-20"
+                      width="85px"
+                      height="30px"
+                      fill={selectedBy.color}
+                    ></rect>
+                    <text>
                       <tspan textAnchor="middle">
                         {selectedBy.name.length < 8 ? selectedBy.name : selectedBy.name.substring(0, 6) + '..'}
                       </tspan>
