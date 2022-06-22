@@ -105,13 +105,12 @@ class CanvasElementComponent extends Component<Props> {
           />
         )}
         {selectedByList.length > 0 && (
-          <>
+          <g>
             {selectedByList.map((selectedBy, index) => {
               const indicatorPosition = 'translate(' + (element.bounds.width + STROKE) + ' ' + index * 32 + ')';
               return (
-                <>
+                <g id={selectedBy.name + '_' + selectedBy.color}>
                   <rect
-                    className={selectedBy.name + '_' + selectedBy.color}
                     x={-STROKE / 2}
                     y={-STROKE / 2}
                     width={element.bounds.width + STROKE}
@@ -125,7 +124,6 @@ class CanvasElementComponent extends Component<Props> {
 
                   <g transform={indicatorPosition} pointerEvents="none">
                     <text
-                      className={selectedBy.name + '_' + selectedBy.color}
                       fillOpacity="0.8"
                       stroke={selectedBy.color}
                       strokeWidth="0.5em"
@@ -139,10 +137,10 @@ class CanvasElementComponent extends Component<Props> {
                       </tspan>
                     </text>
                   </g>
-                </>
+                </g>
               );
             })}
-          </>
+          </g>
         )}
       </svg>
     );
