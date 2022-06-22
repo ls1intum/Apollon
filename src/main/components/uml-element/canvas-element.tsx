@@ -109,7 +109,7 @@ class CanvasElementComponent extends Component<Props> {
             {selectedByList.map((selectedBy, index) => {
               const indicatorPosition = 'translate(' + (element.bounds.width + STROKE) + ' ' + index * 32 + ')';
               return (
-                <g id={selectedBy.name + '_' + selectedBy.color}>
+                <g key={selectedBy.name + '_' + selectedBy.color} id={selectedBy.name + '_' + selectedBy.color}>
                   <rect
                     x={-STROKE / 2}
                     y={-STROKE / 2}
@@ -131,7 +131,7 @@ class CanvasElementComponent extends Component<Props> {
                       width="85px"
                       height="30px"
                       fill={selectedBy.color}
-                    ></rect>
+                    />
                     <text>
                       <tspan textAnchor="middle">
                         {selectedBy.name.length < 8 ? selectedBy.name : selectedBy.name.substring(0, 6) + '..'}
