@@ -104,13 +104,14 @@ class CanvasElementComponent extends Component<Props> {
             pointerEvents="none"
           />
         )}
-        {selectedByList.length > 0 && !(hovered || selected) && (
+        {selectedByList.length > 0 && (
           <>
             {selectedByList.map((selectedBy, index) => {
               const indicatorPosition = 'translate(' + (element.bounds.width + STROKE) + ' ' + index * 32 + ')';
               return (
                 <>
                   <rect
+                    className={selectedBy.name+'_'+selectedBy.color}
                     x={-STROKE / 2}
                     y={-STROKE / 2}
                     width={element.bounds.width + STROKE}
@@ -124,6 +125,7 @@ class CanvasElementComponent extends Component<Props> {
 
                   <g transform={indicatorPosition} pointerEvents="none">
                     <text
+                      className={selectedBy.name+'_'+selectedBy.color}
                       fillOpacity="0.8"
                       stroke={selectedBy.color}
                       strokeWidth="0.5em"
