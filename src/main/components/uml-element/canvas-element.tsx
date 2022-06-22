@@ -133,7 +133,7 @@ class CanvasElementComponent extends Component<Props> {
                       y="5"
                     >
                       <tspan textAnchor="middle">
-                        {selectedBy.name.length < 7 ? selectedBy.name : selectedBy.name.substring(0, 7) + '..'}
+                        {selectedBy.name.length < 8 ? selectedBy.name : selectedBy.name.substring(0, 6) + '..'}
                       </tspan>
                     </text>
                   </g>
