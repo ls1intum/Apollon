@@ -98,7 +98,13 @@ const Handle = styled((props) => {
   x: `${ports[direction].x}px`,
   y: `${ports[direction].y}px`,
   rotate:
-    direction === Direction.Up ? 0 : direction === Direction.Right ? 90 : direction === Direction.Down ? 180 : -90,
+    direction === Direction.Up
+      ? 0
+      : direction === Direction.Right || direction === Direction.Upright
+      ? 90
+      : direction === Direction.Down
+      ? 180
+      : -90,
 }))<{ rotate: number }>`
   cursor: crosshair;
   pointer-events: all;
@@ -185,6 +191,22 @@ export const connectable = (
                 alternativePortVisualization={features.alternativePortVisualization}
                 scale={scale}
               />
+              <Handle
+                ports={ports}
+                direction={Direction.Upright}
+                onPointerDown={this.onPointerDown}
+                onPointerUp={this.onPointerUp}
+                alternativePortVisualization={features.alternativePortVisualization}
+                scale={scale}
+              />
+              <Handle
+                ports={ports}
+                direction={Direction.Upleft}
+                onPointerDown={this.onPointerDown}
+                onPointerUp={this.onPointerUp}
+                alternativePortVisualization={features.alternativePortVisualization}
+                scale={scale}
+              />
             </>
           )}
         </WrappedComponent>
@@ -229,6 +251,10 @@ export const connectable = (
           [Direction.Right]: new Point(1, 0.5),
           [Direction.Down]: new Point(0.5, 1),
           [Direction.Left]: new Point(0, 0.5),
+          [Direction.Upright]: new Point(1, 0.25),
+          [Direction.Downright]: new Point(1, 0.75),
+          [Direction.Upleft]: new Point(0, 0.25),
+          [Direction.Downleft]: new Point(0, 0.75),
         };
 
         const ports = getPortsForElement(this.props.element);

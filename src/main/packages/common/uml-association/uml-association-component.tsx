@@ -95,6 +95,12 @@ export const layoutTextForUMLAssociation = (location: IUMLElementPort['direction
         dy: position === 'TOP' ? -10 : 21,
         textAnchor: 'end',
       };
+    // TODO: fix this
+    default:
+      return {
+        dy: position === 'TOP' ? -10 : 21,
+        textAnchor: 'start',
+      };
   }
 };
 
