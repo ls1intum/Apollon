@@ -159,14 +159,16 @@ export const connectable = (
           {props.children}
           {(hovered || selected || connecting || reconnecting) && (
             <>
-              <Handle
-                ports={ports}
-                direction={Direction.Up}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
+              {this.props.type !== 'ActivityForkNode' && (
+                <Handle
+                  ports={ports}
+                  direction={Direction.Up}
+                  onPointerDown={this.onPointerDown}
+                  onPointerUp={this.onPointerUp}
+                  alternativePortVisualization={features.alternativePortVisualization}
+                  scale={scale}
+                />
+              )}
               <Handle
                 ports={ports}
                 direction={Direction.Right}
@@ -175,14 +177,18 @@ export const connectable = (
                 alternativePortVisualization={features.alternativePortVisualization}
                 scale={scale}
               />
-              <Handle
-                ports={ports}
-                direction={Direction.Down}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
+
+              {this.props.type !== 'ActivityForkNode' && (
+                <Handle
+                  ports={ports}
+                  direction={Direction.Down}
+                  onPointerDown={this.onPointerDown}
+                  onPointerUp={this.onPointerUp}
+                  alternativePortVisualization={features.alternativePortVisualization}
+                  scale={scale}
+                />
+              )}
+
               <Handle
                 ports={ports}
                 direction={Direction.Left}
@@ -191,22 +197,26 @@ export const connectable = (
                 alternativePortVisualization={features.alternativePortVisualization}
                 scale={scale}
               />
-              <Handle
-                ports={ports}
-                direction={Direction.Upright}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
-              <Handle
-                ports={ports}
-                direction={Direction.Upleft}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
+              {this.props.type === 'ActivityForkNode' && (
+                <>
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Upright}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Upleft}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                </>
+              )}
             </>
           )}
         </WrappedComponent>
