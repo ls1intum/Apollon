@@ -79,7 +79,6 @@ export const composeActivityPreview: ComposePreview = (
 
   // Activity Fork Node Horizontal
   const activityForkNodeHorizontal = new UMLActivityForkNodeHorizontal();
-  console.log(activityForkNodeHorizontal);
   elements.push(activityForkNodeHorizontal);
 
   return elements;
