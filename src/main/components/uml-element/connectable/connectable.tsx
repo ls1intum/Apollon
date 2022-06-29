@@ -197,7 +197,7 @@ export const connectable = (
                 alternativePortVisualization={features.alternativePortVisualization}
                 scale={scale}
               />
-              {this.props.type === 'ActivityForkNode' && (
+              {this.props.type === 'ActivityForkNode' && this.props.element.bounds.height > 120 && (
                 <>
                   <Handle
                     ports={ports}
