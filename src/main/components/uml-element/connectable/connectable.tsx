@@ -98,11 +98,11 @@ const Handle = styled((props) => {
   x: `${ports[direction].x}px`,
   y: `${ports[direction].y}px`,
   rotate:
-    direction === Direction.Up
+    direction === Direction.Up || direction === Direction.Topright || direction === Direction.Topleft
       ? 0
       : direction === Direction.Right || direction === Direction.Upright || direction === Direction.Downright
       ? 90
-      : direction === Direction.Down
+      : direction === Direction.Down || direction === Direction.Bottomright || direction === Direction.Bottomleft
       ? 180
       : -90,
 }))<{ rotate: number }>`
@@ -169,15 +169,16 @@ export const connectable = (
                   scale={scale}
                 />
               )}
-              <Handle
-                ports={ports}
-                direction={Direction.Right}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
-
+              {this.props.type !== 'ActivityForkNodeHorizontal' && (
+                <Handle
+                  ports={ports}
+                  direction={Direction.Right}
+                  onPointerDown={this.onPointerDown}
+                  onPointerUp={this.onPointerUp}
+                  alternativePortVisualization={features.alternativePortVisualization}
+                  scale={scale}
+                />
+              )}
               {this.props.type !== 'ActivityForkNode' && (
                 <Handle
                   ports={ports}
@@ -189,14 +190,17 @@ export const connectable = (
                 />
               )}
 
-              <Handle
-                ports={ports}
-                direction={Direction.Left}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
+              {this.props.type !== 'ActivityForkNodeHorizontal' && (
+                <Handle
+                  ports={ports}
+                  direction={Direction.Left}
+                  onPointerDown={this.onPointerDown}
+                  onPointerUp={this.onPointerUp}
+                  alternativePortVisualization={features.alternativePortVisualization}
+                  scale={scale}
+                />
+              )}
+
               {this.props.type === 'ActivityForkNode' && this.props.element.bounds.height > 120 && (
                 <>
                   <Handle
@@ -226,6 +230,43 @@ export const connectable = (
                   <Handle
                     ports={ports}
                     direction={Direction.Downleft}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                </>
+              )}
+
+              {this.props.type === 'ActivityForkNodeHorizontal' && this.props.element.bounds.width > 120 && (
+                <>
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Topright}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Topleft}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Bottomright}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Bottomleft}
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
@@ -281,6 +322,10 @@ export const connectable = (
           [Direction.Downright]: new Point(1, 0.75),
           [Direction.Upleft]: new Point(0, 0.25),
           [Direction.Downleft]: new Point(0, 0.75),
+          [Direction.Topright]: new Point(0.75, 0),
+          [Direction.Bottomright]: new Point(0.75, 1),
+          [Direction.Topleft]: new Point(0.25, 0),
+          [Direction.Bottomleft]: new Point(0.25, 1),
         };
 
         const ports = getPortsForElement(this.props.element);
