@@ -87,23 +87,15 @@ export class Connection {
         startPointOnMarginBox = startPointOnMarginBox.add(0, -ENTITY_MARGIN);
         break;
       case Direction.Right:
+      case Direction.Upright:
+      case Direction.Downright:
         startPointOnMarginBox = startPointOnMarginBox.add(ENTITY_MARGIN, 0);
         break;
       case Direction.Down:
         startPointOnMarginBox = startPointOnMarginBox.add(0, ENTITY_MARGIN);
         break;
       case Direction.Left:
-        startPointOnMarginBox = startPointOnMarginBox.add(-ENTITY_MARGIN, 0);
-        break;
-      case Direction.Upright:
-        startPointOnMarginBox = startPointOnMarginBox.add(ENTITY_MARGIN, 0);
-        break;
       case Direction.Upleft:
-        startPointOnMarginBox = startPointOnMarginBox.add(-ENTITY_MARGIN, 0);
-        break;
-      case Direction.Downright:
-        startPointOnMarginBox = startPointOnMarginBox.add(ENTITY_MARGIN, 0);
-        break;
       case Direction.Downleft:
         startPointOnMarginBox = startPointOnMarginBox.add(-ENTITY_MARGIN, 0);
         break;
@@ -114,25 +106,17 @@ export class Connection {
         endPointOnMarginBox = endPointOnMarginBox.add(0, -ENTITY_MARGIN);
         break;
       case Direction.Right:
+      case Direction.Upright:
+      case Direction.Downright:
         endPointOnMarginBox = endPointOnMarginBox.add(ENTITY_MARGIN, 0);
         break;
       case Direction.Down:
         endPointOnMarginBox = endPointOnMarginBox.add(0, ENTITY_MARGIN);
         break;
       case Direction.Left:
-        endPointOnMarginBox = endPointOnMarginBox.add(-ENTITY_MARGIN, 0);
-        break;
       case Direction.Upleft:
-        endPointOnMarginBox = endPointOnMarginBox.add(-ENTITY_MARGIN, 0);
-        break;
-      case Direction.Upright:
-        endPointOnMarginBox = endPointOnMarginBox.add(ENTITY_MARGIN, 0);
-        break;
       case Direction.Downleft:
         endPointOnMarginBox = endPointOnMarginBox.add(-ENTITY_MARGIN, 0);
-        break;
-      case Direction.Downright:
-        endPointOnMarginBox = endPointOnMarginBox.add(ENTITY_MARGIN, 0);
         break;
     }
 
