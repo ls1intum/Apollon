@@ -100,7 +100,7 @@ const Handle = styled((props) => {
   rotate:
     direction === Direction.Up
       ? 0
-      : direction === Direction.Right || direction === Direction.Upright
+      : direction === Direction.Right || direction === Direction.Upright || direction === Direction.Downright
       ? 90
       : direction === Direction.Down
       ? 180
@@ -210,6 +210,22 @@ export const connectable = (
                   <Handle
                     ports={ports}
                     direction={Direction.Upleft}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Downright}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Downleft}
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}

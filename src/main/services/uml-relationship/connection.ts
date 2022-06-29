@@ -101,6 +101,12 @@ export class Connection {
       case Direction.Upleft:
         startPointOnMarginBox = startPointOnMarginBox.add(-ENTITY_MARGIN, 0);
         break;
+      case Direction.Downright:
+        startPointOnMarginBox = startPointOnMarginBox.add(ENTITY_MARGIN, 0);
+        break;
+      case Direction.Downleft:
+        startPointOnMarginBox = startPointOnMarginBox.add(-ENTITY_MARGIN, 0);
+        break;
     }
     let endPointOnMarginBox: Point = targetPortPosition.clone();
     switch (target.direction) {
@@ -120,6 +126,12 @@ export class Connection {
         endPointOnMarginBox = endPointOnMarginBox.add(-ENTITY_MARGIN, 0);
         break;
       case Direction.Upright:
+        endPointOnMarginBox = endPointOnMarginBox.add(ENTITY_MARGIN, 0);
+        break;
+      case Direction.Downleft:
+        endPointOnMarginBox = endPointOnMarginBox.add(-ENTITY_MARGIN, 0);
+        break;
+      case Direction.Downright:
         endPointOnMarginBox = endPointOnMarginBox.add(ENTITY_MARGIN, 0);
         break;
     }
@@ -640,6 +652,16 @@ function determineCornerQueue(
       break;
 
     case Direction.Upleft:
+      clockwiseCornerQueue = [tl, tr, br, bl];
+      counterClockwiseCornerQueue = [bl, br, tr, tl];
+      break;
+
+    case Direction.Downright:
+      clockwiseCornerQueue = [br, bl, tl, tr];
+      counterClockwiseCornerQueue = [tr, tl, bl, br];
+      break;
+
+    case Direction.Downleft:
       clockwiseCornerQueue = [tl, tr, br, bl];
       counterClockwiseCornerQueue = [bl, br, tr, tl];
       break;
