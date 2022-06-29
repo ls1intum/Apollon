@@ -6,6 +6,7 @@ import { UMLActivityActionNodeComponent } from './uml-activity-diagram/uml-activ
 import { UMLActivityControlFlowComponent } from './uml-activity-diagram/uml-activity-control-flow/uml-activity-control-flow-component';
 import { UMLActivityFinalNodeComponent } from './uml-activity-diagram/uml-activity-final-node/uml-activity-final-node-component';
 import { UMLActivityForkNodeComponent } from './uml-activity-diagram/uml-activity-fork-node/uml-activity-fork-node-component';
+import { UMLActivityForkNodeHorizontalComponent } from './uml-activity-diagram/uml-activity-fork-node-horizontal/uml-activity-fork-node-horizontal-component';
 import { UMLActivityInitialNodeComponent } from './uml-activity-diagram/uml-activity-initial-node/uml-activity-initial-node-component';
 import { UMLActivityMergeNodeComponent } from './uml-activity-diagram/uml-activity-merge-node/uml-activity-merge-node-component';
 import { UMLActivityObjectNodeComponent } from './uml-activity-diagram/uml-activity-object-node/uml-activity-object-node-component';
@@ -66,6 +67,7 @@ export const Components: {
   [UMLElementType.ActivityActionNode]: UMLActivityActionNodeComponent,
   [UMLElementType.ActivityFinalNode]: UMLActivityFinalNodeComponent,
   [UMLElementType.ActivityForkNode]: UMLActivityForkNodeComponent,
+  [UMLElementType.ActivityForkNodeHorizontal]: UMLActivityForkNodeHorizontalComponent,
   [UMLElementType.ActivityInitialNode]: UMLActivityInitialNodeComponent,
   [UMLElementType.ActivityMergeNode]: UMLActivityMergeNodeComponent,
   [UMLElementType.ActivityObjectNode]: UMLActivityObjectNodeComponent,

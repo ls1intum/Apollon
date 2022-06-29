@@ -3,6 +3,7 @@ import { UMLElement } from '../../services/uml-element/uml-element';
 import { ComposePreview } from '../compose-preview';
 import { UMLActivityActionNode } from './uml-activity-action-node/uml-activity-action-node';
 import { UMLActivityFinalNode } from './uml-activity-final-node/uml-activity-final-node';
+import { UMLActivityForkNodeHorizontal } from './uml-activity-fork-node-horizontal/uml-activity-fork-node-horizontal';
 import { UMLActivityForkNode } from './uml-activity-fork-node/uml-activity-fork-node';
 import { UMLActivityInitialNode } from './uml-activity-initial-node/uml-activity-initial-node';
 import { UMLActivityMergeNode } from './uml-activity-merge-node/uml-activity-merge-node';
@@ -17,6 +18,8 @@ export const composeActivityPreview: ComposePreview = (
   const elements: UMLElement[] = [];
   UMLActivityForkNode.defaultWidth = 20 * scale;
   UMLActivityForkNode.defaultHeight = 60 * scale;
+  UMLActivityForkNodeHorizontal.defaultWidth = 60 * scale;
+  UMLActivityForkNodeHorizontal.defaultHeight = 20 * scale;
   // Activity
   const activity = new UMLActivity({ name: translate('packages.ActivityDiagram.Activity') });
   activity.bounds = {
@@ -73,6 +76,10 @@ export const composeActivityPreview: ComposePreview = (
   // Activity Fork Node
   const activityForkNode = new UMLActivityForkNode();
   elements.push(activityForkNode);
+
+  // Activity Fork Node Horizontal
+  const activityForkNodeHorizontal = new UMLActivityForkNodeHorizontal();
+  elements.push(activityForkNodeHorizontal);
 
   return elements;
 };
