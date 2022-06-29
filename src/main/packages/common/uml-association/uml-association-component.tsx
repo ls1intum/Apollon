@@ -80,6 +80,8 @@ export const layoutTextForUMLAssociation = (location: IUMLElementPort['direction
         textAnchor: position === 'TOP' ? 'end' : 'start',
       };
     case Direction.Right:
+    case Direction.Upright:
+    case Direction.Downright:
       return {
         dy: position === 'TOP' ? -10 : 21,
         textAnchor: 'start',
@@ -91,15 +93,11 @@ export const layoutTextForUMLAssociation = (location: IUMLElementPort['direction
         textAnchor: position === 'TOP' ? 'end' : 'start',
       };
     case Direction.Left:
+    case Direction.Upleft:
+    case Direction.Downleft:
       return {
         dy: position === 'TOP' ? -10 : 21,
         textAnchor: 'end',
-      };
-    // TODO: fix this
-    default:
-      return {
-        dy: position === 'TOP' ? -10 : 21,
-        textAnchor: 'start',
       };
   }
 };
