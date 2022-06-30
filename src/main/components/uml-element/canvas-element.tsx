@@ -78,6 +78,7 @@ class CanvasElementComponent extends Component<Props> {
         ? element.fillColor
         : 'white';
 
+    const selectedByList = element.selectedBy || [];
     return (
       <svg
         {...props}
@@ -102,6 +103,45 @@ class CanvasElementComponent extends Component<Props> {
             strokeWidth={STROKE}
             pointerEvents="none"
           />
+        )}
+        {selectedByList.length > 0 && (
+          <g>
+            {selectedByList.map((selectedBy, index) => {
+              const indicatorPosition = 'translate(' + (element.bounds.width + STROKE) + ' ' + index * 32 + ')';
+              return (
+                <g key={selectedBy.name + '_' + selectedBy.color} id={selectedBy.name + '_' + selectedBy.color}>
+                  <rect
+                    x={-STROKE / 2}
+                    y={-STROKE / 2}
+                    width={element.bounds.width + STROKE}
+                    height={element.bounds.height + STROKE}
+                    fill="none"
+                    stroke={selectedBy.color}
+                    strokeOpacity="0.2"
+                    strokeWidth={STROKE}
+                    pointerEvents="none"
+                  />
+
+                  <g transform={indicatorPosition} pointerEvents="none">
+                    <rect
+                      fillOpacity="0.2"
+                      rx="10"
+                      x="-40"
+                      y="-20"
+                      width="85px"
+                      height="30px"
+                      fill={selectedBy.color}
+                    />
+                    <text>
+                      <tspan textAnchor="middle">
+                        {selectedBy.name.length < 8 ? selectedBy.name : selectedBy.name.substring(0, 6) + '..'}
+                      </tspan>
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
+          </g>
         )}
       </svg>
     );
