@@ -3,6 +3,7 @@ export const ActivityElementType = {
   ActivityActionNode: 'ActivityActionNode',
   ActivityFinalNode: 'ActivityFinalNode',
   ActivityForkNode: 'ActivityForkNode',
+  ActivityForkNodeHorizontal: 'ActivityForkNodeHorizontal',
   ActivityInitialNode: 'ActivityInitialNode',
   ActivityMergeNode: 'ActivityMergeNode',
   ActivityObjectNode: 'ActivityObjectNode',

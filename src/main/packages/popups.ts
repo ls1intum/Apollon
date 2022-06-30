@@ -44,6 +44,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.ActivityActionNode]: DefaultPopup,
   [UMLElementType.ActivityFinalNode]: DefaultPopup,
   [UMLElementType.ActivityForkNode]: DefaultPopup,
+  [UMLElementType.ActivityForkNodeHorizontal]: DefaultPopup,
   [UMLElementType.ActivityInitialNode]: DefaultPopup,
   [UMLElementType.ActivityMergeNode]: UMLActivityMergeNodeUpdate,
   [UMLElementType.ActivityObjectNode]: DefaultPopup,

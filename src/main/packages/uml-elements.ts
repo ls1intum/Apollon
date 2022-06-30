@@ -1,6 +1,7 @@
 import { UMLActivityActionNode } from './uml-activity-diagram/uml-activity-action-node/uml-activity-action-node';
 import { UMLActivityFinalNode } from './uml-activity-diagram/uml-activity-final-node/uml-activity-final-node';
 import { UMLActivityForkNode } from './uml-activity-diagram/uml-activity-fork-node/uml-activity-fork-node';
+import { UMLActivityForkNodeHorizontal } from './uml-activity-diagram/uml-activity-fork-node-horizontal/uml-activity-fork-node-horizontal';
 import { UMLActivityInitialNode } from './uml-activity-diagram/uml-activity-initial-node/uml-activity-initial-node';
 import { UMLActivityMergeNode } from './uml-activity-diagram/uml-activity-merge-node/uml-activity-merge-node';
 import { UMLActivityObjectNode } from './uml-activity-diagram/uml-activity-object-node/uml-activity-object-node';
@@ -55,6 +56,7 @@ export const UMLElements = {
   [UMLElementType.ActivityActionNode]: UMLActivityActionNode,
   [UMLElementType.ActivityObjectNode]: UMLActivityObjectNode,
   [UMLElementType.ActivityForkNode]: UMLActivityForkNode,
+  [UMLElementType.ActivityForkNodeHorizontal]: UMLActivityForkNodeHorizontal,
   [UMLElementType.ActivityMergeNode]: UMLActivityMergeNode,
   [UMLElementType.UseCase]: UMLUseCase,
   [UMLElementType.UseCaseActor]: UMLUseCaseActor,
