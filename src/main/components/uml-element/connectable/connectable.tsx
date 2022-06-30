@@ -98,7 +98,13 @@ const Handle = styled((props) => {
   x: `${ports[direction].x}px`,
   y: `${ports[direction].y}px`,
   rotate:
-    direction === Direction.Up ? 0 : direction === Direction.Right ? 90 : direction === Direction.Down ? 180 : -90,
+    direction === Direction.Up || direction === Direction.Topright || direction === Direction.Topleft
+      ? 0
+      : direction === Direction.Right || direction === Direction.Upright || direction === Direction.Downright
+      ? 90
+      : direction === Direction.Down || direction === Direction.Bottomright || direction === Direction.Bottomleft
+      ? 180
+      : -90,
 }))<{ rotate: number }>`
   cursor: crosshair;
   pointer-events: all;
@@ -153,38 +159,121 @@ export const connectable = (
           {props.children}
           {(hovered || selected || connecting || reconnecting) && (
             <>
-              <Handle
-                ports={ports}
-                direction={Direction.Up}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
-              <Handle
-                ports={ports}
-                direction={Direction.Right}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
-              <Handle
-                ports={ports}
-                direction={Direction.Down}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
-              <Handle
-                ports={ports}
-                direction={Direction.Left}
-                onPointerDown={this.onPointerDown}
-                onPointerUp={this.onPointerUp}
-                alternativePortVisualization={features.alternativePortVisualization}
-                scale={scale}
-              />
+              {this.props.type !== 'ActivityForkNode' && (
+                <Handle
+                  ports={ports}
+                  direction={Direction.Up}
+                  onPointerDown={this.onPointerDown}
+                  onPointerUp={this.onPointerUp}
+                  alternativePortVisualization={features.alternativePortVisualization}
+                  scale={scale}
+                />
+              )}
+              {this.props.type !== 'ActivityForkNodeHorizontal' && (
+                <Handle
+                  ports={ports}
+                  direction={Direction.Right}
+                  onPointerDown={this.onPointerDown}
+                  onPointerUp={this.onPointerUp}
+                  alternativePortVisualization={features.alternativePortVisualization}
+                  scale={scale}
+                />
+              )}
+              {this.props.type !== 'ActivityForkNode' && (
+                <Handle
+                  ports={ports}
+                  direction={Direction.Down}
+                  onPointerDown={this.onPointerDown}
+                  onPointerUp={this.onPointerUp}
+                  alternativePortVisualization={features.alternativePortVisualization}
+                  scale={scale}
+                />
+              )}
+
+              {this.props.type !== 'ActivityForkNodeHorizontal' && (
+                <Handle
+                  ports={ports}
+                  direction={Direction.Left}
+                  onPointerDown={this.onPointerDown}
+                  onPointerUp={this.onPointerUp}
+                  alternativePortVisualization={features.alternativePortVisualization}
+                  scale={scale}
+                />
+              )}
+
+              {this.props.type === 'ActivityForkNode' && this.props.element.bounds.height > 120 && (
+                <>
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Upright}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Upleft}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Downright}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Downleft}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                </>
+              )}
+
+              {this.props.type === 'ActivityForkNodeHorizontal' && this.props.element.bounds.width > 120 && (
+                <>
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Topright}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Topleft}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Bottomright}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                  <Handle
+                    ports={ports}
+                    direction={Direction.Bottomleft}
+                    onPointerDown={this.onPointerDown}
+                    onPointerUp={this.onPointerUp}
+                    alternativePortVisualization={features.alternativePortVisualization}
+                    scale={scale}
+                  />
+                </>
+              )}
             </>
           )}
         </WrappedComponent>
@@ -229,6 +318,14 @@ export const connectable = (
           [Direction.Right]: new Point(1, 0.5),
           [Direction.Down]: new Point(0.5, 1),
           [Direction.Left]: new Point(0, 0.5),
+          [Direction.Upright]: new Point(1, 0.25),
+          [Direction.Downright]: new Point(1, 0.75),
+          [Direction.Upleft]: new Point(0, 0.25),
+          [Direction.Downleft]: new Point(0, 0.75),
+          [Direction.Topright]: new Point(0.75, 0),
+          [Direction.Bottomright]: new Point(0.75, 1),
+          [Direction.Topleft]: new Point(0.25, 0),
+          [Direction.Bottomleft]: new Point(0.25, 1),
         };
 
         const ports = getPortsForElement(this.props.element);

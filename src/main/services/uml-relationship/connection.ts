@@ -84,30 +84,46 @@ export class Connection {
     let startPointOnMarginBox: Point = sourcePortPosition.clone();
     switch (source.direction) {
       case Direction.Up:
+      case Direction.Topright:
+      case Direction.Topleft:
         startPointOnMarginBox = startPointOnMarginBox.add(0, -ENTITY_MARGIN);
         break;
       case Direction.Right:
+      case Direction.Upright:
+      case Direction.Downright:
         startPointOnMarginBox = startPointOnMarginBox.add(ENTITY_MARGIN, 0);
         break;
       case Direction.Down:
+      case Direction.Bottomright:
+      case Direction.Bottomleft:
         startPointOnMarginBox = startPointOnMarginBox.add(0, ENTITY_MARGIN);
         break;
       case Direction.Left:
+      case Direction.Upleft:
+      case Direction.Downleft:
         startPointOnMarginBox = startPointOnMarginBox.add(-ENTITY_MARGIN, 0);
         break;
     }
     let endPointOnMarginBox: Point = targetPortPosition.clone();
     switch (target.direction) {
       case Direction.Up:
+      case Direction.Topright:
+      case Direction.Topleft:
         endPointOnMarginBox = endPointOnMarginBox.add(0, -ENTITY_MARGIN);
         break;
       case Direction.Right:
+      case Direction.Upright:
+      case Direction.Downright:
         endPointOnMarginBox = endPointOnMarginBox.add(ENTITY_MARGIN, 0);
         break;
       case Direction.Down:
+      case Direction.Bottomright:
+      case Direction.Bottomleft:
         endPointOnMarginBox = endPointOnMarginBox.add(0, ENTITY_MARGIN);
         break;
       case Direction.Left:
+      case Direction.Upleft:
+      case Direction.Downleft:
         endPointOnMarginBox = endPointOnMarginBox.add(-ENTITY_MARGIN, 0);
         break;
     }
@@ -603,21 +619,29 @@ function determineCornerQueue(
   // when starting at the selected edge of the rectangle
   switch (edge) {
     case Direction.Up:
+    case Direction.Topright:
+    case Direction.Topleft:
       clockwiseCornerQueue = [tr, br, bl, tl];
       counterClockwiseCornerQueue = [tl, bl, br, tr];
       break;
 
     case Direction.Right:
+    case Direction.Upright:
+    case Direction.Downright:
       clockwiseCornerQueue = [br, bl, tl, tr];
       counterClockwiseCornerQueue = [tr, tl, bl, br];
       break;
 
     case Direction.Down:
+    case Direction.Bottomright:
+    case Direction.Bottomleft:
       clockwiseCornerQueue = [bl, tl, tr, br];
       counterClockwiseCornerQueue = [br, tr, tl, bl];
       break;
 
     case Direction.Left:
+    case Direction.Upleft:
+    case Direction.Downleft:
       clockwiseCornerQueue = [tl, tr, br, bl];
       counterClockwiseCornerQueue = [bl, br, tr, tl];
       break;

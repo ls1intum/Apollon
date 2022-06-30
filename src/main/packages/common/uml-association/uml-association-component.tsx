@@ -75,22 +75,30 @@ const Marker = {
 export const layoutTextForUMLAssociation = (location: IUMLElementPort['direction'], position: 'TOP' | 'BOTTOM') => {
   switch (location) {
     case Direction.Up:
+    case Direction.Topright:
+    case Direction.Topleft:
       return {
         dx: position === 'TOP' ? -5 : 5,
         textAnchor: position === 'TOP' ? 'end' : 'start',
       };
     case Direction.Right:
+    case Direction.Upright:
+    case Direction.Downright:
       return {
         dy: position === 'TOP' ? -10 : 21,
         textAnchor: 'start',
       };
     case Direction.Down:
+    case Direction.Bottomright:
+    case Direction.Bottomleft:
       return {
         dx: position === 'TOP' ? -5 : 5,
         dy: 10,
         textAnchor: position === 'TOP' ? 'end' : 'start',
       };
     case Direction.Left:
+    case Direction.Upleft:
+    case Direction.Downleft:
       return {
         dy: position === 'TOP' ? -10 : 21,
         textAnchor: 'end',
