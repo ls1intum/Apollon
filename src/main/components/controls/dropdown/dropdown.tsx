@@ -7,16 +7,16 @@ import { DropdownItemProps, StyledDropdown, StyledDropdownItem } from './dropdow
 
 const defaultProps = Object.freeze({
   color: 'primary' as Color,
-  outline: true,
+  outline: true as boolean,
   placeholder: '',
   size: 'sm' as Size,
 });
 
 const intialState = Object.freeze({
-  show: false,
-  top: 0,
-  left: 0,
-  width: 0,
+  show: false as boolean,
+  top: 0 as number,
+  left: 0 as number,
+  width: 0 as number,
 });
 
 export type Props<T> = {

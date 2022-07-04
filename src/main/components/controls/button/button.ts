@@ -3,10 +3,10 @@ import { Color, Size } from '../../theme/styles';
 import { StyledButton } from './button-styles';
 
 export const defaultProps = Object.freeze({
-  block: false,
+  block: false as boolean,
   color: 'secondary' as Color | 'link',
-  disabled: false,
-  outline: false,
+  disabled: false as boolean,
+  outline: false as boolean,
   size: 'sm' as Size,
 });
 

@@ -2,15 +2,15 @@ import React, { Component, CSSProperties, SVGProps } from 'react';
 import { findDOMNode } from 'react-dom';
 
 const defaultProps = Object.freeze({
-  x: 0,
-  y: 0,
-  dx: 0,
-  dy: 0,
-  angle: 0,
+  x: 0 as number,
+  y: 0 as number,
+  dx: 0 as number,
+  dy: 0 as number,
+  angle: 0 as number,
   width: undefined as number | undefined,
   height: undefined as number | undefined,
-  lineHeight: 16,
-  capHeight: 11,
+  lineHeight: 16 as number,
+  capHeight: 11 as number,
   scaleToFit: false,
   textAnchor: 'middle' as 'start' | 'middle' | 'end' | 'inherit',
   verticalAnchor: 'middle' as 'start' | 'middle' | 'end',
