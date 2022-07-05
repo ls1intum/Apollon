@@ -4,3 +4,4 @@ customSyntax: "@stylelint/postcss-css-in-js"
 rules:
   no-empty-source: null
   no-duplicate-selectors: null
+  function-no-unknown: null

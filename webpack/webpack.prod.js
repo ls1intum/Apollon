@@ -14,7 +14,7 @@ module.exports = merge(common, {
   plugins: [
     new ForkTsCheckerWebpackPlugin({
       async: false,
-      typescript: true,
+      typescript: {},
     }),
   ],
 });
