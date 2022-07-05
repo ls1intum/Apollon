@@ -253,15 +253,15 @@ export class Connection {
     }
 
     /*
-    #######           #######
-    # ~~~ # --------> # ~~~ #
-    # ~~~ #           #######
-    # ~~~ #           
-    #######           
+        #######           #######           #######
+        # ~~~ # --------> # ~~~ # --------> # ~~~ #
+        # ~~~ #           #######           # ~~~ #
+        # ~~~ #                             # ~~~ #
+        #######                             #######
     */
     if (
-      source.direction === Direction.Upright &&
-      target.direction === Direction.Left &&
+      ((source.direction === Direction.Upright && target.direction === Direction.Left) ||
+        (source.direction === Direction.Right && target.direction === Direction.Upleft)) &&
       target.element.bounds.x >= source.element.bounds.x + source.element.bounds.width
     ) {
       const overlapY = computeOverlap(
