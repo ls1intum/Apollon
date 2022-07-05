@@ -253,6 +253,31 @@ export class Connection {
     }
 
     /*
+    #######           #######
+    # ~~~ # --------> # ~~~ #
+    # ~~~ #           #######
+    # ~~~ #           
+    #######           
+    */
+    if (
+      source.direction === Direction.Upright &&
+      target.direction === Direction.Left &&
+      target.element.bounds.x >= source.element.bounds.x + source.element.bounds.width
+    ) {
+      const overlapY = computeOverlap(
+        [source.element.bounds.y, source.element.bounds.y + source.element.bounds.height],
+        [target.element.bounds.y, target.element.bounds.y + target.element.bounds.height],
+      );
+
+      if (overlapY !== null && overlapY[1] - overlapY[0] >= OVERLAP_THRESHOLD) {
+        const middleY = (overlapY[0] + overlapY[1]) / 2;
+        const start: IPoint = { x: source.element.bounds.x + source.element.bounds.width, y: middleY };
+        const end: IPoint = { x: target.element.bounds.x, y: middleY };
+        return [start, end];
+      }
+    }
+
+    /*
         #######           #######
         # ~~~ # <-------- # ~~~ #
         #######           #######
