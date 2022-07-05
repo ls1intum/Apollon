@@ -255,14 +255,17 @@ export class Connection {
       }
     }
 
-    /*
-        #######           #######
-        # ~~~ # <-------- # ~~~ #
-        #######           #######
+    /*                                                OR
+        #######           #######           #######   ||  #######            #######
+        # ~~~ # <-------- # ~~~ # <-------- # ~~~ #   ||  # ~~~ #  <-------- # ~~~ #
+        # ~~~ #           #######           # ~~~ #   ||  #######            #######
+        # ~~~ #                             # ~~~ #   ||  
+        #######                             #######   ||  
     */
     if (
-      source.direction === Direction.Left &&
-      target.direction === Direction.Right &&
+      ((source.direction === Direction.Left && target.direction === Direction.Right) ||
+        (source.direction === Direction.Upleft && target.direction === Direction.Right) ||
+        (source.direction === Direction.Left && target.direction === Direction.Upright)) &&
       source.element.bounds.x >= target.element.bounds.x + target.element.bounds.width
     ) {
       const overlapY = computeOverlap(
