@@ -229,12 +229,12 @@ export class Connection {
   private static tryFindStraightPath(source: Endpoint, target: Endpoint): IPoint[] | null {
     const OVERLAP_THRESHOLD = 40;
 
-    /*
-        #######           #######           #######
-        # ~~~ # --------> # ~~~ # --------> # ~~~ #
-        # ~~~ #           #######           # ~~~ #
-        # ~~~ #                             # ~~~ #
-        #######                             #######
+    /*                                                OR
+        #######           #######           #######   ||  #######            #######
+        # ~~~ # --------> # ~~~ # --------> # ~~~ #   ||  # ~~~ #  --------> # ~~~ #
+        # ~~~ #           #######           # ~~~ #   ||  #######            #######
+        # ~~~ #                             # ~~~ #   ||  
+        #######                             #######   ||  
     */
     if (
       ((source.direction === Direction.Right && target.direction === Direction.Left) ||
