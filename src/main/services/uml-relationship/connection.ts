@@ -328,19 +328,31 @@ export class Connection {
     }
 
     /*
-        #######
-        # ~~~ #
-        #######
-           ∧
-           |
-           |
-        #######
-        # ~~~ #
-        #######
+        ##################
+        # ~~~~~~~~~~~~~~ #
+        ##################
+            ∧   ∧   ∧
+            |   |   |
+            0---|---0
+                |
+            #########
+            # ~~~~~ #
+            #########
+                ∧
+                |
+            0---0---0
+            |       |
+        ##################
+        # ~~~~~~~~~~~~~~ #
+        ##################
     */
     if (
-      source.direction === Direction.Up &&
-      target.direction === Direction.Down &&
+      ((source.direction === Direction.Up &&
+        (target.direction === Direction.Down ||
+          target.direction === Direction.Bottomleft ||
+          target.direction === Direction.Bottomright)) ||
+        ((source.direction === Direction.Topleft || source.direction === Direction.Topright) &&
+          target.direction === Direction.Down)) &&
       source.element.bounds.y >= target.element.bounds.y + target.element.bounds.height
     ) {
       const overlapX = computeOverlap(
