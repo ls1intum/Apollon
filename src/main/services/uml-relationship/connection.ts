@@ -229,17 +229,20 @@ export class Connection {
   private static tryFindStraightPath(source: Endpoint, target: Endpoint): IPoint[] | null {
     const OVERLAP_THRESHOLD = 40;
 
-    /*                                                OR
-        #######           #######           #######   ||  #######            #######
-        # ~~~ # --------> # ~~~ # --------> # ~~~ #   ||  # ~~~ #  --------> # ~~~ #
-        # ~~~ #           #######           # ~~~ #   ||  #######            #######
-        # ~~~ #                             # ~~~ #   ||  
-        #######                             #######   ||  
+    /*                                                
+        #######           #######           #######    
+        # ~~~ # --------> # ~~~ # --------> # ~~~ #   
+        # ~~~ #   |       #######     |-->  # ~~~ #   
+        # ~~~ # --0                   0-->  # ~~~ #  
+        #######                             #######  
     */
     if (
-      ((source.direction === Direction.Right && target.direction === Direction.Left) ||
-        (source.direction === Direction.Upright && target.direction === Direction.Left) ||
-        (source.direction === Direction.Right && target.direction === Direction.Upleft)) &&
+      ((source.direction === Direction.Right &&
+        (target.direction === Direction.Left ||
+          target.direction === Direction.Upleft ||
+          target.direction === Direction.Downleft)) ||
+        ((source.direction === Direction.Upright || source.direction === Direction.Downright) &&
+          target.direction === Direction.Left)) &&
       target.element.bounds.x >= source.element.bounds.x + source.element.bounds.width
     ) {
       const overlapY = computeOverlap(
