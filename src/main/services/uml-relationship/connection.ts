@@ -230,11 +230,11 @@ export class Connection {
     const OVERLAP_THRESHOLD = 40;
 
     /*                                                
-        #######           #######           #######    
-        # ~~~ # --------> # ~~~ # --------> # ~~~ #   
-        # ~~~ #   |       #######     |-->  # ~~~ #   
-        # ~~~ # --0                   0-->  # ~~~ #  
-        #######                             #######  
+        #######              #######              #######    
+        # ~~~ # -----------> # ~~~ # -----------> # ~~~ #   
+        # ~~~ #      |       #######     |----->  # ~~~ #   
+        # ~~~ # -----0                   0----->  # ~~~ #  
+        #######                                   #######  
     */
     if (
       ((source.direction === Direction.Right &&
@@ -258,17 +258,20 @@ export class Connection {
       }
     }
 
-    /*                                                OR
-        #######           #######           #######   ||  #######            #######
-        # ~~~ # <-------- # ~~~ # <-------- # ~~~ #   ||  # ~~~ #  <-------- # ~~~ #
-        # ~~~ #           #######           # ~~~ #   ||  #######            #######
-        # ~~~ #                             # ~~~ #   ||  
-        #######                             #######   ||  
+    /*                                                
+        #######              #######              #######    
+        # ~~~ # <----------- # ~~~ # <----------- # ~~~ #   
+        # ~~~ # <----|       #######     |        # ~~~ #   
+        # ~~~ # <----0                   0------  # ~~~ #  
+        #######                                   #######  
     */
     if (
-      ((source.direction === Direction.Left && target.direction === Direction.Right) ||
-        (source.direction === Direction.Upleft && target.direction === Direction.Right) ||
-        (source.direction === Direction.Left && target.direction === Direction.Upright)) &&
+      ((source.direction === Direction.Left &&
+        (target.direction === Direction.Right ||
+          target.direction === Direction.Upright ||
+          target.direction === Direction.Downright)) ||
+        ((source.direction === Direction.Upleft || source.direction === Direction.Downleft) &&
+          target.direction === Direction.Right)) &&
       source.element.bounds.x >= target.element.bounds.x + target.element.bounds.width
     ) {
       const overlapY = computeOverlap(
