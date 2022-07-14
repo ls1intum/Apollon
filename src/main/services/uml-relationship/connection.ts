@@ -228,15 +228,19 @@ export class Connection {
 
   private static tryFindStraightPath(source: Endpoint, target: Endpoint): IPoint[] | null {
     const OVERLAP_THRESHOLD = 40;
+    const sourceHandleEdge = determineHandleEdge(source.direction);
+    const targetHandleEdge = determineHandleEdge(target.direction);
 
-    /*
-        #######           #######
-        # ~~~ # --------> # ~~~ #
-        #######           #######
+    /*                                                
+        #######              #######              #######    
+        # ~~~ # -----------> # ~~~ # -----------> # ~~~ #   
+        # ~~~ #      |       #######     |----->  # ~~~ #   
+        # ~~~ # -----0                   0----->  # ~~~ #  
+        #######                                   #######  
     */
     if (
-      source.direction === Direction.Right &&
-      target.direction === Direction.Left &&
+      sourceHandleEdge === Direction.Right &&
+      targetHandleEdge === Direction.Left &&
       target.element.bounds.x >= source.element.bounds.x + source.element.bounds.width
     ) {
       const overlapY = computeOverlap(
@@ -252,14 +256,16 @@ export class Connection {
       }
     }
 
-    /*
-        #######           #######
-        # ~~~ # <-------- # ~~~ #
-        #######           #######
+    /*                                                
+        #######              #######              #######    
+        # ~~~ # <----------- # ~~~ # <----------- # ~~~ #   
+        # ~~~ # <----|       #######     |        # ~~~ #   
+        # ~~~ # <----0                   0------  # ~~~ #  
+        #######                                   #######  
     */
     if (
-      source.direction === Direction.Left &&
-      target.direction === Direction.Right &&
+      sourceHandleEdge === Direction.Left &&
+      targetHandleEdge === Direction.Right &&
       source.element.bounds.x >= target.element.bounds.x + target.element.bounds.width
     ) {
       const overlapY = computeOverlap(
@@ -276,19 +282,26 @@ export class Connection {
     }
 
     /*
-        #######
-        # ~~~ #
-        #######
-           |
-           |
-           ∨
-        #######
-        # ~~~ #
-        #######
+        ##################
+        # ~~~~~~~~~~~~~~ #
+        ##################
+            |   |   |
+            0---|---0
+                ∨
+            #########
+            # ~~~~~ #
+            #########
+                |
+            0---0---0
+            |       |
+            v       v
+        ##################
+        # ~~~~~~~~~~~~~~ #
+        ##################
     */
     if (
-      source.direction === Direction.Down &&
-      target.direction === Direction.Up &&
+      sourceHandleEdge === Direction.Down &&
+      targetHandleEdge === Direction.Up &&
       target.element.bounds.y >= source.element.bounds.y + source.element.bounds.height
     ) {
       const overlapX = computeOverlap(
@@ -305,19 +318,27 @@ export class Connection {
     }
 
     /*
-        #######
-        # ~~~ #
-        #######
-           ∧
-           |
-           |
-        #######
-        # ~~~ #
-        #######
+        ##################
+        # ~~~~~~~~~~~~~~ #
+        ##################
+            ∧   ∧   ∧
+            |   |   |
+            0---|---0
+                |
+            #########
+            # ~~~~~ #
+            #########
+                ∧
+                |
+            0---0---0
+            |       |
+        ##################
+        # ~~~~~~~~~~~~~~ #
+        ##################
     */
     if (
-      source.direction === Direction.Up &&
-      target.direction === Direction.Down &&
+      sourceHandleEdge === Direction.Up &&
+      targetHandleEdge === Direction.Down &&
       source.element.bounds.y >= target.element.bounds.y + target.element.bounds.height
     ) {
       const overlapX = computeOverlap(
@@ -785,4 +806,31 @@ function getAxisForPathSegment(pathSegment: [IPoint, IPoint]) {
 
   // We neither have a horizontal nor vertical path segment
   return null;
+}
+
+function determineHandleEdge(handle: Direction) {
+  switch (handle) {
+    case Direction.Left:
+    case Direction.Upleft:
+    case Direction.Downleft:
+      return Direction.Left;
+
+    case Direction.Right:
+    case Direction.Upright:
+    case Direction.Downright:
+      return Direction.Right;
+
+    case Direction.Down:
+    case Direction.Bottomleft:
+    case Direction.Bottomright:
+      return Direction.Down;
+
+    case Direction.Up:
+    case Direction.Topleft:
+    case Direction.Topright:
+      return Direction.Up;
+
+    default:
+      break;
+  }
 }
