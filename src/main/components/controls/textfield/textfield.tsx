@@ -4,13 +4,13 @@ import { Size } from '../../theme/styles';
 import { StyledTextfield } from './textfield-styled';
 
 export const defaultProps = Object.freeze({
-  block: true,
-  gutter: false,
-  multiline: false,
-  outline: false,
-  readonly: false,
+  block: true as boolean,
+  gutter: false as boolean,
+  multiline: false as boolean,
+  outline: false as boolean,
+  readonly: false as boolean,
   size: 'sm' as Size,
-  enterToSubmit: true,
+  enterToSubmit: true as boolean,
 });
 
 type TextfieldValue = string | number;

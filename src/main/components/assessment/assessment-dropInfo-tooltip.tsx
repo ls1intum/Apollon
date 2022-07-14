@@ -29,7 +29,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
 );
 
 const initialState = Object.freeze({
-  showLinkIcon: true,
+  showLinkIcon: true as boolean,
 });
 
 type State = typeof initialState;
