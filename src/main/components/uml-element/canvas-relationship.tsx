@@ -96,6 +96,8 @@ export class CanvasRelationshipComponent extends Component<Props> {
         pointerEvents={disabled ? 'none' : 'stroke'}
       >
         <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
+        <ChildComponent scale={scale} element={UMLRelationshipRepository.get(relationship)} />
+        {children}
         {midPoints.map((point) => {
           return (
             <circle
@@ -112,8 +114,6 @@ export class CanvasRelationshipComponent extends Component<Props> {
             />
           );
         })}
-        <ChildComponent scale={scale} element={UMLRelationshipRepository.get(relationship)} />
-        {children}
       </svg>
     );
   }
