@@ -70,6 +70,13 @@ export class CanvasRelationshipComponent extends Component<Props> {
 
     const points = relationship.path.map((point) => `${point.x} ${point.y}`).join(',');
 
+    const midPoints: { mpX: number; mpY: number }[] = [];
+    relationship.path.map((point, index) => {
+      const mpX = (relationship.path[index].x + relationship.path[index + 1]?.x) / 2;
+      const mpY = (relationship.path[index].y + relationship.path[index + 1]?.y) / 2;
+      if (!isNaN(mpX) && !isNaN(mpY)) midPoints.push({ mpX, mpY });
+    });
+
     const highlight =
       interactable && interactive
         ? theme.interactive.normal
@@ -89,6 +96,18 @@ export class CanvasRelationshipComponent extends Component<Props> {
         pointerEvents={disabled ? 'none' : 'stroke'}
       >
         <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
+        {midPoints.map((point) => {
+          return (
+            <circle
+              key={props.id + '_' + point.mpX + '_' + point.mpY}
+              cx={point.mpX}
+              cy={point.mpY}
+              r="10"
+              fill={highlight}
+            />
+          );
+        })}
+        ;
         <ChildComponent scale={scale} element={UMLRelationshipRepository.get(relationship)} />
         {children}
       </svg>
