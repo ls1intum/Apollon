@@ -99,15 +99,19 @@ export class CanvasRelationshipComponent extends Component<Props> {
         {midPoints.map((point) => {
           return (
             <circle
+              pointerEvents={'all'}
+              style={{ cursor: 'grab' }}
               key={props.id + '_' + point.mpX + '_' + point.mpY}
               cx={point.mpX}
               cy={point.mpY}
               r="10"
-              fill={highlight}
+              onClick={() => {
+                alert('TODO: Implement Function');
+              }}
+              fill={'red'}
             />
           );
         })}
-        ;
         <ChildComponent scale={scale} element={UMLRelationshipRepository.get(relationship)} />
         {children}
       </svg>
