@@ -77,6 +77,9 @@ export class CanvasRelationshipComponent extends Component<Props> {
       if (!isNaN(mpX) && !isNaN(mpY)) midPoints.push({ mpX, mpY });
     });
 
+    midPoints.pop();
+    midPoints.shift();
+
     const highlight =
       interactable && interactive
         ? theme.interactive.normal
@@ -98,7 +101,7 @@ export class CanvasRelationshipComponent extends Component<Props> {
         <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
         <ChildComponent scale={scale} element={UMLRelationshipRepository.get(relationship)} />
         {children}
-        {midPoints.map((point) => {
+        {midPoints.map((point, index) => {
           return (
             <circle
               pointerEvents={'all'}
@@ -107,8 +110,8 @@ export class CanvasRelationshipComponent extends Component<Props> {
               cx={point.mpX}
               cy={point.mpY}
               r="10"
-              onClick={() => {
-                alert('TODO: Implement Function');
+              onPointerDown={(e) => {
+                this.onPointerDown(e, index);
               }}
               fill={'red'}
             />
@@ -117,6 +120,50 @@ export class CanvasRelationshipComponent extends Component<Props> {
       </svg>
     );
   }
+
+  onPointerDown = (event: React.PointerEvent<SVGElement>, handlerIndex: number) => {
+    const element = event.currentTarget;
+    element.setPointerCapture(event.pointerId);
+    element.addEventListener('pointermove', this.onPointerMove);
+    event.currentTarget.setAttribute('handlerIndex', String(handlerIndex));
+    element.addEventListener('pointerup', this.onPointerUp, { once: true });
+  };
+
+  onPointerMove = (event: any) => {
+    console.log('onPointerMove');
+    const handlerIndex = event.currentTarget.getAttribute('handlerIndex');
+    const waypointDirection = (handlerIndex % 2) ? 'horizontal' : 'vertical';
+
+    // Update relationship points here
+    this.updateRelationshipPoints(waypointDirection, handlerIndex);
+  };
+
+  onPointerUp = (event: any) => {
+    console.log('onPointerUp');
+    const element = event.currentTarget;
+    element.removeEventListener('pointermove', this.onPointerMove);
+  };
+
+  updateRelationshipPoints = (waypointDirection: string, handlerIndex: string) => {
+    console.log(this.props.relationship.path);
+
+    const startPoint = Number(handlerIndex) + 1;
+    const endPoint = Number(startPoint) + 1;
+
+    if(waypointDirection === 'vertical') {
+      this.props.relationship.path[startPoint].x = this.props.relationship.path[startPoint].x + 5;
+      this.props.relationship.path[endPoint].x = this.props.relationship.path[endPoint].x + 5;
+    }
+
+    // this.setState({path: this.props.relationship.path});
+
+    // console.log(this.props.relationship.path);
+
+
+    
+
+
+  };
 }
 
 export const CanvasRelationship = enhance(CanvasRelationshipComponent);
