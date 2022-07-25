@@ -6,6 +6,8 @@ import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
+import { Point } from '../../utils/geometry/point';
+import { getClientEventCoordinates } from '../../utils/touch-event';
 import { ModelState } from '../store/model-state';
 import { withTheme, withThemeProps } from '../theme/styles';
 import { UMLElementComponentProps } from './uml-element-component-props';
@@ -28,6 +30,16 @@ type DispatchProps = {};
 
 type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
 
+const initialState = {
+  offset: new Point(),
+  path: [{
+    x: 0,
+    y: 0,
+  }],
+};
+
+type State = typeof initialState;
+
 const enhance = compose<ComponentClass<OwnProps>>(
   withTheme,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
@@ -46,7 +58,9 @@ const enhance = compose<ComponentClass<OwnProps>>(
   ),
 );
 
-export class CanvasRelationshipComponent extends Component<Props> {
+export class CanvasRelationshipComponent extends Component<Props, State> {
+  state = initialState;
+
   render() {
     const {
       hovered,
@@ -111,7 +125,7 @@ export class CanvasRelationshipComponent extends Component<Props> {
               cy={point.mpY}
               r="10"
               onPointerDown={(e) => {
-                this.onPointerDown(e, index);
+                this.onPointerDown(e, index, point);
               }}
               fill={'red'}
             />
@@ -121,47 +135,41 @@ export class CanvasRelationshipComponent extends Component<Props> {
     );
   }
 
-  onPointerDown = (event: React.PointerEvent<SVGElement>, handlerIndex: number) => {
-    const element = event.currentTarget;
-    element.setPointerCapture(event.pointerId);
-    element.addEventListener('pointermove', this.onPointerMove);
-    event.currentTarget.setAttribute('handlerIndex', String(handlerIndex));
-    element.addEventListener('pointerup', this.onPointerUp, { once: true });
+  onPointerDown = (event: any, handlerIndex: number, point: {mpX: number, mpY:number}) => {
+    this.setState({ offset: new Point(event.clientX - point.mpX, event.clientY - point.mpY) });
+    document.addEventListener('pointermove', this.onPointerMove);
+    event.target.setAttribute('handlerIndex', String(handlerIndex));
+    document.addEventListener('pointerup', this.onPointerUp, { once: true });
   };
 
   onPointerMove = (event: any) => {
-    console.log('onPointerMove');
-    const handlerIndex = event.currentTarget.getAttribute('handlerIndex');
+    const handlerIndex = event.target.getAttribute('handlerIndex');
     const waypointDirection = (handlerIndex % 2) ? 'horizontal' : 'vertical';
 
+    const clientEventCoordinates = getClientEventCoordinates(event);
+    const x = clientEventCoordinates.clientX - this.state.offset.x;
+    const y = clientEventCoordinates.clientY - this.state.offset.y;
+
     // Update relationship points here
-    this.updateRelationshipPoints(waypointDirection, handlerIndex);
+    this.updateRelationshipPoints(waypointDirection, handlerIndex, x, y);
   };
 
   onPointerUp = (event: any) => {
-    console.log('onPointerUp');
     const element = event.currentTarget;
     element.removeEventListener('pointermove', this.onPointerMove);
   };
 
-  updateRelationshipPoints = (waypointDirection: string, handlerIndex: string) => {
-    console.log(this.props.relationship.path);
-
+  updateRelationshipPoints = (waypointDirection: string, handlerIndex: string, x: number, y: number) => {
     const startPoint = Number(handlerIndex) + 1;
     const endPoint = Number(startPoint) + 1;
 
     if(waypointDirection === 'vertical') {
-      this.props.relationship.path[startPoint].x = this.props.relationship.path[startPoint].x + 5;
-      this.props.relationship.path[endPoint].x = this.props.relationship.path[endPoint].x + 5;
+      this.props.relationship.path[startPoint].x = x;
+      this.props.relationship.path[endPoint].x = x;
     }
 
-    // this.setState({path: this.props.relationship.path});
 
-    // console.log(this.props.relationship.path);
-
-
-    
-
+    this.setState({path: this.props.relationship.path});
 
   };
 }
