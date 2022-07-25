@@ -32,10 +32,13 @@ type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
 
 const initialState = {
   offset: new Point(),
-  path: [{
-    x: 0,
-    y: 0,
-  }],
+  handlerIndex: 0,
+  path: [
+    {
+      x: 0,
+      y: 0,
+    },
+  ],
 };
 
 type State = typeof initialState;
@@ -135,16 +138,15 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     );
   }
 
-  onPointerDown = (event: any, handlerIndex: number, point: {mpX: number, mpY:number}) => {
-    this.setState({ offset: new Point(event.clientX - point.mpX, event.clientY - point.mpY) });
+  onPointerDown = (event: any, handlerIndex: number, point: { mpX: number; mpY: number }) => {
+    this.setState({ handlerIndex, offset: new Point(event.clientX - point.mpX, event.clientY - point.mpY) });
     document.addEventListener('pointermove', this.onPointerMove);
-    event.target.setAttribute('handlerIndex', String(handlerIndex));
     document.addEventListener('pointerup', this.onPointerUp, { once: true });
   };
 
   onPointerMove = (event: any) => {
-    const handlerIndex = event.target.getAttribute('handlerIndex');
-    const waypointDirection = (handlerIndex % 2) ? 'horizontal' : 'vertical';
+    const handlerIndex = this.state.handlerIndex;
+    const waypointDirection = handlerIndex % 2 ? 'horizontal' : 'vertical';
 
     const clientEventCoordinates = getClientEventCoordinates(event);
     const x = clientEventCoordinates.clientX - this.state.offset.x;
@@ -159,18 +161,21 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     element.removeEventListener('pointermove', this.onPointerMove);
   };
 
-  updateRelationshipPoints = (waypointDirection: string, handlerIndex: string, x: number, y: number) => {
-    const startPoint = Number(handlerIndex) + 1;
+  updateRelationshipPoints = (waypointDirection: string, handlerIndex: number, x: number, y: number) => {
+    const startPoint = handlerIndex + 1;
     const endPoint = Number(startPoint) + 1;
 
-    if(waypointDirection === 'vertical') {
+    if (waypointDirection === 'vertical') {
       this.props.relationship.path[startPoint].x = x;
       this.props.relationship.path[endPoint].x = x;
     }
 
+    if (waypointDirection === 'horizontal') {
+      this.props.relationship.path[startPoint].y = y;
+      this.props.relationship.path[endPoint].y = y;
+    }
 
-    this.setState({path: this.props.relationship.path});
-
+    this.setState({ path: this.props.relationship.path });
   };
 }
 
