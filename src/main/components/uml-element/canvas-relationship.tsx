@@ -106,7 +106,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
         ? 'rgba(0, 100, 255, 0.2)'
         : relationship.highlight
         ? relationship.highlight
-        : undefined;
+        : 'rgba(0, 100, 255, 0)';
 
     return (
       <svg
@@ -126,11 +126,11 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
               key={props.id + '_' + point.mpX + '_' + point.mpY}
               cx={point.mpX}
               cy={point.mpY}
-              r="10"
+              r="15"
               onPointerDown={(e) => {
                 this.onPointerDown(e, index, point);
               }}
-              fill={'red'}
+              fill={highlight}
             />
           );
         })}
