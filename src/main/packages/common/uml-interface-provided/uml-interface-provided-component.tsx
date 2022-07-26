@@ -7,7 +7,7 @@ export const UMLInterfaceProvidedComponent: FunctionComponent<Props> = ({ elemen
     <ThemedPolyline
       points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor="none"
     />
   </g>
 );
