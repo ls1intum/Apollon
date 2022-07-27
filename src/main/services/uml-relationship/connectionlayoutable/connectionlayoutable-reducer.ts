@@ -4,7 +4,7 @@ import { ConnectionLayoutableActionTypes, ConnectionLayoutableState } from './co
 
 export const ConnectionLayoutableReducer: Reducer<ConnectionLayoutableState, Actions> = (state = {}, action) => {
   switch (action.type) {
-    case ConnectionLayoutableActionTypes.CONNECTIONLAYOUT: {
+    case ConnectionLayoutableActionTypes.START: {
       const { payload } = action;
 
       return {
