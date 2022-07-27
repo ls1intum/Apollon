@@ -4,8 +4,10 @@ import { compose } from 'redux';
 import { Components } from '../../packages/components';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
+import { ConnectionLayoutableRepository } from '../../services/uml-relationship/connectionlayoutable/connectionlayoutable-repository';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
 import { Point } from '../../utils/geometry/point';
 import { getClientEventCoordinates } from '../../utils/touch-event';
 import { ModelState } from '../store/model-state';
@@ -26,7 +28,9 @@ type StateProps = {
   scale: number;
 };
 
-type DispatchProps = {};
+type DispatchProps = {
+  connectionLayout: AsyncDispatch<typeof ConnectionLayoutableRepository.connectionLayout>;
+};
 
 type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
 
@@ -57,7 +61,9 @@ const enhance = compose<ComponentClass<OwnProps>>(
       mode: state.editor.mode as ApollonMode,
       scale: state.editor.scale || 1.0,
     }),
-    {},
+    {
+      connectionLayout: ConnectionLayoutableRepository.connectionLayout,
+    },
   ),
 );
 
@@ -176,6 +182,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     }
 
     this.setState({ path: this.props.relationship.path });
+    this.props.connectionLayout(this.props.id, this.props.relationship.path);
   };
 }
 
