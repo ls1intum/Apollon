@@ -4,7 +4,6 @@ import { compose } from 'redux';
 import { Components } from '../../packages/components';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
-import { ConnectionLayoutableRepository } from '../../services/uml-relationship/connectionlayoutable/connectionlayoutable-repository';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
@@ -29,8 +28,8 @@ type StateProps = {
 };
 
 type DispatchProps = {
-  startConnectionLayout: AsyncDispatch<typeof ConnectionLayoutableRepository.startConnectionLayout>;
-  endConnectionLayout: AsyncDispatch<typeof ConnectionLayoutableRepository.endConnectionLayout>;
+  startwaypointslayout: AsyncDispatch<typeof UMLRelationshipRepository.startWaypointsLayout>;
+  endwaypointslayout: AsyncDispatch<typeof UMLRelationshipRepository.endWaypointsLayout>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
@@ -63,8 +62,8 @@ const enhance = compose<ComponentClass<OwnProps>>(
       scale: state.editor.scale || 1.0,
     }),
     {
-      startConnectionLayout: ConnectionLayoutableRepository.startConnectionLayout,
-      endConnectionLayout: ConnectionLayoutableRepository.endConnectionLayout,
+      startwaypointslayout: UMLRelationshipRepository.startWaypointsLayout,
+      endwaypointslayout: UMLRelationshipRepository.endWaypointsLayout,
     },
   ),
 );
@@ -85,6 +84,8 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
       theme,
       mode,
       scale,
+      startwaypointslayout,
+      endwaypointslayout,
       ...props
     } = this.props;
 
@@ -165,7 +166,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
   };
 
   onPointerUp = (event: any) => {
-    this.props.endConnectionLayout(this.props.id);
+    this.props.endwaypointslayout(this.props.id);
     const element = event.currentTarget;
     element.removeEventListener('pointermove', this.onPointerMove);
   };
@@ -185,7 +186,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     }
 
     this.setState({ path: this.props.relationship.path });
-    this.props.startConnectionLayout(this.props.id, this.props.relationship.path);
+    this.props.startwaypointslayout(this.props.id, this.props.relationship.path);
   };
 }
 

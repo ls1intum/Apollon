@@ -37,6 +37,18 @@ export const UMLRelationshipReducer: Reducer<UMLElementState, Actions> = (state 
         },
       };
     }
+
+    case UMLRelationshipActionTypes.STARTWAYPOINTSLAYOUT: {
+      const { payload } = action;
+
+      return {
+        ...state,
+        [payload.id]: {
+          ...state[payload.id],
+          path: payload.path,
+        },
+      };
+    }
   }
   return state;
 };

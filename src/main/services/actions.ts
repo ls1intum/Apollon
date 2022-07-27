@@ -14,7 +14,6 @@ import { SelectableActions } from './uml-element/selectable/selectable-types';
 import { UMLElementActions } from './uml-element/uml-element-types';
 import { UpdatableActions } from './uml-element/updatable/updatable-types';
 import { ReconnectableActions } from './uml-relationship/reconnectable/reconnectable-types';
-import { ConnectionLayoutableActions } from './uml-relationship/connectionlayoutable/connectionlayoutable-types';
 import { UMLRelationshipActions } from './uml-relationship/uml-relationship-types';
 import { UndoActions } from './undo/undo-types';
 import { CopyActions } from './copypaste/copy-types';
@@ -28,7 +27,6 @@ export type Actions =
   | UMLDiagramActions
   | ConnectableActions
   | ReconnectableActions
-  | ConnectionLayoutableActions
   | HoverableActions
   | InteractableActions
   | MovableActions
