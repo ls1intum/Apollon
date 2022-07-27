@@ -29,7 +29,8 @@ type StateProps = {
 };
 
 type DispatchProps = {
-  connectionLayout: AsyncDispatch<typeof ConnectionLayoutableRepository.connectionLayout>;
+  startConnectionLayout: AsyncDispatch<typeof ConnectionLayoutableRepository.startConnectionLayout>;
+  endConnectionLayout: AsyncDispatch<typeof ConnectionLayoutableRepository.endConnectionLayout>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
@@ -62,7 +63,8 @@ const enhance = compose<ComponentClass<OwnProps>>(
       scale: state.editor.scale || 1.0,
     }),
     {
-      connectionLayout: ConnectionLayoutableRepository.connectionLayout,
+      startConnectionLayout: ConnectionLayoutableRepository.startConnectionLayout,
+      endConnectionLayout: ConnectionLayoutableRepository.endConnectionLayout,
     },
   ),
 );
@@ -163,6 +165,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
   };
 
   onPointerUp = (event: any) => {
+    this.props.endConnectionLayout(this.props.id);
     const element = event.currentTarget;
     element.removeEventListener('pointermove', this.onPointerMove);
   };
@@ -182,7 +185,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     }
 
     this.setState({ path: this.props.relationship.path });
-    this.props.connectionLayout(this.props.id, this.props.relationship.path);
+    this.props.startConnectionLayout(this.props.id, this.props.relationship.path);
   };
 }
 

@@ -1,19 +1,37 @@
 import { AsyncAction } from '../../../utils/actions/actions';
 import { IPath } from '../../../utils/geometry/path';
-import { ConnectionLayoutableActionTypes, ConnectionLayoutAction } from './connectionlayoutable-types';
+import {
+  ConnectionLayoutableActionTypes,
+  ConnectionLayoutEndAction,
+  ConnectionLayoutStartAction,
+} from './connectionlayoutable-types';
 
 export const ConnectionLayoutableRepository = {
-  connectionLayout:
+  startConnectionLayout:
     (id: string, path: IPath): AsyncAction =>
-    (dispatch, getState) => {
+    (dispatch) => {
       const ids = id ? (Array.isArray(id) ? id : [id]) : undefined;
       if (ids && !ids.length) {
         return;
       }
 
-      dispatch<ConnectionLayoutAction>({
-        type: ConnectionLayoutableActionTypes.CONNECTIONLAYOUT,
+      dispatch<ConnectionLayoutStartAction>({
+        type: ConnectionLayoutableActionTypes.START,
         payload: { id, path },
+        undoable: false,
+      });
+    },
+
+  endConnectionLayout:
+    (id: string): AsyncAction =>
+    (dispatch) => {
+      if (!id.length) {
+        return;
+      }
+
+      dispatch<ConnectionLayoutEndAction>({
+        type: ConnectionLayoutableActionTypes.END,
+        payload: { id },
         undoable: false,
       });
     },
