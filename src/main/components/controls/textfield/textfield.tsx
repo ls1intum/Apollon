@@ -61,6 +61,7 @@ export class Textfield<T extends TextfieldValue> extends Component<Props<T>, Sta
     return (
       <StyledTextfield
         as={props.multiline ? 'textarea' : 'input'}
+        maxLength={props.multiline ? 1000 : 100}
         key={this.state.key}
         {...props}
         size={size}
