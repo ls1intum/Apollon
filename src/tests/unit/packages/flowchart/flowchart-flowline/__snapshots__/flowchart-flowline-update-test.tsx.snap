@@ -54,6 +54,7 @@ exports[`test flowchart flowline update render 1`] = `
       <section>
         <input
           class="sc-ezWOiH sc-bZkfAO wLKMs gTZQoR"
+          maxlength="100"
           value="FlowchartFlowline"
         />
       </section>

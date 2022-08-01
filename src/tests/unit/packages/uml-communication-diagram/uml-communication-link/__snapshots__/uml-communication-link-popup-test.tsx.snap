@@ -52,6 +52,7 @@ exports[`test communication link popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             value="CommunicationSourceLinkMessage0"
           />
           <button
@@ -94,6 +95,7 @@ exports[`test communication link popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             value="CommunicationSourceLinkMessage1"
           />
           <button
@@ -136,6 +138,7 @@ exports[`test communication link popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             value="CommunicationSourceLinkMessage2"
           />
           <button
@@ -178,6 +181,7 @@ exports[`test communication link popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             value="CommunicationTargetLinkMessage0"
           />
           <button
@@ -220,6 +224,7 @@ exports[`test communication link popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             value="CommunicationTargetLinkMessage1"
           />
           <button
@@ -262,6 +267,7 @@ exports[`test communication link popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             value="CommunicationTargetLinkMessage2"
           />
           <button
@@ -301,6 +307,7 @@ exports[`test communication link popup render 1`] = `
         </div>
         <input
           class="sc-ezWOiH sc-bZkfAO wLKMs dnbWxS"
+          maxlength="100"
           value=""
         />
       </section>

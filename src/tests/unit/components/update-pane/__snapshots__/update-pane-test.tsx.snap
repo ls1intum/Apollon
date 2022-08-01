@@ -431,6 +431,7 @@ exports[`test update pane render with element 1`] = `
               >
                 <input
                   class="c7 c8"
+                  maxlength="100"
                   value=""
                 />
                 <button
@@ -493,6 +494,7 @@ exports[`test update pane render with element 1`] = `
               >
                 <input
                   class="c7 c18"
+                  maxlength="100"
                   value=""
                 />
                 <button
@@ -515,6 +517,7 @@ exports[`test update pane render with element 1`] = `
               </div>
               <input
                 class="c7 c19"
+                maxlength="100"
                 value=""
               />
             </section>
@@ -532,6 +535,7 @@ exports[`test update pane render with element 1`] = `
               >
                 <input
                   class="c7 c18"
+                  maxlength="100"
                   value=""
                 />
                 <button
@@ -554,6 +558,7 @@ exports[`test update pane render with element 1`] = `
               </div>
               <input
                 class="c7 c19"
+                maxlength="100"
                 value=""
               />
             </section>
@@ -1030,6 +1035,7 @@ exports[`test update pane render with relationship 1`] = `
                 </span>
                 <input
                   class="c16 c17"
+                  maxlength="100"
                   style="min-width: 0;"
                   value=""
                 />
@@ -1045,6 +1051,7 @@ exports[`test update pane render with relationship 1`] = `
                 </span>
                 <input
                   class="c16 c18"
+                  maxlength="100"
                   value=""
                 />
               </div>
@@ -1067,6 +1074,7 @@ exports[`test update pane render with relationship 1`] = `
                 </span>
                 <input
                   class="c16 c17"
+                  maxlength="100"
                   style="min-width: 0;"
                   value=""
                 />
@@ -1082,6 +1090,7 @@ exports[`test update pane render with relationship 1`] = `
                 </span>
                 <input
                   class="c16 c18"
+                  maxlength="100"
                   value=""
                 />
               </div>
