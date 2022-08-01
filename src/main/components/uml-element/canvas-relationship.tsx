@@ -4,6 +4,7 @@ import { compose } from 'redux';
 import { Components } from '../../packages/components';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
+import { Direction } from '../../services/uml-element/uml-element-port';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
@@ -174,19 +175,37 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
   updateRelationshipPoints = (waypointDirection: string, handlerIndex: number, x: number, y: number) => {
     const startPoint = handlerIndex + 1;
     const endPoint = Number(startPoint) + 1;
+    const sourceDirection = this.props.relationship.source.direction;
 
-    if (waypointDirection === 'vertical') {
-      this.props.relationship.path[startPoint].x = x;
-      this.props.relationship.path[endPoint].x = x;
-    }
+    switch (waypointDirection) {
+      case 'horizontal':
+        sourceDirection === Direction.Up || sourceDirection === Direction.Down
+          ? this.updateXCoordinate(startPoint, endPoint, x, y)
+          : this.updateYCoordinate(startPoint, endPoint, x, y);
+        break;
 
-    if (waypointDirection === 'horizontal') {
-      this.props.relationship.path[startPoint].y = y;
-      this.props.relationship.path[endPoint].y = y;
+      case 'vertical':
+        sourceDirection === Direction.Up || sourceDirection === Direction.Down
+          ? this.updateYCoordinate(startPoint, endPoint, x, y)
+          : this.updateXCoordinate(startPoint, endPoint, x, y);
+        break;
+
+      default:
+        break;
     }
 
     this.setState({ path: this.props.relationship.path });
     this.props.startwaypointslayout(this.props.id, this.props.relationship.path);
+  };
+
+  updateXCoordinate = (startPoint: number, endPoint: number, x: number, y: number) => {
+    this.props.relationship.path[startPoint].x = x;
+    this.props.relationship.path[endPoint].x = x;
+  };
+
+  updateYCoordinate = (startPoint: number, endPoint: number, x: number, y: number) => {
+    this.props.relationship.path[startPoint].y = y;
+    this.props.relationship.path[endPoint].y = y;
   };
 }
 
