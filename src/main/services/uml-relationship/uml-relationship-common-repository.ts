@@ -10,6 +10,7 @@ import {
   LayoutAction,
   StartWaypointsAction,
   UMLRelationshipActionTypes,
+  WaypointLayoutAction,
 } from './uml-relationship-types';
 import { UMLElementType, UMLRelationshipType } from '../..';
 import { UMLElements } from '../../packages/uml-elements';
@@ -55,6 +56,12 @@ export const UMLRelationshipCommonRepository = {
 
   layout: (id: string, path: IPath, bounds: IBoundary): LayoutAction => ({
     type: UMLRelationshipActionTypes.LAYOUT,
+    payload: { id, path, bounds },
+    undoable: false,
+  }),
+
+  layoutWaypoints: (id: string, path: IPath, bounds: IBoundary): WaypointLayoutAction => ({
+    type: UMLRelationshipActionTypes.WAYPOINTLAYOUT,
     payload: { id, path, bounds },
     undoable: false,
   }),

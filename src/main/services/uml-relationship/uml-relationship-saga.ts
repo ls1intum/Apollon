@@ -12,7 +12,7 @@ import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from 
 import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { UMLRelationshipRepository } from './uml-relationship-repository';
-import { LayoutAction } from './uml-relationship-types';
+import { LayoutAction, WaypointLayoutAction } from './uml-relationship-types';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { IUMLCommunicationLink } from '../../packages/uml-communication-diagram/uml-communication-link/uml-communication-link';
 
@@ -106,7 +106,7 @@ function* deleteElement(): SagaIterator {
 }
 
 export function* recalc(id: string): SagaIterator {
-  const { elements }: ModelState = yield select();
+  const { elements, selected }: ModelState = yield select();
   const layer: ILayer = yield getContext('layer');
   const relationship = UMLRelationshipRepository.get(elements[id]);
   if (!relationship) {
@@ -125,15 +125,25 @@ export function* recalc(id: string): SagaIterator {
   const targetPosition = yield put(UMLElementRepository.getAbsolutePosition(relationship.target.element));
   target.bounds = { ...target.bounds, ...targetPosition };
 
-  const original = elements[id];
+  const original = elements[id] as any;
   const [updates] = relationship.render(layer, source, target) as UMLRelationship[];
 
   const { path, bounds } = diff(original, updates) as Partial<IUMLRelationship>;
   if (path) {
-    yield put<LayoutAction>(UMLRelationshipRepository.layout(updates.id, path, { ...original.bounds, ...bounds }));
+    if (relationship.isManuallyLayouted && shouldPreserveLayout(source.id, target.id, selected)) {
+      yield put<WaypointLayoutAction>(
+        UMLRelationshipRepository.layoutWaypoints(updates.id, original.path, { ...original.bounds, ...bounds }),
+      );
+    } else {
+      yield put<LayoutAction>(UMLRelationshipRepository.layout(updates.id, path, { ...original.bounds, ...bounds }));
+    }
   }
   // layout messages of CommunicationLink
   if (updates.type === UMLRelationshipType.CommunicationLink) {
     yield put<UpdateAction>(UMLElementRepository.update<IUMLCommunicationLink>(updates.id, updates));
   }
 }
+
+const shouldPreserveLayout = (sourceId: string, targetId: string, selected: string[]) => {
+  return selected.includes(sourceId) && selected.includes(targetId) ? true : false;
+};
