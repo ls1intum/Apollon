@@ -10,6 +10,7 @@ exports[`test class association popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs gTZQoR"
+            maxlength="100"
             value=""
           />
           <button
@@ -72,6 +73,7 @@ exports[`test class association popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             value="attribute"
           />
           <button
@@ -94,6 +96,7 @@ exports[`test class association popup render 1`] = `
         </div>
         <input
           class="sc-ezWOiH sc-bZkfAO wLKMs dnbWxS"
+          maxlength="100"
           value=""
         />
       </section>
@@ -111,6 +114,7 @@ exports[`test class association popup render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             value="classMethod"
           />
           <button
@@ -133,6 +137,7 @@ exports[`test class association popup render 1`] = `
         </div>
         <input
           class="sc-ezWOiH sc-bZkfAO wLKMs dnbWxS"
+          maxlength="100"
           value=""
         />
       </section>

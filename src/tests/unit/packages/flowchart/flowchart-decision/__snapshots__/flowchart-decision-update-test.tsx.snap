@@ -10,6 +10,7 @@ exports[`test flowchart decision update render 1`] = `
         >
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs gTZQoR"
+            maxlength="100"
             placeholder="Decision"
             value=""
           />

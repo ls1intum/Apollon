@@ -81,6 +81,7 @@ exports[`test class association popup render 1`] = `
           </span>
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             style="min-width: 0;"
             value=""
           />
@@ -96,6 +97,7 @@ exports[`test class association popup render 1`] = `
           </span>
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs gTZQoR"
+            maxlength="100"
             value=""
           />
         </div>
@@ -118,6 +120,7 @@ exports[`test class association popup render 1`] = `
           </span>
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs cgvUiD"
+            maxlength="100"
             style="min-width: 0;"
             value=""
           />
@@ -133,6 +136,7 @@ exports[`test class association popup render 1`] = `
           </span>
           <input
             class="sc-ezWOiH sc-bZkfAO wLKMs gTZQoR"
+            maxlength="100"
             value=""
           />
         </div>
