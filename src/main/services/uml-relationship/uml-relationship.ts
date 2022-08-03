@@ -16,7 +16,7 @@ export interface IUMLRelationship extends IUMLElement {
   path: IPath;
   source: IUMLElementPort;
   target: IUMLElementPort;
-  isManuallyLayouted: boolean;
+  isManuallyLayouted?: boolean;
 }
 
 export abstract class UMLRelationship extends UMLElement implements IUMLRelationship {
@@ -80,6 +80,7 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     this.path = values.path;
     this.source = values.source;
     this.target = values.target;
+    this.isManuallyLayouted = values.isManuallyLayouted;
   }
 
   render(canvas: ILayer, source?: UMLElement, target?: UMLElement): ILayoutable[] {

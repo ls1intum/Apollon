@@ -80,7 +80,8 @@
         "element": "04d3509e-0dce-458b-bf62-f3555497a5a4",
         "multiplicity": "",
         "role": ""
-      }
+      },
+      "isManuallyLayouted": false
     }
   ],
   "assessments": []
