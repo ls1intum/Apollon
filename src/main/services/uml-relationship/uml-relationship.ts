@@ -16,6 +16,7 @@ export interface IUMLRelationship extends IUMLElement {
   path: IPath;
   source: IUMLElementPort;
   target: IUMLElementPort;
+  isManuallyLayouted: boolean;
 }
 
 export abstract class UMLRelationship extends UMLElement implements IUMLRelationship {
@@ -50,6 +51,7 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     direction: Direction.Up,
     element: '',
   };
+  isManuallyLayouted = false;
 
   constructor(values?: DeepPartial<IUMLRelationship>) {
     super();
@@ -63,6 +65,7 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
       path: this.path,
       source: this.source,
       target: this.target,
+      isManuallyLayouted: this.isManuallyLayouted,
     };
   }
 

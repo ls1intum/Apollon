@@ -49,6 +49,18 @@ export const UMLRelationshipReducer: Reducer<UMLElementState, Actions> = (state 
         },
       };
     }
+
+    case UMLRelationshipActionTypes.ENDWAYPOINTSLAYOUT: {
+      const { payload } = action;
+
+      return {
+        ...state,
+        [payload.id]: {
+          ...state[payload.id],
+          isManuallyLayouted: true,
+        },
+      };
+    }
   }
   return state;
 };

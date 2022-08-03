@@ -71,6 +71,7 @@ export type UMLRelationship = UMLModelElement & {
     element: string;
     direction: Direction;
   };
+  isManuallyLayouted: boolean;
 };
 
 export type UMLClassifier = UMLElement & {
