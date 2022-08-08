@@ -159,8 +159,8 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, sca
         strokeDasharray={stroke}
       />
       <text
-        x={source.x}
-        y={source.y}
+        x={source.x || 0}
+        y={source.y || 0}
         {...layoutTextForUMLAssociation(element.source.direction, 'BOTTOM')}
         pointerEvents="none"
         style={{ ...textFill }}
@@ -168,8 +168,8 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, sca
         {element.source.multiplicity}
       </text>
       <text
-        x={target.x}
-        y={target.y}
+        x={target.x || 0}
+        y={target.y || 0}
         {...layoutTextForUMLAssociation(element.target.direction, 'BOTTOM')}
         pointerEvents="none"
         style={{ ...textFill }}
@@ -177,8 +177,8 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, sca
         {element.target.multiplicity}
       </text>
       <text
-        x={source.x}
-        y={source.y}
+        x={source.x || 0}
+        y={source.y || 0}
         {...layoutTextForUMLAssociation(element.source.direction, 'TOP')}
         pointerEvents="none"
         style={{ ...textFill }}
@@ -186,8 +186,8 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, sca
         {element.source.role}
       </text>
       <text
-        x={target.x}
-        y={target.y}
+        x={target.x || 0}
+        y={target.y || 0}
         {...layoutTextForUMLAssociation(element.target.direction, 'TOP')}
         pointerEvents="none"
         style={{ ...textFill }}
