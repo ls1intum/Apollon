@@ -131,7 +131,8 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
         {midPoints.map((point, index) => {
           return (
             <circle
-              pointerEvents={'all'}
+              visibility={interactive || interactable ? 'hidden' : undefined}
+              pointerEvents={interactive || interactable ? 'none' : 'all'}
               style={{ cursor: 'grab' }}
               key={props.id + '_' + point.mpX + '_' + point.mpY}
               cx={point.mpX}
