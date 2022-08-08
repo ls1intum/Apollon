@@ -34,6 +34,7 @@ export const UMLRelationshipReducer: Reducer<UMLElementState, Actions> = (state 
             ...state[payload.id].bounds,
             ...payload.bounds,
           },
+          isManuallyLayouted: false,
         },
       };
     }
