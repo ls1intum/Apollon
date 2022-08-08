@@ -42,7 +42,7 @@ function* layout(): SagaIterator {
       yield call(render, id);
     }
 
-    if (UMLRelationship.isUMLRelationship(elements[id])) {
+    if (UMLRelationship.isUMLRelationship(elements[id]) && !elements[id].isManuallyLayouted) {
       yield call(recalc, id);
     }
   }
