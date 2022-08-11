@@ -355,7 +355,8 @@ export const connectable = (
 
     private onPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
       const direction = event.currentTarget.getAttribute('direction') as Direction;
-      this.props.start(direction);
+      const id = event.currentTarget.parentElement!.getAttribute('id') as string;
+      this.props.start(direction, id);
     };
 
     private onPointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
