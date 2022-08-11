@@ -34,6 +34,47 @@ export const UMLRelationshipReducer: Reducer<UMLElementState, Actions> = (state 
             ...state[payload.id].bounds,
             ...payload.bounds,
           },
+          isManuallyLayouted: false,
+        },
+      };
+    }
+
+    case UMLRelationshipActionTypes.WAYPOINTLAYOUT: {
+      const { payload } = action;
+
+      return {
+        ...state,
+        [payload.id]: {
+          ...state[payload.id],
+          path: payload.path,
+          bounds: {
+            ...state[payload.id].bounds,
+            ...payload.bounds,
+          },
+        },
+      };
+    }
+
+    case UMLRelationshipActionTypes.STARTWAYPOINTSLAYOUT: {
+      const { payload } = action;
+
+      return {
+        ...state,
+        [payload.id]: {
+          ...state[payload.id],
+          path: payload.path,
+        },
+      };
+    }
+
+    case UMLRelationshipActionTypes.ENDWAYPOINTSLAYOUT: {
+      const { payload } = action;
+
+      return {
+        ...state,
+        [payload.id]: {
+          ...state[payload.id],
+          isManuallyLayouted: true,
         },
       };
     }

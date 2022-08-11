@@ -34,6 +34,7 @@ export interface IUMLElement {
   /** Note to show for element's assessment */
   assessmentNote?: string;
   selectedBy?: UMLElementSelectorType[];
+  isManuallyLayouted?: boolean;
 }
 
 export const enum ResizeFrom {

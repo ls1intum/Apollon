@@ -4,8 +4,12 @@ import { compose } from 'redux';
 import { Components } from '../../packages/components';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
+import { Direction } from '../../services/uml-element/uml-element-port';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
+import { AsyncDispatch } from '../../utils/actions/actions';
+import { Point } from '../../utils/geometry/point';
+import { getClientEventCoordinates } from '../../utils/touch-event';
 import { ModelState } from '../store/model-state';
 import { withTheme, withThemeProps } from '../theme/styles';
 import { UMLElementComponentProps } from './uml-element-component-props';
@@ -24,9 +28,25 @@ type StateProps = {
   scale: number;
 };
 
-type DispatchProps = {};
+type DispatchProps = {
+  startwaypointslayout: AsyncDispatch<typeof UMLRelationshipRepository.startWaypointsLayout>;
+  endwaypointslayout: AsyncDispatch<typeof UMLRelationshipRepository.endWaypointsLayout>;
+};
 
 type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
+
+const initialState = {
+  offset: new Point(),
+  handlerIndex: 0,
+  path: [
+    {
+      x: 0,
+      y: 0,
+    },
+  ],
+};
+
+type State = typeof initialState;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   withTheme,
@@ -42,11 +62,16 @@ const enhance = compose<ComponentClass<OwnProps>>(
       mode: state.editor.mode as ApollonMode,
       scale: state.editor.scale || 1.0,
     }),
-    {},
+    {
+      startwaypointslayout: UMLRelationshipRepository.startWaypointsLayout,
+      endwaypointslayout: UMLRelationshipRepository.endWaypointsLayout,
+    },
   ),
 );
 
-export class CanvasRelationshipComponent extends Component<Props> {
+export class CanvasRelationshipComponent extends Component<Props, State> {
+  state = initialState;
+
   render() {
     const {
       hovered,
@@ -60,6 +85,8 @@ export class CanvasRelationshipComponent extends Component<Props> {
       theme,
       mode,
       scale,
+      startwaypointslayout,
+      endwaypointslayout,
       ...props
     } = this.props;
 
@@ -70,6 +97,16 @@ export class CanvasRelationshipComponent extends Component<Props> {
 
     const points = relationship.path.map((point) => `${point.x} ${point.y}`).join(',');
 
+    const midPoints: { mpX: number; mpY: number }[] = [];
+    relationship.path.map((point, index) => {
+      const mpX = (relationship.path[index].x + relationship.path[index + 1]?.x) / 2;
+      const mpY = (relationship.path[index].y + relationship.path[index + 1]?.y) / 2;
+      if (!isNaN(mpX) && !isNaN(mpY)) midPoints.push({ mpX, mpY });
+    });
+
+    midPoints.pop();
+    midPoints.shift();
+
     const highlight =
       interactable && interactive
         ? theme.interactive.normal
@@ -79,7 +116,7 @@ export class CanvasRelationshipComponent extends Component<Props> {
         ? 'rgba(0, 100, 255, 0.2)'
         : relationship.highlight
         ? relationship.highlight
-        : undefined;
+        : 'rgba(0, 100, 255, 0)';
 
     return (
       <svg
@@ -91,9 +128,86 @@ export class CanvasRelationshipComponent extends Component<Props> {
         <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
         <ChildComponent scale={scale} element={UMLRelationshipRepository.get(relationship)} />
         {children}
+        {midPoints.map((point, index) => {
+          return (
+            <circle
+              visibility={interactive || interactable ? 'hidden' : undefined}
+              pointerEvents={interactive || interactable ? 'none' : 'all'}
+              style={{ cursor: 'grab' }}
+              key={props.id + '_' + point.mpX + '_' + point.mpY}
+              cx={point.mpX}
+              cy={point.mpY}
+              r="15"
+              onPointerDown={(e) => {
+                this.onPointerDown(e, index, point);
+              }}
+              fill={highlight}
+            />
+          );
+        })}
       </svg>
     );
   }
+
+  onPointerDown = (event: any, handlerIndex: number, point: { mpX: number; mpY: number }) => {
+    this.setState({ handlerIndex, offset: new Point(event.clientX - point.mpX, event.clientY - point.mpY) });
+    document.addEventListener('pointermove', this.onPointerMove);
+    document.addEventListener('pointerup', this.onPointerUp, { once: true });
+  };
+
+  onPointerMove = (event: any) => {
+    const handlerIndex = this.state.handlerIndex;
+    const waypointDirection = handlerIndex % 2 ? 'horizontal' : 'vertical';
+
+    const clientEventCoordinates = getClientEventCoordinates(event);
+    const x = clientEventCoordinates.clientX - this.state.offset.x;
+    const y = clientEventCoordinates.clientY - this.state.offset.y;
+
+    // Update relationship points here
+    this.updateRelationshipPoints(waypointDirection, handlerIndex, x, y);
+  };
+
+  onPointerUp = (event: any) => {
+    this.props.endwaypointslayout(this.props.id);
+    const element = event.currentTarget;
+    element.removeEventListener('pointermove', this.onPointerMove);
+  };
+
+  updateRelationshipPoints = (waypointDirection: string, handlerIndex: number, x: number, y: number) => {
+    const startPoint = handlerIndex + 1;
+    const endPoint = Number(startPoint) + 1;
+    const sourceDirection = this.props.relationship.source.direction;
+
+    switch (waypointDirection) {
+      case 'horizontal':
+        sourceDirection === Direction.Up || sourceDirection === Direction.Down
+          ? this.updateXCoordinate(startPoint, endPoint, x, y)
+          : this.updateYCoordinate(startPoint, endPoint, x, y);
+        break;
+
+      case 'vertical':
+        sourceDirection === Direction.Up || sourceDirection === Direction.Down
+          ? this.updateYCoordinate(startPoint, endPoint, x, y)
+          : this.updateXCoordinate(startPoint, endPoint, x, y);
+        break;
+
+      default:
+        break;
+    }
+
+    this.setState({ path: this.props.relationship.path });
+    this.props.startwaypointslayout(this.props.id, this.props.relationship.path);
+  };
+
+  updateXCoordinate = (startPoint: number, endPoint: number, x: number, y: number) => {
+    this.props.relationship.path[startPoint].x = x;
+    this.props.relationship.path[endPoint].x = x;
+  };
+
+  updateYCoordinate = (startPoint: number, endPoint: number, x: number, y: number) => {
+    this.props.relationship.path[startPoint].y = y;
+    this.props.relationship.path[endPoint].y = y;
+  };
 }
 
 export const CanvasRelationship = enhance(CanvasRelationshipComponent);

@@ -5,7 +5,13 @@ import { IPath } from '../../utils/geometry/path';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
-import { LayoutAction, UMLRelationshipActionTypes } from './uml-relationship-types';
+import {
+  EndWaypointsAction,
+  LayoutAction,
+  StartWaypointsAction,
+  UMLRelationshipActionTypes,
+  WaypointLayoutAction,
+} from './uml-relationship-types';
 import { UMLElementType, UMLRelationshipType } from '../..';
 import { UMLElements } from '../../packages/uml-elements';
 
@@ -54,6 +60,12 @@ export const UMLRelationshipCommonRepository = {
     undoable: false,
   }),
 
+  layoutWaypoints: (id: string, path: IPath, bounds: IBoundary): WaypointLayoutAction => ({
+    type: UMLRelationshipActionTypes.WAYPOINTLAYOUT,
+    payload: { id, path, bounds },
+    undoable: false,
+  }),
+
   flip:
     (id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
@@ -70,6 +82,35 @@ export const UMLRelationshipCommonRepository = {
         type: ReconnectableActionTypes.RECONNECT,
         payload: { connections },
         undoable: true,
+      });
+    },
+
+  startWaypointsLayout:
+    (id: string, path: IPath): AsyncAction =>
+    (dispatch) => {
+      const ids = id ? (Array.isArray(id) ? id : [id]) : undefined;
+      if (ids && !ids.length) {
+        return;
+      }
+
+      dispatch<StartWaypointsAction>({
+        type: UMLRelationshipActionTypes.STARTWAYPOINTSLAYOUT,
+        payload: { id, path },
+        undoable: false,
+      });
+    },
+
+  endWaypointsLayout:
+    (id: string): AsyncAction =>
+    (dispatch) => {
+      if (!id.length) {
+        return;
+      }
+
+      dispatch<EndWaypointsAction>({
+        type: UMLRelationshipActionTypes.ENDWAYPOINTSLAYOUT,
+        payload: { id },
+        undoable: false,
       });
     },
 };
