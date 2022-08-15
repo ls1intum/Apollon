@@ -66,6 +66,7 @@ export declare type UMLRelationship = UMLModelElement & {
         element: string;
         direction: Direction;
     };
+    isManuallyLayouted: boolean;
 };
 export declare type UMLClassifier = UMLElement & {
     attributes: string[];
