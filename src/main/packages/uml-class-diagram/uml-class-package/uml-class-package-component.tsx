@@ -2,20 +2,20 @@ import React, { FunctionComponent } from 'react';
 import { UMLClassPackage } from './uml-class-package';
 import { ThemedRect, ThemedPath } from '../../../components/theme/themedComponents';
 
-export const UMLClassPackageComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
+export const UMLClassPackageComponent: FunctionComponent<Props> = ({ element, children, scale, fillColor }) => (
   <g>
     <ThemedPath
       style={{ transform: `scale(${scale})` }}
       d={`M 0 10 V 0 H 40 V 10`}
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor={fillColor || element.fillColor}
     />
     <ThemedRect
       y={10 * scale}
       width="100%"
       height={element.bounds.height - 10 * scale}
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor={fillColor || element.fillColor}
     />
     <text
       x="50%"
@@ -35,4 +35,5 @@ export const UMLClassPackageComponent: FunctionComponent<Props> = ({ element, ch
 interface Props {
   element: UMLClassPackage;
   scale: number;
+  fillColor?: string;
 }
