@@ -3,7 +3,7 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLActivity } from './uml-activity';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 
-export const UMLActivityComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
+export const UMLActivityComponent: FunctionComponent<Props> = ({ element, children, scale, fillColor }) => (
   <g>
     <ThemedRect
       rx={10 * scale}
@@ -11,7 +11,7 @@ export const UMLActivityComponent: FunctionComponent<Props> = ({ element, childr
       width="100%"
       height="100%"
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor={fillColor || element.fillColor}
     />
     <Text y={20 * scale} fill={element.textColor}>
       {element.name}
@@ -23,4 +23,5 @@ export const UMLActivityComponent: FunctionComponent<Props> = ({ element, childr
 interface Props {
   element: UMLActivity;
   scale: number;
+  fillColor?: string;
 }

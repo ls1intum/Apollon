@@ -3,7 +3,7 @@ import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking';
 import { Multiline } from '../../../utils/svg/multiline';
 import { ThemedRect, ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
-export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, scale }) => (
+export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
   <g>
     <ThemedRect
       rx={10 * scale}
@@ -11,7 +11,7 @@ export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({
       width="100%"
       height="100%"
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor={fillColor || element.fillColor}
     />
     <Multiline
       x={element.bounds.width / 2}
@@ -58,4 +58,5 @@ export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({
 interface Props {
   element: UMLReachabilityGraphMarking;
   scale: number;
+  fillColor?: string;
 }
