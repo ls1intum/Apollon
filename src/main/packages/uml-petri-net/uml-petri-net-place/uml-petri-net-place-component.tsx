@@ -34,7 +34,7 @@ const calculatePositions = (amountOfTokens: number, outerRadius: number, scale: 
   return positions;
 };
 
-export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, scale }) => {
+export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => {
   // radius of the outer circle
   const radius = Math.min(element.bounds.width, element.bounds.height) / 2;
   const displayTokenAsNumber = element.amountOfTokens > 0 && element.amountOfTokens > maxAmountCircles;
@@ -52,7 +52,7 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
   }
   return (
     <g>
-      <ThemedCircle cx="50%" cy="50%" r={radius} strokeColor={element.strokeColor} strokeWidth={2} fillOpacity={1} />
+      <ThemedCircle cx="50%" cy="50%" r={radius} strokeColor={element.strokeColor} strokeWidth={2} fillColor={fillColor || element.fillColor} fillOpacity={1} />
       {!displayTokenAsNumber &&
         tokenPositions.map((position, index) => (
           <ThemedCircleContrast
@@ -81,4 +81,5 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
 interface Props {
   element: UMLPetriNetPlace;
   scale: number;
+  fillColor?: string;
 }
