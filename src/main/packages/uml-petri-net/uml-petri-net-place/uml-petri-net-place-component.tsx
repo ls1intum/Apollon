@@ -52,7 +52,15 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
   }
   return (
     <g>
-      <ThemedCircle cx="50%" cy="50%" r={radius} strokeColor={element.strokeColor} strokeWidth={2} fillColor={fillColor || element.fillColor} fillOpacity={1} />
+      <ThemedCircle
+        cx="50%"
+        cy="50%"
+        r={radius}
+        strokeColor={element.strokeColor}
+        strokeWidth={2}
+        fillColor={fillColor || element.fillColor}
+        fillOpacity={1}
+      />
       {!displayTokenAsNumber &&
         tokenPositions.map((position, index) => (
           <ThemedCircleContrast
