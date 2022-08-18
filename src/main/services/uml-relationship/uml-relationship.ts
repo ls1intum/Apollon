@@ -51,7 +51,7 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
     direction: Direction.Up,
     element: '',
   };
-  isManuallyLayouted = false;
+  isManuallyLayouted?: boolean;
 
   constructor(values?: DeepPartial<IUMLRelationship>) {
     super();
