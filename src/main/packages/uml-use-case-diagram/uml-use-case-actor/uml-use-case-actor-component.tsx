@@ -3,7 +3,7 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLUseCaseActor } from './uml-use-case-actor';
 import { ThemedCircle, ThemedLine } from '../../../components/theme/themedComponents';
 
-export const UMLUseCaseActorComponent: FunctionComponent<Props> = ({ element, scale }) => (
+export const UMLUseCaseActorComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
   <g>
     <rect width="100%" height="100%" fill="none" />
     <g stroke={element.strokeColor || 'black'} strokeWidth={2}>
@@ -11,7 +11,7 @@ export const UMLUseCaseActorComponent: FunctionComponent<Props> = ({ element, sc
         cx={45 * scale}
         cy={25 * scale}
         r={15 * scale}
-        fillColor={element.fillColor}
+        fillColor={fillColor || element.fillColor}
         strokeColor={element.fillColor}
       />
       <ThemedLine x1={45 * scale} y1={40 * scale} x2={45 * scale} y2={80 * scale} strokeColor={element.fillColor} />
@@ -28,4 +28,5 @@ export const UMLUseCaseActorComponent: FunctionComponent<Props> = ({ element, sc
 interface Props {
   element: UMLUseCaseActor;
   scale: number;
+  fillColor?: string;
 }

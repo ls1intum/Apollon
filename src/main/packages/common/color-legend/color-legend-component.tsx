@@ -3,13 +3,13 @@ import { Multiline } from '../../../utils/svg/multiline';
 import { ColorLegend } from './color-legend';
 import { ThemedPath } from '../../../components/theme/themedComponents';
 
-export const ColorLegendComponent: FunctionComponent<Props> = ({ element }) => (
+export const ColorLegendComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedPath
       d={`M 0 0 L ${element.bounds.width - 15} 0 L ${element.bounds.width} 15 L ${element.bounds.width} ${
         element.bounds.height
       } L 0 ${element.bounds.height} L 0 0 Z`}
-      fillColor={element.fillColor}
+      fillColor={fillColor || element.fillColor}
       strokeColor={element.strokeColor}
       strokeWidth="1.2"
       strokeMiterlimit="10"
@@ -37,4 +37,5 @@ export const ColorLegendComponent: FunctionComponent<Props> = ({ element }) => (
 
 export interface Props {
   element: ColorLegend;
+  fillColor?: string;
 }

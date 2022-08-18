@@ -3,11 +3,11 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLClassifier } from './uml-classifier';
 import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
-export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scale, children }) => {
+export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scale, children, fillColor }) => {
   return (
     <g>
       <ThemedRect
-        fillColor={element.fillColor}
+        fillColor={fillColor || element.fillColor}
         strokeColor="none"
         width="100%"
         height={element.stereotype ? 50 * scale : 40 * scale}
@@ -57,4 +57,5 @@ export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scal
 interface Props {
   element: UMLClassifier;
   scale: number;
+  fillColor?: string;
 }

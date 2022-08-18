@@ -76,7 +76,7 @@ class CanvasElementComponent extends Component<Props> {
         ? element.highlight
         : element.fillColor
         ? element.fillColor
-        : 'white';
+        : theme.color.background;
 
     const selectedByList = element.selectedBy || [];
     return (
@@ -87,7 +87,7 @@ class CanvasElementComponent extends Component<Props> {
         fillOpacity={moving ? 0.7 : undefined}
         fill={highlight}
       >
-        <ElementComponent scale={props.scale} element={UMLElementRepository.get(element)}>
+        <ElementComponent fillColor={highlight} scale={props.scale} element={UMLElementRepository.get(element)}>
           {elements}
         </ElementComponent>
         {children}

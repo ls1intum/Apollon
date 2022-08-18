@@ -3,7 +3,7 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLUseCase } from './uml-use-case';
 import { ThemedEllipse } from '../../../components/theme/themedComponents';
 
-export const UMLUseCaseComponent: FunctionComponent<Props> = ({ element }) => (
+export const UMLUseCaseComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedEllipse
       cx="50%"
@@ -11,7 +11,7 @@ export const UMLUseCaseComponent: FunctionComponent<Props> = ({ element }) => (
       rx="50%"
       ry="50%"
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor={fillColor || element.fillColor}
     />
     <Text fill={element.textColor}>{element.name}</Text>
   </g>
@@ -19,4 +19,5 @@ export const UMLUseCaseComponent: FunctionComponent<Props> = ({ element }) => (
 
 interface Props {
   element: UMLUseCase;
+  fillColor?: string;
 }

@@ -3,20 +3,20 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLDeploymentNode } from './uml-deployment-node';
 import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
-export const UMLDeploymentNodeComponent: FunctionComponent<Props> = ({ element, children, scale }) => (
+export const UMLDeploymentNodeComponent: FunctionComponent<Props> = ({ element, children, scale, fillColor }) => (
   <g>
     <g>
       <ThemedPath
         d={`M 0 ${8 * scale} l ${8 * scale} -${8 * scale} H ${element.bounds.width} l -${8 * scale} ${8 * scale} Z`}
         strokeColor={element.strokeColor}
-        fillColor={element.fillColor}
+        fillColor={fillColor || element.fillColor}
       />
       <ThemedPath
         d={`M ${element.bounds.width} 0 V ${element.bounds.height - 8 * scale} l -${8 * scale} ${8 * scale} V ${
           8 * scale
         } Z`}
         strokeColor={element.strokeColor}
-        fillColor={element.fillColor}
+        fillColor={fillColor || element.fillColor}
       />
       <ThemedRect
         x="0"
@@ -24,7 +24,7 @@ export const UMLDeploymentNodeComponent: FunctionComponent<Props> = ({ element, 
         width={element.bounds.width - 8 * scale}
         height={element.bounds.height - 9 * scale}
         strokeColor={element.strokeColor}
-        fillColor={element.fillColor}
+        fillColor={fillColor || element.fillColor}
       />
     </g>
     <Text y={30 * scale} fill={element.textColor}>
@@ -44,4 +44,5 @@ export const UMLDeploymentNodeComponent: FunctionComponent<Props> = ({ element, 
 interface Props {
   element: UMLDeploymentNode;
   scale: number;
+  fillColor?: string;
 }
