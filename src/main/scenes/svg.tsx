@@ -181,6 +181,24 @@ export class Svg extends Component<Props, State> {
 
     // connect exported svg to redux state, so that connected components can retrieve properties from state
     const state = ModelState.fromModel(this.props.model);
+    const calculateViewbox = () => {
+      let minX = 0;
+      let minY = 0;
+
+      for (const element of elements) {
+        if (UMLRelationship.isUMLRelationship(element)) {
+          const firstPoint = element.path[0];
+          minX = firstPoint.x;
+          minY = firstPoint.y;
+
+          for (const p of element.path) {
+            if (p.x < minX) minX = p.x;
+            if (p.y < minY) minY = p.y;
+          }
+        }
+      }
+      return minX + ' ' + minY + ' ' + (bounds.width - minX) + ' ' + (bounds.height - minY);
+    };
 
     return (
       <StoreProvider initialState={state}>
@@ -191,6 +209,7 @@ export class Svg extends Component<Props, State> {
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
             fill={theme.color.background}
+            viewBox={calculateViewbox()}
           >
             <defs>
               <style>{(Style[0] as any)({ theme })}</style>
