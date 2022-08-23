@@ -63,6 +63,10 @@ export const UMLRelationshipReducer: Reducer<UMLElementState, Actions> = (state 
         [payload.id]: {
           ...state[payload.id],
           path: payload.path,
+          bounds: {
+            ...state[payload.id].bounds,
+            ...payload.bounds,
+          },
         },
       };
     }
