@@ -187,10 +187,6 @@ export class Svg extends Component<Props, State> {
 
       for (const element of elements) {
         if (UMLRelationship.isUMLRelationship(element)) {
-          const firstPoint = element.path[0];
-          minX = firstPoint.x;
-          minY = firstPoint.y;
-
           for (const p of element.path) {
             if (p.x < minX) minX = p.x;
             if (p.y < minY) minY = p.y;
