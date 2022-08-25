@@ -12,12 +12,19 @@ import { CreateAction, DeleteAction, UMLElementActionTypes, UpdateAction } from 
 import { ReconnectableActionTypes, ReconnectAction } from './reconnectable/reconnectable-types';
 import { IUMLRelationship, UMLRelationship } from './uml-relationship';
 import { UMLRelationshipRepository } from './uml-relationship-repository';
-import { LayoutAction, WaypointLayoutAction } from './uml-relationship-types';
+import {
+  EndWaypointsAction,
+  LayoutAction,
+  UMLRelationshipActionTypes,
+  WaypointLayoutAction,
+} from './uml-relationship-types';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { IUMLCommunicationLink } from '../../packages/uml-communication-diagram/uml-communication-link/uml-communication-link';
+import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
+import { notEmpty } from '../../utils/not-empty';
 
 export function* UMLRelationshipSaga() {
-  yield run([create, reconnect, update, layoutElement, deleteElement]);
+  yield run([create, reconnect, update, layoutElement, layoutRelationship, deleteElement]);
 }
 
 function* create(): SagaIterator {
@@ -32,6 +39,33 @@ function* reconnect(): SagaIterator {
   for (const connection of action.payload.connections) {
     yield call(recalc, connection.id);
   }
+}
+
+function* layoutRelationship(): SagaIterator {
+  const action: EndWaypointsAction = yield take(UMLRelationshipActionTypes.ENDWAYPOINTSLAYOUT);
+  const layer: ILayer = yield getContext('layer');
+  const { elements, diagram }: ModelState = yield select();
+  const children = [
+    ...diagram.ownedElements.map((id) => UMLElementRepository.get(elements[id])),
+    ...diagram.ownedRelationships.map((id) => UMLRelationshipRepository.get(elements[id])),
+  ].filter(notEmpty);
+  const container = UMLDiagramRepository.get(diagram);
+
+  if (!container) {
+    return;
+  }
+
+  const [updates] = container.render(layer, children);
+  const delta = {
+    width: updates.bounds.width - diagram.bounds.width,
+    height: updates.bounds.height - diagram.bounds.height,
+  };
+
+  yield put({
+    type: ResizingActionTypes.RESIZE,
+    payload: { ids: [diagram.id], delta },
+    undoable: false,
+  });
 }
 
 function* update(): SagaIterator {
