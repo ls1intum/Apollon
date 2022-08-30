@@ -13,6 +13,7 @@ type OwnProps = {
 };
 type StateProps = {
   hasOppositeRequiredInterface: boolean;
+  currentRequiredInterfaces: UMLInterfaceRequired[];
 };
 type DispatchProps = {};
 
@@ -35,11 +36,14 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
           otherRequiredInterface.target.direction.valueOf() ===
             getOppositeDirection(props.element.target.direction).valueOf(),
       ),
+    currentRequiredInterfaces: requiredInterfaces.filter(
+      (element) => element.target.element === props.element.target.element,
+    ),
   };
 }, {});
 
 const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
-  const { element, hasOppositeRequiredInterface, scale } = props;
+  const { element, hasOppositeRequiredInterface, currentRequiredInterfaces, scale } = props;
 
   // offset for last point in paragraph, so that line ends at marker
   let offset: Point;
@@ -58,6 +62,25 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
       break;
   }
 
+  const calculatePath = () => {
+    let path = '';
+    switch (currentRequiredInterfaces.length) {
+      case 1:
+        path = `M 13 -13.5 a 13 13 0 0 0 0 27`;
+        break;
+
+      case 2:
+        path = hasOppositeRequiredInterface ? `M 8 -12.5 a 13 13 0 0 0 0 25` : `M 2 -8 a 13 13 0 0 0 0 16`;
+        break;
+
+      default:
+        path = `M 2 -8 a 13 13 0 0 0 0 16`;
+        break;
+    }
+
+    return path;
+  };
+
   return (
     <g>
       <marker
@@ -71,16 +94,7 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
         markerUnits="strokeWidth"
       >
         {/*M -> Move to, A -> Arc radiusX, radiusY, x-axis-rotation, bow-flag, endpointX,endpointY */}
-        <ThemedPath
-          d={`M ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2) - (hasOppositeRequiredInterface ? 5 : 0)} -${
-            (REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)) / 2
-          } a ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2)},${Math.floor(
-            REQUIRED_INTERFACE_MARKER_SIZE / 2,
-          )} 0 0 0 0,${REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
-          fillColor="none"
-          strokeColor={element.strokeColor}
-          strokeWidth={2 * scale}
-        />
+        <ThemedPath d={calculatePath()} fillColor="none" strokeColor={element.strokeColor} strokeWidth={2 * scale} />
       </marker>
       <ThemedPolyline
         points={element.path
