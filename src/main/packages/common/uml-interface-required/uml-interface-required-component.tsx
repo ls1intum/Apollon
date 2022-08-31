@@ -4,7 +4,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { UMLInterfaceRequired } from './uml-interface-required';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
-import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
+import { REQUIRED_INTERFACE_MARKER_SIZE, REQUIRED_INTERFACE_MARKER_TYPE } from './uml-interface-requires-constants';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 type OwnProps = {
@@ -14,6 +14,7 @@ type OwnProps = {
 type StateProps = {
   hasOppositeRequiredInterface: boolean;
   currentRequiredInterfaces: UMLInterfaceRequired[];
+  currentAllInterfaces: any;
 };
 type DispatchProps = {};
 
@@ -39,11 +40,14 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
     currentRequiredInterfaces: requiredInterfaces.filter(
       (element) => element.target.element === props.element.target.element,
     ),
+    currentAllInterfaces: state.diagram.ownedRelationships
+      .map((relationshipId) => state.elements[relationshipId])
+      .filter((element: any) => element.target.element === props.element.target.element),
   };
 }, {});
 
 const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
-  const { element, hasOppositeRequiredInterface, currentRequiredInterfaces, scale } = props;
+  const { element, hasOppositeRequiredInterface, currentRequiredInterfaces, currentAllInterfaces, scale } = props;
 
   // offset for last point in paragraph, so that line ends at marker
   let offset: Point;
@@ -66,15 +70,20 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
     let path = '';
     switch (currentRequiredInterfaces.length) {
       case 1:
-        path = `M 13 -13.5 a 13 13 0 0 0 0 27`;
+        path =
+          currentAllInterfaces.length === currentRequiredInterfaces.length
+            ? REQUIRED_INTERFACE_MARKER_TYPE.Semicircle
+            : REQUIRED_INTERFACE_MARKER_TYPE.Threequarterscircle;
         break;
 
       case 2:
-        path = hasOppositeRequiredInterface ? `M 8 -12.5 a 13 13 0 0 0 0 25` : `M 2 -8 a 13 13 0 0 0 0 16`;
+        path = hasOppositeRequiredInterface
+          ? REQUIRED_INTERFACE_MARKER_TYPE.Threequarterscircle
+          : REQUIRED_INTERFACE_MARKER_TYPE.Quartercircle;
         break;
 
       default:
-        path = `M 2 -8 a 13 13 0 0 0 0 16`;
+        path = REQUIRED_INTERFACE_MARKER_TYPE.Quartercircle;
         break;
     }
 
