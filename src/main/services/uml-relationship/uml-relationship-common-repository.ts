@@ -86,7 +86,7 @@ export const UMLRelationshipCommonRepository = {
     },
 
   startWaypointsLayout:
-    (id: string, path: IPath): AsyncAction =>
+    (id: string, path: IPath, bounds: IBoundary): AsyncAction =>
     (dispatch) => {
       const ids = id ? (Array.isArray(id) ? id : [id]) : undefined;
       if (ids && !ids.length) {
@@ -95,7 +95,7 @@ export const UMLRelationshipCommonRepository = {
 
       dispatch<StartWaypointsAction>({
         type: UMLRelationshipActionTypes.STARTWAYPOINTSLAYOUT,
-        payload: { id, path },
+        payload: { id, path, bounds },
         undoable: false,
       });
     },

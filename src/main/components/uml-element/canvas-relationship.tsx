@@ -8,6 +8,7 @@ import { Direction } from '../../services/uml-element/uml-element-port';
 import { IUMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
+import { computeBoundingBox } from '../../utils/geometry/boundary';
 import { Point } from '../../utils/geometry/point';
 import { getClientEventCoordinates } from '../../utils/touch-event';
 import { ModelState } from '../store/model-state';
@@ -198,8 +199,20 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
         break;
     }
 
+    const points = [new Point()];
+
+    this.props.relationship.path.forEach((path) => {
+      points.push(new Point(path.x, path.y));
+    });
+
+    const updatedBounds = computeBoundingBox(points);
+    updatedBounds.x = this.props.relationship.bounds.x;
+    updatedBounds.y = this.props.relationship.bounds.y;
+    updatedBounds.width = Math.ceil(updatedBounds.width / 20) * 20;
+    updatedBounds.height = Math.ceil(updatedBounds.height / 20) * 20;
+
     this.setState({ path: this.props.relationship.path });
-    this.props.startwaypointslayout(this.props.id, this.props.relationship.path);
+    this.props.startwaypointslayout(this.props.id, this.props.relationship.path, updatedBounds);
   };
 
   updateXCoordinate = (startPoint: number, endPoint: number, x: number, y: number) => {

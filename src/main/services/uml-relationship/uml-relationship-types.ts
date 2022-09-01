@@ -31,6 +31,7 @@ export type StartWaypointsAction = Action<UMLRelationshipActionTypes.STARTWAYPOI
   payload: {
     id: string;
     path: IPath;
+    bounds: IBoundary;
   };
 };
 
