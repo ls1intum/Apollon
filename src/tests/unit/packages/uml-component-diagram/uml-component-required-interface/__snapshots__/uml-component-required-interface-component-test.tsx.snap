@@ -17,7 +17,7 @@ exports[`render the uml-component-required-interface-component 1`] = `
         >
           <path
             class="sc-gsnTZi iAPApG"
-            d="M 13 -13.5 a 13,13 0 0 0 0,27"
+            d="M 2 -8 a 13 13 0 0 0 0 16"
             fill="none"
             stroke="black"
             stroke-width="2"
