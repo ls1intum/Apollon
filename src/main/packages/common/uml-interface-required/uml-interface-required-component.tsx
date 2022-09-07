@@ -4,7 +4,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { UMLInterfaceRequired } from './uml-interface-required';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
-import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
+import { REQUIRED_INTERFACE_MARKER_SIZE, REQUIRED_INTERFACE_MARKER_TYPE } from './uml-interface-requires-constants';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 type OwnProps = {
@@ -13,6 +13,8 @@ type OwnProps = {
 };
 type StateProps = {
   hasOppositeRequiredInterface: boolean;
+  currentRequiredInterfaces: UMLInterfaceRequired[];
+  currentAllInterfaces: any;
 };
 type DispatchProps = {};
 
@@ -35,11 +37,17 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
           otherRequiredInterface.target.direction.valueOf() ===
             getOppositeDirection(props.element.target.direction).valueOf(),
       ),
+    currentRequiredInterfaces: requiredInterfaces.filter(
+      (element) => element.target.element === props.element.target.element,
+    ),
+    currentAllInterfaces: state.diagram.ownedRelationships
+      .map((relationshipId) => state.elements[relationshipId])
+      .filter((element: any) => element.target.element === props.element.target.element),
   };
 }, {});
 
 const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
-  const { element, hasOppositeRequiredInterface, scale } = props;
+  const { element, hasOppositeRequiredInterface, currentRequiredInterfaces, currentAllInterfaces, scale } = props;
 
   // offset for last point in paragraph, so that line ends at marker
   let offset: Point;
@@ -58,6 +66,30 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
       break;
   }
 
+  const calculatePath = () => {
+    let path = '';
+    switch (currentRequiredInterfaces.length) {
+      case 1:
+        path =
+          currentAllInterfaces.length === currentRequiredInterfaces.length
+            ? REQUIRED_INTERFACE_MARKER_TYPE.Semicircle
+            : REQUIRED_INTERFACE_MARKER_TYPE.Threequarterscircle;
+        break;
+
+      case 2:
+        path = hasOppositeRequiredInterface
+          ? REQUIRED_INTERFACE_MARKER_TYPE.Threequarterscircle
+          : REQUIRED_INTERFACE_MARKER_TYPE.Quartercircle;
+        break;
+
+      default:
+        path = REQUIRED_INTERFACE_MARKER_TYPE.Quartercircle;
+        break;
+    }
+
+    return path;
+  };
+
   return (
     <g>
       <marker
@@ -71,16 +103,7 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
         markerUnits="strokeWidth"
       >
         {/*M -> Move to, A -> Arc radiusX, radiusY, x-axis-rotation, bow-flag, endpointX,endpointY */}
-        <ThemedPath
-          d={`M ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2) - (hasOppositeRequiredInterface ? 5 : 0)} -${
-            (REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)) / 2
-          } a ${Math.floor(REQUIRED_INTERFACE_MARKER_SIZE / 2)},${Math.floor(
-            REQUIRED_INTERFACE_MARKER_SIZE / 2,
-          )} 0 0 0 0,${REQUIRED_INTERFACE_MARKER_SIZE - (hasOppositeRequiredInterface ? 2 : 0)}`}
-          fillColor="none"
-          strokeColor={element.strokeColor}
-          strokeWidth={2 * scale}
-        />
+        <ThemedPath d={calculatePath()} fillColor="none" strokeColor={element.strokeColor} strokeWidth={2 * scale} />
       </marker>
       <ThemedPolyline
         points={element.path
