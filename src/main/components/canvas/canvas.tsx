@@ -72,7 +72,7 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
         return minX / 2 + ' ' + minY / 2 + ' ' + (diagram.bounds.width - minX) + ' ' + (diagram.bounds.height - minY);
       }
     };
-    
+
     return (
       <Droppable>
         <CanvasContainer
