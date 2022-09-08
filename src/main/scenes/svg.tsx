@@ -194,7 +194,7 @@ export class Svg extends Component<Props, State> {
           }
         }
       }
-      return {minX: Math.min(minX,0), minY: Math.min(minY,0)};
+      return { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
     };
 
     return (
