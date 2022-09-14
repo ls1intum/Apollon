@@ -99,8 +99,6 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
               </svg>
             )}
           </g>
-
-
         </CanvasContainer>
       </Droppable>
     );
