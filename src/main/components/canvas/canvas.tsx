@@ -54,38 +54,39 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
 
   render() {
     const { elements, diagram, isStatic } = this.props;
-    const calculateViewbox = () => {
-      if (isStatic) {
-        let minX = 0;
-        let minY = 0;
-        for (const element of Object.values(elements)) {
-          if (UMLRelationship.isUMLRelationship(element)) {
-            const firstPoint = element.path[0];
-            minX = firstPoint.x;
-            minY = firstPoint.y;
-            for (const p of element.path) {
-              if (p.x < minX) minX = p.x;
-              if (p.y < minY) minY = p.y;
-            }
+
+    let minX = 0;
+    let minY = 0;
+
+    if (isStatic) {
+      for (const element of Object.values(elements)) {
+        if (UMLRelationship.isUMLRelationship(element)) {
+          for (const p of element.path) {
+            if (p.x < minX) minX = p.x;
+            if (p.y < minY) minY = p.y;
           }
         }
-        return minX / 2 + ' ' + minY / 2 + ' ' + (diagram.bounds.width - minX) + ' ' + (diagram.bounds.height - minY);
       }
+      minX = Math.abs(Math.round(minX));
+      minY = Math.abs(Math.round(minY));
+    }
+
+    const translateCoordinate = () => {
+      return 'translate(' + minX / 2 + 'px,' + minY / 2 + 'px)';
     };
 
     return (
       <Droppable>
         <CanvasContainer
           id="modeling-editor-canvas"
-          width={diagram.bounds.width}
-          height={diagram.bounds.height}
+          width={diagram.bounds.width + minX}
+          height={diagram.bounds.height + minY}
           isStatic={isStatic}
           ref={this.layer}
           data-cy="modeling-editor-canvas"
-          viewBox={calculateViewbox()}
         >
-          {this.layer.current && (
-            <>
+          <g style={{ transform: translateCoordinate() }}>
+            {this.layer.current && (
               <svg x="50%" y="50%">
                 {/* be careful to change the drawing order -> if relationships are drawn first -> relationships will not be visible in containers */}
                 {diagram.ownedElements.map((element) => (
@@ -96,8 +97,10 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
                 ))}
                 <ConnectionPreview />
               </svg>
-            </>
-          )}
+            )}
+          </g>
+
+
         </CanvasContainer>
       </Droppable>
     );
