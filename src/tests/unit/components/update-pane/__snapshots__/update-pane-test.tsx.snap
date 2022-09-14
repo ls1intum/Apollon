@@ -413,7 +413,11 @@ exports[`test update pane render with element 1`] = `
           id="modeling-editor-canvas"
           tabindex="-1"
           width="840"
-        />
+        >
+          <g
+            style="transform: translate(0px,0px);"
+          />
+        </svg>
       </div>
       <div
         class="c3"
@@ -946,7 +950,11 @@ exports[`test update pane render with relationship 1`] = `
           id="modeling-editor-canvas"
           tabindex="-1"
           width="840"
-        />
+        >
+          <g
+            style="transform: translate(0px,0px);"
+          />
+        </svg>
       </div>
       <div
         class="c3"
