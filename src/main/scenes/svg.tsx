@@ -181,19 +181,20 @@ export class Svg extends Component<Props, State> {
 
     // connect exported svg to redux state, so that connected components can retrieve properties from state
     const state = ModelState.fromModel(this.props.model);
-    const calculateViewbox = () => {
+
+    const translationFactor = () => {
       let minX = 0;
       let minY = 0;
 
       for (const element of elements) {
         if (UMLRelationship.isUMLRelationship(element)) {
           for (const p of element.path) {
-            if (p.x < minX) minX = p.x;
-            if (p.y < minY) minY = p.y;
+            if (p.x < minX) minX = p.x + element.bounds.x - 15;
+            if (p.y < minY) minY = p.y + element.bounds.y - 15;
           }
         }
       }
-      return minX + ' ' + minY + ' ' + (bounds.width - minX) + ' ' + (bounds.height - minY);
+      return { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
     };
 
     return (
@@ -205,7 +206,6 @@ export class Svg extends Component<Props, State> {
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
             fill={theme.color.background}
-            viewBox={calculateViewbox()}
           >
             <defs>
               <style>{(Style[0] as any)({ theme })}</style>
@@ -214,8 +214,8 @@ export class Svg extends Component<Props, State> {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
               return (
                 <svg
-                  x={element.bounds.x}
-                  y={element.bounds.y}
+                  x={element.bounds.x - translationFactor().minX}
+                  y={element.bounds.y - translationFactor().minY}
                   width={element.bounds.width}
                   height={element.bounds.height}
                   key={element.id}

@@ -140,7 +140,7 @@ function* deleteElement(): SagaIterator {
 }
 
 export function* recalc(id: string): SagaIterator {
-  const { elements, selected }: ModelState = yield select();
+  const { elements, selected, editor }: ModelState = yield select();
   const layer: ILayer = yield getContext('layer');
   const relationship = UMLRelationshipRepository.get(elements[id]);
   if (!relationship) {
@@ -164,7 +164,7 @@ export function* recalc(id: string): SagaIterator {
 
   const { path, bounds } = diff(original, updates) as Partial<IUMLRelationship>;
   if (path) {
-    if (relationship.isManuallyLayouted && shouldPreserveLayout(source.id, target.id, selected)) {
+    if (relationship.isManuallyLayouted && shouldPreserveLayout(source.id, target.id, selected, editor.readonly)) {
       yield put<WaypointLayoutAction>(
         UMLRelationshipRepository.layoutWaypoints(updates.id, original.path, { ...original.bounds, ...bounds }),
       );
@@ -178,6 +178,6 @@ export function* recalc(id: string): SagaIterator {
   }
 }
 
-const shouldPreserveLayout = (sourceId: string, targetId: string, selected: string[]) => {
-  return selected.includes(sourceId) && selected.includes(targetId) ? true : false;
+const shouldPreserveLayout = (sourceId: string, targetId: string, selected: string[], isEditorReadOnly: boolean) => {
+  return (selected.includes(sourceId) && selected.includes(targetId)) || isEditorReadOnly ? true : false;
 };
