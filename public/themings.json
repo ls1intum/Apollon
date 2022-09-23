@@ -7,7 +7,8 @@
         "--apollon-background": "#ffffff",
         "--apollon-background-variant": "#e5e5e5",
         "--apollon-gray": "#e9ecef",
-        "--apollon-gray-variant": "#343a40"
+        "--apollon-gray-variant": "#343a40",
+        "--apollon-grid": "rgba(36, 39, 36, 0.1)"
     },
     "dark": {
         "--apollon-primary": "#51a2a2",
@@ -17,6 +18,7 @@
         "--apollon-background": "#1B2121",
         "--apollon-background-variant": "#3e4c4c",
         "--apollon-gray": "#343a40",
-        "--apollon-gray-variant": "#6c757d"
+        "--apollon-gray-variant": "#6c757d",
+        "--apollon-grid": "#3e4c4c"
     }
 }
