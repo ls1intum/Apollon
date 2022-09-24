@@ -18,6 +18,7 @@ const apollonTheme = {
     warningYellow: 'var(--apollon-warning-yellow, #ffc800)',
     background: 'var(--apollon-background, #ffffff)',
     backgroundVariant: 'var(--apollon-background-variant, #e5e5e5)',
+    grid: 'var(--apollon-grid, rgba(36, 39, 36, 0.1))',
     primaryContrast: 'var(--apollon-primary-contrast, #212529)',
     gray: 'var(--apollon-gray, #e9ecef)',
     grayAccent: 'var(--apollon-gray-variant, #343a40)',
