@@ -71,11 +71,11 @@ export class Multiline extends Component<Props, State> {
 
   getTextSize = (txt: string) => {
     const element = document.createElement('canvas');
-    const context = element.getContext("2d")!;
-    context.font = "17px Arial";
+    const context = element.getContext('2d')!;
+    context.font = '17px Arial';
     const width = context.measureText(txt).width;
     return width;
-  }
+  };
 
   updateWordsByLines(props: Readonly<Props>, needCalculate: boolean) {
     // Only perform calculations if using features that require them (multiline, scaleToFit)
