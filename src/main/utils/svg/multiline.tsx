@@ -69,14 +69,23 @@ export class Multiline extends Component<Props, State> {
 
       Object.assign(text.style, style);
       text.textContent = str;
-      const width = text.getComputedTextLength();
+      let width = text.getComputedTextLength();
 
       container.removeChild(text);
+      if(width === 0) width = this.getTextSize(str);
 
       return width;
     } catch (e) {
       return 0;
     }
+  }
+
+  getTextSize = (txt: string) => {
+    const element = document.createElement('canvas');
+    const context = element.getContext("2d")!;
+    context.font = "17px Arial";
+    const width = context.measureText(txt).width;
+    return width;
   }
 
   updateWordsByLines(props: Readonly<Props>, needCalculate: boolean) {
