@@ -63,18 +63,7 @@ export class Multiline extends Component<Props, State> {
       if (!container) {
         return 0;
       }
-
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-      container.appendChild(text);
-
-      Object.assign(text.style, style);
-      text.textContent = str;
-      let width = text.getComputedTextLength();
-
-      container.removeChild(text);
-      if(width === 0) width = this.getTextSize(str);
-
-      return width;
+      return this.getTextSize(str);
     } catch (e) {
       return 0;
     }
