@@ -22,11 +22,7 @@ exports[`uml-reachability-graph-marking-component render the uml-reachability-gr
           width="200"
           x="100"
           y="50"
-        >
-          <tspan>
-             
-          </tspan>
-        </text>
+        />
       </g>
     </svg>
   </div>
