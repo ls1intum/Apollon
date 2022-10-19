@@ -91,6 +91,7 @@ export class ModelState {
     // set diagram to keep diagram type
     const diagram: UMLDiagram = new UMLDiagram();
     diagram.type = model.type as UMLDiagramType;
+    diagram.ownedRelationships = model.relationships.map((s) => {return s.id;});
 
     return {
       diagram,
