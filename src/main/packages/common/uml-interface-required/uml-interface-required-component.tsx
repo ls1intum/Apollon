@@ -4,7 +4,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { UMLInterfaceRequired } from './uml-interface-required';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
-import { REQUIRED_INTERFACE_MARKER_SIZE, REQUIRED_INTERFACE_MARKER_TYPE } from './uml-interface-requires-constants';
+import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 type OwnProps = {
@@ -53,37 +53,71 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
   let offset: Point;
   switch (element.target.direction) {
     case Direction.Up:
-      offset = new Point(0, -3 * scale);
+      offset = new Point(0, -3);
       break;
     case Direction.Down:
-      offset = new Point(0, 3 * scale);
+      offset = new Point(0, 3);
       break;
     case Direction.Right:
-      offset = new Point(3 * scale, 0);
+      offset = new Point(3, 0);
       break;
     case Direction.Left:
-      offset = new Point(-3 * scale, 0);
+      offset = new Point(-3, 0);
       break;
   }
+
+  const semiCircle =
+    `M ` + 11 / scale + ` -` + 11 / scale + ` a ` + 1 / scale + ` ` + 1 / scale + ` 0 0 0 0 ` + 22 / scale;
+  const threeQuartersCircle =
+    `M ` +
+    23 / scale +
+    ` -` +
+    10 / scale +
+    ` M ` +
+    7 / scale +
+    ` -` +
+    10 / scale +
+    ` C -` +
+    3 / scale +
+    ` -` +
+    6 / scale +
+    ` -` +
+    2 / scale +
+    ` ` +
+    7 / scale +
+    ` ` +
+    7 / scale +
+    ` ` +
+    10 / scale;
+  const quarterCircle =
+    `M ` +
+    2 / scale +
+    ` -` +
+    6 / scale +
+    ` C -` +
+    1 / scale +
+    ` -` +
+    2 / scale +
+    ` 0 ` +
+    3 / scale +
+    ` ` +
+    2 / scale +
+    ` ` +
+    6 / scale;
 
   const calculatePath = () => {
     let path = '';
     switch (currentRequiredInterfaces.length) {
       case 1:
-        path =
-          currentAllInterfaces.length === currentRequiredInterfaces.length
-            ? REQUIRED_INTERFACE_MARKER_TYPE.Semicircle
-            : REQUIRED_INTERFACE_MARKER_TYPE.Threequarterscircle;
+        path = currentAllInterfaces.length === currentRequiredInterfaces.length ? semiCircle : threeQuartersCircle;
         break;
 
       case 2:
-        path = hasOppositeRequiredInterface
-          ? REQUIRED_INTERFACE_MARKER_TYPE.Threequarterscircle
-          : REQUIRED_INTERFACE_MARKER_TYPE.Quartercircle;
+        path = hasOppositeRequiredInterface ? threeQuartersCircle : quarterCircle;
         break;
 
       default:
-        path = REQUIRED_INTERFACE_MARKER_TYPE.Quartercircle;
+        path = quarterCircle;
         break;
     }
 
