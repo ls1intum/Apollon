@@ -67,43 +67,42 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
   }
 
   const semiCircle =
-    `M ` + 11 / scale + ` -` + 11 / scale + ` a ` + 1 / scale + ` ` + 1 / scale + ` 0 0 0 0 ` + 22 / scale;
+    `M ` + 13 / scale + ` -` + 13.5 / scale + ` a ` + 1 / scale + ` ` + 1 / scale + ` 0 0 0 0 ` + 27 / scale;
   const threeQuartersCircle =
     `M ` +
-    23 / scale +
+    8 / scale +
     ` -` +
-    10 / scale +
-    ` M ` +
-    7 / scale +
-    ` -` +
-    10 / scale +
+    12.5 / scale +
     ` C -` +
-    3 / scale +
+    3.5 / scale +
     ` -` +
-    6 / scale +
+    7.5 / scale +
     ` -` +
-    2 / scale +
+    3.3 / scale +
     ` ` +
-    7 / scale +
+    7.9 / scale +
     ` ` +
-    7 / scale +
+    8 / scale +
     ` ` +
-    10 / scale;
+    12.5 / scale;
+
   const quarterCircle =
     `M ` +
     2 / scale +
     ` -` +
-    6 / scale +
+    7.8 / scale +
     ` C -` +
-    1 / scale +
+    1.5 / scale +
     ` -` +
-    2 / scale +
-    ` 0 ` +
     3 / scale +
+    ` -` +
+    1.2 / scale +
+    ` ` +
+    3.4 / scale +
     ` ` +
     2 / scale +
     ` ` +
-    6 / scale;
+    7.8 / scale;
 
   const calculatePath = () => {
     let path = '';
