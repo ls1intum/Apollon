@@ -7,7 +7,7 @@ exports[`render the uml-component-component 1`] = `
       <g>
         <circle
           class="sc-jSMfEi iyZFgk"
-          cx="10px"
+          cx="50%"
           cy="50%"
           fill="white"
           r="10"
