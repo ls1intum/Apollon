@@ -4,7 +4,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { UMLInterfaceRequired } from './uml-interface-required';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
-import { REQUIRED_INTERFACE_MARKER_SIZE } from './uml-interface-requires-constants';
+import { REQUIRED_INTERFACE_MARKER_SIZE, REQUIRED_INTERFACE_MARKER_TYPE } from './uml-interface-requires-constants';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 type OwnProps = {
@@ -66,57 +66,24 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
       break;
   }
 
-  const semiCircle =
-    `M ` + 13 / scale + ` -` + 13.5 / scale + ` a ` + 1 / scale + ` ` + 1 / scale + ` 0 0 0 0 ` + 27 / scale;
-  const threeQuartersCircle =
-    `M ` +
-    8 / scale +
-    ` -` +
-    12.5 / scale +
-    ` C -` +
-    3.5 / scale +
-    ` -` +
-    7.5 / scale +
-    ` -` +
-    3.3 / scale +
-    ` ` +
-    7.9 / scale +
-    ` ` +
-    8 / scale +
-    ` ` +
-    12.5 / scale;
-
-  const quarterCircle =
-    `M ` +
-    2 / scale +
-    ` -` +
-    7.8 / scale +
-    ` C -` +
-    1.5 / scale +
-    ` -` +
-    3 / scale +
-    ` -` +
-    1.2 / scale +
-    ` ` +
-    3.4 / scale +
-    ` ` +
-    2 / scale +
-    ` ` +
-    7.8 / scale;
-
   const calculatePath = () => {
     let path = '';
     switch (currentRequiredInterfaces.length) {
       case 1:
-        path = currentAllInterfaces.length === currentRequiredInterfaces.length ? semiCircle : threeQuartersCircle;
+        path =
+          currentAllInterfaces.length === currentRequiredInterfaces.length
+            ? REQUIRED_INTERFACE_MARKER_TYPE.Semicircle
+            : REQUIRED_INTERFACE_MARKER_TYPE.Threequarterscircle;
         break;
 
       case 2:
-        path = hasOppositeRequiredInterface ? threeQuartersCircle : quarterCircle;
+        path = hasOppositeRequiredInterface
+          ? REQUIRED_INTERFACE_MARKER_TYPE.Threequarterscircle
+          : REQUIRED_INTERFACE_MARKER_TYPE.Quartercircle;
         break;
 
       default:
-        path = quarterCircle;
+        path = REQUIRED_INTERFACE_MARKER_TYPE.Quartercircle;
         break;
     }
 
@@ -149,7 +116,7 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
           .join(',')}
         strokeColor={element.strokeColor}
         fillColor="none"
-        strokeWidth={1 * scale}
+        strokeWidth={scale}
         markerEnd={`url(#marker-${element.id})`}
       />
     </g>

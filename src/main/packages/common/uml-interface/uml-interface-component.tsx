@@ -6,9 +6,9 @@ import { ThemedCircle } from '../../../components/theme/themedComponents';
 export const UMLInterfaceComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
   <g>
     <ThemedCircle
-      cx={`${element.bounds.width / 2}px`}
+      cx="50%"
       cy="50%"
-      r={element.bounds.width / 2}
+      r={10 * scale}
       strokeColor={element.strokeColor}
       strokeWidth={2 * scale}
       fillColor={fillColor || element.fillColor}
