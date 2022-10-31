@@ -114,6 +114,10 @@ export declare class ApollonEditor {
      * @param options options to change the export behavior (add margin, exclude element ...)
      */
     exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG;
+    /**
+     * Returns current scale factor of the application
+     */
+    getScaleFactor(): number;
     private componentDidMount;
     /**
      * Triggered whenever an action is dispatched which potentially lead to a change in the store / state tree
