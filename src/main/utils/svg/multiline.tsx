@@ -32,6 +32,10 @@ export class Multiline extends Component<Props, State> {
   spaceWidth = 0;
   wordsWithComputedWidth = [] as { word: string; width: number }[];
 
+  componentWillMount() {
+    this.updateWordsByLines(this.props, true);
+  }
+
   componentDidMount() {
     this.updateWordsByLines(this.props, true);
   }
@@ -68,11 +72,6 @@ export class Multiline extends Component<Props, State> {
   getStringWidth(str: string, style?: CSSProperties): number {
     try {
       // Calculate length of each word to be used to determine number of words per line
-      const container = findDOMNode(this);
-      if (!container) {
-        return 0;
-      }
-
       const divElem = document.createElement('div');
       divElem.innerHTML = str;
       Object.assign(divElem.style, style);
