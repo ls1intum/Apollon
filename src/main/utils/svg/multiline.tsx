@@ -37,11 +37,20 @@ export class Multiline extends Component<Props, State> {
   }
 
   componentDidUpdate(previousProps: Readonly<Props>) {
-    const needCalculate = previousProps.children !== this.props.children || previousProps.style !== this.props.style;
+    const needCalculate = this.shouldCalculateWidth(previousProps);
     if (needCalculate) {
       this.updateWordsByLines(this.props, needCalculate);
     }
   }
+
+  shouldCalculateWidth = (previousProps: Readonly<Props>) => {
+    return (
+      previousProps.children !== this.props.children ||
+      previousProps.style !== this.props.style ||
+      previousProps.width !== this.props.width ||
+      previousProps.height !== this.props.height
+    );
+  };
 
   calculateWordWidths = (props: Readonly<Props>) => {
     try {
@@ -63,19 +72,28 @@ export class Multiline extends Component<Props, State> {
       if (!container) {
         return 0;
       }
-      return this.getTextSize(str);
+
+      const divElem = document.createElement('div');
+      divElem.innerHTML = str;
+      Object.assign(divElem.style, style);
+      const width = this.calculateStringWidth(divElem, (el: any) => {
+        return el.clientWidth;
+      });
+
+      return width;
     } catch (e) {
       return 0;
     }
   }
 
-  getTextSize = (txt: string) => {
-    const element = document.createElement('canvas');
-    const context = element.getContext('2d')!;
-    context.font = '17px Arial';
-    const width = context.measureText(txt).width;
-    return width;
-  };
+  calculateStringWidth(divElem: any, fn: any) {
+    divElem.style.visibility = 'hidden';
+    divElem.style.position = 'absolute';
+    document.body.appendChild(divElem);
+    const result = fn(divElem);
+    divElem.parentNode.removeChild(divElem);
+    return result;
+  }
 
   updateWordsByLines(props: Readonly<Props>, needCalculate: boolean) {
     // Only perform calculations if using features that require them (multiline, scaleToFit)
