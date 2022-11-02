@@ -1,5 +1,4 @@
 import React, { Component, CSSProperties, SVGProps } from 'react';
-import { findDOMNode } from 'react-dom';
 
 const defaultProps = Object.freeze({
   x: 0 as number,
@@ -76,7 +75,7 @@ export class Multiline extends Component<Props, State> {
       divElem.innerHTML = str;
       Object.assign(divElem.style, style);
       const width = this.calculateStringWidth(divElem, (el: any) => {
-        return el.clientWidth;
+        return el.clientWidth + 2;
       });
 
       return width;
