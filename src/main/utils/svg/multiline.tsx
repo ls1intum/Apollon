@@ -1,5 +1,4 @@
 import React, { Component, CSSProperties, SVGProps } from 'react';
-import { findDOMNode } from 'react-dom';
 
 const defaultProps = Object.freeze({
   x: 0 as number,
@@ -32,16 +31,29 @@ export class Multiline extends Component<Props, State> {
   spaceWidth = 0;
   wordsWithComputedWidth = [] as { word: string; width: number }[];
 
+  componentWillMount() {
+    this.updateWordsByLines(this.props, true);
+  }
+
   componentDidMount() {
     this.updateWordsByLines(this.props, true);
   }
 
   componentDidUpdate(previousProps: Readonly<Props>) {
-    const needCalculate = previousProps.children !== this.props.children || previousProps.style !== this.props.style;
+    const needCalculate = this.shouldCalculateWidth(previousProps);
     if (needCalculate) {
       this.updateWordsByLines(this.props, needCalculate);
     }
   }
+
+  shouldCalculateWidth = (previousProps: Readonly<Props>) => {
+    return (
+      previousProps.children !== this.props.children ||
+      previousProps.style !== this.props.style ||
+      previousProps.width !== this.props.width ||
+      previousProps.height !== this.props.height
+    );
+  };
 
   calculateWordWidths = (props: Readonly<Props>) => {
     try {
@@ -59,24 +71,26 @@ export class Multiline extends Component<Props, State> {
   getStringWidth(str: string, style?: CSSProperties): number {
     try {
       // Calculate length of each word to be used to determine number of words per line
-      const container = findDOMNode(this);
-      if (!container) {
-        return 0;
-      }
-
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-      container.appendChild(text);
-
-      Object.assign(text.style, style);
-      text.textContent = str;
-      const width = text.getComputedTextLength();
-
-      container.removeChild(text);
+      const divElem = document.createElement('div');
+      divElem.innerHTML = str;
+      Object.assign(divElem.style, style);
+      const width = this.calculateStringWidth(divElem, (el: any) => {
+        return el.clientWidth + 2;
+      });
 
       return width;
     } catch (e) {
       return 0;
     }
+  }
+
+  calculateStringWidth(divElem: any, fn: any) {
+    divElem.style.visibility = 'hidden';
+    divElem.style.position = 'absolute';
+    document.body.appendChild(divElem);
+    const result = fn(divElem);
+    divElem.parentNode.removeChild(divElem);
+    return result;
   }
 
   updateWordsByLines(props: Readonly<Props>, needCalculate: boolean) {
