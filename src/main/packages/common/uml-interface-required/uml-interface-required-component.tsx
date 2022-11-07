@@ -53,16 +53,16 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
   let offset: Point;
   switch (element.target.direction) {
     case Direction.Up:
-      offset = new Point(0, -3 * scale);
+      offset = new Point(0, -3);
       break;
     case Direction.Down:
-      offset = new Point(0, 3 * scale);
+      offset = new Point(0, 3);
       break;
     case Direction.Right:
-      offset = new Point(3 * scale, 0);
+      offset = new Point(3, 0);
       break;
     case Direction.Left:
-      offset = new Point(-3 * scale, 0);
+      offset = new Point(-3, 0);
       break;
   }
 
@@ -116,7 +116,7 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
           .join(',')}
         strokeColor={element.strokeColor}
         fillColor="none"
-        strokeWidth={1 * scale}
+        strokeWidth={scale}
         markerEnd={`url(#marker-${element.id})`}
       />
     </g>

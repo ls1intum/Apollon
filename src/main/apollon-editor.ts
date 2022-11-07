@@ -276,6 +276,13 @@ export class ApollonEditor {
     return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }
 
+  /**
+   * Returns current scale factor of the application
+   */
+  getScaleFactor(): number {
+    return this.options.scale || 1;
+  }
+
   private componentDidMount = () => {
     this.container.setAttribute('touch-action', 'none');
 
