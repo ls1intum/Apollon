@@ -16,7 +16,7 @@ exports[`render the uml-petri-net-arc-component 1`] = `
           viewBox="0 0 30 30"
         >
           <path
-            class="sc-dkzDqf jGsJks"
+            class="sc-dkrFOg bzAOvy"
             d="M0,1 L0,29 L30,15 z"
             fill="black"
             stroke="white"
@@ -44,7 +44,7 @@ exports[`render the uml-petri-net-arc-component 1`] = `
           </textpath>
         </text>
         <polyline
-          class="sc-bczRLJ gQkeMM"
+          class="sc-bcXHqe gxNoIV"
           fill="none"
           marker-end="url(#marker-test-id)"
           points="0 0,200 100"
