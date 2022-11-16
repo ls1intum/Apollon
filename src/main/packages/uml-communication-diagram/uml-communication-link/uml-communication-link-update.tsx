@@ -125,7 +125,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
                 fieldToFocus: this.newCommunicationLinkField.current,
               })
             }
-            onKeyDown={(event) => {
+            onKeyDown={(event: any) => {
               // workaround when 'tab' key is pressed:
               // prevent default and execute blur manually without switching to next tab index
               // then set focus to newCommunicationLink field again (componentDidUpdate)

@@ -105,6 +105,6 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
   }
 }
 
-export const Canvas: ConnectedComponent<ComponentType<Props>, OwnProps & { ref: Ref<CanvasComponent> }> = enhance(
+export const Canvas: ConnectedComponent<ComponentType<Props>, OwnProps & { ref: Ref<CanvasComponent> | any }> = enhance(
   CanvasComponent,
 );

@@ -50,7 +50,7 @@ import { ColorLegendComponent } from './common/color-legend/color-legend-compone
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
-    | FunctionComponent<{ element: any; scale: number; fillColor?: string }>
+    | FunctionComponent<{ element: any; scale: number; fillColor?: string; children?: React.ReactNode }>
     | ConnectedComponent<FunctionComponent<any>, { element: any; scale: number }>;
 } = {
   [UMLElementType.Package]: UMLClassPackageComponent,

@@ -45,4 +45,5 @@ interface Props {
   element: UMLDeploymentNode;
   scale: number;
   fillColor?: string;
+  children?: React.ReactNode;
 }

@@ -36,4 +36,5 @@ interface Props {
   element: UMLClassPackage;
   scale: number;
   fillColor?: string;
+  children?: React.ReactNode;
 }
