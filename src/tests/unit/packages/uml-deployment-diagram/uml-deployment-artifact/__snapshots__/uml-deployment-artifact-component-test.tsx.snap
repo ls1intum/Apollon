@@ -6,7 +6,7 @@ exports[`render the uml-deplyoment-artifact-component 1`] = `
     <svg>
       <g>
         <rect
-          class="sc-hKMtZM kFuMUP"
+          class="sc-hLBbgP kcUggK"
           fill="white"
           height="100%"
           stroke="black"
@@ -26,7 +26,7 @@ exports[`render the uml-deplyoment-artifact-component 1`] = `
           transform="translate(174, 7) scale(1)"
         >
           <path
-            class="sc-gsnTZi hgfdOH"
+            class="sc-gswNZR dGEIZo"
             d="M 0 0 L 13 0 L 19.2 7.25 L 19.2 24 L 0 24 L 0 0 Z"
             fill="white"
             stroke="black"
@@ -34,7 +34,7 @@ exports[`render the uml-deplyoment-artifact-component 1`] = `
             stroke-width="1.2"
           />
           <path
-            class="sc-gsnTZi iAPApG"
+            class="sc-gswNZR bYMoMF"
             d="M 13 0 L 13 7.25 L 19.2 7.25"
             fill="none"
             stroke="black"

@@ -25,7 +25,7 @@ module.exports = {
       {
         test: /\.tsx?/,
         enforce: 'pre',
-        use: ['tslint-loader', 'stylelint-custom-processor-loader'],
+        use: ['tslint-loader'],
       },
       {
         test: /\.tsx?/,
