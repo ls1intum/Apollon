@@ -113,6 +113,7 @@
     "stylelint": "14.15.0",
     "stylelint-config-recommended": "9.0.0",
     "stylelint-config-styled-components": "0.1.1",
+    "stylelint-custom-processor-loader": "0.6.0",
     "stylelint-processor-styled-components": "1.10.0",
     "ts-jest": "29.0.3",
     "ts-loader": "9.4.1",
