@@ -16,10 +16,10 @@ export const composeActivityPreview: ComposePreview = (
   scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
-  UMLActivityForkNode.defaultWidth = 20 * scale;
-  UMLActivityForkNode.defaultHeight = 60 * scale;
-  UMLActivityForkNodeHorizontal.defaultWidth = 60 * scale;
-  UMLActivityForkNodeHorizontal.defaultHeight = 20 * scale;
+  UMLActivityForkNode.defaultWidth = Math.round((20 * scale) / 10) * 10;
+  UMLActivityForkNode.defaultHeight = Math.round((60 * scale) / 10) * 10;
+  UMLActivityForkNodeHorizontal.defaultWidth = Math.round((60 * scale) / 10) * 10;
+  UMLActivityForkNodeHorizontal.defaultHeight = Math.round((20 * scale) / 10) * 10;
   // Activity
   const activity = new UMLActivity({ name: translate('packages.ActivityDiagram.Activity') });
   activity.bounds = {
