@@ -16,14 +16,14 @@ exports[`render the flowchart-flowline-component 1`] = `
           viewBox="0 0 30 30"
         >
           <path
-            class="sc-gsnTZi iAPApG"
+            class="sc-gswNZR bYMoMF"
             d="M0,29 L30,15 L0,1"
             fill="none"
             stroke="black"
           />
         </marker>
         <polyline
-          class="sc-bczRLJ gQkeMM"
+          class="sc-bcXHqe gxNoIV"
           fill="none"
           marker-end="url(#marker-d37b8ce3-17d2-4432-8fff-6c38ff2a1334)"
           points="0 0,200 100"
