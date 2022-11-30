@@ -10,7 +10,7 @@ import { IBoundary } from './utils/geometry/boundary';
 import { IPath } from './utils/geometry/path';
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };
-export declare type ApollonOptions = {
+export type ApollonOptions = {
     type?: UMLDiagramType;
     mode?: ApollonMode;
     readonly?: boolean;
@@ -22,11 +22,11 @@ export declare type ApollonOptions = {
     colorEnabled?: boolean;
     scale?: number;
 };
-export declare type Selection = {
+export type Selection = {
     elements: string[];
     relationships: string[];
 };
-export declare type UMLModel = {
+export type UMLModel = {
     version: string;
     type: UMLDiagramType;
     size: {
@@ -38,8 +38,8 @@ export declare type UMLModel = {
     relationships: UMLRelationship[];
     assessments: Assessment[];
 };
-export declare type UMLModelElementType = UMLElementType | UMLRelationshipType | UMLDiagramType;
-export declare type UMLModelElement = {
+export type UMLModelElementType = UMLElementType | UMLRelationshipType | UMLDiagramType;
+export type UMLModelElement = {
     id: string;
     name: string;
     type: UMLModelElementType;
@@ -52,10 +52,10 @@ export declare type UMLModelElement = {
     assessmentNote?: string;
     selectedBy?: UMLElementSelectorType[];
 };
-export declare type UMLElement = UMLModelElement & {
+export type UMLElement = UMLModelElement & {
     type: UMLElementType;
 };
-export declare type UMLRelationship = UMLModelElement & {
+export type UMLRelationship = UMLModelElement & {
     type: UMLRelationshipType;
     path: IPath;
     source: {
@@ -68,21 +68,21 @@ export declare type UMLRelationship = UMLModelElement & {
     };
     isManuallyLayouted?: boolean;
 };
-export declare type UMLClassifier = UMLElement & {
+export type UMLClassifier = UMLElement & {
     attributes: string[];
     methods: string[];
 };
-export declare type UMLDeploymentNode = UMLElement & {
+export type UMLDeploymentNode = UMLElement & {
     stereotype: string;
 };
-export declare type UMLPetriNetPlace = UMLElement & {
+export type UMLPetriNetPlace = UMLElement & {
     amountOfTokens: number;
     capacity: number | string;
 };
-export declare type UMLReachabilityGraphMarking = UMLElement & {
+export type UMLReachabilityGraphMarking = UMLElement & {
     isInitialMarking: boolean;
 };
-export declare type UMLAssociation = UMLRelationship & {
+export type UMLAssociation = UMLRelationship & {
     source: UMLRelationship['source'] & {
         multiplicity: string;
         role: string;
@@ -92,18 +92,18 @@ export declare type UMLAssociation = UMLRelationship & {
         role: string;
     };
 };
-export declare type UMLCommunicationLink = UMLRelationship & {
+export type UMLCommunicationLink = UMLRelationship & {
     messages: {
         id: string;
         name: string;
         direction: 'source' | 'target';
     }[];
 };
-export declare type FeedbackCorrectionStatus = {
+export type FeedbackCorrectionStatus = {
     description?: string;
     status: 'CORRECT' | 'INCORRECT' | 'NOT_VALIDATED';
 };
-export declare type Assessment = {
+export type Assessment = {
     modelElementId: string;
     elementType: UMLElementType | UMLRelationshipType;
     score: number;
@@ -113,7 +113,7 @@ export declare type Assessment = {
     labelColor?: string;
     correctionStatus?: FeedbackCorrectionStatus;
 };
-export declare type ExportOptions = {
+export type ExportOptions = {
     margin?: number | {
         top?: number;
         right?: number;
@@ -125,7 +125,7 @@ export declare type ExportOptions = {
     exclude?: string[];
     scale?: number;
 };
-export declare type SVG = {
+export type SVG = {
     svg: string;
     clip: {
         x: number;

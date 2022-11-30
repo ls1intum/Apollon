@@ -76,7 +76,7 @@ exports[`test uml-communication-link component render 1`] = `
           </tspan>
         </text>
         <polyline
-          class="sc-bczRLJ gQkeMM"
+          class="sc-bcXHqe gxNoIV"
           fill="none"
           points="0 0,200 100"
           stroke="black"
