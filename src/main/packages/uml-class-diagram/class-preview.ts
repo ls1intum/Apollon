@@ -106,17 +106,17 @@ export const composeClassPreview: ComposePreview = (
   const umlEnumerationCase1 = new UMLClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 1',
     owner: umlEnumeration.id,
-    bounds: { x: 0, y: 50 * scale, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 50 * scale, width: 200 * scale, height: Math.round((30 * scale) / 10) * 10 },
   });
   const umlEnumerationCase2 = new UMLClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 2',
     owner: umlEnumeration.id,
-    bounds: { x: 0, y: 80 * scale, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 80 * scale, width: 200 * scale, height: Math.round((30 * scale) / 10) * 10 },
   });
   const umlEnumerationCase3 = new UMLClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 3',
     owner: umlEnumeration.id,
-    bounds: { x: 0, y: 110 * scale, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 110 * scale, width: 200 * scale, height: Math.round((30 * scale) / 10) * 10 },
   });
   umlEnumeration.ownedElements = [umlEnumerationCase1.id, umlEnumerationCase2.id, umlEnumerationCase3.id];
   elements.push(
