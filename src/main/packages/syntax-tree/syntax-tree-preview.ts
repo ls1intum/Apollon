@@ -10,7 +10,7 @@ export const composeSyntaxTreePreview: ComposePreview = (
   scale: number,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  const defaultBounds: IBoundary = { x: 0, y: 0, width: 80 * scale, height: 30 * scale };
+  const defaultBounds: IBoundary = { x: 0, y: 0, width: 100 * scale, height: 50 * scale };
 
   elements.push(new SyntaxTreeNonterminal({ name: '', bounds: defaultBounds }));
 
