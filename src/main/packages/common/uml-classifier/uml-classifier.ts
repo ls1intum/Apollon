@@ -16,6 +16,8 @@ export interface IUMLClassifier extends IUMLContainer {
   underline: boolean;
   stereotype: string | null;
   deviderPosition: number;
+  hasAttributes: boolean;
+  hasMethods: boolean;
 }
 
 export abstract class UMLClassifier extends UMLContainer implements IUMLClassifier {
@@ -31,6 +33,8 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
   underline: boolean = false;
   stereotype: string | null = null;
   deviderPosition: number = 0;
+  hasAttributes: boolean = false;
+  hasMethods: boolean = false;
 
   get headerHeight() {
     return this.stereotype ? UMLClassifier.stereotypeHeaderHeight : UMLClassifier.nonStereotypeHeaderHeight;
@@ -55,6 +59,9 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     const attributes = children.filter((x): x is UMLClassifierAttribute => x instanceof UMLClassifierAttribute);
     const methods = children.filter((x): x is UMLClassifierMethod => x instanceof UMLClassifierMethod);
+
+    this.hasAttributes = attributes.length > 0;
+    this.hasMethods = methods.length > 0;
 
     const radix = 10;
     this.bounds.width = [this, ...attributes, ...methods].reduce(
