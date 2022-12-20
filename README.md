@@ -13,6 +13,7 @@ A UML modeling editor written in React and TypeScript.
 
 ## Main Features
 
+### Easy to use editor
 The user interface of Apollon is simple to use. 
 It works just like any other office and drawing tool that most users are familiar with. 
 
@@ -26,6 +27,18 @@ It works just like any other office and drawing tool that most users are familia
 - Supports exporting the entire diagram or just selected elements of it.
 
 ![Apollon features](/docs/images/features.gif "Apollon features")
+
+### Integrate Apollon with other software
+Apollon can be integrated to any other Javascript application.
+It serves as the modeling editor for the widely used interactive learning platform called [Artemis](https://artemis.ase.in.tum.de/).  
+It also provides the standalone version of the editor.
+You can try the standalone version of Apollon [here](https://apollon.ase.in.tum.de).
+It is a web application that allows users to use Apollon editor directly from their browser.
+
+The GitHub repository of its Standalone version is
+```
+https://github.com/ls1intum/Apollon_standalone
+```
 
 ## Usage
 
