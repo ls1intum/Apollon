@@ -82,7 +82,6 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
       attribute.bounds.width = this.bounds.width - 1;
       y += attribute.bounds.height;
     }
-    y += 1;
     this.deviderPosition = y;
     for (const method of methods) {
       method.bounds.x = 0.5;
@@ -91,7 +90,7 @@ export abstract class UMLClassifier extends UMLContainer implements IUMLClassifi
       y += method.bounds.height;
     }
 
-    this.bounds.height = y + 1;
+    this.bounds.height = y;
     return [this, ...attributes, ...methods];
   }
 }
