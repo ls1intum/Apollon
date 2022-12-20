@@ -17,7 +17,7 @@ export const composeClassPreview: ComposePreview = (
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
   UMLClassifier.stereotypeHeaderHeight = 50 * scale;
-  UMLClassifier.nonStereotypeHeaderHeight = 40 * scale;
+  UMLClassifier.nonStereotypeHeaderHeight = 37.5 * scale;
 
   // UML Package
   const umlPackage = new UMLClassPackage({ name: translate('packages.ClassDiagram.Package') });
@@ -38,13 +38,13 @@ export const composeClassPreview: ComposePreview = (
   const umlClassAttribute = new UMLClassAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlClass.id,
-    bounds: { x: 0, y: 0, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 0, width: 200 * scale, height: 37.5 * scale },
   });
 
   const umlClassMethod = new UMLClassMethod({
     name: translate('sidebar.classMethod'),
     owner: umlClass.id,
-    bounds: { x: 0, y: 0, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 0, width: 200 * scale, height: 37.5 * scale },
   });
 
   umlClass.ownedElements = [umlClassAttribute.id, umlClassMethod.id];
@@ -60,12 +60,12 @@ export const composeClassPreview: ComposePreview = (
   const umlAbstractAttribute = new UMLClassAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlAbstract.id,
-    bounds: { x: 0, y: 40 * scale, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 40 * scale, width: 200 * scale, height: 37.5 * scale },
   });
   const umlAbstractMethod = new UMLClassMethod({
     name: translate('sidebar.classMethod'),
     owner: umlAbstract.id,
-    bounds: { x: 0, y: 70 * scale, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 70 * scale, width: 200 * scale, height: 37.5 * scale },
   });
   umlAbstract.ownedElements = [umlAbstractAttribute.id, umlAbstractMethod.id];
   elements.push(...(umlAbstract.render(layer, [umlAbstractAttribute, umlAbstractMethod]) as UMLElement[]));
@@ -83,12 +83,12 @@ export const composeClassPreview: ComposePreview = (
   const umlInterfaceAttribute = new UMLClassAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlInterface.id,
-    bounds: { x: 0, y: 50 * scale, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 50 * scale, width: 200 * scale, height: 37.5 * scale },
   });
   const umlInterfaceMethod = new UMLClassMethod({
     name: translate('sidebar.classMethod'),
     owner: umlInterface.id,
-    bounds: { x: 0, y: 80 * scale, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 80 * scale, width: 200 * scale, height: 37.5 * scale },
   });
   umlInterface.ownedElements = [umlInterfaceAttribute.id, umlInterfaceMethod.id];
   elements.push(...(umlInterface.render(layer, [umlInterfaceAttribute, umlInterfaceMethod]) as UMLElement[]));
@@ -106,17 +106,17 @@ export const composeClassPreview: ComposePreview = (
   const umlEnumerationCase1 = new UMLClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 1',
     owner: umlEnumeration.id,
-    bounds: { x: 0, y: 50 * scale, width: 200 * scale, height: Math.round((30 * scale) / 10) * 10 },
+    bounds: { x: 0, y: 50 * scale, width: 200 * scale, height: 37.5 * scale },
   });
   const umlEnumerationCase2 = new UMLClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 2',
     owner: umlEnumeration.id,
-    bounds: { x: 0, y: 80 * scale, width: 200 * scale, height: Math.round((30 * scale) / 10) * 10 },
+    bounds: { x: 0, y: 80 * scale, width: 200 * scale, height: 37.5 * scale },
   });
   const umlEnumerationCase3 = new UMLClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 3',
     owner: umlEnumeration.id,
-    bounds: { x: 0, y: 110 * scale, width: 200 * scale, height: Math.round((30 * scale) / 10) * 10 },
+    bounds: { x: 0, y: 110 * scale, width: 200 * scale, height: 37.5 * scale },
   });
   umlEnumeration.ownedElements = [umlEnumerationCase1.id, umlEnumerationCase2.id, umlEnumerationCase3.id];
   elements.push(
