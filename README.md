@@ -11,6 +11,22 @@
 
 A UML modeling editor written in React and TypeScript.
 
+## Main Features
+
+The user interface of Apollon is simple to use. 
+It works just like any other office and drawing tool that most users are familiar with. 
+
+- Select the diagram type you want to draw from the `Diagram Type` menu. This selection determines the availability of elements that the user can use while drawing their diagram, making it easier for users who are newly introduced to modeling.
+- Adding the element is as easy as dragging it from the elements menu and dropping it to the canvas. So is drawing the connection between them, simply drag and connect two or multiple elements.
+- The layout of the connection is drawn automatically by the editor. If you want to manually layout it, use the existing waypoints features.
+- Edit the text of any elements by double-clicking on them. An easy-to-use menu will allow you to do so.
+- Use keyboard shortcuts to copy, paste, delete and move the elements throughout the canvas.
+- Supports dark/light themes for the editor.
+- Supports two languages: `German` and `English`.
+- Supports exporting the entire diagram or just selected elements of it.
+
+![Apollon features](/docs/images/features.gif "Apollon features")
+
 ## Usage
 
 Install the `@ls1intum/apollon` npm package using either [yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/):
