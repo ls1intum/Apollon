@@ -10,8 +10,8 @@ export const composePetriNetPreview: ComposePreview = (
   scale: number,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  UMLPetriNetTransition.defaultHeight = 60 * scale;
-  UMLPetriNetTransition.defaultWidth = 20 * scale;
+  UMLPetriNetTransition.defaultHeight = 62.5 * scale;
+  UMLPetriNetTransition.defaultWidth = 25 * scale;
 
   const petriNetTransition = new UMLPetriNetTransition({ name: translate('packages.PetriNet.PetriNetTransition') });
 
@@ -27,7 +27,7 @@ export const composePetriNetPreview: ComposePreview = (
   // Petri Net Place
   const petriNetPlace = new UMLPetriNetPlace({
     name: translate('packages.PetriNet.PetriNetPlace'),
-    bounds: { x: 0, y: 0, width: 60 * scale, height: 60 * scale },
+    bounds: { x: 0, y: 0, width: 62.5 * scale, height: 62.5 * scale },
   });
 
   elements.push(petriNetPlace);
