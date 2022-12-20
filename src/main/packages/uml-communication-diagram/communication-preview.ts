@@ -21,7 +21,7 @@ export const composeCommunicationPreview: ComposePreview = (
   const umlObjectAttribute = new UMLObjectAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlObject.id,
-    bounds: { x: 0, y: 0, width: 200 * scale, height: 30 * scale },
+    bounds: { x: 0, y: 0, width: 200 * scale, height: 25 * scale },
   });
   umlObject.ownedElements = [umlObjectAttribute.id];
   elements.push(...(umlObject.render(layer, [umlObjectAttribute]) as UMLElement[]));
