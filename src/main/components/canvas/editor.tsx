@@ -20,7 +20,7 @@ const StyledEditor = styled.div`
 
   overflow: auto;
   -ms-overflow-style: -ms-autohiding-scrollbar;
-  border: ${borderWidth} solid ${(props) => props.theme.color.gray};
+  border: ${borderWidth}px solid ${(props) => props.theme.color.gray};
 
   background-position: calc(50% + ${(grid * subdivisions - borderWidth) / 2}px)
     calc(50% + ${(grid * subdivisions - borderWidth) / 2}px);
