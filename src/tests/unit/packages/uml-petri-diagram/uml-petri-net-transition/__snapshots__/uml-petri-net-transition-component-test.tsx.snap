@@ -21,7 +21,7 @@ exports[`render the uml-petri-net-transition-component 1`] = `
           fill-opacity="1"
           height="60"
           stroke="black"
-          stroke-width="2"
+          stroke-width="1"
           width="20"
         />
       </g>

@@ -31,7 +31,7 @@ exports[`test update pane render with element 1`] = `
   overflow: auto;
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: 1px solid var(--apollon-gray,#e9ecef);
-  background-position: calc(50% + 25px) calc(50% + 25px);
+  background-position: calc(50% + 24.5px) calc(50% + 24.5px);
   background-size: 50px 50px,50px 50px, 10px 10px,10px 10px;
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
@@ -605,7 +605,7 @@ exports[`test update pane render with relationship 1`] = `
   overflow: auto;
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: 1px solid var(--apollon-gray,#e9ecef);
-  background-position: calc(50% + 25px) calc(50% + 25px);
+  background-position: calc(50% + 24.5px) calc(50% + 24.5px);
   background-size: 50px 50px,50px 50px, 10px 10px,10px 10px;
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;

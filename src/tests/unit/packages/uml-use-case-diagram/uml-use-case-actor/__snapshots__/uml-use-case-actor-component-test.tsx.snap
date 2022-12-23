@@ -16,7 +16,7 @@ exports[`render the uml-use-case-actor-component 1`] = `
         >
           <circle
             class="sc-jSUZER cNsuBs"
-            cx="45"
+            cx="40"
             cy="25"
             fill="white"
             r="15"
@@ -25,32 +25,32 @@ exports[`render the uml-use-case-actor-component 1`] = `
           <line
             class="sc-ftTHYK kTdZIp"
             stroke="black"
-            x1="45"
-            x2="45"
+            x1="40"
+            x2="40"
             y1="40"
             y2="80"
           />
           <line
             class="sc-ftTHYK kTdZIp"
             stroke="black"
-            x1="15"
-            x2="75"
-            y1="55"
-            y2="55"
+            x1="10"
+            x2="70"
+            y1="50"
+            y2="50"
           />
           <line
             class="sc-ftTHYK kTdZIp"
             stroke="black"
-            x1="45"
-            x2="15"
+            x1="40"
+            x2="10"
             y1="80"
             y2="110"
           />
           <line
             class="sc-ftTHYK kTdZIp"
             stroke="black"
-            x1="45"
-            x2="75"
+            x1="40"
+            x2="70"
             y1="80"
             y2="110"
           />
@@ -60,7 +60,7 @@ exports[`render the uml-use-case-actor-component 1`] = `
           font-weight="bold"
           pointer-events="none"
           text-anchor="middle"
-          x="45"
+          x="40"
           y="130"
         >
           TestUseCaseComponent
