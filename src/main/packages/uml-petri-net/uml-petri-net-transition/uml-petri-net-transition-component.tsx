@@ -13,7 +13,7 @@ export const UMLPetriNetTransitionComponent: FunctionComponent<Props> = ({ eleme
       height={element.bounds.height}
       strokeColor={element.strokeColor}
       fillColor={fillColor || element.fillColor}
-      strokeWidth={1.2 * scale}
+      strokeWidth={1}
       fillOpacity={1}
     />
   </g>
