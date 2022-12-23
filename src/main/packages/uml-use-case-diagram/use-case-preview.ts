@@ -1,5 +1,6 @@
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
+import { computeDimension } from '../../utils/geometry/boundary';
 import { ComposePreview } from '../compose-preview';
 import { UMLUseCaseActor } from './uml-use-case-actor/uml-use-case-actor';
 import { UMLUseCaseSystem } from './uml-use-case-system/uml-use-case-system';
@@ -24,7 +25,12 @@ export const composeUseCasePreview: ComposePreview = (
   // UML Actor
   const umlActor = new UMLUseCaseActor({
     name: translate('packages.UseCaseDiagram.UseCaseActor'),
-    bounds: { x: 0, y: 0, width: 90 * scale, height: 140 * scale },
+    bounds: {
+      x: 0,
+      y: 0,
+      width: computeDimension(scale, 80),
+      height: computeDimension(scale, 140),
+    },
   });
   elements.push(umlActor);
 
