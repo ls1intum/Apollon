@@ -1,5 +1,6 @@
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
+import { computeDimension } from '../../utils/geometry/boundary';
 import { ComposePreview } from '../compose-preview';
 import { UMLObjectAttribute } from '../uml-object-diagram/uml-object-attribute/uml-object-attribute';
 import { UMLObjectName } from '../uml-object-diagram/uml-object-name/uml-object-name';
@@ -21,7 +22,12 @@ export const composeCommunicationPreview: ComposePreview = (
   const umlObjectAttribute = new UMLObjectAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlObject.id,
-    bounds: { x: 0, y: 0, width: 200 * scale, height: 25 * scale },
+    bounds: {
+      x: 0,
+      y: 0,
+      width: computeDimension(scale, 200),
+      height: computeDimension(scale, 25),
+    },
   });
   umlObject.ownedElements = [umlObjectAttribute.id];
   elements.push(...(umlObject.render(layer, [umlObjectAttribute]) as UMLElement[]));
