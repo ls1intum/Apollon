@@ -2,14 +2,18 @@ import React, { FunctionComponent } from 'react';
 import { FlowchartComponent } from '../flowchart-element/flowchart-component';
 import { FlowchartInputOutput } from './flowchart-input-output';
 import { ThemedPolyline } from '../../../components/theme/themedComponents';
+import { computeDimension } from '../../../utils/geometry/boundary';
 
 export const FlowchartInputOutputComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => {
   return (
     <FlowchartComponent element={element} scale={scale}>
       <ThemedPolyline
-        points={`${(13 / 12) * element.bounds.width} 0, ${(11 / 12) * element.bounds.width} ${element.bounds.height}, ${
-          -(1 / 12) * element.bounds.width
-        } ${element.bounds.height}, ${(1 / 12) * element.bounds.width} 0, ${(13 / 12) * element.bounds.width} 0`}
+        points={`${computeDimension(1.1, element.bounds.width)} 0, ${computeDimension(0.9, element.bounds.width)} ${
+          element.bounds.height
+        }, ${computeDimension(-0.1, element.bounds.width)} ${element.bounds.height}, ${computeDimension(
+          0.1,
+          element.bounds.width,
+        )} 0, ${computeDimension(1.1, element.bounds.width)} 0`}
         strokeColor={element.strokeColor}
         fillColor={fillColor || element.fillColor}
       />
