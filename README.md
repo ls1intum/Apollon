@@ -64,11 +64,7 @@ You can try the standalone version of Apollon completey free and without the nec
 It is a web application that allows users to use Apollon editor directly from their browser with additional features, including but not limited to, sharing and exporting the diagram.
 It can be accessed via https://apollon.ase.in.tum.de.
 
-The GitHub repository of its Standalone version is
-
-```
-https://github.com/ls1intum/Apollon_standalone
-```
+The GitHub repository of its Standalone version is `https://github.com/ls1intum/Apollon_standalone`
 
 ## Usage
 
