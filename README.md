@@ -28,12 +28,30 @@ It works just like any other office and drawing tool that most users are familia
 
 ![Apollon features](/docs/images/features.gif "Apollon features")
 
+### Wide range of UML diagrams
+Apollon allows you to create a wide range of UML diagrams.
+Currently, it supports creating 11 different UML diagrams.
+The list of UML diagrams includes:
+- `Class Diagram`
+- `Object Diagram`
+- `Activity Diagram`
+- `Use Case Diagram`
+- `Communication Diagram`
+- `Component Diagram`
+- `Deployment Diagram`
+- `Petri Net Diagram`
+- `Reachability Graph`
+- `Syntax Tree`
+- `Flowchart`
+
 ### Integrate Apollon with other software
 Apollon can be integrated to any other Javascript application.
 It serves as the modeling editor for the widely used interactive learning platform called [Artemis](https://artemis.ase.in.tum.de/).  
 It also provides the standalone version of the editor.
-You can try the standalone version of Apollon [here](https://apollon.ase.in.tum.de).
-It is a web application that allows users to use Apollon editor directly from their browser.
+You can try the standalone version of Apollon completey free and without the necessity of creating any account. 
+It is a web application that allows users to use Apollon editor directly from their browser with additional features, including but not limited to, sharing and exporting the diagram.
+It can be accessed via https://apollon.ase.in.tum.de.
+
 
 The GitHub repository of its Standalone version is
 ```
