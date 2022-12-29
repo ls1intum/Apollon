@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Apollon'
-copyright = '2020, Stephan Krusche'
+copyright = '2022, Stephan Krusche'
 author = 'Stephan Krusche'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '2.0.6'
+release = '2.12.9'
 
 
 # -- General configuration ---------------------------------------------------
