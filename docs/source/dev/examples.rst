@@ -29,6 +29,7 @@ and resizing can only be done in regard to the components width. For more inform
 what happens on user interaction is added to the element, see :ref:`user-interaction-with-elements`.
 
 
+.. _visual-representation-implementation-of-element:
 
 Example of Visual Representation Implementation of Element
 -------------------------------------------------------------
