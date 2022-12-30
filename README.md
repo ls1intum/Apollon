@@ -19,7 +19,7 @@ It works just like any other office and drawing tool that most users are familia
 
 -   Select the diagram type you want to draw from the `Diagram Type` menu. This selection determines the availability of elements that the user can use while drawing their diagram, making it easier for users who are newly introduced to modeling.
 -   Adding the element is as easy as dragging it from the elements menu and dropping it to the canvas. So is drawing the connection between them, simply drag and connect two or multiple elements.
--   Edit the text of any elements by double-clicking on them. An easy-to-use menu will allow you to do so.
+-   Edit the text of any element by double-clicking on it. An easy-to-use menu will allow you to do so.
 -   Supports dark/light themes for the editor.
 -   Supports two languages: `German` and `English`.
 -   Supports exporting the entire diagram or just selected elements of it.
@@ -31,7 +31,7 @@ Apollon allows user to draw their diagram more flexibly.
 You can use keyboard shortcuts to copy, paste, delete and move the elements throughout the canvas.
 The layout of the connection is drawn automatically by the editor. 
 However, if you want to manually layout the relationship path, use the existing waypoints feature to do so.
-All you have to do is hover on the relationship, and simply drag the displayed waypoint as required. 
+All you have to do is to hover over the relationship, and simply drag the displayed waypoint as required. 
 Elements of diagram can also be resized from all of its four corner.
 
 ### Infinite Canvas
@@ -64,7 +64,7 @@ You can try the standalone version of Apollon completey free and without the nec
 It is a web application that allows users to use Apollon editor directly from their browser with additional features, including but not limited to, sharing and exporting the diagram.
 It can be accessed via https://apollon.ase.in.tum.de.
 
-The GitHub repository of its Standalone version is `https://github.com/ls1intum/Apollon_standalone`
+The GitHub repository of its Standalone version is https://github.com/ls1intum/Apollon_standalone
 
 ## Usage
 
