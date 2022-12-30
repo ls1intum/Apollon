@@ -2,7 +2,7 @@
 Adding another diagram type
 ###########################
 
-Apollon currently has following diagram types.
+Apollon currently has the following diagram types.
 
 Diagram Types
 --------------
@@ -10,7 +10,7 @@ Diagram Types
 .. literalinclude:: api/diagram-type.d.ts
   :language: typescript
 
-To add new diagram type, add the new diagram type inside *src/main/packages/diagram-type.ts*.
+To add a new diagram type, add the new diagram type inside *src/main/packages/diagram-type.ts*.
 
 .. code-block:: typescript
 
@@ -64,8 +64,8 @@ and its update logic in *new-diagram-type-element-1-update.tsx*
 Once the above schema for new diagram is created, we will now import the created diagram elements type from *index.ts* to *uml-element-type.ts* (*src/main/packages/uml-element-type.ts*).
 Newly created elements are then imported to *uml-elements.ts*
 
-And finally, since Apollon supports two languages, English and German, the corresponding translation string of elements are defined in *src/main/i18n* folder.
-The german string is defined in *de.json* and english in *en.json*.
+And finally, since Apollon supports two languages, English and German, the corresponding translation strings of elements are defined in *src/main/i18n* folder.
+The German string is defined in *de.json* and English in *en.json*.
 
 Translation of newly added diagram type
 ----------------------------------------
