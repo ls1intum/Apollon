@@ -54,10 +54,10 @@ The tree structure of the project with the new diagram type will have schema as 
 The folder *new-diagram-type* contains all the elements of the new diagram type (*new-diagram-type-element-1*, *new-diagram-type-element-2*) along with *new-diagram-type-preview.tsx* class and *index.ts*.
 In *index.ts* we define an enum for all diagram elements.
 
-*new-diagram-type-preview.tsx* is a class which creates a preview of all available newly created diagram. 
+*new-diagram-type-preview.tsx* is a class which creates a preview of all available newly created diagrams. 
 This preview is used in the side-panel, which the user can use to drag new elements onto the canvas. 
 
-The visual representationof *new-diagram-type-element* is written in *new-diagram-type-element-1-component.tsx* (see :ref:`visual-representation-implementation-of-element`) 
+The visual representation of *new-diagram-type-element* is written in *new-diagram-type-element-1-component.tsx* (see :ref:`visual-representation-implementation-of-element`) 
 and its update logic in *new-diagram-type-element-1-update.tsx*
 *new-diagram-type-element-1.tsx* is a class extending *UMLElement*.
 
