@@ -57,7 +57,7 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
         cy="50%"
         r={radius}
         strokeColor={element.strokeColor}
-        strokeWidth={2}
+        strokeWidth={1}
         fillColor={fillColor || element.fillColor}
         fillOpacity={1}
       />

@@ -47,3 +47,11 @@ export function computeBoundingBoxForElements(elements: { bounds: IBoundary }[])
   const height = Math.max(...boundaries.map((bounds) => bounds.y + bounds.height)) - y;
   return { x, y, width, height };
 }
+
+export function computeDimension(scale: number, value: number, isCircle?: boolean): number {
+  if (isCircle && scale === 1) {
+    return value * scale;
+  } else {
+    return Math.round((value * scale) / 10) * 10;
+  }
+}

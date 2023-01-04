@@ -13,7 +13,7 @@ exports[`uml-petri-net-arc-component render the uml-petri-net-arc-component 1`] 
           fill-opacity="1"
           r="30"
           stroke="black"
-          stroke-width="2"
+          stroke-width="1"
         />
         <text
           dominant-baseline="middle"

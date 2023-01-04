@@ -8,6 +8,7 @@ import { AsyncDispatch } from '../../utils/actions/actions';
 
 const grid = 10;
 const subdivisions = 5;
+const borderWidth = 1;
 
 const StyledEditor = styled.div`
   display: block;
@@ -19,9 +20,10 @@ const StyledEditor = styled.div`
 
   overflow: auto;
   -ms-overflow-style: -ms-autohiding-scrollbar;
-  border: 1px solid ${(props) => props.theme.color.gray};
+  border: ${borderWidth}px solid ${(props) => props.theme.color.gray};
 
-  background-position: calc(50% + ${(grid * subdivisions) / 2}px) calc(50% + ${(grid * subdivisions) / 2}px);
+  background-position: calc(50% + ${(grid * subdivisions - borderWidth) / 2}px)
+    calc(50% + ${(grid * subdivisions - borderWidth) / 2}px);
   background-size: ${grid * subdivisions}px ${grid * subdivisions}px, ${grid * subdivisions}px ${grid * subdivisions}px,
     ${grid}px ${grid}px, ${grid}px ${grid}px;
   background-image: linear-gradient(to right, ${(props) => props.theme.color.grid} 1px, transparent 1px),

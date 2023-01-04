@@ -1,5 +1,5 @@
 import { ILayer } from '../../services/layouter/layer';
-import { IBoundary } from '../../utils/geometry/boundary';
+import { computeDimension, IBoundary } from '../../utils/geometry/boundary';
 import { ComposePreview, PreviewElement } from '../compose-preview';
 import { FlowchartDecision } from './flowchart-decision/flowchart-decision';
 import { FlowchartFunctionCall } from './flowchart-function-call/flowchart-function-call';
@@ -13,7 +13,7 @@ export const composeFlowchartPreview: ComposePreview = (
   scale: number,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150 * scale, height: 75 * scale };
+  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150 * scale, height: computeDimension(scale, 70) };
 
   elements.push(
     new FlowchartTerminal({
