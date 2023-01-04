@@ -22,7 +22,7 @@
     "postpublish": "pinst --enable",
     "start": "webpack serve --config ./webpack/webpack.dev.js",
     "build": "rm -rf dist && webpack --config ./webpack/webpack.prod.js",
-    "copyAPIToDoc": "cp lib/es6/apollon-editor.d.ts lib/es6/typings.d.ts docs/source/user/api",
+    "copyAPIToDoc": "cp lib/es6/apollon-editor.d.ts lib/es6/typings.d.ts docs/source/user/api && cp lib/es6/packages/diagram-type.d.ts docs/source/dev/api",
     "lint": "yarn lint:ts && yarn lint:css",
     "lint:ts": "tslint --force -p tsconfig.json -c tslint.json -t stylish",
     "lint:css": "stylelint 'src/**/*.ts'",

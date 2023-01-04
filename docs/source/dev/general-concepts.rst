@@ -12,7 +12,18 @@ save diagrams. A Diagram consists of Elements, Containers and Relationships.
 
    Apollon Data Model
 
-TODO explain model
+The above diagram illustrates the Data Model of an Apollon.
+It consists of three interfaces: *IUMLElement, IUMLRelationship, and IUMLContainer*.
+
+*IUMLElement* is an interface with attributes of id, name, type owner, and highlight.
+*IUMLRelationship* inherits *IUMLElement* and has additional attributes of a path, source, and target.
+Similarly, *IUMLRelationship* also inherits *IUMLElement* and has the additional attribute of ownedElements and method reorderChildren.
+
+*UMLElement* implements *IUMLElement* and has additional methods of *serialize, deserialize, ports and render*.
+It can be either *UMLRelationship* or *UMLContainer*.
+Additionally, *UMLRelationship* implements *IUMLRelationship*, and *UMLContainer* implements *IUMLContainer*.
+Both of them have an additional method render that is responsible for rendering the elements to the canvas.
+The render method of *UMLRelationship* takes *canvas, source, and target* as its parameter while the one of UMLContainer takes *canvas and children* as its parameter.
 
 **UMLElement**: The Element is part of a UML diagram. It has a unique identifier,
 name, position, size and color.
