@@ -8,6 +8,7 @@ const defaultLocale = Locale.en;
 
 type Props = {
   locale: Locale;
+  children?: React.ReactNode;
 };
 
 const dictionary: { [key in Locale]: object } = {

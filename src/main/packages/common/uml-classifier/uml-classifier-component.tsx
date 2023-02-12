@@ -62,4 +62,5 @@ interface Props {
   element: UMLClassifier;
   scale: number;
   fillColor?: string;
+  children?: React.ReactNode;
 }

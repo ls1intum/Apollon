@@ -22,4 +22,5 @@ interface Props {
   element: UMLUseCaseSystem;
   scale: number;
   fillColor?: string;
+  children?: React.ReactNode;
 }

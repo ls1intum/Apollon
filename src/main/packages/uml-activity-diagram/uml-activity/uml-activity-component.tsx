@@ -24,4 +24,5 @@ interface Props {
   element: UMLActivity;
   scale: number;
   fillColor?: string;
+  children?: React.ReactNode;
 }

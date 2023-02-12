@@ -9,7 +9,7 @@ import { MockStoreEnhanced } from 'redux-mock-store';
 import { DispatchExts, getMockedStore } from './test-utils';
 
 type AllProvidersProps = {
-  children: ReactChildren;
+  children: React.ReactNode;
 };
 
 type CustomOptions = {

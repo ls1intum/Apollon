@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { ErrorInfo } from 'react';
 
-type Props = { onError: (error: Error) => void };
+type Props = { onError: (error: Error) => void; children?: React.ReactNode };
 
 type State = {
   hasError: boolean;
   error?: Error;
 };
 
-export class ErrorBoundary extends React.Component<Props, State> {
+export class ErrorBoundary extends React.Component<Props & React.PropsWithChildren, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
