@@ -63,10 +63,10 @@ describe('test class association popup', () => {
 
     const { getAllByRole } = wrappedRender(<UMLClassAssociationUpdate element={classAssociation} />, { store: store });
     const buttons = getAllByRole('button');
-    buttons[2].click();
+    fireEvent.click(buttons[2]);
 
     const updatedButtons = getAllByRole('button');
-    updatedButtons[3].click();
+    fireEvent.click(updatedButtons[3]);
 
     expect(store.getState().elements[classAssociation.id].type).toEqual(ClassRelationshipType.ClassAggregation);
   });
