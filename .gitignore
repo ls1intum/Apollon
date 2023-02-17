@@ -2,7 +2,9 @@ node_modules/
 lib/
 dist/
 /.idea
+/.vscode
 /apollon.iml
 /coverage/
 /docs/build/
 cypress
+test-report.html

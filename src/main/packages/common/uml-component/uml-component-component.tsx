@@ -40,4 +40,5 @@ interface Props {
   element: UMLComponent;
   scale: number;
   fillColor?: string;
+  children?: React.ReactNode;
 }

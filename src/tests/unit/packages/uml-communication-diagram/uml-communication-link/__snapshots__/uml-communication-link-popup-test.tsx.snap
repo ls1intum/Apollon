@@ -41,9 +41,7 @@ exports[`test communication link popup render 1`] = `
           Messages
            (
           <small>
-            
              ⟶ 
-            
           </small>
           )
         </h1>

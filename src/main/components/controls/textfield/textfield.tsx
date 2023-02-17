@@ -1,5 +1,4 @@
 import React, { Component, FormEvent, InputHTMLAttributes, KeyboardEvent } from 'react';
-import { Omit } from 'react-redux';
 import { Size } from '../../theme/styles';
 import { StyledTextfield } from './textfield-styled';
 

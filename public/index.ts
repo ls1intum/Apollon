@@ -1,6 +1,6 @@
 import * as Apollon from '../src/main';
 import * as themings from './themings.json';
-import('./styles.css'); 
+import('./styles.css');
 
 const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
@@ -48,7 +48,7 @@ export const draw = (mode?: 'include' | 'exclude') => {
 
   const filter: string[] = [...editor.model.interactive.elements, ...editor.model.interactive.relationships];
 
-  const exportParam = mode ? { [mode]: filter, scale: editor.getScaleFactor() } : {scale: editor.getScaleFactor()};
+  const exportParam = mode ? { [mode]: filter, scale: editor.getScaleFactor() } : { scale: editor.getScaleFactor() };
   const { svg }: Apollon.SVG = editor.exportAsSVG(exportParam);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);

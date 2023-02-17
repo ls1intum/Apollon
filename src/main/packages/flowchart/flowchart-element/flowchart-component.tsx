@@ -23,4 +23,5 @@ export const FlowchartComponent: FunctionComponent<Props> = ({ element, scale = 
 export interface Props {
   element: FlowchartElement;
   scale: number;
+  children?: React.ReactNode;
 }

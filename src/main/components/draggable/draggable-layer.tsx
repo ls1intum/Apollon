@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass, createRef, RefObject } from 'react';
+import React, { Component, ComponentClass, createRef, PropsWithChildren, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { Point } from '../../utils/geometry/point';
 import { CanvasContext } from '../canvas/canvas-context';
@@ -35,7 +35,7 @@ const enhance = compose<ComponentClass<OwnProps>>(withCanvas, withRoot);
  * On drag end (invoked on pointerup in droppable) it takes the current position of the ghost element and
  * creates a {@link DropEvent} with the last position of the ghost
  */
-class DraggableLayerComponent extends Component<Props, State> {
+class DraggableLayerComponent extends Component<PropsWithChildren & Props, State> {
   state = initialState;
 
   ghost: RefObject<HTMLDivElement> = createRef();
