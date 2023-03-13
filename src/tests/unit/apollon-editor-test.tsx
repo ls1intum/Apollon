@@ -5,7 +5,6 @@ import * as Apollon from '../../main/apollon-editor';
 import * as ApollonTypes from '../../main/typings';
 import testClassDiagram from './test-resources/class-diagram.json';
 import { Selection } from '../../../docs/source/user/api/typings';
-import fn = jest.fn;
 import { Assessment, SVG, UMLDiagramType, UMLModel } from '../../main';
 import { getRealStore } from './test-utils/test-utils';
 import { AssessmentRepository } from '../../main/services/assessment/assessment-repository';
@@ -13,6 +12,7 @@ import { IAssessment } from '../../main/services/assessment/assessment';
 import { ModelState } from '../../main/components/store/model-state';
 import { UMLElementCommonRepository } from '../../main/services/uml-element/uml-element-common-repository';
 import { UMLClass } from '../../main/packages/uml-class-diagram/uml-class/uml-class';
+import fn = jest.fn;
 
 let editor = {} as Apollon.ApollonEditor;
 
@@ -60,7 +60,7 @@ describe('test apollon editor ', () => {
     expect(testClassDiagram).toEqual(editor.model);
   });
 
-  it('exportModelAsSvg', () => {
+  it('exportModelAsSvg', async () => {
     const { container } = testLibraryRender(<div />);
     act(() => {
       editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
@@ -68,10 +68,7 @@ describe('test apollon editor ', () => {
     act(() => {
       editor.model = testClassDiagram as any;
     });
-    let svg = {} as ApollonTypes.SVG;
-    act(() => {
-      svg = editor.exportAsSVG();
-    });
+    const svg: ApollonTypes.SVG = await editor.exportAsSVG();
     expect(ignoreSVGClassNames(svg.svg)).toEqual(testClassDiagramAsSVG);
   });
 
