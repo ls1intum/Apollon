@@ -31,7 +31,7 @@ export class Multiline extends Component<Props, State> {
   spaceWidth = 0;
   wordsWithComputedWidth = [] as { word: string; width: number }[];
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.updateWordsByLines(this.props, true);
   }
 
