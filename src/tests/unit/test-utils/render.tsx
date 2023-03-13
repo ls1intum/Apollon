@@ -1,4 +1,4 @@
-import React, { ComponentType, ReactChildren, ReactElement } from 'react';
+import React, { ComponentType, ReactElement } from 'react';
 import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { Store } from 'redux';
