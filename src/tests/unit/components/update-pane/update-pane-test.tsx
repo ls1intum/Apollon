@@ -19,7 +19,7 @@ import { UMLClassMethod } from '../../../../main/packages/uml-class-diagram/uml-
 import { UMLClassBidirectional } from '../../../../main/packages/uml-class-diagram/uml-class-bidirectional/uml-class-bidirectional';
 import { Direction } from '../../../../main/services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../../../main/services/uml-element/uml-element-repository';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import 'jest-styled-components';
 
 const initialState = Object.freeze({
@@ -35,15 +35,19 @@ class UpdatePaneTestComponent extends React.Component<any, State> {
   store: RefObject<ModelStore> = createRef();
 
   setCanvas = (ref: CanvasComponent) => {
-    if (ref && ref.layer.current) {
-      this.setState({ canvas: { ...ref, layer: ref.layer.current } });
-    }
+    act(() => {
+      if (ref && ref.layer.current) {
+        this.setState({ canvas: { ...ref, layer: ref.layer.current } });
+      }
+    });
   };
 
   setLayout = (ref: HTMLDivElement) => {
-    if (ref) {
-      this.setState({ root: ref });
-    }
+    act(() => {
+      if (ref) {
+        this.setState({ root: ref });
+      }
+    });
   };
 
   render() {
@@ -121,10 +125,17 @@ describe('test update pane', () => {
     const { container } = wrappedRender(<UpdatePaneTestComponent />, { store });
 
     const updateAction = UMLElementRepository.updateStart(umlClass.id);
-    store.dispatch(updateAction);
+    act(() => {
+      store.dispatch(updateAction);
+    });
 
-    jest.runAllTimers();
-    fireEvent.pointerDown(container.querySelector('svg')!);
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    act(() => {
+      fireEvent.pointerDown(container.querySelector('svg')!);
+    });
 
     expect(store.getState().updating).toHaveLength(0);
   });
@@ -135,9 +146,12 @@ describe('test update pane', () => {
     const { baseElement } = wrappedRender(<UpdatePaneTestComponent />, { store });
 
     const updateAction = UMLElementRepository.updateStart(umlClass.id);
-    store.dispatch(updateAction);
-
-    jest.runAllTimers();
+    act(() => {
+      store.dispatch(updateAction);
+    });
+    act(() => {
+      jest.runAllTimers();
+    });
     expect(baseElement).toMatchSnapshot();
   });
 
@@ -147,9 +161,12 @@ describe('test update pane', () => {
     const { baseElement } = wrappedRender(<UpdatePaneTestComponent />, { store });
 
     const updateAction = UMLElementRepository.updateStart(association.id);
-    store.dispatch(updateAction);
-
-    jest.runAllTimers();
+    act(() => {
+      store.dispatch(updateAction);
+    });
+    act(() => {
+      jest.runAllTimers();
+    });
     expect(baseElement).toMatchSnapshot();
   });
 });

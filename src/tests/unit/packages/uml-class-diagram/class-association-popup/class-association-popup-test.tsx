@@ -7,7 +7,7 @@ import { Direction } from '../../../../../main/services/uml-element/uml-element-
 import { UMLElement } from '../../../../../main/services/uml-element/uml-element';
 import { wrappedRender } from '../../../test-utils/render';
 import { ClassRelationshipType } from '../../../../../main/packages/uml-class-diagram';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 
 describe('test class association popup', () => {
   let elements: UMLElement[] = [];
@@ -40,8 +40,10 @@ describe('test class association popup', () => {
 
     const { getAllByRole } = wrappedRender(<UMLClassAssociationUpdate element={classAssociation} />, { store: store });
     const buttons = getAllByRole('button');
-    buttons[0].click();
 
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
     const element = store.getState().elements[classAssociation.id] as UMLClassBidirectional;
 
     expect(element.target).toEqual(classAssociation.source);
@@ -53,7 +55,10 @@ describe('test class association popup', () => {
 
     const { getAllByRole } = wrappedRender(<UMLClassAssociationUpdate element={classAssociation} />, { store: store });
     const buttons = getAllByRole('button');
-    buttons[1].click();
+
+    act(() => {
+      fireEvent.click(buttons[1]);
+    });
 
     expect(store.getState().elements).not.toContain(classAssociation.id);
   });
@@ -63,10 +68,15 @@ describe('test class association popup', () => {
 
     const { getAllByRole } = wrappedRender(<UMLClassAssociationUpdate element={classAssociation} />, { store: store });
     const buttons = getAllByRole('button');
-    fireEvent.click(buttons[2]);
+    act(() => {
+      fireEvent.click(buttons[2]);
+    });
 
     const updatedButtons = getAllByRole('button');
-    fireEvent.click(updatedButtons[3]);
+
+    act(() => {
+      fireEvent.click(updatedButtons[3]);
+    });
 
     expect(store.getState().elements[classAssociation.id].type).toEqual(ClassRelationshipType.ClassAggregation);
   });
@@ -80,12 +90,16 @@ describe('test class association popup', () => {
     const textboxes = getAllByRole('textbox');
     const sourceMultiplicityValue = '1';
     const sourceRole = 'role';
-    fireEvent.change(textboxes[0], { target: { value: sourceMultiplicityValue } });
+    act(() => {
+      fireEvent.change(textboxes[0], { target: { value: sourceMultiplicityValue } });
+    });
 
     let updatedElement = store.getState().elements[classAssociation.id] as UMLClassBidirectional;
     rerender(<UMLClassAssociationUpdate element={updatedElement} />);
 
-    fireEvent.change(textboxes[1], { target: { value: sourceRole } });
+    act(() => {
+      fireEvent.change(textboxes[1], { target: { value: sourceRole } });
+    });
 
     updatedElement = store.getState().elements[classAssociation.id] as UMLClassBidirectional;
 

@@ -3,7 +3,7 @@ import React from 'react';
 import { UMLElement } from '../../../../../main/services/uml-element/uml-element';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { wrappedRender } from '../../../test-utils/render';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { FlowchartProcess } from '../../../../../main/packages/flowchart/flowchart-process/flowchart-process';
 import { FlowchartProcessUpdate } from '../../../../../main/packages/flowchart/flowchart-process/flowchart-process-update';
 
@@ -34,7 +34,9 @@ describe('test flowchart input output update', () => {
     });
     const nameField = getByRole('textbox');
     const updatedValue = 'Start';
-    fireEvent.change(nameField, { target: { value: updatedValue } });
+    act(() => {
+      fireEvent.change(nameField, { target: { value: updatedValue } });
+    });
 
     const updatedElement = store.getState().elements[process.id] as FlowchartProcess;
 
@@ -47,7 +49,9 @@ describe('test flowchart input output update', () => {
     const { getAllByRole } = wrappedRender(<FlowchartProcessUpdate element={process} />, { store: store });
     const buttons = getAllByRole('button');
     // delete button
-    buttons[0].click();
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     expect(store.getState().elements).not.toContain(process.id);
   });

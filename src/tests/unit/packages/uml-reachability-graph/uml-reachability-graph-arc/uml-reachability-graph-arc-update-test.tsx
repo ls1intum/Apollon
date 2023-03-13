@@ -4,7 +4,7 @@ import { UMLClassBidirectional } from '../../../../../main/packages/uml-class-di
 import { Direction } from '../../../../../main/services/uml-element/uml-element-port';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { wrappedRender } from '../../../test-utils/render';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { UMLReachabilityGraphArc } from '../../../../../main/packages/uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc';
 import { UMLReachabilityGraphArcUpdate } from '../../../../../main/packages/uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc-update';
 import { UMLReachabilityGraphMarking } from '../../../../../main/packages/uml-reachability-graph/uml-reachability-graph-marking/uml-reachability-graph-marking';
@@ -17,13 +17,15 @@ describe('test reachability graph arc update', () => {
 
   beforeEach(() => {
     // initialize  objects
-    source = new UMLReachabilityGraphMarking({ id: 'source-test-id' });
-    target = new UMLReachabilityGraphMarking({ id: 'target-test-id' });
-    reachabilityGraphArc = new UMLReachabilityGraphArc({
-      id: 'test-id',
-      name: 'UMLClassBidirectional',
-      source: { element: source.id, direction: Direction.Up },
-      target: { element: target.id, direction: Direction.Up },
+    act(() => {
+      source = new UMLReachabilityGraphMarking({ id: 'source-test-id' });
+      target = new UMLReachabilityGraphMarking({ id: 'target-test-id' });
+      reachabilityGraphArc = new UMLReachabilityGraphArc({
+        id: 'test-id',
+        name: 'UMLClassBidirectional',
+        source: { element: source.id, direction: Direction.Up },
+        target: { element: target.id, direction: Direction.Up },
+      });
     });
     elements.push(source, target, reachabilityGraphArc);
   });
@@ -40,7 +42,9 @@ describe('test reachability graph arc update', () => {
 
     const { getAllByRole } = wrappedRender(<UMLReachabilityGraphArcUpdate element={reachabilityGraphArc} />, { store });
     const buttons = getAllByRole('button');
-    buttons[0].click();
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     const element = store.getState().elements[reachabilityGraphArc.id] as UMLClassBidirectional;
 
@@ -53,7 +57,10 @@ describe('test reachability graph arc update', () => {
 
     const { getAllByRole } = wrappedRender(<UMLReachabilityGraphArcUpdate element={reachabilityGraphArc} />, { store });
     const buttons = getAllByRole('button');
-    buttons[1].click();
+
+    act(() => {
+      fireEvent.click(buttons[1]);
+    });
 
     expect(store.getState().elements).not.toContain(reachabilityGraphArc.id);
   });
@@ -64,7 +71,9 @@ describe('test reachability graph arc update', () => {
     const { getByRole } = wrappedRender(<UMLReachabilityGraphArcUpdate element={reachabilityGraphArc} />, { store });
     const nameField = getByRole('textbox');
     const updatedValue = '0';
-    fireEvent.change(nameField, { target: { value: updatedValue } });
+    act(() => {
+      fireEvent.change(nameField, { target: { value: updatedValue } });
+    });
 
     const updatedElement = store.getState().elements[reachabilityGraphArc.id] as UMLReachabilityGraphArc;
 
