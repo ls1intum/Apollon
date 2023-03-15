@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { UMLElement } from '../../../../../main/services/uml-element/uml-element';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { wrappedRender } from '../../../test-utils/render';
@@ -33,7 +33,10 @@ describe('test flowchart input output update', () => {
     });
     const nameField = getByRole('textbox');
     const updatedValue = 'Start';
-    fireEvent.change(nameField, { target: { value: updatedValue } });
+
+    act(() => {
+      fireEvent.change(nameField, { target: { value: updatedValue } });
+    });
 
     const updatedElement = store.getState().elements[terminal.id] as FlowchartTerminal;
 
@@ -46,7 +49,9 @@ describe('test flowchart input output update', () => {
     const { getAllByRole } = wrappedRender(<FlowchartTerminalUpdate element={terminal} />, { store: store });
     const buttons = getAllByRole('button');
     // delete button
-    buttons[0].click();
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     expect(store.getState().elements).not.toContain(terminal.id);
   });

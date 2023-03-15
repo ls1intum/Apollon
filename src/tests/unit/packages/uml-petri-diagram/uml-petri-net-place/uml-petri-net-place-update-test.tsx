@@ -2,7 +2,7 @@ import React from 'react';
 import { UMLElement } from '../../../../../main/services/uml-element/uml-element';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { wrappedRender } from '../../../test-utils/render';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { UMLPetriNetPlace } from '../../../../../main/packages/uml-petri-net/uml-petri-net-place/uml-petri-net-place';
 import { UMLPetriNetPlaceUpdate } from '../../../../../main/packages/uml-petri-net/uml-petri-net-place/uml-petri-net-place-update';
 
@@ -76,7 +76,9 @@ describe('test petri net arc update', () => {
     const { getAllByRole } = wrappedRender(<UMLPetriNetPlaceUpdate element={petriNetPlace} />, { store: store });
     const buttons = getAllByRole('button');
     // delete button
-    buttons[0].click();
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     expect(store.getState().elements).not.toContain(petriNetPlace.id);
   });

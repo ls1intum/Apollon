@@ -1,6 +1,6 @@
 import 'pepjs';
 import { createElement, createRef, RefObject } from 'react';
-import { render, unmountComponentAtNode } from 'react-dom';
+import { createRoot, Root } from 'react-dom/client';
 import { DeepPartial, Store } from 'redux';
 import { ModelState, PartialModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
@@ -16,6 +16,7 @@ import * as Apollon from './typings';
 import { Dispatch } from './utils/actions/actions';
 import { UMLDiagramType, UMLModel } from './typings';
 import { debounce } from './utils/debounce';
+import { delay } from './utils/delay';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
 import { replaceColorVariables } from './utils/replace-color-variables';
 
@@ -90,24 +91,26 @@ export class ApollonEditor {
    * @param options options to change the export behavior (add margin, exclude element ...)
    * @param theme the theme which should be applied on the svg
    */
-  static exportModelAsSvg(
+  static async exportModelAsSvg(
     model: Apollon.UMLModel,
     options?: Apollon.ExportOptions,
     theme?: DeepPartial<Styles>,
-  ): Apollon.SVG {
-    const div = document.createElement('div');
+  ): Promise<Apollon.SVG> {
+    const container = document.createElement('div');
+    const root = createRoot(container);
     const element = createElement(Svg, { model, options, styles: theme });
-    const svg = render(element, div);
-    const { innerHTML } = div;
-    unmountComponentAtNode(div);
+    const svg = new Svg({ model, options, styles: theme });
+    root.render(element);
+    await delay(0);
 
     return {
-      svg: replaceColorVariables(innerHTML),
+      svg: replaceColorVariables(container.querySelector('svg')!.outerHTML),
       clip: svg.state.bounds,
     };
   }
 
   selection: Apollon.Selection = { elements: [], relationships: [] };
+  private root?: Root;
   private currentModelState?: ModelState;
   private assessments: Apollon.Assessment[] = [];
   private application: RefObject<Application> = createRef();
@@ -155,7 +158,8 @@ export class ApollonEditor {
       locale: options.locale,
     });
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
-    render(errorBoundary, container, this.componentDidMount);
+    this.root = createRoot(container);
+    this.root.render(errorBoundary);
     try {
       this.currentModelState = this.store?.getState();
     } catch (error) {
@@ -167,7 +171,7 @@ export class ApollonEditor {
    * Destroys the Apollon Editor and unmounts it from its container
    */
   destroy() {
-    unmountComponentAtNode(this.container);
+    this.root?.unmount();
   }
 
   /**
@@ -272,7 +276,7 @@ export class ApollonEditor {
    * exports current model as svg
    * @param options options to change the export behavior (add margin, exclude element ...)
    */
-  exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG {
+  exportAsSVG(options?: Apollon.ExportOptions): Promise<Apollon.SVG> {
     return ApollonEditor.exportModelAsSvg(this.model, options, this.options.theme);
   }
 
@@ -382,7 +386,8 @@ export class ApollonEditor {
       locale: this.options.locale,
     });
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
-    render(errorBoundary, this.container, this.componentDidMount);
+    this.root = createRoot(this.container);
+    this.root.render(errorBoundary);
   }
 
   private onErrorOccurred(error: Error) {

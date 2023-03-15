@@ -3,7 +3,7 @@ import React from 'react';
 import { UMLElement } from '../../../../../main/services/uml-element/uml-element';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { wrappedRender } from '../../../test-utils/render';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { FlowchartFunctionCall } from '../../../../../main/packages/flowchart/flowchart-function-call/flowchart-function-call';
 import { FlowchartFunctionCallUpdate } from '../../../../../main/packages/flowchart/flowchart-function-call/flowchart-function-call-update';
 
@@ -34,7 +34,10 @@ describe('test flowchart function call update', () => {
     });
     const nameField = getByRole('textbox');
     const updatedValue = 'Start';
-    fireEvent.change(nameField, { target: { value: updatedValue } });
+
+    act(() => {
+      fireEvent.change(nameField, { target: { value: updatedValue } });
+    });
 
     const updatedElement = store.getState().elements[functionCall.id] as FlowchartFunctionCall;
 
@@ -47,7 +50,9 @@ describe('test flowchart function call update', () => {
     const { getAllByRole } = wrappedRender(<FlowchartFunctionCallUpdate element={functionCall} />, { store: store });
     const buttons = getAllByRole('button');
     // delete button
-    buttons[0].click();
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     expect(store.getState().elements).not.toContain(functionCall.id);
   });

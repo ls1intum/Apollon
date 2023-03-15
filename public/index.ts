@@ -43,13 +43,14 @@ export const setTheming = (theming: string) => {
   }
 };
 
-export const draw = (mode?: 'include' | 'exclude') => {
+export const draw = async (mode?: 'include' | 'exclude') => {
   if (!editor) return;
 
   const filter: string[] = [...editor.model.interactive.elements, ...editor.model.interactive.relationships];
 
   const exportParam = mode ? { [mode]: filter, scale: editor.getScaleFactor() } : { scale: editor.getScaleFactor() };
-  const { svg }: Apollon.SVG = editor.exportAsSVG(exportParam);
+
+  const { svg }: Apollon.SVG = await editor.exportAsSVG(exportParam);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);

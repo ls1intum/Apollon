@@ -4,7 +4,7 @@ import { UMLClassBidirectional } from '../../../../../main/packages/uml-class-di
 import { Direction } from '../../../../../main/services/uml-element/uml-element-port';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { wrappedRender } from '../../../test-utils/render';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { UMLPetriNetPlace } from '../../../../../main/packages/uml-petri-net/uml-petri-net-place/uml-petri-net-place';
 import { UMLPetriNetArc } from '../../../../../main/packages/uml-petri-net/uml-petri-net-arc/uml-petri-net-arc';
 import { UMLPetriNetArcUpdate } from '../../../../../main/packages/uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-update';
@@ -40,7 +40,9 @@ describe('test petri net arc update', () => {
 
     const { getAllByRole } = wrappedRender(<UMLPetriNetArcUpdate element={petriNetArc} />, { store: store });
     const buttons = getAllByRole('button');
-    buttons[0].click();
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     const element = store.getState().elements[petriNetArc.id] as UMLClassBidirectional;
 
@@ -53,7 +55,9 @@ describe('test petri net arc update', () => {
 
     const { getAllByRole } = wrappedRender(<UMLPetriNetArcUpdate element={petriNetArc} />, { store: store });
     const buttons = getAllByRole('button');
-    buttons[1].click();
+    act(() => {
+      fireEvent.click(buttons[1]);
+    });
 
     expect(store.getState().elements).not.toContain(petriNetArc.id);
   });
@@ -66,7 +70,9 @@ describe('test petri net arc update', () => {
     });
     const nameField = getByRole('textbox');
     const updatedValue = '1';
-    fireEvent.change(nameField, { target: { value: updatedValue } });
+    act(() => {
+      fireEvent.change(nameField, { target: { value: updatedValue } });
+    });
 
     const updatedElement = store.getState().elements[petriNetArc.id] as UMLPetriNetArc;
 

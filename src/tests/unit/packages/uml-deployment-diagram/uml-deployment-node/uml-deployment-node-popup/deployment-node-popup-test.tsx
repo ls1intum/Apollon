@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { UMLElement } from '../../../../../../main';
 import { UMLDeploymentNode } from '../../../../../../main/packages/uml-deployment-diagram/uml-deployment-node/uml-deployment-node';
 import { getRealStore } from '../../../../test-utils/test-utils';
@@ -28,7 +28,9 @@ describe('test deployment node popup', () => {
 
     const { getAllByRole } = wrappedRender(<UMLDeploymentNodeUpdate element={deploymentNode} />, { store: store });
     const buttons = getAllByRole('button');
-    buttons[0].click();
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     expect(store.getState().elements).not.toContain(deploymentNode.id);
   });
@@ -39,7 +41,9 @@ describe('test deployment node popup', () => {
     const { getAllByRole } = wrappedRender(<UMLDeploymentNodeUpdate element={deploymentNode} />, { store: store });
     const textboxes = getAllByRole('textbox');
     const newName = 'UpdatedName';
-    fireEvent.change(textboxes[0], { target: { value: newName } });
+    act(() => {
+      fireEvent.change(textboxes[0], { target: { value: newName } });
+    });
 
     expect(store.getState().elements[deploymentNode.id].name).toEqual(newName);
   });
@@ -52,8 +56,9 @@ describe('test deployment node popup', () => {
     });
     const textboxes = getAllByRole('textbox');
     const updatedStereotype = 'UpdatedStereotype';
-    fireEvent.change(textboxes[1], { target: { value: updatedStereotype } });
-
+    act(() => {
+      fireEvent.change(textboxes[1], { target: { value: updatedStereotype } });
+    });
     const updatedElement = store.getState().elements[deploymentNode.id] as UMLDeploymentNode;
 
     expect(updatedElement.stereotype).toEqual(updatedStereotype);

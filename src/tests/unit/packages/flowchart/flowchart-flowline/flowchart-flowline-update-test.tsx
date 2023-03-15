@@ -4,7 +4,7 @@ import { UMLClassBidirectional } from '../../../../../main/packages/uml-class-di
 import { Direction } from '../../../../../main/services/uml-element/uml-element-port';
 import { getRealStore } from '../../../test-utils/test-utils';
 import { wrappedRender } from '../../../test-utils/render';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { FlowchartTerminal } from '../../../../../main/packages/flowchart/flowchart-terminal/flowchart-terminal';
 import { FlowchartFlowline } from '../../../../../main/packages/flowchart/flowchart-flowline/flowchart-flowline';
 import { FlowchartFlowlineUpdate } from '../../../../../main/packages/flowchart/flowchart-flowline/flowchart-flowline-update';
@@ -40,7 +40,10 @@ describe('test flowchart flowline update', () => {
 
     const { getAllByRole } = wrappedRender(<FlowchartFlowlineUpdate element={flowline} />, { store: store });
     const buttons = getAllByRole('button');
-    buttons[0].click();
+
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     const element = store.getState().elements[flowline.id] as UMLClassBidirectional;
 
@@ -53,7 +56,9 @@ describe('test flowchart flowline update', () => {
 
     const { getAllByRole } = wrappedRender(<FlowchartFlowlineUpdate element={flowline} />, { store: store });
     const buttons = getAllByRole('button');
-    buttons[1].click();
+    act(() => {
+      fireEvent.click(buttons[1]);
+    });
 
     expect(store.getState().elements).not.toContain(flowline.id);
   });
@@ -66,7 +71,9 @@ describe('test flowchart flowline update', () => {
     });
     const nameField = getByRole('textbox');
     const updatedValue = '1';
-    fireEvent.change(nameField, { target: { value: updatedValue } });
+    act(() => {
+      fireEvent.change(nameField, { target: { value: updatedValue } });
+    });
 
     const updatedElement = store.getState().elements[flowline.id] as FlowchartFlowline;
 

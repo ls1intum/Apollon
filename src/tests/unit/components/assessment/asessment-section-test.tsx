@@ -3,7 +3,7 @@ import { IUMLElement } from '../../../../main/services/uml-element/uml-element';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { UMLClassAttribute } from '../../../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, act } from '@testing-library/react';
 import { AssessmentSection } from '../../../../main/components/assessment/assessment-section';
 import { Theme } from '../../../../main/components/theme/theme';
 import { I18nProvider } from '../../../../main/components/i18n/i18n-provider';
@@ -113,8 +113,10 @@ describe('test AssessmentSection', () => {
     if (!sut) {
       throw Error('SUT could not be found');
     }
-    fireEvent.change(sut, {
-      target: { value: feedback },
+    act(() => {
+      fireEvent.change(sut, {
+        target: { value: feedback },
+      });
     });
 
     expect(Object.keys(store.current!.state.store.getState().assessments)).toHaveLength(1);
@@ -144,8 +146,10 @@ describe('test AssessmentSection', () => {
 
     // Trigger the creation of the new assessment.
     const feedback = getByPlaceholderText('You can enter feedback here...');
-    fireEvent.change(feedback, {
-      target: { value: 'text' },
+    act(() => {
+      fireEvent.change(feedback, {
+        target: { value: 'text' },
+      });
     });
 
     // There should exist one assessment.
@@ -153,7 +157,9 @@ describe('test AssessmentSection', () => {
     expect(Object.keys(state.assessments)).toHaveLength(1);
 
     const deleteButton = getByRole('button');
-    deleteButton.click();
+    act(() => {
+      fireEvent.click(deleteButton);
+    });
 
     // Upon deletion the assessment has to be removed.
     state = store.current!.state.store.getState();

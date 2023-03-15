@@ -3,7 +3,7 @@ import { getRealStore } from '../../../test-utils/test-utils';
 import { Direction } from '../../../../../main/services/uml-element/uml-element-port';
 import { UMLElement } from '../../../../../main/services/uml-element/uml-element';
 import { wrappedRender } from '../../../test-utils/render';
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import { UMLObjectName } from '../../../../../main/packages/uml-object-diagram/uml-object-name/uml-object-name';
 import { UMLCommunicationLink } from '../../../../../main/packages/uml-communication-diagram/uml-communication-link/uml-communication-link';
 import { UMLCommunicationLinkUpdate } from '../../../../../main/packages/uml-communication-diagram/uml-communication-link/uml-communication-link-update';
@@ -66,7 +66,9 @@ describe('test communication link popup', () => {
     const buttons = getAllByRole('button');
 
     // clicked flip button of message[0]
-    buttons[1].click();
+    act(() => {
+      fireEvent.click(buttons[1]);
+    });
     const element = store.getState().elements[communicationLink.id] as UMLCommunicationLink;
 
     // message at position 0 is with direction source -> after flip should be target
@@ -81,7 +83,9 @@ describe('test communication link popup', () => {
       store,
     });
     const buttons = getAllByRole('button');
-    buttons[0].click();
+    act(() => {
+      fireEvent.click(buttons[0]);
+    });
 
     expect(store.getState().elements).not.toContain(communicationLink.id);
     messages.forEach((message) => {
@@ -99,8 +103,11 @@ describe('test communication link popup', () => {
     const textboxes = getAllByRole('textbox');
     const textbox = textboxes[messages.length];
     const value = 'newElement';
-    fireEvent.change(textbox, { target: { value } });
-    textbox.blur();
+
+    act(() => {
+      fireEvent.change(textbox, { target: { value } });
+      textbox.blur();
+    });
 
     const updatedElement = store.getState().elements[communicationLink.id] as UMLCommunicationLink;
 
@@ -119,7 +126,9 @@ describe('test communication link popup', () => {
     const messageIndex = 0;
     const textbox = textboxes[messageIndex];
     const value = 'updatedMessage';
-    fireEvent.change(textbox, { target: { value } });
+    act(() => {
+      fireEvent.change(textbox, { target: { value } });
+    });
 
     const updatedElement = store.getState().elements[communicationLink.id] as UMLCommunicationLink;
     expect(updatedElement.messages[messageIndex].name).toEqual(value);
@@ -138,7 +147,9 @@ describe('test communication link popup', () => {
     // second button is flip first message button
     // third button is delete first message button
     const deleteMessageButton = buttons[2];
-    deleteMessageButton.click();
+    act(() => {
+      fireEvent.click(deleteMessageButton);
+    });
 
     const updatedElement = store.getState().elements[communicationLink.id] as UMLCommunicationLink;
 
