@@ -35,19 +35,15 @@ class UpdatePaneTestComponent extends React.Component<any, State> {
   store: RefObject<ModelStore> = createRef();
 
   setCanvas = (ref: CanvasComponent) => {
-    act(() => {
-      if (ref && ref.layer.current) {
-        this.setState({ canvas: { ...ref, layer: ref.layer.current } });
-      }
-    });
+    if (ref && ref.layer.current) {
+      this.setState({ canvas: { ...ref, layer: ref.layer.current } });
+    }
   };
 
   setLayout = (ref: HTMLDivElement) => {
-    act(() => {
-      if (ref) {
-        this.setState({ root: ref });
-      }
-    });
+    if (ref) {
+      this.setState({ root: ref });
+    }
   };
 
   render() {

@@ -101,7 +101,7 @@ export class ApollonEditor {
     const element = createElement(Svg, { model, options, styles: theme });
     const svg = new Svg({ model, options, styles: theme });
     root.render(element);
-    await delay(500);
+    await delay(0);
 
     return {
       svg: replaceColorVariables(container.querySelector('svg')!.outerHTML),
