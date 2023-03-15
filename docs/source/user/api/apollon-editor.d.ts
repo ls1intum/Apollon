@@ -32,8 +32,9 @@ export declare class ApollonEditor {
      * @param options options to change the export behavior (add margin, exclude element ...)
      * @param theme the theme which should be applied on the svg
      */
-    static exportModelAsSvg(model: Apollon.UMLModel, options?: Apollon.ExportOptions, theme?: DeepPartial<Styles>): Apollon.SVG;
+    static exportModelAsSvg(model: Apollon.UMLModel, options?: Apollon.ExportOptions, theme?: DeepPartial<Styles>): Promise<Apollon.SVG>;
     selection: Apollon.Selection;
+    private root?;
     private currentModelState?;
     private assessments;
     private application;
@@ -113,7 +114,7 @@ export declare class ApollonEditor {
      * exports current model as svg
      * @param options options to change the export behavior (add margin, exclude element ...)
      */
-    exportAsSVG(options?: Apollon.ExportOptions): Apollon.SVG;
+    exportAsSVG(options?: Apollon.ExportOptions): Promise<Apollon.SVG>;
     /**
      * Returns current scale factor of the application
      */
