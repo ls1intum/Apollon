@@ -165,6 +165,7 @@ export class ApollonEditor {
     } catch (error) {
       this.currentModelState = undefined;
     }
+    this.componentDidMount();
   }
 
   /**
@@ -388,6 +389,7 @@ export class ApollonEditor {
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     this.root = createRoot(this.container);
     this.root.render(errorBoundary);
+    this.componentDidMount();
   }
 
   private onErrorOccurred(error: Error) {
