@@ -16,6 +16,7 @@ import { ILayer } from '../services/layouter/layer';
 import { Locale } from '../services/editor/editor-types';
 import { Layout } from './application-styles';
 import { RootContext, RootProvider } from '../components/root/root-context';
+import { MouseEventListener } from '../components/canvas/mouse-eventlistener';
 
 type Props = {
   state?: PartialModelState;
@@ -68,6 +69,7 @@ export class Application extends React.Component<Props, State> {
                           <Sidebar />
                           <UpdatePane />
                           <KeyboardEventListener />
+                          <MouseEventListener />
                         </>
                       )}
                     </DraggableLayer>
