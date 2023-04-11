@@ -13,6 +13,7 @@ import { debounce } from '../../../utils/debounce';
 type StateProps = {
   movable: boolean;
   moving: boolean;
+  selectionBoxActive: boolean;
 };
 
 type DispatchProps = {
@@ -33,6 +34,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   (state, props) => ({
     movable: state.selected.ids.includes(props.id) && !state.resizing.includes(props.id) && !state.connecting.length,
     moving: state.moving.includes(props.id),
+    selectionBoxActive: state.selected.selectionBoxActive,
   }),
   {
     start: UMLElementRepository.startMoving,
@@ -71,6 +73,15 @@ export const movable = (
         child.addEventListener('touchstart', this.onPointerDown);
       } else {
         child.addEventListener('pointerdown', this.onPointerDown);
+      }
+    }
+
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
+      const node = findDOMNode(this) as HTMLElement;
+      if (this.props.selectionBoxActive) {
+        node.style.cursor = 'default';
+      } else {
+        node.style.cursor = 'move';
       }
     }
 
