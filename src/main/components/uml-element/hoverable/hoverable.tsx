@@ -20,8 +20,12 @@ type Props = OwnProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state, props) => {
     return {
-      // cannot emmit hover events when any object is moving and the object is not a UMLContainer
-      cannotBeHovered: state.moving.length > 0 && !UMLContainer.isUMLContainer(state.elements[props.id]),
+      // cannot emmit hover events when the selection box is active
+      // or (any object is moving and the object is not a UMLContainer)
+      cannotBeHovered:
+          state.selected.selectionBoxActive
+          || (state.moving.length > 0
+              && !UMLContainer.isUMLContainer(state.elements[props.id])),
     };
   },
   {

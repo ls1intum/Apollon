@@ -1,5 +1,5 @@
 import { AsyncAction } from '../../../utils/actions/actions';
-import { DeselectAction, SelectableActionTypes, SelectAction } from './selectable-types';
+import { DeselectAction, SelectableActionTypes, SelectAction, StartSelectionBox, EndSelectionBox } from './selectable-types';
 
 export const Selectable = {
   select:
@@ -7,6 +7,11 @@ export const Selectable = {
     (dispatch, getState) => {
       const ids = id ? (Array.isArray(id) ? id : [id]) : Object.keys(getState().elements);
       if (!ids.length) {
+        dispatch<EndSelectionBox>({
+          type: SelectableActionTypes.END_SELECTION_BOX,
+          payload: {},
+          undoable: false,
+        });
         return;
       }
 
@@ -20,7 +25,7 @@ export const Selectable = {
   deselect:
     (id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
-      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected.ids;
       if (!ids.length) {
         return;
       }
@@ -31,4 +36,14 @@ export const Selectable = {
         undoable: false,
       });
     },
+
+  startSelectionBox: (): AsyncAction => (dispatch, getState) => {
+    const ids = getState().selected.ids;
+
+    return dispatch<StartSelectionBox>({
+      type: SelectableActionTypes.START_SELECTION_BOX,
+      payload: { ids },
+      undoable: false,
+    });
+  }
 };

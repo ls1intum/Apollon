@@ -67,7 +67,7 @@ export const UMLElementCommonRepository = {
     (id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
       const { elements, selected } = getState();
-      const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
+      const ids = id ? (Array.isArray(id) ? id : [id]) : selected.ids;
 
       const roots = filterRoots(ids, elements);
       if (!roots.length) {

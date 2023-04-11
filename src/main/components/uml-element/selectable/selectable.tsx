@@ -21,7 +21,7 @@ type Props = UMLElementComponentProps & StateProps & DispatchProps;
 const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
   (state, props) => ({
     hovered: state.hovered[0] === props.id,
-    selected: state.selected.includes(props.id),
+    selected: state.selected.ids.includes(props.id),
   }),
   {
     select: UMLElementRepository.select,

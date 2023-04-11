@@ -306,8 +306,8 @@ export class ApollonEditor {
     if (!this.store) return;
     const { elements, selected, assessments } = this.store.getState();
     const selection: Apollon.Selection = {
-      elements: selected.filter((id) => elements[id].type in UMLElementType),
-      relationships: selected.filter((id) => elements[id].type in UMLRelationshipType),
+      elements: selected.ids.filter((id) => elements[id].type in UMLElementType),
+      relationships: selected.ids.filter((id) => elements[id].type in UMLRelationshipType),
     };
 
     // check if previous selection differs from current selection, if yes -> notify subscribers
@@ -402,7 +402,10 @@ export class ApollonEditor {
       const state = {
         ...this.currentModelState,
         hovered: [],
-        selected: [],
+        selected: {
+          ids: [],
+          selectionBoxActive: false,
+        },
         moving: [],
         resizing: [],
         connecting: [],

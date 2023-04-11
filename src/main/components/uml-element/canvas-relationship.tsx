@@ -55,7 +55,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     (state, props) => ({
       hovered: state.hovered[0] === props.id,
-      selected: state.selected.includes(props.id),
+      selected: state.selected.ids.includes(props.id),
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
       reconnecting: !!state.reconnecting[props.id],

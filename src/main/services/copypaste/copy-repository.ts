@@ -22,7 +22,7 @@ export class CopyRepository {
     (dispatch, getState): CopyAction | undefined => {
       CopyRepository.pasteCounter = 0;
       const { elements, selected } = getState();
-      const ids = id ? (Array.isArray(id) ? id : [id]) : selected;
+      const ids = id ? (Array.isArray(id) ? id : [id]) : selected.ids;
 
       // copy elements with all their child elements, because containers do not know their full children representation
       const idsToClone = getChildren(ids, getState().elements);

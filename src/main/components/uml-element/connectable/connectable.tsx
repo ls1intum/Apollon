@@ -40,7 +40,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   (state, props) => {
     return {
       hovered: state.hovered[0] === props.id,
-      selected: state.selected.includes(props.id),
+      selected: state.selected.ids.includes(props.id),
       connecting: !!state.connecting.length,
       reconnecting: !!Object.keys(state.reconnecting).length,
       element: state.elements[props.id],

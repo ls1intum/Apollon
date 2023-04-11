@@ -21,6 +21,7 @@ type StateProps = {
 
 type DispatchProps = {
     select: AsyncDispatch<typeof UMLElementRepository.select>;
+    startSelectionBox: AsyncDispatch<typeof UMLElementRepository.startSelectionBox>;
 };
 
 type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
@@ -48,6 +49,7 @@ const enhance = compose<ComponentType<OwnProps>>(
         }),
         {
             select: UMLElementRepository.select,
+            startSelectionBox: UMLElementRepository.startSelectionBox,
         },
     ),
 );
@@ -129,6 +131,8 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
                 return;
             }
         }
+
+        this.props.startSelectionBox();
 
         this.setState( {
             selectionStarted: true,

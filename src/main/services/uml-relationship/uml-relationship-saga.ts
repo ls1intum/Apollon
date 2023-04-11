@@ -164,7 +164,7 @@ export function* recalc(id: string): SagaIterator {
 
   const { path, bounds } = diff(original, updates) as Partial<IUMLRelationship>;
   if (path) {
-    if (relationship.isManuallyLayouted && shouldPreserveLayout(source.id, target.id, selected, editor.readonly)) {
+    if (relationship.isManuallyLayouted && shouldPreserveLayout(source.id, target.id, selected.ids, editor.readonly)) {
       yield put<WaypointLayoutAction>(
         UMLRelationshipRepository.layoutWaypoints(updates.id, original.path, { ...original.bounds, ...bounds }),
       );

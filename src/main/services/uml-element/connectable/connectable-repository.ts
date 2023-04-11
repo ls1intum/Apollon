@@ -18,7 +18,7 @@ export const Connectable = {
           ? id
           : [id]
         : getState()
-            .selected.map((elementId) => dispatch(UMLElementCommonRepository.getById(elementId)))
+            .selected.ids.map((elementId) => dispatch(UMLElementCommonRepository.getById(elementId)))
             .filter((element) => element !== null)
             .filter((element) => UMLElements[element!.type as UMLElementType].features.connectable)
             .map((element) => element!.id);

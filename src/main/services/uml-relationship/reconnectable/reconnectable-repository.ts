@@ -25,7 +25,7 @@ export const Reconnectable = {
           ? id
           : [id]
         : getState()
-            .selected.map((elementId) => dispatch(UMLRelationshipCommonRepository.getById(elementId)))
+            .selected.ids.map((elementId) => dispatch(UMLRelationshipCommonRepository.getById(elementId)))
             // all relationships are reconnectable + its a static property, that's why it is enough to check for relationship
             .filter((element) => element !== null && UMLRelationship.isUMLRelationship(element))
             .map((element) => element!.id);

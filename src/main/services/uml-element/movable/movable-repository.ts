@@ -18,7 +18,7 @@ export const Movable = {
     (id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
       const { elements, selected } = getState();
-      const ids = id ? (Array.isArray(id) ? id : [id]) : filterRoots(selected, elements);
+      const ids = id ? (Array.isArray(id) ? id : [id]) : filterRoots(selected.ids, elements);
 
       const movables = [];
       const constructors = { ...UMLElements, ...UMLRelationships };

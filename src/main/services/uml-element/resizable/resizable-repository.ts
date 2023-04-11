@@ -7,7 +7,7 @@ export const Resizable = {
   startResizing:
     (id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
-      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
+      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected.ids;
       if (!ids.length) {
         return;
       }
