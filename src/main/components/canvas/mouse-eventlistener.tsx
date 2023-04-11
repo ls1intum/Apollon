@@ -16,6 +16,7 @@ type StateProps = {
     readonly: boolean;
     mode: ApollonMode;
     elements: UMLElementState
+    resizingInProgress: boolean;
 };
 
 type DispatchProps = {
@@ -42,7 +43,8 @@ const enhance = compose<ComponentType<OwnProps>>(
         (state) => ({
             readonly: state.editor.readonly,
             mode: state.editor.mode,
-            elements: state.elements
+            elements: state.elements,
+            resizingInProgress: state.resizing.length > 0
         }),
         {
             select: UMLElementRepository.select,
@@ -106,6 +108,13 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
                 };
             });
 
+            return;
+        }
+
+        // the selection box will activate when clicking anywhere outside the bounds of an element
+        // however, resizing an element can start when clicking slightly outside its bounds
+        // in this case the selection box needs to be disabled
+        if (this.props.resizingInProgress) {
             return;
         }
 
