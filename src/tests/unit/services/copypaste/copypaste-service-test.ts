@@ -74,7 +74,7 @@ describe('test copy paste functionality', () => {
     const store = getRealStore(
       {
         copy: initialCopyState,
-        selected: initialCopyState,
+        selected: { ids: initialCopyState, selectionBoxActive: false },
         editor: {
           enableCopyPasteToClipboard: false,
         },

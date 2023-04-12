@@ -32,7 +32,7 @@ const createModelStateFromPartialModelState = (
     moving: partialModelState?.moving ? partialModelState.moving : [],
     reconnecting: partialModelState?.reconnecting ? partialModelState.reconnecting : {},
     resizing: partialModelState?.resizing ? partialModelState.resizing : [],
-    selected: partialModelState?.selected ? partialModelState.selected : [],
+    selected: partialModelState?.selected ? partialModelState.selected : { ids: [], selectionBoxActive: false },
     updating: partialModelState?.updating ? partialModelState.updating : [],
     hovered: partialModelState?.hovered ? partialModelState.hovered : [],
     editor: {
