@@ -24,6 +24,7 @@ type StateProps = {
   interactable: boolean;
   element: IUMLElement;
   scale: number;
+  selectionBoxActive: boolean;
 };
 
 type DispatchProps = {};
@@ -41,6 +42,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
       element: state.elements[props.id],
       scale: state.editor.scale || 1.0,
+      selectionBoxActive: state.selected.selectionBoxActive,
     }),
     {},
   ),
@@ -58,6 +60,7 @@ class CanvasElementComponent extends Component<Props> {
       child: ChildComponent,
       children,
       theme,
+      selectionBoxActive,
       ...props
     } = this.props;
 
@@ -79,6 +82,7 @@ class CanvasElementComponent extends Component<Props> {
         : theme.color.background;
 
     const selectedByList = element.selectedBy || [];
+
     return (
       <svg
         {...props}
