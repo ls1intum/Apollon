@@ -4,6 +4,7 @@ import { ApollonMode, ApollonView, EditorActionTypes, EditorState } from './edit
 
 const initialState: EditorState = {
   readonly: false,
+  freehandDrawing: false,
   colorEnabled: false,
   enablePopups: true,
   enableCopyPasteToClipboard: false,

@@ -16,6 +16,7 @@ export type ApollonOptions = {
   type?: UMLDiagramType;
   mode?: ApollonMode;
   readonly?: boolean;
+  freehandDrawing?: boolean;
   enablePopups?: boolean;
   model?: UMLModel;
   theme?: DeepPartial<Styles>;
