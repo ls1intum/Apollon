@@ -5,6 +5,7 @@
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
   </head>
   <body>
     <header class="navbar">
@@ -82,6 +83,15 @@
             <button onclick="apollon.setTheming('dark')">Dark</button>
           </div>
         </section>
+        <label>
+          <input
+            class="checkbox"
+            type="checkbox"
+            name="freehandDrawing"
+            onchange="apollon.renderFreehandEditor(event)"
+          />
+          Activate freehand drawing
+        </label>
       </aside>
     </div>
   </body>
