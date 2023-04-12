@@ -7,6 +7,7 @@ import { Styles } from './components/theme/styles';
 import { UMLElementType } from './packages/uml-element-type';
 import { UMLRelationshipType } from './packages/uml-relationship-type';
 import { Application } from './scenes/application';
+import { FreehandEditor } from './scenes/FreehandEditor';
 import { Svg } from './scenes/svg';
 import { Actions } from './services/actions';
 import { ApollonMode, ApollonView, Locale } from './services/editor/editor-types';
@@ -136,6 +137,7 @@ export class ApollonEditor {
         colorEnabled: options.colorEnabled || false,
         scale: options.scale || 1.0,
         readonly: options.readonly || false,
+        freehandDrawing: options.freehandDrawing || false,
         enablePopups: options.enablePopups === true || options.enablePopups === undefined,
         enableCopyPasteToClipboard: options.copyPasteToClipboard === true,
         features: {
@@ -150,13 +152,17 @@ export class ApollonEditor {
         },
       },
     };
-
-    const element = createElement(Application, {
-      ref: this.application,
-      state,
-      styles: options.theme,
-      locale: options.locale,
-    });
+    let element: React.ReactNode;
+    if (options.freehandDrawing) {
+      element = createElement(FreehandEditor);
+    } else {
+      element = createElement(Application, {
+        ref: this.application,
+        state,
+        styles: options.theme,
+        locale: options.locale,
+      });
+    }
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     this.root = createRoot(container);
     this.root.render(errorBoundary);

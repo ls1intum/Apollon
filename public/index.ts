@@ -56,6 +56,15 @@ export const draw = async (mode?: 'include' | 'exclude') => {
   window.open(svgBlobURL);
 };
 
+export const renderFreehandEditor = (event: MouseEvent) => {
+  const { name, checked: value } = event.target as HTMLInputElement;
+  options = { ...options, [name]: value };
+  if (editor) {
+    editor.destroy();
+  }
+  editor = new Apollon.ApollonEditor(container, options);
+};
+
 const render = () => {
   save();
   if (editor) {
