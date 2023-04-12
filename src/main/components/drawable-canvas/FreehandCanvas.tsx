@@ -30,7 +30,7 @@ export const FreehandCanvas = () => {
 
   return (
     <div className="App">
-      <div style={editorStyle} ref={canvasRef} touch-action="none"></div>
+      <div style={editorStyle} ref={canvasRef} touch-action="none" />
     </div>
   );
 };
