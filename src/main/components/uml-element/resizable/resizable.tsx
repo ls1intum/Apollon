@@ -37,7 +37,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
     start: UMLElementRepository.startResizing,
     resize: UMLElementRepository.resize,
     end: UMLElementRepository.endResizing,
-  }
+  },
 );
 
 const Handle = {

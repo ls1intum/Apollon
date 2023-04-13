@@ -65,7 +65,10 @@ describe('test selectable HOC', () => {
     const elementToDeselect = elements[0];
     // element must be hovered to trigger deselect
     // element must be already selected to trigger deselect
-    store = getMockedStore({ selected: { ids: [elementToDeselect.id], selectionBoxActive: false }, hovered: [elementToDeselect.id] }, elements);
+    store = getMockedStore(
+      { selected: { ids: [elementToDeselect.id], selectionBoxActive: false }, hovered: [elementToDeselect.id] },
+      elements,
+    );
     const expectedAction = UMLElementRepository.deselect(elementToDeselect.id)(
       store.dispatch,
       store.getState,
@@ -94,7 +97,10 @@ describe('test selectable HOC', () => {
     const alreadySelectedElement = elements[1];
     // element must be hovered to trigger deselect
     // element must be already selected to trigger deselect
-    store = getMockedStore({ selected: { ids: [alreadySelectedElement.id], selectionBoxActive: false }, hovered: [elementToSelect.id] }, elements);
+    store = getMockedStore(
+      { selected: { ids: [alreadySelectedElement.id], selectionBoxActive: false }, hovered: [elementToSelect.id] },
+      elements,
+    );
     const expectedAction1 = UMLElementRepository.deselect(alreadySelectedElement.id)(
       store.dispatch,
       store.getState,
@@ -125,7 +131,10 @@ describe('test selectable HOC', () => {
     const alreadySelectedElement = elements[1];
     // element must be hovered to trigger deselect
     // element must be already selected to trigger deselect
-    store = getMockedStore({ selected: { ids: [alreadySelectedElement.id], selectionBoxActive: false }, hovered: [elementToSelect.id] }, elements);
+    store = getMockedStore(
+      { selected: { ids: [alreadySelectedElement.id], selectionBoxActive: false }, hovered: [elementToSelect.id] },
+      elements,
+    );
     const expectedAction = UMLElementRepository.select(elementToSelect.id)(store.dispatch, store.getState, undefined);
     const { container } = render(
       <Provider store={store}>

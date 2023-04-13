@@ -1,5 +1,11 @@
 import { AsyncAction } from '../../../utils/actions/actions';
-import { DeselectAction, SelectableActionTypes, SelectAction, StartSelectionBox, EndSelectionBox } from './selectable-types';
+import {
+  DeselectAction,
+  SelectableActionTypes,
+  SelectAction,
+  StartSelectionBox,
+  EndSelectionBox,
+} from './selectable-types';
 
 export const Selectable = {
   select:
@@ -45,5 +51,5 @@ export const Selectable = {
       payload: { ids },
       undoable: false,
     });
-  }
+  },
 };
