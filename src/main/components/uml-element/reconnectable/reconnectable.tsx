@@ -15,6 +15,7 @@ type StateProps = {
   path: IPath;
   reconnecting: boolean;
   disabled: boolean;
+  selectionBoxActive: boolean;
 };
 
 type DispatchProps = {
@@ -36,6 +37,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
     path: (state.elements[props.id] as IUMLRelationship).path,
     reconnecting: !!state.reconnecting[props.id],
     disabled: !!Object.keys(state.reconnecting).length || !!Object.keys(state.connecting).length,
+    selectionBoxActive: state.selected.selectionBoxActive,
   }),
   {
     start: UMLRelationshipRepository.startReconnecting,
@@ -70,7 +72,7 @@ export const reconnectable = (
     }
 
     render() {
-      const { path, reconnecting, start, reconnect, disabled, ...props } = this.props;
+      const { path, reconnecting, start, reconnect, disabled, selectionBoxActive, ...props } = this.props;
       const sourceHandle: IPath = this.composePath(path);
       const targetHandle: IPath = this.composePath([...path].reverse() as IPath);
 
@@ -84,7 +86,7 @@ export const reconnectable = (
             y2={sourceHandle[1].y}
             onPointerDown={this.onPointerDown}
             data-endpoint="target"
-            pointerEvents={disabled ? 'none' : 'all'}
+            pointerEvents={selectionBoxActive || disabled ? 'none' : 'all'}
           />
           <Handle
             x1={targetHandle[0].x}
@@ -93,7 +95,7 @@ export const reconnectable = (
             y2={targetHandle[1].y}
             onPointerDown={this.onPointerDown}
             data-endpoint="source"
-            pointerEvents={disabled ? 'none' : 'all'}
+            pointerEvents={selectionBoxActive || disabled ? 'none' : 'all'}
           />
         </WrappedComponent>
       );
