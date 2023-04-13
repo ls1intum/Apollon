@@ -19,6 +19,7 @@ type StateProps = {
     resizingInProgress: boolean;
     connectingInProgress: boolean;
     reconnectingInProgress: boolean;
+    hoveringInProgress: boolean;
 };
 
 type DispatchProps = {
@@ -50,6 +51,7 @@ const enhance = compose<ComponentType<OwnProps>>(
             resizingInProgress: state.resizing.length > 0,
             connectingInProgress: state.connecting.length > 0,
             reconnectingInProgress: Object.keys(state.reconnecting).length > 0,
+            hoveringInProgress: state.hovered.length > 0,
         }),
         {
             select: UMLElementRepository.select,
@@ -124,20 +126,9 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
         // in these cases the selection box needs to be disabled
         if (this.props.resizingInProgress
           || this.props.connectingInProgress
-          || this.props.reconnectingInProgress) {
+          || this.props.reconnectingInProgress
+          || this.props.hoveringInProgress) {
             return;
-        }
-
-        // if clicking on an element of the canvas, the selection box will not activate
-        const umlElements = Object.values(this.props.elements);
-        const offset = this.props.canvas.origin();
-        for (const umlElement of umlElements) {
-            const mouseCanvasPositionX = event.clientX - offset.x;
-            const mouseCanvasPositionY = event.clientY - offset.y;
-            if (umlElement.bounds.x <= mouseCanvasPositionX && mouseCanvasPositionX <= umlElement.bounds.x + umlElement.bounds.width
-                && umlElement.bounds.y <= mouseCanvasPositionY && mouseCanvasPositionY <= umlElement.bounds.y + umlElement.bounds.height) {
-                return;
-            }
         }
 
         this.props.startSelectionBox();
