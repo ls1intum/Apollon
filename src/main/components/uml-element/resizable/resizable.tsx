@@ -1,4 +1,4 @@
-import React, {Component, ComponentType, Fragment} from 'react';
+import React, { Component, ComponentType } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
 import { ResizeFrom } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
@@ -53,7 +53,6 @@ const HandleBottomRight = styled.rect.attrs({
   ...Handle,
 })`
   cursor: nwse-resize;
-  pointer-events: all;
 `;
 
 const HandleTopLeft = styled.rect.attrs({
@@ -62,7 +61,6 @@ const HandleTopLeft = styled.rect.attrs({
   ...Handle,
 })`
   cursor: nwse-resize;
-  pointer-events: all;
 `;
 
 const HandleTopRight = styled.rect.attrs({
@@ -71,7 +69,6 @@ const HandleTopRight = styled.rect.attrs({
   ...Handle,
 })`
   cursor: nesw-resize;
-  pointer-events: all;
 `;
 
 const HandleBottomLeft = styled.rect.attrs({
@@ -80,7 +77,6 @@ const HandleBottomLeft = styled.rect.attrs({
   ...Handle,
 })`
   cursor: nesw-resize;
-  pointer-events: all;
 `;
 
 export const resizable =
@@ -101,29 +97,30 @@ export const resizable =
         return (
           <WrappedComponent {...props}>
             {props.children}
-            !selectionBoxActive ??
-              <Fragment>
-								<HandleBottomRight
-									onPointerDown={(e) => {
-                    this.onPointerDown(e, ResizeFrom.BOTTOMRIGHT);
-                  }}
-								/>
-								<HandleTopLeft
-									onPointerDown={(e) => {
-                    this.onPointerDown(e, ResizeFrom.TOPLEFT);
-                  }}
-								/>
-								<HandleTopRight
-									onPointerDown={(e) => {
-                    this.onPointerDown(e, ResizeFrom.TOPRIGHT);
-                  }}
-								/>
-								<HandleBottomLeft
-									onPointerDown={(e) => {
-                    this.onPointerDown(e, ResizeFrom.BOTTOMLEFT);
-                  }}
-								/>
-              </Fragment>
+            <HandleBottomRight
+              onPointerDown={(e) => {
+                this.onPointerDown(e, ResizeFrom.BOTTOMRIGHT);
+              }}
+              pointerEvents={selectionBoxActive ? 'none' : 'all'}
+            />
+            <HandleTopLeft
+              onPointerDown={(e) => {
+                this.onPointerDown(e, ResizeFrom.TOPLEFT);
+              }}
+              pointerEvents={selectionBoxActive ? 'none' : 'all'}
+            />
+            <HandleTopRight
+              onPointerDown={(e) => {
+                this.onPointerDown(e, ResizeFrom.TOPRIGHT);
+              }}
+              pointerEvents={selectionBoxActive ? 'none' : 'all'}
+            />
+            <HandleBottomLeft
+              onPointerDown={(e) => {
+                this.onPointerDown(e, ResizeFrom.BOTTOMLEFT);
+              }}
+              pointerEvents={selectionBoxActive ? 'none' : 'all'}
+            />
           </WrappedComponent>
         );
       }
