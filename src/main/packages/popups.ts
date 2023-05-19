@@ -52,6 +52,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.UseCaseActor]: DefaultPopup,
   [UMLElementType.UseCaseSystem]: DefaultPopup,
   [UMLElementType.Component]: DefaultPopup,
+  [UMLElementType.Subsystem]: DefaultPopup,
   [UMLElementType.ComponentInterface]: DefaultPopup,
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeUpdate,
   [UMLElementType.DeploymentComponent]: DefaultPopup,
