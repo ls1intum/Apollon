@@ -2,8 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { UMLComponent } from './uml-component';
 import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
-
-// y={`${25 * scale}px`} 
+ 
 export const UMLComponentComponent: FunctionComponent<Props> = ({ element, children, scale, fillColor }) => (
   <g data-cy="uml-component">
     <ThemedRect

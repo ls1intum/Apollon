@@ -79,6 +79,7 @@
     },
     "ComponentDiagram": {
       "Component": "Komponente",
+      "Subsystem": "Teilsystem",
       "ComponentDependency": "Abhängigkeit",
       "ComponentInterface": "Schnittstelle",
       "ComponentInterfaceProvided": "Bereitgestellte Schnittstelle",
