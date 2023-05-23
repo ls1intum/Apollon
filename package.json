@@ -8,8 +8,8 @@
   "license": "MIT",
   "author": {
     "name": "Stephan Krusche",
-    "email": "krusche@in.tum.de",
-    "url": "https://www1.in.tum.de/krusche"
+    "email": "krusche@tum.de",
+    "url": "https://ase.cit.tum.de/krusche"
   },
   "main": "lib/es5/index.js",
   "module": "lib/es6/index.js",
