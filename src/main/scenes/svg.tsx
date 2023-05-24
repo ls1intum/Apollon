@@ -212,12 +212,21 @@ export class Svg extends Component<Props, State> {
             </defs>
             {elements.map((element, index) => {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
+              let height: number;
+              // if the element has no owner it's e.g a class that contains other elements
+              if (!element.owner) {
+                height = element.bounds.height;
+              } else {
+                // we reduce the height of the element by 2 to make the borders visible
+                height = element.bounds.height - 2;
+              }
+
               return (
                 <svg
                   x={element.bounds.x - translationFactor().minX}
                   y={element.bounds.y - translationFactor().minY}
                   width={element.bounds.width}
-                  height={element.bounds.height}
+                  height={height}
                   key={element.id}
                   className={element.name ? element.name.replace(/[<>]/g, '') : ''}
                   fill={element.fillColor || theme.color.background}
