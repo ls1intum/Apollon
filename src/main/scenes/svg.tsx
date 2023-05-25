@@ -18,6 +18,7 @@ import { Style } from './svg-styles';
 import { StoreProvider } from '../components/store/model-store';
 import { ModelState } from '../components/store/model-state';
 import { ThemeProvider } from 'styled-components';
+import { Direction } from '../services/uml-element/uml-element-port';
 
 type Props = {
   model: Apollon.UMLModel;
@@ -202,11 +203,19 @@ export class Svg extends Component<Props, State> {
       if (element.type in UMLRelationshipType) {
         const relationship = element as UMLRelationship;
         const path = relationship.path;
+        const verticalRelationship =
+          relationship.target.direction === Direction.Down ||
+          relationship.target.direction === Direction.Up ||
+          relationship.source.direction === Direction.Down ||
+          relationship.source.direction === Direction.Up;
         y = element.bounds.y + 10 - translationFactor().minY;
-        if (path[0].y < path[1].y) {
-          path[0].y += 10;
-        } else if (path[0].y > path[1].y) {
-          path[0].y -= 10;
+        if (verticalRelationship) {
+          // first element in the array is the source and last element is the target, in between might be anchor points
+          if (path[0].y < path[path.length - 1].y) {
+            path[path.length - 1].y -= 10;
+          } else if (path[0].y > path[path.length - 1].y) {
+            path[0].y -= 10;
+          }
         }
       } else if (!element.owner) {
         y = element.bounds.y - translationFactor().minY;
@@ -232,22 +241,25 @@ export class Svg extends Component<Props, State> {
             {elements.map((element, index) => {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
               let height: number;
+              let width: number;
               let y: number = element.bounds.y - translationFactor().minY;
               if (this.props.options?.artemisDiagram) {
                 y = compensateArtemisOffset(element);
               }
               if (!element.owner) {
                 height = element.bounds.height;
+                width = element.bounds.width;
               } else {
-                // we reduce the height of the element by 2 to make the borders visible
+                // we reduce the height and width of the element by 2 to make the borders visible
                 height = element.bounds.height - 2;
+                width = element.bounds.width - 2;
               }
 
               return (
                 <svg
                   x={element.bounds.x - translationFactor().minX}
                   y={y}
-                  width={element.bounds.width}
+                  width={width}
                   height={height}
                   key={element.id}
                   className={element.name ? element.name.replace(/[<>]/g, '') : ''}
