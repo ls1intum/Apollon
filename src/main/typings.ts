@@ -133,6 +133,7 @@ export type ExportOptions = {
   include?: string[];
   exclude?: string[];
   scale?: number;
+  artemisDiagram?: boolean;
 };
 
 export type SVG = {

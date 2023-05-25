@@ -196,6 +196,25 @@ export class Svg extends Component<Props, State> {
       }
       return { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
     };
+    const compensateArtemisOffset = (element: UMLElement) => {
+      let y;
+      // if this is a vertical relationship we have to adjust the path as well as otherwise the line overlaps with the other element, e.g. a class
+      if (element.type in UMLRelationshipType) {
+        const relationship = element as UMLRelationship;
+        const path = relationship.path;
+        y = element.bounds.y + 10 - translationFactor().minY;
+        if (path[0].y < path[1].y) {
+          path[0].y += 10;
+        } else if (path[0].y > path[1].y) {
+          path[0].y -= 10;
+        }
+      } else if (!element.owner) {
+        y = element.bounds.y - translationFactor().minY;
+      } else {
+        y = element.bounds.y + 10 - translationFactor().minY;
+      }
+      return y;
+    };
 
     return (
       <StoreProvider initialState={state}>
@@ -213,7 +232,10 @@ export class Svg extends Component<Props, State> {
             {elements.map((element, index) => {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
               let height: number;
-              // if the element has no owner it's e.g a class that contains other elements
+              let y: number = element.bounds.y - translationFactor().minY;
+              if (this.props.options?.artemisDiagram) {
+                y = compensateArtemisOffset(element);
+              }
               if (!element.owner) {
                 height = element.bounds.height;
               } else {
@@ -224,7 +246,7 @@ export class Svg extends Component<Props, State> {
               return (
                 <svg
                   x={element.bounds.x - translationFactor().minX}
-                  y={element.bounds.y - translationFactor().minY}
+                  y={y}
                   width={element.bounds.width}
                   height={height}
                   key={element.id}
