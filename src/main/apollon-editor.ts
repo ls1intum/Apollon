@@ -114,11 +114,11 @@ export class ApollonEditor {
   private currentModelState?: ModelState;
   private assessments: Apollon.Assessment[] = [];
   private application: RefObject<Application> = createRef();
-  private selectionSubscribers: {[key: number]: (selection: Apollon.Selection) => void} = {};
-  private assessmentSubscribers: {[key: number]: ((assessments: Apollon.Assessment[]) => void)} = {};
-  private modelSubscribers: {[key: number]: (model: Apollon.UMLModel) => void} = {};
-  private discreteModelSubscribers: {[key: number]: (model: Apollon.UMLModel) => void} = {};
-  private errorSubscribers: {[key: number]: (error: Error) => void} = {};
+  private selectionSubscribers: { [key: number]: (selection: Apollon.Selection) => void } = {};
+  private assessmentSubscribers: { [key: number]: (assessments: Apollon.Assessment[]) => void } = {};
+  private modelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
+  private discreteModelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
+  private errorSubscribers: { [key: number]: (error: Error) => void } = {};
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
@@ -186,7 +186,7 @@ export class ApollonEditor {
     dispatch(UMLElementRepository.select([...selection.elements, ...selection.relationships]));
   }
 
-  _getNewSubscriptionId(subscribers: {[key: number]: any}): number {
+  _getNewSubscriptionId(subscribers: { [key: number]: any }): number {
     // largest key + 1
     return Math.max(...Object.keys(subscribers).map((key) => parseInt(key))) + 1;
   }
