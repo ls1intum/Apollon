@@ -310,6 +310,8 @@ export class ApollonEditor {
     setTimeout(() => {
       if (this.store) {
         this.store.subscribe(this.onDispatch);
+      } else {
+        setTimeout(this.componentDidMount, 100);
       }
     });
   };
