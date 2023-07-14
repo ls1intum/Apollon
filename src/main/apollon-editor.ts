@@ -200,7 +200,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromSelectionChange(subscriptionId: number) {
-    this.selectionSubscribers.splice(subscriptionId);
+    this.selectionSubscribers.splice(subscriptionId, 1);
   }
 
   /**
@@ -217,7 +217,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromAssessmentChange(subscriptionId: number) {
-    this.assessmentSubscribers.splice(subscriptionId);
+    this.assessmentSubscribers.splice(subscriptionId, 1);
   }
 
   /**
@@ -234,7 +234,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromModelChange(subscriptionId: number) {
-    this.modelSubscribers.splice(subscriptionId);
+    this.modelSubscribers.splice(subscriptionId, 1);
   }
 
   /**
@@ -252,7 +252,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromDiscreteModelChange(subscriptionId: number) {
-    this.discreteModelSubscribers.splice(subscriptionId);
+    this.discreteModelSubscribers.splice(subscriptionId, 1);
   }
 
   /**
@@ -270,7 +270,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeToApollonErrors(subscriptionId: number) {
-    this.errorSubscribers.splice(subscriptionId);
+    this.errorSubscribers.splice(subscriptionId, 1);
   }
 
   /**
