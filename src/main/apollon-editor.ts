@@ -114,11 +114,11 @@ export class ApollonEditor {
   private currentModelState?: ModelState;
   private assessments: Apollon.Assessment[] = [];
   private application: RefObject<Application> = createRef();
-  private selectionSubscribers: ((selection: Apollon.Selection) => void)[] = [];
-  private assessmentSubscribers: ((assessments: Apollon.Assessment[]) => void)[] = [];
-  private modelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
-  private discreteModelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
-  private errorSubscribers: ((error: Error) => void)[] = [];
+  private selectionSubscribers: { [key: number]: (selection: Apollon.Selection) => void } = {};
+  private assessmentSubscribers: { [key: number]: (assessments: Apollon.Assessment[]) => void } = {};
+  private modelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
+  private discreteModelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
+  private errorSubscribers: { [key: number]: (error: Error) => void } = {};
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
@@ -186,13 +186,21 @@ export class ApollonEditor {
     dispatch(UMLElementRepository.select([...selection.elements, ...selection.relationships]));
   }
 
+  _getNewSubscriptionId(subscribers: { [key: number]: any }): number {
+    // largest key + 1
+    if (Object.keys(subscribers).length === 0) return 0;
+    return Math.max(...Object.keys(subscribers).map((key) => parseInt(key))) + 1;
+  }
+
   /**
    * Register callback which is executed when the selection of elements and relationships changes
    * @param callback function which is called when selection changes
    * @return returns the subscription identifier which can be used to unsubscribe
    */
   subscribeToSelectionChange(callback: (selection: Apollon.Selection) => void): number {
-    return this.selectionSubscribers.push(callback) - 1;
+    const id = this._getNewSubscriptionId(this.selectionSubscribers);
+    this.selectionSubscribers[id] = callback;
+    return id;
   }
 
   /**
@@ -200,7 +208,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromSelectionChange(subscriptionId: number) {
-    this.selectionSubscribers.splice(subscriptionId);
+    delete this.selectionSubscribers[subscriptionId];
   }
 
   /**
@@ -209,7 +217,9 @@ export class ApollonEditor {
    * @return returns the subscription identifier which can be used to unsubscribe
    */
   subscribeToAssessmentChange(callback: (assessments: Apollon.Assessment[]) => void): number {
-    return this.assessmentSubscribers.push(callback) - 1;
+    const id = this._getNewSubscriptionId(this.assessmentSubscribers);
+    this.assessmentSubscribers[id] = callback;
+    return id;
   }
 
   /**
@@ -217,7 +227,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromAssessmentChange(subscriptionId: number) {
-    this.assessmentSubscribers.splice(subscriptionId);
+    delete this.assessmentSubscribers[subscriptionId];
   }
 
   /**
@@ -226,7 +236,9 @@ export class ApollonEditor {
    * @return returns the subscription identifier which can be used to unsubscribe
    */
   subscribeToModelChange(callback: (model: UMLModel) => void): number {
-    return this.modelSubscribers.push(callback) - 1;
+    const id = this._getNewSubscriptionId(this.modelSubscribers);
+    this.modelSubscribers[id] = callback;
+    return id;
   }
 
   /**
@@ -234,7 +246,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromModelChange(subscriptionId: number) {
-    this.modelSubscribers.splice(subscriptionId);
+    delete this.modelSubscribers[subscriptionId];
   }
 
   /**
@@ -244,7 +256,9 @@ export class ApollonEditor {
    * @return returns the subscription identifier which can be used to unsubscribe
    */
   subscribeToModelDiscreteChange(callback: (model: UMLModel) => void): number {
-    return this.discreteModelSubscribers.push(callback) - 1;
+    const id = this._getNewSubscriptionId(this.discreteModelSubscribers);
+    this.discreteModelSubscribers[id] = callback;
+    return id;
   }
 
   /**
@@ -252,7 +266,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeFromDiscreteModelChange(subscriptionId: number) {
-    this.discreteModelSubscribers.splice(subscriptionId);
+    delete this.discreteModelSubscribers[subscriptionId];
   }
 
   /**
@@ -262,7 +276,9 @@ export class ApollonEditor {
    * @return returns the subscription identifier which can be used to unsubscribe
    */
   subscribeToApollonErrors(callback: (error: Error) => void): number {
-    return this.errorSubscribers.push(callback) - 1;
+    const id = this._getNewSubscriptionId(this.errorSubscribers);
+    this.errorSubscribers[id] = callback;
+    return id;
   }
 
   /**
@@ -270,7 +286,7 @@ export class ApollonEditor {
    * @param subscriptionId subscription identifier
    */
   unsubscribeToApollonErrors(subscriptionId: number) {
-    this.errorSubscribers.splice(subscriptionId);
+    delete this.errorSubscribers[subscriptionId];
   }
 
   /**
@@ -294,6 +310,8 @@ export class ApollonEditor {
     setTimeout(() => {
       if (this.store) {
         this.store.subscribe(this.onDispatch);
+      } else {
+        setTimeout(this.componentDidMount, 100);
       }
     });
   };
@@ -312,7 +330,7 @@ export class ApollonEditor {
 
     // check if previous selection differs from current selection, if yes -> notify subscribers
     if (JSON.stringify(this.selection) !== JSON.stringify(selection)) {
-      this.selectionSubscribers.forEach((subscriber) => subscriber(selection));
+      Object.values(this.selectionSubscribers).forEach((subscriber) => subscriber(selection));
       this.selection = selection;
     }
 
@@ -326,7 +344,7 @@ export class ApollonEditor {
 
     // check if previous assessment differs from current selection, if yes -> notify subscribers
     if (JSON.stringify(this.assessments) !== JSON.stringify(umlAssessments)) {
-      this.assessmentSubscribers.forEach((subscriber) => subscriber(umlAssessments));
+      Object.values(this.assessmentSubscribers).forEach((subscriber) => subscriber(umlAssessments));
       this.assessments = umlAssessments;
     }
 
@@ -351,7 +369,7 @@ export class ApollonEditor {
         this.store.getState().lastAction.endsWith('DELETE')
       ) {
         const lastModel = ModelState.toModel(this.store.getState());
-        this.discreteModelSubscribers.forEach((subscriber) => subscriber(lastModel));
+        Object.values(this.discreteModelSubscribers).forEach((subscriber) => subscriber(lastModel));
       }
     } catch (error) {
       // if error occured while getting current state for subscribers -> do not emit changes
@@ -366,7 +384,7 @@ export class ApollonEditor {
       const model = this.model;
       const lastModel = this.currentModelState ? ModelState.toModel(this.currentModelState) : null;
       if ((!lastModel && model) || (lastModel && JSON.stringify(model) !== JSON.stringify(lastModel))) {
-        this.modelSubscribers.forEach((subscriber) => subscriber(model));
+        Object.values(this.modelSubscribers).forEach((subscriber) => subscriber(model));
         this.currentModelState = this.store.getState();
       } else {
         this.currentModelState = this.store.getState();
@@ -393,7 +411,7 @@ export class ApollonEditor {
   }
 
   private onErrorOccurred(error: Error) {
-    this.errorSubscribers.forEach((subscriber) => subscriber(error));
+    Object.values(this.errorSubscribers).forEach((subscriber) => subscriber(error));
     this.restoreEditor();
   }
 
