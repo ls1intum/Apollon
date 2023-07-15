@@ -120,7 +120,10 @@ export class ApollonEditor {
   private discreteModelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private errorSubscribers: { [key: number]: (error: Error) => void } = {};
 
-  constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
+  constructor(
+    private container: HTMLElement,
+    private options: Apollon.ApollonOptions,
+  ) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
 
     state = {

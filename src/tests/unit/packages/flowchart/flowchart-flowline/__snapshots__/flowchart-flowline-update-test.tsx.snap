@@ -6,20 +6,20 @@ exports[`test flowchart flowline update render 1`] = `
     <div>
       <section>
         <div
-          class="sc-fXqpFg dGpESo"
+          class="sc-dZoequ jKvDgE"
         >
           <h1
-            class="sc-iTFTee fZQXzS"
+            class="sc-lcIPJg cQIeHE"
             style="flex-grow: 1;"
           >
             Flowline
           </h1>
           <button
-            class="sc-fLcnxK sc-bBABsx dcusHQ djMjAa"
+            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
             color="link"
           >
             <svg
-              class="sc-jrcTuL keEOGj"
+              class="sc-dhKdcB dMUpVV"
               height="16px"
               viewBox="0 0 512 512"
               width="16px"
@@ -31,11 +31,11 @@ exports[`test flowchart flowline update render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-fLcnxK sc-bBABsx dcusHQ djMjAa"
+            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
             color="link"
           >
             <svg
-              class="sc-jrcTuL keEOGj"
+              class="sc-dhKdcB dMUpVV"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -48,12 +48,12 @@ exports[`test flowchart flowline update render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-eeMvmM heyNTc"
+          class="sc-tagGq XeZYh"
         />
       </section>
       <section>
         <input
-          class="sc-ezOQGI sc-bYMpWt fKZUAy hrpTyo"
+          class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
           maxlength="100"
           value="FlowchartFlowline"
         />

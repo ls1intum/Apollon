@@ -16,14 +16,14 @@ exports[`render the uml-component-dependency-component 1`] = `
           viewBox="0 0 30 30"
         >
           <path
-            class="sc-gswNZR bYMoMF"
+            class="sc-gEvEer hATzAk"
             d="M0,29 L30,15 L0,1"
             fill="none"
             stroke="black"
           />
         </marker>
         <polyline
-          class="sc-bcXHqe gxNoIV"
+          class="sc-aXZVg OFiXI"
           fill="none"
           marker-end="url(#marker-77f00db7-ab65-41fb-9e87-aa123c7705c0)"
           points="0 0,100 100"

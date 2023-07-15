@@ -16,14 +16,14 @@ exports[`render the uml-use-case-generalization-component 1`] = `
           viewBox="0 0 30 30"
         >
           <path
-            class="sc-gswNZR dGEIZo"
+            class="sc-gEvEer fMgKSV"
             d="M0,1 L0,29 L30,15 z"
             fill="white"
             stroke="black"
           />
         </marker>
         <polyline
-          class="sc-bcXHqe gxNoIV"
+          class="sc-aXZVg OFiXI"
           fill="none"
           marker-end="url(#marker-516e57ef-ae31-4311-8d9d-2aeb6c97f924)"
           points="0 0,100 100"
