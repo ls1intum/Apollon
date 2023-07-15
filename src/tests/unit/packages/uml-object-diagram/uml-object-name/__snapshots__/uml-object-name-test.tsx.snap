@@ -9,12 +9,12 @@ exports[`render the uml-object-name-component 1`] = `
           class="sc-fUnMCh gymCgv"
         >
           <input
-            class="sc-dcJsrY sc-iGgWBj jgaQce iaTAlF"
+            class="sc-dcJsrY sc-iGgWBj kVRCyS iaTAlF"
             maxlength="100"
             value="TestObjectComponent"
           />
           <button
-            class="sc-aXZVg sc-gEvEer kSCnoM dnmHiq"
+            class="sc-aXZVg sc-gEvEer lnLYyK dnmHiq"
             color="link"
             tabindex="-1"
           >
@@ -42,7 +42,7 @@ exports[`render the uml-object-name-component 1`] = `
           Attributes
         </h1>
         <input
-          class="sc-dcJsrY sc-iGgWBj jgaQce lpeQEi"
+          class="sc-dcJsrY sc-iGgWBj kVRCyS lpeQEi"
           maxlength="100"
           value=""
         />
@@ -57,7 +57,7 @@ exports[`render the uml-object-name-component 1`] = `
           Methods
         </h1>
         <input
-          class="sc-dcJsrY sc-iGgWBj jgaQce lpeQEi"
+          class="sc-dcJsrY sc-iGgWBj kVRCyS lpeQEi"
           maxlength="100"
           value=""
         />

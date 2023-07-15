@@ -15,7 +15,7 @@ exports[`test class association popup render 1`] = `
             Association
           </h1>
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
           >
             <svg
@@ -31,7 +31,7 @@ exports[`test class association popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
           >
             <svg
@@ -56,7 +56,7 @@ exports[`test class association popup render 1`] = `
           class="sc-hknOHE"
         >
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV iSkCc sc-bbSZdi bnYqnK"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr iSkCc sc-bbSZdi bnYqnK"
             color="primary"
           >
             Association (bidirectional)
@@ -80,7 +80,7 @@ exports[`test class association popup render 1`] = `
             Multiplicity
           </span>
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP etmSlo"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             style="min-width: 0;"
             value=""
@@ -96,7 +96,7 @@ exports[`test class association popup render 1`] = `
             Role
           </span>
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             value=""
           />
@@ -119,7 +119,7 @@ exports[`test class association popup render 1`] = `
             Multiplicity
           </span>
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP etmSlo"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             style="min-width: 0;"
             value=""
@@ -135,7 +135,7 @@ exports[`test class association popup render 1`] = `
             Role
           </span>
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             value=""
           />

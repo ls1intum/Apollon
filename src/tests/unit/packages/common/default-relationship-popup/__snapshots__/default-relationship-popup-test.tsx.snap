@@ -15,7 +15,7 @@ exports[`test default relationship popup render 1`] = `
               Relationship
             </h1>
             <button
-              class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+              class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
               color="link"
               tabindex="-1"
             >

@@ -9,12 +9,12 @@ exports[`test reachability graph arc update render 1`] = `
           class="sc-ddjGPC hMjkq"
         >
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             value="UMLClassBidirectional"
           />
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
           >
             <svg
@@ -30,7 +30,7 @@ exports[`test reachability graph arc update render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
             tabindex="-1"
           >

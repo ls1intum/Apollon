@@ -9,12 +9,12 @@ exports[`test reachability graph arc update render 1`] = `
           class="sc-dSCufp fAuGzn"
         >
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             value=""
           />
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
             tabindex="-1"
           >

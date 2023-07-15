@@ -10,11 +10,11 @@ exports[`test default element popup render 1`] = `
             class="sc-jxOSlx WMFeS"
           >
             <input
-              class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+              class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
               maxLength="100"
             />
             <button
-              class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+              class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
               color="link"
               tabindex="-1"
             >

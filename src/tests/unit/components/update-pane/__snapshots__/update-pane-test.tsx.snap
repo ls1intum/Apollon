@@ -32,7 +32,7 @@ exports[`test update pane render with element 1`] = `
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: 1px solid var(--apollon-gray,#e9ecef);
   background-position: calc(50% + 24.5px) calc(50% + 24.5px);
-  background-size: 50px 50px,50px 50px, 10px 10px,10px 10px;
+  background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
@@ -53,8 +53,8 @@ exports[`test update pane render with element 1`] = `
   overflow: visible;
   padding: 0.375em 0.75em;
   text-transform: none;
-  -webkit-transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -webkit-transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -153,8 +153,8 @@ exports[`test update pane render with element 1`] = `
   margin: 0;
   overflow: visible;
   padding: 0.375em 0.75em;
-  -webkit-transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
-  transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
+  -webkit-transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .c7:focus {
@@ -606,7 +606,7 @@ exports[`test update pane render with relationship 1`] = `
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: 1px solid var(--apollon-gray,#e9ecef);
   background-position: calc(50% + 24.5px) calc(50% + 24.5px);
-  background-size: 50px 50px,50px 50px, 10px 10px,10px 10px;
+  background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
@@ -627,8 +627,8 @@ exports[`test update pane render with relationship 1`] = `
   overflow: visible;
   padding: 0.375em 0.75em;
   text-transform: none;
-  -webkit-transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -webkit-transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -694,8 +694,8 @@ exports[`test update pane render with relationship 1`] = `
   margin: 0;
   overflow: visible;
   padding: 0.375em 0.75em;
-  -webkit-transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
-  transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
+  -webkit-transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .c16:focus {

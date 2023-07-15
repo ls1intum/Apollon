@@ -9,12 +9,12 @@ exports[`test petri net arc update render 1`] = `
           class="sc-klVQfs bbVOet"
         >
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             value=""
           />
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
             tabindex="-1"
           >
@@ -46,7 +46,7 @@ exports[`test petri net arc update render 1`] = `
             Tokens
           </span>
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             style="min-width: 0;"
             type="number"
@@ -69,7 +69,7 @@ exports[`test petri net arc update render 1`] = `
             style="position: relative;"
           >
             <input
-              class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+              class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
               maxlength="100"
               type="number"
               value="Infinity"
@@ -93,7 +93,7 @@ exports[`test petri net arc update render 1`] = `
             </svg>
           </div>
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
             tabindex="-1"
             type="reset"

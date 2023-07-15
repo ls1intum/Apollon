@@ -9,12 +9,12 @@ exports[`test class association popup render 1`] = `
           class="sc-fXSgeo hRUsyw"
         >
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP gacFBO"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             value=""
           />
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
             tabindex="-1"
           >
@@ -40,19 +40,19 @@ exports[`test class association popup render 1`] = `
           class="sc-hmdomO gQZejn"
         >
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV koHCVn sc-bXCLTC PDrUU"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr koHCVn sc-bXCLTC PDrUU"
             color="primary"
           >
             Abstract
           </button>
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV koHCVn sc-bXCLTC PDrUU"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr koHCVn sc-bXCLTC PDrUU"
             color="primary"
           >
             Interface
           </button>
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV koHCVn sc-bXCLTC PDrUU"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr koHCVn sc-bXCLTC PDrUU"
             color="primary"
           >
             Enumeration
@@ -72,12 +72,12 @@ exports[`test class association popup render 1`] = `
           class="sc-esYiGF jnEhCX"
         >
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP etmSlo"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="attribute"
           />
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
             tabindex="-1"
           >
@@ -95,7 +95,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-bmzYkS sc-iHGNWf cItxbP lmyIYN"
+          class="sc-bmzYkS sc-iHGNWf fEVqYL lmyIYN"
           maxlength="100"
           value=""
         />
@@ -113,12 +113,12 @@ exports[`test class association popup render 1`] = `
           class="sc-esYiGF jnEhCX"
         >
           <input
-            class="sc-bmzYkS sc-iHGNWf cItxbP etmSlo"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="classMethod"
           />
           <button
-            class="sc-hzhJZQ sc-fHjqPf cdJQEV lgmFnr"
+            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
             color="link"
             tabindex="-1"
           >
@@ -136,7 +136,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-bmzYkS sc-iHGNWf cItxbP lmyIYN"
+          class="sc-bmzYkS sc-iHGNWf fEVqYL lmyIYN"
           maxlength="100"
           value=""
         />
