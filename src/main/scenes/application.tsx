@@ -62,7 +62,7 @@ export class Application extends React.Component<Props, State> {
       <CanvasProvider value={canvasContext}>
         <RootProvider value={rootContext}>
           <StoreProvider initialState={this.props.state} ref={(ref) => {
-            this.store = ref as ModelStore;
+            this.store ??= ref as ModelStore;
             this.resolveInitialized();
           }}>
             <I18nProvider locale={this.props.locale}>
