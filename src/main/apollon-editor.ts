@@ -158,8 +158,9 @@ export class ApollonEditor {
     });
 
     const element = createElement(Application, {
-      ref: (app) => {
+      ref: async (app) => {
         this.application ??= app;
+        await app?.initialized;
         initializedResolve();
       },
       state,
