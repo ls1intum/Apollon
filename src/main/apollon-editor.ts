@@ -444,7 +444,7 @@ export class ApollonEditor {
   }
 
   private get store(): Store<ModelState, Actions> | undefined {
-    return this.application?.store?.current?.state.store;
+    return this.application?.store?.state.store;
   }
 
   /**
