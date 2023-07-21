@@ -159,7 +159,7 @@ export class ApollonEditor {
 
     const element = createElement(Application, {
       ref: (app) => {
-        this.application = app;
+        this.application ??= app;
         initializedResolve();
       },
       state,
