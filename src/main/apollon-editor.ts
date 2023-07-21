@@ -123,6 +123,7 @@ export class ApollonEditor {
   constructor(
     private container: HTMLElement,
     private options: Apollon.ApollonOptions,
+    onMounted?: () => void
   ) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
 
@@ -159,6 +160,7 @@ export class ApollonEditor {
       state,
       styles: options.theme,
       locale: options.locale,
+      onMounted: onMounted,
     });
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     this.root = createRoot(container);
