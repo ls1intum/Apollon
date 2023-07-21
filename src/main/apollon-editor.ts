@@ -113,18 +113,15 @@ export class ApollonEditor {
   private root?: Root;
   private currentModelState?: ModelState;
   private assessments: Apollon.Assessment[] = [];
-  private application: RefObject<Application> = createRef();
+  private application: Application | null = null;
   private selectionSubscribers: { [key: number]: (selection: Apollon.Selection) => void } = {};
   private assessmentSubscribers: { [key: number]: (assessments: Apollon.Assessment[]) => void } = {};
   private modelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private discreteModelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private errorSubscribers: { [key: number]: (error: Error) => void } = {};
-  private componentMountedPromise: Promise<void>;
+  private initializedPromise: Promise<void>;
 
-  constructor(
-    private container: HTMLElement,
-    private options: Apollon.ApollonOptions
-  ) {
+  constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
 
     state = {
@@ -155,17 +152,19 @@ export class ApollonEditor {
       },
     };
 
-    let mountedResolve;
-    this.componentMountedPromise = new Promise((resolve) => {
-      mountedResolve = resolve;
+    let initializedResolve: () => void;
+    this.initializedPromise = new Promise((resolve) => {
+      initializedResolve = resolve;
     });
 
     const element = createElement(Application, {
-      ref: this.application,
+      ref: (app) => {
+        this.application = app;
+        initializedResolve();
+      },
       state,
       styles: options.theme,
-      locale: options.locale,
-      onMounted: mountedResolve,
+      locale: options.locale
     });
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     this.root = createRoot(container);
@@ -409,7 +408,9 @@ export class ApollonEditor {
     this.destroy();
 
     const element = createElement(Application, {
-      ref: this.application,
+      ref: (app) => {
+        this.application = app;
+      },
       state,
       styles: this.options.theme,
       locale: this.options.locale,
@@ -441,15 +442,15 @@ export class ApollonEditor {
     }
   }
 
-  private get store(): Store<ModelState, Actions> | null {
-    return (
-      this.application.current &&
-      this.application.current.store.current &&
-      this.application.current.store.current.state.store
-    );
+  private get store(): Store<ModelState, Actions> | undefined {
+    return this.application?.store?.current?.state.store;
   }
 
-  get componentMounted(): Promise<void> {
-    return this.componentMountedPromise;
+  /**
+   * Promise that resolves when the application is initialized
+   * => this.store is be available and there should be no errors when trying to access some methods like this.model
+   */
+  get initialized(): Promise<void> {
+    return this.initializedPromise;
   }
 }

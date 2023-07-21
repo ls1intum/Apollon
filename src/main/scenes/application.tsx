@@ -32,17 +32,9 @@ const initialState = Object.freeze({
 type State = typeof initialState;
 
 export class Application extends React.Component<Props, State> {
-  private onMounted: (() => void) | undefined;
   state = initialState;
 
   store: RefObject<ModelStore> = createRef();
-
-  constructor(props: Props) {
-    super(props);
-    if (props.onMounted) {
-      this.onMounted = props.onMounted;
-    }
-  }
 
   setCanvas = (ref: CanvasComponent) => {
     if (ref && ref.layer.current) {
@@ -88,11 +80,5 @@ export class Application extends React.Component<Props, State> {
         </RootProvider>
       </CanvasProvider>
     );
-  }
-
-  componentDidMount() {
-    if (this.onMounted) {
-      this.onMounted();
-    }
   }
 }
