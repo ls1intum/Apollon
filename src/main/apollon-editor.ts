@@ -119,11 +119,11 @@ export class ApollonEditor {
   private modelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private discreteModelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private errorSubscribers: { [key: number]: (error: Error) => void } = {};
+  private componentMountedPromise: Promise<void>;
 
   constructor(
     private container: HTMLElement,
-    private options: Apollon.ApollonOptions,
-    onMounted?: () => void
+    private options: Apollon.ApollonOptions
   ) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
 
@@ -155,12 +155,17 @@ export class ApollonEditor {
       },
     };
 
+    let mountedResolve;
+    this.componentMountedPromise = new Promise((resolve) => {
+      mountedResolve = resolve;
+    });
+
     const element = createElement(Application, {
       ref: this.application,
       state,
       styles: options.theme,
       locale: options.locale,
-      onMounted: onMounted,
+      onMounted: mountedResolve,
     });
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     this.root = createRoot(container);
@@ -442,5 +447,9 @@ export class ApollonEditor {
       this.application.current.store.current &&
       this.application.current.store.current.state.store
     );
+  }
+
+  get componentMounted(): Promise<void> {
+    return this.componentMountedPromise;
   }
 }
