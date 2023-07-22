@@ -21,7 +21,6 @@ type Props = {
   state?: PartialModelState;
   styles?: DeepPartial<Styles>;
   locale?: Locale;
-  onMounted?: () => void;
 };
 
 const initialState = Object.freeze({
