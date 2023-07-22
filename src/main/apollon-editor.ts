@@ -119,7 +119,7 @@ export class ApollonEditor {
   private modelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private discreteModelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private errorSubscribers: { [key: number]: (error: Error) => void } = {};
-  private initializedPromise: Promise<void>;
+  private nextRenderPromise: Promise<void>;
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
@@ -152,16 +152,17 @@ export class ApollonEditor {
       },
     };
 
-    let initializedResolve: () => void;
-    this.initializedPromise = new Promise((resolve) => {
-      initializedResolve = resolve;
+    let nextRenderResolve: () => void;
+    this.nextRenderPromise = new Promise((resolve) => {
+      nextRenderResolve = resolve;
     });
 
     const element = createElement(Application, {
       ref: async (app) => {
-        this.application ??= app;
-        await app?.initialized;
-        initializedResolve();
+        if (app == null) return;
+        this.application = app;
+        await app.initialized;
+        nextRenderResolve();
       },
       state,
       styles: options.theme,
@@ -408,9 +409,17 @@ export class ApollonEditor {
   private recreateEditor(state: PartialModelState) {
     this.destroy();
 
+    let nextRenderResolve: () => void;
+    this.nextRenderPromise = new Promise((resolve) => {
+      nextRenderResolve = resolve;
+    });
+
     const element = createElement(Application, {
-      ref: (app) => {
+      ref: async (app) => {
+        if (app == null) return;
         this.application = app;
+        await app.initialized;
+        nextRenderResolve();
       },
       state,
       styles: this.options.theme,
@@ -448,10 +457,10 @@ export class ApollonEditor {
   }
 
   /**
-   * Promise that resolves when the application is initialized
+   * Returns a Promise that resolves when the current React render cycle is finished.
    * => this.store is be available and there should be no errors when trying to access some methods like this.model
    */
-  get initialized(): Promise<void> {
-    return this.initializedPromise;
+  get nextRender(): Promise<void> {
+    return this.nextRenderPromise;
   }
 }
