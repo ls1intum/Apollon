@@ -21,16 +21,20 @@ import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundar
 import { replaceColorVariables } from './utils/replace-color-variables';
 
 export class ApollonEditor {
+  private ensureInitialized() {
+    if (!this.store) {
+      // tslint:disable-next-line:no-console
+      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.renderCycle`.');
+      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.renderCycle`.');
+    }
+  }
+
   /**
    * Returns the current model of the Apollon Editor
    */
   get model(): Apollon.UMLModel {
-    if (!this.store) {
-      // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-    }
-    return ModelState.toModel(this.store.getState());
+    this.ensureInitialized();
+    return ModelState.toModel(this.store!.getState());
   }
 
   /**
@@ -38,14 +42,10 @@ export class ApollonEditor {
    * @param model valid Apollon Editor Model
    */
   set model(model: Apollon.UMLModel) {
-    if (!this.store) {
-      // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-    }
+    this.ensureInitialized();
     const state: PartialModelState = {
       ...ModelState.fromModel(model),
-      editor: { ...this.store.getState().editor },
+      editor: { ...this.store!.getState().editor },
     };
     this.recreateEditor(state);
   }
@@ -55,13 +55,9 @@ export class ApollonEditor {
    * @param diagramType the new diagram type
    */
   set type(diagramType: UMLDiagramType) {
-    if (!this.store) {
-      // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-    }
+    this.ensureInitialized();
     const state: PartialModelState = {
-      ...this.store.getState(),
+      ...this.store!.getState(),
       diagram: new UMLDiagram({
         type: diagramType,
       }),
@@ -75,12 +71,8 @@ export class ApollonEditor {
    * @param locale supported locale
    */
   set locale(locale: Locale) {
-    if (!this.store) {
-      // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-    }
-    const state = this.store.getState();
+    this.ensureInitialized();
+    const state = this.store!.getState();
     this.options.locale = locale;
     this.recreateEditor(state);
   }
