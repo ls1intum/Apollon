@@ -41,7 +41,6 @@ export class Application extends React.Component<Props, State> {
     this.resolveInitialized = resolve;
   });
 
-
   setCanvas = (ref: CanvasComponent) => {
     if (ref && ref.layer.current) {
       this.setState({ canvas: { ...ref, layer: ref.layer.current } });
@@ -61,10 +60,13 @@ export class Application extends React.Component<Props, State> {
     return (
       <CanvasProvider value={canvasContext}>
         <RootProvider value={rootContext}>
-          <StoreProvider initialState={this.props.state} ref={(ref) => {
-            this.store ??= ref as ModelStore;
-            this.resolveInitialized();
-          }}>
+          <StoreProvider
+            initialState={this.props.state}
+            ref={(ref) => {
+              this.store ??= ref as ModelStore;
+              this.resolveInitialized();
+            }}
+          >
             <I18nProvider locale={this.props.locale}>
               <Theme styles={this.props.styles} scale={this.props.state?.editor?.scale}>
                 <Layout className="apollon-editor" ref={this.setLayout}>

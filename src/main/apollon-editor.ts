@@ -24,8 +24,12 @@ export class ApollonEditor {
   private ensureInitialized() {
     if (!this.store) {
       // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.renderCycle`.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.renderCycle`.');
+      console.error(
+        'The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.renderCycle`.',
+      );
+      throw new Error(
+        'The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.renderCycle`.',
+      );
     }
   }
 
@@ -113,7 +117,10 @@ export class ApollonEditor {
   private errorSubscribers: { [key: number]: (error: Error) => void } = {};
   private nextRenderPromise: Promise<void>;
 
-  constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
+  constructor(
+    private container: HTMLElement,
+    private options: Apollon.ApollonOptions,
+  ) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
 
     state = {
@@ -158,7 +165,7 @@ export class ApollonEditor {
       },
       state,
       styles: options.theme,
-      locale: options.locale
+      locale: options.locale,
     });
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     this.root = createRoot(container);
