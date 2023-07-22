@@ -161,6 +161,7 @@ export class ApollonEditor {
         if (app == null) return;
         this.application = app;
         await app.initialized;
+        this.store!.subscribe(this.onDispatch);
         nextRenderResolve();
       },
       state,
@@ -316,14 +317,6 @@ export class ApollonEditor {
 
   private componentDidMount = () => {
     this.container.setAttribute('touch-action', 'none');
-
-    setTimeout(() => {
-      if (this.store) {
-        this.store.subscribe(this.onDispatch);
-      } else {
-        setTimeout(this.componentDidMount, 100);
-      }
-    });
   };
 
   /**
@@ -418,6 +411,7 @@ export class ApollonEditor {
         if (app == null) return;
         this.application = app;
         await app.initialized;
+        this.store!.subscribe(this.onDispatch);
         nextRenderResolve();
       },
       state,
