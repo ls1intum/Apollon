@@ -19,6 +19,8 @@ import { debounce } from './utils/debounce';
 import { delay } from './utils/delay';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
 import { replaceColorVariables } from './utils/replace-color-variables';
+import { isDiscreteAction, isSelectionAction, Patch, Patcher } from './services/patcher';
+import { streamers } from './services/patcher/streamers';
 
 export class ApollonEditor {
   /**
@@ -119,6 +121,7 @@ export class ApollonEditor {
   private modelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
   private discreteModelSubscribers: ((model: Apollon.UMLModel) => void)[] = [];
   private errorSubscribers: ((error: Error) => void)[] = [];
+  private patcher: Patcher<UMLModel, Actions, ModelState>;
 
   constructor(private container: HTMLElement, private options: Apollon.ApollonOptions) {
     let state: PartialModelState | undefined = options.model ? ModelState.fromModel(options.model) : {};
@@ -151,9 +154,16 @@ export class ApollonEditor {
       },
     };
 
+    this.patcher = new Patcher<UMLModel, Actions, ModelState>({
+      transform: ModelState.toModel,
+      select: (action) => isDiscreteAction(action) || isSelectionAction(action),
+      streamers,
+    });
+
     const element = createElement(Application, {
       ref: this.application,
       state,
+      patcher: this.patcher,
       styles: options.theme,
       locale: options.locale,
     });
@@ -253,6 +263,25 @@ export class ApollonEditor {
    */
   unsubscribeFromDiscreteModelChange(subscriptionId: number) {
     this.discreteModelSubscribers.splice(subscriptionId);
+  }
+
+  /**
+   * Register callback which is executed when the model changes. The callback receives
+   * a JSON patch which contains the changes that needs to be applied to the model.
+   * @param callback function which is called when the model changes
+   * 
+   */
+  subscribeToModelChangePatches(callback: (patch: Patch) => void): void {
+    this.patcher.subscribe(callback);
+  }
+
+  /**
+   * Remove model change subscription, so that the corresponding callback is no longer executed when the model is changed.
+   * @param callback the callback to be unregistered
+   * 
+   */
+  unsubscribeFromModelChangePatches(callback: (patch: Patch) => void): void {
+    this.patcher.unsubscribe(callback);
   }
 
   /**

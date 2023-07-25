@@ -7,7 +7,7 @@ import { KeyboardEventListener } from '../components/canvas/keyboard-eventlisten
 import { DraggableLayer } from '../components/draggable/draggable-layer';
 import { I18nProvider } from '../components/i18n/i18n-provider';
 import { Sidebar } from '../components/sidebar/sidebar-component';
-import { PartialModelState } from '../components/store/model-state';
+import { ModelState, PartialModelState } from '../components/store/model-state';
 import { ModelStore, StoreProvider } from '../components/store/model-store';
 import { Styles } from '../components/theme/styles';
 import { Theme } from '../components/theme/theme';
@@ -16,9 +16,13 @@ import { ILayer } from '../services/layouter/layer';
 import { Locale } from '../services/editor/editor-types';
 import { Layout } from './application-styles';
 import { RootContext, RootProvider } from '../components/root/root-context';
+import { Patcher } from '../services/patcher';
+import { Actions } from '../services/actions';
+import { UMLModel } from '../typings';
 
 type Props = {
   state?: PartialModelState;
+  patcher?: Patcher<UMLModel, Actions, ModelState>;
   styles?: DeepPartial<Styles>;
   locale?: Locale;
 };
@@ -54,7 +58,7 @@ export class Application extends React.Component<Props, State> {
     return (
       <CanvasProvider value={canvasContext}>
         <RootProvider value={rootContext}>
-          <StoreProvider ref={this.store} initialState={this.props.state}>
+          <StoreProvider ref={this.store} initialState={this.props.state} patcher={this.props.patcher}>
             <I18nProvider locale={this.props.locale}>
               <Theme styles={this.props.styles} scale={this.props.state?.editor?.scale}>
                 <Layout className="apollon-editor" ref={this.setLayout}>
