@@ -202,7 +202,7 @@ export class ApollonEditor {
   _getNewSubscriptionId(subscribers: { [key: number]: any }): number {
     // largest key + 1
     if (Object.keys(subscribers).length === 0) return 0;
-    return Math.max(...Object.keys(subscribers).map((key) => parseInt(key))) + 1;
+    return Math.max(...Object.keys(subscribers).map((key) => parseInt(key, 10))) + 1;
   }
 
   /**
