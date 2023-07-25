@@ -6,7 +6,7 @@ exports[`render the flowchart-decision-component 1`] = `
     <svg>
       <g>
         <polyline
-          class="sc-bcXHqe gxZTmk"
+          class="sc-aXZVg bUvEJV"
           fill="white"
           points="100 0, 200 50, 100 100, 0 50, 100 0"
           stroke="black"

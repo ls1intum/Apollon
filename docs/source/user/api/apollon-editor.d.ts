@@ -53,6 +53,9 @@ export declare class ApollonEditor {
      * @param selection contains ids of the elements and relationships which should be selected
      */
     select(selection: Apollon.Selection): void;
+    _getNewSubscriptionId(subscribers: {
+        [key: number]: any;
+    }): number;
     /**
      * Register callback which is executed when the selection of elements and relationships changes
      * @param callback function which is called when selection changes

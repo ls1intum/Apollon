@@ -15,7 +15,7 @@ exports[`render the uml-use-case-actor-component 1`] = `
           stroke-width="2"
         >
           <circle
-            class="sc-jSUZER cNsuBs"
+            class="sc-iGgWBj fvtjvB"
             cx="40"
             cy="25"
             fill="white"
@@ -23,7 +23,7 @@ exports[`render the uml-use-case-actor-component 1`] = `
             stroke="black"
           />
           <line
-            class="sc-ftTHYK kTdZIp"
+            class="sc-imWYAI loIUkN"
             stroke="black"
             x1="40"
             x2="40"
@@ -31,7 +31,7 @@ exports[`render the uml-use-case-actor-component 1`] = `
             y2="80"
           />
           <line
-            class="sc-ftTHYK kTdZIp"
+            class="sc-imWYAI loIUkN"
             stroke="black"
             x1="10"
             x2="70"
@@ -39,7 +39,7 @@ exports[`render the uml-use-case-actor-component 1`] = `
             y2="50"
           />
           <line
-            class="sc-ftTHYK kTdZIp"
+            class="sc-imWYAI loIUkN"
             stroke="black"
             x1="40"
             x2="10"
@@ -47,7 +47,7 @@ exports[`render the uml-use-case-actor-component 1`] = `
             y2="110"
           />
           <line
-            class="sc-ftTHYK kTdZIp"
+            class="sc-imWYAI loIUkN"
             stroke="black"
             x1="40"
             x2="70"

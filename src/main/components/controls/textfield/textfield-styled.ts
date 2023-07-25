@@ -17,7 +17,9 @@ const Input = styled.textarea`
   margin: 0;
   overflow: visible;
   padding: 0.375em 0.75em;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 
   :focus {
     border-color: ${(props) => lighten(props.theme.color.primary, FOCUS_BORDER_LIGHTEN)};

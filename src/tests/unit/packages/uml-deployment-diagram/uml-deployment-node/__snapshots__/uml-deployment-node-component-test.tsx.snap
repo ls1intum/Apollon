@@ -7,19 +7,19 @@ exports[`render the uml-deployment-node-component 1`] = `
       <g>
         <g>
           <path
-            class="sc-gswNZR dGEIZo"
+            class="sc-gEvEer fMgKSV"
             d="M 0 8 l 8 -8 H 200 l -8 8 Z"
             fill="white"
             stroke="black"
           />
           <path
-            class="sc-gswNZR dGEIZo"
+            class="sc-gEvEer fMgKSV"
             d="M 200 0 V 92 l -8 8 V 8 Z"
             fill="white"
             stroke="black"
           />
           <rect
-            class="sc-hLBbgP kcUggK"
+            class="sc-fqkvVR kprGcp"
             fill="white"
             height="91"
             stroke="black"
