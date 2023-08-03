@@ -18,6 +18,9 @@ import { Style } from './svg-styles';
 import { StoreProvider } from '../components/store/model-store';
 import { ModelState } from '../components/store/model-state';
 import { ThemeProvider } from 'styled-components';
+import { ThemedPath, ThemedRect } from '../components/theme/themedComponents';
+import { UMLClassifierComponent } from '../packages/common/uml-classifier/uml-classifier-component';
+import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/uml-classifier-member-component';
 
 type Props = {
   model: Apollon.UMLModel;
@@ -212,19 +215,61 @@ export class Svg extends Component<Props, State> {
             </defs>
             {elements.map((element, index) => {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
-              return (
-                <svg
-                  x={element.bounds.x - translationFactor().minX}
-                  y={element.bounds.y - translationFactor().minY}
-                  width={element.bounds.width}
-                  height={element.bounds.height}
-                  key={element.id}
-                  className={element.name ? element.name.replace(/[<>]/g, '') : ''}
-                  fill={element.fillColor || theme.color.background}
-                >
-                  <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
-                </svg>
-              );
+              const children: UMLElement[] = [];
+              // If the ElementComponent is of Type UMLClassifierComponent, create an array of all Children Members(Attributes and Methods)
+              if (ElementComponent === UMLClassifierComponent) {
+                for (const elementMember of elements) {
+                  if (elementMember.owner === element.id) {
+                    children.push(elementMember);
+                  }
+                }
+                return (
+                  <svg
+                    x={element.bounds.x}
+                    y={element.bounds.y}
+                    width={element.bounds.width}
+                    height={element.bounds.height}
+                    key={element.id}
+                    className={element.name ? element.name.replace(/[<>]/g, '') : ''}
+                    fill={element.fillColor || theme.color.background}
+                  >
+                    <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0}>
+                      {children.map((childElement, childIndex) => {
+                        // Nest the Children within the UMLClassifierComponent, so the Divider Path and Rectangle get rendered afterwards
+                        const ChildElementComponent = Components[childElement.type as UMLElementType];
+                        return (
+                          <svg
+                            x={0}
+                            y={childElement.bounds.y - element.bounds.y}
+                            width={childElement.bounds.width}
+                            height={childElement.bounds.height}
+                            key={childElement.id}
+                            className={childElement.name ? childElement.name.replace(/[<>]/g, '') : ''}
+                            fill={childElement.fillColor || theme.color.background}
+                          >
+                            <ChildElementComponent key={childIndex} element={childElement} scale={this.props.options?.scale || 1.0} />
+                          </svg>
+                        );
+                      })}
+                    </ElementComponent>
+                  </svg>
+                );
+                // Render all other UMLElements and UMLRelationships normally, as they dont have issues when creating a SVG
+              } else if (ElementComponent !== UMLClassifierComponent && ElementComponent !== UMLClassifierMemberComponent) {
+                return (
+                  <svg
+                    x={element.bounds.x - translationFactor().minX}
+                    y={element.bounds.y - translationFactor().minY}
+                    width={element.bounds.width}
+                    height={element.bounds.height}
+                    key={element.id}
+                    className={element.name ? element.name.replace(/[<>]/g, '') : ''}
+                    fill={element.fillColor || theme.color.background}
+                  >
+                    <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
+                  </svg>
+                );
+              }
             })}
           </svg>
         </ThemeProvider>
