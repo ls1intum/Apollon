@@ -25,10 +25,10 @@ export class ApollonEditor {
     if (!this.store) {
       // tslint:disable-next-line:no-console
       console.error(
-        'The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.renderCycle`.',
+        'The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.nextRender`.',
       );
       throw new Error(
-        'The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.renderCycle`.',
+        'The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.nextRender`.',
       );
     }
   }
