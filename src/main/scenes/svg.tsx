@@ -215,14 +215,9 @@ export class Svg extends Component<Props, State> {
             </defs>
             {elements.map((element, index) => {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
-              const children: UMLElement[] = [];
               // If the ElementComponent is of Type UMLClassifierComponent, create an array of all Children Members(Attributes and Methods)
               if (ElementComponent === UMLClassifierComponent) {
-                for (const elementMember of elements) {
-                  if (elementMember.owner === element.id) {
-                    children.push(elementMember);
-                  }
-                }
+                const children = elements.filter((elementMember) => elementMember.owner === element.id);
                 return (
                   <svg
                     x={element.bounds.x}
