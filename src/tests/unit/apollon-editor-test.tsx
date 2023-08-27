@@ -50,7 +50,7 @@ const ignoreSVGClassNames = (svgString: string): string => {
 
 describe('test apollon editor ', () => {
   // init editor before each test
-  beforeEach(() => {  
+  beforeEach(() => {
     const { container } = testLibraryRender(<div />);
     act(() => {
       editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
