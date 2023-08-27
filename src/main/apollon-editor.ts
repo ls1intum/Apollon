@@ -1,5 +1,5 @@
 import 'pepjs';
-import { createElement, createRef, RefObject } from 'react';
+import { createElement } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { DeepPartial, Store } from 'redux';
 import { ModelState, PartialModelState } from './components/store/model-state';
