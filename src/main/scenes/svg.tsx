@@ -18,7 +18,6 @@ import { Style } from './svg-styles';
 import { StoreProvider } from '../components/store/model-store';
 import { ModelState } from '../components/store/model-state';
 import { ThemeProvider } from 'styled-components';
-import { ThemedPath, ThemedRect } from '../components/theme/themedComponents';
 import { UMLClassifierComponent } from '../packages/common/uml-classifier/uml-classifier-component';
 import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/uml-classifier-member-component';
 
