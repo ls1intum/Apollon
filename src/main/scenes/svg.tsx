@@ -215,9 +215,9 @@ export class Svg extends Component<Props, State> {
             </defs>
             {elements.map((element, index) => {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
-              // If the ElementComponent is of Type UMLClassifierComponent, create an array of all Children Members(Attributes and Methods)
+              // If the ElementComponent is of type UMLClassifierComponent, create an array of all members (attributes and methods)
               if (ElementComponent === UMLClassifierComponent) {
-                const children = elements.filter((elementMember) => elementMember.owner === element.id);
+                const members = elements.filter((member) => member.owner === element.id);
                 return (
                   <svg
                     x={element.bounds.x}
@@ -229,27 +229,27 @@ export class Svg extends Component<Props, State> {
                     fill={element.fillColor || theme.color.background}
                   >
                     <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0}>
-                      {children.map((childElement, childIndex) => {
-                        // Nest the Children within the UMLClassifierComponent, so the Divider Path and Rectangle get rendered afterwards
-                        const ChildElementComponent = Components[childElement.type as UMLElementType];
+                      {members.map((memberElement, memberIndex) => {
+                        // Nest the members within the UMLClassifierComponent, so the divider path and rectangle get rendered afterwards
+                        const MemberElementComponent = Components[memberElement.type as UMLElementType];
                         return (
                           <svg
                             x={0}
-                            y={childElement.bounds.y - element.bounds.y}
-                            width={childElement.bounds.width}
-                            height={childElement.bounds.height}
-                            key={childElement.id}
-                            className={childElement.name ? childElement.name.replace(/[<>]/g, '') : ''}
-                            fill={childElement.fillColor || theme.color.background}
+                            y={memberElement.bounds.y - element.bounds.y}
+                            width={memberElement.bounds.width}
+                            height={memberElement.bounds.height}
+                            key={memberElement.id}
+                            className={memberElement.name ? memberElement.name.replace(/[<>]/g, '') : ''}
+                            fill={memberElement.fillColor || theme.color.background}
                           >
-                            <ChildElementComponent key={childIndex} element={childElement} scale={this.props.options?.scale || 1.0} />
+                            <MemberElementComponent key={memberIndex} element={memberElement} scale={this.props.options?.scale || 1.0} />
                           </svg>
                         );
                       })}
                     </ElementComponent>
                   </svg>
                 );
-                // Render all other UMLElements and UMLRelationships normally, as they dont have issues when creating a SVG
+                // Render all other UMLElements and UMLRelationships normally, as they dont have issues when rendering to SVG
               } else if (ElementComponent !== UMLClassifierComponent && ElementComponent !== UMLClassifierMemberComponent) {
                 return (
                   <svg
