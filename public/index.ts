@@ -38,8 +38,8 @@ export const clear = () => {
 
 export const setTheming = (theming: string) => {
   const root = document.documentElement;
-  const selectedButton = document.getElementById(theming === 'light' ? 'lightButton' : 'darkButton');
-  const unselectedButton = document.getElementById(theming === 'light' ? 'darkButton' : 'lightButton');
+  const selectedButton = document.getElementById(theming === 'light' ? 'theming-light-mode-button' : 'theming-dark-mode-button');
+  const unselectedButton = document.getElementById(theming === 'light' ? 'theming-dark-mode-button' : 'theming-light-mode-button');
   if (selectedButton && unselectedButton) {
     selectedButton.classList.add('selected');
     unselectedButton.classList.remove('selected');
