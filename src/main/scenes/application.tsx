@@ -35,7 +35,7 @@ export class Application extends React.Component<Props, State> {
 
   store?: ModelStore;
 
-  private resolveInitialized: () => void = () => {};
+  private resolveInitialized: () => void = () => undefined;
   private initializedPromise: Promise<void> = new Promise((resolve) => {
     this.resolveInitialized = resolve;
   });
