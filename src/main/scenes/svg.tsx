@@ -199,6 +199,17 @@ export class Svg extends Component<Props, State> {
       return { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
     };
 
+    const svgElementDetails = (element: UMLElement, x: number, y: number) => {
+      return {
+        x: (x),
+        y: (y),
+        width: (element.bounds.width),
+        height: (element.bounds.height),
+        className: (element.name ? element.name.replace(/[<>]/g, '') : ''),
+        fill: (element.fillColor || theme.color.background)
+      };
+    };
+
     return (
       <StoreProvider initialState={state}>
         <ThemeProvider theme={theme}>
@@ -221,13 +232,8 @@ export class Svg extends Component<Props, State> {
                   const members = elements.filter((member) => member.owner === element.id);
                   return (
                     <svg
-                      x={element.bounds.x}
-                      y={element.bounds.y}
-                      width={element.bounds.width}
-                      height={element.bounds.height}
                       key={element.id}
-                      className={element.name ? element.name.replace(/[<>]/g, '') : ''}
-                      fill={element.fillColor || theme.color.background}
+                      {...svgElementDetails(element, element.bounds.x, element.bounds.y)}
                     >
                       <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0}>
                         {members.map((memberElement, memberIndex) => {
@@ -235,13 +241,8 @@ export class Svg extends Component<Props, State> {
                           const MemberElementComponent = Components[memberElement.type as UMLElementType];
                           return (
                             <svg
-                              x={0}
-                              y={memberElement.bounds.y - element.bounds.y}
-                              width={memberElement.bounds.width}
-                              height={memberElement.bounds.height}
                               key={memberElement.id}
-                              className={memberElement.name ? memberElement.name.replace(/[<>]/g, '') : ''}
-                              fill={memberElement.fillColor || theme.color.background}
+                              {...svgElementDetails(memberElement, 0, memberElement.bounds.y - element.bounds.y)}
                             >
                               <MemberElementComponent key={memberIndex} element={memberElement} scale={this.props.options?.scale || 1.0} />
                             </svg>
@@ -257,13 +258,8 @@ export class Svg extends Component<Props, State> {
                   // Render all other UMLElements and UMLRelationships normally, as they don't have issues when rendering to SVG.
                   return (
                     <svg
-                      x={element.bounds.x - translationFactor().minX}
-                      y={element.bounds.y - translationFactor().minY}
-                      width={element.bounds.width}
-                      height={element.bounds.height}
                       key={element.id}
-                      className={element.name ? element.name.replace(/[<>]/g, '') : ''}
-                      fill={element.fillColor || theme.color.background}
+                      {...svgElementDetails(element, element.bounds.x - translationFactor().minX, element.bounds.y - translationFactor().minY)}
                     >
                       <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
                     </svg>
