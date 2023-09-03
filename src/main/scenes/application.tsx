@@ -1,4 +1,4 @@
-import React, { createRef, RefObject } from 'react';
+import React, { RefObject } from 'react';
 import { DeepPartial } from 'redux';
 import { Canvas, CanvasComponent } from '../components/canvas/canvas';
 import { CanvasContext, CanvasProvider } from '../components/canvas/canvas-context';
@@ -33,7 +33,12 @@ type State = typeof initialState;
 export class Application extends React.Component<Props, State> {
   state = initialState;
 
-  store: RefObject<ModelStore> = createRef();
+  store?: ModelStore;
+
+  private resolveInitialized: () => void = () => undefined;
+  private initializedPromise: Promise<void> = new Promise((resolve) => {
+    this.resolveInitialized = resolve;
+  });
 
   setCanvas = (ref: CanvasComponent) => {
     if (ref && ref.layer.current) {
@@ -54,7 +59,13 @@ export class Application extends React.Component<Props, State> {
     return (
       <CanvasProvider value={canvasContext}>
         <RootProvider value={rootContext}>
-          <StoreProvider ref={this.store} initialState={this.props.state}>
+          <StoreProvider
+            initialState={this.props.state}
+            ref={(ref) => {
+              this.store ??= ref as ModelStore;
+              this.resolveInitialized();
+            }}
+          >
             <I18nProvider locale={this.props.locale}>
               <Theme styles={this.props.styles} scale={this.props.state?.editor?.scale}>
                 <Layout className="apollon-editor" ref={this.setLayout}>
@@ -79,5 +90,9 @@ export class Application extends React.Component<Props, State> {
         </RootProvider>
       </CanvasProvider>
     );
+  }
+
+  get initialized(): Promise<void> {
+    return this.initializedPromise;
   }
 }

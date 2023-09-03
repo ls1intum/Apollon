@@ -1,5 +1,5 @@
 import 'pepjs';
-import { createElement, createRef, RefObject } from 'react';
+import { createElement } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { DeepPartial, Store } from 'redux';
 import { ModelState, PartialModelState } from './components/store/model-state';
@@ -21,16 +21,24 @@ import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundar
 import { replaceColorVariables } from './utils/replace-color-variables';
 
 export class ApollonEditor {
+  private ensureInitialized() {
+    if (!this.store) {
+      // tslint:disable-next-line:no-console
+      console.error(
+        'The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.nextRender`.',
+      );
+      throw new Error(
+        'The application state of Apollon could not be retrieved. The editor may already be destroyed or you might need to `await apollonEditor.nextRender`.',
+      );
+    }
+  }
+
   /**
    * Returns the current model of the Apollon Editor
    */
   get model(): Apollon.UMLModel {
-    if (!this.store) {
-      // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-    }
-    return ModelState.toModel(this.store.getState());
+    this.ensureInitialized();
+    return ModelState.toModel(this.store!.getState());
   }
 
   /**
@@ -38,14 +46,10 @@ export class ApollonEditor {
    * @param model valid Apollon Editor Model
    */
   set model(model: Apollon.UMLModel) {
-    if (!this.store) {
-      // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-    }
+    this.ensureInitialized();
     const state: PartialModelState = {
       ...ModelState.fromModel(model),
-      editor: { ...this.store.getState().editor },
+      editor: { ...this.store!.getState().editor },
     };
     this.recreateEditor(state);
   }
@@ -55,13 +59,9 @@ export class ApollonEditor {
    * @param diagramType the new diagram type
    */
   set type(diagramType: UMLDiagramType) {
-    if (!this.store) {
-      // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-    }
+    this.ensureInitialized();
     const state: PartialModelState = {
-      ...this.store.getState(),
+      ...this.store!.getState(),
       diagram: new UMLDiagram({
         type: diagramType,
       }),
@@ -75,12 +75,8 @@ export class ApollonEditor {
    * @param locale supported locale
    */
   set locale(locale: Locale) {
-    if (!this.store) {
-      // tslint:disable-next-line:no-console
-      console.error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-      throw new Error('The application state of Apollon could not be retrieved. The editor may already be destroyed.');
-    }
-    const state = this.store.getState();
+    this.ensureInitialized();
+    const state = this.store!.getState();
     this.options.locale = locale;
     this.recreateEditor(state);
   }
@@ -101,7 +97,7 @@ export class ApollonEditor {
     const element = createElement(Svg, { model, options, styles: theme });
     const svg = new Svg({ model, options, styles: theme });
     root.render(element);
-    await delay(0);
+    await delay(50);
 
     return {
       svg: replaceColorVariables(container.querySelector('svg')!.outerHTML),
@@ -113,12 +109,13 @@ export class ApollonEditor {
   private root?: Root;
   private currentModelState?: ModelState;
   private assessments: Apollon.Assessment[] = [];
-  private application: RefObject<Application> = createRef();
+  private application: Application | null = null;
   private selectionSubscribers: { [key: number]: (selection: Apollon.Selection) => void } = {};
   private assessmentSubscribers: { [key: number]: (assessments: Apollon.Assessment[]) => void } = {};
   private modelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private discreteModelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
   private errorSubscribers: { [key: number]: (error: Error) => void } = {};
+  private nextRenderPromise: Promise<void>;
 
   constructor(
     private container: HTMLElement,
@@ -154,8 +151,19 @@ export class ApollonEditor {
       },
     };
 
+    let nextRenderResolve: () => void;
+    this.nextRenderPromise = new Promise((resolve) => {
+      nextRenderResolve = resolve;
+    });
+
     const element = createElement(Application, {
-      ref: this.application,
+      ref: async (app) => {
+        if (app == null) return;
+        this.application = app;
+        await app.initialized;
+        this.store!.subscribe(this.onDispatch);
+        nextRenderResolve();
+      },
       state,
       styles: options.theme,
       locale: options.locale,
@@ -309,14 +317,6 @@ export class ApollonEditor {
 
   private componentDidMount = () => {
     this.container.setAttribute('touch-action', 'none');
-
-    setTimeout(() => {
-      if (this.store) {
-        this.store.subscribe(this.onDispatch);
-      } else {
-        setTimeout(this.componentDidMount, 100);
-      }
-    });
   };
 
   /**
@@ -401,8 +401,19 @@ export class ApollonEditor {
   private recreateEditor(state: PartialModelState) {
     this.destroy();
 
+    let nextRenderResolve: () => void;
+    this.nextRenderPromise = new Promise((resolve) => {
+      nextRenderResolve = resolve;
+    });
+
     const element = createElement(Application, {
-      ref: this.application,
+      ref: async (app) => {
+        if (app == null) return;
+        this.application = app;
+        await app.initialized;
+        this.store!.subscribe(this.onDispatch);
+        nextRenderResolve();
+      },
       state,
       styles: this.options.theme,
       locale: this.options.locale,
@@ -434,11 +445,15 @@ export class ApollonEditor {
     }
   }
 
-  private get store(): Store<ModelState, Actions> | null {
-    return (
-      this.application.current &&
-      this.application.current.store.current &&
-      this.application.current.store.current.state.store
-    );
+  private get store(): Store<ModelState, Actions> | undefined {
+    return this.application?.store?.state.store;
+  }
+
+  /**
+   * Returns a Promise that resolves when the current React render cycle is finished.
+   * => this.store is be available and there should be no errors when trying to access some methods like this.model
+   */
+  get nextRender(): Promise<void> {
+    return this.nextRenderPromise;
   }
 }
