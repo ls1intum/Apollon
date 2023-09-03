@@ -201,12 +201,12 @@ export class Svg extends Component<Props, State> {
 
     const svgElementDetails = (element: UMLElement, x: number, y: number) => {
       return {
-        x: (x),
-        y: (y),
-        width: (element.bounds.width),
-        height: (element.bounds.height),
-        className: (element.name ? element.name.replace(/[<>]/g, '') : ''),
-        fill: (element.fillColor || theme.color.background)
+        x,
+        y,
+        width: element.bounds.width,
+        height: element.bounds.height,
+        className: element.name ? element.name.replace(/[<>]/g, '') : '',
+        fill: element.fillColor || theme.color.background,
       };
     };
 
@@ -227,14 +227,11 @@ export class Svg extends Component<Props, State> {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
               switch (ElementComponent) {
                 case UMLClassifierComponent:
-                  // If the ElementComponent is of type UMLClassifierComponent, create an array of all members (attributes and methods) for that component. 
+                  // If the ElementComponent is of type UMLClassifierComponent, create an array of all members (attributes and methods) for that component.
                   // Unlike other components, the UMLClassifierComponent needs its members to be children within the component to avoid border rendering issues.
                   const members = elements.filter((member) => member.owner === element.id);
                   return (
-                    <svg
-                      key={element.id}
-                      {...svgElementDetails(element, element.bounds.x, element.bounds.y)}
-                    >
+                    <svg key={element.id} {...svgElementDetails(element, element.bounds.x, element.bounds.y)}>
                       <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0}>
                         {members.map((memberElement, memberIndex) => {
                           // Nest the members within the UMLClassifierComponent so the border rectangle and path get rendered afterward.
@@ -244,7 +241,11 @@ export class Svg extends Component<Props, State> {
                               key={memberElement.id}
                               {...svgElementDetails(memberElement, 0, memberElement.bounds.y - element.bounds.y)}
                             >
-                              <MemberElementComponent key={memberIndex} element={memberElement} scale={this.props.options?.scale || 1.0} />
+                              <MemberElementComponent
+                                key={memberIndex}
+                                element={memberElement}
+                                scale={this.props.options?.scale || 1.0}
+                              />
                             </svg>
                           );
                         })}
@@ -259,7 +260,11 @@ export class Svg extends Component<Props, State> {
                   return (
                     <svg
                       key={element.id}
-                      {...svgElementDetails(element, element.bounds.x - translationFactor().minX, element.bounds.y - translationFactor().minY)}
+                      {...svgElementDetails(
+                        element,
+                        element.bounds.x - translationFactor().minX,
+                        element.bounds.y - translationFactor().minY,
+                      )}
                     >
                       <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
                     </svg>
