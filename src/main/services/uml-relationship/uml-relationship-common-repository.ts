@@ -45,13 +45,16 @@ export const UMLRelationshipCommonRepository = {
     }
 
     // determine the common supported connection types
-    return elementsArray.reduce((supportedConnections: UMLRelationshipType[], element: UMLElement) => {
-      const elementSupportedConnections: UMLRelationshipType[] =
-        UMLElements[element.type as UMLElementType].supportedRelationships;
-      return supportedConnections.filter((supportedConnection) =>
-        elementSupportedConnections.includes(supportedConnection),
-      );
-    }, UMLElements[elementsArray[0].type as UMLElementType].supportedRelationships as UMLRelationshipType[]);
+    return elementsArray.reduce(
+      (supportedConnections: UMLRelationshipType[], element: UMLElement) => {
+        const elementSupportedConnections: UMLRelationshipType[] =
+          UMLElements[element.type as UMLElementType].supportedRelationships;
+        return supportedConnections.filter((supportedConnection) =>
+          elementSupportedConnections.includes(supportedConnection),
+        );
+      },
+      UMLElements[elementsArray[0].type as UMLElementType].supportedRelationships as UMLRelationshipType[],
+    );
   },
 
   layout: (id: string, path: IPath, bounds: IBoundary): LayoutAction => ({

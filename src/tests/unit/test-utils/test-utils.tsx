@@ -12,6 +12,7 @@ import { Actions } from '../../../main/services/actions';
 import { createReduxStore } from '../../../main/components/store/model-store';
 import { ILayer } from '../../../main/services/layouter/layer';
 import { Point } from '../../../main/utils/geometry/point';
+import '@testing-library/jest-dom';
 
 export type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
 

@@ -20,7 +20,10 @@ const Button = styled.button`
   overflow: visible;
   padding: 0.375em 0.75em;
   text-transform: none;
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out,
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out,
     box-shadow 0.15s ease-in-out;
   user-select: none;
 

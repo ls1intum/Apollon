@@ -18,6 +18,8 @@ import { Style } from './svg-styles';
 import { StoreProvider } from '../components/store/model-store';
 import { ModelState } from '../components/store/model-state';
 import { ThemeProvider } from 'styled-components';
+import { UMLClassifierComponent } from '../packages/common/uml-classifier/uml-classifier-component';
+import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/uml-classifier-member-component';
 
 type Props = {
   model: Apollon.UMLModel;
@@ -197,6 +199,17 @@ export class Svg extends Component<Props, State> {
       return { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
     };
 
+    const svgElementDetails = (element: UMLElement, x: number, y: number) => {
+      return {
+        x,
+        y,
+        width: element.bounds.width,
+        height: element.bounds.height,
+        className: element.name ? element.name.replace(/[<>]/g, '') : '',
+        fill: element.fillColor || theme.color.background,
+      };
+    };
+
     return (
       <StoreProvider initialState={state}>
         <ThemeProvider theme={theme}>
@@ -212,19 +225,51 @@ export class Svg extends Component<Props, State> {
             </defs>
             {elements.map((element, index) => {
               const ElementComponent = Components[element.type as UMLElementType | UMLRelationshipType];
-              return (
-                <svg
-                  x={element.bounds.x - translationFactor().minX}
-                  y={element.bounds.y - translationFactor().minY}
-                  width={element.bounds.width}
-                  height={element.bounds.height}
-                  key={element.id}
-                  className={element.name ? element.name.replace(/[<>]/g, '') : ''}
-                  fill={element.fillColor || theme.color.background}
-                >
-                  <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
-                </svg>
-              );
+              switch (ElementComponent) {
+                case UMLClassifierComponent:
+                  // If the ElementComponent is of type UMLClassifierComponent, create an array of all members (attributes and methods) for that component.
+                  // Unlike other components, the UMLClassifierComponent needs its members to be children within the component to avoid border rendering issues.
+                  const members = elements.filter((member) => member.owner === element.id);
+                  return (
+                    <svg key={element.id} {...svgElementDetails(element, element.bounds.x, element.bounds.y)}>
+                      <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0}>
+                        {members.map((memberElement, memberIndex) => {
+                          // Nest the members within the UMLClassifierComponent so the border rectangle and path get rendered afterward.
+                          const MemberElementComponent = Components[memberElement.type as UMLElementType];
+                          return (
+                            <svg
+                              key={memberElement.id}
+                              {...svgElementDetails(memberElement, 0, memberElement.bounds.y - element.bounds.y)}
+                            >
+                              <MemberElementComponent
+                                key={memberIndex}
+                                element={memberElement}
+                                scale={this.props.options?.scale || 1.0}
+                              />
+                            </svg>
+                          );
+                        })}
+                      </ElementComponent>
+                    </svg>
+                  );
+                case UMLClassifierMemberComponent:
+                  // If the ElementComponent is of type UMLClassifierMemberComponent, we break out of the switch, as they have been rendered within the UMLClassifierComponent.
+                  break;
+                default:
+                  // Render all other UMLElements and UMLRelationships normally, as they don't have issues when rendering to SVG.
+                  return (
+                    <svg
+                      key={element.id}
+                      {...svgElementDetails(
+                        element,
+                        element.bounds.x - translationFactor().minX,
+                        element.bounds.y - translationFactor().minY,
+                      )}
+                    >
+                      <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
+                    </svg>
+                  );
+              }
             })}
           </svg>
         </ThemeProvider>

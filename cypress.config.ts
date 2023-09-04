@@ -1,4 +1,4 @@
-import { defineConfig } from 'cypress'
+import { defineConfig } from 'cypress';
 
 export default defineConfig({
   numTestsKeptInMemory: 1,
@@ -8,9 +8,8 @@ export default defineConfig({
   screenshotOnRunFailure: false,
   fixturesFolder: './src/tests/e2e/fixture',
   e2e: {
-    setupNodeEvents(on, config) {},
     baseUrl: 'http://localhost:8888',
     specPattern: './src/tests/e2e/specs/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: './src/tests/e2e/support/index.ts',
   },
-})
+});

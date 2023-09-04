@@ -7,6 +7,7 @@ import { UMLDiagramType, UMLModel } from './typings';
 export declare class ApollonEditor {
     private container;
     private options;
+    private ensureInitialized;
     /**
      * Returns the current model of the Apollon Editor
      */
@@ -43,6 +44,7 @@ export declare class ApollonEditor {
     private modelSubscribers;
     private discreteModelSubscribers;
     private errorSubscribers;
+    private nextRenderPromise;
     constructor(container: HTMLElement, options: Apollon.ApollonOptions);
     /**
      * Destroys the Apollon Editor and unmounts it from its container
@@ -53,6 +55,9 @@ export declare class ApollonEditor {
      * @param selection contains ids of the elements and relationships which should be selected
      */
     select(selection: Apollon.Selection): void;
+    _getNewSubscriptionId(subscribers: {
+        [key: number]: any;
+    }): number;
     /**
      * Register callback which is executed when the selection of elements and relationships changes
      * @param callback function which is called when selection changes
@@ -135,4 +140,9 @@ export declare class ApollonEditor {
     private onErrorOccurred;
     private restoreEditor;
     private get store();
+    /**
+     * Returns a Promise that resolves when the current React render cycle is finished.
+     * => this.store is be available and there should be no errors when trying to access some methods like this.model
+     */
+    get nextRender(): Promise<void>;
 }

@@ -16,14 +16,14 @@ exports[`render the uml-reachability-graph-arc-component 1`] = `
           viewBox="0 0 30 30"
         >
           <path
-            class="sc-gswNZR bYMoMF"
+            class="sc-gEvEer hATzAk"
             d="M0,29 L30,15 L0,1"
             fill="none"
             stroke="black"
           />
         </marker>
         <polyline
-          class="sc-bcXHqe gxNoIV"
+          class="sc-aXZVg OFiXI"
           fill="none"
           marker-end="url(#marker-test-id)"
           points="0 0,200 100"
