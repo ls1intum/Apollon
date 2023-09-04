@@ -106,7 +106,11 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     );
   }
 
-  private mouseDown = (event: MouseEvent) => {
+  /**
+   * Mouse down handler for starting the box selection
+   * @param event The triggering mouse down event
+   */
+  private mouseDown = (event: MouseEvent): void => {
     // if the cursor went out of the bounds of the canvas, then the selection box is still active
     // we want to continue with the selection box from where we left off
     if (this.state.selectionStarted) {
@@ -151,12 +155,40 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     });
   };
 
-  private mouseMove = (event: MouseEvent) => {
+  /**
+   * Mouse up handler for finalising the box selection and determining which elements to select
+   */
+  private mouseUp = (): void => {
+    // if no selection has been started, we can skip determining which
+    // elements are contained in the selection box.
     if (!this.state.selectionStarted) {
       return;
     }
 
-    const elementsInSelectionBox = this.getElementsInSelectionBox();
+    const selection = this.getElementIDsInSelectionBox();
+    this.props.select(selection);
+
+    this.setState({
+      selectionStarted: false,
+      selectionRectangle: {
+        startX: undefined,
+        startY: undefined,
+        endX: undefined,
+        endY: undefined,
+      },
+    });
+  };
+
+  /**
+   * Mouse move handler for dragging the selection rectangle
+   * @param event The triggering mouse move event
+   */
+  private mouseMove = (event: MouseEvent): void => {
+    if (!this.state.selectionStarted) {
+      return;
+    }
+
+    const elementsInSelectionBox = this.getElementIDsInSelectionBox();
 
     this.setState((prevState) => {
       return {
@@ -171,19 +203,34 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     });
   };
 
+  /**
+   * Check whether a given IUMLElement is contained in the currently active selection rectangle.
+   * Elements are only considered selected if they are fully contained within the selection rectangle.
+   *
+   * @param element The element for which containment in the selection box is determined
+   */
   private isElementInSelectionBox = (element: IUMLElement): boolean => {
-    const offset = this.props.canvas.origin();
+    const canvasOrigin = this.props.canvas.origin();
+
+    if (
+      !this.state.selectionRectangle.startX ||
+      !this.state.selectionRectangle.endX ||
+      !this.state.selectionRectangle.startY ||
+      !this.state.selectionRectangle.endY
+    ) {
+      return false;
+    }
 
     const selectionRectangleTopLeft =
-      Math.min(this.state.selectionRectangle.startX!, this.state.selectionRectangle.endX!) - offset.x;
+      Math.min(this.state.selectionRectangle.startX, this.state.selectionRectangle.endX) - canvasOrigin.x;
     const selectionRectangleTopRight =
-      Math.max(this.state.selectionRectangle.startX!, this.state.selectionRectangle.endX!) - offset.x;
+      Math.max(this.state.selectionRectangle.startX, this.state.selectionRectangle.endX) - canvasOrigin.x;
     const selectionRectangleBottomLeft =
-      Math.min(this.state.selectionRectangle.startY!, this.state.selectionRectangle.endY!) - offset.y;
+      Math.min(this.state.selectionRectangle.startY, this.state.selectionRectangle.endY) - canvasOrigin.y;
     const selectionRectangleBottomRight =
-      Math.max(this.state.selectionRectangle.startY!, this.state.selectionRectangle.endY!) - offset.y;
+      Math.max(this.state.selectionRectangle.startY, this.state.selectionRectangle.endY) - canvasOrigin.y;
 
-    // check if element is within selection box
+    // determine if the given element is fully contained within the selection rectangle
     return (
       selectionRectangleTopLeft <= element.bounds.x &&
       element.bounds.x + element.bounds.width <= selectionRectangleTopRight &&
@@ -192,42 +239,21 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     );
   };
 
-  private getElementsInSelectionBox = (): string[] => {
-    return Object.entries(this.props.elements)
-      .map(([id, element]) => {
-        // attributes and methods are also UMLElements
-        // we do not want to be able to select them separately from the main UML component
-        // if the owner field is null, then it is a main UML component
-        if (element.owner !== null) {
-          return '';
-        }
+  /**
+   * Retrieve the IDs of all elements fully contained within the selection box
+   */
+  private getElementIDsInSelectionBox = (): string[] => {
+    return Object.entries(this.props.elements).reduce((selectedIDs, [id, element]) => {
+      if (element.owner !== null) {
+        return selectedIDs;
+      }
 
-        if (this.isElementInSelectionBox(element)) {
-          return id;
-        }
+      if (this.isElementInSelectionBox(element)) {
+        return [...selectedIDs, id];
+      }
 
-        return '';
-      })
-      .filter((x) => x.length > 0);
-  };
-
-  private mouseUp = () => {
-    if (!this.state.selectionStarted) {
-      return;
-    }
-
-    const selection = this.getElementsInSelectionBox();
-    this.props.select(selection);
-
-    this.setState({
-      selectionStarted: false,
-      selectionRectangle: {
-        startX: undefined,
-        startY: undefined,
-        endX: undefined,
-        endY: undefined,
-      },
-    });
+      return selectedIDs;
+    }, [] as string[]);
   };
 }
 
