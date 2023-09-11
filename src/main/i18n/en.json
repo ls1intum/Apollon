@@ -117,6 +117,10 @@
     },
     "ColorLegend": {
       "ColorLegend": "Color Description"
+    },
+    "BPMN": {
+      "BPMNTask": "Task",
+      "BPMNSubprocess": "Subprocess"
     }
   }
 }

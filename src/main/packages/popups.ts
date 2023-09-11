@@ -69,6 +69,15 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.FlowchartFunctionCall]: FlowchartFunctionCallUpdate,
   [UMLElementType.FlowchartInputOutput]: FlowchartInputOutputUpdate,
   [UMLElementType.ColorLegend]: ColorLegendUpdate,
+  [UMLElementType.BPMNTask]: DefaultPopup,
+  [UMLElementType.BPMNSubprocess]: DefaultPopup,
+  [UMLElementType.BPMNStartEvent]: DefaultPopup,
+  [UMLElementType.BPMNIntermediateEvent]: DefaultPopup,
+  [UMLElementType.BPMNEndEvent]: DefaultPopup,
+  [UMLElementType.BPMNExclusiveGateway]: DefaultPopup,
+  [UMLElementType.BPMNInclusiveGateway]: DefaultPopup,
+  [UMLElementType.BPMNParallelGateway]: DefaultPopup,
+  [UMLElementType.BPMNEventBasedGateway]: DefaultPopup,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
@@ -95,4 +104,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.ReachabilityGraphArc]: UMLReachabilityGraphArcUpdate,
   [UMLRelationshipType.SyntaxTreeLink]: DefaultRelationshipPopup,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineUpdate,
+  [UMLRelationshipType.BPMNSequenceFlow]: DefaultRelationshipPopup,
 };

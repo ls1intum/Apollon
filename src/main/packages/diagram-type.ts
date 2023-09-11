@@ -12,4 +12,5 @@ export const UMLDiagramType = {
   ReachabilityGraph: 'ReachabilityGraph',
   SyntaxTree: 'SyntaxTree',
   Flowchart: 'Flowchart',
+  BPMN: 'BPMN',
 } as const;

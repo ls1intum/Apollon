@@ -28,6 +28,7 @@ import { composeSyntaxTreePreview } from '../../packages/syntax-tree/syntax-tree
 import { composeFlowchartPreview } from '../../packages/flowchart/flowchart-diagram-preview';
 import { ColorLegend } from '../../packages/common/color-legend/color-legend';
 import { Separator } from './create-pane-styles';
+import { composeBPMNPreview } from '../../packages/bpmn/bpmn-diagram-preview';
 type OwnProps = {};
 
 type StateProps = {
@@ -79,6 +80,10 @@ const getInitialState = ({ type, canvas, translate, colorEnabled, scale }: Props
       break;
     case UMLDiagramType.Flowchart:
       previews.push(...composeFlowchartPreview(canvas, translate, scale));
+      break;
+    case UMLDiagramType.BPMN:
+      previews.push(...composeBPMNPreview(canvas, translate, scale));
+      break;
   }
   if (colorEnabled) {
     utils.push(

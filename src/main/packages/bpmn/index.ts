@@ -1,0 +1,17 @@
+import { BPMNSequenceFlow } from './bpmn-squence-flow/bpmn-sequence-flow';
+
+export const BPMNElementType = {
+  BPMNTask: 'BPMNTask',
+  BPMNSubprocess: 'BPMNSubprocess',
+  BPMNStartEvent: 'BPMNStartEvent',
+  BPMNIntermediateEvent: 'BPMNIntermediateEvent',
+  BPMNEndEvent: 'BPMNEndEvent',
+  BPMNExclusiveGateway: 'BPMNExclusiveGateway',
+  BPMNInclusiveGateway: 'BPMNInclusiveGateway',
+  BPMNParallelGateway: 'BPMNParallelGateway',
+  BPMNEventBasedGateway: 'BPMNEventBasedGateway',
+} as const;
+
+export const BPMNRelationshipType = {
+  BPMNSequenceFlow: 'BPMNSequenceFlow',
+} as const;

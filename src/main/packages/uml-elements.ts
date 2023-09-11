@@ -38,6 +38,15 @@ import { FlowchartDecision } from './flowchart/flowchart-decision/flowchart-deci
 import { FlowchartProcess } from './flowchart/flowchart-process/flowchart-process';
 import { FlowchartInputOutput } from './flowchart/flowchart-input-output/flowchart-input-output';
 import { ColorLegend } from './common/color-legend/color-legend';
+import { BPMNTask } from './bpmn/bpmn-task/bpmn-task';
+import { BPMNSubprocess } from './bpmn/bpmn-subprocess/bpmn-subprocess';
+import { BPMNStartEvent } from './bpmn/bpmn-start-event/bmpn-start-event';
+import { BPMNIntermediateEvent } from './bpmn/bpmn-intermediate-event/bpmn-intermediate-event';
+import { BPMNEndEvent } from './bpmn/bpmn-end-event/bpmn-end-event';
+import { BPMNExclusiveGateway } from './bpmn/bpmn-exclusive-gateway/bpmn-exclusive-gateway';
+import { BPMNInclusiveGateway } from './bpmn/bpmn-inclusive-gateway/bpmn-inclusive-gateway';
+import { BPMNParallelGateway } from './bpmn/bpmn-parallel-gateway/bpmn-parallel-gateway';
+import { BPMNEventBasedGateway } from './bpmn/bpmn-event-based-gateway/bpmn-event-based-gateway';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -79,4 +88,13 @@ export const UMLElements = {
   [UMLElementType.FlowchartDecision]: FlowchartDecision,
   [UMLElementType.FlowchartInputOutput]: FlowchartInputOutput,
   [UMLElementType.ColorLegend]: ColorLegend,
+  [UMLElementType.BPMNTask]: BPMNTask,
+  [UMLElementType.BPMNSubprocess]: BPMNSubprocess,
+  [UMLElementType.BPMNStartEvent]: BPMNStartEvent,
+  [UMLElementType.BPMNIntermediateEvent]: BPMNIntermediateEvent,
+  [UMLElementType.BPMNEndEvent]: BPMNEndEvent,
+  [UMLElementType.BPMNExclusiveGateway]: BPMNExclusiveGateway,
+  [UMLElementType.BPMNInclusiveGateway]: BPMNInclusiveGateway,
+  [UMLElementType.BPMNParallelGateway]: BPMNParallelGateway,
+  [UMLElementType.BPMNEventBasedGateway]: BPMNEventBasedGateway,
 };
