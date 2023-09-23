@@ -10,7 +10,7 @@ const grid = 10;
 const subdivisions = 5;
 const borderWidth = 1;
 
-const StyledEditor = styled.div`
+const StyledEditor = styled.div<{zoomFactor?: number}>`
   display: block;
   width: 100%;
   position: relative;
@@ -35,11 +35,12 @@ const StyledEditor = styled.div`
     linear-gradient(to bottom, ${(props) => props.theme.color.gray} 1px, transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
+  //transform: scale(${(props) => props.zoomFactor ?? 1});
 `;
 
 type OwnProps = { children: ReactNode };
 
-type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean };
+type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean, zoomFactor: number };
 
 type DispatchProps = { move: AsyncDispatch<typeof UMLElementRepository.move> };
 
@@ -48,6 +49,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     moving: [...state.moving],
     connecting: state.connecting.length > 0,
     reconnecting: Object.keys(state.reconnecting).length > 0,
+    zoomFactor: state.editor.zoomFactor
   }),
   {
     move: UMLElementRepository.move,
@@ -88,11 +90,11 @@ class EditorComponent extends Component<Props, State> {
   }
 
   render() {
-    const { moving, connecting, reconnecting, ...props } = this.props;
+    const { moving, connecting, reconnecting, zoomFactor, ...props } = this.props;
     if (this.state.isMobile) {
-      return <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} />;
+      return <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} zoomFactor={zoomFactor}/>;
     } else {
-      return <StyledEditor {...props} />;
+      return <StyledEditor {...props} zoomFactor={zoomFactor}/>;
     }
   }
 
