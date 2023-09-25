@@ -120,7 +120,16 @@
     },
     "BPMN": {
       "BPMNTask": "Task",
-      "BPMNSubprocess": "Sub-Prozess"
+      "BPMNSubprocess": "Sub-Prozess",
+      "BPMNTransaction": "Transaktion",
+      "BPMNCallActivity": "Aufruf-Aktivität",
+      "BPMNStartEvent": "Start-Event",
+      "BPMNIntermediateEvent": "Zwischen-Event",
+      "BPMNEndEvent": "End-Event",
+      "BPMNEventBasedGateway": "Ereignis-basierter Gateway",
+      "BPMNInclusiveGateway": "Inklusiver Gateway",
+      "BPMNExclusiveGateway": "Exklusiver Gateway",
+      "BPMNParallelGateway": "Paralleler Gateway"
     }
   }
 }

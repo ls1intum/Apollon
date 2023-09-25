@@ -1,8 +1,9 @@
 import React, { FunctionComponent } from 'react';
 import { BPMNParallelGateway } from './bpmn-parallel-gateway';
 import { ThemedPolyline } from '../../../components/theme/themedComponents';
+import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNParallelGatewayComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
+export const BPMNParallelGatewayComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedPolyline
       points={`${element.bounds.width / 2} 0, ${element.bounds.width} ${element.bounds.height / 2}, ${
@@ -21,11 +22,21 @@ export const BPMNParallelGatewayComponent: FunctionComponent<Props> = ({ element
       strokeColor={element.strokeColor}
       fillColor={element.fillColor}
     />
+    <Multiline
+      x={element.bounds.width / 2}
+      y={element.bounds.height + 20}
+      width={element.bounds.width}
+      height={element.bounds.height}
+      fill={element.textColor}
+      lineHeight={16}
+      capHeight={11}
+    >
+      {element.name}
+    </Multiline>
   </g>
 );
 
 export interface Props {
   element: BPMNParallelGateway;
-  scale: number;
   fillColor?: string;
 }

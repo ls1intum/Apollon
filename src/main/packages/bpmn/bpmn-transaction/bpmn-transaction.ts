@@ -4,12 +4,9 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { calculateNameBounds } from '../../../utils/name-bounds';
 import { UMLElementType } from '../../uml-element-type';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 
-export class BPMNInclusiveGateway extends UMLElement {
-  static features: UMLElementFeatures = { ...UMLElement.features, resizable: false, updatable: false };
-
-  type: UMLElementType = BPMNElementType.BPMNInclusiveGateway;
+export class BPMNTransaction extends UMLElement {
+  type: UMLElementType = BPMNElementType.BPMNTransaction;
 
   render(canvas: ILayer): ILayoutable[] {
     this.bounds = calculateNameBounds(this, canvas);

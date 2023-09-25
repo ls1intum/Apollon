@@ -3,11 +3,11 @@ import { BPMNTask } from './bpmn-task';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
+export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedRect
-      rx={10 * scale}
-      ry={10 * scale}
+      rx={10}
+      ry={10}
       width="100%"
       height="100%"
       strokeColor={element.strokeColor}
@@ -20,8 +20,8 @@ export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, scale, fi
       height={element.bounds.height}
       fontWeight="bold"
       fill={element.textColor}
-      lineHeight={16 * scale}
-      capHeight={11 * scale}
+      lineHeight={16}
+      capHeight={11}
     >
       {element.name}
     </Multiline>
@@ -30,6 +30,5 @@ export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, scale, fi
 
 interface Props {
   element: BPMNTask;
-  scale: number;
   fillColor?: string;
 }

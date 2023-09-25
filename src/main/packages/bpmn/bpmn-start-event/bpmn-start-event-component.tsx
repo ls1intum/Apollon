@@ -1,15 +1,15 @@
 import React, { ComponentType, FunctionComponent } from 'react';
-import { BPMNStartEvent } from './bmpn-start-event';
+import { BPMNStartEvent } from './bpmn-start-event';
 import { connect, ConnectedComponent } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
 import { compose } from 'redux';
 import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { ApollonView } from '../../../services/editor/editor-types';
 import { ThemedCircle } from '../../../components/theme/themedComponents';
+import { Multiline } from '../../../utils/svg/multiline';
 
 type OwnProps = {
   element: BPMNStartEvent;
-  scale: number;
 };
 
 type StateProps = { interactive: boolean; interactable: boolean };
@@ -26,15 +26,26 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-const BPMNStartEventC: FunctionComponent<Props> = ({ element, interactive, interactable, theme, scale }) => {
+const BPMNStartEventC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
   return (
     <g>
       <ThemedCircle
         cx="50%"
         cy="50%"
-        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5 * scale}
+        r={Math.min(element.bounds.width, element.bounds.height) / 2}
         strokeColor={interactable && interactive ? theme.interactive.normal : element.fillColor}
       />
+      <Multiline
+        x={element.bounds.width / 2}
+        y={element.bounds.height + 20}
+        width={element.bounds.width}
+        height={element.bounds.height}
+        fill={element.textColor}
+        lineHeight={16}
+        capHeight={11}
+      >
+        {element.name}
+      </Multiline>
     </g>
   );
 };

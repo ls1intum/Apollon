@@ -52,11 +52,13 @@ import { BPMNTaskComponent } from './bpmn/bpmn-task/bpmn-task-component';
 import { BPMNSubprocessComponent } from './bpmn/bpmn-subprocess/bpmn-subprocess-component';
 import { BPMNStartEventComponent } from './bpmn/bpmn-start-event/bpmn-start-event-component';
 import { BPMNIntermediateEventComponent } from './bpmn/bpmn-intermediate-event/bpmn-intermediate-event-component';
-import { BPMNEndEventComponent } from './bpmn/bpmn-end-event/bmpn-end-event-component';
+import { BPMNEndEventComponent } from './bpmn/bpmn-end-event/bpmn-end-event-component';
 import { BPMNExclusiveGatewayComponent } from './bpmn/bpmn-exclusive-gateway/bpmn-exclusive-gateway-component';
 import { BPMNInclusiveGatewayComponent } from './bpmn/bpmn-inclusive-gateway/bpmn-inclusive-gateway-component';
 import { BPMNParallelGatewayComponent } from './bpmn/bpmn-parallel-gateway/bpmn-parallel-gateway-component';
 import { BPMNEventBasedGatewayComponent } from './bpmn/bpmn-event-based-gateway/bpmn-event-based-gateway-component';
+import {BPMNTransactionComponent} from './bpmn/bpmn-transaction/bpmn-transaction-component';
+import {BPMNCallActivityComponent} from './bpmn/bpmn-call-activity/bpmn-transaction-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -104,6 +106,8 @@ export const Components: {
   [UMLElementType.ColorLegend]: ColorLegendComponent,
   [UMLElementType.BPMNTask]: BPMNTaskComponent,
   [UMLElementType.BPMNSubprocess]: BPMNSubprocessComponent,
+  [UMLElementType.BPMNTransaction]: BPMNTransactionComponent,
+  [UMLElementType.BPMNCallActivity]: BPMNCallActivityComponent,
   [UMLElementType.BPMNStartEvent]: BPMNStartEventComponent,
   [UMLElementType.BPMNIntermediateEvent]: BPMNIntermediateEventComponent,
   [UMLElementType.BPMNEndEvent]: BPMNEndEventComponent,

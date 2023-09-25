@@ -10,10 +10,11 @@ import { UMLElementType } from '../../uml-element-type';
 
 export class BPMNEndEvent extends UMLElement {
   static supportedRelationships = [BPMNRelationshipType.BPMNSequenceFlow];
-  static features: UMLElementFeatures = { ...UMLElement.features, resizable: false, updatable: false };
+  static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };
 
   type: UMLElementType = BPMNElementType.BPMNEndEvent;
-  bounds: IBoundary = { ...this.bounds, width: 45, height: 45 };
+  bounds: IBoundary = { ...this.bounds, width: 40, height: 40 };
+  name = 'End Event';
 
   constructor(values?: DeepPartial<IUMLElement>) {
     super(values);

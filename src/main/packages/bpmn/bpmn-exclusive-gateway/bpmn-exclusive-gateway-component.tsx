@@ -1,8 +1,9 @@
 import React, { FunctionComponent } from 'react';
 import { BPMNExclusiveGateway } from './bpmn-exclusive-gateway';
 import { ThemedPolyline } from '../../../components/theme/themedComponents';
+import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNExclusiveGatewayComponent: FunctionComponent<Props> = ({ element, scale }) => (
+export const BPMNExclusiveGatewayComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
     <ThemedPolyline
       points={`${element.bounds.width / 2} 0, ${element.bounds.width} ${element.bounds.height / 2}, ${
@@ -12,19 +13,29 @@ export const BPMNExclusiveGatewayComponent: FunctionComponent<Props> = ({ elemen
       fillColor={element.fillColor}
     />
     <ThemedPolyline
-      points={`12 12, ${element.bounds.width - 12} ${element.bounds.height - 12}`}
+      points={`13 13, ${element.bounds.width - 13} ${element.bounds.height - 13}`}
       strokeColor={element.strokeColor}
       fillColor={element.fillColor}
     />
     <ThemedPolyline
-      points={`12 ${element.bounds.height - 12}, ${element.bounds.width - 12} 12`}
+      points={`13 ${element.bounds.height - 13}, ${element.bounds.width - 13} 13`}
       strokeColor={element.strokeColor}
       fillColor={element.fillColor}
     />
+    <Multiline
+      x={element.bounds.width / 2}
+      y={element.bounds.height + 20}
+      width={element.bounds.width}
+      height={element.bounds.height}
+      fill={element.textColor}
+      lineHeight={16}
+      capHeight={11}
+    >
+      {element.name}
+    </Multiline>
   </g>
 );
 
 export interface Props {
   element: BPMNExclusiveGateway;
-  scale: number;
 }

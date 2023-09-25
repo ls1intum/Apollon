@@ -3,6 +3,8 @@ import { BPMNSequenceFlow } from './bpmn-squence-flow/bpmn-sequence-flow';
 export const BPMNElementType = {
   BPMNTask: 'BPMNTask',
   BPMNSubprocess: 'BPMNSubprocess',
+  BPMNTransaction: 'BPMNTransaction',
+  BPMNCallActivity: 'BPMNCallActivity',
   BPMNStartEvent: 'BPMNStartEvent',
   BPMNIntermediateEvent: 'BPMNIntermediateEvent',
   BPMNEndEvent: 'BPMNEndEvent',
