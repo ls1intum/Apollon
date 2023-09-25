@@ -55,7 +55,7 @@ export const BPMNSequenceFlowComponent: FunctionComponent<Props> = ({ element })
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <ThemedPath d={`M0,0 L10,5 L0,10, L0,0 z`} fillRule="evenodd" fillColor="strokeColor" />
+        <ThemedPath d={`M0,0 L10,5 L0,10, L0,0 z`} fillRule="evenodd" fillColor="strokeColor" strokeLinejoin="round" />
       </marker>
       <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}

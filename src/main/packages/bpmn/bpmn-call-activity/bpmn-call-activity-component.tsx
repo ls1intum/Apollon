@@ -11,7 +11,7 @@ export const BPMNCallActivityComponent: FunctionComponent<Props> = ({ element, f
       width={element.bounds.width}
       height={element.bounds.height}
       strokeColor={element.strokeColor}
-      strokeWidth={4}
+      strokeWidth={3}
       fillColor={fillColor || element.fillColor}
     />
     <Multiline

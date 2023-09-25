@@ -5,6 +5,7 @@ export const BPMNElementType = {
   BPMNSubprocess: 'BPMNSubprocess',
   BPMNTransaction: 'BPMNTransaction',
   BPMNCallActivity: 'BPMNCallActivity',
+  BPMNAnnotation: 'BPMNAnnotation',
   BPMNStartEvent: 'BPMNStartEvent',
   BPMNIntermediateEvent: 'BPMNIntermediateEvent',
   BPMNEndEvent: 'BPMNEndEvent',

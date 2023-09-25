@@ -123,6 +123,7 @@
       "BPMNSubprocess": "Sub-Prozess",
       "BPMNTransaction": "Transaktion",
       "BPMNCallActivity": "Aufruf-Aktivität",
+      "BPMNAnnotation": "Annotation",
       "BPMNStartEvent": "Start-Event",
       "BPMNIntermediateEvent": "Zwischen-Event",
       "BPMNEndEvent": "End-Event",

@@ -58,7 +58,8 @@ import { BPMNInclusiveGatewayComponent } from './bpmn/bpmn-inclusive-gateway/bpm
 import { BPMNParallelGatewayComponent } from './bpmn/bpmn-parallel-gateway/bpmn-parallel-gateway-component';
 import { BPMNEventBasedGatewayComponent } from './bpmn/bpmn-event-based-gateway/bpmn-event-based-gateway-component';
 import {BPMNTransactionComponent} from './bpmn/bpmn-transaction/bpmn-transaction-component';
-import {BPMNCallActivityComponent} from './bpmn/bpmn-call-activity/bpmn-transaction-component';
+import {BPMNCallActivityComponent} from './bpmn/bpmn-call-activity/bpmn-call-activity-component';
+import {BPMNAnnotationComponent} from './bpmn/bpmn-annotation/bpmn-annotation-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -108,6 +109,7 @@ export const Components: {
   [UMLElementType.BPMNSubprocess]: BPMNSubprocessComponent,
   [UMLElementType.BPMNTransaction]: BPMNTransactionComponent,
   [UMLElementType.BPMNCallActivity]: BPMNCallActivityComponent,
+  [UMLElementType.BPMNAnnotation]: BPMNAnnotationComponent,
   [UMLElementType.BPMNStartEvent]: BPMNStartEventComponent,
   [UMLElementType.BPMNIntermediateEvent]: BPMNIntermediateEventComponent,
   [UMLElementType.BPMNEndEvent]: BPMNEndEventComponent,

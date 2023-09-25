@@ -74,6 +74,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNSubprocess]: DefaultPopup,
   [UMLElementType.BPMNTransaction]: DefaultPopup,
   [UMLElementType.BPMNCallActivity]: DefaultPopup,
+  [UMLElementType.BPMNAnnotation]: DefaultPopup,
   [UMLElementType.BPMNStartEvent]: DefaultPopup,
   [UMLElementType.BPMNIntermediateEvent]: DefaultPopup,
   [UMLElementType.BPMNEndEvent]: DefaultPopup,

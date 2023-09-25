@@ -49,6 +49,7 @@ import { BPMNParallelGateway } from './bpmn/bpmn-parallel-gateway/bpmn-parallel-
 import { BPMNEventBasedGateway } from './bpmn/bpmn-event-based-gateway/bpmn-event-based-gateway';
 import {BPMNTransaction} from './bpmn/bpmn-transaction/bpmn-transaction';
 import {BPMNCallActivity} from './bpmn/bpmn-call-activity/bpmn-call-activity';
+import {BPMNAnnotation} from './bpmn/bpmn-annotation/bpmn-annotation';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -94,6 +95,7 @@ export const UMLElements = {
   [UMLElementType.BPMNSubprocess]: BPMNSubprocess,
   [UMLElementType.BPMNTransaction]: BPMNTransaction,
   [UMLElementType.BPMNCallActivity]: BPMNCallActivity,
+  [UMLElementType.BPMNAnnotation]: BPMNAnnotation,
   [UMLElementType.BPMNStartEvent]: BPMNStartEvent,
   [UMLElementType.BPMNIntermediateEvent]: BPMNIntermediateEvent,
   [UMLElementType.BPMNEndEvent]: BPMNEndEvent,
