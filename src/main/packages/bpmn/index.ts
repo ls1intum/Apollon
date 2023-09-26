@@ -13,6 +13,7 @@ export const BPMNElementType = {
   BPMNInclusiveGateway: 'BPMNInclusiveGateway',
   BPMNParallelGateway: 'BPMNParallelGateway',
   BPMNEventBasedGateway: 'BPMNEventBasedGateway',
+  BPMNConversation: 'BPMNConversation',
 } as const;
 
 export const BPMNRelationshipType = {

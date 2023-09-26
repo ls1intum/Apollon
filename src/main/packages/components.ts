@@ -60,6 +60,7 @@ import { BPMNEventBasedGatewayComponent } from './bpmn/bpmn-event-based-gateway/
 import {BPMNTransactionComponent} from './bpmn/bpmn-transaction/bpmn-transaction-component';
 import {BPMNCallActivityComponent} from './bpmn/bpmn-call-activity/bpmn-call-activity-component';
 import {BPMNAnnotationComponent} from './bpmn/bpmn-annotation/bpmn-annotation-component';
+import {BPMNConversationComponent} from './bpmn/bpmn-conversation/bpmn-conversation-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -117,6 +118,7 @@ export const Components: {
   [UMLElementType.BPMNInclusiveGateway]: BPMNInclusiveGatewayComponent,
   [UMLElementType.BPMNParallelGateway]: BPMNParallelGatewayComponent,
   [UMLElementType.BPMNEventBasedGateway]: BPMNEventBasedGatewayComponent,
+  [UMLElementType.BPMNConversation]: BPMNConversationComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,

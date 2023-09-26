@@ -13,6 +13,7 @@ import { BPMNEventBasedGateway } from './bpmn-event-based-gateway/bpmn-event-bas
 import { BPMNTransaction } from './bpmn-transaction/bpmn-transaction';
 import { BPMNCallActivity } from './bpmn-call-activity/bpmn-call-activity';
 import { BPMNAnnotation } from './bpmn-annotation/bpmn-annotation';
+import {BPMNConversation} from './bpmn-conversation/bpmn-conversation';
 
 export const composeBPMNPreview: ComposePreview = (
   layer: ILayer,
@@ -104,6 +105,13 @@ export const composeBPMNPreview: ComposePreview = (
       bounds: { x: 0, y: 0, width: 40, height: 40 },
     }),
   );
+
+    elements.push(
+        new BPMNConversation({
+            name: translate('packages.BPMN.BPMNConversation'),
+            bounds: { x: 0, y: 0, width: 40, height: 40 },
+        }),
+    );
 
   return elements;
 };

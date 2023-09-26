@@ -82,6 +82,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNInclusiveGateway]: DefaultPopup,
   [UMLElementType.BPMNParallelGateway]: DefaultPopup,
   [UMLElementType.BPMNEventBasedGateway]: DefaultPopup,
+  [UMLElementType.BPMNConversation]: DefaultPopup,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
