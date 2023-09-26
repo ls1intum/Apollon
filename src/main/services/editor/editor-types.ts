@@ -20,6 +20,7 @@ export const enum ApollonView {
 
 export const enum EditorActionTypes {
   CHANGE_VIEW = '@@element/CHANGE_VIEW',
+  CHANGE_SCALE = '@@element/CHANGE_SCALE',
 }
 
 export type EditorState = {
@@ -33,10 +34,16 @@ export type EditorState = {
   readonly scale: number;
 };
 
-export type EditorActions = ChangeViewAction;
+export type EditorActions = ChangeViewAction | ChangeScaleAction;
 
 export type ChangeViewAction = Action<EditorActionTypes.CHANGE_VIEW> & {
   payload: {
     view: ApollonView;
+  };
+};
+
+export type ChangeScaleAction = Action<EditorActionTypes.CHANGE_SCALE> & {
+  payload: {
+    scale: number;
   };
 };

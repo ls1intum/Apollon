@@ -32,6 +32,14 @@ export const EditorReducer: Reducer<EditorState, Actions> = (state = initialStat
         view: payload.view,
       };
     }
+    case EditorActionTypes.CHANGE_SCALE: {
+      const { payload } = action;
+
+      return {
+        ...state,
+        scale: payload.scale,
+      };
+    }
   }
   return state;
 };
