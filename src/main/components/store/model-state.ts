@@ -124,31 +124,38 @@ export class ModelState {
     const elements = Object.values(state.elements)
       .map<UMLElement | null>((element) => UMLElementRepository.get(element))
       .reduce<{ [id: string]: UMLElement }>((acc, val) => ({ ...acc, ...(val && { [val.id]: val }) }), {});
+
     const relationships: UMLRelationship[] = Object.values(state.elements)
       .filter((x): x is IUMLRelationship => UMLRelationship.isUMLRelationship(x))
       .map((relationship) => UMLRelationshipRepository.get(relationship)!);
 
-    const serialize = (element: UMLElement): Apollon.UMLElement[] => {
+    const serialize = (element: UMLElement): { [id: string]: Apollon.UMLElement } => {
       const children: UMLElement[] = UMLContainer.isUMLContainer(element)
         ? element.ownedElements.map((id) => elements[id])
         : [];
 
-      return [
-        element.serialize(children) as Apollon.UMLElement,
-        ...children
-          .reduce<Apollon.UMLElement[]>((acc, val) => [...acc, ...serialize(val)], [])
-          .map<Apollon.UMLElement>((val) => ({
-            ...val,
-            bounds: { ...val.bounds, x: val.bounds.x + element.bounds.x, y: val.bounds.y + element.bounds.y },
-          })),
-      ];
+      const res = {
+        [element.id]: element.serialize(children) as Apollon.UMLElement,
+      }
+
+      for (const child of children) {
+        const childres = serialize(child);
+        Object.values(childres).forEach((child) => {
+          child.bounds.x += element.bounds.x;
+          child.bounds.y += element.bounds.y;
+        });
+
+        Object.assign(res, childres);
+      }
+
+      return res;
     };
 
-    const apollonElements = Object.fromEntries(
-      Object.entries(elements)
-        .filter(([, element]) => !element.owner)
-    ) as {[id: string]: Apollon.UMLElement};
 
+    const apollonElements = Object.values(elements)
+      .filter((element) => !element.owner)
+      .reduce((acc, element) => ({ ...acc, ...serialize(element) }), {}) as {[id: string]: Apollon.UMLElement};
+  
     const apollonElementsArray = Object.values(apollonElements);
 
     const apollonRelationships: Apollon.UMLRelationship[] = relationships.map((relationship) =>
