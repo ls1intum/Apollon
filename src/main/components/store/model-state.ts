@@ -45,22 +45,26 @@ export interface ModelState {
   lastAction: LastActionState;
 }
 
+// TODO: fix this
+
 export class ModelState {
   static fromModel(model: Apollon.UMLModel): PartialModelState {
+    // TODO: check for version, as it is different based on 2.0.0 vs 3.0.0
+
     const apollonElements = model.elements;
     const apollonRelationships = model.relationships;
 
     const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
       const element = new UMLElements[apollonElement.type]();
       const children: Apollon.UMLElement[] = UMLContainer.isUMLContainer(element)
-        ? apollonElements
+        ? Object.values(apollonElements)
             .filter((child) => child.owner === apollonElement.id)
-            .map<Apollon.UMLElement>((val) => {
-              const parent = apollonElements.find((e) => e.id === val.owner)!;
+            .map((val) => {
+              const parent = apollonElements[val.owner!];
               return {
                 ...val,
                 bounds: { ...val.bounds, x: val.bounds.x - parent.bounds.x, y: val.bounds.y - parent.bounds.y },
-              };
+              } as Apollon.UMLElement;
             })
         : [];
 
@@ -69,11 +73,11 @@ export class ModelState {
       return [element, ...children.reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], [])];
     };
 
-    const elements = apollonElements
+    const elements = Object.values(apollonElements)
       .filter((element) => !element.owner)
       .reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
 
-    const relationships = apollonRelationships.map<UMLRelationship>((apollonRelationship) => {
+    const relationships = Object.values(apollonRelationships).map<UMLRelationship>((apollonRelationship) => {
       const relationship = new UMLRelationships[apollonRelationship.type]();
       relationship.deserialize(apollonRelationship);
       return relationship;
@@ -91,7 +95,7 @@ export class ModelState {
     // set diagram to keep diagram type
     const diagram: UMLDiagram = new UMLDiagram();
     diagram.type = model.type as UMLDiagramType;
-    diagram.ownedRelationships = model.relationships.map((s) => {
+    diagram.ownedRelationships = Object.values(model.relationships).map((s) => {
       return s.id;
     });
 
@@ -99,7 +103,7 @@ export class ModelState {
       diagram,
       interactive: [...model.interactive.elements, ...model.interactive.relationships],
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
-      assessments: (model.assessments || []).reduce<AssessmentState>(
+      assessments: (Object.values(model.assessments) || []).reduce<AssessmentState>(
         (acc, val) => ({
           ...acc,
           [val.modelElementId]: {
@@ -140,19 +144,22 @@ export class ModelState {
       ];
     };
 
-    const apollonElements = Object.values(elements)
-      .filter((element) => !element.owner)
-      .reduce<Apollon.UMLElement[]>((acc, val) => [...acc, ...serialize(val)], []);
+    const apollonElements = Object.fromEntries(
+      Object.entries(elements)
+        .filter(([, element]) => !element.owner)
+    ) as {[id: string]: Apollon.UMLElement};
+
+    const apollonElementsArray = Object.values(apollonElements);
 
     const apollonRelationships: Apollon.UMLRelationship[] = relationships.map((relationship) =>
       relationship.serialize(),
     );
 
-    const roots = [...apollonElements, ...apollonRelationships].filter((element) => !element.owner);
+    const roots = [...apollonElementsArray, ...apollonRelationships].filter((element) => !element.owner);
     const bounds = computeBoundingBoxForElements(roots);
     bounds.width = Math.ceil(bounds.width / 20) * 20;
     bounds.height = Math.ceil(bounds.height / 20) * 20;
-    for (const element of apollonElements) {
+    for (const element of apollonElementsArray) {
       element.bounds.x -= bounds.x;
       element.bounds.y -= bounds.y;
     }
@@ -166,24 +173,26 @@ export class ModelState {
       relationships: state.interactive.filter((id) => UMLRelationship.isUMLRelationship(state.elements[id])),
     };
 
-    const assessments = Object.keys(state.assessments).map<Apollon.Assessment>((id) => ({
-      modelElementId: id,
-      elementType: state.elements[id].type as UMLElementType | UMLRelationshipType,
-      score: state.assessments[id].score,
-      feedback: state.assessments[id].feedback,
-      label: state.assessments[id].label,
-      labelColor: state.assessments[id].labelColor,
-      correctionStatus: state.assessments[id].correctionStatus,
-      dropInfo: state.assessments[id].dropInfo,
-    }));
+    const assessments = Object.fromEntries(
+      Object.entries(state.assessments).map(([id, assessment]) => [id, {
+        modelElementId: id,
+        elementType: state.elements[id].type as UMLElementType | UMLRelationshipType,
+        score: state.assessments[id].score,
+        feedback: state.assessments[id].feedback,
+        label: state.assessments[id].label,
+        labelColor: state.assessments[id].labelColor,
+        correctionStatus: state.assessments[id].correctionStatus,
+        dropInfo: state.assessments[id].dropInfo,
+      }])
+    );
 
     return {
-      version: '2.0.0',
+      version: '3.0.0',
       type: state.diagram.type,
       size: { width: state.diagram.bounds.width, height: state.diagram.bounds.height },
       interactive,
       elements: apollonElements,
-      relationships: apollonRelationships,
+      relationships: Object.fromEntries(apollonRelationships.map((relationship) => [relationship.id, relationship])),
       assessments,
     };
   }

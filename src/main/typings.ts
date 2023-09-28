@@ -34,10 +34,10 @@ export type UMLModel = {
   version: string;
   type: UMLDiagramType;
   size: { width: number; height: number };
-  elements: UMLElement[];
+  elements: { [id: string]: UMLElement };
   interactive: Selection;
-  relationships: UMLRelationship[];
-  assessments: Assessment[];
+  relationships: { [id: string]: UMLRelationship };
+  assessments: { [id: string]: Assessment };
 };
 
 export type UMLModelElementType = UMLElementType | UMLRelationshipType | UMLDiagramType;
