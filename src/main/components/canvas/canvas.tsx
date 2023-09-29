@@ -10,8 +10,7 @@ import { UMLElementComponent } from '../uml-element/uml-element-component';
 import { CanvasContainer } from './canvas-styles';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
-import {EditorRepository} from '../../services/editor/editor-repository';
-
+import { EditorRepository } from '../../services/editor/editor-repository';
 
 const MIN_SCALE: number = 0.5;
 const MAX_SCALE: number = 5.0;
@@ -32,7 +31,7 @@ type DispatchProps = {
 type Props = OwnProps & StateProps & DispatchProps;
 
 const initialState = Object.freeze({
-  gestureStartZoomFactor: 1.0 as number
+  gestureStartZoomFactor: 1.0 as number,
 });
 
 type State = typeof initialState;
@@ -42,11 +41,11 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     diagram: state.diagram,
     isStatic: state.editor.readonly,
     elements: state.elements,
-    zoomFactor: state.editor.zoomFactor
+    zoomFactor: state.editor.zoomFactor,
   }),
-    {
-      changeZoomFactor: EditorRepository.changeZoomFactor,
-    },
+  {
+    changeZoomFactor: EditorRepository.changeZoomFactor,
+  },
   null,
   { forwardRef: true },
 );
@@ -57,8 +56,7 @@ export class CanvasComponent extends Component<Props, State> implements Omit<ILa
   layer: RefObject<SVGSVGElement> = createRef();
 
   componentDidMount() {
-
-    const {zoomFactor = 1} = this.props;
+    const { zoomFactor = 1 } = this.props;
 
     window.addEventListener('wheel', (event) => {
       event.preventDefault();
@@ -68,26 +66,26 @@ export class CanvasComponent extends Component<Props, State> implements Omit<ILa
       }
     });
 
-
     window.addEventListener('gesturestart', (event) => {
       event.preventDefault();
 
       this.setState({
         ...this.state,
-        gestureStartZoomFactor: zoomFactor
+        gestureStartZoomFactor: zoomFactor,
       });
     });
 
-    window.addEventListener('gesturechange',  (event) => {
+    window.addEventListener('gesturechange', (event) => {
       event.preventDefault();
-      this.props.changeZoomFactor(this.clamp(this.state.gestureStartZoomFactor * (event as any).scale, MIN_SCALE, MAX_SCALE));
+      this.props.changeZoomFactor(
+        this.clamp(this.state.gestureStartZoomFactor * (event as any).scale, MIN_SCALE, MAX_SCALE),
+      );
     });
 
     window.addEventListener('gestureend', function (event) {
       event.preventDefault();
     });
   }
-
 
   origin = (): Point => {
     if (!this.layer.current) {
@@ -104,15 +102,12 @@ export class CanvasComponent extends Component<Props, State> implements Omit<ILa
     return point.subtract(origin).round().add(origin);
   };
 
-  clamp = (value: number, min: number, max: number) : number => {
+  clamp = (value: number, min: number, max: number): number => {
     return Math.max(min, Math.min(value, max));
   };
 
   render() {
-
-    const { elements, diagram, isStatic, zoomFactor} = this.props;
-
-    console.log(zoomFactor);
+    const { elements, diagram, isStatic, zoomFactor } = this.props;
 
     let minX = 0;
     let minY = 0;
@@ -144,7 +139,7 @@ export class CanvasComponent extends Component<Props, State> implements Omit<ILa
           ref={this.layer}
           data-cy="modeling-editor-canvas"
         >
-          <g style={{ transform: `scale(${zoomFactor}) ${translateCoordinate()}`}}>
+          <g style={{ transformOrigin: 'top left', transform: `${translateCoordinate()}` }}>
             {this.layer.current && (
               <svg x="50%" y="50%">
                 {/* be careful to change the drawing order -> if relationships are drawn first -> relationships will not be visible in containers */}
@@ -154,7 +149,7 @@ export class CanvasComponent extends Component<Props, State> implements Omit<ILa
                 {diagram.ownedRelationships.map((relationship) => (
                   <UMLElementComponent key={relationship} id={relationship} />
                 ))}
-                <ConnectionPreview/>
+                <ConnectionPreview />
               </svg>
             )}
           </g>

@@ -10,10 +10,8 @@ import { compose } from 'redux';
 import { withRoot } from '../root/with-root';
 import { RootContext } from '../root/root-context';
 import isMobile from 'is-mobile';
-import {connect} from 'react-redux';
-import {ModelState} from '../store/model-state';
-
-
+import { connect } from 'react-redux';
+import { ModelState } from '../store/model-state';
 
 type OwnProps = {};
 
@@ -23,7 +21,7 @@ type StateProps = {
 
 type DispatchProps = {};
 
-type Props =StateProps & CanvasContext & RootContext;
+type Props = StateProps & CanvasContext & RootContext;
 
 const initialState = {
   dragging: false,
@@ -35,9 +33,13 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = compose<ComponentClass<OwnProps>>(withCanvas, withRoot, connect<StateProps, DispatchProps, OwnProps, ModelState>((state) => ({
-  zoomFactor: state.editor.zoomFactor
-})));
+const enhance = compose<ComponentClass<OwnProps>>(
+  withCanvas,
+  withRoot,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>((state) => ({
+    zoomFactor: state.editor.zoomFactor,
+  })),
+);
 
 /**
  * Manages the intermediate state of drag and drop events.
@@ -102,7 +104,6 @@ class DraggableLayerComponent extends Component<PropsWithChildren & Props, State
   };
 
   onPointerMove = (event: PointerEvent | TouchEvent) => {
-
     let position: Point;
     if (event instanceof PointerEvent) {
       position = new Point(event.pageX - this.state.offset.x, event.pageY - this.state.offset.y);
@@ -119,8 +120,7 @@ class DraggableLayerComponent extends Component<PropsWithChildren & Props, State
   };
 
   onDragEnd = (owner?: string) => (event: PointerEvent | TouchEvent) => {
-
-    const {zoomFactor = 1} = this.props;
+    const { zoomFactor = 1 } = this.props;
 
     if (!this.state.dragging) return;
     const dropEvent: DropEvent = {
@@ -128,14 +128,15 @@ class DraggableLayerComponent extends Component<PropsWithChildren & Props, State
       // transformation to new relational point origin, which is in the center of the canvas
       position: this.state.position.subtract(
         this.props.canvas
-          .origin().scale(zoomFactor)
+          .origin()
+          .scale(zoomFactor)
           .subtract(this.props.root.getBoundingClientRect().x, this.props.root.getBoundingClientRect().y),
       ),
     };
 
     // snapping behavior when dropped
-    dropEvent.position.x = Math.round((dropEvent.position.x / zoomFactor) / 10) * 10;
-    dropEvent.position.y = Math.round((dropEvent.position.y / zoomFactor) / 10) * 10;
+    dropEvent.position.x = Math.round(dropEvent.position.x / zoomFactor / 10) * 10;
+    dropEvent.position.y = Math.round(dropEvent.position.y / zoomFactor / 10) * 10;
 
     if (this.state.resolve) {
       this.state.resolve(dropEvent);

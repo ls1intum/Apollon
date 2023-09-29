@@ -37,7 +37,7 @@ const enhance = compose<ComponentType<OwnProps>>(
           (id) => (state.elements[id] as IUMLRelationship)[state.reconnecting[id]],
         ),
       ],
-      zoomFactor: state.editor.zoomFactor
+      zoomFactor: state.editor.zoomFactor,
     }),
     {
       endConnecting: UMLElementRepository.endConnecting,
@@ -78,7 +78,7 @@ class Preview extends Component<Props, State> {
   }
 
   render() {
-    const { connecting} = this.props;
+    const { connecting } = this.props;
     const { position } = this.state;
     if (!connecting.length || !position) {
       return null;
@@ -88,16 +88,18 @@ class Preview extends Component<Props, State> {
   }
 
   onPointerMove = (event: PointerEvent | TouchEvent) => {
-
-    const {zoomFactor = 1} = this.props;
+    const { zoomFactor = 1 } = this.props;
 
     const offset = this.props.canvas.origin();
 
     let position: Point;
     if (event instanceof PointerEvent) {
-      position = new Point((event.clientX / zoomFactor) - offset.x, (event.clientY / zoomFactor) - offset.y);
+      position = new Point(event.clientX / zoomFactor - offset.x, event.clientY / zoomFactor - offset.y);
     } else {
-      position = new Point(((event.targetTouches[0].clientX / zoomFactor) - offset.x), ((event.targetTouches[0].clientY / zoomFactor) - offset.y));
+      position = new Point(
+        event.targetTouches[0].clientX / zoomFactor - offset.x,
+        event.targetTouches[0].clientY / zoomFactor - offset.y,
+      );
     }
 
     this.setState({ position });

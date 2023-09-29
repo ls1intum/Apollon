@@ -36,9 +36,6 @@ export const EditorReducer: Reducer<EditorState, Actions> = (state = initialStat
     case EditorActionTypes.CHANGE_ZOOM_FACTOR: {
       const { payload } = action;
 
-      console.log("WE DOIN THIS");
-      console.log(payload);
-
       return {
         ...state,
         zoomFactor: payload.zoomFactor,
