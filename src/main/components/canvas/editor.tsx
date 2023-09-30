@@ -5,14 +5,19 @@ import { ModelState } from '../store/model-state';
 import isMobile from 'is-mobile';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
+import {EditorRepository} from '../../services/editor/editor-repository';
 
-const grid = 10;
-const subdivisions = 5;
-const borderWidth = 1;
+const minScale: number = 0.5;
+const maxScale: number = 5.0;
+
+const grid: number = 10;
+const subdivisions: number = 5;
+const borderWidth: number = 1;
 
 const StyledEditor = styled.div<{ zoomFactor?: number }>`
   display: block;
-  width: 100%;
+  width: ${100 / minScale}%;
+  height: ${100 / minScale}%;
   position: relative;
   min-height: inherit;
   max-height: inherit;
@@ -43,7 +48,10 @@ type OwnProps = { children: ReactNode };
 
 type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean; zoomFactor: number };
 
-type DispatchProps = { move: AsyncDispatch<typeof UMLElementRepository.move> };
+type DispatchProps = {
+  move: AsyncDispatch<typeof UMLElementRepository.move>;
+  changeZoomFactor: typeof EditorRepository.changeZoomFactor;
+};
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state) => ({
@@ -54,6 +62,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   }),
   {
     move: UMLElementRepository.move,
+    changeZoomFactor: EditorRepository.changeZoomFactor,
   },
 );
 
@@ -62,6 +71,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 const getInitialState = () => {
   return {
     scrollingDisabled: false,
+    gestureStartZoomFactor: 1.0 as number,
     isMobile: isMobile({ tablet: true }),
   };
 };
@@ -74,6 +84,39 @@ const SCROLL_DISTANCE = 5;
 class EditorComponent extends Component<Props, State> {
   state = getInitialState();
   editor = createRef<HTMLDivElement>();
+
+  componentDidMount() {
+
+    const  {zoomFactor = 1} = this.props;
+
+    window.addEventListener('wheel', (event) => {
+      event.preventDefault();
+
+      if (event.ctrlKey) {
+        this.props.changeZoomFactor(this.clamp(zoomFactor - event.deltaY * 0.01, minScale, maxScale));
+      }
+    });
+
+    window.addEventListener('gesturestart', (event) => {
+      event.preventDefault();
+
+      this.setState({
+        ...this.state,
+        gestureStartZoomFactor: zoomFactor,
+      });
+    });
+
+    window.addEventListener('gesturechange', (event) => {
+      event.preventDefault();
+      this.props.changeZoomFactor(
+          this.clamp(this.state.gestureStartZoomFactor * (event as any).scale, minScale, maxScale),
+      );
+    });
+
+    window.addEventListener('gestureend', function (event) {
+      event.preventDefault();
+    });
+  }
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
     if (this.state.isMobile) {
@@ -91,18 +134,30 @@ class EditorComponent extends Component<Props, State> {
   }
 
   render() {
-    const { moving, connecting, reconnecting, zoomFactor, ...props } = this.props;
-
-    console.log('editor', zoomFactor);
+    const { moving, connecting, reconnecting, zoomFactor = 1.0, ...props } = this.props;
 
     if (this.state.isMobile) {
-      return <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} zoomFactor={zoomFactor} />;
+
+      return (
+          <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} zoomFactor={zoomFactor} />
+      );
     } else {
-      return <StyledEditor {...props} zoomFactor={zoomFactor} />;
+      return (
+          <div style={{height: '100%', width: '100%', overflow: 'auto'}}>
+          <StyledEditor {...props} zoomFactor={zoomFactor} />
+          </div>
+      );
     }
   }
 
+  clamp = (value: number, min: number, max: number): number => {
+    return Math.max(min, Math.min(value, max));
+  };
+
   customScrolling = (event: React.TouchEvent) => {
+
+    const {zoomFactor = 1} = this.props;
+
     if (this.editor.current) {
       const clientRect = this.editor.current.getBoundingClientRect();
 
@@ -110,15 +165,15 @@ class EditorComponent extends Component<Props, State> {
 
       // scroll when on the edge of the element
       const scrollHorizontally =
-        touch.clientX < clientRect.x + SCROLL_BORDER
+          (touch.clientX * zoomFactor) < clientRect.x + SCROLL_BORDER
           ? -SCROLL_DISTANCE
-          : touch.clientX > clientRect.x + clientRect.width - SCROLL_BORDER
+          : (touch.clientX * zoomFactor) > clientRect.x + clientRect.width - SCROLL_BORDER
           ? SCROLL_DISTANCE
           : 0;
       const scrollVertically =
-        touch.clientY < clientRect.y + SCROLL_BORDER
+          (touch.clientY * zoomFactor) < clientRect.y + SCROLL_BORDER
           ? -SCROLL_DISTANCE
-          : touch.clientY > clientRect.y + clientRect.height - SCROLL_BORDER
+          : (touch.clientY * zoomFactor)> clientRect.y + clientRect.height - SCROLL_BORDER
           ? SCROLL_DISTANCE
           : 0;
       this.editor.current.scrollBy(scrollHorizontally, scrollVertically);

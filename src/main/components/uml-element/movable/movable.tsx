@@ -51,11 +51,14 @@ export const movable = (
     moveWindow: { x: number; y: number } = { x: 0, y: 0 };
 
     move = (x: number, y: number) => {
+
+      const {zoomFactor = 1} = this.props;
+
       x = Math.round(x / 10) * 10;
       y = Math.round(y / 10) * 10;
       if (x === 0 && y === 0) return;
 
-      this.setState((state) => ({ offset: state.offset.add(x * this.props.zoomFactor, y * this.props.zoomFactor) }));
+      this.setState((state) => ({ offset: state.offset.add(x * zoomFactor, y * zoomFactor) }));
       this.moveWindow = { x: this.moveWindow.x + x, y: this.moveWindow.y + y };
       this.debouncedMove(this.moveWindow);
     };
