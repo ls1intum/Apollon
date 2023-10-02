@@ -12,7 +12,6 @@ import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { EditorRepository } from '../../services/editor/editor-repository';
 
-
 type OwnProps = {};
 
 type StateProps = {
@@ -29,7 +28,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state) => ({
     diagram: state.diagram,
     isStatic: state.editor.readonly,
-    elements: state.elements
+    elements: state.elements,
   }),
   null,
   null,
@@ -37,7 +36,6 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
 );
 
 export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'layer'> {
-
   layer: RefObject<SVGSVGElement> = createRef();
 
   origin = (): Point => {

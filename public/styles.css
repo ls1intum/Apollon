@@ -145,8 +145,7 @@ aside.sidebar section>div {
   justify-content: space-between;
 }
 
-.switch button {
-  width: 100%;
+button {
   background: var(--apollon-background);
   color: var(--apollon-primary-contrast);
   border: 1px solid var(--apollon-gray);
@@ -154,6 +153,24 @@ aside.sidebar section>div {
   margin: 0;
   line-height: 1.5;
   outline: none;
+}
+
+button:hover {
+  background-color: var(--apollon-gray);
+  border-color: var(--apollon-gray-variant);
+}
+
+button:active {
+  background-color: var(--apollon-gray);
+  border-color: var(--apollon-gray-variant);
+}
+
+.button-rounded {
+  border-radius: 0.25rem;
+}
+
+.switch button {
+  width: 100%;
 }
 
 .switch button:first-child {
@@ -165,16 +182,6 @@ aside.sidebar section>div {
 .switch button:last-child {
   border-top-right-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
-}
-
-.switch button:hover {
-  background-color: var(--apollon-gray);
-  border-color: var(--apollon-gray-variant);
-}
-
-.switch button:active {
-  background-color: var(--apollon-gray);
-  border-color: var(--apollon-gray-variant);
 }
 
 .switch button.selected {

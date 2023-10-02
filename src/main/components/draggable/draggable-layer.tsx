@@ -129,7 +129,6 @@ class DraggableLayerComponent extends Component<PropsWithChildren & Props, State
       position: this.state.position.subtract(
         this.props.canvas
           .origin()
-          .scale(zoomFactor)
           .subtract(this.props.root.getBoundingClientRect().x, this.props.root.getBoundingClientRect().y),
       ),
     };
