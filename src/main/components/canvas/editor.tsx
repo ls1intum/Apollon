@@ -8,6 +8,9 @@ import { AsyncDispatch } from '../../utils/actions/actions';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { clamp } from '../../utils/clamp';
 import { ZoomPane } from './zoom-pane';
+import {IUMLElement} from '../../services/uml-element/uml-element';
+import {UMLElementState} from '../../services/uml-element/uml-element-types';
+import {computeBoundingBoxForElements} from '../../utils/geometry/boundary';
 
 const minScale: number = 0.5;
 const maxScale: number = 5.0;
@@ -16,21 +19,24 @@ const grid: number = 10;
 const subdivisions: number = 5;
 const borderWidth: number = 1;
 
-const StyledEditor = styled.div<{ zoomFactor?: number }>`
+// width: ${(props) => clamp(100 / props.zoomFactor, 100, 100 / minScale)}%;
+// height: ${(props) => clamp(100 / props.zoomFactor, 100, 100 / minScale)}%;
+
+const StyledEditor = styled.div<{ zoomFactor: number }>`
   display: block;
-  width: 100%;
-  height: 100%;
+  overflow: auto;
+  
   position: relative;
   min-height: inherit;
   max-height: inherit;
-  max-width: inherit;
 
-  overflow: auto;
+  width: ${(props) => clamp(100 / props.zoomFactor, 100, 100 / minScale)}%;
+  height: ${(props) => clamp(100 / props.zoomFactor, 100, 100 / minScale)}%;
+
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: ${borderWidth}px solid ${(props) => props.theme.color.gray};
-
   background-position: calc(50% + ${(grid * subdivisions - borderWidth) / 2}px)
-    calc(50% + ${(grid * subdivisions - borderWidth) / 2}px);
+  calc(50% + ${(grid * subdivisions - borderWidth) / 2}px);
   background-size:
     ${grid * subdivisions}px ${grid * subdivisions}px,
     ${grid * subdivisions}px ${grid * subdivisions}px,
@@ -42,14 +48,14 @@ const StyledEditor = styled.div<{ zoomFactor?: number }>`
     linear-gradient(to bottom, ${(props) => props.theme.color.gray} 1px, transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
-  transition: transform 500ms;
+  transition: transform 500ms, width 500ms, height 500ms;
   transform-origin: top left;
   transform: scale(${(props) => props.zoomFactor ?? 1});
 `;
 
 type OwnProps = { children: ReactNode };
 
-type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean; zoomFactor: number };
+type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean; zoomFactor: number; elements: UMLElementState; };
 
 type DispatchProps = {
   move: AsyncDispatch<typeof UMLElementRepository.move>;
@@ -62,6 +68,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     connecting: state.connecting.length > 0,
     reconnecting: Object.keys(state.reconnecting).length > 0,
     zoomFactor: state.editor.zoomFactor,
+    elements: state.elements
   }),
   {
     move: UMLElementRepository.move,
@@ -90,19 +97,20 @@ class EditorComponent extends Component<Props, State> {
   zoomContainer = createRef<HTMLDivElement>();
 
   componentDidMount() {
-    const { zoomFactor = 1 } = this.props;
+    // const { zoomFactor = 1 } = this.props;
 
     window.addEventListener(
       'wheel',
       (event) => {
         if (event.ctrlKey) {
           event.preventDefault();
-          this.props.changeZoomFactor(clamp(zoomFactor - event.deltaY * 0.1, minScale, maxScale));
+          // this.props.changeZoomFactor(clamp(zoomFactor - event.deltaY * 0.1, minScale, maxScale));
         }
       },
       { passive: false },
     );
 
+    /*
     window.addEventListener('gesturestart', (event) => {
       event.preventDefault();
 
@@ -115,25 +123,18 @@ class EditorComponent extends Component<Props, State> {
     window.addEventListener('gesturechange', (event) => {
       event.preventDefault();
 
-      const { zoomFactor = 1 } = this.props;
+      const { zoomFactor = 1, } = this.props;
 
       const relativeCursorOffsetX = (event as any).clientX - this.editor.current!.getBoundingClientRect().x;
       const relativeCursorOffsetY = (event as any).clientY - this.editor.current!.getBoundingClientRect().y;
 
       const newZoomFactor = clamp(this.state.gestureStartZoomFactor * (event as any).scale, minScale, maxScale);
 
-      // console.log(this.state.gestureStartZoomFactor * relativeCursorOffsetX);
-      // console.log(this.state.gestureStartZoomFactor * relativeCursorOffsetY - newZoomFactor * relativeCursorOffsetY);
-
-      // TODO: Evaluate if we need to integrate the zoom Factor here additionally as the relative position changes on zoom
-
-      /*
-            this.zoomContainer.current?.scrollBy({
-              left: newZoomFactor * relativeCursorOffsetX - zoomFactor * relativeCursorOffsetX ,
-              top: newZoomFactor * relativeCursorOffsetY - zoomFactor * relativeCursorOffsetY,
-              behavior: 'smooth'
-            });
-             */
+      this.zoomContainer.current?.scrollBy({
+        left: newZoomFactor * relativeCursorOffsetX - zoomFactor * relativeCursorOffsetX ,
+        top: newZoomFactor * relativeCursorOffsetY - zoomFactor * relativeCursorOffsetY,
+        behavior: 'smooth'
+      });
 
       this.props.changeZoomFactor(newZoomFactor);
     });
@@ -141,6 +142,7 @@ class EditorComponent extends Component<Props, State> {
     window.addEventListener('gestureend', function (event) {
       event.preventDefault();
     });
+    */
   }
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
@@ -159,29 +161,31 @@ class EditorComponent extends Component<Props, State> {
   }
 
   render() {
-    const { moving, connecting, reconnecting, zoomFactor = 1.0, ...props } = this.props;
+    const { moving, connecting, reconnecting, zoomFactor = 1.0, elements, ...props } = this.props;
 
     if (this.state.isMobile) {
       return (
-        <div ref={this.zoomContainer} style={{ height: '100%', width: '100%', overflow: 'auto' }}>
-          <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} zoomFactor={zoomFactor} />
+        <div ref={this.zoomContainer} style={{ height: '100%', width: '100%', overflow: zoomFactor > 1.0 ? 'auto' : 'hidden' }}>
+          <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} zoomFactor={zoomFactor}/>
           <ZoomPane
             value={zoomFactor}
             onChange={(zoomFactor) => this.props.changeZoomFactor(zoomFactor)}
             min={minScale}
             max={maxScale}
+            step={0.2}
           />
         </div>
       );
     } else {
       return (
-        <div ref={this.zoomContainer} style={{ height: '100%', width: '100%', overflow: 'auto' }}>
-          <StyledEditor ref={this.editor} {...props} zoomFactor={zoomFactor} />
+        <div ref={this.zoomContainer} style={{ height: '100%', width: '100%', overflow: zoomFactor > 1.0 ? 'auto' : 'hidden' }}>
+          <StyledEditor ref={this.editor} {...props} zoomFactor={zoomFactor}/>
           <ZoomPane
             value={zoomFactor}
             onChange={(zoomFactor) => this.props.changeZoomFactor(zoomFactor)}
             min={minScale}
             max={maxScale}
+            step={0.2}
           />
         </div>
       );
@@ -233,6 +237,7 @@ class EditorComponent extends Component<Props, State> {
     if (target) {
       // disables default scrolling in editor
       (target as HTMLElement).style.overflow = 'hidden';
+
       // disables pull to refresh
       document.body.style.overflowY = 'hidden';
       (target as HTMLElement).style.overscrollBehavior = 'none';

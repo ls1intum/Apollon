@@ -10,7 +10,6 @@ import { UMLElementComponent } from '../uml-element/uml-element-component';
 import { CanvasContainer } from './canvas-styles';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { UMLRelationship } from '../../services/uml-relationship/uml-relationship';
-import { EditorRepository } from '../../services/editor/editor-repository';
 
 type OwnProps = {};
 
