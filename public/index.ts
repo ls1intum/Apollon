@@ -7,7 +7,7 @@ let editor: Apollon.ApollonEditor | null = null;
 let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
   colorEnabled: false,
-  scale: 1.0,
+  scale: 0.8,
 };
 
 export const onChange = (event: MouseEvent) => {

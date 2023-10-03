@@ -8,9 +8,7 @@ import { AsyncDispatch } from '../../utils/actions/actions';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { clamp } from '../../utils/clamp';
 import { ZoomPane } from './zoom-pane';
-import {IUMLElement} from '../../services/uml-element/uml-element';
 import {UMLElementState} from '../../services/uml-element/uml-element-types';
-import {computeBoundingBoxForElements} from '../../utils/geometry/boundary';
 
 const minScale: number = 0.5;
 const maxScale: number = 5.0;
@@ -18,9 +16,6 @@ const maxScale: number = 5.0;
 const grid: number = 10;
 const subdivisions: number = 5;
 const borderWidth: number = 1;
-
-// width: ${(props) => clamp(100 / props.zoomFactor, 100, 100 / minScale)}%;
-// height: ${(props) => clamp(100 / props.zoomFactor, 100, 100 / minScale)}%;
 
 const StyledEditor = styled.div<{ zoomFactor: number }>`
   display: block;
