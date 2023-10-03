@@ -11,7 +11,7 @@ exports[`render the uml-activity-intial-node-component 1`] = `
           cy="50%"
           fill="black"
           fill-opacity="1"
-          r="22.5"
+          r="25"
           stroke="none"
         />
       </g>
