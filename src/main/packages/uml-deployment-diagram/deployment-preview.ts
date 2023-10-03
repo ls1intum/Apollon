@@ -9,7 +9,6 @@ import { UMLDeploymentComponent } from './uml-deployment-component/uml-component
 export const composeDeploymentPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
-  scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 
@@ -17,8 +16,8 @@ export const composeDeploymentPreview: ComposePreview = (
   const umlDeploymentNode = new UMLDeploymentNode({ name: translate('packages.DeploymentDiagram.DeploymentNode') });
   umlDeploymentNode.bounds = {
     ...umlDeploymentNode.bounds,
-    width: umlDeploymentNode.bounds.width * scale,
-    height: umlDeploymentNode.bounds.height * scale,
+    width: umlDeploymentNode.bounds.width,
+    height: umlDeploymentNode.bounds.height,
   };
   elements.push(umlDeploymentNode);
 
@@ -28,8 +27,8 @@ export const composeDeploymentPreview: ComposePreview = (
   });
   umlComponent.bounds = {
     ...umlComponent.bounds,
-    width: umlComponent.bounds.width * scale,
-    height: umlComponent.bounds.height * scale,
+    width: umlComponent.bounds.width,
+    height: umlComponent.bounds.height,
   };
   elements.push(umlComponent);
 
@@ -39,7 +38,7 @@ export const composeDeploymentPreview: ComposePreview = (
   });
   umlDeploymentArtifact.bounds = {
     ...umlDeploymentArtifact.bounds,
-    width: umlDeploymentArtifact.bounds.width * scale,
+    width: umlDeploymentArtifact.bounds.width,
   };
   elements.push(umlDeploymentArtifact);
 
@@ -49,8 +48,8 @@ export const composeDeploymentPreview: ComposePreview = (
   });
   umlDeploymentInterface.bounds = {
     ...umlDeploymentInterface.bounds,
-    width: umlDeploymentInterface.bounds.width * scale,
-    height: umlDeploymentInterface.bounds.height * scale,
+    width: umlDeploymentInterface.bounds.width,
+    height: umlDeploymentInterface.bounds.height,
   };
   elements.push(umlDeploymentInterface);
 

@@ -3,11 +3,11 @@ import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking';
 import { Multiline } from '../../../utils/svg/multiline';
 import { ThemedRect, ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
-export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
+export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedRect
-      rx={10 * scale}
-      ry={10 * scale}
+      rx={10}
+      ry={10}
       width="100%"
       height="100%"
       strokeColor={element.strokeColor}
@@ -20,8 +20,8 @@ export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({
       height={element.bounds.height}
       fontWeight="bold"
       fill={element.textColor}
-      lineHeight={16 * scale}
-      capHeight={11 * scale}
+      lineHeight={16}
+      capHeight={11}
     >
       {element.name}
     </Multiline>
@@ -29,25 +29,25 @@ export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({
       <g>
         <marker
           id={`marker-${element.id}`}
-          viewBox={`0 0 ${30 * scale} ${30 * scale}`}
-          markerWidth={22 * scale}
-          markerHeight={30 * scale}
-          refX={30 * scale}
-          refY={15 * scale}
+          viewBox={`0 0 ${30} ${30}`}
+          markerWidth={22}
+          markerHeight={30}
+          refX={30}
+          refY={15}
           orient="auto"
           markerUnits="strokeWidth"
         >
           <ThemedPath
-            d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`}
+            d={`M0,${29} L${30},${15} L0,${1}`}
             fillColor="none"
             strokeColor={element.strokeColor}
           />
         </marker>
         <ThemedPolyline
-          points={`-${50 * scale},-${50 * scale} ${3 * scale},${3 * scale}`}
+          points={`-${50},-${50} ${3},${3}`}
           strokeColor={element.strokeColor}
           fillColor="none"
-          strokeWidth={1 * scale}
+          strokeWidth={1}
           markerEnd={`url(#marker-${element.id})`}
         />
       </g>
@@ -57,6 +57,5 @@ export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({
 
 interface Props {
   element: UMLReachabilityGraphMarking;
-  scale: number;
   fillColor?: string;
 }

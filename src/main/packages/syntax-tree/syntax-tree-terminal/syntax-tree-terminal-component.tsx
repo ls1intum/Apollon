@@ -3,7 +3,7 @@ import { Multiline } from '../../../utils/svg/multiline';
 import { SyntaxTreeTerminal } from './syntax-tree-terminal';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 
-export const SyntaxTreeTerminalComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
+export const SyntaxTreeTerminalComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedRect
       width="100%"
@@ -18,8 +18,8 @@ export const SyntaxTreeTerminalComponent: FunctionComponent<Props> = ({ element,
       height={element.bounds.height}
       fontWeight="bold"
       fill={element.textColor}
-      lineHeight={16 * scale}
-      capHeight={11 * scale}
+      lineHeight={16}
+      capHeight={11}
     >
       {element.name}
     </Multiline>
@@ -28,6 +28,5 @@ export const SyntaxTreeTerminalComponent: FunctionComponent<Props> = ({ element,
 
 export interface Props {
   element: SyntaxTreeTerminal;
-  scale: number;
   fillColor?: string;
 }

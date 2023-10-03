@@ -7,28 +7,27 @@ import { UMLRelationshipType } from '../../uml-relationship-type';
 import { ThemedPath, ThemedPathContrast, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 const Marker = {
-  Arrow: (id: string, color?: string, scale: number = 1.0) => (
+  Arrow: (id: string, color?: string) => (
     <marker
       id={id}
-      viewBox={`0 0 ${30 * scale} ${30 * scale}`}
-      markerWidth={22 * scale}
-      markerHeight={30 * scale}
-      refX={30 * scale}
-      refY={15 * scale}
+      viewBox={'0 0 30 30'}
+      markerWidth={22}
+      markerHeight={30}
+      refX={30}
+      refY={15}
       orient="auto"
       markerUnits="strokeWidth"
     >
       <ThemedPath
-        d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`}
+        d={`M0,29 L30,15 L0,1`}
         fillColor="none"
         strokeColor={color}
       />
     </marker>
   ),
-  Rhombus: (id: string, color?: string, scale: number = 1.0) => (
+  Rhombus: (id: string, color?: string) => (
     <marker
       id={id}
-      style={{ transform: `scale(${scale})` }}
       viewBox="0 0 30 30"
       markerWidth="30"
       markerHeight="30"
@@ -40,10 +39,9 @@ const Marker = {
       <ThemedPath d="M0,15 L15,22 L30,15 L15,8 z" fillColor={color} strokeColor={color} />
     </marker>
   ),
-  RhombusFilled: (id: string, color?: string, scale: number = 1.0) => (
+  RhombusFilled: (id: string, color?: string) => (
     <marker
       id={id}
-      style={{ transform: `scale(${scale})` }}
       viewBox="0 0 30 30"
       markerWidth="30"
       markerHeight="30"
@@ -55,10 +53,9 @@ const Marker = {
       <ThemedPathContrast d="M0,15 L15,22 L30,15 L15,8 z" fillColor={color} />
     </marker>
   ),
-  Triangle: (id: string, color?: string, scale: number = 1.0) => (
+  Triangle: (id: string, color?: string) => (
     <marker
       id={id}
-      style={{ transform: `scale(${scale})` }}
       viewBox="0 0 30 30"
       markerWidth="22"
       markerHeight="30"
@@ -130,7 +127,7 @@ export const getMarkerForTypeForUMLAssociation = (relationshipType: UMLRelations
   })(relationshipType);
 };
 
-export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, scale }) => {
+export const UMLAssociationComponent: FunctionComponent<Props> = ({ element }) => {
   const marker = getMarkerForTypeForUMLAssociation(element.type);
 
   const stroke = ((type) => {
@@ -149,7 +146,7 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, sca
   const textFill = element.textColor ? { fill: element.textColor } : {};
   return (
     <g>
-      {marker && marker(id, element.strokeColor, scale)}
+      {marker && marker(id, element.strokeColor)}
       <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
         strokeColor={element.strokeColor}
@@ -200,5 +197,4 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element, sca
 
 interface Props {
   element: UMLAssociation;
-  scale: number;
 }

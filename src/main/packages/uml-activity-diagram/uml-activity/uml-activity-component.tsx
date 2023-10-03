@@ -3,17 +3,17 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLActivity } from './uml-activity';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 
-export const UMLActivityComponent: FunctionComponent<Props> = ({ element, children, scale, fillColor }) => (
+export const UMLActivityComponent: FunctionComponent<Props> = ({ element, children, fillColor }) => (
   <g>
     <ThemedRect
-      rx={10 * scale}
-      ry={10 * scale}
+      rx={10}
+      ry={10}
       width="100%"
       height="100%"
       strokeColor={element.strokeColor}
       fillColor={fillColor || element.fillColor}
     />
-    <Text y={20 * scale} fill={element.textColor}>
+    <Text y={20} fill={element.textColor}>
       {element.name}
     </Text>
     {children}
@@ -22,7 +22,6 @@ export const UMLActivityComponent: FunctionComponent<Props> = ({ element, childr
 
 interface Props {
   element: UMLActivity;
-  scale: number;
   fillColor?: string;
   children?: React.ReactNode;
 }

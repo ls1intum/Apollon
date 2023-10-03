@@ -3,7 +3,7 @@ import { Point } from '../../../utils/geometry/point';
 import { UMLReachabilityGraphArc } from './uml-reachability-graph-arc';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
-export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ element, scale }) => {
+export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
   const path = element.path.map((point) => new Point(point.x, point.y));
@@ -28,13 +28,13 @@ export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ ele
     switch (dir) {
       case 'v':
         return {
-          dx: 5 * scale,
+          dx: 5,
           dominantBaseline: 'middle',
           textAnchor: 'start',
         };
       case 'h':
         return {
-          dy: -5 * scale,
+          dy: -5,
           dominantBaseline: 'text-after-edge',
           textAnchor: 'middle',
         };
@@ -47,16 +47,16 @@ export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ ele
     <g>
       <marker
         id={`marker-${element.id}`}
-        viewBox={`0 0 ${30 * scale} ${30 * scale}`}
-        markerWidth={22 * scale}
-        markerHeight={30 * scale}
-        refX={30 * scale}
-        refY={15 * scale}
+        viewBox={`0 0 ${30} ${30}`}
+        markerWidth={22}
+        markerHeight={30}
+        refX={30}
+        refY={15}
         orient="auto"
         markerUnits="strokeWidth"
       >
         <ThemedPath
-          d={`M0,${29 * scale} L${30 * scale},${15 * scale} L0,${1 * scale}`}
+          d={`M0,${29} L${30},${15} L0,${1}`}
           fillColor="none"
           strokeColor={element.strokeColor}
         />
@@ -65,7 +65,7 @@ export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ ele
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
         strokeColor={element.strokeColor}
         fillColor="none"
-        strokeWidth={1 * scale}
+        strokeWidth={1}
         markerEnd={`url(#marker-${element.id})`}
       />
       <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none" style={{ ...textColor }}>
@@ -77,5 +77,4 @@ export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ ele
 
 interface Props {
   element: UMLReachabilityGraphArc;
-  scale: number;
 }

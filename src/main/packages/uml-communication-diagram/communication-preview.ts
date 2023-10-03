@@ -8,7 +8,6 @@ import { UMLObjectName } from '../uml-object-diagram/uml-object-name/uml-object-
 export const composeCommunicationPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
-  scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 
@@ -16,8 +15,8 @@ export const composeCommunicationPreview: ComposePreview = (
   const umlObject = new UMLObjectName({ name: translate('packages.CommunicationDiagram.ObjectName') });
   umlObject.bounds = {
     ...umlObject.bounds,
-    width: umlObject.bounds.width * scale,
-    height: umlObject.bounds.height * scale,
+    width: umlObject.bounds.width,
+    height: umlObject.bounds.height,
   };
   const umlObjectAttribute = new UMLObjectAttribute({
     name: translate('sidebar.classAttribute'),
@@ -25,8 +24,8 @@ export const composeCommunicationPreview: ComposePreview = (
     bounds: {
       x: 0,
       y: 0,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 25),
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 25),
     },
   });
   umlObject.ownedElements = [umlObjectAttribute.id];

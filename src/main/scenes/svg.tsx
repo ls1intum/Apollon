@@ -179,7 +179,7 @@ export class Svg extends Component<Props, State> {
   state = getInitialState(this.props);
   render() {
     const { bounds, elements } = this.state;
-    const theme: Styles = update(defaults(this.props.options?.scale), this.props.styles || {});
+    const theme: Styles = update(defaults(), this.props.styles || {});
 
     // connect exported svg to redux state, so that connected components can retrieve properties from state
     const state = ModelState.fromModel(this.props.model);
@@ -232,7 +232,7 @@ export class Svg extends Component<Props, State> {
                   const members = elements.filter((member) => member.owner === element.id);
                   return (
                     <svg key={element.id} {...svgElementDetails(element, element.bounds.x, element.bounds.y)}>
-                      <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0}>
+                      <ElementComponent key={index} element={element}>
                         {members.map((memberElement, memberIndex) => {
                           // Nest the members within the UMLClassifierComponent so the border rectangle and path get rendered afterward.
                           const MemberElementComponent = Components[memberElement.type as UMLElementType];
@@ -244,7 +244,6 @@ export class Svg extends Component<Props, State> {
                               <MemberElementComponent
                                 key={memberIndex}
                                 element={memberElement}
-                                scale={this.props.options?.scale || 1.0}
                               />
                             </svg>
                           );
@@ -266,7 +265,7 @@ export class Svg extends Component<Props, State> {
                         element.bounds.y - translationFactor().minY,
                       )}
                     >
-                      <ElementComponent key={index} element={element} scale={this.props.options?.scale || 1.0} />
+                      <ElementComponent key={index} element={element} />
                     </svg>
                   );
               }

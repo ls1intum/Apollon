@@ -3,17 +3,17 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLInterface } from './uml-interface';
 import { ThemedCircle } from '../../../components/theme/themedComponents';
 
-export const UMLInterfaceComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
+export const UMLInterfaceComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedCircle
       cx="50%"
       cy="50%"
-      r={10 * scale}
+      r={10}
       strokeColor={element.strokeColor}
-      strokeWidth={2 * scale}
+      strokeWidth={2}
       fillColor={fillColor || element.fillColor}
     />
-    <Text noY x={`${25 * scale}px`} dominantBaseline="auto" textAnchor="start" fill={element.textColor}>
+    <Text noY x={'25px'} dominantBaseline="auto" textAnchor="start" fill={element.textColor}>
       {element.name}
     </Text>
   </g>
@@ -21,6 +21,5 @@ export const UMLInterfaceComponent: FunctionComponent<Props> = ({ element, scale
 
 interface Props {
   element: UMLInterface;
-  scale: number;
   fillColor?: string;
 }

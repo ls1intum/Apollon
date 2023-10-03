@@ -5,14 +5,13 @@ import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking/um
 
 export const composeReachabilityGraphPreview: ComposePreview = (
   layer: ILayer,
-  translate: (id: string) => string,
-  scale: number,
+  translate: (id: string) => string
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 
   const umlReachabilityGraphMarking = new UMLReachabilityGraphMarking({
     name: translate('packages.ReachabilityGraph.ReachabilityGraphMarking'),
-    bounds: { x: 0, y: 0, width: 200 * scale, height: 100 * scale },
+    bounds: { x: 0, y: 0, width: 200, height: 100 },
   });
 
   elements.push(umlReachabilityGraphMarking);

@@ -13,19 +13,18 @@ import { UMLInterface } from './uml-interface/uml-interface';
 
 export const composeClassPreview: ComposePreview = (
   layer: ILayer,
-  translate: (id: string) => string,
-  scale: number,
+  translate: (id: string) => string
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
-  UMLClassifier.stereotypeHeaderHeight = computeDimension(scale, 50);
-  UMLClassifier.nonStereotypeHeaderHeight = computeDimension(scale, 40);
+  UMLClassifier.stereotypeHeaderHeight = computeDimension(1.0, 50);
+  UMLClassifier.nonStereotypeHeaderHeight = computeDimension(1.0, 40);
 
   // UML Package
   const umlPackage = new UMLClassPackage({ name: translate('packages.ClassDiagram.Package') });
   umlPackage.bounds = {
     ...umlPackage.bounds,
-    width: umlPackage.bounds.width * scale,
-    height: umlPackage.bounds.height * scale,
+    width: umlPackage.bounds.width,
+    height: umlPackage.bounds.height,
   };
   elements.push(umlPackage);
 
@@ -33,8 +32,8 @@ export const composeClassPreview: ComposePreview = (
   const umlClass = new UMLClass({ name: translate('packages.ClassDiagram.Class') });
   umlClass.bounds = {
     ...umlClass.bounds,
-    width: umlClass.bounds.width * scale,
-    height: umlClass.bounds.height * scale,
+    width: umlClass.bounds.width,
+    height: umlClass.bounds.height,
   };
   const umlClassAttribute = new UMLClassAttribute({
     name: translate('sidebar.classAttribute'),
@@ -42,8 +41,8 @@ export const composeClassPreview: ComposePreview = (
     bounds: {
       x: 0,
       y: 0,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
 
@@ -53,8 +52,8 @@ export const composeClassPreview: ComposePreview = (
     bounds: {
       x: 0,
       y: 0,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
 
@@ -65,17 +64,17 @@ export const composeClassPreview: ComposePreview = (
   const umlAbstract = new UMLAbstractClass({ name: translate('packages.ClassDiagram.AbstractClass') });
   umlAbstract.bounds = {
     ...umlAbstract.bounds,
-    width: umlAbstract.bounds.width * scale,
-    height: umlAbstract.bounds.height * scale,
+    width: umlAbstract.bounds.width,
+    height: umlAbstract.bounds.height,
   };
   const umlAbstractAttribute = new UMLClassAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlAbstract.id,
     bounds: {
       x: 0,
-      y: 40 * scale,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      y: 40,
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
   const umlAbstractMethod = new UMLClassMethod({
@@ -83,9 +82,9 @@ export const composeClassPreview: ComposePreview = (
     owner: umlAbstract.id,
     bounds: {
       x: 0,
-      y: 70 * scale,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      y: 70,
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
   umlAbstract.ownedElements = [umlAbstractAttribute.id, umlAbstractMethod.id];
@@ -98,17 +97,17 @@ export const composeClassPreview: ComposePreview = (
   });
   umlInterface.bounds = {
     ...umlInterface.bounds,
-    width: umlInterface.bounds.width * scale,
-    height: umlInterface.bounds.height * scale,
+    width: umlInterface.bounds.width,
+    height: umlInterface.bounds.height,
   };
   const umlInterfaceAttribute = new UMLClassAttribute({
     name: translate('sidebar.classAttribute'),
     owner: umlInterface.id,
     bounds: {
       x: 0,
-      y: 50 * scale,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      y: 50,
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
   const umlInterfaceMethod = new UMLClassMethod({
@@ -116,9 +115,9 @@ export const composeClassPreview: ComposePreview = (
     owner: umlInterface.id,
     bounds: {
       x: 0,
-      y: 80 * scale,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      y: 80,
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
   umlInterface.ownedElements = [umlInterfaceAttribute.id, umlInterfaceMethod.id];
@@ -131,17 +130,17 @@ export const composeClassPreview: ComposePreview = (
   });
   umlEnumeration.bounds = {
     ...umlEnumeration.bounds,
-    width: umlEnumeration.bounds.width * scale,
-    height: umlEnumeration.bounds.height * scale,
+    width: umlEnumeration.bounds.width,
+    height: umlEnumeration.bounds.height,
   };
   const umlEnumerationCase1 = new UMLClassAttribute({
     name: translate('sidebar.enumAttribute') + ' 1',
     owner: umlEnumeration.id,
     bounds: {
       x: 0,
-      y: 50 * scale,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      y: 50,
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
   const umlEnumerationCase2 = new UMLClassAttribute({
@@ -149,9 +148,9 @@ export const composeClassPreview: ComposePreview = (
     owner: umlEnumeration.id,
     bounds: {
       x: 0,
-      y: 80 * scale,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      y: 80,
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
   const umlEnumerationCase3 = new UMLClassAttribute({
@@ -159,9 +158,9 @@ export const composeClassPreview: ComposePreview = (
     owner: umlEnumeration.id,
     bounds: {
       x: 0,
-      y: 110 * scale,
-      width: computeDimension(scale, 200),
-      height: computeDimension(scale, 40),
+      y: 110,
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 40),
     },
   });
   umlEnumeration.ownedElements = [umlEnumerationCase1.id, umlEnumerationCase2.id, umlEnumerationCase3.id];

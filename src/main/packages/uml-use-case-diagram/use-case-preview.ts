@@ -8,16 +8,15 @@ import { UMLUseCase } from './uml-use-case/uml-use-case';
 
 export const composeUseCasePreview: ComposePreview = (
   layer: ILayer,
-  translate: (id: string) => string,
-  scale: number,
+  translate: (id: string) => string
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
   // UML Use Case
   const umlUseCase = new UMLUseCase({ name: translate('packages.UseCaseDiagram.UseCase') });
   umlUseCase.bounds = {
     ...umlUseCase.bounds,
-    width: umlUseCase.bounds.width * scale,
-    height: umlUseCase.bounds.height * scale,
+    width: umlUseCase.bounds.width,
+    height: umlUseCase.bounds.height,
   };
 
   elements.push(umlUseCase);
@@ -28,8 +27,8 @@ export const composeUseCasePreview: ComposePreview = (
     bounds: {
       x: 0,
       y: 0,
-      width: computeDimension(scale, 80),
-      height: computeDimension(scale, 140),
+      width: computeDimension(1.0, 80),
+      height: computeDimension(1.0, 140),
     },
   });
   elements.push(umlActor);
@@ -38,8 +37,8 @@ export const composeUseCasePreview: ComposePreview = (
   const umlSystem = new UMLUseCaseSystem({ name: translate('packages.UseCaseDiagram.UseCaseSystem') });
   umlSystem.bounds = {
     ...umlSystem.bounds,
-    width: umlSystem.bounds.width * scale,
-    height: umlSystem.bounds.height * scale,
+    width: umlSystem.bounds.width,
+    height: umlSystem.bounds.height,
   };
   elements.push(umlSystem);
 

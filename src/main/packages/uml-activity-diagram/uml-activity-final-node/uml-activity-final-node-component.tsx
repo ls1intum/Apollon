@@ -9,7 +9,6 @@ import { ThemedCircle, ThemedCircleContrast } from '../../../components/theme/th
 
 type OwnProps = {
   element: UMLActivityFinalNode;
-  scale: number;
 };
 
 type StateProps = { interactive: boolean; interactable: boolean };
@@ -30,22 +29,21 @@ export const UMLActivityFinalNodeC: FunctionComponent<Props> = ({
   element,
   interactive,
   interactable,
-  theme,
-  scale,
+  theme
 }) => {
   return (
     <g>
       <ThemedCircle
         cx="50%"
         cy="50%"
-        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5 * scale}
+        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 2.5}
         strokeColor={interactable && interactive ? theme.interactive.normal : element.fillColor}
-        strokeWidth={5 * scale}
+        strokeWidth={5}
       />
       <ThemedCircleContrast
         cx="50%"
         cy="50%"
-        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 7.5 * scale}
+        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 7.5}
         strokeColor="none"
         fillColor={interactive && interactable ? theme.interactive.normal : element.fillColor}
         fillOpacity={1}

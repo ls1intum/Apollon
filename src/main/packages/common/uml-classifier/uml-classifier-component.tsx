@@ -3,30 +3,30 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLClassifier } from './uml-classifier';
 import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
-export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scale, children, fillColor }) => {
+export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, children, fillColor }) => {
   return (
     <g>
       <ThemedRect
         fillColor={fillColor || element.fillColor}
         strokeColor="none"
         width="100%"
-        height={element.stereotype ? 50 * scale : 40 * scale}
+        height={element.stereotype ? 50 : 40 }
       />
       <ThemedRect
-        y={element.stereotype ? 50 * scale : 40 * scale}
+        y={element.stereotype ? 50 : 40 }
         width="100%"
-        height={element.bounds.height - (element.stereotype ? 50 * scale : 40 * scale)}
+        height={element.bounds.height - (element.stereotype ? 50 : 40 )}
         strokeColor="none"
       />
       {element.stereotype ? (
-        <svg height={50 * scale}>
+        <svg height={50}>
           <Text fill={element.textColor}>
-            <tspan x="50%" dy={-8 * scale} textAnchor="middle" fontSize="85%">
+            <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
               {`«${element.stereotype}»`}
             </tspan>
             <tspan
               x="50%"
-              dy={18 * scale}
+              dy={18}
               textAnchor="middle"
               fontStyle={element.italic ? 'italic' : undefined}
               textDecoration={element.underline ? 'underline' : undefined}
@@ -36,7 +36,7 @@ export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scal
           </Text>
         </svg>
       ) : (
-        <svg height={40 * scale}>
+        <svg height={40}>
           <Text
             fill={element.textColor}
             fontStyle={element.italic ? 'italic' : undefined}
@@ -60,7 +60,6 @@ export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, scal
 
 interface Props {
   element: UMLClassifier;
-  scale: number;
   fillColor?: string;
   children?: React.ReactNode;
 }
