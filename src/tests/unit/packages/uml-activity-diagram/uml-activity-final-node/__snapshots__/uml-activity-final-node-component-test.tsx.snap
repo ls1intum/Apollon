@@ -10,7 +10,7 @@ exports[`render the uml-activity-final-node-component 1`] = `
           cx="50%"
           cy="50%"
           fill="white"
-          r="20"
+          r="22.5"
           stroke="black"
           stroke-width="5"
         />
@@ -20,7 +20,7 @@ exports[`render the uml-activity-final-node-component 1`] = `
           cy="50%"
           fill="black"
           fill-opacity="1"
-          r="15"
+          r="17.5"
           stroke="none"
         />
       </g>
