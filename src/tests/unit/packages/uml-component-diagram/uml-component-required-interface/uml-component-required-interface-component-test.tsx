@@ -17,7 +17,7 @@ it('render the uml-component-required-interface-component', () => {
     >
       <Theme styles={undefined}>
         <svg>
-          <UMLInterfaceRequiredComponent element={umlComponentInterfaceRequired} scale={1.0} />
+          <UMLInterfaceRequiredComponent element={umlComponentInterfaceRequired} />
         </svg>
       </Theme>
     </StoreProvider>,

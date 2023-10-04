@@ -14,7 +14,7 @@ it('render the flowchart-input-output-component', () => {
   const inputOutput: FlowchartInputOutput = new FlowchartInputOutput({ name: 'TestInputOutputComponent' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <FlowchartInputOutputComponent element={inputOutput} scale={1.0} />
+      <FlowchartInputOutputComponent element={inputOutput} />
     </svg>,
   );
   expect(getByText(inputOutput.name)).toBeInTheDocument();

@@ -23,12 +23,12 @@ exports[`test update pane render with element 1`] = `
 
 .c1 {
   display: block;
-  width: 100%;
+  overflow: auto;
   position: relative;
   min-height: inherit;
   max-height: inherit;
-  max-width: inherit;
-  overflow: auto;
+  width: 100%;
+  height: 100%;
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: 1px solid var(--apollon-gray,#e9ecef);
   background-position: calc(50% + 24.5px) calc(50% + 24.5px);
@@ -36,6 +36,15 @@ exports[`test update pane render with element 1`] = `
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
+  -webkit-transition: -webkit-transform 500ms,width 500ms,height 500ms;
+  -webkit-transition: transform 500ms,width 500ms,height 500ms;
+  transition: transform 500ms,width 500ms,height 500ms;
+  -webkit-transform-origin: top left;
+  -ms-transform-origin: top left;
+  transform-origin: top left;
+  -webkit-transform: scale(1);
+  -ms-transform: scale(1);
+  transform: scale(1);
 }
 
 .c9 {
@@ -404,20 +413,39 @@ exports[`test update pane render with element 1`] = `
       class="c0 apollon-editor"
     >
       <div
-        class="c1"
+        style="height: 100%; width: 100%; overflow: hidden;"
       >
-        <svg
-          class="c2"
-          data-cy="modeling-editor-canvas"
-          height="640"
-          id="modeling-editor-canvas"
-          tabindex="-1"
-          width="840"
+        <div
+          class="c1"
         >
-          <g
-            style="transform: translate(0px,0px);"
-          />
-        </svg>
+          <svg
+            class="c2"
+            data-cy="modeling-editor-canvas"
+            height="640"
+            id="modeling-editor-canvas"
+            tabindex="-1"
+            width="840"
+          >
+            <g
+              style="transform-origin: top left; transform: translate(0px,0px);"
+            />
+          </svg>
+        </div>
+        <div
+          style="position: absolute; left: 0.75em; bottom: 0.75em;"
+        >
+          <button
+            class="button-rounded"
+            style="margin-right: 0.5em;"
+          >
+            +
+          </button>
+          <button
+            class="button-rounded"
+          >
+            -
+          </button>
+        </div>
       </div>
       <div
         class="c3"
@@ -597,12 +625,12 @@ exports[`test update pane render with relationship 1`] = `
 
 .c1 {
   display: block;
-  width: 100%;
+  overflow: auto;
   position: relative;
   min-height: inherit;
   max-height: inherit;
-  max-width: inherit;
-  overflow: auto;
+  width: 100%;
+  height: 100%;
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: 1px solid var(--apollon-gray,#e9ecef);
   background-position: calc(50% + 24.5px) calc(50% + 24.5px);
@@ -610,6 +638,15 @@ exports[`test update pane render with relationship 1`] = `
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
+  -webkit-transition: -webkit-transform 500ms,width 500ms,height 500ms;
+  -webkit-transition: transform 500ms,width 500ms,height 500ms;
+  transition: transform 500ms,width 500ms,height 500ms;
+  -webkit-transform-origin: top left;
+  -ms-transform-origin: top left;
+  transform-origin: top left;
+  -webkit-transform: scale(1);
+  -ms-transform: scale(1);
+  transform: scale(1);
 }
 
 .c8 {
@@ -941,20 +978,39 @@ exports[`test update pane render with relationship 1`] = `
       class="c0 apollon-editor"
     >
       <div
-        class="c1"
+        style="height: 100%; width: 100%; overflow: hidden;"
       >
-        <svg
-          class="c2"
-          data-cy="modeling-editor-canvas"
-          height="640"
-          id="modeling-editor-canvas"
-          tabindex="-1"
-          width="840"
+        <div
+          class="c1"
         >
-          <g
-            style="transform: translate(0px,0px);"
-          />
-        </svg>
+          <svg
+            class="c2"
+            data-cy="modeling-editor-canvas"
+            height="640"
+            id="modeling-editor-canvas"
+            tabindex="-1"
+            width="840"
+          >
+            <g
+              style="transform-origin: top left; transform: translate(0px,0px);"
+            />
+          </svg>
+        </div>
+        <div
+          style="position: absolute; left: 0.75em; bottom: 0.75em;"
+        >
+          <button
+            class="button-rounded"
+            style="margin-right: 0.5em;"
+          >
+            +
+          </button>
+          <button
+            class="button-rounded"
+          >
+            -
+          </button>
+        </div>
       </div>
       <div
         class="c3"
