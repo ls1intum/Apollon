@@ -19,7 +19,7 @@ const borderWidth: number = 1;
 const StyledEditor = styled.div<{ zoomFactor: number }>`
   display: block;
   overflow: auto;
-  
+
   position: relative;
   min-height: inherit;
   max-height: inherit;
@@ -30,7 +30,7 @@ const StyledEditor = styled.div<{ zoomFactor: number }>`
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: ${borderWidth}px solid ${(props) => props.theme.color.gray};
   background-position: calc(50% + ${(grid * subdivisions - borderWidth) / 2}px)
-  calc(50% + ${(grid * subdivisions - borderWidth) / 2}px);
+    calc(50% + ${(grid * subdivisions - borderWidth) / 2}px);
   background-size:
     ${grid * subdivisions}px ${grid * subdivisions}px,
     ${grid * subdivisions}px ${grid * subdivisions}px,
@@ -42,14 +42,17 @@ const StyledEditor = styled.div<{ zoomFactor: number }>`
     linear-gradient(to bottom, ${(props) => props.theme.color.gray} 1px, transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
-  transition: transform 500ms, width 500ms, height 500ms;
+  transition:
+    transform 500ms,
+    width 500ms,
+    height 500ms;
   transform-origin: top left;
   transform: scale(${(props) => props.zoomFactor ?? 1});
 `;
 
 type OwnProps = { children: ReactNode };
 
-type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean; zoomFactor: number; };
+type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean; zoomFactor: number };
 
 type DispatchProps = {
   move: AsyncDispatch<typeof UMLElementRepository.move>;
@@ -158,8 +161,11 @@ class EditorComponent extends Component<Props, State> {
 
     if (this.state.isMobile) {
       return (
-        <div ref={this.zoomContainer} style={{ height: '100%', width: '100%', overflow: zoomFactor > 1.0 ? 'auto' : 'hidden' }}>
-          <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} zoomFactor={zoomFactor}/>
+        <div
+          ref={this.zoomContainer}
+          style={{ height: '100%', width: '100%', overflow: zoomFactor > 1.0 ? 'auto' : 'hidden' }}
+        >
+          <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} zoomFactor={zoomFactor} />
           <ZoomPane
             value={zoomFactor}
             onChange={(zoomFactor) => this.props.changeZoomFactor(zoomFactor)}
@@ -171,8 +177,11 @@ class EditorComponent extends Component<Props, State> {
       );
     } else {
       return (
-        <div ref={this.zoomContainer} style={{ height: '100%', width: '100%', overflow: zoomFactor > 1.0 ? 'auto' : 'hidden' }}>
-          <StyledEditor ref={this.editor} {...props} zoomFactor={zoomFactor}/>
+        <div
+          ref={this.zoomContainer}
+          style={{ height: '100%', width: '100%', overflow: zoomFactor > 1.0 ? 'auto' : 'hidden' }}
+        >
+          <StyledEditor ref={this.editor} {...props} zoomFactor={zoomFactor} />
           <ZoomPane
             value={zoomFactor}
             onChange={(zoomFactor) => this.props.changeZoomFactor(zoomFactor)}
