@@ -8,7 +8,6 @@ import { AsyncDispatch } from '../../utils/actions/actions';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { clamp } from '../../utils/clamp';
 import { ZoomPane } from './zoom-pane';
-import {UMLElementState} from '../../services/uml-element/uml-element-types';
 
 const minScale: number = 0.5;
 const maxScale: number = 5.0;
@@ -50,7 +49,7 @@ const StyledEditor = styled.div<{ zoomFactor: number }>`
 
 type OwnProps = { children: ReactNode };
 
-type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean; zoomFactor: number; elements: UMLElementState; };
+type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean; zoomFactor: number; };
 
 type DispatchProps = {
   move: AsyncDispatch<typeof UMLElementRepository.move>;
@@ -63,7 +62,6 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
     connecting: state.connecting.length > 0,
     reconnecting: Object.keys(state.reconnecting).length > 0,
     zoomFactor: state.editor.zoomFactor,
-    elements: state.elements
   }),
   {
     move: UMLElementRepository.move,
@@ -156,7 +154,7 @@ class EditorComponent extends Component<Props, State> {
   }
 
   render() {
-    const { moving, connecting, reconnecting, zoomFactor = 1.0, elements, ...props } = this.props;
+    const { moving, connecting, reconnecting, zoomFactor = 1.0, ...props } = this.props;
 
     if (this.state.isMobile) {
       return (
