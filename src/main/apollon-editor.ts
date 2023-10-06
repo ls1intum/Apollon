@@ -105,7 +105,7 @@ export class ApollonEditor {
     };
   }
 
-  selection: Apollon.Selection = { elements: [], relationships: [] };
+  selection: Apollon.Selection = { elements: {}, relationships: {} };
   private root?: Root;
   private currentModelState?: ModelState;
   private assessments: Apollon.Assessment[] = [];
@@ -194,7 +194,12 @@ export class ApollonEditor {
     if (!this.store) return;
     const dispatch = this.store.dispatch as Dispatch;
     dispatch(UMLElementRepository.deselect());
-    dispatch(UMLElementRepository.select([...selection.elements, ...selection.relationships]));
+    dispatch(
+      UMLElementRepository.select([
+        ...Object.entries(selection.elements).filter(([, selected]) => selected).map(([id]) => id),
+        ...Object.entries(selection.relationships).filter(([, selected]) => selected).map(([id]) => id),
+      ])
+    );
   }
 
   _getNewSubscriptionId(subscribers: { [key: number]: any }): number {
@@ -327,8 +332,14 @@ export class ApollonEditor {
     if (!this.store) return;
     const { elements, selected, assessments } = this.store.getState();
     const selection: Apollon.Selection = {
-      elements: selected.filter((id) => elements[id].type in UMLElementType),
-      relationships: selected.filter((id) => elements[id].type in UMLRelationshipType),
+      elements:
+        selected
+          .filter((id) => elements[id].type in UMLElementType)
+          .reduce((acc, id) => ({ ...acc, [id]: true }), {}),
+      relationships: 
+        selected
+          .filter((id) => elements[id].type in UMLRelationshipType)
+          .reduce((acc, id) => ({ ...acc, [id]: true }), {})
     };
 
     // check if previous selection differs from current selection, if yes -> notify subscribers
@@ -372,7 +383,7 @@ export class ApollonEditor {
         this.store.getState().lastAction.endsWith('DELETE')
       ) {
         const lastModel = ModelState.toModel(this.store.getState());
-        // eslint-disable-next-line no-console
+        // tslint:disable-next-line:no-console
         console.log(lastModel);
         Object.values(this.discreteModelSubscribers).forEach((subscriber) => subscriber(lastModel));
       }

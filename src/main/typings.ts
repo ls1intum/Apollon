@@ -26,8 +26,8 @@ export type ApollonOptions = {
 };
 
 export type Selection = {
-  elements: string[];
-  relationships: string[];
+  elements: { [id: string]: boolean };
+  relationships: { [id: string]: boolean };
 };
 
 export type UMLModel = {

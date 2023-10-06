@@ -101,7 +101,10 @@ export class ModelState {
 
     return {
       diagram,
-      interactive: [...model.interactive.elements, ...model.interactive.relationships],
+      interactive: [
+        ...Object.entries(model.interactive.elements).filter(([, value]) => value).map(([key]) => key),
+        ...Object.entries(model.interactive.relationships).filter(([, value]) => value).map(([key]) => key),
+      ],
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
       assessments: (Object.values(model.assessments) || []).reduce<AssessmentState>(
         (acc, val) => ({
@@ -136,7 +139,7 @@ export class ModelState {
 
       const res = {
         [element.id]: element.serialize(children) as Apollon.UMLElement,
-      }
+      };
 
       for (const child of children) {
         const childres = serialize(child);
@@ -176,8 +179,14 @@ export class ModelState {
     }
 
     const interactive: Apollon.Selection = {
-      elements: state.interactive.filter((id) => UMLElement.isUMLElement(state.elements[id])),
-      relationships: state.interactive.filter((id) => UMLRelationship.isUMLRelationship(state.elements[id])),
+      elements:
+        state.interactive
+          .filter((id) => UMLElement.isUMLElement(state.elements[id]))
+          .reduce((acc, val) => ({ ...acc, [val]: true }), {}),
+      relationships:
+        state.interactive
+          .filter((id) => UMLRelationship.isUMLRelationship(state.elements[id]))
+          .reduce((acc, val) => ({ ...acc, [val]: true }), {})
     };
 
     const assessments = Object.fromEntries(
