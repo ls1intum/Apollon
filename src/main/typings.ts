@@ -31,7 +31,7 @@ export type Selection = {
 };
 
 export type UMLModel = {
-  version: string;
+  version: `3.${number}.${number}`;
   type: UMLDiagramType;
   size: { width: number; height: number };
   elements: { [id: string]: UMLElement };

@@ -20,6 +20,7 @@ import { ReconnectableState } from '../../services/uml-relationship/reconnectabl
 import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import * as Apollon from '../../typings';
+import { backwardsCompatibleModel, UMLModelCompat } from '../../compat';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { UMLDiagramType } from '../../typings';
@@ -45,11 +46,11 @@ export interface ModelState {
   lastAction: LastActionState;
 }
 
-// TODO: fix this
+// TODO: simplify this code.
 
 export class ModelState {
-  static fromModel(model: Apollon.UMLModel): PartialModelState {
-    // TODO: check for version, as it is different based on 2.0.0 vs 3.0.0
+  static fromModel(compatModel: UMLModelCompat): PartialModelState {
+    const model = backwardsCompatibleModel(compatModel);
 
     const apollonElements = model.elements;
     const apollonRelationships = model.relationships;
