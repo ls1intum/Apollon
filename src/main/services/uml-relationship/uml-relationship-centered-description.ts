@@ -1,3 +1,4 @@
+
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import { IPath } from '../../utils/geometry/path';
 import { ILayer } from '../layouter/layer';

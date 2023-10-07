@@ -127,11 +127,16 @@
       "BPMNStartEvent": "Start Event",
       "BPMNIntermediateEvent": "Intermediate Event",
       "BPMNEndEvent": "End Event",
-      "BPMNEventBasedGateway": "Event-based Gateway",
-      "BPMNInclusiveGateway": "Inclusive Gateway",
-      "BPMNExclusiveGateway": "Exclusive Gateway",
-      "BPMNParallelGateway": "Parallel Gateway",
-      "BPMNConversation": "Conversation"
+      "BPMNGateway": "Gateway",
+      "BPMNComplexGateway": "Complex",
+      "BPMNEventBasedGateway": "Event-based",
+      "BPMNInclusiveGateway": "Inclusive",
+      "BPMNExclusiveGateway": "Exclusive",
+      "BPMNExclusiveEventBasedGateway": "Exclusive Event-based",
+      "BPMNParallelGateway": "Parallel",
+      "BPMNParallelEventBasedGateway": "Parallel Event-based",
+      "BPMNConversation": "Conversation",
+      "BPMNCallConversation": "Call Conversation"
     }
   }
 }

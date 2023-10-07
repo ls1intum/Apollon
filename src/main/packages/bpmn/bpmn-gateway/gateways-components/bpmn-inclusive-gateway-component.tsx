@@ -1,16 +1,16 @@
 import React, { FunctionComponent } from 'react';
-import { BPMNEventBasedGateway } from './bpmn-event-based-gateway';
-import { ThemedCircle, ThemedPolyline } from '../../../components/theme/themedComponents';
-import { Multiline } from '../../../utils/svg/multiline';
+import { ThemedCircle, ThemedPolyline } from '../../../../components/theme/themedComponents';
+import { Multiline } from '../../../../utils/svg/multiline';
+import { Props } from '../bpmn-gateway-component';
 
-export const BPMNEventBasedGatewayComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
+export const BPMNInclusiveGatewayComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
     <ThemedPolyline
       points={`${element.bounds.width / 2} 0, ${element.bounds.width} ${element.bounds.height / 2}, ${
         element.bounds.width / 2
       } ${element.bounds.height}, 0 ${element.bounds.height / 2}, ${element.bounds.width / 2} 0`}
       strokeColor={element.strokeColor}
-      fillColor={fillColor || element.fillColor}
+      fillColor={element.fillColor}
     />
     <ThemedCircle
       cx={element.bounds.width / 2}
@@ -31,8 +31,3 @@ export const BPMNEventBasedGatewayComponent: FunctionComponent<Props> = ({ eleme
     </Multiline>
   </g>
 );
-
-export interface Props {
-  element: BPMNEventBasedGateway;
-  fillColor?: string;
-}

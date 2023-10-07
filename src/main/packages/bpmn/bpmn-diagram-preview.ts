@@ -6,14 +6,11 @@ import { BPMNSubprocess } from './bpmn-subprocess/bpmn-subprocess';
 import { BPMNStartEvent } from './bpmn-start-event/bpmn-start-event';
 import { BPMNIntermediateEvent } from './bpmn-intermediate-event/bpmn-intermediate-event';
 import { BPMNEndEvent } from './bpmn-end-event/bpmn-end-event';
-import { BPMNExclusiveGateway } from './bpmn-exclusive-gateway/bpmn-exclusive-gateway';
-import { BPMNInclusiveGateway } from './bpmn-inclusive-gateway/bpmn-inclusive-gateway';
-import { BPMNParallelGateway } from './bpmn-parallel-gateway/bpmn-parallel-gateway';
-import { BPMNEventBasedGateway } from './bpmn-event-based-gateway/bpmn-event-based-gateway';
+import { BPMNGateway } from './bpmn-gateway/bpmn-gateway';
 import { BPMNTransaction } from './bpmn-transaction/bpmn-transaction';
 import { BPMNCallActivity } from './bpmn-call-activity/bpmn-call-activity';
 import { BPMNAnnotation } from './bpmn-annotation/bpmn-annotation';
-import {BPMNConversation} from './bpmn-conversation/bpmn-conversation';
+import { BPMNConversation } from './bpmn-conversation/bpmn-conversation';
 
 export const composeBPMNPreview: ComposePreview = (
   layer: ILayer,
@@ -79,39 +76,18 @@ export const composeBPMNPreview: ComposePreview = (
   );
 
   elements.push(
-    new BPMNExclusiveGateway({
-      name: translate('packages.BPMN.BPMNExclusiveGateway'),
+    new BPMNGateway({
+      name: translate('packages.BPMN.BPMNGateway'),
       bounds: { x: 0, y: 0, width: 40, height: 40 },
     }),
   );
 
   elements.push(
-    new BPMNInclusiveGateway({
-      name: translate('packages.BPMN.BPMNInclusiveGateway'),
+    new BPMNConversation({
+      name: translate('packages.BPMN.BPMNConversation'),
       bounds: { x: 0, y: 0, width: 40, height: 40 },
     }),
   );
-
-  elements.push(
-    new BPMNParallelGateway({
-      name: translate('packages.BPMN.BPMNParallelGateway'),
-      bounds: { x: 0, y: 0, width: 40, height: 40 },
-    }),
-  );
-
-  elements.push(
-    new BPMNEventBasedGateway({
-      name: translate('packages.BPMN.BPMNEventBasedGateway'),
-      bounds: { x: 0, y: 0, width: 40, height: 40 },
-    }),
-  );
-
-    elements.push(
-        new BPMNConversation({
-            name: translate('packages.BPMN.BPMNConversation'),
-            bounds: { x: 0, y: 0, width: 40, height: 40 },
-        }),
-    );
 
   return elements;
 };

@@ -1,14 +1,19 @@
 import React, { FunctionComponent } from 'react';
-import {BPMNConversation} from './bpmn-conversation';
+import { BPMNConversation } from './bpmn-conversation';
 import { ThemedCircle, ThemedPolyline } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNConversationComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
+export const BPMNConversationComponent: FunctionComponent<Props> = ({ element }) => (
   <g>
     <ThemedPolyline
-      points={`${element.bounds.width / 4} 0, ${(element.bounds.width / 4) * 3} 0, ${element.bounds.width} ${element.bounds.height / 2}, ${(element.bounds.width / 4) * 3} ${element.bounds.height}, ${element.bounds.width / 4} ${element.bounds.height}, 0 ${element.bounds.height / 2}, ${element.bounds.width / 4} 0`}
+      points={`${element.bounds.width / 4} 0, ${(element.bounds.width / 4) * 3} 0, ${element.bounds.width} ${
+        element.bounds.height / 2
+      }, ${(element.bounds.width / 4) * 3} ${element.bounds.height}, ${element.bounds.width / 4} ${
+        element.bounds.height
+      }, 0 ${element.bounds.height / 2}, ${element.bounds.width / 4} 0`}
       strokeColor={element.strokeColor}
-      fillColor={fillColor || element.fillColor}
+      fillColor={element.fillColor}
+      strokeWidth={element.conversationType === 'call' ? 3 : 1}
     />
     <Multiline
       x={element.bounds.width / 2}
@@ -26,5 +31,4 @@ export const BPMNConversationComponent: FunctionComponent<Props> = ({ element, f
 
 export interface Props {
   element: BPMNConversation;
-  fillColor?: string;
 }

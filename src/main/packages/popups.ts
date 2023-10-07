@@ -27,6 +27,8 @@ import { FlowchartInputOutputUpdate } from './flowchart/flowchart-input-output/f
 import { FlowchartFlowlineUpdate } from './flowchart/flowchart-flowline/flowchart-flowline-update';
 import { ColorLegendUpdate } from './common/color-legend/color-legend-update';
 import { BPMNSequenceFlowUpdate } from './bpmn/bpmn-squence-flow/bpmn-sequence-flow-update';
+import {BPMNGatewayUpdate} from './bpmn/bpmn-gateway/bpmn-gateway-update';
+import {BPMNConversationUpdate} from './bpmn/bpmn-conversation/bpmn-conversation-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -78,11 +80,8 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNStartEvent]: DefaultPopup,
   [UMLElementType.BPMNIntermediateEvent]: DefaultPopup,
   [UMLElementType.BPMNEndEvent]: DefaultPopup,
-  [UMLElementType.BPMNExclusiveGateway]: DefaultPopup,
-  [UMLElementType.BPMNInclusiveGateway]: DefaultPopup,
-  [UMLElementType.BPMNParallelGateway]: DefaultPopup,
-  [UMLElementType.BPMNEventBasedGateway]: DefaultPopup,
-  [UMLElementType.BPMNConversation]: DefaultPopup,
+  [UMLElementType.BPMNGateway]: BPMNGatewayUpdate,
+  [UMLElementType.BPMNConversation]: BPMNConversationUpdate,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,

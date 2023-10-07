@@ -9,10 +9,7 @@ export const BPMNElementType = {
   BPMNStartEvent: 'BPMNStartEvent',
   BPMNIntermediateEvent: 'BPMNIntermediateEvent',
   BPMNEndEvent: 'BPMNEndEvent',
-  BPMNExclusiveGateway: 'BPMNExclusiveGateway',
-  BPMNInclusiveGateway: 'BPMNInclusiveGateway',
-  BPMNParallelGateway: 'BPMNParallelGateway',
-  BPMNEventBasedGateway: 'BPMNEventBasedGateway',
+  BPMNGateway: 'BPMNGateway',
   BPMNConversation: 'BPMNConversation',
 } as const;
 

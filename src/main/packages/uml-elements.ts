@@ -43,10 +43,7 @@ import { BPMNSubprocess } from './bpmn/bpmn-subprocess/bpmn-subprocess';
 import { BPMNStartEvent } from './bpmn/bpmn-start-event/bpmn-start-event';
 import { BPMNIntermediateEvent } from './bpmn/bpmn-intermediate-event/bpmn-intermediate-event';
 import { BPMNEndEvent } from './bpmn/bpmn-end-event/bpmn-end-event';
-import { BPMNExclusiveGateway } from './bpmn/bpmn-exclusive-gateway/bpmn-exclusive-gateway';
-import { BPMNInclusiveGateway } from './bpmn/bpmn-inclusive-gateway/bpmn-inclusive-gateway';
-import { BPMNParallelGateway } from './bpmn/bpmn-parallel-gateway/bpmn-parallel-gateway';
-import { BPMNEventBasedGateway } from './bpmn/bpmn-event-based-gateway/bpmn-event-based-gateway';
+import { BPMNGateway } from './bpmn/bpmn-gateway/bpmn-gateway';
 import {BPMNTransaction} from './bpmn/bpmn-transaction/bpmn-transaction';
 import {BPMNCallActivity} from './bpmn/bpmn-call-activity/bpmn-call-activity';
 import {BPMNAnnotation} from './bpmn/bpmn-annotation/bpmn-annotation';
@@ -100,9 +97,6 @@ export const UMLElements = {
   [UMLElementType.BPMNStartEvent]: BPMNStartEvent,
   [UMLElementType.BPMNIntermediateEvent]: BPMNIntermediateEvent,
   [UMLElementType.BPMNEndEvent]: BPMNEndEvent,
-  [UMLElementType.BPMNExclusiveGateway]: BPMNExclusiveGateway,
-  [UMLElementType.BPMNInclusiveGateway]: BPMNInclusiveGateway,
-  [UMLElementType.BPMNParallelGateway]: BPMNParallelGateway,
-  [UMLElementType.BPMNEventBasedGateway]: BPMNEventBasedGateway,
+  [UMLElementType.BPMNGateway]: BPMNGateway,
   [UMLElementType.BPMNConversation]: BPMNConversation,
 };
