@@ -11,15 +11,14 @@ import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
-import { BPMNFlowType, BPMNSequenceFlow } from './bpmn-sequence-flow';
+import { BPMNFlowType, BPMNFlow } from './bpmn-flow';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { StylePane } from '../../../components/style-pane/style-pane';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
-import { BPMNFlow } from '../../../typings';
 import { Divider } from '../../../components/controls/divider/divider';
 
 interface OwnProps {
-  element: BPMNSequenceFlow;
+  element: BPMNFlow;
 }
 
 type StateProps = {};
@@ -49,7 +48,7 @@ const Flex = styled.div`
 
 type State = { colorOpen: boolean };
 
-class BPMNSequenceFlowUpdateComponent extends Component<Props, State> {
+class BPMNFlowUpdateComponent extends Component<Props, State> {
   state = { colorOpen: false };
 
   private toggleColor = () => {
@@ -113,4 +112,4 @@ class BPMNSequenceFlowUpdateComponent extends Component<Props, State> {
   };
 }
 
-export const BPMNSequenceFlowUpdate = enhance(BPMNSequenceFlowUpdateComponent);
+export const BPMNFlowUpdate = enhance(BPMNFlowUpdateComponent);

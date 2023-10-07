@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-task-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          class="sc-fqkvVR kprGcp"
+          fill="white"
+          height="100%"
+          rx="10"
+          ry="10"
+          stroke="black"
+          width="100%"
+        />
+        <text
+          font-weight="bold"
+          height="100"
+          pointer-events="none"
+          text-anchor="middle"
+          width="200"
+          x="100"
+          y="50"
+        >
+          <tspan
+            dy="5.5"
+            x="100"
+          >
+            Task
+          </tspan>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

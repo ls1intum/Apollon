@@ -1,9 +1,9 @@
 import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
-import { BPMNSequenceFlow } from './bpmn-sequence-flow';
+import { BPMNFlow } from './bpmn-flow';
 import { ThemedCircle, ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
-export const BPMNSequenceFlowComponent: FunctionComponent<Props> = ({ element }) => {
+export const BPMNFlowComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
   let direction: 'vertical' | 'horizontal' = 'vertical';
   const path = element.path.map((point) => new Point(point.x, point.y));
@@ -86,5 +86,5 @@ export const BPMNSequenceFlowComponent: FunctionComponent<Props> = ({ element })
 };
 
 interface Props {
-  element: BPMNSequenceFlow;
+  element: BPMNFlow;
 }

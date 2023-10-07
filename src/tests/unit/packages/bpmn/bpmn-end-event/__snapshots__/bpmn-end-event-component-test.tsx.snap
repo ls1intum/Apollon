@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-end-event-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <circle
+          class="sc-iGgWBj fvtjvB"
+          cx="50%"
+          cy="50%"
+          fill="white"
+          r="18.5"
+          stroke="black"
+          stroke-width="3"
+        />
+        <text
+          height="40"
+          pointer-events="none"
+          text-anchor="start"
+          width="40"
+          x="50"
+          y="20"
+        >
+          <tspan
+            dy="5.5"
+            x="50"
+          >
+            End
+          </tspan>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

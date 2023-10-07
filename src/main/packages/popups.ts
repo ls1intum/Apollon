@@ -26,9 +26,9 @@ import { FlowchartFunctionCallUpdate } from './flowchart/flowchart-function-call
 import { FlowchartInputOutputUpdate } from './flowchart/flowchart-input-output/flowchart-input-output-update';
 import { FlowchartFlowlineUpdate } from './flowchart/flowchart-flowline/flowchart-flowline-update';
 import { ColorLegendUpdate } from './common/color-legend/color-legend-update';
-import { BPMNSequenceFlowUpdate } from './bpmn/bpmn-squence-flow/bpmn-sequence-flow-update';
-import {BPMNGatewayUpdate} from './bpmn/bpmn-gateway/bpmn-gateway-update';
-import {BPMNConversationUpdate} from './bpmn/bpmn-conversation/bpmn-conversation-update';
+import { BPMNFlowUpdate } from './bpmn/bpmn-flow/bpmn-flow-update';
+import { BPMNGatewayUpdate } from './bpmn/bpmn-gateway/bpmn-gateway-update';
+import { BPMNConversationUpdate } from './bpmn/bpmn-conversation/bpmn-conversation-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -108,5 +108,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.ReachabilityGraphArc]: UMLReachabilityGraphArcUpdate,
   [UMLRelationshipType.SyntaxTreeLink]: DefaultRelationshipPopup,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineUpdate,
-  [UMLRelationshipType.BPMNSequenceFlow]: BPMNSequenceFlowUpdate,
+  [UMLRelationshipType.BPMNFlow]: BPMNFlowUpdate,
 };

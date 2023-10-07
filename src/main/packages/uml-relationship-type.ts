@@ -53,5 +53,5 @@ export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelations
   [UMLDiagramType.ReachabilityGraph]: ReachabilityGraphRelationshipType.ReachabilityGraphArc,
   [UMLDiagramType.SyntaxTree]: SyntaxTreeRelationshipType.SyntaxTreeLink,
   [UMLDiagramType.Flowchart]: FlowchartRelationshipType.FlowchartFlowline,
-  [UMLDiagramType.BPMN]: BPMNRelationshipType.BPMNSequenceFlow,
+  [UMLDiagramType.BPMN]: BPMNRelationshipType.BPMNFlow,
 };

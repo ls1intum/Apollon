@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-flow-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <marker
+          id="marker-start-1"
+          markerHeight="10"
+          markerUnits="strokeWidth"
+          markerWidth="10"
+          orient="auto"
+          refX="0"
+          refY="0"
+          viewBox="0 0 10 10"
+        >
+          <circle
+            class="sc-iGgWBj fvtjvB"
+            cx="0%"
+            cy="0%"
+            fill="white"
+            r="5"
+            stroke="black"
+            stroke-width="1"
+          />
+        </marker>
+        <marker
+          id="marker-end-1"
+          markerHeight="10"
+          markerUnits="strokeWidth"
+          markerWidth="10"
+          orient="auto"
+          refX="11"
+          refY="5"
+          viewBox="0 0 10 5"
+        >
+          <path
+            class="sc-gEvEer fpHXmb"
+            d="M0,0 L10,5 L0,10, L0,0 z"
+            fill="strokeColor"
+            fill-rule="evenodd"
+            stroke="black"
+            stroke-linejoin="round"
+          />
+        </marker>
+        <polyline
+          class="sc-aXZVg OFiXI"
+          fill="none"
+          marker-end="url(#marker-end-1)"
+          points="0 0,200 100"
+          stroke="black"
+          stroke-width="1"
+        />
+        <text
+          dominant-baseline="text-after-edge"
+          dy="-5"
+          pointer-events="none"
+          text-anchor="middle"
+          x="100"
+          y="50"
+        >
+          Sequence
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

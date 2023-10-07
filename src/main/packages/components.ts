@@ -47,17 +47,17 @@ import { FlowchartDecisionComponent } from './flowchart/flowchart-decision/flowc
 import { FlowchartFunctionCallComponent } from './flowchart/flowchart-function-call/flowchart-function-call-component';
 import { FlowchartInputOutputComponent } from './flowchart/flowchart-input-output/flowchart-input-output-component';
 import { ColorLegendComponent } from './common/color-legend/color-legend-component';
-import { BPMNSequenceFlowComponent } from './bpmn/bpmn-squence-flow/bpmn-sequence-flow-component';
+import { BPMNFlowComponent } from './bpmn/bpmn-flow/bpmn-flow-component';
 import { BPMNTaskComponent } from './bpmn/bpmn-task/bpmn-task-component';
 import { BPMNSubprocessComponent } from './bpmn/bpmn-subprocess/bpmn-subprocess-component';
 import { BPMNStartEventComponent } from './bpmn/bpmn-start-event/bpmn-start-event-component';
 import { BPMNIntermediateEventComponent } from './bpmn/bpmn-intermediate-event/bpmn-intermediate-event-component';
 import { BPMNEndEventComponent } from './bpmn/bpmn-end-event/bpmn-end-event-component';
 import { BPMNGatewayComponent } from './bpmn/bpmn-gateway/bpmn-gateway-component';
-import {BPMNTransactionComponent} from './bpmn/bpmn-transaction/bpmn-transaction-component';
-import {BPMNCallActivityComponent} from './bpmn/bpmn-call-activity/bpmn-call-activity-component';
-import {BPMNAnnotationComponent} from './bpmn/bpmn-annotation/bpmn-annotation-component';
-import {BPMNConversationComponent} from './bpmn/bpmn-conversation/bpmn-conversation-component';
+import { BPMNTransactionComponent } from './bpmn/bpmn-transaction/bpmn-transaction-component';
+import { BPMNCallActivityComponent } from './bpmn/bpmn-call-activity/bpmn-call-activity-component';
+import { BPMNAnnotationComponent } from './bpmn/bpmn-annotation/bpmn-annotation-component';
+import { BPMNConversationComponent } from './bpmn/bpmn-conversation/bpmn-conversation-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -138,5 +138,5 @@ export const Components: {
   [UMLRelationshipType.ReachabilityGraphArc]: UMLReachabilityGraphArcComponent,
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLinkComponent,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineComponent,
-  [UMLRelationshipType.BPMNSequenceFlow]: BPMNSequenceFlowComponent,
+  [UMLRelationshipType.BPMNFlow]: BPMNFlowComponent,
 };

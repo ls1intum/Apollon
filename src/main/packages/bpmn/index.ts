@@ -1,4 +1,4 @@
-import { BPMNSequenceFlow } from './bpmn-squence-flow/bpmn-sequence-flow';
+import { BPMNFlow } from './bpmn-flow/bpmn-flow';
 
 export const BPMNElementType = {
   BPMNTask: 'BPMNTask',
@@ -14,5 +14,5 @@ export const BPMNElementType = {
 } as const;
 
 export const BPMNRelationshipType = {
-  BPMNSequenceFlow: 'BPMNSequenceFlow',
+  BPMNFlow: 'BPMNFlow',
 } as const;

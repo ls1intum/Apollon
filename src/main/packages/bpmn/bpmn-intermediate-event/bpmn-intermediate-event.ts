@@ -9,7 +9,7 @@ import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
 
 export class BPMNIntermediateEvent extends UMLElement {
-  static supportedRelationships = [BPMNRelationshipType.BPMNSequenceFlow];
+  static supportedRelationships = [BPMNRelationshipType.BPMNFlow];
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };
 
   type: UMLElementType = BPMNElementType.BPMNIntermediateEvent;

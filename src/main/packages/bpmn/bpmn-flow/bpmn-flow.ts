@@ -4,23 +4,22 @@ import { DeepPartial } from 'redux';
 import { UMLRelationshipCenteredDescription } from '../../../services/uml-relationship/uml-relationship-centered-description';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import * as Apollon from '../../../typings';
-import { BPMNFlow } from '../../../typings';
 
 export type BPMNFlowType = 'sequence' | 'message' | 'association';
 
-export class BPMNSequenceFlow extends UMLRelationshipCenteredDescription {
+export class BPMNFlow extends UMLRelationshipCenteredDescription {
   static features = { ...UMLRelationship.features };
   static defaultFlowType: BPMNFlowType = 'sequence';
 
-  type = BPMNRelationshipType.BPMNSequenceFlow;
+  type = BPMNRelationshipType.BPMNFlow;
   name = '';
 
   flowType: BPMNFlowType;
 
-  constructor(values?: DeepPartial<BPMNFlow>) {
+  constructor(values?: DeepPartial<Apollon.BPMNFlow>) {
     super(values);
     this.name = values?.name || this.name;
-    this.flowType = values?.flowType || BPMNSequenceFlow.defaultFlowType;
+    this.flowType = values?.flowType || BPMNFlow.defaultFlowType;
   }
 
   serialize(children?: UMLElement[]): Apollon.BPMNFlow {
@@ -36,6 +35,6 @@ export class BPMNSequenceFlow extends UMLRelationshipCenteredDescription {
     children?: Apollon.UMLModelElement[],
   ) {
     super.deserialize(values, children);
-    this.flowType = values.flowType || BPMNSequenceFlow.defaultFlowType;
+    this.flowType = values.flowType || BPMNFlow.defaultFlowType;
   }
 }
