@@ -16,13 +16,14 @@ export const BPMNConversationComponent: FunctionComponent<Props> = ({ element })
       strokeWidth={element.conversationType === 'call' ? 3 : 1}
     />
     <Multiline
-      x={element.bounds.width / 2}
-      y={element.bounds.height + 20}
+      x={element.bounds.width + 10}
+      y={element.bounds.height / 2}
       width={element.bounds.width}
       height={element.bounds.height}
       fill={element.textColor}
       lineHeight={16}
       capHeight={11}
+      textAnchor="start"
     >
       {element.name}
     </Multiline>

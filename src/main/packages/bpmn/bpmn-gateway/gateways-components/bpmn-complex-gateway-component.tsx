@@ -22,24 +22,25 @@ export const BPMNComplexGatewayComponent: FunctionComponent<Props> = ({ element 
       strokeColor={element.strokeColor}
       fillColor={element.fillColor}
     />
-      <ThemedPolyline
-          points={`${element.bounds.width / 2} 10, ${element.bounds.width / 2} ${element.bounds.height - 10}`}
-          strokeColor={element.strokeColor}
-          fillColor={element.fillColor}
-      />
-      <ThemedPolyline
-          points={`10 ${element.bounds.height / 2}, ${element.bounds.width - 10} ${element.bounds.height / 2}`}
-          strokeColor={element.strokeColor}
-          fillColor={element.fillColor}
-      />
+    <ThemedPolyline
+      points={`${element.bounds.width / 2} 10, ${element.bounds.width / 2} ${element.bounds.height - 10}`}
+      strokeColor={element.strokeColor}
+      fillColor={element.fillColor}
+    />
+    <ThemedPolyline
+      points={`10 ${element.bounds.height / 2}, ${element.bounds.width - 10} ${element.bounds.height / 2}`}
+      strokeColor={element.strokeColor}
+      fillColor={element.fillColor}
+    />
     <Multiline
-      x={element.bounds.width / 2}
-      y={element.bounds.height + 20}
+      x={element.bounds.width + 10}
+      y={element.bounds.height / 2}
       width={element.bounds.width}
       height={element.bounds.height}
       fill={element.textColor}
       lineHeight={16}
       capHeight={11}
+      textAnchor="start"
     >
       {element.name}
     </Multiline>

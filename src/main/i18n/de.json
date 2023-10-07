@@ -125,7 +125,7 @@
       "BPMNCallActivity": "Aufruf-Aktivität",
       "BPMNAnnotation": "Annotation",
       "BPMNStartEvent": "Start-Event",
-      "BPMNIntermediateEvent": "Zwischen-Event",
+      "BPMNIntermediateEvent": "Event",
       "BPMNEndEvent": "End-Event",
       "BPMNGateway": "Gateway",
       "BPMNComplexGateway": "Komplex",
@@ -136,7 +136,10 @@
       "BPMNParallelGateway": "Parallel",
       "BPMNParallelEventBasedGateway": "Parallel Ereignis-basiert",
       "BPMNConversation": "Konversation",
-      "BPMNCallConversation": "Aufruf-Konversation"
+      "BPMNCallConversation": "Aufruf-Konversation",
+      "BPMNSequenceFlow": "Sequenz",
+      "BPMNMessageFlow": "Nachricht",
+      "BPMNAssociationFlow": "Assoziation"
     }
   }
 }

@@ -9,7 +9,14 @@ import { DeepPartial } from 'redux';
 import { assign } from '../../../utils/fx/assign';
 import * as Apollon from '../../../typings';
 
-export type BPMNGatewayType = 'complex' | 'event-based' | 'exclusive' | 'exclusive-event-based' | 'inclusive' | 'parallel' | 'parallel-event-based';
+export type BPMNGatewayType =
+  | 'complex'
+  | 'event-based'
+  | 'exclusive'
+  | 'exclusive-event-based'
+  | 'inclusive'
+  | 'parallel'
+  | 'parallel-event-based';
 
 export class BPMNGateway extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };

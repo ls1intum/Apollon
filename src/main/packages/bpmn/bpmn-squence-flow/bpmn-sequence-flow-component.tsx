@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { BPMNSequenceFlow } from './bpmn-sequence-flow';
-import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { ThemedCircle, ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const BPMNSequenceFlowComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
@@ -46,7 +46,19 @@ export const BPMNSequenceFlowComponent: FunctionComponent<Props> = ({ element })
   return (
     <g>
       <marker
-        id={`marker-${element.id}`}
+        id={`marker-start-${element.id}`}
+        viewBox={`0 0 ${10} ${10}`}
+        markerWidth={10}
+        markerHeight={10}
+        refX={0}
+        refY={0}
+        orient="auto"
+        markerUnits="strokeWidth"
+      >
+        <ThemedCircle cx="0%" cy="0%" r={5} strokeColor={element.fillColor} strokeWidth={1} />
+      </marker>
+      <marker
+        id={`marker-end-${element.id}`}
         viewBox={`0 0 ${10} ${5}`}
         markerWidth={10}
         markerHeight={10}
@@ -62,7 +74,9 @@ export const BPMNSequenceFlowComponent: FunctionComponent<Props> = ({ element })
         strokeColor={element.strokeColor}
         fillColor="none"
         strokeWidth={1}
-        markerEnd={`url(#marker-${element.id})`}
+        markerStart={element.flowType === 'message' ? `url(#marker-start-${element.id})` : undefined}
+        markerEnd={element.flowType !== 'association' ? `url(#marker-end-${element.id})` : undefined}
+        strokeDasharray={element.flowType !== 'sequence' ? 4 : undefined}
       />
       <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none" style={{ ...textColor }}>
         {element.name}

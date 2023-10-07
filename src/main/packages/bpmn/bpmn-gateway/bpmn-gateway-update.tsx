@@ -12,8 +12,8 @@ import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { BPMNGateway, BPMNGatewayType } from './bpmn-gateway';
 import { Switch } from '../../../components/controls/switch/switch';
-import {Dropdown} from '../../../components/controls/dropdown/dropdown';
-import {UseCaseRelationshipType} from '../../uml-use-case-diagram';
+import { Dropdown } from '../../../components/controls/dropdown/dropdown';
+import { UseCaseRelationshipType } from '../../uml-use-case-diagram';
 
 interface OwnProps {
   element: BPMNGateway;
@@ -59,17 +59,25 @@ class BPMNGatewayUpdateComponent extends Component<Props> {
         </section>
         <section>
           <Dropdown value={element.gatewayType} onChange={this.changeGatewayType(element.id)}>
-            <Dropdown.Item value={'complex'}>
-              {this.props.translate('packages.BPMN.BPMNComplexGateway')}
-            </Dropdown.Item>
+            <Dropdown.Item value={'complex'}>{this.props.translate('packages.BPMN.BPMNComplexGateway')}</Dropdown.Item>
             <Dropdown.Item value={'event-based'}>
               {this.props.translate('packages.BPMN.BPMNEventBasedGateway')}
             </Dropdown.Item>
-            <Dropdown.Item value={'exclusive'}>{this.props.translate('packages.BPMN.BPMNExclusiveGateway')}</Dropdown.Item>
-            <Dropdown.Item value={'exclusive-event-based'}>{this.props.translate('packages.BPMN.BPMNExclusiveEventBasedGateway')}</Dropdown.Item>
-            <Dropdown.Item value={'inclusive'}>{this.props.translate('packages.BPMN.BPMNInclusiveGateway')}</Dropdown.Item>
-            <Dropdown.Item value={'parallel'}>{this.props.translate('packages.BPMN.BPMNParallelGateway')}</Dropdown.Item>
-            <Dropdown.Item value={'parallel-event-based'}>{this.props.translate('packages.BPMN.BPMNParallelEventBasedGateway')}</Dropdown.Item>
+            <Dropdown.Item value={'exclusive'}>
+              {this.props.translate('packages.BPMN.BPMNExclusiveGateway')}
+            </Dropdown.Item>
+            <Dropdown.Item value={'exclusive-event-based'}>
+              {this.props.translate('packages.BPMN.BPMNExclusiveEventBasedGateway')}
+            </Dropdown.Item>
+            <Dropdown.Item value={'inclusive'}>
+              {this.props.translate('packages.BPMN.BPMNInclusiveGateway')}
+            </Dropdown.Item>
+            <Dropdown.Item value={'parallel'}>
+              {this.props.translate('packages.BPMN.BPMNParallelGateway')}
+            </Dropdown.Item>
+            <Dropdown.Item value={'parallel-event-based'}>
+              {this.props.translate('packages.BPMN.BPMNParallelEventBasedGateway')}
+            </Dropdown.Item>
           </Dropdown>
         </section>
       </div>

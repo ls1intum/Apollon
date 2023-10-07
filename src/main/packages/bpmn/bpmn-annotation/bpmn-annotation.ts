@@ -7,7 +7,7 @@ import { UMLElementType } from '../../uml-element-type';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 
 export class BPMNAnnotation extends UMLElement {
-  static features: UMLElementFeatures = { ...UMLElement.features, connectable: false };
+  static features: UMLElementFeatures = { ...UMLElement.features };
 
   type: UMLElementType = BPMNElementType.BPMNAnnotation;
 

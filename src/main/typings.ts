@@ -98,6 +98,10 @@ export type BPMNConversation = UMLElement & {
   conversationType: BPMNConversationType;
 };
 
+export type BPMNFlow = UMLRelationship & {
+  flowType: 'sequence' | 'message' | 'association';
+};
+
 export type UMLReachabilityGraphMarking = UMLElement & {
   isInitialMarking: boolean;
 };

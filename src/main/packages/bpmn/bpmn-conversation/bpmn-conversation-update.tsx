@@ -11,8 +11,8 @@ import { ModelState } from '../../../components/store/model-state';
 import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { Switch } from '../../../components/controls/switch/switch';
-import {BPMNConversation, BPMNConversationType} from './bpmn-conversation';
-import {Dropdown} from '../../../components/controls/dropdown/dropdown';
+import { BPMNConversation, BPMNConversationType } from './bpmn-conversation';
+import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 
 interface OwnProps {
   element: BPMNConversation;
@@ -58,12 +58,8 @@ class BPMNConversationUpdateComponent extends Component<Props> {
         </section>
         <section>
           <Dropdown value={element.conversationType} onChange={this.changeConversationType(element.id)} color="primary">
-            <Dropdown.Item value={'default'}>
-              {this.props.translate('packages.BPMN.BPMNConversation')}
-            </Dropdown.Item>
-            <Switch.Item value={'call'}>
-              {this.props.translate('packages.BPMN.BPMNCallConversation')}
-            </Switch.Item>
+            <Dropdown.Item value={'default'}>{this.props.translate('packages.BPMN.BPMNConversation')}</Dropdown.Item>
+            <Switch.Item value={'call'}>{this.props.translate('packages.BPMN.BPMNCallConversation')}</Switch.Item>
           </Dropdown>
         </section>
       </div>

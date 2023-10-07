@@ -11,9 +11,12 @@ import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { ExchangeIcon } from '../../../components/controls/icon/exchange';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
-import { BPMNSequenceFlow } from './bpmn-sequence-flow';
+import { BPMNFlowType, BPMNSequenceFlow } from './bpmn-sequence-flow';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { StylePane } from '../../../components/style-pane/style-pane';
+import { Dropdown } from '../../../components/controls/dropdown/dropdown';
+import { BPMNFlow } from '../../../typings';
+import { Divider } from '../../../components/controls/divider/divider';
 
 interface OwnProps {
   element: BPMNSequenceFlow;
@@ -72,6 +75,16 @@ class BPMNSequenceFlowUpdateComponent extends Component<Props, State> {
             </Button>
           </Flex>
         </section>
+        <Divider />
+        <section>
+          <Dropdown value={element.flowType} onChange={this.changeFlowType(element.id)}>
+            <Dropdown.Item value={'sequence'}>{this.props.translate('packages.BPMN.BPMNSequenceFlow')}</Dropdown.Item>
+            <Dropdown.Item value={'message'}>{this.props.translate('packages.BPMN.BPMNMessageFlow')}</Dropdown.Item>
+            <Dropdown.Item value={'association'}>
+              {this.props.translate('packages.BPMN.BPMNAssociationFlow')}
+            </Dropdown.Item>
+          </Dropdown>
+        </section>
         <StylePane
           open={this.state.colorOpen}
           element={element}
@@ -85,6 +98,14 @@ class BPMNSequenceFlowUpdateComponent extends Component<Props, State> {
 
   private rename = (id: string) => (value: string) => {
     this.props.update(id, { name: value });
+  };
+
+  /**
+   * Change the type of the gateway
+   * @param id The ID of the gateway whose type should be changed
+   */
+  private changeFlowType = (id: string) => (value: string) => {
+    this.props.update<BPMNFlow>(id, { flowType: value as BPMNFlowType });
   };
 
   private delete = (id: string) => () => {

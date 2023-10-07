@@ -36,13 +36,14 @@ const BPMNStartEventC: FunctionComponent<Props> = ({ element, interactive, inter
         strokeColor={interactable && interactive ? theme.interactive.normal : element.fillColor}
       />
       <Multiline
-        x={element.bounds.width / 2}
-        y={element.bounds.height + 20}
+        x={-10}
+        y={element.bounds.height / 2}
         width={element.bounds.width}
         height={element.bounds.height}
         fill={element.textColor}
         lineHeight={16}
         capHeight={11}
+        textAnchor="end"
       >
         {element.name}
       </Multiline>

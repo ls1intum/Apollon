@@ -4,18 +4,13 @@ import { BPMNEventBasedGatewayComponent } from './gateways-components/bpmn-event
 import { BPMNExclusiveGatewayComponent } from './gateways-components/bpmn-exclusive-gateway-component';
 import { BPMNInclusiveGatewayComponent } from './gateways-components/bpmn-inclusive-gateway-component';
 import { BPMNParallelGatewayComponent } from './gateways-components/bpmn-parallel-gateway-component';
-import {BPMNComplexGatewayComponent} from './gateways-components/bpmn-complex-gateway-component';
-import {
-  BPMNExclusiveEventBasedGatewayComponent
-} from './gateways-components/bpmn-exclusive-event-based-gateway-component';
-import {
-  BPMNParallelEventBasedGatewayComponent
-} from './gateways-components/bpmn-parallel-event-based-gateway-component';
+import { BPMNComplexGatewayComponent } from './gateways-components/bpmn-complex-gateway-component';
+import { BPMNExclusiveEventBasedGatewayComponent } from './gateways-components/bpmn-exclusive-event-based-gateway-component';
+import { BPMNParallelEventBasedGatewayComponent } from './gateways-components/bpmn-parallel-event-based-gateway-component';
 
 export const BPMNGatewayComponent: FunctionComponent<Props> = (props) => {
-  
   let GatewayComponent = BPMNExclusiveGatewayComponent;
-      
+
   switch (props.element.gatewayType) {
     case 'complex':
       GatewayComponent = BPMNComplexGatewayComponent;
@@ -39,8 +34,12 @@ export const BPMNGatewayComponent: FunctionComponent<Props> = (props) => {
       GatewayComponent = BPMNParallelEventBasedGatewayComponent;
       break;
   }
-  
-  return <g><GatewayComponent {...props}/></g>;
+
+  return (
+    <g>
+      <GatewayComponent {...props} />
+    </g>
+  );
 };
 
 export interface Props {
