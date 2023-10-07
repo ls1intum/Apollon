@@ -5,7 +5,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { compose } from 'redux';
 import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { ApollonView } from '../../../services/editor/editor-types';
-import { ThemedCircle, ThemedCircleContrast } from '../../../components/theme/themedComponents';
+import { ThemedCircle } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
 type OwnProps = {

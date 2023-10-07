@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { BPMNConversation } from './bpmn-conversation';
-import { ThemedCircle, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { ThemedPolyline } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
 export const BPMNConversationComponent: FunctionComponent<Props> = ({ element }) => (

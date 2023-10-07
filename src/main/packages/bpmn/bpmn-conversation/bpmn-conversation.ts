@@ -8,7 +8,6 @@ import { IBoundary } from '../../../utils/geometry/boundary';
 import { DeepPartial } from 'redux';
 import { assign } from '../../../utils/fx/assign';
 import * as Apollon from '../../../typings';
-import { BPMNGatewayType } from '../bpmn-gateway/bpmn-gateway';
 
 export type BPMNConversationType = 'default' | 'call';
 

@@ -11,9 +11,7 @@ import { ModelState } from '../../../components/store/model-state';
 import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { BPMNGateway, BPMNGatewayType } from './bpmn-gateway';
-import { Switch } from '../../../components/controls/switch/switch';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
-import { UseCaseRelationshipType } from '../../uml-use-case-diagram';
 
 interface OwnProps {
   element: BPMNGateway;

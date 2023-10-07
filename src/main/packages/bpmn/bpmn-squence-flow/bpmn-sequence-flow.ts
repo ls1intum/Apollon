@@ -1,11 +1,9 @@
-import { BPMNElementType, BPMNRelationshipType } from '..';
-import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { ReachabilityGraphRelationshipType } from '../../uml-reachability-graph';
+import { BPMNRelationshipType } from '..';
+import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import { DeepPartial } from 'redux';
 import { UMLRelationshipCenteredDescription } from '../../../services/uml-relationship/uml-relationship-centered-description';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import * as Apollon from '../../../typings';
-import { BPMNGatewayType } from '../bpmn-gateway/bpmn-gateway';
 import { BPMNFlow } from '../../../typings';
 
 export type BPMNFlowType = 'sequence' | 'message' | 'association';

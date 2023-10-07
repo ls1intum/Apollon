@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { BPMNAnnotation } from './bpmn-annotation';
-import { ThemedPath, ThemedPolyline, ThemedRect } from '../../../components/theme/themedComponents';
+import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
 export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element }) => (
