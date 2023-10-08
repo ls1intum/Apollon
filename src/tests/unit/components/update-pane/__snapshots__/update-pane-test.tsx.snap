@@ -36,9 +36,9 @@ exports[`test update pane render with element 1`] = `
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
-  -webkit-transition: -webkit-transform 500ms,width 500ms,height 500ms;
-  -webkit-transition: transform 500ms,width 500ms,height 500ms;
-  transition: transform 500ms,width 500ms,height 500ms;
+  -webkit-transition: -webkit-transform 500ms, width 500ms, height 500ms;
+  -webkit-transition: transform 500ms, width 500ms, height 500ms;
+  transition: transform 500ms, width 500ms, height 500ms;
   -webkit-transform-origin: top left;
   -ms-transform-origin: top left;
   transform-origin: top left;
@@ -417,6 +417,7 @@ exports[`test update pane render with element 1`] = `
       >
         <div
           class="c1"
+          scale="1"
         >
           <svg
             class="c2"
@@ -432,7 +433,7 @@ exports[`test update pane render with element 1`] = `
           </svg>
         </div>
         <div
-          style="position: absolute; left: 0.75em; bottom: 0.75em;"
+          style="position: absolute; left: 0.75em; bottom: 0.75em; display: flex;"
         >
           <button
             class="button-rounded"
@@ -638,9 +639,9 @@ exports[`test update pane render with relationship 1`] = `
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
-  -webkit-transition: -webkit-transform 500ms,width 500ms,height 500ms;
-  -webkit-transition: transform 500ms,width 500ms,height 500ms;
-  transition: transform 500ms,width 500ms,height 500ms;
+  -webkit-transition: -webkit-transform 500ms, width 500ms, height 500ms;
+  -webkit-transition: transform 500ms, width 500ms, height 500ms;
+  transition: transform 500ms, width 500ms, height 500ms;
   -webkit-transform-origin: top left;
   -ms-transform-origin: top left;
   transform-origin: top left;
@@ -982,6 +983,7 @@ exports[`test update pane render with relationship 1`] = `
       >
         <div
           class="c1"
+          scale="1"
         >
           <svg
             class="c2"
@@ -997,7 +999,7 @@ exports[`test update pane render with relationship 1`] = `
           </svg>
         </div>
         <div
-          style="position: absolute; left: 0.75em; bottom: 0.75em;"
+          style="position: absolute; left: 0.75em; bottom: 0.75em; display: flex;"
         >
           <button
             class="button-rounded"
