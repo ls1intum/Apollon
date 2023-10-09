@@ -10,6 +10,7 @@ const initialState: EditorState = {
   mode: ApollonMode.Exporting,
   view: ApollonView.Modelling,
   scale: 1.0,
+  zoomFactor: 1.0,
   features: {
     hoverable: true,
     selectable: true,
@@ -30,6 +31,14 @@ export const EditorReducer: Reducer<EditorState, Actions> = (state = initialStat
       return {
         ...state,
         view: payload.view,
+      };
+    }
+    case EditorActionTypes.CHANGE_ZOOM_FACTOR: {
+      const { payload } = action;
+
+      return {
+        ...state,
+        zoomFactor: payload.zoomFactor,
       };
     }
   }

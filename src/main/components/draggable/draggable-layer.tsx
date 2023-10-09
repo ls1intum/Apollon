@@ -10,10 +10,18 @@ import { compose } from 'redux';
 import { withRoot } from '../root/with-root';
 import { RootContext } from '../root/root-context';
 import isMobile from 'is-mobile';
+import { connect } from 'react-redux';
+import { ModelState } from '../store/model-state';
 
 type OwnProps = {};
 
-type Props = CanvasContext & RootContext;
+type StateProps = {
+  zoomFactor: number;
+};
+
+type DispatchProps = {};
+
+type Props = StateProps & CanvasContext & RootContext;
 
 const initialState = {
   dragging: false,
@@ -25,7 +33,13 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = compose<ComponentClass<OwnProps>>(withCanvas, withRoot);
+const enhance = compose<ComponentClass<OwnProps>>(
+  withCanvas,
+  withRoot,
+  connect<StateProps, DispatchProps, OwnProps, ModelState>((state) => ({
+    zoomFactor: state.editor.zoomFactor,
+  })),
+);
 
 /**
  * Manages the intermediate state of drag and drop events.
@@ -106,6 +120,8 @@ class DraggableLayerComponent extends Component<PropsWithChildren & Props, State
   };
 
   onDragEnd = (owner?: string) => (event: PointerEvent | TouchEvent) => {
+    const { zoomFactor = 1 } = this.props;
+
     if (!this.state.dragging) return;
     const dropEvent: DropEvent = {
       owner,
@@ -118,8 +134,8 @@ class DraggableLayerComponent extends Component<PropsWithChildren & Props, State
     };
 
     // snapping behavior when dropped
-    dropEvent.position.x = Math.round(dropEvent.position.x / 10) * 10;
-    dropEvent.position.y = Math.round(dropEvent.position.y / 10) * 10;
+    dropEvent.position.x = Math.round(dropEvent.position.x / zoomFactor / 10) * 10;
+    dropEvent.position.y = Math.round(dropEvent.position.y / zoomFactor / 10) * 10;
 
     if (this.state.resolve) {
       this.state.resolve(dropEvent);
