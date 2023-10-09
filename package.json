@@ -83,7 +83,6 @@
     "@types/styled-components": "5.1.28",
     "@types/uuid": "9.0.4",
     "@typescript-eslint/eslint-plugin": "6.7.4",
-    "@typescript-eslint/eslint-plugin-tslint": "6.7.4",
     "@typescript-eslint/parser": "6.7.4",
     "circular-dependency-plugin": "5.2.2",
     "copy-webpack-plugin": "11.0.0",
