@@ -96,10 +96,9 @@ class Preview extends Component<Props, State> {
     if (event instanceof PointerEvent) {
       position = new Point(event.clientX - offset.x, event.clientY - offset.y).scale(1 / zoomFactor);
     } else {
-      position = new Point(
-        event.targetTouches[0].clientX - offset.x,
-        event.targetTouches[0].clientY  - offset.y,
-      ).scale(1 / zoomFactor);
+      position = new Point(event.targetTouches[0].clientX - offset.x, event.targetTouches[0].clientY - offset.y).scale(
+        1 / zoomFactor,
+      );
     }
 
     this.setState({ position });
