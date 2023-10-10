@@ -13,7 +13,7 @@ export const ZoomPaneComponent: FunctionComponent<Props> = (props) => {
   const { min = 0.5, max = 5, step = 0.5, value, onChange } = props;
 
   return (
-    <div style={{ position: 'absolute', left: '0.75em', bottom: '0.75em' }}>
+    <div style={{ position: 'absolute', left: '0.75em', bottom: '0.75em', display: 'flex' }}>
       <button
         style={{ marginRight: '0.5em' }}
         className="button-rounded"

@@ -51,7 +51,8 @@ export const movable = (
     moveWindow: { x: number; y: number } = { x: 0, y: 0 };
 
     move = (x: number, y: number) => {
-      const { zoomFactor = 1 } = this.props;
+
+      const {zoomFactor = 1} = this.props;
 
       x = Math.round(x / 10) * 10;
       y = Math.round(y / 10) * 10;

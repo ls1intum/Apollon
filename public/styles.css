@@ -167,6 +167,11 @@ button:active {
 
 .button-rounded {
   border-radius: 0.25rem;
+  width: 2.25em;
+  height: 2.25em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .switch button {
