@@ -18,11 +18,7 @@ const Marker = {
       orient="auto"
       markerUnits="strokeWidth"
     >
-      <ThemedPath
-        d={`M0,29 L30,15 L0,1`}
-        fillColor="none"
-        strokeColor={color}
-      />
+      <ThemedPath d={`M0,29 L30,15 L0,1`} fillColor="none" strokeColor={color} />
     </marker>
   ),
   Rhombus: (id: string, color?: string) => (

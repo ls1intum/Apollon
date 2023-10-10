@@ -51,7 +51,7 @@ import { ColorLegendComponent } from './common/color-legend/color-legend-compone
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
     | FunctionComponent<PropsWithChildren<{ element: any; fillColor?: string }>>
-    | ConnectedComponent<FunctionComponent<any>, { element: any; }>;
+    | ConnectedComponent<FunctionComponent<any>, { element: any }>;
 } = {
   [UMLElementType.Package]: UMLClassPackageComponent,
   [UMLElementType.Class]: UMLClassifierComponent,

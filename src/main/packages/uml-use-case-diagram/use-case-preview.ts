@@ -8,7 +8,7 @@ import { UMLUseCase } from './uml-use-case/uml-use-case';
 
 export const composeUseCasePreview: ComposePreview = (
   layer: ILayer,
-  translate: (id: string) => string
+  translate: (id: string) => string,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
   // UML Use Case

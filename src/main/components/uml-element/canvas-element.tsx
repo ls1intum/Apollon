@@ -38,7 +38,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       moving: state.moving.includes(props.id),
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
-      element: state.elements[props.id]
+      element: state.elements[props.id],
     }),
     {},
   ),

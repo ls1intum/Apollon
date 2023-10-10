@@ -55,11 +55,7 @@ export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ ele
         orient="auto"
         markerUnits="strokeWidth"
       >
-        <ThemedPath
-          d={`M0,${29} L${30},${15} L0,${1}`}
-          fillColor="none"
-          strokeColor={element.strokeColor}
-        />
+        <ThemedPath d={`M0,${29} L${30},${15} L0,${1}`} fillColor="none" strokeColor={element.strokeColor} />
       </marker>
       <ThemedPolyline
         points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}

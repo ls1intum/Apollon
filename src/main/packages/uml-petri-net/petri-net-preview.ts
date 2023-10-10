@@ -7,7 +7,7 @@ import { computeDimension } from '../../utils/geometry/boundary';
 
 export const composePetriNetPreview: ComposePreview = (
   layer: ILayer,
-  translate: (id: string) => string
+  translate: (id: string) => string,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
   UMLPetriNetTransition.defaultHeight = computeDimension(1.0, 60);

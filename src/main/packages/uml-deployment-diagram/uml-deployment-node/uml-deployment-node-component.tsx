@@ -12,9 +12,7 @@ export const UMLDeploymentNodeComponent: FunctionComponent<Props> = ({ element, 
         fillColor={fillColor || element.fillColor}
       />
       <ThemedPath
-        d={`M ${element.bounds.width} 0 V ${element.bounds.height - 8} l -${8} ${8} V ${
-          8
-        } Z`}
+        d={`M ${element.bounds.width} 0 V ${element.bounds.height - 8} l -${8} ${8} V ${8} Z`}
         strokeColor={element.strokeColor}
         fillColor={fillColor || element.fillColor}
       />

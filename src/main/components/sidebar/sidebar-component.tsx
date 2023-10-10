@@ -32,7 +32,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       readonly: state.editor.readonly,
       mode: state.editor.mode,
       view: state.editor.view,
-      selected: state.selected
+      selected: state.selected,
     }),
     {
       changeView: EditorRepository.changeView,

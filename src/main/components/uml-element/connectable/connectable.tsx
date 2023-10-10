@@ -43,7 +43,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
       connecting: !!state.connecting.length,
       reconnecting: !!Object.keys(state.reconnecting).length,
       element: state.elements[props.id],
-      type: state.elements[props.id].type as UMLElementType | UMLRelationshipType
+      type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
     };
   },
   {

@@ -37,11 +37,7 @@ export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({
           orient="auto"
           markerUnits="strokeWidth"
         >
-          <ThemedPath
-            d={`M0,${29} L${30},${15} L0,${1}`}
-            fillColor="none"
-            strokeColor={element.strokeColor}
-          />
+          <ThemedPath d={`M0,${29} L${30},${15} L0,${1}`} fillColor="none" strokeColor={element.strokeColor} />
         </marker>
         <ThemedPolyline
           points={`-${50},-${50} ${3},${3}`}

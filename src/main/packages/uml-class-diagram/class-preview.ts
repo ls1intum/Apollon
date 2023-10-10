@@ -11,10 +11,7 @@ import { UMLClass } from './uml-class/uml-class';
 import { UMLEnumeration } from './uml-enumeration/uml-enumeration';
 import { UMLInterface } from './uml-interface/uml-interface';
 
-export const composeClassPreview: ComposePreview = (
-  layer: ILayer,
-  translate: (id: string) => string
-): UMLElement[] => {
+export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (id: string) => string): UMLElement[] => {
   const elements: UMLElement[] = [];
   UMLClassifier.stereotypeHeaderHeight = computeDimension(1.0, 50);
   UMLClassifier.nonStereotypeHeaderHeight = computeDimension(1.0, 40);

@@ -241,10 +241,7 @@ export class Svg extends Component<Props, State> {
                               key={memberElement.id}
                               {...svgElementDetails(memberElement, 0, memberElement.bounds.y - element.bounds.y)}
                             >
-                              <MemberElementComponent
-                                key={memberIndex}
-                                element={memberElement}
-                              />
+                              <MemberElementComponent key={memberIndex} element={memberElement} />
                             </svg>
                           );
                         })}

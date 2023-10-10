@@ -5,7 +5,7 @@ import { update } from '../../utils/update';
 import { defaults, Styles } from './styles';
 
 const defaultProps = {
-  styles: {} as DeepPartial<Styles>
+  styles: {} as DeepPartial<Styles>,
 };
 
 type Props = { children?: React.ReactChild } & typeof defaultProps;

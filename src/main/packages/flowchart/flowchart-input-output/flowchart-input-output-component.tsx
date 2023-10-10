@@ -6,7 +6,7 @@ import { computeDimension } from '../../../utils/geometry/boundary';
 
 export const FlowchartInputOutputComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
   return (
-    <FlowchartComponent element={element} >
+    <FlowchartComponent element={element}>
       <ThemedPolyline
         points={`${computeDimension(1.1, element.bounds.width)} 0, ${computeDimension(0.9, element.bounds.width)} ${
           element.bounds.height

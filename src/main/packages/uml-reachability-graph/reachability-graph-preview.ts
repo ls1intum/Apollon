@@ -5,7 +5,7 @@ import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking/um
 
 export const composeReachabilityGraphPreview: ComposePreview = (
   layer: ILayer,
-  translate: (id: string) => string
+  translate: (id: string) => string,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 

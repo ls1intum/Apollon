@@ -2,10 +2,7 @@ import { Direction } from '../../services/uml-element/uml-element-port';
 import { IBoundary } from './boundary';
 import { Point } from './point';
 
-export function position(
-  bounds: IBoundary,
-  direction: Direction,
-): { point: Point; offset: Point } {
+export function position(bounds: IBoundary, direction: Direction): { point: Point; offset: Point } {
   const { x, y, width, height } = bounds;
   const offset = 40;
   switch (direction) {

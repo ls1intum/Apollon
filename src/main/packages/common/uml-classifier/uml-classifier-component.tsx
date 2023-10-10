@@ -10,12 +10,12 @@ export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, chil
         fillColor={fillColor || element.fillColor}
         strokeColor="none"
         width="100%"
-        height={element.stereotype ? 50 : 40 }
+        height={element.stereotype ? 50 : 40}
       />
       <ThemedRect
-        y={element.stereotype ? 50 : 40 }
+        y={element.stereotype ? 50 : 40}
         width="100%"
-        height={element.bounds.height - (element.stereotype ? 50 : 40 )}
+        height={element.bounds.height - (element.stereotype ? 50 : 40)}
         strokeColor="none"
       />
       {element.stereotype ? (

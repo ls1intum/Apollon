@@ -25,12 +25,7 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
   })),
 );
 
-export const UMLActivityFinalNodeC: FunctionComponent<Props> = ({
-  element,
-  interactive,
-  interactable,
-  theme
-}) => {
+export const UMLActivityFinalNodeC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
   return (
     <g>
       <ThemedCircle

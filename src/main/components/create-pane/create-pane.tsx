@@ -98,7 +98,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   connect<StateProps, DispatchProps, OwnProps, ModelState>(
     (state) => ({
       type: state.diagram.type,
-      colorEnabled: state.editor.colorEnabled
+      colorEnabled: state.editor.colorEnabled,
     }),
     {
       create: UMLElementRepository.create,
