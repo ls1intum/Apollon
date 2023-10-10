@@ -31,14 +31,14 @@ export const composeActivityPreview: ComposePreview = (
 
   // Activity Initial Node
   const activityInitialNode = new UMLActivityInitialNode({
-    bounds: { x: 0, y: 0, width: 45 * scale, height: 45 * scale },
+    bounds: { x: 0, y: 0, width: 50 * scale, height: 50 * scale },
   });
 
   elements.push(activityInitialNode);
 
   // Activity Final Node
   const activityFinalNode = new UMLActivityFinalNode({
-    bounds: { x: 0, y: 0, width: 45 * scale, height: 45 * scale },
+    bounds: { x: 0, y: 0, width: 50 * scale, height: 50 * scale },
   });
   elements.push(activityFinalNode);
 

@@ -13,7 +13,7 @@ export class UMLActivityFinalNode extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false, updatable: false };
 
   type: UMLElementType = ActivityElementType.ActivityFinalNode;
-  bounds: IBoundary = { ...this.bounds, width: 45, height: 45 };
+  bounds: IBoundary = { ...this.bounds, width: 50, height: 50 };
 
   constructor(values?: DeepPartial<IUMLElement>) {
     super(values);
