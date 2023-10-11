@@ -23,7 +23,7 @@
     "start": "webpack serve --config ./webpack/webpack.dev.js",
     "build": "rm -rf dist && webpack --config ./webpack/webpack.prod.js",
     "copyAPIToDoc": "cp lib/es6/apollon-editor.d.ts lib/es6/typings.d.ts docs/source/user/api && cp lib/es6/packages/diagram-type.d.ts docs/source/dev/api",
-    "lint": "yarn lint:ts && yarn lint:css",
+    "lint": "npm run lint:ts && npm run lint:css",
     "lint:ts": "eslint -c .eslintrc.js src/main",
     "lint:css": "stylelint 'src/**/*.ts'",
     "prepare": "rm -rf lib && tsc -p . && tsc -p tsconfig.es5.json",
@@ -37,9 +37,9 @@
     "test:e2e": "start-server-and-test start http://localhost:8888 test-cypress",
     "test:e2e:headless": "start-server-and-test start http://localhost:8888 test-cypress:headless",
     "update": "npm run upgrade-interactive --latest",
-    "publish:patch": "npm run prepare && npm run test && npm run copyAPIToDoc && npmversion patch && npmpublish",
-    "publish:minor": "npm run prepare && npm run test && npm run copyAPIToDoc && npmversion minor && npmpublish",
-    "publish:major": "npm run prepare && npm run test && npm run copyAPIToDoc && npmversion major && npmpublish"
+    "publish:patch": "npm run prepare && npm run test && npm run copyAPIToDoc && npm version patch && npm publish",
+    "publish:minor": "npm run prepare && npm run test && npm run copyAPIToDoc && npm version minor && npm publish",
+    "publish:major": "npm run prepare && npm run test && npm run copyAPIToDoc && npm version major && npm publish"
   },
   "husky": {
     "hooks": {
