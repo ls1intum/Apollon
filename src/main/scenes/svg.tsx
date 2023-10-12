@@ -81,7 +81,6 @@ const getInitialState = ({ model, options }: Props): State => {
   const apollonElements = model.elements;
   const apollonRelationships = model.relationships;
 
-
   const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
     const element = new UMLElements[apollonElement.type]();
     const apollonChildren: Apollon.UMLElement[] = UMLContainer.isUMLContainer(element)
