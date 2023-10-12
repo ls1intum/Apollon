@@ -21,7 +21,6 @@ import { ThemeProvider } from 'styled-components';
 import { UMLClassifierComponent } from '../packages/common/uml-classifier/uml-classifier-component';
 import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/uml-classifier-member-component';
 
-
 type Props = {
   model: Apollon.UMLModel;
   options?: Apollon.ExportOptions;

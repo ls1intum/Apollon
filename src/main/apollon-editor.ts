@@ -196,9 +196,13 @@ export class ApollonEditor {
     dispatch(UMLElementRepository.deselect());
     dispatch(
       UMLElementRepository.select([
-        ...Object.entries(selection.elements).filter(([, selected]) => selected).map(([id]) => id),
-        ...Object.entries(selection.relationships).filter(([, selected]) => selected).map(([id]) => id),
-      ])
+        ...Object.entries(selection.elements)
+          .filter(([, selected]) => selected)
+          .map(([id]) => id),
+        ...Object.entries(selection.relationships)
+          .filter(([, selected]) => selected)
+          .map(([id]) => id),
+      ]),
     );
   }
 
@@ -332,14 +336,12 @@ export class ApollonEditor {
     if (!this.store) return;
     const { elements, selected, assessments } = this.store.getState();
     const selection: Apollon.Selection = {
-      elements:
-        selected
-          .filter((id) => elements[id].type in UMLElementType)
-          .reduce((acc, id) => ({ ...acc, [id]: true }), {}),
-      relationships: 
-        selected
-          .filter((id) => elements[id].type in UMLRelationshipType)
-          .reduce((acc, id) => ({ ...acc, [id]: true }), {})
+      elements: selected
+        .filter((id) => elements[id].type in UMLElementType)
+        .reduce((acc, id) => ({ ...acc, [id]: true }), {}),
+      relationships: selected
+        .filter((id) => elements[id].type in UMLRelationshipType)
+        .reduce((acc, id) => ({ ...acc, [id]: true }), {}),
     };
 
     // check if previous selection differs from current selection, if yes -> notify subscribers
@@ -383,8 +385,6 @@ export class ApollonEditor {
         this.store.getState().lastAction.endsWith('DELETE')
       ) {
         const lastModel = ModelState.toModel(this.store.getState());
-        // tslint:disable-next-line:no-console
-        console.log(lastModel);
         Object.values(this.discreteModelSubscribers).forEach((subscriber) => subscriber(lastModel));
       }
     } catch (error) {

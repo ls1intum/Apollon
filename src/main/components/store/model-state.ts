@@ -26,6 +26,7 @@ import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { UMLDiagramType } from '../../typings';
 import { CopyState } from '../../services/copypaste/copy-types';
 import { LastActionState } from '../../services/last-action/last-action-types';
+import { arrayToInclusionMap, inclusionMapToArray } from './util';
 
 export type PartialModelState = Omit<Partial<ModelState>, 'editor'> & { editor?: Partial<EditorState> };
 
@@ -46,7 +47,9 @@ export interface ModelState {
   lastAction: LastActionState;
 }
 
-// TODO: simplify this code.
+// TODO: simplify this code, break it into smaller pieces.
+// FIXME: this code has issues in various cases, including when
+//        the boundary of the diagram is determined by some relationship.
 
 export class ModelState {
   static fromModel(compatModel: UMLModelCompat): PartialModelState {
@@ -103,8 +106,8 @@ export class ModelState {
     return {
       diagram,
       interactive: [
-        ...Object.entries(model.interactive.elements).filter(([, value]) => value).map(([key]) => key),
-        ...Object.entries(model.interactive.relationships).filter(([, value]) => value).map(([key]) => key),
+        ...inclusionMapToArray(model.interactive.elements),
+        ...inclusionMapToArray(model.interactive.relationships),
       ],
       elements: [...elements, ...relationships].reduce((acc, val) => ({ ...acc, [val.id]: { ...val } }), {}),
       assessments: (Object.values(model.assessments) || []).reduce<AssessmentState>(
@@ -155,11 +158,10 @@ export class ModelState {
       return res;
     };
 
-
     const apollonElements = Object.values(elements)
       .filter((element) => !element.owner)
-      .reduce((acc, element) => ({ ...acc, ...serialize(element) }), {}) as {[id: string]: Apollon.UMLElement};
-  
+      .reduce((acc, element) => ({ ...acc, ...serialize(element) }), {}) as { [id: string]: Apollon.UMLElement };
+
     const apollonElementsArray = Object.values(apollonElements);
 
     const apollonRelationships: Apollon.UMLRelationship[] = relationships.map((relationship) =>
@@ -180,27 +182,26 @@ export class ModelState {
     }
 
     const interactive: Apollon.Selection = {
-      elements:
-        state.interactive
-          .filter((id) => UMLElement.isUMLElement(state.elements[id]))
-          .reduce((acc, val) => ({ ...acc, [val]: true }), {}),
-      relationships:
-        state.interactive
-          .filter((id) => UMLRelationship.isUMLRelationship(state.elements[id]))
-          .reduce((acc, val) => ({ ...acc, [val]: true }), {})
+      elements: arrayToInclusionMap(state.interactive.filter((id) => UMLElement.isUMLElement(state.elements[id]))),
+      relationships: arrayToInclusionMap(
+        state.interactive.filter((id) => UMLRelationship.isUMLRelationship(state.elements[id])),
+      ),
     };
 
     const assessments = Object.fromEntries(
-      Object.entries(state.assessments).map(([id, assessment]) => [id, {
-        modelElementId: id,
-        elementType: state.elements[id].type as UMLElementType | UMLRelationshipType,
-        score: state.assessments[id].score,
-        feedback: state.assessments[id].feedback,
-        label: state.assessments[id].label,
-        labelColor: state.assessments[id].labelColor,
-        correctionStatus: state.assessments[id].correctionStatus,
-        dropInfo: state.assessments[id].dropInfo,
-      }])
+      Object.entries(state.assessments).map(([id, assessment]) => [
+        id,
+        {
+          modelElementId: id,
+          elementType: state.elements[id].type as UMLElementType | UMLRelationshipType,
+          score: state.assessments[id].score,
+          feedback: state.assessments[id].feedback,
+          label: state.assessments[id].label,
+          labelColor: state.assessments[id].labelColor,
+          correctionStatus: state.assessments[id].correctionStatus,
+          dropInfo: state.assessments[id].dropInfo,
+        },
+      ]),
     );
 
     return {

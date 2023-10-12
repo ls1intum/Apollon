@@ -4,6 +4,7 @@ import { act, render as testLibraryRender } from '@testing-library/react';
 import * as Apollon from '../../main/apollon-editor';
 import * as ApollonTypes from '../../main/typings';
 import testClassDiagram from './test-resources/class-diagram.json';
+import testClassDiagramV2 from './test-resources/class-diagram-v2.json';
 import { Selection } from '../../../docs/source/user/api/typings';
 import { Assessment, SVG, UMLDiagramType, UMLModel } from '../../main';
 import { getRealStore } from './test-utils/test-utils';
@@ -12,6 +13,7 @@ import { IAssessment } from '../../main/services/assessment/assessment';
 import { ModelState } from '../../main/components/store/model-state';
 import { UMLElementCommonRepository } from '../../main/services/uml-element/uml-element-common-repository';
 import { UMLClass } from '../../main/packages/uml-class-diagram/uml-class/uml-class';
+import { arrayToInclusionMap } from '../../main/components/store/util';
 import fn = jest.fn;
 
 let editor = {} as Apollon.ApollonEditor;
@@ -65,6 +67,13 @@ describe('test apollon editor ', () => {
     expect(testClassDiagram).toEqual(editor.model);
   });
 
+  it('get and set v2 model', () => {
+    act(() => {
+      editor.model = testClassDiagramV2 as any;
+    });
+
+    expect(testClassDiagram).toEqual(editor.model);
+  });
   it('exportModelAsSvg', async () => {
     const svg: ApollonTypes.SVG = await editor.exportAsSVG();
     expect(ignoreSVGClassNames(svg.svg)).toEqual(testClassDiagramAsSVG);
@@ -72,8 +81,8 @@ describe('test apollon editor ', () => {
 
   it('subscribeToSelection', async () => {
     const selection: Selection = {
-      elements: testClassDiagram.elements.map((element) => element.id),
-      relationships: testClassDiagram.relationships.map((relationship) => relationship.id),
+      elements: arrayToInclusionMap(Object.keys(testClassDiagram.elements)),
+      relationships: arrayToInclusionMap(Object.keys(testClassDiagram.relationships)),
     };
     const selectionCallback = (s: Selection) => {
       return expect(s).toEqual(selection);
@@ -85,8 +94,8 @@ describe('test apollon editor ', () => {
   });
   it('unsubscribeFromSelection', async () => {
     const selection: Selection = {
-      elements: testClassDiagram.elements.map((element) => element.id),
-      relationships: testClassDiagram.relationships.map((relationship) => relationship.id),
+      elements: arrayToInclusionMap(Object.keys(testClassDiagram.elements)),
+      relationships: arrayToInclusionMap(Object.keys(testClassDiagram.relationships)),
     };
     const selectionCallback = fn((s: Selection) => {});
 
@@ -99,7 +108,7 @@ describe('test apollon editor ', () => {
       // unsubscribe and call select again
       editor.unsubscribeFromSelectionChange(selectionSubscription);
       act(() => {
-        editor.select({ elements: [], relationships: [] });
+        editor.select({ elements: {}, relationships: {} });
       });
       setTimeout(() => {
         expect(selectionCallback).toBeCalledTimes(1);
@@ -111,8 +120,8 @@ describe('test apollon editor ', () => {
     // this validates that the timing is enough so that selection callback would be called twice
     // it is still possible that callback would be called twice in unsubscribeFromSelection and not in unsubscribeFromSelectionValidation, but less likely
     const selection: Selection = {
-      elements: testClassDiagram.elements.map((element) => element.id),
-      relationships: testClassDiagram.relationships.map((relationship) => relationship.id),
+      elements: arrayToInclusionMap(Object.keys(testClassDiagram.elements)),
+      relationships: arrayToInclusionMap(Object.keys(testClassDiagram.relationships)),
     };
     const selectionCallback = fn((s: Selection) => {});
 
@@ -125,7 +134,7 @@ describe('test apollon editor ', () => {
     setTimeout(() => {
       // just select again
       act(() => {
-        editor.select({ elements: [], relationships: [] });
+        editor.select({ elements: {}, relationships: {} });
       });
       setTimeout(() => {
         // should be called twice
@@ -259,7 +268,7 @@ describe('test apollon editor ', () => {
 
     const modelChangedCallback = (model: UMLModel) => {
       // created element should be included in model
-      return expect(model.elements.filter((e) => e.id === element.id)).toHaveLength(1);
+      return expect(model.elements[element.id]).toBeDefined();
     };
     // subscribe to model changes
     editor.subscribeToModelChange(modelChangedCallback);
@@ -340,7 +349,7 @@ describe('test apollon editor ', () => {
 
     const modelChangedCallback = (model: UMLModel) => {
       // created element should be included in model
-      return expect(model.elements.filter((e) => e.id === element.id)).toHaveLength(1);
+      return expect(model.elements[element.id]).toBeDefined();
     };
     // subscribe to model changes
     editor.subscribeToModelDiscreteChange(modelChangedCallback);
