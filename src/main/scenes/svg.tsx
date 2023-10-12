@@ -81,8 +81,6 @@ const getInitialState = ({ model, options }: Props): State => {
   const apollonElements = model.elements;
   const apollonRelationships = model.relationships;
 
-  // TODO: deserialize based on version. the following code is for 3.0.0, write for 2.0.0 as well.
-  // TODO: optimize this code.
 
   const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
     const element = new UMLElements[apollonElement.type]();
