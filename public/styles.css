@@ -145,7 +145,7 @@ aside.sidebar section>div {
   justify-content: space-between;
 }
 
-button {
+.switch button {
   background: var(--apollon-background);
   color: var(--apollon-primary-contrast);
   border: 1px solid var(--apollon-gray);
@@ -155,12 +155,12 @@ button {
   outline: none;
 }
 
-button:hover {
+.switch button:hover {
   background-color: var(--apollon-gray);
   border-color: var(--apollon-gray-variant);
 }
 
-button:active {
+.switch button:active {
   background-color: var(--apollon-gray);
   border-color: var(--apollon-gray-variant);
 }
