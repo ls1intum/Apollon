@@ -14,6 +14,10 @@ Install the `@ls1intum/apollon` npm package using either `yarn <https://yarnpkg.
 
     yarn add @ls1intum/apollon
 
+.. code-block:: bash
+
+    npm install @ls1intum/apollon
+
 *******
 Usage
 *******
