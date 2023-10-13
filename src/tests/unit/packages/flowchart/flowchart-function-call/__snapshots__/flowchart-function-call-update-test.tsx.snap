@@ -6,16 +6,16 @@ exports[`test flowchart function call update render 1`] = `
     <div>
       <section>
         <div
-          class="sc-jnOGJG djsxMp"
+          class="sc-dZoequ jKvDgE"
         >
           <input
-            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
+            class="sc-iHGNWf sc-dtBdUo jSLZkO kIvhJv"
             maxlength="100"
             placeholder="Decision"
             value=""
           />
           <button
-            class="sc-hzhJZQ sc-fHjqPf jXCbhr lgmFnr"
+            class="sc-fHjqPf sc-hmdomO egzafX OnZRE"
             color="link"
             tabindex="-1"
           >
