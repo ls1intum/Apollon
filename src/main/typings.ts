@@ -9,7 +9,7 @@ import { Direction } from './services/uml-element/uml-element-port';
 import { IBoundary } from './utils/geometry/boundary';
 import { IPath } from './utils/geometry/path';
 import { BPMNGatewayType } from './packages/bpmn/bpmn-gateway/bpmn-gateway';
-import {BPMNConversationType} from './packages/bpmn/bpmn-conversation/bpmn-conversation';
+import { BPMNConversationType } from './packages/bpmn/bpmn-conversation/bpmn-conversation';
 
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };

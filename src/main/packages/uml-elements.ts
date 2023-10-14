@@ -44,10 +44,10 @@ import { BPMNStartEvent } from './bpmn/bpmn-start-event/bpmn-start-event';
 import { BPMNIntermediateEvent } from './bpmn/bpmn-intermediate-event/bpmn-intermediate-event';
 import { BPMNEndEvent } from './bpmn/bpmn-end-event/bpmn-end-event';
 import { BPMNGateway } from './bpmn/bpmn-gateway/bpmn-gateway';
-import {BPMNTransaction} from './bpmn/bpmn-transaction/bpmn-transaction';
-import {BPMNCallActivity} from './bpmn/bpmn-call-activity/bpmn-call-activity';
-import {BPMNAnnotation} from './bpmn/bpmn-annotation/bpmn-annotation';
-import {BPMNConversation} from './bpmn/bpmn-conversation/bpmn-conversation';
+import { BPMNTransaction } from './bpmn/bpmn-transaction/bpmn-transaction';
+import { BPMNCallActivity } from './bpmn/bpmn-call-activity/bpmn-call-activity';
+import { BPMNAnnotation } from './bpmn/bpmn-annotation/bpmn-annotation';
+import { BPMNConversation } from './bpmn/bpmn-conversation/bpmn-conversation';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
