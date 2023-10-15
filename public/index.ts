@@ -52,7 +52,10 @@ export const setTheming = (theming: string) => {
 export const draw = async (mode?: 'include' | 'exclude') => {
   if (!editor) return;
 
-  const filter: string[] = [...editor.model.interactive.elements, ...editor.model.interactive.relationships];
+  const filter: string[] = [
+    ...Object.entries(editor.model.interactive.elements).filter(([, value]) => value).map(([key]) => key),
+    ...Object.entries(editor.model.interactive.relationships).filter(([, value]) => value).map(([key]) => key),
+  ];
 
   const exportParam = mode ? { [mode]: filter, scale: editor.getScaleFactor() } : { scale: editor.getScaleFactor() };
 

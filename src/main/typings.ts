@@ -28,18 +28,18 @@ export type ApollonOptions = {
 };
 
 export type Selection = {
-  elements: string[];
-  relationships: string[];
+  elements: { [id: string]: boolean };
+  relationships: { [id: string]: boolean };
 };
 
 export type UMLModel = {
-  version: string;
+  version: `3.${number}.${number}`;
   type: UMLDiagramType;
   size: { width: number; height: number };
-  elements: UMLElement[];
+  elements: { [id: string]: UMLElement };
   interactive: Selection;
-  relationships: UMLRelationship[];
-  assessments: Assessment[];
+  relationships: { [id: string]: UMLRelationship };
+  assessments: { [id: string]: Assessment };
 };
 
 export type UMLModelElementType = UMLElementType | UMLRelationshipType | UMLDiagramType;
@@ -119,10 +119,12 @@ export type UMLAssociation = UMLRelationship & {
 
 export type UMLCommunicationLink = UMLRelationship & {
   messages: {
-    id: string;
-    name: string;
-    direction: 'source' | 'target';
-  }[];
+    [id: string]: {
+      id: string;
+      name: string;
+      direction: 'source' | 'target';
+    };
+  };
 };
 
 export type FeedbackCorrectionStatus = {

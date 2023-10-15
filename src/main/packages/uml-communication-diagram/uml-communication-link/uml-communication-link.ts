@@ -28,7 +28,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
   serialize(): Apollon.UMLCommunicationLink {
     return {
       ...super.serialize(),
-      messages: this.messages,
+      messages: this.messages.reduce((acc, message) => ({ ...acc, [message.id]: message }), {}),
     };
   }
 
@@ -40,7 +40,7 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
     }
 
     super.deserialize(values, children);
-    this.messages = values.messages.map((message) => new CommunicationLinkMessage(message));
+    this.messages = Object.values(values.messages).map((message) => new CommunicationLinkMessage(message));
   }
 
   render(canvas: ILayer, source?: UMLElement, target?: UMLElement): ILayoutable[] {
