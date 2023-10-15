@@ -43,7 +43,7 @@ export class BPMNGateway extends UMLElement {
   deserialize<T extends Apollon.UMLModelElement>(
     values: T & { gatewayType?: BPMNGatewayType },
     children?: Apollon.UMLModelElement[],
-  ) {
+  ): void {
     super.deserialize(values, children);
     this.gatewayType = values.gatewayType || BPMNGateway.defaultGatewayType;
   }

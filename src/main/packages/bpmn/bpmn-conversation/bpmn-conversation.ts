@@ -36,7 +36,7 @@ export class BPMNConversation extends UMLElement {
   deserialize<T extends Apollon.UMLModelElement>(
     values: T & { conversationType?: BPMNConversationType },
     children?: Apollon.UMLModelElement[],
-  ) {
+  ): void {
     super.deserialize(values, children);
     this.conversationType = values.conversationType || BPMNConversation.defaultConversationType;
   }
