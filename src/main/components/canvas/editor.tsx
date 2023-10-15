@@ -93,14 +93,11 @@ class EditorComponent extends Component<Props, State> {
   zoomContainer = createRef<HTMLDivElement>();
 
   componentDidMount() {
-    // const { zoomFactor = 1 } = this.props;
-
     window.addEventListener(
       'wheel',
       (event) => {
         if (event.ctrlKey) {
           event.preventDefault();
-          // this.props.changeZoomFactor(clamp(zoomFactor - event.deltaY * 0.1, minScale, maxScale));
         }
       },
       { passive: false },
