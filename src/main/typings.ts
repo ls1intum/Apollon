@@ -8,6 +8,8 @@ import { ApollonMode, Locale } from './services/editor/editor-types';
 import { Direction } from './services/uml-element/uml-element-port';
 import { IBoundary } from './utils/geometry/boundary';
 import { IPath } from './utils/geometry/path';
+import { BPMNGatewayType } from './packages/bpmn/bpmn-gateway/bpmn-gateway';
+import { BPMNConversationType } from './packages/bpmn/bpmn-conversation/bpmn-conversation';
 
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };
@@ -86,6 +88,18 @@ export type UMLDeploymentNode = UMLElement & {
 export type UMLPetriNetPlace = UMLElement & {
   amountOfTokens: number;
   capacity: number | string;
+};
+
+export type BPMNGateway = UMLElement & {
+  gatewayType: BPMNGatewayType;
+};
+
+export type BPMNConversation = UMLElement & {
+  conversationType: BPMNConversationType;
+};
+
+export type BPMNFlow = UMLRelationship & {
+  flowType: 'sequence' | 'message' | 'association';
 };
 
 export type UMLReachabilityGraphMarking = UMLElement & {

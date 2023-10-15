@@ -10,6 +10,7 @@ import { PetriNetRelationshipType } from './uml-petri-net';
 import { ReachabilityGraphRelationshipType } from './uml-reachability-graph';
 import { SyntaxTreeRelationshipType } from './syntax-tree';
 import { FlowchartRelationshipType } from './flowchart';
+import { BPMNRelationshipType } from './bpmn';
 
 export type UMLRelationshipType =
   | keyof typeof ClassRelationshipType
@@ -22,7 +23,8 @@ export type UMLRelationshipType =
   | keyof typeof PetriNetRelationshipType
   | keyof typeof ReachabilityGraphRelationshipType
   | keyof typeof SyntaxTreeRelationshipType
-  | keyof typeof FlowchartRelationshipType;
+  | keyof typeof FlowchartRelationshipType
+  | keyof typeof BPMNRelationshipType;
 
 export const UMLRelationshipType = {
   ...ClassRelationshipType,
@@ -36,6 +38,7 @@ export const UMLRelationshipType = {
   ...ReachabilityGraphRelationshipType,
   ...SyntaxTreeRelationshipType,
   ...FlowchartRelationshipType,
+  ...BPMNRelationshipType,
 };
 
 export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelationshipType } = {
@@ -50,4 +53,5 @@ export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelations
   [UMLDiagramType.ReachabilityGraph]: ReachabilityGraphRelationshipType.ReachabilityGraphArc,
   [UMLDiagramType.SyntaxTree]: SyntaxTreeRelationshipType.SyntaxTreeLink,
   [UMLDiagramType.Flowchart]: FlowchartRelationshipType.FlowchartFlowline,
+  [UMLDiagramType.BPMN]: BPMNRelationshipType.BPMNFlow,
 };

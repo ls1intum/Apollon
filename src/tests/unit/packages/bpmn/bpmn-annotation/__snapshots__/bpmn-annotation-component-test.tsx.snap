@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-annotation-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          class="sc-fqkvVR joPxif"
+          fill="transparent"
+          height="100"
+          rx="10"
+          ry="10"
+          stroke="transparent"
+          width="200"
+        />
+        <path
+          class="sc-gEvEer JpXgg"
+          d="M20,0 L10,0 A 10 10 280 0 0 0 10 L0,90 A 10 10 180 0 0 10 100 L20, 100"
+          fill="transparent"
+          stroke="black"
+        />
+        <text
+          font-weight="bold"
+          height="100"
+          pointer-events="none"
+          text-anchor="middle"
+          width="200"
+          x="100"
+          y="50"
+        >
+          <tspan
+            dy="5.5"
+            x="100"
+          >
+            Annotation
+          </tspan>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;
