@@ -7,7 +7,7 @@ it('render the uml-use-case-actor-component', () => {
   const actor: UMLUseCaseActor = new UMLUseCaseActor({ name: 'TestUseCaseComponent' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <UMLUseCaseActorComponent element={actor} scale={1.0} />
+      <UMLUseCaseActorComponent element={actor} />
     </svg>,
   );
   expect(getByText(actor.name)).toBeInTheDocument();

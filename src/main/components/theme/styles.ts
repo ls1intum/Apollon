@@ -34,9 +34,6 @@ const apollonTheme = {
   },
 };
 
-export const defaults = (scale: number = 1.0) => {
-  return {
-    ...apollonTheme,
-    font: { ...apollonTheme.font, size: apollonTheme.font.size * scale },
-  };
+export const defaults = () => {
+  return apollonTheme;
 };

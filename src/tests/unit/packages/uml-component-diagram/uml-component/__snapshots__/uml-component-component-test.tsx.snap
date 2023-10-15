@@ -34,7 +34,6 @@ exports[`render the uml-component-component 1`] = `
             stroke="black"
             stroke-miterlimit="10"
             stroke-width="1.2"
-            style="transform: scale(1);"
           />
           <path
             class="sc-gEvEer hATzAk"
@@ -43,7 +42,6 @@ exports[`render the uml-component-component 1`] = `
             stroke="black"
             stroke-miterlimit="10"
             stroke-width="1.2"
-            style="transform: scale(1);"
           />
         </g>
       </g>

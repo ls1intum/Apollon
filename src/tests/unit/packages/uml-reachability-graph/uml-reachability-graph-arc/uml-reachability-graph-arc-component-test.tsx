@@ -16,7 +16,7 @@ it('render the uml-reachability-graph-arc-component', () => {
   });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <UMLReachabilityGraphArcComponent element={element} scale={1.0} />
+      <UMLReachabilityGraphArcComponent element={element} />
     </svg>,
   );
   expect(getByText(element.name)).toBeInTheDocument();

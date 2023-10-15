@@ -12,7 +12,7 @@ describe('uml-reachability-graph-marking-component', () => {
   it('render the uml-reachability-graph-marking-component', () => {
     const { baseElement } = wrappedRender(
       <svg>
-        <UMLReachabilityGraphMarkingComponent element={element} scale={1.0} />
+        <UMLReachabilityGraphMarkingComponent element={element} />
       </svg>,
     );
     expect(baseElement).toMatchSnapshot();
@@ -22,7 +22,7 @@ describe('uml-reachability-graph-marking-component', () => {
     element.isInitialMarking = false;
     const { container } = wrappedRender(
       <svg>
-        <UMLReachabilityGraphMarkingComponent element={element} scale={1.0} />
+        <UMLReachabilityGraphMarkingComponent element={element} />
       </svg>,
     );
     expect(container.querySelectorAll('polyline')).toHaveLength(0);
@@ -32,7 +32,7 @@ describe('uml-reachability-graph-marking-component', () => {
     element.isInitialMarking = true;
     const { container } = wrappedRender(
       <svg>
-        <UMLReachabilityGraphMarkingComponent element={element} scale={1.0} />
+        <UMLReachabilityGraphMarkingComponent element={element} />
       </svg>,
     );
     expect(container.querySelectorAll('polyline')).toHaveLength(1);

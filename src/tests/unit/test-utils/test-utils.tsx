@@ -40,7 +40,6 @@ const createModelStateFromPartialModelState = (
       mode: partialModelState?.editor?.mode ? partialModelState.editor.mode : ApollonMode.Modelling,
       readonly: partialModelState?.editor?.readonly ? partialModelState.editor?.readonly : false,
       colorEnabled: partialModelState?.editor?.colorEnabled ? partialModelState.editor.colorEnabled : false,
-      scale: partialModelState?.editor?.scale ? partialModelState.editor.scale : false,
       enablePopups: partialModelState?.editor?.enablePopups ? partialModelState.editor?.enablePopups : true,
       enableCopyPasteToClipboard: partialModelState?.editor?.enableCopyPasteToClipboard
         ? partialModelState.editor?.enableCopyPasteToClipboard

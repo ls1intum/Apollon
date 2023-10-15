@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Multiline } from '../../../utils/svg/multiline';
 import { FlowchartElement } from '../index';
 
-export const FlowchartComponent: FunctionComponent<Props> = ({ element, scale = 1.0, children }) => (
+export const FlowchartComponent: FunctionComponent<Props> = ({ element, children }) => (
   <g>
     {children}
     <Multiline
@@ -12,8 +12,8 @@ export const FlowchartComponent: FunctionComponent<Props> = ({ element, scale = 
       height={element.bounds.height}
       fontWeight="bold"
       fill={element.textColor}
-      lineHeight={16 * scale}
-      capHeight={11 * scale}
+      lineHeight={16}
+      capHeight={11}
     >
       {element.name}
     </Multiline>
@@ -22,6 +22,5 @@ export const FlowchartComponent: FunctionComponent<Props> = ({ element, scale = 
 
 export interface Props {
   element: FlowchartElement;
-  scale: number;
   children?: React.ReactNode;
 }

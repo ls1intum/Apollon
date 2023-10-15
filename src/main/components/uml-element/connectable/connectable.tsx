@@ -25,7 +25,6 @@ type StateProps = {
   reconnecting: boolean;
   element: IUMLElement;
   type: UMLElementType | UMLRelationshipType;
-  scale: number;
 };
 
 type DispatchProps = {
@@ -45,7 +44,6 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
       reconnecting: !!Object.keys(state.reconnecting).length,
       element: state.elements[props.id],
       type: state.elements[props.id].type as UMLElementType | UMLRelationshipType,
-      scale: state.editor.scale,
     };
   },
   {
@@ -56,14 +54,14 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
 );
 
 const Handle = styled((props) => {
-  const { alternativePortVisualization, scale, ...otherProps } = props;
+  const { alternativePortVisualization, ...otherProps } = props;
   // alternative port visualization size
-  const alternativePortHeight = 10 * scale;
-  const alternativePortWidth = 5 * scale;
-  const alternativePortCircleSize = 30 * scale;
+  const alternativePortHeight = 10;
+  const alternativePortWidth = 5;
+  const alternativePortCircleSize = 30;
 
   // default port visualization size
-  const defaultPortSize = 20 * scale;
+  const defaultPortSize = 20;
   if (alternativePortVisualization) {
     return (
       <svg {...otherProps}>
@@ -145,7 +143,6 @@ export const connectable = (
         reconnect,
         type,
         element,
-        scale,
         ...props
       } = this.props;
 
@@ -166,7 +163,6 @@ export const connectable = (
                   onPointerDown={this.onPointerDown}
                   onPointerUp={this.onPointerUp}
                   alternativePortVisualization={features.alternativePortVisualization}
-                  scale={scale}
                 />
               )}
               {this.props.type !== 'ActivityForkNodeHorizontal' && (
@@ -176,7 +172,6 @@ export const connectable = (
                   onPointerDown={this.onPointerDown}
                   onPointerUp={this.onPointerUp}
                   alternativePortVisualization={features.alternativePortVisualization}
-                  scale={scale}
                 />
               )}
               {this.props.type !== 'ActivityForkNode' && (
@@ -186,7 +181,6 @@ export const connectable = (
                   onPointerDown={this.onPointerDown}
                   onPointerUp={this.onPointerUp}
                   alternativePortVisualization={features.alternativePortVisualization}
-                  scale={scale}
                 />
               )}
 
@@ -197,7 +191,6 @@ export const connectable = (
                   onPointerDown={this.onPointerDown}
                   onPointerUp={this.onPointerUp}
                   alternativePortVisualization={features.alternativePortVisualization}
-                  scale={scale}
                 />
               )}
 
@@ -209,7 +202,6 @@ export const connectable = (
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
-                    scale={scale}
                   />
                   <Handle
                     ports={ports}
@@ -217,7 +209,6 @@ export const connectable = (
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
-                    scale={scale}
                   />
                   <Handle
                     ports={ports}
@@ -225,7 +216,6 @@ export const connectable = (
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
-                    scale={scale}
                   />
                   <Handle
                     ports={ports}
@@ -233,7 +223,6 @@ export const connectable = (
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
-                    scale={scale}
                   />
                 </>
               )}
@@ -246,7 +235,6 @@ export const connectable = (
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
-                    scale={scale}
                   />
                   <Handle
                     ports={ports}
@@ -254,7 +242,6 @@ export const connectable = (
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
-                    scale={scale}
                   />
                   <Handle
                     ports={ports}
@@ -262,7 +249,6 @@ export const connectable = (
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
-                    scale={scale}
                   />
                   <Handle
                     ports={ports}
@@ -270,7 +256,6 @@ export const connectable = (
                     onPointerDown={this.onPointerDown}
                     onPointerUp={this.onPointerUp}
                     alternativePortVisualization={features.alternativePortVisualization}
-                    scale={scale}
                   />
                 </>
               )}

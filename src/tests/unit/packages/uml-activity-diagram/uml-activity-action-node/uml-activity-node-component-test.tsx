@@ -14,7 +14,7 @@ it('render the uml-activity-action-node-component', () => {
   const actionNode: UMLActivityActionNode = new UMLActivityActionNode({ name: 'TestActivityComponent' });
   const { getByText } = wrappedRender(
     <svg>
-      <UMLActivityActionNodeComponent element={actionNode} scale={1.0} />
+      <UMLActivityActionNodeComponent element={actionNode} />
     </svg>,
   );
   expect(getByText(actionNode.name)).toBeInTheDocument();

@@ -6,7 +6,6 @@ import { defaults, Styles } from './styles';
 
 const defaultProps = {
   styles: {} as DeepPartial<Styles>,
-  scale: 1.0,
 };
 
 type Props = { children?: React.ReactChild } & typeof defaultProps;
@@ -14,7 +13,7 @@ type Props = { children?: React.ReactChild } & typeof defaultProps;
 export class Theme extends Component<Props> {
   static defaultProps = defaultProps;
 
-  theme: Styles = update(defaults(this.props.scale), this.props.styles);
+  theme: Styles = update(defaults(), this.props.styles);
 
   render() {
     return <ThemeProvider theme={this.theme}>{this.props.children}</ThemeProvider>;

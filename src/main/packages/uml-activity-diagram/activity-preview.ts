@@ -13,32 +13,31 @@ import { UMLActivity } from './uml-activity/uml-activity';
 export const composeActivityPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
-  scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
-  UMLActivityForkNode.defaultWidth = Math.round((20 * scale) / 10) * 10;
-  UMLActivityForkNode.defaultHeight = Math.round((60 * scale) / 10) * 10;
-  UMLActivityForkNodeHorizontal.defaultWidth = Math.round((60 * scale) / 10) * 10;
-  UMLActivityForkNodeHorizontal.defaultHeight = Math.round((20 * scale) / 10) * 10;
+  UMLActivityForkNode.defaultWidth = Math.round(20 / 10) * 10;
+  UMLActivityForkNode.defaultHeight = Math.round(60 / 10) * 10;
+  UMLActivityForkNodeHorizontal.defaultWidth = Math.round(60 / 10) * 10;
+  UMLActivityForkNodeHorizontal.defaultHeight = Math.round(20 / 10) * 10;
   // Activity
   const activity = new UMLActivity({ name: translate('packages.ActivityDiagram.Activity') });
   activity.bounds = {
     ...activity.bounds,
-    width: activity.bounds.width * scale,
-    height: activity.bounds.height * scale,
+    width: activity.bounds.width,
+    height: activity.bounds.height,
   };
   elements.push(activity);
 
   // Activity Initial Node
   const activityInitialNode = new UMLActivityInitialNode({
-    bounds: { x: 0, y: 0, width: 50 * scale, height: 50 * scale },
+    bounds: { x: 0, y: 0, width: 45, height: 45 },
   });
 
   elements.push(activityInitialNode);
 
   // Activity Final Node
   const activityFinalNode = new UMLActivityFinalNode({
-    bounds: { x: 0, y: 0, width: 50 * scale, height: 50 * scale },
+    bounds: { x: 0, y: 0, width: 45, height: 45 },
   });
   elements.push(activityFinalNode);
 
@@ -48,8 +47,8 @@ export const composeActivityPreview: ComposePreview = (
   });
   activityActionNode.bounds = {
     ...activityActionNode.bounds,
-    width: activityActionNode.bounds.width * scale,
-    height: activityActionNode.bounds.height * scale,
+    width: activityActionNode.bounds.width,
+    height: activityActionNode.bounds.height,
   };
   elements.push(activityActionNode);
 
@@ -59,8 +58,8 @@ export const composeActivityPreview: ComposePreview = (
   });
   activityObjectNode.bounds = {
     ...activityObjectNode.bounds,
-    width: activityObjectNode.bounds.width * scale,
-    height: activityObjectNode.bounds.height * scale,
+    width: activityObjectNode.bounds.width,
+    height: activityObjectNode.bounds.height,
   };
   elements.push(activityObjectNode);
 
@@ -68,8 +67,8 @@ export const composeActivityPreview: ComposePreview = (
   const activityMergeNode = new UMLActivityMergeNode({ name: translate('packages.ActivityDiagram.ActivityMergeNode') });
   activityMergeNode.bounds = {
     ...activityMergeNode.bounds,
-    width: activityMergeNode.bounds.width * scale,
-    height: activityMergeNode.bounds.height * scale,
+    width: activityMergeNode.bounds.width,
+    height: activityMergeNode.bounds.height,
   };
   elements.push(activityMergeNode);
 

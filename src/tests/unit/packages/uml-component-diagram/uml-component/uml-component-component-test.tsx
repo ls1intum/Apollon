@@ -7,7 +7,7 @@ it('render the uml-component-component', () => {
   const component: UMLComponent = new UMLComponent({ name: 'TestComponentComponent' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <UMLComponentComponent element={component} scale={1.0} />
+      <UMLComponentComponent element={component} />
     </svg>,
   );
   expect(getByText(component.name)).toBeInTheDocument();

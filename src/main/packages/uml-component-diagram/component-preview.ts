@@ -7,7 +7,6 @@ import { UMLComponentComponent } from './uml-component/uml-component-component';
 export const composeComponentPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
-  scale: number,
 ): UMLElement[] => {
   const elements: UMLElement[] = [];
 
@@ -15,8 +14,8 @@ export const composeComponentPreview: ComposePreview = (
   const umlComponent = new UMLComponentComponent({ name: translate('packages.ComponentDiagram.Component') });
   umlComponent.bounds = {
     ...umlComponent.bounds,
-    width: umlComponent.bounds.width * scale,
-    height: umlComponent.bounds.height * scale,
+    width: umlComponent.bounds.width,
+    height: umlComponent.bounds.height,
   };
   elements.push(umlComponent);
 
@@ -26,8 +25,8 @@ export const composeComponentPreview: ComposePreview = (
   });
   umlComponentInterface.bounds = {
     ...umlComponentInterface.bounds,
-    width: umlComponentInterface.bounds.width * scale,
-    height: umlComponentInterface.bounds.height * scale,
+    width: umlComponentInterface.bounds.width,
+    height: umlComponentInterface.bounds.height,
   };
   const [umlInterface] = umlComponentInterface.render(layer) as [UMLElement];
   elements.push(umlInterface);

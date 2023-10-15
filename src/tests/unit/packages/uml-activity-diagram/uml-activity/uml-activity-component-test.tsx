@@ -7,7 +7,7 @@ it('render the uml-activity-component', () => {
   const activity: UMLActivity = new UMLActivity({ name: 'TestActivityComponent' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <UMLActivityComponent element={activity} scale={1.0} />
+      <UMLActivityComponent element={activity} />
     </svg>,
   );
   expect(getByText(activity.name)).toBeInTheDocument();

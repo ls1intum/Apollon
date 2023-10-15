@@ -3,11 +3,11 @@ import { Multiline } from '../../../utils/svg/multiline';
 import { SyntaxTreeNonterminal } from './syntax-tree-nonterminal';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 
-export const SyntaxTreeNonterminalComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
+export const SyntaxTreeNonterminalComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedRect
-      rx={10 * scale}
-      ry={10 * scale}
+      rx={10}
+      ry={10}
       width="100%"
       height="100%"
       strokeColor={element.strokeColor}
@@ -20,8 +20,8 @@ export const SyntaxTreeNonterminalComponent: FunctionComponent<Props> = ({ eleme
       height={element.bounds.height}
       fontWeight="bold"
       fill={element.textColor}
-      lineHeight={16 * scale}
-      capHeight={11 * scale}
+      lineHeight={16}
+      capHeight={11}
     >
       {element.name}
     </Multiline>
@@ -30,6 +30,5 @@ export const SyntaxTreeNonterminalComponent: FunctionComponent<Props> = ({ eleme
 
 export interface Props {
   element: SyntaxTreeNonterminal;
-  scale: number;
   fillColor?: string;
 }
