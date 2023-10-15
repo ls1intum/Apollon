@@ -3,9 +3,9 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLPetriNetTransition } from './uml-petri-net-transition';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 
-export const UMLPetriNetTransitionComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
+export const UMLPetriNetTransitionComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
-    <Text y={-15 * scale} fill={element.textColor}>
+    <Text y={-15} fill={element.textColor}>
       {element.name}
     </Text>
     <ThemedRect
@@ -21,6 +21,5 @@ export const UMLPetriNetTransitionComponent: FunctionComponent<Props> = ({ eleme
 
 interface Props {
   element: UMLPetriNetTransition;
-  scale: number;
   fillColor?: string;
 }

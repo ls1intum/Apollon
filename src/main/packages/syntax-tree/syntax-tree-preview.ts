@@ -7,10 +7,9 @@ import { SyntaxTreeNonterminal } from './syntax-tree-nonterminal/syntax-tree-non
 export const composeSyntaxTreePreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
-  scale: number,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  const defaultBounds: IBoundary = { x: 0, y: 0, width: 100 * scale, height: 50 * scale };
+  const defaultBounds: IBoundary = { x: 0, y: 0, width: 100, height: 50 };
 
   elements.push(new SyntaxTreeNonterminal({ name: '', bounds: defaultBounds }));
 

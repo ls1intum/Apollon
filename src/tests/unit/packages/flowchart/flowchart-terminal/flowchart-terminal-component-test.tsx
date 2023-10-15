@@ -14,7 +14,7 @@ it('render the flowchart-terminal-component', () => {
   const terminal: FlowchartTerminal = new FlowchartTerminal({ name: 'TestTerminalComponent' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <FlowchartTerminalComponent element={terminal} scale={1.0} />
+      <FlowchartTerminalComponent element={terminal} />
     </svg>,
   );
   expect(getByText(terminal.name)).toBeInTheDocument();

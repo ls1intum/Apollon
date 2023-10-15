@@ -146,7 +146,6 @@ export type ExportOptions = {
   keepOriginalSize?: boolean;
   include?: string[];
   exclude?: string[];
-  scale?: number;
 };
 
 export type SVG = {

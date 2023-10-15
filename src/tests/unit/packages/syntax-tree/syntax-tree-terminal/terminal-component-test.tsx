@@ -14,7 +14,7 @@ it('render the syntax-tree-terminal-component', () => {
   const syntaxTreeTerminal: SyntaxTreeTerminal = new SyntaxTreeTerminal({ name: 'SyntaxTreeTerminal' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <SyntaxTreeTerminalComponent element={syntaxTreeTerminal} scale={1.0} />
+      <SyntaxTreeTerminalComponent element={syntaxTreeTerminal} />
     </svg>,
   );
   expect(getByText(syntaxTreeTerminal.name)).toBeInTheDocument();

@@ -23,7 +23,6 @@ type StateProps = {
   interactive: boolean;
   interactable: boolean;
   element: IUMLElement;
-  scale: number;
 };
 
 type DispatchProps = {};
@@ -40,7 +39,6 @@ const enhance = compose<ComponentClass<OwnProps>>(
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
       element: state.elements[props.id],
-      scale: state.editor.scale || 1.0,
     }),
     {},
   ),
@@ -87,7 +85,7 @@ class CanvasElementComponent extends Component<Props> {
         fillOpacity={moving ? 0.7 : undefined}
         fill={highlight}
       >
-        <ElementComponent fillColor={highlight} scale={props.scale} element={UMLElementRepository.get(element)}>
+        <ElementComponent fillColor={highlight} element={UMLElementRepository.get(element)}>
           {elements}
         </ElementComponent>
         {children}

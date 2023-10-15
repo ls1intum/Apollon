@@ -26,7 +26,6 @@ type StateProps = {
   disabled: boolean;
   relationship: IUMLRelationship;
   mode: ApollonMode;
-  scale: number;
   readonly: boolean;
 };
 
@@ -62,7 +61,6 @@ const enhance = compose<ComponentClass<OwnProps>>(
       disabled: !!Object.keys(state.reconnecting).length || !!Object.keys(state.connecting).length,
       relationship: state.elements[props.id] as IUMLRelationship,
       mode: state.editor.mode as ApollonMode,
-      scale: state.editor.scale || 1.0,
       readonly: state.editor.readonly || false,
     }),
     {
@@ -87,7 +85,6 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
       children,
       theme,
       mode,
-      scale,
       readonly,
       startwaypointslayout,
       endwaypointslayout,
@@ -130,7 +127,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
         pointerEvents={disabled ? 'none' : 'stroke'}
       >
         <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
-        <ChildComponent scale={scale} element={UMLRelationshipRepository.get(relationship)} />
+        <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
         {children}
         {midPoints.map((point, index) => {
           return (

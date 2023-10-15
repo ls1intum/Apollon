@@ -134,7 +134,7 @@ export class ApollonEditor {
         view: ApollonView.Modelling,
         mode: options.mode || ApollonMode.Exporting,
         colorEnabled: options.colorEnabled || false,
-        scale: options.scale || 1.0,
+        zoomFactor: options.scale || 1.0,
         readonly: options.readonly || false,
         enablePopups: options.enablePopups === true || options.enablePopups === undefined,
         enableCopyPasteToClipboard: options.copyPasteToClipboard === true,

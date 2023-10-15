@@ -9,7 +9,7 @@ it('render the uml-activity-final-node-component', () => {
   const store = getRealStore(undefined, [finalNode]);
   const { container, baseElement } = wrappedRender(
     <svg>
-      <UMLActivityFinalNodeComponent element={finalNode} scale={1.0} />
+      <UMLActivityFinalNodeComponent element={finalNode} />
     </svg>,
     { store },
   );

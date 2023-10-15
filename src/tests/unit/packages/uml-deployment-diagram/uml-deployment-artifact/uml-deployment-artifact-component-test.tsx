@@ -7,7 +7,7 @@ it('render the uml-deplyoment-artifact-component', () => {
   const artifact: UMLDeploymentArtifact = new UMLDeploymentArtifact({ name: 'TestDeploymentComponent' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <UMLDeploymentArtifactComponent element={artifact} scale={1.0} />
+      <UMLDeploymentArtifactComponent element={artifact} />
     </svg>,
   );
   expect(getByText(artifact.name)).toBeInTheDocument();

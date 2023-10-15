@@ -14,7 +14,7 @@ it('render the syntax-tree-nonterminal-component', () => {
   const syntaxTreeNonterminal: SyntaxTreeNonterminal = new SyntaxTreeNonterminal({ name: 'TestActivityComponent' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <SyntaxTreeNonterminalComponent element={syntaxTreeNonterminal} scale={1.0} />
+      <SyntaxTreeNonterminalComponent element={syntaxTreeNonterminal} />
     </svg>,
   );
   expect(getByText(syntaxTreeNonterminal.name)).toBeInTheDocument();

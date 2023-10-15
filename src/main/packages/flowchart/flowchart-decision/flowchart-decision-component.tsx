@@ -3,8 +3,8 @@ import { FlowchartComponent } from '../flowchart-element/flowchart-component';
 import { FlowchartDecision } from './flowchart-decision';
 import { ThemedPolyline } from '../../../components/theme/themedComponents';
 
-export const FlowchartDecisionComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => (
-  <FlowchartComponent element={element} scale={scale}>
+export const FlowchartDecisionComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
+  <FlowchartComponent element={element}>
     <ThemedPolyline
       points={`${element.bounds.width / 2} 0, ${element.bounds.width} ${element.bounds.height / 2}, ${
         element.bounds.width / 2
@@ -17,6 +17,5 @@ export const FlowchartDecisionComponent: FunctionComponent<Props> = ({ element, 
 
 export interface Props {
   element: FlowchartDecision;
-  scale: number;
   fillColor?: string;
 }

@@ -8,11 +8,10 @@ import { computeDimension } from '../../utils/geometry/boundary';
 export const composePetriNetPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
-  scale: number,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  UMLPetriNetTransition.defaultHeight = computeDimension(scale, 60);
-  UMLPetriNetTransition.defaultWidth = computeDimension(scale, 25);
+  UMLPetriNetTransition.defaultHeight = computeDimension(1.0, 60);
+  UMLPetriNetTransition.defaultWidth = computeDimension(1.0, 25);
 
   const petriNetTransition = new UMLPetriNetTransition({ name: translate('packages.PetriNet.PetriNetTransition') });
 
@@ -31,8 +30,8 @@ export const composePetriNetPreview: ComposePreview = (
     bounds: {
       x: 0,
       y: 0,
-      width: computeDimension(scale, 60),
-      height: computeDimension(scale, 60),
+      width: computeDimension(1.0, 60),
+      height: computeDimension(1.0, 60),
     },
   });
 

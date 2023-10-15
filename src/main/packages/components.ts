@@ -61,8 +61,8 @@ import { BPMNConversationComponent } from './bpmn/bpmn-conversation/bpmn-convers
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
-    | FunctionComponent<PropsWithChildren<{ element: any; scale: number; fillColor?: string }>>
-    | ConnectedComponent<FunctionComponent<any>, { element: any; scale: number }>;
+    | FunctionComponent<PropsWithChildren<{ element: any; fillColor?: string }>>
+    | ConnectedComponent<FunctionComponent<any>, { element: any }>;
 } = {
   [UMLElementType.Package]: UMLClassPackageComponent,
   [UMLElementType.Class]: UMLClassifierComponent,
