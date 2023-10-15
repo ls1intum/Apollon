@@ -81,7 +81,7 @@ const getInitialState = ({ type, canvas, translate, colorEnabled }: Props) => {
       previews.push(...composeFlowchartPreview(canvas, translate));
       break;
     case UMLDiagramType.BPMN:
-      previews.push(...composeBPMNPreview(canvas, translate, scale));
+      previews.push(...composeBPMNPreview(canvas, translate));
       break;
   }
   if (colorEnabled) {
