@@ -24,14 +24,14 @@ jobs:
         uses: actions/cache@v2
         with:
           path: node_modules
-          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node_modules-
       # see prepare script
       - name: Install Dependencies and Build Library
-        run: yarn install
+        run: npm install
       - name: TypeScript Tests
-        run: yarn test:coverage --ci
+        run: npm run test:coverage --ci
       - name: "Codacy: Report coverage"
         uses: codacy/codacy-coverage-reporter-action@master
         with:
@@ -39,8 +39,8 @@ jobs:
           coverage-reports: coverage/lcov.info
         if: (github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) && (success() || failure())
       - name: TypeScript Formatting
-        run: yarn prettier:check
+        run: npm run prettier:check
         if: success() || failure()
       - name: TypeScript Code Style
-        run: yarn lint
+        run: npm run lint
         if: success() || failure()
