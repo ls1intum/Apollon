@@ -105,10 +105,12 @@ export type UMLAssociation = UMLRelationship & {
 
 export type UMLCommunicationLink = UMLRelationship & {
   messages: {
-    id: string;
-    name: string;
-    direction: 'source' | 'target';
-  }[];
+    [id: string]: {
+      id: string;
+      name: string;
+      direction: 'source' | 'target';
+    };
+  };
 };
 
 export type FeedbackCorrectionStatus = {
