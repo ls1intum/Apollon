@@ -84,7 +84,7 @@ const getInitialState = ({ model, options }: Props): State => {
   const deserialize = (apollonElement: Apollon.UMLElement): UMLElement[] => {
     const element = new UMLElements[apollonElement.type]();
     const apollonChildren: Apollon.UMLElement[] = UMLContainer.isUMLContainer(element)
-      ? apollonElements.filter((child) => child.owner === apollonElement.id)
+      ? Object.values(apollonElements).filter((child) => child.owner === apollonElement.id)
       : [];
 
     element.deserialize(apollonElement, apollonChildren);
@@ -107,11 +107,11 @@ const getInitialState = ({ model, options }: Props): State => {
     return [root, ...updates];
   };
 
-  const elements = apollonElements
+  const elements = Object.values(apollonElements)
     .filter((element) => !element.owner)
     .reduce<UMLElement[]>((acc, val) => [...acc, ...deserialize(val)], []);
 
-  const relationships = apollonRelationships.map<UMLRelationship>((apollonRelationship) => {
+  const relationships = Object.values(apollonRelationships).map<UMLRelationship>((apollonRelationship) => {
     const relationship = new UMLRelationships[apollonRelationship.type]();
     relationship.deserialize(apollonRelationship);
     return relationship;

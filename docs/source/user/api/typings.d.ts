@@ -23,8 +23,8 @@ export type ApollonOptions = {
     scale?: number;
 };
 export type Selection = {
-    elements: string[];
-    relationships: string[];
+    elements: {[id: string]: boolean};
+    relationships: {[id: string]: boolean};
 };
 export type UMLModel = {
     version: string;
@@ -33,10 +33,10 @@ export type UMLModel = {
         width: number;
         height: number;
     };
-    elements: UMLElement[];
+    elements: {[id: string]: UMLElement};
     interactive: Selection;
-    relationships: UMLRelationship[];
-    assessments: Assessment[];
+    relationships: {[id: string]: UMLRelationship};
+    assessments: {[id: string]: Assessment};
 };
 export type UMLModelElementType = UMLElementType | UMLRelationshipType | UMLDiagramType;
 export type UMLModelElement = {
