@@ -1,10 +1,17 @@
-import { UMLModel, UMLDiagramType, UMLElement, UMLRelationship, Assessment, UMLCommunicationLink, UMLRelationshipType } from '../../typings';
-
+import {
+  UMLModel,
+  UMLDiagramType,
+  UMLElement,
+  UMLRelationship,
+  Assessment,
+  UMLCommunicationLink,
+  UMLRelationshipType,
+} from '../../typings';
 
 /**
- * 
+ *
  * Represents a communication link in V2 schema.
- * 
+ *
  */
 export type UMLCommunicationLinkV2 = UMLRelationship & {
   messages: {
@@ -64,14 +71,13 @@ export function isV2(model: UMLModelCompat): model is UMLModelV2 {
   return model.version.startsWith('2.');
 }
 
-
 /**
- * 
+ *
  * Returns whether given relationship is a communication link in v2 schema.
- * 
+ *
  * @param {UMLRelationship} rel relationship to check
  * @returns {boolean} `true` if the relationship is a communication link, `false` otherwise.
- * 
+ *
  */
 export function isCommunicationLink(rel: UMLRelationship): rel is UMLCommunicationLinkV2 {
   return rel.type === UMLRelationshipType.CommunicationLink;

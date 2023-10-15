@@ -5,8 +5,8 @@ import * as Apollon from '../../main/apollon-editor';
 import * as ApollonTypes from '../../main/typings';
 import testClassDiagram from './test-resources/class-diagram.json';
 import testClassDiagramV2 from './test-resources/class-diagram-v2.json';
-import testCommunicationDiagram from './test-resources/communication-diagram.json'
-import testCommunicationDiagramV2 from './test-resources/communication-diagram-v2.json'
+import testCommunicationDiagram from './test-resources/communication-diagram.json';
+import testCommunicationDiagramV2 from './test-resources/communication-diagram-v2.json';
 import { Selection } from '../../../docs/source/user/api/typings';
 import { Assessment, SVG, UMLDiagramType, UMLModel } from '../../main';
 import { getRealStore } from './test-utils/test-utils';
