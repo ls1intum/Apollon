@@ -14,16 +14,6 @@ exports[`render the uml-component-component 1`] = `
           stroke="black"
           width="100%"
         />
-        <text
-          dominant-baseline="auto"
-          font-weight="bold"
-          pointer-events="none"
-          text-anchor="middle"
-          x="50%"
-          y="25px"
-        >
-          TestComponentComponent
-        </text>
         <g
           transform="translate(169, 7)"
         >
@@ -44,6 +34,30 @@ exports[`render the uml-component-component 1`] = `
             stroke-width="1.2"
           />
         </g>
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="50%"
+          y="50%"
+        >
+          <tspan
+            dy="-8"
+            font-size="85%"
+            text-anchor="middle"
+            x="50%"
+          >
+            «component»
+          </tspan>
+          <tspan
+            dy="18"
+            text-anchor="middle"
+            x="50%"
+          >
+            TestComponentComponent
+          </tspan>
+        </text>
       </g>
     </svg>
   </div>

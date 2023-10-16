@@ -19,13 +19,13 @@ export const composeComponentPreview: ComposePreview = (
     height: umlComponent.bounds.height,
   };
   elements.push(umlComponent);
-  
+
   // UML Subsystem
   const umlSubsystem = new UMLSubsystem({ name: translate('packages.ComponentDiagram.Subsystem') });
   umlSubsystem.bounds = {
     ...umlSubsystem.bounds,
-    width: umlSubsystem.bounds.width * scale,
-    height: umlSubsystem.bounds.height * scale,
+    width: umlSubsystem.bounds.width,
+    height: umlSubsystem.bounds.height,
   };
   elements.push(umlSubsystem);
 
