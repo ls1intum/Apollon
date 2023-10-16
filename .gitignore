@@ -8,3 +8,4 @@ dist/
 /docs/build/
 cypress
 test-report.html
+**/.DS_Store

@@ -25,6 +25,7 @@ import { UMLPetriNetArc } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-
 import { UMLReachabilityGraphArc } from './uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc';
 import { SyntaxTreeLink } from './syntax-tree/syntax-tree-link/syntax-tree-link';
 import { FlowchartFlowline } from './flowchart/flowchart-flowline/flowchart-flowline';
+import { BPMNFlow } from './bpmn/bpmn-flow/bpmn-flow';
 
 type UMLRelationships = { [key in UMLRelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
 
@@ -54,4 +55,5 @@ export const UMLRelationships = {
   [UMLRelationshipType.ReachabilityGraphArc]: UMLReachabilityGraphArc,
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLink,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowline,
+  [UMLRelationshipType.BPMNFlow]: BPMNFlow,
 };

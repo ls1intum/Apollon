@@ -146,7 +146,7 @@ export class CopyRepository {
       element.bounds.y = element.bounds.y + 10 * CopyRepository.pasteCounter;
       element.source.element = cloneMap[element.source.element];
       element.target.element = cloneMap[element.target.element];
-      const newPath = element.path.map((pathPoint) => ({ x: pathPoint.x + 10, y: pathPoint.y + 10 } as IPoint));
+      const newPath = element.path.map((pathPoint) => ({ x: pathPoint.x + 10, y: pathPoint.y + 10 }) as IPoint);
       element.path = [newPath[0], newPath[1], ...newPath.slice(2)];
       const clones = [element.cloneRelationship()];
       return clonedElements.concat(...clones);

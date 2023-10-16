@@ -13,16 +13,16 @@ Install all node dependencies
 
 .. code-block:: shell
 
-    yarn install
+    npm install
 
 Launch the webpack-dev-server:
 
 .. code-block:: shell
 
-    yarn start
+    npm run start
 
 Run the tests:
 
 .. code-block:: shell
 
-    yarn test
+    npm run test

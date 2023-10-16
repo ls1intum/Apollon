@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`test update pane render with element 1`] = `
-.c11 {
+.c12 {
   height: 1em;
   vertical-align: middle;
   width: 1em;
@@ -21,24 +21,66 @@ exports[`test update pane render with element 1`] = `
   fill: white;
 }
 
+.c3 {
+  background: var(--apollon-background);
+  color: var(--apollon-primary-contrast);
+  border: 1px solid var(--apollon-gray);
+  margin: 0;
+  outline: none;
+  border-radius: 0.25rem;
+  width: 2.25em;
+  height: 2.25em;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.c3:hover {
+  background-color: var(--apollon-gray);
+  border-color: var(--apollon-gray-variant);
+}
+
+.c3:active {
+  background-color: var(--apollon-gray);
+  border-color: var(--apollon-gray-variant);
+}
+
 .c1 {
   display: block;
-  width: 100%;
+  overflow: auto;
   position: relative;
   min-height: inherit;
   max-height: inherit;
-  max-width: inherit;
-  overflow: auto;
+  width: 100%;
+  height: 100%;
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: 1px solid var(--apollon-gray,#e9ecef);
   background-position: calc(50% + 24.5px) calc(50% + 24.5px);
-  background-size: 50px 50px,50px 50px, 10px 10px,10px 10px;
+  background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
+  -webkit-transition: -webkit-transform 500ms, width 500ms, height 500ms;
+  -webkit-transition: transform 500ms, width 500ms, height 500ms;
+  transition: transform 500ms, width 500ms, height 500ms;
+  -webkit-transform-origin: top left;
+  -ms-transform-origin: top left;
+  transform-origin: top left;
+  -webkit-transform: scale(1);
+  -ms-transform: scale(1);
+  transform: scale(1);
 }
 
-.c9 {
+.c10 {
   -webkit-appearance: button;
   -moz-appearance: button;
   appearance: button;
@@ -53,32 +95,32 @@ exports[`test update pane render with element 1`] = `
   overflow: visible;
   padding: 0.375em 0.75em;
   text-transform: none;
-  -webkit-transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -webkit-transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 
-.c9 svg {
+.c10 svg {
   pointer-events: none;
 }
 
-.c9::-moz-focus-inner {
+.c10::-moz-focus-inner {
   border-style: none;
   padding: 0;
 }
 
-.c9:focus {
+.c10:focus {
   outline: 0;
 }
 
-.c9:not(:disabled) {
+.c10:not(:disabled) {
   cursor: pointer;
 }
 
-.c10 {
+.c11 {
   border-radius: 0.2em;
   font-size: 0.875em;
   padding: 0.25em 0.5em;
@@ -88,7 +130,7 @@ exports[`test update pane render with element 1`] = `
   fill: var(--apollon-primary-contrast,#212529);
 }
 
-.c14 {
+.c15 {
   border-radius: 0.2em;
   font-size: 0.875em;
   padding: 0.25em 0.5em;
@@ -96,16 +138,16 @@ exports[`test update pane render with element 1`] = `
   color: var(--apollon-primary,#2a8fbd);
 }
 
-.c14:focus {
+.c15:focus {
   box-shadow: 0 0 0 0.2em var(--apollon-primary,#2a8fbd)80;
 }
 
-.c14:hover {
+.c15:hover {
   background-color: var(--apollon-primary,#2a8fbd);
   color: var(--apollon-background,#ffffff);
 }
 
-.c13 {
+.c14 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -113,7 +155,7 @@ exports[`test update pane render with element 1`] = `
   min-height: 1.9rem;
 }
 
-.c15 {
+.c16 {
   -webkit-flex: 1 1 auto;
   -ms-flex: 1 1 auto;
   flex: 1 1 auto;
@@ -122,25 +164,25 @@ exports[`test update pane render with element 1`] = `
   text-overflow: ellipsis;
 }
 
-.c15:not(:first-child) {
+.c16:not(:first-child) {
   margin-left: -1px;
 }
 
-.c15:first-child {
+.c16:first-child {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-.c15:last-child {
+.c16:last-child {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-.c15:not(:first-child):not(:last-child) {
+.c16:not(:first-child):not(:last-child) {
   border-radius: 0;
 }
 
-.c7 {
+.c8 {
   background-clip: padding-box;
   background-color: var(--apollon-background,#ffffff);
   border: 1px solid var(--apollon-gray-variant,#343a40);
@@ -153,46 +195,37 @@ exports[`test update pane render with element 1`] = `
   margin: 0;
   overflow: visible;
   padding: 0.375em 0.75em;
-  -webkit-transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
-  transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
+  -webkit-transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.c7:focus {
+.c8:focus {
   border-color: #404040;
   outline: 0;
   box-shadow: 0 0 0 0.2em var(--apollon-primary,#2a8fbd)40;
 }
 
-.c7::-webkit-input-placeholder {
+.c8::-webkit-input-placeholder {
   color: var(--apollon-gray-variant,#343a40);
   opacity: 1;
 }
 
-.c7::-moz-placeholder {
+.c8::-moz-placeholder {
   color: var(--apollon-gray-variant,#343a40);
   opacity: 1;
 }
 
-.c7:-ms-input-placeholder {
+.c8:-ms-input-placeholder {
   color: var(--apollon-gray-variant,#343a40);
   opacity: 1;
 }
 
-.c7::placeholder {
+.c8::placeholder {
   color: var(--apollon-gray-variant,#343a40);
   opacity: 1;
 }
 
-.c8 {
-  display: block;
-  width: 100%;
-  border-radius: 0.2em;
-  font-size: 0.875em;
-  padding: 0.25em 0.5em;
-}
-
-.c18 {
-  margin-bottom: 0.5em;
+.c9 {
   display: block;
   width: 100%;
   border-radius: 0.2em;
@@ -201,6 +234,7 @@ exports[`test update pane render with element 1`] = `
 }
 
 .c19 {
+  margin-bottom: 0.5em;
   display: block;
   width: 100%;
   border-radius: 0.2em;
@@ -208,16 +242,24 @@ exports[`test update pane render with element 1`] = `
   padding: 0.25em 0.5em;
 }
 
-.c19:not(:focus) {
+.c20 {
+  display: block;
+  width: 100%;
+  border-radius: 0.2em;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+}
+
+.c20:not(:focus) {
   border-style: dashed;
 }
 
-.c19:not(:focus):not(:hover) {
+.c20:not(:focus):not(:hover) {
   background: var(--apollon-background,#ffffff);
   opacity: 0.5;
 }
 
-.c16 {
+.c17 {
   margin-top: 0;
   font-size: 1.25em;
   font-weight: 500;
@@ -225,7 +267,7 @@ exports[`test update pane render with element 1`] = `
   margin-bottom: 0.5em;
 }
 
-.c12 {
+.c13 {
   border: 0;
   border-top: 1px solid var(--apollon-primary-contrast,#212529);
   box-sizing: content-box;
@@ -235,7 +277,7 @@ exports[`test update pane render with element 1`] = `
   overflow: visible;
 }
 
-.c17 {
+.c18 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -250,7 +292,7 @@ exports[`test update pane render with element 1`] = `
   justify-content: space-between;
 }
 
-.c6 {
+.c7 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -265,7 +307,7 @@ exports[`test update pane render with element 1`] = `
   justify-content: space-between;
 }
 
-.c3 {
+.c4 {
   background-clip: padding-box;
   background-color: var(--apollon-background-variant,#e5e5e5);
   border: 1px solid var(--apollon-primary-contrast,#212529)33;
@@ -304,20 +346,20 @@ exports[`test update pane render with element 1`] = `
   transform: translate(calc(0px - 100% - 0.5em),calc(100px - 100%));
 }
 
-.c3 *,
-.c3 *:before,
-.c3 *:after {
+.c4 *,
+.c4 *:before,
+.c4 *:after {
   box-sizing: inherit;
 }
 
-.c5 {
+.c6 {
   color: var(--apollon-primary-contrast,#212529);
   padding: 0.5em 0.75em;
   max-height: 500px;
   overflow: auto;
 }
 
-.c4 {
+.c5 {
   display: block;
   height: 0.5em;
   position: absolute;
@@ -328,8 +370,8 @@ exports[`test update pane render with element 1`] = `
   bottom: 0.3em;
 }
 
-.c4::before,
-.c4::after {
+.c5::before,
+.c5::after {
   content: '';
   border-color: transparent;
   border-style: solid;
@@ -337,13 +379,13 @@ exports[`test update pane render with element 1`] = `
   position: absolute;
 }
 
-.c4::before {
+.c5::before {
   border-left-color: var(--apollon-primary-contrast,#212529)33;
   border-width: 0.5em 0 0.5em 0.5em;
   right: 0;
 }
 
-.c4::after {
+.c5::after {
   border-left-color: var(--apollon-gray,#e9ecef);
   border-width: 0.5em 0 0.5em 0.5em;
   right: 1px;
@@ -404,47 +446,67 @@ exports[`test update pane render with element 1`] = `
       class="c0 apollon-editor"
     >
       <div
-        class="c1"
+        style="height: 100%; width: 100%; overflow: hidden;"
       >
-        <svg
-          class="c2"
-          data-cy="modeling-editor-canvas"
-          height="640"
-          id="modeling-editor-canvas"
-          tabindex="-1"
-          width="840"
+        <div
+          class="c1"
+          scale="1"
         >
-          <g
-            style="transform: translate(0px,0px);"
-          />
-        </svg>
+          <svg
+            class="c2"
+            data-cy="modeling-editor-canvas"
+            height="640"
+            id="modeling-editor-canvas"
+            tabindex="-1"
+            width="840"
+          >
+            <g
+              style="transform-origin: top left; transform: translate(0px,0px);"
+            />
+          </svg>
+        </div>
+        <div
+          style="position: absolute; left: 0.75em; bottom: 0.75em; display: flex;"
+        >
+          <button
+            class="c3"
+            style="margin-right: 0.5em;"
+          >
+            +
+          </button>
+          <button
+            class="c3"
+          >
+            -
+          </button>
+        </div>
       </div>
       <div
-        class="c3"
+        class="c4"
       >
         <div
-          class="c4"
+          class="c5"
         />
         <div
-          class="c5"
+          class="c6"
         >
           <div>
             <section>
               <div
-                class="c6"
+                class="c7"
               >
                 <input
-                  class="c7 c8"
+                  class="c8 c9"
                   maxlength="100"
                   value=""
                 />
                 <button
-                  class="c9 c10"
+                  class="c10 c11"
                   color="link"
                   tabindex="-1"
                 >
                   <svg
-                    class="c11"
+                    class="c12"
                     height="16px"
                     viewBox="0 0 448 512"
                     width="16px"
@@ -457,57 +519,57 @@ exports[`test update pane render with element 1`] = `
                 </button>
               </div>
               <hr
-                class="c12"
+                class="c13"
               />
             </section>
             <section>
               <div
-                class="c13"
+                class="c14"
               >
                 <button
-                  class="c9 c14 c15"
+                  class="c10 c15 c16"
                   color="primary"
                 >
                   Abstract
                 </button>
                 <button
-                  class="c9 c14 c15"
+                  class="c10 c15 c16"
                   color="primary"
                 >
                   Interface
                 </button>
                 <button
-                  class="c9 c14 c15"
+                  class="c10 c15 c16"
                   color="primary"
                 >
                   Enumeration
                 </button>
               </div>
               <hr
-                class="c12"
+                class="c13"
               />
             </section>
             <section>
               <h1
-                class="c16"
+                class="c17"
               >
                 Attributes
               </h1>
               <div
-                class="c17"
+                class="c18"
               >
                 <input
-                  class="c7 c18"
+                  class="c8 c19"
                   maxlength="100"
                   value=""
                 />
                 <button
-                  class="c9 c10"
+                  class="c10 c11"
                   color="link"
                   tabindex="-1"
                 >
                   <svg
-                    class="c11"
+                    class="c12"
                     height="16px"
                     viewBox="0 0 448 512"
                     width="16px"
@@ -520,35 +582,35 @@ exports[`test update pane render with element 1`] = `
                 </button>
               </div>
               <input
-                class="c7 c19"
+                class="c8 c20"
                 maxlength="100"
                 value=""
               />
             </section>
             <section>
               <hr
-                class="c12"
+                class="c13"
               />
               <h1
-                class="c16"
+                class="c17"
               >
                 Methods
               </h1>
               <div
-                class="c17"
+                class="c18"
               >
                 <input
-                  class="c7 c18"
+                  class="c8 c19"
                   maxlength="100"
                   value=""
                 />
                 <button
-                  class="c9 c10"
+                  class="c10 c11"
                   color="link"
                   tabindex="-1"
                 >
                   <svg
-                    class="c11"
+                    class="c12"
                     height="16px"
                     viewBox="0 0 448 512"
                     width="16px"
@@ -561,7 +623,7 @@ exports[`test update pane render with element 1`] = `
                 </button>
               </div>
               <input
-                class="c7 c19"
+                class="c8 c20"
                 maxlength="100"
                 value=""
               />
@@ -575,7 +637,7 @@ exports[`test update pane render with element 1`] = `
 `;
 
 exports[`test update pane render with relationship 1`] = `
-.c10 {
+.c11 {
   height: 1em;
   vertical-align: middle;
   width: 1em;
@@ -595,24 +657,66 @@ exports[`test update pane render with relationship 1`] = `
   fill: white;
 }
 
+.c3 {
+  background: var(--apollon-background);
+  color: var(--apollon-primary-contrast);
+  border: 1px solid var(--apollon-gray);
+  margin: 0;
+  outline: none;
+  border-radius: 0.25rem;
+  width: 2.25em;
+  height: 2.25em;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.c3:hover {
+  background-color: var(--apollon-gray);
+  border-color: var(--apollon-gray-variant);
+}
+
+.c3:active {
+  background-color: var(--apollon-gray);
+  border-color: var(--apollon-gray-variant);
+}
+
 .c1 {
   display: block;
-  width: 100%;
+  overflow: auto;
   position: relative;
   min-height: inherit;
   max-height: inherit;
-  max-width: inherit;
-  overflow: auto;
+  width: 100%;
+  height: 100%;
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: 1px solid var(--apollon-gray,#e9ecef);
   background-position: calc(50% + 24.5px) calc(50% + 24.5px);
-  background-size: 50px 50px,50px 50px, 10px 10px,10px 10px;
+  background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
   background-image: linear-gradient(to right,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-grid,rgba(36,39,36,0.1)) 1px,transparent 1px), linear-gradient(to right,var(--apollon-gray,#e9ecef) 1px,transparent 1px), linear-gradient(to bottom,var(--apollon-gray,#e9ecef) 1px,transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
+  -webkit-transition: -webkit-transform 500ms, width 500ms, height 500ms;
+  -webkit-transition: transform 500ms, width 500ms, height 500ms;
+  transition: transform 500ms, width 500ms, height 500ms;
+  -webkit-transform-origin: top left;
+  -ms-transform-origin: top left;
+  transform-origin: top left;
+  -webkit-transform: scale(1);
+  -ms-transform: scale(1);
+  transform: scale(1);
 }
 
-.c8 {
+.c9 {
   -webkit-appearance: button;
   -moz-appearance: button;
   appearance: button;
@@ -627,32 +731,32 @@ exports[`test update pane render with relationship 1`] = `
   overflow: visible;
   padding: 0.375em 0.75em;
   text-transform: none;
-  -webkit-transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -webkit-transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 
-.c8 svg {
+.c9 svg {
   pointer-events: none;
 }
 
-.c8::-moz-focus-inner {
+.c9::-moz-focus-inner {
   border-style: none;
   padding: 0;
 }
 
-.c8:focus {
+.c9:focus {
   outline: 0;
 }
 
-.c8:not(:disabled) {
+.c9:not(:disabled) {
   cursor: pointer;
 }
 
-.c9 {
+.c10 {
   border-radius: 0.2em;
   font-size: 0.875em;
   padding: 0.25em 0.5em;
@@ -662,7 +766,7 @@ exports[`test update pane render with relationship 1`] = `
   fill: var(--apollon-primary-contrast,#212529);
 }
 
-.c12 {
+.c13 {
   display: block;
   width: 100%;
   border-radius: 0.2em;
@@ -672,16 +776,16 @@ exports[`test update pane render with relationship 1`] = `
   color: var(--apollon-primary,#2a8fbd);
 }
 
-.c12:focus {
+.c13:focus {
   box-shadow: 0 0 0 0.2em var(--apollon-primary,#2a8fbd)80;
 }
 
-.c12:hover {
+.c13:hover {
   background-color: var(--apollon-primary,#2a8fbd);
   color: var(--apollon-background,#ffffff);
 }
 
-.c16 {
+.c17 {
   background-clip: padding-box;
   background-color: var(--apollon-background,#ffffff);
   border: 1px solid var(--apollon-gray-variant,#343a40);
@@ -694,37 +798,37 @@ exports[`test update pane render with relationship 1`] = `
   margin: 0;
   overflow: visible;
   padding: 0.375em 0.75em;
-  -webkit-transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
-  transition: border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out;
+  -webkit-transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.c16:focus {
+.c17:focus {
   border-color: #404040;
   outline: 0;
   box-shadow: 0 0 0 0.2em var(--apollon-primary,#2a8fbd)40;
 }
 
-.c16::-webkit-input-placeholder {
+.c17::-webkit-input-placeholder {
   color: var(--apollon-gray-variant,#343a40);
   opacity: 1;
 }
 
-.c16::-moz-placeholder {
+.c17::-moz-placeholder {
   color: var(--apollon-gray-variant,#343a40);
   opacity: 1;
 }
 
-.c16:-ms-input-placeholder {
+.c17:-ms-input-placeholder {
   color: var(--apollon-gray-variant,#343a40);
   opacity: 1;
 }
 
-.c16::placeholder {
+.c17::placeholder {
   color: var(--apollon-gray-variant,#343a40);
   opacity: 1;
 }
 
-.c17 {
+.c18 {
   margin-bottom: 0.5em;
   display: block;
   width: 100%;
@@ -733,7 +837,7 @@ exports[`test update pane render with relationship 1`] = `
   padding: 0.25em 0.5em;
 }
 
-.c18 {
+.c19 {
   display: block;
   width: 100%;
   border-radius: 0.2em;
@@ -741,7 +845,7 @@ exports[`test update pane render with relationship 1`] = `
   padding: 0.25em 0.5em;
 }
 
-.c7 {
+.c8 {
   margin-top: 0;
   font-size: 1.25em;
   font-weight: 500;
@@ -750,7 +854,7 @@ exports[`test update pane render with relationship 1`] = `
   margin-bottom: 0;
 }
 
-.c14 {
+.c15 {
   margin-top: 0;
   font-size: 1.25em;
   font-weight: 500;
@@ -758,13 +862,13 @@ exports[`test update pane render with relationship 1`] = `
   margin-bottom: 0.5em;
 }
 
-.c15 {
+.c16 {
   margin-top: 0;
   margin-bottom: 1em;
   margin-bottom: 0;
 }
 
-.c11 {
+.c12 {
   border: 0;
   border-top: 1px solid var(--apollon-primary-contrast,#212529);
   box-sizing: content-box;
@@ -774,7 +878,7 @@ exports[`test update pane render with relationship 1`] = `
   overflow: visible;
 }
 
-.c13::after {
+.c14::after {
   border-top: 0.3em solid;
   border-right: 0.3em solid transparent;
   border-bottom: 0;
@@ -787,7 +891,7 @@ exports[`test update pane render with relationship 1`] = `
   width: 0;
 }
 
-.c6 {
+.c7 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -802,7 +906,7 @@ exports[`test update pane render with relationship 1`] = `
   justify-content: space-between;
 }
 
-.c3 {
+.c4 {
   background-clip: padding-box;
   background-color: var(--apollon-background-variant,#e5e5e5);
   border: 1px solid var(--apollon-primary-contrast,#212529)33;
@@ -841,20 +945,20 @@ exports[`test update pane render with relationship 1`] = `
   transform: translate(calc(100px - 100% - 0.5em),calc(65px - 100%));
 }
 
-.c3 *,
-.c3 *:before,
-.c3 *:after {
+.c4 *,
+.c4 *:before,
+.c4 *:after {
   box-sizing: inherit;
 }
 
-.c5 {
+.c6 {
   color: var(--apollon-primary-contrast,#212529);
   padding: 0.5em 0.75em;
   max-height: 500px;
   overflow: auto;
 }
 
-.c4 {
+.c5 {
   display: block;
   height: 0.5em;
   position: absolute;
@@ -865,8 +969,8 @@ exports[`test update pane render with relationship 1`] = `
   bottom: 0.3em;
 }
 
-.c4::before,
-.c4::after {
+.c5::before,
+.c5::after {
   content: '';
   border-color: transparent;
   border-style: solid;
@@ -874,13 +978,13 @@ exports[`test update pane render with relationship 1`] = `
   position: absolute;
 }
 
-.c4::before {
+.c5::before {
   border-left-color: var(--apollon-primary-contrast,#212529)33;
   border-width: 0.5em 0 0.5em 0.5em;
   right: 0;
 }
 
-.c4::after {
+.c5::after {
   border-left-color: var(--apollon-gray,#e9ecef);
   border-width: 0.5em 0 0.5em 0.5em;
   right: 1px;
@@ -941,47 +1045,67 @@ exports[`test update pane render with relationship 1`] = `
       class="c0 apollon-editor"
     >
       <div
-        class="c1"
+        style="height: 100%; width: 100%; overflow: hidden;"
       >
-        <svg
-          class="c2"
-          data-cy="modeling-editor-canvas"
-          height="640"
-          id="modeling-editor-canvas"
-          tabindex="-1"
-          width="840"
+        <div
+          class="c1"
+          scale="1"
         >
-          <g
-            style="transform: translate(0px,0px);"
-          />
-        </svg>
+          <svg
+            class="c2"
+            data-cy="modeling-editor-canvas"
+            height="640"
+            id="modeling-editor-canvas"
+            tabindex="-1"
+            width="840"
+          >
+            <g
+              style="transform-origin: top left; transform: translate(0px,0px);"
+            />
+          </svg>
+        </div>
+        <div
+          style="position: absolute; left: 0.75em; bottom: 0.75em; display: flex;"
+        >
+          <button
+            class="c3"
+            style="margin-right: 0.5em;"
+          >
+            +
+          </button>
+          <button
+            class="c3"
+          >
+            -
+          </button>
+        </div>
       </div>
       <div
-        class="c3"
+        class="c4"
       >
         <div
-          class="c4"
+          class="c5"
         />
         <div
-          class="c5"
+          class="c6"
         >
           <div>
             <section>
               <div
-                class="c6"
+                class="c7"
               >
                 <h1
-                  class="c7"
+                  class="c8"
                   style="flex-grow: 1;"
                 >
                   Association
                 </h1>
                 <button
-                  class="c8 c9"
+                  class="c9 c10"
                   color="link"
                 >
                   <svg
-                    class="c10"
+                    class="c11"
                     height="16px"
                     viewBox="0 0 512 512"
                     width="16px"
@@ -993,11 +1117,11 @@ exports[`test update pane render with relationship 1`] = `
                   </svg>
                 </button>
                 <button
-                  class="c8 c9"
+                  class="c9 c10"
                   color="link"
                 >
                   <svg
-                    class="c10"
+                    class="c11"
                     height="16px"
                     viewBox="0 0 448 512"
                     width="16px"
@@ -1010,7 +1134,7 @@ exports[`test update pane render with relationship 1`] = `
                 </button>
               </div>
               <hr
-                class="c11"
+                class="c12"
               />
             </section>
             <section>
@@ -1018,86 +1142,86 @@ exports[`test update pane render with relationship 1`] = `
                 class=""
               >
                 <button
-                  class="c8 c12 c13"
+                  class="c9 c13 c14"
                   color="primary"
                 >
                   Association (bidirectional)
                 </button>
               </div>
               <hr
-                class="c11"
+                class="c12"
               />
             </section>
             <section>
               <h1
-                class="c14"
+                class="c15"
               />
               <div
-                class="c6"
+                class="c7"
               >
                 <span
-                  class="c15"
+                  class="c16"
                   style="margin-right: 0.5em;"
                 >
                   Multiplicity
                 </span>
                 <input
-                  class="c16 c17"
+                  class="c17 c18"
                   maxlength="100"
                   style="min-width: 0;"
                   value=""
                 />
               </div>
               <div
-                class="c6"
+                class="c7"
               >
                 <span
-                  class="c15"
+                  class="c16"
                   style="margin-right: 0.5em;"
                 >
                   Role
                 </span>
                 <input
-                  class="c16 c18"
+                  class="c17 c19"
                   maxlength="100"
                   value=""
                 />
               </div>
               <hr
-                class="c11"
+                class="c12"
               />
             </section>
             <section>
               <h1
-                class="c14"
+                class="c15"
               />
               <div
-                class="c6"
+                class="c7"
               >
                 <span
-                  class="c15"
+                  class="c16"
                   style="margin-right: 0.5em;"
                 >
                   Multiplicity
                 </span>
                 <input
-                  class="c16 c17"
+                  class="c17 c18"
                   maxlength="100"
                   style="min-width: 0;"
                   value=""
                 />
               </div>
               <div
-                class="c6"
+                class="c7"
               >
                 <span
-                  class="c15"
+                  class="c16"
                   style="margin-right: 0.5em;"
                 >
                   Role
                 </span>
                 <input
-                  class="c16 c18"
+                  class="c17 c19"
                   maxlength="100"
                   value=""
                 />

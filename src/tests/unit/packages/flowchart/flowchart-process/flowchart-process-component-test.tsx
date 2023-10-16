@@ -14,7 +14,7 @@ it('render the flowchart-process-component', () => {
   const process: FlowchartProcess = new FlowchartProcess({ name: 'TestProcessComponent' });
   const { getByText, baseElement } = wrappedRender(
     <svg>
-      <FlowchartProcessComponent element={process} scale={1.0} />
+      <FlowchartProcessComponent element={process} />
     </svg>,
   );
   expect(getByText(process.name)).toBeInTheDocument();

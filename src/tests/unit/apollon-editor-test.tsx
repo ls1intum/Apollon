@@ -4,6 +4,9 @@ import { act, render as testLibraryRender } from '@testing-library/react';
 import * as Apollon from '../../main/apollon-editor';
 import * as ApollonTypes from '../../main/typings';
 import testClassDiagram from './test-resources/class-diagram.json';
+import testClassDiagramV2 from './test-resources/class-diagram-v2.json';
+import testCommunicationDiagram from './test-resources/communication-diagram.json';
+import testCommunicationDiagramV2 from './test-resources/communication-diagram-v2.json';
 import { Selection } from '../../../docs/source/user/api/typings';
 import { Assessment, SVG, UMLDiagramType, UMLModel } from '../../main';
 import { getRealStore } from './test-utils/test-utils';
@@ -12,6 +15,7 @@ import { IAssessment } from '../../main/services/assessment/assessment';
 import { ModelState } from '../../main/components/store/model-state';
 import { UMLElementCommonRepository } from '../../main/services/uml-element/uml-element-common-repository';
 import { UMLClass } from '../../main/packages/uml-class-diagram/uml-class/uml-class';
+import { arrayToInclusionMap } from '../../main/components/store/util';
 import fn = jest.fn;
 
 let editor = {} as Apollon.ApollonEditor;
@@ -49,43 +53,58 @@ const ignoreSVGClassNames = (svgString: string): string => {
 };
 
 describe('test apollon editor ', () => {
-  it('get and set model', () => {
+  // init editor before each test
+  beforeEach(() => {
     const { container } = testLibraryRender(<div />);
     act(() => {
       editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
     });
     act(() => {
+      // second act is needed because the editor needs to be initialized already to set the model
       editor.model = testClassDiagram as any;
     });
+  });
+
+  it('get and set model', () => {
     expect(testClassDiagram).toEqual(editor.model);
   });
 
+  it('get and set v2 model', () => {
+    act(() => {
+      editor.model = testClassDiagramV2 as any;
+    });
+
+    expect(testClassDiagram).toEqual(editor.model);
+  });
+
+  it('get and set communication diagram.', () => {
+    act(() => {
+      editor.model = testCommunicationDiagram as any;
+    });
+
+    expect(testCommunicationDiagram).toEqual(editor.model);
+  });
+
+  it('get and set communication diagram v2.', () => {
+    act(() => {
+      editor.model = testCommunicationDiagramV2 as any;
+    });
+
+    expect(testCommunicationDiagram).toEqual(editor.model);
+  });
+
   it('exportModelAsSvg', async () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     const svg: ApollonTypes.SVG = await editor.exportAsSVG();
     expect(ignoreSVGClassNames(svg.svg)).toEqual(testClassDiagramAsSVG);
   });
 
   it('subscribeToSelection', async () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     const selection: Selection = {
-      elements: testClassDiagram.elements.map((element) => element.id),
-      relationships: testClassDiagram.relationships.map((relationship) => relationship.id),
+      elements: arrayToInclusionMap(Object.keys(testClassDiagram.elements)),
+      relationships: arrayToInclusionMap(Object.keys(testClassDiagram.relationships)),
     };
     const selectionCallback = (s: Selection) => {
-      return expect(s).resolves.toEqual(selection);
+      return expect(s).toEqual(selection);
     };
     editor.subscribeToSelectionChange(selectionCallback);
     act(() => {
@@ -93,16 +112,9 @@ describe('test apollon editor ', () => {
     });
   });
   it('unsubscribeFromSelection', async () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     const selection: Selection = {
-      elements: testClassDiagram.elements.map((element) => element.id),
-      relationships: testClassDiagram.relationships.map((relationship) => relationship.id),
+      elements: arrayToInclusionMap(Object.keys(testClassDiagram.elements)),
+      relationships: arrayToInclusionMap(Object.keys(testClassDiagram.relationships)),
     };
     const selectionCallback = fn((s: Selection) => {});
 
@@ -115,7 +127,7 @@ describe('test apollon editor ', () => {
       // unsubscribe and call select again
       editor.unsubscribeFromSelectionChange(selectionSubscription);
       act(() => {
-        editor.select({ elements: [], relationships: [] });
+        editor.select({ elements: {}, relationships: {} });
       });
       setTimeout(() => {
         expect(selectionCallback).toBeCalledTimes(1);
@@ -126,16 +138,9 @@ describe('test apollon editor ', () => {
     // same test as above, but don't unsubscribe
     // this validates that the timing is enough so that selection callback would be called twice
     // it is still possible that callback would be called twice in unsubscribeFromSelection and not in unsubscribeFromSelectionValidation, but less likely
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     const selection: Selection = {
-      elements: testClassDiagram.elements.map((element) => element.id),
-      relationships: testClassDiagram.relationships.map((relationship) => relationship.id),
+      elements: arrayToInclusionMap(Object.keys(testClassDiagram.elements)),
+      relationships: arrayToInclusionMap(Object.keys(testClassDiagram.relationships)),
     };
     const selectionCallback = fn((s: Selection) => {});
 
@@ -148,7 +153,7 @@ describe('test apollon editor ', () => {
     setTimeout(() => {
       // just select again
       act(() => {
-        editor.select({ elements: [], relationships: [] });
+        editor.select({ elements: {}, relationships: {} });
       });
       setTimeout(() => {
         // should be called twice
@@ -158,10 +163,6 @@ describe('test apollon editor ', () => {
   });
 
   it('subscribeToAssessmentChange', async () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -192,10 +193,6 @@ describe('test apollon editor ', () => {
     store.dispatch(assessAction);
   });
   it('unsubscribeFromAssessment', () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -237,10 +234,6 @@ describe('test apollon editor ', () => {
     }, 500);
   });
   it('unsubscribeFromAssessmentValidation', () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -282,10 +275,6 @@ describe('test apollon editor ', () => {
   });
 
   it('subscribeToModelChange', () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -298,7 +287,7 @@ describe('test apollon editor ', () => {
 
     const modelChangedCallback = (model: UMLModel) => {
       // created element should be included in model
-      return expect(model.elements.filter((e) => e.id === element.id)).toHaveLength(1);
+      return expect(model.elements[element.id]).toBeDefined();
     };
     // subscribe to model changes
     editor.subscribeToModelChange(modelChangedCallback);
@@ -308,10 +297,6 @@ describe('test apollon editor ', () => {
     store.dispatch(createElementAction);
   });
   it('unsubscribeFromModelChanges', () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -342,10 +327,6 @@ describe('test apollon editor ', () => {
     }, 500);
   });
   it('unsubscribeFromModelChangesValidation', () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -375,10 +356,6 @@ describe('test apollon editor ', () => {
   });
 
   it('subscribeToDiscreteModelChange', () => {
-    const { container } = testLibraryRender(<div />);
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -391,7 +368,7 @@ describe('test apollon editor ', () => {
 
     const modelChangedCallback = (model: UMLModel) => {
       // created element should be included in model
-      return expect(model.elements.filter((e) => e.id === element.id)).toHaveLength(1);
+      return expect(model.elements[element.id]).toBeDefined();
     };
     // subscribe to model changes
     editor.subscribeToModelDiscreteChange(modelChangedCallback);
@@ -404,11 +381,6 @@ describe('test apollon editor ', () => {
   });
 
   it('unsubscribeFromDiscreteModelChanges', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -442,11 +414,6 @@ describe('test apollon editor ', () => {
   });
 
   it('unsubscribeFromDiscreteModelChangesValidation', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
     // create store to inject into apollon editor, so that actions can be dispatched
     const state = ModelState.fromModel(testClassDiagram as any);
     const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
@@ -475,126 +442,54 @@ describe('test apollon editor ', () => {
     }, 500);
   });
   it('set type to UseCaseDiagram', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.UseCaseDiagram;
     });
     expect(editor.model.type).toEqual(UMLDiagramType.UseCaseDiagram);
   });
   it('set type to CommunicationDiagram', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.CommunicationDiagram;
     });
     expect(editor.model.type).toEqual(UMLDiagramType.CommunicationDiagram);
   });
   it('set type to ComponentDiagram', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.ComponentDiagram;
     });
     expect(editor.model.type).toEqual(UMLDiagramType.ComponentDiagram);
   });
   it('set type to DeploymentDiagram', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.DeploymentDiagram;
     });
     expect(editor.model.type).toEqual(UMLDiagramType.DeploymentDiagram);
   });
   it('set type to PetriNet', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.PetriNet;
     });
     expect(editor.model.type).toEqual(UMLDiagramType.PetriNet);
   });
   it('set type to ActivityDiagram', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.ActivityDiagram;
     });
     expect(editor.model.type).toEqual(UMLDiagramType.ActivityDiagram);
   });
   it('set type to ObjectDiagram', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.ObjectDiagram;
     });
     expect(editor.model.type).toEqual(UMLDiagramType.ObjectDiagram);
   });
   it('set type to ClassDiagram', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.ClassDiagram;
     });
     expect(editor.model.type).toEqual(UMLDiagramType.ClassDiagram);
   });
   it('set type to SyntaxTree', () => {
-    const { container } = testLibraryRender(<div />);
-    let editor = {} as Apollon.ApollonEditor;
-    act(() => {
-      editor = new Apollon.ApollonEditor(container.firstChild as HTMLElement, {});
-    });
-    act(() => {
-      editor.model = testClassDiagram as any;
-    });
     act(() => {
       editor.type = UMLDiagramType.SyntaxTree;
     });

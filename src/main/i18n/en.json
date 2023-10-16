@@ -118,6 +118,29 @@
     },
     "ColorLegend": {
       "ColorLegend": "Color Description"
+    },
+    "BPMN": {
+      "BPMNTask": "Task",
+      "BPMNSubprocess": "Subprocess",
+      "BPMNTransaction": "Transaction",
+      "BPMNCallActivity": "Call Activity",
+      "BPMNAnnotation": "Annotation",
+      "BPMNStartEvent": "Start",
+      "BPMNIntermediateEvent": "Event",
+      "BPMNEndEvent": "End",
+      "BPMNGateway": "Gateway",
+      "BPMNComplexGateway": "Complex",
+      "BPMNEventBasedGateway": "Event-based",
+      "BPMNInclusiveGateway": "Inclusive",
+      "BPMNExclusiveGateway": "Exclusive",
+      "BPMNExclusiveEventBasedGateway": "Exclusive Event-based",
+      "BPMNParallelGateway": "Parallel",
+      "BPMNParallelEventBasedGateway": "Parallel Event-based",
+      "BPMNConversation": "Conversation",
+      "BPMNCallConversation": "Call Conversation",
+      "BPMNSequenceFlow": "Sequence",
+      "BPMNMessageFlow": "Message",
+      "BPMNAssociationFlow": "Association"
     }
   }
 }

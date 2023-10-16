@@ -9,7 +9,6 @@ import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComp
 
 type OwnProps = {
   element: UMLInterfaceRequired;
-  scale: number;
 };
 type StateProps = {
   hasOppositeRequiredInterface: boolean;
@@ -47,7 +46,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>((state,
 }, {});
 
 const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
-  const { element, hasOppositeRequiredInterface, currentRequiredInterfaces, currentAllInterfaces, scale } = props;
+  const { element, hasOppositeRequiredInterface, currentRequiredInterfaces, currentAllInterfaces } = props;
 
   // offset for last point in paragraph, so that line ends at marker
   let offset: Point;
@@ -103,7 +102,7 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
         markerUnits="strokeWidth"
       >
         {/*M -> Move to, A -> Arc radiusX, radiusY, x-axis-rotation, bow-flag, endpointX,endpointY */}
-        <ThemedPath d={calculatePath()} fillColor="none" strokeColor={element.strokeColor} strokeWidth={2 * scale} />
+        <ThemedPath d={calculatePath()} fillColor="none" strokeColor={element.strokeColor} strokeWidth={2} />
       </marker>
       <ThemedPolyline
         points={element.path
@@ -116,7 +115,7 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
           .join(',')}
         strokeColor={element.strokeColor}
         fillColor="none"
-        strokeWidth={scale}
+        strokeWidth={1.0}
         markerEnd={`url(#marker-${element.id})`}
       />
     </g>

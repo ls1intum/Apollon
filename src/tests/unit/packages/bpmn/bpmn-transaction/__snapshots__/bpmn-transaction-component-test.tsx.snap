@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-transaction-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          class="sc-fqkvVR kprGcp"
+          fill="white"
+          height="100"
+          rx="10"
+          ry="10"
+          stroke="black"
+          width="200"
+        />
+        <rect
+          class="sc-fqkvVR kprGcp"
+          fill="white"
+          height="90"
+          rx="7"
+          ry="7"
+          stroke="black"
+          width="190"
+          x="5"
+          y="5"
+        />
+        <text
+          font-weight="bold"
+          height="100"
+          pointer-events="none"
+          text-anchor="middle"
+          width="200"
+          x="100"
+          y="50"
+        >
+          <tspan
+            dy="5.5"
+            x="100"
+          >
+            Transaction
+          </tspan>
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

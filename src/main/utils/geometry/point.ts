@@ -4,7 +4,10 @@ export interface IPoint {
 }
 
 export class Point implements IPoint {
-  constructor(public x: number = 0, public y: number = 0) {}
+  constructor(
+    public x: number = 0,
+    public y: number = 0,
+  ) {}
 
   get length(): number {
     return Math.sqrt(this.x * this.x + this.y * this.y);

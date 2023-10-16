@@ -6,20 +6,20 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-jOiSOi lesipn"
+          class="sc-JrDLc cQSxzb"
         >
           <input
-            class="sc-ezOQGI sc-bYMpWt fKZUAy hrpTyo"
+            class="sc-iHGNWf sc-dtBdUo jSLZkO kIvhJv"
             maxlength="100"
             value=""
           />
           <button
-            class="sc-fLcnxK sc-bBABsx dcusHQ djMjAa"
+            class="sc-fHjqPf sc-hmdomO egzafX OnZRE"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-jrcTuL keEOGj"
+              class="sc-dhKdcB dMUpVV"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -32,57 +32,57 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-eeMvmM heyNTc"
+          class="sc-esYiGF iLojZW"
         />
       </section>
       <section>
         <div
-          class="sc-iveFHk chCsae"
+          class="sc-bXCLTC leCMrB"
         >
           <button
-            class="sc-fLcnxK sc-bBABsx dcusHQ fqDdwC sc-cwSeag bGkkZQ"
+            class="sc-fHjqPf sc-hmdomO egzafX dFvOaw sc-jsJBEP gDTmhe"
             color="primary"
           >
             Abstract
           </button>
           <button
-            class="sc-fLcnxK sc-bBABsx dcusHQ fqDdwC sc-cwSeag bGkkZQ"
+            class="sc-fHjqPf sc-hmdomO egzafX dFvOaw sc-jsJBEP gDTmhe"
             color="primary"
           >
             Interface
           </button>
           <button
-            class="sc-fLcnxK sc-bBABsx dcusHQ fqDdwC sc-cwSeag bGkkZQ"
+            class="sc-fHjqPf sc-hmdomO egzafX dFvOaw sc-jsJBEP gDTmhe"
             color="primary"
           >
             Enumeration
           </button>
         </div>
         <hr
-          class="sc-eeMvmM heyNTc"
+          class="sc-esYiGF iLojZW"
         />
       </section>
       <section>
         <h1
-          class="sc-iTFTee bbdJIf"
+          class="sc-kdBSHD bunwHc"
         >
           Attributes
         </h1>
         <div
-          class="sc-cUEOzv kDFOxK"
+          class="sc-fXSgeo hRUsyw"
         >
           <input
-            class="sc-ezOQGI sc-bYMpWt fKZUAy iYZoxu"
+            class="sc-iHGNWf sc-dtBdUo jSLZkO cpgdNd"
             maxlength="100"
             value="attribute"
           />
           <button
-            class="sc-fLcnxK sc-bBABsx dcusHQ djMjAa"
+            class="sc-fHjqPf sc-hmdomO egzafX OnZRE"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-jrcTuL keEOGj"
+              class="sc-dhKdcB dMUpVV"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -95,35 +95,35 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-ezOQGI sc-bYMpWt fKZUAy bHobFP"
+          class="sc-iHGNWf sc-dtBdUo jSLZkO jRogEI"
           maxlength="100"
           value=""
         />
       </section>
       <section>
         <hr
-          class="sc-eeMvmM heyNTc"
+          class="sc-esYiGF iLojZW"
         />
         <h1
-          class="sc-iTFTee bbdJIf"
+          class="sc-kdBSHD bunwHc"
         >
           Methods
         </h1>
         <div
-          class="sc-cUEOzv kDFOxK"
+          class="sc-fXSgeo hRUsyw"
         >
           <input
-            class="sc-ezOQGI sc-bYMpWt fKZUAy iYZoxu"
+            class="sc-iHGNWf sc-dtBdUo jSLZkO cpgdNd"
             maxlength="100"
             value="classMethod"
           />
           <button
-            class="sc-fLcnxK sc-bBABsx dcusHQ djMjAa"
+            class="sc-fHjqPf sc-hmdomO egzafX OnZRE"
             color="link"
             tabindex="-1"
           >
             <svg
-              class="sc-jrcTuL keEOGj"
+              class="sc-dhKdcB dMUpVV"
               height="16px"
               viewBox="0 0 448 512"
               width="16px"
@@ -136,7 +136,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-ezOQGI sc-bYMpWt fKZUAy bHobFP"
+          class="sc-iHGNWf sc-dtBdUo jSLZkO jRogEI"
           maxlength="100"
           value=""
         />

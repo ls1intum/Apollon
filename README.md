@@ -74,6 +74,10 @@ Install the `@ls1intum/apollon` npm package using either [yarn](https://yarnpkg.
 yarn add @ls1intum/apollon
 ```
 
+```sh
+npm install @ls1intum/apollon
+```
+
 Import the `ApollonEditor` class, which is the default export of the npm package:
 
 ```js
@@ -112,13 +116,13 @@ cd Apollon
 Install all node dependencies:
 
 ```
-yarn install
+npm install
 ```
 
 Launch the webpack-dev-server:
 
 ```
-yarn start
+npm run start
 ```
 
 The webpack-dev-server is now listening on [http://localhost:8888](http://localhost:8888). If you change a TypeScript file, webpack will automatically compile the code, bundle the application, and refresh the page in your browser.

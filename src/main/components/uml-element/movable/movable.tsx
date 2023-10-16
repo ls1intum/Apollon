@@ -13,6 +13,7 @@ import { debounce } from '../../../utils/debounce';
 type StateProps = {
   movable: boolean;
   moving: boolean;
+  zoomFactor: number;
 };
 
 type DispatchProps = {
@@ -33,6 +34,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   (state, props) => ({
     movable: state.selected.includes(props.id) && !state.resizing.includes(props.id) && !state.connecting.length,
     moving: state.moving.includes(props.id),
+    zoomFactor: state.editor.zoomFactor,
   }),
   {
     start: UMLElementRepository.startMoving,
@@ -49,11 +51,13 @@ export const movable = (
     moveWindow: { x: number; y: number } = { x: 0, y: 0 };
 
     move = (x: number, y: number) => {
+      const { zoomFactor = 1 } = this.props;
+
       x = Math.round(x / 10) * 10;
       y = Math.round(y / 10) * 10;
       if (x === 0 && y === 0) return;
 
-      this.setState((state) => ({ offset: state.offset.add(x, y) }));
+      this.setState((state) => ({ offset: state.offset.add(x * zoomFactor, y * zoomFactor) }));
       this.moveWindow = { x: this.moveWindow.x + x, y: this.moveWindow.y + y };
       this.debouncedMove(this.moveWindow);
     };
@@ -95,6 +99,8 @@ export const movable = (
     }
 
     private onPointerDown = (event: PointerEvent | TouchEvent) => {
+      const { zoomFactor = 1 } = this.props;
+
       if (event.which && event.which !== 1) {
         return;
       }
@@ -113,9 +119,11 @@ export const movable = (
     };
 
     private onPointerMove = (event: PointerEvent | TouchEvent) => {
+      const { zoomFactor = 1 } = this.props;
+
       const clientEventCoordinates = getClientEventCoordinates(event);
-      const x = clientEventCoordinates.clientX - this.state.offset.x;
-      const y = clientEventCoordinates.clientY - this.state.offset.y;
+      const x = (clientEventCoordinates.clientX - this.state.offset.x) / zoomFactor;
+      const y = (clientEventCoordinates.clientY - this.state.offset.y) / zoomFactor;
 
       if (!this.props.moving) {
         if (Math.abs(x) > 5 || Math.abs(y) > 5) {

@@ -85,7 +85,7 @@ export class CanvasComponent extends Component<Props> implements Omit<ILayer, 'l
           ref={this.layer}
           data-cy="modeling-editor-canvas"
         >
-          <g style={{ transform: translateCoordinate() }}>
+          <g style={{ transformOrigin: 'top left', transform: `${translateCoordinate()}` }}>
             {this.layer.current && (
               <svg x="50%" y="50%">
                 {/* be careful to change the drawing order -> if relationships are drawn first -> relationships will not be visible in containers */}

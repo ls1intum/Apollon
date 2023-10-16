@@ -17,7 +17,7 @@ const calculateTokenRadius = (amountOfTokens: number, outerRadius: number) => {
   }
 };
 
-const calculatePositions = (amountOfTokens: number, outerRadius: number, scale: number): Point[] => {
+const calculatePositions = (amountOfTokens: number, outerRadius: number): Point[] => {
   const positions: Point[] = [];
   if (amountOfTokens === 1) {
     positions.push(new Point(0, 0));
@@ -25,7 +25,7 @@ const calculatePositions = (amountOfTokens: number, outerRadius: number, scale: 
     const degreeFraction = (2 * Math.PI) / amountOfTokens;
     const tokenRadius = calculateTokenRadius(maxAmountCircles, outerRadius);
     const tokenCenterCircleRadius =
-      outerRadius + (tokenToTokenDistance * scale * amountOfTokens) / maxAmountCircles - tokenRadius;
+      outerRadius + (tokenToTokenDistance * amountOfTokens) / maxAmountCircles - tokenRadius;
     for (let i = 0; i < amountOfTokens; i++) {
       const degree = i * degreeFraction + (1 / 2) * Math.PI;
       positions.push(new Point(Math.cos(degree) * tokenCenterCircleRadius, Math.sin(degree) * tokenCenterCircleRadius));
@@ -34,7 +34,7 @@ const calculatePositions = (amountOfTokens: number, outerRadius: number, scale: 
   return positions;
 };
 
-export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => {
+export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
   // radius of the outer circle
   const radius = Math.min(element.bounds.width, element.bounds.height) / 2;
   const displayTokenAsNumber = element.amountOfTokens > 0 && element.amountOfTokens > maxAmountCircles;
@@ -45,8 +45,8 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
   // calculate token props
   if (element.amountOfTokens > 0) {
     if (!displayTokenAsNumber) {
-      const radiusWithPadding = radius - tokenToBoundaryDistance * scale;
-      tokenPositions = calculatePositions(element.amountOfTokens, radiusWithPadding, scale);
+      const radiusWithPadding = radius - tokenToBoundaryDistance;
+      tokenPositions = calculatePositions(element.amountOfTokens, radiusWithPadding);
       tokenRadius = calculateTokenRadius(maxAmountCircles, radiusWithPadding);
     }
   }
@@ -75,7 +75,7 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
         ))}
       {displayTokenAsNumber && <Text fill={element.strokeColor}>{element.amountOfTokens}</Text>}
       {displayCapacity && (
-        <text x="95%" y={5 * scale} pointerEvents="none" style={element.textColor ? { fill: element.textColor } : {}}>
+        <text x="95%" y={5} pointerEvents="none" style={element.textColor ? { fill: element.textColor } : {}}>
           C={element.capacity}
         </text>
       )}
@@ -88,6 +88,5 @@ export const UMLPetriNetPlaceComponent: FunctionComponent<Props> = ({ element, s
 
 interface Props {
   element: UMLPetriNetPlace;
-  scale: number;
   fillColor?: string;
 }

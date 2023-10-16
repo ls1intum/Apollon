@@ -1,5 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -22,11 +21,6 @@ module.exports = {
   },
   module: {
     rules: [
-      {
-        test: /\.tsx?/,
-        enforce: 'pre',
-        use: ['tslint-loader', 'stylelint-custom-processor-loader'],
-      },
       {
         test: /\.tsx?/,
         exclude: /\/node_modules\//,

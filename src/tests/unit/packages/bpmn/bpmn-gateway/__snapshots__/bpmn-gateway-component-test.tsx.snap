@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-gateway-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <g>
+          <polyline
+            class="sc-aXZVg bUvEJV"
+            fill="white"
+            points="20 0, 40 20, 20 40, 0 20, 20 0"
+            stroke="black"
+          />
+          <polyline
+            class="sc-aXZVg bUvEJV"
+            fill="white"
+            points="13 13, 27 27"
+            stroke="black"
+          />
+          <polyline
+            class="sc-aXZVg bUvEJV"
+            fill="white"
+            points="13 27, 27 13"
+            stroke="black"
+          />
+          <text
+            height="40"
+            pointer-events="none"
+            text-anchor="start"
+            width="40"
+            x="50"
+            y="20"
+          >
+            <tspan
+              dy="5.5"
+              x="50"
+            >
+              Gateway
+            </tspan>
+          </text>
+        </g>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

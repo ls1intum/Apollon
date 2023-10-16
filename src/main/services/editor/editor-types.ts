@@ -20,6 +20,7 @@ export const enum ApollonView {
 
 export const enum EditorActionTypes {
   CHANGE_VIEW = '@@element/CHANGE_VIEW',
+  CHANGE_ZOOM_FACTOR = '@@element/CHANGE_ZOOM_FACTOR',
 }
 
 export type EditorState = {
@@ -30,13 +31,19 @@ export type EditorState = {
   readonly view: ApollonView;
   readonly features: UMLElementFeatures;
   readonly colorEnabled: boolean;
-  readonly scale: number;
+  readonly zoomFactor: number;
 };
 
-export type EditorActions = ChangeViewAction;
+export type EditorActions = ChangeViewAction | ChangeZoomFactorAction;
 
 export type ChangeViewAction = Action<EditorActionTypes.CHANGE_VIEW> & {
   payload: {
     view: ApollonView;
+  };
+};
+
+export type ChangeZoomFactorAction = Action<EditorActionTypes.CHANGE_ZOOM_FACTOR> & {
+  payload: {
+    zoomFactor: number;
   };
 };

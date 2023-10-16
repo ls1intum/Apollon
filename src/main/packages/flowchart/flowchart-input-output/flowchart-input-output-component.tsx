@@ -4,9 +4,9 @@ import { FlowchartInputOutput } from './flowchart-input-output';
 import { ThemedPolyline } from '../../../components/theme/themedComponents';
 import { computeDimension } from '../../../utils/geometry/boundary';
 
-export const FlowchartInputOutputComponent: FunctionComponent<Props> = ({ element, scale, fillColor }) => {
+export const FlowchartInputOutputComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
   return (
-    <FlowchartComponent element={element} scale={scale}>
+    <FlowchartComponent element={element}>
       <ThemedPolyline
         points={`${computeDimension(1.1, element.bounds.width)} 0, ${computeDimension(0.9, element.bounds.width)} ${
           element.bounds.height
@@ -23,6 +23,5 @@ export const FlowchartInputOutputComponent: FunctionComponent<Props> = ({ elemen
 
 export interface Props {
   element: FlowchartInputOutput;
-  scale: number;
   fillColor?: string;
 }

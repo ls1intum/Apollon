@@ -5,49 +5,70 @@ import { ModelState } from '../store/model-state';
 import isMobile from 'is-mobile';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../utils/actions/actions';
+import { EditorRepository } from '../../services/editor/editor-repository';
+import { clamp } from '../../utils/clamp';
+import { ZoomPane } from './zoom-pane';
 
-const grid = 10;
-const subdivisions = 5;
-const borderWidth = 1;
+const minScale: number = 0.5;
+const maxScale: number = 5.0;
 
-const StyledEditor = styled.div`
+const grid: number = 10;
+const subdivisions: number = 5;
+const borderWidth: number = 1;
+
+const StyledEditor = styled.div<{ scale: number }>`
   display: block;
-  width: 100%;
+  overflow: auto;
+
   position: relative;
   min-height: inherit;
   max-height: inherit;
-  max-width: inherit;
 
-  overflow: auto;
+  width: ${(props) => clamp(100 / props.scale, 100, 100 / minScale)}%;
+  height: ${(props) => clamp(100 / props.scale, 100, 100 / minScale)}%;
+
   -ms-overflow-style: -ms-autohiding-scrollbar;
   border: ${borderWidth}px solid ${(props) => props.theme.color.gray};
-
   background-position: calc(50% + ${(grid * subdivisions - borderWidth) / 2}px)
     calc(50% + ${(grid * subdivisions - borderWidth) / 2}px);
-  background-size: ${grid * subdivisions}px ${grid * subdivisions}px, ${grid * subdivisions}px ${grid * subdivisions}px,
-    ${grid}px ${grid}px, ${grid}px ${grid}px;
+  background-size:
+    ${grid * subdivisions}px ${grid * subdivisions}px,
+    ${grid * subdivisions}px ${grid * subdivisions}px,
+    ${grid}px ${grid}px,
+    ${grid}px ${grid}px;
   background-image: linear-gradient(to right, ${(props) => props.theme.color.grid} 1px, transparent 1px),
     linear-gradient(to bottom, ${(props) => props.theme.color.grid} 1px, transparent 1px),
     linear-gradient(to right, ${(props) => props.theme.color.gray} 1px, transparent 1px),
     linear-gradient(to bottom, ${(props) => props.theme.color.gray} 1px, transparent 1px);
   background-repeat: repeat;
   background-attachment: local;
+  transition:
+    transform 500ms,
+    width 500ms,
+    height 500ms;
+  transform-origin: top left;
+  transform: scale(${(props) => props.scale ?? 1});
 `;
 
 type OwnProps = { children: ReactNode };
 
-type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean };
+type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean; scale: number };
 
-type DispatchProps = { move: AsyncDispatch<typeof UMLElementRepository.move> };
+type DispatchProps = {
+  move: AsyncDispatch<typeof UMLElementRepository.move>;
+  changeZoomFactor: typeof EditorRepository.changeZoomFactor;
+};
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   (state) => ({
     moving: [...state.moving],
     connecting: state.connecting.length > 0,
     reconnecting: Object.keys(state.reconnecting).length > 0,
+    scale: state.editor.zoomFactor,
   }),
   {
     move: UMLElementRepository.move,
+    changeZoomFactor: EditorRepository.changeZoomFactor,
   },
 );
 
@@ -56,6 +77,7 @@ type Props = OwnProps & StateProps & DispatchProps;
 const getInitialState = () => {
   return {
     scrollingDisabled: false,
+    gestureStartZoomFactor: 1.0 as number,
     isMobile: isMobile({ tablet: true }),
   };
 };
@@ -68,6 +90,19 @@ const SCROLL_DISTANCE = 5;
 class EditorComponent extends Component<Props, State> {
   state = getInitialState();
   editor = createRef<HTMLDivElement>();
+  zoomContainer = createRef<HTMLDivElement>();
+
+  componentDidMount() {
+    window.addEventListener(
+      'wheel',
+      (event) => {
+        if (event.ctrlKey) {
+          event.preventDefault();
+        }
+      },
+      { passive: false },
+    );
+  }
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
     if (this.state.isMobile) {
@@ -85,15 +120,46 @@ class EditorComponent extends Component<Props, State> {
   }
 
   render() {
-    const { moving, connecting, reconnecting, ...props } = this.props;
+    const { moving, connecting, reconnecting, scale = 1.0, ...props } = this.props;
+
     if (this.state.isMobile) {
-      return <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} />;
+      return (
+        <div
+          ref={this.zoomContainer}
+          style={{ height: '100%', width: '100%', overflow: scale > 1.0 ? 'auto' : 'hidden' }}
+        >
+          <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} scale={scale} />
+          <ZoomPane
+            value={scale}
+            onChange={(zoomFactor) => this.props.changeZoomFactor(zoomFactor)}
+            min={minScale}
+            max={maxScale}
+            step={0.2}
+          />
+        </div>
+      );
     } else {
-      return <StyledEditor {...props} />;
+      return (
+        <div
+          ref={this.zoomContainer}
+          style={{ height: '100%', width: '100%', overflow: scale > 1.0 ? 'auto' : 'hidden' }}
+        >
+          <StyledEditor ref={this.editor} {...props} scale={scale} />
+          <ZoomPane
+            value={scale}
+            onChange={(zoomFactor) => this.props.changeZoomFactor(zoomFactor)}
+            min={minScale}
+            max={maxScale}
+            step={0.2}
+          />
+        </div>
+      );
     }
   }
 
   customScrolling = (event: React.TouchEvent) => {
+    const { scale = 1 } = this.props;
+
     if (this.editor.current) {
       const clientRect = this.editor.current.getBoundingClientRect();
 
@@ -101,15 +167,15 @@ class EditorComponent extends Component<Props, State> {
 
       // scroll when on the edge of the element
       const scrollHorizontally =
-        touch.clientX < clientRect.x + SCROLL_BORDER
+        touch.clientX * scale < clientRect.x + SCROLL_BORDER
           ? -SCROLL_DISTANCE
-          : touch.clientX > clientRect.x + clientRect.width - SCROLL_BORDER
+          : touch.clientX * scale > clientRect.x + clientRect.width - SCROLL_BORDER
           ? SCROLL_DISTANCE
           : 0;
       const scrollVertically =
-        touch.clientY < clientRect.y + SCROLL_BORDER
+        touch.clientY * scale < clientRect.y + SCROLL_BORDER
           ? -SCROLL_DISTANCE
-          : touch.clientY > clientRect.y + clientRect.height - SCROLL_BORDER
+          : touch.clientY * scale > clientRect.y + clientRect.height - SCROLL_BORDER
           ? SCROLL_DISTANCE
           : 0;
       this.editor.current.scrollBy(scrollHorizontally, scrollVertically);
@@ -136,6 +202,7 @@ class EditorComponent extends Component<Props, State> {
     if (target) {
       // disables default scrolling in editor
       (target as HTMLElement).style.overflow = 'hidden';
+
       // disables pull to refresh
       document.body.style.overflowY = 'hidden';
       (target as HTMLElement).style.overscrollBehavior = 'none';
