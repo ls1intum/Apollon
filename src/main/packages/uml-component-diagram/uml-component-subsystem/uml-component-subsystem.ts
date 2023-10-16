@@ -11,6 +11,6 @@ export class UMLSubsystem extends UMLPackage implements IUMLSubsystem {
     ComponentRelationshipType.ComponentInterfaceProvided,
     ComponentRelationshipType.ComponentInterfaceRequired,
   ];
-  stereotype: string = 'subsystem';
+  stereotype = 'subsystem';
   type = ComponentElementType.Subsystem;
 }

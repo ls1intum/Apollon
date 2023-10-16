@@ -5,5 +5,5 @@ export interface IUMLComponent {
 }
 
 export abstract class UMLComponent extends UMLPackage implements IUMLComponent {
-  stereotype: string = 'component';
+  stereotype = 'component';
 }
