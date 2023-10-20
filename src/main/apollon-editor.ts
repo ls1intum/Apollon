@@ -387,7 +387,6 @@ export class ApollonEditor {
         this.store.getState().lastAction.endsWith('DELETE')
       ) {
         const lastModel = ModelState.toModel(this.store.getState());
-        console.log(lastModel);
         Object.values(this.discreteModelSubscribers).forEach((subscriber) => subscriber(lastModel));
       }
     } catch (error) {
