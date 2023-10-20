@@ -94,7 +94,7 @@ export const movable = (
     }
 
     render() {
-      const { movable: _, start, move, end, ...props } = this.props;
+      const { movable: _movable, zoomFactor: _zoomFactor, start, move, end, ...props } = this.props;
       return <WrappedComponent {...props} />;
     }
 
