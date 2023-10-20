@@ -1,5 +1,3 @@
-// tslint:disable: no-console
-
 import 'pepjs';
 import { createElement } from 'react';
 import { createRoot, Root } from 'react-dom/client';
