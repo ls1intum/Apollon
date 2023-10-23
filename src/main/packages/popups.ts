@@ -29,6 +29,7 @@ import { ColorLegendUpdate } from './common/color-legend/color-legend-update';
 import { BPMNFlowUpdate } from './bpmn/bpmn-flow/bpmn-flow-update';
 import { BPMNGatewayUpdate } from './bpmn/bpmn-gateway/bpmn-gateway-update';
 import { BPMNConversationUpdate } from './bpmn/bpmn-conversation/bpmn-conversation-update';
+import { BPMNPoolUpdate } from './bpmn/bpmn-pool/bpmn-pool-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -82,6 +83,8 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNEndEvent]: DefaultPopup,
   [UMLElementType.BPMNGateway]: BPMNGatewayUpdate,
   [UMLElementType.BPMNConversation]: BPMNConversationUpdate,
+  [UMLElementType.BPMNPool]: BPMNPoolUpdate,
+  [UMLElementType.BPMNSwimlane]: DefaultPopup,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,

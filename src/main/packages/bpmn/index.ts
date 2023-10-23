@@ -11,6 +11,8 @@ export const BPMNElementType = {
   BPMNEndEvent: 'BPMNEndEvent',
   BPMNGateway: 'BPMNGateway',
   BPMNConversation: 'BPMNConversation',
+  BPMNPool: 'BPMNPool',
+  BPMNSwimlane: 'BPMNSwimlane',
 } as const;
 
 export const BPMNRelationshipType = {

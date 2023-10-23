@@ -139,7 +139,9 @@
       "BPMNCallConversation": "Call Conversation",
       "BPMNSequenceFlow": "Sequence",
       "BPMNMessageFlow": "Message",
-      "BPMNAssociationFlow": "Association"
+      "BPMNAssociationFlow": "Association",
+      "BPMNPool": "Pool",
+      "BPMNSwimlane": "Lane"
     }
   }
 }
