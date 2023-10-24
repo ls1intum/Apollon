@@ -3,7 +3,7 @@ import { UMLElementType } from '../../uml-element-type';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
+import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 
 export class BPMNPool extends UMLContainer {
@@ -21,16 +21,21 @@ export class BPMNPool extends UMLContainer {
 
   type: UMLElementType = BPMNElementType.BPMNPool;
 
-  hasSwimlanes(children: (ILayoutable & { type?: UMLElementType })[] = []): boolean {
-    return children.length > 0 && children.every((child) => child.type === BPMNElementType.BPMNSwimlane);
-  }
-
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     if (this.bounds.width < BPMNPool.MIN_WIDTH) {
       this.bounds.width = BPMNPool.MIN_WIDTH;
     }
 
-    if (!this.hasSwimlanes(children)) {
+    console.log(layer);
+
+    // We determine if the current pool has swimlanes as a pool with lanes behaves different in regard to resizing
+    // compared to a pool without lanes
+    const hasSwimlanes =
+      children.length > 0 &&
+      children.every((child: ILayoutable & { type?: UMLElementType }) => child.type === BPMNElementType.BPMNSwimlane);
+
+    if (!hasSwimlanes) {
+      // If the pool does not have lanes, we simply return the pool and its child elements
       return [this, ...children];
     }
 
@@ -46,7 +51,8 @@ export class BPMNPool extends UMLContainer {
       return element;
     });
 
-    if (this.hasSwimlanes(children)) {
+    // If the pool has swimlanes, we set its height to the sum of the heights of the contained swimlanes
+    if (hasSwimlanes) {
       this.bounds.height =
         calculatedContainerPoolHeight < BPMNPool.MIN_HEIGHT ? BPMNPool.MIN_HEIGHT : calculatedContainerPoolHeight;
     }

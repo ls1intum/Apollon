@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-swimlane-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          class="sc-fqkvVR zazVk"
+          fill="transparent"
+          height="100"
+          stroke="black"
+          width="100%"
+        />
+        <text
+          alignment-baseline="middle"
+          pointer-events="none"
+          text-anchor="middle"
+          transform="rotate(270)"
+          x="-50"
+          y="20"
+        >
+          Swimlane
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

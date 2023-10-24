@@ -141,7 +141,8 @@
       "BPMNMessageFlow": "Message",
       "BPMNAssociationFlow": "Association",
       "BPMNPool": "Pool",
-      "BPMNSwimlane": "Lane"
+      "BPMNSwimlane": "Lane",
+      "BPMNCreateSwimlane": "Insert lane"
     }
   }
 }

@@ -65,8 +65,8 @@ class BPMNPoolUpdateComponent extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Button color="link" tabIndex={-1} onClick={() => this.insertSwimlane(element.id)}>
-            + Create lane
+          <Button color="link" tabIndex={-1} onClick={this.insertSwimlane(element.id)}>
+            + {this.props.translate('packages.BPMN.BPMNCreateSwimlane')}
           </Button>
         </section>
       </div>
@@ -89,11 +89,22 @@ class BPMNPoolUpdateComponent extends Component<Props> {
     this.props.delete(id);
   };
 
-  private insertSwimlane = (id: string) => {
+  /**
+   * Insert a new lane into the pool. If there are already elements in the pool other than swimlanes, all existing
+   * elements will be moved to the newly created swimlane.
+   *
+   * @param id The ID of the pool into which a new swimlane should be inserted in.
+   */
+  private insertSwimlane = (id: string) => () => {
+    // We resolve all non-empty children of the current pool from the redux store
     const children = this.props.element.ownedElements.map((id) => this.props.getById(id)).filter(notEmpty);
 
-    const convertToSwimlaneBased = !children.every((child) => child.type === BPMNElementType.BPMNSwimlane);
+    // We then check if there is currently any direct children within the pool to determine whether we need to convert
+    // the pool to a swimlane-based pool or if we just need to insert a new swimlane.
+    const convertToSwimlaneBased = children.every((child) => child.type !== BPMNElementType.BPMNSwimlane);
 
+    // We then create a new swimlane object. If the pool is converted, the transfer the pools children to the swimlane
+    // and size the swimlane accordingly to fit all child elements.
     const swimlane = new BPMNSwimlane({
       id: uuid(),
       name: this.props.translate('packages.BPMN.BPMNSwimlane'),
@@ -107,16 +118,20 @@ class BPMNPoolUpdateComponent extends Component<Props> {
 
     this.props.create(swimlane);
 
-    const instance = new BPMNPool({
+    // We then update the pool element and remove the child elements that have been transferred to the newly created
+    // swim lane
+    const pool = new BPMNPool({
       ...this.props.element,
-      bounds: {
-        ...this.props.element.bounds,
-        x: convertToSwimlaneBased ? this.props.element.bounds.x - BPMNPool.HEADER_WIDTH : this.props.element.bounds.x,
-      },
       ownedElements: convertToSwimlaneBased ? [swimlane.id] : [swimlane.id, ...this.props.element.ownedElements],
     });
 
-    this.props.update(id, instance);
+    this.props.update(id, pool);
+
+    // As the last step, all child elements that were transferred from the pool to a swimlane then have their owner
+    // field set to the new swimlane element.
+    if (convertToSwimlaneBased) {
+      children.forEach((child) => this.props.update(child.id, { owner: swimlane.id }));
+    }
   };
 }
 

@@ -141,7 +141,8 @@
       "BPMNMessageFlow": "Nachricht",
       "BPMNAssociationFlow": "Assoziation",
       "BPMNPool": "Pool",
-      "BPMNSwimlane": "Bahn"
+      "BPMNSwimlane": "Bahn",
+      "BPMNCreateSwimlane": "Bahn anlegen"
     }
   }
 }
