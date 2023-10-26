@@ -1,10 +1,10 @@
 import React, { FunctionComponent } from 'react';
 import { Text } from '../../../components/controls/text/text';
-import { UMLComponent } from './uml-component';
+import { UMLSubsystem } from './uml-component-subsystem';
 import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
-export const UMLComponentComponent: FunctionComponent<Props> = ({ element, children, fillColor }) => (
-  <g data-cy="uml-component">
+export const UMLComponentSubsystem: FunctionComponent<Props> = ({ element, children, fillColor }) => (
+  <g data-cy="uml-subsystem">
     <ThemedRect
       width="100%"
       height="100%"
@@ -27,7 +27,7 @@ export const UMLComponentComponent: FunctionComponent<Props> = ({ element, child
         strokeMiterlimit="10"
       />
     </g>
-    <Text fill={element.textColor}>
+    <Text fill={element.textColor} y={`${25}px`}>
       {element.stereotype && (
         <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
           {`«${element.stereotype}»`}
@@ -42,7 +42,7 @@ export const UMLComponentComponent: FunctionComponent<Props> = ({ element, child
 );
 
 interface Props {
-  element: UMLComponent;
+  element: UMLSubsystem;
   fillColor?: string;
   children?: React.ReactNode;
 }
