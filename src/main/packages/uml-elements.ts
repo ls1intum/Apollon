@@ -30,6 +30,7 @@ import { UMLReachabilityGraphMarking } from './uml-reachability-graph/uml-reacha
 import { CommunicationLinkMessage } from './uml-communication-diagram/uml-communication-link/uml-communiction-link-message';
 import { UMLDeploymentComponent } from './uml-deployment-diagram/uml-deployment-component/uml-component';
 import { UMLComponentComponent } from './uml-component-diagram/uml-component/uml-component-component';
+import { UMLSubsystem } from './uml-component-diagram/uml-component-subsystem/uml-component-subsystem';
 import { SyntaxTreeTerminal } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal';
 import { SyntaxTreeNonterminal } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal';
 import { FlowchartTerminal } from './flowchart/flowchart-terminal/flowchart-terminal';
@@ -72,6 +73,7 @@ export const UMLElements = {
   [UMLElementType.UseCaseActor]: UMLUseCaseActor,
   [UMLElementType.UseCaseSystem]: UMLUseCaseSystem,
   [UMLElementType.Component]: UMLComponentComponent,
+  [UMLElementType.Subsystem]: UMLSubsystem,
   [UMLElementType.ComponentInterface]: UMLComponentInterface,
   [UMLElementType.DeploymentNode]: UMLDeploymentNode,
   [UMLElementType.DeploymentComponent]: UMLDeploymentComponent,

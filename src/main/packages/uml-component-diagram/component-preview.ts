@@ -3,6 +3,7 @@ import { UMLElement } from '../../services/uml-element/uml-element';
 import { ComposePreview } from '../compose-preview';
 import { UMLComponentInterface } from './uml-component-interface/uml-component-interface';
 import { UMLComponentComponent } from './uml-component/uml-component-component';
+import { UMLSubsystem } from './uml-component-subsystem/uml-component-subsystem';
 
 export const composeComponentPreview: ComposePreview = (
   layer: ILayer,
@@ -19,7 +20,16 @@ export const composeComponentPreview: ComposePreview = (
   };
   elements.push(umlComponent);
 
-  // UML Deployment Artifact
+  // UML Subsystem
+  const umlSubsystem = new UMLSubsystem({ name: translate('packages.ComponentDiagram.Subsystem') });
+  umlSubsystem.bounds = {
+    ...umlSubsystem.bounds,
+    width: umlSubsystem.bounds.width,
+    height: umlSubsystem.bounds.height,
+  };
+  elements.push(umlSubsystem);
+
+  // UML Component Interface
   const umlComponentInterface = new UMLComponentInterface({
     name: translate('packages.ComponentDiagram.ComponentInterface'),
   });

@@ -1,5 +1,6 @@
 export const ComponentElementType = {
   Component: 'Component',
+  Subsystem: 'Subsystem',
   ComponentInterface: 'ComponentInterface',
 } as const;
 
