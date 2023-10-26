@@ -8,7 +8,9 @@ import { ModelState } from '../../store/model-state';
 import { styled } from '../../theme/styles';
 import { UMLElementComponentProps } from '../uml-element-component-props';
 
-type StateProps = {};
+type StateProps = {
+  zoomFactor: number;
+};
 
 type DispatchProps = {
   start: AsyncDispatch<typeof UMLElementRepository.startResizing>;
@@ -25,11 +27,16 @@ const initialState = {
 
 type State = typeof initialState;
 
-const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(null, {
-  start: UMLElementRepository.startResizing,
-  resize: UMLElementRepository.resize,
-  end: UMLElementRepository.endResizing,
-});
+const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, ModelState>(
+  (state) => ({
+    zoomFactor: state.editor.zoomFactor,
+  }),
+  {
+    start: UMLElementRepository.startResizing,
+    resize: UMLElementRepository.resize,
+    end: UMLElementRepository.endResizing,
+  },
+);
 
 const Handle = {
   width: 15,
@@ -148,7 +155,7 @@ export const resizable =
             break;
         }
 
-        this.setState({ resizing: true, offset });
+        this.setState({ resizing: true, offset: offset.scale(1 / this.props.zoomFactor) });
         this.props.start();
         const element = event.currentTarget;
         element.setPointerCapture(event.pointerId);
@@ -163,20 +170,20 @@ export const resizable =
         let height = 0;
         switch (resizeFrom) {
           case ResizeFrom.BOTTOMRIGHT:
-            width = event.clientX - this.state.offset.x;
-            height = event.clientY - this.state.offset.y;
+            width = event.clientX / this.props.zoomFactor - this.state.offset.x;
+            height = event.clientY / this.props.zoomFactor - this.state.offset.y;
             break;
           case ResizeFrom.TOPLEFT:
-            width = -event.clientX - this.state.offset.x;
-            height = -event.clientY - this.state.offset.y;
+            width = -event.clientX / this.props.zoomFactor - this.state.offset.x;
+            height = -event.clientY / this.props.zoomFactor - this.state.offset.y;
             break;
           case ResizeFrom.TOPRIGHT:
-            width = event.clientX - this.state.offset.x;
-            height = -event.clientY - this.state.offset.y;
+            width = event.clientX / this.props.zoomFactor - this.state.offset.x;
+            height = -event.clientY / this.props.zoomFactor - this.state.offset.y;
             break;
           case ResizeFrom.BOTTOMLEFT:
-            width = -event.clientX - this.state.offset.x;
-            height = event.clientY - this.state.offset.y;
+            width = -event.clientX / this.props.zoomFactor - this.state.offset.x;
+            height = event.clientY / this.props.zoomFactor - this.state.offset.y;
             break;
         }
         this.resize(width, height, resizeFrom);

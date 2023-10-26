@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { BPMNSubprocess } from './bpmn-subprocess';
-import { ThemedRect } from '../../../components/theme/themedComponents';
+import { ThemedPolyline, ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
 export const BPMNSubprocessComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
@@ -12,7 +12,23 @@ export const BPMNSubprocessComponent: FunctionComponent<Props> = ({ element, fil
       height="100%"
       strokeColor={element.strokeColor}
       fillColor={fillColor || element.fillColor}
-      strokeDasharray="4"
+    />
+    <ThemedRect
+      x={element.bounds.width / 2 - 7}
+      y={element.bounds.height - 14}
+      width={14}
+      height={14}
+      strokeColor={element.strokeColor}
+    />
+    <ThemedPolyline
+      points={`${element.bounds.width / 2 - 4} ${element.bounds.height - 7}, ${element.bounds.width / 2 + 4} ${
+        element.bounds.height - 7
+      }`}
+    />
+    <ThemedPolyline
+      points={`${element.bounds.width / 2} ${element.bounds.height - 11}, ${element.bounds.width / 2} ${
+        element.bounds.height - 3
+      }`}
     />
     <Multiline
       x={element.bounds.width / 2}

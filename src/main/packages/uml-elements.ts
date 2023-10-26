@@ -48,6 +48,7 @@ import { BPMNTransaction } from './bpmn/bpmn-transaction/bpmn-transaction';
 import { BPMNCallActivity } from './bpmn/bpmn-call-activity/bpmn-call-activity';
 import { BPMNAnnotation } from './bpmn/bpmn-annotation/bpmn-annotation';
 import { BPMNConversation } from './bpmn/bpmn-conversation/bpmn-conversation';
+import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -99,4 +100,5 @@ export const UMLElements = {
   [UMLElementType.BPMNEndEvent]: BPMNEndEvent,
   [UMLElementType.BPMNGateway]: BPMNGateway,
   [UMLElementType.BPMNConversation]: BPMNConversation,
+  [UMLElementType.BPMNGroup]: BPMNGroup,
 };
