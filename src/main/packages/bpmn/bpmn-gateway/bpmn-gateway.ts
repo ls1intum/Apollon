@@ -1,13 +1,13 @@
 import { BPMNElementType } from '..';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
-import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { DeepPartial } from 'redux';
 import { assign } from '../../../utils/fx/assign';
 import * as Apollon from '../../../typings';
+import { UMLContainer } from '../../../services/uml-container/uml-container';
 
 export type BPMNGatewayType =
   | 'complex'
@@ -18,8 +18,8 @@ export type BPMNGatewayType =
   | 'parallel'
   | 'parallel-event-based';
 
-export class BPMNGateway extends UMLElement {
-  static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };
+export class BPMNGateway extends UMLContainer {
+  static features: UMLElementFeatures = { ...UMLContainer.features, resizable: false };
   static defaultGatewayType: BPMNGatewayType = 'exclusive';
 
   type: UMLElementType = BPMNElementType.BPMNGateway;
@@ -28,11 +28,11 @@ export class BPMNGateway extends UMLElement {
 
   constructor(values?: DeepPartial<BPMNGateway>) {
     super(values);
-    assign<IUMLElement>(this, values);
+    assign<BPMNGateway>(this, values);
     this.gatewayType = values?.gatewayType || BPMNGateway.defaultGatewayType;
   }
 
-  serialize(children?: UMLElement[]): Apollon.BPMNGateway {
+  serialize(children?: UMLContainer[]): Apollon.BPMNGateway {
     return {
       ...super.serialize(),
       type: this.type as keyof typeof BPMNElementType,
