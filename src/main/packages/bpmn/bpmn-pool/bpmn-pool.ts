@@ -26,8 +26,6 @@ export class BPMNPool extends UMLContainer {
       this.bounds.width = BPMNPool.MIN_WIDTH;
     }
 
-    console.log(layer);
-
     // We determine if the current pool has swimlanes as a pool with lanes behaves different in regard to resizing
     // compared to a pool without lanes
     const hasSwimlanes =
