@@ -8,6 +8,8 @@ import { ApollonMode, Locale } from './services/editor/editor-types';
 import { Direction } from './services/uml-element/uml-element-port';
 import { IBoundary } from './utils/geometry/boundary';
 import { IPath } from './utils/geometry/path';
+import { BPMNGatewayType } from './packages/bpmn/bpmn-gateway/bpmn-gateway';
+import { BPMNConversationType } from './packages/bpmn/bpmn-conversation/bpmn-conversation';
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };
 export type ApollonOptions = {
@@ -23,20 +25,30 @@ export type ApollonOptions = {
     scale?: number;
 };
 export type Selection = {
-    elements: {[id: string]: boolean};
-    relationships: {[id: string]: boolean};
+    elements: {
+        [id: string]: boolean;
+    };
+    relationships: {
+        [id: string]: boolean;
+    };
 };
 export type UMLModel = {
-    version: string;
+    version: `3.${number}.${number}`;
     type: UMLDiagramType;
     size: {
         width: number;
         height: number;
     };
-    elements: {[id: string]: UMLElement};
+    elements: {
+        [id: string]: UMLElement;
+    };
     interactive: Selection;
-    relationships: {[id: string]: UMLRelationship};
-    assessments: {[id: string]: Assessment};
+    relationships: {
+        [id: string]: UMLRelationship;
+    };
+    assessments: {
+        [id: string]: Assessment;
+    };
 };
 export type UMLModelElementType = UMLElementType | UMLRelationshipType | UMLDiagramType;
 export type UMLModelElement = {
@@ -79,6 +91,15 @@ export type UMLPetriNetPlace = UMLElement & {
     amountOfTokens: number;
     capacity: number | string;
 };
+export type BPMNGateway = UMLElement & {
+    gatewayType: BPMNGatewayType;
+};
+export type BPMNConversation = UMLElement & {
+    conversationType: BPMNConversationType;
+};
+export type BPMNFlow = UMLRelationship & {
+    flowType: 'sequence' | 'message' | 'association';
+};
 export type UMLReachabilityGraphMarking = UMLElement & {
     isInitialMarking: boolean;
 };
@@ -94,10 +115,12 @@ export type UMLAssociation = UMLRelationship & {
 };
 export type UMLCommunicationLink = UMLRelationship & {
     messages: {
-        id: string;
-        name: string;
-        direction: 'source' | 'target';
-    }[];
+        [id: string]: {
+            id: string;
+            name: string;
+            direction: 'source' | 'target';
+        };
+    };
 };
 export type FeedbackCorrectionStatus = {
     description?: string;
@@ -123,7 +146,6 @@ export type ExportOptions = {
     keepOriginalSize?: boolean;
     include?: string[];
     exclude?: string[];
-    scale?: number;
 };
 export type SVG = {
     svg: string;
