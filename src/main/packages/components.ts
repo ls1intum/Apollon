@@ -37,6 +37,7 @@ import { UMLPetriNetArcComponent } from './uml-petri-net/uml-petri-net-arc/uml-p
 import { UMLReachabilityGraphArcComponent } from './uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc-component';
 import { UMLReachabilityGraphMarkingComponent } from './uml-reachability-graph/uml-reachability-graph-marking/uml-reachability-graph-marking-component';
 import { UMLComponentComponent } from './common/uml-component/uml-component-component';
+import { UMLComponentSubsystem } from './uml-component-diagram/uml-component-subsystem/uml-component-subsystem-component';
 import { SyntaxTreeTerminalComponent } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-component';
 import { SyntaxTreeNonterminalComponent } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-component';
 import { SyntaxTreeLinkComponent } from './syntax-tree/syntax-tree-link/syntax-tree-link-component';
@@ -87,6 +88,7 @@ export const Components: {
   [UMLElementType.UseCaseActor]: UMLUseCaseActorComponent,
   [UMLElementType.UseCaseSystem]: UMLUseCaseSystemComponent,
   [UMLElementType.Component]: UMLComponentComponent,
+  [UMLElementType.Subsystem]: UMLComponentSubsystem,
   [UMLElementType.ComponentInterface]: UMLInterfaceComponent,
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeComponent,
   [UMLElementType.DeploymentComponent]: UMLComponentComponent,

@@ -10,11 +10,16 @@ import { UMLModelV2, isCommunicationLink } from './typings';
  *
  */
 export function v2ModeltoV3Model(model: UMLModelV2): UMLModel {
+  const elements = Array.isArray(model.elements) ? model.elements : [];
+  const relationships = Array.isArray(model.relationships) ? model.relationships : [];
+  const assessments = Array.isArray(model.assessments) ? model.assessments : [];
+  const interactive = model.interactive || { elements: [], relationships: [] };
+
   return {
     ...model,
     version: '3.0.0',
-    elements: model.elements.reduce((acc, val) => ({ ...acc, [val.id]: val }), {}),
-    relationships: model.relationships
+    elements: elements.reduce((acc, val) => ({ ...acc, [val.id]: val }), {}),
+    relationships: relationships
       .map((relationship) => {
         if (isCommunicationLink(relationship)) {
           return {
@@ -26,10 +31,10 @@ export function v2ModeltoV3Model(model: UMLModelV2): UMLModel {
         }
       })
       .reduce((acc, val) => ({ ...acc, [val.id]: val }), {}),
-    assessments: model.assessments.reduce((acc, val) => ({ ...acc, [val.modelElementId]: val }), {}),
+    assessments: assessments.reduce((acc, val) => ({ ...acc, [val.modelElementId]: val }), {}),
     interactive: {
-      elements: model.interactive.elements.reduce((acc, val) => ({ ...acc, [val]: true }), {}),
-      relationships: model.interactive.relationships.reduce((acc, val) => ({ ...acc, [val]: true }), {}),
+      elements: interactive.elements.reduce((acc, val) => ({ ...acc, [val]: true }), {}),
+      relationships: interactive.relationships.reduce((acc, val) => ({ ...acc, [val]: true }), {}),
     },
   };
 }

@@ -79,6 +79,7 @@
     },
     "ComponentDiagram": {
       "Component": "Component",
+      "Subsystem": "Subsystem",
       "ComponentDependency": "Dependency",
       "ComponentInterface": "Interface",
       "ComponentInterfaceProvided": "Provided Interface",
