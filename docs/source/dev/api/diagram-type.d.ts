@@ -11,4 +11,5 @@ export declare const UMLDiagramType: {
     readonly ReachabilityGraph: "ReachabilityGraph";
     readonly SyntaxTree: "SyntaxTree";
     readonly Flowchart: "Flowchart";
+    readonly BPMN: "BPMN";
 };
