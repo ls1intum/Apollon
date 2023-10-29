@@ -137,10 +137,7 @@ class EditorComponent extends Component<Props, State> {
       );
     } else {
       return (
-        <div
-          ref={this.zoomContainer}
-          style={{ height: '100%', width: '100%', overflow: scale > 1.0 ? 'auto' : 'hidden' }}
-        >
+        <div ref={this.zoomContainer} style={{ width: '100%', overflow: scale > 1.0 ? 'auto' : 'hidden' }}>
           <StyledEditor ref={this.editor} {...props} scale={scale} />
           <ZoomPane
             value={scale}
