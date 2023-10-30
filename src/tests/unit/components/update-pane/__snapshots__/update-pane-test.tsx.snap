@@ -446,7 +446,7 @@ exports[`test update pane render with element 1`] = `
       class="c0 apollon-editor"
     >
       <div
-        style="height: 100%; width: 100%; overflow: hidden;"
+        style="width: 100%; overflow: hidden;"
       >
         <div
           class="c1"
@@ -1045,7 +1045,7 @@ exports[`test update pane render with relationship 1`] = `
       class="c0 apollon-editor"
     >
       <div
-        style="height: 100%; width: 100%; overflow: hidden;"
+        style="width: 100%; overflow: hidden;"
       >
         <div
           class="c1"
