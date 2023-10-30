@@ -8,10 +8,11 @@ import { IBoundary } from '../../../utils/geometry/boundary';
 import { DeepPartial } from 'redux';
 import { assign } from '../../../utils/fx/assign';
 import * as Apollon from '../../../typings';
+import { UMLContainer } from '../../../services/uml-container/uml-container';
 
 export type BPMNConversationType = 'default' | 'call';
 
-export class BPMNConversation extends UMLElement {
+export class BPMNConversation extends UMLContainer {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };
   static defaultConversationType: BPMNConversationType = 'default';
 

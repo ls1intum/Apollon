@@ -141,7 +141,8 @@
       "BPMNSequenceFlow": "Sequenz",
       "BPMNMessageFlow": "Nachricht",
       "BPMNAssociationFlow": "Assoziation",
-      "BPMNDataObject": "Datenobjekt"
+      "BPMNDataObject": "Datenobjekt",
+      "BPMNGroup": "Gruppe"
     }
   }
 }
