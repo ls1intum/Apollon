@@ -13,6 +13,7 @@ export const BPMNElementType = {
   BPMNConversation: 'BPMNConversation',
   BPMNPool: 'BPMNPool',
   BPMNSwimlane: 'BPMNSwimlane',
+  BPMNGroup: 'BPMNGroup',
 } as const;
 
 export const BPMNRelationshipType = {

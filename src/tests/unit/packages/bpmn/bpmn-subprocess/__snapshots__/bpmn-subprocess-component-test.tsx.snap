@@ -12,8 +12,28 @@ exports[`render the bpmn-subprocess-component 1`] = `
           rx="10"
           ry="10"
           stroke="black"
-          stroke-dasharray="4"
           width="100%"
+        />
+        <rect
+          class="sc-fqkvVR kprGcp"
+          fill="white"
+          height="14"
+          stroke="black"
+          width="14"
+          x="93"
+          y="86"
+        />
+        <polyline
+          class="sc-aXZVg bUvEJV"
+          fill="white"
+          points="96 93, 104 93"
+          stroke="black"
+        />
+        <polyline
+          class="sc-aXZVg bUvEJV"
+          fill="white"
+          points="100 89, 100 97"
+          stroke="black"
         />
         <text
           font-weight="bold"
