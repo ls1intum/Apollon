@@ -11,6 +11,7 @@ import { BPMNTransaction } from './bpmn-transaction/bpmn-transaction';
 import { BPMNCallActivity } from './bpmn-call-activity/bpmn-call-activity';
 import { BPMNAnnotation } from './bpmn-annotation/bpmn-annotation';
 import { BPMNConversation } from './bpmn-conversation/bpmn-conversation';
+import { BPMNGroup } from './bpmn-group/bpmn-group';
 
 export const composeBPMNPreview: ComposePreview = (
   layer: ILayer,
@@ -43,6 +44,12 @@ export const composeBPMNPreview: ComposePreview = (
   elements.push(
     new BPMNCallActivity({
       name: translate('packages.BPMN.BPMNCallActivity'),
+      bounds: defaultBounds,
+    }),
+  );
+
+  elements.push(
+    new BPMNGroup({
       bounds: defaultBounds,
     }),
   );

@@ -140,7 +140,8 @@
       "BPMNCallConversation": "Aufruf-Konversation",
       "BPMNSequenceFlow": "Sequenz",
       "BPMNMessageFlow": "Nachricht",
-      "BPMNAssociationFlow": "Assoziation"
+      "BPMNAssociationFlow": "Assoziation",
+      "BPMNGroup": "Gruppe"
     }
   }
 }
