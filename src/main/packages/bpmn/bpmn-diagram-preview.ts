@@ -11,6 +11,7 @@ import { BPMNTransaction } from './bpmn-transaction/bpmn-transaction';
 import { BPMNCallActivity } from './bpmn-call-activity/bpmn-call-activity';
 import { BPMNAnnotation } from './bpmn-annotation/bpmn-annotation';
 import { BPMNConversation } from './bpmn-conversation/bpmn-conversation';
+import { BPMNDataObject } from './bpmn-data-object/bpmn-data-object';
 import { BPMNGroup } from './bpmn-group/bpmn-group';
 
 export const composeBPMNPreview: ComposePreview = (
@@ -90,9 +91,8 @@ export const composeBPMNPreview: ComposePreview = (
   );
 
   elements.push(
-    new BPMNConversation({
-      name: translate('packages.BPMN.BPMNConversation'),
-      bounds: { x: 0, y: 0, width: 40, height: 40 },
+    new BPMNDataObject({
+      bounds: { x: 0, y: 0, width: 50, height: 60 },
     }),
   );
 

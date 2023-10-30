@@ -11,6 +11,7 @@ export const BPMNElementType = {
   BPMNEndEvent: 'BPMNEndEvent',
   BPMNGateway: 'BPMNGateway',
   BPMNConversation: 'BPMNConversation',
+  BPMNDataObject: 'BPMNDataObject',
   BPMNGroup: 'BPMNGroup',
 } as const;
 
