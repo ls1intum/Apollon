@@ -14,8 +14,8 @@ export class BPMNGroup extends UMLPackage {
 
   type: UMLElementType = BPMNElementType.BPMNGroup;
 
-  render(canvas: ILayer): ILayoutable[] {
+  render(canvas: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     this.bounds = calculateNameBounds(this, canvas);
-    return [this];
+    return [this, ...children];
   }
 }
