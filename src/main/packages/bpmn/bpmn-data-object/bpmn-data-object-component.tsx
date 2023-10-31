@@ -1,0 +1,34 @@
+import React, { FunctionComponent } from 'react';
+import { ThemedPath, ThemedPolyline, ThemedRect } from '../../../components/theme/themedComponents';
+import { Multiline } from '../../../utils/svg/multiline';
+import { BPMNDataObject } from './bpmn-data-object';
+
+export const BPMNDataObjectComponent: FunctionComponent<Props> = ({ element }) => (
+  <g>
+    <ThemedPolyline
+      points={`0 0, 0 ${element.bounds.height}, ${element.bounds.width} ${element.bounds.height}, ${
+        element.bounds.width
+      } 15, ${element.bounds.width - 15} 0, ${element.bounds.width - 15} 15, ${element.bounds.width} 15, ${
+        element.bounds.width - 15
+      } 0, 0 0`}
+      strokeColor={element.strokeColor}
+      fillColor={element.fillColor}
+    />
+    <Multiline
+      x={element.bounds.width / 2}
+      y={element.bounds.height / 2}
+      width={element.bounds.width}
+      height={element.bounds.height}
+      fontWeight="bold"
+      fill={element.textColor}
+      lineHeight={16}
+      capHeight={11}
+    >
+      {element.name}
+    </Multiline>
+  </g>
+);
+
+interface Props {
+  element: BPMNDataObject;
+}

@@ -59,6 +59,7 @@ import { BPMNTransactionComponent } from './bpmn/bpmn-transaction/bpmn-transacti
 import { BPMNCallActivityComponent } from './bpmn/bpmn-call-activity/bpmn-call-activity-component';
 import { BPMNAnnotationComponent } from './bpmn/bpmn-annotation/bpmn-annotation-component';
 import { BPMNConversationComponent } from './bpmn/bpmn-conversation/bpmn-conversation-component';
+import { BPMNDataObjectComponent } from './bpmn/bpmn-data-object/bpmn-data-object-component';
 import { BPMNGroupComponent } from './bpmn/bpmn-group/bpmn-group-component';
 import { BPMNPoolComponent } from './bpmn/bpmn-pool/bpmn-pool-component';
 import { BPMNSwimlaneComponent } from './bpmn/bpmn-swimlane/bpmn-swimlane-component';
@@ -118,6 +119,7 @@ export const Components: {
   [UMLElementType.BPMNEndEvent]: BPMNEndEventComponent,
   [UMLElementType.BPMNGateway]: BPMNGatewayComponent,
   [UMLElementType.BPMNConversation]: BPMNConversationComponent,
+  [UMLElementType.BPMNDataObject]: BPMNDataObjectComponent,
   [UMLElementType.BPMNPool]: BPMNPoolComponent,
   [UMLElementType.BPMNSwimlane]: BPMNSwimlaneComponent,
   [UMLElementType.BPMNGroup]: BPMNGroupComponent,
