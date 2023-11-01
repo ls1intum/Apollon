@@ -144,7 +144,7 @@
       "BPMNDataObject": "Datenobjekt",
       "BPMNPool": "Pool",
       "BPMNSwimlane": "Bahn",
-      "BPMNCreateSwimlane": "Bahn anlegen",
+      "BPMNCreateSwimlane": "+ Bahn",
       "BPMNGroup": "Gruppe"
     }
   }

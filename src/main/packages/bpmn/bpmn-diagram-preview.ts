@@ -21,7 +21,7 @@ export const composeBPMNPreview: ComposePreview = (
   translate: (id: string) => string,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150, height: computeDimension(1.0, 60) };
+  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150, height: 60 };
 
   elements.push(
     new BPMNTask({
@@ -66,28 +66,24 @@ export const composeBPMNPreview: ComposePreview = (
 
   elements.push(
     new BPMNStartEvent({
-      name: translate('packages.BPMN.BPMNStartEvent'),
       bounds: { x: 0, y: 0, width: 40, height: 40 },
     }),
   );
 
   elements.push(
     new BPMNIntermediateEvent({
-      name: translate('packages.BPMN.BPMNIntermediateEvent'),
       bounds: { x: 0, y: 0, width: 40, height: 40 },
     }),
   );
 
   elements.push(
     new BPMNEndEvent({
-      name: translate('packages.BPMN.BPMNEndEvent'),
       bounds: { x: 0, y: 0, width: 40, height: 40 },
     }),
   );
 
   elements.push(
     new BPMNGateway({
-      name: translate('packages.BPMN.BPMNGateway'),
       bounds: { x: 0, y: 0, width: 40, height: 40 },
     }),
   );

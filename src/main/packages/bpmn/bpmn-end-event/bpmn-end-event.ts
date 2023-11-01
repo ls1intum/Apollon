@@ -14,7 +14,6 @@ export class BPMNEndEvent extends UMLContainer {
 
   type: UMLElementType = BPMNElementType.BPMNEndEvent;
   bounds: IBoundary = { ...this.bounds, width: 40, height: 40 };
-  name = 'End Event';
 
   constructor(values?: DeepPartial<UMLContainer>) {
     super(values);

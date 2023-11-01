@@ -5,11 +5,9 @@ import { UMLElementFeatures } from '../../../services/uml-element/uml-element-fe
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
-import { calculateNameBounds } from '../../../utils/name-bounds';
-import { computeBoundingBoxForElements } from '../../../utils/geometry/boundary';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 
-export class BPMNSwimlane extends UMLPackage {
+export class BPMNSwimlane extends UMLContainer {
   static DEFAULT_HEIGHT = 80;
   static MIN_HEIGHT = 80;
 
@@ -18,7 +16,7 @@ export class BPMNSwimlane extends UMLPackage {
     droppable: true,
     movable: false,
     connectable: false,
-    resizable: 'HEIGHT',
+    resizable: true,
   };
 
   type: UMLElementType = BPMNElementType.BPMNSwimlane;
@@ -28,6 +26,6 @@ export class BPMNSwimlane extends UMLPackage {
       this.bounds.height = BPMNSwimlane.MIN_HEIGHT;
     }
 
-    return super.render(layer, children);
+    return [this, ...children];
   }
 }

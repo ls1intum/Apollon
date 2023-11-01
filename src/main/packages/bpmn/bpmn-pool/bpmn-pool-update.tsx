@@ -66,7 +66,7 @@ class BPMNPoolUpdateComponent extends Component<Props> {
         </section>
         <section>
           <Button color="link" tabIndex={-1} onClick={this.insertSwimlane(element.id)}>
-            + {this.props.translate('packages.BPMN.BPMNCreateSwimlane')}
+            {this.props.translate('packages.BPMN.BPMNCreateSwimlane')}
           </Button>
         </section>
       </div>
@@ -113,7 +113,7 @@ class BPMNPoolUpdateComponent extends Component<Props> {
         height: convertToSwimlaneBased ? this.props.element.bounds.height : BPMNSwimlane.DEFAULT_HEIGHT,
       },
       owner: id,
-      ownedElements: convertToSwimlaneBased ? this.props.element.ownedElements : [],
+      //ownedElements: convertToSwimlaneBased ? this.props.element.ownedElements : [],
     });
 
     this.props.create(swimlane);
