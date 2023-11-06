@@ -10,6 +10,7 @@ import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { Container } from './sidebar-styles';
 import { SelectableState } from '../../services/uml-element/selectable/selectable-types';
+
 type OwnProps = {};
 
 type StateProps = {

@@ -9,6 +9,7 @@ import { UMLRelationshipType } from './packages/uml-relationship-type';
 import { Application } from './scenes/application';
 import { Svg } from './scenes/svg';
 import { Actions } from './services/actions';
+import { Patch, Patcher, PatcherRepository } from './services/patcher';
 import { ApollonMode, ApollonView, Locale } from './services/editor/editor-types';
 import { UMLDiagram } from './services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from './services/uml-element/uml-element-repository';
@@ -110,6 +111,7 @@ export class ApollonEditor {
   private currentModelState?: ModelState;
   private assessments: Apollon.Assessment[] = [];
   private application: Application | null = null;
+  private patcher = new Patcher<UMLModel>();
   private selectionSubscribers: { [key: number]: (selection: Apollon.Selection) => void } = {};
   private assessmentSubscribers: { [key: number]: (assessments: Apollon.Assessment[]) => void } = {};
   private modelSubscribers: { [key: number]: (model: Apollon.UMLModel) => void } = {};
@@ -165,6 +167,7 @@ export class ApollonEditor {
         nextRenderResolve();
       },
       state,
+      patcher: this.patcher,
       styles: options.theme,
       locale: options.locale,
     });
@@ -177,6 +180,7 @@ export class ApollonEditor {
       this.currentModelState = undefined;
     }
     this.componentDidMount();
+    this.patcher.subscribe(console.log);
   }
 
   /**
@@ -287,6 +291,21 @@ export class ApollonEditor {
    */
   unsubscribeFromDiscreteModelChange(subscriptionId: number) {
     delete this.discreteModelSubscribers[subscriptionId];
+  }
+
+  // TODO: document
+  subscribeToModelChangePatches(callback: (patch: Patch) => void): void {
+    return this.patcher.subscribe(callback);
+  }
+
+  // TODO: document
+  unsubscribeFromModelChangePatches(callback: (patch: Patch) => void): void {
+    return this.patcher.unsubscribe(callback);
+  }
+
+  // TODO: document
+  importPatch(patch: Patch): void {
+    this.store?.dispatch(PatcherRepository.patch(patch));
   }
 
   /**
@@ -420,7 +439,7 @@ export class ApollonEditor {
     });
 
     const element = createElement(Application, {
-      ref: async (app) => {
+      ref: async (app: Application) => {
         if (app == null) return;
         this.application = app;
         await app.initialized;
@@ -430,7 +449,7 @@ export class ApollonEditor {
       state,
       styles: this.options.theme,
       locale: this.options.locale,
-    });
+    } as any);
     const errorBoundary = createElement(ErrorBoundary, { onError: this.onErrorOccurred.bind(this) }, element);
     this.root = createRoot(this.container);
     this.root.render(errorBoundary);

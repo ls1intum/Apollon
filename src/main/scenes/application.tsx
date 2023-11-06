@@ -16,8 +16,11 @@ import { ILayer } from '../services/layouter/layer';
 import { Locale } from '../services/editor/editor-types';
 import { Layout } from './application-styles';
 import { RootContext, RootProvider } from '../components/root/root-context';
+import { UMLModel } from '../typings';
+import { Patcher } from '../services/patcher';
 
 type Props = {
+  patcher: Patcher<UMLModel>;
   state?: PartialModelState;
   styles?: DeepPartial<Styles>;
   locale?: Locale;
@@ -61,6 +64,7 @@ export class Application extends React.Component<Props, State> {
         <RootProvider value={rootContext}>
           <StoreProvider
             initialState={this.props.state}
+            patcher={this.props.patcher}
             ref={(ref) => {
               this.store ??= ref as ModelStore;
               this.resolveInitialized();

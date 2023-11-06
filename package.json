@@ -51,6 +51,7 @@
     "*.{ts,tsx,js,css,md}": "prettier --write"
   },
   "dependencies": {
+    "fast-json-patch": "3.1.1",
     "is-mobile": "4.0.0",
     "pepjs": "0.5.3",
     "react": "18.2.0",
