@@ -13,7 +13,6 @@ export type BPMNGatewayType =
   | 'complex'
   | 'event-based'
   | 'exclusive'
-  | 'exclusive-event-based'
   | 'inclusive'
   | 'parallel'
   | 'parallel-event-based';

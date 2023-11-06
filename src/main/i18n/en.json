@@ -133,7 +133,6 @@
       "BPMNEventBasedGateway": "Event-based",
       "BPMNInclusiveGateway": "Inclusive",
       "BPMNExclusiveGateway": "Exclusive",
-      "BPMNExclusiveEventBasedGateway": "Exclusive Event-based",
       "BPMNParallelGateway": "Parallel",
       "BPMNParallelEventBasedGateway": "Parallel Event-based",
       "BPMNConversation": "Conversation",

@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { FlowchartFlowline } from './flowchart-flowline';
-import { ThemedPolyline, ThemedPath } from '../../../components/theme/themedComponents';
+import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };

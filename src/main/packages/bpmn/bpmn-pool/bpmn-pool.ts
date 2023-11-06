@@ -4,8 +4,6 @@ import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { UMLElement } from '../../../services/uml-element/uml-element';
-import { UMLContainer } from '../../../services/uml-container/uml-container';
-import { UMLModelElement } from '../../../typings';
 import { UMLPackage } from '../../common/uml-package/uml-package';
 
 export class BPMNPool extends UMLPackage {
@@ -45,15 +43,23 @@ export class BPMNPool extends UMLPackage {
 
     // We reverse the swim lane array to ensure that the lanes are rendered bottom to top, ensuring that
     // the resize handles are not overlapped by the following lane.
-    const repositionedChildren = children.reverse().map((element, index) => ({
-      ...element,
-      bounds: {
-        x: BPMNPool.HEADER_WIDTH,
-        y: index > 0 ? children[index - 1].bounds.y + children[index - 1].bounds.height : 0,
-        width: this.bounds.width - BPMNPool.HEADER_WIDTH - 10,
-        height: element.bounds.height,
-      },
-    }));
+    const repositionedChildren = children.reverse().map((element, index) => {
+      // As all elements, including indirect descendents are passed as children for the export, we make sure
+      // to only reposition swimlanes
+      if ((element as UMLElement).type !== BPMNElementType.BPMNSwimlane) {
+        return element;
+      }
+
+      return {
+        ...element,
+        bounds: {
+          ...element.bounds,
+          x: BPMNPool.HEADER_WIDTH,
+          y: index > 0 ? children[index - 1].bounds.y + children[index - 1].bounds.height : 0,
+          width: this.bounds.width - BPMNPool.HEADER_WIDTH,
+        },
+      };
+    });
 
     // If the pool has swimlanes, we set its height to the sum of the heights of the contained swimlanes
     if (hasSwimlanes) {
@@ -62,9 +68,5 @@ export class BPMNPool extends UMLPackage {
     }
 
     return [this, ...repositionedChildren];
-  }
-
-  serialize(children?: UMLElement[]): UMLModelElement {
-    return super.serialize(children);
   }
 }

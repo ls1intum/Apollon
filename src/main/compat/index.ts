@@ -1,5 +1,5 @@
 import { UMLModel } from '../typings';
-import { isV2, v2ModeltoV3Model, UMLModelCompat as UMLModelCompatV2 } from './v2';
+import { isV2, UMLModelCompat as UMLModelCompatV2, v2ModeltoV3Model } from './v2';
 
 /**
  *

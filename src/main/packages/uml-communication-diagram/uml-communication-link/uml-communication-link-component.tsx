@@ -1,5 +1,4 @@
 import React, { FunctionComponent } from 'react';
-import { Text } from '../../../components/controls/text/text';
 import { Direction } from '../../../services/uml-element/uml-element-port';
 import { Point } from '../../../utils/geometry/point';
 import { UMLCommunicationLink } from './uml-communication-link';

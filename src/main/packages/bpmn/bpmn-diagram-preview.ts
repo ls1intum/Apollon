@@ -1,5 +1,5 @@
 import { ILayer } from '../../services/layouter/layer';
-import { computeDimension, IBoundary } from '../../utils/geometry/boundary';
+import { IBoundary } from '../../utils/geometry/boundary';
 import { ComposePreview, PreviewElement } from '../compose-preview';
 import { BPMNTask } from './bpmn-task/bpmn-task';
 import { BPMNSubprocess } from './bpmn-subprocess/bpmn-subprocess';
@@ -10,9 +10,7 @@ import { BPMNGateway } from './bpmn-gateway/bpmn-gateway';
 import { BPMNTransaction } from './bpmn-transaction/bpmn-transaction';
 import { BPMNCallActivity } from './bpmn-call-activity/bpmn-call-activity';
 import { BPMNAnnotation } from './bpmn-annotation/bpmn-annotation';
-import { BPMNConversation } from './bpmn-conversation/bpmn-conversation';
 import { BPMNPool } from './bpmn-pool/bpmn-pool';
-import { BPMNSwimlane } from './bpmn-swimlane/bpmn-swimlane';
 import { BPMNDataObject } from './bpmn-data-object/bpmn-data-object';
 import { BPMNGroup } from './bpmn-group/bpmn-group';
 

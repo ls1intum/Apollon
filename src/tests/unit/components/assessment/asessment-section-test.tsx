@@ -3,7 +3,7 @@ import { IUMLElement } from '../../../../main/services/uml-element/uml-element';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { UMLClassAttribute } from '../../../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
-import { render, fireEvent, act } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import { AssessmentSection } from '../../../../main/components/assessment/assessment-section';
 import { Theme } from '../../../../main/components/theme/theme';
 import { I18nProvider } from '../../../../main/components/i18n/i18n-provider';

@@ -9,7 +9,7 @@ import { UMLContainerRepository } from '../uml-container/uml-container-repositor
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
-import { UMLElement } from '../uml-element/uml-element';
+import { ResizeFrom, UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UpdateAction } from '../uml-element/uml-element-types';
 import { UMLRelationship } from '../uml-relationship/uml-relationship';
@@ -102,10 +102,18 @@ export function* render(id: string): SagaIterator {
       width: update.bounds.width - original.bounds.width,
       height: update.bounds.height - original.bounds.height,
     };
+
     if (Object.values(size).some((x) => x !== 0)) {
       yield put<ResizeAction>({
         type: ResizingActionTypes.RESIZE,
-        payload: { ids: [update.id], resizeFrom: update.resizeFrom, delta: size },
+        payload: {
+          ids: [update.id],
+          // For manually layouted elements like swimlanes in pools, we set the resizeFrom property to
+          // bottom left to prevent issues with the layouter attempting to repositon elements due to their
+          // changed size.
+          resizeFrom: elements[update.id]?.isManuallyLayouted ? ResizeFrom.BOTTOMRIGHT : update.resizeFrom,
+          delta: size,
+        },
         undoable: false,
       });
     }
@@ -118,6 +126,7 @@ export function* render(id: string): SagaIterator {
       x: update.bounds.x - original.bounds.x,
       y: update.bounds.y - original.bounds.y,
     };
+
     if (Object.values(position).some((x) => x !== 0)) {
       yield put<MoveAction>({
         type: MovingActionTypes.MOVE,

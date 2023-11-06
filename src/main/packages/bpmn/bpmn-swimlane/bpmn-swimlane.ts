@@ -1,5 +1,4 @@
 import { BPMNElementType } from '..';
-import { UMLPackage } from '../../common/uml-package/uml-package';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { UMLElement } from '../../../services/uml-element/uml-element';
@@ -16,10 +15,14 @@ export class BPMNSwimlane extends UMLContainer {
     droppable: true,
     movable: false,
     connectable: false,
-    resizable: true,
+    resizable: 'HEIGHT',
   };
 
   type: UMLElementType = BPMNElementType.BPMNSwimlane;
+
+  // We set this flag to indicate that swimlanes should not be picked up by the layouter
+  // for resizing-based repositioning.
+  isManuallyLayouted: boolean = true;
 
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     if (this.bounds.height < BPMNSwimlane.MIN_HEIGHT) {

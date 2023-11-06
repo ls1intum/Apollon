@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { ThemedPath, ThemedPolyline, ThemedRect } from '../../../components/theme/themedComponents';
+import { ThemedPolyline } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 import { BPMNDataObject } from './bpmn-data-object';
 

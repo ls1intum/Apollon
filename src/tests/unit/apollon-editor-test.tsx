@@ -8,7 +8,7 @@ import testClassDiagramV2 from './test-resources/class-diagram-v2.json';
 import testCommunicationDiagram from './test-resources/communication-diagram.json';
 import testCommunicationDiagramV2 from './test-resources/communication-diagram-v2.json';
 import { Selection } from '../../../docs/source/user/api/typings';
-import { Assessment, SVG, UMLDiagramType, UMLModel } from '../../main';
+import { Assessment, UMLDiagramType, UMLModel } from '../../main';
 import { getRealStore } from './test-utils/test-utils';
 import { AssessmentRepository } from '../../main/services/assessment/assessment-repository';
 import { IAssessment } from '../../main/services/assessment/assessment';

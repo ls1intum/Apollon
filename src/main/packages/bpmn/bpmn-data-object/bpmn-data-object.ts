@@ -4,7 +4,6 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { calculateNameBounds } from '../../../utils/name-bounds';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 
 export class BPMNDataObject extends UMLContainer {

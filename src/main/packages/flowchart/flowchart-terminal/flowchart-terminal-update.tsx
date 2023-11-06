@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { FlowchartUpdateComponent, enhance, GeneralProps } from '../flowchart-element/flowchart-update';
+import { enhance, FlowchartUpdateComponent, GeneralProps } from '../flowchart-element/flowchart-update';
 import { FlowchartTerminal } from './flowchart-terminal';
 
 export const FlowchartTerminalUpdateComponent: FunctionComponent<Props> = (props) => {
