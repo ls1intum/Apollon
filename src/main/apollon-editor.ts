@@ -180,7 +180,6 @@ export class ApollonEditor {
       this.currentModelState = undefined;
     }
     this.componentDidMount();
-    this.patcher.subscribe(console.log);
   }
 
   /**
@@ -294,13 +293,13 @@ export class ApollonEditor {
   }
 
   // TODO: document
-  subscribeToModelChangePatches(callback: (patch: Patch) => void): void {
+  subscribeToModelChangePatches(callback: (patch: Patch) => void): number {
     return this.patcher.subscribe(callback);
   }
 
   // TODO: document
-  unsubscribeFromModelChangePatches(callback: (patch: Patch) => void): void {
-    return this.patcher.unsubscribe(callback);
+  unsubscribeFromModelChangePatches(subscriptionId: number): void {
+    return this.patcher.unsubscribe(subscriptionId);
   }
 
   // TODO: document

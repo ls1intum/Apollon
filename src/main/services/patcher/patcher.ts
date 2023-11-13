@@ -1,36 +1,87 @@
-import { compare, applyPatch } from 'fast-json-patch';
+import { applyReducer } from 'fast-json-patch';
+import { Observable, Subject, Subscription, buffer, debounceTime, map, filter } from 'rxjs';
+
+import { compare } from './compare';
 import { Patch, PatchListener } from './patcher-types';
 
 
+export type Comparator<T> = (a: T, b: T) => Patch;
+
+
 export class Patcher<T> {
-  private snapshot?: T;
-  private listeners: PatchListener[] = [];
+  private _snapshot: T | undefined;
+  private subscribers: { [key: number]: Subscription} = {};
+  private router = new Subject<Patch>();
+  private observable: Observable<Patch>;
+
+  constructor(
+    readonly diff: Comparator<T> = compare as Comparator<T>
+  ) {
+    this.observable = this.router.pipe(
+      buffer(this.router.pipe(debounceTime(0))),
+      map(patches => patches.flat()),
+      filter(patches => patches.length > 0),
+    )
+  }
+
+  get snapshot() {
+    return this._snapshot;
+  }
 
   check(nextState: T) {
-    const skip = this.listeners.length === 0;
-    const patch = !skip && compare(this.snapshot || {}, nextState as any);
-    this.snapshot = nextState;
+    this.validate();
+
+    const skip = Object.keys(this.subscribers).length === 0;
+    const patch = !skip && this.diff(this.snapshot, nextState);
+    this._snapshot = nextState;
 
     if (patch && patch.length) {
-      this.listeners.forEach((listener) => listener(patch as Patch));
+      this.router.next(patch);
     }
   }
 
   initialize(state: T) {
-    this.snapshot = state;
+    this._snapshot = state;
   }
 
   patch(patch: Patch) {
-    this.snapshot = applyPatch(this.snapshot || {}, patch).newDocument as T;
+    this.validate();
+
+    if (patch && patch.length > 0) {
+      this._snapshot = patch.reduce(
+        (state, p, index) => {
+          try {
+            return applyReducer(state, p, index)
+          } catch {
+            return state;
+          }
+        },
+        this.snapshot
+      );
+    }
 
     return this.snapshot;
   }
 
   subscribe(listener: PatchListener) {
-    this.listeners.push(listener);
+    const key = this.nextKey();
+    this.subscribers[key] = this.observable.subscribe(listener);
+
+    return key;
   }
 
-  unsubscribe(listener: PatchListener) {
-    this.listeners = this.listeners.filter((l) => l !== listener);
+  unsubscribe(subscriptionId: number) {
+    this.subscribers[subscriptionId].unsubscribe();
+    delete this.subscribers[subscriptionId];
+  }
+
+  private nextKey() {
+    return Math.max(...Object.keys(this.subscribers).map((k) => parseInt(k, 10)), 0) + 1;
+  }
+
+  private validate(): asserts this is { snapshot: T } {
+    if (!this.snapshot) {
+      throw new Error('Patcher not initialized');
+    }
   }
 }

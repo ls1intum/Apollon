@@ -22,7 +22,7 @@ import { Dispatch } from '../../utils/actions/actions';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { ModelState, PartialModelState } from './model-state';
-import { Patch, Patcher, createPatcherMiddleware, createPatcherReducer, isDiscreteAction, isSelectionAction } from '../../services/patcher';
+import { Patcher, createPatcherMiddleware, createPatcherReducer, isDiscreteAction, isSelectionAction } from '../../services/patcher';
 import { UMLModel } from '../../typings';
 
 type OwnProps = PropsWithChildren<{
@@ -37,14 +37,20 @@ export const createReduxStore = (
   layer: ILayer | null = null,
   patcher?: Patcher<UMLModel>,
 ): Store<ModelState, Actions> => {
-  const reducer: Reducer<ModelState, Actions> = undoable(combineReducers<ModelState, Actions>({
-    ...reducers,
-    ...(patcher ? {
-        patcher: createPatcherReducer<UMLModel, ModelState>(patcher, {
-          transform: (model) => ModelState.fromModel(model) as ModelState
-        })
-    } : {})
-  }));
+  const baseReducer: Reducer<ModelState, Actions> = undoable(combineReducers<ModelState, Actions>(reducers));
+  const patchReducer = patcher && createPatcherReducer<UMLModel, ModelState>(patcher, {
+    transform: (model) => ModelState.fromModel(model) as ModelState
+  });
+
+  const reducer: Reducer<ModelState, Actions> = (state, action) => {
+    const baseState = baseReducer(state, action);
+    if (patchReducer) {
+      return patchReducer(baseState, action);
+    } else {
+      return baseState;
+    }
+  };
+
   const sagaMiddleware: SagaMiddleware<SagaContext> = createSagaMiddleware<SagaContext>({ context: { layer } });
 
   const middleware: StoreEnhancer<{ dispatch: Dispatch }, {}> = applyMiddleware(...[

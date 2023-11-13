@@ -21,7 +21,12 @@ export function createPatcherReducer<T, U=T>(
   return (state = {} as U, action) => {
     const { type, payload } = action;
     if (type === PatcherActionTypes.PATCH) {
-      return transform(patcher.patch(payload.patch));
+      const res = transform(patcher.patch(payload));
+
+      return {
+        ...state,
+        ...res,
+      };
     }
 
     return state;
