@@ -53,6 +53,9 @@ export class BPMNPool extends UMLPackage {
       element.bounds.x = BPMNPool.HEADER_WIDTH;
       element.bounds.y = index > 0 ? children[index - 1].bounds.y + children[index - 1].bounds.height : 0;
       element.bounds.width = this.bounds.width - BPMNPool.HEADER_WIDTH;
+
+      // This is crucial as otherwise we get run into issues with the layouter trying to layout
+      // an automatically resized swimlane according to its own "resizeFrom" property
       element.resizeFrom = ResizeFrom.BOTTOMRIGHT;
 
       return element;

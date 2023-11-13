@@ -21,6 +21,7 @@ import { Header } from '../../../components/controls/typography/typography';
 import UmlAttributeUpdate from '../../common/uml-classifier/uml-classifier-attribute-update';
 import { UMLClassMethod } from '../../uml-class-diagram/uml-class-method/uml-class-method';
 import { UMLClassAttribute } from '../../uml-class-diagram/uml-class-attribute/uml-class-attribute';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 
 interface OwnProps {
   element: BPMNPool;
@@ -167,6 +168,7 @@ class BPMNPoolUpdateComponent extends Component<Props> {
         width: this.props.element.bounds.width - BPMNPool.HEADER_WIDTH,
         height: convertToSwimlaneBased ? this.props.element.bounds.height : BPMNSwimlane.DEFAULT_HEIGHT,
       },
+      ownedElements: convertToSwimlaneBased ? this.props.element.ownedElements : [],
     });
 
     this.props.create(swimlane, owner);
