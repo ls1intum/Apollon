@@ -21,7 +21,7 @@ export class BPMNPool extends UMLPackage {
 
   type: UMLElementType = BPMNElementType.BPMNPool;
 
-  hasSwimlanes = (children: ILayoutable[]) =>
+  hasSwimlanes = (children: ILayoutable[]): boolean =>
     children.length > 0 &&
     children.every((child: ILayoutable & { type?: UMLElementType }) => child.type === BPMNElementType.BPMNSwimlane);
 

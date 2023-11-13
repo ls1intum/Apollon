@@ -22,7 +22,7 @@ export class BPMNSwimlane extends UMLContainer {
 
   // We set this flag to indicate that swimlanes should not be picked up by the layouter
   // for resizing-based repositioning.
-  isManuallyLayouted: boolean = true;
+  isManuallyLayouted = true;
 
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
     if (this.bounds.height < BPMNSwimlane.MIN_HEIGHT) {
