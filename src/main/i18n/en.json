@@ -143,7 +143,7 @@
       "BPMNDataObject": "Data Object",
       "BPMNPool": "Pool",
       "BPMNSwimlane": "Lane",
-      "BPMNCreateSwimlane": "+ Lane",
+      "BPMNSwimlanes": "Lanes",
       "BPMNGroup": "Group"
     }
   }

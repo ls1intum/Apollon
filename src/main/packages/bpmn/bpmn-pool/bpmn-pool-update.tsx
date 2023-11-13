@@ -1,4 +1,4 @@
-import React, { Component, ComponentClass } from 'react';
+import React, { Component, ComponentClass, createRef } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { Button } from '../../../components/controls/button/button';
@@ -17,6 +17,10 @@ import { notEmpty } from '../../../utils/not-empty';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { BPMNElementType } from '../index';
+import { Header } from '../../../components/controls/typography/typography';
+import UmlAttributeUpdate from '../../common/uml-classifier/uml-classifier-attribute-update';
+import { UMLClassMethod } from '../../uml-class-diagram/uml-class-method/uml-class-method';
+import { UMLClassAttribute } from '../../uml-class-diagram/uml-class-attribute/uml-class-attribute';
 
 interface OwnProps {
   element: BPMNPool;
@@ -50,24 +54,72 @@ const Flex = styled.div`
 `;
 
 class BPMNPoolUpdateComponent extends Component<Props> {
+  newSwimlaneField = createRef<Textfield<string>>();
+
   render() {
-    const { element } = this.props;
+    const { element, getById } = this.props;
+
+    const swimlaneRefs: (Textfield<string> | null)[] = [];
+
+    const swimlanes = element.ownedElements
+      .map((id) => getById(id))
+      .filter(notEmpty)
+      .filter((element) => element.type === BPMNElementType.BPMNSwimlane);
 
     return (
       <div>
         <section>
           <Flex>
-            <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
-            <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
+            <Textfield value={element.name} onChange={(value) => this.rename(element.id, value)} autoFocus />
+            <Button color="link" tabIndex={-1} onClick={() => this.delete(element.id)}>
               <TrashIcon />
             </Button>
           </Flex>
-          <Divider />
         </section>
         <section>
-          <Button color="link" tabIndex={-1} onClick={this.insertSwimlane(element.id)}>
-            {this.props.translate('packages.BPMN.BPMNCreateSwimlane')}
-          </Button>
+          <Divider />
+          <Header>{this.props.translate('packages.BPMN.BPMNSwimlanes')}</Header>
+          {swimlanes.reverse().map((swimlane, index) => (
+            <UmlAttributeUpdate
+              id={swimlane.id}
+              key={swimlane.id}
+              value={swimlane.name}
+              onChange={this.props.update}
+              onSubmitKeyUp={() =>
+                index === swimlanes.length - 1
+                  ? this.newSwimlaneField.current?.focus()
+                  : this.setState({
+                      fieldToFocus: swimlaneRefs[index + 1],
+                    })
+              }
+              onDelete={(id) => () => this.delete(id)}
+              onRefChange={(ref) => (swimlaneRefs[index] = ref)}
+              element={swimlane}
+            />
+          ))}
+          <Textfield
+            ref={this.newSwimlaneField}
+            outline
+            value=""
+            onSubmit={(name) => this.insertSwimlane(element.id, name)}
+            onSubmitKeyUp={() =>
+              this.setState({
+                fieldToFocus: this.newSwimlaneField.current,
+              })
+            }
+            onKeyDown={(event) => {
+              // workaround when 'tab' key is pressed:
+              // prevent default and execute blur manually without switching to next tab index
+              // then set focus to newMethodField field again (componentDidUpdate)
+              if (event.key === 'Tab' && event.currentTarget.value) {
+                event.preventDefault();
+                event.currentTarget.blur();
+                this.setState({
+                  fieldToFocus: this.newSwimlaneField.current,
+                });
+              }
+            }}
+          />
         </section>
       </div>
     );
@@ -75,17 +127,18 @@ class BPMNPoolUpdateComponent extends Component<Props> {
 
   /**
    * Rename the gateway
-   * @param id The ID of the gateway that should be renamed
+   * @param id The ID of the pool that should be renamed
+   * @param name The name the pool should be renamed to
    */
-  private rename = (id: string) => (value: string) => {
-    this.props.update(id, { name: value });
+  private rename = (id: string, name: string) => {
+    this.props.update(id, { name: name });
   };
 
   /**
-   * Delete a gateway
-   * @param id The ID of the gateway that should be deleted
+   * Delete a pool
+   * @param id The ID of the pool that should be deleted
    */
-  private delete = (id: string) => () => {
+  private delete = (id: string) => {
     this.props.delete(id);
   };
 
@@ -93,9 +146,10 @@ class BPMNPoolUpdateComponent extends Component<Props> {
    * Insert a new lane into the pool. If there are already elements in the pool other than swimlanes, all existing
    * elements will be moved to the newly created swimlane.
    *
-   * @param id The ID of the pool into which a new swimlane should be inserted in.
+   * @param owner The ID of the pool into which a new swimlane should be inserted in.
+   * @param name Optional name for the newly created swimlane.
    */
-  private insertSwimlane = (id: string) => () => {
+  private insertSwimlane = (owner: string, name?: string) => {
     // We resolve all non-empty children of the current pool from the redux store
     const children = this.props.element.ownedElements.map((id) => this.props.getById(id)).filter(notEmpty);
 
@@ -107,16 +161,15 @@ class BPMNPoolUpdateComponent extends Component<Props> {
     // and size the swimlane accordingly to fit all child elements.
     const swimlane = new BPMNSwimlane({
       id: uuid(),
-      name: this.props.translate('packages.BPMN.BPMNSwimlane'),
+      name: name ?? this.props.translate('packages.BPMN.BPMNSwimlane'),
       bounds: {
+        x: BPMNPool.HEADER_WIDTH,
         width: this.props.element.bounds.width - BPMNPool.HEADER_WIDTH,
         height: convertToSwimlaneBased ? this.props.element.bounds.height : BPMNSwimlane.DEFAULT_HEIGHT,
       },
-      owner: id,
-      //ownedElements: convertToSwimlaneBased ? this.props.element.ownedElements : [],
     });
 
-    this.props.create(swimlane);
+    this.props.create(swimlane, owner);
 
     // We then update the pool element and remove the child elements that have been transferred to the newly created
     // swim lane
@@ -125,7 +178,7 @@ class BPMNPoolUpdateComponent extends Component<Props> {
       ownedElements: convertToSwimlaneBased ? [swimlane.id] : [swimlane.id, ...this.props.element.ownedElements],
     });
 
-    this.props.update(id, pool);
+    this.props.update(owner, pool);
 
     // As the last step, all child elements that were transferred from the pool to a swimlane then have their owner
     // field set to the new swimlane element.

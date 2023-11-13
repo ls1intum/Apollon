@@ -108,10 +108,7 @@ export function* render(id: string): SagaIterator {
         type: ResizingActionTypes.RESIZE,
         payload: {
           ids: [update.id],
-          // For manually layouted elements like swimlanes in pools, we set the resizeFrom property to
-          // bottom left to prevent issues with the layouter attempting to repositon elements due to their
-          // changed size.
-          resizeFrom: elements[update.id]?.isManuallyLayouted ? ResizeFrom.BOTTOMRIGHT : update.resizeFrom,
+          resizeFrom: update.resizeFrom,
           delta: size,
         },
         undoable: false,
