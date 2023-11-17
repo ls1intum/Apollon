@@ -20,11 +20,11 @@ export class Patcher<T> {
     );
   }
 
-  get snapshot() {
+  get snapshot(): T | undefined {
     return this._snapshot;
   }
 
-  check(nextState: T) {
+  check(nextState: T): void {
     this.validate();
 
     const skip = Object.keys(this.subscribers).length === 0;
@@ -36,11 +36,11 @@ export class Patcher<T> {
     }
   }
 
-  initialize(state: T) {
+  initialize(state: T): void {
     this._snapshot = state;
   }
 
-  patch(patch: Patch) {
+  patch(patch: Patch): T {
     this.validate();
 
     if (patch && patch.length > 0) {
@@ -56,14 +56,14 @@ export class Patcher<T> {
     return this.snapshot;
   }
 
-  subscribe(listener: PatchListener) {
+  subscribe(listener: PatchListener): number {
     const key = this.nextKey();
     this.subscribers[key] = this.observable.subscribe(listener);
 
     return key;
   }
 
-  unsubscribe(subscriptionId: number) {
+  unsubscribe(subscriptionId: number): void {
     this.subscribers[subscriptionId].unsubscribe();
     delete this.subscribers[subscriptionId];
   }

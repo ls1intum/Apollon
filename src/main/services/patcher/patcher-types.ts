@@ -4,10 +4,8 @@ import { Actions } from '../actions';
 import { Action } from '../../utils/actions/actions';
 import { SelectableActionTypes } from '../uml-element/selectable/selectable-types';
 
-// TODO: these aren't specific to patcher, they should rather be moved
-//       to a more general place
 
-export const isDiscreteAction = (action: Actions) => {
+export const isDiscreteAction = (action: Actions): boolean => {
   return (
     action.type.endsWith('END') ||
     action.type.endsWith('DELETE') ||
@@ -16,7 +14,7 @@ export const isDiscreteAction = (action: Actions) => {
   );
 };
 
-export const isSelectionAction = (action: Actions) => {
+export const isSelectionAction = (action: Actions): boolean => {
   return action.type === SelectableActionTypes.SELECT || action.type === SelectableActionTypes.DESELECT;
 };
 

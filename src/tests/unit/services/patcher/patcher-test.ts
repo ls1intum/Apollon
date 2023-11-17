@@ -6,7 +6,7 @@ describe('patcher class.', () => {
   test('shoult invoke given comparator on check.', () => {
     const cb = jest.fn();
     const patcher = new Patcher(cb);
-    patcher.subscribe(() => {});
+    patcher.subscribe(jest.fn());
     patcher.initialize({});
     patcher.check({ x: 42 });
 
@@ -21,7 +21,7 @@ describe('patcher class.', () => {
 
     expect(cb).not.toHaveBeenCalled();
 
-    const sub = patcher.subscribe(() => {});
+    const sub = patcher.subscribe(jest.fn());
     patcher.check({ x: 42 });
     expect(cb).toHaveBeenCalledTimes(1);
 
