@@ -25,6 +25,11 @@ export class Patcher<T> {
    * in the form of a [JSON patch](http://jsonpatch.com/).
    */
   constructor(readonly diff: Comparator<T> = compare as Comparator<T>) {
+    //
+    // we might get multiple patches in a single tick,
+    // for example due to some side effects of some patches being applied.
+    // to avoid backpressure, we buffer the patches and emit them all at once.
+    //
     this.observable = this.router.pipe(
       buffer(this.router.pipe(debounceTime(0))),
       map((patches) => patches.flat()),
