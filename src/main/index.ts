@@ -1,3 +1,4 @@
 export * from './typings';
 export * from './apollon-editor';
-export { Patch } from './services/patcher/patcher-types';
+
+export type { Patch } from './services/patcher';

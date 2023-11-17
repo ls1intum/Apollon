@@ -8,8 +8,8 @@ export type PatcherMiddlewareOptions<T, U = T, A = any> = {
   select?: (action: A) => boolean;
 };
 
-const _DefaultOptions: PatcherMiddlewareOptions<any> = {
-  transform: (state) => state,
+const _DefaultOptions = {
+  transform: (state: any) => state,
   select: () => true,
 };
 
@@ -17,8 +17,8 @@ export function createPatcherMiddleware<T, A = any, U = T>(
   patcher: Patcher<T>,
   options: PatcherMiddlewareOptions<T, U, A> = _DefaultOptions,
 ): PatcherMiddleware<U> {
-  const transform = options.transform || _DefaultOptions.transform!;
-  const select = options.select || _DefaultOptions.select!;
+  const transform = options.transform || _DefaultOptions.transform;
+  const select = options.select || _DefaultOptions.select;
 
   return (store) => {
     patcher.initialize(transform(store.getState()));
