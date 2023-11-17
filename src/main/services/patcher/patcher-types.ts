@@ -4,6 +4,10 @@ import { Actions } from '../actions';
 import { Action } from '../../utils/actions/actions';
 import { SelectableActionTypes } from '../uml-element/selectable/selectable-types';
 
+/**
+ * Returns true if the action is discrete, i.e. if it is not in middle of
+ * a user action.
+ */
 export const isDiscreteAction = (action: Actions): boolean => {
   return (
     action.type.endsWith('END') ||
@@ -13,10 +17,17 @@ export const isDiscreteAction = (action: Actions): boolean => {
   );
 };
 
+/**
+ * Returns true if the action is a selection action.
+ */
 export const isSelectionAction = (action: Actions): boolean => {
   return action.type === SelectableActionTypes.SELECT || action.type === SelectableActionTypes.DESELECT;
 };
 
+/**
+ * A patch is a list of operations that can be applied to an object
+ * to change them in some desired manner. See [JSON patch](http://jsonpatch.com/) for more info.
+ */
 export type Patch = Operation[];
 export type PatchListener = (patch: Patch) => void;
 

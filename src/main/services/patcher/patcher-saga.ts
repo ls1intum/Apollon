@@ -10,6 +10,9 @@ import { UMLRelationship } from '../uml-relationship/uml-relationship';
 import { recalc } from '../uml-relationship/uml-relationship-saga';
 import { render } from '../layouter/layouter';
 
+/**
+ * Fixes the layout of the diagram after importing a patch.
+ */
 export function* PatchLayouter(): SagaIterator {
   yield run([patchLayout]);
 }
