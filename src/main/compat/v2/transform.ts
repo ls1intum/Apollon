@@ -1,5 +1,5 @@
-import { UMLCommunicationLink, UMLModel, UMLRelationshipType } from '../../typings';
-import { UMLModelV2, isCommunicationLink } from './typings';
+import { UMLCommunicationLink, UMLModel } from '../../typings';
+import { isCommunicationLink, UMLModelV2 } from './typings';
 
 /**
  *

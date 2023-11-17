@@ -7,7 +7,7 @@ import { IPath, Path } from '../../../utils/geometry/path';
 import { Point } from '../../../utils/geometry/point';
 import { ModelState } from '../../store/model-state';
 import { UMLElementComponentProps } from '../uml-element-component-props';
-import { ICON_SIZE, Container, CorrectIcon, FeedbackIcon, Triangle, WarningIcon, WrongIcon } from './assessment-styles';
+import { Container, CorrectIcon, FeedbackIcon, ICON_SIZE, Triangle, WarningIcon, WrongIcon } from './assessment-styles';
 import { findDOMNode } from 'react-dom';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';

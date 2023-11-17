@@ -1,7 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { useSelector } from 'react-redux';
 import { Text } from '../../../components/controls/text/text';
-import { ModelState } from '../../../components/store/model-state';
 import { UMLClassifierMember } from './uml-classifier-member';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 

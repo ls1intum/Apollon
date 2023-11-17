@@ -1,5 +1,5 @@
 import { ILayer } from '../services/layouter/layer';
-import { IBoundary, computeBoundingBoxForElements } from '../utils/geometry/boundary';
+import { computeBoundingBoxForElements, IBoundary } from '../utils/geometry/boundary';
 import { Text } from '../utils/svg/text';
 
 export function calculateNameBounds(element: any, layer: ILayer): IBoundary {

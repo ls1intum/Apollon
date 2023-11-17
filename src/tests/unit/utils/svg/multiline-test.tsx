@@ -1,7 +1,7 @@
 import * as React from 'react';
+import { CSSProperties } from 'react';
 import { render } from '@testing-library/react';
 import { Multiline } from '../../../../main/utils/svg/multiline';
-import { CSSProperties } from 'react';
 import '@testing-library/jest-dom';
 
 // override getStringWidth, because it uses by jsdom unsupported SVGElement methods

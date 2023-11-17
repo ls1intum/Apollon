@@ -23,6 +23,7 @@ type StateProps = {
   interactive: boolean;
   interactable: boolean;
   element: IUMLElement;
+  zoomFactor: number;
 };
 
 type DispatchProps = {};
@@ -39,6 +40,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
       element: state.elements[props.id],
+      zoomFactor: state.editor.zoomFactor,
     }),
     {},
   ),
@@ -56,6 +58,7 @@ class CanvasElementComponent extends Component<Props> {
       child: ChildComponent,
       children,
       theme,
+      zoomFactor: _,
       ...props
     } = this.props;
 

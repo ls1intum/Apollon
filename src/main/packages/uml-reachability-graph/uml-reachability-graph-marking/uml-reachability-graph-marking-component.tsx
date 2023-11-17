@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { UMLReachabilityGraphMarking } from './uml-reachability-graph-marking';
 import { Multiline } from '../../../utils/svg/multiline';
-import { ThemedRect, ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { ThemedPath, ThemedPolyline, ThemedRect } from '../../../components/theme/themedComponents';
 
 export const UMLReachabilityGraphMarkingComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>

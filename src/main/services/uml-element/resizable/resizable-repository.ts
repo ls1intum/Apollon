@@ -7,7 +7,7 @@ export const Resizable = {
   startResizing:
     (id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
-      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().selected;
+      const ids = id ? (Array.isArray(id) ? id : [id]) : [];
       if (!ids.length) {
         return;
       }
@@ -22,7 +22,7 @@ export const Resizable = {
   resize:
     (delta: { width: number; height: number }, resizeFrom: ResizeFrom, id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
-      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().resizing;
+      const ids = id ? (Array.isArray(id) ? id : [id]) : [];
       if (!ids.length) {
         return;
       }
@@ -37,7 +37,7 @@ export const Resizable = {
   endResizing:
     (id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
-      const ids = id ? (Array.isArray(id) ? id : [id]) : getState().resizing;
+      const ids = id ? (Array.isArray(id) ? id : [id]) : [];
       if (!ids.length) {
         return;
       }

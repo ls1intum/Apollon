@@ -64,9 +64,6 @@ class BPMNGatewayUpdateComponent extends Component<Props> {
             <Dropdown.Item value={'exclusive'}>
               {this.props.translate('packages.BPMN.BPMNExclusiveGateway')}
             </Dropdown.Item>
-            <Dropdown.Item value={'exclusive-event-based'}>
-              {this.props.translate('packages.BPMN.BPMNExclusiveEventBasedGateway')}
-            </Dropdown.Item>
             <Dropdown.Item value={'inclusive'}>
               {this.props.translate('packages.BPMN.BPMNInclusiveGateway')}
             </Dropdown.Item>
