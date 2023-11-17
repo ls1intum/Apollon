@@ -22,7 +22,13 @@ import { Dispatch } from '../../utils/actions/actions';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { ModelState, PartialModelState } from './model-state';
-import { Patcher, createPatcherMiddleware, createPatcherReducer, isDiscreteAction, isSelectionAction } from '../../services/patcher';
+import {
+  Patcher,
+  createPatcherMiddleware,
+  createPatcherReducer,
+  isDiscreteAction,
+  isSelectionAction,
+} from '../../services/patcher';
 import { UMLModel } from '../../typings';
 
 type OwnProps = PropsWithChildren<{
@@ -38,9 +44,11 @@ export const createReduxStore = (
   patcher?: Patcher<UMLModel>,
 ): Store<ModelState, Actions> => {
   const baseReducer: Reducer<ModelState, Actions> = undoable(combineReducers<ModelState, Actions>(reducers));
-  const patchReducer = patcher && createPatcherReducer<UMLModel, ModelState>(patcher, {
-    transform: (model) => ModelState.fromModel(model) as ModelState
-  });
+  const patchReducer =
+    patcher &&
+    createPatcherReducer<UMLModel, ModelState>(patcher, {
+      transform: (model) => ModelState.fromModel(model) as ModelState,
+    });
 
   const reducer: Reducer<ModelState, Actions> = (state, action) => {
     const baseState = baseReducer(state, action);
@@ -53,16 +61,20 @@ export const createReduxStore = (
 
   const sagaMiddleware: SagaMiddleware<SagaContext> = createSagaMiddleware<SagaContext>({ context: { layer } });
 
-  const middleware: StoreEnhancer<{ dispatch: Dispatch }, {}> = applyMiddleware(...[
-    thunk as ThunkMiddleware<ModelState, Actions>,
-    sagaMiddleware,
-    ...(patcher ? [
-      createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
-        select: (action) => isDiscreteAction(action) || isSelectionAction(action),
-        transform: ModelState.toModel,
-      })
-    ]: [])
-  ]);
+  const middleware: StoreEnhancer<{ dispatch: Dispatch }, {}> = applyMiddleware(
+    ...[
+      thunk as ThunkMiddleware<ModelState, Actions>,
+      sagaMiddleware,
+      ...(patcher
+        ? [
+            createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
+              select: (action) => isDiscreteAction(action) || isSelectionAction(action),
+              transform: ModelState.toModel,
+            }),
+          ]
+        : []),
+    ],
+  );
   const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
   const enhancer = composeEnhancers(middleware);
 

@@ -10,11 +10,9 @@ import { UMLRelationship } from '../uml-relationship/uml-relationship';
 import { recalc } from '../uml-relationship/uml-relationship-saga';
 import { render } from '../layouter/layouter';
 
-
 export function* PatchLayouter() {
   yield run([patchLayout]);
 }
-
 
 export function* patchLayout(): SagaIterator {
   yield take(PatcherActionTypes.PATCH);
@@ -22,8 +20,8 @@ export function* patchLayout(): SagaIterator {
   const { elements }: ModelState = yield select();
 
   const ids = Object.values(elements)
-  .filter((x) => !x.owner)
-  .map((x) => x.id);
+    .filter((x) => !x.owner)
+    .map((x) => x.id);
 
   if (!ids.length) {
     return;

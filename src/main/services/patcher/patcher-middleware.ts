@@ -1,10 +1,9 @@
 import { Middleware } from 'redux';
 import { Patcher } from './patcher';
 
-
 export type PatcherMiddleware<T> = Middleware<{}, T>;
 
-export type PatcherMiddlewareOptions<T, U=T, A=any> = {
+export type PatcherMiddlewareOptions<T, U = T, A = any> = {
   transform?: (state: U) => T;
   select?: (action: A) => boolean;
 };
@@ -14,11 +13,10 @@ const _DefaultOptions: PatcherMiddlewareOptions<any> = {
   select: () => true,
 };
 
-
-export function createPatcherMiddleware<T, A=any, U=T>(
+export function createPatcherMiddleware<T, A = any, U = T>(
   patcher: Patcher<T>,
   options: PatcherMiddlewareOptions<T, U, A> = _DefaultOptions,
-): PatcherMiddleware<U>  {
+): PatcherMiddleware<U> {
   const transform = options.transform || _DefaultOptions.transform!;
   const select = options.select || _DefaultOptions.select!;
 
@@ -33,6 +31,6 @@ export function createPatcherMiddleware<T, A=any, U=T>(
       }
 
       return res;
-    }
-  }
+    };
+  };
 }

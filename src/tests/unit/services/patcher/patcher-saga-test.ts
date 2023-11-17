@@ -7,38 +7,37 @@ import { IUMLRelationship } from '../../../../main/services/uml-relationship/uml
 import { render } from '../../../../main/services/layouter/layouter';
 import { recalc } from '../../../../main/services/uml-relationship/uml-relationship-saga';
 
-
 describe('test patcher saga.', () => {
   test('it invokes re-renders and re-calcs after a patch.', () => {
     const run = patchLayout();
-    
+
     expect(run.next().value).toEqual(take(PatcherActionTypes.PATCH));
-    expect(run.next(PatcherRepository.patch([{op: 'add', path: '/x', value: 42}])).value).toEqual(delay(0));
+    expect(run.next(PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }])).value).toEqual(delay(0));
     expect(run.next().value).toEqual(select());
 
     const elements: UMLElementState = {
-      'x': {
+      x: {
         type: 'Package',
         id: 'x',
         name: 'package',
         owner: null,
         bounds: { x: 0, y: 0, width: 100, height: 100 },
       },
-      'y': {
+      y: {
         type: 'Class',
         id: 'y',
         name: 'class',
         owner: 'x',
         bounds: { x: 0, y: 0, width: 100, height: 100 },
       },
-      'z': {
+      z: {
         type: 'Class',
         id: 'z',
         name: 'class',
         owner: null,
         bounds: { x: 0, y: 0, width: 100, height: 100 },
       },
-      'w': {
+      w: {
         type: 'ClassInheritance',
         id: 'w',
         name: '...',

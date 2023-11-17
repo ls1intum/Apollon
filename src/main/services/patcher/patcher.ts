@@ -4,24 +4,20 @@ import { Observable, Subject, Subscription, buffer, debounceTime, map, filter } 
 import { compare } from './compare';
 import { Patch, PatchListener } from './patcher-types';
 
-
 export type Comparator<T> = (a: T, b: T) => Patch;
-
 
 export class Patcher<T> {
   private _snapshot: T | undefined;
-  private subscribers: { [key: number]: Subscription} = {};
+  private subscribers: { [key: number]: Subscription } = {};
   private router = new Subject<Patch>();
   private observable: Observable<Patch>;
 
-  constructor(
-    readonly diff: Comparator<T> = compare as Comparator<T>
-  ) {
+  constructor(readonly diff: Comparator<T> = compare as Comparator<T>) {
     this.observable = this.router.pipe(
       buffer(this.router.pipe(debounceTime(0))),
-      map(patches => patches.flat()),
-      filter(patches => patches.length > 0),
-    )
+      map((patches) => patches.flat()),
+      filter((patches) => patches.length > 0),
+    );
   }
 
   get snapshot() {
@@ -48,16 +44,13 @@ export class Patcher<T> {
     this.validate();
 
     if (patch && patch.length > 0) {
-      this._snapshot = patch.reduce(
-        (state, p, index) => {
-          try {
-            return applyReducer(state, p, index)
-          } catch {
-            return state;
-          }
-        },
-        this.snapshot
-      );
+      this._snapshot = patch.reduce((state, p, index) => {
+        try {
+          return applyReducer(state, p, index);
+        } catch {
+          return state;
+        }
+      }, this.snapshot);
     }
 
     return this.snapshot;
