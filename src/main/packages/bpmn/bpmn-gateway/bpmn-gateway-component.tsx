@@ -5,7 +5,6 @@ import { BPMNExclusiveGatewayComponent } from './gateways-components/bpmn-exclus
 import { BPMNInclusiveGatewayComponent } from './gateways-components/bpmn-inclusive-gateway-component';
 import { BPMNParallelGatewayComponent } from './gateways-components/bpmn-parallel-gateway-component';
 import { BPMNComplexGatewayComponent } from './gateways-components/bpmn-complex-gateway-component';
-import { BPMNExclusiveEventBasedGatewayComponent } from './gateways-components/bpmn-exclusive-event-based-gateway-component';
 import { BPMNParallelEventBasedGatewayComponent } from './gateways-components/bpmn-parallel-event-based-gateway-component';
 
 export const BPMNGatewayComponent: FunctionComponent<Props> = (props) => {
@@ -20,9 +19,6 @@ export const BPMNGatewayComponent: FunctionComponent<Props> = (props) => {
       break;
     case 'exclusive':
       GatewayComponent = BPMNExclusiveGatewayComponent;
-      break;
-    case 'exclusive-event-based':
-      GatewayComponent = BPMNExclusiveEventBasedGatewayComponent;
       break;
     case 'inclusive':
       GatewayComponent = BPMNInclusiveGatewayComponent;

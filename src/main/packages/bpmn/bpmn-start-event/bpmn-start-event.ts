@@ -14,7 +14,6 @@ export class BPMNStartEvent extends UMLContainer {
 
   type: UMLElementType = BPMNElementType.BPMNStartEvent;
   bounds: IBoundary = { ...this.bounds, width: 40, height: 40 };
-  name = 'Start Event';
 
   constructor(values?: DeepPartial<UMLContainer>) {
     super(values);

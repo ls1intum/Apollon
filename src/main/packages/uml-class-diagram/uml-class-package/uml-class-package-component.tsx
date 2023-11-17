@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { UMLClassPackage } from './uml-class-package';
-import { ThemedRect, ThemedPath } from '../../../components/theme/themedComponents';
+import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 
 export const UMLClassPackageComponent: FunctionComponent<Props> = ({ element, children, fillColor }) => (
   <g>

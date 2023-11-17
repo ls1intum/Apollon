@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { UMLUseCaseGeneralization } from './uml-use-case-generalization';
-import { ThemedPolyline, ThemedPath } from '../../../components/theme/themedComponents';
+import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
 export const UMLUseCaseGeneralizationComponent: FunctionComponent<Props> = ({ element }) => (
   <g>

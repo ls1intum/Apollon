@@ -1,5 +1,4 @@
 import { DeepPartial } from 'redux';
-import { Application } from '../../../scenes/application';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';

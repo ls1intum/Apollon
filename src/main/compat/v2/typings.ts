@@ -1,12 +1,4 @@
-import {
-  UMLModel,
-  UMLDiagramType,
-  UMLElement,
-  UMLRelationship,
-  Assessment,
-  UMLCommunicationLink,
-  UMLRelationshipType,
-} from '../../typings';
+import { Assessment, UMLDiagramType, UMLElement, UMLModel, UMLRelationship, UMLRelationshipType } from '../../typings';
 
 /**
  *

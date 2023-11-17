@@ -1,9 +1,9 @@
 import * as React from 'react';
+import { CSSProperties } from 'react';
 import { wrappedRender } from '../../../test-utils/render';
 import { UMLActivityObjectNode } from '../../../../../main/packages/uml-activity-diagram/uml-activity-object-node/uml-activity-object-node';
 import { UMLActivityObjectNodeComponent } from '../../../../../main/packages/uml-activity-diagram/uml-activity-object-node/uml-activity-object-node-component';
 import { Multiline } from '../../../../../main/utils/svg/multiline';
-import { CSSProperties } from 'react';
 
 // override getStringWidth, because it uses by jsdom unsupported SVGElement methods
 Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {

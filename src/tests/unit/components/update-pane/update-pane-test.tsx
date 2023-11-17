@@ -1,10 +1,10 @@
 import { getRealStore } from '../../test-utils/test-utils';
 import { wrappedRender } from '../../test-utils/render';
 import * as React from 'react';
+import { createRef, RefObject } from 'react';
 import { UMLClass } from '../../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { UpdatePane } from '../../../../main/components/update-pane/update-pane';
 import { ILayer } from '../../../../main/services/layouter/layer';
-import { createRef, RefObject } from 'react';
 import { ModelStore } from '../../../../main/components/store/model-store';
 import { Canvas, CanvasComponent } from '../../../../main/components/canvas/canvas';
 import { CanvasContext, CanvasProvider } from '../../../../main/components/canvas/canvas-context';
@@ -19,7 +19,7 @@ import { UMLClassMethod } from '../../../../main/packages/uml-class-diagram/uml-
 import { UMLClassBidirectional } from '../../../../main/packages/uml-class-diagram/uml-class-bidirectional/uml-class-bidirectional';
 import { Direction } from '../../../../main/services/uml-element/uml-element-port';
 import { UMLElementRepository } from '../../../../main/services/uml-element/uml-element-repository';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent } from '@testing-library/react';
 import 'jest-styled-components';
 
 const initialState = Object.freeze({

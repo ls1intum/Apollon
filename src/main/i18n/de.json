@@ -132,7 +132,6 @@
       "BPMNComplexGateway": "Komplex",
       "BPMNEventBasedGateway": "Ereignis-basiert",
       "BPMNExclusiveGateway": "Exklusiv",
-      "BPMNExclusiveEventBasedGateway": "Exklusiv Ereignis-basiert",
       "BPMNInclusiveGateway": "Inklusiv",
       "BPMNParallelGateway": "Parallel",
       "BPMNParallelEventBasedGateway": "Parallel Ereignis-basiert",
@@ -142,6 +141,9 @@
       "BPMNMessageFlow": "Nachricht",
       "BPMNAssociationFlow": "Assoziation",
       "BPMNDataObject": "Datenobjekt",
+      "BPMNPool": "Pool",
+      "BPMNSwimlane": "Bahn",
+      "BPMNSwimlanes": "Bahnen",
       "BPMNGroup": "Gruppe"
     }
   }

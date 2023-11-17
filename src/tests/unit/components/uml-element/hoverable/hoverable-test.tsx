@@ -4,7 +4,7 @@ import { ModelState } from '../../../../../main/components/store/model-state';
 import { DeepPartial } from 'redux';
 import { UMLClassAttribute } from '../../../../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../../../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
-import { render, fireEvent } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { hoverable } from '../../../../../main/components/uml-element/hoverable/hoverable';
 import { UMLElementComponentProps } from '../../../../../main/components/uml-element/uml-element-component-props';
 import { MockStoreEnhanced } from 'redux-mock-store';

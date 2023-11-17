@@ -20,10 +20,10 @@ import { ReconnectableState } from '../../services/uml-relationship/reconnectabl
 import { IUMLRelationship, UMLRelationship } from '../../services/uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../../services/uml-relationship/uml-relationship-repository';
 import * as Apollon from '../../typings';
+import { UMLDiagramType } from '../../typings';
 import { backwardsCompatibleModel, UMLModelCompat } from '../../compat';
 import { computeBoundingBoxForElements } from '../../utils/geometry/boundary';
 import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
-import { UMLDiagramType } from '../../typings';
 import { CopyState } from '../../services/copypaste/copy-types';
 import { LastActionState } from '../../services/last-action/last-action-types';
 import { arrayToInclusionMap, inclusionMapToArray } from './util';

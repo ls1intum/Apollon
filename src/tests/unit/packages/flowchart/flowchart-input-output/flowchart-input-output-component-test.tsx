@@ -1,9 +1,9 @@
 import * as React from 'react';
+import { CSSProperties } from 'react';
 import { wrappedRender } from '../../../test-utils/render';
 import { FlowchartInputOutput } from '../../../../../main/packages/flowchart/flowchart-input-output/flowchart-input-output';
 import { FlowchartInputOutputComponent } from '../../../../../main/packages/flowchart/flowchart-input-output/flowchart-input-output-component';
 import { Multiline } from '../../../../../main/utils/svg/multiline';
-import { CSSProperties } from 'react';
 
 // override getStringWidth, because it uses by jsdom unsupported SVGElement methods
 Multiline.prototype.getStringWidth = (str: string, style?: CSSProperties) => {

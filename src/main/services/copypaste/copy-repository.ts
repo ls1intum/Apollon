@@ -8,8 +8,6 @@ import { CopyAction, CopyActionTypes, PasteAction } from './copy-types';
 import { UMLElementsForDiagram } from '../../packages/uml-element-type';
 import { IUMLRelationship, UMLRelationship } from '../uml-relationship/uml-relationship';
 import { UMLRelationshipRepository } from '../uml-relationship/uml-relationship-repository';
-import { UMLElementState } from '../uml-element/uml-element-types';
-import { Reconnectable } from '../uml-relationship/reconnectable/reconnectable-repository';
 
 export class CopyRepository {
   /**

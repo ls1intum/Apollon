@@ -133,7 +133,6 @@
       "BPMNEventBasedGateway": "Event-based",
       "BPMNInclusiveGateway": "Inclusive",
       "BPMNExclusiveGateway": "Exclusive",
-      "BPMNExclusiveEventBasedGateway": "Exclusive Event-based",
       "BPMNParallelGateway": "Parallel",
       "BPMNParallelEventBasedGateway": "Parallel Event-based",
       "BPMNConversation": "Conversation",
@@ -142,6 +141,9 @@
       "BPMNMessageFlow": "Message",
       "BPMNAssociationFlow": "Association",
       "BPMNDataObject": "Data Object",
+      "BPMNPool": "Pool",
+      "BPMNSwimlane": "Lane",
+      "BPMNSwimlanes": "Lanes",
       "BPMNGroup": "Group"
     }
   }

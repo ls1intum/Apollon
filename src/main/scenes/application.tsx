@@ -1,4 +1,4 @@
-import React, { RefObject } from 'react';
+import React from 'react';
 import { DeepPartial } from 'redux';
 import { Canvas, CanvasComponent } from '../components/canvas/canvas';
 import { CanvasContext, CanvasProvider } from '../components/canvas/canvas-context';

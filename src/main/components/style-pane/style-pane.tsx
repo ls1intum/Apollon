@@ -9,7 +9,8 @@ import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
 import { ModelState } from '../store/model-state';
 import { ColorSelector } from './color-selector';
-import { Row, Container, Color, Divider } from './style-pane-styles';
+import { Color, Container, Divider, Row } from './style-pane-styles';
+
 type OwnProps = {
   open: boolean;
   element: IUMLElement;
