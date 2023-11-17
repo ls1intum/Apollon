@@ -4,7 +4,6 @@ import { Actions } from '../actions';
 import { Action } from '../../utils/actions/actions';
 import { SelectableActionTypes } from '../uml-element/selectable/selectable-types';
 
-
 export const isDiscreteAction = (action: Actions): boolean => {
   return (
     action.type.endsWith('END') ||

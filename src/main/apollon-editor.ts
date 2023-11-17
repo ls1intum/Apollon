@@ -292,17 +292,28 @@ export class ApollonEditor {
     delete this.discreteModelSubscribers[subscriptionId];
   }
 
-  // TODO: document
+  /**
+   * Register callback which is executed when the model changes, receiving the changes to the model
+   * in [JSONPatch](http://jsonpatch.com/) format.
+   * @param callback function which is called when the model changes
+   * @return returns the subscription identifier which can be used to unsubscribe
+   */
   subscribeToModelChangePatches(callback: (patch: Patch) => void): number {
     return this.patcher.subscribe(callback);
   }
 
-  // TODO: document
+  /**
+   * Remove model change subscription, so that the corresponding callback is no longer executed when the model is changed.
+   * @param subscriptionId subscription identifier
+   */
   unsubscribeFromModelChangePatches(subscriptionId: number): void {
     return this.patcher.unsubscribe(subscriptionId);
   }
 
-  // TODO: document
+  /**
+   * Imports a patch into the current model.
+   * @param patch changes to be applied to the model, in [JSONPatch](http://jsonpatch.com/) format.
+   */
   importPatch(patch: Patch): void {
     this.store?.dispatch(PatcherRepository.patch(patch));
   }
