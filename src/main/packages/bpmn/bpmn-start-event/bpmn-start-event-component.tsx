@@ -1,4 +1,4 @@
-import React, { ComponentType, FunctionComponent } from 'react';
+import React, { ComponentType, FunctionComponent, ReactElement } from 'react';
 import { BPMNStartEvent } from './bpmn-start-event';
 import { connect, ConnectedComponent } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
@@ -7,6 +7,11 @@ import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { ApollonView } from '../../../services/editor/editor-types';
 import { ThemedCircle } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
+import { BPMNMessageIcon } from '../common/bpmn-message-icon';
+import { BPMNTimerIcon } from '../common/bpmn-timer-icon';
+import { BPMNSignalIcon } from '../common/bpmn-signal-icon';
+import { BPMNConditionalIcon } from '../common/bpmn-conditional-icon';
+import { BPMNStartEventType } from '../../../../../lib/es6/packages/bpmn/bpmn-start-event/bpmn-start-event';
 
 type OwnProps = {
   element: BPMNStartEvent;
@@ -25,6 +30,31 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
     interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
   })),
 );
+
+/**
+ * Retrieve an icon based on a given start event type
+ * @param eventType The event type for which a icon should be rendered
+ * @param props Additional props that are passed to the rendered icon
+ */
+const renderIconForType = (
+  eventType: BPMNStartEventType,
+  props: React.SVGProps<SVGSVGElement> = {},
+): null | ReactElement => {
+  switch (eventType) {
+    case 'default':
+      return null;
+    case 'message':
+      return <BPMNMessageIcon {...props} />;
+    case 'timer':
+      return <BPMNTimerIcon {...props} />;
+    case 'conditional':
+      return <BPMNConditionalIcon {...props} />;
+    case 'signal':
+      return <BPMNSignalIcon {...props} />;
+    default:
+      return null;
+  }
+};
 
 const BPMNStartEventC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
   return (
@@ -47,6 +77,10 @@ const BPMNStartEventC: FunctionComponent<Props> = ({ element, interactive, inter
       >
         {element.name}
       </Multiline>
+      {renderIconForType(element.eventType, {
+        x: element.bounds.width / 2 - 10,
+        y: element.bounds.height / 2 - 10,
+      })}
     </g>
   );
 };

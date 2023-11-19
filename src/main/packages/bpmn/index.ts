@@ -10,7 +10,6 @@ export const BPMNElementType = {
   BPMNIntermediateEvent: 'BPMNIntermediateEvent',
   BPMNEndEvent: 'BPMNEndEvent',
   BPMNGateway: 'BPMNGateway',
-  BPMNConversation: 'BPMNConversation',
   BPMNDataObject: 'BPMNDataObject',
   BPMNPool: 'BPMNPool',
   BPMNSwimlane: 'BPMNSwimlane',

@@ -9,7 +9,9 @@ import { Direction } from './services/uml-element/uml-element-port';
 import { IBoundary } from './utils/geometry/boundary';
 import { IPath } from './utils/geometry/path';
 import { BPMNGatewayType } from './packages/bpmn/bpmn-gateway/bpmn-gateway';
-import { BPMNConversationType } from './packages/bpmn/bpmn-conversation/bpmn-conversation';
+import { BPMNEndEventType } from './packages/bpmn/bpmn-end-event/bpmn-end-event';
+import { BPMNStartEventType } from './packages/bpmn/bpmn-start-event/bpmn-start-event';
+import { BPMNIntermediateEventType } from './packages/bpmn/bpmn-intermediate-event/bpmn-intermediate-event';
 
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };
@@ -94,8 +96,16 @@ export type BPMNGateway = UMLElement & {
   gatewayType: BPMNGatewayType;
 };
 
-export type BPMNConversation = UMLElement & {
-  conversationType: BPMNConversationType;
+export type BPMNStartEvent = UMLElement & {
+  eventType: BPMNStartEventType;
+};
+
+export type BPMNIntermediateEvent = UMLElement & {
+  eventType: BPMNIntermediateEventType;
+};
+
+export type BPMNEndEvent = UMLElement & {
+  eventType: BPMNEndEventType;
 };
 
 export type BPMNFlow = UMLRelationship & {

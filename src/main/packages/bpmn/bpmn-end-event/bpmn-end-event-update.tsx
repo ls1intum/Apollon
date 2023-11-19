@@ -10,12 +10,11 @@ import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { Switch } from '../../../components/controls/switch/switch';
-import { BPMNConversation, BPMNConversationType } from './bpmn-conversation';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
+import { BPMNEndEvent, BPMNEndEventType } from './bpmn-end-event';
 
 interface OwnProps {
-  element: BPMNConversation;
+  element: BPMNEndEvent;
 }
 
 type StateProps = {};
@@ -41,7 +40,7 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class BPMNConversationUpdateComponent extends Component<Props> {
+class BPMNEndEventUpdateComponent extends Component<Props> {
   render() {
     const { element } = this.props;
 
@@ -57,9 +56,20 @@ class BPMNConversationUpdateComponent extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Dropdown value={element.conversationType} onChange={this.changeConversationType(element.id)} color="primary">
-            <Dropdown.Item value={'default'}>{this.props.translate('packages.BPMN.BPMNConversation')}</Dropdown.Item>
-            <Switch.Item value={'call'}>{this.props.translate('packages.BPMN.BPMNCallConversation')}</Switch.Item>
+          <Dropdown value={element.eventType} onChange={this.changeEventType(element.id)}>
+            <Dropdown.Item value={'default'}>{this.props.translate('packages.BPMN.BPMNEndEvent')}</Dropdown.Item>
+            <Dropdown.Item value={'message'}>{this.props.translate('packages.BPMN.BPMNMessageEndEvent')}</Dropdown.Item>
+            <Dropdown.Item value={'escalation'}>
+              {this.props.translate('packages.BPMN.BPMNEscalationEndEvent')}
+            </Dropdown.Item>
+            <Dropdown.Item value={'error'}>{this.props.translate('packages.BPMN.BPMNErrorEndEvent')}</Dropdown.Item>
+            <Dropdown.Item value={'compensation'}>
+              {this.props.translate('packages.BPMN.BPMNCompensationEndEvent')}
+            </Dropdown.Item>
+            <Dropdown.Item value={'signal'}>{this.props.translate('packages.BPMN.BPMNSignalEndEvent')}</Dropdown.Item>
+            <Dropdown.Item value={'terminate'}>
+              {this.props.translate('packages.BPMN.BPMNTerminateEndEvent')}
+            </Dropdown.Item>
           </Dropdown>
         </section>
       </div>
@@ -67,28 +77,28 @@ class BPMNConversationUpdateComponent extends Component<Props> {
   }
 
   /**
-   * Rename the conversation
-   * @param id The ID of the conversation that should be renamed
+   * Rename the event
+   * @param id The ID of the event that should be renamed
    */
   private rename = (id: string) => (value: string) => {
     this.props.update(id, { name: value });
   };
 
   /**
-   * Change the type of the conversation
-   * @param id The ID of the conversation whose type should be changed
+   * Change the type of the event
+   * @param id The ID of the event whose type should be changed
    */
-  private changeConversationType = (id: string) => (value: string) => {
-    this.props.update<BPMNConversation>(id, { conversationType: value as BPMNConversationType });
+  private changeEventType = (id: string) => (value: string) => {
+    this.props.update<BPMNEndEvent>(id, { eventType: value as BPMNEndEventType });
   };
 
   /**
-   * Delete a conversation
-   * @param id The ID of the conversation that should be deleted
+   * Delete an event
+   * @param id The ID of the event that should be deleted
    */
   private delete = (id: string) => () => {
     this.props.delete(id);
   };
 }
 
-export const BPMNConversationUpdate = enhance(BPMNConversationUpdateComponent);
+export const BPMNEndEventUpdate = enhance(BPMNEndEventUpdateComponent);

@@ -1,5 +1,5 @@
-import React, { ComponentType, FunctionComponent } from 'react';
-import { BPMNIntermediateEvent } from './bpmn-intermediate-event';
+import React, { ComponentType, FunctionComponent, ReactElement } from 'react';
+import { BPMNIntermediateEvent, BPMNIntermediateEventType } from './bpmn-intermediate-event';
 import { connect, ConnectedComponent } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
 import { compose } from 'redux';
@@ -7,6 +7,16 @@ import { withTheme, withThemeProps } from '../../../components/theme/styles';
 import { ApollonView } from '../../../services/editor/editor-types';
 import { ThemedCircle } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
+import { BPMNMessageIcon } from '../common/bpmn-message-icon';
+import { BPMNMessageFilledIcon } from '../common/bpmn-message-filled-icon';
+import { BPMNTimerIcon } from '../common/bpmn-timer-icon';
+import { BPMNEscalationFilledIcon } from '../common/bpmn-escalation-filled-icon';
+import { BPMNConditionalIcon } from '../common/bpmn-conditional-icon';
+import { BPMNLinkIcon } from '../common/bpmn-link-icon';
+import { BPMNLinkFilledIcon } from '../common/bpmn-link-filled-icon';
+import { BPMNCompensationFilledIcon } from '../common/bpmn-compensation-filled-icon';
+import { BPMNSignalIcon } from '../common/bpmn-signal-icon';
+import { BPMNSignalFilledIcon } from '../common/bpmn-signal-filled-icon';
 
 type OwnProps = {
   element: BPMNIntermediateEvent;
@@ -27,6 +37,43 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
 );
 
 const BPMNIntermediateEventC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
+  /**
+   * Retrieve an icon based on a given start event type
+   * @param eventType The event type for which a icon should be rendered
+   * @param props Additional props that are passed to the rendered icon
+   */
+  const renderIconForType = (
+    eventType: BPMNIntermediateEventType,
+    props: React.SVGProps<SVGSVGElement> = {},
+  ): null | ReactElement => {
+    switch (eventType) {
+      case 'default':
+        return null;
+      case 'message-catch':
+        return <BPMNMessageIcon {...props} />;
+      case 'message-throw':
+        return <BPMNMessageFilledIcon {...props} />;
+      case 'timer-catch':
+        return <BPMNTimerIcon {...props} />;
+      case 'escalation-throw':
+        return <BPMNEscalationFilledIcon {...props} />;
+      case 'conditional-catch':
+        return <BPMNConditionalIcon {...props} />;
+      case 'link-catch':
+        return <BPMNLinkIcon {...props} />;
+      case 'link-throw':
+        return <BPMNLinkFilledIcon {...props} />;
+      case 'compensation-throw':
+        return <BPMNCompensationFilledIcon {...props} />;
+      case 'signal-catch':
+        return <BPMNSignalIcon {...props} />;
+      case 'signal-throw':
+        return <BPMNSignalFilledIcon {...props} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <g>
       <ThemedCircle
@@ -38,7 +85,7 @@ const BPMNIntermediateEventC: FunctionComponent<Props> = ({ element, interactive
       <ThemedCircle
         cx="50%"
         cy="50%"
-        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 6.5}
+        r={Math.min(element.bounds.width, element.bounds.height) / 2 - 3.5}
         strokeColor={interactable && interactive ? theme.interactive.normal : element.fillColor}
       />
       <Multiline
@@ -53,6 +100,10 @@ const BPMNIntermediateEventC: FunctionComponent<Props> = ({ element, interactive
       >
         {element.name}
       </Multiline>
+      {renderIconForType(element.eventType, {
+        x: element.bounds.width / 2 - 10,
+        y: element.bounds.height / 2 - 10,
+      })}
     </g>
   );
 };

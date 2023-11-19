@@ -10,11 +10,11 @@ import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { BPMNGateway, BPMNGatewayType } from './bpmn-gateway';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
+import { BPMNStartEvent, BPMNStartEventType } from './bpmn-start-event';
 
 interface OwnProps {
-  element: BPMNGateway;
+  element: BPMNStartEvent;
 }
 
 type StateProps = {};
@@ -40,7 +40,7 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class BPMNGatewayUpdateComponent extends Component<Props> {
+class BPMNStartEventUpdateComponent extends Component<Props> {
   render() {
     const { element } = this.props;
 
@@ -56,20 +56,16 @@ class BPMNGatewayUpdateComponent extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Dropdown value={element.gatewayType} onChange={this.changeGatewayType(element.id)}>
-            <Dropdown.Item value={'exclusive'}>
-              {this.props.translate('packages.BPMN.BPMNExclusiveGateway')}
+          <Dropdown value={element.eventType} onChange={this.changeEventType(element.id)}>
+            <Dropdown.Item value={'default'}>{this.props.translate('packages.BPMN.BPMNStartEvent')}</Dropdown.Item>
+            <Dropdown.Item value={'message'}>
+              {this.props.translate('packages.BPMN.BPMNMessageStartEvent')}
             </Dropdown.Item>
-            <Dropdown.Item value={'parallel'}>
-              {this.props.translate('packages.BPMN.BPMNParallelGateway')}
+            <Dropdown.Item value={'timer'}>{this.props.translate('packages.BPMN.BPMNTimerStartEvent')}</Dropdown.Item>
+            <Dropdown.Item value={'conditional'}>
+              {this.props.translate('packages.BPMN.BPMNConditionalStartEvent')}
             </Dropdown.Item>
-            <Dropdown.Item value={'inclusive'}>
-              {this.props.translate('packages.BPMN.BPMNInclusiveGateway')}
-            </Dropdown.Item>
-            <Dropdown.Item value={'event-based'}>
-              {this.props.translate('packages.BPMN.BPMNEventBasedGateway')}
-            </Dropdown.Item>
-            <Dropdown.Item value={'complex'}>{this.props.translate('packages.BPMN.BPMNComplexGateway')}</Dropdown.Item>
+            <Dropdown.Item value={'signal'}>{this.props.translate('packages.BPMN.BPMNSignalStartEvent')}</Dropdown.Item>
           </Dropdown>
         </section>
       </div>
@@ -77,28 +73,28 @@ class BPMNGatewayUpdateComponent extends Component<Props> {
   }
 
   /**
-   * Rename the gateway
-   * @param id The ID of the gateway that should be renamed
+   * Rename the event
+   * @param id The ID of the event that should be renamed
    */
   private rename = (id: string) => (value: string) => {
     this.props.update(id, { name: value });
   };
 
   /**
-   * Change the type of the gateway
-   * @param id The ID of the gateway whose type should be changed
+   * Change the type of the event
+   * @param id The ID of the event whose type should be changed
    */
-  private changeGatewayType = (id: string) => (value: string) => {
-    this.props.update<BPMNGateway>(id, { gatewayType: value as BPMNGatewayType });
+  private changeEventType = (id: string) => (value: string) => {
+    this.props.update<BPMNStartEvent>(id, { eventType: value as BPMNStartEventType });
   };
 
   /**
-   * Delete a gateway
-   * @param id The ID of the gateway that should be deleted
+   * Delete an event
+   * @param id The ID of the event that should be deleted
    */
   private delete = (id: string) => () => {
     this.props.delete(id);
   };
 }
 
-export const BPMNGatewayUpdate = enhance(BPMNGatewayUpdateComponent);
+export const BPMNStartEventUpdate = enhance(BPMNStartEventUpdateComponent);
