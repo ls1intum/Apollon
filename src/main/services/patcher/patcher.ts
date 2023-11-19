@@ -1,5 +1,5 @@
 import { applyReducer } from 'fast-json-patch';
-import { Observable, Subject, Subscription, buffer, debounceTime, map, filter } from 'rxjs';
+import { buffer, debounceTime, filter, map, Observable, Subject, Subscription } from 'rxjs';
 
 import { compare } from './compare';
 import { Patch, PatchListener } from './patcher-types';

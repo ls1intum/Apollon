@@ -18,7 +18,7 @@ exports[`render the bpmn-intermediate-event-component 1`] = `
           cx="50%"
           cy="50%"
           fill="white"
-          r="13.5"
+          r="16.5"
           stroke="black"
         />
         <text

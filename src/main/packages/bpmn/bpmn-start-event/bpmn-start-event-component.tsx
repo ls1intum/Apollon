@@ -1,5 +1,5 @@
 import React, { ComponentType, FunctionComponent, ReactElement } from 'react';
-import { BPMNStartEvent } from './bpmn-start-event';
+import { BPMNStartEvent, BPMNStartEventType } from './bpmn-start-event';
 import { connect, ConnectedComponent } from 'react-redux';
 import { ModelState } from '../../../components/store/model-state';
 import { compose } from 'redux';
@@ -11,7 +11,6 @@ import { BPMNMessageIcon } from '../common/bpmn-message-icon';
 import { BPMNTimerIcon } from '../common/bpmn-timer-icon';
 import { BPMNSignalIcon } from '../common/bpmn-signal-icon';
 import { BPMNConditionalIcon } from '../common/bpmn-conditional-icon';
-import { BPMNStartEventType } from '../../../../../lib/es6/packages/bpmn/bpmn-start-event/bpmn-start-event';
 
 type OwnProps = {
   element: BPMNStartEvent;
