@@ -9,7 +9,7 @@ import { UMLContainerRepository } from '../uml-container/uml-container-repositor
 import { UMLDiagramRepository } from '../uml-diagram/uml-diagram-repository';
 import { MoveAction, MovingActionTypes } from '../uml-element/movable/moving-types';
 import { ResizeAction, ResizingActionTypes } from '../uml-element/resizable/resizing-types';
-import { UMLElement } from '../uml-element/uml-element';
+import { ResizeFrom, UMLElement } from '../uml-element/uml-element';
 import { UMLElementRepository } from '../uml-element/uml-element-repository';
 import { UpdateAction } from '../uml-element/uml-element-types';
 import { UMLRelationship } from '../uml-relationship/uml-relationship';

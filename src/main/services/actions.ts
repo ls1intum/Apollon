@@ -17,10 +17,12 @@ import { ReconnectableActions } from './uml-relationship/reconnectable/reconnect
 import { UMLRelationshipActions } from './uml-relationship/uml-relationship-types';
 import { UndoActions } from './undo/undo-types';
 import { CopyActions } from './copypaste/copy-types';
+import { PatcherActions } from './patcher';
 
 export type Actions =
   | EditorActions
   | LayouterActions
+  | PatcherActions
   | UMLContainerActions
   | UMLElementActions
   | UMLRelationshipActions
