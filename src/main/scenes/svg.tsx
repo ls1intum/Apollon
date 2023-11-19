@@ -196,7 +196,9 @@ export class Svg extends Component<Props, State> {
           }
         }
       }
-      return { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
+      const res = { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
+
+      return res;
     };
 
     const svgElementDetails = (element: UMLElement, x: number, y: number) => {
@@ -210,12 +212,14 @@ export class Svg extends Component<Props, State> {
       };
     };
 
+    const tfact = translationFactor();
+
     return (
       <StoreProvider initialState={state}>
         <ThemeProvider theme={theme}>
           <svg
-            width={bounds.width + 1}
-            height={bounds.height + 1}
+            width={bounds.width - tfact.minX + 1}
+            height={bounds.height - tfact.minY + 1}
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
             fill={theme.color.background}
@@ -256,11 +260,7 @@ export class Svg extends Component<Props, State> {
                   return (
                     <svg
                       key={element.id}
-                      {...svgElementDetails(
-                        element,
-                        element.bounds.x - translationFactor().minX,
-                        element.bounds.y - translationFactor().minY,
-                      )}
+                      {...svgElementDetails(element, element.bounds.x - tfact.minX, element.bounds.y - tfact.minY)}
                     >
                       <ElementComponent key={index} element={element} />
                     </svg>
