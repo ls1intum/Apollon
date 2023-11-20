@@ -196,6 +196,7 @@ export class Svg extends Component<Props, State> {
           }
         }
       }
+
       return { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
     };
 
@@ -210,12 +211,14 @@ export class Svg extends Component<Props, State> {
       };
     };
 
+    const tfact = translationFactor();
+
     return (
       <StoreProvider initialState={state}>
         <ThemeProvider theme={theme}>
           <svg
-            width={bounds.width + 1}
-            height={bounds.height + 1}
+            width={bounds.width - tfact.minX + 1}
+            height={bounds.height - tfact.minY + 1}
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
             fill={theme.color.background}
@@ -231,7 +234,10 @@ export class Svg extends Component<Props, State> {
                   // Unlike other components, the UMLClassifierComponent needs its members to be children within the component to avoid border rendering issues.
                   const members = elements.filter((member) => member.owner === element.id);
                   return (
-                    <svg key={element.id} {...svgElementDetails(element, element.bounds.x, element.bounds.y)}>
+                    <svg
+                      key={element.id}
+                      {...svgElementDetails(element, element.bounds.x - tfact.minX, element.bounds.y - tfact.minY)}
+                    >
                       <ElementComponent key={index} element={element}>
                         {members.map((memberElement, memberIndex) => {
                           // Nest the members within the UMLClassifierComponent so the border rectangle and path get rendered afterward.
@@ -256,11 +262,7 @@ export class Svg extends Component<Props, State> {
                   return (
                     <svg
                       key={element.id}
-                      {...svgElementDetails(
-                        element,
-                        element.bounds.x - translationFactor().minX,
-                        element.bounds.y - translationFactor().minY,
-                      )}
+                      {...svgElementDetails(element, element.bounds.x - tfact.minX, element.bounds.y - tfact.minY)}
                     >
                       <ElementComponent key={index} element={element} />
                     </svg>
