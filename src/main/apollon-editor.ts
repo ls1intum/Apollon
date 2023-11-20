@@ -338,7 +338,7 @@ export class ApollonEditor {
    * @param select ids of elements and relationships to be selected
    * @param deselect ids of elements and relationships to be deselected
    */
-  remoteSelect(selectorName: string, selectorColor: string, select: string[], deselect?: string[]) {
+  remoteSelect(selectorName: string, selectorColor: string, select: string[], deselect?: string[]): void {
     this.store?.dispatch(
       UMLElementRepository.remoteSelectDeselect({ name: selectorName, color: selectorColor }, select, deselect || []),
     );
@@ -350,7 +350,7 @@ export class ApollonEditor {
    * on future remote selections.
    * @param allowedSelectors allowed remote selectors
    */
-  pruneRemoteSelectors(allowedSelectors: { name: string; color: string }[]) {
+  pruneRemoteSelectors(allowedSelectors: { name: string; color: string }[]): void {
     this.store?.dispatch(UMLElementRepository.pruneRemoteSelectors(allowedSelectors));
   }
 
