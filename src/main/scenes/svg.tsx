@@ -196,9 +196,8 @@ export class Svg extends Component<Props, State> {
           }
         }
       }
-      const res = { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
 
-      return res;
+      return { minX: Math.min(minX, 0), minY: Math.min(minY, 0) };
     };
 
     const svgElementDetails = (element: UMLElement, x: number, y: number) => {
