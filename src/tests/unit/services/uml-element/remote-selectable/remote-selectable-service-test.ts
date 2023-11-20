@@ -2,7 +2,6 @@ import { getRealStore } from '../../../test-utils/test-utils';
 import { UMLClass } from '../../../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { RemoteSelectable } from '../../../../../main/services/uml-element/remote-selectable/remote-selection-repository';
 
-
 describe('test redux state upon changing remote selection.', () => {
   test('elements can be selected.', () => {
     const classA = new UMLClass({ name: 'ClassA' });
