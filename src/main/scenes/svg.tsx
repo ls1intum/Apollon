@@ -235,7 +235,8 @@ export class Svg extends Component<Props, State> {
                   // Unlike other components, the UMLClassifierComponent needs its members to be children within the component to avoid border rendering issues.
                   const members = elements.filter((member) => member.owner === element.id);
                   return (
-                    <svg key={element.id} {...svgElementDetails(element, element.bounds.x, element.bounds.y)}>
+                    <svg key={element.id} {
+                      ...svgElementDetails(element, element.bounds.x - tfact.minX, element.bounds.y - tfact.minY)}>
                       <ElementComponent key={index} element={element}>
                         {members.map((memberElement, memberIndex) => {
                           // Nest the members within the UMLClassifierComponent so the border rectangle and path get rendered afterward.
