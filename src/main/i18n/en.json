@@ -121,6 +121,12 @@
     },
     "BPMN": {
       "BPMNTask": "Task",
+      "BPMNUserTask": "User Task",
+      "BPMNSendTask": "Send Task",
+      "BPMNReceiveTask": "Receive Task",
+      "BPMNManualTask": "Manual Task",
+      "BPMNBusinessRuleTask": "Business Rule Task",
+      "BPMNScriptTask": "Script Task",
       "BPMNSubprocess": "Subprocess",
       "BPMNTransaction": "Transaction",
       "BPMNCallActivity": "Call Activity",

@@ -12,6 +12,7 @@ import { BPMNGatewayType } from './packages/bpmn/bpmn-gateway/bpmn-gateway';
 import { BPMNEndEventType } from './packages/bpmn/bpmn-end-event/bpmn-end-event';
 import { BPMNStartEventType } from './packages/bpmn/bpmn-start-event/bpmn-start-event';
 import { BPMNIntermediateEventType } from './packages/bpmn/bpmn-intermediate-event/bpmn-intermediate-event';
+import { BPMNTaskType } from './packages/bpmn/bpmn-task/bpmn-task';
 
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };
@@ -90,6 +91,10 @@ export type UMLDeploymentNode = UMLElement & {
 export type UMLPetriNetPlace = UMLElement & {
   amountOfTokens: number;
   capacity: number | string;
+};
+
+export type BPMNTask = UMLElement & {
+  taskType: BPMNTaskType;
 };
 
 export type BPMNGateway = UMLElement & {

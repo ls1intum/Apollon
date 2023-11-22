@@ -32,6 +32,7 @@ import { BPMNPoolUpdate } from './bpmn/bpmn-pool/bpmn-pool-update';
 import { BPMNIntermediateEventUpdate } from './bpmn/bpmn-intermediate-event/bpmn-intermediate-event-update';
 import { BPMNStartEventUpdate } from './bpmn/bpmn-start-event/bpmn-start-event-update';
 import { BPMNEndEventUpdate } from './bpmn/bpmn-end-event/bpmn-end-event-update';
+import { BPMNTaskUpdate } from './bpmn/bpmn-task/bpmn-task-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -76,7 +77,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.FlowchartFunctionCall]: FlowchartFunctionCallUpdate,
   [UMLElementType.FlowchartInputOutput]: FlowchartInputOutputUpdate,
   [UMLElementType.ColorLegend]: ColorLegendUpdate,
-  [UMLElementType.BPMNTask]: DefaultPopup,
+  [UMLElementType.BPMNTask]: BPMNTaskUpdate,
   [UMLElementType.BPMNSubprocess]: DefaultPopup,
   [UMLElementType.BPMNTransaction]: DefaultPopup,
   [UMLElementType.BPMNCallActivity]: DefaultPopup,

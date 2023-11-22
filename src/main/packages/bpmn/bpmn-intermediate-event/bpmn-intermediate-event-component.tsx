@@ -39,7 +39,7 @@ const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
 const BPMNIntermediateEventC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
   /**
    * Retrieve an icon based on a given start event type
-   * @param eventType The event type for which a icon should be rendered
+   * @param eventType The event type for which an icon should be rendered
    * @param props Additional props that are passed to the rendered icon
    */
   const renderIconForType = (
@@ -89,14 +89,14 @@ const BPMNIntermediateEventC: FunctionComponent<Props> = ({ element, interactive
         strokeColor={interactable && interactive ? theme.interactive.normal : element.fillColor}
       />
       <Multiline
-        x={element.bounds.width + 10}
-        y={element.bounds.height / 2}
+        x={element.bounds.width / 2}
+        y={element.bounds.height + 20}
         width={element.bounds.width}
         height={element.bounds.height}
         fill={element.textColor}
         lineHeight={16}
         capHeight={11}
-        textAnchor="start"
+        verticalAnchor="start"
       >
         {element.name}
       </Multiline>
