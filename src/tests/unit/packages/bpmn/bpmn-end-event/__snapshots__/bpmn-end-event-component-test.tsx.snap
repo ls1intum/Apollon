@@ -15,16 +15,14 @@ exports[`render the bpmn-end-event-component 1`] = `
           stroke-width="3"
         />
         <text
-          height="40"
           pointer-events="none"
-          text-anchor="start"
-          width="40"
-          x="50"
-          y="20"
+          text-anchor="middle"
+          x="20"
+          y="60"
         >
           <tspan
-            dy="5.5"
-            x="50"
+            dy="11"
+            x="20"
           >
             End
           </tspan>

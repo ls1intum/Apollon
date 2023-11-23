@@ -24,14 +24,14 @@ exports[`render the bpmn-intermediate-event-component 1`] = `
         <text
           height="40"
           pointer-events="none"
-          text-anchor="start"
+          text-anchor="middle"
           width="40"
-          x="50"
-          y="20"
+          x="20"
+          y="60"
         >
           <tspan
-            dy="5.5"
-            x="50"
+            dy="11"
+            x="20"
           >
             Event
           </tspan>
