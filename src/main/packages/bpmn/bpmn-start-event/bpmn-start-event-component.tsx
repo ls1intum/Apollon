@@ -68,7 +68,6 @@ const BPMNStartEventC: FunctionComponent<Props> = ({ element, interactive, inter
         x={element.bounds.width / 2}
         y={element.bounds.height + 20}
         width={element.bounds.width}
-        height={element.bounds.height}
         fill={element.textColor}
         lineHeight={16}
         capHeight={11}

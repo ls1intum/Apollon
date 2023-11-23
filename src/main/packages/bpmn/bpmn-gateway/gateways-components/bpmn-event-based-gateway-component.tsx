@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { ThemedPath, ThemedPolyline } from '../../../../components/theme/themedComponents';
+import { ThemedCircle, ThemedPath, ThemedPolyline } from '../../../../components/theme/themedComponents';
 import { Multiline } from '../../../../utils/svg/multiline';
 import { Props } from '../bpmn-gateway-component';
 
@@ -11,6 +11,18 @@ export const BPMNEventBasedGatewayComponent: FunctionComponent<Props> = ({ eleme
       } ${element.bounds.height}, 0 ${element.bounds.height / 2}, ${element.bounds.width / 2} 0`}
       strokeColor={element.strokeColor}
       fillColor={element.fillColor}
+    />
+    <ThemedCircle
+      cx={element.bounds.width / 2}
+      cy={element.bounds.height / 2}
+      r={Math.min(element.bounds.width, element.bounds.height) / 2 - 9}
+      strokeColor={element.strokeColor}
+    />
+    <ThemedCircle
+      cx={element.bounds.width / 2}
+      cy={element.bounds.height / 2}
+      r={Math.min(element.bounds.width, element.bounds.height) / 2 - 12}
+      strokeColor={element.strokeColor}
     />
     <ThemedPath
       d={

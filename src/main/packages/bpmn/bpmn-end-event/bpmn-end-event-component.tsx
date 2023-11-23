@@ -75,6 +75,7 @@ export const BPMNEndEventC: FunctionComponent<Props> = ({ element, interactive, 
         x={element.bounds.width / 2}
         y={element.bounds.height + 20}
         fill={element.textColor}
+        width={element.bounds.width}
         lineHeight={16}
         capHeight={11}
         verticalAnchor="start"
