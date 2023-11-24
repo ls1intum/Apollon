@@ -10,6 +10,7 @@ import { UMLElementRepository } from '../../services/uml-element/uml-element-rep
 import { ModelState } from '../store/model-state';
 import { withTheme, withThemeProps } from '../theme/styles';
 import { UMLElementComponentProps } from './uml-element-component-props';
+import { UMLElementSelectorType } from '../../packages/uml-element-selector-type';
 
 const STROKE = 5;
 
@@ -19,6 +20,7 @@ type OwnProps = { child?: ComponentClass<UMLElementComponentProps> } & UMLElemen
 type StateProps = {
   hovered: boolean;
   selected: boolean;
+  remoteSelectors: UMLElementSelectorType[];
   moving: boolean;
   interactive: boolean;
   interactable: boolean;
@@ -36,6 +38,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     (state, props) => ({
       hovered: state.hovered[0] === props.id,
       selected: state.selected.includes(props.id),
+      remoteSelectors: state.remoteSelection[props.id] || [],
       moving: state.moving.includes(props.id),
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
@@ -51,6 +54,7 @@ class CanvasElementComponent extends Component<Props> {
     const {
       hovered,
       selected,
+      remoteSelectors,
       moving,
       interactive,
       interactable,
@@ -79,7 +83,6 @@ class CanvasElementComponent extends Component<Props> {
         ? element.fillColor
         : theme.color.background;
 
-    const selectedByList = element.selectedBy || [];
     return (
       <svg
         {...props}
@@ -105,9 +108,9 @@ class CanvasElementComponent extends Component<Props> {
             pointerEvents="none"
           />
         )}
-        {selectedByList.length > 0 && (
+        {remoteSelectors.length > 0 && (
           <g>
-            {selectedByList.map((selectedBy, index) => {
+            {remoteSelectors.map((selectedBy, index) => {
               const indicatorPosition = 'translate(' + (element.bounds.width + STROKE) + ' ' + index * 32 + ')';
               return (
                 <g key={selectedBy.name + '_' + selectedBy.color} id={selectedBy.name + '_' + selectedBy.color}>

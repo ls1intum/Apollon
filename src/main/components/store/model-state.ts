@@ -27,6 +27,7 @@ import { UMLDiagram } from '../../services/uml-diagram/uml-diagram';
 import { CopyState } from '../../services/copypaste/copy-types';
 import { LastActionState } from '../../services/last-action/last-action-types';
 import { arrayToInclusionMap, inclusionMapToArray } from './util';
+import { RemoteSelectionState } from '../../services/uml-element/remote-selectable/remote-selectable-types';
 
 export type PartialModelState = Omit<Partial<ModelState>, 'editor'> & { editor?: Partial<EditorState> };
 
@@ -35,6 +36,7 @@ export interface ModelState {
   diagram: UMLDiagramState;
   hovered: HoverableState;
   selected: SelectableState;
+  remoteSelection: RemoteSelectionState;
   moving: MovableState;
   resizing: ResizableState;
   connecting: ConnectableState;

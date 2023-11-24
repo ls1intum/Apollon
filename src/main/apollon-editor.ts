@@ -331,6 +331,30 @@ export class ApollonEditor {
   }
 
   /**
+   * Displays given elements and relationships as selected or deselected by
+   * a given remote selector, identified by a name and a color.
+   * @param selectorName name of the remote selector
+   * @param selectorColor color of the remote selector
+   * @param select ids of elements and relationships to be selected
+   * @param deselect ids of elements and relationships to be deselected
+   */
+  remoteSelect(selectorName: string, selectorColor: string, select: string[], deselect?: string[]): void {
+    this.store?.dispatch(
+      UMLElementRepository.remoteSelectDeselect({ name: selectorName, color: selectorColor }, select, deselect || []),
+    );
+  }
+
+  /**
+   * Allows a given set of remote selectors for remotely selecting and deselecting
+   * elements and relationships, removing all other selectors. This won't have an effect
+   * on future remote selections.
+   * @param allowedSelectors allowed remote selectors
+   */
+  pruneRemoteSelectors(allowedSelectors: { name: string; color: string }[]): void {
+    this.store?.dispatch(UMLElementRepository.pruneRemoteSelectors(allowedSelectors));
+  }
+
+  /**
    * Removes error subscription, so that the corresponding callback is no longer executed when an error occurs.
    * @param subscriptionId subscription identifier
    */
