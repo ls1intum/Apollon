@@ -134,8 +134,8 @@ describe('test compat helpers for modifying diagrams.', () => {
     addOrUpdateAssessment(model, newAssessment);
     addOrUpdateAssessment(modelV2, newAssessment);
 
-    expect(findAssessment(model, class1Id)!.score).toBe(20);
-    expect(findAssessment(modelV2, class1Id)!.score).toBe(20);
+    expect(findAssessment(model, class1Id)?.score).toBe(20);
+    expect(findAssessment(modelV2, class1Id)?.score).toBe(20);
 
     const newAssessment2: Assessment = {
       modelElementId: class2Id,
@@ -146,8 +146,8 @@ describe('test compat helpers for modifying diagrams.', () => {
     addOrUpdateAssessment(model, newAssessment2);
     addOrUpdateAssessment(modelV2, newAssessment2);
 
-    expect(findAssessment(model, class2Id)!.score).toBe(30);
-    expect(findAssessment(modelV2, class2Id)!.score).toBe(30);
+    expect(findAssessment(model, class2Id)?.score).toBe(30);
+    expect(findAssessment(modelV2, class2Id)?.score).toBe(30);
   });
 
   test('can check and set element and relationship interactive state.', () => {
