@@ -5,6 +5,7 @@ import { Patch } from './services/patcher';
 import { Locale } from './services/editor/editor-types';
 import * as Apollon from './typings';
 import { UMLDiagramType, UMLModel } from './typings';
+import { UMLModelCompat } from './compat';
 export declare class ApollonEditor {
     private container;
     private options;
@@ -17,7 +18,7 @@ export declare class ApollonEditor {
      * Sets a model as the current model of the Apollon Editor
      * @param model valid Apollon Editor Model
      */
-    set model(model: Apollon.UMLModel);
+    set model(model: UMLModelCompat);
     /**
      * Sets the diagram type of the current Apollon Editor. This changes the selection of elements the user can chose from on the sidebar.
      * @param diagramType the new diagram type
