@@ -77,8 +77,8 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
               ? Direction.Left
               : Direction.Right
             : norm.y > 0
-            ? Direction.Up
-            : Direction.Down;
+              ? Direction.Up
+              : Direction.Down;
         messagePosition = path[index].add(norm.scale(distance));
         break;
       }
@@ -157,15 +157,15 @@ export class UMLCommunicationLink extends UMLRelationship implements IUMLCommuni
       arrowDirection === Direction.Left
         ? messagePosition.y - arrowSize.height
         : arrowDirection === Direction.Right
-        ? messagePosition.y + Text.size(canvas, messages[0].name).height + arrowSize.height
-        : messagePosition.y;
+          ? messagePosition.y + Text.size(canvas, messages[0].name).height + arrowSize.height
+          : messagePosition.y;
 
     const x =
       arrowDirection === Direction.Up
         ? messagePosition.x + arrowSize.width
         : arrowDirection === Direction.Down
-        ? messagePosition.x - arrowSize.width
-        : messagePosition.x;
+          ? messagePosition.x - arrowSize.width
+          : messagePosition.x;
 
     for (const message of messages) {
       const messageSize = Text.size(canvas, message.name);
