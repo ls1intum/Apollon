@@ -34,15 +34,15 @@ describe('test compat helpers for modifying diagrams.', () => {
   });
 
   test('can find elements.', () => {
-    expect(findElement(model, class1Id)!.owner).toEqual(packageId);
-    expect(findElement(modelV2, class1Id)!.owner).toEqual(packageId);
+    expect(findElement(model, class1Id)?.owner).toEqual(packageId);
+    expect(findElement(modelV2, class1Id)?.owner).toEqual(packageId);
     expect(findElement(model, 'non-existing-id')).toBeUndefined();
     expect(findElement(modelV2, 'non-existing-id')).toBeUndefined();
   });
 
   test('can find relationships.', () => {
-    expect(findRelationship(model, relId)!.source.element).toEqual(class2Id);
-    expect(findRelationship(modelV2, relId)!.target.element).toEqual(class1Id);
+    expect(findRelationship(model, relId)?.source.element).toEqual(class2Id);
+    expect(findRelationship(modelV2, relId)?.target.element).toEqual(class1Id);
     expect(findRelationship(model, 'non-existing-id')).toBeUndefined();
     expect(findRelationship(modelV2, 'non-existing-id')).toBeUndefined();
   });
