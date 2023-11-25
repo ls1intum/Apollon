@@ -20,6 +20,7 @@ import { debounce } from './utils/debounce';
 import { delay } from './utils/delay';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
 import { replaceColorVariables } from './utils/replace-color-variables';
+import { UMLModelCompat } from './compat';
 
 export class ApollonEditor {
   private ensureInitialized() {
@@ -46,7 +47,7 @@ export class ApollonEditor {
    * Sets a model as the current model of the Apollon Editor
    * @param model valid Apollon Editor Model
    */
-  set model(model: Apollon.UMLModel) {
+  set model(model: UMLModelCompat) {
     this.ensureInitialized();
     const state: PartialModelState = {
       ...ModelState.fromModel(model),
