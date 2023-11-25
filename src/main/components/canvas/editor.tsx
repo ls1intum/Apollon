@@ -164,14 +164,14 @@ class EditorComponent extends Component<Props, State> {
         touch.clientX * scale < clientRect.x + SCROLL_BORDER
           ? -SCROLL_DISTANCE
           : touch.clientX * scale > clientRect.x + clientRect.width - SCROLL_BORDER
-          ? SCROLL_DISTANCE
-          : 0;
+            ? SCROLL_DISTANCE
+            : 0;
       const scrollVertically =
         touch.clientY * scale < clientRect.y + SCROLL_BORDER
           ? -SCROLL_DISTANCE
           : touch.clientY * scale > clientRect.y + clientRect.height - SCROLL_BORDER
-          ? SCROLL_DISTANCE
-          : 0;
+            ? SCROLL_DISTANCE
+            : 0;
       this.editor.current.scrollBy(scrollHorizontally, scrollVertically);
       if (this.props.moving) {
         this.props.move({ x: scrollHorizontally, y: scrollVertically }, this.props.moving);

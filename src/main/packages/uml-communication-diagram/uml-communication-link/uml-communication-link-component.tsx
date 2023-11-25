@@ -35,8 +35,8 @@ export const UMLCommunicationLinkComponent: FunctionComponent<Props> = ({ elemen
             ? Direction.Left
             : Direction.Right
           : norm.y > 0
-          ? Direction.Up
-          : Direction.Down;
+            ? Direction.Up
+            : Direction.Down;
       position = path[index].add(norm.scale(distance));
       break;
     }

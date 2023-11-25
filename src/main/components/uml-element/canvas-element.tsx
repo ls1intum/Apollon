@@ -76,12 +76,12 @@ class CanvasElementComponent extends Component<Props> {
       interactable && interactive
         ? theme.interactive.normal
         : interactable && hovered
-        ? theme.interactive.hovered
-        : element.highlight
-        ? element.highlight
-        : element.fillColor
-        ? element.fillColor
-        : theme.color.background;
+          ? theme.interactive.hovered
+          : element.highlight
+            ? element.highlight
+            : element.fillColor
+              ? element.fillColor
+              : theme.color.background;
 
     return (
       <svg

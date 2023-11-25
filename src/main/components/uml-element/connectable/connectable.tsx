@@ -99,10 +99,10 @@ const Handle = styled((props) => {
     direction === Direction.Up || direction === Direction.Topright || direction === Direction.Topleft
       ? 0
       : direction === Direction.Right || direction === Direction.Upright || direction === Direction.Downright
-      ? 90
-      : direction === Direction.Down || direction === Direction.Bottomright || direction === Direction.Bottomleft
-      ? 180
-      : -90,
+        ? 90
+        : direction === Direction.Down || direction === Direction.Bottomright || direction === Direction.Bottomleft
+          ? 180
+          : -90,
 }))<{ rotate: number }>`
   cursor: crosshair;
   pointer-events: all;
