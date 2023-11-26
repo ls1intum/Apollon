@@ -173,11 +173,11 @@ export const Arrow = styled.div<ArrowProps>`
       ? props.alignment === 'start'
         ? 'left: 0.3em;'
         : props.alignment === 'end'
-        ? 'right: 0.3em;'
-        : 'left: 50%; transform: translate(-50%, 0);'
+          ? 'right: 0.3em;'
+          : 'left: 50%; transform: translate(-50%, 0);'
       : props.alignment === 'start'
-      ? 'top: 0.3em;'
-      : props.alignment === 'end'
-      ? 'bottom: 0.3em;'
-      : 'top: 50%; transform: translate(0, -50%);'}
+        ? 'top: 0.3em;'
+        : props.alignment === 'end'
+          ? 'bottom: 0.3em;'
+          : 'top: 50%; transform: translate(0, -50%);'}
 `;

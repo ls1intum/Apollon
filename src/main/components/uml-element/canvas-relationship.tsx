@@ -112,12 +112,12 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
       interactable && interactive
         ? theme.interactive.normal
         : interactable && hovered
-        ? theme.interactive.hovered
-        : hovered || selected
-        ? 'rgba(0, 100, 255, 0.2)'
-        : relationship.highlight
-        ? relationship.highlight
-        : 'rgba(0, 100, 255, 0)';
+          ? theme.interactive.hovered
+          : hovered || selected
+            ? 'rgba(0, 100, 255, 0.2)'
+            : relationship.highlight
+              ? relationship.highlight
+              : 'rgba(0, 100, 255, 0)';
 
     return (
       <svg
