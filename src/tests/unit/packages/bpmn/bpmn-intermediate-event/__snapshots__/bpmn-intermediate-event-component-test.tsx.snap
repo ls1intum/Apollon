@@ -22,7 +22,6 @@ exports[`render the bpmn-intermediate-event-component 1`] = `
           stroke="black"
         />
         <text
-          height="40"
           pointer-events="none"
           text-anchor="middle"
           width="40"

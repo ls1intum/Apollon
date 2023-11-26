@@ -14,7 +14,6 @@ exports[`render the bpmn-start-event-component 1`] = `
           stroke="black"
         />
         <text
-          height="40"
           pointer-events="none"
           text-anchor="middle"
           width="40"
