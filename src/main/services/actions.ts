@@ -11,6 +11,7 @@ import { MovingActions } from './uml-element/movable/moving-types';
 import { ResizableActions } from './uml-element/resizable/resizable-types';
 import { ResizingActions } from './uml-element/resizable/resizing-types';
 import { SelectableActions } from './uml-element/selectable/selectable-types';
+import { RemoteSelectionActions } from './uml-element/remote-selectable/remote-selectable-types';
 import { UMLElementActions } from './uml-element/uml-element-types';
 import { UpdatableActions } from './uml-element/updatable/updatable-types';
 import { ReconnectableActions } from './uml-relationship/reconnectable/reconnectable-types';
@@ -36,6 +37,7 @@ export type Actions =
   | ResizableActions
   | ResizingActions
   | SelectableActions
+  | RemoteSelectionActions
   | UpdatableActions
   | AssessmentActions
   | UndoActions

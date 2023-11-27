@@ -20,6 +20,7 @@ import { debounce } from './utils/debounce';
 import { delay } from './utils/delay';
 import { ErrorBoundary } from './components/controls/error-boundary/ErrorBoundary';
 import { replaceColorVariables } from './utils/replace-color-variables';
+import { UMLModelCompat } from './compat';
 
 export class ApollonEditor {
   private ensureInitialized() {
@@ -46,7 +47,7 @@ export class ApollonEditor {
    * Sets a model as the current model of the Apollon Editor
    * @param model valid Apollon Editor Model
    */
-  set model(model: Apollon.UMLModel) {
+  set model(model: UMLModelCompat) {
     this.ensureInitialized();
     const state: PartialModelState = {
       ...ModelState.fromModel(model),
@@ -328,6 +329,30 @@ export class ApollonEditor {
     const id = this._getNewSubscriptionId(this.errorSubscribers);
     this.errorSubscribers[id] = callback;
     return id;
+  }
+
+  /**
+   * Displays given elements and relationships as selected or deselected by
+   * a given remote selector, identified by a name and a color.
+   * @param selectorName name of the remote selector
+   * @param selectorColor color of the remote selector
+   * @param select ids of elements and relationships to be selected
+   * @param deselect ids of elements and relationships to be deselected
+   */
+  remoteSelect(selectorName: string, selectorColor: string, select: string[], deselect?: string[]): void {
+    this.store?.dispatch(
+      UMLElementRepository.remoteSelectDeselect({ name: selectorName, color: selectorColor }, select, deselect || []),
+    );
+  }
+
+  /**
+   * Allows a given set of remote selectors for remotely selecting and deselecting
+   * elements and relationships, removing all other selectors. This won't have an effect
+   * on future remote selections.
+   * @param allowedSelectors allowed remote selectors
+   */
+  pruneRemoteSelectors(allowedSelectors: { name: string; color: string }[]): void {
+    this.store?.dispatch(UMLElementRepository.pruneRemoteSelectors(allowedSelectors));
   }
 
   /**
