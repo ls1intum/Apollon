@@ -34,6 +34,7 @@ const createModelStateFromPartialModelState = (
     reconnecting: partialModelState?.reconnecting ? partialModelState.reconnecting : {},
     resizing: partialModelState?.resizing ? partialModelState.resizing : [],
     selected: partialModelState?.selected ? partialModelState.selected : [],
+    remoteSelection: partialModelState?.remoteSelection ? partialModelState.remoteSelection : {},
     updating: partialModelState?.updating ? partialModelState.updating : [],
     hovered: partialModelState?.hovered ? partialModelState.hovered : [],
     editor: {

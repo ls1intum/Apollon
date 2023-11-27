@@ -1,9 +1,11 @@
 import 'pepjs';
 import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
+import { Patch } from './services/patcher';
 import { Locale } from './services/editor/editor-types';
 import * as Apollon from './typings';
 import { UMLDiagramType, UMLModel } from './typings';
+import { UMLModelCompat } from './compat';
 export declare class ApollonEditor {
     private container;
     private options;
@@ -16,7 +18,7 @@ export declare class ApollonEditor {
      * Sets a model as the current model of the Apollon Editor
      * @param model valid Apollon Editor Model
      */
-    set model(model: Apollon.UMLModel);
+    set model(model: UMLModelCompat);
     /**
      * Sets the diagram type of the current Apollon Editor. This changes the selection of elements the user can chose from on the sidebar.
      * @param diagramType the new diagram type
@@ -39,6 +41,7 @@ export declare class ApollonEditor {
     private currentModelState?;
     private assessments;
     private application;
+    private patcher;
     private selectionSubscribers;
     private assessmentSubscribers;
     private modelSubscribers;
@@ -104,12 +107,48 @@ export declare class ApollonEditor {
      */
     unsubscribeFromDiscreteModelChange(subscriptionId: number): void;
     /**
+     * Register callback which is executed when the model changes, receiving the changes to the model
+     * in [JSONPatch](http://jsonpatch.com/) format.
+     * @param callback function which is called when the model changes
+     * @return returns the subscription identifier which can be used to unsubscribe
+     */
+    subscribeToModelChangePatches(callback: (patch: Patch) => void): number;
+    /**
+     * Remove model change subscription, so that the corresponding callback is no longer executed when the model is changed.
+     * @param subscriptionId subscription identifier
+     */
+    unsubscribeFromModelChangePatches(subscriptionId: number): void;
+    /**
+     * Imports a patch into the current model.
+     * @param patch changes to be applied to the model, in [JSONPatch](http://jsonpatch.com/) format.
+     */
+    importPatch(patch: Patch): void;
+    /**
      * Register callback which is executed when an error occurs in the editor. Apollon will try to recreate the latest working state when an error occurs, so that it is less visible to user / less interrupting.
      * A registered callback would be called anyway, giving the full error, so that the application which uses Apollon can decide what to do next.
      * @param callback callback function which is called when an error occurs
      * @return returns the subscription identifier which can be used to unsubscribe
      */
     subscribeToApollonErrors(callback: (error: Error) => void): number;
+    /**
+     * Displays given elements and relationships as selected or deselected by
+     * a given remote selector, identified by a name and a color.
+     * @param selectorName name of the remote selector
+     * @param selectorColor color of the remote selector
+     * @param select ids of elements and relationships to be selected
+     * @param deselect ids of elements and relationships to be deselected
+     */
+    remoteSelect(selectorName: string, selectorColor: string, select: string[], deselect?: string[]): void;
+    /**
+     * Allows a given set of remote selectors for remotely selecting and deselecting
+     * elements and relationships, removing all other selectors. This won't have an effect
+     * on future remote selections.
+     * @param allowedSelectors allowed remote selectors
+     */
+    pruneRemoteSelectors(allowedSelectors: {
+        name: string;
+        color: string;
+    }[]): void;
     /**
      * Removes error subscription, so that the corresponding callback is no longer executed when an error occurs.
      * @param subscriptionId subscription identifier

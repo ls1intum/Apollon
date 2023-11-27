@@ -25,6 +25,13 @@ export type SelectionV2 = {
 
 /**
  *
+ * Represents the relationship type in V2 schema.
+ *
+ */
+export type UMLRelationshipV2 = UMLRelationship | UMLCommunicationLinkV2;
+
+/**
+ *
  * Represents the V2 model.
  *
  * @todo This type definition reuses unchanged elements from latest model version.
@@ -40,9 +47,16 @@ export type UMLModelV2 = {
   size: { width: number; height: number };
   elements: UMLElement[];
   interactive: SelectionV2;
-  relationships: (UMLRelationship | UMLCommunicationLinkV2)[];
+  relationships: UMLRelationshipV2[];
   assessments: Assessment[];
 };
+
+/**
+ *
+ * Represents a relationship compatible with either V2 or latest version.
+ *
+ */
+export type UMLRelationshipCompat = UMLRelationship | UMLRelationshipV2;
 
 /**
  *

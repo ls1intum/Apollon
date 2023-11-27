@@ -441,6 +441,47 @@ describe('test apollon editor ', () => {
       }, 500);
     }, 500);
   });
+
+  it('remoteSelection.', () => {
+    const state = ModelState.fromModel(testClassDiagram as any);
+    const elements = Object.keys(state.elements!).map((id) => state.elements![id]);
+    const store = getRealStore(state, elements);
+    // inject store
+    Object.defineProperty(editor, 'store', { value: store });
+
+    const elA = 'c10b995a-036c-4e9e-aa67-0570ada5cb6a';
+    const elB = '4d3509e-0dce-458b-bf62-f3555497a5a4';
+    const john = { name: 'john', color: 'red' };
+    const jane = { name: 'jane', color: 'blue' };
+
+    act(() => {
+      editor.remoteSelect(john.name, john.color, [elA]);
+    });
+
+    expect(store.getState().remoteSelection[elA]).toEqual([john]);
+
+    act(() => {
+      editor.remoteSelect(jane.name, jane.color, [elA, elB]);
+    });
+
+    expect(store.getState().remoteSelection[elA]).toEqual([john, jane]);
+    expect(store.getState().remoteSelection[elB]).toEqual([jane]);
+
+    act(() => {
+      editor.remoteSelect(john.name, john.color, [elB], [elA]);
+    });
+
+    expect(store.getState().remoteSelection[elA]).toEqual([jane]);
+    expect(store.getState().remoteSelection[elB]).toEqual([jane, john]);
+
+    act(() => {
+      editor.pruneRemoteSelectors([john]);
+    });
+
+    expect(store.getState().remoteSelection[elA]).toEqual([]);
+    expect(store.getState().remoteSelection[elB]).toEqual([john]);
+  });
+
   it('set type to UseCaseDiagram', () => {
     act(() => {
       editor.type = UMLDiagramType.UseCaseDiagram;
