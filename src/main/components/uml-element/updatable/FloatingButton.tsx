@@ -4,7 +4,7 @@ import { styled } from '../../theme/styles';
 const FloatingButtonContainer = styled.g.attrs((props) => ({
   ...props,
 }))`
-  transition: all 200ms ease-in-out;
+  transition: all 180ms ease-in-out;
   pointer-events: all;
 
   path {

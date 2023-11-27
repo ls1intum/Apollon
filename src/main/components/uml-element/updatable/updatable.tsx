@@ -11,7 +11,7 @@ import { FloatingButton } from './FloatingButton';
 import { EditIcon } from './icons/EditIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
 
-const FAB_TIMEOUT = 800;
+const FAB_TIMEOUT = 500;
 
 const initialState = {
   showActionButtons: false,
@@ -91,7 +91,7 @@ export const updatable = (
             <FloatingButton
               style={{
                 opacity: this.state.showActionButtons ? 1 : 0,
-                transform: `translate(${element.bounds.width + 10}px, ${this.state.showActionButtons ? -40 : -30}px)`,
+                transform: `translate(${element.bounds.width}px, ${this.state.showActionButtons ? -40 : -30}px)`,
               }}
               onClick={this.onStartUpdate}
             >
@@ -102,7 +102,7 @@ export const updatable = (
             <FloatingButton
               style={{
                 opacity: this.state.showActionButtons ? 1 : 0,
-                transform: `translate(${element.bounds.width + 10}px, ${this.state.showActionButtons ? -80 : -30}px)`,
+                transform: `translate(${element.bounds.width}px, ${this.state.showActionButtons ? -80 : -30}px)`,
               }}
               onClick={this.onDelete}
             >
