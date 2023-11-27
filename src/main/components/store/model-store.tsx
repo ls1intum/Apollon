@@ -23,11 +23,11 @@ import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { ModelState, PartialModelState } from './model-state';
 import {
-  Patcher,
   createPatcherMiddleware,
   createPatcherReducer,
   isDiscreteAction,
   isSelectionAction,
+  Patcher,
 } from '../../services/patcher';
 import { UMLModel } from '../../typings';
 

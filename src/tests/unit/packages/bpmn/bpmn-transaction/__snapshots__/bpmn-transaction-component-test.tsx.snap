@@ -17,13 +17,13 @@ exports[`render the bpmn-transaction-component 1`] = `
         <rect
           class="sc-fqkvVR kprGcp"
           fill="white"
-          height="90"
+          height="94"
           rx="7"
           ry="7"
           stroke="black"
-          width="190"
-          x="5"
-          y="5"
+          width="194"
+          x="3"
+          y="3"
         />
         <text
           font-weight="bold"

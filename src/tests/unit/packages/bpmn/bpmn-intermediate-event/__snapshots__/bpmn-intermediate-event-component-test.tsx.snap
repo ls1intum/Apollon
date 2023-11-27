@@ -18,20 +18,19 @@ exports[`render the bpmn-intermediate-event-component 1`] = `
           cx="50%"
           cy="50%"
           fill="white"
-          r="13.5"
+          r="16.5"
           stroke="black"
         />
         <text
-          height="40"
           pointer-events="none"
-          text-anchor="start"
+          text-anchor="middle"
           width="40"
-          x="50"
-          y="20"
+          x="20"
+          y="60"
         >
           <tspan
-            dy="5.5"
-            x="50"
+            dy="11"
+            x="20"
           >
             Event
           </tspan>

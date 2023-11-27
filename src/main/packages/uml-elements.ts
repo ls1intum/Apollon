@@ -48,7 +48,6 @@ import { BPMNGateway } from './bpmn/bpmn-gateway/bpmn-gateway';
 import { BPMNTransaction } from './bpmn/bpmn-transaction/bpmn-transaction';
 import { BPMNCallActivity } from './bpmn/bpmn-call-activity/bpmn-call-activity';
 import { BPMNAnnotation } from './bpmn/bpmn-annotation/bpmn-annotation';
-import { BPMNConversation } from './bpmn/bpmn-conversation/bpmn-conversation';
 import { BPMNDataObject } from './bpmn/bpmn-data-object/bpmn-data-object';
 import { BPMNPool } from './bpmn/bpmn-pool/bpmn-pool';
 import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
@@ -104,7 +103,6 @@ export const UMLElements = {
   [UMLElementType.BPMNIntermediateEvent]: BPMNIntermediateEvent,
   [UMLElementType.BPMNEndEvent]: BPMNEndEvent,
   [UMLElementType.BPMNGateway]: BPMNGateway,
-  [UMLElementType.BPMNConversation]: BPMNConversation,
   [UMLElementType.BPMNDataObject]: BPMNDataObject,
   [UMLElementType.BPMNPool]: BPMNPool,
   [UMLElementType.BPMNSwimlane]: BPMNSwimlane,

@@ -9,13 +9,7 @@ import { assign } from '../../../utils/fx/assign';
 import * as Apollon from '../../../typings';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 
-export type BPMNGatewayType =
-  | 'complex'
-  | 'event-based'
-  | 'exclusive'
-  | 'inclusive'
-  | 'parallel'
-  | 'parallel-event-based';
+export type BPMNGatewayType = 'complex' | 'event-based' | 'exclusive' | 'inclusive' | 'parallel';
 
 export class BPMNGateway extends UMLContainer {
   static features: UMLElementFeatures = { ...UMLContainer.features, resizable: false };

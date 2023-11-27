@@ -16,10 +16,10 @@ export const BPMNTransactionComponent: FunctionComponent<Props> = ({ element, fi
     <ThemedRect
       rx={7}
       ry={7}
-      x={5}
-      y={5}
-      width={element.bounds.width - 10}
-      height={element.bounds.height - 10}
+      x={3}
+      y={3}
+      width={element.bounds.width - 6}
+      height={element.bounds.height - 6}
       strokeColor={element.strokeColor}
       fillColor={fillColor || element.fillColor}
     />

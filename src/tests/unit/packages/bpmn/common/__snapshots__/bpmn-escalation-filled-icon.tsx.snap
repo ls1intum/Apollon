@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-escalation-filled-icon 1`] = `
+<body>
+  <div>
+    <svg>
+      <svg
+        height="20"
+        width="20"
+      >
+        <polyline
+          class="sc-aXZVg epDaOi"
+          fill="currentColor"
+          fill-rule="evenodd"
+          points="10 3, 4 15, 10 12, 16 15, 10 3"
+          stroke="black"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </svg>
+  </div>
+</body>
+`;

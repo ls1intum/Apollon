@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-conditional-icon 1`] = `
+<body>
+  <div>
+    <svg>
+      <svg
+        height="20"
+        width="20"
+      >
+        <rect
+          class="sc-fqkvVR kprGcp"
+          fill="white"
+          height="16"
+          stroke="black"
+          stroke-linejoin="round"
+          width="16"
+          x="2"
+          y="2"
+        />
+        <polyline
+          class="sc-aXZVg bUvEJV"
+          fill="white"
+          points="6 7, 14 7"
+          stroke="black"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <polyline
+          class="sc-aXZVg bUvEJV"
+          fill="white"
+          points="6 13, 14 13"
+          stroke="black"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </svg>
+  </div>
+</body>
+`;

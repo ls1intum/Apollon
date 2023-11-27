@@ -19,9 +19,6 @@ import { AsyncDispatch } from '../../../utils/actions/actions';
 import { BPMNElementType } from '../index';
 import { Header } from '../../../components/controls/typography/typography';
 import UmlAttributeUpdate from '../../common/uml-classifier/uml-classifier-attribute-update';
-import { UMLClassMethod } from '../../uml-class-diagram/uml-class-method/uml-class-method';
-import { UMLClassAttribute } from '../../uml-class-diagram/uml-class-attribute/uml-class-attribute';
-import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
 
 interface OwnProps {
   element: BPMNPool;
