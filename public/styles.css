@@ -22,8 +22,14 @@ body {
 .container {
   background-color: var(--apollon-background);
   display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.apollon-container {
+  padding: 20px 20px 20px 0px;
+  display: flex;
   flex-grow: 2;
-  padding: 20px;
 }
 
 main {
@@ -33,7 +39,10 @@ main {
 
 aside.sidebar {
   flex: 0 0 10em;
-  margin-left: 1em;
+  padding: 14px;
+  border-right-color: var(--apollon-gray);
+  border-right-width: 1px;
+  border-right-style: solid;
 }
 
 aside.sidebar section {

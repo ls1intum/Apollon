@@ -75,16 +75,16 @@ export class Application extends React.Component<Props, State> {
                 <Layout className="apollon-editor" ref={this.setLayout}>
                   {rootContext && (
                     <DraggableLayer>
-                      <Editor>
-                        <Canvas ref={this.setCanvas} />
-                      </Editor>
                       {canvasContext && (
                         <>
-                          <Sidebar />
                           <UpdatePane />
+                          <Sidebar />
                           <KeyboardEventListener />
                         </>
                       )}
+                      <Editor>
+                        <Canvas ref={this.setCanvas} />
+                      </Editor>
                     </DraggableLayer>
                   )}
                 </Layout>
