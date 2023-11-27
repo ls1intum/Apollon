@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-terminate-filled-icon 1`] = `
+<body>
+  <div>
+    <svg>
+      <svg
+        height="20"
+        width="20"
+      >
+        <circle
+          class="sc-iGgWBj gKUPrO"
+          cx="50%"
+          cy="50%"
+          fill="currentColor"
+          r="10"
+          stroke="black"
+        />
+      </svg>
+    </svg>
+  </div>
+</body>
+`;

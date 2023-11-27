@@ -10,12 +10,11 @@ import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { Switch } from '../../../components/controls/switch/switch';
-import { BPMNConversation, BPMNConversationType } from './bpmn-conversation';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
+import { BPMNTask, BPMNTaskType } from './bpmn-task';
 
 interface OwnProps {
-  element: BPMNConversation;
+  element: BPMNTask;
 }
 
 type StateProps = {};
@@ -41,7 +40,7 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class BPMNConversationUpdateComponent extends Component<Props> {
+class BPMNTaskUpdateComponent extends Component<Props> {
   render() {
     const { element } = this.props;
 
@@ -57,9 +56,16 @@ class BPMNConversationUpdateComponent extends Component<Props> {
           <Divider />
         </section>
         <section>
-          <Dropdown value={element.conversationType} onChange={this.changeConversationType(element.id)} color="primary">
-            <Dropdown.Item value={'default'}>{this.props.translate('packages.BPMN.BPMNConversation')}</Dropdown.Item>
-            <Switch.Item value={'call'}>{this.props.translate('packages.BPMN.BPMNCallConversation')}</Switch.Item>
+          <Dropdown value={element.taskType} onChange={this.changeTaskType(element.id)}>
+            <Dropdown.Item value={'default'}>{this.props.translate('packages.BPMN.BPMNTask')}</Dropdown.Item>
+            <Dropdown.Item value={'user'}>{this.props.translate('packages.BPMN.BPMNUserTask')}</Dropdown.Item>
+            <Dropdown.Item value={'send'}>{this.props.translate('packages.BPMN.BPMNSendTask')}</Dropdown.Item>
+            <Dropdown.Item value={'receive'}>{this.props.translate('packages.BPMN.BPMNReceiveTask')}</Dropdown.Item>
+            <Dropdown.Item value={'manual'}>{this.props.translate('packages.BPMN.BPMNManualTask')}</Dropdown.Item>
+            <Dropdown.Item value={'business-rule'}>
+              {this.props.translate('packages.BPMN.BPMNBusinessRuleTask')}
+            </Dropdown.Item>
+            <Dropdown.Item value={'script'}>{this.props.translate('packages.BPMN.BPMNScriptTask')}</Dropdown.Item>
           </Dropdown>
         </section>
       </div>
@@ -67,28 +73,28 @@ class BPMNConversationUpdateComponent extends Component<Props> {
   }
 
   /**
-   * Rename the conversation
-   * @param id The ID of the conversation that should be renamed
+   * Rename the task
+   * @param id The ID of the task that should be renamed
    */
   private rename = (id: string) => (value: string) => {
     this.props.update(id, { name: value });
   };
 
   /**
-   * Change the type of the conversation
-   * @param id The ID of the conversation whose type should be changed
+   * Change the type of the task
+   * @param id The ID of the task whose type should be changed
    */
-  private changeConversationType = (id: string) => (value: string) => {
-    this.props.update<BPMNConversation>(id, { conversationType: value as BPMNConversationType });
+  private changeTaskType = (id: string) => (value: string) => {
+    this.props.update<BPMNTask>(id, { taskType: value as BPMNTaskType });
   };
 
   /**
-   * Delete a conversation
-   * @param id The ID of the conversation that should be deleted
+   * Delete a task
+   * @param id The ID of the task that should be deleted
    */
   private delete = (id: string) => () => {
     this.props.delete(id);
   };
 }
 
-export const BPMNConversationUpdate = enhance(BPMNConversationUpdateComponent);
+export const BPMNTaskUpdate = enhance(BPMNTaskUpdateComponent);

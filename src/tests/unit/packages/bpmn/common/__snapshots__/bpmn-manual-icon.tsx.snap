@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the bpmn-manual-icon 1`] = `
+<body>
+  <div>
+    <svg>
+      <svg
+        height="20"
+        width="20"
+      >
+        <path
+          class="sc-gEvEer fMgKSV"
+          d="M5 1.5C5 2.5 5 8 5 8M5 1.5C5 0.499993 7 0.500007 7 1.5M5 1.5C5 1.5 5 4.00001 5 3.00001C5 2 3 1.93337 3 3.00001C3 4.06664 3 10 3 10C3 10 3 8.25001 3 7.25001C3 6.25 1 6.25 1 7.25001C1 8.25001 1 12 1 12L3 14V16H9V14L11 12V8.56252C11 8.56252 11 5 11 4C11 3 9 3 9 4C9 5 9 3.00001 9 3.00001M7 1.5C7 2.49999 7 8 7 8M7 1.5C7 1.5 7 4.00001 7 3.00001C7 2.00001 9 2.00001 9 3.00001M9 3.00001V8"
+          fill="white"
+          stroke="black"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </svg>
+  </div>
+</body>
+`;

@@ -16,7 +16,7 @@ export class BPMNPool extends UMLPackage {
     droppable: true,
     movable: true,
     resizable: true,
-    connectable: false,
+    connectable: true,
   };
 
   type: UMLElementType = BPMNElementType.BPMNPool;

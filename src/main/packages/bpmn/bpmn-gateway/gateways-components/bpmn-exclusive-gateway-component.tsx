@@ -23,14 +23,14 @@ export const BPMNExclusiveGatewayComponent: FunctionComponent<Props> = ({ elemen
       fillColor={element.fillColor}
     />
     <Multiline
-      x={element.bounds.width + 10}
-      y={element.bounds.height / 2}
+      x={element.bounds.width / 2}
+      y={element.bounds.height + 20}
       width={element.bounds.width}
       height={element.bounds.height}
       fill={element.textColor}
       lineHeight={16}
       capHeight={11}
-      textAnchor="start"
+      verticalAnchor="start"
     >
       {element.name}
     </Multiline>
