@@ -151,7 +151,7 @@ npm run docs:prepare
 You can now build the docs:
 
 ```bash
-npm run docs:prepare && npm run docs:build
+npm run docs:build
 ```
 
 The docs will be built and put into `docs/build/html`.
