@@ -17,6 +17,7 @@ Welcome to Apollon's documentation!
 
    user/getting-started
    user/api
+   user/uml-model-helpers
    
 .. toctree::
    :caption: Contributor Guide
