@@ -14,12 +14,14 @@ import { getClientEventCoordinates } from '../../utils/touch-event';
 import { ModelState } from '../store/model-state';
 import { withTheme, withThemeProps } from '../theme/styles';
 import { UMLElementComponentProps } from './uml-element-component-props';
+import { UMLElementSelectorType } from '../../packages/uml-element-selector-type';
 
 type OwnProps = UMLElementComponentProps & SVGProps<SVGSVGElement>;
 
 type StateProps = {
   hovered: boolean;
   selected: boolean;
+  remoteSelectors: UMLElementSelectorType[];
   interactive: boolean;
   interactable: boolean;
   reconnecting: boolean;
@@ -55,6 +57,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
     (state, props) => ({
       hovered: state.hovered[0] === props.id,
       selected: state.selected.includes(props.id),
+      remoteSelectors: state.remoteSelection[props.id] || [],
       interactive: state.interactive.includes(props.id),
       interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
       reconnecting: !!state.reconnecting[props.id],
@@ -77,6 +80,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     const {
       hovered,
       selected,
+      remoteSelectors,
       interactive,
       interactable,
       reconnecting,
@@ -112,12 +116,12 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
       interactable && interactive
         ? theme.interactive.normal
         : interactable && hovered
-        ? theme.interactive.hovered
-        : hovered || selected
-        ? 'rgba(0, 100, 255, 0.2)'
-        : relationship.highlight
-        ? relationship.highlight
-        : 'rgba(0, 100, 255, 0)';
+          ? theme.interactive.hovered
+          : hovered || selected
+            ? 'rgba(0, 100, 255, 0.2)'
+            : relationship.highlight
+              ? relationship.highlight
+              : 'rgba(0, 100, 255, 0)';
 
     return (
       <svg
@@ -127,6 +131,17 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
         pointerEvents={disabled ? 'none' : 'stroke'}
       >
         <polyline points={points} stroke={highlight} fill="none" strokeWidth={STROKE} />
+        {remoteSelectors.length > 0 &&
+          remoteSelectors.map((selector) => (
+            <polyline
+              key={selector.name}
+              points={points}
+              stroke={selector.color}
+              strokeOpacity="0.2"
+              strokeWidth={STROKE}
+              fill="none"
+            />
+          ))}
         <ChildComponent element={UMLRelationshipRepository.get(relationship)} />
         {children}
         {midPoints.map((point, index) => {
