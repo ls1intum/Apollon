@@ -466,11 +466,11 @@ exports[`test update pane render with element 1`] = `
           </svg>
         </div>
         <div
-          style="position: absolute; left: 0.75em; bottom: 0.75em; display: flex;"
+          style="display: flex; flex-direction: column; position: absolute; right: 0.75em; bottom: 0.75em;"
         >
           <button
             class="c3"
-            style="margin-right: 0.5em;"
+            style="margin-bottom: 0.5em;"
           >
             +
           </button>
@@ -1065,11 +1065,11 @@ exports[`test update pane render with relationship 1`] = `
           </svg>
         </div>
         <div
-          style="position: absolute; left: 0.75em; bottom: 0.75em; display: flex;"
+          style="display: flex; flex-direction: column; position: absolute; right: 0.75em; bottom: 0.75em;"
         >
           <button
             class="c3"
-            style="margin-right: 0.5em;"
+            style="margin-bottom: 0.5em;"
           >
             +
           </button>

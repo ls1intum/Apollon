@@ -8,6 +8,7 @@ type Props = {
   step?: number;
   value: number;
   onChange: (value: number) => void;
+  style?: React.CSSProperties | undefined;
 };
 
 const ZoomButton = styled.button`
@@ -35,11 +36,20 @@ const ZoomButton = styled.button`
 `;
 
 export const ZoomPaneComponent: FunctionComponent<Props> = (props) => {
-  const { min = 0.5, max = 5, step = 0.5, value, onChange } = props;
+  const { min = 0.5, max = 5, step = 0.5, value, onChange, style } = props;
 
   return (
-    <div style={{ position: 'absolute', left: '0.75em', bottom: '0.75em', display: 'flex' }}>
-      <ZoomButton style={{ marginRight: '0.5em' }} onClick={() => onChange(clamp(value + step, min, max))}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'absolute',
+        right: '0.75em',
+        bottom: '0.75em',
+        ...style,
+      }}
+    >
+      <ZoomButton style={{ marginBottom: '0.5em' }} onClick={() => onChange(clamp(value + step, min, max))}>
         +
       </ZoomButton>
       <ZoomButton onClick={() => onChange(clamp(value - step, min, max))}>-</ZoomButton>
