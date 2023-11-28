@@ -25,7 +25,6 @@
     "postpublish": "pinst --enable",
     "start": "webpack serve --config ./webpack/webpack.dev.js",
     "build": "rm -rf dist && webpack --config ./webpack/webpack.prod.js",
-    "copyAPIToDoc": "cp lib/es6/apollon-editor.d.ts lib/es6/typings.d.ts docs/source/user/api && cp lib/es6/packages/diagram-type.d.ts docs/source/dev/api",
     "lint": "npm run lint:ts && npm run lint:css",
     "lint:ts": "eslint -c .eslintrc.js src/main",
     "lint:css": "stylelint 'src/**/*.ts'",
@@ -40,9 +39,13 @@
     "test:e2e": "start-server-and-test start http://localhost:8888 test-cypress",
     "test:e2e:headless": "start-server-and-test start http://localhost:8888 test-cypress:headless",
     "update": "ncu -i --format group",
-    "publish:patch": "npm run prepare && npm run test && npm run copyAPIToDoc && npm version patch && npm publish",
-    "publish:minor": "npm run prepare && npm run test && npm run copyAPIToDoc && npm version minor && npm publish",
-    "publish:major": "npm run prepare && npm run test && npm run copyAPIToDoc && npm version major && npm publish"
+    "publish:patch": "npm run prepare && npm run test && npm run docs:copy-api && npm version patch && npm publish",
+    "publish:minor": "npm run prepare && npm run test && npm run docs:copy-api && npm version minor && npm publish",
+    "publish:major": "npm run prepare && npm run test && npm run docs:copy-api && npm version major && npm publish",
+    "docs:copy-api": "cp lib/es6/apollon-editor.d.ts lib/es6/typings.d.ts lib/es6/compat/helpers.d.ts docs/source/user/api && cp lib/es6/packages/diagram-type.d.ts docs/source/dev/api",
+    "docs:prepare": "npm run docs:copy-api && cd docs && pip3 install -r requirements.txt",
+    "docs:build": "cd docs && make clean && make html",
+    "docs:watch": "npm run docs:build && serve -p 8088 docs/build/html & chokidar \"docs/source/**/*\" \"docs/images/**/*\" -c \"npm run docs:build\""
   },
   "husky": {
     "hooks": {
@@ -90,6 +93,7 @@
     "@types/uuid": "9.0.7",
     "@typescript-eslint/eslint-plugin": "6.12.0",
     "@typescript-eslint/parser": "6.12.0",
+    "chokidar-cli": "3.0.0",
     "circular-dependency-plugin": "5.2.2",
     "copy-webpack-plugin": "11.0.0",
     "css-loader": "6.8.1",
@@ -114,6 +118,7 @@
     "postcss-syntax": "0.36.2",
     "prettier": "3.1.0",
     "redux-mock-store": "1.5.4",
+    "serve": "14.2.1",
     "sleep-promise": "9.1.0",
     "start-server-and-test": "2.0.3",
     "style-loader": "3.3.3",

@@ -133,3 +133,33 @@ The webpack-dev-server is now listening on [http://localhost:8888](http://localh
 npm install -g npm-check-updates
 npm run update
 ```
+
+### Building the Docs
+
+To build the docs, you need [pip installed](https://pip.pypa.io/en/stable/installation/#). You neeed to build Apollon's type definitions before you can build the docs:
+
+```bash
+npm run prepare
+```
+
+Then install necessary dependencies for the docs:
+
+```bash
+npm run docs:prepare
+```
+
+You can now build the docs:
+
+```bash
+npm run docs:build
+```
+
+The docs will be built and put into `docs/build/html`.
+
+You can also serve the docs locally:
+
+```bash
+npm run docs:watch
+```
+
+The docs will be served on `localhost:8088`. This script will also watch for changes in the docs and rebuild them automatically.
