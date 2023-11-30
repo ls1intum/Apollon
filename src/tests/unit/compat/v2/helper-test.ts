@@ -1,17 +1,17 @@
 import { deepClone } from 'fast-json-patch';
 
 import {
-  UMLModelCompat,
-  findElement,
+  addOrUpdateAssessment,
   addOrUpdateElement,
-  findRelationship,
   addOrUpdateRelationship,
   findAssessment,
-  addOrUpdateAssessment,
+  findElement,
+  findRelationship,
   isInteractiveElement,
-  setInteractiveElement,
   isInteractiveRelationship,
+  setInteractiveElement,
   setInteractiveRelationship,
+  UMLModelCompat,
 } from '../../../../main/compat';
 import { Assessment, UMLElement, UMLModel, UMLRelationship } from '../../../../main';
 

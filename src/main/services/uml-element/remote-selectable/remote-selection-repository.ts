@@ -1,9 +1,9 @@
 import { UMLElementSelectorType } from '../../../packages/uml-element-selector-type';
 import {
   RemoteSelectionActionTypes,
-  RemoteSelectionChangeTypes,
   RemoteSelectionChange,
   RemoteSelectionChangeAction,
+  RemoteSelectionChangeTypes,
   RemoteSelectionPruneSelectorsAction,
 } from './remote-selectable-types';
 

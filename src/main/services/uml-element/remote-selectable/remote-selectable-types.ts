@@ -1,6 +1,5 @@
 import { UMLElementSelectorType } from '../../../packages/uml-element-selector-type';
 import { Action } from '../../../utils/actions/actions';
-import { UMLElementState } from '../uml-element-types';
 
 export const enum RemoteSelectionActionTypes {
   SELECTION_CHANGE = '@@element/remote-selection/CHANGE',

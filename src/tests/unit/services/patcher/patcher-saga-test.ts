@@ -1,4 +1,4 @@
-import { take, delay, select, call } from 'redux-saga/effects';
+import { call, delay, select, take } from 'redux-saga/effects';
 
 import { patchLayout } from '../../../../main/services/patcher/patcher-saga';
 import { PatcherActionTypes, PatcherRepository } from '../../../../main/services/patcher';
