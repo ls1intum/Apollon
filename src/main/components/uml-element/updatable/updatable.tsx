@@ -11,11 +11,7 @@ import { FloatingButton } from './FloatingButton';
 import { EditIcon } from './icons/EditIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
 
-const FAB_TIMEOUT = 500;
-
-const initialState = {
-  showActionButtons: false,
-};
+const initialState = {};
 
 type StateProps = {
   hovered: boolean;
@@ -67,22 +63,6 @@ export const updatable = (
 
       const element = getById(props.id);
 
-      // We wait a few milliseconds before hiding the float action buttons
-      // to prevent the actions from being hidden un
-      if (!this.state.showActionButtons && (hovered || selected)) {
-        this.setState({ ...this.state, showActionButtons: true });
-
-        if (this.timer) {
-          clearTimeout(this.timer);
-        }
-      }
-
-      if (this.state.showActionButtons && !(hovered || selected)) {
-        this.timer = setTimeout(() => {
-          this.setState({ ...this.state, showActionButtons: false });
-        }, FAB_TIMEOUT);
-      }
-
       const shouldRenderFABs = element && !UMLRelationship.isUMLRelationship(element);
 
       return (
@@ -90,8 +70,8 @@ export const updatable = (
           {shouldRenderFABs && (
             <FloatingButton
               style={{
-                opacity: this.state.showActionButtons ? 1 : 0,
-                transform: `translate(${element.bounds.width}px, ${this.state.showActionButtons ? -40 : -30}px)`,
+                opacity: selected ? 1 : 0,
+                transform: `translate(${element.bounds.width}px, ${selected ? -40 : -30}px)`,
               }}
               onClick={this.onStartUpdate}
             >
@@ -101,8 +81,8 @@ export const updatable = (
           {shouldRenderFABs && (
             <FloatingButton
               style={{
-                opacity: this.state.showActionButtons ? 1 : 0,
-                transform: `translate(${element.bounds.width}px, ${this.state.showActionButtons ? -80 : -30}px)`,
+                opacity: selected ? 1 : 0,
+                transform: `translate(${element.bounds.width}px, ${selected ? -80 : -30}px)`,
               }}
               onClick={this.onDelete}
             >

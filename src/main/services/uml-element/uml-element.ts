@@ -1,6 +1,5 @@
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
-import { UMLElementSelectorType } from '../../packages/uml-element-selector-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import * as Apollon from '../../typings';

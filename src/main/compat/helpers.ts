@@ -1,16 +1,16 @@
 import { Assessment, UMLElement, UMLRelationship } from '../typings';
 import { UMLModelCompat } from './typings';
 import {
-  isV2,
-  findElement as findElementV2,
+  addOrUpdateAssessment as addOrUpdateAssessmentV2,
   addOrUpdateElement as addOrUpdateElementV2,
-  findRelationship as findRelationshipV2,
   addOrUpdateRelationship as addOrUpdateRelationshipV2,
   findAssessment as findAssessmentV2,
-  addOrUpdateAssessment as addOrUpdateAssessmentV2,
+  findElement as findElementV2,
+  findRelationship as findRelationshipV2,
   isInteractiveElement as isInteractiveElementV2,
-  setInteractiveElement as setInteractiveElementV2,
   isInteractiveRelationship as isInteractiveRelationshipV2,
+  isV2,
+  setInteractiveElement as setInteractiveElementV2,
   setInteractiveRelationship as setInteractiveRelationshipV2,
 } from './v2';
 
