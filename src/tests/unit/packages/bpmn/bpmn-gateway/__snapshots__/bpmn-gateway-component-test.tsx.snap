@@ -28,7 +28,7 @@ exports[`render the bpmn-gateway-component 1`] = `
             height="40"
             pointer-events="none"
             text-anchor="middle"
-            width="40"
+            width="80"
             x="20"
             y="60"
           >

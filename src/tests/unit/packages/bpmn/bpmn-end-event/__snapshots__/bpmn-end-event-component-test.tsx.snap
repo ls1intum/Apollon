@@ -17,7 +17,7 @@ exports[`render the bpmn-end-event-component 1`] = `
         <text
           pointer-events="none"
           text-anchor="middle"
-          width="40"
+          width="80"
           x="20"
           y="60"
         >

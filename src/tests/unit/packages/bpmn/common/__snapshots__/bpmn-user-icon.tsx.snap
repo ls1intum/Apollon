@@ -9,16 +9,16 @@ exports[`render the bpmn-user-icon 1`] = `
         width="20"
       >
         <circle
-          class="sc-iGgWBj fvtjvB"
+          class="sc-iGgWBj gRgQSU"
           cx="10"
           cy="4"
-          fill="white"
+          fill="transparent"
           r="4"
           stroke="black"
         />
         <polyline
-          class="sc-aXZVg bUvEJV"
-          fill="white"
+          class="sc-aXZVg dCdbOk"
+          fill="transparent"
           points="4 16, 4 11, 16 11, 16 16"
           stroke="black"
         />

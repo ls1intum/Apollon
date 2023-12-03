@@ -15,8 +15,8 @@ exports[`render the bpmn-subprocess-component 1`] = `
           width="100%"
         />
         <rect
-          class="sc-fqkvVR kprGcp"
-          fill="white"
+          class="sc-fqkvVR zazVk"
+          fill="transparent"
           height="14"
           stroke="black"
           width="14"

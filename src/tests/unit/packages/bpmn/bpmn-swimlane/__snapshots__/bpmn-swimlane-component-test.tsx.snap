@@ -4,9 +4,7 @@ exports[`render the bpmn-swimlane-component 1`] = `
 <body>
   <div>
     <svg>
-      <g
-        width="100%"
-      >
+      <g>
         <rect
           class="sc-fqkvVR zazVk"
           fill="transparent"

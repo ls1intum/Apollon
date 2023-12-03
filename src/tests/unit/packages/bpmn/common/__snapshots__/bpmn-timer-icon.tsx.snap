@@ -9,10 +9,10 @@ exports[`render the bpmn-timer-icon 1`] = `
         width="20"
       >
         <circle
-          class="sc-iGgWBj fvtjvB"
+          class="sc-iGgWBj gRgQSU"
           cx="50%"
           cy="50%"
-          fill="white"
+          fill="transparent"
           r="10"
           stroke="black"
         />
