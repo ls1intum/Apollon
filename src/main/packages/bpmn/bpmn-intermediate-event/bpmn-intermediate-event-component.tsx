@@ -1,10 +1,5 @@
-import React, { ComponentType, FunctionComponent, ReactElement } from 'react';
+import React, { FunctionComponent, ReactElement } from 'react';
 import { BPMNIntermediateEvent, BPMNIntermediateEventType } from './bpmn-intermediate-event';
-import { connect, ConnectedComponent } from 'react-redux';
-import { ModelState } from '../../../components/store/model-state';
-import { compose } from 'redux';
-import { withTheme, withThemeProps } from '../../../components/theme/styles';
-import { ApollonView } from '../../../services/editor/editor-types';
 import { ThemedCircle } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 import { BPMNMessageIcon } from '../common/bpmn-message-icon';
@@ -18,25 +13,7 @@ import { BPMNCompensationFilledIcon } from '../common/bpmn-compensation-filled-i
 import { BPMNSignalIcon } from '../common/bpmn-signal-icon';
 import { BPMNSignalFilledIcon } from '../common/bpmn-signal-filled-icon';
 
-type OwnProps = {
-  element: BPMNIntermediateEvent;
-};
-
-type StateProps = { interactive: boolean; interactable: boolean };
-
-type DispatchProps = {};
-
-type Props = OwnProps & StateProps & DispatchProps & withThemeProps;
-
-const enhance = compose<ConnectedComponent<ComponentType<Props>, OwnProps>>(
-  withTheme,
-  connect<StateProps, DispatchProps, OwnProps, ModelState>((state, props) => ({
-    interactive: state.interactive.includes(props.element.id),
-    interactable: state.editor.view === ApollonView.Exporting || state.editor.view === ApollonView.Highlight,
-  })),
-);
-
-const BPMNIntermediateEventC: FunctionComponent<Props> = ({ element, interactive, interactable, theme }) => {
+export const BPMNIntermediateEventComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
   /**
    * Retrieve an icon based on a given start event type
    * @param eventType The event type for which an icon should be rendered
@@ -80,18 +57,18 @@ const BPMNIntermediateEventC: FunctionComponent<Props> = ({ element, interactive
         cx="50%"
         cy="50%"
         r={Math.min(element.bounds.width, element.bounds.height) / 2 - 0.5}
-        strokeColor={interactable && interactive ? theme.interactive.normal : element.fillColor}
+        fillColor={fillColor || element.fillColor || 'transparent'}
       />
       <ThemedCircle
         cx="50%"
         cy="50%"
         r={Math.min(element.bounds.width, element.bounds.height) / 2 - 3.5}
-        strokeColor={interactable && interactive ? theme.interactive.normal : element.fillColor}
+        fillColor={fillColor || element.fillColor || 'transparent'}
       />
       <Multiline
         x={element.bounds.width / 2}
         y={element.bounds.height + 20}
-        width={element.bounds.width}
+        width={element.bounds.width * 2}
         fill={element.textColor}
         lineHeight={16}
         capHeight={11}
@@ -107,4 +84,7 @@ const BPMNIntermediateEventC: FunctionComponent<Props> = ({ element, interactive
   );
 };
 
-export const BPMNIntermediateEventComponent = enhance(BPMNIntermediateEventC);
+interface Props {
+  element: BPMNIntermediateEvent;
+  fillColor?: string;
+}

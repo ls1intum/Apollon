@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { BPMNPool } from './bpmn-pool';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 
-export const BPMNPoolComponent: FunctionComponent<Props> = ({ element, children }) => {
+export const BPMNPoolComponent: FunctionComponent<Props> = ({ element, fillColor, children }) => {
   return (
     <g>
       <ThemedRect
@@ -10,7 +10,7 @@ export const BPMNPoolComponent: FunctionComponent<Props> = ({ element, children 
         width={BPMNPool.HEADER_WIDTH}
         height={element.bounds.height}
         strokeColor={element.strokeColor}
-        fillColor={element.fillColor}
+        fillColor={fillColor || element.fillColor}
       />
       <ThemedRect
         y={0}
@@ -18,7 +18,7 @@ export const BPMNPoolComponent: FunctionComponent<Props> = ({ element, children 
         width={element.bounds.width - BPMNPool.HEADER_WIDTH}
         height={element.bounds.height}
         strokeColor={element.strokeColor}
-        fillColor={element.fillColor}
+        fillColor={fillColor || element.fillColor}
       />
       <text
         y={20}
@@ -38,5 +38,6 @@ export const BPMNPoolComponent: FunctionComponent<Props> = ({ element, children 
 
 interface Props {
   element: BPMNPool;
+  fillColor?: string;
   children?: React.ReactNode;
 }

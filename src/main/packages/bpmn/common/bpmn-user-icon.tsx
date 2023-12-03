@@ -3,7 +3,7 @@ import { ThemedCircle, ThemedPolyline } from '../../../components/theme/themedCo
 
 export const BPMNUserIcon: FunctionComponent<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg {...props} height={20} width={20}>
-    <ThemedCircle cx="10" cy="4" r={4} />
-    <ThemedPolyline points={'4 16, 4 11, 16 11, 16 16'} />
+    <ThemedCircle cx="10" cy="4" r={4} fillColor="transparent" />
+    <ThemedPolyline points={'4 16, 4 11, 16 11, 16 16'} fillColor="transparent" />
   </svg>
 );

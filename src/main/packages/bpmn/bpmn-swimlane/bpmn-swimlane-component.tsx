@@ -4,7 +4,7 @@ import { BPMNSwimlane } from './bpmn-swimlane';
 
 export const BPMNSwimlaneComponent: FunctionComponent<Props> = ({ element, children }) => {
   return (
-    <g width={'100%'}>
+    <g>
       <ThemedRect width={element.bounds.width} height={element.bounds.height} fillColor="transparent" />
       <text
         y={20}

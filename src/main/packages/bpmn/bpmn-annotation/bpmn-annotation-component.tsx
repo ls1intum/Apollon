@@ -3,7 +3,7 @@ import { BPMNAnnotation } from './bpmn-annotation';
 import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element }) => (
+export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
   <g>
     <ThemedRect
       rx={10}
@@ -11,7 +11,7 @@ export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element }) =
       width={element.bounds.width}
       height={element.bounds.height}
       strokeColor="transparent"
-      fillColor="transparent"
+      fillColor={fillColor || element.fillColor || 'transparent'}
     />
     <ThemedPath
       d={`M20,0 L10,0 A 10 10 280 0 0 0 10 L0,${element.bounds.height - 10} A 10 10 180 0 0 10 ${

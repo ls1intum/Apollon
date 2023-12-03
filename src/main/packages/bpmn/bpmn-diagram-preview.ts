@@ -13,6 +13,7 @@ import { BPMNAnnotation } from './bpmn-annotation/bpmn-annotation';
 import { BPMNPool } from './bpmn-pool/bpmn-pool';
 import { BPMNDataObject } from './bpmn-data-object/bpmn-data-object';
 import { BPMNGroup } from './bpmn-group/bpmn-group';
+import { BPMNDataStore } from './bpmn-data-store/bpmn-data-store';
 
 export const composeBPMNPreview: ComposePreview = (
   layer: ILayer,
@@ -88,6 +89,12 @@ export const composeBPMNPreview: ComposePreview = (
 
   elements.push(
     new BPMNDataObject({
+      bounds: { x: 0, y: 0, width: 50, height: 60 },
+    }),
+  );
+
+  elements.push(
+    new BPMNDataStore({
       bounds: { x: 0, y: 0, width: 50, height: 60 },
     }),
   );

@@ -5,10 +5,10 @@ import { UMLElementType } from '../../uml-element-type';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 
-export class BPMNDataObject extends UMLContainer {
+export class BPMNDataStore extends UMLContainer {
   static features: UMLElementFeatures = { ...UMLContainer.features, resizable: false };
 
-  type: UMLElementType = BPMNElementType.BPMNDataObject;
+  type: UMLElementType = BPMNElementType.BPMNDataStore;
 
   render(canvas: ILayer): ILayoutable[] {
     return [this];

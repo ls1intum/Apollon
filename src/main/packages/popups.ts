@@ -87,6 +87,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNEndEvent]: BPMNEndEventUpdate,
   [UMLElementType.BPMNGateway]: BPMNGatewayUpdate,
   [UMLElementType.BPMNDataObject]: DefaultPopup,
+  [UMLElementType.BPMNDataStore]: DefaultPopup,
   [UMLElementType.BPMNGroup]: DefaultPopup,
   [UMLElementType.BPMNPool]: BPMNPoolUpdate,
   [UMLElementType.BPMNSwimlane]: DefaultPopup,

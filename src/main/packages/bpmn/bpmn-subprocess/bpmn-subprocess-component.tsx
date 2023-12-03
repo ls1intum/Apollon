@@ -19,6 +19,7 @@ export const BPMNSubprocessComponent: FunctionComponent<Props> = ({ element, fil
       width={14}
       height={14}
       strokeColor={element.strokeColor}
+      fillColor="transparent"
     />
     <ThemedPolyline
       points={`${element.bounds.width / 2 - 4} ${element.bounds.height - 7}, ${element.bounds.width / 2 + 4} ${

@@ -3,7 +3,7 @@ import { BPMNGroup } from './bpmn-group';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNGroupComponent: FunctionComponent<Props> = ({ element, children }) => (
+export const BPMNGroupComponent: FunctionComponent<Props> = ({ element, fillColor, children }) => (
   <g>
     <ThemedRect
       rx={10}
@@ -11,7 +11,7 @@ export const BPMNGroupComponent: FunctionComponent<Props> = ({ element, children
       width="100%"
       height="100%"
       strokeColor={element.strokeColor}
-      fillColor="transparent"
+      fillColor={fillColor || element.fillColor || 'transparent'}
       strokeDasharray="4"
     />
     <Multiline
@@ -32,5 +32,6 @@ export const BPMNGroupComponent: FunctionComponent<Props> = ({ element, children
 
 interface Props {
   element: BPMNGroup;
+  fillColor?: string;
   children?: React.ReactNode;
 }
