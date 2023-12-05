@@ -13,7 +13,12 @@ import { BPMNCompensationFilledIcon } from '../common/bpmn-compensation-filled-i
 import { BPMNSignalIcon } from '../common/bpmn-signal-icon';
 import { BPMNSignalFilledIcon } from '../common/bpmn-signal-filled-icon';
 
-export const BPMNIntermediateEventComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
+export const BPMNIntermediateEventComponent: FunctionComponent<Props> = ({
+  element,
+  fillColor,
+  strokeColor,
+  textColor,
+}) => {
   /**
    * Retrieve an icon based on a given start event type
    * @param eventType The event type for which an icon should be rendered
@@ -58,18 +63,20 @@ export const BPMNIntermediateEventComponent: FunctionComponent<Props> = ({ eleme
         cy="50%"
         r={Math.min(element.bounds.width, element.bounds.height) / 2 - 0.5}
         fillColor={fillColor || element.fillColor || 'transparent'}
+        strokeColor={strokeColor || element.strokeColor}
       />
       <ThemedCircle
         cx="50%"
         cy="50%"
         r={Math.min(element.bounds.width, element.bounds.height) / 2 - 3.5}
         fillColor={fillColor || element.fillColor || 'transparent'}
+        strokeColor={strokeColor || element.strokeColor}
       />
       <Multiline
         x={element.bounds.width / 2}
         y={element.bounds.height + 20}
         width={element.bounds.width * 2}
-        fill={element.textColor}
+        fill={textColor || element.textColor}
         lineHeight={16}
         capHeight={11}
         verticalAnchor="start"
@@ -87,4 +94,6 @@ export const BPMNIntermediateEventComponent: FunctionComponent<Props> = ({ eleme
 interface Props {
   element: BPMNIntermediateEvent;
   fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
 }

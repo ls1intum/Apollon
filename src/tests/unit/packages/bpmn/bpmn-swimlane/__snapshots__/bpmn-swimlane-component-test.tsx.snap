@@ -6,8 +6,8 @@ exports[`render the bpmn-swimlane-component 1`] = `
     <svg>
       <g>
         <rect
-          class="sc-fqkvVR zazVk"
-          fill="transparent"
+          class="sc-fqkvVR kprGcp"
+          fill="white"
           height="100"
           stroke="black"
           width="200"
@@ -20,7 +20,12 @@ exports[`render the bpmn-swimlane-component 1`] = `
           x="-50"
           y="20"
         >
-          Swimlane
+          <tspan
+            dy="5.5"
+            x="-50"
+          >
+            Swimlane
+          </tspan>
         </text>
       </g>
     </svg>

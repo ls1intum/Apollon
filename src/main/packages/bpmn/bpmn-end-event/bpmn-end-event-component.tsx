@@ -9,7 +9,7 @@ import { BPMNSignalFilledIcon } from '../common/bpmn-signal-filled-icon';
 import { BPMNTerminateFilledIcon } from '../common/bpmn-terminate-filled-icon';
 import { BPMNErrorFilledIcon } from '../common/bpmn-error-filled-icon';
 
-export const BPMNEndEventComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
+export const BPMNEndEventComponent: FunctionComponent<Props> = ({ element, fillColor, strokeColor, textColor }) => {
   /**
    * Retrieve an icon based on a given start event type
    * @param eventType The event type for which an icon should be rendered
@@ -47,11 +47,12 @@ export const BPMNEndEventComponent: FunctionComponent<Props> = ({ element, fillC
         r={Math.min(element.bounds.width, element.bounds.height) / 2 - 1.5}
         strokeWidth={3}
         fillColor={fillColor || element.fillColor}
+        strokeColor={strokeColor || element.strokeColor}
       />
       <Multiline
         x={element.bounds.width / 2}
         y={element.bounds.height + 20}
-        fill={element.textColor}
+        fill={textColor || element.textColor}
         width={element.bounds.width * 2}
         lineHeight={16}
         capHeight={11}
@@ -70,4 +71,6 @@ export const BPMNEndEventComponent: FunctionComponent<Props> = ({ element, fillC
 interface Props {
   element: BPMNEndEvent;
   fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
 }

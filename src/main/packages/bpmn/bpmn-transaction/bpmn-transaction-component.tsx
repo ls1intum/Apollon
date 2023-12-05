@@ -3,15 +3,15 @@ import { BPMNTransaction } from './bpmn-transaction';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNTransactionComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
+export const BPMNTransactionComponent: FunctionComponent<Props> = ({ element, fillColor, strokeColor, textColor }) => (
   <g>
     <ThemedRect
       rx={10}
       ry={10}
       width={element.bounds.width}
       height={element.bounds.height}
-      strokeColor={element.strokeColor}
       fillColor={fillColor || element.fillColor}
+      strokeColor={strokeColor || element.strokeColor}
     />
     <ThemedRect
       rx={7}
@@ -20,8 +20,8 @@ export const BPMNTransactionComponent: FunctionComponent<Props> = ({ element, fi
       y={3}
       width={element.bounds.width - 6}
       height={element.bounds.height - 6}
-      strokeColor={element.strokeColor}
       fillColor={fillColor || element.fillColor}
+      strokeColor={strokeColor || element.strokeColor}
     />
     <Multiline
       x={element.bounds.width / 2}
@@ -29,7 +29,7 @@ export const BPMNTransactionComponent: FunctionComponent<Props> = ({ element, fi
       width={element.bounds.width}
       height={element.bounds.height}
       fontWeight="bold"
-      fill={element.textColor}
+      fill={textColor || element.textColor}
       lineHeight={16}
       capHeight={11}
     >
@@ -41,4 +41,6 @@ export const BPMNTransactionComponent: FunctionComponent<Props> = ({ element, fi
 interface Props {
   element: BPMNTransaction;
   fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
 }

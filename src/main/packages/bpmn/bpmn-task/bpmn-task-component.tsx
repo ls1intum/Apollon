@@ -9,7 +9,7 @@ import { BPMNBusinessRuleIcon } from '../common/bpmn-business-rule-icon';
 import { BPMNManualIcon } from '../common/bpmn-manual-icon';
 import { BPMNUserIcon } from '../common/bpmn-user-icon';
 
-export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
+export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor, strokeColor, textColor }) => {
   /**
    * Retrieve an icon based on a given task type
    * @param taskType The task type for which an icon should be rendered
@@ -46,8 +46,8 @@ export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor
         ry={10}
         width="100%"
         height="100%"
-        strokeColor={element.strokeColor}
         fillColor={fillColor || element.fillColor}
+        strokeColor={strokeColor || element.strokeColor}
       />
       <Multiline
         x={element.bounds.width / 2}
@@ -55,7 +55,7 @@ export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor
         width={element.bounds.width}
         height={element.bounds.height}
         fontWeight="bold"
-        fill={element.textColor}
+        fill={textColor || element.textColor}
         lineHeight={16}
         capHeight={11}
       >
@@ -72,4 +72,6 @@ export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor
 interface Props {
   element: BPMNTask;
   fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
 }

@@ -3,7 +3,7 @@ import { BPMNAnnotation } from './bpmn-annotation';
 import { ThemedPath, ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
+export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element, strokeColor, textColor }) => (
   <g>
     <ThemedRect
       rx={10}
@@ -11,13 +11,13 @@ export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element, fil
       width={element.bounds.width}
       height={element.bounds.height}
       strokeColor="transparent"
-      fillColor={fillColor || element.fillColor || 'transparent'}
+      fillColor="transparent"
     />
     <ThemedPath
       d={`M20,0 L10,0 A 10 10 280 0 0 0 10 L0,${element.bounds.height - 10} A 10 10 180 0 0 10 ${
         element.bounds.height
       } L20, ${element.bounds.height}`}
-      strokeColor={element.strokeColor}
+      strokeColor={strokeColor || element.strokeColor}
       fillColor="transparent"
     />
     <Multiline
@@ -26,7 +26,7 @@ export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element, fil
       width={element.bounds.width}
       height={element.bounds.height}
       fontWeight="bold"
-      fill={element.textColor}
+      fill={textColor || element.textColor}
       lineHeight={16}
       capHeight={11}
     >
@@ -37,5 +37,6 @@ export const BPMNAnnotationComponent: FunctionComponent<Props> = ({ element, fil
 
 interface Props {
   element: BPMNAnnotation;
-  fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
 }

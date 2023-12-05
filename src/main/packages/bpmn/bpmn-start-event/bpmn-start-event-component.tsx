@@ -32,7 +32,7 @@ const renderIconForType = (
   }
 };
 
-export const BPMNStartEventComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
+export const BPMNStartEventComponent: FunctionComponent<Props> = ({ element, fillColor, strokeColor, textColor }) => {
   return (
     <g>
       <ThemedCircle
@@ -40,12 +40,13 @@ export const BPMNStartEventComponent: FunctionComponent<Props> = ({ element, fil
         cy="50%"
         r={Math.min(element.bounds.width, element.bounds.height) / 2}
         fillColor={fillColor || element.fillColor || 'transparent'}
+        strokeColor={strokeColor || element.strokeColor}
       />
       <Multiline
         x={element.bounds.width / 2}
         y={element.bounds.height + 20}
         width={element.bounds.width * 2}
-        fill={element.textColor}
+        fill={textColor || element.textColor}
         lineHeight={16}
         capHeight={11}
         verticalAnchor="start"
@@ -63,4 +64,13 @@ export const BPMNStartEventComponent: FunctionComponent<Props> = ({ element, fil
 interface Props {
   element: BPMNStartEvent;
   fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
+}
+
+interface Props {
+  element: BPMNStartEvent;
+  fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
 }

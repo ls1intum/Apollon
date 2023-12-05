@@ -3,14 +3,14 @@ import { BPMNCallActivity } from './bpmn-call-activity';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
 
-export const BPMNCallActivityComponent: FunctionComponent<Props> = ({ element, fillColor }) => (
+export const BPMNCallActivityComponent: FunctionComponent<Props> = ({ element, fillColor, strokeColor, textColor }) => (
   <g>
     <ThemedRect
       rx={10}
       ry={10}
       width={element.bounds.width}
       height={element.bounds.height}
-      strokeColor={element.strokeColor}
+      strokeColor={strokeColor || element.strokeColor}
       strokeWidth={3}
       fillColor={fillColor || element.fillColor}
     />
@@ -20,7 +20,7 @@ export const BPMNCallActivityComponent: FunctionComponent<Props> = ({ element, f
       width={element.bounds.width}
       height={element.bounds.height}
       fontWeight="bold"
-      fill={element.textColor}
+      fill={textColor || element.textColor}
       lineHeight={16}
       capHeight={11}
     >
@@ -32,4 +32,6 @@ export const BPMNCallActivityComponent: FunctionComponent<Props> = ({ element, f
 interface Props {
   element: BPMNCallActivity;
   fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
 }

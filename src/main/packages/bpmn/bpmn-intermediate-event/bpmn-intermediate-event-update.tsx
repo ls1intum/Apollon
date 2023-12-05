@@ -12,6 +12,8 @@ import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { BPMNIntermediateEvent, BPMNIntermediateEventType } from './bpmn-intermediate-event';
+import { StylePane } from '../../../components/style-pane/style-pane';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
 
 interface OwnProps {
   element: BPMNIntermediateEvent;
@@ -40,7 +42,17 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class BPMNIntermediateEventUpdateComponent extends Component<Props> {
+type State = { colorOpen: boolean };
+
+class BPMNIntermediateEventUpdateComponent extends Component<Props, State> {
+  state = { colorOpen: false };
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
+
   render() {
     const { element } = this.props;
 
@@ -49,13 +61,24 @@ class BPMNIntermediateEventUpdateComponent extends Component<Props> {
         <section>
           <Flex>
             <Textfield value={element.name} onChange={this.rename(element.id)} autoFocus />
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" tabIndex={-1} onClick={this.delete(element.id)}>
               <TrashIcon />
             </Button>
           </Flex>
-          <Divider />
         </section>
         <section>
+          <StylePane
+            open={this.state.colorOpen}
+            element={element}
+            onColorChange={this.props.update}
+            lineColor
+            textColor
+            fillColor
+          />
+        </section>
+        <section>
+          <Divider />
           <Dropdown value={element.eventType} onChange={this.changeEventType(element.id)}>
             <Dropdown.Item value={'default'}>
               {this.props.translate('packages.BPMN.BPMNIntermediateEvent')}
