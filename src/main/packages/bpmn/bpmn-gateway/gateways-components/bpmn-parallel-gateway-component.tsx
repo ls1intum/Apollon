@@ -15,12 +15,12 @@ export const BPMNParallelGatewayComponent: FunctionComponent<Props> = ({ element
     <ThemedPolyline
       points={`${element.bounds.width / 2} 10, ${element.bounds.width / 2} ${element.bounds.height - 10}`}
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor="transparent"
     />
     <ThemedPolyline
       points={`10 ${element.bounds.height / 2}, ${element.bounds.width - 10} ${element.bounds.height / 2}`}
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor="transparent"
     />
     <Multiline
       x={element.bounds.width / 2}

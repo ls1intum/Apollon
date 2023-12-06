@@ -17,6 +17,7 @@ export const BPMNInclusiveGatewayComponent: FunctionComponent<Props> = ({ elemen
       cy={element.bounds.height / 2}
       r={Math.min(element.bounds.width, element.bounds.height) / 2 - 12}
       strokeColor={element.strokeColor}
+      fillColor="transparent"
     />
     <Multiline
       x={element.bounds.width / 2}

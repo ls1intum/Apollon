@@ -17,12 +17,14 @@ export const BPMNEventBasedGatewayComponent: FunctionComponent<Props> = ({ eleme
       cy={element.bounds.height / 2}
       r={Math.min(element.bounds.width, element.bounds.height) / 2 - 9}
       strokeColor={element.strokeColor}
+      fillColor="transparent"
     />
     <ThemedCircle
       cx={element.bounds.width / 2}
       cy={element.bounds.height / 2}
       r={Math.min(element.bounds.width, element.bounds.height) / 2 - 12}
       strokeColor={element.strokeColor}
+      fillColor="transparent"
     />
     <ThemedPath
       d={
@@ -36,7 +38,7 @@ export const BPMNEventBasedGatewayComponent: FunctionComponent<Props> = ({ eleme
         ].join(' ') + ' z'
       }
       strokeColor={element.strokeColor}
-      fillColor={element.fillColor}
+      fillColor="transparent"
     />
     <Multiline
       x={element.bounds.width / 2}
