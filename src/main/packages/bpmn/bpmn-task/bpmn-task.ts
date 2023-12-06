@@ -39,7 +39,7 @@ export class BPMNTask extends UMLContainer {
   }
 
   render(canvas: ILayer): ILayoutable[] {
-    this.bounds = calculateNameBounds(this, canvas);
+    //this.bounds = calculateNameBounds(this, canvas);
     return [this];
   }
 }

@@ -20,7 +20,7 @@ export const composeBPMNPreview: ComposePreview = (
   translate: (id: string) => string,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150, height: 60 };
+  const defaultBounds: IBoundary = { x: 0, y: 0, width: 160, height: 60 };
 
   elements.push(
     new BPMNTask({
@@ -89,13 +89,13 @@ export const composeBPMNPreview: ComposePreview = (
 
   elements.push(
     new BPMNDataObject({
-      bounds: { x: 0, y: 0, width: 50, height: 60 },
+      bounds: { x: 0, y: 0, width: 40, height: 60 },
     }),
   );
 
   elements.push(
     new BPMNDataStore({
-      bounds: { x: 0, y: 0, width: 50, height: 60 },
+      bounds: { x: 0, y: 0, width: 60, height: 60 },
     }),
   );
 
