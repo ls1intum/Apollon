@@ -165,6 +165,7 @@
       "BPMNSequenceFlow": "Sequenz",
       "BPMNMessageFlow": "Nachricht",
       "BPMNAssociationFlow": "Assoziation",
+      "BPMNDataAssociationFlow": "Daten-Assoziation",
       "BPMNDataObject": "Datenobjekt",
       "BPMNPool": "Pool",
       "BPMNSwimlane": "Bahn",

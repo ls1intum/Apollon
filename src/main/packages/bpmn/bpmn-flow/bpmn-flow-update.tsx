@@ -82,6 +82,9 @@ class BPMNFlowUpdateComponent extends Component<Props, State> {
             <Dropdown.Item value={'association'}>
               {this.props.translate('packages.BPMN.BPMNAssociationFlow')}
             </Dropdown.Item>
+            <Dropdown.Item value={'data association'}>
+              {this.props.translate('packages.BPMN.BPMNDataAssociationFlow')}
+            </Dropdown.Item>
           </Dropdown>
         </section>
         <StylePane

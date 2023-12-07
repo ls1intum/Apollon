@@ -36,4 +36,5 @@ export const BPMNGatewayComponent: FunctionComponent<Props> = (props) => {
 
 export interface Props {
   element: BPMNGateway;
+  fillColor?: string;
 }

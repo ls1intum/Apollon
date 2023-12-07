@@ -5,7 +5,7 @@ import { UMLRelationshipCenteredDescription } from '../../../services/uml-relati
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import * as Apollon from '../../../typings';
 
-export type BPMNFlowType = 'sequence' | 'message' | 'association';
+export type BPMNFlowType = 'sequence' | 'message' | 'association' | 'data association';
 
 export class BPMNFlow extends UMLRelationshipCenteredDescription {
   static features = { ...UMLRelationship.features };
