@@ -18,6 +18,7 @@ import { Layout } from './application-styles';
 import { RootContext, RootProvider } from '../components/root/root-context';
 import { UMLModel } from '../typings';
 import { Patcher } from '../services/patcher';
+import { MouseEventListener } from '../components/canvas/mouse-eventlistener';
 
 type Props = {
   patcher: Patcher<UMLModel>;
@@ -85,6 +86,11 @@ export class Application extends React.Component<Props, State> {
                       <Editor>
                         <Canvas ref={this.setCanvas} />
                       </Editor>
+                      {canvasContext && (
+                        <>
+                          <MouseEventListener />
+                        </>
+                      )}
                     </DraggableLayer>
                   )}
                 </Layout>
