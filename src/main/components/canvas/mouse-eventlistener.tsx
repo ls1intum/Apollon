@@ -95,10 +95,14 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
           pointerEvents={'none'}
           style={{
             position: 'fixed',
-            left: `${Math.min(this.state.selectionRectangle.startX!, this.state.selectionRectangle.endX!)}px`,
-            width: `${Math.abs(this.state.selectionRectangle.startX! - this.state.selectionRectangle.endX!)}px`,
-            top: `${Math.min(this.state.selectionRectangle.startY!, this.state.selectionRectangle.endY!)}px`,
-            height: `${Math.abs(this.state.selectionRectangle.startY! - this.state.selectionRectangle.endY!)}px`,
+            left: `${Math.min(this.state.selectionRectangle.startX ?? 0, this.state.selectionRectangle.endX ?? 0)}px`,
+            width: `${Math.abs(
+              (this.state.selectionRectangle.startX ?? 0) - (this.state.selectionRectangle.endX ?? 0),
+            )}px`,
+            top: `${Math.min(this.state.selectionRectangle.startY ?? 0, this.state.selectionRectangle.endY ?? 0)}px`,
+            height: `${Math.abs(
+              (this.state.selectionRectangle.startY ?? 0) - (this.state.selectionRectangle.endY ?? 0),
+            )}px`,
             backgroundColor: '#1E90FF',
             borderStyle: 'solid',
             borderWidth: '1px',
