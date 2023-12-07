@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { ThemedCircle, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { ThemedCircle, ThemedPolyline } from '../../../../components/theme/themedComponents';
 
 export const BPMNUserIcon: FunctionComponent<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg {...props} height={20} width={20}>

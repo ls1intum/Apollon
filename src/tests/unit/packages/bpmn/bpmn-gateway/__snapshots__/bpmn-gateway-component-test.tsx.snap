@@ -13,14 +13,14 @@ exports[`render the bpmn-gateway-component 1`] = `
             stroke="black"
           />
           <polyline
-            class="sc-aXZVg bUvEJV"
-            fill="white"
+            class="sc-aXZVg dCdbOk"
+            fill="transparent"
             points="13 13, 27 27"
             stroke="black"
           />
           <polyline
-            class="sc-aXZVg bUvEJV"
-            fill="white"
+            class="sc-aXZVg dCdbOk"
+            fill="transparent"
             points="13 27, 27 13"
             stroke="black"
           />

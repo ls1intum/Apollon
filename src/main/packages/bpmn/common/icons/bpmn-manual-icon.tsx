@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { ThemedPath } from '../../../components/theme/themedComponents';
+import { ThemedPath } from '../../../../components/theme/themedComponents';
 
 export const BPMNManualIcon: FunctionComponent<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg {...props} height={20} width={20}>

@@ -14,6 +14,11 @@ import { Dropdown } from '../../../components/controls/dropdown/dropdown';
 import { BPMNTask, BPMNTaskType } from './bpmn-task';
 import { StylePane } from '../../../components/style-pane/style-pane';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
+import { Switch } from '../../../components/controls/switch/switch';
+import { BPMNMarkerType } from '../common/types';
+import { BpmnLoopMarkerIcon } from '../common/markers/bpmn-loop-marker-icon';
+import { BPMNParallelMarkerIcon } from '../common/markers/bpmn-parallel-marker-icon';
+import { BPMNSequentialMarkerIcon } from '../common/markers/bpmn-sequential-marker-icon';
 
 interface OwnProps {
   element: BPMNTask;
@@ -91,6 +96,20 @@ class BPMNTaskUpdateComponent extends Component<Props, State> {
             <Dropdown.Item value={'script'}>{this.props.translate('packages.BPMN.BPMNScriptTask')}</Dropdown.Item>
           </Dropdown>
         </section>
+        <section>
+          <Divider />
+          <Switch value={element.marker as BPMNMarkerType} onChange={this.changeMarker(element.id)} color="primary">
+            <Switch.Item value={'parallel multi instance'}>
+              <BPMNParallelMarkerIcon stroke="currentColor" />
+            </Switch.Item>
+            <Switch.Item value={'sequential multi instance'}>
+              <BPMNSequentialMarkerIcon stroke="currentColor" />
+            </Switch.Item>
+            <Switch.Item value={'loop'}>
+              <BpmnLoopMarkerIcon stroke="currentColor" />
+            </Switch.Item>
+          </Switch>
+        </section>
       </div>
     );
   }
@@ -109,6 +128,19 @@ class BPMNTaskUpdateComponent extends Component<Props, State> {
    */
   private changeTaskType = (id: string) => (value: string) => {
     this.props.update<BPMNTask>(id, { taskType: value as BPMNTaskType });
+  };
+
+  /**
+   * Change the marker of the task
+   * @param id The ID of the task whose marker should be changed
+   */
+  private changeMarker = (id: string) => (value: string) => {
+    if (this.props.element.marker === value) {
+      this.props.update<BPMNTask>(id, { marker: 'none' as BPMNMarkerType });
+      return;
+    }
+
+    this.props.update<BPMNTask>(id, { marker: value as BPMNMarkerType });
   };
 
   /**

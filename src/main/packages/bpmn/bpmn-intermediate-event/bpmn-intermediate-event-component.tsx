@@ -2,16 +2,16 @@ import React, { FunctionComponent, ReactElement } from 'react';
 import { BPMNIntermediateEvent, BPMNIntermediateEventType } from './bpmn-intermediate-event';
 import { ThemedCircle } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
-import { BPMNMessageIcon } from '../common/bpmn-message-icon';
-import { BPMNMessageFilledIcon } from '../common/bpmn-message-filled-icon';
-import { BPMNTimerIcon } from '../common/bpmn-timer-icon';
-import { BPMNEscalationFilledIcon } from '../common/bpmn-escalation-filled-icon';
-import { BPMNConditionalIcon } from '../common/bpmn-conditional-icon';
-import { BPMNLinkIcon } from '../common/bpmn-link-icon';
-import { BPMNLinkFilledIcon } from '../common/bpmn-link-filled-icon';
-import { BPMNCompensationFilledIcon } from '../common/bpmn-compensation-filled-icon';
-import { BPMNSignalIcon } from '../common/bpmn-signal-icon';
-import { BPMNSignalFilledIcon } from '../common/bpmn-signal-filled-icon';
+import { BPMNMessageIcon } from '../common/icons/bpmn-message-icon';
+import { BPMNMessageFilledIcon } from '../common/icons/bpmn-message-filled-icon';
+import { BPMNTimerIcon } from '../common/icons/bpmn-timer-icon';
+import { BPMNEscalationFilledIcon } from '../common/icons/bpmn-escalation-filled-icon';
+import { BPMNConditionalIcon } from '../common/icons/bpmn-conditional-icon';
+import { BPMNLinkIcon } from '../common/icons/bpmn-link-icon';
+import { BPMNLinkFilledIcon } from '../common/icons/bpmn-link-filled-icon';
+import { BPMNCompensationFilledIcon } from '../common/icons/bpmn-compensation-filled-icon';
+import { BPMNSignalIcon } from '../common/icons/bpmn-signal-icon';
+import { BPMNSignalFilledIcon } from '../common/icons/bpmn-signal-filled-icon';
 
 export const BPMNIntermediateEventComponent: FunctionComponent<Props> = ({
   element,

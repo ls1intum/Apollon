@@ -2,10 +2,10 @@ import React, { FunctionComponent, ReactElement } from 'react';
 import { BPMNStartEvent, BPMNStartEventType } from './bpmn-start-event';
 import { ThemedCircle } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
-import { BPMNMessageIcon } from '../common/bpmn-message-icon';
-import { BPMNTimerIcon } from '../common/bpmn-timer-icon';
-import { BPMNSignalIcon } from '../common/bpmn-signal-icon';
-import { BPMNConditionalIcon } from '../common/bpmn-conditional-icon';
+import { BPMNMessageIcon } from '../common/icons/bpmn-message-icon';
+import { BPMNTimerIcon } from '../common/icons/bpmn-timer-icon';
+import { BPMNSignalIcon } from '../common/icons/bpmn-signal-icon';
+import { BPMNConditionalIcon } from '../common/icons/bpmn-conditional-icon';
 
 /**
  * Retrieve an icon based on a given start event type

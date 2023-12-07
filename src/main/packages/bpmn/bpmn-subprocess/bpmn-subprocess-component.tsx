@@ -26,12 +26,16 @@ export const BPMNSubprocessComponent: FunctionComponent<Props> = ({ element, fil
         element.bounds.height - 7
       }`}
       strokeColor={strokeColor || element.strokeColor}
+      strokeLinejoin="round"
+      strokeLinecap="round"
     />
     <ThemedPolyline
       points={`${element.bounds.width / 2} ${element.bounds.height - 11}, ${element.bounds.width / 2} ${
         element.bounds.height - 3
       }`}
       strokeColor={strokeColor || element.strokeColor}
+      strokeLinejoin="round"
+      strokeLinecap="round"
     />
     <Multiline
       x={element.bounds.width / 2}

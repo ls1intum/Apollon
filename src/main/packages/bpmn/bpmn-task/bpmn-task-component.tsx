@@ -2,12 +2,16 @@ import React, { FunctionComponent, ReactElement } from 'react';
 import { BPMNTask, BPMNTaskType } from './bpmn-task';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
-import { BPMNMessageIcon } from '../common/bpmn-message-icon';
-import { BPMNMessageFilledIcon } from '../common/bpmn-message-filled-icon';
-import { BPMNScriptIcon } from '../common/bpmn-script-icon';
-import { BPMNBusinessRuleIcon } from '../common/bpmn-business-rule-icon';
-import { BPMNManualIcon } from '../common/bpmn-manual-icon';
-import { BPMNUserIcon } from '../common/bpmn-user-icon';
+import { BPMNMessageIcon } from '../common/icons/bpmn-message-icon';
+import { BPMNMessageFilledIcon } from '../common/icons/bpmn-message-filled-icon';
+import { BPMNScriptIcon } from '../common/icons/bpmn-script-icon';
+import { BPMNBusinessRuleIcon } from '../common/icons/bpmn-business-rule-icon';
+import { BPMNManualIcon } from '../common/icons/bpmn-manual-icon';
+import { BPMNUserIcon } from '../common/icons/bpmn-user-icon';
+import { BPMNSequentialMarkerIcon } from '../common/markers/bpmn-sequential-marker-icon';
+import { BPMNMarkerType } from '../common/types';
+import { BpmnLoopMarkerIcon } from '../common/markers/bpmn-loop-marker-icon';
+import { BPMNParallelMarkerIcon } from '../common/markers/bpmn-parallel-marker-icon';
 
 export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor, strokeColor, textColor }) => {
   /**
@@ -39,6 +43,21 @@ export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor
     }
   };
 
+  const renderMarker = (taskType: BPMNMarkerType, props: React.SVGProps<SVGSVGElement> = {}): null | ReactElement => {
+    switch (taskType) {
+      case 'none':
+        return null;
+      case 'parallel multi instance':
+        return <BPMNParallelMarkerIcon {...props} />;
+      case 'sequential multi instance':
+        return <BPMNSequentialMarkerIcon {...props} />;
+      case 'loop':
+        return <BpmnLoopMarkerIcon {...props} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <g>
       <ThemedRect
@@ -64,6 +83,10 @@ export const BPMNTaskComponent: FunctionComponent<Props> = ({ element, fillColor
       {renderIconForType(element.taskType, {
         x: 10,
         y: 10,
+      })}
+      {renderMarker(element.marker, {
+        x: element.bounds.width / 2 - 7,
+        y: element.bounds.height - 16,
       })}
     </g>
   );

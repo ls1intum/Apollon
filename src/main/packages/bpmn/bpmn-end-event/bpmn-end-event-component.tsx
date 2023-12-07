@@ -2,12 +2,12 @@ import React, { FunctionComponent, ReactElement } from 'react';
 import { BPMNEndEvent, BPMNEndEventType } from './bpmn-end-event';
 import { ThemedCircle } from '../../../components/theme/themedComponents';
 import { Multiline } from '../../../utils/svg/multiline';
-import { BPMNMessageFilledIcon } from '../common/bpmn-message-filled-icon';
-import { BPMNEscalationFilledIcon } from '../common/bpmn-escalation-filled-icon';
-import { BPMNCompensationFilledIcon } from '../common/bpmn-compensation-filled-icon';
-import { BPMNSignalFilledIcon } from '../common/bpmn-signal-filled-icon';
-import { BPMNTerminateFilledIcon } from '../common/bpmn-terminate-filled-icon';
-import { BPMNErrorFilledIcon } from '../common/bpmn-error-filled-icon';
+import { BPMNMessageFilledIcon } from '../common/icons/bpmn-message-filled-icon';
+import { BPMNEscalationFilledIcon } from '../common/icons/bpmn-escalation-filled-icon';
+import { BPMNCompensationFilledIcon } from '../common/icons/bpmn-compensation-filled-icon';
+import { BPMNSignalFilledIcon } from '../common/icons/bpmn-signal-filled-icon';
+import { BPMNTerminateFilledIcon } from '../common/icons/bpmn-terminate-filled-icon';
+import { BPMNErrorFilledIcon } from '../common/icons/bpmn-error-filled-icon';
 
 export const BPMNEndEventComponent: FunctionComponent<Props> = ({ element, fillColor, strokeColor, textColor }) => {
   /**

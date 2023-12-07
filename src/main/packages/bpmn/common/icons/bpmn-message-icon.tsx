@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { ThemedPolyline } from '../../../components/theme/themedComponents';
+import { ThemedPolyline } from '../../../../components/theme/themedComponents';
 
 export const BPMNMessageIcon: FunctionComponent<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg {...props} height={20} width={20}>

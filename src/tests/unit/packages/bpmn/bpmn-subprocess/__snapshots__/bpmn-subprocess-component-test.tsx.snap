@@ -28,12 +28,16 @@ exports[`render the bpmn-subprocess-component 1`] = `
           fill="white"
           points="96 93, 104 93"
           stroke="black"
+          stroke-linecap="round"
+          stroke-linejoin="round"
         />
         <polyline
           class="sc-aXZVg bUvEJV"
           fill="white"
           points="100 89, 100 97"
           stroke="black"
+          stroke-linecap="round"
+          stroke-linejoin="round"
         />
         <text
           font-weight="bold"

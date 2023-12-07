@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { ThemedPolyline, ThemedRect } from '../../../components/theme/themedComponents';
+import { ThemedPolyline, ThemedRect } from '../../../../components/theme/themedComponents';
 
 export const BPMNConditionalIcon: FunctionComponent<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg {...props} height={20} width={20}>
