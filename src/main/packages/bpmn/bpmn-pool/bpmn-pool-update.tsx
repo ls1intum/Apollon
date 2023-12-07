@@ -19,6 +19,8 @@ import { AsyncDispatch } from '../../../utils/actions/actions';
 import { BPMNElementType } from '../index';
 import { Header } from '../../../components/controls/typography/typography';
 import UmlAttributeUpdate from '../../common/uml-classifier/uml-classifier-attribute-update';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
+import { StylePane } from '../../../components/style-pane/style-pane';
 
 interface OwnProps {
   element: BPMNPool;
@@ -51,8 +53,21 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-class BPMNPoolUpdateComponent extends Component<Props> {
+type State = {
+  fieldToFocus?: Textfield<string> | null;
+  colorOpen: boolean;
+};
+
+class BPMNPoolUpdateComponent extends Component<Props, State> {
+  state = { colorOpen: false };
+
   newSwimlaneField = createRef<Textfield<string>>();
+
+  private toggleColor = () => {
+    this.setState((state) => ({
+      colorOpen: !state.colorOpen,
+    }));
+  };
 
   render() {
     const { element, getById } = this.props;
@@ -69,10 +84,21 @@ class BPMNPoolUpdateComponent extends Component<Props> {
         <section>
           <Flex>
             <Textfield value={element.name} onChange={(value) => this.rename(element.id, value)} autoFocus />
+            <ColorButton onClick={this.toggleColor} />
             <Button color="link" tabIndex={-1} onClick={() => this.delete(element.id)}>
               <TrashIcon />
             </Button>
           </Flex>
+        </section>
+        <section>
+          <StylePane
+            open={this.state.colorOpen}
+            element={element}
+            onColorChange={this.props.update}
+            lineColor
+            textColor
+            fillColor
+          />
         </section>
         <section>
           <Divider />

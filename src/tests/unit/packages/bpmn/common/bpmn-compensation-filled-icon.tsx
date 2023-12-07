@@ -1,6 +1,6 @@
 import { wrappedRender } from '../../../test-utils/render';
 import * as React from 'react';
-import { BPMNCompensationFilledIcon } from '../../../../../main/packages/bpmn/common/bpmn-compensation-filled-icon';
+import { BPMNCompensationFilledIcon } from '../../../../../main/packages/bpmn/common/icons/bpmn-compensation-filled-icon';
 
 it('render the bpmn-compensation-filled-icon', () => {
   const { baseElement } = wrappedRender(

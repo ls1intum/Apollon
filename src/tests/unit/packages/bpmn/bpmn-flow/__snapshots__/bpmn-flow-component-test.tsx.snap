@@ -6,26 +6,6 @@ exports[`render the bpmn-flow-component 1`] = `
     <svg>
       <g>
         <marker
-          id="marker-start-1"
-          markerHeight="10"
-          markerUnits="strokeWidth"
-          markerWidth="10"
-          orient="auto"
-          refX="0"
-          refY="0"
-          viewBox="0 0 10 10"
-        >
-          <circle
-            class="sc-iGgWBj fvtjvB"
-            cx="0%"
-            cy="0%"
-            fill="white"
-            r="5"
-            stroke="black"
-            stroke-width="1"
-          />
-        </marker>
-        <marker
           id="marker-end-1"
           markerHeight="10"
           markerUnits="strokeWidth"

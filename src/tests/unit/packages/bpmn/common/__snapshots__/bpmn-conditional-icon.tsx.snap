@@ -9,8 +9,8 @@ exports[`render the bpmn-conditional-icon 1`] = `
         width="20"
       >
         <rect
-          class="sc-fqkvVR kprGcp"
-          fill="white"
+          class="sc-fqkvVR zazVk"
+          fill="transparent"
           height="16"
           stroke="black"
           stroke-linejoin="round"

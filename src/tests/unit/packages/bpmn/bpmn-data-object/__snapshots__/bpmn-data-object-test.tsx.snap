@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`render the bpmn-transaction-component 1`] = `
+exports[`render the bpmn-data-object-component 1`] = `
 <body>
   <div>
     <svg>
@@ -12,16 +12,14 @@ exports[`render the bpmn-transaction-component 1`] = `
           stroke="black"
         />
         <text
-          font-weight="bold"
-          height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
+          width="400"
           x="100"
-          y="50"
+          y="120"
         >
           <tspan
-            dy="5.5"
+            dy="11"
             x="100"
           >
             Data Object

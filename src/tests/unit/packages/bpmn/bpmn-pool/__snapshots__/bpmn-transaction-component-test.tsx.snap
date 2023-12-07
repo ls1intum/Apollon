@@ -31,7 +31,12 @@ exports[`render the bpmn-pool-component 1`] = `
           x="-50"
           y="20"
         >
-          Pool
+          <tspan
+            dy="5.5"
+            x="-50"
+          >
+            Pool
+          </tspan>
         </text>
       </g>
     </svg>

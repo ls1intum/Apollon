@@ -17,6 +17,9 @@ export const StyledSwitchItem = styled(Button).attrs<SwitchItemProps>((props) =>
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   :not(:first-child) {
     margin-left: -1px;
