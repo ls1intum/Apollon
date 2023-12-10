@@ -6,8 +6,7 @@ import { Patch } from './patcher-types';
  * in the form of a [JSON patch](http://jsonpatch.com/)
  */
 export function compare<T>(a: T, b: T): Patch {
-  const patch = comparePatches(a as any, b as any)
-    .filter((op) => !op.path.startsWith('/size'));
+  const patch = comparePatches(a as any, b as any).filter((op) => !op.path.startsWith('/size'));
 
   const relationshipIdsWithAffectedPaths: string[] = [];
 
@@ -21,7 +20,7 @@ export function compare<T>(a: T, b: T): Patch {
   const cleanedPatch = patch.filter((op) => {
     const match = /\/relationships\/(?<id>[\w-]+)\//g.exec(op.path);
 
-    return !(match?.groups?.id) || !relationshipIdsWithAffectedPaths.includes(match.groups.id);
+    return !match?.groups?.id || !relationshipIdsWithAffectedPaths.includes(match.groups.id);
   });
 
   relationshipIdsWithAffectedPaths.forEach((id) => {
