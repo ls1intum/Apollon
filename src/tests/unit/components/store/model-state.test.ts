@@ -21,17 +21,19 @@ describe('model state.', () => {
 
   it('puts model on 0,0 when exporting.', () => {
     const state = ModelState.fromModel(diagram as any);
-    Object.values(state.elements!).forEach((element) => {
-      if (UMLRelationship.isUMLRelationship(element)) {
-        element.path.forEach((point) => {
-          point.x += 100;
-          point.y += 100;
-        });
-      }
+    expect(state.elements).toBeDefined();
+    state.elements &&
+      Object.values(state.elements).forEach((element) => {
+        if (UMLRelationship.isUMLRelationship(element)) {
+          element.path.forEach((point) => {
+            point.x += 100;
+            point.y += 100;
+          });
+        }
 
-      element.bounds.x += 100;
-      element.bounds.y += 100;
-    });
+        element.bounds.x += 100;
+        element.bounds.y += 100;
+      });
 
     const exp = ModelState.toModel(state as any);
     const bounds = computeBoundingBoxForElements([...Object.values(exp.elements), ...Object.values(exp.relationships)]);
@@ -42,17 +44,19 @@ describe('model state.', () => {
 
   it('deos not put model on 0,0 when exporting, given the option.', () => {
     const state = ModelState.fromModel(diagram as any);
-    Object.values(state.elements!).forEach((element) => {
-      if (UMLRelationship.isUMLRelationship(element)) {
-        element.path.forEach((point) => {
-          point.x += 100;
-          point.y += 100;
-        });
-      }
+    expect(state.elements).toBeDefined();
+    state.elements &&
+      Object.values(state.elements).forEach((element) => {
+        if (UMLRelationship.isUMLRelationship(element)) {
+          element.path.forEach((point) => {
+            point.x += 100;
+            point.y += 100;
+          });
+        }
 
-      element.bounds.x += 100;
-      element.bounds.y += 100;
-    });
+        element.bounds.x += 100;
+        element.bounds.y += 100;
+      });
 
     const exp = ModelState.toModel(state as any, false);
     const bounds = computeBoundingBoxForElements([...Object.values(exp.elements), ...Object.values(exp.relationships)]);
