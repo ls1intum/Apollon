@@ -13,15 +13,15 @@ export function compare<T>(a: T, b: T): Patch {
 
   patch.forEach((op) => {
     const match = /\/relationships\/(?<id>[\w-]+)\/path/g.exec(op.path);
-    if (match && !relationshipIdsWithAffectedPaths.includes(match.groups!.id)) {
-      relationshipIdsWithAffectedPaths.push(match.groups!.id);
+    if (match?.groups?.id && !relationshipIdsWithAffectedPaths.includes(match.groups.id)) {
+      relationshipIdsWithAffectedPaths.push(match.groups.id);
     }
   });
 
   const cleanedPatch = patch.filter((op) => {
     const match = /\/relationships\/(?<id>[\w-]+)\//g.exec(op.path);
 
-    return !match || !relationshipIdsWithAffectedPaths.includes(match.groups!.id);
+    return !(match?.groups?.id) || !relationshipIdsWithAffectedPaths.includes(match.groups.id);
   });
 
   relationshipIdsWithAffectedPaths.forEach((id) => {
