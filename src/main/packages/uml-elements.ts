@@ -52,6 +52,7 @@ import { BPMNDataObject } from './bpmn/bpmn-data-object/bpmn-data-object';
 import { BPMNPool } from './bpmn/bpmn-pool/bpmn-pool';
 import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
 import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
+import { BPMNDataStore } from './bpmn/bpmn-data-store/bpmn-data-store';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -104,6 +105,7 @@ export const UMLElements = {
   [UMLElementType.BPMNEndEvent]: BPMNEndEvent,
   [UMLElementType.BPMNGateway]: BPMNGateway,
   [UMLElementType.BPMNDataObject]: BPMNDataObject,
+  [UMLElementType.BPMNDataStore]: BPMNDataStore,
   [UMLElementType.BPMNPool]: BPMNPool,
   [UMLElementType.BPMNSwimlane]: BPMNSwimlane,
   [UMLElementType.BPMNGroup]: BPMNGroup,

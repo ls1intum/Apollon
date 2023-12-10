@@ -9,8 +9,8 @@ exports[`render the bpmn-link-icon 1`] = `
         width="20"
       >
         <polyline
-          class="sc-aXZVg bUvEJV"
-          fill="white"
+          class="sc-aXZVg dCdbOk"
+          fill="transparent"
           points="3 7, 13 7, 13 4, 18 10, 13 16, 13 13, 3 13, 3 7"
           stroke="black"
           stroke-linecap="round"

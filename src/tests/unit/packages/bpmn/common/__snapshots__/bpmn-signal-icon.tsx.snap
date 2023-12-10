@@ -9,8 +9,8 @@ exports[`render the bpmn-signal-icon 1`] = `
         width="20"
       >
         <polyline
-          class="sc-aXZVg bUvEJV"
-          fill="white"
+          class="sc-aXZVg dCdbOk"
+          fill="transparent"
           points="10 3, 3 15, 17 15, 10 3"
           stroke="black"
           stroke-linecap="round"

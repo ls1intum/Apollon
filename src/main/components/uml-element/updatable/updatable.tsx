@@ -10,6 +10,9 @@ import { UMLRelationship } from '../../../services/uml-relationship/uml-relation
 import { FloatingButton } from './FloatingButton';
 import { EditIcon } from './icons/EditIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
+import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
+import { IPoint } from '../../../utils/geometry/point';
+import { IPath } from '../../../utils/geometry/path';
 
 const initialState = {};
 
@@ -21,7 +24,8 @@ type StateProps = {
 type DispatchProps = {
   updateStart: AsyncDispatch<typeof UMLElementRepository.updateStart>;
   delete: AsyncDispatch<typeof UMLElementRepository.delete>;
-  getById: (id: string) => UMLElement | null;
+  getElementById: (id: string) => UMLElement | null;
+  getRelationshipById: (id: string) => UMLElement | null;
 };
 
 type Props = UMLElementComponentProps & StateProps & DispatchProps;
@@ -36,7 +40,10 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   {
     updateStart: UMLElementRepository.updateStart,
     delete: UMLElementRepository.delete,
-    getById: UMLElementRepository.getById as any as AsyncDispatch<typeof UMLElementRepository.getById>,
+    getElementById: UMLElementRepository.getById as any as AsyncDispatch<typeof UMLElementRepository.getById>,
+    getRelationshipById: UMLRelationshipRepository.getById as any as AsyncDispatch<
+      typeof UMLRelationshipRepository.getById
+    >,
   },
 );
 
@@ -45,8 +52,6 @@ export const updatable = (
 ): ConnectedComponent<ComponentType<Props>, UMLElementComponentProps> => {
   class Updatable extends Component<Props, State> {
     state = initialState;
-
-    timer: ReturnType<typeof setTimeout> | null = null;
 
     componentDidMount() {
       const node = findDOMNode(this) as HTMLElement;
@@ -58,37 +63,78 @@ export const updatable = (
       node.removeEventListener('dblclick', this.onStartUpdate);
     }
 
+    /**
+     * Determine the rightmost point in a path
+     * @param path The path for which the rightmost point should be determined
+     */
+    private findRightmostPoint(path: IPath): IPoint | undefined {
+      let rightmostPoint = undefined;
+
+      for (const currentPoint of path) {
+        if (rightmostPoint === undefined || currentPoint.x > rightmostPoint.x) {
+          rightmostPoint = currentPoint;
+        }
+      }
+
+      return rightmostPoint;
+    }
+
+    /**
+     * Helper function to determine the base coordinates for the context actions
+     * @param element The element for which the context action base coordinates should be determined
+     */
+    private getContextActionBaseCoordinates(element: UMLElement): IPoint {
+      const isRelationship = UMLRelationship.isUMLRelationship(element);
+
+      if (!isRelationship) {
+        return {
+          x: element.bounds.width,
+          y: -30,
+        };
+      }
+
+      const relationship = element as UMLRelationship;
+
+      const rightmostPoint = this.findRightmostPoint(relationship.path);
+
+      return {
+        x: (rightmostPoint?.x ?? 0) - 40,
+        y: (rightmostPoint?.y ?? 0) - 30,
+      };
+    }
+
     render() {
-      const { updateStart, getById, hovered, selected, ...props } = this.props;
+      const { updateStart, getElementById, getRelationshipById, hovered, selected, ...props } = this.props;
 
-      const element = getById(props.id);
+      const element = getElementById(props.id);
+      const relationship = getRelationshipById(props.id);
 
-      const shouldRenderFABs = element && !UMLRelationship.isUMLRelationship(element);
+      const baseCoordinates = this.getContextActionBaseCoordinates((element || relationship)!);
 
       return (
         <WrappedComponent {...props}>
-          {shouldRenderFABs && (
-            <FloatingButton
-              style={{
-                opacity: selected ? 1 : 0,
-                transform: `translate(${element.bounds.width}px, ${selected ? -40 : -30}px)`,
-              }}
-              onClick={this.onStartUpdate}
-            >
-              <EditIcon x={7} y={7} />
-            </FloatingButton>
-          )}
-          {shouldRenderFABs && (
-            <FloatingButton
-              style={{
-                opacity: selected ? 1 : 0,
-                transform: `translate(${element.bounds.width}px, ${selected ? -80 : -30}px)`,
-              }}
-              onClick={this.onDelete}
-            >
-              <DeleteIcon x={7} y={7} />
-            </FloatingButton>
-          )}
+          <FloatingButton
+            style={{
+              opacity: selected ? 1 : 0,
+              transform: `translate(${baseCoordinates.x}px, ${
+                selected ? baseCoordinates.y - 10 : baseCoordinates.y
+              }px)`,
+            }}
+            onClick={this.onStartUpdate}
+          >
+            <EditIcon x={7} y={7} />
+          </FloatingButton>
+          <FloatingButton
+            style={{
+              opacity: selected ? 1 : 0,
+              transform: `translate(${baseCoordinates.x}px, ${
+                selected ? baseCoordinates.y - 50 : baseCoordinates.y
+              }px)`,
+            }}
+            onClick={this.onDelete}
+          >
+            <DeleteIcon x={7} y={7} />
+          </FloatingButton>
         </WrappedComponent>
       );
     }

@@ -1,10 +1,10 @@
 import React, { FunctionComponent } from 'react';
-import { ThemedPolyline } from '../../../components/theme/themedComponents';
+import { ThemedPolyline } from '../../../../components/theme/themedComponents';
 
-export const BPMNLinkFilledIcon: FunctionComponent<React.SVGProps<SVGSVGElement>> = (props) => (
+export const BPMNEscalationFilledIcon: FunctionComponent<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg {...props} height={20} width={20}>
     <ThemedPolyline
-      points={'3 7, 13 7, 13 4, 18 10, 13 16, 13 13, 3 13, 3 7'}
+      points={'10 3, 4 15, 10 12, 16 15, 10 3'}
       strokeLinecap="round"
       strokeLinejoin="round"
       fillColor="currentColor"

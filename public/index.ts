@@ -6,7 +6,7 @@ const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
 let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
-  colorEnabled: false,
+  colorEnabled: true,
   scale: 0.8,
 };
 
@@ -38,8 +38,12 @@ export const clear = () => {
 
 export const setTheming = (theming: string) => {
   const root = document.documentElement;
-  const selectedButton = document.getElementById(theming === 'light' ? 'theming-light-mode-button' : 'theming-dark-mode-button');
-  const unselectedButton = document.getElementById(theming === 'light' ? 'theming-dark-mode-button' : 'theming-light-mode-button');
+  const selectedButton = document.getElementById(
+    theming === 'light' ? 'theming-light-mode-button' : 'theming-dark-mode-button',
+  );
+  const unselectedButton = document.getElementById(
+    theming === 'light' ? 'theming-dark-mode-button' : 'theming-light-mode-button',
+  );
   if (selectedButton && unselectedButton) {
     selectedButton.classList.add('selected');
     unselectedButton.classList.remove('selected');
@@ -53,8 +57,12 @@ export const draw = async (mode?: 'include' | 'exclude') => {
   if (!editor) return;
 
   const filter: string[] = [
-    ...Object.entries(editor.model.interactive.elements).filter(([, value]) => value).map(([key]) => key),
-    ...Object.entries(editor.model.interactive.relationships).filter(([, value]) => value).map(([key]) => key),
+    ...Object.entries(editor.model.interactive.elements)
+      .filter(([, value]) => value)
+      .map(([key]) => key),
+    ...Object.entries(editor.model.interactive.relationships)
+      .filter(([, value]) => value)
+      .map(([key]) => key),
   ];
 
   const exportParam = mode ? { [mode]: filter, scale: editor.getScaleFactor() } : { scale: editor.getScaleFactor() };

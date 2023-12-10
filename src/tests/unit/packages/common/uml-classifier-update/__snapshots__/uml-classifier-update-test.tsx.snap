@@ -40,19 +40,19 @@ exports[`test class association popup render 1`] = `
           class="sc-jsJBEP jEuSgr"
         >
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY eGoSrK"
+            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY dXlFvE"
             color="primary"
           >
             Abstract
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY eGoSrK"
+            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY dXlFvE"
             color="primary"
           >
             Interface
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY eGoSrK"
+            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY dXlFvE"
             color="primary"
           >
             Enumeration

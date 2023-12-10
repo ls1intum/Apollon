@@ -62,6 +62,7 @@ import { BPMNDataObjectComponent } from './bpmn/bpmn-data-object/bpmn-data-objec
 import { BPMNGroupComponent } from './bpmn/bpmn-group/bpmn-group-component';
 import { BPMNPoolComponent } from './bpmn/bpmn-pool/bpmn-pool-component';
 import { BPMNSwimlaneComponent } from './bpmn/bpmn-swimlane/bpmn-swimlane-component';
+import { BPMNDataStoreComponent } from './bpmn/bpmn-data-store/bpmn-data-store-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -118,6 +119,7 @@ export const Components: {
   [UMLElementType.BPMNEndEvent]: BPMNEndEventComponent,
   [UMLElementType.BPMNGateway]: BPMNGatewayComponent,
   [UMLElementType.BPMNDataObject]: BPMNDataObjectComponent,
+  [UMLElementType.BPMNDataStore]: BPMNDataStoreComponent,
   [UMLElementType.BPMNPool]: BPMNPoolComponent,
   [UMLElementType.BPMNSwimlane]: BPMNSwimlaneComponent,
   [UMLElementType.BPMNGroup]: BPMNGroupComponent,
