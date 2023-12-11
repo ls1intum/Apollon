@@ -303,6 +303,14 @@ export class ApollonEditor {
     return this.patcher.subscribe(callback);
   }
 
+  subscribeToModelDiscreteChangePatches(callback: (patch: Patch) => void): number {
+    return this.patcher.subscribeToDiscreteChanges(callback);
+  }
+
+  subscribeToModelContinuousChangePatches(callback: (patch: Patch) => void): number {
+    return this.patcher.subscribeToContinuousChanges(callback);
+  }
+
   /**
    * Remove model change subscription, so that the corresponding callback is no longer executed when the model is changed.
    * @param subscriptionId subscription identifier

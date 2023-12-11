@@ -5,7 +5,7 @@ import { Patcher } from '../../../../main/services/patcher';
 describe('patcher class.', () => {
   test('shoult invoke given comparator on check.', () => {
     const cb = jest.fn();
-    const patcher = new Patcher(cb);
+    const patcher = new Patcher({ diff: cb });
     patcher.subscribe(jest.fn());
     patcher.initialize({});
     patcher.check({ x: 42 });
@@ -15,7 +15,7 @@ describe('patcher class.', () => {
 
   test('should not check without subscribers.', () => {
     const cb = jest.fn();
-    const patcher = new Patcher(cb);
+    const patcher = new Patcher({ diff: cb });
     patcher.initialize({});
     patcher.check({ x: 42 });
 

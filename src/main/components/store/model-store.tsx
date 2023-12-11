@@ -25,6 +25,7 @@ import { ModelState, PartialModelState } from './model-state';
 import {
   createPatcherMiddleware,
   createPatcherReducer,
+  isContinuousAction,
   isDiscreteAction,
   isSelectionAction,
   Patcher,
@@ -68,7 +69,8 @@ export const createReduxStore = (
       ...(patcher
         ? [
             createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
-              select: (action) => isDiscreteAction(action) || isSelectionAction(action),
+              selectDiscrete: (action) => isDiscreteAction(action) || isSelectionAction(action),
+              selectContinuous: (action) => isContinuousAction(action),
               transform: (state) => ModelState.toModel(state, false),
             }),
           ]
