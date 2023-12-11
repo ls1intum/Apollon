@@ -23,7 +23,7 @@ type StateProps = {
 
 type DispatchProps = {
   updateStart: AsyncDispatch<typeof UMLElementRepository.updateStart>;
-  delete: AsyncDispatch<typeof UMLElementRepository.delete>;
+  deleteElement: AsyncDispatch<typeof UMLElementRepository.delete>;
   getElementById: (id: string) => UMLElement | null;
   getRelationshipById: (id: string) => UMLElement | null;
 };
@@ -39,7 +39,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
   }),
   {
     updateStart: UMLElementRepository.updateStart,
-    delete: UMLElementRepository.delete,
+    deleteElement: UMLElementRepository.delete,
     getElementById: UMLElementRepository.getById as any as AsyncDispatch<typeof UMLElementRepository.getById>,
     getRelationshipById: UMLRelationshipRepository.getById as any as AsyncDispatch<
       typeof UMLRelationshipRepository.getById
@@ -104,7 +104,8 @@ export const updatable = (
     }
 
     render() {
-      const { updateStart, getElementById, getRelationshipById, hovered, selected, ...props } = this.props;
+      const { updateStart, deleteElement, getElementById, getRelationshipById, hovered, selected, ...props } =
+        this.props;
 
       const element = getElementById(props.id);
       const relationship = getRelationshipById(props.id);
@@ -150,7 +151,7 @@ export const updatable = (
      * Show the delete dialog of the wrapped element
      */
     private onDelete = () => {
-      this.props.delete(this.props.id);
+      this.props.deleteElement(this.props.id);
     };
   }
 
