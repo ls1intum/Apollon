@@ -300,11 +300,11 @@ export class ApollonEditor {
    * @return returns the subscription identifier which can be used to unsubscribe
    */
   subscribeToModelChangePatches(callback: (patch: Patch) => void): number {
-    return this.patcher.subscribe(callback);
+    return this.patcher.subscribeToDiscreteChanges(callback);
   }
 
-  subscribeToModelDiscreteChangePatches(callback: (patch: Patch) => void): number {
-    return this.patcher.subscribeToDiscreteChanges(callback);
+  subscribeToAllModelChangePatches(callback: (patch: Patch) => void): number {
+    return this.patcher.subscribe(callback);
   }
 
   subscribeToModelContinuousChangePatches(callback: (patch: Patch) => void): number {

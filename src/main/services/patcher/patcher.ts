@@ -19,14 +19,14 @@ export interface PatcherOptions<T> {
 
   /**
    * The maximum frequency of continuous changes emitted by this patcher,
-   * per second. Defaults to 60. This does not affect discrete changes.
+   * per second. Defaults to 25. This does not affect discrete changes.
    */
   maxFrequency: number;
 }
 
 const _DefaultOptions = {
   diff: compare,
-  maxFrequency: 15,
+  maxFrequency: 25,
 };
 
 /**
@@ -87,7 +87,7 @@ export class Patcher<T> {
    * @param nextState The next state of the object.
    */
   check(nextState: T): void {
-    this.checkWithRouter(nextState, this.discreteRouter);
+    this.checkAndUpdate(nextState);
   }
 
   /**
@@ -97,7 +97,7 @@ export class Patcher<T> {
    * @param nextState The next state of the object.
    */
   checkContinuous(nextState: T): void {
-    this.checkWithRouter(nextState, this.continuousRouter);
+    this.checkAndUpdate(nextState, false);
   }
 
   /**
@@ -177,14 +177,17 @@ export class Patcher<T> {
   }
 
   // checks for changes and notifies subscribers, using given router
-  private checkWithRouter(nextState: T, router: Subject<Patch>): void {
+  private checkAndUpdate(nextState: T, discreteChange = true): void {
     this.validate();
 
     const skip = Object.keys(this.subscribers).length === 0;
     const patch = !skip && this.options.diff(this.snapshot, nextState);
-    this._snapshot = nextState;
+    if (discreteChange) {
+      this._snapshot = nextState;
+    }
 
     if (patch && patch.length) {
+      const router = discreteChange ? this.discreteRouter : this.continuousRouter;
       router.next(patch);
     }
   }
