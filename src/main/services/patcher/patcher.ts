@@ -58,10 +58,7 @@ export class Patcher<T> {
     //
     this.continuousPatchObservable = this.continuousRouter.pipe(throttleTime(1000 / this.options.maxFrequency));
 
-    const router = merge(
-      this.discreteRouter,
-      this.continuousPatchObservable,
-    );
+    const router = merge(this.discreteRouter, this.continuousPatchObservable);
 
     //
     // we might get multiple patches in a single tick,

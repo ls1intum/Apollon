@@ -322,10 +322,10 @@ export class ApollonEditor {
    * Registers a callback which is executed when the model changes, receiving only the continuous changes to the model.
    * Continuous changes are changes that are executed during user actions, and is ok to miss some of them. For example:
    * moving of an element is a continuous change, while releasing the element is a discrete change.
-   * 
+   *
    * **IMPORTANT**: If you want to keep proper track of the model, make sure that you subscribe to discrete changes
    * as well, either via `subscribeToModelChangePatches()` or `subscribeToAllModelChangePatches()`.
-   * 
+   *
    * @param callback function which is called when the model changes
    * @returns the subscription identifier which can be used to unsubscribe using `unsubscribeFromModelChangePatches()`.
    */

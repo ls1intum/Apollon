@@ -27,10 +27,7 @@ export const isSelectionAction = (action: Actions): boolean => {
 };
 
 export const isContinuousAction = (action: Actions): boolean => {
-  return (
-    action.type === MovingActionTypes.MOVE ||
-    action.type === ResizingActionTypes.RESIZE
-  );
+  return action.type === MovingActionTypes.MOVE || action.type === ResizingActionTypes.RESIZE;
 };
 
 /**
