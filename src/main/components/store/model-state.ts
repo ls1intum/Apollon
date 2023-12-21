@@ -54,7 +54,7 @@ export interface ModelState {
 //        the boundary of the diagram is determined by some relationship.
 
 export class ModelState {
-  static fromModel(compatModel: UMLModelCompat): PartialModelState {
+  static fromModel(compatModel: UMLModelCompat, repositionRoots = true): PartialModelState {
     const model = backwardsCompatibleModel(compatModel);
 
     const apollonElements = model.elements;
@@ -89,13 +89,15 @@ export class ModelState {
       return relationship;
     });
 
-    const roots = [...elements.filter((element) => !element.owner), ...relationships];
-    const bounds = computeBoundingBoxForElements(roots);
-    bounds.width = Math.ceil(bounds.width / 20) * 20;
-    bounds.height = Math.ceil(bounds.height / 20) * 20;
-    for (const element of roots) {
-      element.bounds.x -= bounds.x + bounds.width / 2;
-      element.bounds.y -= bounds.y + bounds.height / 2;
+    if (repositionRoots) {
+      const roots = [...elements.filter((element) => !element.owner), ...relationships];
+      const bounds = computeBoundingBoxForElements(roots);
+      bounds.width = Math.ceil(bounds.width / 20) * 20;
+      bounds.height = Math.ceil(bounds.height / 20) * 20;
+      for (const element of roots) {
+        element.bounds.x -= bounds.x + bounds.width / 2;
+        element.bounds.y -= bounds.y + bounds.height / 2;
+      }
     }
 
     // set diagram to keep diagram type
@@ -129,7 +131,7 @@ export class ModelState {
     };
   }
 
-  static toModel(state: ModelState): Apollon.UMLModel {
+  static toModel(state: ModelState, repositionRoots = true): Apollon.UMLModel {
     const elements = Object.values(state.elements)
       .map<UMLElement | null>((element) => UMLElementRepository.get(element))
       .reduce<{ [id: string]: UMLElement }>((acc, val) => ({ ...acc, ...(val && { [val.id]: val }) }), {});
@@ -170,17 +172,19 @@ export class ModelState {
       relationship.serialize(),
     );
 
-    const roots = [...apollonElementsArray, ...apollonRelationships].filter((element) => !element.owner);
-    const bounds = computeBoundingBoxForElements(roots);
-    bounds.width = Math.ceil(bounds.width / 20) * 20;
-    bounds.height = Math.ceil(bounds.height / 20) * 20;
-    for (const element of apollonElementsArray) {
-      element.bounds.x -= bounds.x;
-      element.bounds.y -= bounds.y;
-    }
-    for (const element of apollonRelationships) {
-      element.bounds.x -= bounds.x;
-      element.bounds.y -= bounds.y;
+    if (repositionRoots) {
+      const roots = [...apollonElementsArray, ...apollonRelationships].filter((element) => !element.owner);
+      const bounds = computeBoundingBoxForElements(roots);
+      bounds.width = Math.ceil(bounds.width / 20) * 20;
+      bounds.height = Math.ceil(bounds.height / 20) * 20;
+      for (const element of apollonElementsArray) {
+        element.bounds.x -= bounds.x;
+        element.bounds.y -= bounds.y;
+      }
+      for (const element of apollonRelationships) {
+        element.bounds.x -= bounds.x;
+        element.bounds.y -= bounds.y;
+      }
     }
 
     const interactive: Apollon.Selection = {

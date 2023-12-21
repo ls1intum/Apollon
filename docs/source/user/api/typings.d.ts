@@ -12,6 +12,8 @@ import { BPMNEndEventType } from './packages/bpmn/bpmn-end-event/bpmn-end-event'
 import { BPMNStartEventType } from './packages/bpmn/bpmn-start-event/bpmn-start-event';
 import { BPMNIntermediateEventType } from './packages/bpmn/bpmn-intermediate-event/bpmn-intermediate-event';
 import { BPMNTaskType } from './packages/bpmn/bpmn-task/bpmn-task';
+import { BPMNFlowType } from './packages/bpmn/bpmn-flow/bpmn-flow';
+import { BPMNMarkerType } from './packages/bpmn/common/types';
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };
 export type ApollonOptions = {
@@ -94,6 +96,7 @@ export type UMLPetriNetPlace = UMLElement & {
 };
 export type BPMNTask = UMLElement & {
     taskType: BPMNTaskType;
+    marker: BPMNMarkerType;
 };
 export type BPMNGateway = UMLElement & {
     gatewayType: BPMNGatewayType;
@@ -108,7 +111,7 @@ export type BPMNEndEvent = UMLElement & {
     eventType: BPMNEndEventType;
 };
 export type BPMNFlow = UMLRelationship & {
-    flowType: 'sequence' | 'message' | 'association';
+    flowType: BPMNFlowType;
 };
 export type UMLReachabilityGraphMarking = UMLElement & {
     isInitialMarking: boolean;

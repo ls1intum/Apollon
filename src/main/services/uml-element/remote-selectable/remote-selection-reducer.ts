@@ -8,7 +8,7 @@ import { Actions } from '../../actions';
 import { UMLElementSelectorType } from '../../../packages/uml-element-selector-type';
 
 const sameSelector = (a: UMLElementSelectorType, b: UMLElementSelectorType) => {
-  return a.name === b.name && a.color === b.color;
+  return a && b && a.name === b.name && a.color === b.color;
 };
 
 export const RemoteSelectionReducer: Reducer<RemoteSelectionState, Actions> = (state = {}, action) => {

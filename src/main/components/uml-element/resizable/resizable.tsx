@@ -158,7 +158,7 @@ export const resizable =
         }
 
         this.setState({ resizing: true, offset: offset.scale(1 / this.props.zoomFactor) });
-        this.props.start();
+        this.props.start(this.props.id);
         const element = event.currentTarget;
         element.setPointerCapture(event.pointerId);
         element.addEventListener('pointermove', this.onPointerMove);
@@ -201,7 +201,7 @@ export const resizable =
         element.releasePointerCapture(event.pointerId);
         element.removeEventListener('pointermove', this.onPointerMove);
         this.setState(initialState);
-        this.props.end();
+        this.props.end(this.props.id);
         event.stopPropagation();
       };
     }
