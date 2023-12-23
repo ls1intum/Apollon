@@ -25,6 +25,7 @@ type StateProps = {
   element: IUMLElement | null;
   disabled: boolean;
   mode: ApollonMode;
+  zoomFactor: number;
 };
 
 type DispatchProps = {
@@ -42,6 +43,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       element: state.elements[state.updating[0]],
       disabled: !state.editor.enablePopups,
       mode: state.editor.mode,
+      zoomFactor: state.editor.zoomFactor,
     }),
     {
       updateEnd: UMLElementRepository.updateEnd,
@@ -92,7 +94,14 @@ class UnwrappedUpdatePane extends Component<Props, State> {
     }
 
     return createPortal(
-      <Popover ref={this.popover} position={position} placement={placement} alignment={alignment} maxHeight={500}>
+      <Popover
+        ref={this.popover}
+        position={position}
+        placement={placement}
+        alignment={alignment}
+        maxHeight={500}
+        zoomFactor={this.props.zoomFactor}
+      >
         <CustomPopupComponent element={element} />
       </Popover>,
       this.props.root,
@@ -130,6 +139,7 @@ class UnwrappedUpdatePane extends Component<Props, State> {
       const absolute: Point = this.props
         // relative to drawing area (0,0)
         .getAbsolutePosition(element.id)
+        .scale(this.props.zoomFactor)
         .add(
           canvas
             .origin()
