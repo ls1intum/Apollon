@@ -20,13 +20,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Apollon'
-copyright = '2023, Stephan Krusche'
+copyright = '2024, Stephan Krusche'
 author = 'Stephan Krusche'
-
-# The short X.Y version
-version = ''
-# The full version, including alpha/beta/rc tags
-release = '3.3.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -63,7 +58,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -129,14 +124,6 @@ latex_elements = {
     # 'figure_align': 'htbp',
 }
 
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, 'Apollon.tex', 'Apollon Documentation',
-     'Stephan Krusche', 'manual'),
-]
-
 
 # -- Options for manual page output ------------------------------------------
 
@@ -146,19 +133,6 @@ man_pages = [
     (master_doc, 'apollon', 'Apollon Documentation',
      [author], 1)
 ]
-
-
-# -- Options for Texinfo output ----------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (master_doc, 'Apollon', 'Apollon Documentation',
-     author, 'Apollon', 'One line description of project.',
-     'Miscellaneous'),
-]
-
 
 # -- Extension configuration -------------------------------------------------
 
