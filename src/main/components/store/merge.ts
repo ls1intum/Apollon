@@ -16,9 +16,7 @@ export function merge(oldState: ModelState, newState: ModelState): ModelState {
     ...oldState,
     diagram: {
       ...oldState.diagram,
-      ownedElements: oldState.diagram.ownedElements.filter(
-        (id) => !!newState.elements[id] && !newState.elements[id].owner,
-      ),
+      ownedElements: Object.keys(newState.elements).filter((id) => !newState.elements[id].owner),
       ownedRelationships: oldState.diagram.ownedRelationships.filter((id) => !!newState.elements[id]),
     },
     elements: Object.keys(newState.elements).reduce((acc, id) => {
