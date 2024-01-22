@@ -30,5 +30,5 @@ describe('merge', () => {
     expect(merged.diagram.ownedElements).toContain(class1Id);
     expect(merged.diagram.ownedElements).toContain(class2Id);
     expect(merged.diagram.ownedElements).toContain(pkgId);
-  })
+  });
 });
