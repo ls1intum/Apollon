@@ -10,6 +10,7 @@ import { withCanvas } from './with-canvas';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { EditorRepository } from '../../services/editor/editor-repository';
+import { IBoundary } from '../../utils/geometry/boundary';
 
 type OwnProps = {};
 
@@ -33,14 +34,7 @@ type Props = OwnProps & StateProps & DispatchProps & CanvasContext;
 
 type LocalState = {
   selectionStarted: boolean;
-  selectionRectangle: SelectionRectangle;
-};
-
-type SelectionRectangle = {
-  startX: number | undefined;
-  startY: number | undefined;
-  endX: number | undefined;
-  endY: number | undefined;
+  selectionRectangle: Partial<IBoundary>;
 };
 
 const enhance = compose<ComponentType<OwnProps>>(
@@ -69,10 +63,10 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     this.state = {
       selectionStarted: false,
       selectionRectangle: {
-        startX: undefined,
-        startY: undefined,
-        endX: undefined,
-        endY: undefined,
+        x: undefined,
+        y: undefined,
+        width: undefined,
+        height: undefined,
       },
     };
   }
@@ -86,23 +80,28 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     }
   }
 
+  componentWillUnmount() {
+    const { layer } = this.props.canvas;
+    layer.removeEventListener('mousedown', this.mouseDown);
+    layer.removeEventListener('mousemove', this.mouseMove);
+    layer.removeEventListener('mouseup', this.mouseUp);
+  }
+
   render() {
+    const { x = 0, y = 0, width = 0, height = 0 } = this.state.selectionRectangle;
+
     return (
       this.state.selectionStarted &&
-      this.state.selectionRectangle.endX && (
+      width != 0 && (
         <svg
           opacity={0.5}
           pointerEvents={'none'}
           style={{
             position: 'fixed',
-            left: `${Math.min(this.state.selectionRectangle.startX ?? 0, this.state.selectionRectangle.endX ?? 0)}px`,
-            width: `${Math.abs(
-              (this.state.selectionRectangle.startX ?? 0) - (this.state.selectionRectangle.endX ?? 0),
-            )}px`,
-            top: `${Math.min(this.state.selectionRectangle.startY ?? 0, this.state.selectionRectangle.endY ?? 0)}px`,
-            height: `${Math.abs(
-              (this.state.selectionRectangle.startY ?? 0) - (this.state.selectionRectangle.endY ?? 0),
-            )}px`,
+            left: `${Math.min(x, x + width)}px`,
+            width: `${Math.abs(width)}px`,
+            top: `${Math.min(y, y + height)}px`,
+            height: `${Math.abs(height)}px`,
             backgroundColor: '#1E90FF',
             borderStyle: 'solid',
             borderWidth: '1px',
@@ -154,10 +153,10 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     this.setState({
       selectionStarted: true,
       selectionRectangle: {
-        startX: event.clientX,
-        startY: event.clientY,
-        endX: undefined,
-        endY: undefined,
+        x: event.clientX,
+        y: event.clientY,
+        width: undefined,
+        height: undefined,
       },
     });
   };
@@ -173,15 +172,14 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     }
 
     const selection = this.getElementIDsInSelectionBox();
-    this.props.select(selection);
 
     this.setState({
       selectionStarted: false,
       selectionRectangle: {
-        startX: undefined,
-        startY: undefined,
-        endX: undefined,
-        endY: undefined,
+        x: undefined,
+        y: undefined,
+        width: undefined,
+        height: undefined,
       },
     });
 
@@ -197,16 +195,17 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
       return;
     }
 
-    const elementsInSelectionBox = this.getElementIDsInSelectionBox();
+    const selection = this.getElementIDsInSelectionBox();
+    this.props.select(selection);
 
     this.setState((prevState) => {
       return {
         selectionStarted: prevState.selectionStarted,
-        elementsInSelectionBox,
+        elementsInSelectionBox: selection,
         selectionRectangle: {
           ...prevState.selectionRectangle,
-          endX: event.clientX,
-          endY: event.clientY,
+          width: event.clientX - (prevState.selectionRectangle.x ?? 0),
+          height: event.clientY - (prevState.selectionRectangle.y ?? 0),
         },
       };
     });
@@ -221,34 +220,27 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
   private isElementInSelectionBox = (element: IUMLElement): boolean => {
     const canvasOrigin = this.props.canvas.origin();
 
-    if (
-      !this.state.selectionRectangle.startX ||
-      !this.state.selectionRectangle.endX ||
-      !this.state.selectionRectangle.startY ||
-      !this.state.selectionRectangle.endY
-    ) {
+    const { x, y, width, height } = this.state.selectionRectangle;
+
+    if (!x || !y || !width || !height) {
       return false;
     }
 
     const selectionRectangleTopLeft =
-      Math.min(this.state.selectionRectangle.startX, this.state.selectionRectangle.endX) / this.props.zoomFactor -
-      canvasOrigin.x / this.props.zoomFactor;
+      Math.min(x, x + width) / this.props.zoomFactor - canvasOrigin.x / this.props.zoomFactor;
     const selectionRectangleTopRight =
-      Math.max(this.state.selectionRectangle.startX, this.state.selectionRectangle.endX) / this.props.zoomFactor -
-      canvasOrigin.x / this.props.zoomFactor;
+      Math.max(x, x + width) / this.props.zoomFactor - canvasOrigin.x / this.props.zoomFactor;
     const selectionRectangleBottomLeft =
-      Math.min(this.state.selectionRectangle.startY, this.state.selectionRectangle.endY) / this.props.zoomFactor -
-      canvasOrigin.y / this.props.zoomFactor;
+      Math.min(y, y + height) / this.props.zoomFactor - canvasOrigin.y / this.props.zoomFactor;
     const selectionRectangleBottomRight =
-      Math.max(this.state.selectionRectangle.startY, this.state.selectionRectangle.endY) / this.props.zoomFactor -
-      canvasOrigin.y / this.props.zoomFactor;
+      Math.max(y, y + height) / this.props.zoomFactor - canvasOrigin.y / this.props.zoomFactor;
 
     // determine if the given element is fully contained within the selection rectangle
     return (
       selectionRectangleTopLeft <= element.bounds.x &&
-      element.bounds.x + element.bounds.width <= selectionRectangleTopRight &&
+      element.bounds.x <= selectionRectangleTopRight &&
       selectionRectangleBottomLeft <= element.bounds.y &&
-      element.bounds.y + element.bounds.height <= selectionRectangleBottomRight
+      element.bounds.y <= selectionRectangleBottomRight
     );
   };
 
