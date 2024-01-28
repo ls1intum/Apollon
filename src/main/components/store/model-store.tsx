@@ -25,11 +25,13 @@ import { ModelState, PartialModelState } from './model-state';
 import {
   createPatcherMiddleware,
   createPatcherReducer,
+  isContinuousAction,
   isDiscreteAction,
   isSelectionAction,
   Patcher,
 } from '../../services/patcher';
 import { UMLModel } from '../../typings';
+import { merge } from './merge';
 
 type OwnProps = PropsWithChildren<{
   initialState?: PreloadedState<PartialModelState>;
@@ -48,6 +50,7 @@ export const createReduxStore = (
     patcher &&
     createPatcherReducer<UMLModel, ModelState>(patcher, {
       transform: (model) => ModelState.fromModel(model, false) as ModelState,
+      merge,
     });
 
   const reducer: Reducer<ModelState, Actions> = (state, action) => {
@@ -68,7 +71,8 @@ export const createReduxStore = (
       ...(patcher
         ? [
             createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
-              select: (action) => isDiscreteAction(action) || isSelectionAction(action),
+              selectDiscrete: (action) => isDiscreteAction(action) || isSelectionAction(action),
+              selectContinuous: (action) => isContinuousAction(action),
               transform: (state) => ModelState.toModel(state, false),
             }),
           ]

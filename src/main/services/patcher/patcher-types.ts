@@ -3,6 +3,8 @@ import { Operation } from 'fast-json-patch';
 import { Actions } from '../actions';
 import { Action } from '../../utils/actions/actions';
 import { SelectableActionTypes } from '../uml-element/selectable/selectable-types';
+import { MovingActionTypes } from '../uml-element/movable/moving-types';
+import { ResizingActionTypes } from '../uml-element/resizable/resizing-types';
 
 /**
  * Returns true if the action is discrete, i.e. if it is not in middle of
@@ -22,6 +24,10 @@ export const isDiscreteAction = (action: Actions): boolean => {
  */
 export const isSelectionAction = (action: Actions): boolean => {
   return action.type === SelectableActionTypes.SELECT || action.type === SelectableActionTypes.DESELECT;
+};
+
+export const isContinuousAction = (action: Actions): boolean => {
+  return action.type === MovingActionTypes.MOVE || action.type === ResizingActionTypes.RESIZE;
 };
 
 /**

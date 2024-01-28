@@ -1,6 +1,7 @@
 import { Reducer } from 'redux';
 import { Patcher } from './patcher';
 import { PatcherActionTypes } from './patcher-types';
+import { deepClone } from 'fast-json-patch';
 
 export type PatcherReducerOptions<T, U = T> = {
   /**
@@ -10,10 +11,21 @@ export type PatcherReducerOptions<T, U = T> = {
    * @returns The state in the internal schema.
    */
   transform?: (state: T) => U;
+
+  /**
+   * Merges the old state with the new state. This is useful when naive strategies
+   * like `Object.assign` would trigger unwanted side-effects and more context-aware merging
+   * of state is required.
+   * @param oldState
+   * @param newState
+   * @returns The merged state.
+   */
+  merge?: (oldState: U, newState: U) => U;
 };
 
 const _DefaultOptions = {
   transform: (state: any) => state,
+  merge: (oldState: any, newState: any) => ({ ...oldState, ...newState }),
 };
 
 /**
@@ -27,16 +39,14 @@ export function createPatcherReducer<T, U = T>(
   options: PatcherReducerOptions<T, U> = _DefaultOptions,
 ): Reducer<U> {
   const transform = options.transform || _DefaultOptions.transform;
+  const merge = options.merge || _DefaultOptions.merge;
 
   return (state = {} as U, action) => {
     const { type, payload } = action;
     if (type === PatcherActionTypes.PATCH) {
       const res = transform(patcher.patch(payload));
 
-      return {
-        ...state,
-        ...res,
-      };
+      return merge(state, res);
     }
 
     return state;

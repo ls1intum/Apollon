@@ -108,11 +108,35 @@ export declare class ApollonEditor {
     unsubscribeFromDiscreteModelChange(subscriptionId: number): void;
     /**
      * Register callback which is executed when the model changes, receiving the changes to the model
-     * in [JSONPatch](http://jsonpatch.com/) format.
+     * in [JSONPatch](http://jsonpatch.com/) format. This callback is only executed for discrete changes to the model.
+     * Discrete changes are changes that should not be missed and are executed at the end of important user actions.
      * @param callback function which is called when the model changes
-     * @return returns the subscription identifier which can be used to unsubscribe
+     * @returns the subscription identifier which can be used to unsubscribe
      */
     subscribeToModelChangePatches(callback: (patch: Patch) => void): number;
+    /**
+     * Registers a callback which is executed when the model changes, receiving the changes to the model
+     * in [JSONPatch](http://jsonpatch.com/) format. This callback is executed for every change to the model, including
+     * discrete and continuous changes. Discrete changes are changes that should not be missed and are executed at
+     * the end of important user actions. Continuous changes are changes that are executed during user actions, and is
+     * ok to miss some of them. For example: moving of an element is a continuous change, while releasing the element
+     * is a discrete change.
+     * @param callback function which is called when the model changes
+     * @returns the subscription identifier which can be used to unsubscribe using `unsubscribeFromModelChangePatches()`.
+     */
+    subscribeToAllModelChangePatches(callback: (patch: Patch) => void): number;
+    /**
+     * Registers a callback which is executed when the model changes, receiving only the continuous changes to the model.
+     * Continuous changes are changes that are executed during user actions, and is ok to miss some of them. For example:
+     * moving of an element is a continuous change, while releasing the element is a discrete change.
+     *
+     * **IMPORTANT**: If you want to keep proper track of the model, make sure that you subscribe to discrete changes
+     * as well, either via `subscribeToModelChangePatches()` or `subscribeToAllModelChangePatches()`.
+     *
+     * @param callback function which is called when the model changes
+     * @returns the subscription identifier which can be used to unsubscribe using `unsubscribeFromModelChangePatches()`.
+     */
+    subscribeToModelContinuousChangePatches(callback: (patch: Patch) => void): number;
     /**
      * Remove model change subscription, so that the corresponding callback is no longer executed when the model is changed.
      * @param subscriptionId subscription identifier

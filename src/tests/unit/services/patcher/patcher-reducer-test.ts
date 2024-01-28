@@ -26,6 +26,18 @@ describe('test patcher reducer.', () => {
     expect(nextState).toEqual({ y: 42 });
   });
 
+  test('calls given merge function for applying the patch.', () => {
+    const cb = jest.fn((x, y) => ({ ...x, ...y }));
+
+    const patcher = new Patcher();
+    patcher.initialize({});
+
+    const reducer = createPatcherReducer(patcher, { merge: cb });
+    const nextState = reducer({ y: 41 }, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]));
+
+    expect(nextState).toEqual({ x: 42, y: 41 });
+  });
+
   test('handles weird options.', () => {
     expect(() => createPatcherReducer(new Patcher(), {})).not.toThrow();
   });

@@ -13,15 +13,22 @@ export type PatcherMiddlewareOptions<T, U = T, A = any> = {
   transform?: (state: U) => T;
 
   /**
-   * Selects actions that should trigger a check for changes. This is useful
+   * Selects actions that should trigger a check for discrete changes. This is useful
    * when the patcher should only check for changes when certain actions are dispatched.
    */
-  select?: (action: A) => boolean;
+  selectDiscrete?: (action: A) => boolean;
+
+  /**
+   * Selects actions that should trigger a check for continuous changes. Continuous changes
+   * happen more frequently than discrete changes and are ok to miss a few.
+   */
+  selectContinuous?: (action: A) => boolean;
 };
 
 const _DefaultOptions = {
   transform: (state: any) => state,
-  select: () => true,
+  selectDiscrete: () => true,
+  selectContinuous: () => false,
 };
 
 /**
@@ -35,7 +42,8 @@ export function createPatcherMiddleware<T, A = any, U = T>(
   options: PatcherMiddlewareOptions<T, U, A> = _DefaultOptions,
 ): PatcherMiddleware<U> {
   const transform = options.transform || _DefaultOptions.transform;
-  const select = options.select || _DefaultOptions.select;
+  const selectDiscrete = options.selectDiscrete || _DefaultOptions.selectDiscrete;
+  const selectContinuous = options.selectContinuous || _DefaultOptions.selectContinuous;
 
   return (store) => {
     patcher.initialize(transform(store.getState()));
@@ -43,8 +51,10 @@ export function createPatcherMiddleware<T, A = any, U = T>(
     return (next) => (action: A) => {
       const res = next(action as any);
 
-      if (select(action)) {
+      if (selectDiscrete(action)) {
         patcher.check(transform(store.getState()));
+      } else if (selectContinuous(action)) {
+        patcher.checkContinuous(transform(store.getState()));
       }
 
       return res;
