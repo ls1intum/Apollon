@@ -11,6 +11,7 @@ import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { IBoundary } from '../../utils/geometry/boundary';
+import { IPoint } from '../../utils/geometry/point';
 
 type OwnProps = {};
 
@@ -226,21 +227,29 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
       return false;
     }
 
-    const selectionRectangleTopLeft =
+    const elementCornerPoints: IPoint[] = [
+      { x: element.bounds.x, y: element.bounds.y },
+      { x: element.bounds.x + element.bounds.width, y: element.bounds.y },
+      { x: element.bounds.x + element.bounds.width, y: element.bounds.y + element.bounds.height },
+      { x: element.bounds.x, y: element.bounds.y + element.bounds.height },
+    ];
+
+    const selectionRectangleStartX =
       Math.min(x, x + width) / this.props.zoomFactor - canvasOrigin.x / this.props.zoomFactor;
-    const selectionRectangleTopRight =
+    const selectionRectangleEndX =
       Math.max(x, x + width) / this.props.zoomFactor - canvasOrigin.x / this.props.zoomFactor;
-    const selectionRectangleBottomLeft =
+    const selectionRectangleStartY =
       Math.min(y, y + height) / this.props.zoomFactor - canvasOrigin.y / this.props.zoomFactor;
-    const selectionRectangleBottomRight =
+    const selectionRectangleEndY =
       Math.max(y, y + height) / this.props.zoomFactor - canvasOrigin.y / this.props.zoomFactor;
 
-    // determine if the given element is fully contained within the selection rectangle
-    return (
-      selectionRectangleTopLeft <= element.bounds.x &&
-      element.bounds.x <= selectionRectangleTopRight &&
-      selectionRectangleBottomLeft <= element.bounds.y &&
-      element.bounds.y <= selectionRectangleBottomRight
+    // Determine if the given element is at least partially contained within the selection rectangle
+    return elementCornerPoints.some(
+      (point) =>
+        selectionRectangleStartX <= point.x &&
+        point.x <= selectionRectangleEndX &&
+        selectionRectangleStartY <= point.y &&
+        point.y <= selectionRectangleEndY,
     );
   };
 
