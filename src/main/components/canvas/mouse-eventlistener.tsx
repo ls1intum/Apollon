@@ -12,6 +12,7 @@ import { IUMLElement } from '../../services/uml-element/uml-element';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { IBoundary } from '../../utils/geometry/boundary';
 import { IPoint } from '../../utils/geometry/point';
+import { defaults as getTheme } from '../../components/theme/styles';
 
 type OwnProps = {};
 
@@ -74,7 +75,10 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
 
   componentDidMount() {
     const { layer } = this.props.canvas;
-    if (!this.props.readonly && this.props.mode !== ApollonMode.Assessment) {
+    if (
+      !this.props.readonly &&
+      (this.props.mode === ApollonMode.Modelling || this.props.mode === ApollonMode.Exporting)
+    ) {
       layer.addEventListener('mousedown', this.mouseDown);
       layer.addEventListener('mousemove', this.mouseMove);
       layer.addEventListener('mouseup', this.mouseUp);
@@ -91,6 +95,8 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
   render() {
     const { x = 0, y = 0, width = 0, height = 0 } = this.state.selectionRectangle;
 
+    const theme = getTheme();
+
     return (
       this.state.selectionStarted &&
       width != 0 && (
@@ -103,10 +109,7 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
             width: `${Math.abs(width)}px`,
             top: `${Math.min(y, y + height)}px`,
             height: `${Math.abs(height)}px`,
-            backgroundColor: '#1E90FF',
-            borderStyle: 'solid',
-            borderWidth: '1px',
-            borderColor: 'blue',
+            backgroundColor: theme.color.primary,
           }}
         />
       )
@@ -135,8 +138,7 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
       return;
     }
 
-    // the selection box will activate when clicking anywhere outside the bounds of an element
-    // however:
+    // The selection box will activate when clicking anywhere outside the bounds of an element however:
     //      * resizing an element can start when clicking slightly outside its bounds
     //      * the connection/reconnection port of an element is outside its bounding box
     // in these cases the selection box needs to be disabled
