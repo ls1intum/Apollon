@@ -89,18 +89,6 @@ export class ModelState {
       return relationship;
     });
 
-    // TODO: remove this
-    // if (repositionRoots) {
-      // const roots = [...elements.filter((element) => !element.owner), ...relationships];
-      // const bounds = computeBoundingBoxForElements(roots);
-      // bounds.width = Math.ceil(bounds.width / 20) * 20;
-      // bounds.height = Math.ceil(bounds.height / 20) * 20;
-      // for (const element of roots) {
-      //   element.bounds.x -= bounds.x + bounds.width / 2;
-      //   element.bounds.y -= bounds.y + bounds.height / 2;
-      // }
-    // }
-
     // set diagram to keep diagram type
     const diagram: UMLDiagram = new UMLDiagram();
     diagram.type = model.type as UMLDiagramType;
@@ -172,22 +160,6 @@ export class ModelState {
     const apollonRelationships: Apollon.UMLRelationship[] = relationships.map((relationship) =>
       relationship.serialize(),
     );
-
-    // TODO: remove this
-    // if (repositionRoots) {
-      // const roots = [...apollonElementsArray, ...apollonRelationships].filter((element) => !element.owner);
-      // const bounds = computeBoundingBoxForElements(roots);
-      // bounds.width = Math.ceil(bounds.width / 20) * 20;
-      // bounds.height = Math.ceil(bounds.height / 20) * 20;
-      // for (const element of apollonElementsArray) {
-      //   element.bounds.x -= bounds.x;
-      //   element.bounds.y -= bounds.y;
-      // }
-      // for (const element of apollonRelationships) {
-      //   element.bounds.x -= bounds.x;
-      //   element.bounds.y -= bounds.y;
-      // }
-    // }
 
     const interactive: Apollon.Selection = {
       elements: arrayToInclusionMap(state.interactive.filter((id) => UMLElement.isUMLElement(state.elements[id]))),
