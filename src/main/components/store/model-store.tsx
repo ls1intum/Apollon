@@ -49,7 +49,7 @@ export const createReduxStore = (
   const patchReducer =
     patcher &&
     createPatcherReducer<UMLModel, ModelState>(patcher, {
-      transform: (model) => ModelState.fromModel(model, false) as ModelState,
+      transform: (model) => ModelState.fromModel(model) as ModelState,
       merge,
     });
 
@@ -73,7 +73,7 @@ export const createReduxStore = (
             createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
               selectDiscrete: (action) => isDiscreteAction(action) || isSelectionAction(action),
               selectContinuous: (action) => isContinuousAction(action),
-              transform: (state) => ModelState.toModel(state, false),
+              transform: (state) => ModelState.toModel(state),
             }),
           ]
         : []),
