@@ -26,6 +26,7 @@ afterEach(() => {
   });
 });
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const testClassDiagramAsSVG = require('./test-resources/class-diagram-as-svg.json') as string;
 
 const ignoreSVGClassNames = (svgString: string): string => {

@@ -2,8 +2,8 @@
   "version": "2.0.0",
   "type": "CommunicationDiagram",
   "size": {
-    "width": 380,
-    "height": 240
+    "width": 700,
+    "height": 405
   },
   "interactive": {
     "elements": [],
