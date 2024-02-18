@@ -3,6 +3,7 @@ import { buffer, debounceTime, filter, map, merge, Observable, Subject, Subscrip
 
 import { compare } from './compare';
 import { Patch, PatchListener } from './patcher-types';
+import { PatchVerifier, SignedPatch } from './patch-verifier';
 
 /**
  * Compares two objects and returns the difference
@@ -26,7 +27,7 @@ export interface PatcherOptions<T> {
 
 const _DefaultOptions = {
   diff: compare,
-  maxFrequency: 25,
+  maxFrequency: 60,
 };
 
 /**
@@ -40,6 +41,7 @@ export class Patcher<T> {
   private continuousRouter = new Subject<Patch>();
   private continuousPatchObservable: Observable<Patch>;
   private observable: Observable<Patch>;
+  private verifier = new PatchVerifier();
   readonly options: PatcherOptions<T>;
 
   /**
@@ -51,6 +53,13 @@ export class Patcher<T> {
       diff: options.diff || _DefaultOptions.diff,
       maxFrequency: options.maxFrequency || _DefaultOptions.maxFrequency,
     };
+
+    // TODO: Double check the correctness of this code.
+    //       there are guard rails for handling multiple patches per tick
+    //       or filtering out empty patches, but they are only
+    //       applied to the total observable. If a consumer subscribes
+    //       to discrete patches, for example, they won't get these
+    //       guard rails. This is a potential bug.
 
     //
     // throttle continuous patches to handle back-pressure. note that
@@ -108,22 +117,26 @@ export class Patcher<T> {
   /**
    * Applies a patch to the object. Will NOT notify subscribers.
    * @param patch The patch to apply.
-   * @returns The new state of the object.
+   * @returns The whether the state should change, and the new state of the object.
    */
-  patch(patch: Patch): T {
+  patch(patch: Patch | SignedPatch): { patched: boolean, result: T } {
     this.validate();
 
-    if (patch && patch.length > 0) {
-      this._snapshot = patch.reduce((state, p, index) => {
+    const verified = this.verifier.verified(patch);
+
+    if (verified && verified.length > 0) {
+      this._snapshot = verified.reduce((state, p, index) => {
         try {
           return applyReducer(state, p, index);
         } catch {
           return state;
         }
       }, this.snapshot);
+
+      return { patched: true, result: this.snapshot };
     }
 
-    return this.snapshot;
+    return { patched: false, result: this.snapshot };
   }
 
   /**
@@ -185,7 +198,7 @@ export class Patcher<T> {
 
     if (patch && patch.length) {
       const router = discreteChange ? this.discreteRouter : this.continuousRouter;
-      router.next(patch);
+      router.next(this.verifier.sign(patch));
     }
   }
 
