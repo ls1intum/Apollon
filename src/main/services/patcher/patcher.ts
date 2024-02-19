@@ -119,7 +119,7 @@ export class Patcher<T> {
    * @param patch The patch to apply.
    * @returns The whether the state should change, and the new state of the object.
    */
-  patch(patch: Patch | SignedPatch): { patched: boolean, result: T } {
+  patch(patch: Patch | SignedPatch): { patched: boolean; result: T } {
     this.validate();
 
     const verified = this.verifier.verified(patch);

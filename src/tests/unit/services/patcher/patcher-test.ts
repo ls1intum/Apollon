@@ -119,7 +119,7 @@ describe('patcher class.', () => {
     let captured: any;
     const patcher = new Patcher();
     patcher.initialize({ x: 42 });
-    patcher.subscribe((patch) => captured = patch);
+    patcher.subscribe((patch) => (captured = patch));
     patcher.check({ x: 43 });
 
     await sleep(1);
@@ -132,7 +132,7 @@ describe('patcher class.', () => {
     let captured: any;
     const patcher = new Patcher();
     patcher.initialize({ x: 42 });
-    patcher.subscribe((patch) => captured = patch);
+    patcher.subscribe((patch) => (captured = patch));
     patcher.check({ x: 43 });
 
     await sleep(1);
@@ -155,7 +155,7 @@ describe('patcher class.', () => {
     let captured: any;
     const patcher = new Patcher();
     patcher.initialize({ x: 42 });
-    patcher.subscribe((patch) => captured = patch);
+    patcher.subscribe((patch) => (captured = patch));
     patcher.check({ x: 43 });
 
     await sleep(1);
