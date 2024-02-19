@@ -73,7 +73,7 @@ export class PatchVerifier {
    * @param patch
    * @returns the signed patch (to be sent to the server)
    */
-  public sign(patch: Patch) {
+  public sign(patch: Patch): SignedPatch {
     return patch.map((op) => this.signOperation(op));
   }
 
