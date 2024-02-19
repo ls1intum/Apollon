@@ -119,11 +119,12 @@ export class Patcher<T> {
    * @param patch The patch to apply.
    * @returns The whether the state should change, and the new state of the object.
    */
-  patch(patch: Patch | SignedPatch): { patched: boolean; result: T } {
+  patch(patch: Patch | SignedPatch, state?: T): { patched: boolean; result: T } {
     this.validate();
 
     const verified = this.verifier.verified(patch);
 
+    this._snapshot = state ?? this._snapshot;
     if (verified && verified.length > 0) {
       this._snapshot = verified.reduce((state, p, index) => {
         try {

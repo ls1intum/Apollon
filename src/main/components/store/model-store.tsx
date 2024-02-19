@@ -50,6 +50,7 @@ export const createReduxStore = (
     patcher &&
     createPatcherReducer<UMLModel, ModelState>(patcher, {
       transform: (model) => ModelState.fromModel(model) as ModelState,
+      transformInverse: (state) => ModelState.toModel(state),
       merge,
     });
 
