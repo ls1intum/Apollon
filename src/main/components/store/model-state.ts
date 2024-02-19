@@ -54,7 +54,7 @@ export interface ModelState {
 //        the boundary of the diagram is determined by some relationship.
 
 export class ModelState {
-  static fromModel(compatModel: UMLModelCompat, repositionRoots = true): PartialModelState {
+  static fromModel(compatModel: UMLModelCompat): PartialModelState {
     const model = backwardsCompatibleModel(compatModel);
 
     const apollonElements = model.elements;
@@ -89,17 +89,6 @@ export class ModelState {
       return relationship;
     });
 
-    if (repositionRoots) {
-      const roots = [...elements.filter((element) => !element.owner), ...relationships];
-      const bounds = computeBoundingBoxForElements(roots);
-      bounds.width = Math.ceil(bounds.width / 20) * 20;
-      bounds.height = Math.ceil(bounds.height / 20) * 20;
-      for (const element of roots) {
-        element.bounds.x -= bounds.x + bounds.width / 2;
-        element.bounds.y -= bounds.y + bounds.height / 2;
-      }
-    }
-
     // set diagram to keep diagram type
     const diagram: UMLDiagram = new UMLDiagram();
     diagram.type = model.type as UMLDiagramType;
@@ -131,7 +120,7 @@ export class ModelState {
     };
   }
 
-  static toModel(state: ModelState, repositionRoots = true): Apollon.UMLModel {
+  static toModel(state: ModelState): Apollon.UMLModel {
     const elements = Object.values(state.elements)
       .map<UMLElement | null>((element) => UMLElementRepository.get(element))
       .reduce<{ [id: string]: UMLElement }>((acc, val) => ({ ...acc, ...(val && { [val.id]: val }) }), {});
@@ -171,21 +160,6 @@ export class ModelState {
     const apollonRelationships: Apollon.UMLRelationship[] = relationships.map((relationship) =>
       relationship.serialize(),
     );
-
-    if (repositionRoots) {
-      const roots = [...apollonElementsArray, ...apollonRelationships].filter((element) => !element.owner);
-      const bounds = computeBoundingBoxForElements(roots);
-      bounds.width = Math.ceil(bounds.width / 20) * 20;
-      bounds.height = Math.ceil(bounds.height / 20) * 20;
-      for (const element of apollonElementsArray) {
-        element.bounds.x -= bounds.x;
-        element.bounds.y -= bounds.y;
-      }
-      for (const element of apollonRelationships) {
-        element.bounds.x -= bounds.x;
-        element.bounds.y -= bounds.y;
-      }
-    }
 
     const interactive: Apollon.Selection = {
       elements: arrayToInclusionMap(state.interactive.filter((id) => UMLElement.isUMLElement(state.elements[id]))),
