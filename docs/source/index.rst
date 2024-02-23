@@ -18,6 +18,7 @@ Welcome to Apollon's documentation!
    user/getting-started
    user/api
    user/uml-model-helpers
+   user/realtime-collaboration
    
 .. toctree::
    :caption: Contributor Guide

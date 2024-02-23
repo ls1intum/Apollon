@@ -48,7 +48,7 @@ describe('patcher class.', () => {
     await sleep(1);
 
     expect(cb).toHaveBeenCalledWith([
-      { op: 'replace', path: '/x', value: 43 },
+      { op: 'replace', path: '/x', value: 43, hash: expect.any(String) },
       { op: 'add', path: '/y', value: 'hello' },
     ]);
   });
@@ -113,5 +113,61 @@ describe('patcher class.', () => {
     expect(cb2).toHaveBeenCalledTimes(1);
     expect(cb3).toHaveBeenCalledTimes(2);
     expect(patcher.snapshot).toEqual({ x: 45 });
+  });
+
+  test('does not reapply self-induced patches.', async () => {
+    let captured: any;
+    const patcher = new Patcher();
+    patcher.initialize({ x: 42 });
+    patcher.subscribe((patch) => (captured = patch));
+    patcher.check({ x: 43 });
+
+    await sleep(1);
+    expect(captured).toBeDefined();
+    const res = patcher.patch(captured);
+    expect(res.patched).toBe(false);
+  });
+
+  test('suppresses patches on a changed address until confirmation patch is received.', async () => {
+    let captured: any;
+    const patcher = new Patcher();
+    patcher.initialize({ x: 42 });
+    patcher.subscribe((patch) => (captured = patch));
+    patcher.check({ x: 43 });
+
+    await sleep(1);
+    expect(captured).toBeDefined();
+
+    const res1 = patcher.patch([{ op: 'replace', path: '/x', value: 44, hash: '123' }]);
+    expect(res1.patched).toBe(false);
+
+    const res2 = patcher.patch([{ op: 'replace', path: '/x', value: 45, hash: '123' }]);
+    expect(res2.patched).toBe(false);
+
+    patcher.patch(captured);
+
+    const res3 = patcher.patch([{ op: 'replace', path: '/x', value: 46, hash: '123' }]);
+    expect(res3.patched).toBe(true);
+    expect(res3.result).toEqual({ x: 46 });
+  });
+
+  test('always applies unsigned patches.', async () => {
+    let captured: any;
+    const patcher = new Patcher();
+    patcher.initialize({ x: 42 });
+    patcher.subscribe((patch) => (captured = patch));
+    patcher.check({ x: 43 });
+
+    await sleep(1);
+    expect(captured).toBeDefined();
+
+    const res1 = patcher.patch([{ op: 'replace', path: '/x', value: 44, hash: '123' }]);
+    expect(res1.patched).toBe(false);
+
+    const res2 = patcher.patch([{ op: 'add', path: '/y', value: 45 }]);
+    expect(res2.patched).toBe(true);
+
+    const res3 = patcher.patch([{ op: 'replace', path: '/x', value: 46, hash: '123' }]);
+    expect(res3.patched).toBe(false);
   });
 });
