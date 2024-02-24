@@ -124,7 +124,7 @@ export class Patcher<T> {
 
     const verified = this.verifier.verified(patch);
     this._snapshot = state ?? this._snapshot;
-    
+
     if (verified && verified.length > 0) {
       this._snapshot = verified.reduce((state, p, index) => {
         try {
