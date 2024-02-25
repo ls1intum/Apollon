@@ -170,4 +170,11 @@ describe('patcher class.', () => {
     const res3 = patcher.patch([{ op: 'replace', path: '/x', value: 46, hash: '123' }]);
     expect(res3.patched).toBe(false);
   });
+
+  test('can update snapshot on patch.', () => {
+    const patcher = new Patcher();
+    patcher.initialize({ x: 42, y: 43 });
+    const res = patcher.patch([{ op: 'replace', path: '/x', value: 44 }], { y: 45 });
+    expect(res.result).toEqual({ x: 44, y: 45 });
+  });
 });
