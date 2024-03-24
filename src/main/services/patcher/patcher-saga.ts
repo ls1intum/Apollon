@@ -1,19 +1,19 @@
 import { call, debounce, delay, put, select, take } from 'redux-saga/effects';
- import { SagaIterator } from 'redux-saga';
+import { SagaIterator } from 'redux-saga';
 
- import { run } from '../../utils/actions/sagas';
- import { PatcherActionTypes } from './patcher-types';
- import { ModelState } from '../../components/store/model-state';
- import { UMLContainerRepository } from '../uml-container/uml-container-repository';
- import { UMLElement } from '../uml-element/uml-element';
- import { UMLRelationship } from '../uml-relationship/uml-relationship';
- import { recalc } from '../uml-relationship/uml-relationship-saga';
- import { render } from '../layouter/layouter';
+import { run } from '../../utils/actions/sagas';
+import { PatcherActionTypes } from './patcher-types';
+import { ModelState } from '../../components/store/model-state';
+import { UMLContainerRepository } from '../uml-container/uml-container-repository';
+import { UMLElement } from '../uml-element/uml-element';
+import { UMLRelationship } from '../uml-relationship/uml-relationship';
+import { recalc } from '../uml-relationship/uml-relationship-saga';
+import { render } from '../layouter/layouter';
 
- /**
-  * Fixes the layout of the diagram after importing a patch.
-  */
- export function* PatchLayouter(): SagaIterator {
+/**
+ * Fixes the layout of the diagram after importing a patch.
+ */
+export function* PatchLayouter(): SagaIterator {
   yield run([patchLayout]);
 }
 
