@@ -10,6 +10,7 @@ const initialState: EditorState = {
   mode: ApollonMode.Exporting,
   view: ApollonView.Modelling,
   zoomFactor: 1.0,
+  selectionBoxActive: false,
   features: {
     hoverable: true,
     selectable: true,
@@ -32,12 +33,20 @@ export const EditorReducer: Reducer<EditorState, Actions> = (state = initialStat
         view: payload.view,
       };
     }
-    case EditorActionTypes.CHANGE_ZOOM_FACTOR: {
+    case EditorActionTypes.SET_ZOOM_FACTOR: {
       const { payload } = action;
 
       return {
         ...state,
         zoomFactor: payload.zoomFactor,
+      };
+    }
+    case EditorActionTypes.SET_SELECTION_BOX: {
+      const { payload } = action;
+
+      return {
+        ...state,
+        selectionBoxActive: payload.selectionBoxActive,
       };
     }
   }

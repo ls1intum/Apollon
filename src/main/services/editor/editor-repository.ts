@@ -1,4 +1,10 @@
-import { ApollonView, ChangeViewAction, ChangeZoomFactorAction, EditorActionTypes } from './editor-types';
+import {
+  ApollonView,
+  SetSelectionBoxAction,
+  ChangeViewAction,
+  SetZoomFactorAction,
+  EditorActionTypes,
+} from './editor-types';
 
 export class EditorRepository {
   static changeView = (view: ApollonView): ChangeViewAction => ({
@@ -6,9 +12,14 @@ export class EditorRepository {
     payload: { view },
     undoable: false,
   });
-  static changeZoomFactor = (zoomFactor: number): ChangeZoomFactorAction => ({
-    type: EditorActionTypes.CHANGE_ZOOM_FACTOR,
+  static setZoomFactor = (zoomFactor: number): SetZoomFactorAction => ({
+    type: EditorActionTypes.SET_ZOOM_FACTOR,
     payload: { zoomFactor },
+    undoable: false,
+  });
+  static setSelectionBoxActive = (selectionBoxActive: boolean): SetSelectionBoxAction => ({
+    type: EditorActionTypes.SET_SELECTION_BOX,
+    payload: { selectionBoxActive },
     undoable: false,
   });
 }

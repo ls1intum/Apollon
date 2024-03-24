@@ -1,5 +1,6 @@
 import { AsyncAction } from '../../../utils/actions/actions';
 import { DeselectAction, SelectableActionTypes, SelectAction } from './selectable-types';
+import { SetSelectionBoxAction, EditorActionTypes } from '../../editor/editor-types';
 
 export const Selectable = {
   select:
@@ -7,6 +8,14 @@ export const Selectable = {
     (dispatch, getState) => {
       const ids = id ? (Array.isArray(id) ? id : [id]) : Object.keys(getState().elements);
       if (!ids.length) {
+        dispatch<SetSelectionBoxAction>({
+          type: EditorActionTypes.SET_SELECTION_BOX,
+          payload: {
+            selectionBoxActive: false,
+          },
+          undoable: false,
+        });
+
         return;
       }
 

@@ -56,7 +56,7 @@ type StateProps = { moving: string[]; connecting: boolean; reconnecting: boolean
 
 type DispatchProps = {
   move: AsyncDispatch<typeof UMLElementRepository.move>;
-  changeZoomFactor: typeof EditorRepository.changeZoomFactor;
+  setZoomFactor: typeof EditorRepository.setZoomFactor;
 };
 
 const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
@@ -68,7 +68,7 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(
   }),
   {
     move: UMLElementRepository.move,
-    changeZoomFactor: EditorRepository.changeZoomFactor,
+    setZoomFactor: EditorRepository.setZoomFactor,
   },
 );
 
@@ -128,7 +128,7 @@ class EditorComponent extends Component<Props, State> {
           <StyledEditor ref={this.editor} {...props} onTouchMove={this.customScrolling} scale={scale} />
           <ZoomPane
             value={scale}
-            onChange={(zoomFactor) => this.props.changeZoomFactor(zoomFactor)}
+            onChange={(zoomFactor) => this.props.setZoomFactor(zoomFactor)}
             min={minScale}
             max={maxScale}
             step={0.2}
@@ -141,7 +141,7 @@ class EditorComponent extends Component<Props, State> {
           <StyledEditor ref={this.editor} {...props} scale={scale} />
           <ZoomPane
             value={scale}
-            onChange={(zoomFactor) => this.props.changeZoomFactor(zoomFactor)}
+            onChange={(zoomFactor) => this.props.setZoomFactor(zoomFactor)}
             min={minScale}
             max={maxScale}
             step={0.2}

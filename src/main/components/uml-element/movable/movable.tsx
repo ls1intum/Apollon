@@ -14,6 +14,7 @@ type StateProps = {
   movable: boolean;
   moving: boolean;
   zoomFactor: number;
+  selectionBoxActive: boolean;
 };
 
 type DispatchProps = {
@@ -35,6 +36,7 @@ const enhance = connect<StateProps, DispatchProps, UMLElementComponentProps, Mod
     movable: state.selected.includes(props.id) && !state.resizing.includes(props.id) && !state.connecting.length,
     moving: state.moving.includes(props.id),
     zoomFactor: state.editor.zoomFactor,
+    selectionBoxActive: state.editor.selectionBoxActive,
   }),
   {
     start: UMLElementRepository.startMoving,
@@ -75,6 +77,15 @@ export const movable = (
         child.addEventListener('touchstart', this.onPointerDown);
       } else {
         child.addEventListener('pointerdown', this.onPointerDown);
+      }
+    }
+
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
+      const node = findDOMNode(this) as HTMLElement;
+      if (this.props.selectionBoxActive) {
+        node.style.cursor = 'default';
+      } else {
+        node.style.cursor = 'move';
       }
     }
 

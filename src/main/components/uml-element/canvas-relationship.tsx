@@ -29,6 +29,7 @@ type StateProps = {
   relationship: IUMLRelationship;
   mode: ApollonMode;
   readonly: boolean;
+  selectionBoxActive: boolean;
 };
 
 type DispatchProps = {
@@ -65,6 +66,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
       relationship: state.elements[props.id] as IUMLRelationship,
       mode: state.editor.mode as ApollonMode,
       readonly: state.editor.readonly || false,
+      selectionBoxActive: state.editor.selectionBoxActive,
     }),
     {
       startwaypointslayout: UMLRelationshipRepository.startWaypointsLayout,
@@ -92,6 +94,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
       readonly,
       startwaypointslayout,
       endwaypointslayout,
+      selectionBoxActive,
       ...props
     } = this.props;
 
@@ -147,8 +150,8 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
         {midPoints.map((point, index) => {
           return (
             <circle
-              visibility={interactive || interactable || readonly ? 'hidden' : undefined}
-              pointerEvents={interactive || interactable || readonly ? 'none' : 'all'}
+              visibility={selectionBoxActive || interactive || interactable || readonly ? 'hidden' : undefined}
+              pointerEvents={selectionBoxActive || interactive || interactable || readonly ? 'none' : 'all'}
               style={{ cursor: 'grab' }}
               key={props.id + '_' + point.mpX + '_' + point.mpY}
               cx={point.mpX}

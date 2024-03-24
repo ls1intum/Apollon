@@ -20,7 +20,8 @@ export const enum ApollonView {
 
 export const enum EditorActionTypes {
   CHANGE_VIEW = '@@element/CHANGE_VIEW',
-  CHANGE_ZOOM_FACTOR = '@@element/CHANGE_ZOOM_FACTOR',
+  SET_ZOOM_FACTOR = '@@element/SET_ZOOM_FACTOR',
+  SET_SELECTION_BOX = '@@element/SET_SELECTION_BOX_ACTIVE',
 }
 
 export type EditorState = {
@@ -32,9 +33,10 @@ export type EditorState = {
   readonly features: UMLElementFeatures;
   readonly colorEnabled: boolean;
   readonly zoomFactor: number;
+  readonly selectionBoxActive: boolean;
 };
 
-export type EditorActions = ChangeViewAction | ChangeZoomFactorAction;
+export type EditorActions = ChangeViewAction | SetZoomFactorAction | SetSelectionBoxAction;
 
 export type ChangeViewAction = Action<EditorActionTypes.CHANGE_VIEW> & {
   payload: {
@@ -42,8 +44,14 @@ export type ChangeViewAction = Action<EditorActionTypes.CHANGE_VIEW> & {
   };
 };
 
-export type ChangeZoomFactorAction = Action<EditorActionTypes.CHANGE_ZOOM_FACTOR> & {
+export type SetZoomFactorAction = Action<EditorActionTypes.SET_ZOOM_FACTOR> & {
   payload: {
     zoomFactor: number;
+  };
+};
+
+export type SetSelectionBoxAction = Action<EditorActionTypes.SET_SELECTION_BOX> & {
+  payload: {
+    selectionBoxActive: boolean;
   };
 };
