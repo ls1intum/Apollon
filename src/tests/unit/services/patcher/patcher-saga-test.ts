@@ -1,4 +1,4 @@
-import { call, delay, select, take } from 'redux-saga/effects';
+import { call, debounce, delay, select, take } from 'redux-saga/effects';
 
 import { patchLayout } from '../../../../main/services/patcher/patcher-saga';
 import { PatcherActionTypes, PatcherRepository } from '../../../../main/services/patcher';
@@ -10,10 +10,11 @@ import { recalc } from '../../../../main/services/uml-relationship/uml-relations
 describe('test patcher saga.', () => {
   test('it invokes re-renders and re-calcs after a patch.', () => {
     const run = patchLayout();
+    const debounced = run.next().value;
+    expect(debounced).toEqual(debounce(100, PatcherActionTypes.PATCH, expect.any(Function)));
 
-    expect(run.next().value).toEqual(take(PatcherActionTypes.PATCH));
-    expect(run.next(PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }])).value).toEqual(delay(0));
-    expect(run.next().value).toEqual(select());
+    const fork = debounced['payload']['args'][2]();
+    expect(fork.next(PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }])).value).toEqual(select());
 
     const elements: UMLElementState = {
       x: {
@@ -52,18 +53,18 @@ describe('test patcher saga.', () => {
       } as IUMLRelationship,
     };
 
-    run.next({ elements });
+    fork.next({ elements });
 
-    expect(run.next().value).toEqual(delay(0));
-    expect(run.next().value).toEqual(call(render, 'x'));
+    expect(fork.next().value).toEqual(delay(0));
+    expect(fork.next().value).toEqual(call(render, 'x'));
 
-    expect(run.next().value).toEqual(delay(0));
-    expect(run.next().value).toEqual(call(render, 'y'));
+    expect(fork.next().value).toEqual(delay(0));
+    expect(fork.next().value).toEqual(call(render, 'y'));
 
-    expect(run.next().value).toEqual(delay(0));
-    expect(run.next().value).toEqual(call(render, 'z'));
+    expect(fork.next().value).toEqual(delay(0));
+    expect(fork.next().value).toEqual(call(render, 'z'));
 
-    expect(run.next().value).toEqual(delay(0));
-    expect(run.next().value).toEqual(call(recalc, 'w'));
+    expect(fork.next().value).toEqual(delay(0));
+    expect(fork.next().value).toEqual(call(recalc, 'w'));
   });
 });

@@ -1,4 +1,4 @@
-import { call, delay, put, select, take } from 'redux-saga/effects';
+import { call, debounce, delay, put, select, take } from 'redux-saga/effects';
 import { SagaIterator } from 'redux-saga';
 
 import { run } from '../../utils/actions/sagas';
@@ -18,8 +18,10 @@ export function* PatchLayouter(): SagaIterator {
 }
 
 export function* patchLayout(): SagaIterator {
-  yield take(PatcherActionTypes.PATCH);
-  yield delay(0);
+  yield debounce(100, PatcherActionTypes.PATCH, recalculateLayouts);
+}
+
+function* recalculateLayouts(): SagaIterator {
   const { elements }: ModelState = yield select();
 
   const ids = Object.values(elements)

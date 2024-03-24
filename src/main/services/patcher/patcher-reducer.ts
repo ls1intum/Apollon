@@ -13,6 +13,14 @@ export type PatcherReducerOptions<T, U = T> = {
   transform?: (state: T) => U;
 
   /**
+   * Transforms the state before applying the patch. This is useful
+   * when the internal store schema differs from the schema exposed to the outside.
+   * @param state The state in the internal schema.
+   * @returns The state in the external schema.
+   */
+  transformInverse?: (state: U) => T;
+
+  /**
    * Merges the old state with the new state. This is useful when naive strategies
    * like `Object.assign` would trigger unwanted side-effects and more context-aware merging
    * of state is required.
@@ -25,6 +33,7 @@ export type PatcherReducerOptions<T, U = T> = {
 
 const _DefaultOptions = {
   transform: (state: any) => state,
+  transformInverse: (state: any) => state,
   merge: (oldState: any, newState: any) => ({ ...oldState, ...newState }),
 };
 
@@ -39,14 +48,17 @@ export function createPatcherReducer<T, U = T>(
   options: PatcherReducerOptions<T, U> = _DefaultOptions,
 ): Reducer<U> {
   const transform = options.transform || _DefaultOptions.transform;
+  const transformInverse = options.transformInverse || _DefaultOptions.transformInverse;
   const merge = options.merge || _DefaultOptions.merge;
 
-  return (state = {} as U, action) => {
+  return (state, action) => {
     const { type, payload } = action;
     if (type === PatcherActionTypes.PATCH) {
-      const res = transform(patcher.patch(payload));
+      const res = patcher.patch(payload, transformInverse(state as U));
 
-      return merge(state, res);
+      if (res.patched) {
+        return merge((state ?? {}) as U, transform(res.result));
+      }
     }
 
     return state;
