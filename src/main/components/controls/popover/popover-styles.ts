@@ -20,7 +20,6 @@ export const PopoverContainer = styled.div<Props>`
   max-width: 276px;
   position: absolute;
   text-align: left;
-  text-align: start;
   text-decoration: none;
   text-transform: none;
   text-shadow: none;
@@ -30,6 +29,7 @@ export const PopoverContainer = styled.div<Props>`
   word-break: normal;
   word-spacing: normal;
   word-wrap: break-word;
+  transform-origin: top left;
 
   *,
   *:before,
@@ -41,6 +41,7 @@ export const PopoverContainer = styled.div<Props>`
     let x = `${props.position.x}px`;
     let y = `${props.position.y}px`;
     const alignment = props.alignment === 'start' ? 0 : props.alignment === 'end' ? 100 : 50;
+
     switch (props.placement) {
       case 'top':
         x += ` - ${alignment}%`;

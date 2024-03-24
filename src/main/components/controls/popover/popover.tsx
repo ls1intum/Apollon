@@ -7,6 +7,7 @@ export type Props = {
   alignment?: 'start' | 'center' | 'end';
   position: { x: number; y: number };
   maxHeight?: number;
+  zoomFactor: number;
 } & HTMLAttributes<HTMLDivElement>;
 
 export const Popover = forwardRef<HTMLDivElement, Props>(
