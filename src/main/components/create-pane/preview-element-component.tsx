@@ -17,6 +17,8 @@ export const Preview = styled(hoverable(CanvasElement)).attrs({
   margin: 8px;
   overflow: visible;
   fill: white;
+  scale: 0.8;
+  transform-origin: top left;
 `;
 
 export class PreviewElementComponent extends Component<Props> {
