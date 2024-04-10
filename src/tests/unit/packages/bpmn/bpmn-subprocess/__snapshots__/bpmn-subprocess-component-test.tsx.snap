@@ -20,13 +20,13 @@ exports[`render the bpmn-subprocess-component 1`] = `
           height="14"
           stroke="black"
           width="14"
-          x="93"
+          x="73"
           y="86"
         />
         <polyline
           class="sc-aXZVg bUvEJV"
           fill="white"
-          points="96 93, 104 93"
+          points="76 93, 84 93"
           stroke="black"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -34,7 +34,7 @@ exports[`render the bpmn-subprocess-component 1`] = `
         <polyline
           class="sc-aXZVg bUvEJV"
           fill="white"
-          points="100 89, 100 97"
+          points="80 89, 80 97"
           stroke="black"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -44,13 +44,13 @@ exports[`render the bpmn-subprocess-component 1`] = `
           height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
-          x="100"
+          width="160"
+          x="80"
           y="50"
         >
           <tspan
             dy="5.5"
-            x="100"
+            x="80"
           >
             SyntaxTreeTerminal
           </tspan>

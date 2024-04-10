@@ -14,11 +14,10 @@ type Props = {
 export const Preview = styled(hoverable(CanvasElement)).attrs({
   child: CanvasElement,
 })`
-  margin: 8px;
   overflow: visible;
   fill: white;
   scale: 0.8;
-  transform-origin: top left;
+  transform-origin: center left;
 `;
 
 export class PreviewElementComponent extends Component<Props> {

@@ -12,7 +12,7 @@ export const composeFlowchartPreview: ComposePreview = (
   translate: (id: string) => string,
 ): PreviewElement[] => {
   const elements: PreviewElement[] = [];
-  const defaultBounds: IBoundary = { x: 0, y: 0, width: 150, height: computeDimension(1.0, 70) };
+  const defaultBounds: IBoundary = { x: 0, y: 0, width: 160, height: computeDimension(1.0, 70) };
 
   elements.push(
     new FlowchartTerminal({
@@ -38,7 +38,10 @@ export const composeFlowchartPreview: ComposePreview = (
   elements.push(
     new FlowchartInputOutput({
       name: translate('packages.Flowchart.FlowchartInputOutput'),
-      bounds: defaultBounds,
+      bounds: {
+        ...defaultBounds,
+        width: 140,
+      },
     }),
   );
 

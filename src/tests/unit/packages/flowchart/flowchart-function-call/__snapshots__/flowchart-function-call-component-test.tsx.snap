@@ -18,7 +18,7 @@ exports[`render the flowchart-function-call-component 1`] = `
           fill="white"
           height="100%"
           stroke="black"
-          width="180"
+          width="140"
           x="10"
         />
         <rect
@@ -27,20 +27,20 @@ exports[`render the flowchart-function-call-component 1`] = `
           height="100%"
           stroke="black"
           width="10"
-          x="190"
+          x="150"
         />
         <text
           font-weight="bold"
           height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
-          x="100"
+          width="160"
+          x="80"
           y="50"
         >
           <tspan
             dy="5.5"
-            x="100"
+            x="80"
           >
             TestFunctionCallComponent
           </tspan>

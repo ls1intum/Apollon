@@ -7,38 +7,38 @@ exports[`render the bpmn-data-store-component 1`] = `
       <g>
         <path
           class="sc-gEvEer fMgKSV"
-          d="M 0 10 L 0 90 A 100 10 0 0 0 200 90 L 200 10 A 100 10 180 0 0 0 10"
+          d="M 0 10 L 0 90 A 80 10 0 0 0 160 90 L 160 10 A 80 10 180 0 0 0 10"
           fill="white"
           stroke="black"
         />
         <path
           class="sc-gEvEer JpXgg"
-          d="M 0 30 A 100 10 0 0 0 200 30"
+          d="M 0 30 A 80 10 0 0 0 160 30"
           fill="transparent"
           stroke="black"
         />
         <path
           class="sc-gEvEer JpXgg"
-          d="M 0 20 A 100 10 0 0 0 200 20"
+          d="M 0 20 A 80 10 0 0 0 160 20"
           fill="transparent"
           stroke="black"
         />
         <path
           class="sc-gEvEer JpXgg"
-          d="M 0 10 A 100 10 0 0 0 200 10"
+          d="M 0 10 A 80 10 0 0 0 160 10"
           fill="transparent"
           stroke="black"
         />
         <text
           pointer-events="none"
           text-anchor="middle"
-          width="400"
-          x="100"
+          width="320"
+          x="80"
           y="120"
         >
           <tspan
             dy="11"
-            x="100"
+            x="80"
           >
             Data Store
           </tspan>

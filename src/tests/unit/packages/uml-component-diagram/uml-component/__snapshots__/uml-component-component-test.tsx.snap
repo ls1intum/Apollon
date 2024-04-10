@@ -15,7 +15,7 @@ exports[`render the uml-component-component 1`] = `
           width="100%"
         />
         <g
-          transform="translate(169, 7)"
+          transform="translate(129, 7)"
         >
           <path
             class="sc-gEvEer fMgKSV"

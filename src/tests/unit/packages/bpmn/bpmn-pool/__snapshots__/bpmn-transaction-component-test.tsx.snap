@@ -18,7 +18,7 @@ exports[`render the bpmn-pool-component 1`] = `
           fill="white"
           height="100"
           stroke="black"
-          width="160"
+          width="120"
           x="40"
           y="0"
         />
