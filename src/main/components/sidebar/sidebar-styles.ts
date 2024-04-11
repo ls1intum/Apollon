@@ -8,9 +8,11 @@ export const Container = styled.aside.attrs<ContainerProps>({})<ContainerProps>`
   height: 100%;
   min-height: inherit;
   max-height: inherit;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
 
   svg {
     display: block;

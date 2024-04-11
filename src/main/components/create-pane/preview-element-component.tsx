@@ -9,15 +9,17 @@ import { hoverable } from '../uml-element/hoverable/hoverable';
 type Props = {
   element: UMLElement;
   create: (element: UMLElement, owner?: string) => void;
+  scale?: number;
 };
 
-export const Preview = styled(hoverable(CanvasElement)).attrs({
+export const Preview = styled(hoverable(CanvasElement)).attrs((props: { scale?: number }) => ({
   child: CanvasElement,
-})`
+  scale: props.scale,
+}))`
   overflow: visible;
   fill: white;
-  scale: 0.8;
-  transform-origin: center left;
+  scale: ${(props) => props.scale ?? 0.8};
+  transform-origin: center center;
 `;
 
 export class PreviewElementComponent extends Component<Props> {
