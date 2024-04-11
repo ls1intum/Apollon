@@ -8,7 +8,7 @@ exports[`render the flowchart-input-output-component 1`] = `
         <polyline
           class="sc-aXZVg bUvEJV"
           fill="white"
-          points="220 0, 180 100, -20 100, 20 0, 220 0"
+          points="180 0, 140 100, -20 100, 20 0, 180 0"
           stroke="black"
         />
         <text
@@ -16,13 +16,13 @@ exports[`render the flowchart-input-output-component 1`] = `
           height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
-          x="100"
+          width="160"
+          x="80"
           y="50"
         >
           <tspan
             dy="5.5"
-            x="100"
+            x="80"
           >
             TestInputOutputComponent
           </tspan>

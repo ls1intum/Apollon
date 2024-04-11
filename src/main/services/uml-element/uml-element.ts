@@ -82,7 +82,7 @@ export abstract class UMLElement implements IUMLElement, ILayoutable {
   id = uuid();
   name = '';
   abstract type: UMLElementType | UMLRelationshipType | UMLDiagramType;
-  bounds = { x: 0, y: 0, width: 200, height: 100 };
+  bounds = { x: 0, y: 0, width: 160, height: 100 };
   owner = null as string | null;
   highlight?: string;
   fillColor?: string;

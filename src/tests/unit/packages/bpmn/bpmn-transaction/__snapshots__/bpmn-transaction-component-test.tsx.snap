@@ -12,7 +12,7 @@ exports[`render the bpmn-transaction-component 1`] = `
           rx="10"
           ry="10"
           stroke="black"
-          width="200"
+          width="160"
         />
         <rect
           class="sc-fqkvVR kprGcp"
@@ -21,7 +21,7 @@ exports[`render the bpmn-transaction-component 1`] = `
           rx="7"
           ry="7"
           stroke="black"
-          width="194"
+          width="154"
           x="3"
           y="3"
         />
@@ -30,13 +30,13 @@ exports[`render the bpmn-transaction-component 1`] = `
           height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
-          x="100"
+          width="160"
+          x="80"
           y="50"
         >
           <tspan
             dy="5.5"
-            x="100"
+            x="80"
           >
             Transaction
           </tspan>

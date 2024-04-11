@@ -11,7 +11,7 @@ export const composeReachabilityGraphPreview: ComposePreview = (
 
   const umlReachabilityGraphMarking = new UMLReachabilityGraphMarking({
     name: translate('packages.ReachabilityGraph.ReachabilityGraphMarking'),
-    bounds: { x: 0, y: 0, width: 200, height: 100 },
+    bounds: { x: 0, y: 0, width: 160, height: 100 },
   });
 
   elements.push(umlReachabilityGraphMarking);

@@ -35,6 +35,7 @@ type OwnProps = {};
 type StateProps = {
   type: UMLDiagramType;
   colorEnabled: boolean;
+  previewScaleFactor?: number;
 };
 
 type DispatchProps = {
@@ -121,7 +122,10 @@ class CreatePaneComponent extends Component<Props, State> {
       .map((preview, index) => {
         const { styles: previewStyles } = preview;
         return (
-          <div style={previewStyles} key={index}>
+          <div
+            style={{ ...previewStyles, height: preview.bounds.height * (this.props?.previewScaleFactor ?? 0.8) + 8 }}
+            key={index}
+          >
             <PreviewElementComponent element={preview} create={this.create} />
           </div>
         );
