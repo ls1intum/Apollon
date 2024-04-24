@@ -8,7 +8,7 @@ exports[`render the flowchart-decision-component 1`] = `
         <polyline
           class="sc-aXZVg bUvEJV"
           fill="white"
-          points="100 0, 200 50, 100 100, 0 50, 100 0"
+          points="80 0, 160 50, 80 100, 0 50, 80 0"
           stroke="black"
         />
         <text
@@ -16,13 +16,13 @@ exports[`render the flowchart-decision-component 1`] = `
           height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
-          x="100"
+          width="160"
+          x="80"
           y="50"
         >
           <tspan
             dy="5.5"
-            x="100"
+            x="80"
           >
             TestDecisionComponent
           </tspan>

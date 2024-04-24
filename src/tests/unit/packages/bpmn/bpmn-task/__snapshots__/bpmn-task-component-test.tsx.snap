@@ -19,13 +19,13 @@ exports[`render the bpmn-task-component 1`] = `
           height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
-          x="100"
+          width="160"
+          x="80"
           y="50"
         >
           <tspan
             dy="5.5"
-            x="100"
+            x="80"
           >
             Task
           </tspan>

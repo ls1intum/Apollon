@@ -9,7 +9,7 @@ export class ColorLegend extends UMLElement {
   type: UMLElementType = ColorLegendElementType.ColorLegend;
 
   constructor(values?: DeepPartial<IUMLElement>) {
-    super(values && !values.bounds ? { ...values, bounds: { x: 0, y: 0, width: 200, height: 50 } } : values);
+    super(values && !values.bounds ? { ...values, bounds: { x: 0, y: 0, width: 160, height: 50 } } : values);
   }
 
   render(canvas: ILayer): ILayoutable[] {
