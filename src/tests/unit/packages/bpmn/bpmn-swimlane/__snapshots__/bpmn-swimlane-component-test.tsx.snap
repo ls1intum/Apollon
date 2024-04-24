@@ -10,7 +10,7 @@ exports[`render the bpmn-swimlane-component 1`] = `
           fill="white"
           height="100"
           stroke="black"
-          width="200"
+          width="160"
         />
         <text
           alignment-baseline="middle"

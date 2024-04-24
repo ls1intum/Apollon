@@ -23,7 +23,7 @@ exports[`render the uml-deplyoment-artifact-component 1`] = `
           TestDeploymentComponent
         </text>
         <g
-          transform="translate(174, 7)"
+          transform="translate(134, 7)"
         >
           <path
             class="sc-gEvEer fMgKSV"

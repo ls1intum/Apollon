@@ -19,8 +19,8 @@ exports[`uml-reachability-graph-marking-component render the uml-reachability-gr
           height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
-          x="100"
+          width="160"
+          x="80"
           y="50"
         />
       </g>

@@ -13,20 +13,20 @@ exports[`render the bpmn-call-activity-component 1`] = `
           ry="10"
           stroke="black"
           stroke-width="3"
-          width="200"
+          width="160"
         />
         <text
           font-weight="bold"
           height="100"
           pointer-events="none"
           text-anchor="middle"
-          width="200"
-          x="100"
+          width="160"
+          x="80"
           y="50"
         >
           <tspan
             dy="5.5"
-            x="100"
+            x="80"
           >
             Call Activity
           </tspan>

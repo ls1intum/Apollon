@@ -6,7 +6,7 @@ exports[`test assessable HOC display negative score 1`] = `
     <svg>
       <g
         pointer-events="none"
-        transform="translate(200 0)"
+        transform="translate(160 0)"
       >
         <circle
           class="sc-kpDqfm"
@@ -42,7 +42,7 @@ exports[`test assessable HOC display neutral score 1`] = `
     <svg>
       <g
         pointer-events="none"
-        transform="translate(200 0)"
+        transform="translate(160 0)"
       >
         <circle
           class="sc-kpDqfm"
@@ -78,7 +78,7 @@ exports[`test assessable HOC display positive score 1`] = `
     <svg>
       <g
         pointer-events="none"
-        transform="translate(200 0)"
+        transform="translate(160 0)"
       >
         <circle
           class="sc-kpDqfm"
