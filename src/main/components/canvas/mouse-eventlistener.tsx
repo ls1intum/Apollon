@@ -199,12 +199,12 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
     }
 
     const selection = this.getElementIDsInSelectionBox();
-    this.props.select(selection);
+
+    this.props.select(selection, true);
 
     this.setState((prevState) => {
       return {
         selectionStarted: prevState.selectionStarted,
-        elementsInSelectionBox: selection,
         selectionRectangle: {
           ...prevState.selectionRectangle,
           width: event.clientX - (prevState.selectionRectangle.x ?? 0),

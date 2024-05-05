@@ -8,7 +8,7 @@ export const SelectableReducer: Reducer<SelectableState, Actions> = (state = [],
     case SelectableActionTypes.SELECT: {
       const { payload } = action;
 
-      return [...new Set([...payload.ids, ...state])];
+      return [...new Set([...payload.ids, ...(payload.overwrite ? [] : state)])];
     }
     case UMLElementActionTypes.DELETE:
     case SelectableActionTypes.DESELECT: {

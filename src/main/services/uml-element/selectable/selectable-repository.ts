@@ -4,7 +4,7 @@ import { SetSelectionBoxAction, EditorActionTypes } from '../../editor/editor-ty
 
 export const Selectable = {
   select:
-    (id?: string | string[]): AsyncAction =>
+    (id?: string | string[], overwrite?: boolean): AsyncAction =>
     (dispatch, getState) => {
       const ids = id ? (Array.isArray(id) ? id : [id]) : Object.keys(getState().elements);
       if (!ids.length) {
@@ -15,17 +15,17 @@ export const Selectable = {
           },
           undoable: false,
         });
-
-        return;
       }
 
       return dispatch<SelectAction>({
         type: SelectableActionTypes.SELECT,
-        payload: { ids },
+        payload: {
+          ids: ids,
+          overwrite: overwrite,
+        },
         undoable: false,
       });
     },
-
   deselect:
     (id?: string | string[]): AsyncAction =>
     (dispatch, getState) => {
@@ -36,7 +36,7 @@ export const Selectable = {
 
       return dispatch<DeselectAction>({
         type: SelectableActionTypes.DESELECT,
-        payload: { ids },
+        payload: { ids: ids },
         undoable: false,
       });
     },
