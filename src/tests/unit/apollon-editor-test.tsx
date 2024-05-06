@@ -117,7 +117,7 @@ describe('test apollon editor ', () => {
       elements: arrayToInclusionMap(Object.keys(testClassDiagram.elements)),
       relationships: arrayToInclusionMap(Object.keys(testClassDiagram.relationships)),
     };
-    const selectionCallback = fn((s: Selection) => {});
+    const selectionCallback = fn((selection: Selection) => {});
 
     // subscribe to selection and call select
     const selectionSubscription = editor.subscribeToSelectionChange(selectionCallback);

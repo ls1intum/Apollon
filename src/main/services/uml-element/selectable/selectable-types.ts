@@ -12,6 +12,7 @@ export type SelectableActions = SelectAction | DeselectAction;
 export type SelectAction = Action<SelectableActionTypes.SELECT> & {
   payload: {
     ids: string[];
+    overwrite?: boolean;
   };
 };
 

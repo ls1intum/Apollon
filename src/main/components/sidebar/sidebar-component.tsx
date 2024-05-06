@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { ApollonMode, ApollonView } from '../../services/editor/editor-types';
-import { Switch } from '../controls/switch/switch';
 import { CreatePane } from '../create-pane/create-pane';
 import { I18nContext } from '../i18n/i18n-context';
 import { localized } from '../i18n/localized';
@@ -48,10 +47,16 @@ class SidebarComponent extends Component<Props> {
     return (
       <Container id="modeling-editor-sidebar" data-cy="modeling-editor-sidebar">
         {this.props.mode === ApollonMode.Exporting && (
-          <Switch value={this.props.view} onChange={this.props.changeView} color="primary">
-            <Switch.Item value={ApollonView.Modelling}>{this.props.translate('views.modelling')}</Switch.Item>
-            <Switch.Item value={ApollonView.Exporting}>{this.props.translate('views.exporting')}</Switch.Item>
-          </Switch>
+          <div className="dropdown" style={{ width: 128 }}>
+            <select
+              value={this.props.view}
+              onChange={(event) => this.props.changeView(event.target.value as ApollonView)}
+              color="primary"
+            >
+              <option value={ApollonView.Modelling}>{this.props.translate('views.modelling')}</option>
+              <option value={ApollonView.Exporting}>{this.props.translate('views.exporting')}</option>
+            </select>
+          </div>
         )}
         {this.props.view === ApollonView.Modelling ? (
           <CreatePane />

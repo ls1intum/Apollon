@@ -9,12 +9,12 @@ exports[`test communication link popup render 1`] = `
           class="sc-gFAWRd gHOPDJ"
         >
           <h1
-            class="sc-tagGq cchZgf"
+            class="sc-lcIPJg cQIeHE"
           >
             Communication Link
           </h1>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
           >
             <svg
@@ -31,12 +31,12 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-fXSgeo kpgPkJ"
+          class="sc-tagGq XeZYh"
         />
       </section>
       <section>
         <h1
-          class="sc-tagGq gknvxe"
+          class="sc-lcIPJg chQxvR"
         >
           Messages
            (
@@ -49,12 +49,12 @@ exports[`test communication link popup render 1`] = `
           class="sc-gFAWRd gHOPDJ"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj dERxbl"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="CommunicationSourceLinkMessage0"
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -71,7 +71,7 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -92,12 +92,12 @@ exports[`test communication link popup render 1`] = `
           class="sc-gFAWRd gHOPDJ"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj dERxbl"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="CommunicationSourceLinkMessage1"
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -114,7 +114,7 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -135,12 +135,12 @@ exports[`test communication link popup render 1`] = `
           class="sc-gFAWRd gHOPDJ"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj dERxbl"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="CommunicationSourceLinkMessage2"
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -157,7 +157,7 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -178,12 +178,12 @@ exports[`test communication link popup render 1`] = `
           class="sc-gFAWRd gHOPDJ"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj dERxbl"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="CommunicationTargetLinkMessage0"
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -200,7 +200,7 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -221,12 +221,12 @@ exports[`test communication link popup render 1`] = `
           class="sc-gFAWRd gHOPDJ"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj dERxbl"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="CommunicationTargetLinkMessage1"
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -243,7 +243,7 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -264,12 +264,12 @@ exports[`test communication link popup render 1`] = `
           class="sc-gFAWRd gHOPDJ"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj dERxbl"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="CommunicationTargetLinkMessage2"
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -286,7 +286,7 @@ exports[`test communication link popup render 1`] = `
             </svg>
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -304,7 +304,7 @@ exports[`test communication link popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-dtBdUo sc-kOHTFB nbRZj fzqSng"
+          class="sc-bmzYkS sc-iHGNWf fEVqYL lmyIYN"
           maxlength="100"
           value=""
         />

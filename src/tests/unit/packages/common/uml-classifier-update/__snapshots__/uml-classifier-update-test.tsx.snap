@@ -9,12 +9,12 @@ exports[`test class association popup render 1`] = `
           class="sc-fjvvzt cQBzZO"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj bHpNZf"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             value=""
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -32,39 +32,39 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-fXSgeo kpgPkJ"
+          class="sc-tagGq XeZYh"
         />
       </section>
       <section>
         <div
-          class="sc-jsJBEP jEuSgr"
+          class="sc-esYiGF dWYmfg"
         >
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY dXlFvE"
+            class="sc-eeDRCY sc-koXPp fShmjg jwSmKw sc-fXSgeo jURMRc"
             color="primary"
           >
             Abstract
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY dXlFvE"
+            class="sc-eeDRCY sc-koXPp fShmjg jwSmKw sc-fXSgeo jURMRc"
             color="primary"
           >
             Interface
           </button>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA gCyQAW sc-eeDRCY dXlFvE"
+            class="sc-eeDRCY sc-koXPp fShmjg jwSmKw sc-fXSgeo jURMRc"
             color="primary"
           >
             Enumeration
           </button>
         </div>
         <hr
-          class="sc-fXSgeo kpgPkJ"
+          class="sc-tagGq XeZYh"
         />
       </section>
       <section>
         <h1
-          class="sc-tagGq gknvxe"
+          class="sc-lcIPJg chQxvR"
         >
           Attributes
         </h1>
@@ -72,12 +72,12 @@ exports[`test class association popup render 1`] = `
           class="sc-JrDLc cQSxzb"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj dERxbl"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="attribute"
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -95,17 +95,17 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-dtBdUo sc-kOHTFB nbRZj fzqSng"
+          class="sc-bmzYkS sc-iHGNWf fEVqYL lmyIYN"
           maxlength="100"
           value=""
         />
       </section>
       <section>
         <hr
-          class="sc-fXSgeo kpgPkJ"
+          class="sc-tagGq XeZYh"
         />
         <h1
-          class="sc-tagGq gknvxe"
+          class="sc-lcIPJg chQxvR"
         >
           Methods
         </h1>
@@ -113,12 +113,12 @@ exports[`test class association popup render 1`] = `
           class="sc-JrDLc cQSxzb"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj dERxbl"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL etmSlo"
             maxlength="100"
             value="classMethod"
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -136,7 +136,7 @@ exports[`test class association popup render 1`] = `
           </button>
         </div>
         <input
-          class="sc-dtBdUo sc-kOHTFB nbRZj fzqSng"
+          class="sc-bmzYkS sc-iHGNWf fEVqYL lmyIYN"
           maxlength="100"
           value=""
         />
