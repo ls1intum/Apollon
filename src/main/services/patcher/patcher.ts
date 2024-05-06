@@ -145,7 +145,7 @@ export class Patcher<T> {
    * @param listener A function that will be called when the object changes.
    * @returns A subscription ID that can be used to unsubscribe.
    */
-  subscribe(listener: PatchListener): number {
+  subscribe(listener?: PatchListener): number {
     const key = this.nextKey();
     this.subscribers[key] = this.observable.subscribe(listener);
 
