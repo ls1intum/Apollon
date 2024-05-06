@@ -1,3 +1,4 @@
+import { debounce, debounceTime, groupBy, mergeMap, Subject, tap } from 'rxjs';
 import { Patch } from './patcher-types';
 import { Operation, ReplaceOperation } from 'fast-json-patch';
 
@@ -49,8 +50,27 @@ export function isSignedOperation(operation: Operation): operation is SignedOper
  * [**this issue**](https://github.com/ls1intum/Apollon_standalone/pull/70) for more details.
  */
 export class PatchVerifier {
-  private waitlist: { [address: string]: string } = {};
+  /**
+   * In some cases, the rebroadcast of a change might be delayed or lost.
+   * To prevent the client from indefninitely discarding changes on the same path,
+   * the verifier will discard changes on the same path until a certain time.
+   */
+  static SUPRESSION_WINDOW = 200;
 
+  private waitlist: { [address: string]: string } = {};
+  private cleanup = new Subject<string>();
+
+  constructor() {
+    // This ensures that the waitlist is cleaned up after a certain time.
+    // Otherwise, due to message loss, some specific paths on the waitlist might be locked up.
+    this.cleanup
+      .pipe(
+        groupBy((path) => path),
+        mergeMap((group) => group.pipe(debounceTime(PatchVerifier.SUPRESSION_WINDOW))),
+        tap((path) => delete this.waitlist[path]),
+      )
+      .subscribe();
+  }
   /**
    * Signs an operation and tracks it. Only replace operations are signed and tracked.
    * @param operation
@@ -61,6 +81,7 @@ export class PatchVerifier {
       const hash = Math.random().toString(36).substring(2, 15);
       const path = operation.path;
       this.waitlist[path] = hash;
+      this.cleanup.next(path);
 
       return { ...operation, hash };
     } else {
