@@ -151,6 +151,23 @@ describe('patcher class.', () => {
     expect(res3.result).toEqual({ x: 46 });
   });
 
+  test('suppresses patches on a changed address for a limited time.', async () => {
+    const patcher = new Patcher();
+    patcher.initialize({ x: 42 });
+    patcher.subscribe();
+    patcher.check({ x: 43 });
+
+    await sleep(1);
+
+    const res1 = patcher.patch([{ op: 'replace', path: '/x', value: 44, hash: '123' }]);
+    expect(res1.patched).toBe(false);
+
+    await sleep(200);
+
+    const res2 = patcher.patch([{ op: 'replace', path: '/x', value: 45, hash: '123' }]);
+    expect(res2.patched).toBe(true);
+  });
+
   test('always applies unsigned patches.', async () => {
     let captured: any;
     const patcher = new Patcher();
