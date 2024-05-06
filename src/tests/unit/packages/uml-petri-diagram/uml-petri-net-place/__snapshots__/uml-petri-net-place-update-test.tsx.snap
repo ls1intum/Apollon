@@ -9,12 +9,12 @@ exports[`test petri net arc update render 1`] = `
           class="sc-ddjGPC hMjkq"
         >
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj bHpNZf"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             value=""
           />
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
           >
@@ -32,7 +32,7 @@ exports[`test petri net arc update render 1`] = `
           </button>
         </div>
         <hr
-          class="sc-fXSgeo kpgPkJ"
+          class="sc-tagGq XeZYh"
         />
       </section>
       <section>
@@ -40,13 +40,13 @@ exports[`test petri net arc update render 1`] = `
           class="sc-ddjGPC hMjkq"
         >
           <span
-            class="sc-tagGq hIQBr"
+            class="sc-lcIPJg gscKFM"
             style="margin-right: 0.5em; min-width: 70px;"
           >
             Tokens
           </span>
           <input
-            class="sc-dtBdUo sc-kOHTFB nbRZj bHpNZf"
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
             style="min-width: 0;"
             type="number"
@@ -60,7 +60,7 @@ exports[`test petri net arc update render 1`] = `
           style="margin-top: 0.5em; align-items: center;"
         >
           <span
-            class="sc-tagGq hIQBr"
+            class="sc-lcIPJg gscKFM"
             style="margin-right: 0.5em; min-width: 70px;"
           >
             Capacity
@@ -69,7 +69,7 @@ exports[`test petri net arc update render 1`] = `
             style="position: relative;"
           >
             <input
-              class="sc-dtBdUo sc-kOHTFB nbRZj bHpNZf"
+              class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
               maxlength="100"
               type="number"
               value="Infinity"
@@ -93,7 +93,7 @@ exports[`test petri net arc update render 1`] = `
             </svg>
           </div>
           <button
-            class="sc-hmdomO sc-bXCLTC czBNuA iklrvW"
+            class="sc-eeDRCY sc-koXPp fShmjg dCdHsc"
             color="link"
             tabindex="-1"
             type="reset"

@@ -10,7 +10,7 @@ import { withCanvas } from './with-canvas';
 import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { EditorRepository } from '../../services/editor/editor-repository';
-import { IBoundary } from '../../utils/geometry/boundary';
+import { areBoundsIntersecting, IBoundary } from '../../utils/geometry/boundary';
 import { IPoint } from '../../utils/geometry/point';
 import { defaults as getTheme } from '../../components/theme/styles';
 
@@ -229,30 +229,14 @@ class MouseEventListenerComponent extends Component<Props, LocalState> {
       return false;
     }
 
-    const elementCornerPoints: IPoint[] = [
-      { x: element.bounds.x, y: element.bounds.y },
-      { x: element.bounds.x + element.bounds.width, y: element.bounds.y },
-      { x: element.bounds.x + element.bounds.width, y: element.bounds.y + element.bounds.height },
-      { x: element.bounds.x, y: element.bounds.y + element.bounds.height },
-    ];
+    const normalizedSelectionBounds: IBoundary = {
+      x: (x - canvasOrigin.x) / this.props.zoomFactor,
+      y: (y - canvasOrigin.y) / this.props.zoomFactor,
+      height: height / this.props.zoomFactor,
+      width: width / this.props.zoomFactor,
+    };
 
-    const selectionRectangleStartX =
-      Math.min(x, x + width) / this.props.zoomFactor - canvasOrigin.x / this.props.zoomFactor;
-    const selectionRectangleEndX =
-      Math.max(x, x + width) / this.props.zoomFactor - canvasOrigin.x / this.props.zoomFactor;
-    const selectionRectangleStartY =
-      Math.min(y, y + height) / this.props.zoomFactor - canvasOrigin.y / this.props.zoomFactor;
-    const selectionRectangleEndY =
-      Math.max(y, y + height) / this.props.zoomFactor - canvasOrigin.y / this.props.zoomFactor;
-
-    // Determine if the given element is at least partially contained within the selection rectangle
-    return elementCornerPoints.some(
-      (point) =>
-        selectionRectangleStartX <= point.x &&
-        point.x <= selectionRectangleEndX &&
-        selectionRectangleStartY <= point.y &&
-        point.y <= selectionRectangleEndY,
-    );
+    return areBoundsIntersecting(element.bounds, normalizedSelectionBounds);
   };
 
   /**
