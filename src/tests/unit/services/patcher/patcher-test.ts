@@ -154,7 +154,7 @@ describe('patcher class.', () => {
   test('suppresses patches on a changed address for a limited time.', async () => {
     const patcher = new Patcher();
     patcher.initialize({ x: 42 });
-    patcher.subscribe(() => {});
+    patcher.subscribe();
     patcher.check({ x: 43 });
 
     await sleep(1);
