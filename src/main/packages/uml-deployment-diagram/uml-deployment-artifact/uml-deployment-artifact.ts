@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { DeploymentElementType, DeploymentRelationshipType } from '..';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
@@ -7,6 +6,7 @@ import { assign } from '../../../utils/fx/assign';
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { calculateNameBounds } from '../../../utils/name-bounds';
 import { UMLElementType } from '../../uml-element-type';
+import { DeepPartial } from '../../../typings';
 
 export class UMLDeploymentArtifact extends UMLElement {
   static supportedRelationships = [

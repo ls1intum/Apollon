@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
 import { UMLDiagramType } from './packages/diagram-type';
 import { UMLElementType } from './packages/uml-element-type';
@@ -175,3 +174,9 @@ export type SVG = {
     height: number;
   };
 };
+
+export type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>;
+    }
+  : T;

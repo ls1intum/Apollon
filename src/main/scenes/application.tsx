@@ -1,5 +1,5 @@
 import React from 'react';
-import { DeepPartial } from 'redux';
+
 import { Canvas, CanvasComponent } from '../components/canvas/canvas';
 import { CanvasContext, CanvasProvider } from '../components/canvas/canvas-context';
 import { Editor } from '../components/canvas/editor';
@@ -16,7 +16,7 @@ import { ILayer } from '../services/layouter/layer';
 import { Locale } from '../services/editor/editor-types';
 import { Layout } from './application-styles';
 import { RootContext, RootProvider } from '../components/root/root-context';
-import { UMLModel } from '../typings';
+import { DeepPartial, UMLModel } from '../typings';
 import { Patcher } from '../services/patcher';
 import { MouseEventListener } from '../components/canvas/mouse-eventlistener';
 

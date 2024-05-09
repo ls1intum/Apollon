@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { CommunicationRelationshipType } from '..';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import * as Apollon from '../../../typings';
@@ -11,6 +10,7 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { Point } from '../../../utils/geometry/point';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Text } from '../../../utils/svg/text';
+import { DeepPartial } from '../../../typings';
 
 export interface IUMLCommunicationLink extends IUMLRelationship {
   messages: ICommunicationLinkMessage[];

@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import { DeepPartial } from 'redux';
+
 import { ThemeProvider } from 'styled-components';
 import { update } from '../../utils/update';
 import { defaults, Styles } from './styles';
+import { DeepPartial } from '../../typings';
 
 const defaultProps = {
   styles: {} as DeepPartial<Styles>,

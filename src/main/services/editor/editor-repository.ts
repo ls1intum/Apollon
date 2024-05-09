@@ -1,9 +1,9 @@
 import {
   ApollonView,
-  SetSelectionBoxAction,
   ChangeViewAction,
-  SetZoomFactorAction,
   EditorActionTypes,
+  SetSelectionBoxAction,
+  SetZoomFactorAction,
 } from './editor-types';
 
 export class EditorRepository {

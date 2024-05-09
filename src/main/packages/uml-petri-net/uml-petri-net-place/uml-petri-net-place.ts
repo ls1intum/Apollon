@@ -4,10 +4,11 @@ import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-eleme
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
-import { DeepPartial } from 'redux';
+
 import * as Apollon from '../../../typings';
 import { PetriNetElementType } from '../index';
 import { assign } from '../../../utils/fx/assign';
+import { DeepPartial } from '../../../typings';
 
 export class UMLPetriNetPlace extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };

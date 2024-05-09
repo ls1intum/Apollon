@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { DeepPartial } from 'redux';
+
 import { defaults, Styles } from '../components/theme/styles';
 import { Components } from '../packages/components';
 import { UMLElementType } from '../packages/uml-element-type';
@@ -20,6 +20,7 @@ import { ModelState } from '../components/store/model-state';
 import { ThemeProvider } from 'styled-components';
 import { UMLClassifierComponent } from '../packages/common/uml-classifier/uml-classifier-component';
 import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/uml-classifier-member-component';
+import { DeepPartial } from '../typings';
 
 type Props = {
   model: Apollon.UMLModel;

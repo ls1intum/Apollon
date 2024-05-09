@@ -1,7 +1,6 @@
 import { Reducer } from 'redux';
 import { Patcher } from './patcher';
 import { PatcherActionTypes } from './patcher-types';
-import { deepClone } from 'fast-json-patch';
 
 export type PatcherReducerOptions<T, U = T> = {
   /**

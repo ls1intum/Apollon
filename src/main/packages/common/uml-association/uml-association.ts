@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLElement } from '../../../services/uml-element/uml-element';
@@ -13,6 +12,7 @@ import {
 } from './uml-association-component';
 import { Text } from '../../../utils/svg/text';
 import { Point } from '../../../utils/geometry/point';
+import { DeepPartial } from '../../../typings';
 
 export interface IUMLAssociation extends IUMLRelationship {
   source: IUMLElementPort & {

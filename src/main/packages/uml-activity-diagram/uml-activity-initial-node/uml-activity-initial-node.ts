@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { ActivityElementType, ActivityRelationshipType } from '..';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
@@ -7,6 +6,7 @@ import { UMLElementFeatures } from '../../../services/uml-element/uml-element-fe
 import { assign } from '../../../utils/fx/assign';
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
+import { DeepPartial } from '../../../typings';
 
 export class UMLActivityInitialNode extends UMLElement {
   static supportedRelationships = [ActivityRelationshipType.ActivityControlFlow];

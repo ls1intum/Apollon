@@ -1,6 +1,6 @@
 import { AsyncAction } from '../../../utils/actions/actions';
 import { DeselectAction, SelectableActionTypes, SelectAction } from './selectable-types';
-import { SetSelectionBoxAction, EditorActionTypes } from '../../editor/editor-types';
+import { EditorActionTypes, SetSelectionBoxAction } from '../../editor/editor-types';
 
 export const Selectable = {
   select:

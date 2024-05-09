@@ -11,7 +11,6 @@ import { UMLElementState } from '../../services/uml-element/uml-element-types';
 import { IUMLElement } from '../../services/uml-element/uml-element';
 import { EditorRepository } from '../../services/editor/editor-repository';
 import { areBoundsIntersecting, IBoundary } from '../../utils/geometry/boundary';
-import { IPoint } from '../../utils/geometry/point';
 import { defaults as getTheme } from '../../components/theme/styles';
 
 type OwnProps = {};

@@ -1,10 +1,10 @@
-import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { assign } from '../../utils/fx/assign';
 import { IBoundary } from '../../utils/geometry/boundary';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../uml-container/uml-container';
+import { DeepPartial } from '../../typings';
 
 export const DIAGRAM_MARGIN = 40;
 

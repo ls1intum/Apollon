@@ -1,9 +1,10 @@
 import { BPMNRelationshipType } from '..';
 import { UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { DeepPartial } from 'redux';
+
 import { UMLRelationshipCenteredDescription } from '../../../services/uml-relationship/uml-relationship-centered-description';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import * as Apollon from '../../../typings';
+import { DeepPartial } from '../../../typings';
 
 export type BPMNFlowType = 'sequence' | 'message' | 'association' | 'data association';
 

@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
@@ -10,6 +9,7 @@ import { Text } from '../../../utils/svg/text';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLClassifierAttribute } from './uml-classifier-attribute';
 import { UMLClassifierMethod } from './uml-classifier-method';
+import { DeepPartial } from '../../../typings';
 
 export interface IUMLClassifier extends IUMLContainer {
   italic: boolean;

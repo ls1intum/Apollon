@@ -5,7 +5,7 @@ import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-eleme
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
-import { DeepPartial } from 'redux';
+import { DeepPartial } from '../../../typings';
 
 export class UMLActivityForkNode extends UMLElement {
   static supportedRelationships = [ActivityRelationshipType.ActivityControlFlow];

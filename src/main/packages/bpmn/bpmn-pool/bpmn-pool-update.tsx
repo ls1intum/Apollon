@@ -188,6 +188,7 @@ class BPMNPoolUpdateComponent extends Component<Props, State> {
       name: name ?? this.props.translate('packages.BPMN.BPMNSwimlane'),
       bounds: {
         x: BPMNPool.HEADER_WIDTH,
+        y: 0,
         width: this.props.element.bounds.width - BPMNPool.HEADER_WIDTH,
         height: convertToSwimlaneBased ? this.props.element.bounds.height : BPMNSwimlane.DEFAULT_HEIGHT,
       },

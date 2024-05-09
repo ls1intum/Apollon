@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import * as Apollon from '../../typings';
@@ -7,6 +6,7 @@ import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { IUMLElement, UMLElement } from '../uml-element/uml-element';
 import { UMLElementFeatures } from '../uml-element/uml-element-features';
+import { DeepPartial } from '../../typings';
 
 export interface IUMLContainer extends IUMLElement {
   type: UMLElementType | UMLDiagramType;

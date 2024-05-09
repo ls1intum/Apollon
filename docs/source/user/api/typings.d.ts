@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
 import { UMLDiagramType } from './packages/diagram-type';
 import { UMLElementType } from './packages/uml-element-type';
@@ -14,158 +13,161 @@ import { BPMNIntermediateEventType } from './packages/bpmn/bpmn-intermediate-eve
 import { BPMNTaskType } from './packages/bpmn/bpmn-task/bpmn-task';
 import { BPMNFlowType } from './packages/bpmn/bpmn-flow/bpmn-flow';
 import { BPMNMarkerType } from './packages/bpmn/common/types';
+import { DeepPartial } from 'redux';
 export { UMLDiagramType, UMLElementType, UMLRelationshipType, ApollonMode, Locale };
 export type { Styles };
 export type ApollonOptions = {
-    type?: UMLDiagramType;
-    mode?: ApollonMode;
-    readonly?: boolean;
-    enablePopups?: boolean;
-    model?: UMLModel;
-    theme?: DeepPartial<Styles>;
-    locale?: Locale;
-    copyPasteToClipboard?: boolean;
-    colorEnabled?: boolean;
-    scale?: number;
+  type?: UMLDiagramType;
+  mode?: ApollonMode;
+  readonly?: boolean;
+  enablePopups?: boolean;
+  model?: UMLModel;
+  theme?: DeepPartial<Styles>;
+  locale?: Locale;
+  copyPasteToClipboard?: boolean;
+  colorEnabled?: boolean;
+  scale?: number;
 };
 export type Selection = {
-    elements: {
-        [id: string]: boolean;
-    };
-    relationships: {
-        [id: string]: boolean;
-    };
+  elements: {
+    [id: string]: boolean;
+  };
+  relationships: {
+    [id: string]: boolean;
+  };
 };
 export type UMLModel = {
-    version: `3.${number}.${number}`;
-    type: UMLDiagramType;
-    size: {
-        width: number;
-        height: number;
-    };
-    elements: {
-        [id: string]: UMLElement;
-    };
-    interactive: Selection;
-    relationships: {
-        [id: string]: UMLRelationship;
-    };
-    assessments: {
-        [id: string]: Assessment;
-    };
+  version: `3.${number}.${number}`;
+  type: UMLDiagramType;
+  size: {
+    width: number;
+    height: number;
+  };
+  elements: {
+    [id: string]: UMLElement;
+  };
+  interactive: Selection;
+  relationships: {
+    [id: string]: UMLRelationship;
+  };
+  assessments: {
+    [id: string]: Assessment;
+  };
 };
 export type UMLModelElementType = UMLElementType | UMLRelationshipType | UMLDiagramType;
 export type UMLModelElement = {
-    id: string;
-    name: string;
-    type: UMLModelElementType;
-    owner: string | null;
-    bounds: IBoundary;
-    highlight?: string;
-    fillColor?: string;
-    strokeColor?: string;
-    textColor?: string;
-    assessmentNote?: string;
+  id: string;
+  name: string;
+  type: UMLModelElementType;
+  owner: string | null;
+  bounds: IBoundary;
+  highlight?: string;
+  fillColor?: string;
+  strokeColor?: string;
+  textColor?: string;
+  assessmentNote?: string;
 };
 export type UMLElement = UMLModelElement & {
-    type: UMLElementType;
+  type: UMLElementType;
 };
 export type UMLRelationship = UMLModelElement & {
-    type: UMLRelationshipType;
-    path: IPath;
-    source: {
-        element: string;
-        direction: Direction;
-    };
-    target: {
-        element: string;
-        direction: Direction;
-    };
-    isManuallyLayouted?: boolean;
+  type: UMLRelationshipType;
+  path: IPath;
+  source: {
+    element: string;
+    direction: Direction;
+  };
+  target: {
+    element: string;
+    direction: Direction;
+  };
+  isManuallyLayouted?: boolean;
 };
 export type UMLClassifier = UMLElement & {
-    attributes: string[];
-    methods: string[];
+  attributes: string[];
+  methods: string[];
 };
 export type UMLDeploymentNode = UMLElement & {
-    stereotype: string;
+  stereotype: string;
 };
 export type UMLPetriNetPlace = UMLElement & {
-    amountOfTokens: number;
-    capacity: number | string;
+  amountOfTokens: number;
+  capacity: number | string;
 };
 export type BPMNTask = UMLElement & {
-    taskType: BPMNTaskType;
-    marker: BPMNMarkerType;
+  taskType: BPMNTaskType;
+  marker: BPMNMarkerType;
 };
 export type BPMNGateway = UMLElement & {
-    gatewayType: BPMNGatewayType;
+  gatewayType: BPMNGatewayType;
 };
 export type BPMNStartEvent = UMLElement & {
-    eventType: BPMNStartEventType;
+  eventType: BPMNStartEventType;
 };
 export type BPMNIntermediateEvent = UMLElement & {
-    eventType: BPMNIntermediateEventType;
+  eventType: BPMNIntermediateEventType;
 };
 export type BPMNEndEvent = UMLElement & {
-    eventType: BPMNEndEventType;
+  eventType: BPMNEndEventType;
 };
 export type BPMNFlow = UMLRelationship & {
-    flowType: BPMNFlowType;
+  flowType: BPMNFlowType;
 };
 export type UMLReachabilityGraphMarking = UMLElement & {
-    isInitialMarking: boolean;
+  isInitialMarking: boolean;
 };
 export type UMLAssociation = UMLRelationship & {
-    source: UMLRelationship['source'] & {
-        multiplicity: string;
-        role: string;
-    };
-    target: UMLRelationship['target'] & {
-        multiplicity: string;
-        role: string;
-    };
+  source: UMLRelationship['source'] & {
+    multiplicity: string;
+    role: string;
+  };
+  target: UMLRelationship['target'] & {
+    multiplicity: string;
+    role: string;
+  };
 };
 export type UMLCommunicationLink = UMLRelationship & {
-    messages: {
-        [id: string]: {
-            id: string;
-            name: string;
-            direction: 'source' | 'target';
-        };
+  messages: {
+    [id: string]: {
+      id: string;
+      name: string;
+      direction: 'source' | 'target';
     };
+  };
 };
 export type FeedbackCorrectionStatus = {
-    description?: string;
-    status: 'CORRECT' | 'INCORRECT' | 'NOT_VALIDATED';
+  description?: string;
+  status: 'CORRECT' | 'INCORRECT' | 'NOT_VALIDATED';
 };
 export type Assessment = {
-    modelElementId: string;
-    elementType: UMLElementType | UMLRelationshipType;
-    score: number;
-    feedback?: string;
-    dropInfo?: any;
-    label?: string;
-    labelColor?: string;
-    correctionStatus?: FeedbackCorrectionStatus;
+  modelElementId: string;
+  elementType: UMLElementType | UMLRelationshipType;
+  score: number;
+  feedback?: string;
+  dropInfo?: any;
+  label?: string;
+  labelColor?: string;
+  correctionStatus?: FeedbackCorrectionStatus;
 };
 export type ExportOptions = {
-    margin?: number | {
+  margin?:
+    | number
+    | {
         top?: number;
         right?: number;
         bottom?: number;
         left?: number;
-    };
-    keepOriginalSize?: boolean;
-    include?: string[];
-    exclude?: string[];
+      };
+  keepOriginalSize?: boolean;
+  include?: string[];
+  exclude?: string[];
 };
 export type SVG = {
-    svg: string;
-    clip: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-    };
+  svg: string;
+  clip: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 };
