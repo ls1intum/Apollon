@@ -3,12 +3,12 @@ import { PutEffect } from 'redux-saga/effects';
 import { ThunkAction, ThunkDispatch } from 'redux-thunk';
 import { ModelState } from '../../components/store/model-state';
 
-export interface Action<T = any> extends ReduxAction<T> {
+export interface Action<T extends string = string> extends ReduxAction<T> {
   payload: object;
   undoable: boolean;
 }
 
-export interface RedoableAction<T = any> extends Action<T> {
+export interface RedoableAction<T extends string = string> extends Action<T> {
   redoable: true;
 }
 

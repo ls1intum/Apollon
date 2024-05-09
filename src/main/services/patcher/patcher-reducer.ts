@@ -1,6 +1,7 @@
 import { Reducer } from 'redux';
 import { Patcher } from './patcher';
-import { PatcherActionTypes } from './patcher-types';
+import { Patch, PatcherActionTypes } from './patcher-types';
+import { SignedPatch } from './patch-verifier';
 
 export type PatcherReducerOptions<T, U = T> = {
   /**
@@ -53,7 +54,7 @@ export function createPatcherReducer<T, U = T>(
   return (state, action) => {
     const { type, payload } = action;
     if (type === PatcherActionTypes.PATCH) {
-      const res = patcher.patch(payload, transformInverse(state as U));
+      const res = patcher.patch(payload as Patch | SignedPatch, transformInverse(state as U));
 
       if (res.patched) {
         return merge((state ?? {}) as U, transform(res.result));

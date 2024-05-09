@@ -1,17 +1,8 @@
 import React, { Component, PropsWithChildren } from 'react';
 import { Provider } from 'react-redux';
-import {
-  applyMiddleware,
-  combineReducers,
-  compose,
-  createStore,
-  PreloadedState,
-  Reducer,
-  Store,
-  StoreEnhancer,
-} from 'redux';
+import { applyMiddleware, combineReducers, compose, createStore, Reducer, Store, StoreEnhancer } from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
-import thunk, { ThunkMiddleware } from 'redux-thunk';
+import { thunk, ThunkMiddleware } from 'redux-thunk';
 import { Actions } from '../../services/actions';
 import { ILayer } from '../../services/layouter/layer';
 import { LayouterRepository } from '../../services/layouter/layouter-repository';
@@ -34,18 +25,18 @@ import { UMLModel } from '../../typings';
 import { merge } from './merge';
 
 type OwnProps = PropsWithChildren<{
-  initialState?: PreloadedState<PartialModelState>;
+  initialState?: PartialModelState;
   patcher?: Patcher<UMLModel>;
 }>;
 
 type Props = OwnProps & CanvasContext;
 
 export const createReduxStore = (
-  initialState: PreloadedState<PartialModelState> = {},
+  initialState: PartialModelState = {},
   layer: ILayer | null = null,
   patcher?: Patcher<UMLModel>,
 ): Store<ModelState, Actions> => {
-  const baseReducer: Reducer<ModelState, Actions> = undoable(combineReducers<ModelState, Actions>(reducers));
+  const baseReducer: Reducer<ModelState, Actions> = undoable<ModelState, Actions>(combineReducers(reducers) as any);
   const patchReducer =
     patcher &&
     createPatcherReducer<UMLModel, ModelState>(patcher, {
@@ -57,7 +48,7 @@ export const createReduxStore = (
   const reducer: Reducer<ModelState, Actions> = (state, action) => {
     const baseState = baseReducer(state, action);
     if (patchReducer) {
-      return patchReducer(baseState, action);
+      return patchReducer(baseState, action as any);
     } else {
       return baseState;
     }
@@ -93,7 +84,7 @@ export const createReduxStore = (
 };
 
 const getInitialState = (
-  initialState: PreloadedState<PartialModelState> = {},
+  initialState: PartialModelState = {},
   layer: ILayer | null = null,
   patcher?: Patcher<UMLModel>,
 ): { store: Store<ModelState, Actions> } => {
