@@ -12,7 +12,7 @@ import { undoable } from '../../services/undo/undo-reducer';
 import { Dispatch } from '../../utils/actions/actions';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
-import { ModelState } from './model-state';
+import { ModelState, PartialModelState } from './model-state';
 import {
   createPatcherMiddleware,
   createPatcherReducer,
@@ -25,14 +25,14 @@ import { UMLModel } from '../../typings';
 import { merge } from './merge';
 
 type OwnProps = PropsWithChildren<{
-  initialState?: Partial<ModelState>;
+  initialState?: PartialModelState;
   patcher?: Patcher<UMLModel>;
 }>;
 
 type Props = OwnProps & CanvasContext;
 
 export const createReduxStore = (
-  initialState: Partial<ModelState> = {},
+  initialState: PartialModelState = {},
   layer: ILayer | null = null,
   patcher?: Patcher<UMLModel>,
 ): Store<ModelState, Actions> => {
@@ -84,7 +84,7 @@ export const createReduxStore = (
 };
 
 const getInitialState = (
-  initialState: Partial<ModelState> = {},
+  initialState: PartialModelState = {},
   layer: ILayer | null = null,
   patcher?: Patcher<UMLModel>,
 ): { store: Store<ModelState, Actions> } => {
