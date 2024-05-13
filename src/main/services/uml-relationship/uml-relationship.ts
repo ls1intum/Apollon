@@ -1,5 +1,6 @@
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import * as Apollon from '../../typings';
+import { DeepPartial } from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { IPath } from '../../utils/geometry/path';
 import { ILayer } from '../layouter/layer';
@@ -9,7 +10,6 @@ import { Direction, IUMLElementPort } from '../uml-element/uml-element-port';
 import { Connection } from './connection';
 import { UMLRelationshipFeatures } from './uml-relationship-features';
 import { uuid } from '../../utils/uuid';
-import { DeepPartial } from '../../typings';
 
 export interface IUMLRelationship extends IUMLElement {
   type: UMLRelationshipType;

@@ -1,6 +1,6 @@
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
-import { computeDimension, IBoundary } from '../../utils/geometry/boundary';
+import { computeDimension } from '../../utils/geometry/boundary';
 import { UMLClassifier } from '../common/uml-classifier/uml-classifier';
 import { ComposePreview } from '../compose-preview';
 import { UMLAbstractClass } from './uml-abstract-class/uml-abstract-class';

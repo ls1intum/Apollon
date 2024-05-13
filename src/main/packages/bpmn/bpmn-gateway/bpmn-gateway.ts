@@ -7,8 +7,8 @@ import { IBoundary } from '../../../utils/geometry/boundary';
 
 import { assign } from '../../../utils/fx/assign';
 import * as Apollon from '../../../typings';
-import { UMLContainer } from '../../../services/uml-container/uml-container';
 import { DeepPartial } from '../../../typings';
+import { UMLContainer } from '../../../services/uml-container/uml-container';
 
 export type BPMNGatewayType = 'complex' | 'event-based' | 'exclusive' | 'inclusive' | 'parallel';
 

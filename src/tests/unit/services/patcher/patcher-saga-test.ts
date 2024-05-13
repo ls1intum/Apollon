@@ -1,4 +1,4 @@
-import { call, debounce, delay, select, take } from 'redux-saga/effects';
+import { call, debounce, delay, select } from 'redux-saga/effects';
 
 import { patchLayout } from '../../../../main/services/patcher/patcher-saga';
 import { PatcherActionTypes, PatcherRepository } from '../../../../main/services/patcher';

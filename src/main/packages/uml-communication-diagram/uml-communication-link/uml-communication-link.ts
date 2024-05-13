@@ -1,6 +1,7 @@
 import { CommunicationRelationshipType } from '..';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
 import * as Apollon from '../../../typings';
+import { DeepPartial } from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 import { CommunicationLinkMessage, ICommunicationLinkMessage } from './uml-communiction-link-message';
 import { computeBoundingBoxForElements, IBoundary } from '../../../utils/geometry/boundary';
@@ -10,7 +11,6 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { Point } from '../../../utils/geometry/point';
 import { Direction, getOppositeDirection } from '../../../services/uml-element/uml-element-port';
 import { Text } from '../../../utils/svg/text';
-import { DeepPartial } from '../../../typings';
 
 export interface IUMLCommunicationLink extends IUMLRelationship {
   messages: ICommunicationLinkMessage[];

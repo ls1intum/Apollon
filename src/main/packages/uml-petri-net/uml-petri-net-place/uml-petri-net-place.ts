@@ -6,9 +6,9 @@ import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
 
 import * as Apollon from '../../../typings';
+import { DeepPartial } from '../../../typings';
 import { PetriNetElementType } from '../index';
 import { assign } from '../../../utils/fx/assign';
-import { DeepPartial } from '../../../typings';
 
 export class UMLPetriNetPlace extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false };

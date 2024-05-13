@@ -11,6 +11,7 @@ import { UMLContainer } from '../services/uml-container/uml-container';
 import { UMLElement } from '../services/uml-element/uml-element';
 import { UMLRelationship } from '../services/uml-relationship/uml-relationship';
 import * as Apollon from '../typings';
+import { DeepPartial } from '../typings';
 import { computeBoundingBoxForElements, IBoundary } from '../utils/geometry/boundary';
 import { Point } from '../utils/geometry/point';
 import { update } from '../utils/update';
@@ -20,7 +21,6 @@ import { ModelState } from '../components/store/model-state';
 import { ThemeProvider } from 'styled-components';
 import { UMLClassifierComponent } from '../packages/common/uml-classifier/uml-classifier-component';
 import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/uml-classifier-member-component';
-import { DeepPartial } from '../typings';
 
 type Props = {
   model: Apollon.UMLModel;

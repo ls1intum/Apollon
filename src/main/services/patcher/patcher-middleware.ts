@@ -48,12 +48,12 @@ export function createPatcherMiddleware<T, A = any, U = T>(
   return (store) => {
     patcher.initialize(transform(store.getState()));
 
-    return (next) => (action: A) => {
+    return (next) => (action: unknown) => {
       const res = next(action as any);
 
-      if (selectDiscrete(action)) {
+      if (selectDiscrete(action as A)) {
         patcher.check(transform(store.getState()));
-      } else if (selectContinuous(action)) {
+      } else if (selectContinuous(action as A)) {
         patcher.checkContinuous(transform(store.getState()));
       }
 
