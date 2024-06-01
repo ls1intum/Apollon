@@ -13,6 +13,7 @@ import { assessable } from '../../../../../main/components/uml-element/assessabl
 import { IAssessment } from '../../../../../main/services/assessment/assessment';
 import { Theme } from '../../../../../main/components/theme/theme';
 import { UMLClassInheritance } from '../../../../../main/packages/uml-class-diagram/uml-class-inheritance/uml-class-inheritance';
+import { DeepPartial } from '../../../../../main';
 
 class MockComponent extends React.Component<UMLElementComponentProps> {
   render() {

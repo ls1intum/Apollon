@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Store } from 'redux';
 import thunk, { ThunkDispatch } from 'redux-thunk';
-import createMockStore, { MockStoreEnhanced } from 'redux-mock-store';
+import configureStore, { MockStore, MockStoreCreator, MockStoreEnhanced } from 'redux-mock-store';
 import { ModelState, PartialModelState } from '../../../main/components/store/model-state';
 import { UMLDiagram } from '../../../main/services/uml-diagram/uml-diagram';
 import { ApollonMode } from '../../../main';
@@ -17,7 +17,7 @@ import '@testing-library/jest-dom';
 export type DispatchExts = ThunkDispatch<ModelState, void, Actions>;
 
 const middleware = [thunk];
-const mockStore = createMockStore<ModelState, DispatchExts>(middleware);
+const mockStore = configureStore<ModelState, DispatchExts>(middleware as any);
 
 const createModelStateFromPartialModelState = (
   partialModelState?: PartialModelState,
@@ -77,10 +77,8 @@ const createModelStateFromPartialModelState = (
 export const getMockedStore = (
   modelState?: PartialModelState,
   elements?: IUMLElement[],
-): MockStoreEnhanced<ModelState, DispatchExts> => {
-  // initial state
-  const storeState = createModelStateFromPartialModelState(modelState, elements);
-  return mockStore(storeState);
+): MockStoreEnhanced<ModelState, any> => {
+  return configureStore<ModelState>([])(createModelStateFromPartialModelState(modelState, elements));
 };
 
 const createSVG = (): SVGSVGElement => {

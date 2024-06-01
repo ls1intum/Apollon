@@ -1,6 +1,14 @@
 import React, { Component, PropsWithChildren } from 'react';
 import { Provider } from 'react-redux';
-import { applyMiddleware, combineReducers, compose, createStore, Reducer, Store, StoreEnhancer } from 'redux';
+import {
+  applyMiddleware,
+  combineReducers,
+  compose,
+  legacy_createStore as createStore,
+  Reducer,
+  Store,
+  StoreEnhancer,
+} from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
 import { thunk, ThunkMiddleware } from 'redux-thunk';
 import { Actions } from '../../services/actions';
