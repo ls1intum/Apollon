@@ -1,6 +1,4 @@
-import { createPatcherReducer } from '../../../../main/services/patcher';
-import { Patcher } from '../../../../main/services/patcher';
-import { PatcherRepository } from '../../../../main/services/patcher';
+import { createPatcherReducer, Patcher, PatcherRepository } from '../../../../main/services/patcher';
 
 describe('test patcher reducer.', () => {
   test('it invokes the patcher when receiving a patch action.', () => {

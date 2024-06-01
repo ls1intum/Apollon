@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { UMLElementComponentProps } from '../../../../../main/components/uml-element/uml-element-component-props';
 import { MockStoreEnhanced } from 'redux-mock-store';
-import { ModelState, PartialModelState } from '../../../../../main/components/store/model-state';
+import { ModelState } from '../../../../../main/components/store/model-state';
 import { IUMLElement } from '../../../../../main/services/uml-element/uml-element';
 import { UMLClass } from '../../../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { UMLClassAttribute } from '../../../../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../../../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
-import { getMockedStore, getRealStore } from '../../../test-utils/test-utils';
+import { getMockedStore } from '../../../test-utils/test-utils';
 import { fireEvent, render } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { updatable } from '../../../../../main/components/uml-element/updatable/updatable';
