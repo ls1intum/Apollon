@@ -154,7 +154,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
 
   private rename = (value: ICommunicationLinkMessage) => (name: string) => {
     const { element, update } = this.props;
-    const messages: ICommunicationLinkMessage[] = [...element.messages];
+    const messages: ICommunicationLinkMessage[] = element.messages.map((message) => ({ ...message }));
     const index = messages.findIndex((message) => message.name === value.name);
     messages[index].name = name;
     update<UMLCommunicationLink>(element.id, { messages });
@@ -162,7 +162,7 @@ class CommunicationLinkUpdate extends Component<Props, State> {
 
   private flip = (value: ICommunicationLinkMessage) => () => {
     const { element, update } = this.props;
-    const messages: ICommunicationLinkMessage[] = [...element.messages];
+    const messages: ICommunicationLinkMessage[] = element.messages.map((message) => ({ ...message }));
     const index = messages.findIndex((message) => message.name === value.name);
     messages[index].direction = messages[index].direction === 'source' ? 'target' : 'source';
     update<UMLCommunicationLink>(element.id, { messages });

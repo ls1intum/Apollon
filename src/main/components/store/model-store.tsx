@@ -10,14 +10,13 @@ import {
   StoreEnhancer,
 } from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
-import { thunk, ThunkMiddleware } from 'redux-thunk';
+import { thunk } from 'redux-thunk';
 import { Actions } from '../../services/actions';
 import { ILayer } from '../../services/layouter/layer';
 import { LayouterRepository } from '../../services/layouter/layouter-repository';
 import { reducers } from '../../services/reducer';
 import { saga, SagaContext } from '../../services/saga';
 import { undoable } from '../../services/undo/undo-reducer';
-import { Dispatch } from '../../utils/actions/actions';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { ModelState, PartialModelState } from './model-state';
@@ -31,6 +30,7 @@ import {
 } from '../../services/patcher';
 import { UMLModel } from '../../typings';
 import { merge } from './merge';
+import { configureStore } from '@reduxjs/toolkit';
 
 type OwnProps = PropsWithChildren<{
   initialState?: PartialModelState;
@@ -64,25 +64,29 @@ export const createReduxStore = (
 
   const sagaMiddleware: SagaMiddleware<SagaContext> = createSagaMiddleware<SagaContext>({ context: { layer } });
 
-  const middleware: StoreEnhancer<{ dispatch: Dispatch }, {}> = applyMiddleware(
-    ...[
-      thunk as ThunkMiddleware<ModelState, Actions>,
-      sagaMiddleware,
-      ...(patcher
-        ? [
-            createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
-              selectDiscrete: (action) => isDiscreteAction(action) || isSelectionAction(action),
-              selectContinuous: (action) => isContinuousAction(action),
-              transform: (state) => ModelState.toModel(state),
-            }),
-          ]
-        : []),
-    ],
-  );
-  const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-  const enhancer = composeEnhancers(middleware);
+  const store: Store<ModelState, Actions> = configureStore({
+    reducer: reducer,
+    preloadedState: initialState as ModelState,
+    middleware: (getDefaultMiddleware) => {
+      const middleware = getDefaultMiddleware({
+        serializableCheck: false,
+      })
+        .concat(thunk)
+        .concat(sagaMiddleware);
 
-  const store: Store<ModelState, Actions> = createStore(reducer, initialState as ModelState, enhancer);
+      if (patcher) {
+        const patcherMiddleware = createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
+          selectDiscrete: (action) => isDiscreteAction(action) || isSelectionAction(action),
+          selectContinuous: (action) => isContinuousAction(action),
+          transform: (state) => ModelState.toModel(state),
+        });
+
+        return middleware.concat(patcherMiddleware);
+      }
+
+      return middleware;
+    },
+  });
 
   if (layer) {
     sagaMiddleware.run(saga);
