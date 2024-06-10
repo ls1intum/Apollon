@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AnyAction, Dispatch, Middleware, Store, UnknownAction } from 'redux';
+import { Store } from 'redux';
 import { thunk, ThunkDispatch } from 'redux-thunk';
 import configureStore, { MockStoreEnhanced } from 'redux-mock-store';
 import { ModelState, PartialModelState } from '../../../main/components/store/model-state';
@@ -75,7 +75,7 @@ export const getMockedStore = (
   modelState?: PartialModelState,
   elements?: IUMLElement[],
 ): MockStoreEnhanced<ModelState, any> => {
-  return configureStore<ModelState>([thunk])(createModelStateFromPartialModelState(modelState, elements));
+  return configureStore<ModelState>([thunk as any])(createModelStateFromPartialModelState(modelState, elements));
 };
 
 const createSVG = (): SVGSVGElement => {
