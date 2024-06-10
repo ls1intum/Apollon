@@ -29,6 +29,7 @@ Welcome to Apollon's documentation!
    dev/repository-overview
    dev/general-concepts
    dev/adding-another-diagram-type
+   dev/realtime-collaboration
    dev/examples
 
 
