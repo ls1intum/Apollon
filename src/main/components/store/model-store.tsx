@@ -36,10 +36,12 @@ export const createReduxStore = (
   layer: ILayer | null = null,
   patcher?: Patcher<UMLModel>,
 ): Store<ModelState, Actions> => {
-  const baseReducer: Reducer<ModelState, Actions> = undoable<ModelState, Actions>(combineReducers(reducers) as any);
+  const baseReducer: Reducer<ModelState, Actions> = undoable<ModelState, Actions>(
+    combineReducers(reducers) as unknown as Reducer<ModelState, Actions>,
+  );
   const patchReducer =
     patcher &&
-    createPatcherReducer<UMLModel, ModelState>(patcher, {
+    createPatcherReducer<UMLModel, Actions, ModelState>(patcher, {
       transform: (model) => ModelState.fromModel(model) as ModelState,
       transformInverse: (state) => ModelState.toModel(state),
       merge,
@@ -48,7 +50,7 @@ export const createReduxStore = (
   const reducer: Reducer<ModelState, Actions> = (state, action) => {
     const baseState = baseReducer(state, action);
     if (patchReducer) {
-      return patchReducer(baseState, action as any);
+      return patchReducer(baseState, action);
     } else {
       return baseState;
     }

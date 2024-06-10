@@ -1,8 +1,13 @@
-import { Reducer } from 'redux';
+import { Action, Reducer, UnknownAction } from 'redux';
 import { Patcher } from './patcher';
-import { Patch, PatcherActionTypes } from './patcher-types';
+import { Patch, PatchAction, PatcherActionTypes } from './patcher-types';
 import { SignedPatch } from './patch-verifier';
 
+/**
+ * Options for the patcher reducer.
+ * @template T The external schema of the state.
+ * @template U The internal schema of the state.
+ */
 export type PatcherReducerOptions<T, U = T> = {
   /**
    * Transforms the state after applying the patch. This is useful
@@ -32,35 +37,39 @@ export type PatcherReducerOptions<T, U = T> = {
 };
 
 const _DefaultOptions = {
-  transform: (state: any) => state,
-  transformInverse: (state: any) => state,
-  merge: (oldState: any, newState: any) => ({ ...oldState, ...newState }),
+  transform: <T>(state: T) => state,
+  transformInverse: <T>(state: T) => state,
+  merge: <T>(oldState: T, newState: T) => ({ ...oldState, ...newState }),
 };
 
 /**
  * Creates a reducer that applies patches to the state using
  * given patcher.
+ * @template T The external schema of the state (exposed to users, for example via patches).
+ * @template A The action type the reducer is supposed to handle.
+ * @template U The internal schema of the state (as managed in the store).
  * @param patcher The patcher to use.
  * @param options Options for the reducer.
  */
-export function createPatcherReducer<T, U = T>(
+export function createPatcherReducer<T, A extends Action, U = T>(
   patcher: Patcher<T>,
-  options: PatcherReducerOptions<T, U> = _DefaultOptions,
-): Reducer<U> {
-  const transform = options.transform || _DefaultOptions.transform;
-  const transformInverse = options.transformInverse || _DefaultOptions.transformInverse;
+  options: PatcherReducerOptions<T, U> = _DefaultOptions as PatcherReducerOptions<T, U>,
+): Reducer<U, PatchAction | A | UnknownAction> {
+  const transform = options.transform || (_DefaultOptions.transform as (s: T) => U);
+  const transformInverse = options.transformInverse || (_DefaultOptions.transformInverse as (s: U) => T);
   const merge = options.merge || _DefaultOptions.merge;
 
-  return (state, action) => {
-    const { type, payload } = action;
-    if (type === PatcherActionTypes.PATCH) {
-      const res = patcher.patch(payload as Patch | SignedPatch, transformInverse(state as U));
+  return (state, action: PatchAction | UnknownAction) => {
+    const { type } = action;
+    if (type === PatcherActionTypes.PATCH && state) {
+      const { payload } = action as unknown as PatchAction;
+      const res = patcher.patch(payload as Patch | SignedPatch, transformInverse(state));
 
       if (res.patched) {
         return merge((state ?? {}) as U, transform(res.result));
       }
     }
 
-    return state;
+    return state as U;
   };
 }
