@@ -19,7 +19,7 @@ export abstract class UMLClassifierMember extends UMLElement {
     updatable: false,
   };
 
-  bounds: IBoundary = { ...this.bounds, height: computeDimension(1.0, 40) };
+  bounds: IBoundary = { ...this.bounds, height: computeDimension(1.0, 30) };
 
   constructor(values?: DeepPartial<IUMLElement>) {
     super(values);
