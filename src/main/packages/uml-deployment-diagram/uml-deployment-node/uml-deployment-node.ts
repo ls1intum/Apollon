@@ -8,6 +8,7 @@ import { UMLElementType } from '../../uml-element-type';
 
 export interface IUMLDeploymentNode extends IUMLContainer {
   stereotype: string;
+  displayStereotype: boolean;
 }
 
 export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode {
@@ -19,6 +20,7 @@ export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode 
   ];
   type: UMLElementType = DeploymentElementType.DeploymentNode;
   stereotype: string = 'node';
+  displayStereotype: boolean = true;
 
   constructor(values?: DeepPartial<IUMLDeploymentNode>) {
     super();
@@ -30,6 +32,7 @@ export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode 
       ...super.serialize(),
       type: this.type as keyof typeof DeploymentElementType,
       stereotype: this.stereotype,
+      displayStereotype: this.displayStereotype,
     };
   }
 
@@ -42,5 +45,6 @@ export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode 
 
     super.deserialize(values, children);
     this.stereotype = values.stereotype;
+    this.displayStereotype = values.displayStereotype;
   }
 }

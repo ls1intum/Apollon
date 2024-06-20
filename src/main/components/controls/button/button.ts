@@ -8,6 +8,8 @@ export const defaultProps = Object.freeze({
   disabled: false as boolean,
   outline: false as boolean,
   size: 'sm' as Size,
+  toggle: false as boolean,
+  toggleValue: true as boolean,
 });
 
 export type Props = { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement> & Partial<typeof defaultProps>;
