@@ -39,10 +39,10 @@ class DeploymentNodeUpdate extends Component<Props, State> {
           <Flex>
             <Textfield value={element.name} onChange={this.onRename} autoFocus />
             <ColorButton onClick={this.toggleColor} />
+            <ToggleButton value={element.displayStereotype} onChange={this.onStereotypeVisibilityToggle} />
             <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
-            <ToggleButton value={element.displayStereotype} onChange={this.onStereotypeVisibilityToggle} />
           </Flex>
           <StylePane
             open={this.state.colorOpen}
