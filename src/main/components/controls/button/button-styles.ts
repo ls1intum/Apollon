@@ -117,17 +117,5 @@ export const StyledButton = styled(Button)<typeof defaultProps>((props) => {
         color: ${props.theme.color.background};
       }
     `}
-
-    ${props.toggle &&
-    props.toggleValue &&
-    css`
-      color: green;
-    `}
-
-    ${props.toggle &&
-    !props.toggleValue &&
-    css`
-      color: red;
-    `}
   `;
 });
