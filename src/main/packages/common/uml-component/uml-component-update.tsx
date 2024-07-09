@@ -10,7 +10,7 @@ import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { IUMLComponent, UMLComponent } from './uml-component';
-import { ToggleButton } from '../../../components/controls/toggle-button/toggle-button';
+import { ToggleButton } from '../../../components/controls/stereotype-toggle/stereotype-toggle';
 
 const Flex = styled.div`
   display: flex;

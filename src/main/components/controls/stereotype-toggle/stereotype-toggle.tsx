@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
 
-import { VisibilityOnIcon } from '../icon/visibility-on';
-import { VisibilityOffIcon } from '../icon/visibility-off';
+import { StereotypeOnIcon } from '../icon/stereotype-on';
+import { StereotypeOffIcon } from '../icon/stereotype-off';
 import { Button } from '../button/button';
 
 type Props = { onChange: () => void; value: boolean };
 
-export class ToggleButton extends Component<Props> {
+export class StereotypeToggle extends Component<Props> {
   render() {
     const { value, onChange } = this.props;
 
     return (
       <Button color="link" tabIndex={-1} onClick={onChange}>
-        {value ? <VisibilityOnIcon /> : <VisibilityOffIcon />}
+        {value ? <StereotypeOnIcon /> : <StereotypeOffIcon />}
       </Button>
     );
   }
