@@ -6,7 +6,7 @@ exports[`test class association popup render 1`] = `
     <div>
       <section>
         <div
-          class="sc-cfxfcM iJlpTp"
+          class="sc-gmPhUn kYucFZ"
         >
           <h1
             class="sc-lcIPJg cQIeHE"
@@ -53,10 +53,10 @@ exports[`test class association popup render 1`] = `
       </section>
       <section>
         <div
-          class="sc-hCPjZK"
+          class="sc-cfxfcM"
         >
           <button
-            class="sc-eeDRCY sc-koXPp fShmjg jICzlH sc-hknOHE tqbxh"
+            class="sc-eeDRCY sc-koXPp fShmjg jICzlH sc-hCPjZK lhcboe"
             color="primary"
           >
             Association (bidirectional)
@@ -71,7 +71,7 @@ exports[`test class association popup render 1`] = `
           class="sc-lcIPJg chQxvR"
         />
         <div
-          class="sc-cfxfcM iJlpTp"
+          class="sc-gmPhUn kYucFZ"
         >
           <span
             class="sc-lcIPJg gscKFM"
@@ -87,7 +87,7 @@ exports[`test class association popup render 1`] = `
           />
         </div>
         <div
-          class="sc-cfxfcM iJlpTp"
+          class="sc-gmPhUn kYucFZ"
         >
           <span
             class="sc-lcIPJg gscKFM"
@@ -110,7 +110,7 @@ exports[`test class association popup render 1`] = `
           class="sc-lcIPJg chQxvR"
         />
         <div
-          class="sc-cfxfcM iJlpTp"
+          class="sc-gmPhUn kYucFZ"
         >
           <span
             class="sc-lcIPJg gscKFM"
@@ -126,7 +126,7 @@ exports[`test class association popup render 1`] = `
           />
         </div>
         <div
-          class="sc-cfxfcM iJlpTp"
+          class="sc-gmPhUn kYucFZ"
         >
           <span
             class="sc-lcIPJg gscKFM"

@@ -10,7 +10,7 @@ import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { IUMLSubsystem, UMLSubsystem } from './uml-component-subsystem';
-import { ToggleButton } from '../../../components/controls/stereotype-toggle/stereotype-toggle';
+import { StereotypeToggle } from '../../../components/controls/stereotype-toggle/stereotype-toggle';
 
 const Flex = styled.div`
   display: flex;
@@ -38,7 +38,7 @@ class ComponentSubsystemUpdate extends Component<Props, State> {
           <Flex>
             <Textfield value={element.name} onChange={this.onRename} autoFocus />
             <ColorButton onClick={this.toggleColor} />
-            <ToggleButton value={element.displayStereotype} onChange={this.onStereotypeVisibilityToggle} />
+            <StereotypeToggle value={element.displayStereotype} onChange={this.onStereotypeVisibilityToggle} />
             <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
             </Button>
