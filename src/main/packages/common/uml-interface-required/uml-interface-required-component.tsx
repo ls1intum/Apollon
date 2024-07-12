@@ -6,6 +6,7 @@ import { Direction, getOppositeDirection } from '../../../services/uml-element/u
 import { Point } from '../../../utils/geometry/point';
 import { REQUIRED_INTERFACE_MARKER_SIZE, REQUIRED_INTERFACE_MARKER_TYPE } from './uml-interface-requires-constants';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { uuid } from '../../../utils/uuid';
 
 type OwnProps = {
   element: UMLInterfaceRequired;
@@ -89,10 +90,11 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
     return path;
   };
 
+  const id = uuid();
   return (
     <g>
       <marker
-        id={`marker-${element.id}`}
+        id={`marker-${id}`}
         viewBox={`0 0 ${REQUIRED_INTERFACE_MARKER_SIZE} ${REQUIRED_INTERFACE_MARKER_SIZE}`}
         markerWidth={REQUIRED_INTERFACE_MARKER_SIZE}
         markerHeight={REQUIRED_INTERFACE_MARKER_SIZE}
@@ -116,7 +118,7 @@ const UMLInterfaceRequiredC: FunctionComponent<Props> = (props: Props) => {
         strokeColor={element.strokeColor}
         fillColor="none"
         strokeWidth={1.0}
-        markerEnd={`url(#marker-${element.id})`}
+        markerEnd={`url(#marker-${id})`}
       />
     </g>
   );

@@ -3,6 +3,7 @@ import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLPetriNetArc } from './uml-petri-net-arc';
 import { ThemedPathContrast, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { uuid } from '../../../utils/uuid';
 
 export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) => {
   const [start, end] = element.path.map((p) => new Point(p.x, p.y));
@@ -12,10 +13,11 @@ export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) =
 
   const displayMultiplicity = element.name !== UMLPetriNetArc.defaultMultiplicity;
 
+  const id = uuid();
   return (
     <g>
       <marker
-        id={`marker-${element.id}`}
+        id={`marker-${id}`}
         viewBox="0 0 30 30"
         markerWidth="22"
         markerHeight="30"
@@ -27,7 +29,7 @@ export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) =
         <ThemedPathContrast d="M0,1 L0,29 L30,15 z" fill={element.strokeColor} />
       </marker>
       <path
-        id={`textpath-${element.id}`}
+        id={`textpath-${id}`}
         d={`
         M ${start.x} ${start.y - 10}
         L ${end.x} ${end.y - 10}
@@ -49,7 +51,7 @@ export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) =
               : undefined
           }
         >
-          <textPath xlinkHref={`#textpath-${element.id}`} startOffset="50%">
+          <textPath xlinkHref={`#textpath-${id}`} startOffset="50%">
             {element.name}
           </textPath>
         </Text>
@@ -59,7 +61,7 @@ export const UMLPetriNetArcComponent: FunctionComponent<Props> = ({ element }) =
         strokeColor={element.strokeColor}
         fillColor="none"
         strokeWidth={1}
-        markerEnd={`url(#marker-${element.id})`}
+        markerEnd={`url(#marker-${id})`}
       />
     </g>
   );
