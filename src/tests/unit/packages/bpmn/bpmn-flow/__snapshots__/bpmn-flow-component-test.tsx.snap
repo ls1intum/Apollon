@@ -6,7 +6,7 @@ exports[`render the bpmn-flow-component 1`] = `
     <svg>
       <g>
         <marker
-          id="marker-end-1"
+          id="marker-end-de094d9a-cc76-4e78-9daa-af78790fbe05"
           markerHeight="10"
           markerUnits="strokeWidth"
           markerWidth="10"
@@ -27,7 +27,7 @@ exports[`render the bpmn-flow-component 1`] = `
         <polyline
           class="sc-aXZVg OFiXI"
           fill="none"
-          marker-end="url(#marker-end-1)"
+          marker-end="url(#marker-end-de094d9a-cc76-4e78-9daa-af78790fbe05)"
           points="0 0,200 100"
           stroke="black"
           stroke-width="1"

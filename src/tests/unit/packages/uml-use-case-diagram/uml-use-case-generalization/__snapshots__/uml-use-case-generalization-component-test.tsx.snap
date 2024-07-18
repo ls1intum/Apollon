@@ -6,7 +6,7 @@ exports[`render the uml-use-case-generalization-component 1`] = `
     <svg>
       <g>
         <marker
-          id="marker-516e57ef-ae31-4311-8d9d-2aeb6c97f924"
+          id="marker-ab5a33ed-473c-452c-8b9c-404e02184b3c"
           markerHeight="30"
           markerUnits="strokeWidth"
           markerWidth="22"
@@ -25,7 +25,7 @@ exports[`render the uml-use-case-generalization-component 1`] = `
         <polyline
           class="sc-aXZVg OFiXI"
           fill="none"
-          marker-end="url(#marker-516e57ef-ae31-4311-8d9d-2aeb6c97f924)"
+          marker-end="url(#marker-ab5a33ed-473c-452c-8b9c-404e02184b3c)"
           points="0 0,100 100"
           stroke="black"
           stroke-width="1"

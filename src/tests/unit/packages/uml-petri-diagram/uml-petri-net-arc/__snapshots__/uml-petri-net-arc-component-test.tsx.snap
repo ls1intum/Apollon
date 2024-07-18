@@ -6,7 +6,7 @@ exports[`render the uml-petri-net-arc-component 1`] = `
     <svg>
       <g>
         <marker
-          id="marker-test-id"
+          id="marker-3ac29fb2-bcdd-4748-9e6f-b3ed78f47835"
           markerHeight="30"
           markerUnits="strokeWidth"
           markerWidth="22"
@@ -27,7 +27,7 @@ exports[`render the uml-petri-net-arc-component 1`] = `
         M 0 -10
         L 200 90
     "
-          id="textpath-test-id"
+          id="textpath-3ac29fb2-bcdd-4748-9e6f-b3ed78f47835"
         />
         <text
           dominant-baseline="middle"
@@ -38,7 +38,7 @@ exports[`render the uml-petri-net-arc-component 1`] = `
         >
           <textpath
             startOffset="50%"
-            xlink:href="#textpath-test-id"
+            xlink:href="#textpath-3ac29fb2-bcdd-4748-9e6f-b3ed78f47835"
           >
             TestPetriNetArc
           </textpath>
@@ -46,7 +46,7 @@ exports[`render the uml-petri-net-arc-component 1`] = `
         <polyline
           class="sc-aXZVg OFiXI"
           fill="none"
-          marker-end="url(#marker-test-id)"
+          marker-end="url(#marker-3ac29fb2-bcdd-4748-9e6f-b3ed78f47835)"
           points="0 0,200 100"
           stroke="black"
           stroke-width="1"

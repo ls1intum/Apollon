@@ -6,7 +6,7 @@ exports[`render the uml-reachability-graph-arc-component 1`] = `
     <svg>
       <g>
         <marker
-          id="marker-test-id"
+          id="marker-1076b51a-1ba3-499a-bb21-797b965b2b5c"
           markerHeight="30"
           markerUnits="strokeWidth"
           markerWidth="22"
@@ -25,7 +25,7 @@ exports[`render the uml-reachability-graph-arc-component 1`] = `
         <polyline
           class="sc-aXZVg OFiXI"
           fill="none"
-          marker-end="url(#marker-test-id)"
+          marker-end="url(#marker-1076b51a-1ba3-499a-bb21-797b965b2b5c)"
           points="0 0,200 100"
           stroke="black"
           stroke-width="1"
