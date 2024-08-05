@@ -17,7 +17,7 @@ export class UMLSubsystem extends UMLPackage implements IUMLSubsystem {
     ComponentRelationshipType.ComponentInterfaceRequired,
   ];
   stereotype = 'subsystem';
-  displayStereotype: boolean = true;
+  displayStereotype = true;
   type = ComponentElementType.Subsystem;
 
   constructor(values?: DeepPartial<IUMLSubsystem>) {

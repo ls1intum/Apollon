@@ -8,5 +8,5 @@ export interface IUMLComponent extends IUMLContainer {
 
 export abstract class UMLComponent extends UMLPackage implements IUMLComponent {
   stereotype = 'component';
-  displayStereotype: boolean = true;
+  displayStereotype = true;
 }

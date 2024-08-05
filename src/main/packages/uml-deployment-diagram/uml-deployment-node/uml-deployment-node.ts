@@ -20,7 +20,7 @@ export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode 
   ];
   type: UMLElementType = DeploymentElementType.DeploymentNode;
   stereotype: string = 'node';
-  displayStereotype: boolean = true;
+  displayStereotype = true;
 
   constructor(values?: DeepPartial<IUMLDeploymentNode>) {
     super();

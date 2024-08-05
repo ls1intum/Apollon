@@ -25,7 +25,7 @@ export class UMLComponentComponent extends UMLComponent {
     };
   }
 
-  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]) {
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]): void {
     const assert = (v: Apollon.UMLModelElement): v is Apollon.UMLComponentComponent =>
       v.type === ComponentElementType.Component;
     if (!assert(values)) {
