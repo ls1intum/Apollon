@@ -33,7 +33,7 @@ export const UMLComponentComponent: FunctionComponent<Props> = ({ element, child
           {`«${element.stereotype}»`}
         </tspan>
       )}
-      <tspan x="50%" dy={element.stereotype && element.displayStereotype ? 18 : 10} textAnchor="middle">
+      <tspan x="50%" dy={element.stereotype && element.displayStereotype ? 18 : 0} textAnchor="middle">
         {element.name}
       </tspan>
     </Text>
