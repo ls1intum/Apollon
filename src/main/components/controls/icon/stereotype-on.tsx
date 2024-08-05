@@ -3,7 +3,7 @@ import { Icon } from './icon';
 
 type Props = SVGAttributes<SVGSVGElement>;
 
-export const StereotypeOnIcon = (props: Props) => (
+export const StereotypeOnIcon = (props: Props): React.JSX.Element => (
   <Icon viewBox="0 0 128 128" {...props}>
     <path
       d="M74.1387 93.5415L92.8052 64.1677H101.049V65.1153L81.9085 93.5415H74.1387ZM74.1387 35.3625H81.9085L101.049 63.7887V64.7363H92.8052L74.1387 35.3625ZM98.7273 93.5415L117.394 64.1677H125.637V65.1153L106.497 93.5415H98.7273ZM98.7273 35.3625H106.497L125.637 63.7887V64.7363H117.394L98.7273 35.3625Z"

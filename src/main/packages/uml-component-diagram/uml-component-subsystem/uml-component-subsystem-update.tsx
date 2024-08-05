@@ -63,7 +63,7 @@ class ComponentSubsystemUpdate extends Component<Props, State> {
 
   private onStereotypeVisibilityToggle = () => {
     const { element, update } = this.props;
-    const newVisibilityValue: boolean = !element.displayStereotype;
+    const newVisibilityValue = !element.displayStereotype;
     update<IUMLSubsystem>(element.id, { displayStereotype: newVisibilityValue });
   };
 }

@@ -36,7 +36,7 @@ export class UMLDeploymentNode extends UMLPackage implements IUMLDeploymentNode 
     };
   }
 
-  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]) {
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]): void {
     const assert = (v: Apollon.UMLModelElement): v is Apollon.UMLDeploymentNode =>
       v.type === DeploymentElementType.DeploymentNode;
     if (!assert(values)) {

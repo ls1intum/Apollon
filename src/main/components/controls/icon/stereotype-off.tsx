@@ -3,7 +3,7 @@ import { Icon } from './icon';
 
 type Props = SVGAttributes<SVGSVGElement>;
 
-export const StereotypeOffIcon = (props: Props) => (
+export const StereotypeOffIcon = (props: Props): React.JSX.Element => (
   <Icon viewBox="0 0 128 128" {...props}>
     <path
       fillRule="evenodd"

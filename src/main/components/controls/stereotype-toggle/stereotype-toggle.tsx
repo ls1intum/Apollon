@@ -7,7 +7,7 @@ import { Button } from '../button/button';
 type Props = { onChange: () => void; value: boolean };
 
 export class StereotypeToggle extends Component<Props> {
-  render() {
+  render(): React.JSX.Element {
     const { value, onChange } = this.props;
 
     return (

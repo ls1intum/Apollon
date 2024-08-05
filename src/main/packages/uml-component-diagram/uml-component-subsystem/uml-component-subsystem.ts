@@ -34,7 +34,7 @@ export class UMLSubsystem extends UMLPackage implements IUMLSubsystem {
     };
   }
 
-  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]) {
+  deserialize<T extends Apollon.UMLModelElement>(values: T, children?: Apollon.UMLModelElement[]): void {
     const assert = (v: Apollon.UMLModelElement): v is Apollon.UMLComponentSubsystem =>
       v.type === ComponentElementType.Subsystem;
     if (!assert(values)) {
