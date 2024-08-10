@@ -19,7 +19,7 @@ exports[`render the uml-deployment-interface-component 1`] = `
           font-weight="bold"
           pointer-events="none"
           text-anchor="start"
-          x="25px"
+          x="25"
         >
           TestDeploymentComponent
         </text>
