@@ -156,7 +156,7 @@ class CreatePaneComponent extends Component<Props, State> {
 
     return (
       <StoreProvider initialState={{ elements, editor: { features } }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,  }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           {this.getElementArray(previews)}
         </div>
 
