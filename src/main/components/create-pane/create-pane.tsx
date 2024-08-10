@@ -145,6 +145,7 @@ class CreatePaneComponent extends Component<Props, State> {
     };
 
     const { previews, utils } = this.state;
+
     const elements = [...previews, ...utils].reduce<UMLElementState>(
       (state, preview) => ({
         ...state,
@@ -155,7 +156,10 @@ class CreatePaneComponent extends Component<Props, State> {
 
     return (
       <StoreProvider initialState={{ elements, editor: { features } }}>
-        {this.getElementArray(previews)}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,  }}>
+          {this.getElementArray(previews)}
+        </div>
+
         {utils && utils.length > 0 ? (
           <>
             <Separator />

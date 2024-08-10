@@ -19,7 +19,7 @@ export const Preview = styled(hoverable(CanvasElement)).attrs((props: { scale?: 
   overflow: visible;
   fill: white;
   scale: ${(props) => props.scale ?? 0.8};
-  transform-origin: center center;
+  transform-origin: center;
 `;
 
 export class PreviewElementComponent extends Component<Props> {
