@@ -40,7 +40,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 0,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
 
@@ -51,7 +51,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 0,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
 
@@ -72,7 +72,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 40,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
   const umlAbstractMethod = new UMLClassMethod({
@@ -82,7 +82,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 70,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
   umlAbstract.ownedElements = [umlAbstractAttribute.id, umlAbstractMethod.id];
@@ -104,7 +104,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 50,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
   const umlInterfaceMethod = new UMLClassMethod({
@@ -114,7 +114,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 80,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
   umlInterface.ownedElements = [umlInterfaceAttribute.id, umlInterfaceMethod.id];
@@ -136,7 +136,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 50,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
   const umlEnumerationCase2 = new UMLClassAttribute({
@@ -146,7 +146,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 80,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
   const umlEnumerationCase3 = new UMLClassAttribute({
@@ -156,7 +156,7 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
       x: 0,
       y: 110,
       width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 40),
+      height: computeDimension(1.0, 30),
     },
   });
   umlEnumeration.ownedElements = [umlEnumerationCase1.id, umlEnumerationCase2.id, umlEnumerationCase3.id];

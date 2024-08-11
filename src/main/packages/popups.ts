@@ -4,6 +4,8 @@ import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { UMLClassifierUpdate } from './common/uml-classifier/uml-classifier-update';
 import { UMLActivityControlFlowUpdate } from './uml-activity-diagram/uml-activity-control-flow/uml-activity-control-flow-update';
 import { UMLActivityMergeNodeUpdate } from './uml-activity-diagram/uml-activity-merge-node/uml-activity-merge-node-update';
+import { UMLComponentSubsystemUpdate } from './uml-component-diagram/uml-component-subsystem/uml-component-subsystem-update';
+import { UMLComponentUpdate } from './common/uml-component/uml-component-update';
 import { UMLClassAssociationUpdate } from './uml-class-diagram/uml-class-association/uml-class-association-update';
 import { UMLCommunicationLinkUpdate } from './uml-communication-diagram/uml-communication-link/uml-communication-link-update';
 import { UMLComponentAssociationUpdate } from './uml-component-diagram/uml-component-association-update';
@@ -58,11 +60,11 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.UseCase]: DefaultPopup,
   [UMLElementType.UseCaseActor]: DefaultPopup,
   [UMLElementType.UseCaseSystem]: DefaultPopup,
-  [UMLElementType.Component]: DefaultPopup,
-  [UMLElementType.Subsystem]: DefaultPopup,
+  [UMLElementType.Component]: UMLComponentUpdate,
+  [UMLElementType.Subsystem]: UMLComponentSubsystemUpdate,
   [UMLElementType.ComponentInterface]: DefaultPopup,
   [UMLElementType.DeploymentNode]: UMLDeploymentNodeUpdate,
-  [UMLElementType.DeploymentComponent]: DefaultPopup,
+  [UMLElementType.DeploymentComponent]: UMLComponentUpdate,
   [UMLElementType.DeploymentArtifact]: DefaultPopup,
   [UMLElementType.DeploymentInterface]: DefaultPopup,
   [UMLElementType.PetriNetPlace]: UMLPetriNetPlaceUpdate,

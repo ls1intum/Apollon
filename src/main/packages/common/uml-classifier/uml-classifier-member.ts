@@ -3,7 +3,7 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { assign } from '../../../utils/fx/assign';
-import { IBoundary } from '../../../utils/geometry/boundary';
+import { IBoundary, computeDimension } from '../../../utils/geometry/boundary';
 import { Text } from '../../../utils/svg/text';
 import { DeepPartial } from '../../../typings';
 
@@ -19,7 +19,7 @@ export abstract class UMLClassifierMember extends UMLElement {
     updatable: false,
   };
 
-  bounds: IBoundary = { ...this.bounds, height: 30 };
+  bounds: IBoundary = { ...this.bounds, height: computeDimension(1.0, 30) };
 
   constructor(values?: DeepPartial<IUMLElement>) {
     super(values);

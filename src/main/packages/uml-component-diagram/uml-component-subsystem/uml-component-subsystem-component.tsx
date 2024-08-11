@@ -28,12 +28,12 @@ export const UMLComponentSubsystem: FunctionComponent<Props> = ({ element, child
       />
     </g>
     <Text fill={element.textColor} y={`${25}px`}>
-      {element.stereotype && (
+      {element.stereotype && element.displayStereotype && (
         <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
           {`«${element.stereotype}»`}
         </tspan>
       )}
-      <tspan x="50%" dy={element.stereotype ? 18 : 10} textAnchor="middle">
+      <tspan x="50%" dy={element.stereotype && element.displayStereotype ? 18 : 0} textAnchor="middle">
         {element.name}
       </tspan>
     </Text>

@@ -2,7 +2,6 @@ import React, { Component, ComponentType } from 'react';
 import { connect, ConnectedComponent } from 'react-redux';
 import { Button } from '../../../components/controls/button/button';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
-import { Divider } from '../../../components/controls/divider/divider';
 import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { ModelState } from '../../../components/store/model-state';
@@ -10,7 +9,7 @@ import { StylePane } from '../../../components/style-pane/style-pane';
 import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
-import { IUMLDeploymentNode, UMLDeploymentNode } from './uml-deployment-node';
+import { IUMLComponent, UMLComponent } from './uml-component';
 import { StereotypeToggle } from '../../../components/controls/stereotype-toggle/stereotype-toggle';
 
 const Flex = styled.div`
@@ -21,7 +20,7 @@ const Flex = styled.div`
 
 type State = { colorOpen: boolean };
 
-class DeploymentNodeUpdate extends Component<Props, State> {
+class ComponentUpdate extends Component<Props, State> {
   state = { colorOpen: false };
 
   private toggleColor = () => {
@@ -44,44 +43,33 @@ class DeploymentNodeUpdate extends Component<Props, State> {
               <TrashIcon />
             </Button>
           </Flex>
-          <StylePane
-            open={this.state.colorOpen}
-            element={element}
-            onColorChange={this.props.update}
-            lineColor
-            textColor
-            fillColor
-          />
         </section>
-        <section>
-          <Divider />
-          <Flex>
-            <Textfield value={element.stereotype} onChange={this.onStereotypeRename} />
-          </Flex>
-        </section>
+        <StylePane
+          open={this.state.colorOpen}
+          element={element}
+          onColorChange={this.props.update}
+          lineColor
+          textColor
+          fillColor
+        />
       </div>
     );
   }
 
   private onRename = (value: string) => {
     const { element, update } = this.props;
-    update<IUMLDeploymentNode>(element.id, { name: value });
+    update<IUMLComponent>(element.id, { name: value });
   };
 
   private onStereotypeVisibilityToggle = () => {
     const { element, update } = this.props;
     const newVisibilityValue = !element.displayStereotype;
-    update<IUMLDeploymentNode>(element.id, { displayStereotype: newVisibilityValue });
-  };
-
-  private onStereotypeRename = (value: string) => {
-    const { element, update } = this.props;
-    update<IUMLDeploymentNode>(element.id, { stereotype: value });
+    update<IUMLComponent>(element.id, { displayStereotype: newVisibilityValue });
   };
 }
 
 type OwnProps = {
-  element: UMLDeploymentNode;
+  element: UMLComponent;
 };
 
 type StateProps = {};
@@ -98,6 +86,4 @@ const enhance = connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
   delete: UMLElementRepository.delete,
 });
 
-export const UMLDeploymentNodeUpdate: ConnectedComponent<ComponentType<Props>, OwnProps> = enhance(
-  DeploymentNodeUpdate,
-);
+export const UMLComponentUpdate: ConnectedComponent<ComponentType<Props>, OwnProps> = enhance(ComponentUpdate);
