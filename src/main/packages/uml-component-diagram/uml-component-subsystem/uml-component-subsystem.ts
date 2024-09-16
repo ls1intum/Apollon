@@ -1,9 +1,9 @@
-import { DeepPartial } from 'redux';
 import { UMLPackage } from '../../common/uml-package/uml-package';
 import { ComponentElementType, ComponentRelationshipType } from '..';
 import { IUMLContainer } from '../../../services/uml-container/uml-container';
 import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
+import { DeepPartial } from '../../../typings';
 
 export interface IUMLSubsystem extends IUMLContainer {
   stereotype: string;

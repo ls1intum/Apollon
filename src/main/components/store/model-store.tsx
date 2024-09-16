@@ -2,7 +2,6 @@ import React, { Component, PropsWithChildren } from 'react';
 import { Provider } from 'react-redux';
 import { combineReducers, Reducer, Store } from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
-import { thunk } from 'redux-thunk';
 import { Actions } from '../../services/actions';
 import { ILayer } from '../../services/layouter/layer';
 import { LayouterRepository } from '../../services/layouter/layouter-repository';
@@ -65,7 +64,6 @@ export const createReduxStore = (
       const middleware = getDefaultMiddleware({
         serializableCheck: false,
       })
-        .concat(thunk)
         .concat(sagaMiddleware);
 
       if (patcher) {
