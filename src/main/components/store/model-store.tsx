@@ -63,8 +63,7 @@ export const createReduxStore = (
     middleware: (getDefaultMiddleware) => {
       const middleware = getDefaultMiddleware({
         serializableCheck: false,
-      })
-        .concat(sagaMiddleware);
+      }).concat(sagaMiddleware);
 
       if (patcher) {
         const patcherMiddleware = createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
