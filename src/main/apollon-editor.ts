@@ -512,6 +512,7 @@ export class ApollonEditor {
         nextRenderResolve();
       },
       state,
+      patcher: this.patcher,
       styles: this.options.theme,
       locale: this.options.locale,
     } as any);
