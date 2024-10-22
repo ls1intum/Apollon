@@ -1,4 +1,4 @@
-import { DeepPartial } from 'redux';
+import { DeepPartial } from '../typings';
 
 type update = <T extends object>(target: T, source: DeepPartial<T>) => T;
 

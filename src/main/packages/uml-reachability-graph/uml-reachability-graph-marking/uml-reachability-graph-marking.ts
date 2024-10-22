@@ -3,8 +3,9 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementType } from '../../uml-element-type';
 import * as Apollon from '../../../typings';
+import { DeepPartial } from '../../../typings';
 import { ReachabilityGraphElementType } from '..';
-import { DeepPartial } from 'redux';
+
 import { calculateNameBounds } from '../../../utils/name-bounds';
 
 export class UMLReachabilityGraphMarking extends UMLElement {

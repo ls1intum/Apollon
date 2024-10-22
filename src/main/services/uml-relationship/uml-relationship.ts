@@ -1,6 +1,6 @@
-import { DeepPartial } from 'redux';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import * as Apollon from '../../typings';
+import { DeepPartial } from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { IPath } from '../../utils/geometry/path';
 import { ILayer } from '../layouter/layer';
@@ -109,7 +109,7 @@ export abstract class UMLRelationship extends UMLElement implements IUMLRelation
    *
    * @param override - Override existing properties.
    */
-  cloneRelationship<T extends UMLRelationship>(override?: DeepPartial<IUMLRelationship>): T {
+  cloneRelationship<T extends UMLRelationship>(override?: Partial<IUMLRelationship>): T {
     const Constructor = this.constructor as new (values?: DeepPartial<IUMLRelationship>) => T;
     const values: IUMLRelationship = { ...this, ...override, id: uuid() };
 

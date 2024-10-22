@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { UMLClass } from '../../../../../main/packages/uml-class-diagram/uml-class/uml-class';
 import { ModelState } from '../../../../../main/components/store/model-state';
-import { DeepPartial } from 'redux';
+
 import { UMLClassAttribute } from '../../../../../main/packages/uml-class-diagram/uml-class-attribute/uml-class-attribute';
 import { UMLClassMethod } from '../../../../../main/packages/uml-class-diagram/uml-class-method/uml-class-method';
 import { fireEvent, render } from '@testing-library/react';
@@ -11,6 +11,7 @@ import { MockStoreEnhanced } from 'redux-mock-store';
 import { Provider } from 'react-redux';
 import { UMLElementRepository } from '../../../../../main/services/uml-element/uml-element-repository';
 import { getMockedStore } from '../../../test-utils/test-utils';
+import { DeepPartial } from '../../../../../main';
 
 class MockComponent extends React.Component<UMLElementComponentProps> {
   render() {

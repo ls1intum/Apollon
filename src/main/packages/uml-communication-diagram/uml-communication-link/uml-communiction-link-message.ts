@@ -1,8 +1,9 @@
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
-import { DeepPartial } from 'redux';
+
 import { CommunicationElementType } from '../index';
+import { DeepPartial } from '../../../typings';
 
 export interface ICommunicationLinkMessage extends IUMLElement {
   direction: 'source' | 'target';

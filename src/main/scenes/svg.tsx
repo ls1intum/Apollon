@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { DeepPartial } from 'redux';
+
 import { defaults, Styles } from '../components/theme/styles';
 import { Components } from '../packages/components';
 import { UMLElementType } from '../packages/uml-element-type';
@@ -11,6 +11,7 @@ import { UMLContainer } from '../services/uml-container/uml-container';
 import { UMLElement } from '../services/uml-element/uml-element';
 import { UMLRelationship } from '../services/uml-relationship/uml-relationship';
 import * as Apollon from '../typings';
+import { DeepPartial } from '../typings';
 import { computeBoundingBoxForElements, IBoundary } from '../utils/geometry/boundary';
 import { Point } from '../utils/geometry/point';
 import { update } from '../utils/update';

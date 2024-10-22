@@ -1,8 +1,8 @@
-import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import { UMLRelationshipType } from '../../packages/uml-relationship-type';
 import * as Apollon from '../../typings';
+import { DeepPartial } from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { IBoundary } from '../../utils/geometry/boundary';
 import { Point } from '../../utils/geometry/point';

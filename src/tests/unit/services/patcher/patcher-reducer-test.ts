@@ -1,6 +1,4 @@
-import { createPatcherReducer } from '../../../../main/services/patcher/patcher-reducer';
-import { Patcher } from '../../../../main/services/patcher/patcher';
-import { PatcherRepository } from '../../../../main/services/patcher';
+import { createPatcherReducer, Patcher, PatcherRepository } from '../../../../main/services/patcher';
 
 describe('test patcher reducer.', () => {
   test('it invokes the patcher when receiving a patch action.', () => {
@@ -8,7 +6,7 @@ describe('test patcher reducer.', () => {
     patcher.initialize({});
 
     const reducer = createPatcherReducer(patcher);
-    const nextState = reducer({}, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]));
+    const nextState = reducer({}, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]) as any);
 
     expect(nextState).toEqual({ x: 42 });
     expect(patcher.snapshot).toEqual({ x: 42 });
@@ -22,7 +20,7 @@ describe('test patcher reducer.', () => {
     patcher.initialize({});
 
     const reducer = createPatcherReducer(patcher, { transform: cb, transformInverse: inv });
-    const nextState = reducer({ y: 41 }, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]));
+    const nextState = reducer({ y: 41 }, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]) as any);
 
     expect(nextState).toEqual({ y: 42 });
   });
@@ -32,7 +30,7 @@ describe('test patcher reducer.', () => {
     patcher.initialize({});
 
     const reducer = createPatcherReducer(patcher);
-    const nextState = reducer({ y: 41 }, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]));
+    const nextState = reducer({ y: 41 }, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]) as any);
 
     expect(nextState).toEqual({ x: 42, y: 41 });
   });
@@ -44,7 +42,7 @@ describe('test patcher reducer.', () => {
     patcher.initialize({});
 
     const reducer = createPatcherReducer(patcher, { merge: cb });
-    const nextState = reducer({ y: 41 }, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]));
+    const nextState = reducer({ y: 41 }, PatcherRepository.patch([{ op: 'add', path: '/x', value: 42 }]) as any);
 
     expect(nextState).toEqual({ x: 42, y: 41 });
   });

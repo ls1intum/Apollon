@@ -1,10 +1,10 @@
-import { DeepPartial } from 'redux';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../../../services/uml-container/uml-container';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import * as Apollon from '../../../typings';
+import { DeepPartial } from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 import { Text } from '../../../utils/svg/text';
 import { UMLElementType } from '../../uml-element-type';

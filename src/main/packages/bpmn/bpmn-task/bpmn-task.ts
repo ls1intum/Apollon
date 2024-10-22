@@ -3,9 +3,10 @@ import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
-import { DeepPartial } from 'redux';
+
 import { assign } from '../../../utils/fx/assign';
 import * as Apollon from '../../../typings';
+import { DeepPartial } from '../../../typings';
 import { BPMNMarkerType } from '../common/types';
 
 export type BPMNTaskType = 'default' | 'user' | 'send' | 'receive' | 'manual' | 'business-rule' | 'script';

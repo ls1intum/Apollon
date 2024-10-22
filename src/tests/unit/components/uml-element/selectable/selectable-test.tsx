@@ -42,7 +42,7 @@ describe('test selectable HOC', () => {
     const elementToSelect = elements[0];
     // element must be hovered to trigger select
     store = getMockedStore({ hovered: [elementToSelect.id] }, elements);
-    const expectedAction = UMLElementRepository.select(elementToSelect.id)(store.dispatch, store.getState, undefined);
+    const expectedAction = store.dispatch(UMLElementRepository.select(elementToSelect.id));
 
     const { container } = render(
       <Provider store={store}>
@@ -95,12 +95,8 @@ describe('test selectable HOC', () => {
     // element must be hovered to trigger deselect
     // element must be already selected to trigger deselect
     store = getMockedStore({ selected: [alreadySelectedElement.id], hovered: [elementToSelect.id] }, elements);
-    const expectedAction1 = UMLElementRepository.deselect(alreadySelectedElement.id)(
-      store.dispatch,
-      store.getState,
-      undefined,
-    );
-    const expectedAction2 = UMLElementRepository.select(elementToSelect.id)(store.dispatch, store.getState, undefined);
+    const expectedAction1 = store.dispatch(UMLElementRepository.deselect(alreadySelectedElement.id));
+    const expectedAction2 = store.dispatch(UMLElementRepository.select(elementToSelect.id));
     const { container } = render(
       <Provider store={store}>
         <SelectableMockComponent id={elementToSelect.id} />
@@ -126,7 +122,7 @@ describe('test selectable HOC', () => {
     // element must be hovered to trigger deselect
     // element must be already selected to trigger deselect
     store = getMockedStore({ selected: [alreadySelectedElement.id], hovered: [elementToSelect.id] }, elements);
-    const expectedAction = UMLElementRepository.select(elementToSelect.id)(store.dispatch, store.getState, undefined);
+    const expectedAction = store.dispatch(UMLElementRepository.select(elementToSelect.id));
     const { container } = render(
       <Provider store={store}>
         <SelectableMockComponent id={elementToSelect.id} />

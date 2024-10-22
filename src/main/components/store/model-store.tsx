@@ -1,24 +1,13 @@
 import React, { Component, PropsWithChildren } from 'react';
 import { Provider } from 'react-redux';
-import {
-  applyMiddleware,
-  combineReducers,
-  compose,
-  createStore,
-  PreloadedState,
-  Reducer,
-  Store,
-  StoreEnhancer,
-} from 'redux';
+import { combineReducers, Reducer, Store } from 'redux';
 import createSagaMiddleware, { SagaMiddleware } from 'redux-saga';
-import thunk, { ThunkMiddleware } from 'redux-thunk';
 import { Actions } from '../../services/actions';
 import { ILayer } from '../../services/layouter/layer';
 import { LayouterRepository } from '../../services/layouter/layouter-repository';
 import { reducers } from '../../services/reducer';
 import { saga, SagaContext } from '../../services/saga';
 import { undoable } from '../../services/undo/undo-reducer';
-import { Dispatch } from '../../utils/actions/actions';
 import { CanvasContext } from '../canvas/canvas-context';
 import { withCanvas } from '../canvas/with-canvas';
 import { ModelState, PartialModelState } from './model-state';
@@ -32,23 +21,26 @@ import {
 } from '../../services/patcher';
 import { UMLModel } from '../../typings';
 import { merge } from './merge';
+import { configureStore } from '@reduxjs/toolkit';
 
 type OwnProps = PropsWithChildren<{
-  initialState?: PreloadedState<PartialModelState>;
+  initialState?: PartialModelState;
   patcher?: Patcher<UMLModel>;
 }>;
 
 type Props = OwnProps & CanvasContext;
 
 export const createReduxStore = (
-  initialState: PreloadedState<PartialModelState> = {},
+  initialState: PartialModelState = {},
   layer: ILayer | null = null,
   patcher?: Patcher<UMLModel>,
 ): Store<ModelState, Actions> => {
-  const baseReducer: Reducer<ModelState, Actions> = undoable(combineReducers<ModelState, Actions>(reducers));
+  const baseReducer: Reducer<ModelState, Actions> = undoable<ModelState, Actions>(
+    combineReducers(reducers) as unknown as Reducer<ModelState, Actions>,
+  );
   const patchReducer =
     patcher &&
-    createPatcherReducer<UMLModel, ModelState>(patcher, {
+    createPatcherReducer<UMLModel, Actions, ModelState>(patcher, {
       transform: (model) => ModelState.fromModel(model) as ModelState,
       transformInverse: (state) => ModelState.toModel(state),
       merge,
@@ -65,25 +57,27 @@ export const createReduxStore = (
 
   const sagaMiddleware: SagaMiddleware<SagaContext> = createSagaMiddleware<SagaContext>({ context: { layer } });
 
-  const middleware: StoreEnhancer<{ dispatch: Dispatch }, {}> = applyMiddleware(
-    ...[
-      thunk as ThunkMiddleware<ModelState, Actions>,
-      sagaMiddleware,
-      ...(patcher
-        ? [
-            createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
-              selectDiscrete: (action) => isDiscreteAction(action) || isSelectionAction(action),
-              selectContinuous: (action) => isContinuousAction(action),
-              transform: (state) => ModelState.toModel(state),
-            }),
-          ]
-        : []),
-    ],
-  );
-  const composeEnhancers: typeof compose = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-  const enhancer = composeEnhancers(middleware);
+  const store: Store<ModelState, Actions> = configureStore({
+    reducer: reducer,
+    preloadedState: initialState as ModelState,
+    middleware: (getDefaultMiddleware) => {
+      const middleware = getDefaultMiddleware({
+        serializableCheck: false,
+      }).concat(sagaMiddleware);
 
-  const store: Store<ModelState, Actions> = createStore(reducer, initialState as ModelState, enhancer);
+      if (patcher) {
+        const patcherMiddleware = createPatcherMiddleware<UMLModel, Actions, ModelState>(patcher, {
+          selectDiscrete: (action) => isDiscreteAction(action) || isSelectionAction(action),
+          selectContinuous: (action) => isContinuousAction(action),
+          transform: (state) => ModelState.toModel(state),
+        });
+
+        return middleware.concat(patcherMiddleware);
+      }
+
+      return middleware;
+    },
+  });
 
   if (layer) {
     sagaMiddleware.run(saga);
@@ -93,7 +87,7 @@ export const createReduxStore = (
 };
 
 const getInitialState = (
-  initialState: PreloadedState<PartialModelState> = {},
+  initialState: PartialModelState = {},
   layer: ILayer | null = null,
   patcher?: Patcher<UMLModel>,
 ): { store: Store<ModelState, Actions> } => {

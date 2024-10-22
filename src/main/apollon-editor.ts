@@ -1,7 +1,7 @@
 import 'pepjs';
 import { createElement } from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { DeepPartial, Store } from 'redux';
+import { Store } from 'redux';
 import { ModelState, PartialModelState } from './components/store/model-state';
 import { Styles } from './components/theme/styles';
 import { UMLElementType } from './packages/uml-element-type';
@@ -14,7 +14,7 @@ import { ApollonMode, ApollonView, Locale } from './services/editor/editor-types
 import { UMLDiagram } from './services/uml-diagram/uml-diagram';
 import { UMLElementRepository } from './services/uml-element/uml-element-repository';
 import * as Apollon from './typings';
-import { UMLDiagramType, UMLModel } from './typings';
+import { DeepPartial, UMLDiagramType, UMLModel } from './typings';
 import { Dispatch } from './utils/actions/actions';
 import { debounce } from './utils/debounce';
 import { delay } from './utils/delay';

@@ -1,8 +1,8 @@
 import { ComponentElementType, ComponentRelationshipType } from '..';
 import { IUMLComponent, UMLComponent } from '../../common/uml-component/uml-component';
-import { DeepPartial } from 'redux';
 import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
+import { DeepPartial } from '../../../typings';
 
 export class UMLComponentComponent extends UMLComponent {
   static supportedRelationships = [

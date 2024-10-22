@@ -1,4 +1,3 @@
-import { DeepPartial } from 'redux';
 import { BPMNElementType, BPMNRelationshipType } from '..';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
@@ -8,6 +7,7 @@ import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 import * as Apollon from '../../../typings';
+import { DeepPartial } from '../../../typings';
 
 export type BPMNIntermediateEventType =
   | 'default'

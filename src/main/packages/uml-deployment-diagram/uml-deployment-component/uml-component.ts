@@ -1,9 +1,9 @@
-import { DeepPartial } from 'redux';
 import { DeploymentElementType, DeploymentRelationshipType } from '..';
 import { IUMLComponent } from '../../common/uml-component/uml-component';
 import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 import { UMLComponent } from '../../common/uml-component/uml-component';
+import { DeepPartial } from '../../../typings';
 
 export class UMLDeploymentComponent extends UMLComponent {
   static supportedRelationships = [

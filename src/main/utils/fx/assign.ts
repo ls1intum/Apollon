@@ -1,4 +1,4 @@
-import { DeepPartial } from 'redux';
+import { DeepPartial } from '../../typings';
 
 export const assign = <T extends { [key: string]: any }>(target: T, source?: DeepPartial<T>): T => {
   for (const key in source) {
@@ -18,7 +18,7 @@ export const assign = <T extends { [key: string]: any }>(target: T, source?: Dee
       if (target === undefined) {
         target = {} as T;
       }
-      target[key] = source[key] as T[Extract<keyof T, string>];
+      target[key] = source[key] as T[Extract<keyof DeepPartial<T>, string>];
     }
   }
 

@@ -1,6 +1,6 @@
 import { PetriNetRelationshipType } from '../index';
 import { IUMLRelationship, UMLRelationship } from '../../../services/uml-relationship/uml-relationship';
-import { DeepPartial } from 'redux';
+import { DeepPartial } from '../../../typings';
 
 export class UMLPetriNetArc extends UMLRelationship {
   static features = { ...UMLRelationship.features, straight: true };

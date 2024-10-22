@@ -1,10 +1,9 @@
 import 'pepjs';
-import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
 import { Patch } from './services/patcher';
 import { Locale } from './services/editor/editor-types';
 import * as Apollon from './typings';
-import { UMLDiagramType, UMLModel } from './typings';
+import { DeepPartial, UMLDiagramType, UMLModel } from './typings';
 import { UMLModelCompat } from './compat';
 export declare class ApollonEditor {
     private container;

@@ -1,4 +1,4 @@
-import { call, debounce, delay, put, select, take } from 'redux-saga/effects';
+import { call, debounce, delay, put, select } from 'redux-saga/effects';
 import { SagaIterator } from 'redux-saga';
 
 import { run } from '../../utils/actions/sagas';

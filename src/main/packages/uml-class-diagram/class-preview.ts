@@ -13,6 +13,7 @@ import { UMLInterface } from './uml-interface/uml-interface';
 
 export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (id: string) => string): UMLElement[] => {
   const elements: UMLElement[] = [];
+
   UMLClassifier.stereotypeHeaderHeight = computeDimension(1.0, 50);
   UMLClassifier.nonStereotypeHeaderHeight = computeDimension(1.0, 40);
 
@@ -90,7 +91,6 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
   // UML Interface
   const umlInterface = new UMLInterface({
     name: translate('packages.ClassDiagram.Interface'),
-    bounds: { height: 110 },
   });
   umlInterface.bounds = {
     ...umlInterface.bounds,
@@ -123,7 +123,6 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
   // UML Enumeration
   const umlEnumeration = new UMLEnumeration({
     name: translate('packages.ClassDiagram.Enumeration'),
-    bounds: { height: 140 },
   });
   umlEnumeration.bounds = {
     ...umlEnumeration.bounds,

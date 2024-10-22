@@ -1,7 +1,7 @@
-import { DeepPartial } from 'redux';
 import { DeploymentElementType, DeploymentRelationshipType } from '..';
 import { IUMLContainer } from '../../../services/uml-container/uml-container';
 import * as Apollon from '../../../typings';
+import { DeepPartial } from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 import { UMLPackage } from '../../common/uml-package/uml-package';
 import { UMLElementType } from '../../uml-element-type';

@@ -1,7 +1,7 @@
-import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { UMLElementType } from '../../packages/uml-element-type';
 import * as Apollon from '../../typings';
+import { DeepPartial } from '../../typings';
 import { assign } from '../../utils/fx/assign';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
