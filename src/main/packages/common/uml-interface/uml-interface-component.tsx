@@ -13,7 +13,7 @@ export const UMLInterfaceComponent: FunctionComponent<Props> = ({ element, fillC
       strokeWidth={2}
       fillColor={fillColor || element.fillColor}
     />
-    <Text noY x={'25px'} dominantBaseline="auto" textAnchor="start" fill={element.textColor}>
+    <Text x={25} noY dominantBaseline="auto" textAnchor="start" fill={element.textColor}>
       {element.name}
     </Text>
   </g>

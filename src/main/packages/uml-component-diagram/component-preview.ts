@@ -1,6 +1,6 @@
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
-import { ComposePreview } from '../compose-preview';
+import { ComposePreview, PreviewElement } from '../compose-preview';
 import { UMLComponentInterface } from './uml-component-interface/uml-component-interface';
 import { UMLComponentComponent } from './uml-component/uml-component-component';
 import { UMLSubsystem } from './uml-component-subsystem/uml-component-subsystem';
@@ -8,8 +8,8 @@ import { UMLSubsystem } from './uml-component-subsystem/uml-component-subsystem'
 export const composeComponentPreview: ComposePreview = (
   layer: ILayer,
   translate: (id: string) => string,
-): UMLElement[] => {
-  const elements: UMLElement[] = [];
+): PreviewElement[] => {
+  const elements: PreviewElement[] = [];
 
   // UML Component
   const umlComponent = new UMLComponentComponent({ name: translate('packages.ComponentDiagram.Component') });
@@ -38,7 +38,8 @@ export const composeComponentPreview: ComposePreview = (
     width: umlComponentInterface.bounds.width,
     height: umlComponentInterface.bounds.height,
   };
-  const [umlInterface] = umlComponentInterface.render(layer) as [UMLElement];
+  const [umlInterface] = umlComponentInterface.render(layer) as [PreviewElement];
+  umlInterface.styles = { paddingTop: 8 };
   elements.push(umlInterface);
 
   return elements;
