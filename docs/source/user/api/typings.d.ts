@@ -89,6 +89,17 @@ export type UMLClassifier = UMLElement & {
 };
 export type UMLDeploymentNode = UMLElement & {
     stereotype: string;
+    displayStereotype: boolean;
+};
+export type UMLDeploymentComponent = UMLElement & {
+    displayStereotype: boolean;
+};
+export type UMLComponentSubsystem = UMLElement & {
+    stereotype: string;
+    displayStereotype: boolean;
+};
+export type UMLComponentComponent = UMLElement & {
+    displayStereotype: boolean;
 };
 export type UMLPetriNetPlace = UMLElement & {
     amountOfTokens: number;
