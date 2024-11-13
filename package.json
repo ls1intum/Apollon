@@ -28,7 +28,7 @@
     "lint": "npm run lint:ts && npm run lint:css",
     "lint:ts": "eslint -c .eslintrc.js src/main",
     "lint:css": "stylelint 'src/**/*.ts'",
-    "prepare": "rm -rf lib && tsc -p . && tsc -p tsconfig.es5.json",
+    "prepare": "rimraf lib && tsc -p . && tsc -p tsconfig.es5.json",
     "prettier:check": "prettier --check 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
     "prettier:write": "prettier --write 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
     "test": "jest -w=4",
@@ -53,6 +53,7 @@
     "*.{ts,tsx,js,css,md}": "prettier --write"
   },
   "dependencies": {
+    "@ls1intum/apollon": "file:",
     "fast-json-patch": "3.1.1",
     "is-mobile": "4.0.0",
     "pepjs": "0.5.3",

@@ -9,3 +9,7 @@ dist/
 cypress
 test-report.html
 **/.DS_Store
+besser_backend/besser_venv
+besser_backend/output/
+besser_backend/start.bat
+besser_backend/__pycache__/main.cpython-312.pyc

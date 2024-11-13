@@ -71,6 +71,23 @@
         </div>
       </section>
       <section>
+        <h3 class="header">Code Generator</h3>
+        <div class="dropdown">
+          <label for="generatorSelect">Select Code Generator:</label>
+          <select id="generatorSelect">
+            <option value="buml">Domain Model (BUML)</option>
+            <option value="json">Domain Model (JSON)</option>
+            <option value="python">Python Classes</option>
+            <option value="java">Java Classes</option>
+            <option value="django">Django Models</option>
+            <option value="pydantic">Pydantic Classes</option>
+            <option value="sqlalchemy">SQLAlchemy Models</option>
+            <option value="sql">SQL Scripts</option>
+          </select>
+        </div>
+        <button id="generateButton">Generate/Download</button>
+      </section>
+      <section>
         <h3 class="header">State</h3>
         <div class="switch">
           <button onclick="apollon.save(event)">Save</button>
