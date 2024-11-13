@@ -210,3 +210,63 @@ aside.sidebar section>div {
 .checkbox {
   vertical-align: middle;
 }
+
+.file-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  left: -9999px;
+}
+
+.file-input-label {
+  display: inline-block;
+  background: var(--apollon-background);
+  color: var(--apollon-primary-contrast);
+  border: 1px solid var(--apollon-gray);
+  padding: 0.375rem 0.75rem;
+  margin: 0;
+  line-height: 1.5;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.file-input-label:hover {
+  background-color: var(--apollon-gray);
+  border-color: var(--apollon-gray-variant);
+}
+
+/* Adjust the Import/Export section switch to stack buttons vertically */
+section:has(> h3:contains("Import/Export")) .switch {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+section:has(> h3:contains("Import/Export")) .switch button,
+section:has(> h3:contains("Import/Export")) .file-input-label {
+  border-radius: 0.25rem;
+  width: 100%;
+}
+
+/* Add these styles for the generate button */
+.generate-button {
+  width: 100%;
+  background: var(--apollon-background);
+  color: var(--apollon-primary-contrast);
+  border: 1px solid var(--apollon-gray);
+  padding: 0.375rem 0.75rem;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.generate-button:hover {
+  background-color: var(--apollon-gray);
+  border-color: var(--apollon-gray-variant);
+}

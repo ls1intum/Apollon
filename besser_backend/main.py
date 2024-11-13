@@ -1,9 +1,9 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from besser.BUML.metamodel.structural import Class, Property, Method, DomainModel, PrimitiveDataType, \
-    Enumeration, EnumerationLiteral, BinaryAssociation, Generalization, Multiplicity, UNLIMITED_MAX_MULTIPLICITY
+    Enumeration, EnumerationLiteral, BinaryAssociation, Generalization, Multiplicity, UNLIMITED_MAX_MULTIPLICITY, Package
 from besser.generators.django import DjangoGenerator
 from besser.generators.python_classes import PythonGenerator
 from besser.generators.java_classes import JavaGenerator
@@ -13,6 +13,7 @@ from besser.generators.sql import SQLGenerator
 
 import json
 import os
+import uuid
 
 app = FastAPI()
 
@@ -191,7 +192,193 @@ def json_to_buml(json_data):
 
     return domain_model
 
+def buml_to_json(domain_model):
+    """Convert a BUML DomainModel object to JSON format matching the frontend structure."""
+    elements = {}
+    relationships = {}
+    
+    # Default diagram size
+    default_size = {
+        "width": 1200,
+        "height": 300
+    }
+    
+    # Initial x, y position for elements
+    current_x = -580
+    current_y = -130
 
+    for type_obj in domain_model.types:
+        if isinstance(type_obj, Class):
+            # Generate UUID for the class
+            class_id = str(uuid.uuid4())
+            
+            # Initialize lists for attributes and methods IDs
+            attribute_ids = []
+            method_ids = []
+            
+            # Process attributes
+            y_offset = current_y + 40  # Starting position for attributes
+            for attr in type_obj.attributes:
+                attr_id = str(uuid.uuid4())
+                visibility_symbol = next(k for k, v in VISIBILITY_MAP.items() if v == attr.visibility)
+                attr_type = attr.type.name if hasattr(attr.type, 'name') else str(attr.type)
+                
+                elements[attr_id] = {
+                    "id": attr_id,
+                    "name": f"{visibility_symbol} {attr.name}: {attr_type}",
+                    "type": "ClassAttribute",
+                    "owner": class_id,
+                    "bounds": {
+                        "x": current_x + 0.5,
+                        "y": y_offset,
+                        "width": 159,
+                        "height": 30
+                    }
+                }
+                attribute_ids.append(attr_id)
+                y_offset += 30
+
+            # Process methods
+            for method in type_obj.methods:
+                method_id = str(uuid.uuid4())
+                visibility_symbol = next(k for k, v in VISIBILITY_MAP.items() if v == method.visibility)
+                
+                elements[method_id] = {
+                    "id": method_id,
+                    "name": f"{visibility_symbol} {method.name}()",
+                    "type": "ClassMethod",
+                    "owner": class_id,
+                    "bounds": {
+                        "x": current_x + 0.5,
+                        "y": y_offset,
+                        "width": 159,
+                        "height": 30
+                    }
+                }
+                method_ids.append(method_id)
+                y_offset += 30
+
+            # Create the class element
+            elements[class_id] = {
+                "id": class_id,
+                "name": type_obj.name,
+                "type": "Class",
+                "owner": None,
+                "bounds": {
+                    "x": current_x,
+                    "y": current_y,
+                    "width": 160,
+                    "height": max(100, 30 * (len(attribute_ids) + len(method_ids) + 1))
+                },
+                "attributes": attribute_ids,
+                "methods": method_ids
+            }
+            
+            # Update position for next class
+            current_x += 200
+
+        elif isinstance(type_obj, Enumeration):
+            enum_id = str(uuid.uuid4())
+            literal_ids = []
+            
+            # Process enumeration literals
+            y_offset = current_y + 40
+            for literal in type_obj.literals:
+                literal_id = str(uuid.uuid4())
+                elements[literal_id] = {
+                    "id": literal_id,
+                    "name": literal.name,
+                    "type": "ClassAttribute",  # Using ClassAttribute for enum literals
+                    "owner": enum_id,
+                    "bounds": {
+                        "x": current_x + 0.5,
+                        "y": y_offset,
+                        "width": 159,
+                        "height": 30
+                    }
+                }
+                literal_ids.append(literal_id)
+                y_offset += 30
+
+            elements[enum_id] = {
+                "id": enum_id,
+                "name": type_obj.name,
+                "type": "Enumeration",
+                "owner": None,
+                "bounds": {
+                    "x": current_x,
+                    "y": current_y,
+                    "width": 160,
+                    "height": max(100, 30 * (len(literal_ids) + 1))
+                },
+                "attributes": literal_ids,
+                "methods": []
+            }
+            
+            current_x += 200
+
+    # Create the final structure
+    result = {
+        "version": "3.0.0",
+        "type": "ClassDiagram",
+        "size": default_size,
+        "interactive": {
+            "elements": {},
+            "relationships": {}
+        },
+        "elements": elements,
+        "relationships": relationships,
+        "assessments": {}
+    }
+
+    return result
+
+def parse_buml_content(content: str) -> DomainModel:
+    """Parse BUML content from a Python file and return a DomainModel."""
+    try:
+        print("Starting to parse BUML content from Python file...")
+        print(f"Raw content: {content}")
+        
+        # Create a safe environment for eval
+        safe_globals = {
+            'Package': Package,
+            'Class': Class,
+            'Property': Property,
+            'PrimitiveDataType': PrimitiveDataType,
+            'Multiplicity': Multiplicity,
+            'set': set
+        }
+        
+        try:
+            # Evaluate the Python expression safely
+            model = eval(content.strip(), safe_globals)
+            print(f"Evaluated model: {model}")
+            
+            if isinstance(model, Package):
+                # Create domain model from package
+                domain_model = DomainModel(model.name)
+                
+                # Add all classes from the package
+                for type_obj in model.types:
+                    if isinstance(type_obj, Class):
+                        domain_model.types.add(type_obj)
+                
+                # Add relationships if any
+                domain_model.associations.update(model.associations)
+                domain_model.generalizations.update(model.generalizations)
+                
+                print(f"Created domain model: {domain_model}")
+                return domain_model
+            else:
+                raise ValueError("Invalid BUML model format: expected Package")
+            
+        except Exception as eval_error:
+            print(f"Error evaluating BUML content: {eval_error}")
+            raise
+            
+    except Exception as e:
+        print(f"Error parsing BUML content: {e}")
+        raise ValueError(f"Failed to parse BUML content: {str(e)}")
 
 @app.post("/generate-output")
 async def generate_output(input_data: ClassDiagramInput):
@@ -210,18 +397,13 @@ async def generate_output(input_data: ClassDiagramInput):
             file_name = "classes.py"
 
         elif generator == "buml":
-            with open(os.path.join("output", "domain_model.buml"), "w") as file:
+            with open(os.path.join("output", "domain_model.py"), "w") as file:
                 file.write(str(buml_model))
             return FileResponse("output/domain_model.py", filename="domain_model.py", media_type="text/plain")
 
         elif generator == "java":
             generator_instance = JavaGenerator(buml_model)
             file_name = "Class.java"
-
-        elif generator == "json":
-            with open(os.path.join("output", "domain_model.json"), "w") as file:
-                json.dump(buml_model.to_json(), file)
-            return FileResponse("output/domain_model.json", filename="domain_model.json", media_type="application/json")
 
         elif generator == "django":
             generator_instance = DjangoGenerator(buml_model)
@@ -259,6 +441,188 @@ async def generate_output(input_data: ClassDiagramInput):
     except Exception as e:
         print(f"Error during file generation or response: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+@app.post("/get-json-model")
+async def get_json_model(buml_file: UploadFile = File(...)):
+    try:
+        print(f"Received file: {buml_file.filename}")
+        content = await buml_file.read()
+        buml_content = content.decode('utf-8')
+        
+        # Create the model structure
+        model_data = {
+            "version": "3.0.0",
+            "type": "ClassDiagram",
+            "size": {
+                "width": 1200,
+                "height": 300
+            },
+            "interactive": {
+                "elements": {},
+                "relationships": {}
+            },
+            "elements": {},
+            "relationships": {},
+            "assessments": {}
+        }
+        
+        # Track classes and their attributes
+        classes = {}
+        class_attributes = {}
+        current_x = -580
+        
+        # First pass: Create classes
+        lines = buml_content.split('\n')
+        for line in lines:
+            line = line.strip()
+            
+            if ': Class =' in line:
+                class_parts = line.split('=')
+                class_name = class_parts[0].split(':')[0].strip()
+                class_id = str(uuid.uuid4())
+                
+                classes[class_name] = class_id
+                class_attributes[class_id] = []
+                
+                model_data["elements"][class_id] = {
+                    "id": class_id,
+                    "name": class_name,
+                    "type": "Class",
+                    "owner": None,
+                    "bounds": {
+                        "x": current_x,
+                        "y": -130,
+                        "width": 160,
+                        "height": 100
+                    },
+                    "attributes": [],
+                    "methods": []
+                }
+                current_x += 200
+        
+        # Second pass: Add attributes to their proper classes
+        for line in lines:
+            line = line.strip()
+            if ': Property =' in line:
+                prop_parts = line.split('=')
+                prop_name = prop_parts[0].split(':')[0].strip()
+                
+                # Find which class this property belongs to
+                for class_def_line in lines:
+                    if ': Class =' in class_def_line and prop_name in class_def_line:
+                        class_name = class_def_line.split('=')[0].split(':')[0].strip()
+                        class_id = classes.get(class_name)
+                        
+                        if class_id:
+                            prop_id = str(uuid.uuid4())
+                            attr_count = len(class_attributes[class_id])
+                            
+                            # Add attribute to class
+                            model_data["elements"][class_id]["attributes"].append(prop_id)
+                            class_attributes[class_id].append(prop_id)
+                            
+                            # Add attribute element
+                            model_data["elements"][prop_id] = {
+                                "id": prop_id,
+                                "name": f"+ {prop_name}: str",
+                                "type": "ClassAttribute",
+                                "owner": class_id,
+                                "bounds": {
+                                    "x": model_data["elements"][class_id]["bounds"]["x"] + 0.5,
+                                    "y": model_data["elements"][class_id]["bounds"]["y"] + 40 + (attr_count * 30),
+                                    "width": 159,
+                                    "height": 30
+                                }
+                            }
+        
+        # Third pass: Add relationships
+        for line in lines:
+            line = line.strip()
+            if ': BinaryAssociation =' in line:
+                assoc_parts = line.split('=')
+                assoc_name = assoc_parts[0].split(':')[0].strip()
+                assoc_id = str(uuid.uuid4())
+                
+                # Find source and target classes from the association definition
+                source_class = None
+                target_class = None
+                
+                for class_name, class_id in classes.items():
+                    if class_name in line:
+                        if not source_class:
+                            source_class = class_id
+                        else:
+                            target_class = class_id
+                            break
+                
+                if source_class and target_class:
+                    # Get source and target element positions
+                    source_bounds = model_data["elements"][source_class]["bounds"]
+                    target_bounds = model_data["elements"][target_class]["bounds"]
+                    
+                    # Calculate path points
+                    start_x = source_bounds["x"] + source_bounds["width"]
+                    start_y = source_bounds["y"] + (source_bounds["height"] / 2)
+                    end_x = target_bounds["x"]
+                    end_y = target_bounds["y"] + (target_bounds["height"] / 2)
+                    mid_x = (start_x + end_x) / 2
+                    
+                    relationship = {
+                        "id": assoc_id,
+                        "type": "ClassBidirectional",
+                        "name": assoc_name,
+                        "source": {
+                            "id": str(source_class),
+                            "element": str(source_class),
+                            "multiplicity": "1",
+                            "role": "",
+                            "bounds": {
+                                "x": start_x,
+                                "y": start_y,
+                                "width": 0,
+                                "height": 0
+                            }
+                        },
+                        "target": {
+                            "id": str(target_class),
+                            "element": str(target_class),
+                            "multiplicity": "*",
+                            "role": "",
+                            "bounds": {
+                                "x": end_x,
+                                "y": end_y,
+                                "width": 0,
+                                "height": 0
+                            }
+                        },
+                        "path": [
+                            {"x": start_x, "y": start_y},
+                            {"x": mid_x, "y": start_y},
+                            {"x": mid_x, "y": end_y},
+                            {"x": end_x, "y": end_y}
+                        ],
+                        "bounds": {
+                            "x": min(start_x, end_x),
+                            "y": min(start_y, end_y),
+                            "width": abs(end_x - start_x),
+                            "height": abs(end_y - start_y)
+                        }
+                    }
+                    
+                    model_data["relationships"][assoc_id] = relationship
+        
+        # Wrap the model data in the expected format
+        wrapped_response = {
+            "title": buml_file.filename,
+            "model": model_data
+        }
+        
+        print("JSON data created:", wrapped_response)
+        return JSONResponse(content=wrapped_response)
+            
+    except Exception as e:
+        print(f"Error in get_json_model: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Entry point if running directly
 if __name__ == "__main__":

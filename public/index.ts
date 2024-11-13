@@ -1,6 +1,8 @@
 import * as Apollon from '../src/main';
 import * as themings from './themings.json';
 import('./styles.css');
+import { exportDiagram, importDiagram } from '../src/main/services/diagramExportImport/diagramExportService';
+import { convertBumlToJson } from './generate_besser';
 
 const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
@@ -8,40 +10,52 @@ let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
   colorEnabled: true,
   scale: 0.8,
+  type: 'ClassDiagram'
 };
 
+// Set initial visibility of code generator section
+const codeGeneratorSection = document.getElementById('codeGeneratorSection');
+if (codeGeneratorSection) {
+  codeGeneratorSection.style.display = 'block';
+}
+
+// Fonction appelée pour modifier les options de l'éditeur
 export const onChange = (event: MouseEvent) => {
-  console.log("Change event triggered");
   const { name, value } = event.target as HTMLSelectElement;
   options = { ...options, [name]: value };
   render();
+  if (name === 'type') {
+    const codeGeneratorSection = document.getElementById('codeGeneratorSection');
+    if (codeGeneratorSection) {
+      codeGeneratorSection.style.display = value === 'ClassDiagram' ? 'block' : 'none';
+    }
+  }
 };
 
+// Fonction pour activer/désactiver des options de l'éditeur
 export const onSwitch = (event: MouseEvent) => {
-  console.log("Switch event triggered");
   const { name, checked: value } = event.target as HTMLInputElement;
   options = { ...options, [name]: value };
   render();
 };
 
+// Sauvegarder le modèle de diagramme dans localStorage
 export const save = () => {
   if (!editor) return;
-
-  console.log("Saving diagram data");
   const model: Apollon.UMLModel = editor.model;
   localStorage.setItem('apollon', JSON.stringify(model));
   options = { ...options, model };
   return options;
 };
 
+// Supprimer les données de diagramme sauvegardées
 export const clear = () => {
-  console.log("Clearing diagram data");
   localStorage.removeItem('apollon');
   options = { ...options, model: undefined };
 };
 
+// Appliquer un thème (clair ou sombre)
 export const setTheming = (theming: string) => {
-  console.log(`Setting theming to ${theming}`);
   const root = document.documentElement;
   const selectedButton = document.getElementById(
     theming === 'light' ? 'theming-light-mode-button' : 'theming-dark-mode-button',
@@ -58,10 +72,9 @@ export const setTheming = (theming: string) => {
   }
 };
 
+// Dessiner le diagramme en SVG et l'ouvrir dans une nouvelle fenêtre
 export const draw = async (mode?: 'include' | 'exclude') => {
   if (!editor) return;
-
-  console.log(`Drawing diagram with mode: ${mode}`);
   const filter: string[] = [
     ...Object.entries(editor.model.interactive.elements)
       .filter(([, value]) => value)
@@ -72,13 +85,13 @@ export const draw = async (mode?: 'include' | 'exclude') => {
   ];
 
   const exportParam = mode ? { [mode]: filter, scale: editor.getScaleFactor() } : { scale: editor.getScaleFactor() };
-
   const { svg }: Apollon.SVG = await editor.exportAsSVG(exportParam);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
   window.open(svgBlobURL);
 };
 
+// Attendre l'initialisation complète de l'éditeur
 const awaitEditorInitialization = async () => {
   if (editor && editor.nextRender) {
     try {
@@ -90,6 +103,50 @@ const awaitEditorInitialization = async () => {
   }
 };
 
+// Modifions la façon dont nous exposons les fonctions globalement
+const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
+  (window as any).apollon = {
+    onChange,
+    onSwitch,
+    draw,
+    save,
+    clear,
+    setTheming,
+    exportDiagram: () => {
+      if (editor) {
+        exportDiagram(editor);
+      } else {
+        console.warn("Editor is not initialized");
+      }
+    },
+    importDiagram: (file: File) => {
+      if (editor) {
+        importDiagram(file, editor);
+      } else {
+        console.warn("Editor is not initialized");
+      }
+    },
+    convertBumlToJson: () => {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.py';
+      fileInput.style.display = 'none';
+      
+      fileInput.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.files && target.files.length > 0) {
+          convertBumlToJson(target.files[0]);
+        }
+        document.body.removeChild(fileInput);
+      });
+      
+      document.body.appendChild(fileInput);
+      fileInput.click();
+    }
+  };
+};
+
+// Modifions la fonction render pour utiliser setupGlobalApollon
 const render = async () => {
   console.log("Rendering editor");
   save();
@@ -97,15 +154,15 @@ const render = async () => {
     editor.destroy();
   }
   editor = new Apollon.ApollonEditor(container, options);
-  console.log("Editor instance:", editor);
+  console.log("Editor instance created:", editor);
 
-  await awaitEditorInitialization();  // Attendre que l'éditeur soit entièrement initialisé
+  await awaitEditorInitialization();
 
   if (editor) {
     console.log("Editor initialized successfully with application:", editor.application);
-    (window as any).editor = editor;  // Attacher l'éditeur globalement après l'initialisation
+    (window as any).editor = editor;
+    setupGlobalApollon(editor);
 
-    // Charger generate_besser.ts après l'initialisation de l'éditeur
     import('./generate_besser').then(() => {
       console.log("generate_besser.ts loaded successfully after editor initialization");
     }).catch(error => {
@@ -114,16 +171,6 @@ const render = async () => {
   } else {
     console.error("Editor failed to initialize");
   }
-};
-
-// Expose functions globally for HTML event handlers
-(window as any).apollon = {
-  onChange,
-  onSwitch,
-  draw,
-  save,
-  clear,
-  setTheming,
 };
 
 render();

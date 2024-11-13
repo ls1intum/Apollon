@@ -78,20 +78,123 @@ async function generateOutput(generatorType: string) {
   }
 }
 
+// Export the function
+export async function convertBumlToJson(file: File) {
+  try {
+    console.log("Starting BUML to JSON conversion...");
+    console.log("File being sent:", file);
+
+    const formData = new FormData();
+    formData.append('buml_file', file);
+
+    console.log("Sending request to backend...");
+    const response = await fetch('http://localhost:8000/get-json-model', {
+      method: 'POST',
+      body: formData
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response headers:", response.headers);
+
+    if (response.ok) {
+      let jsonData;
+      try {
+        const textData = await response.text();
+        console.log("Raw response:", textData);
+        jsonData = JSON.parse(textData);
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", parseError);
+        return;
+      }
+
+      console.log("Parsed JSON data:", jsonData);
+      
+      // Update the editor with the new JSON data
+      const editorInstance = (window as any).editor;
+      if (editorInstance && editorInstance.model) {
+        console.log("Updating editor model...");
+        try {
+          editorInstance.model.loadData(jsonData);
+          console.log("Editor model updated successfully");
+        } catch (editorError) {
+          console.error("Failed to update editor:", editorError);
+        }
+
+        // Create and trigger download of JSON file
+        try {
+          const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+          const url = window.URL.createObjectURL(jsonBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'converted_model.json';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          console.log("JSON file download triggered");
+        } catch (downloadError) {
+          console.error("Failed to create download:", downloadError);
+        }
+      } else {
+        console.error("Editor is not properly initialized!", editorInstance);
+      }
+    } else {
+      const errorText = await response.text();
+      console.error('Error response from server:', errorText);
+    }
+  } catch (error) {
+    console.error('Error during conversion:', error);
+  }
+}
+
+// Create a hidden file input element
+function createFileInput(): HTMLInputElement {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.py';  // Accept Python files
+  fileInput.style.display = 'none';
+  return fileInput;
+}
+
 // Fonction pour gérer l'événement du bouton de génération
 function setupGenerateButton() {
   console.log("Setting up generate button");
   const generateButton = document.getElementById('generateButton');
   const generatorSelect = document.getElementById('generatorSelect') as HTMLSelectElement;
+  const convertButton = document.getElementById('convertButton');
 
   if (generateButton && generatorSelect) {
     console.log("Generate button and generator select found");
     generateButton.addEventListener('click', () => {
       console.log("Generate button clicked");
       const selectedGenerator = generatorSelect.value;
-
-      // Appelle la fonction pour générer la sortie en fonction du générateur sélectionné
       generateOutput(selectedGenerator);
+    });
+  }
+
+  // Add event listener for the convert button
+  if (convertButton) {
+    console.log("Convert button found");
+    convertButton.addEventListener('click', () => {
+      console.log("Convert button clicked");
+      
+      // Create and trigger file input
+      const fileInput = createFileInput();
+      document.body.appendChild(fileInput);
+      
+      fileInput.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement;
+        const files = target.files;
+        
+        if (files && files.length > 0) {
+          convertBumlToJson(files[0]);
+        }
+        
+        // Clean up
+        document.body.removeChild(fileInput);
+      });
+      
+      fileInput.click();
     });
   }
 }

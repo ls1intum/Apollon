@@ -6,6 +6,26 @@
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <style>
+    .besser-logo {
+      height: 20px; /* Adjust this value to match your desired size */
+      width: auto;
+    }
+
+    .convert-button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+
+    .convert-button:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
 
 <body>
@@ -13,7 +33,13 @@
     <a class="navbar-brand logo float-left">
       <img class="logo-img" src="images/logo.png" />
       <span>&nbsp;&nbsp;&nbsp;</span>
-      <span class="navbar-title">Apollon</span>&nbsp;&nbsp;&nbsp;<span class="navbar-version">
+      <span class="navbar-title">Apollon</span>
+      <span>&nbsp;×&nbsp;</span>
+      <a href="https://besser.readthedocs.io/en/latest/#" target="_blank">
+        <img class="logo-img besser-logo" src="images/besser_logo_light.png" />
+      </a>
+      <span>&nbsp;&nbsp;&nbsp;</span>
+      <span class="navbar-version">
         <%=htmlWebpackPlugin.options.version%>
       </span>
     </a>
@@ -39,7 +65,7 @@
           </select>
         </div>
       </section>
-      <section>
+      <!-- <section>
         <h3 class="header">Language</h3>
         <div class="dropdown">
           <select name="locale" onchange="apollon.onChange(event)">
@@ -47,7 +73,7 @@
             <option value="de">German</option>
           </select>
         </div>
-      </section>
+      </section> -->
       <section>
         <h3 class="header">Mode</h3>
         <div class="dropdown">
@@ -70,13 +96,11 @@
           <button onclick="apollon.draw('exclude')">Exclude</button>
         </div>
       </section>
-      <section>
-        <h3 class="header">Code Generator</h3>
+      <section id="codeGeneratorSection" style="display: none;">
+        <h3 class="header">BESSER Code Generator</h3>
         <div class="dropdown">
-          <label for="generatorSelect">Select Code Generator:</label>
           <select id="generatorSelect">
             <option value="buml">Domain Model (BUML)</option>
-            <option value="json">Domain Model (JSON)</option>
             <option value="python">Python Classes</option>
             <option value="java">Java Classes</option>
             <option value="django">Django Models</option>
@@ -85,20 +109,38 @@
             <option value="sql">SQL Scripts</option>
           </select>
         </div>
-        <button id="generateButton">Generate/Download</button>
+        <div class="switch">
+          <button id="generateButton" class="generate-button">Generate/Download</button>
+        </div>
       </section>
       <section>
+        <h3 class="header">Import/Export</h3>
+        <div class="switch">
+          <button onclick="window.apollon.exportDiagram()">Export JSON</button>
+          <div class="file-input-wrapper">
+            <input type="file" id="import-file" accept="application/json" onchange="window.apollon.importDiagram(this.files[0])">
+            <label for="import-file" class="file-input-label">Choose File</label>
+          </div>
+        </div>
+      </section>
+      <!-- <section>
         <h3 class="header">State</h3>
         <div class="switch">
           <button onclick="apollon.save(event)">Save</button>
           <button onclick="apollon.clear(event)">Clear</button>
         </div>
-      </section>
+      </section> -->
       <section>
         <h3 class="header">Theming</h3>
         <div class="switch">
           <button id="theming-light-mode-button" onclick="apollon.setTheming('light')" class="selected">Light</button>
           <button id="theming-dark-mode-button" onclick="apollon.setTheming('dark')">Dark</button>
+        </div>
+      </section>
+      <section>
+        <h3 class="header">BUML to JSON</h3>
+        <div class="switch">
+          <button id="convertButton" onclick="window.apollon.convertBumlToJson()">Convert BUML</button>
         </div>
       </section>
     </aside>
