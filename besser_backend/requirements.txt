@@ -1,5 +1,5 @@
 fastapi
 uvicorn
 pydantic
-besser
+besser == 1.4.0
 python-multipart

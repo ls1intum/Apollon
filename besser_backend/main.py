@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from fastapi.responses import FileResponse, JSONResponse
 from besser.BUML.metamodel.structural import Class, Property, Method, DomainModel, PrimitiveDataType, \
     Enumeration, EnumerationLiteral, BinaryAssociation, Generalization, Multiplicity, UNLIMITED_MAX_MULTIPLICITY, Package
+from besser.utilities.buml_code_builder import domain_model_to_code
 from besser.generators.django import DjangoGenerator
 from besser.generators.python_classes import PythonGenerator
 from besser.generators.java_classes import JavaGenerator
@@ -69,7 +70,13 @@ def parse_attribute(attribute_name):
 
 def parse_method(method_name):
     """Parse a method string to extract visibility and method name."""
-    parts = method_name.replace(":", "").split()  # Remove colons from method name if present
+    # Remove colons and parentheses from the method name
+    method_name = method_name.replace(":", "").replace("()", "")
+    parts = method_name.split()  # Split on whitespace
+    
+    if len(parts) == 1:  # Just the method name
+        return "public", parts[0]
+    
     visibility_symbol = parts[0] if parts[0] in VISIBILITY_MAP else "+"
     visibility = VISIBILITY_MAP.get(visibility_symbol, "public")  # Default to "public"
     name = parts[1] if len(parts) > 1 else "UnnamedMethod"
@@ -397,8 +404,7 @@ async def generate_output(input_data: ClassDiagramInput):
             file_name = "classes.py"
 
         elif generator == "buml":
-            with open(os.path.join("output", "domain_model.py"), "w") as file:
-                file.write(str(buml_model))
+            domain_model_to_code(model=buml_model, file_path="output/domain_model.py")
             return FileResponse("output/domain_model.py", filename="domain_model.py", media_type="text/plain")
 
         elif generator == "java":
