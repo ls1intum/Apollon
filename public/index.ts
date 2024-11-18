@@ -103,7 +103,7 @@ const awaitEditorInitialization = async () => {
   }
 };
 
-// Modifions la façon dont nous exposons les fonctions globalement
+// 
 const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
   (window as any).apollon = {
     onChange,

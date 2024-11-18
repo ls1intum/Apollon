@@ -48,6 +48,14 @@ VISIBILITY_MAP = {
     "~": "package"
 }
 
+
+RELATIONSHIP_TYPES = {
+    "bidirectional": "ClassBidirectional",
+    "unidirectional": "ClassUnidirectional",
+    "composition": "ClassComposition",
+    "inheritance": "ClassInheritance"
+}
+
 # Sample request body model
 class ClassDiagramInput(BaseModel):
     elements: dict
@@ -188,7 +196,7 @@ def json_to_buml(json_data):
             )
 
             association = BinaryAssociation(
-                name=f"{source_class.name}-{target_class.name} association",
+                name=f"{source_class.name}_{target_class.name}",
                 ends={source_property, target_property}
             )
             domain_model.associations.add(association)
@@ -199,193 +207,7 @@ def json_to_buml(json_data):
 
     return domain_model
 
-def buml_to_json(domain_model):
-    """Convert a BUML DomainModel object to JSON format matching the frontend structure."""
-    elements = {}
-    relationships = {}
-    
-    # Default diagram size
-    default_size = {
-        "width": 1200,
-        "height": 300
-    }
-    
-    # Initial x, y position for elements
-    current_x = -580
-    current_y = -130
 
-    for type_obj in domain_model.types:
-        if isinstance(type_obj, Class):
-            # Generate UUID for the class
-            class_id = str(uuid.uuid4())
-            
-            # Initialize lists for attributes and methods IDs
-            attribute_ids = []
-            method_ids = []
-            
-            # Process attributes
-            y_offset = current_y + 40  # Starting position for attributes
-            for attr in type_obj.attributes:
-                attr_id = str(uuid.uuid4())
-                visibility_symbol = next(k for k, v in VISIBILITY_MAP.items() if v == attr.visibility)
-                attr_type = attr.type.name if hasattr(attr.type, 'name') else str(attr.type)
-                
-                elements[attr_id] = {
-                    "id": attr_id,
-                    "name": f"{visibility_symbol} {attr.name}: {attr_type}",
-                    "type": "ClassAttribute",
-                    "owner": class_id,
-                    "bounds": {
-                        "x": current_x + 0.5,
-                        "y": y_offset,
-                        "width": 159,
-                        "height": 30
-                    }
-                }
-                attribute_ids.append(attr_id)
-                y_offset += 30
-
-            # Process methods
-            for method in type_obj.methods:
-                method_id = str(uuid.uuid4())
-                visibility_symbol = next(k for k, v in VISIBILITY_MAP.items() if v == method.visibility)
-                
-                elements[method_id] = {
-                    "id": method_id,
-                    "name": f"{visibility_symbol} {method.name}()",
-                    "type": "ClassMethod",
-                    "owner": class_id,
-                    "bounds": {
-                        "x": current_x + 0.5,
-                        "y": y_offset,
-                        "width": 159,
-                        "height": 30
-                    }
-                }
-                method_ids.append(method_id)
-                y_offset += 30
-
-            # Create the class element
-            elements[class_id] = {
-                "id": class_id,
-                "name": type_obj.name,
-                "type": "Class",
-                "owner": None,
-                "bounds": {
-                    "x": current_x,
-                    "y": current_y,
-                    "width": 160,
-                    "height": max(100, 30 * (len(attribute_ids) + len(method_ids) + 1))
-                },
-                "attributes": attribute_ids,
-                "methods": method_ids
-            }
-            
-            # Update position for next class
-            current_x += 200
-
-        elif isinstance(type_obj, Enumeration):
-            enum_id = str(uuid.uuid4())
-            literal_ids = []
-            
-            # Process enumeration literals
-            y_offset = current_y + 40
-            for literal in type_obj.literals:
-                literal_id = str(uuid.uuid4())
-                elements[literal_id] = {
-                    "id": literal_id,
-                    "name": literal.name,
-                    "type": "ClassAttribute",  # Using ClassAttribute for enum literals
-                    "owner": enum_id,
-                    "bounds": {
-                        "x": current_x + 0.5,
-                        "y": y_offset,
-                        "width": 159,
-                        "height": 30
-                    }
-                }
-                literal_ids.append(literal_id)
-                y_offset += 30
-
-            elements[enum_id] = {
-                "id": enum_id,
-                "name": type_obj.name,
-                "type": "Enumeration",
-                "owner": None,
-                "bounds": {
-                    "x": current_x,
-                    "y": current_y,
-                    "width": 160,
-                    "height": max(100, 30 * (len(literal_ids) + 1))
-                },
-                "attributes": literal_ids,
-                "methods": []
-            }
-            
-            current_x += 200
-
-    # Create the final structure
-    result = {
-        "version": "3.0.0",
-        "type": "ClassDiagram",
-        "size": default_size,
-        "interactive": {
-            "elements": {},
-            "relationships": {}
-        },
-        "elements": elements,
-        "relationships": relationships,
-        "assessments": {}
-    }
-
-    return result
-
-def parse_buml_content(content: str) -> DomainModel:
-    """Parse BUML content from a Python file and return a DomainModel."""
-    try:
-        print("Starting to parse BUML content from Python file...")
-        print(f"Raw content: {content}")
-        
-        # Create a safe environment for eval
-        safe_globals = {
-            'Package': Package,
-            'Class': Class,
-            'Property': Property,
-            'PrimitiveDataType': PrimitiveDataType,
-            'Multiplicity': Multiplicity,
-            'set': set
-        }
-        
-        try:
-            # Evaluate the Python expression safely
-            model = eval(content.strip(), safe_globals)
-            print(f"Evaluated model: {model}")
-            
-            if isinstance(model, Package):
-                # Create domain model from package
-                domain_model = DomainModel(model.name)
-                
-                # Add all classes from the package
-                for type_obj in model.types:
-                    if isinstance(type_obj, Class):
-                        domain_model.types.add(type_obj)
-                
-                # Add relationships if any
-                domain_model.associations.update(model.associations)
-                domain_model.generalizations.update(model.generalizations)
-                
-                print(f"Created domain model: {domain_model}")
-                return domain_model
-            else:
-                raise ValueError("Invalid BUML model format: expected Package")
-            
-        except Exception as eval_error:
-            print(f"Error evaluating BUML content: {eval_error}")
-            raise
-            
-    except Exception as e:
-        print(f"Error parsing BUML content: {e}")
-        raise ValueError(f"Failed to parse BUML content: {str(e)}")
 
 @app.post("/generate-output")
 async def generate_output(input_data: ClassDiagramInput):
@@ -448,6 +270,279 @@ async def generate_output(input_data: ClassDiagramInput):
         print(f"Error during file generation or response: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
+def parse_buml_content(content: str) -> DomainModel:
+    """Parse BUML content from a Python file and return a DomainModel."""
+    try:
+        # Create a safe environment for eval
+        safe_globals = {
+            'Class': Class,
+            'Property': Property,
+            'Method': Method,
+            'PrimitiveDataType': PrimitiveDataType,
+            'BinaryAssociation': BinaryAssociation,
+            'Multiplicity': Multiplicity,
+            'UNLIMITED_MAX_MULTIPLICITY': UNLIMITED_MAX_MULTIPLICITY,
+            'Generalization': Generalization,
+            'set': set,
+            'StringType': PrimitiveDataType("str"),
+            'IntegerType': PrimitiveDataType("int"),
+            'DateType': PrimitiveDataType("date"),
+            # Add mock generators that do nothing
+            'PythonGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'DjangoGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'SQLAlchemyGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'SQLGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'RESTAPIGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'BackendGenerator': lambda model, **kwargs: type('MockGenerator', (), {'generate': lambda: None}),
+            'RDFGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None})
+        }
+        
+        # Create a new domain model
+        domain_model = DomainModel("Generated Model")
+        
+        # Execute the BUML content in a safe environment
+        local_vars = {}
+        exec(content, safe_globals, local_vars)
+        
+        print("Local variables after execution:", local_vars.keys())
+        
+        # First pass: Add all classes
+        classes = {}
+        for var_name, var_value in local_vars.items():
+            if isinstance(var_value, Class):
+                print(f"Found class: {var_name} = {var_value}")
+                domain_model.types.add(var_value)
+                classes[var_name] = var_value
+        
+        # Second pass: Add associations and generalizations
+        for var_name, var_value in local_vars.items():
+            if isinstance(var_value, BinaryAssociation):
+                print(f"Found association: {var_name} = {var_value}")
+                print(f"Association ends: {var_value.ends}")
+                domain_model.associations.add(var_value)
+            elif isinstance(var_value, Generalization):
+                print(f"Found generalization: {var_name} = {var_value}")
+                domain_model.generalizations.add(var_value)
+        
+        print(f"Domain model classes: {domain_model.types}")
+        print(f"Domain model associations: {domain_model.associations}")
+        
+        return domain_model
+            
+    except Exception as e:
+        print(f"Error parsing BUML content: {e}")
+        raise ValueError(f"Failed to parse BUML content: {str(e)}")
+
+
+def buml_to_json(domain_model):
+    """Convert a BUML DomainModel object to JSON format matching the frontend structure."""
+    elements = {}
+    relationships = {}
+    
+    # Default diagram size
+    default_size = {
+        "width": 1200,
+        "height": 800  # Increased height for better visibility
+    }
+    
+    # Grid layout configuration
+    grid_size = {
+        "x_spacing": 300,  # Space between elements horizontally
+        "y_spacing": 200,  # Space between elements vertically
+        "max_columns": 3   # Maximum elements per row
+    }
+    
+    # Track position
+    current_column = 0
+    current_row = 0
+    
+    def get_position():
+        nonlocal current_column, current_row
+        x = 50 + (current_column * grid_size["x_spacing"])
+        y = 50 + (current_row * grid_size["y_spacing"])
+        
+        # Move to next position
+        current_column += 1
+        if current_column >= grid_size["max_columns"]:
+            current_column = 0
+            current_row += 1
+            
+        return x, y
+
+    # First pass: Create all class and enumeration elements
+    class_id_map = {}  # Store mapping between Class objects and their IDs
+    
+    for type_obj in domain_model.types:
+        if isinstance(type_obj, (Class, Enumeration)):
+            # Generate UUID for the element
+            element_id = str(uuid.uuid4())
+            class_id_map[type_obj] = element_id
+            
+            # Get position for this element
+            x, y = get_position()
+            
+            # Initialize lists for attributes and methods IDs
+            attribute_ids = []
+            method_ids = []
+            
+            # Process attributes
+            y_offset = y + 40  # Starting position for attributes
+            if isinstance(type_obj, Class):
+                for attr in type_obj.attributes:
+                    attr_id = str(uuid.uuid4())
+                    visibility_symbol = next(k for k, v in VISIBILITY_MAP.items() if v == attr.visibility)
+                    attr_type = attr.type.name if hasattr(attr.type, 'name') else str(attr.type)
+                    
+                    elements[attr_id] = {
+                        "id": attr_id,
+                        "name": f"{visibility_symbol} {attr.name}: {attr_type}",
+                        "type": "ClassAttribute",
+                        "owner": element_id,
+                        "bounds": {
+                            "x": x + 0.5,
+                            "y": y_offset,
+                            "width": 159,
+                            "height": 30
+                        }
+                    }
+                    attribute_ids.append(attr_id)
+                    y_offset += 30
+
+                # Process methods
+                for method in type_obj.methods:
+                    method_id = str(uuid.uuid4())
+                    visibility_symbol = next(k for k, v in VISIBILITY_MAP.items() if v == method.visibility)
+                    
+                    elements[method_id] = {
+                        "id": method_id,
+                        "name": f"{visibility_symbol} {method.name}()",
+                        "type": "ClassMethod",
+                        "owner": element_id,
+                        "bounds": {
+                            "x": x + 0.5,
+                            "y": y_offset,
+                            "width": 159,
+                            "height": 30
+                        }
+                    }
+                    method_ids.append(method_id)
+                    y_offset += 30
+
+            # Create the element
+            elements[element_id] = {
+                "id": element_id,
+                "name": type_obj.name,
+                "type": "Class" if isinstance(type_obj, Class) else "Enumeration",
+                "owner": None,
+                "bounds": {
+                    "x": x,
+                    "y": y,
+                    "width": 160,
+                    "height": max(100, 30 * (len(attribute_ids) + len(method_ids) + 1))
+                },
+                "attributes": attribute_ids,
+                "methods": method_ids
+            }
+
+    # Second pass: Create relationships
+    for association in domain_model.associations:
+        rel_id = str(uuid.uuid4())
+        ends = list(association.ends)
+        if len(ends) == 2:
+            source_prop, target_prop = ends
+            source_class = source_prop.type
+            target_class = target_prop.type
+            
+            if source_class in class_id_map and target_class in class_id_map:
+                # Determine relationship type
+                rel_type = RELATIONSHIP_TYPES["composition"] if source_prop.is_composite else (
+                    RELATIONSHIP_TYPES["bidirectional"] if source_prop.is_navigable and target_prop.is_navigable
+                    else RELATIONSHIP_TYPES["unidirectional"]
+                )
+                
+                relationships[rel_id] = {
+                    "id": rel_id,
+                    "type": rel_type,
+                    "source": {
+                        "element": class_id_map[source_class],
+                        "multiplicity": f"{source_prop.multiplicity.min}..{'*' if source_prop.multiplicity.max == 9999 else source_prop.multiplicity.max}",
+                        "role": source_prop.name,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0,
+                            "width": 0,
+                            "height": 0
+                        }
+                    },
+                    "target": {
+                        "element": class_id_map[target_class],
+                        "multiplicity": f"{target_prop.multiplicity.min}..{'*' if target_prop.multiplicity.max == 9999 else target_prop.multiplicity.max}",
+                        "role": target_prop.name,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0,
+                            "width": 0,
+                            "height": 0
+                        }
+                    },
+                    "path": [
+                        {"x": 0, "y": 0},
+                        {"x": 50, "y": 0},
+                        {"x": 50, "y": 50},
+                        {"x": 100, "y": 50}
+                    ]
+                }
+
+    # Handle generalizations
+    for generalization in domain_model.generalizations:
+        rel_id = str(uuid.uuid4())
+        if generalization.general in class_id_map and generalization.specific in class_id_map:
+            relationships[rel_id] = {
+                "id": rel_id,
+                "type": "ClassInheritance",
+                "source": {
+                    "element": class_id_map[generalization.general],
+                    "bounds": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 0,
+                        "height": 0
+                    }
+                },
+                "target": {
+                    "element": class_id_map[generalization.specific],
+                    "bounds": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 0,
+                        "height": 0
+                    }
+                },
+                "path": [
+                    {"x": 0, "y": 0},
+                    {"x": 50, "y": 0},
+                    {"x": 50, "y": 50},
+                    {"x": 100, "y": 50}
+                ]
+            }
+
+    # Create the final structure
+    result = {
+        "version": "3.0.0",
+        "type": "ClassDiagram",
+        "size": default_size,
+        "interactive": {
+            "elements": {},
+            "relationships": {}
+        },
+        "elements": elements,
+        "relationships": relationships,
+        "assessments": {}
+    }
+
+    return result
+
+
 @app.post("/get-json-model")
 async def get_json_model(buml_file: UploadFile = File(...)):
     try:
@@ -455,176 +550,20 @@ async def get_json_model(buml_file: UploadFile = File(...)):
         content = await buml_file.read()
         buml_content = content.decode('utf-8')
         
-        # Create the model structure
-        model_data = {
-            "version": "3.0.0",
-            "type": "ClassDiagram",
-            "size": {
-                "width": 1200,
-                "height": 300
-            },
-            "interactive": {
-                "elements": {},
-                "relationships": {}
-            },
-            "elements": {},
-            "relationships": {},
-            "assessments": {}
-        }
+        # Parse the BUML content into a domain model
+        domain_model = parse_buml_content(buml_content)
         
-        # Track classes and their attributes
-        classes = {}
-        class_attributes = {}
-        current_x = -580
-        
-        # First pass: Create classes
-        lines = buml_content.split('\n')
-        for line in lines:
-            line = line.strip()
-            
-            if ': Class =' in line:
-                class_parts = line.split('=')
-                class_name = class_parts[0].split(':')[0].strip()
-                class_id = str(uuid.uuid4())
-                
-                classes[class_name] = class_id
-                class_attributes[class_id] = []
-                
-                model_data["elements"][class_id] = {
-                    "id": class_id,
-                    "name": class_name,
-                    "type": "Class",
-                    "owner": None,
-                    "bounds": {
-                        "x": current_x,
-                        "y": -130,
-                        "width": 160,
-                        "height": 100
-                    },
-                    "attributes": [],
-                    "methods": []
-                }
-                current_x += 200
-        
-        # Second pass: Add attributes to their proper classes
-        for line in lines:
-            line = line.strip()
-            if ': Property =' in line:
-                prop_parts = line.split('=')
-                prop_name = prop_parts[0].split(':')[0].strip()
-                
-                # Find which class this property belongs to
-                for class_def_line in lines:
-                    if ': Class =' in class_def_line and prop_name in class_def_line:
-                        class_name = class_def_line.split('=')[0].split(':')[0].strip()
-                        class_id = classes.get(class_name)
-                        
-                        if class_id:
-                            prop_id = str(uuid.uuid4())
-                            attr_count = len(class_attributes[class_id])
-                            
-                            # Add attribute to class
-                            model_data["elements"][class_id]["attributes"].append(prop_id)
-                            class_attributes[class_id].append(prop_id)
-                            
-                            # Add attribute element
-                            model_data["elements"][prop_id] = {
-                                "id": prop_id,
-                                "name": f"+ {prop_name}: str",
-                                "type": "ClassAttribute",
-                                "owner": class_id,
-                                "bounds": {
-                                    "x": model_data["elements"][class_id]["bounds"]["x"] + 0.5,
-                                    "y": model_data["elements"][class_id]["bounds"]["y"] + 40 + (attr_count * 30),
-                                    "width": 159,
-                                    "height": 30
-                                }
-                            }
-        
-        # Third pass: Add relationships
-        for line in lines:
-            line = line.strip()
-            if ': BinaryAssociation =' in line:
-                assoc_parts = line.split('=')
-                assoc_name = assoc_parts[0].split(':')[0].strip()
-                assoc_id = str(uuid.uuid4())
-                
-                # Find source and target classes from the association definition
-                source_class = None
-                target_class = None
-                
-                for class_name, class_id in classes.items():
-                    if class_name in line:
-                        if not source_class:
-                            source_class = class_id
-                        else:
-                            target_class = class_id
-                            break
-                
-                if source_class and target_class:
-                    # Get source and target element positions
-                    source_bounds = model_data["elements"][source_class]["bounds"]
-                    target_bounds = model_data["elements"][target_class]["bounds"]
-                    
-                    # Calculate path points
-                    start_x = source_bounds["x"] + source_bounds["width"]
-                    start_y = source_bounds["y"] + (source_bounds["height"] / 2)
-                    end_x = target_bounds["x"]
-                    end_y = target_bounds["y"] + (target_bounds["height"] / 2)
-                    mid_x = (start_x + end_x) / 2
-                    
-                    relationship = {
-                        "id": assoc_id,
-                        "type": "ClassBidirectional",
-                        "name": assoc_name,
-                        "source": {
-                            "id": str(source_class),
-                            "element": str(source_class),
-                            "multiplicity": "1",
-                            "role": "",
-                            "bounds": {
-                                "x": start_x,
-                                "y": start_y,
-                                "width": 0,
-                                "height": 0
-                            }
-                        },
-                        "target": {
-                            "id": str(target_class),
-                            "element": str(target_class),
-                            "multiplicity": "*",
-                            "role": "",
-                            "bounds": {
-                                "x": end_x,
-                                "y": end_y,
-                                "width": 0,
-                                "height": 0
-                            }
-                        },
-                        "path": [
-                            {"x": start_x, "y": start_y},
-                            {"x": mid_x, "y": start_y},
-                            {"x": mid_x, "y": end_y},
-                            {"x": end_x, "y": end_y}
-                        ],
-                        "bounds": {
-                            "x": min(start_x, end_x),
-                            "y": min(start_y, end_y),
-                            "width": abs(end_x - start_x),
-                            "height": abs(end_y - start_y)
-                        }
-                    }
-                    
-                    model_data["relationships"][assoc_id] = relationship
+        # Convert the domain model to JSON format
+        json_model = buml_to_json(domain_model)
         
         # Wrap the model data in the expected format
         wrapped_response = {
             "title": buml_file.filename,
-            "model": model_data
+            "model": json_model
         }
         
         print("JSON data created:", wrapped_response)
-        return JSONResponse(content=wrapped_response)
+        return wrapped_response  # Removed JSONResponse wrapper
             
     except Exception as e:
         print(f"Error in get_json_model: {str(e)}")
