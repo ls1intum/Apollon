@@ -218,6 +218,18 @@ async def generate_output(input_data: ClassDiagramInput):
         buml_model = json_to_buml(json_data)
         print("BUML model created:", buml_model)
 
+        # Create output directory if it doesn't exist
+        os.makedirs("output", exist_ok=True)
+
+        # Clear existing files in output directory
+        for file in os.listdir("output"):
+            file_path = os.path.join("output", file)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            except Exception as e:
+                print(f"Error deleting {file_path}: {e}")
+
         # Check the generator type requested
         generator = input_data.generator
 
@@ -333,6 +345,117 @@ def parse_buml_content(content: str) -> DomainModel:
         print(f"Error parsing BUML content: {e}")
         raise ValueError(f"Failed to parse BUML content: {str(e)}")
 
+
+def calculate_center_point(bounds):
+    """Calculate the center point of an element based on its bounds."""
+    return {
+        'x': bounds['x'] + bounds['width'] / 2,
+        'y': bounds['y'] + bounds['height'] / 2
+    }
+
+def determine_connection_direction(source_bounds, target_bounds):
+    """Determine the best connection directions between two elements."""
+    source_center = calculate_center_point(source_bounds)
+    target_center = calculate_center_point(target_bounds)
+    
+    dx = target_center['x'] - source_center['x']
+    dy = target_center['y'] - source_center['y']
+    
+    # Si les éléments sont principalement alignés horizontalement
+    if abs(dx) > abs(dy):
+        if dx > 0:
+            return "Right", "Left"  # source à gauche du target
+        else:
+            return "Left", "Right"  # source à droite du target
+    # Si les éléments sont principalement alignés verticalement
+    else:
+        if dy > 0:
+            return "Down", "Up"    # source au-dessus du target
+        else:
+            return "Up", "Down"    # source en-dessous du target
+
+def calculate_connection_points(element_bounds, direction):
+    """Calculate connection point based on direction."""
+    if direction == "Right":
+        return {
+            'x': element_bounds['x'] + element_bounds['width'],
+            'y': element_bounds['y'] + (element_bounds['height'] / 2)
+        }
+    elif direction == "Left":
+        return {
+            'x': element_bounds['x'],
+            'y': element_bounds['y'] + (element_bounds['height'] / 2)
+        }
+    elif direction == "Up":
+        return {
+            'x': element_bounds['x'] + (element_bounds['width'] / 2),
+            'y': element_bounds['y']
+        }
+    else:  # Down
+        return {
+            'x': element_bounds['x'] + (element_bounds['width'] / 2),
+            'y': element_bounds['y'] + element_bounds['height']
+        }
+
+def calculate_path_points(source_point, target_point, source_dir, target_dir):
+    """Calculate intermediate points for the relationship path."""
+    points = [source_point]
+    offset = 30  # Distance minimale pour les détours
+    
+    # Calculer les points intermédiaires en fonction des directions
+    if source_dir == "Right" and target_dir == "Left":
+        mid_x = (source_point['x'] + target_point['x']) / 2
+        points.extend([
+            {'x': mid_x, 'y': source_point['y']},
+            {'x': mid_x, 'y': target_point['y']}
+        ])
+    elif source_dir == "Left" and target_dir == "Right":
+        mid_x = (source_point['x'] + target_point['x']) / 2
+        points.extend([
+            {'x': mid_x, 'y': source_point['y']},
+            {'x': mid_x, 'y': target_point['y']}
+        ])
+    elif source_dir == "Down" and target_dir == "Up":
+        mid_y = (source_point['y'] + target_point['y']) / 2
+        points.extend([
+            {'x': source_point['x'], 'y': mid_y},
+            {'x': target_point['x'], 'y': mid_y}
+        ])
+    elif source_dir == "Up" and target_dir == "Down":
+        mid_y = (source_point['y'] + target_point['y']) / 2
+        points.extend([
+            {'x': source_point['x'], 'y': mid_y},
+            {'x': target_point['x'], 'y': mid_y}
+        ])
+    elif source_dir in ["Right", "Left"] and target_dir in ["Up", "Down"]:
+        points.extend([
+            {'x': target_point['x'], 'y': source_point['y']}
+        ])
+    elif source_dir in ["Up", "Down"] and target_dir in ["Right", "Left"]:
+        points.extend([
+            {'x': source_point['x'], 'y': target_point['y']}
+        ])
+    
+    points.append(target_point)
+    return points
+
+def calculate_relationship_bounds(path_points):
+    """Calculate the bounding box that contains all path points with padding."""
+    x_coords = [p['x'] for p in path_points]
+    y_coords = [p['y'] for p in path_points]
+    
+    padding = 10  # Ajouter un peu d'espace autour du chemin
+    min_x = min(x_coords) - padding
+    max_x = max(x_coords) + padding
+    min_y = min(y_coords) - padding
+    max_y = max(y_coords) + padding
+    
+    return {
+        'x': min_x,
+        'y': min_y,
+        'width': max_x - min_x,
+        'height': max_y - min_y
+    }
 
 def buml_to_json(domain_model):
     """Convert a BUML DomainModel object to JSON format matching the frontend structure."""
@@ -454,6 +577,25 @@ def buml_to_json(domain_model):
             target_class = target_prop.type
             
             if source_class in class_id_map and target_class in class_id_map:
+                # Get source and target elements
+                source_element = elements[class_id_map[source_class]]
+                target_element = elements[class_id_map[target_class]]
+                
+                # Calculate connection directions and points
+                source_dir, target_dir = determine_connection_direction(
+                    source_element['bounds'], 
+                    target_element['bounds']
+                )
+                
+                source_point = calculate_connection_points(source_element['bounds'], source_dir)
+                target_point = calculate_connection_points(target_element['bounds'], target_dir)
+                
+                # Calculate path points
+                path_points = calculate_path_points(source_point, target_point, source_dir, target_dir)
+                
+                # Calculate bounds
+                rel_bounds = calculate_relationship_bounds(path_points)
+                
                 # Determine relationship type
                 rel_type = RELATIONSHIP_TYPES["composition"] if source_prop.is_composite else (
                     RELATIONSHIP_TYPES["bidirectional"] if source_prop.is_navigable and target_prop.is_navigable
@@ -467,9 +609,10 @@ def buml_to_json(domain_model):
                         "element": class_id_map[source_class],
                         "multiplicity": f"{source_prop.multiplicity.min}..{'*' if source_prop.multiplicity.max == 9999 else source_prop.multiplicity.max}",
                         "role": source_prop.name,
+                        "direction": source_dir,
                         "bounds": {
-                            "x": 0,
-                            "y": 0,
+                            "x": source_point['x'],
+                            "y": source_point['y'],
                             "width": 0,
                             "height": 0
                         }
@@ -478,19 +621,17 @@ def buml_to_json(domain_model):
                         "element": class_id_map[target_class],
                         "multiplicity": f"{target_prop.multiplicity.min}..{'*' if target_prop.multiplicity.max == 9999 else target_prop.multiplicity.max}",
                         "role": target_prop.name,
+                        "direction": target_dir,
                         "bounds": {
-                            "x": 0,
-                            "y": 0,
+                            "x": target_point['x'],
+                            "y": target_point['y'],
                             "width": 0,
                             "height": 0
                         }
                     },
-                    "path": [
-                        {"x": 0, "y": 0},
-                        {"x": 50, "y": 0},
-                        {"x": 50, "y": 50},
-                        {"x": 100, "y": 50}
-                    ]
+                    "bounds": rel_bounds,
+                    "path": path_points,
+                    "isManuallyLayouted": False
                 }
 
     # Handle generalizations
@@ -501,7 +642,7 @@ def buml_to_json(domain_model):
                 "id": rel_id,
                 "type": "ClassInheritance",
                 "source": {
-                    "element": class_id_map[generalization.general],
+                    "element": class_id_map[generalization.specific],
                     "bounds": {
                         "x": 0,
                         "y": 0,
@@ -510,7 +651,7 @@ def buml_to_json(domain_model):
                     }
                 },
                 "target": {
-                    "element": class_id_map[generalization.specific],
+                    "element": class_id_map[generalization.general],
                     "bounds": {
                         "x": 0,
                         "y": 0,
