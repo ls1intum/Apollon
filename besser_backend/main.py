@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import FileResponse, JSONResponse
 from besser.BUML.metamodel.structural import Class, Property, Method, DomainModel, PrimitiveDataType, \
-    Enumeration, EnumerationLiteral, BinaryAssociation, Generalization, Multiplicity, UNLIMITED_MAX_MULTIPLICITY, Package
+    Enumeration, EnumerationLiteral, BinaryAssociation, Generalization, Multiplicity, UNLIMITED_MAX_MULTIPLICITY, Package, Parameter
 from besser.utilities.buml_code_builder import domain_model_to_code
 from besser.generators.django import DjangoGenerator
 from besser.generators.python_classes import PythonGenerator
@@ -285,54 +285,8 @@ async def generate_output(input_data: ClassDiagramInput):
 def parse_buml_content(content: str) -> DomainModel:
     """Parse BUML content from a Python file and return a DomainModel."""
     try:
-        # Create mock modules
-        class MockStructuralModule:
-            DomainModel = DomainModel
-            Class = Class
-            Property = Property
-            PrimitiveDataType = PrimitiveDataType
-            Multiplicity = Multiplicity
-            BinaryAssociation = BinaryAssociation
-
-        class MockGenerator:
-            def __init__(self, model, **kwargs):
-                pass
-            def generate(self):
-                pass
-
-        class MockGeneratorModule:
-            PythonGenerator = MockGenerator
-            DjangoGenerator = MockGenerator
-            SQLAlchemyGenerator = MockGenerator
-            SQLGenerator = MockGenerator
-            RESTAPIGenerator = MockGenerator
-            BackendGenerator = MockGenerator
-            RDFGenerator = MockGenerator
-
-        def mock_import(name, *args):
-            if name == 'besser.BUML.metamodel.structural':
-                return MockStructuralModule
-            elif name in [
-                'besser.generators.python_classes',
-                'besser.generators.django',
-                'besser.generators.sql_alchemy',
-                'besser.generators.sql',
-                'besser.generators.rest_api',
-                'besser.generators.backend',
-                'besser.generators.rdf'
-            ]:
-                return MockGeneratorModule
-            return None
-
-        # Create minimal builtins
-        minimal_builtins = {
-            '__import__': mock_import,
-            'print': print,
-        }
-
-        # Create safe environment
+        # Create a safe environment for eval
         safe_globals = {
-            '__builtins__': minimal_builtins,
             'Class': Class,
             'Property': Property,
             'Method': Method,
@@ -341,41 +295,45 @@ def parse_buml_content(content: str) -> DomainModel:
             'Multiplicity': Multiplicity,
             'UNLIMITED_MAX_MULTIPLICITY': UNLIMITED_MAX_MULTIPLICITY,
             'Generalization': Generalization,
+            'Enumeration': Enumeration,
+            'EnumerationLiteral': EnumerationLiteral,
             'set': set,
             'StringType': PrimitiveDataType("str"),
             'IntegerType': PrimitiveDataType("int"),
             'DateType': PrimitiveDataType("date"),
-            'DomainModel': DomainModel,
+            # Add mock generators that do nothing
+            'PythonGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'DjangoGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'SQLAlchemyGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'SQLGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'RESTAPIGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
+            'BackendGenerator': lambda model, **kwargs: type('MockGenerator', (), {'generate': lambda: None}),
+            'RDFGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None})
         }
         
         # Create a new domain model
         domain_model = DomainModel("Generated Model")
         
-        # Execute the BUML content
+        # Execute the BUML content in a safe environment
         local_vars = {}
         exec(content, safe_globals, local_vars)
         
         print("Local variables after execution:", local_vars.keys())
         
-        # First pass: Add all classes
-        classes = {}
+        # First pass: Add all classes and enumerations
         for var_name, var_value in local_vars.items():
-            if isinstance(var_value, Class):
-                print(f"Found class: {var_name} = {var_value}")
+            if isinstance(var_value, (Class, Enumeration)):
+                print(f"Found type: {var_name} = {var_value}")
                 domain_model.types.add(var_value)
-                classes[var_name] = var_value
         
-        # Second pass: Add associations and generalizations
-        for var_name, var_value in local_vars.items():
-            if isinstance(var_value, BinaryAssociation):
-                print(f"Found association: {var_name} = {var_value}")
-                print(f"Association ends: {var_value.ends}")
-                domain_model.associations.add(var_value)
-            elif isinstance(var_value, Generalization):
-                print(f"Found generalization: {var_name} = {var_value}")
-                domain_model.generalizations.add(var_value)
+        # Get the domain model from local vars if it exists
+        if 'domain_model' in local_vars and isinstance(local_vars['domain_model'], DomainModel):
+            # Merge the types from the file's domain model
+            domain_model.types.update(local_vars['domain_model'].types)
+            domain_model.associations.update(local_vars['domain_model'].associations)
+            domain_model.generalizations.update(local_vars['domain_model'].generalizations)
         
-        print(f"Domain model classes: {domain_model.types}")
+        print(f"Domain model types: {domain_model.types}")
         print(f"Domain model associations: {domain_model.associations}")
         
         return domain_model
@@ -547,7 +505,7 @@ def buml_to_json(domain_model):
             attribute_ids = []
             method_ids = []
             
-            # Process attributes
+            # Process attributes/literals
             y_offset = y + 40  # Starting position for attributes
             if isinstance(type_obj, Class):
                 for attr in type_obj.attributes:
@@ -590,6 +548,25 @@ def buml_to_json(domain_model):
                     method_ids.append(method_id)
                     y_offset += 30
 
+            elif isinstance(type_obj, Enumeration):
+                # Handle enumeration literals
+                for literal in type_obj.literals:
+                    literal_id = str(uuid.uuid4())
+                    elements[literal_id] = {
+                        "id": literal_id,
+                        "name": literal.name,
+                        "type": "ClassAttribute",  # We use ClassAttribute type for literals
+                        "owner": element_id,
+                        "bounds": {
+                            "x": x + 0.5,
+                            "y": y_offset,
+                            "width": 159,
+                            "height": 30
+                        }
+                    }
+                    attribute_ids.append(literal_id)
+                    y_offset += 30
+
             # Create the element
             elements[element_id] = {
                 "id": element_id,
@@ -603,7 +580,8 @@ def buml_to_json(domain_model):
                     "height": max(100, 30 * (len(attribute_ids) + len(method_ids) + 1))
                 },
                 "attributes": attribute_ids,
-                "methods": method_ids
+                "methods": method_ids,
+                "stereotype": "enumeration" if isinstance(type_obj, Enumeration) else None
             }
 
     # Second pass: Create relationships
