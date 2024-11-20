@@ -61,7 +61,7 @@ class ClassDiagramInput(BaseModel):
     elements: dict
     generator: str
 
-def parse_attribute(attribute_name):
+def parse_attribute(attribute_name, domain_model=None):
     """Parse an attribute string to extract visibility, name, and type, removing any colons."""
     parts = attribute_name.replace(":", "").split()  # Remove colons from the attribute name
     if len(parts) == 1:
@@ -72,8 +72,19 @@ def parse_attribute(attribute_name):
         visibility_symbol = parts[0] if parts[0] in VISIBILITY_MAP else "+"
         visibility = VISIBILITY_MAP.get(visibility_symbol, "public")  # Default to "public"
         name = parts[1] if len(parts) > 1 else "Unnamed"
-        attr_type = parts[2] if len(parts) > 2 else "str"  # Default to "str" if no type specified
-        attr_type = VALID_PRIMITIVE_TYPES.get(attr_type.lower(), "str")  # Ensure valid type
+        
+        # Check if type is specified
+        if len(parts) > 2:
+            type_name = parts[2]
+            # Check if type is an enumeration in the domain model
+            if domain_model and any(isinstance(t, Enumeration) and t.name == type_name for t in domain_model.types):
+                attr_type = type_name  # Keep the enumeration type name
+            else:
+                # Convert to primitive type if not an enumeration
+                attr_type = VALID_PRIMITIVE_TYPES.get(type_name.lower(), "str")
+        else:
+            attr_type = "str"  # Default to "str" if no type specified
+            
     return visibility, name, attr_type
 
 def parse_method(method_name):
@@ -104,24 +115,39 @@ def parse_multiplicity(multiplicity_str):
 
 def json_to_buml(json_data):
     """Convert JSON data to a BUML DomainModel object."""
-    domain_model = DomainModel("Enhanced Domain Model")
+    domain_model = DomainModel("Domain Model")
     elements = json_data.get("elements", {}).get("elements", {})
     relationships = json_data.get("elements", {}).get("relationships", {})
 
-    # Processing classes and enumerations
+    # First process enumerations to have them available for attribute types
     for element_id, element in elements.items():
-        element_type = element.get("type")
-        element_name = element.get("name")
+        if element.get("type") == "Enumeration":
+            element_name = element.get("name")
+            literals = set()
+            for literal_id in element.get("attributes", []):
+                literal = elements.get(literal_id)
+                if literal:
+                    literal_obj = EnumerationLiteral(name=literal.get("name", ""))
+                    literals.add(literal_obj)
+            enum = Enumeration(name=element_name, literals=literals)
+            domain_model.types.add(enum)
 
-        if element_type == "Class":
-            cls = Class(name=element_name)
+    # Then process classes with attributes that might reference enumerations
+    for element_id, element in elements.items():
+        if element.get("type") == "Class":
+            cls = Class(name=element.get("name"))
 
             # Add attributes
             for attr_id in element.get("attributes", []):
                 attr = elements.get(attr_id)
                 if attr:
-                    visibility, name, attr_type = parse_attribute(attr.get("name", ""))
-                    property = Property(name=name, type=PrimitiveDataType(attr_type), visibility=visibility)
+                    visibility, name, attr_type = parse_attribute(attr.get("name", ""), domain_model)
+                    # If attr_type is a string matching an enumeration name, get the actual enumeration
+                    if any(isinstance(t, Enumeration) and t.name == attr_type for t in domain_model.types):
+                        enum_type = next(t for t in domain_model.types if isinstance(t, Enumeration) and t.name == attr_type)
+                        property = Property(name=name, type=enum_type, visibility=visibility)
+                    else:
+                        property = Property(name=name, type=PrimitiveDataType(attr_type), visibility=visibility)
                     cls.attributes.add(property)
 
             # Add methods
@@ -133,17 +159,6 @@ def json_to_buml(json_data):
                     cls.methods.add(method_obj)
 
             domain_model.types.add(cls)
-
-        elif element_type == "Enumeration":
-            literals = set()
-            for literal_id in element.get("attributes", []):
-                literal = elements.get(literal_id)
-                if literal:
-                    literal_obj = EnumerationLiteral(name=literal.get("name", ""))
-                    literals.add(literal_obj)
-
-            enum = Enumeration(name=element_name, literals=literals)
-            domain_model.types.add(enum)
 
     # Processing relationships (Associations, Generalizations, and Compositions)
     for rel_id, relationship in relationships.items():
