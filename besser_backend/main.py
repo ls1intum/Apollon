@@ -285,8 +285,54 @@ async def generate_output(input_data: ClassDiagramInput):
 def parse_buml_content(content: str) -> DomainModel:
     """Parse BUML content from a Python file and return a DomainModel."""
     try:
-        # Create a safe environment for eval
+        # Create mock modules
+        class MockStructuralModule:
+            DomainModel = DomainModel
+            Class = Class
+            Property = Property
+            PrimitiveDataType = PrimitiveDataType
+            Multiplicity = Multiplicity
+            BinaryAssociation = BinaryAssociation
+
+        class MockGenerator:
+            def __init__(self, model, **kwargs):
+                pass
+            def generate(self):
+                pass
+
+        class MockGeneratorModule:
+            PythonGenerator = MockGenerator
+            DjangoGenerator = MockGenerator
+            SQLAlchemyGenerator = MockGenerator
+            SQLGenerator = MockGenerator
+            RESTAPIGenerator = MockGenerator
+            BackendGenerator = MockGenerator
+            RDFGenerator = MockGenerator
+
+        def mock_import(name, *args):
+            if name == 'besser.BUML.metamodel.structural':
+                return MockStructuralModule
+            elif name in [
+                'besser.generators.python_classes',
+                'besser.generators.django',
+                'besser.generators.sql_alchemy',
+                'besser.generators.sql',
+                'besser.generators.rest_api',
+                'besser.generators.backend',
+                'besser.generators.rdf'
+            ]:
+                return MockGeneratorModule
+            return None
+
+        # Create minimal builtins
+        minimal_builtins = {
+            '__import__': mock_import,
+            'print': print,
+        }
+
+        # Create safe environment
         safe_globals = {
+            '__builtins__': minimal_builtins,
             'Class': Class,
             'Property': Property,
             'Method': Method,
@@ -299,20 +345,13 @@ def parse_buml_content(content: str) -> DomainModel:
             'StringType': PrimitiveDataType("str"),
             'IntegerType': PrimitiveDataType("int"),
             'DateType': PrimitiveDataType("date"),
-            # Add mock generators that do nothing
-            'PythonGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
-            'DjangoGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
-            'SQLAlchemyGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
-            'SQLGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
-            'RESTAPIGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None}),
-            'BackendGenerator': lambda model, **kwargs: type('MockGenerator', (), {'generate': lambda: None}),
-            'RDFGenerator': lambda model: type('MockGenerator', (), {'generate': lambda: None})
+            'DomainModel': DomainModel,
         }
         
         # Create a new domain model
         domain_model = DomainModel("Generated Model")
         
-        # Execute the BUML content in a safe environment
+        # Execute the BUML content
         local_vars = {}
         exec(content, safe_globals, local_vars)
         
