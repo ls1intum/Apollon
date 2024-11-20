@@ -11,7 +11,6 @@ from besser.generators.java_classes import JavaGenerator
 from besser.generators.pydantic_classes import PydanticGenerator
 from besser.generators.sql_alchemy import SQLAlchemyGenerator
 from besser.generators.sql import SQLGenerator
-
 import json
 import os
 import uuid
@@ -134,9 +133,12 @@ def json_to_buml(json_data):
 
     # Then process classes with attributes that might reference enumerations
     for element_id, element in elements.items():
-        if element.get("type") == "Class":
-            cls = Class(name=element.get("name"))
-
+        # Check for both regular Class and AbstractClass
+        if element.get("type") in ["Class", "AbstractClass"]:
+            # Set is_abstract based on the type
+            is_abstract = element.get("type") == "AbstractClass"
+            cls = Class(name=element.get("name"), is_abstract=is_abstract)
+            print(f"Is {cls.name} abstract? {cls.is_abstract}")
             # Add attributes
             for attr_id in element.get("attributes", []):
                 attr = elements.get(attr_id)
@@ -586,7 +588,8 @@ def buml_to_json(domain_model):
             elements[element_id] = {
                 "id": element_id,
                 "name": type_obj.name,
-                "type": "Class" if isinstance(type_obj, Class) else "Enumeration",
+                "type": "Enumeration" if isinstance(type_obj, Enumeration) else 
+                       "AbstractClass" if type_obj.is_abstract else "Class",
                 "owner": None,
                 "bounds": {
                     "x": x,
