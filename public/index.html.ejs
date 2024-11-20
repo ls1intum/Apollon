@@ -123,6 +123,16 @@
           </div>
         </div>
       </section>
+      <section>
+        <h3 class="header">BUML Import/Export</h3>
+        <div class="switch">
+          <button onclick="window.apollon.generateCode('buml')">Export BUML</button>
+          <div class="file-input-wrapper">
+            <input type="file" id="import-buml-file" accept=".buml,.py" onchange="window.apollon.convertBumlToJson(this.files[0])" style="display: none;">
+            <label for="import-buml-file" class="file-input-label">Import BUML</label>
+          </div>
+        </div>
+      </section>
       <!-- <section>
         <h3 class="header">State</h3>
         <div class="switch">
@@ -137,12 +147,12 @@
           <button id="theming-dark-mode-button" onclick="apollon.setTheming('dark')">Dark</button>
         </div>
       </section>
-      <section>
+      <!--<section>
         <h3 class="header">BUML to JSON</h3>
         <div class="switch">
           <button id="convertButton" onclick="window.apollon.convertBumlToJson()">Convert BUML</button>
         </div>
-      </section>
+      </section> -->
     </aside>
     <div class="apollon-container">
       <main id="apollon"></main>

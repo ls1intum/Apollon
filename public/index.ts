@@ -84,7 +84,7 @@ export const draw = async (mode?: 'include' | 'exclude') => {
       .map(([key]) => key),
   ];
 
-  const exportParam = mode ? { [mode]: filter, scale: editor.getScaleFactor() } : { scale: editor.getScaleFactor() };
+  const exportParam: Apollon.ExportOptions = mode ? { [mode]: filter, scale: editor.getScaleFactor() } as Apollon.ExportOptions : { scale: editor.getScaleFactor() } as Apollon.ExportOptions;
   const { svg }: Apollon.SVG = await editor.exportAsSVG(exportParam);
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
   const svgBlobURL = URL.createObjectURL(svgBlob);
@@ -159,7 +159,7 @@ const render = async () => {
   await awaitEditorInitialization();
 
   if (editor) {
-    console.log("Editor initialized successfully with application:", editor.application);
+    console.log("Editor initialized successfully");
     (window as any).editor = editor;
     setupGlobalApollon(editor);
 
