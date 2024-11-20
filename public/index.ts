@@ -154,7 +154,11 @@ const render = async () => {
     editor.destroy();
   }
   editor = new Apollon.ApollonEditor(container, options);
-  console.log("Editor instance created:", editor);
+  
+  // Add position change listener
+  editor.subscribeToModelDiscreteChange(() => {
+    save();
+  });
 
   await awaitEditorInitialization();
 
