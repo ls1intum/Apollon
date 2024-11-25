@@ -19,7 +19,7 @@ if (codeGeneratorSection) {
   codeGeneratorSection.style.display = 'block';
 }
 
-// Fonction appelée pour modifier les options de l'éditeur
+// Fonction called when the diagram type is changed
 export const onChange = (event: MouseEvent) => {
   const { name, value } = event.target as HTMLSelectElement;
   options = { ...options, [name]: value };
@@ -32,14 +32,14 @@ export const onChange = (event: MouseEvent) => {
   }
 };
 
-// Fonction pour activer/désactiver des options de l'éditeur
+// Fonction called when a switch is toggled 
 export const onSwitch = (event: MouseEvent) => {
   const { name, checked: value } = event.target as HTMLInputElement;
   options = { ...options, [name]: value };
   render();
 };
 
-// Sauvegarder le modèle de diagramme dans localStorage
+// Save the diagram data in local storage
 export const save = () => {
   if (!editor) return;
   const model: Apollon.UMLModel = editor.model;
@@ -48,13 +48,13 @@ export const save = () => {
   return options;
 };
 
-// Supprimer les données de diagramme sauvegardées
+// Delete the diagram data from local storage
 export const clear = () => {
   localStorage.removeItem('apollon');
   options = { ...options, model: undefined };
 };
 
-// Appliquer un thème (clair ou sombre)
+// Set the theming of the editor
 export const setTheming = (theming: string) => {
   const root = document.documentElement;
   const selectedButton = document.getElementById(
@@ -72,7 +72,7 @@ export const setTheming = (theming: string) => {
   }
 };
 
-// Dessiner le diagramme en SVG et l'ouvrir dans une nouvelle fenêtre
+// Draw the diagram as SVG and open it in a new window
 export const draw = async (mode?: 'include' | 'exclude') => {
   if (!editor) return;
   const filter: string[] = [
@@ -91,7 +91,7 @@ export const draw = async (mode?: 'include' | 'exclude') => {
   window.open(svgBlobURL);
 };
 
-// Attendre l'initialisation complète de l'éditeur
+// Wait for the editor to fully initialize
 const awaitEditorInitialization = async () => {
   if (editor && editor.nextRender) {
     try {
@@ -105,7 +105,12 @@ const awaitEditorInitialization = async () => {
 
 // 
 const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
-  (window as any).apollon = {
+  if (!window.apollon) {
+    window.apollon = {};
+  }
+  
+  window.apollon = {
+    ...window.apollon,
     onChange,
     onSwitch,
     draw,
@@ -125,28 +130,11 @@ const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
       } else {
         console.warn("Editor is not initialized");
       }
-    },
-    convertBumlToJson: () => {
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = '.py';
-      fileInput.style.display = 'none';
-      
-      fileInput.addEventListener('change', (event) => {
-        const target = event.target as HTMLInputElement;
-        if (target.files && target.files.length > 0) {
-          convertBumlToJson(target.files[0]);
-        }
-        document.body.removeChild(fileInput);
-      });
-      
-      document.body.appendChild(fileInput);
-      fileInput.click();
     }
   };
 };
 
-// Modifions la fonction render pour utiliser setupGlobalApollon
+// Render the editor
 const render = async () => {
   console.log("Rendering editor");
   save();

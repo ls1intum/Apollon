@@ -14,7 +14,7 @@ export async function generateOutput(generatorType: string) {
 
     const diagramData = getDiagramData(editorInstance);
     if (!diagramData) {
-      console.error("Aucune donnée de diagramme disponible !");
+      console.error("there is no data avail;able!");
       return;
     }
 
@@ -42,9 +42,6 @@ export async function generateOutput(generatorType: string) {
           break;
         case 'java':
           filename = 'Class.java';
-          break;
-        case 'json':
-          filename = 'domain_model.json';
           break;
         case 'django':
           filename = 'models.py';
@@ -80,7 +77,7 @@ export async function generateOutput(generatorType: string) {
 
 
 
-// Fonction pour gérer l'événement du bouton de génération
+// Function to handle the generation button event
 function setupGenerateButton() {
   console.log("Setting up generate button");
   const generateButton = document.getElementById('generateButton');
@@ -95,7 +92,7 @@ function setupGenerateButton() {
     });
   }
 
-  // Utiliser l'input file existant au lieu d'en créer un nouveau
+// Use the existing input file instead of creating a new one
   if (convertButton && importBumlFile) {
     convertButton.addEventListener('click', () => {
       (importBumlFile as HTMLInputElement).click();
@@ -113,16 +110,26 @@ declare global {
 window.addEventListener('load', () => {
   setupGenerateButton();
   
-  // Ajouter une seule fonction de conversion
+  // Extend window.apollon with all necessary functions
+  if (!window.apollon) {
+    window.apollon = {};
+  }
+  
   window.apollon = {
     ...window.apollon,
-    generateCode: (generatorType: string) => {
-      generateOutput(generatorType);
+    generateCode: async (generatorType: string) => {
+      console.log("Generating code with type:", generatorType);
+      if (generatorType === 'buml') {
+        // Handle BUML export specifically
+        await generateOutput('buml');
+      } else {
+        await generateOutput(generatorType);
+      }
     },
     convertBumlToJson: async (file: File) => {
       if (!file) return;
       console.log("Converting file:", file.name);
-      await convertBumlToJson(file);  // Une seule conversion
+      await convertBumlToJson(file);
     }
   };
 });

@@ -1,5 +1,0 @@
-fastapi
-uvicorn
-pydantic
-besser == 1.4.0
-python-multipart
