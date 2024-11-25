@@ -337,18 +337,23 @@ def parse_buml_content(content: str) -> DomainModel:
         
         print("Local variables after execution:", local_vars.keys())
         
-        # First pass: Add all classes and enumerations
+        # First pass: Add all classes
+        classes = {}
         for var_name, var_value in local_vars.items():
-            if isinstance(var_value, (Class, Enumeration)):
-                print(f"Found type: {var_name} = {var_value}")
+            if isinstance(var_value, Class):
+                print(f"Found class: {var_name} = {var_value}")
                 domain_model.types.add(var_value)
+                classes[var_name] = var_value
         
-        # Get the domain model from local vars if it exists
-        if 'domain_model' in local_vars and isinstance(local_vars['domain_model'], DomainModel):
-            # Merge the types from the file's domain model
-            domain_model.types.update(local_vars['domain_model'].types)
-            domain_model.associations.update(local_vars['domain_model'].associations)
-            domain_model.generalizations.update(local_vars['domain_model'].generalizations)
+        # Second pass: Add associations and generalizations
+        for var_name, var_value in local_vars.items():
+            if isinstance(var_value, BinaryAssociation):
+                print(f"Found association: {var_name} = {var_value}")
+                print(f"Association ends: {var_value.ends}")
+                domain_model.associations.add(var_value)
+            elif isinstance(var_value, Generalization):
+                print(f"Found generalization: {var_name} = {var_value}")
+                domain_model.generalizations.add(var_value)
         
         print(f"Domain model types: {domain_model.types}")
         print(f"Domain model associations: {domain_model.associations}")
@@ -495,8 +500,8 @@ def buml_to_json(domain_model):
     
     def get_position():
         nonlocal current_column, current_row
-        x = 50 + (current_column * grid_size["x_spacing"])
-        y = 50 + (current_row * grid_size["y_spacing"])
+        x = -600 + (current_column * grid_size["x_spacing"])
+        y = -300 + (current_row * grid_size["y_spacing"])
         
         # Move to next position
         current_column += 1
