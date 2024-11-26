@@ -171,6 +171,17 @@
       "BPMNSwimlane": "Lane",
       "BPMNSwimlanes": "Lanes",
       "BPMNGroup": "Group"
+    },
+    "StateDiagram": {
+      "State": "State",
+      "StateActionNode": "Action",
+      "StateFinalNode": "Final Node",
+      "StateForkNode": "Fork Node",
+      "StateForkNodeHorizontal": "Fork Node Horizontal",
+      "StateInitialNode": "Initial Node",
+      "StateMergeNode": "Condition",
+      "StateObjectNode": "Object",
+      "StateControlFlow": "Control Flow"
     }
   }
 }

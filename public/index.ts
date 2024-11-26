@@ -39,11 +39,13 @@ export const onSwitch = (event: MouseEvent) => {
   render();
 };
 
-// Save the diagram data in local storage
+// Save both the diagram data and options in local storage
 export const save = () => {
   if (!editor) return;
   const model: Apollon.UMLModel = editor.model;
   localStorage.setItem('apollon', JSON.stringify(model));
+  // Save the current options as well
+  localStorage.setItem('apollonOptions', JSON.stringify(options));
   options = { ...options, model };
   return options;
 };
@@ -51,6 +53,7 @@ export const save = () => {
 // Delete the diagram data from local storage
 export const clear = () => {
   localStorage.removeItem('apollon');
+  localStorage.removeItem('apollonOptions');
   options = { ...options, model: undefined };
 };
 
@@ -103,6 +106,44 @@ const awaitEditorInitialization = async () => {
   }
 };
 
+// Delete everything - diagram, options, and reset the editor
+export const deleteEverything = () => {
+  // Show a confirmation dialog
+  const confirmDelete = window.confirm('Are you sure you want to delete everything? This cannot be undone.');
+  
+  if (confirmDelete) {
+    // Clear local storage
+    localStorage.removeItem('apollon');
+    localStorage.removeItem('apollonOptions');
+    
+    // Reset options to default
+    options = {
+      model: undefined,
+      colorEnabled: true,
+      scale: 0.8,
+      type: 'ClassDiagram'
+    };
+    
+    // Destroy current editor if it exists
+    if (editor) {
+      editor.destroy();
+      editor = null;
+    }
+    
+    // Reset the diagram type dropdown
+    const typeSelect = document.querySelector('select[name="type"]') as HTMLSelectElement;
+    if (typeSelect) {
+      typeSelect.value = 'ClassDiagram';
+    }
+    
+    // Re-render the editor with default options
+    render();
+    
+    // Log the action
+    console.log('Everything has been deleted and reset');
+  }
+};
+
 // 
 const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
   if (!window.apollon) {
@@ -116,6 +157,7 @@ const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
     draw,
     save,
     clear,
+    deleteEverything,
     setTheming,
     exportDiagram: () => {
       if (editor) {
@@ -138,6 +180,20 @@ const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
 const render = async () => {
   console.log("Rendering editor");
   save();
+  
+  // Load saved options from localStorage
+  const savedOptions = localStorage.getItem('apollonOptions');
+  if (savedOptions) {
+    const parsedOptions = JSON.parse(savedOptions);
+    options = { ...options, ...parsedOptions, model: options.model };
+    
+    // Update the diagram type dropdown to match saved options
+    const typeSelect = document.querySelector('select[name="type"]') as HTMLSelectElement;
+    if (typeSelect && parsedOptions.type) {
+      typeSelect.value = parsedOptions.type;
+    }
+  }
+
   if (editor) {
     editor.destroy();
   }
@@ -162,6 +218,16 @@ const render = async () => {
     });
   } else {
     console.error("Editor failed to initialize");
+  }
+
+  // Add event listener for delete everything button
+  const deleteButton = document.getElementById('delete-everything-btn');
+  if (deleteButton) {
+    deleteButton.addEventListener('click', () => {
+      if (window.apollon && window.apollon.deleteEverything) {
+        window.apollon.deleteEverything();
+      }
+    });
   }
 };
 
