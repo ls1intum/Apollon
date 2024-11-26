@@ -21,16 +21,15 @@ export const ColorLegendComponent: FunctionComponent<Props> = ({ element, fillCo
       strokeWidth="1.2"
       strokeMiterlimit="10"
     />
-    {/* <rect width="100%" height="100%" stroke={element.strokeColor || 'black'} /> */}
     <Multiline
       x={element.bounds.width / 2}
       y={element.bounds.height / 2}
-      width={element.bounds.width}
-      height={element.bounds.height}
+      width={element.bounds.width - 20}
+      height={element.bounds.height - 20}
       fontWeight="bold"
       fill={element.textColor}
     >
-      {element.name}
+      {element.text}
     </Multiline>
   </g>
 );

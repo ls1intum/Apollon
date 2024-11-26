@@ -1,7 +1,7 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { ColorLegendElement } from '.';
+import { ColorLegendElement, IColorLegendElement } from '.';
 import { Button } from '../../../components/controls/button/button';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { TrashIcon } from '../../../components/controls/icon/trash';
@@ -13,11 +13,29 @@ import { StylePane } from '../../../components/style-pane/style-pane';
 import { styled } from '../../../components/theme/styles';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
+import { IUMLElement } from '../../../services/uml-element/uml-element';
 
 const Flex = styled.div`
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid ${(props) => props.theme.color.gray};
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: inherit;
+  
+  &:focus {
+    outline: none;
+    border-color: ${(props) => props.theme.color.primary};
+  }
 `;
 
 type State = { colorOpen: boolean };
@@ -37,13 +55,13 @@ class ColorLegendUpdateComponent extends Component<Props, State> {
     return (
       <div>
         <section>
+          <TextArea
+            value={element.text}
+            placeholder={this.props.translate('packages.SyntaxTree.SyntaxTreeNonterminal')}
+            onChange={(e) => this.onUpdate(e.target.value)}
+            autoFocus
+          />
           <Flex>
-            <Textfield
-              value={element.name}
-              placeholder={this.props.translate('packages.SyntaxTree.SyntaxTreeNonterminal')}
-              onChange={this.onUpdate}
-              autoFocus
-            />
             <ColorButton onClick={this.toggleColor} />
             <Button color="link" tabIndex={-1} onClick={() => this.props.delete(element.id)}>
               <TrashIcon />
@@ -61,9 +79,9 @@ class ColorLegendUpdateComponent extends Component<Props, State> {
       </div>
     );
   }
-  private onUpdate = (name: string) => {
+  private onUpdate = (text: string) => {
     const { element, update } = this.props;
-    update(element.id, { name });
+    update(element.id, { text });
   };
 }
 
@@ -74,7 +92,7 @@ type OwnProps = {
 type StateProps = {};
 
 type DispatchProps = {
-  update: typeof UMLElementRepository.update;
+  update: (id: string, values: Partial<IColorLegendElement>) => void;
   delete: AsyncDispatch<typeof UMLElementRepository.delete>;
 };
 
@@ -83,7 +101,8 @@ export type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
-    update: UMLElementRepository.update,
+    update: (id: string, values: Partial<IColorLegendElement>) => 
+      UMLElementRepository.update(id, values as Partial<IUMLElement>),
     delete: UMLElementRepository.delete,
   }),
 );
