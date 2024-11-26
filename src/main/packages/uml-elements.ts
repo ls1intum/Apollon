@@ -53,6 +53,14 @@ import { BPMNPool } from './bpmn/bpmn-pool/bpmn-pool';
 import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
 import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
 import { BPMNDataStore } from './bpmn/bpmn-data-store/bpmn-data-store';
+import { UMLState } from './uml-state-diagram/uml-state/uml-state';
+import { UMLStateActionNode } from './uml-state-diagram/uml-state-action-node/uml-state-action-node';
+import { UMLStateFinalNode } from './uml-state-diagram/uml-state-final-node/uml-state-final-node';
+import { UMLStateForkNode } from './uml-state-diagram/uml-state-fork-node/uml-state-fork-node';
+import { UMLStateForkNodeHorizontal } from './uml-state-diagram/uml-state-fork-node-horizontal/uml-state-fork-node-horizontal';
+import { UMLStateInitialNode } from './uml-state-diagram/uml-state-initial-node/uml-state-initial-node';
+import { UMLStateMergeNode } from './uml-state-diagram/uml-state-merge-node/uml-state-merge-node';
+import { UMLStateObjectNode } from './uml-state-diagram/uml-state-object-node/uml-state-object-node';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -109,4 +117,12 @@ export const UMLElements = {
   [UMLElementType.BPMNPool]: BPMNPool,
   [UMLElementType.BPMNSwimlane]: BPMNSwimlane,
   [UMLElementType.BPMNGroup]: BPMNGroup,
+  [UMLElementType.State]: UMLState,
+  [UMLElementType.StateInitialNode]: UMLStateInitialNode,
+  [UMLElementType.StateFinalNode]: UMLStateFinalNode,
+  [UMLElementType.StateActionNode]: UMLStateActionNode,
+  [UMLElementType.StateForkNode]: UMLStateForkNode,
+  [UMLElementType.StateForkNodeHorizontal]: UMLStateForkNodeHorizontal,
+  [UMLElementType.StateMergeNode]: UMLStateMergeNode,
+  [UMLElementType.StateObjectNode]: UMLStateObjectNode,
 };

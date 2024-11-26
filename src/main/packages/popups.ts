@@ -35,6 +35,8 @@ import { BPMNIntermediateEventUpdate } from './bpmn/bpmn-intermediate-event/bpmn
 import { BPMNStartEventUpdate } from './bpmn/bpmn-start-event/bpmn-start-event-update';
 import { BPMNEndEventUpdate } from './bpmn/bpmn-end-event/bpmn-end-event-update';
 import { BPMNTaskUpdate } from './bpmn/bpmn-task/bpmn-task-update';
+import { UMLStateMergeNodeUpdate } from './uml-state-diagram/uml-state-merge-node/uml-state-merge-node-update';
+import { UMLStateControlFlowUpdate } from './uml-state-diagram/uml-state-control-flow/uml-state-control-flow-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -93,6 +95,14 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNGroup]: DefaultPopup,
   [UMLElementType.BPMNPool]: BPMNPoolUpdate,
   [UMLElementType.BPMNSwimlane]: DefaultPopup,
+  [UMLElementType.State]: DefaultPopup,
+  [UMLElementType.StateActionNode]: DefaultPopup,
+  [UMLElementType.StateFinalNode]: DefaultPopup,
+  [UMLElementType.StateForkNode]: DefaultPopup,
+  [UMLElementType.StateForkNodeHorizontal]: DefaultPopup,
+  [UMLElementType.StateInitialNode]: DefaultPopup,
+  [UMLElementType.StateMergeNode]: UMLStateMergeNodeUpdate,
+  [UMLElementType.StateObjectNode]: DefaultPopup,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
@@ -120,4 +130,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.SyntaxTreeLink]: DefaultRelationshipPopup,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineUpdate,
   [UMLRelationshipType.BPMNFlow]: BPMNFlowUpdate,
+  [UMLRelationshipType.StateControlFlow]: UMLStateControlFlowUpdate,
 };

@@ -29,6 +29,7 @@ import { composeFlowchartPreview } from '../../packages/flowchart/flowchart-diag
 import { ColorLegend } from '../../packages/common/color-legend/color-legend';
 import { Separator } from './create-pane-styles';
 import { composeBPMNPreview } from '../../packages/bpmn/bpmn-diagram-preview';
+import { composeStatePreview } from '../../packages/uml-state-diagram/state-preview';
 
 type OwnProps = {};
 
@@ -84,6 +85,9 @@ const getInitialState = ({ type, canvas, translate, colorEnabled }: Props) => {
       break;
     case UMLDiagramType.BPMN:
       previews.push(...composeBPMNPreview(canvas, translate));
+      break;
+    case UMLDiagramType.StateMachineDiagram:
+      previews.push(...composeStatePreview(canvas, translate));
       break;
   }
   if (colorEnabled) {

@@ -12,6 +12,7 @@ import { FlowchartElementType } from './flowchart';
 import { ColorLegendElementType } from './common/color-legend';
 import { ReachabilityGraphElementType } from './uml-reachability-graph';
 import { BPMNElementType } from './bpmn';
+import { StateElementType } from './uml-state-diagram';
 
 export type UMLElementType =
   | keyof typeof ClassElementType
@@ -26,7 +27,8 @@ export type UMLElementType =
   | keyof typeof SyntaxTreeElementType
   | keyof typeof FlowchartElementType
   | keyof typeof ColorLegendElementType
-  | keyof typeof BPMNElementType;
+  | keyof typeof BPMNElementType
+  | keyof typeof StateElementType;
 
 export const UMLElementType = {
   ...ClassElementType,
@@ -42,6 +44,7 @@ export const UMLElementType = {
   ...FlowchartElementType,
   ...ColorLegendElementType,
   ...BPMNElementType,
+  ...StateElementType,
 };
 
 export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
@@ -60,4 +63,5 @@ export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
     [UMLDiagramType.BPMN]: BPMNElementType,
   },
   ...ColorLegendElementType,
+  [UMLDiagramType.StateMachineDiagram]: StateElementType,
 };
