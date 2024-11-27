@@ -50,14 +50,48 @@ type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 // Component
 class UMLStateCodeBlockUpdateComponent extends Component<Props> {
+  componentDidMount() {
+    const { element, update } = this.props;
+    
+    // Handle initial state, including JSON imports
+    const content = element.code?.content || element.text || '';
+    const language = element.code?.language || element.language || 'python';
+    const version = element.code?.version || '1.0';
+
+    // Always update to ensure proper initialization
+    update(element.id, {
+      text: content,
+      language: language,
+      bounds: {
+        ...element.bounds,
+        width: element.bounds.width || 380,
+        height: element.bounds.height || 220
+      },
+      code: {
+        content: content,
+        language: language,
+        version: version
+      }
+    });
+  }
+
   private onUpdate = (text: string) => {
     const { element, update } = this.props;
-    update(element.id, { 
-      text,
+    
+    // Don't update if text is undefined
+    if (text === undefined) return;
+
+    const currentVersion = element.code?.version || '1.0';
+    const existingLanguage = element.code?.language || element.language || 'python';
+    
+    update(element.id, {
+      text: text,
+      language: existingLanguage,
+      bounds: element.bounds,
       code: {
         content: text,
-        language: element.language,
-        version: '1.0'
+        language: existingLanguage,
+        version: currentVersion
       }
     });
   };
@@ -65,14 +99,20 @@ class UMLStateCodeBlockUpdateComponent extends Component<Props> {
   private onLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const { element, update } = this.props;
     const newLanguage = event.target.value;
-    update(element.id, { 
+    const currentVersion = element.code?.version || '1.0';
+    const existingContent = element.code?.content || element.text;
+    
+    const updatedValues: Partial<IUMLStateCodeBlockElement> = {
+      text: existingContent,
       language: newLanguage,
       code: {
-        content: element.text,
+        content: existingContent,
         language: newLanguage,
-        version: '1.0'
+        version: currentVersion
       }
-    });
+    };
+    
+    update(element.id, updatedValues);
   };
 
   render() {
