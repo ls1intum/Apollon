@@ -61,6 +61,7 @@ import { UMLStateForkNodeHorizontal } from './uml-state-diagram/uml-state-fork-n
 import { UMLStateInitialNode } from './uml-state-diagram/uml-state-initial-node/uml-state-initial-node';
 import { UMLStateMergeNode } from './uml-state-diagram/uml-state-merge-node/uml-state-merge-node';
 import { UMLStateObjectNode } from './uml-state-diagram/uml-state-object-node/uml-state-object-node';
+import { UMLStateCodeBlock } from './uml-state-diagram/uml-state-code-block/uml-state-code-block';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -125,4 +126,5 @@ export const UMLElements = {
   [UMLElementType.StateForkNodeHorizontal]: UMLStateForkNodeHorizontal,
   [UMLElementType.StateMergeNode]: UMLStateMergeNode,
   [UMLElementType.StateObjectNode]: UMLStateObjectNode,
+  [UMLElementType.StateCodeBlock]: UMLStateCodeBlock,
 };

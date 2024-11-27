@@ -61,7 +61,8 @@ export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
     [UMLDiagramType.SyntaxTree]: SyntaxTreeElementType,
     [UMLDiagramType.Flowchart]: FlowchartElementType,
     [UMLDiagramType.BPMN]: BPMNElementType,
+    [UMLDiagramType.StateMachineDiagram]: StateElementType,
   },
   ...ColorLegendElementType,
-  [UMLDiagramType.StateMachineDiagram]: StateElementType,
+  
 };
