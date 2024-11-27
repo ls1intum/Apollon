@@ -1,5 +1,7 @@
 export const StateElementType = {
-  State: 'State',
+  State_: 'State_',
+  StateVariable_: 'StateVariable_',
+  StateAction_: 'StateAction_',
   StateActionNode: 'StateActionNode',
   StateFinalNode: 'StateFinalNode',
   StateForkNode: 'StateForkNode',
@@ -11,5 +13,5 @@ export const StateElementType = {
 } as const;
 
 export const StateRelationshipType = {
-  StateControlFlow: 'StateControlFlow',
+  StateTransition: 'StateTransition',
 } as const;

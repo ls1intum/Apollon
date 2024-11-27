@@ -26,7 +26,7 @@ import { UMLReachabilityGraphArc } from './uml-reachability-graph/uml-reachabili
 import { SyntaxTreeLink } from './syntax-tree/syntax-tree-link/syntax-tree-link';
 import { FlowchartFlowline } from './flowchart/flowchart-flowline/flowchart-flowline';
 import { BPMNFlow } from './bpmn/bpmn-flow/bpmn-flow';
-import { UMLStateControlFlow } from './uml-state-diagram/uml-state-control-flow/uml-state-control-flow';
+import { UMLStateTransition } from './uml-state-diagram/uml-state-transition/uml-state-transition';
 
 type UMLRelationships = { [key in UMLRelationshipType]: new (values?: IUMLRelationship) => UMLRelationship };
 
@@ -57,5 +57,5 @@ export const UMLRelationships = {
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLink,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowline,
   [UMLRelationshipType.BPMNFlow]: BPMNFlow,
-  [UMLRelationshipType.StateControlFlow]: UMLStateControlFlow,
+  [UMLRelationshipType.StateTransition]: UMLStateTransition,
 };

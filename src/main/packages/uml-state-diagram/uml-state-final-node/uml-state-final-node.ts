@@ -9,7 +9,7 @@ import { UMLElementType } from '../../uml-element-type';
 import { DeepPartial } from 'redux';
 
 export class UMLStateFinalNode extends UMLElement {
-  static supportedRelationships = [StateRelationshipType.StateControlFlow];
+  static supportedRelationships = [StateRelationshipType.StateTransition];
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false, updatable: false };
 
   type: UMLElementType = StateElementType.StateFinalNode;

@@ -8,7 +8,7 @@ import { assign } from '../../../utils/fx/assign';
 import { IBoundary } from '../../../utils/geometry/boundary';
 
 export class UMLStateInitialNode extends UMLElement {
-  static supportedRelationships = [StateRelationshipType.StateControlFlow];
+  static supportedRelationships = [StateRelationshipType.StateTransition];
 
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false, updatable: false };
 

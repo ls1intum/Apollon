@@ -6,7 +6,7 @@ import { calculateNameBounds } from '../../../utils/name-bounds';
 import { UMLElementType } from '../../uml-element-type';
 
 export class UMLStateActionNode extends UMLElement {
-  static supportedRelationships = [StateRelationshipType.StateControlFlow];
+  static supportedRelationships = [StateRelationshipType.StateTransition];
   type: UMLElementType = StateElementType.StateActionNode;
 
   render(canvas: ILayer): ILayoutable[] {

@@ -84,6 +84,11 @@ export type UMLClassifier = UMLElement & {
   methods: string[];
 };
 
+export type UMLState = UMLElement & {
+  variables: string[];
+  actions: string[];
+};
+
 export type UMLDeploymentNode = UMLElement & {
   stereotype: string;
   displayStereotype: boolean;

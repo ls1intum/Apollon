@@ -1,9 +1,9 @@
 import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
-import { UMLStateControlFlow } from './uml-state-control-flow';
+import { UMLStateTransition } from './uml-state-transition';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
 
-export const UMLStateControlFlowComponent: FunctionComponent<Props> = ({ element }) => {
+export const UMLStateTransitionComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
   let direction: 'v' | 'h' = 'v';
   const path = element.path.map((point) => new Point(point.x, point.y));
@@ -72,5 +72,5 @@ export const UMLStateControlFlowComponent: FunctionComponent<Props> = ({ element
 };
 
 interface Props {
-  element: UMLStateControlFlow;
-} 
+  element: UMLStateTransition;
+}

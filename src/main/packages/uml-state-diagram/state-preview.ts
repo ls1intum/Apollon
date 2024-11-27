@@ -8,7 +8,7 @@ import { UMLStateForkNode } from './uml-state-fork-node/uml-state-fork-node';
 import { UMLStateInitialNode } from './uml-state-initial-node/uml-state-initial-node';
 import { UMLStateMergeNode } from './uml-state-merge-node/uml-state-merge-node';
 import { UMLStateObjectNode } from './uml-state-object-node/uml-state-object-node';
-import { UMLState } from './uml-state/uml-state';
+import { UMLState_ } from './uml-state/uml-state';
 import { UMLStateCodeBlock } from './uml-state-code-block/uml-state-code-block';
 
 export const composeStatePreview: ComposePreview = (
@@ -22,7 +22,7 @@ export const composeStatePreview: ComposePreview = (
   UMLStateForkNodeHorizontal.defaultHeight = Math.round(20 / 10) * 10;
   
   // State
-  const state = new UMLState({ name: translate('packages.StateDiagram.State') });
+  const state = new UMLState_({ name: translate('packages.StateDiagram.State') });
   state.bounds = {
     ...state.bounds,
     width: state.bounds.width,

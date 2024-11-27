@@ -57,5 +57,5 @@ export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelations
   [UMLDiagramType.SyntaxTree]: SyntaxTreeRelationshipType.SyntaxTreeLink,
   [UMLDiagramType.Flowchart]: FlowchartRelationshipType.FlowchartFlowline,
   [UMLDiagramType.BPMN]: BPMNRelationshipType.BPMNFlow,
-  [UMLDiagramType.StateMachineDiagram]: StateRelationshipType.StateControlFlow,
+  [UMLDiagramType.StateMachineDiagram]: StateRelationshipType.StateTransition,
 };

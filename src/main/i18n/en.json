@@ -11,6 +11,8 @@
     "objectAttribute": "attribute = value"
   },
   "popup": {
+    "variables": "Variables",
+    "actions": "Actions",
     "attributes": "Attributes",
     "methods": "Methods",
     "relationship": "Relationship",
@@ -181,7 +183,7 @@
       "StateInitialNode": "Initial Node",
       "StateMergeNode": "Condition",
       "StateObjectNode": "Object",
-      "StateControlFlow": "Control Flow"
+      "StateTransition": "Transition"
     }
   }
 }

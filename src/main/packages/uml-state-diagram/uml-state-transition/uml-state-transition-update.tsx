@@ -13,7 +13,7 @@ import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
-import { UMLStateControlFlow } from './uml-state-control-flow';
+import { UMLStateTransition } from './uml-state-transition';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { StylePane } from '../../../components/style-pane/style-pane';
 
@@ -25,7 +25,7 @@ const Flex = styled.div`
 
 type State = { colorOpen: boolean };
 
-class StateControlFlowUpdate extends Component<Props, State> {
+class StateTransitionUpdate extends Component<Props, State> {
   state = { colorOpen: false };
 
   private toggleColor = () => {
@@ -42,7 +42,7 @@ class StateControlFlowUpdate extends Component<Props, State> {
         <section>
           <Flex>
             <Header gutter={false} style={{ flexGrow: 1 }}>
-              {this.props.translate('packages.StateDiagram.StateControlFlow')}
+              {this.props.translate('packages.StateDiagram.StateTransition')}
             </Header>
             <ColorButton onClick={this.toggleColor} />
             <Button color="link" onClick={() => this.props.flip(element.id)}>
@@ -74,7 +74,7 @@ class StateControlFlowUpdate extends Component<Props, State> {
 }
 
 type OwnProps = {
-  element: UMLStateControlFlow;
+  element: UMLStateTransition;
 };
 
 type StateProps = {};
@@ -96,4 +96,4 @@ const enhance = compose<ComponentClass<OwnProps>>(
   }),
 );
 
-export const UMLStateControlFlowUpdate = enhance(StateControlFlowUpdate); 
+export const UMLStateTransitionUpdate = enhance(StateTransitionUpdate); 

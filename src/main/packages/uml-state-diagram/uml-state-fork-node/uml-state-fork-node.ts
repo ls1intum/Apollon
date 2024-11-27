@@ -8,7 +8,7 @@ import { UMLElementType } from '../../uml-element-type';
 import { DeepPartial } from 'redux';
 
 export class UMLStateForkNode extends UMLElement {
-  static supportedRelationships = [StateRelationshipType.StateControlFlow];
+  static supportedRelationships = [StateRelationshipType.StateTransition];
   static features: UMLElementFeatures = { ...UMLElement.features, updatable: false };
   static defaultWidth = 20;
   static defaultHeight = 60;

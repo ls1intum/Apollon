@@ -6,7 +6,7 @@ import { IBoundary } from '../../../utils/geometry/boundary';
 import { calculateNameBounds } from '../../../utils/name-bounds';
 
 export class UMLStateMergeNode extends UMLElement {
-  static supportedRelationships = [StateRelationshipType.StateControlFlow];
+  static supportedRelationships = [StateRelationshipType.StateTransition];
   type = StateElementType.StateMergeNode;
   bounds: IBoundary = { ...this.bounds };
 
