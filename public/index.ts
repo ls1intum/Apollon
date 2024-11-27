@@ -2,7 +2,7 @@ import * as Apollon from '../src/main';
 import * as themings from './themings.json';
 import('./styles.css');
 import { exportDiagram, importDiagram } from '../src/main/services/diagramExportImport/diagramExportService';
-import { convertBumlToJson } from './generate_besser';
+import { generateOutput, convertBumlToJson } from './generate_besser';
 
 const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
@@ -312,23 +312,95 @@ export const deleteEverything = () => {
   }
 };
 
-// 
+
+interface ApollonGlobal {
+  onChange: (event: MouseEvent) => void;
+  onSwitch: (event: MouseEvent) => void;
+  draw: (mode?: 'include' | 'exclude') => Promise<void>;
+  save: () => void;
+  clear: () => void;
+  deleteEverything: () => void;
+  setTheming: (theming: string) => void;
+  exportDiagram: () => Promise<void>;
+  importDiagram: (file: File) => Promise<void>;
+  generateCode?: (generatorType: string) => Promise<void>;
+  convertBumlToJson?: (file: File) => Promise<void>;
+}
+
+// Then declare it as part of the global Window interface
+declare global {
+  var apollon: ApollonGlobal | undefined;
+}
+
+// Update the setupGlobalApollon function
 const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
-  window.apollon = {
+  const apollonGlobal: ApollonGlobal = {
     onChange,
     onSwitch,
     draw,
     save,
     clear,
     deleteEverything,
-    setTheming
+    setTheming,
+    exportDiagram: async () => {
+      if (!editor) return;
+      const model = editor.model;
+      const jsonString = JSON.stringify(model, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `diagram_${options.type}_${new Date().toISOString()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+    importDiagram: async (file: File) => {
+      if (!editor || !file) return;
+      try {
+        const text = await file.text();
+        const jsonModel = JSON.parse(text);
+        editor.model = jsonModel;
+        save();
+      } catch (error) {
+        console.error('Error importing diagram:', error);
+        alert('Error importing diagram. Please check if the file is valid JSON.');
+      }
+    },
+    generateCode: window.apollon?.generateCode,
+    convertBumlToJson: window.apollon?.convertBumlToJson
   };
+
+  window.apollon = apollonGlobal;
 };
 
-render();
-
-declare global {
-  interface Window {
-    apollon: any;
+// Add this before the render() call, after all the function definitions
+window.addEventListener('load', () => {
+  // Initialize window.apollon if it doesn't exist
+  if (!window.apollon) {
+    window.apollon = {} as ApollonGlobal;
   }
-}
+  
+  // Add the BESSER-specific functions
+  const currentApollon = window.apollon;
+  window.apollon = {
+    ...currentApollon,
+    generateCode: async (generatorType: string) => {
+      console.log("Generating code with type:", generatorType);
+      if (generatorType === 'buml') {
+        await generateOutput('buml');
+      } else {
+        await generateOutput(generatorType);
+      }
+    },
+    convertBumlToJson: async (file: File) => {
+      if (!file) return;
+      console.log("Converting file:", file.name);
+      await convertBumlToJson(file);
+    }
+  } as ApollonGlobal;
+});
+
+// Then call render
+render();
