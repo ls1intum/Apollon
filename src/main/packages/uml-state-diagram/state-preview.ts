@@ -9,6 +9,7 @@ import { UMLStateInitialNode } from './uml-state-initial-node/uml-state-initial-
 import { UMLStateMergeNode } from './uml-state-merge-node/uml-state-merge-node';
 import { UMLStateObjectNode } from './uml-state-object-node/uml-state-object-node';
 import { UMLState } from './uml-state/uml-state';
+import { UMLStateCodeBlock } from './uml-state-code-block/uml-state-code-block';
 
 export const composeStatePreview: ComposePreview = (
   layer: ILayer,
@@ -79,6 +80,19 @@ export const composeStatePreview: ComposePreview = (
   // State Fork Node Horizontal
   const stateForkNodeHorizontal = new UMLStateForkNodeHorizontal();
   elements.push(stateForkNodeHorizontal);
+
+  // State Code Block
+  const stateCodeBlock = new UMLStateCodeBlock({
+    text: '# Sample code\nprint("Hello World")',
+    language: 'python',
+    bounds: { x: 0, y: 0, width: 150, height: 150 },
+    code: {
+      content: '# Sample code\nprint("Hello World")',
+      language: 'python',
+      version: '1.0'
+    }
+  });
+  elements.push(stateCodeBlock);
 
   return elements;
 };

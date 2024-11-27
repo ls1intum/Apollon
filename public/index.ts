@@ -6,11 +6,51 @@ import { convertBumlToJson } from './generate_besser';
 
 const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
-let options: Apollon.ApollonOptions = {
-  model: JSON.parse(window.localStorage.getItem('apollon')!),
+
+// Define a union type for diagram types
+type DiagramType = 
+  | 'ClassDiagram'
+  | 'ObjectDiagram'
+  | 'ActivityDiagram'
+  | 'UseCaseDiagram'
+  | 'CommunicationDiagram'
+  | 'ComponentDiagram'
+  | 'DeploymentDiagram'
+  | 'PetriNet'
+  | 'ReachabilityGraph'
+  | 'SyntaxTree'
+  | 'Flowchart'
+  | 'BPMN'
+  | 'StateMachineDiagram';
+
+// Define a type to store models for different diagram types
+interface DiagramModels {
+  ClassDiagram?: Apollon.UMLModel;
+  ObjectDiagram?: Apollon.UMLModel;
+  ActivityDiagram?: Apollon.UMLModel;
+  UseCaseDiagram?: Apollon.UMLModel;
+  CommunicationDiagram?: Apollon.UMLModel;
+  ComponentDiagram?: Apollon.UMLModel;
+  DeploymentDiagram?: Apollon.UMLModel;
+  PetriNet?: Apollon.UMLModel;
+  ReachabilityGraph?: Apollon.UMLModel;
+  SyntaxTree?: Apollon.UMLModel;
+  Flowchart?: Apollon.UMLModel;
+  BPMN?: Apollon.UMLModel;
+  StateMachineDiagram?: Apollon.UMLModel;
+}
+
+// Define a custom options type that extends ApollonOptions
+interface CustomApollonOptions extends Apollon.ApollonOptions {
+  savedModels?: DiagramModels;
+}
+
+// Modify options to use the custom type
+let options: CustomApollonOptions = {
   colorEnabled: true,
   scale: 0.8,
-  type: 'ClassDiagram'
+  type: 'ClassDiagram' as DiagramType,
+  savedModels: {}
 };
 
 // Set initial visibility of code generator section
@@ -22,14 +62,38 @@ if (codeGeneratorSection) {
 // Fonction called when the diagram type is changed
 export const onChange = (event: MouseEvent) => {
   const { name, value } = event.target as HTMLSelectElement;
-  options = { ...options, [name]: value };
-  render();
+  
+  console.log('onChange called:', { name, value }); // Debug log
+
   if (name === 'type') {
+    // Save current model before switching
+    if (editor) {
+      save();
+    }
+
+    // Type assertion to ensure type safety
+    const diagramType = value as DiagramType;
+
+    // Load model for the new type
+    const newModel = loadModelForType(diagramType);
+
+    // Update options with new type and corresponding model
+    options = { 
+      ...options, 
+      type: diagramType,
+      model: newModel
+    };
+
+    // Update the code generator section visibility
     const codeGeneratorSection = document.getElementById('codeGeneratorSection');
     if (codeGeneratorSection) {
-      codeGeneratorSection.style.display = value === 'ClassDiagram' ? 'block' : 'none';
+      codeGeneratorSection.style.display = diagramType === 'ClassDiagram' ? 'block' : 'none';
     }
+  } else {
+    options = { ...options, [name]: value };
   }
+
+  render();
 };
 
 // Fonction called when a switch is toggled 
@@ -39,22 +103,116 @@ export const onSwitch = (event: MouseEvent) => {
   render();
 };
 
-// Save both the diagram data and options in local storage
+// Updated save function to store models by type
 export const save = () => {
   if (!editor) return;
-  const model: Apollon.UMLModel = editor.model;
-  localStorage.setItem('apollon', JSON.stringify(model));
-  // Save the current options as well
-  localStorage.setItem('apollonOptions', JSON.stringify(options));
-  options = { ...options, model };
+  const currentModel: Apollon.UMLModel = editor.model;
+  const currentType = options.type as DiagramType;
+
+  // Save current model with type-specific key
+  localStorage.setItem(`apollon_${currentType}`, JSON.stringify(currentModel));
+  
+  // Save current options
+  const currentOptions = {
+    colorEnabled: options.colorEnabled,
+    scale: options.scale,
+    type: currentType
+  };
+  localStorage.setItem('apollonOptions', JSON.stringify(currentOptions));
+
+  options = { 
+    ...options,
+    model: currentModel 
+  };
+
   return options;
 };
 
-// Delete the diagram data from local storage
+// Load function to get model for specific type
+const loadModelForType = (type: DiagramType): Apollon.UMLModel | undefined => {
+  const modelString = localStorage.getItem(`apollon_${type}`);
+  return modelString ? JSON.parse(modelString) : undefined;
+};
+
+// Updated render function to load models
+const render = async () => {
+  console.log("Rendering editor");
+  
+  // Load saved options
+  const savedOptionsString = localStorage.getItem('apollonOptions');
+  const savedOptions = savedOptionsString 
+    ? JSON.parse(savedOptionsString) 
+    : {};
+
+  // Important: Use options.type instead of savedOptions.type
+  const currentType = options.type || 'ClassDiagram' as DiagramType;
+
+  // Load model for current type
+  const currentModel = loadModelForType(currentType);
+
+  // Update options
+  options = {
+    ...options,
+    colorEnabled: savedOptions.colorEnabled ?? options.colorEnabled,
+    scale: savedOptions.scale ?? options.scale,
+    type: currentType,
+    model: currentModel
+  };
+
+  // Update the diagram type dropdown
+  const typeSelect = document.querySelector('select[name="type"]') as HTMLSelectElement;
+  if (typeSelect) {
+    typeSelect.value = currentType;
+  }
+
+  // Destroy existing editor if it exists
+  if (editor) {
+    editor.destroy();
+  }
+
+  // Create new editor with clean options
+  editor = new Apollon.ApollonEditor(container, {
+    ...options,
+    model: options.model
+  });
+
+  // Add position change listener
+  editor.subscribeToModelDiscreteChange(() => {
+    save();
+  });
+
+  await awaitEditorInitialization();
+
+  if (editor) {
+    console.log("Editor initialized successfully");
+    (window as any).editor = editor;
+    setupGlobalApollon(editor);
+  } else {
+    console.error("Editor failed to initialize");
+  }
+};
+
+// Updated clear function
 export const clear = () => {
-  localStorage.removeItem('apollon');
+  const currentType = options.type as DiagramType;
+  
+  // Load existing models
+  const savedModels: DiagramModels = JSON.parse(
+    localStorage.getItem('apollonModels') || '{}'
+  );
+
+  // Remove the current type's model
+  delete savedModels[currentType];
+
+  // Update localStorage and options
+  localStorage.setItem('apollonModels', JSON.stringify(savedModels));
   localStorage.removeItem('apollonOptions');
-  options = { ...options, model: undefined };
+
+  options = {
+    ...options,
+    savedModels: savedModels,
+    model: undefined
+  };
 };
 
 // Set the theming of the editor
@@ -108,127 +266,69 @@ const awaitEditorInitialization = async () => {
 
 // Delete everything - diagram, options, and reset the editor
 export const deleteEverything = () => {
-  // Show a confirmation dialog
-  const confirmDelete = window.confirm('Are you sure you want to delete everything? This cannot be undone.');
-  
-  if (confirmDelete) {
-    // Clear local storage
-    localStorage.removeItem('apollon');
-    localStorage.removeItem('apollonOptions');
-    
-    // Reset options to default
+  console.log('deleteEverything called');
+  console.log('Current localStorage before deletion:', { ...localStorage });
+
+  try {
+    // List all keys in localStorage
+    const allKeys = Object.keys(localStorage);
+    console.log('All localStorage keys:', allKeys);
+
+    // Filter keys related to Apollon
+    const apollonKeys = allKeys.filter(key => key.startsWith('apollon_') || key === 'apollonOptions');
+    console.log('Apollon-related keys to be deleted:', apollonKeys);
+
+    // Remove each Apollon-related key
+    apollonKeys.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`Removed key: ${key}`);
+    });
+
+    console.log('Current localStorage after deletion:', { ...localStorage });
+
+    // Reset options to default state
     options = {
       model: undefined,
       colorEnabled: true,
       scale: 0.8,
-      type: 'ClassDiagram'
+      type: 'ClassDiagram' as DiagramType
     };
-    
-    // Destroy current editor if it exists
+
+    // Destroy existing editor
     if (editor) {
       editor.destroy();
       editor = null;
     }
-    
-    // Reset the diagram type dropdown
-    const typeSelect = document.querySelector('select[name="type"]') as HTMLSelectElement;
-    if (typeSelect) {
-      typeSelect.value = 'ClassDiagram';
-    }
-    
-    // Re-render the editor with default options
+
+    // Re-render with clean state
     render();
-    
-    // Log the action
-    console.log('Everything has been deleted and reset');
+
+    // Force a page reload to ensure clean state
+    window.location.reload();
+
+  } catch (error) {
+    console.error('Error during deletion:', error);
+    alert('An error occurred while deleting diagrams and settings');
   }
 };
 
 // 
 const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
-  if (!window.apollon) {
-    window.apollon = {};
-  }
-  
   window.apollon = {
-    ...window.apollon,
     onChange,
     onSwitch,
     draw,
     save,
     clear,
     deleteEverything,
-    setTheming,
-    exportDiagram: () => {
-      if (editor) {
-        exportDiagram(editor);
-      } else {
-        console.warn("Editor is not initialized");
-      }
-    },
-    importDiagram: (file: File) => {
-      if (editor) {
-        importDiagram(file, editor);
-      } else {
-        console.warn("Editor is not initialized");
-      }
-    }
+    setTheming
   };
 };
 
-// Render the editor
-const render = async () => {
-  console.log("Rendering editor");
-  save();
-  
-  // Load saved options from localStorage
-  const savedOptions = localStorage.getItem('apollonOptions');
-  if (savedOptions) {
-    const parsedOptions = JSON.parse(savedOptions);
-    options = { ...options, ...parsedOptions, model: options.model };
-    
-    // Update the diagram type dropdown to match saved options
-    const typeSelect = document.querySelector('select[name="type"]') as HTMLSelectElement;
-    if (typeSelect && parsedOptions.type) {
-      typeSelect.value = parsedOptions.type;
-    }
-  }
-
-  if (editor) {
-    editor.destroy();
-  }
-  editor = new Apollon.ApollonEditor(container, options);
-  
-  // Add position change listener
-  editor.subscribeToModelDiscreteChange(() => {
-    save();
-  });
-
-  await awaitEditorInitialization();
-
-  if (editor) {
-    console.log("Editor initialized successfully");
-    (window as any).editor = editor;
-    setupGlobalApollon(editor);
-
-    import('./generate_besser').then(() => {
-      console.log("generate_besser.ts loaded successfully after editor initialization");
-    }).catch(error => {
-      console.error("Failed to load generate_besser.ts:", error);
-    });
-  } else {
-    console.error("Editor failed to initialize");
-  }
-
-  // Add event listener for delete everything button
-  const deleteButton = document.getElementById('delete-everything-btn');
-  if (deleteButton) {
-    deleteButton.addEventListener('click', () => {
-      if (window.apollon && window.apollon.deleteEverything) {
-        window.apollon.deleteEverything();
-      }
-    });
-  }
-};
-
 render();
+
+declare global {
+  interface Window {
+    apollon: any;
+  }
+}

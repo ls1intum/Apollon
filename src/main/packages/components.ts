@@ -72,6 +72,7 @@ import { UMLStateInitialNodeComponent } from './uml-state-diagram/uml-state-init
 import { UMLStateMergeNodeComponent } from './uml-state-diagram/uml-state-merge-node/uml-state-merge-node-component';
 import { UMLStateObjectNodeComponent } from './uml-state-diagram/uml-state-object-node/uml-state-object-node-component';
 import { UMLStateControlFlowComponent } from './uml-state-diagram/uml-state-control-flow/uml-state-control-flow-component';
+import { UMLStateCodeBlockComponent } from './uml-state-diagram/uml-state-code-block/uml-state-code-block-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -167,4 +168,5 @@ export const Components: {
   [UMLElementType.StateMergeNode]: UMLStateMergeNodeComponent,
   [UMLElementType.StateObjectNode]: UMLStateObjectNodeComponent,
   [UMLRelationshipType.StateControlFlow]: UMLStateControlFlowComponent,
+  [UMLElementType.StateCodeBlock]: UMLStateCodeBlockComponent,
 };

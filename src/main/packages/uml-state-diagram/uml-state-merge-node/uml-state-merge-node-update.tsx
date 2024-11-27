@@ -24,6 +24,25 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
+const Controls = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+`;
+
+const SizeInput = styled.input`
+  padding: 4px 8px;
+  border: 1px solid ${(props) => props.theme.color.gray};
+  border-radius: 4px;
+  width: 80px;
+  
+  &:focus {
+    outline: none;
+    border-color: ${(props) => props.theme.color.primary};
+  }
+`;
+
 type State = { colorOpen: boolean };
 
 class StateMergeNodeUpdate extends Component<Props, State> {
@@ -45,6 +64,19 @@ class StateMergeNodeUpdate extends Component<Props, State> {
     update(id, { name });
   };
 
+  private onUpdateSize = (dimension: 'width' | 'height') => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value, 10);
+    if (!isNaN(value)) {
+      const { element, update } = this.props;
+      update(element.id, {
+        bounds: {
+          ...element.bounds,
+          [dimension]: value
+        }
+      });
+    }
+  };
+
   render() {
     const { element, decisions, targets, update } = this.props;
     return (
@@ -62,6 +94,28 @@ class StateMergeNodeUpdate extends Component<Props, State> {
             lineColor
             textColor
           />
+          <Controls>
+            <div>
+              <span>{this.props.translate('common.width')}</span>
+              <SizeInput
+                type="number"
+                value={element.bounds.width}
+                onChange={this.onUpdateSize('width')}
+                min={50}
+                max={1000}
+              />
+            </div>
+            <div>
+              <span>{this.props.translate('common.height')}</span>
+              <SizeInput
+                type="number"
+                value={element.bounds.height}
+                onChange={this.onUpdateSize('height')}
+                min={50}
+                max={1000}
+              />
+            </div>
+          </Controls>
         </section>
 
         <section>

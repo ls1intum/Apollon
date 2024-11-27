@@ -37,6 +37,7 @@ import { BPMNEndEventUpdate } from './bpmn/bpmn-end-event/bpmn-end-event-update'
 import { BPMNTaskUpdate } from './bpmn/bpmn-task/bpmn-task-update';
 import { UMLStateMergeNodeUpdate } from './uml-state-diagram/uml-state-merge-node/uml-state-merge-node-update';
 import { UMLStateControlFlowUpdate } from './uml-state-diagram/uml-state-control-flow/uml-state-control-flow-update';
+import { UMLStateCodeBlockUpdate } from './uml-state-diagram/uml-state-code-block/uml-state-code-block-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -103,6 +104,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.StateInitialNode]: DefaultPopup,
   [UMLElementType.StateMergeNode]: UMLStateMergeNodeUpdate,
   [UMLElementType.StateObjectNode]: DefaultPopup,
+  [UMLElementType.StateCodeBlock]: UMLStateCodeBlockUpdate,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,

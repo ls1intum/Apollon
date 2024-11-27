@@ -7,6 +7,7 @@ export const StateElementType = {
   StateInitialNode: 'StateInitialNode',
   StateMergeNode: 'StateMergeNode',
   StateObjectNode: 'StateObjectNode',
+  StateCodeBlock: 'StateCodeBlock'
 } as const;
 
 export const StateRelationshipType = {
