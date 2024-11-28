@@ -54,8 +54,8 @@ import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
 import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
 import { BPMNDataStore } from './bpmn/bpmn-data-store/bpmn-data-store';
 import { UMLState } from './uml-state-diagram/uml-state/uml-state';
-import { UMLStateVariable } from './uml-state-diagram/uml-state-variable/uml-state-variable';
-import { UMLStateAction } from './uml-state-diagram/uml-state-action/uml-state-action';
+import { UMLStateBody } from './uml-state-diagram/uml-state-body/uml-state-body';
+import { UMLStateFallbackBody } from './uml-state-diagram/uml-state-fallback_body/uml-state-fallback_body';
 import { UMLStateActionNode } from './uml-state-diagram/uml-state-action-node/uml-state-action-node';
 import { UMLStateFinalNode } from './uml-state-diagram/uml-state-final-node/uml-state-final-node';
 import { UMLStateForkNode } from './uml-state-diagram/uml-state-fork-node/uml-state-fork-node';
@@ -121,8 +121,8 @@ export const UMLElements = {
   [UMLElementType.BPMNSwimlane]: BPMNSwimlane,
   [UMLElementType.BPMNGroup]: BPMNGroup,
   [UMLElementType.State]: UMLState,
-  [UMLElementType.StateVariable]: UMLStateVariable,
-  [UMLElementType.StateAction]: UMLStateAction,
+  [UMLElementType.StateBody]: UMLStateBody,
+  [UMLElementType.StateFallbackBody]: UMLStateFallbackBody,
   [UMLElementType.StateInitialNode]: UMLStateInitialNode,
   [UMLElementType.StateFinalNode]: UMLStateFinalNode,
   [UMLElementType.StateActionNode]: UMLStateActionNode,

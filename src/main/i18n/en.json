@@ -11,8 +11,8 @@
     "objectAttribute": "attribute = value"
   },
   "popup": {
-    "variables": "Variables",
-    "actions": "Actions",
+    "bodies": "Body",
+    "fallback_bodies": "Fallback Body",
     "attributes": "Attributes",
     "methods": "Methods",
     "relationship": "Relationship",

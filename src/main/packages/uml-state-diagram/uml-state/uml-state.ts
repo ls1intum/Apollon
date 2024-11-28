@@ -9,16 +9,16 @@ import * as Apollon from '../../../typings';
 import { assign } from '../../../utils/fx/assign';
 import { Text } from '../../../utils/svg/text';
 import { UMLElementType } from '../../uml-element-type';
-import { UMLStateVariable } from '../uml-state-variable/uml-state-variable';
-import { UMLStateAction } from '../uml-state-action/uml-state-action';
+import { UMLStateBody } from '../uml-state-body/uml-state-body';
+import { UMLStateFallbackBody } from '../uml-state-fallback_body/uml-state-fallback_body';
 
 export interface IUMLState extends IUMLContainer {
   italic: boolean;
   underline: boolean;
   stereotype: string | null;
   deviderPosition: number;
-  hasVariables: boolean;
-  hasActions: boolean;
+  hasBody: boolean;
+  hasFallbackBody: boolean;
 }
 
 export class UMLState extends UMLContainer implements IUMLState {
@@ -35,8 +35,8 @@ export class UMLState extends UMLContainer implements IUMLState {
   underline: boolean = false;
   stereotype: string | null = null;
   deviderPosition: number = 0;
-  hasVariables: boolean = false;
-  hasActions: boolean = false;
+  hasBody: boolean = false;
+  hasFallbackBody: boolean = false;
 
   get headerHeight() {
     return this.stereotype ? UMLState.stereotypeHeaderHeight : UMLState.nonStereotypeHeaderHeight;
@@ -48,29 +48,29 @@ export class UMLState extends UMLContainer implements IUMLState {
   }
 
   reorderChildren(children: IUMLElement[]): string[] {
-    const variables = children.filter((x): x is UMLStateVariable => x.type === StateElementType.StateVariable);
-    const actions = children.filter((x): x is UMLStateAction => x.type === StateElementType.StateAction);
-    return [...variables.map((element) => element.id), ...actions.map((element) => element.id)];
+    const bodies = children.filter((x): x is UMLStateBody => x.type === StateElementType.StateBody);
+    const fallbackBodies = children.filter((x): x is UMLStateFallbackBody => x.type === StateElementType.StateFallbackBody);
+    return [...bodies.map((element) => element.id), ...fallbackBodies.map((element) => element.id)];
   }
 
   serialize(children: UMLElement[] = []): Apollon.UMLState {
     return {
       ...super.serialize(children),
       type: this.type as UMLElementType,
-      variables: children.filter((x) => x instanceof UMLStateVariable).map((x) => x.id),
-      actions: children.filter((x) => x instanceof UMLStateAction).map((x) => x.id),
+      bodies: children.filter((x) => x instanceof UMLStateBody).map((x) => x.id),
+      fallbackBodies: children.filter((x) => x instanceof UMLStateFallbackBody).map((x) => x.id),
     };
   }
 
   render(layer: ILayer, children: ILayoutable[] = []): ILayoutable[] {
-    const variables = children.filter((x): x is UMLStateVariable => x instanceof UMLStateVariable);
-    const actions = children.filter((x): x is UMLStateAction => x instanceof UMLStateAction);
+    const bodies = children.filter((x): x is UMLStateBody => x instanceof UMLStateBody);
+    const fallbackBodies = children.filter((x): x is UMLStateFallbackBody => x instanceof UMLStateFallbackBody);
 
-    this.hasVariables = variables.length > 0;
-    this.hasActions = actions.length > 0;
+    this.hasBody = bodies.length > 0;
+    this.hasFallbackBody = fallbackBodies.length > 0;
 
     const radix = 10;
-    this.bounds.width = [this, ...variables, ...actions].reduce(
+    this.bounds.width = [this, ...bodies, ...fallbackBodies].reduce(
       (current, child, index) =>
         Math.max(
           current,
@@ -82,21 +82,21 @@ export class UMLState extends UMLContainer implements IUMLState {
     );
 
     let y = this.headerHeight;
-    for (const variable of variables) {
-      variable.bounds.x = 0.5;
-      variable.bounds.y = y + 0.5;
-      variable.bounds.width = this.bounds.width - 1;
-      y += variable.bounds.height;
+    for (const body of bodies) {
+      body.bounds.x = 0.5;
+      body.bounds.y = y + 0.5;
+      body.bounds.width = this.bounds.width - 1;
+      y += body.bounds.height;
     }
     this.deviderPosition = y;
-    for (const action of actions) {
-      action.bounds.x = 0.5;
-      action.bounds.y = y + 0.5;
-      action.bounds.width = this.bounds.width - 1;
-      y += action.bounds.height;
+    for (const fallbackBody of fallbackBodies) {
+      fallbackBody.bounds.x = 0.5;
+      fallbackBody.bounds.y = y + 0.5;
+      fallbackBody.bounds.width = this.bounds.width - 1;
+      y += fallbackBody.bounds.height;
     }
 
     this.bounds.height = y;
-    return [this, ...variables, ...actions];
+    return [this, ...bodies, ...fallbackBodies];
   }
 }

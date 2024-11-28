@@ -65,10 +65,10 @@ export const UMLStateComponent: FunctionComponent<Props> = ({ element, children,
         pointer-events="none"
         rx={cornerRadius}
       />
-      {element.hasVariables && (
+      {element.hasBody && (
         <ThemedPath d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} strokeColor={element.strokeColor} />
       )}
-      {element.hasActions && (
+      {element.hasFallbackBody && (
         <ThemedPath d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} strokeColor={element.strokeColor} />
       )}
     </g>

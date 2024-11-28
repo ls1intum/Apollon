@@ -17,12 +17,12 @@ import { UMLElementRepository } from '../../../services/uml-element/uml-element-
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
 import { StateElementType } from '..';
-import { UMLStateVariable } from '../uml-state-variable/uml-state-variable';
-import { UMLStateAction } from '../uml-state-action/uml-state-action';
+import { UMLStateBody } from '../uml-state-body/uml-state-body';
+import { UMLStateFallbackBody } from '../uml-state-fallback_body/uml-state-fallback_body';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLElements } from '../../uml-elements';
 import { UMLState } from './uml-state';
-import UmlVariableUpdate from '../uml-state-variable/uml-state-variable-update';
+import UmlBodyUpdate from '../uml-state-body/uml-state-body-update';
 
 const Flex = styled.div`
   display: flex;
@@ -66,8 +66,8 @@ const enhance = compose<ComponentClass<OwnProps>>(
 
 class StateUpdate extends Component<Props, State> {
   state = getInitialState();
-  newActionField = createRef<Textfield<string>>();
-  newVariableField = createRef<Textfield<string>>();
+  newFallbackBodyField = createRef<Textfield<string>>();
+  newBodyField = createRef<Textfield<string>>();
 
   private toggleColor = () => {
     this.setState((state) => ({
@@ -85,10 +85,10 @@ class StateUpdate extends Component<Props, State> {
   render() {
     const { element, getById } = this.props;
     const children = element.ownedElements.map((id) => getById(id)).filter(notEmpty);
-    const variables = children.filter((child) => child instanceof UMLStateVariable);
-    const actions = children.filter((child) => child instanceof UMLStateAction);
-    const variableRefs: (Textfield<string> | null)[] = [];
-    const actionRefs: (Textfield<string> | null)[] = [];
+    const bodies = children.filter((child) => child instanceof UMLStateBody);
+    const fallbackBodies = children.filter((child) => child instanceof UMLStateFallbackBody);
+    const bodyRefs: (Textfield<string> | null)[] = [];
+    const fallbackBodyRefs: (Textfield<string> | null)[] = [];
 
     return (
       <div>
@@ -111,43 +111,43 @@ class StateUpdate extends Component<Props, State> {
           <Divider />
         </section>
         <section>
-          <Header>{this.props.translate('popup.variables')}</Header>
-          {variables.map((variable, index) => (
-            <UmlVariableUpdate
-              id={variable.id}
-              key={variable.id}
-              value={variable.name}
+          <Header>{this.props.translate('popup.bodies')}</Header>
+          {bodies.map((body, index) => (
+            <UmlBodyUpdate
+              id={body.id}
+              key={body.id}
+              value={body.name}
               onChange={this.props.update}
               onSubmitKeyUp={() =>
-                index === variables.length - 1
-                  ? this.newVariableField.current?.focus()
+                index === bodies.length - 1
+                  ? this.newBodyField.current?.focus()
                   : this.setState({
-                      fieldToFocus: variableRefs[index + 1],
+                      fieldToFocus: bodyRefs[index + 1],
                     })
               }
               onDelete={this.delete}
-              onRefChange={(ref) => (variableRefs[index] = ref)}
-              element={variable}
+              onRefChange={(ref) => (bodyRefs[index] = ref)}
+              element={body}
             />
           ))}
           <Textfield
-            ref={this.newVariableField}
+            ref={this.newBodyField}
             outline
             value=""
-            onSubmit={this.create(UMLStateVariable)}
+            onSubmit={this.create(UMLStateBody)}
             onSubmitKeyUp={(key: string, value: string) => {
               if (value) {
                 this.setState({
-                  fieldToFocus: this.newVariableField.current,
+                  fieldToFocus: this.newBodyField.current,
                 });
               } else {
-                if (actionRefs && actionRefs.length > 0) {
+                if (fallbackBodyRefs && fallbackBodyRefs.length > 0) {
                   this.setState({
-                    fieldToFocus: actionRefs[0],
+                    fieldToFocus: fallbackBodyRefs[0],
                   });
                 } else {
                   this.setState({
-                    fieldToFocus: this.newActionField.current,
+                    fieldToFocus: this.newFallbackBodyField.current,
                   });
                 }
               }
@@ -157,7 +157,7 @@ class StateUpdate extends Component<Props, State> {
                 event.preventDefault();
                 event.currentTarget.blur();
                 this.setState({
-                  fieldToFocus: this.newVariableField.current,
+                  fieldToFocus: this.newBodyField.current,
                 });
               }
             }}
@@ -165,33 +165,33 @@ class StateUpdate extends Component<Props, State> {
         </section>
         <section>
           <Divider />
-          <Header>{this.props.translate('popup.actions')}</Header>
-          {actions.map((action, index) => (
-            <UmlVariableUpdate
-              id={action.id}
-              key={action.id}
-              value={action.name}
+          <Header>{this.props.translate('popup.fallback_bodies')}</Header>
+          {fallbackBodies.map((fallbackBody, index) => (
+            <UmlBodyUpdate
+              id={fallbackBody.id}
+              key={fallbackBody.id}
+              value={fallbackBody.name}
               onChange={this.props.update}
               onSubmitKeyUp={() =>
-                index === actions.length - 1
-                  ? this.newActionField.current?.focus()
+                index === fallbackBodies.length - 1
+                  ? this.newFallbackBodyField.current?.focus()
                   : this.setState({
-                      fieldToFocus: actionRefs[index + 1],
+                      fieldToFocus: fallbackBodyRefs[index + 1],
                     })
               }
               onDelete={this.delete}
-              onRefChange={(ref) => (actionRefs[index] = ref)}
-              element={action}
+              onRefChange={(ref) => (fallbackBodyRefs[index] = ref)}
+              element={fallbackBody}
             />
           ))}
           <Textfield
-            ref={this.newActionField}
+            ref={this.newFallbackBodyField}
             outline
             value=""
-            onSubmit={this.create(UMLStateAction)}
+            onSubmit={this.create(UMLStateFallbackBody)}
             onSubmitKeyUp={() =>
               this.setState({
-                fieldToFocus: this.newActionField.current,
+                fieldToFocus: this.newFallbackBodyField.current,
               })
             }
             onKeyDown={(event) => {
@@ -199,7 +199,7 @@ class StateUpdate extends Component<Props, State> {
                 event.preventDefault();
                 event.currentTarget.blur();
                 this.setState({
-                  fieldToFocus: this.newActionField.current,
+                  fieldToFocus: this.newFallbackBodyField.current,
                 });
               }
             }}
@@ -209,7 +209,7 @@ class StateUpdate extends Component<Props, State> {
     );
   }
 
-  private create = (Clazz: typeof UMLStateVariable | typeof UMLStateAction) => (value: string) => {
+  private create = (Clazz: typeof UMLStateBody | typeof UMLStateFallbackBody) => (value: string) => {
     const { element, create } = this.props;
     const member = new Clazz();
     member.name = value;

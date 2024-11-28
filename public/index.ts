@@ -43,6 +43,8 @@ interface DiagramModels {
 // Define a custom options type that extends ApollonOptions
 interface CustomApollonOptions extends Apollon.ApollonOptions {
   savedModels?: DiagramModels;
+  useSingleStorage: boolean;
+  legacyModel?: Apollon.UMLModel; // For backwards compatibility
 }
 
 // Modify options to use the custom type
@@ -50,7 +52,9 @@ let options: CustomApollonOptions = {
   colorEnabled: true,
   scale: 0.8,
   type: 'ClassDiagram' as DiagramType,
-  savedModels: {}
+  savedModels: {},
+  useSingleStorage: false,
+  legacyModel: JSON.parse(localStorage.getItem('apollon') || 'null')
 };
 
 // Set initial visibility of code generator section
@@ -66,28 +70,61 @@ export const onChange = (event: MouseEvent) => {
   console.log('onChange called:', { name, value }); // Debug log
 
   if (name === 'type') {
+    if (!editor) return;
+
     // Save current model before switching
-    if (editor) {
-      save();
+    const currentModel = editor.model;
+    const currentType = options.type as DiagramType;
+
+    if (options.useSingleStorage) {
+      // Single storage mode - save all models in one key
+      const savedModels: DiagramModels = JSON.parse(
+        localStorage.getItem('apollonModels') || '{}'
+      );
+      
+      // Save current diagram state before switching
+      savedModels[currentType] = currentModel;
+      
+      // Type assertion to ensure type safety
+      const newType = value as DiagramType;
+      
+      // Keep the existing model for the new type if it exists
+      const newModel = savedModels[newType];
+      
+      // Update storage
+      localStorage.setItem('apollonModels', JSON.stringify(savedModels));
+
+      // Update options with new type and corresponding model
+      options = { 
+        ...options, 
+        type: newType,
+        model: newModel,
+        savedModels: savedModels
+      };
+    } else {
+      // Per-diagram storage mode
+      // Save current diagram state
+      localStorage.setItem(`apollon_${currentType}`, JSON.stringify(currentModel));
+      
+      // Type assertion to ensure type safety
+      const newType = value as DiagramType;
+      
+      // Load existing model for new type if it exists
+      const modelString = localStorage.getItem(`apollon_${newType}`);
+      const newModel = modelString ? JSON.parse(modelString) : undefined;
+
+      // Update options
+      options = { 
+        ...options, 
+        type: newType,
+        model: newModel
+      };
     }
-
-    // Type assertion to ensure type safety
-    const diagramType = value as DiagramType;
-
-    // Load model for the new type
-    const newModel = loadModelForType(diagramType);
-
-    // Update options with new type and corresponding model
-    options = { 
-      ...options, 
-      type: diagramType,
-      model: newModel
-    };
 
     // Update the code generator section visibility
     const codeGeneratorSection = document.getElementById('codeGeneratorSection');
     if (codeGeneratorSection) {
-      codeGeneratorSection.style.display = diagramType === 'ClassDiagram' ? 'block' : 'none';
+      codeGeneratorSection.style.display = value === 'ClassDiagram' ? 'block' : 'none';
     }
   } else {
     options = { ...options, [name]: value };
@@ -103,22 +140,24 @@ export const onSwitch = (event: MouseEvent) => {
   render();
 };
 
-// Updated save function to store models by type
+// Updated save function to handle both storage modes
 export const save = () => {
   if (!editor) return;
   const currentModel: Apollon.UMLModel = editor.model;
   const currentType = options.type as DiagramType;
 
-  // Save current model with type-specific key
-  localStorage.setItem(`apollon_${currentType}`, JSON.stringify(currentModel));
-  
-  // Save current options
-  const currentOptions = {
-    colorEnabled: options.colorEnabled,
-    scale: options.scale,
-    type: currentType
-  };
-  localStorage.setItem('apollonOptions', JSON.stringify(currentOptions));
+  if (options.useSingleStorage) {
+    // Legacy single storage mode
+    localStorage.setItem('apollon', JSON.stringify(currentModel));
+    options.legacyModel = currentModel;
+  } else {
+    // Per-diagram storage mode
+    const savedModels: DiagramModels = JSON.parse(
+      localStorage.getItem('apollonModels') || '{}'
+    );
+    savedModels[currentType] = currentModel;
+    localStorage.setItem('apollonModels', JSON.stringify(savedModels));
+  }
 
   options = { 
     ...options,
@@ -128,10 +167,19 @@ export const save = () => {
   return options;
 };
 
-// Load function to get model for specific type
+// Updated load function to handle both storage modes
 const loadModelForType = (type: DiagramType): Apollon.UMLModel | undefined => {
-  const modelString = localStorage.getItem(`apollon_${type}`);
-  return modelString ? JSON.parse(modelString) : undefined;
+  if (options.useSingleStorage) {
+    // Single storage mode - load from combined storage
+    const savedModels: DiagramModels = JSON.parse(
+      localStorage.getItem('apollonModels') || '{}'
+    );
+    return savedModels[type];
+  } else {
+    // Per-diagram storage mode
+    const modelString = localStorage.getItem(`apollon_${type}`);
+    return modelString ? JSON.parse(modelString) : undefined;
+  }
 };
 
 // Updated render function to load models
@@ -170,10 +218,20 @@ const render = async () => {
     editor.destroy();
   }
 
+  let modelToUse: Apollon.UMLModel | undefined;
+
+  if (options.useSingleStorage) {
+    // Legacy single storage mode
+    modelToUse = options.legacyModel;
+  } else {
+    // Per-diagram storage mode
+    modelToUse = loadModelForType(options.type as DiagramType);
+  }
+
   // Create new editor with clean options
   editor = new Apollon.ApollonEditor(container, {
     ...options,
-    model: options.model
+    model: modelToUse
   });
 
   // Add position change listener
@@ -192,25 +250,24 @@ const render = async () => {
   }
 };
 
-// Updated clear function
+// Updated clear function to handle both storage modes
 export const clear = () => {
   const currentType = options.type as DiagramType;
   
-  // Load existing models
-  const savedModels: DiagramModels = JSON.parse(
-    localStorage.getItem('apollonModels') || '{}'
-  );
-
-  // Remove the current type's model
-  delete savedModels[currentType];
-
-  // Update localStorage and options
-  localStorage.setItem('apollonModels', JSON.stringify(savedModels));
-  localStorage.removeItem('apollonOptions');
+  if (options.useSingleStorage) {
+    // Single storage mode - remove only current type from combined storage
+    const savedModels: DiagramModels = JSON.parse(
+      localStorage.getItem('apollonModels') || '{}'
+    );
+    delete savedModels[currentType];
+    localStorage.setItem('apollonModels', JSON.stringify(savedModels));
+  } else {
+    // Per-diagram storage mode
+    localStorage.removeItem(`apollon_${currentType}`);
+  }
 
   options = {
     ...options,
-    savedModels: savedModels,
     model: undefined
   };
 };
@@ -264,54 +321,68 @@ const awaitEditorInitialization = async () => {
   }
 };
 
-// Delete everything - diagram, options, and reset the editor
+// Updated deleteEverything function to handle both storage modes
 export const deleteEverything = () => {
-  console.log('deleteEverything called');
-  console.log('Current localStorage before deletion:', { ...localStorage });
-
   try {
-    // List all keys in localStorage
-    const allKeys = Object.keys(localStorage);
-    console.log('All localStorage keys:', allKeys);
+    if (options.useSingleStorage) {
+      // Single storage mode - just remove the combined storage
+      localStorage.removeItem('apollonModels');
+    } else {
+      // Per-diagram storage mode - remove all diagram-specific keys
+      const allKeys = Object.keys(localStorage);
+      const apollonKeys = allKeys.filter(key => key.startsWith('apollon_'));
+      apollonKeys.forEach(key => localStorage.removeItem(key));
+    }
 
-    // Filter keys related to Apollon
-    const apollonKeys = allKeys.filter(key => key.startsWith('apollon_') || key === 'apollonOptions');
-    console.log('Apollon-related keys to be deleted:', apollonKeys);
+    localStorage.removeItem('apollonOptions');
 
-    // Remove each Apollon-related key
-    apollonKeys.forEach(key => {
-      localStorage.removeItem(key);
-      console.log(`Removed key: ${key}`);
-    });
-
-    console.log('Current localStorage after deletion:', { ...localStorage });
-
-    // Reset options to default state
     options = {
       model: undefined,
       colorEnabled: true,
       scale: 0.8,
-      type: 'ClassDiagram' as DiagramType
+      type: 'ClassDiagram' as DiagramType,
+      useSingleStorage: options.useSingleStorage
     };
 
-    // Destroy existing editor
     if (editor) {
       editor.destroy();
       editor = null;
     }
 
-    // Re-render with clean state
     render();
-
-    // Force a page reload to ensure clean state
     window.location.reload();
-
   } catch (error) {
     console.error('Error during deletion:', error);
     alert('An error occurred while deleting diagrams and settings');
   }
 };
 
+// Add storage mode toggle function
+export const toggleStorageMode = () => {
+  if (!editor) return;
+  
+  const currentModel = editor.model;
+  
+  if (options.useSingleStorage) {
+    // Converting from legacy to per-diagram
+    const savedModels: DiagramModels = {};
+    savedModels[options.type as DiagramType] = currentModel;
+    localStorage.setItem('apollonModels', JSON.stringify(savedModels));
+    localStorage.removeItem('apollon');
+  } else {
+    // Converting to legacy mode
+    localStorage.setItem('apollon', JSON.stringify(currentModel));
+    localStorage.removeItem('apollonModels');
+  }
+  
+  options = {
+    ...options,
+    useSingleStorage: !options.useSingleStorage,
+    legacyModel: options.useSingleStorage ? undefined : currentModel
+  };
+  
+  render();
+};
 
 interface ApollonGlobal {
   onChange: (event: MouseEvent) => void;

@@ -23,7 +23,7 @@ type Props = {
   element: IUMLElement;
 };
 
-const UmlVariableUpdate = ({ id, onRefChange, value, onChange, onSubmitKeyUp, onDelete, element }: Props) => {
+const UmlBodyUpdate = ({ id, onRefChange, value, onChange, onSubmitKeyUp, onDelete, element }: Props) => {
   const [colorOpen, setColorOpen] = useState(false);
 
   const toggleColor = () => {
@@ -52,4 +52,4 @@ const UmlVariableUpdate = ({ id, onRefChange, value, onChange, onSubmitKeyUp, on
   );
 };
 
-export default UmlVariableUpdate; 
+export default UmlBodyUpdate;

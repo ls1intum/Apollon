@@ -20,7 +20,9 @@
     "messages": "Nachrichten",
     "condition": "Bedingungen",
     "tokens": "Tokens",
-    "capacity": "Kapazität"
+    "capacity": "Kapazität",
+    "bodies": "Body",
+    "fallback_bodies": "Fallback Body"
   },
   "assessment": {
     "assessment": "Bewertung für",
@@ -148,7 +150,7 @@
       "BPMNSignalIntermediateCatchEvent": "Signal Intermediate Catch Event",
       "BPMNSignalIntermediateThrowEvent": "Signal Intermediate Throw Event",
       "BPMNEndEvent": "End-Ereignis",
-      "BPMNMessageEndEvent:": "Message End Event",
+      "BPMNMessageEndEvent": "Message End Event",
       "BPMNEscalationEndEvent": "Escalation End Event",
       "BPMNErrorEndEvent": "Error End Event",
       "BPMNCompensationEndEvent": "Compensation End Event",
@@ -171,6 +173,17 @@
       "BPMNSwimlane": "Bahn",
       "BPMNSwimlanes": "Bahnen",
       "BPMNGroup": "Gruppe"
+    },
+    "StateDiagram": {
+      "State": "State",
+      "StateActionNode": "Action",
+      "StateFinalNode": "Final Node",
+      "StateForkNode": "Fork Node",
+      "StateForkNodeHorizontal": "Fork Node Horizontal",
+      "StateInitialNode": "Initial Node",
+      "StateMergeNode": "Condition",
+      "StateObjectNode": "Object",
+      "StateTransition": "Transition"
     }
   }
 }
