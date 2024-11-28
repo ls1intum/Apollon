@@ -1,7 +1,7 @@
 export const StateElementType = {
-  State_: 'State_',
-  StateVariable_: 'StateVariable_',
-  StateAction_: 'StateAction_',
+  State: 'State',
+  StateVariable: 'StateVariable',
+  StateAction: 'StateAction',
   StateActionNode: 'StateActionNode',
   StateFinalNode: 'StateFinalNode',
   StateForkNode: 'StateForkNode',

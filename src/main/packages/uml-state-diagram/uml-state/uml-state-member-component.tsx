@@ -3,6 +3,11 @@ import { Text } from '../../../components/controls/text/text';
 import { UMLStateMember } from './uml-state-member';
 import { ThemedRect } from '../../../components/theme/themedComponents';
 
+interface Props {
+  element: UMLStateMember;
+  fillColor?: string;
+}
+
 export const UMLStateMemberComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
   return (
     <g>
@@ -12,9 +17,4 @@ export const UMLStateMemberComponent: FunctionComponent<Props> = ({ element, fil
       </Text>
     </g>
   );
-};
-
-interface Props {
-  element: UMLStateMember;
-  fillColor?: string;
-} 
+}; 

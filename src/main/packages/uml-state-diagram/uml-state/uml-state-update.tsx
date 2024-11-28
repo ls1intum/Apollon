@@ -16,13 +16,13 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { notEmpty } from '../../../utils/not-empty';
-import { StateElementType } from '../../uml-state-diagram';
-import { UMLStateVariable_ } from '../../uml-state-diagram/uml-state-variable/uml-state-variable';
-import { UMLStateAction_ } from '../../uml-state-diagram/uml-state-action/uml-state-action';
+import { StateElementType } from '..';
+import { UMLStateVariable } from '../uml-state-variable/uml-state-variable';
+import { UMLStateAction } from '../uml-state-action/uml-state-action';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLElements } from '../../uml-elements';
 import { UMLState } from './uml-state';
-import UmlVariableUpdate from './uml-state-variable-update';
+import UmlVariableUpdate from '../uml-state-variable/uml-state-variable-update';
 
 const Flex = styled.div`
   display: flex;
@@ -45,6 +45,15 @@ interface DispatchProps {
 
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
+interface State {
+  colorOpen: boolean;
+  fieldToFocus?: Textfield<string> | null;
+}
+
+const getInitialState = (): State => ({
+  colorOpen: false,
+});
+
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<StateProps, DispatchProps, OwnProps, ModelState>(null, {
@@ -54,16 +63,6 @@ const enhance = compose<ComponentClass<OwnProps>>(
     getById: UMLElementRepository.getById as any as AsyncDispatch<typeof UMLElementRepository.getById>,
   }),
 );
-
-type State = {
-  fieldToFocus?: Textfield<string> | null;
-  colorOpen: boolean;
-};
-
-const getInitialState = (): State => ({
-  fieldToFocus: undefined,
-  colorOpen: false,
-});
 
 class StateUpdate extends Component<Props, State> {
   state = getInitialState();
@@ -86,8 +85,8 @@ class StateUpdate extends Component<Props, State> {
   render() {
     const { element, getById } = this.props;
     const children = element.ownedElements.map((id) => getById(id)).filter(notEmpty);
-    const variables = children.filter((child) => child instanceof UMLStateVariable_);
-    const actions = children.filter((child) => child instanceof UMLStateAction_);
+    const variables = children.filter((child) => child instanceof UMLStateVariable);
+    const actions = children.filter((child) => child instanceof UMLStateAction);
     const variableRefs: (Textfield<string> | null)[] = [];
     const actionRefs: (Textfield<string> | null)[] = [];
 
@@ -135,7 +134,7 @@ class StateUpdate extends Component<Props, State> {
             ref={this.newVariableField}
             outline
             value=""
-            onSubmit={this.create(UMLStateVariable_)}
+            onSubmit={this.create(UMLStateVariable)}
             onSubmitKeyUp={(key: string, value: string) => {
               if (value) {
                 this.setState({
@@ -189,7 +188,7 @@ class StateUpdate extends Component<Props, State> {
             ref={this.newActionField}
             outline
             value=""
-            onSubmit={this.create(UMLStateAction_)}
+            onSubmit={this.create(UMLStateAction)}
             onSubmitKeyUp={() =>
               this.setState({
                 fieldToFocus: this.newActionField.current,
@@ -210,7 +209,7 @@ class StateUpdate extends Component<Props, State> {
     );
   }
 
-  private create = (Clazz: typeof UMLStateVariable_ | typeof UMLStateAction_) => (value: string) => {
+  private create = (Clazz: typeof UMLStateVariable | typeof UMLStateAction) => (value: string) => {
     const { element, create } = this.props;
     const member = new Clazz();
     member.name = value;
@@ -226,4 +225,4 @@ class StateUpdate extends Component<Props, State> {
   };
 }
 
-export const UMLStateUpdate = enhance(StateUpdate); 
+export const UMLStateUpdate = enhance(StateUpdate);

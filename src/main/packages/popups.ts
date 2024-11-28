@@ -38,7 +38,7 @@ import { BPMNTaskUpdate } from './bpmn/bpmn-task/bpmn-task-update';
 import { UMLStateMergeNodeUpdate } from './uml-state-diagram/uml-state-merge-node/uml-state-merge-node-update';
 import { UMLStateTransitionUpdate } from './uml-state-diagram/uml-state-transition/uml-state-transition-update';
 import { UMLStateCodeBlockUpdate } from './uml-state-diagram/uml-state-code-block/uml-state-code-block-update';
-import { UMLStateUpdate } from './common/uml-state/uml-state-update';
+import { UMLStateUpdate } from './uml-state-diagram/uml-state/uml-state-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -97,9 +97,9 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNGroup]: DefaultPopup,
   [UMLElementType.BPMNPool]: BPMNPoolUpdate,
   [UMLElementType.BPMNSwimlane]: DefaultPopup,
-  [UMLElementType.State_]: UMLStateUpdate,
-  [UMLElementType.StateVariable_]: null,
-  [UMLElementType.StateAction_]: null,
+  [UMLElementType.State]: UMLStateUpdate,
+  [UMLElementType.StateVariable]: null,
+  [UMLElementType.StateAction]: null,
   [UMLElementType.StateActionNode]: DefaultPopup,
   [UMLElementType.StateFinalNode]: DefaultPopup,
   [UMLElementType.StateForkNode]: DefaultPopup,
