@@ -23,7 +23,22 @@ const Flex = styled.div`
   justify-content: space-between;
 `;
 
-type State = { colorOpen: boolean };
+const ParamContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+`;
+
+const ParamControls = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+
+type State = { 
+  colorOpen: boolean;
+  paramIds: string[];
+};
 
 type OwnProps = {
   element: UMLStateTransition;
@@ -40,12 +55,49 @@ type DispatchProps = {
 type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 class StateTransitionUpdate extends Component<Props, State> {
-  state = { colorOpen: false };
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      colorOpen: false,
+      paramIds: Object.keys(props.element.params).length > 0 
+        ? Object.keys(props.element.params).sort() 
+        : ['0']
+    };
+  }
 
   private toggleColor = () => {
     this.setState((state) => ({
       colorOpen: !state.colorOpen,
     }));
+  };
+
+  private addParam = () => {
+    const newId = (Math.max(...this.state.paramIds.map(Number)) + 1).toString();
+    this.setState(
+      prevState => ({ paramIds: [...prevState.paramIds, newId] }),
+      () => {
+        const newParams = { ...this.props.element.params, [newId]: '' };
+        this.props.update<UMLStateTransition>(this.props.element.id, { params: newParams });
+      }
+    );
+  };
+
+  private removeParam = (id: string) => {
+    this.setState(
+      prevState => ({
+        paramIds: prevState.paramIds.filter(paramId => paramId !== id)
+      }),
+      () => {
+        const newParams = { ...this.props.element.params };
+        delete newParams[id];
+        this.props.update<UMLStateTransition>(this.props.element.id, { params: newParams });
+      }
+    );
+  };
+
+  private handleParamChange = (id: string, value: string) => {
+    const newParams = { ...this.props.element.params, [id]: value };
+    this.props.update<UMLStateTransition>(this.props.element.id, { params: newParams });
   };
 
   render() {
@@ -73,8 +125,28 @@ class StateTransitionUpdate extends Component<Props, State> {
           <Textfield value={element.name} onChange={this.rename} autoFocus />
         </section>
         <section>
-          <Header>Params</Header>
-          <Textfield value={element.params} onChange={this.updateParams} />
+          <Flex>
+            <Header>Parameters</Header>
+            <Button color="link" onClick={this.addParam}>
+              Add
+            </Button>
+          </Flex>
+          {this.state.paramIds.map((id, index) => (
+            <ParamContainer key={index}>
+              <Textfield
+                value={this.props.element.params[id]}
+                onChange={(value) => this.handleParamChange(id, value)}
+                placeholder={`Parameter ${index + 1}`}
+              />
+              {this.state.paramIds.length > 1 && (
+                <ParamControls>
+                  <Button color="link" onClick={() => this.removeParam(id)}>
+                    Delete
+                  </Button>
+                </ParamControls>
+              )}
+            </ParamContainer>
+          ))}
         </section>
         <StylePane
           open={this.state.colorOpen}
@@ -89,10 +161,6 @@ class StateTransitionUpdate extends Component<Props, State> {
 
   private rename = (name: string) => {
     this.props.update<UMLStateTransition>(this.props.element.id, { name });
-  };
-
-  private updateParams = (params: string) => {
-    this.props.update<UMLStateTransition>(this.props.element.id, { params });
   };
 }
 

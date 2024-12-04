@@ -5,31 +5,57 @@ import { UMLElement } from '../../../services/uml-element/uml-element';
 import { DeepPartial } from 'redux';
 
 export interface IUMLStateTransition {
-  params?: string;
+  params: { [id: string]: string };
 }
 
 export class UMLStateTransition extends UMLRelationshipCenteredDescription implements IUMLStateTransition {
   type = StateRelationshipType.StateTransition;
-  params: string = '';
+  params: { [id: string]: string } = {};
 
   constructor(values?: DeepPartial<Apollon.UMLStateTransition>) {
     super(values);
-    this.params = values?.params || '';
+    this.params = {};
+    if (values?.params) {
+      if (typeof values.params === 'string') {
+        this.params = { '0': values.params };
+      } else if (Array.isArray(values.params)) {
+        values.params.forEach((param, index) => {
+          this.params[index.toString()] = param;
+        });
+      } else {
+        this.params = values.params;
+      }
+    }
   }
 
   serialize(): Apollon.UMLStateTransition {
+    const base = super.serialize();
+    const paramValues = Object.values(this.params);
     return {
-      ...super.serialize(),
+      ...base,
       type: this.type,
-      params: this.params || undefined
+      params: paramValues.length === 0 ? undefined :
+             paramValues.length === 1 ? paramValues[0] :
+             paramValues
     };
   }
 
   deserialize<T extends Apollon.UMLModelElement>(
-    values: T & { params?: string },
+    values: T & { params?: string | string[] | { [id: string]: string } },
     children?: Apollon.UMLModelElement[],
   ): void {
     super.deserialize(values, children);
-    this.params = values.params || '';
+    this.params = {};
+    if (values.params) {
+      if (typeof values.params === 'string') {
+        this.params = { '0': values.params };
+      } else if (Array.isArray(values.params)) {
+        values.params.forEach((param, index) => {
+          this.params[index.toString()] = param;
+        });
+      } else {
+        this.params = values.params;
+      }
+    }
   }
 } 

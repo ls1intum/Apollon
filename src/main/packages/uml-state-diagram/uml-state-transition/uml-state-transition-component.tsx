@@ -44,11 +44,16 @@ export const UMLStateTransitionComponent: FunctionComponent<Props> = ({ element 
   const fill = element.textColor ? { fill: element.textColor } : {};
 
   const getDisplayText = () => {
-    if (element.params && element.name) {
-      return `${element.name} [${element.params}]`;
+    if (!element.params && !element.name) return '';
+    
+    const paramValues = Object.values(element.params);
+    const formattedParams = paramValues.length > 0 ? paramValues.join(', ') : '';
+    
+    if (formattedParams && element.name) {
+      return `${element.name} [${formattedParams}]`;
     }
-    if (element.params) {
-      return `[${element.params}]`;
+    if (formattedParams) {
+      return `[${formattedParams}]`;
     }
     return element.name;
   };
