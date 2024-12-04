@@ -195,3 +195,7 @@ export type SVG = {
     height: number;
   };
 };
+
+export type UMLStateTransition = UMLRelationship & {
+  params?: string;
+};

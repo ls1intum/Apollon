@@ -43,6 +43,16 @@ export const UMLStateTransitionComponent: FunctionComponent<Props> = ({ element 
 
   const fill = element.textColor ? { fill: element.textColor } : {};
 
+  const getDisplayText = () => {
+    if (element.params && element.name) {
+      return `${element.name} [${element.params}]`;
+    }
+    if (element.params) {
+      return `[${element.params}]`;
+    }
+    return element.name;
+  };
+
   return (
     <g>
       <marker
@@ -65,7 +75,7 @@ export const UMLStateTransitionComponent: FunctionComponent<Props> = ({ element 
         markerEnd={`url(#marker-${element.id})`}
       />
       <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none" style={{ ...fill }}>
-        {element.name}
+        {getDisplayText()}
       </text>
     </g>
   );

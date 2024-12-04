@@ -13,7 +13,7 @@ import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { UMLRelationshipRepository } from '../../../services/uml-relationship/uml-relationship-repository';
-import { UMLStateTransition } from './uml-state-transition';
+import { UMLStateTransition, IUMLStateTransition } from './uml-state-transition';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { StylePane } from '../../../components/style-pane/style-pane';
 
@@ -24,6 +24,20 @@ const Flex = styled.div`
 `;
 
 type State = { colorOpen: boolean };
+
+type OwnProps = {
+  element: UMLStateTransition;
+};
+
+type StateProps = {};
+
+type DispatchProps = {
+  update: typeof UMLElementRepository.update;
+  delete: typeof UMLElementRepository.delete;
+  flip: typeof UMLRelationshipRepository.flip;
+};
+
+type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 class StateTransitionUpdate extends Component<Props, State> {
   state = { colorOpen: false };
@@ -55,7 +69,12 @@ class StateTransitionUpdate extends Component<Props, State> {
           <Divider />
         </section>
         <section>
+          <Header>Name</Header>
           <Textfield value={element.name} onChange={this.rename} autoFocus />
+        </section>
+        <section>
+          <Header>Params</Header>
+          <Textfield value={element.params} onChange={this.updateParams} />
         </section>
         <StylePane
           open={this.state.colorOpen}
@@ -69,23 +88,13 @@ class StateTransitionUpdate extends Component<Props, State> {
   }
 
   private rename = (name: string) => {
-    this.props.update(this.props.element.id, { name });
+    this.props.update<UMLStateTransition>(this.props.element.id, { name });
+  };
+
+  private updateParams = (params: string) => {
+    this.props.update<UMLStateTransition>(this.props.element.id, { params });
   };
 }
-
-type OwnProps = {
-  element: UMLStateTransition;
-};
-
-type StateProps = {};
-
-type DispatchProps = {
-  update: typeof UMLElementRepository.update;
-  delete: typeof UMLElementRepository.delete;
-  flip: typeof UMLRelationshipRepository.flip;
-};
-
-type Props = OwnProps & StateProps & DispatchProps & I18nContext;
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
