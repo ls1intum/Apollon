@@ -12,7 +12,7 @@ This fork of Apollon integrates with the [BESSER platform](https://github.com/BE
 ## Key Features
 
 ### B-UML Modeling Support
-- Visual modeling interface for BESSER's modeling language
+- Visual modeling interface for BESSER's modeling language (Strutural and StateMachines)
 - Seamless integration with BESSER's code generation pipeline
 
 ### Code Generation

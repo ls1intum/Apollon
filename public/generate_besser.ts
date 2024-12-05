@@ -1,5 +1,4 @@
 import { getDiagramData } from './utils';
-// console.log("generate_besser.ts is loaded");
 
 export async function exportBuml(editorInstance: any) {
   try {
@@ -14,7 +13,6 @@ export async function exportBuml(editorInstance: any) {
       return;
     }
 
-    console.log("Sending data to backend for BUML conversion...");
     const response = await fetch('http://localhost:8000/export-buml', {
       method: 'POST',
       headers: {
@@ -53,7 +51,6 @@ export async function exportBuml(editorInstance: any) {
 
 export async function generateOutput(generatorType: string) {
   try {
-    console.log("Generating output with generator type: ", generatorType);
     const editorInstance = (window as any).editor;
 
     if (!editorInstance || !editorInstance.model) {
@@ -67,7 +64,6 @@ export async function generateOutput(generatorType: string) {
       return;
     }
 
-    console.log("Sending data to backend...");
     const response = await fetch('http://localhost:8000/generate-output', {
       method: 'POST',
       headers: {
@@ -80,16 +76,13 @@ export async function generateOutput(generatorType: string) {
     });
 
     if (response.ok) {
-      console.log("Output generated successfully");
       const blob = await response.blob();
       
       let filename;
+
       switch (generatorType) {
         case 'python':
           filename = 'classes.py';
-          break;
-        case 'java':
-          filename = 'Class.java';
           break;
         case 'django':
           filename = 'models.py';
@@ -103,11 +96,19 @@ export async function generateOutput(generatorType: string) {
         case 'sql':
           filename = 'tables.sql';
           break;
+        case 'backend':
+          filename = 'backend_output.zip';
+          break;
+        case 'java':
+          filename = 'java_output.zip';
+          break;
         default:
           filename = 'default.py';
           break;
       }
+      
 
+      // Create and trigger download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -115,11 +116,14 @@ export async function generateOutput(generatorType: string) {
       document.body.appendChild(a);
       a.click();
       a.remove();
+      window.URL.revokeObjectURL(url);
     } else {
-      console.error('Erreur lors de la génération du fichier:', response.statusText);
+      console.error('Error generating file:', response.statusText);
+      throw new Error(`Generation failed: ${response.statusText}`);
     }
   } catch (error) {
-    console.error('Erreur:', error);
+    console.error('Error:', error);
+    throw error;
   }
 }
 
@@ -165,17 +169,13 @@ window.addEventListener('load', () => {
   window.apollon = {
     ...window.apollon,
     generateCode: async (generatorType: string) => {
-      console.log("Generating code with type:", generatorType);
-
       await generateOutput(generatorType);
     },
     convertBumlToJson: async (file: File) => {
       if (!file) return;
-      console.log("Converting file:", file.name);
       await convertBumlToJson(file);
     },
     exportBuml: async () => {
-      console.log("Exporting BUML...");
       await exportBuml((window as any).editor);
     }
   };
@@ -184,7 +184,6 @@ window.addEventListener('load', () => {
 // Export the function
 export async function convertBumlToJson(file: File) {
   try {
-    console.log("Starting BUML to JSON conversion...");
     const formData = new FormData();
     formData.append('buml_file', file);
 
@@ -195,16 +194,13 @@ export async function convertBumlToJson(file: File) {
 
     if (response.ok) {
       const textData = await response.text();
-      console.log("Raw response:", textData);
       const jsonData = JSON.parse(textData);
       
       const editorInstance = (window as any).editor;
       if (editorInstance && editorInstance.model) {
-        console.log("Updating editor model...");
         try {
           editorInstance.model = jsonData.model;
           window.apollon.save();
-          console.log("Editor model updated and saved to localStorage");
         } catch (editorError) {
           console.error("Failed to update editor:", editorError);
         }
@@ -214,74 +210,3 @@ export async function convertBumlToJson(file: File) {
     console.error('Error during conversion:', error);
   }
 }
-
-
-
-// // Export the function
-// export async function convertBumlToJsonDownload(file: File) {
-//   try {
-//     console.log("Starting BUML to JSON conversion...");
-//     console.log("File being sent:", file);
-
-//     const formData = new FormData();
-//     formData.append('buml_file', file);
-
-//     console.log("Sending request to backend...");
-//     const response = await fetch('http://localhost:8000/get-json-model', {
-//       method: 'POST',
-//       body: formData
-//     });
-
-//     console.log("Response status:", response.status);
-//     console.log("Response headers:", response.headers);
-
-//     if (response.ok) {
-//       let jsonData;
-//       try {
-//         const textData = await response.text();
-//         console.log("Raw response:", textData);
-//         jsonData = JSON.parse(textData);
-//       } catch (parseError) {
-//         console.error("Failed to parse response as JSON:", parseError);
-//         return;
-//       }
-
-//       console.log("Parsed JSON data:", jsonData);
-      
-//       // Update the editor with the new JSON data
-//       const editorInstance = (window as any).editor;
-//       if (editorInstance && editorInstance.model) {
-//         console.log("Updating editor model...");
-//         try {
-//           editorInstance.model.loadData(jsonData);
-//           console.log("Editor model updated successfully");
-//         } catch (editorError) {
-//           console.error("Failed to update editor:", editorError);
-//         }
-
-//         // Create and trigger download of JSON file
-//         try {
-//           const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
-//           const url = window.URL.createObjectURL(jsonBlob);
-//           const a = document.createElement('a');
-//           a.href = url;
-//           a.download = 'converted_model.json';
-//           document.body.appendChild(a);
-//           a.click();
-//           a.remove();
-//           window.URL.revokeObjectURL(url);
-//           console.log("JSON file download triggered");
-//         } catch (downloadError) {
-//           console.error("Failed to create download:", downloadError);
-//         }
-//       } else {
-//         console.error("Editor is not properly initialized!", editorInstance);
-//       }
-//     } else {
-//       const errorText = await response.text();
-//       console.error('Error response from server:', errorText);
-//     }
-//   } catch (error) {
-//     console.error('Error during conversion:', error);
-//   }
-// }

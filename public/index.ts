@@ -64,10 +64,15 @@ if (codeGeneratorSection) {
   codeGeneratorSection.style.display = 'block';
 }
 
-// Fonction called when the diagram type is changed
+// Set initial visibility of BUML section
+const bumlSection = document.getElementById('bumlSection');
+if (bumlSection) {
+  bumlSection.style.display = options.type && ['ClassDiagram', 'StateMachineDiagram'].includes(options.type) ? 'block' : 'none';
+}
+
+// Function called when the diagram type is changed
 export const onChange = async (event: any) => {
   const { name, value } = event.target;
-  console.log('onChange called:', { name, value });
 
   if (name === 'type') {
     // Update options
@@ -78,16 +83,22 @@ export const onChange = async (event: any) => {
       editor.type = value as DiagramType;
       
       // Debug logging
-      console.log('Current diagram type after change:', {
-        optionsType: options.type,
-        editorType: editor.model.type,
-        newType: value
-      });
+      // console.log('Current diagram type after change:', {
+      //   optionsType: options.type,
+      //   editorType: editor.model.type,
+      //   newType: value
+      // });
 
       // Update the code generator section visibility
       const codeGeneratorSection = document.getElementById('codeGeneratorSection');
       if (codeGeneratorSection) {
         codeGeneratorSection.style.display = value === 'ClassDiagram' ? 'block' : 'none';
+      }
+
+      // Update the BUML section visibility
+      const bumlSection = document.getElementById('bumlSection');
+      if (bumlSection) {
+        bumlSection.style.display = value && ['ClassDiagram', 'StateMachineDiagram'].includes(value) ? 'block' : 'none';
       }
     }
   } else {
@@ -101,7 +112,7 @@ export const onChange = async (event: any) => {
   save();
 };
 
-// Fonction called when a switch is toggled 
+// Function called when a switch is toggled 
 export const onSwitch = (event: MouseEvent) => {
   const { name, checked: value } = event.target as HTMLInputElement;
   options = { ...options, [name]: value };
@@ -152,7 +163,6 @@ const loadModelForType = (type: DiagramType): Apollon.UMLModel | undefined => {
 
 // Updated render function to load models
 const render = async () => {
-  console.log("Rendering editor");
   
   // Load saved options
   const savedOptionsString = localStorage.getItem('apollonOptions');
@@ -210,7 +220,6 @@ const render = async () => {
   await awaitEditorInitialization();
 
   if (editor) {
-    console.log("Editor initialized successfully");
     (window as any).editor = editor;
     setupGlobalApollon(editor);
   } else {
@@ -426,16 +435,13 @@ window.addEventListener('load', () => {
   window.apollon = {
     ...currentApollon,
     generateCode: async (generatorType: string) => {
-      console.log("Generating code with type:", generatorType);
       await generateOutput(generatorType);
     },
     convertBumlToJson: async (file: File) => {
       if (!file) return;
-      console.log("Converting file:", file.name);
       await convertBumlToJson(file);
     },
     exportBuml: async () => {
-      console.log("Exporting BUML...");
       const currentEditor = (window as any).editor;
       if (!currentEditor) {
         console.error("Editor is not initialized");
@@ -450,19 +456,17 @@ window.addEventListener('load', () => {
         return;
       }
 
-      console.log("Diagram type:", diagramData.type);
       
-      // Add debug logging
-      console.log("Checking diagram type:", {
-        isStateMachine: diagramData.type === 'StateMachineDiagram',
-        isClass: diagramData.type === 'ClassDiagram',
-        actualType: diagramData.type
-      });
+      // Debug logging
+      // console.log("Checking diagram type:", {
+      //   isStateMachine: diagramData.type === 'StateMachineDiagram',
+      //   isClass: diagramData.type === 'ClassDiagram',
+      //   actualType: diagramData.type
+      // });
       
       if (diagramData.type === 'StateMachineDiagram' || diagramData.type === 'ClassDiagram') {
         try {
           await exportBuml(currentEditor);
-          console.log("BUML export completed");
         } catch (error) {
           console.error("Error during BUML export:", error);
           alert(`Failed to export BUML: ${error.message}`);
