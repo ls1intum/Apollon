@@ -6,6 +6,16 @@ export const getDiagramData = (editor: Apollon.ApollonEditor | null) => {
         return null;
     }
     console.log("Retrieving diagram data");
-    const model: Apollon.UMLModel = editor.model;
-    return model;
+    
+    // Get the current model and ensure type is set
+    const model = editor.model;
+    console.log("Current diagram type:", model.type);
+    
+    // Force refresh the type from the editor's current state
+    const currentType = editor.model.type;
+    
+    return {
+        ...model,
+        type: currentType
+    };
 };

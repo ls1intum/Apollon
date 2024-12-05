@@ -67,6 +67,7 @@
           <select name="type" data-cy="select-type" onchange="apollon.onChange(event)">
             <option value="ClassDiagram">Class Diagram</option>
             <option value="ObjectDiagram">Object Diagram</option>
+            <option value="StateMachineDiagram">State Machine Diagram (beta)(BESSER)</option>
             <option value="ActivityDiagram">Activity Diagram</option>
             <option value="UseCaseDiagram">Use Case Diagram</option>
             <option value="CommunicationDiagram">Communication Diagram</option>
@@ -77,7 +78,6 @@
             <option value="SyntaxTree">Syntax Tree</option>
             <option value="Flowchart">Flowchart</option>
             <option value="BPMN">BPMN (beta)</option>
-            <option value="StateMachineDiagram">State Machine Diagram (beta)</option>
           </select>
         </div>
       </section>
@@ -141,7 +141,7 @@
       <section>
         <h3 class="header">BUML Import/Export</h3>
         <div class="switch">
-          <button onclick="if(window.apollon && window.apollon.generateCode) window.apollon.generateCode('buml')">Export BUML</button>
+          <button onclick="if(window.apollon && window.apollon.exportBuml) window.apollon.exportBuml()">Export BUML</button>
           <div class="file-input-wrapper">
             <input type="file" id="import-buml-file" accept=".buml,.py" onchange="window.apollon.convertBumlToJson(this.files[0])" style="display: none;">
             <label for="import-buml-file" class="file-input-label">Import BUML</label>

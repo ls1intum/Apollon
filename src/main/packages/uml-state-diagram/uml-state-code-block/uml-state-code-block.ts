@@ -34,7 +34,7 @@ export class UMLStateCodeBlock extends UMLElement implements IUMLStateCodeBlockE
     super(values && !values.bounds ? { ...values, bounds: { x: 0, y: 0, width: 200, height: 100 } } : values);
     
 
-    console.log('Raw constructor values:', JSON.stringify(values, null, 2));
+    //console.log('Raw constructor values:', JSON.stringify(values, null, 2));
 
     // If values exist, override defaults
     if (values) {

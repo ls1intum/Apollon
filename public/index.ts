@@ -2,7 +2,8 @@ import * as Apollon from '../src/main';
 import * as themings from './themings.json';
 import('./styles.css');
 import { exportDiagram, importDiagram } from '../src/main/services/diagramExportImport/diagramExportService';
-import { generateOutput, convertBumlToJson } from './generate_besser';
+import { generateOutput, convertBumlToJson, exportBuml } from './generate_besser';
+import { getDiagramData } from './utils.ts';
 
 const container = document.getElementById('apollon')!;
 let editor: Apollon.ApollonEditor | null = null;
@@ -64,73 +65,40 @@ if (codeGeneratorSection) {
 }
 
 // Fonction called when the diagram type is changed
-export const onChange = (event: MouseEvent) => {
-  const { name, value } = event.target as HTMLSelectElement;
-  
-  console.log('onChange called:', { name, value }); // Debug log
+export const onChange = async (event: any) => {
+  const { name, value } = event.target;
+  console.log('onChange called:', { name, value });
 
   if (name === 'type') {
-    if (!editor) return;
+    // Update options
+    options.type = value as DiagramType;
+    
+    // Update editor type and recreate it
+    if (editor) {
+      editor.type = value as DiagramType;
+      
+      // Debug logging
+      console.log('Current diagram type after change:', {
+        optionsType: options.type,
+        editorType: editor.model.type,
+        newType: value
+      });
 
-    // Save current model before switching
-    const currentModel = editor.model;
-    const currentType = options.type as DiagramType;
-
-    if (options.useSingleStorage) {
-      // Single storage mode - save all models in one key
-      const savedModels: DiagramModels = JSON.parse(
-        localStorage.getItem('apollonModels') || '{}'
-      );
-      
-      // Save current diagram state before switching
-      savedModels[currentType] = currentModel;
-      
-      // Type assertion to ensure type safety
-      const newType = value as DiagramType;
-      
-      // Keep the existing model for the new type if it exists
-      const newModel = savedModels[newType];
-      
-      // Update storage
-      localStorage.setItem('apollonModels', JSON.stringify(savedModels));
-
-      // Update options with new type and corresponding model
-      options = { 
-        ...options, 
-        type: newType,
-        model: newModel,
-        savedModels: savedModels
-      };
-    } else {
-      // Per-diagram storage mode
-      // Save current diagram state
-      localStorage.setItem(`apollon_${currentType}`, JSON.stringify(currentModel));
-      
-      // Type assertion to ensure type safety
-      const newType = value as DiagramType;
-      
-      // Load existing model for new type if it exists
-      const modelString = localStorage.getItem(`apollon_${newType}`);
-      const newModel = modelString ? JSON.parse(modelString) : undefined;
-
-      // Update options
-      options = { 
-        ...options, 
-        type: newType,
-        model: newModel
-      };
-    }
-
-    // Update the code generator section visibility
-    const codeGeneratorSection = document.getElementById('codeGeneratorSection');
-    if (codeGeneratorSection) {
-      codeGeneratorSection.style.display = value === 'ClassDiagram' ? 'block' : 'none';
+      // Update the code generator section visibility
+      const codeGeneratorSection = document.getElementById('codeGeneratorSection');
+      if (codeGeneratorSection) {
+        codeGeneratorSection.style.display = value === 'ClassDiagram' ? 'block' : 'none';
+      }
     }
   } else {
     options = { ...options, [name]: value };
   }
 
-  render();
+  // Wait for editor to be fully initialized after type change
+  await awaitEditorInitialization();
+  
+  // Save the current state
+  save();
 };
 
 // Fonction called when a switch is toggled 
@@ -459,16 +427,49 @@ window.addEventListener('load', () => {
     ...currentApollon,
     generateCode: async (generatorType: string) => {
       console.log("Generating code with type:", generatorType);
-      if (generatorType === 'buml') {
-        await generateOutput('buml');
-      } else {
-        await generateOutput(generatorType);
-      }
+      await generateOutput(generatorType);
     },
     convertBumlToJson: async (file: File) => {
       if (!file) return;
       console.log("Converting file:", file.name);
       await convertBumlToJson(file);
+    },
+    exportBuml: async () => {
+      console.log("Exporting BUML...");
+      const currentEditor = (window as any).editor;
+      if (!currentEditor) {
+        console.error("Editor is not initialized");
+        alert("Editor is not initialized. Please try refreshing the page.");
+        return;
+      }
+
+      const diagramData = getDiagramData(currentEditor);
+      if (!diagramData) {
+        console.error("No diagram data available!");
+        alert("No diagram data available to export!");
+        return;
+      }
+
+      console.log("Diagram type:", diagramData.type);
+      
+      // Add debug logging
+      console.log("Checking diagram type:", {
+        isStateMachine: diagramData.type === 'StateMachineDiagram',
+        isClass: diagramData.type === 'ClassDiagram',
+        actualType: diagramData.type
+      });
+      
+      if (diagramData.type === 'StateMachineDiagram' || diagramData.type === 'ClassDiagram') {
+        try {
+          await exportBuml(currentEditor);
+          console.log("BUML export completed");
+        } catch (error) {
+          console.error("Error during BUML export:", error);
+          alert(`Failed to export BUML: ${error.message}`);
+        }
+      } else {
+        alert("BUML export is only supported for State Machine and Class diagrams.");
+      }
     }
   } as ApollonGlobal;
 });

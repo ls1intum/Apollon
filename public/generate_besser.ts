@@ -1,7 +1,56 @@
 import { getDiagramData } from './utils';
-console.log("generate_besser.ts is loaded");
+// console.log("generate_besser.ts is loaded");
 
-// Fonction pour envoyer une requête au backend pour générer la sortie en fonction du générateur sélectionné
+export async function exportBuml(editorInstance: any) {
+  try {
+    if (!editorInstance || !editorInstance.model) {
+      console.error("Editor is not properly initialized or doesn't have a model yet!");
+      return;
+    }
+
+    const diagramData = getDiagramData(editorInstance);
+    if (!diagramData) {
+      console.error("No diagram data available!");
+      return;
+    }
+
+    console.log("Sending data to backend for BUML conversion...");
+    const response = await fetch('http://localhost:8000/export-buml', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        elements: diagramData
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log("BUML generated successfully");
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    
+    // Determine filename based on diagram type
+    const filename = editorInstance.model.type === 'StateMachineDiagram' 
+      ? 'state_machine.py' 
+      : 'domain_model.py';
+    
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error during BUML export:', error);
+    throw error; // Re-throw to be caught by the caller
+  }
+}
+
 export async function generateOutput(generatorType: string) {
   try {
     console.log("Generating output with generator type: ", generatorType);
@@ -14,7 +63,7 @@ export async function generateOutput(generatorType: string) {
 
     const diagramData = getDiagramData(editorInstance);
     if (!diagramData) {
-      console.error("there is no data avail;able!");
+      console.error("There is no data available!");
       return;
     }
 
@@ -34,7 +83,6 @@ export async function generateOutput(generatorType: string) {
       console.log("Output generated successfully");
       const blob = await response.blob();
       
-      // Déterminer le nom du fichier en fonction du générateur sélectionné
       let filename;
       switch (generatorType) {
         case 'python':
@@ -56,7 +104,7 @@ export async function generateOutput(generatorType: string) {
           filename = 'tables.sql';
           break;
         default:
-          filename = 'domain_model.py';
+          filename = 'default.py';
           break;
       }
 
@@ -110,7 +158,6 @@ declare global {
 window.addEventListener('load', () => {
   setupGenerateButton();
   
-  // Extend window.apollon with all necessary functions
   if (!window.apollon) {
     window.apollon = {};
   }
@@ -119,17 +166,17 @@ window.addEventListener('load', () => {
     ...window.apollon,
     generateCode: async (generatorType: string) => {
       console.log("Generating code with type:", generatorType);
-      if (generatorType === 'buml') {
-        // Handle BUML export specifically
-        await generateOutput('buml');
-      } else {
-        await generateOutput(generatorType);
-      }
+
+      await generateOutput(generatorType);
     },
     convertBumlToJson: async (file: File) => {
       if (!file) return;
       console.log("Converting file:", file.name);
       await convertBumlToJson(file);
+    },
+    exportBuml: async () => {
+      console.log("Exporting BUML...");
+      await exportBuml((window as any).editor);
     }
   };
 });
