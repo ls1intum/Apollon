@@ -75,40 +75,69 @@ export const onChange = async (event: any) => {
   const { name, value } = event.target;
 
   if (name === 'type') {
-    // Update options
-    options.type = value as DiagramType;
+    const previousType = options.type;
+    const newType = value as DiagramType;
     
-    // Update editor type and recreate it
-    if (editor) {
-      editor.type = value as DiagramType;
+    options.type = newType;
+    
+    if (editor && previousType) {
+      const currentModel = editor.model;
       
-      // Debug logging
-      // console.log('Current diagram type after change:', {
-      //   optionsType: options.type,
-      //   editorType: editor.model.type,
-      //   newType: value
-      // });
-
-      // Update the code generator section visibility
-      const codeGeneratorSection = document.getElementById('codeGeneratorSection');
-      if (codeGeneratorSection) {
-        codeGeneratorSection.style.display = value === 'ClassDiagram' ? 'block' : 'none';
+      if (options.useSingleStorage) {
+        localStorage.setItem('apollon', JSON.stringify(currentModel));
+        options.legacyModel = currentModel;
+        
+        editor.model = {
+          ...currentModel,
+          type: newType,
+          version: '3.0.0',
+          size: { width: 2000, height: 2000 },
+          elements: currentModel.elements || {},
+          relationships: currentModel.relationships || {},
+          interactive: currentModel.interactive || { elements: {}, relationships: {} },
+          assessments: currentModel.assessments || {}
+        };
+      } else {
+        const savedModels: DiagramModels = JSON.parse(
+          localStorage.getItem('apollonModels') || '{}'
+        );
+        savedModels[previousType] = currentModel;
+        localStorage.setItem('apollonModels', JSON.stringify(savedModels));
+        
+        const existingModel = savedModels[newType];
+        if (existingModel) {
+          editor.model = existingModel;
+        } else {
+          editor.model = {
+            type: newType,
+            version: '3.0.0',
+            size: { width: 2000, height: 2000 },
+            elements: {},
+            relationships: {},
+            interactive: { elements: {}, relationships: {} },
+            assessments: {}
+          };
+        }
       }
 
-      // Update the BUML section visibility
+      // Update UI elements visibility
+      const codeGeneratorSection = document.getElementById('codeGeneratorSection');
+      if (codeGeneratorSection) {
+        codeGeneratorSection.style.display = newType === 'ClassDiagram' ? 'block' : 'none';
+      }
+
       const bumlSection = document.getElementById('bumlSection');
       if (bumlSection) {
-        bumlSection.style.display = value && ['ClassDiagram', 'StateMachineDiagram'].includes(value) ? 'block' : 'none';
+        bumlSection.style.display = newType && ['ClassDiagram', 'StateMachineDiagram'].includes(newType) 
+          ? 'block' 
+          : 'none';
       }
     }
   } else {
     options = { ...options, [name]: value };
   }
 
-  // Wait for editor to be fully initialized after type change
   await awaitEditorInitialization();
-  
-  // Save the current state
   save();
 };
 
@@ -123,10 +152,9 @@ export const onSwitch = (event: MouseEvent) => {
 export const save = () => {
   if (!editor) return;
   const currentModel: Apollon.UMLModel = editor.model;
-  const currentType = options.type as DiagramType;
-
+  
   if (options.useSingleStorage) {
-    // Legacy single storage mode
+    // In single storage mode, save everything in one place
     localStorage.setItem('apollon', JSON.stringify(currentModel));
     options.legacyModel = currentModel;
   } else {
@@ -134,7 +162,7 @@ export const save = () => {
     const savedModels: DiagramModels = JSON.parse(
       localStorage.getItem('apollonModels') || '{}'
     );
-    savedModels[currentType] = currentModel;
+    savedModels[options.type as DiagramType] = currentModel;
     localStorage.setItem('apollonModels', JSON.stringify(savedModels));
   }
 
@@ -163,56 +191,48 @@ const loadModelForType = (type: DiagramType): Apollon.UMLModel | undefined => {
 
 // Updated render function to load models
 const render = async () => {
-  
-  // Load saved options
   const savedOptionsString = localStorage.getItem('apollonOptions');
   const savedOptions = savedOptionsString 
     ? JSON.parse(savedOptionsString) 
     : {};
 
-  // Important: Use options.type instead of savedOptions.type
   const currentType = options.type || 'ClassDiagram' as DiagramType;
 
-  // Load model for current type
-  const currentModel = loadModelForType(currentType);
+  let modelToUse: Apollon.UMLModel | undefined;
 
-  // Update options
+  if (options.useSingleStorage) {
+    // In single storage mode, use the legacy model
+    modelToUse = JSON.parse(localStorage.getItem('apollon') || 'null');
+    if (modelToUse) {
+      // Update the type while preserving elements and relationships
+      modelToUse = {
+        ...modelToUse,
+        type: currentType
+      };
+    }
+  } else {
+    // Per-diagram storage mode
+    modelToUse = loadModelForType(currentType);
+  }
+
   options = {
     ...options,
     colorEnabled: savedOptions.colorEnabled ?? options.colorEnabled,
     scale: savedOptions.scale ?? options.scale,
     type: currentType,
-    model: currentModel
+    model: modelToUse,
+    legacyModel: options.useSingleStorage ? modelToUse : undefined
   };
 
-  // Update the diagram type dropdown
-  const typeSelect = document.querySelector('select[name="type"]') as HTMLSelectElement;
-  if (typeSelect) {
-    typeSelect.value = currentType;
-  }
-
-  // Destroy existing editor if it exists
   if (editor) {
     editor.destroy();
   }
 
-  let modelToUse: Apollon.UMLModel | undefined;
-
-  if (options.useSingleStorage) {
-    // Legacy single storage mode
-    modelToUse = options.legacyModel;
-  } else {
-    // Per-diagram storage mode
-    modelToUse = loadModelForType(options.type as DiagramType);
-  }
-
-  // Create new editor with clean options
   editor = new Apollon.ApollonEditor(container, {
     ...options,
     model: modelToUse
   });
 
-  // Add position change listener
   editor.subscribeToModelDiscreteChange(() => {
     save();
   });
@@ -222,8 +242,6 @@ const render = async () => {
   if (editor) {
     (window as any).editor = editor;
     setupGlobalApollon(editor);
-  } else {
-    console.error("Editor failed to initialize");
   }
 };
 
