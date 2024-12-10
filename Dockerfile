@@ -14,7 +14,7 @@ ENV CI=true
 RUN npm pkg set dependencies.monaco-editor="0.52.0"
 
 # Install dependencies without running scripts
-RUN yarn install --ignore-scripts --ignore-platform
+RUN npm ci --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -23,4 +23,4 @@ COPY . .
 EXPOSE 8888
 
 # Start the application
-CMD ["yarn", "start"]
+CMD ["npm", "start"]
