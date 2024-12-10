@@ -19,7 +19,8 @@ export async function exportBuml(editorInstance: any) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        elements: diagramData
+        elements: diagramData,
+        generator: "buml",
       }),
     });
 
