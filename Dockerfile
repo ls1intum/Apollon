@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:18.20.4
 
 WORKDIR /app
 
@@ -13,11 +13,11 @@ ENV CI=true
 # Add monaco-editor to package.json before installing
 RUN npm pkg set dependencies.monaco-editor="0.52.0"
 
-# Install dependencies without running scripts
-RUN npm ci --ignore-scripts
-
 # Copy the rest of the application code
 COPY . .
+
+# Install dependencies without running scripts
+RUN npm install --ignore-scripts
 
 # Expose the port the app runs on
 EXPOSE 8888
