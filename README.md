@@ -1,6 +1,4 @@
-<div align="center">
-  <img src="./docs/source/_static/besser_logo_light.png" alt="BESSER platform" width="500"/>
-</div>
+
 
 # BESSER GUI: A UML Modeling Editor
 
