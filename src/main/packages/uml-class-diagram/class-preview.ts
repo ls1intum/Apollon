@@ -16,14 +16,14 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
   UMLClassifier.stereotypeHeaderHeight = computeDimension(1.0, 50);
   UMLClassifier.nonStereotypeHeaderHeight = computeDimension(1.0, 40);
 
-  // UML Package
-  const umlPackage = new UMLClassPackage({ name: translate('packages.ClassDiagram.Package') });
-  umlPackage.bounds = {
-    ...umlPackage.bounds,
-    width: umlPackage.bounds.width,
-    height: umlPackage.bounds.height,
-  };
-  elements.push(umlPackage);
+  // // UML Package
+  // const umlPackage = new UMLClassPackage({ name: translate('packages.ClassDiagram.Package') });
+  // umlPackage.bounds = {
+  //   ...umlPackage.bounds,
+  //   width: umlPackage.bounds.width,
+  //   height: umlPackage.bounds.height,
+  // };
+  // elements.push(umlPackage);
 
   // UML Class
   const umlClass = new UMLClass({ name: translate('packages.ClassDiagram.Class') });
@@ -87,38 +87,38 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
   umlAbstract.ownedElements = [umlAbstractAttribute.id, umlAbstractMethod.id];
   elements.push(...(umlAbstract.render(layer, [umlAbstractAttribute, umlAbstractMethod]) as UMLElement[]));
 
-  // UML Interface
-  const umlInterface = new UMLInterface({
-    name: translate('packages.ClassDiagram.Interface'),
-    bounds: { height: 110 },
-  });
-  umlInterface.bounds = {
-    ...umlInterface.bounds,
-    width: umlInterface.bounds.width,
-    height: umlInterface.bounds.height,
-  };
-  const umlInterfaceAttribute = new UMLClassAttribute({
-    name: translate('sidebar.classAttribute'),
-    owner: umlInterface.id,
-    bounds: {
-      x: 0,
-      y: 50,
-      width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 30),
-    },
-  });
-  const umlInterfaceMethod = new UMLClassMethod({
-    name: translate('sidebar.classMethod'),
-    owner: umlInterface.id,
-    bounds: {
-      x: 0,
-      y: 80,
-      width: computeDimension(1.0, 200),
-      height: computeDimension(1.0, 30),
-    },
-  });
-  umlInterface.ownedElements = [umlInterfaceAttribute.id, umlInterfaceMethod.id];
-  elements.push(...(umlInterface.render(layer, [umlInterfaceAttribute, umlInterfaceMethod]) as UMLElement[]));
+  // // UML Interface
+  // const umlInterface = new UMLInterface({
+  //   name: translate('packages.ClassDiagram.Interface'),
+  //   bounds: { height: 110 },
+  // });
+  // umlInterface.bounds = {
+  //   ...umlInterface.bounds,
+  //   width: umlInterface.bounds.width,
+  //   height: umlInterface.bounds.height,
+  // };
+  // const umlInterfaceAttribute = new UMLClassAttribute({
+  //   name: translate('sidebar.classAttribute'),
+  //   owner: umlInterface.id,
+  //   bounds: {
+  //     x: 0,
+  //     y: 50,
+  //     width: computeDimension(1.0, 200),
+  //     height: computeDimension(1.0, 30),
+  //   },
+  // });
+  // const umlInterfaceMethod = new UMLClassMethod({
+  //   name: translate('sidebar.classMethod'),
+  //   owner: umlInterface.id,
+  //   bounds: {
+  //     x: 0,
+  //     y: 80,
+  //     width: computeDimension(1.0, 200),
+  //     height: computeDimension(1.0, 30),
+  //   },
+  // });
+  // umlInterface.ownedElements = [umlInterfaceAttribute.id, umlInterfaceMethod.id];
+  // elements.push(...(umlInterface.render(layer, [umlInterfaceAttribute, umlInterfaceMethod]) as UMLElement[]));
 
   // UML Enumeration
   const umlEnumeration = new UMLEnumeration({

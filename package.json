@@ -1,20 +1,20 @@
 {
-  "name": "@ls1intum/apollon",
-  "version": "3.3.15",
-  "description": "A UML diagram editor.",
+  "name": "@BESSER/BESSER-GUI",
+  "version": "1.0.0",
+  "description": "BESSER Graphical User Interface",
   "keywords": [],
-  "homepage": "https://github.com/ls1intum/apollon#readme",
-  "bugs": "https://github.com/ls1intum/apollon/issues",
+  "homepage": "https://github.com/BESSER-PEARL/Apollon",
+  "bugs": "https://github.com/BESSER-PEARL/Apollon",
   "license": "MIT",
   "author": {
-    "name": "Stephan Krusche",
-    "email": "krusche@tum.de",
-    "url": "https://ase.cit.tum.de/krusche"
+    "name": "Armen SULEJMANI",
+    "email": "armen.sulejmani@list.lu",
+    "url": ""
   },
   "main": "lib/es5/index.js",
   "module": "lib/es6/index.js",
   "typings": "lib/es6/index.d.ts",
-  "repository": "github:ls1intum/apollon",
+  "repository": "github:BESSER/BESSER-GUI",
   "sideEffects": false,
   "engines": {
     "node": ">=18.17.0"
@@ -53,6 +53,8 @@
     "*.{ts,tsx,js,css,md}": "prettier --write"
   },
   "dependencies": {
+    "@BESSER/Besser": "file:",
+    "@BESSER/BESSER-GUI": "file:",
     "@ls1intum/apollon": "file:",
     "@monaco-editor/react": "4.6.0",
     "fast-json-patch": "3.1.1",

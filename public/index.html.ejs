@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <title>Apollon x BESSER</title>
+  <title>BESSER Graphical User Interface</title>
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
@@ -46,13 +46,13 @@
 <body>
   <header class="navbar">
     <a class="navbar-brand logo float-left">
-      <img class="logo-img" src="images/logo.png" />
-      <span>&nbsp;&nbsp;&nbsp;</span>
-      <span class="navbar-title">Apollon</span>
-      <span style="font-size: 1.2em; color: white;">&nbsp;×&nbsp;</span>
+      <!-- <img class="logo-img" src="images/logo.png" />
+      <span>&nbsp;&nbsp;&nbsp;</span> -->
+      <!-- <span style="font-size: 1.2em; color: white;">&nbsp;×&nbsp;</span> -->
       <a href="https://besser.readthedocs.io/en/latest/#" target="_blank">
         <img class="logo-img besser-logo" src="images/besser_logo_dark.png" />
       </a>
+      <span class="navbar-title">Graphical User Interface</span>
       <span>&nbsp;&nbsp;&nbsp;</span>
       <span class="navbar-version">
         <%=htmlWebpackPlugin.options.version%>
@@ -66,8 +66,8 @@
         <div class="dropdown">
           <select name="type" data-cy="select-type" onchange="apollon.onChange(event)">
             <option value="ClassDiagram">Class Diagram</option>
-            <option value="ObjectDiagram">Object Diagram</option>
             <option value="StateMachineDiagram">State Machine Diagram (beta)(BESSER)</option>
+            <!-- <option value="ObjectDiagram">Object Diagram</option>
             <option value="ActivityDiagram">Activity Diagram</option>
             <option value="UseCaseDiagram">Use Case Diagram</option>
             <option value="CommunicationDiagram">Communication Diagram</option>
@@ -77,7 +77,7 @@
             <option value="ReachabilityGraph">Reachability Graph</option>
             <option value="SyntaxTree">Syntax Tree</option>
             <option value="Flowchart">Flowchart</option>
-            <option value="BPMN">BPMN (beta)</option>
+            <option value="BPMN">BPMN (beta)</option> -->
           </select>
         </div>
       </section>

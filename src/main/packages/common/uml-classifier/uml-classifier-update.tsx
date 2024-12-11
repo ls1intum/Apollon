@@ -117,9 +117,10 @@ class ClassifierUpdate extends Component<Props, State> {
             <Switch.Item value={ClassElementType.AbstractClass}>
               {this.props.translate('packages.ClassDiagram.AbstractClass')}
             </Switch.Item>
+            {/* Switch item for Interface type is commented out because it is not supported yet
             <Switch.Item value={ClassElementType.Interface}>
               {this.props.translate('packages.ClassDiagram.Interface')}
-            </Switch.Item>
+            </Switch.Item>*/}
             <Switch.Item value={ClassElementType.Enumeration}>
               {this.props.translate('packages.ClassDiagram.Enumeration')}
             </Switch.Item>

@@ -95,9 +95,9 @@ class ClassAssociationComponent extends Component<Props, State> {
         </section>
         <section>
           <Dropdown value={element.type as keyof typeof ClassRelationshipType} onChange={this.onChange}>
-            <Dropdown.Item value={ClassRelationshipType.ClassAggregation}>
+            {/*<Dropdown.Item value={ClassRelationshipType.ClassAggregation}>
               {this.props.translate('packages.ClassDiagram.ClassAggregation')}
-            </Dropdown.Item>
+            </Dropdown.Item>*/}
             <Dropdown.Item value={ClassRelationshipType.ClassUnidirectional}>
               {this.props.translate('packages.ClassDiagram.ClassUnidirectional')}
             </Dropdown.Item>
@@ -107,15 +107,15 @@ class ClassAssociationComponent extends Component<Props, State> {
             <Dropdown.Item value={ClassRelationshipType.ClassComposition}>
               {this.props.translate('packages.ClassDiagram.ClassComposition')}
             </Dropdown.Item>
-            <Dropdown.Item value={ClassRelationshipType.ClassDependency}>
+            {/*<Dropdown.Item value={ClassRelationshipType.ClassDependency}>
               {this.props.translate('packages.ClassDiagram.ClassDependency')}
-            </Dropdown.Item>
+            </Dropdown.Item>*/}
             <Dropdown.Item value={ClassRelationshipType.ClassInheritance}>
               {this.props.translate('packages.ClassDiagram.ClassInheritance')}
             </Dropdown.Item>
-            <Dropdown.Item value={ClassRelationshipType.ClassRealization}>
+           {/* <Dropdown.Item value={ClassRelationshipType.ClassRealization}>
               {this.props.translate('packages.ClassDiagram.ClassRealization')}
-            </Dropdown.Item>
+            </Dropdown.Item>*/}
           </Dropdown>
           <Divider />
         </section>

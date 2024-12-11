@@ -46,6 +46,10 @@ class SidebarComponent extends Component<Props> {
 
     return (
       <Container id="modeling-editor-sidebar" data-cy="modeling-editor-sidebar">
+        {this.props.view === ApollonView.Modelling && <CreatePane />}
+
+        {/* Uncomment the following block if needed in the future */}
+        {/*
         {this.props.mode === ApollonMode.Exporting && (
           <div className="dropdown" style={{ width: 128 }}>
             <select
@@ -58,9 +62,7 @@ class SidebarComponent extends Component<Props> {
             </select>
           </div>
         )}
-        {this.props.view === ApollonView.Modelling ? (
-          <CreatePane />
-        ) : (
+        {this.props.view !== ApollonView.Modelling && (
           <label htmlFor="toggleInteractiveElementsMode">
             <input
               id="toggleInteractiveElementsMode"
@@ -71,16 +73,20 @@ class SidebarComponent extends Component<Props> {
             {this.props.translate('views.highlight')}
           </label>
         )}
+        */}
       </Container>
     );
   }
 
+  // Keeping the toggleInteractiveElementsMode method for future use, if needed.
+  /*
   toggleInteractiveElementsMode = (event: React.FormEvent<HTMLInputElement>) => {
     const { checked } = event.currentTarget;
     const view: ApollonView = checked ? ApollonView.Exporting : ApollonView.Highlight;
 
     this.props.changeView(view);
   };
+  */
 }
 
 export const Sidebar = enhance(SidebarComponent);
