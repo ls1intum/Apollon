@@ -25,6 +25,28 @@ export const composeClassPreview: ComposePreview = (layer: ILayer, translate: (i
   // };
   // elements.push(umlPackage);
 
+    // UML Class 1 with attribute
+  const umlClass1 = new UMLClass({ name: translate('packages.ClassDiagram.Class') });
+  umlClass1.bounds = {
+    ...umlClass1.bounds,
+    width: umlClass1.bounds.width,
+    height: umlClass1.bounds.height,
+  };
+
+  const umlClass1Attribute = new UMLClassAttribute({
+    name: translate('sidebar.classAttribute'),
+    owner: umlClass1.id,
+    bounds: {
+      x: 0,
+      y: 0,
+      width: computeDimension(1.0, 200),
+      height: computeDimension(1.0, 30),
+    },
+  });
+
+  umlClass1.ownedElements = [umlClass1Attribute.id];
+  elements.push(...(umlClass1.render(layer, [umlClass1Attribute]) as UMLElement[]));
+
   // UML Class
   const umlClass = new UMLClass({ name: translate('packages.ClassDiagram.Class') });
   umlClass.bounds = {

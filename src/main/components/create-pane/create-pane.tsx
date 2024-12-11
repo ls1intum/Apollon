@@ -90,13 +90,13 @@ const getInitialState = ({ type, canvas, translate, colorEnabled }: Props) => {
       previews.push(...composeStatePreview(canvas, translate));
       break;
   }
-  if (colorEnabled) {
-    utils.push(
-      new ColorLegend({
-        name: translate('packages.ColorLegend.ColorLegend'),
-      }),
-    );
-  }
+  // if (colorEnabled) {
+  //   utils.push(
+  //     new ColorLegend({
+  //       name: translate('packages.ColorLegend.ColorLegend'),
+  //     }),
+  //   );
+  // }
 
   return { previews, utils };
 };

@@ -63,6 +63,6 @@ export const UMLElementsForDiagram: { [key in UMLDiagramType]: any } = {
     [UMLDiagramType.BPMN]: BPMNElementType,
     [UMLDiagramType.StateMachineDiagram]: StateElementType,
   },
-  ...ColorLegendElementType,
+  // ...ColorLegendElementType,
   
 };
