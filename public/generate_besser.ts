@@ -28,7 +28,7 @@ export async function exportBuml(editorInstance: any) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    console.log("BUML generated successfully");
+    console.log("B-UML generated successfully");
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -45,7 +45,7 @@ export async function exportBuml(editorInstance: any) {
     a.remove();
     window.URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('Error during BUML export:', error);
+    console.error('Error during B-UML export:', error);
     throw error; // Re-throw to be caught by the caller
   }
 }
