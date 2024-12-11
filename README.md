@@ -1,21 +1,20 @@
+# BESSER Web Modeling Editor: A UML Modeling Editor
 
+BESSER Web Modeling Editor is a UML modeling editor customized for the [BESSER platform](https://github.com/BESSER-PEARL/BESSER). It integrates BESSER's B-UML modeling language with powerful code generation capabilities, making it easy to design and generate code for software applications in a low-code environment.
 
-# BESSER GUI: A UML Modeling Editor
+## About the web modeling editor
 
-BESSER GUI is a UML modeling editor customized for the [BESSER platform](https://github.com/BESSER-PEARL/BESSER). It integrates BESSER's B-UML modeling language with powerful code generation capabilities, making it easy to design and generate code for software applications in a low-code environment.
-
-## About BESSER GUI
-
-BESSER GUI enhances the UML modeling experience with added support for BESSER’s B-UML language. Designed for seamless integration with the BESSER low-code platform, the editor provides tools for creating, editing, and generating code from UML diagrams.
+BESSER Web Modeling Editor enhances the UML modeling experience with added support for BESSER’s B-UML language. Designed for seamless integration with the BESSER low-code platform, the editor provides tools for creating, editing, and generating code from UML diagrams.
 
 ## Key Features
 
 ### B-UML Modeling
 - **Support for Structural and StateMachine Models**: Tailored to B-UML
 - **Code Generation**: Automatically translate models into executable code for various applications, such as:
-  - Python code compatible with the BESSER framework
+  - Python code compatible with BESSER 
   - Django models
   - SQLAlchemy database schemas
+  - Full backend with FASTAPI
 
 
 ### Core Features
@@ -33,15 +32,14 @@ BESSER GUI enhances the UML modeling experience with added support for BESSER’
 
 ### Integration with BESSER Platform
 - **Automatic Saving**: Syncs with the BESSER backend.
-- **Collaborative Editing**: Built for team-based modeling.
 - **Code Generators**: Direct pipeline to BESSER's model-driven code generators.
 
 ## Installation
 ### Development
 #### Clone the Repository
 ```bash
-git clone https://github.com/besser/besser-gui.git
-cd besser-gui
+git clone https://github.com/BESSER-PEARL/BESSER-Web-Modeling-Editor.git
+cd BESSER-Web-Modeling-Editor
 ```
 
 #### Install Dependencies
@@ -54,15 +52,6 @@ npm install
 npm run start
 ```
 The editor will be accessible at http://localhost:8888.
-
-### Documentation
-To build and serve the documentation locally:
-```bash
-npm run docs:prepare
-npm run docs:build
-npm run docs:watch
-```
-Documentation is served at http://localhost:8088.
 
 ### Contributing
 We welcome contributions! Please ensure that any updates maintain compatibility with the BESSER platform. For major changes, please open an issue to discuss them before submitting a pull request.
