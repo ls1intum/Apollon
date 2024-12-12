@@ -43,15 +43,16 @@
   </style>
 </head>
 
+<!-- <img class="logo-img" src="images/logo.png" />
+<span>&nbsp;&nbsp;&nbsp;</span> -->
+<!-- <span style="font-size: 1.2em; color: white;">&nbsp;×&nbsp;</span> -->
 <body>
   <header class="navbar">
     <a class="navbar-brand logo float-left">
-      <!-- <img class="logo-img" src="images/logo.png" />
-      <span>&nbsp;&nbsp;&nbsp;</span> -->
-      <!-- <span style="font-size: 1.2em; color: white;">&nbsp;×&nbsp;</span> -->
       <a href="https://besser.readthedocs.io/en/latest/#" target="_blank">
         <img class="logo-img besser-logo" src="images/besser_logo_dark.png" />
       </a>
+      <span>&nbsp;&nbsp;&nbsp;</span>
       <span class="navbar-title">Web Modeling Editor</span>
       <span>&nbsp;&nbsp;&nbsp;</span>
       <span class="navbar-version">
@@ -104,14 +105,7 @@
           read-only
         </label>
       </section> -->
-      <section>
-        <h3 class="header">Export</h3>
-        <div class="switch">
-          <button onclick="apollon.draw()">All</button>
-          <button onclick="apollon.draw('include')">Include</button>
-          <button onclick="apollon.draw('exclude')">Exclude</button>
-        </div>
-      </section>
+
       <section id="codeGeneratorSection" style="display: none;">
         <h3 class="header">BESSER Code Generator</h3>
         <div class="dropdown">
@@ -124,28 +118,29 @@
             <option value="sql">SQL Scripts</option>
             <option value="backend">Backend</option>
           </select>
+
         </div>
         <div class="switch">
           <button id="generateButton" class="generate-button">Generate/Download</button>
         </div>
       </section>
       <section>
-        <h3 class="header">Import/Export</h3>
+        <h3 class="header">JSON Import/Export</h3>
         <div class="switch">
           <button onclick="window.apollon.exportDiagram()">Export JSON</button>
           <div class="file-input-wrapper">
             <input type="file" id="import-file" accept="application/json" onchange="window.apollon.importDiagram(this.files[0])">
-            <label for="import-file" class="file-input-label">Choose File</label>
+            <label for="import-file" class="file-input-label">Import JSON</label>
           </div>
         </div>
       </section>
       <section id="bumlSection">
         <h3 class="header">B-UML Import/Export</h3>
         <div class="switch">
-          <button onclick="if(window.apollon && window.apollon.exportBuml) window.apollon.exportBuml()">Export B-UML</button>
+          <button onclick="if(window.apollon && window.apollon.exportBuml) window.apollon.exportBuml()">Export B&#8209;UML</button>
           <div class="file-input-wrapper">
             <input type="file" id="import-buml-file" accept=".buml,.py" onchange="window.apollon.convertBumlToJson(this.files[0])" style="display: none;">
-            <label for="import-buml-file" class="file-input-label">Import B-UML</label>
+            <label for="import-buml-file" class="file-input-label">Import B&#8209;UML</label>
           </div>
         </div>
       </section>
@@ -169,6 +164,14 @@
           <button id="convertButton" onclick="window.apollon.convertBumlToJson()">Convert BUML</button>
         </div>
       </section> -->
+      <section>
+        <h3 class="header">Export</h3>
+        <div class="switch">
+          <button onclick="apollon.draw()">To SVG</button>
+          <!-- <button onclick="apollon.draw('include')">Include</button>
+          <button onclick="apollon.draw('exclude')">Exclude</button> -->
+        </div>
+      </section>
       <section class="danger-zone">
         <h3 class="header">Advanced Management</h3>
         <div class="button-container">

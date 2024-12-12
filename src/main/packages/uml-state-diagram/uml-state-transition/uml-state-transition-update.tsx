@@ -141,7 +141,7 @@ class StateTransitionUpdate extends Component<Props, State> {
               {this.state.paramIds.length > 1 && (
                 <ParamControls>
                   <Button color="link" onClick={() => this.removeParam(id)}>
-                    Delete
+                  <TrashIcon />
                   </Button>
                 </ParamControls>
               )}
