@@ -151,6 +151,7 @@ class ClassifierUpdate extends Component<Props, State> {
             ref={this.newAttributeField}
             outline
             value=""
+            placeholder={`+ attribute: str`}
             onSubmit={this.create(UMLClassAttribute)}
             onSubmitKeyUp={(key: string, value: string) => {
               // if we have a value -> navigate to next field in case we want to create a new element
@@ -210,6 +211,7 @@ class ClassifierUpdate extends Component<Props, State> {
             ref={this.newMethodField}
             outline
             value=""
+            placeholder={`+ method(param: str): str`}
             onSubmit={this.create(UMLClassMethod)}
             onSubmitKeyUp={() =>
               this.setState({
