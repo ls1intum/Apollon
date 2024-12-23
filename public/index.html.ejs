@@ -185,6 +185,12 @@
         </div>
       </section>
       <section>
+        <h3 class="header">Notes</h3>
+        <div class="switch">
+          <button onclick="window.apollon.openNotesPopup()">Open Notes</button>
+        </div>
+      </section>
+      <section>
         <small class="warning-text" style="color: #666; font-size: 0.8em; margin-top: 5px; display: block;">
             Based on <a href="https://github.com/ls1intum/Apollon" target="_blank">Apollon Editor</a>
         </small>
@@ -192,6 +198,15 @@
     </aside>
     <div class="apollon-container">
       <main id="apollon"></main>
+    </div>
+  </div>
+  <div id="notesPopup" class="popup-overlay">
+    <div class="popup-content">
+      <textarea id="notesText" placeholder="Enter your notes here..."></textarea>
+      <div class="popup-buttons">
+        <button onclick="window.apollon.saveNotes()">Save</button>
+        <button onclick="document.getElementById('notesPopup').style.display='none'">Cancel</button>
+      </div>
     </div>
   </div>
 </body>

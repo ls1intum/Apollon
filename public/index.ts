@@ -391,6 +391,8 @@ interface ApollonGlobal {
   importDiagram: (file: File) => Promise<void>;
   generateCode?: (generatorType: string) => Promise<void>;
   convertBumlToJson?: (file: File) => Promise<void>;
+  openNotesPopup: () => void;
+  saveNotes: () => void;
 }
 
 // Then declare it as part of the global Window interface
@@ -435,7 +437,25 @@ const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
       }
     },
     generateCode: window.apollon?.generateCode,
-    convertBumlToJson: window.apollon?.convertBumlToJson
+    convertBumlToJson: window.apollon?.convertBumlToJson,
+    openNotesPopup: () => {
+      const popup = document.getElementById('notesPopup');
+      const textarea = document.getElementById('notesText') as HTMLTextAreaElement;
+      if (popup && textarea) {
+        // Load saved notes
+        const savedNotes = localStorage.getItem('diagramNotes') || '';
+        textarea.value = savedNotes;
+        popup.style.display = 'flex';
+      }
+    },
+    saveNotes: () => {
+      const popup = document.getElementById('notesPopup');
+      const textarea = document.getElementById('notesText') as HTMLTextAreaElement;
+      if (textarea) {
+        localStorage.setItem('diagramNotes', textarea.value);
+        popup.style.display = 'none'; // Hide popup directly after saving
+      }
+    }
   };
 
   window.apollon = apollonGlobal;
