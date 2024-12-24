@@ -185,9 +185,9 @@
         </div>
       </section>
       <section>
-        <h3 class="header">Notes</h3>
+        <h3 class="header">OCL Constraints</h3>
         <div class="switch">
-          <button onclick="window.apollon.openNotesPopup()">Open Notes</button>
+          <button onclick="window.apollon.openOclPopup()">Open OCL</button>
         </div>
       </section>
       <section>
@@ -200,12 +200,12 @@
       <main id="apollon"></main>
     </div>
   </div>
-  <div id="notesPopup" class="popup-overlay">
+  <div id="oclPopup" class="popup-overlay">
     <div class="popup-content">
-      <textarea id="notesText" placeholder="Enter your notes here..."></textarea>
+      <textarea id="oclText" placeholder="Enter your OCL constraints here..."></textarea>
       <div class="popup-buttons">
-        <button onclick="window.apollon.saveNotes()">Save</button>
-        <button onclick="document.getElementById('notesPopup').style.display='none'">Cancel</button>
+        <button onclick="window.apollon.saveOcl()">Save</button>
+        <button onclick="document.getElementById('oclPopup').style.display='none'">Cancel</button>
       </div>
     </div>
   </div>

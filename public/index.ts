@@ -391,8 +391,8 @@ interface ApollonGlobal {
   importDiagram: (file: File) => Promise<void>;
   generateCode?: (generatorType: string) => Promise<void>;
   convertBumlToJson?: (file: File) => Promise<void>;
-  openNotesPopup: () => void;
-  saveNotes: () => void;
+  openOclPopup: () => void;
+  saveOcl: () => void;
 }
 
 // Then declare it as part of the global Window interface
@@ -438,22 +438,21 @@ const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
     },
     generateCode: window.apollon?.generateCode,
     convertBumlToJson: window.apollon?.convertBumlToJson,
-    openNotesPopup: () => {
-      const popup = document.getElementById('notesPopup');
-      const textarea = document.getElementById('notesText') as HTMLTextAreaElement;
+    openOclPopup: () => {
+      const popup = document.getElementById('oclPopup');
+      const textarea = document.getElementById('oclText') as HTMLTextAreaElement;
       if (popup && textarea) {
-        // Load saved notes
-        const savedNotes = localStorage.getItem('diagramNotes') || '';
-        textarea.value = savedNotes;
+        const savedOcl = localStorage.getItem('diagramOCL') || '';
+        textarea.value = savedOcl;
         popup.style.display = 'flex';
       }
     },
-    saveNotes: () => {
-      const popup = document.getElementById('notesPopup');
-      const textarea = document.getElementById('notesText') as HTMLTextAreaElement;
+    saveOcl: () => {
+      const popup = document.getElementById('oclPopup');
+      const textarea = document.getElementById('oclText') as HTMLTextAreaElement;
       if (textarea) {
-        localStorage.setItem('diagramNotes', textarea.value);
-        popup.style.display = 'none'; // Hide popup directly after saving
+        localStorage.setItem('diagramOCL', textarea.value);
+        popup.style.display = 'none';
       }
     }
   };
