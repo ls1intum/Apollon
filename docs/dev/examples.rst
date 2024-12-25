@@ -1,6 +1,6 @@
-##########
+########
 Examples
-##########
+########
 
 
 Example of Feature Definition of Element
@@ -38,54 +38,56 @@ The representation is the defined in the corresponding component class, in our e
 
 .. code-block:: typescript
 
-   export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, children }) => (
-      <g>
-        <rect width="100%" height={element.stereotype ? 50 : 40} />
-        <rect
-          y={element.stereotype ? 50 : 40}
-          width="100%"
-          height={element.bounds.height - (element.stereotype ? 50 : 40)}
-          fill="white"
-        />
-        {element.stereotype ? (
-          <svg height={50}>
-            <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
-              <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
-                {`«${element.stereotype}»`}
-              </tspan>
-              <tspan
+    export const UMLClassifierComponent: FunctionComponent<Props> = ({ element, children }) => {
+      const fontStyle = element.italic ? 'italic' : undefined;
+      const textDecoration = element.underline ? 'underline' : undefined;
+      const headerPath = `M 0 ${element.headerHeight} H ${element.bounds.width}`;
+      const dividerPath = `M 0 ${element.deviderPosition} H ${element.bounds.width}`;
+
+      return (
+        <g>
+          <rect width="100%" height={element.stereotype ? 50 : 40} />
+          <rect
+            y={element.stereotype ? 50 : 40}
+            width="100%"
+            height={element.bounds.height - (element.stereotype ? 50 : 40)}
+            fill="white"
+          />
+          {element.stereotype ? (
+            <svg height={50}>
+              <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontWeight="bold" pointerEvents="none">
+                {/* «${element.stereotype}» */}
+                <tspan x="50%" dy={-8} textAnchor="middle" fontSize="85%">
+                  {/* «${element.stereotype}» */}
+                </tspan>
+                <tspan x="50%" dy={18} textAnchor="middle" fontStyle={fontStyle} textDecoration={textDecoration}>
+                  {element.name}
+                </tspan>
+              </text>
+            </svg>
+          ) : (
+            <svg height={40}>
+              <text
                 x="50%"
-                dy={18}
+                y="50%"
+                dominantBaseline="middle"
                 textAnchor="middle"
-                fontStyle={element.italic ? 'italic' : undefined}
-                textDecoration={element.underline ? 'underline' : undefined}
+                fontWeight="bold"
+                fontStyle={fontStyle}
+                textDecoration={textDecoration}
+                pointerEvents="none"
               >
                 {element.name}
-              </tspan>
-            </text>
-          </svg>
-        ) : (
-          <svg height={40}>
-            <text
-              x="50%"
-              y="50%"
-              dominantBaseline="middle"
-              textAnchor="middle"
-              fontWeight="bold"
-              fontStyle={element.italic ? 'italic' : undefined}
-              textDecoration={element.underline ? 'underline' : undefined}
-              pointerEvents="none"
-            >
-              {element.name}
-            </text>
-          </svg>
-        )}
-        {children}
-        <rect width="100%" height="100%" stroke="black" fill="none" pointerEvents="none" />
-        <path d={`M 0 ${element.headerHeight} H ${element.bounds.width}`} stroke="black" />
-        <path d={`M 0 ${element.deviderPosition} H ${element.bounds.width}`} stroke="black" />
-      </g>
-   );
+              </text>
+            </svg>
+          )}
+          {children}
+          <rect width="100%" height="100%" stroke="black" fill="none" pointerEvents="none" />
+          <path d={headerPath} stroke="black" />
+          <path d={dividerPath} stroke="black" />
+        </g>
+      );
+    };
 
 It implements the visual representation, which always made up of svg elements.
 

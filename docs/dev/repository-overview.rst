@@ -20,8 +20,7 @@ On the top level we have the separation between `components`, `i18n`, `packages`
 
 #. `packages` contains the code which is specific to UML diagram types. A package describes one UML diagram type (location: src/main/packages/) and has:
 
-    * a component for each UML element type available in the specific UML diagram type, which describes the appearance of the elements. (Reference example)
-For example in `src/main/packages/uml-object-diagram` exists
+    * a component for each UML element type available in the specific UML diagram type, which describes the appearance of the elements. (Reference example) For example in `src/main/packages/uml-object-diagram` exists
 
         * uml-object-attribute
 

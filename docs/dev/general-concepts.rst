@@ -1,6 +1,6 @@
-#################
+################
 General Concepts
-#################
+################
 
 The ApollonEditor is a UML modeling editor which can be used to visualize and
 modify UML Diagrams. It can load and

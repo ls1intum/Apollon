@@ -7,7 +7,7 @@ on:
     branches: [ develop ]
 
 env:
-  node: 16.x
+  node: 22
 
 jobs:
   build:
@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Setup Node.js '${{ env.node }}'
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: '${{ env.node }}'
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cache node modules
         uses: actions/cache@v2
         with:

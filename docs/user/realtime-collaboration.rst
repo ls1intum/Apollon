@@ -1,8 +1,8 @@
 .. _realtime-collaboration:
 
-################
+######################
 Realtime Collaboration
-################
+######################
 
 Apollon supports realtime collaboration by emitting patches when a model is changed, and importing
 patches potentially emitted by other Apollon clients. Patches follow the `RFC 6902`_ standard (i.e. `JSON Patch`_),
@@ -33,9 +33,9 @@ This means, if client A emits patch P1 and client B emits patch P2, both clients
 
 Apollon clients sign the patches they emit and treat receiving their own patches as confirmation that the patch has been applied and ordered with patches from other clients. They also optimize based on this assumption, to recognize when they are ahead of the rest of the clients on some part of the state: when client A applies the effects of patch P1 locally, its state is ahead until other clients have also applied patch P1, so client A can safely ignore other effects on that same part of the state (as it will get overwritten by patch P1 anyway).
 
-================
+=======================
 Displaying Remote Users
-================
+=======================
 
 In realtime collaboration, it can be useful to display activities of other users active in the collaboration session within the diagram editor. Apollon provides methods to display other users' selections:
 
