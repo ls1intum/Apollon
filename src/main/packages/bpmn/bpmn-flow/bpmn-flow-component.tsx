@@ -2,6 +2,7 @@ import React, { FunctionComponent, SVGProps } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { BPMNFlow } from './bpmn-flow';
 import { ThemedCircle, ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { uuid } from '../../../utils/uuid';
 
 export const BPMNFlowComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
@@ -45,11 +46,12 @@ export const BPMNFlowComponent: FunctionComponent<Props> = ({ element }) => {
     }
   };
 
+  const id = uuid();
   return (
     <g>
       {element.flowType === 'message' && (
         <marker
-          id={`marker-start-${element.id}`}
+          id={`marker-start-${id}`}
           viewBox={`0 0 ${10} ${10}`}
           markerWidth={10}
           markerHeight={10}
@@ -63,7 +65,7 @@ export const BPMNFlowComponent: FunctionComponent<Props> = ({ element }) => {
       )}
       {(element.flowType === 'sequence' || element.flowType === 'message') && (
         <marker
-          id={`marker-end-${element.id}`}
+          id={`marker-end-${id}`}
           viewBox={`0 0 ${10} ${5}`}
           markerWidth={10}
           markerHeight={10}
@@ -82,7 +84,7 @@ export const BPMNFlowComponent: FunctionComponent<Props> = ({ element }) => {
       )}
       {element.flowType === 'data association' && (
         <marker
-          id={`marker-end-${element.id}`}
+          id={`marker-end-${id}`}
           viewBox={`0 0 ${10} ${5}`}
           markerWidth={10}
           markerHeight={10}
@@ -105,8 +107,8 @@ export const BPMNFlowComponent: FunctionComponent<Props> = ({ element }) => {
         strokeColor={element.strokeColor}
         fillColor="none"
         strokeWidth={1}
-        markerStart={element.flowType === 'message' ? `url(#marker-start-${element.id})` : undefined}
-        markerEnd={element.flowType !== 'association' ? `url(#marker-end-${element.id})` : undefined}
+        markerStart={element.flowType === 'message' ? `url(#marker-start-${id})` : undefined}
+        markerEnd={element.flowType !== 'association' ? `url(#marker-end-${id})` : undefined}
         strokeDasharray={element.flowType !== 'sequence' ? 4 : undefined}
       />
       <text

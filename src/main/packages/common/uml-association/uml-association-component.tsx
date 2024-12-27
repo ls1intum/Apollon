@@ -5,6 +5,7 @@ import { ClassRelationshipType } from '../../uml-class-diagram';
 import { UMLAssociation } from './uml-association';
 import { UMLRelationshipType } from '../../uml-relationship-type';
 import { ThemedPath, ThemedPathContrast, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { uuid } from '../../../utils/uuid';
 
 const Marker = {
   Arrow: (id: string, color?: string) => (
@@ -137,7 +138,7 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element }) =
   const path = element.path.map((point) => new Point(point.x, point.y));
   const source: Point = computeTextPositionForUMLAssociation(path);
   const target: Point = computeTextPositionForUMLAssociation(path.reverse(), !!marker);
-  const id = `marker-${element.id}`;
+  const id = `marker-${uuid()}`;
 
   const textFill = element.textColor ? { fill: element.textColor } : {};
   return (

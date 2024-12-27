@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { FlowchartFlowline } from './flowchart-flowline';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { uuid } from '../../../utils/uuid';
 
 export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
@@ -42,10 +43,11 @@ export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }
   };
   const fill = element.textColor ? { fill: element.textColor } : {};
 
+  const id = uuid();
   return (
     <g>
       <marker
-        id={`marker-${element.id}`}
+        id={`marker-${id}`}
         viewBox="0 0 30 30"
         markerWidth="22"
         markerHeight="30"
@@ -61,7 +63,7 @@ export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }
         strokeColor={element.strokeColor}
         fillColor="none"
         strokeWidth={1}
-        markerEnd={`url(#marker-${element.id})`}
+        markerEnd={`url(#marker-${id})`}
       />
       <text x={position.x} y={position.y} {...layoutText(direction)} pointerEvents="none" style={{ ...fill }}>
         {element.name}
