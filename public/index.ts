@@ -416,25 +416,11 @@ const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
     deleteEverything,
     setTheming,
     exportDiagram: async () => {
-      if (!editor) return;
-      const model = editor.model;
-      const jsonString = JSON.stringify(model, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `diagram_${options.type}_${new Date().toISOString()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      await exportDiagram(editor);
     },
     importDiagram: async (file: File) => {
-      if (!editor || !file) return;
       try {
-        const text = await file.text();
-        const jsonModel = JSON.parse(text);
-        editor.model = jsonModel;
+        await importDiagram(file, editor);
         save();
       } catch (error) {
         console.error('Error importing diagram:', error);
@@ -446,18 +432,50 @@ const setupGlobalApollon = (editor: Apollon.ApollonEditor | null) => {
     openOclPopup: () => {
       const popup = document.getElementById('oclPopup');
       const textarea = document.getElementById('oclText') as HTMLTextAreaElement;
-      if (popup && textarea) {
-        const savedOcl = localStorage.getItem('diagramOCL') || '';
-        textarea.value = savedOcl;
-        popup.style.display = 'flex';
+      
+      if (!popup || !textarea) {
+        console.error('Required OCL popup elements not found');
+        return;
       }
+
+      // Load saved OCL
+      const savedOcl = localStorage.getItem('diagramOCL') || '';
+      textarea.value = savedOcl;
+      
+      // Show popup
+      popup.style.display = 'flex';
+
+      // Close on outside click
+      const closeOnOutsideClick = (e: MouseEvent) => {
+        if (e.target === popup) {
+          popup.style.display = 'none';
+          document.removeEventListener('click', closeOnOutsideClick);
+        }
+      };
+      document.addEventListener('click', closeOnOutsideClick);
     },
+
     saveOcl: () => {
-      const popup = document.getElementById('oclPopup');
+      const popup = document.getElementById('oclPopup') as HTMLElement;
       const textarea = document.getElementById('oclText') as HTMLTextAreaElement;
-      if (textarea) {
-        localStorage.setItem('diagramOCL', textarea.value);
+      
+      if (!popup || !textarea) {
+        console.error('Required OCL elements not found');
+        return;
+      }
+
+      try {
+        // Basic OCL validation could be added here
+        const oclContent = textarea.value.trim();
+        
+        // Save OCL
+        localStorage.setItem('diagramOCL', oclContent);
+        
+        // Hide popup
         popup.style.display = 'none';
+      } catch (error) {
+        console.error('Error saving OCL:', error);
+        alert('Failed to save OCL constraints');
       }
     }
   };

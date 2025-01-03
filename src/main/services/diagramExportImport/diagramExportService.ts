@@ -1,43 +1,43 @@
 import { ApollonEditor } from '../../apollon-editor';
 
-export const exportDiagram = (editor: ApollonEditor | null, fileName: string = 'diagram.json') => {
-    if (!editor) {
-        console.warn("Editor is not initialized.");
-        return;
+export const exportDiagram = async (editor: ApollonEditor | null) => {
+    if (!editor) return;
+    const model = editor.model;
+    
+    // Add OCL constraints to the model before export
+    const oclConstraints = localStorage.getItem('diagramOCL');
+    if (oclConstraints) {
+        model.oclConstraints = oclConstraints;
     }
-
-    try {
-        const modelData = { title: fileName, model: editor.model };
-        const jsonContent = JSON.stringify(modelData, null, 2);
-        const blob = new Blob([jsonContent], { type: 'application/json' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-    } catch (error) {
-        console.error("Error exporting diagram:", error);
-    }
+    
+    const jsonString = JSON.stringify(model, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `diagram_${model.type}_${new Date().toISOString()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 };
 
-
-export const importDiagram = (file: File, editor: ApollonEditor | null) => {
-    if (!editor) {
-        console.warn("Editor is not initialized.");
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        const jsonData = JSON.parse(event.target?.result as string);
-        if (jsonData && jsonData.model) {
-            editor.model = jsonData.model;
-            console.log("Diagram successfully imported from JSON");
-        } else {
-            console.error("Invalid JSON file");
+export const importDiagram = async (file: File, editor: ApollonEditor | null) => {
+    if (!editor || !file) return;
+    try {
+        const text = await file.text();
+        const jsonModel = JSON.parse(text);
+        
+        // Handle OCL constraints if present in the imported model
+        if (jsonModel.oclConstraints) {
+            localStorage.setItem('diagramOCL', jsonModel.oclConstraints);
+            delete jsonModel.oclConstraints; // Remove from model before setting
         }
-    };
-    reader.readAsText(file);
+        
+        editor.model = jsonModel;
+        return true;
+    } catch (error) {
+        console.error('Error importing diagram:', error);
+        throw new Error('Error importing diagram. Please check if the file is valid JSON.');
+    }
 };
