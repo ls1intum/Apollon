@@ -64,10 +64,16 @@ if (codeGeneratorSection) {
   codeGeneratorSection.style.display = 'block';
 }
 
+const oclConstraintsSection = document.getElementById('oclConstraintsSection');
+if (oclConstraintsSection) {
+  oclConstraintsSection.style.display = 'block';
+}
+
+
 // Set initial visibility of BUML section
 const bumlSection = document.getElementById('bumlSection');
 if (bumlSection) {
-  bumlSection.style.display = options.type && ['ClassDiagram', 'StateMachineDiagram'].includes(options.type) ? 'block' : 'none';
+  bumlSection.style.display = options.type && ['ClassDiagram','ObjectDiagram', 'StateMachineDiagram'].includes(options.type) ? 'block' : 'none';
 }
 
 // Function called when the diagram type is changed
@@ -126,12 +132,11 @@ export const onChange = async (event: any) => {
         codeGeneratorSection.style.display = newType === 'ClassDiagram' ? 'block' : 'none';
       }
 
-      const bumlSection = document.getElementById('bumlSection');
-      if (bumlSection) {
-        bumlSection.style.display = newType && ['ClassDiagram', 'StateMachineDiagram'].includes(newType) 
-          ? 'block' 
-          : 'none';
+      const oclConstraintsSection = document.getElementById('oclConstraintsSection');
+      if (oclConstraintsSection) {
+        oclConstraintsSection.style.display = newType === 'ClassDiagram' ? 'block' : 'none';
       }
+      
     }
   } else {
     options = { ...options, [name]: value };

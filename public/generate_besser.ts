@@ -205,6 +205,9 @@ export async function convertBumlToJson(file: File) {
       if (editorInstance && editorInstance.model) {
         try {
           editorInstance.model = jsonData.model;
+          if (jsonData.ocl) {
+            localStorage.setItem('diagramOCL', jsonData.ocl);
+          }
           window.apollon.save();
         } catch (editorError) {
           console.error("Failed to update editor:", editorError);

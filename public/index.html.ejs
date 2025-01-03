@@ -67,9 +67,9 @@
         <div class="dropdown">
           <select name="type" data-cy="select-type" onchange="apollon.onChange(event)">
             <option value="ClassDiagram">Class Diagram</option>
-            <option value="StateMachineDiagram">State Machine Diagram (beta)(BESSER)</option>
-            <!-- <option value="ObjectDiagram">Object Diagram</option>
-            <option value="ActivityDiagram">Activity Diagram</option>
+            <option value="ObjectDiagram">Object Diagram</option>
+            <option value="StateMachineDiagram">State Machine Diagram</option>
+            <!-- <option value="ActivityDiagram">Activity Diagram</option>
             <option value="UseCaseDiagram">Use Case Diagram</option>
             <option value="CommunicationDiagram">Communication Diagram</option>
             <option value="ComponentDiagram">Component Diagram</option>
@@ -118,10 +118,15 @@
             <option value="sql">SQL Scripts</option>
             <option value="backend">Backend</option>
           </select>
-
         </div>
         <div class="switch">
           <button id="generateButton" class="generate-button">Generate/Download</button>
+        </div>
+      </section>
+      <section id="oclConstraintsSection" style="display: none;">
+        <h3 class="header">OCL Constraints</h3>
+        <div class="switch">
+          <button onclick="window.apollon.openOclPopup()">Open OCL</button>
         </div>
       </section>
       <section>
@@ -185,12 +190,6 @@
         </div>
       </section>
       <section>
-        <h3 class="header">OCL Constraints</h3>
-        <div class="switch">
-          <button onclick="window.apollon.openOclPopup()">Open OCL</button>
-        </div>
-      </section>
-      <section>
         <small class="warning-text" style="color: #666; font-size: 0.8em; margin-top: 5px; display: block;">
             Based on <a href="https://github.com/ls1intum/Apollon" target="_blank">Apollon Editor</a>
         </small>
@@ -202,7 +201,7 @@
   </div>
   <div id="oclPopup" class="popup-overlay">
     <div class="popup-content">
-      <textarea id="oclText" placeholder="Enter your OCL constraints here..."></textarea>
+      <textarea id="oclText" placeholder="Enter your OCL constraints here, separated by commas..."></textarea>
       <div class="popup-buttons">
         <button onclick="window.apollon.saveOcl()">Save</button>
         <button onclick="document.getElementById('oclPopup').style.display='none'">Cancel</button>

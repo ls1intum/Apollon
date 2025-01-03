@@ -26,5 +26,10 @@ export function position(bounds: IBoundary, direction: Direction): { point: Poin
         point: new Point(x, y + height),
         offset: new Point(x - offset, y + height),
       };
+    default:
+      return {
+        point: new Point(x + width, y),
+        offset: new Point(x + width, y - offset)
+      };
   }
 }
