@@ -94,6 +94,17 @@ class ClassAssociationComponent extends Component<Props, State> {
           <Divider />
         </section>
         <section>
+          <Flex>
+            <Body style={{ marginRight: '0.5em' }}>{this.props.translate('popup.name')}</Body>
+            <Textfield
+              value={element.name}
+              onChange={(value) => this.props.update(element.id, { name: value })}
+              placeholder="Association name"
+            />
+          </Flex>
+          <Divider />
+        </section>
+        <section>
           <Dropdown value={element.type as keyof typeof ClassRelationshipType} onChange={this.onChange}>
             {/*<Dropdown.Item value={ClassRelationshipType.ClassAggregation}>
               {this.props.translate('packages.ClassDiagram.ClassAggregation')}

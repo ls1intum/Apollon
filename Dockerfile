@@ -10,8 +10,8 @@ ENV HUSKY=0
 ENV DISABLE_HUSKY=1
 ENV CI=true
 
-# Add monaco-editor to package.json before installing
-RUN npm pkg set dependencies.monaco-editor="0.52.0"
+# # Add monaco-editor to package.json before installing
+# RUN npm pkg set dependencies.monaco-editor="0.52.0"
 
 # Copy the rest of the application code
 COPY . .
