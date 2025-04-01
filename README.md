@@ -58,7 +58,7 @@ The list of UML diagrams includes:
 
 ### Integrate Apollon with other software
 Apollon can be integrated to any other Javascript application.
-It serves as the modeling editor for the widely used interactive learning platform called [Artemis](https://artemis.ase.in.tum.de/).  
+It serves as the modeling editor for the widely used interactive learning platform called [Artemis](https://artemis.tum.de/).  
 It also provides the standalone version of the editor.
 You can try the standalone version of Apollon completey free and without the necessity of creating any account. 
 It is a web application that allows users to use Apollon editor directly from their browser with additional features, including but not limited to, sharing and exporting the diagram.
