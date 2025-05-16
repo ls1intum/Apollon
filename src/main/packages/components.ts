@@ -63,12 +63,18 @@ import { BPMNGroupComponent } from './bpmn/bpmn-group/bpmn-group-component';
 import { BPMNPoolComponent } from './bpmn/bpmn-pool/bpmn-pool-component';
 import { BPMNSwimlaneComponent } from './bpmn/bpmn-swimlane/bpmn-swimlane-component';
 import { BPMNDataStoreComponent } from './bpmn/bpmn-data-store/bpmn-data-store-component';
+import { PrototypeRectangleComponent } from './prototype/prototype-rectangle/prototype-rectangle-component';
+import { PrototypeLabelComponent } from './prototype/prototype-label/prototype-label-component';
+import { PrototypeLinkComponent } from './prototype/prototype-link/prototype-link-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
     | FunctionComponent<PropsWithChildren<{ element: any; fillColor?: string }>>
     | ConnectedComponent<FunctionComponent<any>, { element: any }>;
 } = {
+  [UMLElementType.PrototypeRectangle]: PrototypeRectangleComponent,
+  [UMLElementType.PrototypeLabel]: PrototypeLabelComponent,
+  [UMLRelationshipType.PrototypeLink]: PrototypeLinkComponent,
   [UMLElementType.Package]: UMLClassPackageComponent,
   [UMLElementType.Class]: UMLClassifierComponent,
   [UMLElementType.AbstractClass]: UMLClassifierComponent,

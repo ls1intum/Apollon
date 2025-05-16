@@ -53,8 +53,12 @@ import { BPMNPool } from './bpmn/bpmn-pool/bpmn-pool';
 import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
 import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
 import { BPMNDataStore } from './bpmn/bpmn-data-store/bpmn-data-store';
+import { PrototypeRectangle } from './prototype/prototype-rectangle/prototype-rectangle';
+import { PrototypeLabel } from './prototype/prototype-label/prototype-label';
 
 export const UMLElements = {
+  [UMLElementType.PrototypeRectangle]: PrototypeRectangle,
+  [UMLElementType.PrototypeLabel]: PrototypeLabel,
   [UMLElementType.Package]: UMLClassPackage,
   [UMLElementType.Class]: UMLClass,
   [UMLElementType.AbstractClass]: UMLAbstractClass,

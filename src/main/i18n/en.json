@@ -30,6 +30,10 @@
     "additionalFeedbackPlaceholder": "You can enter additional feedback here..."
   },
   "packages": {
+    "Prototype": {
+      "PrototypeRectangle": "Prototype-Rectangle",
+      "PrototypeLabel": "Prototype-Label"
+    },
     "ClassDiagram": {
       "Package": "Package",
       "Class": "Class",

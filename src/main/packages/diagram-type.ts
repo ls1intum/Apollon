@@ -1,6 +1,7 @@
 export type UMLDiagramType = keyof typeof UMLDiagramType;
 
 export const UMLDiagramType = {
+  Prototype: 'Prototype',
   ClassDiagram: 'ClassDiagram',
   ObjectDiagram: 'ObjectDiagram',
   ActivityDiagram: 'ActivityDiagram',
