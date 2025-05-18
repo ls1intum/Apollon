@@ -16,11 +16,19 @@ export function PrototypeRectangleComponent({ element, children, fillColor }: Pr
         fillColor={fillColor || element.fillColor}
         width="100%"
         height="100%"
-        strokeColor={element.strokeColor}
       />
-      <Text fill={element.textColor}>{element.name}</Text>
+      <Text x={10} y={10} fill={element.textColor} textAnchor="start" dominantBaseline="hanging">
+        {element.name}
+      </Text>
 
       {children}
+
+      <ThemedRect
+        fillColor="none"
+        width="100%"
+        height="100%"
+        strokeColor={element.strokeColor}
+      />
     </g>
   );
 }
