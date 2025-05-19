@@ -53,12 +53,13 @@ import { BPMNPool } from './bpmn/bpmn-pool/bpmn-pool';
 import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
 import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
 import { BPMNDataStore } from './bpmn/bpmn-data-store/bpmn-data-store';
-import { PrototypeRectangle } from './prototype/prototype-rectangle/prototype-rectangle';
-import { PrototypeLabel } from './prototype/prototype-label/prototype-label';
+import { PrototypeRectangle } from './sfc/prototype-rectangle/prototype-rectangle';
+import { PrototypeLabel } from './sfc/prototype-label/prototype-label';
+import { SfcEnd } from './sfc/sfc-end/sfc-end';
+import { SfcStart } from './sfc/sfc-start/sfc-start';
+import { SfcStep } from './sfc/sfc-step/sfc-step';
 
 export const UMLElements = {
-  [UMLElementType.PrototypeRectangle]: PrototypeRectangle,
-  [UMLElementType.PrototypeLabel]: PrototypeLabel,
   [UMLElementType.Package]: UMLClassPackage,
   [UMLElementType.Class]: UMLClass,
   [UMLElementType.AbstractClass]: UMLAbstractClass,
@@ -113,4 +114,9 @@ export const UMLElements = {
   [UMLElementType.BPMNPool]: BPMNPool,
   [UMLElementType.BPMNSwimlane]: BPMNSwimlane,
   [UMLElementType.BPMNGroup]: BPMNGroup,
+  [UMLElementType.SfcStart]: SfcStart,
+  [UMLElementType.SfcStep]: SfcStep,
+  [UMLElementType.SfcEnd]: SfcEnd,
+  [UMLElementType.PrototypeRectangle]: PrototypeRectangle,
+  [UMLElementType.PrototypeLabel]: PrototypeLabel,
 };

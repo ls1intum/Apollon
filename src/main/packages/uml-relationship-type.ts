@@ -11,10 +11,9 @@ import { ReachabilityGraphRelationshipType } from './uml-reachability-graph';
 import { SyntaxTreeRelationshipType } from './syntax-tree';
 import { FlowchartRelationshipType } from './flowchart';
 import { BPMNRelationshipType } from './bpmn';
-import { PrototypeRelationshipType } from './prototype';
+import { SfcRelationshipType } from './sfc';
 
 export type UMLRelationshipType =
-  | keyof typeof PrototypeRelationshipType
   | keyof typeof ClassRelationshipType
   | keyof typeof ObjectRelationshipType
   | keyof typeof ActivityRelationshipType
@@ -26,10 +25,10 @@ export type UMLRelationshipType =
   | keyof typeof ReachabilityGraphRelationshipType
   | keyof typeof SyntaxTreeRelationshipType
   | keyof typeof FlowchartRelationshipType
-  | keyof typeof BPMNRelationshipType;
+  | keyof typeof BPMNRelationshipType
+  | keyof typeof SfcRelationshipType;
 
 export const UMLRelationshipType = {
-  ...PrototypeRelationshipType,
   ...ClassRelationshipType,
   ...ObjectRelationshipType,
   ...ActivityRelationshipType,
@@ -42,10 +41,10 @@ export const UMLRelationshipType = {
   ...SyntaxTreeRelationshipType,
   ...FlowchartRelationshipType,
   ...BPMNRelationshipType,
+  ...SfcRelationshipType,
 };
 
 export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelationshipType } = {
-  [UMLDiagramType.Prototype]: PrototypeRelationshipType.PrototypeLink,
   [UMLDiagramType.ClassDiagram]: ClassRelationshipType.ClassBidirectional,
   [UMLDiagramType.ObjectDiagram]: ObjectRelationshipType.ObjectLink,
   [UMLDiagramType.ActivityDiagram]: ActivityRelationshipType.ActivityControlFlow,
@@ -58,4 +57,5 @@ export const DefaultUMLRelationshipType: { [key in UMLDiagramType]: UMLRelations
   [UMLDiagramType.SyntaxTree]: SyntaxTreeRelationshipType.SyntaxTreeLink,
   [UMLDiagramType.Flowchart]: FlowchartRelationshipType.FlowchartFlowline,
   [UMLDiagramType.BPMN]: BPMNRelationshipType.BPMNFlow,
+  [UMLDiagramType.Sfc]: SfcRelationshipType.SfcLink,
 };

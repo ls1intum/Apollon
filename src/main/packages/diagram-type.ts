@@ -1,7 +1,6 @@
 export type UMLDiagramType = keyof typeof UMLDiagramType;
 
 export const UMLDiagramType = {
-  Prototype: 'Prototype',
   ClassDiagram: 'ClassDiagram',
   ObjectDiagram: 'ObjectDiagram',
   ActivityDiagram: 'ActivityDiagram',
@@ -14,4 +13,5 @@ export const UMLDiagramType = {
   SyntaxTree: 'SyntaxTree',
   Flowchart: 'Flowchart',
   BPMN: 'BPMN',
+  Sfc: 'Sfc',
 } as const;

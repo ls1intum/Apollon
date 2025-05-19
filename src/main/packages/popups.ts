@@ -2,23 +2,39 @@ import { ComponentType } from 'react';
 import { DefaultPopup } from './common/default-popup';
 import { DefaultRelationshipPopup } from './common/default-relationship-popup';
 import { UMLClassifierUpdate } from './common/uml-classifier/uml-classifier-update';
-import { UMLActivityControlFlowUpdate } from './uml-activity-diagram/uml-activity-control-flow/uml-activity-control-flow-update';
-import { UMLActivityMergeNodeUpdate } from './uml-activity-diagram/uml-activity-merge-node/uml-activity-merge-node-update';
-import { UMLComponentSubsystemUpdate } from './uml-component-diagram/uml-component-subsystem/uml-component-subsystem-update';
+import {
+  UMLActivityControlFlowUpdate,
+} from './uml-activity-diagram/uml-activity-control-flow/uml-activity-control-flow-update';
+import {
+  UMLActivityMergeNodeUpdate,
+} from './uml-activity-diagram/uml-activity-merge-node/uml-activity-merge-node-update';
+import {
+  UMLComponentSubsystemUpdate,
+} from './uml-component-diagram/uml-component-subsystem/uml-component-subsystem-update';
 import { UMLComponentUpdate } from './common/uml-component/uml-component-update';
 import { UMLClassAssociationUpdate } from './uml-class-diagram/uml-class-association/uml-class-association-update';
-import { UMLCommunicationLinkUpdate } from './uml-communication-diagram/uml-communication-link/uml-communication-link-update';
+import {
+  UMLCommunicationLinkUpdate,
+} from './uml-communication-diagram/uml-communication-link/uml-communication-link-update';
 import { UMLComponentAssociationUpdate } from './uml-component-diagram/uml-component-association-update';
-import { UMLDeploymentAssociationUpdate } from './uml-deployment-diagram/uml-deployment-association/uml-deployment-association-update';
+import {
+  UMLDeploymentAssociationUpdate,
+} from './uml-deployment-diagram/uml-deployment-association/uml-deployment-association-update';
 import { UMLDeploymentNodeUpdate } from './uml-deployment-diagram/uml-deployment-node/uml-deployment-node-update';
 import { UMLElementType } from './uml-element-type';
 import { UMLObjectNameUpdate } from './uml-object-diagram/uml-object-name/uml-object-name-update';
 import { UMLRelationshipType } from './uml-relationship-type';
-import { UMLUseCaseAssociationUpdate } from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-update';
+import {
+  UMLUseCaseAssociationUpdate,
+} from './uml-use-case-diagram/uml-use-case-association/uml-use-case-association-update';
 import { UMLPetriNetPlaceUpdate } from './uml-petri-net/uml-petri-net-place/uml-petri-net-place-update';
 import { UMLPetriNetArcUpdate } from './uml-petri-net/uml-petri-net-arc/uml-petri-net-arc-update';
-import { UMLReachabilityGraphArcUpdate } from './uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc-update';
-import { UMLReachabilityGraphMarkingUpdate } from './uml-reachability-graph/uml-reachability-graph-marking/uml-reachability-graph-marking-update';
+import {
+  UMLReachabilityGraphArcUpdate,
+} from './uml-reachability-graph/uml-reachability-graph-arc/uml-reachability-graph-arc-update';
+import {
+  UMLReachabilityGraphMarkingUpdate,
+} from './uml-reachability-graph/uml-reachability-graph-marking/uml-reachability-graph-marking-update';
 import { SyntaxTreeTerminalUpdate } from './syntax-tree/syntax-tree-terminal/syntax-tree-terminal-update';
 import { SyntaxTreeNonterminalUpdate } from './syntax-tree/syntax-tree-nonterminal/syntax-tree-nonterminal-update';
 import { FlowchartTerminalUpdate } from './flowchart/flowchart-terminal/flowchart-terminal-update';
@@ -35,8 +51,9 @@ import { BPMNIntermediateEventUpdate } from './bpmn/bpmn-intermediate-event/bpmn
 import { BPMNStartEventUpdate } from './bpmn/bpmn-start-event/bpmn-start-event-update';
 import { BPMNEndEventUpdate } from './bpmn/bpmn-end-event/bpmn-end-event-update';
 import { BPMNTaskUpdate } from './bpmn/bpmn-task/bpmn-task-update';
-import { PrototypeRectangleUpdate } from './prototype/prototype-rectangle/prototype-rectangle-update';
-import { PrototypeLinkUpdate } from './prototype/prototype-link/prototype-link-update';
+import { PrototypeRectangleUpdate } from './sfc/prototype-rectangle/prototype-rectangle-update';
+import { SfcTransitionUpdate } from './sfc/sfc-transition/sfc-transition-update';
+import { SfcStepUpdate } from './sfc/sfc-step/sfc-step-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -97,6 +114,9 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNSwimlane]: DefaultPopup,
   [UMLElementType.PrototypeRectangle]: PrototypeRectangleUpdate,
   [UMLElementType.PrototypeLabel]: null,
+  [UMLElementType.SfcStart]: null,
+  [UMLElementType.SfcStep]: SfcStepUpdate,
+  [UMLElementType.SfcEnd]: null,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,
@@ -124,5 +144,5 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLRelationshipType.SyntaxTreeLink]: DefaultRelationshipPopup,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineUpdate,
   [UMLRelationshipType.BPMNFlow]: BPMNFlowUpdate,
-  [UMLRelationshipType.PrototypeLink]: PrototypeLinkUpdate,
+  [UMLRelationshipType.SfcLink]: SfcTransitionUpdate,
 };

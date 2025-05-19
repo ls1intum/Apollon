@@ -1,12 +1,12 @@
 import React from 'react';
 import { ThemedPolyline } from '../../../components/theme/themedComponents';
-import { PrototypeLink } from './prototype-link';
+import { SfcTransition } from './sfc-transition';
 
 interface Props {
-  element: PrototypeLink;
+  element: SfcTransition;
 }
 
-export function PrototypeLinkComponent({ element }: Props) {
+export function SfcTransitionComponent({ element }: Props) {
   return (
     <g>
       <ThemedPolyline

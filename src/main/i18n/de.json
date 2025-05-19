@@ -30,9 +30,11 @@
     "additionalFeedbackPlaceholder": "Du kannst hier zusätzliches Feedback abgeben..."
   },
   "packages": {
-    "Prototype": {
+    "Sfc": {
       "PrototypeRectangle": "Prototype-Rechteck",
-      "PrototypeLabel": "Prototype-Beschriftung"
+      "PrototypeLabel": "Prototype-Beschriftung",
+      "Start": "Start",
+      "Step": "Schritt"
     },
     "ClassDiagram": {
       "Package": "Paket",

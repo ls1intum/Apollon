@@ -29,7 +29,7 @@ import { composeFlowchartPreview } from '../../packages/flowchart/flowchart-diag
 import { ColorLegend } from '../../packages/common/color-legend/color-legend';
 import { Separator } from './create-pane-styles';
 import { composeBPMNPreview } from '../../packages/bpmn/bpmn-diagram-preview';
-import { composePrototypePreview } from '../../packages/prototype/prototype-preview';
+import { composeSfcPreview } from '../../packages/sfc/sfc-preview';
 
 type OwnProps = {};
 
@@ -50,8 +50,8 @@ const getInitialState = ({ type, canvas, translate, colorEnabled }: Props) => {
   const utils: PreviewElement[] = [];
 
   switch (type) {
-    case UMLDiagramType.Prototype:
-      previews.push(...composePrototypePreview(canvas, translate));
+    case UMLDiagramType.Sfc:
+      previews.push(...composeSfcPreview(canvas, translate));
       break;
     case UMLDiagramType.ClassDiagram:
       previews.push(...composeClassPreview(canvas, translate));

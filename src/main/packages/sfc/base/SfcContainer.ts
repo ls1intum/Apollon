@@ -1,18 +1,21 @@
-import { UMLElementType } from '../../uml-element-type';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
+import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
-import { PrototypeElementType } from '../index';
-import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import { Text } from '../../../utils/svg/text';
 import { PrototypeLabel } from '../prototype-label/prototype-label';
+import { Text } from '../../../utils/svg/text';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 
-export class PrototypeRectangle extends UMLContainer {
+export abstract class ScfContainer extends UMLContainer {
   static features: UMLElementFeatures = {
     ...UMLContainer.features,
     updatable: true,
+    resizable: false,
+    droppable: false,
   };
+
+  private static readonly MIN_WIDTH = 120
+  private static readonly MIN_HEIGHT = 50
 
   render(canvas: ILayer, children?: ILayoutable[] | undefined): ILayoutable[] {
     this.autoWidth(canvas, children);
@@ -25,7 +28,7 @@ export class PrototypeRectangle extends UMLContainer {
         yOffset += child.bounds.height;
       }
     }
-    this.bounds.height = Math.max(yOffset, 100);
+    this.bounds.height = Math.max(yOffset, ScfContainer.MIN_HEIGHT);
 
     return [this, ...(children ?? [])];
   }
@@ -48,12 +51,10 @@ export class PrototypeRectangle extends UMLContainer {
       return max;
     }, 0);
 
-    const newWidth = Math.max(160, nameWidth, maxLabelWidth);
+    const newWidth = Math.max(ScfContainer.MIN_WIDTH, nameWidth, maxLabelWidth);
     const newWidthRounded = Math.ceil(newWidth / 10) * 10;
     [...presentChildren, this].forEach((element) => {
       element.bounds.width = newWidthRounded;
     });
   }
-
-  type: UMLElementType = PrototypeElementType.PrototypeRectangle;
 }

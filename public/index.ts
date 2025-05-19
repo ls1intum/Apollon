@@ -8,6 +8,7 @@ let options: Apollon.ApollonOptions = {
   model: JSON.parse(window.localStorage.getItem('apollon')!),
   colorEnabled: true,
   scale: 0.8,
+  type: 'Sfc'
 };
 
 export const onChange = (event: MouseEvent) => {
