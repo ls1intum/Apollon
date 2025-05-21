@@ -2,7 +2,7 @@ import { UMLRelationship } from '../../../services/uml-relationship/uml-relation
 import { UMLRelationshipType } from '../../uml-relationship-type';
 
 export class SfcTransition extends UMLRelationship {
-  static features = { ...UMLRelationship.features, straight: true };
+  static features = { ...UMLRelationship.features, straight: false };
 
   type: UMLRelationshipType = UMLRelationshipType.SfcTransition;
 }
