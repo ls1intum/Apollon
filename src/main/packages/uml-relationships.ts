@@ -57,5 +57,5 @@ export const UMLRelationships = {
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLink,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowline,
   [UMLRelationshipType.BPMNFlow]: BPMNFlow,
-  [UMLRelationshipType.SfcLink]: SfcTransition,
+  [UMLRelationshipType.SfcTransition]: SfcTransition,
 };

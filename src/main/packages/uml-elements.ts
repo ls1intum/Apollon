@@ -58,6 +58,8 @@ import { PrototypeLabel } from './sfc/prototype-label/prototype-label';
 import { SfcEnd } from './sfc/sfc-end/sfc-end';
 import { SfcStart } from './sfc/sfc-start/sfc-start';
 import { SfcStep } from './sfc/sfc-step/sfc-step';
+import { SfcActionTable } from './sfc/sfc-action-table/sfc-action-table';
+import { SfcActionTableRow } from './sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -116,6 +118,8 @@ export const UMLElements = {
   [UMLElementType.BPMNGroup]: BPMNGroup,
   [UMLElementType.SfcStart]: SfcStart,
   [UMLElementType.SfcStep]: SfcStep,
+  [UMLElementType.SfcActionTable]: SfcActionTable,
+  [UMLElementType.SfcActionTableRow]: SfcActionTableRow,
   [UMLElementType.SfcEnd]: SfcEnd,
   [UMLElementType.PrototypeRectangle]: PrototypeRectangle,
   [UMLElementType.PrototypeLabel]: PrototypeLabel,

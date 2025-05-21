@@ -5,9 +5,11 @@ export const SfcElementType = {
   PrototypeLabel: 'PrototypeLabel',
   SfcStep: 'SfcStep',
   SfcStart: 'SfcStart',
+  SfcActionTable: 'SfcActionTable',
+  SfcActionTableRow: 'SfcActionTableRow',
   SfcEnd: 'SfcEnd',
 } as const;
 
 export const SfcRelationshipType = {
-  SfcLink: 'SfcLink',
+  SfcTransition: 'SfcTransition',
 } as const;

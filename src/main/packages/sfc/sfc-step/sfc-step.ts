@@ -1,7 +1,7 @@
-import { ScfContainer } from '../base/SfcContainer';
+import { SfcContainer } from '../base/SfcContainer';
 import { UMLElementType } from '../../uml-element-type';
 
-export class SfcStep extends ScfContainer {
+export class SfcStep extends SfcContainer {
 
   type = UMLElementType.SfcStep;
 

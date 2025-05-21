@@ -4,5 +4,5 @@ import { UMLRelationshipType } from '../../uml-relationship-type';
 export class SfcTransition extends UMLRelationship {
   static features = { ...UMLRelationship.features, straight: true };
 
-  type: UMLRelationshipType = UMLRelationshipType.SfcLink;
+  type: UMLRelationshipType = UMLRelationshipType.SfcTransition;
 }
