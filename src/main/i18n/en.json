@@ -34,7 +34,8 @@
       "PrototypeRectangle": "Prototype-Rectangle",
       "PrototypeLabel": "Prototype-Label",
       "Start": "Start",
-      "Step": "Step"
+      "Step": "Step",
+      "Transition": "Transition"
     },
     "ClassDiagram": {
       "Package": "Package",

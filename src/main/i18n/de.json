@@ -34,7 +34,8 @@
       "PrototypeRectangle": "Prototype-Rechteck",
       "PrototypeLabel": "Prototype-Beschriftung",
       "Start": "Start",
-      "Step": "Schritt"
+      "Step": "Schritt",
+      "Transition": "Übergang"
     },
     "ClassDiagram": {
       "Package": "Paket",

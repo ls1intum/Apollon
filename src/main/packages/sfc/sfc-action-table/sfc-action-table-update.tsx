@@ -14,12 +14,6 @@ import { SfcActionTable } from './sfc-action-table';
 import SfcActionTableUpdateRowControls from './sfc-action-table-update-row-controls';
 import { SfcActionTableRow } from './sfc-action-table-row/sfc-action-table-row';
 
-const Flex = styled.div`
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-`;
-
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 30px 1fr auto;

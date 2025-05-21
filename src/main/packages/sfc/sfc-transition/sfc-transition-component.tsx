@@ -64,10 +64,14 @@ export function SfcTransitionComponent({ element }: Props) {
   const crossbarEnd = center.add(perpendicular.scale(crossbarLength / 2));
 
   // Create a text path for the label
-  const textOffset = 30; // Distance of text from the crossbar
+  const textOffset = 35; // Distance of text from the crossbar
   const textPosition = center.add(perpendicular.scale(textOffset));
 
+  const isNameNegated = element.name.startsWith('!');
+  const displayName = element.name.startsWith('!') ? element.name.substring(1) : element.name;
+
   const isPerpendicularMoreHorizontal = Math.abs(perpendicular.x) > Math.abs(perpendicular.y);
+  const isTextHorizontal = displayName.length > 1 && isPerpendicularMoreHorizontal;
 
   return (
     <g>
@@ -77,25 +81,26 @@ export function SfcTransitionComponent({ element }: Props) {
         fillColor="none"
         strokeWidth={1}
       />
-      <ThemedPolyline
-        points={`${crossbarStart.x},${crossbarStart.y} ${crossbarEnd.x},${crossbarEnd.y}`}
-        strokeColor={element.strokeColor}
-        fillColor="none"
-        strokeWidth={10}
-      />
-      {element.name && (
-        <Text
-          x={textPosition.x}
-          y={textPosition.y}
-          fill={element.textColor}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          transform={
-            element.name.length > 1 && isPerpendicularMoreHorizontal ? `rotate(-90, ${textPosition.x}, ${textPosition.y})` : undefined
-          }
-        >
-          {element.name}
-        </Text>
+      {displayName.length > 0 && (
+        <>
+          <ThemedPolyline
+            points={`${crossbarStart.x},${crossbarStart.y} ${crossbarEnd.x},${crossbarEnd.y}`}
+            strokeColor={element.strokeColor}
+            fillColor="none"
+            strokeWidth={10}
+          />
+          <Text
+            textDecoration={isNameNegated ? 'overline' : undefined}
+            x={textPosition.x}
+            y={textPosition.y}
+            fill={element.textColor}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            transform={isTextHorizontal ? `rotate(-90, ${textPosition.x}, ${textPosition.y})` : undefined}
+          >
+            {displayName}
+          </Text>
+        </>
       )}
     </g>
   );
