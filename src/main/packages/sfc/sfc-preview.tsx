@@ -8,6 +8,7 @@ import { SfcStart } from './sfc-start/sfc-start';
 import { SfcStep } from './sfc-step/sfc-step';
 import { SfcActionTable } from './sfc-action-table/sfc-action-table';
 import { SfcActionTableRow } from './sfc-action-table/sfc-action-table-row/sfc-action-table-row';
+import { SfcTransitionBranch } from './sfc-transition-branch/sfc-transition-branch';
 
 export const composeSfcPreview: ComposePreview = (layer: ILayer, translate: (id: string) => string): UMLElement[] => {
   const prototypeRectangle = new PrototypeRectangle({ name: translate('packages.Sfc.PrototypeRectangle') });
@@ -31,6 +32,8 @@ export const composeSfcPreview: ComposePreview = (layer: ILayer, translate: (id:
 
   sfcActionTable.ownedElements = [sfcActionTableRow1.id];
 
+  const sfcTransitionBranch = new SfcTransitionBranch({})
+
   const sfcEnd = new SfcEnd();
 
   return [
@@ -38,6 +41,7 @@ export const composeSfcPreview: ComposePreview = (layer: ILayer, translate: (id:
     ...(sfcStart.render(layer) as UMLElement[]),
     ...(sfcStep.render(layer) as UMLElement[]),
     ...(sfcActionTable.render(layer, [sfcActionTableRow1]) as UMLElement[]),
+    ...(sfcTransitionBranch.render(layer) as UMLElement[]),
     ...(sfcEnd.render(layer) as UMLElement[]),
   ];
 };

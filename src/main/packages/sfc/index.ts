@@ -7,6 +7,7 @@ export const SfcElementType = {
   SfcStart: 'SfcStart',
   SfcActionTable: 'SfcActionTable',
   SfcActionTableRow: 'SfcActionTableRow',
+  SfcTransitionBranch: 'SfcTransitionBranch',
   SfcEnd: 'SfcEnd',
 } as const;
 

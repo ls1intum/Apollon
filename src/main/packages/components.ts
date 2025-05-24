@@ -71,6 +71,7 @@ import { SfcStartComponent } from './sfc/sfc-start/sfc-start-component';
 import { SfcStepComponent } from './sfc/sfc-step/sfc-step-component';
 import { SfcActionTableComponent } from './sfc/sfc-action-table/sfc-action-table-component';
 import { SfcActionTableRowComponent } from './sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row-component';
+import { SfcTransitionBranchComponent } from './sfc/sfc-transition-branch/sfc-transition-branch-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -161,6 +162,7 @@ export const Components: {
   [UMLElementType.SfcStep]: SfcStepComponent,
   [UMLElementType.SfcActionTable]: SfcActionTableComponent,
   [UMLElementType.SfcActionTableRow]: SfcActionTableRowComponent,
+  [UMLElementType.SfcTransitionBranch]: SfcTransitionBranchComponent,
   [UMLElementType.SfcEnd]: SfcEndComponent,
   [UMLElementType.PrototypeRectangle]: PrototypeRectangleComponent,
   [UMLElementType.PrototypeLabel]: PrototypeLabelComponent,

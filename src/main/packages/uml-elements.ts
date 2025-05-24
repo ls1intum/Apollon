@@ -60,6 +60,7 @@ import { SfcStart } from './sfc/sfc-start/sfc-start';
 import { SfcStep } from './sfc/sfc-step/sfc-step';
 import { SfcActionTable } from './sfc/sfc-action-table/sfc-action-table';
 import { SfcActionTableRow } from './sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row';
+import { SfcTransitionBranch } from './sfc/sfc-transition-branch/sfc-transition-branch';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -120,6 +121,7 @@ export const UMLElements = {
   [UMLElementType.SfcStep]: SfcStep,
   [UMLElementType.SfcActionTable]: SfcActionTable,
   [UMLElementType.SfcActionTableRow]: SfcActionTableRow,
+  [UMLElementType.SfcTransitionBranch]: SfcTransitionBranch,
   [UMLElementType.SfcEnd]: SfcEnd,
   [UMLElementType.PrototypeRectangle]: PrototypeRectangle,
   [UMLElementType.PrototypeLabel]: PrototypeLabel,
