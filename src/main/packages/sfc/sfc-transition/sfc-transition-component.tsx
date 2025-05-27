@@ -4,11 +4,7 @@ import { SfcTransition } from './sfc-transition';
 import { Point } from '../../../utils/geometry/point';
 import { Text } from '../../../components/controls/text/text';
 
-interface Props {
-  element: SfcTransition;
-}
-
-export function SfcTransitionComponent({ element }: Props) {
+export function SfcTransitionComponent({ element }: { element: SfcTransition }) {
   // Calculate the center point and perpendicular vector for the crossbar
   const path = element.path.map((p) => new Point(p.x, p.y));
 

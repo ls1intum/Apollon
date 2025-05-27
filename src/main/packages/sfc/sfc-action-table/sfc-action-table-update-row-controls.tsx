@@ -19,7 +19,7 @@ type Props = {
   onDelete: (id: string) => () => void;
 };
 
-const SfcActionTableUpdateRowControls = ({ row, update, onDelete }: Props) => {
+export const SfcActionTableUpdateRowControls = ({ row, update, onDelete }: Props) => {
   const [colorOpen, setColorOpen] = useState(false);
 
   const toggleColor = () => {
@@ -44,5 +44,3 @@ const SfcActionTableUpdateRowControls = ({ row, update, onDelete }: Props) => {
     </>
   );
 };
-
-export default SfcActionTableUpdateRowControls;

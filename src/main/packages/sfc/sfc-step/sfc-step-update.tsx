@@ -22,16 +22,13 @@ interface OwnProps {
   element: SfcStep;
 }
 
-type StateProps = {};
-
 interface DispatchProps {
   update: typeof UMLElementRepository.update;
-  delete: typeof UMLElementRepository.delete;
 }
 
-type Props = OwnProps & StateProps & DispatchProps & I18nContext;
+type Props = OwnProps & DispatchProps & I18nContext;
 
-function SfcStepUpdateComponent({ element, update }: Props) {
+function BaseSfcStepUpdate({ element, update }: Props) {
   const [colorOpen, setColorOpen] = React.useState(false);
 
   const toggleColor = () => {
@@ -50,7 +47,6 @@ function SfcStepUpdateComponent({ element, update }: Props) {
           <ColorButton onClick={toggleColor} />
         </Flex>
         <StylePane open={colorOpen} element={element} onColorChange={update} fillColor lineColor textColor />
-        <Divider />
       </section>
     </div>
   );
@@ -60,8 +56,7 @@ const enhance = compose<ComponentClass<OwnProps>>(
   localized,
   connect<{}, DispatchProps, OwnProps, ModelState>(null, {
     update: UMLElementRepository.update,
-    delete: UMLElementRepository.delete,
   }),
 );
 
-export const SfcStepUpdate = enhance(SfcStepUpdateComponent);
+export const SfcStepUpdate = enhance(BaseSfcStepUpdate);

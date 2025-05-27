@@ -1,8 +1,13 @@
 import { UMLElementType } from '../../../uml-element-type';
-import { computeDimension, IBoundary } from '../../../../utils/geometry/boundary';
 import { SfcElement } from '../../base/SfcElement';
+import { UMLElementFeatures } from '../../../../services/uml-element/uml-element-features';
 
 export class SfcActionTableRow extends SfcElement {
+  static features: UMLElementFeatures = {
+    ...SfcElement.features,
+    connectable: false,
+    hoverable: false
+  };
+  bounds = { x: 0, y: 0, width: 0, height: 30 };
   type: UMLElementType = UMLElementType.SfcActionTableRow;
-  bounds: IBoundary = { x: 0, y: 0, width: 0, height: computeDimension(1.0, 30) };
 }

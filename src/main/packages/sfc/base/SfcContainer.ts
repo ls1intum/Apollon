@@ -13,8 +13,6 @@ export abstract class SfcContainer extends UMLContainer {
     droppable: false,
   };
 
-  protected hasNameAtTop = false;
-
   protected minWidth = 120;
   protected minHeight = 50;
   protected childWidthCalculation = (canvas: ILayer, child: UMLElement) =>
@@ -22,24 +20,12 @@ export abstract class SfcContainer extends UMLContainer {
 
   render(canvas: ILayer, children?: ILayoutable[] | undefined): ILayoutable[] {
     this.autoWidth(canvas, children);
-
-    let yOffset = this.hasNameAtTop ? 30 : 0;
-    for (const child of children ?? []) {
-      child.bounds.x = 0;
-      child.bounds.y = yOffset;
-      yOffset += child.bounds.height;
-    }
-    this.bounds.height = Math.max(yOffset, this.minHeight);
+    this.autoHeight(children);
 
     return [this, ...(children ?? [])];
   }
 
-  /**
-   * Auto-width the rectangle based on the name and labels
-   * @param canvas The canvas layer
-   * @param children The children elements (labels)
-   */
-  private autoWidth(canvas: ILayer, children?: ILayoutable[] | undefined): void {
+  private autoWidth(canvas: ILayer, children?: ILayoutable[]): void {
     const nameWidth = Text.size(canvas, this.name, { fontWeight: 'bold' }).width + 20;
 
     const presentChildren = children ?? [];
@@ -54,5 +40,15 @@ export abstract class SfcContainer extends UMLContainer {
     [...presentChildren, this].forEach((element) => {
       element.bounds.width = newWidthRounded;
     });
+  }
+
+  private autoHeight(children?: ILayoutable[]) {
+    let yOffset = 0;
+    for (const child of children ?? []) {
+      child.bounds.x = 0;
+      child.bounds.y = yOffset;
+      yOffset += child.bounds.height;
+    }
+    this.bounds.height = Math.max(yOffset, this.minHeight);
   }
 }

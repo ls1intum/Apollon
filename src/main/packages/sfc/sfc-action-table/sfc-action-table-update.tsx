@@ -2,8 +2,6 @@ import React, { ComponentClass, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { Textfield } from '../../../components/controls/textfield/textfield';
-import { I18nContext } from '../../../components/i18n/i18n-context';
-import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
@@ -11,7 +9,7 @@ import { notEmpty } from '../../../utils/not-empty';
 import { AsyncDispatch } from '../../../utils/actions/actions';
 import { compose } from 'redux';
 import { SfcActionTable } from './sfc-action-table';
-import SfcActionTableUpdateRowControls from './sfc-action-table-update-row-controls';
+import { SfcActionTableUpdateRowControls } from './sfc-action-table-update-row-controls';
 import { SfcActionTableRow } from './sfc-action-table-row/sfc-action-table-row';
 
 const Grid = styled.div`
@@ -30,9 +28,9 @@ interface DispatchProps {
   getById: (id: string) => UMLElement | null;
 }
 
-type Props = OwnProps & DispatchProps & I18nContext;
+type Props = OwnProps & DispatchProps;
 
-function SfcActionTableUpdateComponent({ element, create, update, delete: deleteElement, getById, translate }: Props) {
+function SfcActionTableUpdateComponent({ element, create, update, delete: deleteElement, getById }: Props) {
   const [colorOpen, setColorOpen] = useState(false);
   const [fieldToFocus, setFieldToFocus] = useState<Textfield<string> | null>(null);
 
@@ -146,7 +144,6 @@ function SfcActionTableUpdateComponent({ element, create, update, delete: delete
 }
 
 const enhance = compose<ComponentClass<OwnProps>>(
-  localized,
   connect<{}, DispatchProps, OwnProps, ModelState>(null, {
     create: UMLElementRepository.create,
     update: UMLElementRepository.update,

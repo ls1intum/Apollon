@@ -6,12 +6,9 @@ import { SfcTransition } from './sfc-transition';
 import styled from 'styled-components';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { Row } from '../base/layout';
-import { Header } from '../../../components/controls/typography/typography';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Button } from '../../../components/controls/button/button';
 import { I18nContext } from '../../../components/i18n/i18n-context';
-import { localized } from '../../../components/i18n/localized';
 
 const Container = styled.div`
   display: flex;
@@ -20,12 +17,18 @@ const Container = styled.div`
   gap: 10px;
 `;
 
+const Row = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+`;
+
 interface Props {
   element: SfcTransition;
   update: typeof UMLElementRepository.update;
 }
 
-function SfcTransitionUpdateComponent({ element, update, translate }: Props & I18nContext) {
+function SfcTransitionUpdateComponent({ element, update }: Props & I18nContext) {
   const [colorOpen, setColorOpen] = useState(false);
 
   const toggleColorOpen = () => {
@@ -42,28 +45,22 @@ function SfcTransitionUpdateComponent({ element, update, translate }: Props & I1
     update(element.id, { name });
   };
 
-  const displayName = (name: string) => (name.startsWith('!') ? name.substring(1) : name);
-  const negationButtonColor = (name: string) => (name.startsWith('!') ? 'primary' : 'secondary');
+  const [displayName, negationButtonColor, textDecoration]: [string, 'primary' | 'secondary', 'overline' | undefined] =
+    element.name.startsWith('!')
+      ? [element.name.substring(1), 'primary', 'overline']
+      : [element.name, 'secondary', undefined];
 
   return (
     <Container>
       <section>
-        <Row>
-          <Header style={{ flex: '1' }}>{translate('packages.Sfc.Transition')}</Header>
-          <ColorButton onClick={() => setColorOpen((prevState) => !prevState)} />
-        </Row>
-        <StylePane open={colorOpen} element={element} onColorChange={update} lineColor textColor />
-
         <Row style={{ gap: 5 }}>
-          <Textfield style={{ flex: '1' }} value={displayName(element.name)} onChange={handleNameChange} />
-          <Button
-            color={negationButtonColor(element.name)}
-            style={{ textDecoration: 'overline' }}
-            onClick={() => handleNegation()}
-          >
+          <Textfield style={{ flex: '1', textDecoration }} value={displayName} onChange={handleNameChange} autoFocus />
+          <Button color={negationButtonColor} style={{ textDecoration: 'overline' }} onClick={() => handleNegation()}>
             X
           </Button>
+          <ColorButton onClick={toggleColorOpen} />
         </Row>
+        <StylePane open={colorOpen} element={element} onColorChange={update} lineColor textColor />
       </section>
     </Container>
   );
@@ -74,7 +71,6 @@ interface OwnProps {
 }
 
 const enhance = compose<ComponentClass<OwnProps>>(
-  localized,
   connect(null, (dispatch) => ({
     update: (id: string, values: Partial<SfcTransition>) => dispatch(UMLElementRepository.update(id, values)),
   })),

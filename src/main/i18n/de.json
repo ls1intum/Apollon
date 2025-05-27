@@ -31,8 +31,7 @@
   },
   "packages": {
     "Sfc": {
-      "PrototypeRectangle": "Prototype-Rechteck",
-      "PrototypeLabel": "Prototype-Beschriftung",
+      "Actions": "Aktionen",
       "Start": "Start",
       "Step": "Schritt",
       "Transition": "Übergang"

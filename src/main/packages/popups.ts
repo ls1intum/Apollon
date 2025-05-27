@@ -35,7 +35,6 @@ import { BPMNIntermediateEventUpdate } from './bpmn/bpmn-intermediate-event/bpmn
 import { BPMNStartEventUpdate } from './bpmn/bpmn-start-event/bpmn-start-event-update';
 import { BPMNEndEventUpdate } from './bpmn/bpmn-end-event/bpmn-end-event-update';
 import { BPMNTaskUpdate } from './bpmn/bpmn-task/bpmn-task-update';
-import { PrototypeRectangleUpdate } from './sfc/prototype-rectangle/prototype-rectangle-update';
 import { SfcTransitionUpdate } from './sfc/sfc-transition/sfc-transition-update';
 import { SfcStepUpdate } from './sfc/sfc-step/sfc-step-update';
 import { SfcActionTableUpdate } from './sfc/sfc-action-table/sfc-action-table-update';
@@ -97,8 +96,6 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNGroup]: DefaultPopup,
   [UMLElementType.BPMNPool]: BPMNPoolUpdate,
   [UMLElementType.BPMNSwimlane]: DefaultPopup,
-  [UMLElementType.PrototypeRectangle]: PrototypeRectangleUpdate,
-  [UMLElementType.PrototypeLabel]: null,
   [UMLElementType.SfcStart]: null,
   [UMLElementType.SfcStep]: SfcStepUpdate,
   [UMLElementType.SfcActionTable]: SfcActionTableUpdate,

@@ -63,8 +63,6 @@ import { BPMNGroupComponent } from './bpmn/bpmn-group/bpmn-group-component';
 import { BPMNPoolComponent } from './bpmn/bpmn-pool/bpmn-pool-component';
 import { BPMNSwimlaneComponent } from './bpmn/bpmn-swimlane/bpmn-swimlane-component';
 import { BPMNDataStoreComponent } from './bpmn/bpmn-data-store/bpmn-data-store-component';
-import { PrototypeRectangleComponent } from './sfc/prototype-rectangle/prototype-rectangle-component';
-import { PrototypeLabelComponent } from './sfc/prototype-label/prototype-label-component';
 import { SfcTransitionComponent } from './sfc/sfc-transition/sfc-transition-component';
 import { SfcEndComponent } from './sfc/sfc-end/sfc-end-component';
 import { SfcStartComponent } from './sfc/sfc-start/sfc-start-component';
@@ -164,7 +162,5 @@ export const Components: {
   [UMLElementType.SfcActionTableRow]: SfcActionTableRowComponent,
   [UMLElementType.SfcTransitionBranch]: SfcTransitionBranchComponent,
   [UMLElementType.SfcEnd]: SfcEndComponent,
-  [UMLElementType.PrototypeRectangle]: PrototypeRectangleComponent,
-  [UMLElementType.PrototypeLabel]: PrototypeLabelComponent,
   [UMLRelationshipType.SfcTransition]: SfcTransitionComponent,
 };

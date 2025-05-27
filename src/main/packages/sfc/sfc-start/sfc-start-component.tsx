@@ -1,13 +1,13 @@
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Text } from '../../../components/controls/text/text';
 import React from 'react';
-import { SfcEnd } from '../sfc-end/sfc-end';
+import { SfcStart } from './sfc-start';
 
-export function SfcStartComponent({ element }: { element: SfcEnd }) {
+export function SfcStartComponent({ element }: { element: SfcStart }) {
   const innerRectBounds = { x: 5, y: 5, width: element.bounds.width - 10, height: element.bounds.height - 10 };
   return (
     <g>
-      <ThemedRect x="0" y="0" width="100%" height="100%" />
+      <ThemedRect x="0" y="0" width="100%" height="100%" strokeColor="none" />
       <Text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
         {element.name}
       </Text>

@@ -27,8 +27,6 @@ export function SfcActionTableRowComponent({ element, fillColor }: Props) {
       <Text x={40} fill={element.textColor} fontWeight="normal" textAnchor="start">
         {parsedValues[1]}
       </Text>
-      <ThemedRect fillColor="none" x={0} y={0} width="30" height="30" />
-      <ThemedRect fillColor="none" width="100%" height="100%" />
     </g>
   );
 }

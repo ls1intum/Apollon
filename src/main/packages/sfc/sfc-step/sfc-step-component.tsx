@@ -1,12 +1,12 @@
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Text } from '../../../components/controls/text/text';
 import React from 'react';
-import { SfcEnd } from '../sfc-end/sfc-end';
+import { SfcStep } from './sfc-step';
 
-export function SfcStepComponent({ element }: { element: SfcEnd }) {
+export function SfcStepComponent({ element }: { element: SfcStep }) {
   return (
     <g>
-      <ThemedRect fillColor={element.fillColor} x="0" y="0" width="100%" height="100%" />
+      <ThemedRect fillColor={element.fillColor} strokeColor="none" x="0" y="0" width="100%" height="100%" />
       <Text x="50%" y="50%" fill={element.textColor} textAnchor="middle" dominantBaseline="middle">
         {element.name}
       </Text>

@@ -53,8 +53,6 @@ import { BPMNPool } from './bpmn/bpmn-pool/bpmn-pool';
 import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
 import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
 import { BPMNDataStore } from './bpmn/bpmn-data-store/bpmn-data-store';
-import { PrototypeRectangle } from './sfc/prototype-rectangle/prototype-rectangle';
-import { PrototypeLabel } from './sfc/prototype-label/prototype-label';
 import { SfcEnd } from './sfc/sfc-end/sfc-end';
 import { SfcStart } from './sfc/sfc-start/sfc-start';
 import { SfcStep } from './sfc/sfc-step/sfc-step';
@@ -123,6 +121,4 @@ export const UMLElements = {
   [UMLElementType.SfcActionTableRow]: SfcActionTableRow,
   [UMLElementType.SfcTransitionBranch]: SfcTransitionBranch,
   [UMLElementType.SfcEnd]: SfcEnd,
-  [UMLElementType.PrototypeRectangle]: PrototypeRectangle,
-  [UMLElementType.PrototypeLabel]: PrototypeLabel,
 };
