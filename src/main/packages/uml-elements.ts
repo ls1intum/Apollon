@@ -53,7 +53,7 @@ import { BPMNPool } from './bpmn/bpmn-pool/bpmn-pool';
 import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
 import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
 import { BPMNDataStore } from './bpmn/bpmn-data-store/bpmn-data-store';
-import { SfcJump } from './sfc/sfc-end/sfc-jump';
+import { SfcJump } from './sfc/sfc-jump/sfc-jump';
 import { SfcStart } from './sfc/sfc-start/sfc-start';
 import { SfcStep } from './sfc/sfc-step/sfc-step';
 import { SfcActionTable } from './sfc/sfc-action-table/sfc-action-table';

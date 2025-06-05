@@ -1,7 +1,7 @@
 import { ComposePreview } from '../compose-preview';
 import { ILayer } from '../../services/layouter/layer';
 import { UMLElement } from '../../services/uml-element/uml-element';
-import { SfcJump } from './sfc-end/sfc-jump';
+import { SfcJump } from './sfc-jump/sfc-jump';
 import { SfcStart } from './sfc-start/sfc-start';
 import { SfcStep } from './sfc-step/sfc-step';
 import { SfcActionTable } from './sfc-action-table/sfc-action-table';
