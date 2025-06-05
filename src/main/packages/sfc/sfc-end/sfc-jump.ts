@@ -1,14 +1,15 @@
 import { UMLElementType } from '../../uml-element-type';
-import { SfcElement } from '../base/sfc-element';
 import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
+import { SfcContainer } from '../base/sfc-container';
+import { Text } from '../../../utils/svg/text';
 
-export class SfcTransitionBranch extends SfcElement {
-  type = UMLElementType.SfcTransitionBranch;
+export class SfcJump extends SfcContainer {
+  type = UMLElementType.SfcJump;
 
   render(canvas: ILayer): ILayoutable[] {
-    this.bounds.width = 20;
     this.bounds.height = 20;
+    this.bounds.width = Text.size(canvas, this.name, { fontWeight: 'bold' }).width + 50;
     return [this];
   }
 }

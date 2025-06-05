@@ -6,7 +6,7 @@ export const SfcElementType = {
   SfcActionTable: 'SfcActionTable',
   SfcActionTableRow: 'SfcActionTableRow',
   SfcTransitionBranch: 'SfcTransitionBranch',
-  SfcEnd: 'SfcEnd',
+  SfcJump: 'SfcJump',
 } as const;
 
 export const SfcRelationshipType = {

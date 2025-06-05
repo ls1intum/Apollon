@@ -64,7 +64,7 @@ import { BPMNPoolComponent } from './bpmn/bpmn-pool/bpmn-pool-component';
 import { BPMNSwimlaneComponent } from './bpmn/bpmn-swimlane/bpmn-swimlane-component';
 import { BPMNDataStoreComponent } from './bpmn/bpmn-data-store/bpmn-data-store-component';
 import { SfcTransitionComponent } from './sfc/sfc-transition/sfc-transition-component';
-import { SfcEndComponent } from './sfc/sfc-end/sfc-end-component';
+import { SfcJumpComponent } from './sfc/sfc-end/sfc-jump-component';
 import { SfcStartComponent } from './sfc/sfc-start/sfc-start-component';
 import { SfcStepComponent } from './sfc/sfc-step/sfc-step-component';
 import { SfcActionTableComponent } from './sfc/sfc-action-table/sfc-action-table-component';
@@ -161,6 +161,6 @@ export const Components: {
   [UMLElementType.SfcActionTable]: SfcActionTableComponent,
   [UMLElementType.SfcActionTableRow]: SfcActionTableRowComponent,
   [UMLElementType.SfcTransitionBranch]: SfcTransitionBranchComponent,
-  [UMLElementType.SfcEnd]: SfcEndComponent,
+  [UMLElementType.SfcJump]: SfcJumpComponent,
   [UMLRelationshipType.SfcTransition]: SfcTransitionComponent,
 };

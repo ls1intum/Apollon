@@ -32,9 +32,11 @@
   "packages": {
     "Sfc": {
       "Actions": "Aktionen",
+      "Jump": "Sprung",
       "Start": "Start",
       "Step": "Schritt",
-      "Transition": "Übergang"
+      "Transition": "Übergang",
+      "TransitionBranch": "Verzweigung"
     },
     "ClassDiagram": {
       "Package": "Paket",

@@ -1,5 +1,5 @@
 import { UMLElementType } from '../../../uml-element-type';
-import { SfcElement } from '../../base/SfcElement';
+import { SfcElement } from '../../base/sfc-element';
 import { UMLElementFeatures } from '../../../../services/uml-element/uml-element-features';
 
 export class SfcActionTableRow extends SfcElement {

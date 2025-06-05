@@ -36,8 +36,8 @@ import { BPMNStartEventUpdate } from './bpmn/bpmn-start-event/bpmn-start-event-u
 import { BPMNEndEventUpdate } from './bpmn/bpmn-end-event/bpmn-end-event-update';
 import { BPMNTaskUpdate } from './bpmn/bpmn-task/bpmn-task-update';
 import { SfcTransitionUpdate } from './sfc/sfc-transition/sfc-transition-update';
-import { SfcStepUpdate } from './sfc/sfc-step/sfc-step-update';
 import { SfcActionTableUpdate } from './sfc/sfc-action-table/sfc-action-table-update';
+import { SfcNameUpdate } from './sfc/base/sfc-name-update';
 
 export type Popups = { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null };
 export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentType<{ element: any }> | null } = {
@@ -97,11 +97,11 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNPool]: BPMNPoolUpdate,
   [UMLElementType.BPMNSwimlane]: DefaultPopup,
   [UMLElementType.SfcStart]: null,
-  [UMLElementType.SfcStep]: SfcStepUpdate,
+  [UMLElementType.SfcStep]: SfcNameUpdate,
   [UMLElementType.SfcActionTable]: SfcActionTableUpdate,
   [UMLElementType.SfcActionTableRow]: null,
   [UMLElementType.SfcTransitionBranch]: null,
-  [UMLElementType.SfcEnd]: null,
+  [UMLElementType.SfcJump]: SfcNameUpdate,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,

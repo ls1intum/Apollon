@@ -1,4 +1,4 @@
-import { SfcContainer } from '../base/SfcContainer';
+import { SfcContainer } from '../base/sfc-container';
 import { UMLElementType } from '../../uml-element-type';
 import { SfcElementType } from '../index';
 import { Text } from '../../../utils/svg/text';

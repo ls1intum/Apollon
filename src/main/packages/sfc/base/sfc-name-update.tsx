@@ -3,14 +3,13 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
-import { Divider } from '../../../components/controls/divider/divider';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { I18nContext } from '../../../components/i18n/i18n-context';
 import { localized } from '../../../components/i18n/localized';
 import { ModelState } from '../../../components/store/model-state';
 import { StylePane } from '../../../components/style-pane/style-pane';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { SfcStep } from './sfc-step';
+import { IUMLElement } from '../../../services/uml-element/uml-element';
 
 const Flex = styled.div`
   display: flex;
@@ -19,7 +18,7 @@ const Flex = styled.div`
 `;
 
 interface OwnProps {
-  element: SfcStep;
+  element: IUMLElement;
 }
 
 interface DispatchProps {
@@ -28,7 +27,7 @@ interface DispatchProps {
 
 type Props = OwnProps & DispatchProps & I18nContext;
 
-function BaseSfcStepUpdate({ element, update }: Props) {
+function BaseSfcNameUpdate({ element, update }: Props) {
   const [colorOpen, setColorOpen] = React.useState(false);
 
   const toggleColor = () => {
@@ -59,4 +58,4 @@ const enhance = compose<ComponentClass<OwnProps>>(
   }),
 );
 
-export const SfcStepUpdate = enhance(BaseSfcStepUpdate);
+export const SfcNameUpdate = enhance(BaseSfcNameUpdate);

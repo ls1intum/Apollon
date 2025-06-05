@@ -1,4 +1,4 @@
-import { SfcContainer } from '../base/SfcContainer';
+import { SfcContainer } from '../base/sfc-container';
 import { UMLElementType } from '../../uml-element-type';
 
 export class SfcStep extends SfcContainer {

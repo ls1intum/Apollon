@@ -1,10 +1,17 @@
 import { ThemedCircleContrast } from '../../../components/theme/themedComponents';
 import React from 'react';
+import { Text } from '../../../components/controls/text/text';
+import { SfcTransitionBranch } from './sfc-transition-branch';
 
-export function SfcTransitionBranchComponent() {
+export function SfcTransitionBranchComponent({ element }: { element: SfcTransitionBranch }) {
   return (
     <g>
       <ThemedCircleContrast cx="10" cy="10" r="10" strokeColor="none" />
+      {element.bounds.x === -1_000_000_000_000 && (
+        <Text fontWeight="normal" y="30">
+          {element.name}
+        </Text>
+      )}
     </g>
   );
 }
