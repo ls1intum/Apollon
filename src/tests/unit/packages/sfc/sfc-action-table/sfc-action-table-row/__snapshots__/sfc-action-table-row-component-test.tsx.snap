@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the sfc-action-table-row-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          class="sc-fqkvVR lnbwZS"
+          fill="white"
+          height="100%"
+          stroke="none"
+          width="100%"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="normal"
+          pointer-events="none"
+          text-anchor="start"
+          x="10"
+          y="50%"
+        >
+          A
+        </text>
+        <text
+          dominant-baseline="middle"
+          font-weight="normal"
+          pointer-events="none"
+          text-anchor="start"
+          x="40"
+          y="50%"
+        >
+          Action
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

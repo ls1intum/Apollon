@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the sfc-transition-branch-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <circle
+          class="sc-gsFSXq eZvbji"
+          cx="10"
+          cy="10"
+          fill="black"
+          r="10"
+          stroke="none"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="normal"
+          pointer-events="none"
+          text-anchor="middle"
+          x="50%"
+          y="30"
+        >
+          TransitionBranch
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

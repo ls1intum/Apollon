@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the sfc-transition-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <polyline
+          class="sc-aXZVg OFiXI"
+          fill="none"
+          points="0 0,100 100"
+          stroke="black"
+          stroke-width="1"
+        />
+        <polyline
+          class="sc-aXZVg OFiXI"
+          fill="none"
+          points="64.14213562373095,35.85786437626905 35.85786437626905,64.14213562373095"
+          stroke="black"
+          stroke-width="10"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="25.25126265847084"
+          y="74.74873734152916"
+        >
+          Transition
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test sfc transition update render 1`] = `
+<body>
+  <div>
+    <div
+      class="sc-krNlru jRArHx"
+    >
+      <section>
+        <div
+          class="sc-hwdzOV jMtuLb"
+          style="gap: 5px;"
+        >
+          <input
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
+            maxlength="100"
+            style="flex: 1;"
+            value="Transition"
+          />
+          <button
+            class="sc-eeDRCY sc-koXPp fShmjg cQHvtb"
+            color="secondary"
+            style="text-decoration: overline;"
+          >
+            X
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+`;

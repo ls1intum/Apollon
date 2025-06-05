@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test sfc name update render 1`] = `
+<body>
+  <div>
+    <div>
+      <section>
+        <div
+          class="sc-jGKxIK RsXyA"
+        >
+          <input
+            class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
+            maxlength="100"
+            value="Test Element"
+          />
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+`;
