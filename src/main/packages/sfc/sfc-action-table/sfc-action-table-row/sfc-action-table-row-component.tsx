@@ -8,6 +8,10 @@ interface Props {
   fillColor?: string;
 }
 
+/**
+ * Component for rendering a row in a sfc action table.
+ * Displays the action identifier and description parsed from the element's name.
+ */
 export function SfcActionTableRowComponent({ element, fillColor }: Props) {
   const parsedValues = useMemo(() => JSON.parse(element.name), [element.name]);
 

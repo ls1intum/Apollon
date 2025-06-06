@@ -5,6 +5,10 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { Text } from '../../../utils/svg/text';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 
+/**
+ * Base container class for sfc containers with automatic sizing.
+ * Handles layout of child elements and adjusts width/height accordingly.
+ */
 export abstract class SfcContainer extends UMLContainer {
   static features: UMLElementFeatures = {
     ...UMLContainer.features,

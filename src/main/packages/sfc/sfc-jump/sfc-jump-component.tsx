@@ -3,6 +3,10 @@ import { ThemedPolyline, ThemedRect } from '../../../components/theme/themedComp
 import { Text } from '../../../components/controls/text/text';
 import { SfcJump } from './sfc-jump';
 
+/**
+ * Component for rendering a jump element in a sfc.
+ * Displays a triangular shape with the jump target name.
+ */
 export function SfcJumpComponent({ element }: { element: SfcJump }) {
   const sideLength = 20;
   const halfSideLength = sideLength / 2;

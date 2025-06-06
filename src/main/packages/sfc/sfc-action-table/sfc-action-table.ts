@@ -5,6 +5,10 @@ import { Text } from '../../../utils/svg/text';
 import { UMLElement } from '../../../services/uml-element/uml-element';
 import { ILayer } from '../../../services/layouter/layer';
 
+/**
+ * Represents an action table in a sfc.
+ * Contains rows of actions with identifiers and descriptions.
+ */
 export class SfcActionTable extends SfcContainer {
   type: UMLElementType = SfcElementType.SfcActionTable;
   override minHeight = 30;

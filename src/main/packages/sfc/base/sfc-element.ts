@@ -4,6 +4,9 @@ import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 
+/**
+ * Base class for sfc elements with non-resizable and non-updatable features.
+ */
 export abstract class SfcElement extends UMLElement {
   static features: UMLElementFeatures = {
     ...UMLContainer.features,

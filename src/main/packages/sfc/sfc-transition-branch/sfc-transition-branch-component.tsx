@@ -3,6 +3,10 @@ import React from 'react';
 import { Text } from '../../../components/controls/text/text';
 import { SfcTransitionBranch } from './sfc-transition-branch';
 
+/**
+ * Component for rendering a transition branch in a sfc.
+ * Displays a circular junction point where transitions can converge or diverge.
+ */
 export function SfcTransitionBranchComponent({ element }: { element: SfcTransitionBranch }) {
   return (
     <g>

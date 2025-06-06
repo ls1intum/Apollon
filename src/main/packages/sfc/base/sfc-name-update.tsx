@@ -58,4 +58,8 @@ const enhance = compose<ComponentClass<OwnProps>>(
   }),
 );
 
+/**
+ * Component for updating the name of a sfc element.
+ * Provides a text field for editing the name and a color button for styling.
+ */
 export const SfcNameUpdate = enhance(BaseSfcNameUpdate);

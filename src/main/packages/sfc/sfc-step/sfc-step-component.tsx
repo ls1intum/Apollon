@@ -3,6 +3,10 @@ import { Text } from '../../../components/controls/text/text';
 import React from 'react';
 import { SfcStep } from './sfc-step';
 
+/**
+ * Component for rendering a step element in a sfc.
+ * Displays a rectangle with the step name centered inside.
+ */
 export function SfcStepComponent({ element }: { element: SfcStep }) {
   return (
     <g>

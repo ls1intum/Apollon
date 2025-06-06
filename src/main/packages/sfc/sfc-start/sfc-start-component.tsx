@@ -3,6 +3,10 @@ import { Text } from '../../../components/controls/text/text';
 import React from 'react';
 import { SfcStart } from './sfc-start';
 
+/**
+ * Component for rendering a start element in a sfc.
+ * Displays a double-bordered rectangle with the element name.
+ */
 export function SfcStartComponent({ element }: { element: SfcStart }) {
   const innerRectBounds = { x: 5, y: 5, width: element.bounds.width - 10, height: element.bounds.height - 10 };
   return (

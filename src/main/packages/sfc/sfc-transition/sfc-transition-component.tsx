@@ -4,6 +4,10 @@ import { SfcTransition } from './sfc-transition';
 import { Point } from '../../../utils/geometry/point';
 import { Text } from '../../../components/controls/text/text';
 
+/**
+ * Component for rendering transitions in sfc.
+ * Displays a path with a crossbar at the center and the transition condition text.
+ */
 export function SfcTransitionComponent({ element }: { element: SfcTransition }) {
   // Calculate the center point and perpendicular vector for the crossbar
   const path = element.path.map((p) => new Point(p.x, p.y));

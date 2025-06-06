@@ -7,6 +7,10 @@ interface Props {
   children?: React.ReactNode;
 }
 
+/**
+ * Component for rendering a sfc action table.
+ * Displays a grid with horizontal and vertical lines for organizing action rows.
+ */
 export function SfcActionTableComponent({ element, children }: Props) {
   const numberOfLines = Math.floor(element.bounds.height / 30) - 1;
   const horizontalLines = Array.from({ length: numberOfLines }, (_, index) => (index + 1) * 30);

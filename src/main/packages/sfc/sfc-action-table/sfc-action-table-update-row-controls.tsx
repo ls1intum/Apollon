@@ -19,6 +19,10 @@ type Props = {
   onDelete: (id: string) => () => void;
 };
 
+/**
+ * Component for providing control buttons for action table rows.
+ * Includes color styling and delete functionality for each row.
+ */
 export const SfcActionTableUpdateRowControls = ({ row, update, onDelete }: Props) => {
   const [colorOpen, setColorOpen] = useState(false);
 

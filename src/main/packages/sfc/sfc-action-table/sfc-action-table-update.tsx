@@ -152,4 +152,8 @@ const enhance = compose<ComponentClass<OwnProps>>(
   }),
 );
 
+/**
+ * Component for editing rows in a sfc action table.
+ * Provides a grid interface for adding, editing, and deleting action rows.
+ */
 export const SfcActionTableUpdate = enhance(SfcActionTableUpdateComponent);

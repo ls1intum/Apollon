@@ -76,4 +76,8 @@ const enhance = compose<ComponentClass<OwnProps>>(
   })),
 );
 
+/**
+ * Component for editing transition properties in a sfc.
+ * Provides controls for changing the transition name, negation status, and styling.
+ */
 export const SfcTransitionUpdate = enhance(SfcTransitionUpdateComponent);

@@ -4,6 +4,9 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { SfcContainer } from '../base/sfc-container';
 import { Text } from '../../../utils/svg/text';
 
+/**
+ * Represents a jump element in a sfc.
+ */
 export class SfcJump extends SfcContainer {
   type = UMLElementType.SfcJump;
 
