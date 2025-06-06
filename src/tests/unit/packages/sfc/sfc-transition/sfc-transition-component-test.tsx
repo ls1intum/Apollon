@@ -6,7 +6,7 @@ import { Point } from '../../../../../main/utils/geometry/point';
 
 it('render the sfc-transition-component', () => {
   const transition: SfcTransition = new SfcTransition({
-    name: 'Transition',
+    name: JSON.stringify(['', 'Transition']),
     path: [new Point(0, 0), new Point(100, 100)],
   });
   const { baseElement } = wrappedRender(

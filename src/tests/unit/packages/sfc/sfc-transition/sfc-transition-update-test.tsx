@@ -32,7 +32,7 @@ describe('test sfc transition update', () => {
     target = new TestUMLElement({ id: 'target-test-id' });
     transition = new SfcTransition({
       id: 'transition-test-id',
-      name: 'Transition',
+      name: JSON.stringify(['', 'Transition']),
       path: [new Point(0, 0), new Point(100, 100)],
       source: { element: source.id, direction: Direction.Up },
       target: { element: target.id, direction: Direction.Up },
@@ -59,7 +59,9 @@ describe('test sfc transition update', () => {
     });
 
     const updatedTransition = store.getState().elements[transition.id] as SfcTransition;
-    expect(updatedTransition.name).toEqual(newValue);
+    const parsedName = JSON.parse(updatedTransition.name);
+    expect(parsedName[0]).toEqual('');
+    expect(parsedName[1]).toEqual(newValue);
   });
 
   it('toggle negation', () => {
@@ -76,6 +78,8 @@ describe('test sfc transition update', () => {
     });
 
     const updatedTransition = store.getState().elements[transition.id] as SfcTransition;
-    expect(updatedTransition.name).toEqual('!Transition');
+    const parsedName = JSON.parse(updatedTransition.name);
+    expect(parsedName[0]).toEqual('!');
+    expect(parsedName[1]).toEqual('Transition');
   });
 });

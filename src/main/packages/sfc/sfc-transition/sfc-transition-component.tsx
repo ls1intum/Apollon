@@ -67,8 +67,9 @@ export function SfcTransitionComponent({ element }: { element: SfcTransition }) 
   const textOffset = -30; // Distance of text from the crossbar
   const textPosition = center.add(perpendicular.scale(textOffset));
 
-  const isNameNegated = element.name.startsWith('!');
-  const displayName = element.name.startsWith('!') ? element.name.substring(1) : element.name;
+  const parsedName = JSON.parse(element.name);
+  const isNameNegated = parsedName[0] === '!';
+  const displayName = parsedName[1];
 
   const isPerpendicularMoreHorizontal = Math.abs(perpendicular.x) > Math.abs(perpendicular.y);
 

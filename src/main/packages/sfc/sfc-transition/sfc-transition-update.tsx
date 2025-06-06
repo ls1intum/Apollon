@@ -28,27 +28,39 @@ interface Props {
   update: typeof UMLElementRepository.update;
 }
 
+function parseName(element: SfcTransition): [string, boolean, string] {
+  try {
+    const parsedName = JSON.parse(element.name);
+    return [parsedName[0], parsedName[0] === '!', parsedName[1]];
+  } catch (e) {
+    element.name = JSON.stringify(['', '']);
+    return ['', false, ''];
+  }
+}
+
 function SfcTransitionUpdateComponent({ element, update }: Props & I18nContext) {
   const [colorOpen, setColorOpen] = useState(false);
+
+  const [negationString, isNegated, displayName] = parseName(element);
 
   const toggleColorOpen = () => {
     setColorOpen((prev) => !prev);
   };
 
-  const handleNameChange = (displayName: string) => {
-    const name = element.name.startsWith('!') ? `!${displayName}` : displayName;
+  const handleNameChange = (newDisplayName: string) => {
+    const name = JSON.stringify([negationString, newDisplayName]);
     update(element.id, { name });
   };
 
   const handleNegation = () => {
-    const name = element.name.startsWith('!') ? element.name.substring(1) : `!${element.name}`;
+    const newNegationString = isNegated ? '' : '!';
+    const name = JSON.stringify([newNegationString, displayName]);
     update(element.id, { name });
   };
 
-  const [displayName, negationButtonColor, textDecoration]: [string, 'primary' | 'secondary', 'overline' | undefined] =
-    element.name.startsWith('!')
-      ? [element.name.substring(1), 'primary', 'overline']
-      : [element.name, 'secondary', undefined];
+  const [negationButtonColor, textDecoration]: ['primary' | 'secondary', 'overline' | undefined] = isNegated
+    ? ['primary', 'overline']
+    : ['secondary', undefined];
 
   return (
     <Container>
