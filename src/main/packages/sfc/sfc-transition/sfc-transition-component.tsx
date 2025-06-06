@@ -54,20 +54,19 @@ export function SfcTransitionComponent({ element }: { element: SfcTransition }) 
   const center = start.add(norm.scale(segmentFraction * line.length));
 
   // Calculate the perpendicular vector for the crossbar
-  const perpendicular = new Point(-norm.y, norm.x);
-  const crossbarLength = 40; // Length of the crossbar (5 on each side)
+  const perpendicular = new Point(-Math.abs(norm.y), Math.abs(norm.x));
+  const crossbarLength = 40;
   const crossbarStart = center.add(perpendicular.scale(-crossbarLength / 2));
   const crossbarEnd = center.add(perpendicular.scale(crossbarLength / 2));
 
   // Create a text path for the label
-  const textOffset = 35; // Distance of text from the crossbar
+  const textOffset = -30; // Distance of text from the crossbar
   const textPosition = center.add(perpendicular.scale(textOffset));
 
   const isNameNegated = element.name.startsWith('!');
   const displayName = element.name.startsWith('!') ? element.name.substring(1) : element.name;
 
   const isPerpendicularMoreHorizontal = Math.abs(perpendicular.x) > Math.abs(perpendicular.y);
-  const isTextHorizontal = displayName.length > 1 && isPerpendicularMoreHorizontal;
 
   return (
     <g>
@@ -90,9 +89,8 @@ export function SfcTransitionComponent({ element }: { element: SfcTransition }) 
             x={textPosition.x}
             y={textPosition.y}
             fill={element.textColor}
-            textAnchor="middle"
+            textAnchor={isPerpendicularMoreHorizontal ? 'start' : 'middle'}
             dominantBaseline="middle"
-            transform={isTextHorizontal ? `rotate(-90, ${textPosition.x}, ${textPosition.y})` : undefined}
           >
             {displayName}
           </Text>

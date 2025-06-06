@@ -24,8 +24,8 @@ exports[`render the sfc-transition-component 1`] = `
           font-weight="bold"
           pointer-events="none"
           text-anchor="middle"
-          x="25.25126265847084"
-          y="74.74873734152916"
+          x="71.21320343559643"
+          y="28.786796564403577"
         >
           Transition
         </text>
