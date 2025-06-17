@@ -28,7 +28,7 @@ interface Props {
   update: typeof UMLElementRepository.update;
 }
 
-function parseName(element: SfcTransition): [string, boolean, string] {
+const parseName = (element: SfcTransition): [string, boolean, string] => {
   try {
     const parsedName = JSON.parse(element.name);
     return [parsedName[0], parsedName[0] === '!', parsedName[1]];
@@ -36,9 +36,9 @@ function parseName(element: SfcTransition): [string, boolean, string] {
     element.name = JSON.stringify(['', '']);
     return ['', false, ''];
   }
-}
+};
 
-function SfcTransitionUpdateComponent({ element, update }: Props & I18nContext) {
+const SfcTransitionUpdateComponent = ({ element, update }: Props & I18nContext) => {
   const [colorOpen, setColorOpen] = useState(false);
 
   const [negationString, isNegated, displayName] = parseName(element);
@@ -76,7 +76,7 @@ function SfcTransitionUpdateComponent({ element, update }: Props & I18nContext) 
       </section>
     </Container>
   );
-}
+};
 
 interface OwnProps {
   element: SfcTransition;

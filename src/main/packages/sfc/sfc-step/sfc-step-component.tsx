@@ -7,7 +7,7 @@ import { SfcStep } from './sfc-step';
  * Component for rendering a step element in a sfc.
  * Displays a rectangle with the step name centered inside.
  */
-export function SfcStepComponent({ element }: { element: SfcStep }) {
+export const SfcStepComponent = ({ element }: { element: SfcStep }) => {
   return (
     <g>
       <ThemedRect fillColor={element.fillColor} strokeColor="none" x="0" y="0" width="100%" height="100%" />
@@ -17,4 +17,4 @@ export function SfcStepComponent({ element }: { element: SfcStep }) {
       <ThemedRect x="0" y="0" fillColor="none" width="100%" height="100%" strokeColor={element.strokeColor} />
     </g>
   );
-}
+};

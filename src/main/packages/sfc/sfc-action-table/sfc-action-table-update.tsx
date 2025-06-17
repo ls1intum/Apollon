@@ -30,7 +30,7 @@ interface DispatchProps {
 
 type Props = OwnProps & DispatchProps;
 
-function SfcActionTableUpdateComponent({ element, create, update, delete: deleteElement, getById }: Props) {
+const SfcActionTableUpdateComponent = ({ element, create, update, delete: deleteElement, getById }: Props) => {
   const [colorOpen, setColorOpen] = useState(false);
   const [fieldToFocus, setFieldToFocus] = useState<Textfield<string> | null>(null);
 
@@ -141,7 +141,7 @@ function SfcActionTableUpdateComponent({ element, create, update, delete: delete
       </section>
     </div>
   );
-}
+};
 
 const enhance = compose<ComponentClass<OwnProps>>(
   connect<{}, DispatchProps, OwnProps, ModelState>(null, {

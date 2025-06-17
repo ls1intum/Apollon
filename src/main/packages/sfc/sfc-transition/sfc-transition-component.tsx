@@ -8,7 +8,16 @@ import { Text } from '../../../components/controls/text/text';
  * Component for rendering transitions in sfc.
  * Displays a path with a crossbar at the center and the transition condition text.
  */
-export function SfcTransitionComponent({ element }: { element: SfcTransition }) {
+export const SfcTransitionComponent = ({ element }: { element: SfcTransition }) => {
+  const getParsedName = () => {
+    try {
+      const parsedName = JSON.parse(element.name);
+      return parsedName.length === 2 ? parsedName : ['', ''];
+    } catch (e) {
+      return ['', ''];
+    }
+  };
+
   // Calculate the center point and perpendicular vector for the crossbar
   const path = element.path.map((p) => new Point(p.x, p.y));
 
@@ -67,7 +76,7 @@ export function SfcTransitionComponent({ element }: { element: SfcTransition }) 
   const textOffset = -30; // Distance of text from the crossbar
   const textPosition = center.add(perpendicular.scale(textOffset));
 
-  const parsedName = JSON.parse(element.name);
+  const parsedName = getParsedName();
   const isNameNegated = parsedName[0] === '!';
   const displayName = parsedName[1];
 
@@ -103,4 +112,4 @@ export function SfcTransitionComponent({ element }: { element: SfcTransition }) 
       )}
     </g>
   );
-}
+};

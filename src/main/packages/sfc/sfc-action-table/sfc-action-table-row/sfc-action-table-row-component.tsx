@@ -12,7 +12,7 @@ interface Props {
  * Component for rendering a row in a sfc action table.
  * Displays the action identifier and description parsed from the element's name.
  */
-export function SfcActionTableRowComponent({ element, fillColor }: Props) {
+export const SfcActionTableRowComponent = ({ element, fillColor }: Props) => {
   const parsedValues = useMemo(() => JSON.parse(element.name), [element.name]);
 
   const isLengthGreaterOne = (text: string | null | undefined) => (text?.length ?? 0) > 1;
@@ -33,4 +33,4 @@ export function SfcActionTableRowComponent({ element, fillColor }: Props) {
       </Text>
     </g>
   );
-}
+};

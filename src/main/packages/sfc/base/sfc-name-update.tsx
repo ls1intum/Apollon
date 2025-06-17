@@ -27,7 +27,7 @@ interface DispatchProps {
 
 type Props = OwnProps & DispatchProps & I18nContext;
 
-function BaseSfcNameUpdate({ element, update }: Props) {
+const BaseSfcNameUpdate = ({ element, update }: Props) => {
   const [colorOpen, setColorOpen] = React.useState(false);
 
   const toggleColor = () => {
@@ -49,7 +49,7 @@ function BaseSfcNameUpdate({ element, update }: Props) {
       </section>
     </div>
   );
-}
+};
 
 const enhance = compose<ComponentClass<OwnProps>>(
   localized,
