@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { FunctionComponent, useState } from 'react';
 import styled from 'styled-components';
 import { Button } from '../../../components/controls/button/button';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
@@ -23,16 +23,16 @@ type Props = {
  * Component for providing control buttons for action table rows.
  * Includes color styling and delete functionality for each row.
  */
-export const SfcActionTableUpdateRowControls = ({ row, update, onDelete }: Props) => {
+export const SfcActionTableUpdateRowControls: FunctionComponent<Props> = ({ row, update, onDelete }) => {
   const [colorOpen, setColorOpen] = useState(false);
 
-  const toggleColor = () => {
+  function toggleColor(): void {
     setColorOpen(!colorOpen);
-  };
+  }
 
-  const handleDelete = () => {
+  function handleDelete(): void {
     onDelete(row.id)();
-  };
+  }
 
   return (
     <>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { ThemedPolyline, ThemedRect } from '../../../components/theme/themedComponents';
 import { Text } from '../../../components/controls/text/text';
 import { SfcJump } from './sfc-jump';
@@ -7,7 +7,7 @@ import { SfcJump } from './sfc-jump';
  * Component for rendering a jump element in a sfc.
  * Displays a triangular shape with the jump target name.
  */
-export const SfcJumpComponent = ({ element }: { element: SfcJump }) => {
+export const SfcJumpComponent: FunctionComponent<{ element: SfcJump }> = ({ element }) => {
   const sideLength = 20;
   const halfSideLength = sideLength / 2;
 

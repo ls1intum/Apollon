@@ -1,13 +1,13 @@
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Text } from '../../../components/controls/text/text';
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { SfcStart } from './sfc-start';
 
 /**
  * Component for rendering a start element in a sfc.
  * Displays a double-bordered rectangle with the element name.
  */
-export const SfcStartComponent = ({ element }: { element: SfcStart }) => {
+export const SfcStartComponent: FunctionComponent<{ element: SfcStart }> = ({ element }) => {
   const innerRectBounds = { x: 5, y: 5, width: element.bounds.width - 10, height: element.bounds.height - 10 };
   return (
     <g>

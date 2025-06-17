@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { ThemedLine, ThemedRect } from '../../../components/theme/themedComponents';
 import { SfcActionTable } from './sfc-action-table';
 
@@ -11,7 +11,7 @@ interface Props {
  * Component for rendering a sfc action table.
  * Displays a grid with horizontal and vertical lines for organizing action rows.
  */
-export const SfcActionTableComponent = ({ element, children }: Props) => {
+export const SfcActionTableComponent: FunctionComponent<Props> = ({ element, children }) => {
   const numberOfLines = Math.floor(element.bounds.height / 30) - 1;
   const horizontalLines = Array.from({ length: numberOfLines }, (_, index) => (index + 1) * 30);
 

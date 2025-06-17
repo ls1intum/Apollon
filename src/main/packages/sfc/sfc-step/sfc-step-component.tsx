@@ -1,13 +1,13 @@
 import { ThemedRect } from '../../../components/theme/themedComponents';
 import { Text } from '../../../components/controls/text/text';
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { SfcStep } from './sfc-step';
 
 /**
  * Component for rendering a step element in a sfc.
  * Displays a rectangle with the step name centered inside.
  */
-export const SfcStepComponent = ({ element }: { element: SfcStep }) => {
+export const SfcStepComponent: FunctionComponent<{ element: SfcStep }> = ({ element }) => {
   return (
     <g>
       <ThemedRect fillColor={element.fillColor} strokeColor="none" x="0" y="0" width="100%" height="100%" />

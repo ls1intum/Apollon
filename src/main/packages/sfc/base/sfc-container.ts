@@ -19,7 +19,7 @@ export abstract class SfcContainer extends UMLContainer {
 
   protected minWidth = 120;
   protected minHeight = 50;
-  protected childWidthCalculation = (canvas: ILayer, child: UMLElement) =>
+  protected childWidthCalculation: (canvas: ILayer, child: UMLElement) => number = (canvas, child) =>
     Text.size(canvas, (child as UMLElement).name, { fontWeight: 'normal' }).width + 20;
 
   render(canvas: ILayer, children?: ILayoutable[] | undefined): ILayoutable[] {
@@ -46,7 +46,7 @@ export abstract class SfcContainer extends UMLContainer {
     });
   }
 
-  private autoHeight(children?: ILayoutable[]) {
+  private autoHeight(children?: ILayoutable[]): void {
     let yOffset = 0;
     for (const child of children ?? []) {
       child.bounds.x = 0;

@@ -13,7 +13,7 @@ export class SfcActionTable extends SfcContainer {
   type: UMLElementType = SfcElementType.SfcActionTable;
   override minHeight = 30;
 
-  override childWidthCalculation = (canvas: ILayer, child: UMLElement) => {
+  override childWidthCalculation: (canvas: ILayer, child: UMLElement) => number = (canvas, child) => {
     const parsedValues = JSON.parse((child as UMLElement).name);
     return Text.size(canvas, parsedValues[1] ?? 0, { fontWeight: 'normal' }).width + 50;
   };

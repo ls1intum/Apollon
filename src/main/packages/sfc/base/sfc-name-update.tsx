@@ -1,4 +1,4 @@
-import React, { ComponentClass } from 'react';
+import React, { ComponentClass, FunctionComponent, useState } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import styled from 'styled-components';
@@ -27,16 +27,16 @@ interface DispatchProps {
 
 type Props = OwnProps & DispatchProps & I18nContext;
 
-const BaseSfcNameUpdate = ({ element, update }: Props) => {
-  const [colorOpen, setColorOpen] = React.useState(false);
+const BaseSfcNameUpdate: FunctionComponent<Props> = ({ element, update }) => {
+  const [colorOpen, setColorOpen] = useState(false);
 
-  const toggleColor = () => {
+  function toggleColor(): void {
     setColorOpen(!colorOpen);
-  };
+  }
 
-  const rename = (name: string) => {
+  function rename(name: string): void {
     update(element.id, { name });
-  };
+  }
 
   return (
     <div>

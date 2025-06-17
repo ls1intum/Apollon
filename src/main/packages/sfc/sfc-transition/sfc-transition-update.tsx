@@ -1,4 +1,4 @@
-import React, { ComponentClass, useState } from 'react';
+import React, { ComponentClass, FunctionComponent, useState } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { StylePane } from '../../../components/style-pane/style-pane';
@@ -29,24 +29,24 @@ interface Props {
   update: typeof UMLElementRepository.update;
 }
 
-const SfcTransitionUpdateComponent = ({ element, update }: Props & I18nContext) => {
+const SfcTransitionUpdateComponent: FunctionComponent<Props & I18nContext> = ({ element, update }) => {
   const [colorOpen, setColorOpen] = useState(false);
 
   const { isNegated, displayName } = getParsedName(element.name);
 
-  const toggleColorOpen = () => {
+  function toggleColorOpen(): void {
     setColorOpen((prev) => !prev);
-  };
+  }
 
-  const handleNameChange = (newDisplayName: string) => {
+  function handleNameChange(newDisplayName: string): void {
     const name = JSON.stringify({ isNegated, displayName: newDisplayName });
     update(element.id, { name });
-  };
+  }
 
-  const handleNegation = () => {
+  function handleNegation(): void {
     const name = JSON.stringify({ isNegated: !isNegated, displayName });
     update(element.id, { name });
-  };
+  }
 
   const [negationButtonColor, textDecoration]: ['primary' | 'secondary', 'overline' | undefined] = isNegated
     ? ['primary', 'overline']

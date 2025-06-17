@@ -1,4 +1,4 @@
-import React, { ComponentClass, useRef, useState } from 'react';
+import React, { ComponentClass, FunctionComponent, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { Textfield } from '../../../components/controls/textfield/textfield';
@@ -30,8 +30,13 @@ interface DispatchProps {
 
 type Props = OwnProps & DispatchProps;
 
-const SfcActionTableUpdateComponent = ({ element, create, update, delete: deleteElement, getById }: Props) => {
-  const [colorOpen, setColorOpen] = useState(false);
+const SfcActionTableUpdateComponent: FunctionComponent<Props> = ({
+  element,
+  create,
+  update,
+  delete: deleteElement,
+  getById,
+}) => {
   const [fieldToFocus, setFieldToFocus] = useState<Textfield<string> | null>(null);
 
   const newRowFirstCell = useRef<Textfield<string>>(null);
@@ -51,23 +56,19 @@ const SfcActionTableUpdateComponent = ({ element, create, update, delete: delete
     }
   }, [fieldToFocus]);
 
-  const toggleColor = () => {
-    setColorOpen(!colorOpen);
-  };
-
-  const rename = (rowId: string, rowIndex: number, colIndex: 0 | 1, cellValue: string) => {
+  function rename(rowId: string, rowIndex: number, colIndex: 0 | 1, cellValue: string): void {
     const otherColIndex = 1 - colIndex;
     const rowValue = [];
     rowValue[colIndex] = cellValue;
     rowValue[otherColIndex] = cellValues[rowIndex][otherColIndex] ?? '';
     update(rowId, { name: JSON.stringify(rowValue) });
-  };
+  }
 
-  const handleDelete = (id: string) => () => {
-    deleteElement(id);
-  };
+  function handleDelete(id: string): () => void {
+    return () => deleteElement(id);
+  }
 
-  const createRow = () => {
+  function createRow(): void {
     const firstInput = newRowFirstCell.current?.ref.current;
     const secondInput = newRowSecondCell.current?.ref.current;
 
@@ -84,7 +85,7 @@ const SfcActionTableUpdateComponent = ({ element, create, update, delete: delete
     const rowValues = [firstCellValue, secondCellValue];
     const row = new SfcActionTableRow({ name: JSON.stringify(rowValues) });
     create(row, element.id);
-  };
+  }
 
   return (
     <div>

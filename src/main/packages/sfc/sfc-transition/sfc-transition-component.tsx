@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { ThemedPolyline } from '../../../components/theme/themedComponents';
 import { SfcTransition } from './sfc-transition';
 import { Point } from '../../../utils/geometry/point';
@@ -8,14 +8,14 @@ import { Text } from '../../../components/controls/text/text';
  * Component for rendering transitions in sfc.
  * Displays a path with a crossbar at the center and the transition condition text.
  */
-export const SfcTransitionComponent = ({ element }: { element: SfcTransition }) => {
-  const getParsedName = () => {
+export const SfcTransitionComponent: FunctionComponent<{ element: SfcTransition }> = ({ element }) => {
+  function getParsedName(name: string): { isNegated: boolean; displayName: string } {
     try {
-      return JSON.parse(element.name) as { isNegated: boolean; displayName: string };
-    } catch (e) {
+      return JSON.parse(name);
+    } catch (_) {
       return { isNegated: false, displayName: '' };
     }
-  };
+  }
 
   // Calculate the center point and perpendicular vector for the crossbar
   const path = element.path.map((p) => new Point(p.x, p.y));
@@ -75,7 +75,7 @@ export const SfcTransitionComponent = ({ element }: { element: SfcTransition }) 
   const textOffset = -30; // Distance of text from the crossbar
   const textPosition = center.add(perpendicular.scale(textOffset));
 
-  const { isNegated, displayName } = getParsedName();
+  const { isNegated, displayName } = getParsedName(element.name);
 
   const isPerpendicularMoreHorizontal = Math.abs(perpendicular.x) > Math.abs(perpendicular.y);
 

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { FunctionComponent, useMemo } from 'react';
 import { ThemedRect } from '../../../../components/theme/themedComponents';
 import { Text } from '../../../../components/controls/text/text';
 import { SfcActionTableRow } from './sfc-action-table-row';
@@ -12,10 +12,12 @@ interface Props {
  * Component for rendering a row in a sfc action table.
  * Displays the action identifier and description parsed from the element's name.
  */
-export const SfcActionTableRowComponent = ({ element, fillColor }: Props) => {
+export const SfcActionTableRowComponent: FunctionComponent<Props> = ({ element, fillColor }) => {
   const parsedValues = useMemo(() => JSON.parse(element.name), [element.name]);
 
-  const isLengthGreaterOne = (text: string | null | undefined) => (text?.length ?? 0) > 1;
+  function isLengthGreaterOne(text: string | null | undefined): boolean {
+    return (text?.length ?? 0) > 1;
+  }
 
   return (
     <g>
