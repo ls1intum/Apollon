@@ -9,6 +9,7 @@ import { UMLElementRepository } from '../../../services/uml-element/uml-element-
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Button } from '../../../components/controls/button/button';
 import { I18nContext } from '../../../components/i18n/i18n-context';
+import { getParsedName } from './sfc-transition-utils';
 
 const Container = styled.div`
   display: flex;
@@ -28,33 +29,22 @@ interface Props {
   update: typeof UMLElementRepository.update;
 }
 
-const parseName = (element: SfcTransition): [string, boolean, string] => {
-  try {
-    const parsedName = JSON.parse(element.name);
-    return [parsedName[0], parsedName[0] === '!', parsedName[1]];
-  } catch (e) {
-    element.name = JSON.stringify(['', '']);
-    return ['', false, ''];
-  }
-};
-
 const SfcTransitionUpdateComponent = ({ element, update }: Props & I18nContext) => {
   const [colorOpen, setColorOpen] = useState(false);
 
-  const [negationString, isNegated, displayName] = parseName(element);
+  const { isNegated, displayName } = getParsedName(element.name);
 
   const toggleColorOpen = () => {
     setColorOpen((prev) => !prev);
   };
 
   const handleNameChange = (newDisplayName: string) => {
-    const name = JSON.stringify([negationString, newDisplayName]);
+    const name = JSON.stringify({ isNegated, displayName: newDisplayName });
     update(element.id, { name });
   };
 
   const handleNegation = () => {
-    const newNegationString = isNegated ? '' : '!';
-    const name = JSON.stringify([newNegationString, displayName]);
+    const name = JSON.stringify({ isNegated: !isNegated, displayName });
     update(element.id, { name });
   };
 

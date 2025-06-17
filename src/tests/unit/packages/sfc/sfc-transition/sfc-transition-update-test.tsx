@@ -32,7 +32,7 @@ describe('test sfc transition update', () => {
     target = new TestUMLElement({ id: 'target-test-id' });
     transition = new SfcTransition({
       id: 'transition-test-id',
-      name: JSON.stringify(['', 'Transition']),
+      name: JSON.stringify({ isNegated: false, displayName: 'Transition' }),
       path: [new Point(0, 0), new Point(100, 100)],
       source: { element: source.id, direction: Direction.Up },
       target: { element: target.id, direction: Direction.Up },
@@ -59,9 +59,9 @@ describe('test sfc transition update', () => {
     });
 
     const updatedTransition = store.getState().elements[transition.id] as SfcTransition;
-    const parsedName = JSON.parse(updatedTransition.name);
-    expect(parsedName[0]).toEqual('');
-    expect(parsedName[1]).toEqual(newValue);
+    const { isNegated, displayName } = JSON.parse(updatedTransition.name);
+    expect(isNegated).toEqual(false);
+    expect(displayName).toEqual(newValue);
   });
 
   it('toggle negation', () => {
@@ -74,12 +74,13 @@ describe('test sfc transition update', () => {
     const negationButton = buttons.find((button) => button.textContent === 'X');
 
     act(() => {
-      fireEvent.click(negationButton!);
+      if (!negationButton) throw new Error('Negation button not found');
+      fireEvent.click(negationButton);
     });
 
     const updatedTransition = store.getState().elements[transition.id] as SfcTransition;
-    const parsedName = JSON.parse(updatedTransition.name);
-    expect(parsedName[0]).toEqual('!');
-    expect(parsedName[1]).toEqual('Transition');
+    const { isNegated, displayName } = JSON.parse(updatedTransition.name);
+    expect(isNegated).toEqual(true);
+    expect(displayName).toEqual('Transition');
   });
 });

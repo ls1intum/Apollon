@@ -11,10 +11,9 @@ import { Text } from '../../../components/controls/text/text';
 export const SfcTransitionComponent = ({ element }: { element: SfcTransition }) => {
   const getParsedName = () => {
     try {
-      const parsedName = JSON.parse(element.name);
-      return parsedName.length === 2 ? parsedName : ['', ''];
+      return JSON.parse(element.name) as { isNegated: boolean; displayName: string };
     } catch (e) {
-      return ['', ''];
+      return { isNegated: false, displayName: '' };
     }
   };
 
@@ -76,9 +75,7 @@ export const SfcTransitionComponent = ({ element }: { element: SfcTransition }) 
   const textOffset = -30; // Distance of text from the crossbar
   const textPosition = center.add(perpendicular.scale(textOffset));
 
-  const parsedName = getParsedName();
-  const isNameNegated = parsedName[0] === '!';
-  const displayName = parsedName[1];
+  const { isNegated, displayName } = getParsedName();
 
   const isPerpendicularMoreHorizontal = Math.abs(perpendicular.x) > Math.abs(perpendicular.y);
 
@@ -99,7 +96,7 @@ export const SfcTransitionComponent = ({ element }: { element: SfcTransition }) 
             strokeWidth={10}
           />
           <Text
-            textDecoration={isNameNegated ? 'overline' : undefined}
+            textDecoration={isNegated ? 'overline' : undefined}
             x={textPosition.x}
             y={textPosition.y}
             fill={element.textColor}
