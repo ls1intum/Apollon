@@ -7,6 +7,7 @@ import { SfcStep } from './sfc-step/sfc-step';
 import { SfcActionTable } from './sfc-action-table/sfc-action-table';
 import { SfcActionTableRow } from './sfc-action-table/sfc-action-table-row/sfc-action-table-row';
 import { SfcTransitionBranch } from './sfc-transition-branch/sfc-transition-branch';
+import { SfcPreviewSpacer } from './sfc-preview-spacer/sfc-preview-spacer';
 
 export const composeSfcPreview: ComposePreview = (layer: ILayer, translate: (id: string) => string): UMLElement[] => {
   const sfcStart = new SfcStart({ name: translate('packages.Sfc.Start') });
@@ -27,6 +28,8 @@ export const composeSfcPreview: ComposePreview = (layer: ILayer, translate: (id:
     },
   });
 
+  const sfcPreviewSpacer = new SfcPreviewSpacer();
+
   const sfcJump = new SfcJump({ name: translate('packages.Sfc.Jump') });
 
   return [
@@ -34,6 +37,7 @@ export const composeSfcPreview: ComposePreview = (layer: ILayer, translate: (id:
     ...(sfcStep.render(layer) as UMLElement[]),
     ...(sfcActionTable.render(layer, [sfcActionTableRow]) as UMLElement[]),
     ...(sfcTransitionBranch.render(layer) as UMLElement[]),
+    ...(sfcPreviewSpacer.render(layer) as UMLElement[]),
     ...(sfcJump.render(layer) as UMLElement[]),
   ];
 };

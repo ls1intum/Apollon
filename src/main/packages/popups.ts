@@ -102,6 +102,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.SfcActionTableRow]: null,
   [UMLElementType.SfcTransitionBranch]: null,
   [UMLElementType.SfcJump]: SfcNameUpdate,
+  [UMLElementType.SfcPreviewSpacer]: null,
   // Relationships
   [UMLRelationshipType.ClassAggregation]: UMLClassAssociationUpdate,
   [UMLRelationshipType.ClassBidirectional]: UMLClassAssociationUpdate,

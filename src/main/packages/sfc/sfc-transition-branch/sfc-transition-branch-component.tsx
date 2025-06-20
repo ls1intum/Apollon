@@ -12,7 +12,7 @@ export const SfcTransitionBranchComponent: FunctionComponent<{ element: SfcTrans
     <g>
       <ThemedCircleContrast cx="10" cy="10" r="10" strokeColor="none" />
       {element.bounds.x === -1_000_000_000_000 && (
-        <Text fontWeight="normal" y="30">
+        <Text fontWeight="normal" y="30" fill="gray">
           {element.name}
         </Text>
       )}

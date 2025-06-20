@@ -70,6 +70,7 @@ import { SfcStepComponent } from './sfc/sfc-step/sfc-step-component';
 import { SfcActionTableComponent } from './sfc/sfc-action-table/sfc-action-table-component';
 import { SfcActionTableRowComponent } from './sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row-component';
 import { SfcTransitionBranchComponent } from './sfc/sfc-transition-branch/sfc-transition-branch-component';
+import { SfcPreviewSpacerComponent } from './sfc/sfc-preview-spacer/sfc-preview-spacer-component';
 
 export const Components: {
   [key in UMLElementType | UMLRelationshipType]:
@@ -130,6 +131,13 @@ export const Components: {
   [UMLElementType.BPMNPool]: BPMNPoolComponent,
   [UMLElementType.BPMNSwimlane]: BPMNSwimlaneComponent,
   [UMLElementType.BPMNGroup]: BPMNGroupComponent,
+  [UMLElementType.SfcStart]: SfcStartComponent,
+  [UMLElementType.SfcStep]: SfcStepComponent,
+  [UMLElementType.SfcActionTable]: SfcActionTableComponent,
+  [UMLElementType.SfcActionTableRow]: SfcActionTableRowComponent,
+  [UMLElementType.SfcTransitionBranch]: SfcTransitionBranchComponent,
+  [UMLElementType.SfcJump]: SfcJumpComponent,
+  [UMLElementType.SfcPreviewSpacer]: SfcPreviewSpacerComponent,
   [UMLRelationshipType.ClassAggregation]: UMLAssociationComponent,
   [UMLRelationshipType.ClassBidirectional]: UMLAssociationComponent,
   [UMLRelationshipType.ClassComposition]: UMLAssociationComponent,
@@ -156,11 +164,5 @@ export const Components: {
   [UMLRelationshipType.SyntaxTreeLink]: SyntaxTreeLinkComponent,
   [UMLRelationshipType.FlowchartFlowline]: FlowchartFlowlineComponent,
   [UMLRelationshipType.BPMNFlow]: BPMNFlowComponent,
-  [UMLElementType.SfcStart]: SfcStartComponent,
-  [UMLElementType.SfcStep]: SfcStepComponent,
-  [UMLElementType.SfcActionTable]: SfcActionTableComponent,
-  [UMLElementType.SfcActionTableRow]: SfcActionTableRowComponent,
-  [UMLElementType.SfcTransitionBranch]: SfcTransitionBranchComponent,
-  [UMLElementType.SfcJump]: SfcJumpComponent,
   [UMLRelationshipType.SfcTransition]: SfcTransitionComponent,
 };
