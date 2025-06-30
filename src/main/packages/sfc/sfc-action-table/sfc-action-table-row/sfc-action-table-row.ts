@@ -10,7 +10,7 @@ export class SfcActionTableRow extends SfcElement {
   static features: UMLElementFeatures = {
     ...SfcElement.features,
     connectable: false,
-    hoverable: false
+    hoverable: false,
   };
   bounds = { x: 0, y: 0, width: 0, height: 30 };
   type: UMLElementType = UMLElementType.SfcActionTableRow;
