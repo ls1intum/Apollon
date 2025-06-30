@@ -38,7 +38,7 @@
     "publish:patch": "npm run prepare && npm run test && npm run docs:copy-api && npm version patch && npm publish",
     "publish:minor": "npm run prepare && npm run test && npm run docs:copy-api && npm version minor && npm publish",
     "publish:major": "npm run prepare && npm run test && npm run docs:copy-api && npm version major && npm publish",
-    "docs:copy-api": "cp lib/es6/apollon-editor.d.ts lib/es6/typings.d.ts lib/es6/compat/helpers.d.ts docs/source/user/api && cp lib/es6/packages/diagram-type.d.ts docs/dev/api",
+    "docs:copy-api": "cp lib/es6/apollon-editor.d.ts lib/es6/typings.d.ts lib/es6/compat/helpers.d.ts docs/user/api && cp lib/es6/packages/diagram-type.d.ts docs/dev/api",
     "docs:prepare": "npm run docs:copy-api && cd docs && pip3 install -r requirements.txt",
     "docs:build": "cd docs && make clean && make html",
     "docs:watch": "npm run docs:build && serve -p 8088 docs/build/html & chokidar \"docs/source/**/*\" \"docs/images/**/*\" -c \"npm run docs:build\""

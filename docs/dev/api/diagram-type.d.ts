@@ -12,4 +12,5 @@ export declare const UMLDiagramType: {
     readonly SyntaxTree: "SyntaxTree";
     readonly Flowchart: "Flowchart";
     readonly BPMN: "BPMN";
+    readonly Sfc: "Sfc";
 };
