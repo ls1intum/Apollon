@@ -53,6 +53,13 @@ import { BPMNPool } from './bpmn/bpmn-pool/bpmn-pool';
 import { BPMNSwimlane } from './bpmn/bpmn-swimlane/bpmn-swimlane';
 import { BPMNGroup } from './bpmn/bpmn-group/bpmn-group';
 import { BPMNDataStore } from './bpmn/bpmn-data-store/bpmn-data-store';
+import { SfcJump } from './sfc/sfc-jump/sfc-jump';
+import { SfcStart } from './sfc/sfc-start/sfc-start';
+import { SfcStep } from './sfc/sfc-step/sfc-step';
+import { SfcActionTable } from './sfc/sfc-action-table/sfc-action-table';
+import { SfcActionTableRow } from './sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row';
+import { SfcTransitionBranch } from './sfc/sfc-transition-branch/sfc-transition-branch';
+import { SfcPreviewSpacer } from './sfc/sfc-preview-spacer/sfc-preview-spacer';
 
 export const UMLElements = {
   [UMLElementType.Package]: UMLClassPackage,
@@ -109,4 +116,11 @@ export const UMLElements = {
   [UMLElementType.BPMNPool]: BPMNPool,
   [UMLElementType.BPMNSwimlane]: BPMNSwimlane,
   [UMLElementType.BPMNGroup]: BPMNGroup,
+  [UMLElementType.SfcStart]: SfcStart,
+  [UMLElementType.SfcStep]: SfcStep,
+  [UMLElementType.SfcActionTable]: SfcActionTable,
+  [UMLElementType.SfcActionTableRow]: SfcActionTableRow,
+  [UMLElementType.SfcTransitionBranch]: SfcTransitionBranch,
+  [UMLElementType.SfcJump]: SfcJump,
+  [UMLElementType.SfcPreviewSpacer]: SfcPreviewSpacer,
 };

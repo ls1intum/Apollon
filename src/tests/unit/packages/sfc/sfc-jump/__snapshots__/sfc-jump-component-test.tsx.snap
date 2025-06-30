@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the sfc-jump-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          class="sc-fqkvVR elaLsK"
+          fill="#00000000"
+          height="100"
+          stroke="none"
+          width="160"
+        />
+        <polyline
+          class="sc-aXZVg bUvEJV"
+          fill="white"
+          points="0,0 0,20 20,10 0,0"
+          stroke="black"
+          stroke-width="2"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="50%"
+          y="50%"
+        >
+          Jump
+        </text>
+      </g>
+    </svg>
+  </div>
+</body>
+`;

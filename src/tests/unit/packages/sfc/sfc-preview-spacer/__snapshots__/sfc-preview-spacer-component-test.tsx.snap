@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the sfc-preview-spacer-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g />
+    </svg>
+  </div>
+</body>
+`;

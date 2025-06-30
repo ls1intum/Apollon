@@ -30,6 +30,14 @@
     "additionalFeedbackPlaceholder": "You can enter additional feedback here..."
   },
   "packages": {
+    "Sfc": {
+      "Actions": "Actions",
+      "Jump": "Jump",
+      "Start": "Start",
+      "Step": "Step",
+      "Transition": "Transition",
+      "TransitionBranch": "Branch"
+    },
     "ClassDiagram": {
       "Package": "Package",
       "Class": "Class",

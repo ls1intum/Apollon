@@ -30,6 +30,14 @@
     "additionalFeedbackPlaceholder": "Du kannst hier zusätzliches Feedback abgeben..."
   },
   "packages": {
+    "Sfc": {
+      "Actions": "Aktionen",
+      "Jump": "Sprung",
+      "Start": "Start",
+      "Step": "Schritt",
+      "Transition": "Übergang",
+      "TransitionBranch": "Verzweigung"
+    },
     "ClassDiagram": {
       "Package": "Paket",
       "Class": "Klasse",

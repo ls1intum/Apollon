@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the sfc-action-table-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          class="sc-fqkvVR lnbwZS"
+          fill="white"
+          height="100%"
+          stroke="none"
+          width="100%"
+        />
+        <line
+          class="sc-imWYAI loIUkN"
+          stroke="black"
+          x1="0"
+          x2="160"
+          y1="30"
+          y2="30"
+        />
+        <line
+          class="sc-imWYAI loIUkN"
+          stroke="black"
+          x1="0"
+          x2="160"
+          y1="60"
+          y2="60"
+        />
+        <line
+          class="sc-imWYAI loIUkN"
+          stroke="black"
+          x1="30"
+          x2="30"
+          y1="0"
+          y2="100"
+        />
+        <rect
+          class="sc-fqkvVR jRtNsY"
+          fill="none"
+          height="100%"
+          stroke="black"
+          width="100%"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;

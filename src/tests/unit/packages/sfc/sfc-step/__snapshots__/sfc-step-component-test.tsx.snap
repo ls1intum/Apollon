@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render the sfc-step-component 1`] = `
+<body>
+  <div>
+    <svg>
+      <g>
+        <rect
+          class="sc-fqkvVR lnbwZS"
+          fill="white"
+          height="100%"
+          stroke="none"
+          width="100%"
+          x="0"
+          y="0"
+        />
+        <text
+          dominant-baseline="middle"
+          font-weight="bold"
+          pointer-events="none"
+          text-anchor="middle"
+          x="50%"
+          y="50%"
+        >
+          Step
+        </text>
+        <rect
+          class="sc-fqkvVR jRtNsY"
+          fill="none"
+          height="100%"
+          stroke="black"
+          width="100%"
+          x="0"
+          y="0"
+        />
+      </g>
+    </svg>
+  </div>
+</body>
+`;
