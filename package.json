@@ -93,7 +93,7 @@
     "circular-dependency-plugin": "5.2.2",
     "copy-webpack-plugin": "11.0.0",
     "css-loader": "6.11.0",
-    "eslint": "8.57.0",
+    "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-jsdoc": "46.10.1",
     "eslint-plugin-prefer-arrow": "1.2.3",
