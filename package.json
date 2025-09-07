@@ -70,6 +70,7 @@
     "tslib": "2.8.1"
   },
   "overrides": {
+    "@babel/runtime": "7.28.4",
     "jsdom": "26.1.0",
     "postcss": "8.5.6",
     "semver": "7.7.2",
