@@ -106,7 +106,7 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     const points = relationship.path.map((point) => `${point.x} ${point.y}`).join(',');
 
     const midPoints: { mpX: number; mpY: number }[] = [];
-    relationship.path.map((point, index) => {
+    relationship.path.map((_point, index) => {
       const mpX = (relationship.path[index].x + relationship.path[index + 1]?.x) / 2;
       const mpY = (relationship.path[index].y + relationship.path[index + 1]?.y) / 2;
       if (!isNaN(mpX) && !isNaN(mpY)) midPoints.push({ mpX, mpY });
@@ -230,12 +230,12 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     this.props.startwaypointslayout(this.props.id, this.props.relationship.path, updatedBounds);
   };
 
-  updateXCoordinate = (startPoint: number, endPoint: number, x: number, y: number) => {
+  updateXCoordinate = (startPoint: number, endPoint: number, x: number, _y: number) => {
     this.props.relationship.path[startPoint].x = x;
     this.props.relationship.path[endPoint].x = x;
   };
 
-  updateYCoordinate = (startPoint: number, endPoint: number, x: number, y: number) => {
+  updateYCoordinate = (startPoint: number, endPoint: number, _x: number, y: number) => {
     this.props.relationship.path[startPoint].y = y;
     this.props.relationship.path[endPoint].y = y;
   };

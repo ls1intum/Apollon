@@ -5,7 +5,6 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { assign } from '../../../utils/fx/assign';
-import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
 
 export class UMLActivityInitialNode extends UMLElement {
@@ -14,11 +13,11 @@ export class UMLActivityInitialNode extends UMLElement {
   static features: UMLElementFeatures = { ...UMLElement.features, resizable: false, updatable: false };
 
   type: UMLElementType = ActivityElementType.ActivityInitialNode;
-  bounds: IBoundary = { ...this.bounds, width: 50, height: 50 };
 
   constructor(values?: DeepPartial<IUMLElement>) {
     super(values);
     assign<IUMLElement>(this, values);
+    this.bounds = { ...this.bounds, width: values?.bounds?.width ?? 50, height: values?.bounds?.height ?? 50 };
   }
 
   render(canvas: ILayer): ILayoutable[] {

@@ -25,3 +25,5 @@ export function inclusionMapToArray(map: Record<string, boolean>): string[] {
 export function arrayToInclusionMap(array: string[]): Record<string, boolean> {
   return array.reduce<Record<string, boolean>>((acc, val) => ({ ...acc, [val]: true }), {});
 }
+
+export type TextLayout = Pick<React.SVGProps<SVGTextElement>, 'dx' | 'dy' | 'textAnchor' | 'dominantBaseline'>;

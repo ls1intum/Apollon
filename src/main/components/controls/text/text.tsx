@@ -5,8 +5,22 @@ type Props = {
   fill?: string;
   x?: string | number;
   y?: string | number;
-  dominantBaseline?: string;
-  textAnchor?: string;
+  dominantBaseline?:
+    | 'alphabetic'
+    | 'hanging'
+    | 'ideographic'
+    | 'mathematical'
+    | 'auto'
+    | 'text-before-edge'
+    | 'middle'
+    | 'central'
+    | 'text-after-edge'
+    | 'inherit'
+    | 'use-script'
+    | 'no-change'
+    | 'reset-size'
+    | undefined;
+  textAnchor?: 'end' | 'start' | 'middle' | 'inherit' | undefined;
   fontWeight?: string;
   pointerEvents?: string;
   noX?: boolean;

@@ -2,7 +2,6 @@ import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { IUMLElement, UMLElement } from '../../../services/uml-element/uml-element';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
-import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
 import { DeepPartial } from 'redux';
 import * as Apollon from '../../../typings';
@@ -16,13 +15,13 @@ export class UMLPetriNetPlace extends UMLElement {
   // currently we need to add this, because otherwise this will be recognized as update in layouter and for every update action on component, antoher update is triggerd
   highlight: string | undefined = undefined;
   type: UMLElementType = PetriNetElementType.PetriNetPlace;
-  bounds: IBoundary = { ...this.bounds, width: 60, height: 60 };
   amountOfTokens: number;
   capacity: number;
 
   constructor(values?: DeepPartial<UMLPetriNetPlace>) {
     super(values);
     assign<IUMLElement>(this, values);
+    this.bounds = { ...this.bounds, width: values?.bounds?.width ?? 60, height: values?.bounds?.height ?? 60 };
     this.amountOfTokens = values?.amountOfTokens || values?.amountOfTokens === 0 ? values.amountOfTokens : 0;
     this.capacity = values?.capacity || values?.capacity === 0 ? values.capacity : UMLPetriNetPlace.defaultCapacity;
   }

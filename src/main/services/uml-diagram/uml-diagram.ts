@@ -1,7 +1,6 @@
 import { DeepPartial } from 'redux';
 import { UMLDiagramType } from '../../packages/diagram-type';
 import { assign } from '../../utils/fx/assign';
-import { IBoundary } from '../../utils/geometry/boundary';
 import { ILayer } from '../layouter/layer';
 import { ILayoutable } from '../layouter/layoutable';
 import { IUMLContainer, UMLContainer } from '../uml-container/uml-container';
@@ -16,11 +15,11 @@ export interface IUMLDiagram extends IUMLContainer {
 export class UMLDiagram extends UMLContainer implements IUMLDiagram {
   type: UMLDiagramType = UMLDiagramType.ClassDiagram;
   ownedRelationships: string[] = [];
-  bounds: IBoundary = { ...this.bounds, width: 0, height: 0 };
 
   constructor(values?: DeepPartial<IUMLDiagram>) {
     super();
     assign<IUMLDiagram>(this, values);
+    this.bounds = { ...this.bounds, width: values?.bounds?.width ?? 0, height: values?.bounds?.height ?? 0 };
   }
 
   render(canvas: ILayer, children: ILayoutable[] = []): ILayoutable[] {

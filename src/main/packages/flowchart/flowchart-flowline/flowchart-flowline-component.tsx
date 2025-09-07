@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { FlowchartFlowline } from './flowchart-flowline';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { TextLayout } from '../../../components/store/util';
 
 export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
@@ -24,7 +25,7 @@ export const FlowchartFlowlineComponent: FunctionComponent<Props> = ({ element }
     distance -= vector.length;
   }
 
-  const layoutText = (dir: 'v' | 'h') => {
+  const layoutText = (dir: 'v' | 'h'): TextLayout => {
     switch (dir) {
       case 'v':
         return {

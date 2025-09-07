@@ -3,6 +3,7 @@ import { Text } from '../../../components/controls/text/text';
 import { Point } from '../../../utils/geometry/point';
 import { UMLDeploymentAssociation } from './uml-deployment-association';
 import { ThemedPolyline } from '../../../components/theme/themedComponents';
+import { TextLayout } from '../../../components/store/util';
 
 export const UMLDeploymentAssociationComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
@@ -24,7 +25,7 @@ export const UMLDeploymentAssociationComponent: FunctionComponent<Props> = ({ el
     }
     distance -= vector.length;
   }
-  const layoutText = (dir: 'v' | 'h') => {
+  const layoutText = (dir: 'v' | 'h'): TextLayout => {
     switch (dir) {
       case 'v':
         return {

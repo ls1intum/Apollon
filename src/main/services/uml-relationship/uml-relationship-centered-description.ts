@@ -17,7 +17,7 @@ export interface IUMLRelationship extends IUMLElement {
   target: IUMLElementPort;
 }
 
-// TODO: this is a ugly solution, which is needed, becasue we want to maintain backwards compatability of diagrams. It would be cleaner to add a general concept to relationships
+// TODO: this is a ugly solution, which is needed, because we want to maintain backwards compatability of diagrams. It would be cleaner to add a general concept to relationships
 // what is ugly about this? we calculate the bounding box of the whole relationship (relationship + description) here, but do not use it to display the message
 // it is also calculated in the components which display the description on the relationship
 // at some point, when the compatibility cannot be maintained anyway, we should change this
@@ -30,7 +30,7 @@ export abstract class UMLRelationshipCenteredDescription extends UMLRelationship
       const pathBounds = this.bounds;
 
       let descriptionPosition = new Point(0, 0);
-      let direction: 'v' | 'h' = 'v';
+      let direction: 'vertical' | 'horizontal' = 'vertical';
       const path = this.path.map((point) => new Point(point.x, point.y));
       let distance =
         path.reduce(
@@ -43,7 +43,7 @@ export abstract class UMLRelationshipCenteredDescription extends UMLRelationship
         const vector = path[index + 1].subtract(path[index]);
         if (vector.length > distance) {
           const norm = vector.normalize();
-          direction = Math.abs(norm.x) > Math.abs(norm.y) ? 'h' : 'v';
+          direction = Math.abs(norm.x) > Math.abs(norm.y) ? 'horizontal' : 'vertical';
           descriptionPosition = path[index].add(norm.scale(distance));
           break;
         }
@@ -58,8 +58,8 @@ export abstract class UMLRelationshipCenteredDescription extends UMLRelationship
       // subtracting DIAGRAM_MARGIN from y only works, because we do not use these values to display the description
       const descriptionBoundingBox = {
         bounds: {
-          x: direction === 'v' ? descriptionPosition.x + 5 : descriptionPosition.x - descriptionSize.width / 2,
-          y: 'v' ? descriptionPosition.y - DIAGRAM_MARGIN : descriptionPosition.y,
+          x: direction === 'vertical' ? descriptionPosition.x + 5 : descriptionPosition.x - descriptionSize.width / 2,
+          y: descriptionPosition.y - DIAGRAM_MARGIN,
           width: descriptionSize.width,
           height: descriptionSize.height,
         },

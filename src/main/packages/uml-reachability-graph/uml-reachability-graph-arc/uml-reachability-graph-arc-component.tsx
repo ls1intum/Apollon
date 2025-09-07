@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Point } from '../../../utils/geometry/point';
 import { UMLReachabilityGraphArc } from './uml-reachability-graph-arc';
 import { ThemedPath, ThemedPolyline } from '../../../components/theme/themedComponents';
+import { TextLayout } from '../../../components/store/util';
 
 export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ element }) => {
   let position = { x: 0, y: 0 };
@@ -24,7 +25,7 @@ export const UMLReachabilityGraphArcComponent: FunctionComponent<Props> = ({ ele
     distance -= vector.length;
   }
 
-  const layoutText = (dir: 'v' | 'h') => {
+  const layoutText = (dir: 'v' | 'h'): TextLayout => {
     switch (dir) {
       case 'v':
         return {

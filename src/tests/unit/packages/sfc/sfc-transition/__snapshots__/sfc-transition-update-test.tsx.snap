@@ -14,7 +14,7 @@ exports[`test sfc transition update render 1`] = `
           <input
             class="sc-bmzYkS sc-iHGNWf fEVqYL gacFBO"
             maxlength="100"
-            style="flex: 1;"
+            style="flex: 1 1 0%;"
             value="Transition"
           />
           <button

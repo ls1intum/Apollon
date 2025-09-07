@@ -19,10 +19,9 @@ export const UmlCommunicationLinkTextComponent: React.FC<Props> = ({
   messages,
   directionIcon,
 }) => {
-  const tspanProps = textCentered ? { textAnchor: 'middle' } : {};
   return (
     <Text x={x} y={y} fontSize="85%" textAnchor="start" dominantBaseline="auto" fontWeight="normal" fill={fill}>
-      <tspan fontWeight="bold" fontSize="120%" {...tspanProps}>
+      <tspan fontWeight="bold" fontSize="120%" textAnchor={textCentered ? 'middle' : undefined}>
         {messages.length ? directionIcon : ''}
       </tspan>
       {messages.map((message, i) => (

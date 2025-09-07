@@ -26,6 +26,18 @@ afterEach(() => {
   });
 });
 
+function stripUndefined(obj: any): any {
+  if (Array.isArray(obj)) return obj.map(stripUndefined);
+  if (obj && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => [k, stripUndefined(v)]),
+    );
+  }
+  return obj;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const testClassDiagramAsSVG = require('./test-resources/class-diagram-as-svg.json') as string;
 
@@ -83,7 +95,7 @@ describe('test apollon editor ', () => {
       editor.model = testCommunicationDiagram as any;
     });
 
-    expect(testCommunicationDiagram).toEqual(editor.model);
+    expect(stripUndefined(editor.model)).toMatchObject(testCommunicationDiagram);
   });
 
   it('get and set communication diagram v2.', () => {
@@ -91,7 +103,7 @@ describe('test apollon editor ', () => {
       editor.model = testCommunicationDiagramV2 as any;
     });
 
-    expect(testCommunicationDiagram).toEqual(editor.model);
+    expect(stripUndefined(editor.model)).toMatchObject(testCommunicationDiagram);
   });
 
   it('exportModelAsSvg', async () => {

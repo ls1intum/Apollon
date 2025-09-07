@@ -154,7 +154,10 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element }) =
       <text
         x={source.x || 0}
         y={source.y || 0}
-        {...layoutTextForUMLAssociation(element.source.direction, 'BOTTOM')}
+        {...(layoutTextForUMLAssociation(element.source.direction, 'BOTTOM') as Pick<
+          React.SVGProps<SVGTextElement>,
+          'dx' | 'dy' | 'textAnchor'
+        >)}
         pointerEvents="none"
         style={{ ...textFill }}
       >
@@ -163,7 +166,10 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element }) =
       <text
         x={target.x || 0}
         y={target.y || 0}
-        {...layoutTextForUMLAssociation(element.target.direction, 'BOTTOM')}
+        {...(layoutTextForUMLAssociation(element.target.direction, 'BOTTOM') as Pick<
+          React.SVGProps<SVGTextElement>,
+          'dx' | 'dy' | 'textAnchor'
+        >)}
         pointerEvents="none"
         style={{ ...textFill }}
       >
@@ -172,7 +178,10 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element }) =
       <text
         x={source.x || 0}
         y={source.y || 0}
-        {...layoutTextForUMLAssociation(element.source.direction, 'TOP')}
+        {...(layoutTextForUMLAssociation(element.source.direction, 'TOP') as Pick<
+          React.SVGProps<SVGTextElement>,
+          'dx' | 'dy' | 'textAnchor'
+        >)}
         pointerEvents="none"
         style={{ ...textFill }}
       >
@@ -181,7 +190,10 @@ export const UMLAssociationComponent: FunctionComponent<Props> = ({ element }) =
       <text
         x={target.x || 0}
         y={target.y || 0}
-        {...layoutTextForUMLAssociation(element.target.direction, 'TOP')}
+        {...(layoutTextForUMLAssociation(element.target.direction, 'TOP') as Pick<
+          React.SVGProps<SVGTextElement>,
+          'dx' | 'dy' | 'textAnchor'
+        >)}
         pointerEvents="none"
         style={{ ...textFill }}
       >

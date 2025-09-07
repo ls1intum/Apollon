@@ -4,7 +4,6 @@ import { ILayer } from '../../../services/layouter/layer';
 import { ILayoutable } from '../../../services/layouter/layoutable';
 import { UMLElementFeatures } from '../../../services/uml-element/uml-element-features';
 import { assign } from '../../../utils/fx/assign';
-import { IBoundary } from '../../../utils/geometry/boundary';
 import { UMLElementType } from '../../uml-element-type';
 import { UMLContainer } from '../../../services/uml-container/uml-container';
 import * as Apollon from '../../../typings';
@@ -28,12 +27,12 @@ export class BPMNIntermediateEvent extends UMLContainer {
   static defaultEventType: BPMNIntermediateEventType = 'default';
 
   type: UMLElementType = BPMNElementType.BPMNIntermediateEvent;
-  bounds: IBoundary = { ...this.bounds, width: 40, height: 40 };
   eventType: BPMNIntermediateEventType;
 
   constructor(values?: DeepPartial<BPMNIntermediateEvent>) {
     super(values);
     assign<UMLContainer>(this, values);
+    this.bounds = { ...this.bounds, width: values?.bounds?.width ?? 40, height: values?.bounds?.height ?? 40 };
     this.eventType = values?.eventType || BPMNIntermediateEvent.defaultEventType;
   }
 
