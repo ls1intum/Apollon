@@ -26,4 +26,23 @@ export function arrayToInclusionMap(array: string[]): Record<string, boolean> {
   return array.reduce<Record<string, boolean>>((acc, val) => ({ ...acc, [val]: true }), {});
 }
 
-export type TextLayout = Pick<React.SVGProps<SVGTextElement>, 'dx' | 'dy' | 'textAnchor' | 'dominantBaseline'>;
+// Keep this in sync with `Text` component props to avoid widening to string|number from React.SVGProps
+export type TextLayout =
+  Pick<React.SVGProps<SVGTextElement>, 'dx' | 'dy'> & {
+    textAnchor?: 'end' | 'start' | 'middle' | 'inherit';
+    dominantBaseline?:
+      | 'alphabetic'
+      | 'hanging'
+      | 'ideographic'
+      | 'mathematical'
+      | 'auto'
+      | 'text-before-edge'
+      | 'middle'
+      | 'central'
+      | 'text-after-edge'
+      | 'inherit'
+      | 'use-script'
+      | 'no-change'
+      | 'reset-size'
+      | undefined;
+  };

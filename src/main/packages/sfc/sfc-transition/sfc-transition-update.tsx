@@ -56,7 +56,7 @@ const SfcTransitionUpdateComponent: FunctionComponent<Props & I18nContext> = ({ 
     <Container>
       <section>
         <Row style={{ gap: 5 }}>
-          <Textfield style={{ flex: '1', textDecoration }} value={displayName} onChange={handleNameChange} autoFocus />
+          <Textfield style={{ flex: '1 1 0%', textDecoration }} value={displayName} onChange={handleNameChange} autoFocus />
           <Button color={negationButtonColor} style={{ textDecoration: 'overline' }} onClick={() => handleNegation()}>
             X
           </Button>

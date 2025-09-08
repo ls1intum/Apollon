@@ -18,7 +18,7 @@ import { ModelState } from '../store/model-state';
 import { styled } from '../theme/styles';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AssessmentDropInfoTooltip } from './assessment-dropInfo-tooltip';
-import { Tooltip } from 'react-tooltip';
+import Tooltip from 'react-tooltip';
 
 const Flex = styled.div`
   display: flex;

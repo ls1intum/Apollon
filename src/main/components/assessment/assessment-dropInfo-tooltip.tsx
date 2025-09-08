@@ -4,7 +4,7 @@ import { Button } from '../controls/button/button';
 import { LinkIcon } from '../controls/icon/link';
 import { TrashIcon } from '../controls/icon/trash';
 import { I18nContext } from '../i18n/i18n-context';
-import { Tooltip } from 'react-tooltip';
+import Tooltip from 'react-tooltip';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { compose } from 'redux';
 import { localized } from '../i18n/localized';
