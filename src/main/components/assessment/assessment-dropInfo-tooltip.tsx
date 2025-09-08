@@ -4,7 +4,7 @@ import { Button } from '../controls/button/button';
 import { LinkIcon } from '../controls/icon/link';
 import { TrashIcon } from '../controls/icon/trash';
 import { I18nContext } from '../i18n/i18n-context';
-import Tooltip from 'react-tooltip';
+import { Tooltip } from 'react-tooltip';
 import { AssessmentRepository } from '../../services/assessment/assessment-repository';
 import { compose } from 'redux';
 import { localized } from '../i18n/localized';
@@ -43,18 +43,18 @@ class AssessmentDropInfoTooltipComponent extends Component<Props, State> {
     return (
       <div>
         {readonly ? (
-          <Button color="link" tabIndex={-1} data-tooltip-id="tooltip">
+          <Button color="link" tabIndex={-1} data-tooltip-id={`tooltip-${this.props.element.id}`}>
             <LinkIcon />
           </Button>
         ) : this.state.showLinkIcon ? (
-          <Button color="link" tabIndex={-1} data-tooltip-id="tooltip" onClick={this.toggle}>
+          <Button color="link" tabIndex={-1} data-tooltip-id={`tooltip-${this.props.element.id}`} onClick={this.toggle}>
             <LinkIcon />
           </Button>
         ) : (
           <Button
             color="link"
             tabIndex={-1}
-            data-tooltip-id="tooltip"
+            data-tooltip-id={`tooltip-${this.props.element.id}`}
             onClick={this.removeLink}
             onMouseLeave={this.toggle}
           >
@@ -62,7 +62,7 @@ class AssessmentDropInfoTooltipComponent extends Component<Props, State> {
           </Button>
         )}
 
-        <Tooltip id="tooltip" place="right">
+        <Tooltip id={`tooltip-${this.props.element.id}`} place="right">
           {this.state.showLinkIcon ? message : assessment?.dropInfo.removeMessage}
         </Tooltip>
       </div>

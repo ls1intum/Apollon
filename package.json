@@ -28,7 +28,7 @@
     "build": "rm -rf dist && webpack --config ./webpack/webpack.prod.js",
     "lint": "npm run lint:ts && npm run lint:css",
     "lint:ts": "eslint \"src/main/**/*.{ts,tsx,js,jsx}\"",
-    "lint:css": "stylelint \"src/**/*.{css,scss}\"",
+    "lint:css": "stylelint \"src/**/*.{css,scss}\" --allow-empty-input",
     "prepare": "rm -rf lib && tsc -p . && tsc -p tsconfig.json",
     "prettier:check": "prettier --check 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
     "prettier:write": "prettier --write 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
@@ -50,8 +50,9 @@
     }
   },
   "lint-staged": {
-    "*.ts": "stylelint --fix",
-    "*.{ts,tsx,js,css,md}": "prettier --write"
+    "*.{ts,tsx,js,jsx}": "eslint --fix",
+    "*.{css,scss}": "stylelint --fix",
+    "*.{md,json,ts,tsx,js,jsx,css,scss}": "prettier --write"
   },
   "dependencies": {
     "fast-json-patch": "3.1.1",

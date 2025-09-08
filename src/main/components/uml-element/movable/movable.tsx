@@ -61,7 +61,7 @@ export const movable = (
 
       this.setState((state) => ({ offset: state.offset.add(x * zoomFactor, y * zoomFactor) }));
       this.moveWindow = { x: this.moveWindow.x + x, y: this.moveWindow.y + y };
-      this.debouncedMove(this.moveWindow);
+      this.debouncedMove();
     };
 
     private debouncedMove = debounce(() => {
@@ -102,6 +102,9 @@ export const movable = (
         document.removeEventListener('pointermove', this.onPointerMove);
         document.removeEventListener('pointerup', this.onPointerUp);
       }
+
+      // Cancel any pending debounced move to avoid dispatching after unmount
+      (this.debouncedMove as any).cancel?.();
     }
 
     render() {

@@ -25,3 +25,14 @@ try {
 } catch {
   // ignore
 }
+
+// jsdom doesn't implement ResizeObserver; provide a minimal mock so libraries depending on it don't crash
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+if (typeof (window as any).ResizeObserver === 'undefined') {
+  (window as any).ResizeObserver = ResizeObserverMock as any;
+}

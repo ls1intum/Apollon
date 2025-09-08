@@ -106,25 +106,29 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     const points = relationship.path.map((point) => `${point.x} ${point.y}`).join(',');
 
     const midPoints: { mpX: number; mpY: number }[] = [];
-    relationship.path.map((_point, index) => {
+    relationship.path.forEach((_point, index) => {
       const mpX = (relationship.path[index].x + relationship.path[index + 1]?.x) / 2;
       const mpY = (relationship.path[index].y + relationship.path[index + 1]?.y) / 2;
-      if (!isNaN(mpX) && !isNaN(mpY)) midPoints.push({ mpX, mpY });
+      if (!isNaN(mpX) && !isNaN(mpY)) {
+        midPoints.push({ mpX, mpY });
+      }
     });
 
     midPoints.pop();
     midPoints.shift();
 
-    const highlight =
-      interactable && interactive
-        ? theme.interactive.normal
-        : interactable && hovered
-          ? theme.interactive.hovered
-          : hovered || selected
-            ? 'rgba(0, 100, 255, 0.2)'
-            : relationship.highlight
-              ? relationship.highlight
-              : 'rgba(0, 100, 255, 0)';
+    let highlight: string;
+    if (interactable && interactive) {
+      highlight = theme.interactive.normal;
+    } else if (interactable && hovered) {
+      highlight = theme.interactive.hovered;
+    } else if (hovered || selected) {
+      highlight = 'rgba(0, 100, 255, 0.2)';
+    } else if (relationship.highlight) {
+      highlight = relationship.highlight;
+    } else {
+      highlight = 'rgba(0, 100, 255, 0)';
+    }
 
     return (
       <svg
@@ -186,10 +190,9 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
     this.updateRelationshipPoints(waypointDirection, handlerIndex, x, y);
   };
 
-  onPointerUp = (event: any) => {
+  onPointerUp = (_event: any) => {
     this.props.endwaypointslayout(this.props.id);
-    const element = event.currentTarget;
-    element.removeEventListener('pointermove', this.onPointerMove);
+    document.removeEventListener('pointermove', this.onPointerMove);
   };
 
   updateRelationshipPoints = (waypointDirection: string, handlerIndex: number, x: number, y: number) => {
@@ -199,15 +202,19 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
 
     switch (waypointDirection) {
       case 'horizontal':
-        sourceDirection === Direction.Up || sourceDirection === Direction.Down
-          ? this.updateXCoordinate(startPoint, endPoint, x, y)
-          : this.updateYCoordinate(startPoint, endPoint, x, y);
+        if (sourceDirection === Direction.Up || sourceDirection === Direction.Down) {
+          this.updateXCoordinate(startPoint, endPoint, x, y);
+        } else {
+          this.updateYCoordinate(startPoint, endPoint, x, y);
+        }
         break;
 
       case 'vertical':
-        sourceDirection === Direction.Up || sourceDirection === Direction.Down
-          ? this.updateYCoordinate(startPoint, endPoint, x, y)
-          : this.updateXCoordinate(startPoint, endPoint, x, y);
+        if (sourceDirection === Direction.Up || sourceDirection === Direction.Down) {
+          this.updateYCoordinate(startPoint, endPoint, x, y);
+        } else {
+          this.updateXCoordinate(startPoint, endPoint, x, y);
+        }
         break;
 
       default:

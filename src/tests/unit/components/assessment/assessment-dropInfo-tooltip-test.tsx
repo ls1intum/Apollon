@@ -91,7 +91,7 @@ describe('test AssessmentDropInfoTooltip', () => {
     const sut = container.firstChild;
     expect(sut).not.toBeNull();
   });
-  it('it should display delete button after clicking link icon', () => {
+  it('it should display delete button after clicking link icon', async () => {
     const dropInfo = {
       instruction: 'Assessment Instruction',
       tooltipMessage: 'message',
@@ -103,7 +103,7 @@ describe('test AssessmentDropInfoTooltip', () => {
       dropInfo,
     } as IAssessment;
 
-    const { getByRole, getByText } = render(
+  const { getByRole, findByText } = render(
       <StoreProvider
         initialState={{
           elements: {
@@ -122,19 +122,26 @@ describe('test AssessmentDropInfoTooltip', () => {
     );
 
     const linkButton = getByRole('button');
-    const displayedMessage = getByText(dropInfo.tooltipMessage);
+    // react-tooltip renders on hover; simulate hover and assert content appears
+    act(() => {
+      fireEvent.mouseOver(linkButton);
+    });
+    const displayedMessage = await findByText(dropInfo.tooltipMessage);
     expect(displayedMessage).not.toBeNull();
 
     act(() => {
       fireEvent.click(linkButton);
     });
 
-    const deleteButton = getByRole('button');
+  const deleteButton = getByRole('button');
 
     act(() => {
       fireEvent.click(deleteButton);
     });
-    const updatedMessage = getByText(dropInfo.removeMessage);
+    act(() => {
+      fireEvent.mouseOver(deleteButton);
+    });
+    const updatedMessage = await findByText(dropInfo.removeMessage);
     expect(updatedMessage).not.toBeNull();
   });
 });

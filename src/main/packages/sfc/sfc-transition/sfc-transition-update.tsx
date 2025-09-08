@@ -1,14 +1,14 @@
 import React, { ComponentClass, FunctionComponent, useState } from 'react';
+import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { StylePane } from '../../../components/style-pane/style-pane';
-import { SfcTransition } from './sfc-transition';
-import styled from 'styled-components';
-import { Textfield } from '../../../components/controls/textfield/textfield';
-import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
-import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Button } from '../../../components/controls/button/button';
+import { ColorButton } from '../../../components/controls/color-button/color-button';
+import { Textfield } from '../../../components/controls/textfield/textfield';
 import { I18nContext } from '../../../components/i18n/i18n-context';
+import { StylePane } from '../../../components/style-pane/style-pane';
+import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
+import { SfcTransition } from './sfc-transition';
 import { getParsedName } from './sfc-transition-utils';
 
 const Container = styled.div`
@@ -56,7 +56,12 @@ const SfcTransitionUpdateComponent: FunctionComponent<Props & I18nContext> = ({ 
     <Container>
       <section>
         <Row style={{ gap: 5 }}>
-          <Textfield style={{ flex: '1 1 0%', textDecoration }} value={displayName} onChange={handleNameChange} autoFocus />
+          <Textfield
+            style={{ flex: '1 1 0%', textDecoration }}
+            value={displayName}
+            onChange={handleNameChange}
+            autoFocus
+          />
           <Button color={negationButtonColor} style={{ textDecoration: 'overline' }} onClick={() => handleNegation()}>
             X
           </Button>

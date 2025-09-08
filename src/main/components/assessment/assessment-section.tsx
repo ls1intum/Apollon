@@ -18,7 +18,7 @@ import { ModelState } from '../store/model-state';
 import { styled } from '../theme/styles';
 import { UMLElementRepository } from '../../services/uml-element/uml-element-repository';
 import { AssessmentDropInfoTooltip } from './assessment-dropInfo-tooltip';
-import Tooltip from 'react-tooltip';
+import { Tooltip } from 'react-tooltip';
 
 const Flex = styled.div`
   display: flex;
@@ -124,10 +124,10 @@ class AssessmentSectionComponent extends Component<Props> {
         <span style={{ display: 'inline' }}>{this.props.translate('assessment.feedback')}</span>
         {assessment?.dropInfo && assessment?.dropInfo.instruction ? (
           <div style={{ display: 'inline' }}>
-            <Button color="link" tabIndex={-1} data-tooltip-id="tooltip-feedback-hint">
+            <Button color="link" tabIndex={-1} data-tooltip-id={`tooltip-feedback-hint-${element.id}`}>
               <HelpIcon />
             </Button>
-            <Tooltip id="tooltip-feedback-hint" place="right">
+            <Tooltip id={`tooltip-feedback-hint-${element.id}`} place="right">
               {assessment.dropInfo.feedbackHint}
             </Tooltip>
             {assessment.dropInfo.instruction.feedback}
