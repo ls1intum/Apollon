@@ -90,12 +90,6 @@ module.exports = {
 
   // A preset that is used as a base for Jest's configuration
   preset: 'ts-jest',
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.jest.json',
-      isolatedModules: true,
-    },
-  },
 
   // Run tests from one or more projects
   // projects: undefined,
