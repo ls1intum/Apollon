@@ -199,15 +199,19 @@ export class CanvasRelationshipComponent extends Component<Props, State> {
 
     switch (waypointDirection) {
       case 'horizontal':
-        sourceDirection === Direction.Up || sourceDirection === Direction.Down
-          ? this.updateXCoordinate(startPoint, endPoint, x, y)
-          : this.updateYCoordinate(startPoint, endPoint, x, y);
+        if (sourceDirection === Direction.Up || sourceDirection === Direction.Down) {
+          this.updateXCoordinate(startPoint, endPoint, x, y);
+        } else {
+          this.updateYCoordinate(startPoint, endPoint, x, y);
+        }
         break;
 
       case 'vertical':
-        sourceDirection === Direction.Up || sourceDirection === Direction.Down
-          ? this.updateYCoordinate(startPoint, endPoint, x, y)
-          : this.updateXCoordinate(startPoint, endPoint, x, y);
+        if (sourceDirection === Direction.Up || sourceDirection === Direction.Down) {
+          this.updateYCoordinate(startPoint, endPoint, x, y);
+        } else {
+          this.updateXCoordinate(startPoint, endPoint, x, y);
+        }
         break;
 
       default:

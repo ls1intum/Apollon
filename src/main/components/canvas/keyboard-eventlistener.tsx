@@ -131,7 +131,11 @@ class KeyboardEventListenerComponent extends Component<Props> {
           break;
         case 'z':
           event.preventDefault();
-          event.shiftKey ? this.props.redo() : this.props.undo();
+          if (event.shiftKey) {
+            this.props.redo();
+          } else {
+            this.props.undo();
+          }
           break;
       }
     }

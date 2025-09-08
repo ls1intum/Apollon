@@ -1,10 +1,16 @@
-// tslint:disable-next-line:ban-types
-export function debounce(func: Function, wait: number = 0) {
+export function debounce<TArgs extends unknown[], TThis>(
+  func: (this: TThis, ...args: TArgs) => unknown,
+  wait: number = 0,
+) {
   let timeout: number | undefined;
-  return function (...args: any[]) {
-    // @ts-ignore
+  // Allow passing additional, unused arguments without type errors
+  return function (this: TThis, ...args: [...TArgs, ...unknown[]]) {
     const context = this;
     clearTimeout(timeout);
-    timeout = window.setTimeout(() => func.apply(context, args), wait > 0 ? wait : 300);
+    const delay = wait > 0 ? wait : 300;
+    timeout = window.setTimeout(() => {
+      // Only pass the arguments expected by the wrapped function
+      return func.apply(context, args as unknown as TArgs);
+    }, delay);
   };
 }

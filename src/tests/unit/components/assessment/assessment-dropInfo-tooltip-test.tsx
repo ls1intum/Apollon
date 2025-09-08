@@ -122,6 +122,9 @@ describe('test AssessmentDropInfoTooltip', () => {
     );
 
     const linkButton = getByRole('button');
+    act(() => {
+      fireEvent.mouseEnter(linkButton);
+    });
     const displayedMessage = getByText(dropInfo.tooltipMessage);
     expect(displayedMessage).not.toBeNull();
 
