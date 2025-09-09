@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '${{ env.node }}'
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Cache node modules
         uses: actions/cache@v4
         with:
