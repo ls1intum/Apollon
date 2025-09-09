@@ -4,7 +4,7 @@ Jinja2==3.1.6
 requests==2.32.5
 Sphinx==8.2.3
 sphinx-rtd-theme==3.0.2
-sphinx-autobuild==2024.10.3
+sphinx-autobuild==2025.8.25
 sphinxcontrib-bibtex==2.6.5
 urllib3==2.5.0
 zipp==3.21.0
