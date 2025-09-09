@@ -116,7 +116,7 @@
     "serve": "14.2.5",
     "sleep-promise": "9.1.0",
     "start-server-and-test": "2.1.0",
-    "style-loader": "3.3.4",
+    "style-loader": "4.0.0",
     "stylelint": "16.24.0",
     "stylelint-config-recommended": "17.0.0",
     "stylelint-config-styled-components": "0.1.1",
