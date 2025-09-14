@@ -284,7 +284,6 @@ export class Svg extends Component<Props, State> {
                       </ElementComponent>
                     </svg>
                   );
-                  break;
                 case SfcActionTableRowComponent:
                   // Do not render ActionTableRows separately, it is rendered within ActionTableComponent above
                   break;

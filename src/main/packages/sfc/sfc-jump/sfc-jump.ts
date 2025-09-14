@@ -15,8 +15,8 @@ export class SfcJump extends SfcContainer {
 
     // TODO: Find reason why this fix is necessary
     // Sometimes, Text.size returns 0, screwing with the text alignment due to false width
-    const textWidth = Text.size(canvas, this.name, { fontWeight: 'bold' }).width;
-    this.bounds.width = textWidth > 0 ? textWidth + 50 : this.bounds.width;
+    const textWidth = Text.size(canvas, this.name, { fontWeight: 'bold' }).width + 50;
+    this.bounds.width = textWidth > 50 ? textWidth : this.bounds.width;
 
     return [this];
   }
