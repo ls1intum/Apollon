@@ -21,11 +21,8 @@ import { ThemeProvider } from 'styled-components';
 import { UMLClassifierComponent } from '../packages/common/uml-classifier/uml-classifier-component';
 import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/uml-classifier-member-component';
 import { SfcActionTableComponent } from '../packages/sfc/sfc-action-table/sfc-action-table-component';
-import { SfcActionTableRow } from '../packages/sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row';
-import {
-  SfcActionTableRowComponent
-} from '../packages/sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row-component';
-import { ThemedLine, ThemedRect } from '../components/theme/themedComponents';
+import { SfcActionTableRowComponent } from '../packages/sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row-component';
+
 
 type Props = {
   model: Apollon.UMLModel;
