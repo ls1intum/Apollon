@@ -20,6 +20,12 @@ import { ModelState } from '../components/store/model-state';
 import { ThemeProvider } from 'styled-components';
 import { UMLClassifierComponent } from '../packages/common/uml-classifier/uml-classifier-component';
 import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/uml-classifier-member-component';
+import { SfcActionTableComponent } from '../packages/sfc/sfc-action-table/sfc-action-table-component';
+import { SfcActionTableRow } from '../packages/sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row';
+import {
+  SfcActionTableRowComponent
+} from '../packages/sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row-component';
+import { ThemedLine, ThemedRect } from '../components/theme/themedComponents';
 
 type Props = {
   model: Apollon.UMLModel;
@@ -256,6 +262,34 @@ export class Svg extends Component<Props, State> {
                   );
                 case UMLClassifierMemberComponent:
                   // If the ElementComponent is of type UMLClassifierMemberComponent, we break out of the switch, as they have been rendered within the UMLClassifierComponent.
+                  break;
+                case SfcActionTableComponent:
+                  // If the ElementComponent has something to do with SFCActionTables, fix rendering here:
+                  const tableRows = elements.filter((member) => member.owner === element.id);
+
+                  return (
+                    <svg
+                      key={element.id}
+                      {...svgElementDetails(element, element.bounds.x - tfact.minX, element.bounds.y - tfact.minY)}
+                    >
+                      <ElementComponent key={index} element={element}>
+                        {tableRows.map((row, rowIndex) => {
+                          const RowElementComponent = Components[row.type as UMLElementType];
+                          return(
+                            <svg
+                              key={row.id}
+                              {...svgElementDetails(row, 0, rowIndex*row.bounds.height)}
+                              >
+                              <RowElementComponent key={rowIndex} element={row}></RowElementComponent>
+                            </svg>
+                          )
+                        })};
+                      </ElementComponent>
+                    </svg>
+                  );
+                  break;
+                case SfcActionTableRowComponent:
+                  // Do not render ActionTableRows separately, it is rendered within ActionTableComponent above
                   break;
                 default:
                   // Render all other UMLElements and UMLRelationships normally, as they don't have issues when rendering to SVG.
