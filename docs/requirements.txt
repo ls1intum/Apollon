@@ -1,5 +1,5 @@
 alabaster==1.0.0
-docutils==0.21.2
+docutils==0.22.1
 Jinja2==3.1.6
 requests==2.32.5
 Sphinx==8.2.3
