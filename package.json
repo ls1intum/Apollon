@@ -115,7 +115,7 @@
     "redux-mock-store": "1.5.5",
     "serve": "14.2.5",
     "sleep-promise": "9.1.0",
-    "start-server-and-test": "2.1.0",
+    "start-server-and-test": "2.1.2",
     "style-loader": "3.3.4",
     "stylelint": "16.24.0",
     "stylelint-config-recommended": "17.0.0",
