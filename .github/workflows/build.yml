@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Setup Node.js '${{ env.node }}'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '${{ env.node }}'
       - uses: actions/checkout@v4
