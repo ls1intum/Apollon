@@ -7,4 +7,4 @@ sphinx-rtd-theme==3.0.2
 sphinx-autobuild==2025.8.25
 sphinxcontrib-bibtex==2.6.5
 urllib3==2.5.0
-zipp==3.21.0
+zipp==3.23.0
