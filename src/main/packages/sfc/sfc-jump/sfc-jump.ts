@@ -13,8 +13,9 @@ export class SfcJump extends SfcContainer {
   render(canvas: ILayer): ILayoutable[] {
     this.bounds.height = 20;
 
-    // TODO: Find reason why this fix is necessary
-    // Sometimes, Text.size returns 0, screwing with the text alignment due to false width
+    /** TODO: Find reason why this fix is necessary
+     *  Sometimes, Text.size returns 0, screwing with the text alignment due to false width
+     */
     const textWidth = Text.size(canvas, this.name, { fontWeight: 'bold' }).width + 50;
     this.bounds.width = textWidth > 50 ? textWidth : this.bounds.width;
 

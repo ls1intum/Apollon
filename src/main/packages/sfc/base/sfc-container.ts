@@ -30,7 +30,9 @@ export abstract class SfcContainer extends UMLContainer {
   }
 
   private autoWidth(canvas: ILayer, children?: ILayoutable[]): void {
-    // TODO: Again, Text.size, sometimes returns 0
+    /**
+     * TODO: Again, Text.size, sometimes returns 0
+      */
     const nameWidth = Text.size(canvas, this.name, { fontWeight: 'bold' }).width + 20;
 
     const presentChildren = children ?? [];
@@ -40,7 +42,6 @@ export abstract class SfcContainer extends UMLContainer {
       return Math.max(max, childWidth);
     }, 0);
 
-    //                                       see to do above
     const newWidth = Math.max(this.minWidth, nameWidth > 20 ? nameWidth : this.bounds.width, maxLabelWidth);
     const newWidthRounded = Math.ceil(newWidth / 10) * 10;
     [...presentChildren, this].forEach((element) => {
