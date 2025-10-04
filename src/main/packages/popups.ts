@@ -96,7 +96,7 @@ export const Popups: { [key in UMLElementType | UMLRelationshipType]: ComponentT
   [UMLElementType.BPMNGroup]: DefaultPopup,
   [UMLElementType.BPMNPool]: BPMNPoolUpdate,
   [UMLElementType.BPMNSwimlane]: DefaultPopup,
-  [UMLElementType.SfcStart]: null,
+  [UMLElementType.SfcStart]: SfcNameUpdate,
   [UMLElementType.SfcStep]: SfcNameUpdate,
   [UMLElementType.SfcActionTable]: SfcActionTableUpdate,
   [UMLElementType.SfcActionTableRow]: null,
