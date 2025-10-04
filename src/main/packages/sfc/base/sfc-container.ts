@@ -32,7 +32,7 @@ export abstract class SfcContainer extends UMLContainer {
   private autoWidth(canvas: ILayer, children?: ILayoutable[]): void {
     /**
      * TODO: Again, Text.size, sometimes returns 0
-      */
+     */
     const nameWidth = Text.size(canvas, this.name, { fontWeight: 'bold' }).width + 20;
 
     const presentChildren = children ?? [];

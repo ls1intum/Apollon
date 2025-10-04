@@ -23,7 +23,6 @@ import { UMLClassifierMemberComponent } from '../packages/common/uml-classifier/
 import { SfcActionTableComponent } from '../packages/sfc/sfc-action-table/sfc-action-table-component';
 import { SfcActionTableRowComponent } from '../packages/sfc/sfc-action-table/sfc-action-table-row/sfc-action-table-row-component';
 
-
 type Props = {
   model: Apollon.UMLModel;
   options?: Apollon.ExportOptions;
@@ -272,15 +271,13 @@ export class Svg extends Component<Props, State> {
                       <ElementComponent key={index} element={element}>
                         {tableRows.map((row, rowIndex) => {
                           const RowElementComponent = Components[row.type as UMLElementType];
-                          return(
-                            <svg
-                              key={row.id}
-                              {...svgElementDetails(row, 0, rowIndex*row.bounds.height)}
-                              >
+                          return (
+                            <svg key={row.id} {...svgElementDetails(row, 0, rowIndex * row.bounds.height)}>
                               <RowElementComponent key={rowIndex} element={row}></RowElementComponent>
                             </svg>
-                          )
-                        })};
+                          );
+                        })}
+                        ;
                       </ElementComponent>
                     </svg>
                   );
