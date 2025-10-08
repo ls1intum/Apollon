@@ -1,34 +1,33 @@
 import { IPoint } from "@/edges/types"
 import { ReactFlowInstance, type Node, type Edge, Rect } from "@xyflow/react"
 
-// Define CSS variables to embed in the SVG
-// Light theme variables
-const cssVariables = `
-    :root {
-  --apollon2-primary: var(--apollon-primary, #3e8acc);
-  --apollon2-primary-contrast: var(--apollon-primary-contrast, #212529);
-  --apollon2-secondary: var(--apollon-secondary, #6c757d);
-  --apollon2-alert-warning-yellow: var(--apollon-alert-warning-yellow, #ffc107);
-  --apollon2-alert-warning-background: var(--apollon-alert-warning-background, #fff3cd);
-  --apollon2-alert-warning-border: var(--apollon-alert-warning-border, #ffeeba);
-  --apollon2-background: var(--apollon-background, white);
-  --apollon2-background-inverse: var(--apollon-background-inverse, #000000);
-  --apollon2-background-variant: var(--apollon-background-variant, #f8f9fa);
-  --apollon2-gray: var(--apollon-gray, #e9ecef);
-  --apollon2-grid: var(--apollon-grid, rgba(36, 39, 36, 0.1));
-  --apollon2-gray-variant: var(--apollon-gray-variant, #495057);
-  --apollon2-alert-danger-color: var(--apollon-alert-danger-color, #721c24);
-  --apollon2-alert-danger-background: var(--apollon-alert-danger-background, #f8d7da);
-  --apollon2-alert-danger-border: var(--apollon-alert-danger-border, #f5c6cb);
-  --apollon2-switch-box-border-color: var(--apollon-switch-box-border-color, #dee2e6);
-  --apollon2-list-group-color: var(--apollon-list-group-color, #ffffff);
-  --apollon2-btn-outline-secondary-color: var(--apollon-btn-outline-secondary-color, #6c757d);
-  --apollon2-modal-bottom-border: var(--apollon-modal-bottom-border, #e9ecef);
-    }
+const svgFontStyles = `
     text {
       font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     }
   `
+
+const cssVariableMap: Record<string, string> = {
+  "--apollon2-primary": "#3e8acc",
+  "--apollon2-primary-contrast": "#212529",
+  "--apollon2-secondary": "#6c757d",
+  "--apollon2-alert-warning-yellow": "#ffc107",
+  "--apollon2-alert-warning-background": "#fff3cd",
+  "--apollon2-alert-warning-border": "#ffeeba",
+  "--apollon2-background": "#ffffff",
+  "--apollon2-background-inverse": "#000000",
+  "--apollon2-background-variant": "#f8f9fa",
+  "--apollon2-gray": "#e9ecef",
+  "--apollon2-grid": "rgba(36, 39, 36, 0.1)",
+  "--apollon2-gray-variant": "#495057",
+  "--apollon2-alert-danger-color": "#721c24",
+  "--apollon2-alert-danger-background": "#f8d7da",
+  "--apollon2-alert-danger-border": "#f5c6cb",
+  "--apollon2-switch-box-border-color": "#dee2e6",
+  "--apollon2-list-group-color": "#ffffff",
+  "--apollon2-btn-outline-secondary-color": "#6c757d",
+  "--apollon2-modal-bottom-border": "#e9ecef",
+}
 
 export const getSVG = (container: HTMLElement, clip: Rect): string => {
   const emptySVG = "<svg></svg>"
@@ -44,7 +43,7 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   const mainSVG = document.createElementNS(SVG_NS, "svg")
   mainSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg")
   mainSVG.appendChild(document.createElementNS(SVG_NS, "style")).textContent =
-    cssVariables
+    svgFontStyles
   mainSVG.setAttribute("viewBox", `${clip.x} ${clip.y} ${width} ${height}`)
   mainSVG.setAttribute("width", `${width}`)
   mainSVG.setAttribute("height", `${height}`)
@@ -95,6 +94,8 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
       MainEdgesGTag.appendChild(element.cloneNode(true))
     })
   })
+
+  replaceCSSVariables(mainSVG)
 
   return mainSVG.outerHTML
 }
@@ -163,5 +164,39 @@ function extractStyles(styleString: string) {
     transform: { x, y },
     width: widthMatch ? widthMatch[1].trim() : null,
     height: heightMatch ? heightMatch[1].trim() : null,
+  }
+}
+
+const VARIABLE_REGEX = /var\((--[^,\s)]+)(?:,\s*([^)]+))?\)/g
+
+function resolveCSSVariable(value: string): string {
+  return value.replace(VARIABLE_REGEX, (_, variableName: string, fallback?: string) => {
+    const resolved = cssVariableMap[variableName.trim()]
+    if (resolved) return resolved
+    if (fallback) return fallback.trim()
+    return ""
+  })
+}
+
+function replaceCSSVariables(node: Element | ChildNode): void {
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const element = node as Element
+    element.getAttributeNames().forEach((attr) => {
+      const attrValue = element.getAttribute(attr)
+      if (!attrValue) return
+      const resolvedValue = resolveCSSVariable(attrValue)
+      if (resolvedValue !== attrValue) {
+        element.setAttribute(attr, resolvedValue)
+      }
+    })
+
+    Array.from(element.childNodes).forEach((child) => replaceCSSVariables(child))
+  } else if (node.nodeType === Node.TEXT_NODE) {
+    const textNode = node as Text
+    const textContent = textNode.textContent ?? ""
+    const resolvedText = resolveCSSVariable(textContent)
+    if (resolvedText !== textContent) {
+      textNode.textContent = resolvedText
+    }
   }
 }
