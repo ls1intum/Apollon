@@ -198,7 +198,7 @@ Connecting a Component to the Global Application State
 
 See `here <https://react-redux.js.org/api/connect>`_ for the React-Redux documentation on connect function.
 
-In the example we can see in the enhance function, how the global applicatio state and extra functionality is merged into the component.
+In the example we can see in the enhance function, how the global application state and extra functionality is merged into the component.
 The parameter of the connect function, takes the global application state and the actual component properties that the component would receive.
 It adds an additional property, in this case `moving` which determines if the component is moving or not.
 
