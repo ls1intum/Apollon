@@ -1,4 +1,3 @@
-import 'pepjs';
 import { createElement } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { DeepPartial, Store } from 'redux';

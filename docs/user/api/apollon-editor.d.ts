@@ -1,4 +1,3 @@
-import 'pepjs';
 import { DeepPartial } from 'redux';
 import { Styles } from './components/theme/styles';
 import { Patch } from './services/patcher';
