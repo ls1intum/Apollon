@@ -22,8 +22,6 @@
   "type": "module",
   "scripts": {
     "postinstall": "husky",
-    "prepublishOnly": "pinst --disable",
-    "postpublish": "pinst --enable",
     "start": "webpack serve --config ./webpack/webpack.dev.js",
     "build": "rm -rf dist && webpack --config ./webpack/webpack.prod.js",
     "lint": "npm run lint:ts && npm run lint:css",
