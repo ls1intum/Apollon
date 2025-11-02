@@ -1,17 +1,27 @@
-const path = require('path');
-const CircularDependencyPlugin = require('circular-dependency-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyPlugin = require('copy-webpack-plugin');
-const appVersion = require('../package').version;
+// webpack.common.js (ESM)
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import CircularDependencyPlugin from 'circular-dependency-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import CopyPlugin from 'copy-webpack-plugin';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Use createRequire to read package.json in ESM
+const require = createRequire(import.meta.url);
+const appVersion = require('../package.json').version;
 
 const outputDir = path.resolve(__dirname, '../dist');
 
-module.exports = {
+export default {
   entry: './public/index.ts',
   output: {
     path: outputDir,
     filename: '[name].js',
     library: { name: 'apollon', type: 'umd' },
+    clean: false, // keep original behavior; set true if you want auto-clean
   },
   resolve: {
     extensions: ['.js', '.ts', '.tsx'],
@@ -22,8 +32,8 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?/,
-        exclude: /\/node_modules\//,
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
         use: [
           {
             loader: 'ts-loader',

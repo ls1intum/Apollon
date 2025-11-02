@@ -1,15 +1,14 @@
 {
   "name": "@ls1intum/apollon",
   "version": "3.4.4",
-  "description": "A UML diagram editor.",
-  "keywords": [],
+  "description": "A lightweight UML diagram editor for web applications",
   "homepage": "https://github.com/ls1intum/apollon#readme",
   "bugs": "https://github.com/ls1intum/apollon/issues",
   "license": "MIT",
   "author": {
     "name": "Stephan Krusche",
     "email": "krusche@tum.de",
-    "url": "https://ase.cit.tum.de/krusche"
+    "url": "https://aet.cit.tum.de/krusche"
   },
   "main": "lib/es5/index.js",
   "module": "lib/es6/index.js",
@@ -20,6 +19,7 @@
     "node": ">=24.7.0",
     "npm": ">=11.5.1"
   },
+  "type": "module",
   "scripts": {
     "postinstall": "husky",
     "prepublishOnly": "pinst --disable",
@@ -113,7 +113,7 @@
     "redux-mock-store": "1.5.5",
     "serve": "14.2.5",
     "sleep-promise": "9.1.0",
-    "style-loader": "3.3.4",
+    "style-loader": "4.0.0",
     "stylelint": "16.25.0",
     "stylelint-config-recommended": "17.0.0",
     "stylelint-config-styled-components": "0.1.1",
