@@ -1,4 +1,4 @@
-import { applyReducer } from 'fast-json-patch';
+import jsonPatch from 'fast-json-patch';
 import { buffer, debounceTime, filter, map, merge, Observable, Subject, Subscription, throttleTime } from 'rxjs';
 
 import { compare } from './compare';
@@ -128,7 +128,7 @@ export class Patcher<T> {
     if (verified && verified.length > 0) {
       this._snapshot = verified.reduce((state, p, index) => {
         try {
-          return applyReducer(state, p, index);
+          return jsonPatch.applyReducer(state, p, index);
         } catch {
           return state;
         }

@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { StylePane } from '../../../components/style-pane/style-pane';
 import { SfcTransition } from './sfc-transition';
-import styled from 'styled-components';
+import { styled } from '../../../components/theme/styles';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { UMLElementRepository } from '../../../services/uml-element/uml-element-repository';
 import { ColorButton } from '../../../components/controls/color-button/color-button';

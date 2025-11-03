@@ -4,7 +4,29 @@ export { withTheme } from 'styled-components';
 
 export type Styles = typeof apollonTheme;
 
-export const styled = baseStyled as ThemedStyledInterface<Styles>;
+const resolvedStyled = ((baseStyled as unknown as { default?: unknown }).default ?? baseStyled) as ThemedStyledInterface<Styles>;
+
+const styledProxy = new Proxy(resolvedStyled, {
+  apply(target, thisArg, argArray) {
+    return Reflect.apply(target as unknown as (...args: unknown[]) => unknown, thisArg, argArray);
+  },
+  get(target, prop, receiver) {
+    const existing = Reflect.get(target, prop, receiver);
+    if (existing !== undefined) {
+      return existing;
+    }
+
+    if (typeof prop === 'string') {
+      const helper = (target as unknown as (tag: string) => unknown)(prop);
+      Reflect.set(target, prop, helper, receiver);
+      return helper;
+    }
+
+    return existing;
+  },
+});
+
+export const styled = styledProxy as ThemedStyledInterface<Styles>;
 export const css = baseCss as ThemedCssFunction<Styles>;
 
 export type withThemeProps = { theme: Styles };

@@ -1,7 +1,7 @@
 import React, { Component, ComponentClass } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import styled from 'styled-components';
+import { styled } from '../../../components/theme/styles';
 import { Button } from '../../../components/controls/button/button';
 import { TrashIcon } from '../../../components/controls/icon/trash';
 import { Textfield } from '../../../components/controls/textfield/textfield';

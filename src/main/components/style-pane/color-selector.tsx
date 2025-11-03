@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from './style-pane-styles';
-import styled from 'styled-components';
+import { styled } from '../theme/styles';
 
 type Props = { color?: string; onColorChange: (hex: string | undefined) => void; open: boolean; key: string };
 

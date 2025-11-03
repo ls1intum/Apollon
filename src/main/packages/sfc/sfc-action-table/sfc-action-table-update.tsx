@@ -1,6 +1,6 @@
 import React, { ComponentClass, FunctionComponent, useRef, useState } from 'react';
 import { connect } from 'react-redux';
-import styled from 'styled-components';
+import { styled } from '../../../components/theme/styles';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { ModelState } from '../../../components/store/model-state';
 import { UMLElement } from '../../../services/uml-element/uml-element';

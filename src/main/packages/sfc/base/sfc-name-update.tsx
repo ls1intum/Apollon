@@ -1,7 +1,7 @@
 import React, { ComponentClass, FunctionComponent, useState } from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import styled from 'styled-components';
+import { styled } from '../../../components/theme/styles';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { Textfield } from '../../../components/controls/textfield/textfield';
 import { I18nContext } from '../../../components/i18n/i18n-context';

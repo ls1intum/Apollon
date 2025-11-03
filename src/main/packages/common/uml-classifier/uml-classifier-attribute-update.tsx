@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import { styled } from '../../../components/theme/styles';
 import { Button } from '../../../components/controls/button/button';
 import { ColorButton } from '../../../components/controls/color-button/color-button';
 import { TrashIcon } from '../../../components/controls/icon/trash';

@@ -1,4 +1,4 @@
-import { compare as comparePatches } from 'fast-json-patch';
+import jsonPatch from 'fast-json-patch';
 import { Patch } from './patcher-types';
 
 /**
@@ -6,21 +6,23 @@ import { Patch } from './patcher-types';
  * in the form of a [JSON patch](http://jsonpatch.com/)
  */
 export function compare<T>(a: T, b: T): Patch {
-  const patch = comparePatches(a as any, b as any).filter((op) => !op.path.startsWith('/size'));
+  const patch = jsonPatch.compare(a as any, b as any).filter((op) => !op.path.startsWith('/size'));
 
   const relationshipIdsWithAffectedPaths: string[] = [];
 
   patch.forEach((op) => {
-    const match = /\/relationships\/(?<id>[\w-]+)\/path/g.exec(op.path);
-    if (match?.groups?.id && !relationshipIdsWithAffectedPaths.includes(match.groups.id)) {
-      relationshipIdsWithAffectedPaths.push(match.groups.id);
+    const match = /\/relationships\/([\w-]+)\/path/g.exec(op.path);
+    const relationshipId = match?.[1];
+    if (relationshipId && !relationshipIdsWithAffectedPaths.includes(relationshipId)) {
+      relationshipIdsWithAffectedPaths.push(relationshipId);
     }
   });
 
   const cleanedPatch = patch.filter((op) => {
-    const match = /\/relationships\/(?<id>[\w-]+)\//g.exec(op.path);
+    const match = /\/relationships\/([\w-]+)\//g.exec(op.path);
+    const relationshipId = match?.[1];
 
-    return !match?.groups?.id || !relationshipIdsWithAffectedPaths.includes(match.groups.id);
+    return !relationshipId || !relationshipIdsWithAffectedPaths.includes(relationshipId);
   });
 
   relationshipIdsWithAffectedPaths.forEach((id) => {

@@ -13,6 +13,15 @@
   "main": "lib/es5/index.js",
   "module": "lib/es6/index.js",
   "typings": "lib/es6/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/es6/index.d.ts",
+      "import": "./lib/es6/index.js",
+      "require": "./lib/es5/index.js",
+      "default": "./lib/es6/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "repository": "github:ls1intum/apollon",
   "sideEffects": false,
   "engines": {
@@ -27,7 +36,7 @@
     "lint": "npm run lint:ts && npm run lint:css",
     "lint:ts": "eslint \"src/main/**/*.{ts,tsx,js,jsx}\"",
     "lint:css": "stylelint \"src/**/*.{css,scss}\" --allow-empty-input",
-    "prepare": "rm -rf lib && tsc -p . && tsc -p tsconfig.json",
+    "prepare": "rm -rf lib && tsc -p tsconfig.es5.json && tsc -p tsconfig.json",
     "prettier:check": "prettier --check 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
     "prettier:write": "prettier --write 'src/{main,tests}/**/*.{json,ts,tsx,js,jsx,css,scss,html}'",
     "test": "jest -w=4",
