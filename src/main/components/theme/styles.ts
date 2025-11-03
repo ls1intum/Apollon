@@ -1,38 +1,11 @@
-import baseStyled, { css as baseCss, ThemedCssFunction, ThemedStyledInterface } from 'styled-components';
+import baseStyled, {
+  css as baseCss,
+  ThemedCssFunction,
+  ThemedStyledFunction,
+  ThemedStyledInterface,
+} from 'styled-components';
 
 export { withTheme } from 'styled-components';
-
-export type Styles = typeof apollonTheme;
-
-const resolvedStyled = ((baseStyled as unknown as { default?: unknown }).default ?? baseStyled) as ThemedStyledInterface<Styles>;
-
-const styledProxy = new Proxy(resolvedStyled, {
-  apply(target, thisArg, argArray) {
-    return Reflect.apply(target as unknown as (...args: unknown[]) => unknown, thisArg, argArray);
-  },
-  get(target, prop, receiver) {
-    const existing = Reflect.get(target, prop, receiver);
-    if (existing !== undefined) {
-      return existing;
-    }
-
-    if (typeof prop === 'string') {
-      const helper = (target as unknown as (tag: string) => unknown)(prop);
-      Reflect.set(target, prop, helper, receiver);
-      return helper;
-    }
-
-    return existing;
-  },
-});
-
-export const styled = styledProxy as ThemedStyledInterface<Styles>;
-export const css = baseCss as ThemedCssFunction<Styles>;
-
-export type withThemeProps = { theme: Styles };
-
-export type Color = 'primary' | 'secondary';
-export type Size = 'sm' | 'md' | 'lg';
 
 const apollonTheme = {
   color: {
@@ -56,6 +29,39 @@ const apollonTheme = {
     hovered: 'rgba(0, 220, 0, 0.15)',
   },
 };
+
+export type Styles = typeof apollonTheme;
+
+declare module 'styled-components' {
+  // Ensure styled-components infers the Apollon theme without casting
+  export interface DefaultTheme extends Styles {}
+}
+
+type StyledSvgHelpers = {
+  polyline: ThemedStyledFunction<'polyline', Styles>;
+  path: ThemedStyledFunction<'path', Styles>;
+  rect: ThemedStyledFunction<'rect', Styles>;
+  circle: ThemedStyledFunction<'circle', Styles>;
+  ellipse: ThemedStyledFunction<'ellipse', Styles>;
+  line: ThemedStyledFunction<'line', Styles>;
+};
+
+const svgHelpers: StyledSvgHelpers = {
+  polyline: baseStyled('polyline'),
+  path: baseStyled('path'),
+  rect: baseStyled('rect'),
+  circle: baseStyled('circle'),
+  ellipse: baseStyled('ellipse'),
+  line: baseStyled('line'),
+};
+
+export const styled: ThemedStyledInterface<Styles> & StyledSvgHelpers = Object.assign(baseStyled, svgHelpers);
+export const css: ThemedCssFunction<Styles> = baseCss;
+
+export type withThemeProps = { theme: Styles };
+
+export type Color = 'primary' | 'secondary';
+export type Size = 'sm' | 'md' | 'lg';
 
 export const defaults = () => {
   return apollonTheme;
