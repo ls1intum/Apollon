@@ -72,7 +72,7 @@
     "redux-saga": "1.4.2",
     "redux-thunk": "2.4.2",
     "rxjs": "7.8.2",
-    "styled-components": "5.3.11",
+    "styled-components": "6.1.19",
     "tslib": "2.8.1"
   },
   "overrides": {
