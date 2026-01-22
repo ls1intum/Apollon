@@ -7,7 +7,7 @@ sphinx-autobuild==2025.8.25
 sphinx-rtd-theme==3.0.2
 Sphinx==8.2.3
 sphinxcontrib-bibtex==2.6.5
-starlette==0.50.0
+starlette==0.52.1
 urllib3==2.6.3
 uvicorn==0.40.0
 zipp==3.23.0
