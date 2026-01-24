@@ -121,7 +121,7 @@
     "sleep-promise": "9.1.0",
     "style-loader": "4.0.0",
     "stylelint": "16.26.1",
-    "stylelint-config-recommended": "17.0.0",
+    "stylelint-config-recommended": "18.0.0",
     "stylelint-config-styled-components": "0.1.1",
     "stylelint-processor-styled-components": "1.10.0",
     "ts-jest": "29.4.6",
