@@ -3,7 +3,7 @@ import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { CustomText } from "../CustomText"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { PetriNetPlaceProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils"
 
@@ -14,7 +14,7 @@ interface Props extends SVGComponentProps {
 export const PetriNetPlaceSVG: React.FC<Props> = ({
   id,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
   data,
   width,
@@ -23,8 +23,8 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
   const { name, tokens, capacity } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const centerX = width / 2
   const centerY = height / 2
@@ -86,7 +86,7 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
         r={width / 2}
         fill={fillColor}
         stroke={strokeColor}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
       />
 
       {typeof capacity === "number" && (

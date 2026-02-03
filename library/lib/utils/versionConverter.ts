@@ -170,7 +170,7 @@ export function convertV3NodeTypeToV4(v3Type: string): string {
     ActivityForkNode: "activityForkNode",
     ActivityForkNodeHorizontal: "activityForkNodeHorizontal",
     ActivityMergeNode: "activityMergeNode",
-    ActivityDecisionNode: "activityDecisionNode",
+    ActivityDecisionNode: "activityMergeNode",
     Activity: "activity",
 
     // Use Case Diagram

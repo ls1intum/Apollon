@@ -1,5 +1,5 @@
 import { CustomText } from "@/components"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { SVGComponentProps } from "@/types/SVG"
 import { useShallow } from "zustand/shallow"
@@ -16,15 +16,15 @@ export const BPMNDataStoreNodeSVG: React.FC<BPMNDataStoreNodeSVGProps> = ({
   height,
   data,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   id,
   showAssessmentResults = false,
 }) => {
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
   return (
@@ -39,26 +39,26 @@ export const BPMNDataStoreNodeSVG: React.FC<BPMNDataStoreNodeSVGProps> = ({
         d={`M 0 10 L 0 ${height - 10} A ${width / 2} 10 0 0 0 ${width} ${
           height - 10
         } L ${width} 10 A ${width / 2} 10 180 0 0 0 10`}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
         stroke={strokeColor}
         fill={fillColor}
       />
       <path
         d={`M 0 30 A ${width / 2} 10 0 0 0 ${width} 30`}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
         stroke={strokeColor}
         fill="none"
       />
       <path
         d={`M 0 20 A ${width / 2} 10 0 0 0 ${width} 20`}
         stroke={strokeColor}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
         fill="none"
       />
       <path
         d={`M 0 10 A ${width / 2} 10 0 0 0 ${width} 10`}
         stroke={strokeColor}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
         fill="none"
       />
       <CustomText

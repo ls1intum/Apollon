@@ -1,5 +1,5 @@
 import { CustomText } from "@/components"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { SVGComponentProps } from "@/types/SVG"
 import { useShallow } from "zustand/shallow"
@@ -18,7 +18,7 @@ export const BPMNEventNodeSVG: React.FC<BPMNEventNodeSVGProps> = ({
   width,
   height,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   variant,
   data,
   id,
@@ -27,8 +27,8 @@ export const BPMNEventNodeSVG: React.FC<BPMNEventNodeSVGProps> = ({
   const { name, eventType } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const r = Math.min(width, height) / 2
 
   const innerCircle = variant === "intermediate"
@@ -331,7 +331,7 @@ export const BPMNEventNodeSVG: React.FC<BPMNEventNodeSVGProps> = ({
         cx={width / 2}
         cy={height / 2}
         r={r}
-        strokeWidth={thickStroke ? LINE_WIDTH * 2 : LINE_WIDTH}
+        strokeWidth={thickStroke ? LAYOUT.LINE_WIDTH * 2 : LAYOUT.LINE_WIDTH}
         stroke={strokeColor}
         fill={fillColor}
       />
@@ -341,7 +341,7 @@ export const BPMNEventNodeSVG: React.FC<BPMNEventNodeSVGProps> = ({
           cy={height / 2}
           r={r - 3.5}
           stroke={strokeColor}
-          strokeWidth={LINE_WIDTH}
+          strokeWidth={LAYOUT.LINE_WIDTH}
           fill={fillColor}
         />
       )}

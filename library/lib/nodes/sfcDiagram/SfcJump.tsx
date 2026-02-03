@@ -7,7 +7,7 @@ import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { DefaultNodeProps } from "@/types"
 import { SfcJumpNodeSVG } from "@/components"
 import { measureTextWidth, calculateMinWidth } from "@/utils"
-import { DEFAULT_PADDING, DEFAULT_FONT } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 export function SfcJump({
@@ -31,8 +31,8 @@ export function SfcJump({
 
   // Calculate minimum width based on text
   const minWidth = useMemo(() => {
-    const textWidth = measureTextWidth(name || "", DEFAULT_FONT) + 8
-    return calculateMinWidth(textWidth, DEFAULT_PADDING)
+    const textWidth = measureTextWidth(name || "", LAYOUT.DEFAULT_FONT) + 8
+    return calculateMinWidth(textWidth, LAYOUT.DEFAULT_PADDING)
   }, [name])
 
   // Auto-expand/shrink width when text changes

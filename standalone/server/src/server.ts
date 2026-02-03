@@ -3,6 +3,7 @@ import "./loadEnvironment"
 import express from "express"
 import { configureMiddlewares } from "./middlewares"
 import diagramRouter from "./diagramRouter"
+import conversionRouter from "./conversionRouter"
 import { startSocketServer } from "./relaySocketServer"
 import { connectToMongoDB } from "./database/connect"
 import { startDiagramCleanupJob } from "./database/cleanupJob"
@@ -19,6 +20,7 @@ configureMiddlewares(app)
 
 // Mount routes
 app.use("/api", diagramRouter)
+app.use("/api/converter", conversionRouter)
 
 // Start servers immediately for a fast dev feedback loop
 app.listen(PORT, () => {

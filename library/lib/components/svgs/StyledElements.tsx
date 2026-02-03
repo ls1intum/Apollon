@@ -1,4 +1,4 @@
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import React from "react"
 
 export const StyledRect: React.FC<React.SVGProps<SVGRectElement>> = ({
@@ -7,6 +7,11 @@ export const StyledRect: React.FC<React.SVGProps<SVGRectElement>> = ({
   ...props
 }) => {
   return (
-    <rect stroke={stroke} fill={fill} strokeWidth={LINE_WIDTH} {...props} />
+    <rect
+      stroke={stroke}
+      fill={fill}
+      strokeWidth={LAYOUT.LINE_WIDTH}
+      {...props}
+    />
   )
 }

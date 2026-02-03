@@ -1,4 +1,4 @@
-import { ZINDEX_LABEL } from "@/constants/zindexConstants"
+import { ZINDEX } from "@/constants"
 import { IPoint } from "../Connection"
 import { EdgeLabelRenderer } from "@xyflow/react"
 import { MessageData } from "../EdgeProps"
@@ -90,7 +90,7 @@ export const EdgeMultipleLabels = ({
             style={{
               position: "absolute",
               transform: `translate(${pathMiddlePosition.x + labelBoxPosition.x + offset.x}px, ${pathMiddlePosition.y + labelBoxPosition.y + offset.y}px) translate(-50%, -50%)`,
-              zIndex: ZINDEX_LABEL,
+              zIndex: ZINDEX.LABEL,
               pointerEvents: "none",
             }}
             className="nodrag nopan"

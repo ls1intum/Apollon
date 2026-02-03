@@ -1,14 +1,14 @@
 import React from "react"
 import {
   ColorDescriptionConfig,
+  DROPS,
   dropElementConfigs,
-  transformScale,
-} from "@/constants/dropElementConfig"
+  ZINDEX,
+} from "@/constants"
 import { DividerLine } from "./ui/DividerLine"
 import { useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
-import { ZINDEX_DRAGGABLE_GHOST } from "@/constants/zindexConstants"
 
 /* ========================================================================
    Sidebar Component
@@ -44,9 +44,9 @@ export const Sidebar = () => {
             <div
               className="prevent-select"
               style={{
-                width: config.width * transformScale,
-                height: config.height * transformScale,
-                zIndex: ZINDEX_DRAGGABLE_GHOST,
+                width: config.width * DROPS.SIDEBAR_PREVIEW_SCALE,
+                height: config.height * DROPS.SIDEBAR_PREVIEW_SCALE,
+                zIndex: ZINDEX.DRAGGABLE_GHOST,
                 marginTop: config.marginTop,
               }}
             >
@@ -55,7 +55,7 @@ export const Sidebar = () => {
                 height: config.height,
                 ...config.defaultData,
                 data: config.defaultData,
-                transformScale,
+                SIDEBAR_PREVIEW_SCALE: DROPS.SIDEBAR_PREVIEW_SCALE,
                 id: `sidebarElement_${index}`,
               })}
             </div>
@@ -68,9 +68,9 @@ export const Sidebar = () => {
         <div
           className="prevent-select"
           style={{
-            width: ColorDescriptionConfig.width * transformScale,
-            height: ColorDescriptionConfig.height * transformScale,
-            zIndex: ZINDEX_DRAGGABLE_GHOST,
+            width: ColorDescriptionConfig.width * DROPS.SIDEBAR_PREVIEW_SCALE,
+            height: ColorDescriptionConfig.height * DROPS.SIDEBAR_PREVIEW_SCALE,
+            zIndex: ZINDEX.DRAGGABLE_GHOST,
             marginTop: ColorDescriptionConfig.marginTop,
           }}
         >
@@ -79,7 +79,7 @@ export const Sidebar = () => {
             height: ColorDescriptionConfig.height,
             ...ColorDescriptionConfig.defaultData,
             data: ColorDescriptionConfig.defaultData,
-            transformScale,
+            SIDEBAR_PREVIEW_SCALE: DROPS.SIDEBAR_PREVIEW_SCALE,
             id: "sidebarElement_ColorDescription",
           })}
         </div>

@@ -7,7 +7,7 @@ export type ColorDescriptionSVGProps = {
   width: number
   height: number
   data: DefaultNodeProps
-  transformScale?: number
+  SIDEBAR_PREVIEW_SCALE?: number
   svgAttributes?: SVGAttributes<SVGElement>
 }
 
@@ -16,12 +16,12 @@ export function ColorDescriptionSVG({
   height,
   data,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
 }: ColorDescriptionSVGProps) {
   const strokeWidth = 0.5
 
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const { name } = data
 
   const { strokeColor, fillColor, textColor } = getCustomColorsFromData(data)

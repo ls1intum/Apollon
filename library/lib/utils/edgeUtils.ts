@@ -1,13 +1,4 @@
-import {
-  MARKER_PADDING,
-  DOTTED_ARROW_MARKER_PADDING,
-  ARROW_MARKER_PADDING,
-  RHOMBUS_MARKER_PADDING,
-  TRIANGLE_MARKER_PADDING,
-  USECASE_PADDING,
-  BPMN_SMALL_ARROW_PADDING,
-  BPMN_MESSAGE_ARROW_PADDING,
-} from "@/constants"
+import { EDGES } from "@/constants"
 import { IPoint } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
 import { Position, Rect, XYPosition, ConnectionLineType } from "@xyflow/react"
@@ -187,7 +178,7 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "SyntaxTreeLink":
     case "CommunicationLink":
       return {
-        markerPadding: MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         strokeDashArray: "0",
         offset: 0,
       }
@@ -196,35 +187,35 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "FlowChartFlowline":
     case "ReachabilityGraphArc":
       return {
-        markerPadding: ARROW_MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-arrow)",
         strokeDashArray: "0",
         offset: 0,
       }
     case "ClassAggregation":
       return {
-        markerPadding: RHOMBUS_MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#white-rhombus)",
         strokeDashArray: "0",
-        offset: 14.5,
+        offset: 0,
       }
     case "ClassComposition":
       return {
-        markerPadding: RHOMBUS_MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-rhombus)",
         strokeDashArray: "0",
-        offset: 14.5,
+        offset: 0,
       }
     case "ClassInheritance":
       return {
-        markerPadding: TRIANGLE_MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#white-triangle)",
         strokeDashArray: "0",
         offset: 0,
       }
     case "PetriNetArc":
       return {
-        markerPadding: -3,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-triangle)",
         strokeDashArray: "0",
         offset: 0,
@@ -233,28 +224,28 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ClassDependency":
     case "DeploymentDependency":
       return {
-        markerPadding: DOTTED_ARROW_MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-arrow)",
         strokeDashArray: "8",
         offset: 0,
       }
     case "ClassRealization":
       return {
-        markerPadding: TRIANGLE_MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#white-triangle)",
         strokeDashArray: "8",
         offset: 0,
       }
     case "BPMNSequenceFlow":
       return {
-        markerPadding: BPMN_SMALL_ARROW_PADDING,
-        markerEnd: "url(#bpmn-white-triangle)",
+        markerPadding: EDGES.MARKER_PADDING,
+        markerEnd: "url(#bpmn-black-triangle)",
         strokeDashArray: "0",
         offset: 8,
       }
     case "BPMNMessageFlow":
       return {
-        markerPadding: BPMN_MESSAGE_ARROW_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#bpmn-white-triangle)",
         markerStart: "url(#bpmn-white-circle)",
         strokeDashArray: "8",
@@ -262,40 +253,40 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
       }
     case "BPMNAssociationFlow":
       return {
-        markerPadding: MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         strokeDashArray: "8",
         offset: 0,
       }
     case "BPMNDataAssociationFlow":
       return {
-        markerPadding: BPMN_SMALL_ARROW_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#bpmn-arrow)",
         strokeDashArray: "8",
         offset: 8,
       }
     case "UseCaseAssociation":
       return {
-        markerPadding: 0,
+        markerPadding: EDGES.MARKER_PADDING,
         strokeDashArray: "0",
         offset: 0,
       }
     case "UseCaseInclude":
       return {
-        markerPadding: USECASE_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-arrow)",
         strokeDashArray: "4",
         offset: 0,
       }
     case "UseCaseExtend":
       return {
-        markerPadding: USECASE_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-arrow)",
         strokeDashArray: "4",
         offset: 0,
       }
     case "UseCaseGeneralization":
       return {
-        markerPadding: USECASE_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#white-triangle)",
         strokeDashArray: "0",
         offset: 0,
@@ -304,14 +295,18 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentProvidedInterface":
     case "DeploymentProvidedInterface":
       return {
-        markerPadding: -2,
+        markerPadding: EDGES.MARKER_PADDING,
         strokeDashArray: "0", // Plain line like association
         offset: 0,
       }
     case "ComponentRequiredInterface":
     case "DeploymentRequiredInterface":
       return {
-        markerPadding: 2,
+        // For CONCENTRIC circles: markerPadding = MARKER_PADDING + gap
+        // MARKER_PADDING (-3) compensates for React Flow handle offset
+        // gap (2) is the visual separation between socket and ball
+        // This positions socket center exactly at ball center
+        markerPadding: EDGES.MARKER_PADDING + 2,
         markerEnd: "url(#required-interface)",
         strokeDashArray: "0",
         offset: 0,
@@ -319,7 +314,8 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredQuarterInterface":
     case "DeploymentRequiredQuarterInterface":
       return {
-        markerPadding: 2,
+        // Same as full required interface - concentric circles
+        markerPadding: EDGES.MARKER_PADDING + 2,
         markerEnd: "url(#required-interface-quarter)",
         strokeDashArray: "0",
         offset: 0,
@@ -327,14 +323,15 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredThreeQuarterInterface":
     case "DeploymentRequiredThreeQuarterInterface":
       return {
-        markerPadding: 2,
+        // Same as full required interface - concentric circles
+        markerPadding: EDGES.MARKER_PADDING + 2,
         markerEnd: "url(#required-interface-threequarter)",
         strokeDashArray: "0",
         offset: 0,
       }
     default:
       return {
-        markerPadding: MARKER_PADDING,
+        markerPadding: EDGES.MARKER_PADDING,
         strokeDashArray: "0",
         offset: 0,
       }
@@ -458,6 +455,12 @@ export function calculateOverlayPath(
   targetY: number,
   type: string
 ): string {
+  // Round coordinates to whole pixels for pixel-perfect rendering
+  const sX = Math.round(sourceX)
+  const sY = Math.round(sourceY)
+  const tX = Math.round(targetX)
+  const tY = Math.round(targetY)
+
   if (
     type == "UseCaseInclude" ||
     type == "UseCaseExtend" ||
@@ -469,21 +472,21 @@ export function calculateOverlayPath(
     const markerOffset = offset ?? 0
 
     if (markerOffset !== 0) {
-      const dx = targetX - sourceX
-      const dy = targetY - sourceY
+      const dx = tX - sX
+      const dy = tY - sY
       const length = Math.sqrt(dx * dx + dy * dy)
 
       if (length > 0) {
         const normalizedDx = dx / length
         const normalizedDy = dy / length
-        const adjustedTargetX = targetX + normalizedDx * markerOffset
-        const adjustedTargetY = targetY + normalizedDy * markerOffset
+        const adjustedTargetX = Math.round(tX + normalizedDx * markerOffset)
+        const adjustedTargetY = Math.round(tY + normalizedDy * markerOffset)
 
-        return `M ${sourceX},${sourceY} L ${adjustedTargetX},${adjustedTargetY}`
+        return `M ${sX},${sY} L ${adjustedTargetX},${adjustedTargetY}`
       }
     }
   }
-  return `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+  return `M ${sX},${sY} L ${tX},${tY}`
 }
 
 export function calculateStraightPath(
@@ -493,40 +496,43 @@ export function calculateStraightPath(
   targetY: number,
   type: string
 ): string {
-  const dx = targetX - sourceX
-  const dy = targetY - sourceY
+  // Round coordinates to whole pixels for pixel-perfect rendering
+  const sX = Math.round(sourceX)
+  const sY = Math.round(sourceY)
+  const tX = Math.round(targetX)
+  const tY = Math.round(targetY)
+
+  const dx = tX - sX
+  const dy = tY - sY
   const length = Math.sqrt(dx * dx + dy * dy)
 
   if (length === 0) {
-    return `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+    return `M ${sX},${sY} L ${tX},${tY}`
   }
 
   if (type === "UseCaseInclude" || type == "UseCaseExtend") {
-    const startX = sourceX
-    const startY = sourceY
-    const endX = targetX
-    const endY = targetY
-    const midX = (startX + endX) / 2
-    const midY = (startY + endY) / 2
+    const midX = Math.round((sX + tX) / 2)
+    const midY = Math.round((sY + tY) / 2)
 
     const normalizedDx = dx / length
     const normalizedDy = dy / length
     const gapSize = 40
 
-    const gapStartX = midX - normalizedDx * gapSize
-    const gapStartY = midY - normalizedDy * gapSize
-    const gapEndX = midX + normalizedDx * gapSize
-    const gapEndY = midY + normalizedDy * gapSize
+    const gapStartX = Math.round(midX - normalizedDx * gapSize)
+    const gapStartY = Math.round(midY - normalizedDy * gapSize)
+    const gapEndX = Math.round(midX + normalizedDx * gapSize)
+    const gapEndY = Math.round(midY + normalizedDy * gapSize)
 
-    return `M ${startX},${startY} L ${gapStartX},${gapStartY} M ${gapEndX},${gapEndY} L ${endX},${endY}`
+    return `M ${sX},${sY} L ${gapStartX},${gapStartY} M ${gapEndX},${gapEndY} L ${tX},${tY}`
   }
 
   // For all other edge types, just create a straight line
-  return `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+  return `M ${sX},${sY} L ${tX},${tY}`
 }
 
-export function simplifySvgPath(path: string, decimals: number = 2): string {
-  const round = (num: number) => Number(num.toFixed(decimals))
+export function simplifySvgPath(path: string): string {
+  // Round to whole pixels for pixel-perfect rendering
+  const round = (num: number) => Math.round(num)
 
   const withSpaces = path.replace(/([MLQ])(?=[-0-9])/gi, "$1 ")
   const cleaned = withSpaces.replace(/,/g, " ").trim()
@@ -702,26 +708,29 @@ export function getMarkerSegmentPath(
   if (points.length === 0) return ""
 
   const lastPoint = points[points.length - 1]
-  let extendedX = lastPoint.x
-  let extendedY = lastPoint.y
+  // Round coordinates to whole pixels for pixel-perfect rendering
+  const lastX = Math.round(lastPoint.x)
+  const lastY = Math.round(lastPoint.y)
+  let extendedX = lastX
+  let extendedY = lastY
   switch (targetPosition) {
     case "top":
-      extendedY = lastPoint.y + offset
+      extendedY = lastY + offset
       break
     case "bottom":
-      extendedY = lastPoint.y - offset
+      extendedY = lastY - offset
       break
     case "left":
-      extendedX = lastPoint.x + offset
+      extendedX = lastX + offset
       break
     case "right":
-      extendedX = lastPoint.x - offset
+      extendedX = lastX - offset
       break
     default:
       break
   }
 
-  return `M ${lastPoint.x} ${lastPoint.y} L ${extendedX} ${extendedY}`
+  return `M ${lastX} ${lastY} L ${extendedX} ${extendedY}`
 }
 
 export const getDefaultEdgeType = (

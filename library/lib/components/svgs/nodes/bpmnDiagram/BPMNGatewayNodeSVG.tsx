@@ -1,4 +1,4 @@
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { SVGComponentProps } from "@/types/SVG"
 import { useShallow } from "zustand/shallow"
@@ -15,7 +15,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
   width,
   height,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   id,
   data,
   showAssessmentResults = false,
@@ -23,8 +23,8 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
   const { name, gatewayType = "exclusive" } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const cx = width / 2
   const cy = height / 2
@@ -50,7 +50,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
     >
       <polygon
         points={points}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
         stroke={strokeColor}
         fill={fillColor}
       />

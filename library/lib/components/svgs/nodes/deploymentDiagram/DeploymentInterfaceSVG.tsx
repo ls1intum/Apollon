@@ -1,5 +1,5 @@
 import { CustomText } from "@/components"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -16,15 +16,15 @@ export const DeploymentInterfaceSVG: React.FC<Props> = ({
   width,
   height,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
   data,
 }) => {
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
 
   return (
@@ -40,7 +40,7 @@ export const DeploymentInterfaceSVG: React.FC<Props> = ({
           cx={width / 2}
           cy={height / 2}
           r={width / 2}
-          strokeWidth={LINE_WIDTH}
+          strokeWidth={LAYOUT.LINE_WIDTH}
           stroke={strokeColor}
           fill={fillColor}
         />

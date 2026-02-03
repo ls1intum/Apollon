@@ -11,10 +11,11 @@ import { useEdgeConfig } from "@/hooks/useEdgeConfig"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useToolbar } from "@/hooks"
 import { useRef } from "react"
-import { EDGE_HIGHTLIGHT_STROKE_WIDTH } from "@/constants"
+import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
+import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 
 const arePositionsOpposite = (pos1: Position, pos2: Position): boolean => {
   return (
@@ -167,7 +168,6 @@ export const ComponentDiagramEdge = ({
             key={markerKey}
             id={id}
             path={currentPath}
-            markerEnd={isReconnectingRef.current ? undefined : markerEnd}
             pointerEvents="none"
             style={{
               stroke: strokeColor,
@@ -181,12 +181,21 @@ export const ComponentDiagramEdge = ({
             }}
           />
 
+          {!isReconnectingRef.current && (
+            <EdgeInlineMarkers
+              pathD={currentPath}
+              markerEnd={markerEnd}
+              markerStart={markerStart}
+              strokeColor={strokeColor}
+            />
+          )}
+
           <path
             ref={pathRef}
             className="edge-overlay"
             d={overlayPath}
             fill="none"
-            strokeWidth={EDGE_HIGHTLIGHT_STROKE_WIDTH}
+            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{
               opacity: isReconnectingRef.current ? 0 : 0.4,

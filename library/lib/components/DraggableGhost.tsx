@@ -1,12 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react"
-import {
-  DropElementConfig,
-  transformScale,
-} from "@/constants/dropElementConfig"
+import { CANVAS, DROPS, DropElementConfig, ZINDEX } from "@/constants"
 import { DropNodeData } from "@/types"
 import { createPortal } from "react-dom"
 import { useReactFlow, type Node } from "@xyflow/react"
-import { MOUSE_UP_OFFSET_IN_PIXELS, SNAP_TO_GRID_PX } from "@/constants"
 import {
   generateUUID,
   getPositionOnCanvas,
@@ -16,7 +12,6 @@ import {
 import { canDropIntoParent } from "@/utils/bpmnConstraints"
 import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { ZINDEX_DRAGGABLE_ELEMENT } from "@/constants/zindexConstants"
 import { log } from "../logger"
 
 /* ========================================================================
@@ -117,16 +112,16 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       const dropData: DropNodeData = {
         type: dropElementConfig.type,
         data: defaultData,
-        offsetX: clickOffset.x / transformScale,
-        offsetY: clickOffset.y / transformScale,
+        offsetX: clickOffset.x / DROPS.SIDEBAR_PREVIEW_SCALE,
+        offsetY: clickOffset.y / DROPS.SIDEBAR_PREVIEW_SCALE,
       }
 
       // Find potential parent node by checking intersections with a potential Parent node type
       const intersectingNodes = getIntersectingNodes({
         x: dropPosition.x,
         y: dropPosition.y,
-        width: MOUSE_UP_OFFSET_IN_PIXELS,
-        height: MOUSE_UP_OFFSET_IN_PIXELS,
+        width: CANVAS.MOUSE_UP_OFFSET_PX,
+        height: CANVAS.MOUSE_UP_OFFSET_PX,
       }).filter((node) => {
         return (
           isParentNodeType(node.type) &&
@@ -146,11 +141,13 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
 
       // Snap position to grid
       position.x -=
-        Math.floor(clickOffset.x / transformScale / SNAP_TO_GRID_PX) *
-        SNAP_TO_GRID_PX
+        Math.floor(
+          clickOffset.x / DROPS.SIDEBAR_PREVIEW_SCALE / CANVAS.SNAP_TO_GRID_PX
+        ) * CANVAS.SNAP_TO_GRID_PX
       position.y -=
-        Math.floor(clickOffset.y / transformScale / SNAP_TO_GRID_PX) *
-        SNAP_TO_GRID_PX
+        Math.floor(
+          clickOffset.y / DROPS.SIDEBAR_PREVIEW_SCALE / CANVAS.SNAP_TO_GRID_PX
+        ) * CANVAS.SNAP_TO_GRID_PX
 
       if (parentId) {
         const parentPositionOnCanvas = getPositionOnCanvas(parentNode, nodes)
@@ -254,7 +251,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
         left: `${ghostPosition.x}px`,
         top: `${ghostPosition.y}px`,
         pointerEvents: "none",
-        zIndex: ZINDEX_DRAGGABLE_ELEMENT,
+        zIndex: ZINDEX.DRAGGABLE_ELEMENT,
         opacity: 0.8,
       }}
     >

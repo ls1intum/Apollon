@@ -1,5 +1,5 @@
 import { CustomText, StyledRect } from "@/components"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -16,7 +16,7 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
   width,
   height,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
   data,
 }) => {
@@ -24,8 +24,8 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
 
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
 
   return (
@@ -41,14 +41,14 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
           {/* Top face */}
           <path
             d={`M 0 8 l 8 -8 H ${width} l -8 8 Z`}
-            strokeWidth={LINE_WIDTH}
+            strokeWidth={LAYOUT.LINE_WIDTH}
             stroke={strokeColor}
             fill={fillColor}
           />
           {/* Right face */}
           <path
             d={`M ${width} 0 V ${height - 8} l -8 8 V 8 Z`}
-            strokeWidth={LINE_WIDTH}
+            strokeWidth={LAYOUT.LINE_WIDTH}
             stroke={strokeColor}
             fill={fillColor}
           />

@@ -12,11 +12,11 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
   height,
   data,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
 }) => {
   const { name, showHint } = data
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const { strokeColor } = getCustomColorsFromData(data)
   const fillColor = data.fillColor || "var(--apollon2-primary-contrast)"

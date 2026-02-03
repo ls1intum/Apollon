@@ -1,4 +1,4 @@
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { SVGComponentProps } from "@/types/SVG"
 import { CustomText, StyledRect } from "@/components"
 import { SfcActionTableProps } from "@/types"
@@ -12,12 +12,12 @@ export const SfcActionTableNodeSVG: React.FC<Props> = ({
   width,
   height,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   data,
 }) => {
   const { actionRows } = data
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const rowHeight = 30
   const numberOfLines = Math.floor(height / rowHeight) - 1
   const horizontalLines = Array.from(
@@ -52,7 +52,7 @@ export const SfcActionTableNodeSVG: React.FC<Props> = ({
           x2={width}
           y2={y}
           stroke={strokeColor}
-          strokeWidth={LINE_WIDTH}
+          strokeWidth={LAYOUT.LINE_WIDTH}
         />
       ))}
 
@@ -110,7 +110,7 @@ export const SfcActionTableNodeSVG: React.FC<Props> = ({
         x2={30}
         y2={height}
         stroke={strokeColor}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
       />
     </svg>
   )

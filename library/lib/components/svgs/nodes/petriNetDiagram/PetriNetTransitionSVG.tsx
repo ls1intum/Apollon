@@ -14,7 +14,7 @@ interface Props extends SVGComponentProps {
 export const PetriNetTransitionSVG: React.FC<Props> = ({
   id,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
   width,
   height,
@@ -23,8 +23,8 @@ export const PetriNetTransitionSVG: React.FC<Props> = ({
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
   return (

@@ -257,7 +257,7 @@ export class ApollonEditor {
       throw new Error("React Flow instance not initialized")
     }
 
-    const bounds = getDiagramBounds(reactFlowInstance)
+    const bounds = getDiagramBounds(reactFlowInstance, container)
 
     const margin = 20
     const clip = {

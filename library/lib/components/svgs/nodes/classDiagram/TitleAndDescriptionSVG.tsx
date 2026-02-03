@@ -5,7 +5,7 @@ interface TitleAndDescriptionSVGProps {
   height: number
   title: string
   description: string
-  transformScale?: number
+  SIDEBAR_PREVIEW_SCALE?: number
   svgAttributes?: SVGAttributes<SVGElement>
 }
 
@@ -14,7 +14,7 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
   height,
   title,
   description,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   svgAttributes,
 }) => {
   const padding = 10 // Padding inside the SVG
@@ -65,8 +65,8 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
     return wrappedLines
   }, [description, maxTextWidth, maxDescriptionHeight, lineHeight, wrapText])
 
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   return (
     <svg

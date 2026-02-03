@@ -1,5 +1,5 @@
 import { CustomText } from "@/components"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -16,14 +16,14 @@ export const FlowchartInputOutputNodeSVG: React.FC<Props> = ({
   height,
   data,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
 }) => {
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
 
@@ -39,7 +39,7 @@ export const FlowchartInputOutputNodeSVG: React.FC<Props> = ({
         {/* Parallelogram shape for input/output */}
         <polygon
           points={`20,0 ${width},0 ${width - 20},${height} 0,${height}`}
-          strokeWidth={LINE_WIDTH}
+          strokeWidth={LAYOUT.LINE_WIDTH}
           stroke={strokeColor}
           fill={fillColor}
         />

@@ -1,5 +1,5 @@
 import { CustomText, StyledRect } from "@/components"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { SVGComponentProps } from "@/types/SVG"
 import { useShallow } from "zustand/shallow"
@@ -16,7 +16,7 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
   height,
   data,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   id,
   showAssessmentResults = false,
   variant = "subprocess",
@@ -24,8 +24,8 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const isTransaction = variant === "transaction"
   const isCall = variant === "call"
   const isSubprocess = !isTransaction && !isCall
@@ -71,7 +71,7 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
           y={0}
           width={width}
           height={height}
-          strokeWidth={LINE_WIDTH * 3}
+          strokeWidth={LAYOUT.LINE_WIDTH * 3}
           rx={10}
           ry={10}
           fill={fillColor}

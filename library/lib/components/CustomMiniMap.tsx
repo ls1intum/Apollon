@@ -49,7 +49,7 @@ import {
   ReachabilityGraphMarkingSVG,
 } from "./svgs"
 import { DiagramNodeType } from "@/typings"
-import { ZINDEX_MINIMAP, ZINDEX_PANEL } from "@/constants/zindexConstants"
+import { ZINDEX } from "@/constants"
 import { MapIcon } from "./Icon/MapIcon"
 import { SouthEastArrowIcon } from "./Icon/SouthEastArrowIcon"
 import {
@@ -94,7 +94,7 @@ export const CustomMiniMap = () => {
           bottom: 0,
           right: 0,
           display: "flex",
-          zIndex: ZINDEX_PANEL,
+          zIndex: ZINDEX.PANEL,
           padding: 8,
           backgroundColor: "var(--apollon2-background)",
           borderRadius: "4px",
@@ -112,7 +112,7 @@ export const CustomMiniMap = () => {
         onClick={() => setMinimapCollapsed(true)}
         nodeComponent={MiniMapNode}
         offsetScale={20}
-        style={{ zIndex: ZINDEX_MINIMAP }}
+        style={{ zIndex: ZINDEX.MINIMAP }}
       />
     </Panel>
   )

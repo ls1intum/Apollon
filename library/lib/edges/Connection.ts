@@ -4,7 +4,7 @@
  * It calculates port positions based solely on a node's width and height.
  */
 
-import { ARROW_MARKER_PADDING, MARKER_PADDING } from "@/constants"
+import { EDGES, INTERFACE } from "@/constants"
 import { Position } from "@xyflow/react"
 
 export interface IPoint {
@@ -45,10 +45,13 @@ export function computeOverlap(
 
 export function pointsToSvgPath(points: IPoint[]): string {
   if (points.length === 0) return ""
-  const pathCommands = [`M ${points[0].x} ${points[0].y}`]
+  // Round coordinates to whole pixels for pixel-perfect rendering
+  const pathCommands = [
+    `M ${Math.round(points[0].x)} ${Math.round(points[0].y)}`,
+  ]
 
   for (let i = 1; i < points.length; i++) {
-    pathCommands.push(`L ${points[i].x} ${points[i].y}`)
+    pathCommands.push(`L ${Math.round(points[i].x)} ${Math.round(points[i].y)}`)
   }
   return pathCommands.join(" ")
 }
@@ -67,11 +70,15 @@ export function tryFindStraightPath(
   },
   targetPadding: number
 ): IPoint[] | null {
+  // Offset determines how far the straight path extends:
+  // - Standard markers (MARKER_PADDING = -3): no extra offset
+  // - Interface markers (padding = -INTERFACE.RADIUS = -10): offset by interface radius
+  // - Other cases: default offset
   const offset =
-    targetPadding === MARKER_PADDING
+    targetPadding === EDGES.MARKER_PADDING
       ? 0
-      : targetPadding === ARROW_MARKER_PADDING
-        ? 10
+      : targetPadding === -INTERFACE.RADIUS
+        ? INTERFACE.RADIUS
         : 15
   const OVERLAP_THRESHOLD = 40
   const sourceHandleEdge = source.direction

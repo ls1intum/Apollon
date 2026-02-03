@@ -11,10 +11,11 @@ import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
 import { useRef } from "react"
-import { EDGE_HIGHTLIGHT_STROKE_WIDTH } from "@/constants"
+import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils"
+import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 
 export const ReachabilityGraphEdge = ({
   id,
@@ -95,7 +96,6 @@ export const ReachabilityGraphEdge = ({
             key={markerKey}
             id={id}
             path={currentPath}
-            markerEnd={isReconnectingRef.current ? undefined : markerEnd}
             pointerEvents="none"
             style={{
               stroke: strokeColor,
@@ -109,12 +109,21 @@ export const ReachabilityGraphEdge = ({
             }}
           />
 
+          {!isReconnectingRef.current && (
+            <EdgeInlineMarkers
+              pathD={currentPath}
+              markerEnd={markerEnd}
+              markerStart={markerStart}
+              strokeColor={strokeColor}
+            />
+          )}
+
           <path
             ref={pathRef}
             className="edge-overlay"
             d={overlayPath}
             fill="none"
-            strokeWidth={EDGE_HIGHTLIGHT_STROKE_WIDTH}
+            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{
               opacity: isReconnectingRef.current ? 0 : 0.4,

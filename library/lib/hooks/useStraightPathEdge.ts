@@ -8,10 +8,7 @@ import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
 } from "@/utils/edgeUtils"
-import {
-  MARKER_PADDING,
-  SOURCE_CONNECTION_POINT_PADDING,
-} from "@/constants/edgeConstants"
+import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { useEdgeReconnection, BaseEdgeProps } from "../edges/GenericEdge"
@@ -70,20 +67,27 @@ export const useStraightPathEdge = ({
   const { markerEnd, markerStart, strokeDashArray, markerPadding } =
     getEdgeMarkerStyles(type)
 
-  const padding = markerPadding ?? MARKER_PADDING
+  const padding = markerPadding ?? EDGES.MARKER_PADDING
+
+  // Round coordinates to whole pixels for pixel-perfect rendering
+  // React Flow may return fractional values when node dimensions are odd
+  const roundedSourceX = Math.round(sourceX)
+  const roundedSourceY = Math.round(sourceY)
+  const roundedTargetX = Math.round(targetX)
+  const roundedTargetY = Math.round(targetY)
 
   const adjustedTargetCoordinates = adjustTargetCoordinates(
-    targetX,
-    targetY,
+    roundedTargetX,
+    roundedTargetY,
     targetPosition,
     padding
   )
 
   const adjustedSourceCoordinates = adjustSourceCoordinates(
-    sourceX,
-    sourceY,
+    roundedSourceX,
+    roundedSourceY,
     sourcePosition,
-    SOURCE_CONNECTION_POINT_PADDING
+    EDGES.SOURCE_CONNECTION_POINT_PADDING
   )
 
   const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>(() => ({
@@ -276,7 +280,7 @@ export const useStraightPathEdge = ({
           newSourceX,
           newSourceY,
           sourcePosition,
-          SOURCE_CONNECTION_POINT_PADDING
+          EDGES.SOURCE_CONNECTION_POINT_PADDING
         )
 
         const tempPath = calculateStraightPath(
