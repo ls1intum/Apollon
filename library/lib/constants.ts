@@ -546,6 +546,7 @@ export const dropElementConfigs: Readonly<
       height: 90,
       defaultData: { name: "Transition" },
       svg: PetriNetTransitionSVG,
+      marginTop: 25,
     },
   ],
   [UMLDiagramType.ReachabilityGraph]: [

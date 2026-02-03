@@ -15,7 +15,7 @@ export const SfcActionTableNodeSVG: React.FC<Props> = ({
   SIDEBAR_PREVIEW_SCALE,
   data,
 }) => {
-  const { actionRows } = data
+  const actionRows = data.actionRows ?? []
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const rowHeight = 30
