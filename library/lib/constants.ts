@@ -458,7 +458,7 @@ export const dropElementConfigs: Readonly<
     {
       type: "communicationObjectName",
       width: 160,
-      height: 70,
+      height: 40,
       defaultData: { name: "Object" },
       svg: CommunicationObjectNameSVG,
     },
