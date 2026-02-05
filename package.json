@@ -88,7 +88,7 @@
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@types/jest": "29.5.14",
-    "@types/react": "18.3.27",
+    "@types/react": "18.3.28",
     "@types/react-color": "3.0.13",
     "@types/react-dom": "18.3.7",
     "@types/react-redux": "7.1.34",
