@@ -79,7 +79,7 @@
     "@babel/runtime": "7.28.6",
     "jsdom": "26.1.0",
     "postcss": "8.5.6",
-    "semver": "7.7.3",
+    "semver": "7.7.4",
     "word-wrap": "1.2.5",
     "tough-cookie": "6.0.0"
   },
