@@ -10,6 +10,9 @@
   "categories": [
     "Other"
   ],
+  "vsce": {
+  "dependencies": false
+  },
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
