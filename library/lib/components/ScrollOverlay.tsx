@@ -23,10 +23,12 @@ export const ScrollOverlay: React.FC = () => {
   useEffect(() => {
     if (!scrollLock) return
 
-    const apollonContainer = document.querySelector(".apollon-container") as HTMLElement
+    const apollonContainer = document.querySelector(
+      ".apollon-container"
+    ) as HTMLElement
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey ) {
+      if (e.ctrlKey || e.metaKey) {
         setScrollEnabled(true)
         setShowOverlay(false)
         // Clear any pending hide timeout
