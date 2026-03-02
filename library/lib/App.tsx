@@ -105,6 +105,7 @@ function App({ onReactFlowInit }: AppProps) {
       <SvgMarkers />
       <ReactFlow
         id={`react-flow-library-${diagramId}`}
+        className="apollon-container"
         nodeTypes={diagramNodeTypes}
         edgeTypes={diagramEdgeTypes}
         nodes={nodes}
