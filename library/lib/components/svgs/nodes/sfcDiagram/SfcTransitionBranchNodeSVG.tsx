@@ -17,6 +17,7 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
   const { name, showHint } = data
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const padding = 5
 
   const { strokeColor } = getCustomColorsFromData(data)
   const fillColor = data.fillColor || "var(--apollon2-primary-contrast)"
@@ -28,7 +29,7 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
       overflow="visible"
       {...svgAttributes}
     >
-      <circle cx={10} cy={10} r={10} fill={fillColor} stroke={strokeColor} />
+      <circle cx={padding + 10} cy={padding + 10} r={10} fill={fillColor} stroke={strokeColor} />
       {showHint && (
         <CustomText x={0} y={30}>
           {name}

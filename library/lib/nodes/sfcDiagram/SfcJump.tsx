@@ -32,8 +32,10 @@ export function SfcJump({
   // Calculate minimum width based on text
   const minWidth = useMemo(() => {
     const textWidth = measureTextWidth(name || "", LAYOUT.DEFAULT_FONT) + 8
-    return calculateMinWidth(textWidth, LAYOUT.DEFAULT_PADDING)
+    return calculateMinWidth(textWidth, LAYOUT.DEFAULT_PADDING) + 12 // Extra space for the diamond and padding
   }, [name])
+
+  const fixedHeight = 32 // Fixed height for compact appearance
 
   // Auto-expand/shrink width when text changes
   useEffect(() => {
@@ -44,9 +46,11 @@ export function SfcJump({
             return {
               ...node,
               width: minWidth,
+              height: fixedHeight,
               measured: {
                 ...node.measured,
                 width: minWidth,
+                height: fixedHeight,
               },
             }
           }
@@ -57,15 +61,16 @@ export function SfcJump({
   }, [minWidth, width, id, setNodes])
 
   const finalWidth = Math.max(width ?? 0, minWidth)
+  const finalHeight = fixedHeight
 
   return (
-    <DefaultNodeWrapper width={finalWidth} height={height} elementId={id}>
+    <DefaultNodeWrapper width={finalWidth} height={finalHeight} elementId={id}>
       <NodeToolbar elementId={id} />
 
       <div ref={svgWrapperRef}>
         <SfcJumpNodeSVG
           width={finalWidth}
-          height={height}
+          height={finalHeight}
           data={data}
           id={id}
         />

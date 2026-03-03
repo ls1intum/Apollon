@@ -663,7 +663,7 @@ export const dropElementConfigs: Readonly<
   [UMLDiagramType.Sfc]: [
     {
       type: "sfcStart",
-      width: 100,
+      width: 140,
       height: 60,
       defaultData: { name: "Start" },
       svg: SfcStartNodeSVG,
@@ -677,23 +677,28 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "sfcJump",
-      width: 120,
-      height: 60,
+      width: 96,
+      height: 48,
       defaultData: { name: "Jump" },
       svg: SfcJumpNodeSVG,
     },
     {
       type: "sfcTransitionBranch",
       width: 30,
-      height: 120,
+      height: 30,
       defaultData: { name: "Branch" },
       svg: SfcTransitionBranchNodeSVG,
     },
     {
       type: "sfcActionTable",
       width: 160,
-      height: 90,
-      defaultData: { name: "Action Table" },
+      height: 30,
+      defaultData: { 
+        name: "Action Table",
+        actionRows: [
+          { id: "1", identifier: "A", name: "Actions", fillColor: "", strokeColor: "" }
+        ]
+      },
       svg: SfcActionTableNodeSVG,
     },
   ],
