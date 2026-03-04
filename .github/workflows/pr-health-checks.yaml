@@ -63,7 +63,7 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('standalone/webapp/package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -78,21 +78,11 @@ jobs:
         run: npx playwright test tests/e2e/
         working-directory: standalone/webapp/
 
-      # Visual regression tests are not run in CI yet.
-      # Baselines must be generated inside the mcr.microsoft.com/playwright
-      # Docker image to ensure consistent rendering across platforms.
-      # Once baselines are committed from that image, uncomment the step
-      # below to enable visual regression checks in CI.
-      #
-      # - name: Run visual regression tests
-      #   run: npx playwright test tests/visual-regression/
-      #   working-directory: standalone/webapp/
-
       - name: Upload Playwright report
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-e2e
           path: standalone/webapp/playwright-report/
           retention-days: 14
 
@@ -100,6 +90,55 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results
+          name: playwright-test-results-e2e
+          path: standalone/webapp/test-results/
+          retention-days: 14
+
+  # Visual regression tests run inside the same Docker image used to generate
+  # the baseline screenshots, guaranteeing pixel-perfect font rendering and
+  # system library parity.
+  #
+  # To regenerate baselines after UI changes, run from the repo root:
+  #   docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
+  #     mcr.microsoft.com/playwright:v1.58.2-noble \
+  #     bash -c "npm ci && npm run build:lib && cd standalone/webapp \
+  #       && npx playwright test tests/visual/ --update-snapshots"
+  visual-regression-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build:lib
+
+      - name: Run visual regression tests
+        run: npx playwright test tests/visual/
+        working-directory: standalone/webapp/
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-visual
+          path: standalone/webapp/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-visual
           path: standalone/webapp/test-results/
           retention-days: 14
