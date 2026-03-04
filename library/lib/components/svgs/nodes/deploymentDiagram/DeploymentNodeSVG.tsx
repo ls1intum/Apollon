@@ -72,7 +72,7 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
           dominantBaseline="middle"
           fill={textColor}
         >
-          {isComponentHeaderShown && stereotype.length > 0 ? (
+          {isComponentHeaderShown && stereotype && stereotype.length > 0 ? (
             <>
               <tspan x="50%" dy="-8" fontSize="85%">
                 {`«${stereotype}»`}

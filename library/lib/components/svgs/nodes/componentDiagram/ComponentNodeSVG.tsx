@@ -72,12 +72,20 @@ export const ComponentNodeSVG: React.FC<Props> = ({
           dominantBaseline="central"
           fill={textColor}
         >
-          <tspan x={width / 2} dy="-0.6em" fontSize="0.8em">
-            {"«component»"}
-          </tspan>
-          <tspan x={width / 2} dy="1.2em">
-            {name}
-          </tspan>
+          {isComponentHeaderShown ? (
+            <>
+              <tspan x={width / 2} dy="-0.6em" fontSize="0.8em">
+                {"«component»"}
+              </tspan>
+              <tspan x={width / 2} dy="1.2em">
+                {name}
+              </tspan>
+            </>
+          ) : (
+            <tspan x={width / 2} dy="0">
+              {name}
+            </tspan>
+          )}
         </CustomText>
       </g>
 
