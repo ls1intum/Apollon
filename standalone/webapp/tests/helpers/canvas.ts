@@ -31,6 +31,19 @@ export async function waitForCanvasReady(page: Page, expectNodes = true) {
 }
 
 /**
+ * Click the built-in ReactFlow "fit view" button from the <Controls> panel.
+ * This zooms/pans so ALL nodes fit within the viewport (respects the global
+ * minZoom of 0.4, unlike the onInit fitView which is clamped to 1.0).
+ * Useful for large diagrams (e.g. BPMN) that overflow at zoom 1.0.
+ */
+export async function clickFitView(page: Page) {
+  const fitViewBtn = page.locator(".react-flow__controls-fitview")
+  await fitViewBtn.click()
+  // Let the zoom/pan animation settle
+  await page.waitForTimeout(500)
+}
+
+/**
  * Inject a UMLModel fixture into localStorage so Zustand hydrates with it.
  * Must be called BEFORE navigation (page.goto).
  */

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 import {
   waitForCanvasReady,
   injectFixtureIntoLocalStorage,
+  clickFitView,
 } from "../helpers/canvas"
 
 const __filename = fileURLToPath(import.meta.url)
@@ -35,6 +36,8 @@ function loadFixture(filename: string): Record<string, unknown> {
 }
 
 // All 13 diagram fixtures with human-readable name + kebab-case file slug.
+// `fitView: true` triggers the ReactFlow fit-view button so the full diagram
+// is visible — needed for diagrams that overflow the viewport at zoom 1.0.
 const diagramFixtures = [
   {
     name: "ClassDiagram",
@@ -91,9 +94,14 @@ const diagramFixtures = [
     file: "flowchart",
     fixture: loadFixture("flowchart.json"),
   },
-  { name: "BPMN", file: "bpmn", fixture: loadFixture("bpmn.json") },
+  {
+    name: "BPMN",
+    file: "bpmn",
+    fixture: loadFixture("bpmn.json"),
+    fitView: true,
+  },
   { name: "Sfc", file: "sfc", fixture: loadFixture("sfc.json") },
-] as const
+]
 
 // Helpers imported from ../helpers/canvas
 
@@ -102,11 +110,17 @@ const diagramFixtures = [
 // ---------------------------------------------------------------------------
 
 test.describe("Visual regression - diagram fixtures", () => {
-  for (const { name, file, fixture } of diagramFixtures) {
+  for (const { name, file, fixture, fitView } of diagramFixtures) {
     test(`canvas for ${name}`, async ({ page }) => {
       await injectFixtureIntoLocalStorage(page, fixture)
       await page.goto("/")
       await waitForCanvasReady(page)
+
+      // For large diagrams that overflow at zoom 1.0, click the built-in
+      // ReactFlow fit-view button so the full diagram is captured.
+      if (fitView) {
+        await clickFitView(page)
+      }
 
       // Screenshot the editor area (sidebar + canvas) excluding the navbar,
       // so visual diffs focus on diagram rendering, not unrelated UI chrome.
@@ -117,11 +131,11 @@ test.describe("Visual regression - diagram fixtures", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 2. Template diagram – Adapter pattern loaded via fixture injection
+// 2. Template diagrams – GoF design pattern templates loaded via fixture injection
 // ---------------------------------------------------------------------------
-// The Adapter template JSON lives in the webapp's public assets. We load it
+// The template JSON files live in the webapp's assets directory. We load them
 // via fixture injection (the same approach as the 13 diagram fixtures above)
-// so the test is deterministic and doesn't depend on Vite serving dynamic
+// so the tests are deterministic and don't depend on Vite serving dynamic
 // imports at runtime.
 
 function loadJsonFile(filePath: string): Record<string, unknown> {
@@ -129,17 +143,34 @@ function loadJsonFile(filePath: string): Record<string, unknown> {
   return JSON.parse(raw) as Record<string, unknown>
 }
 
-const adapterTemplate = loadJsonFile(
-  path.join(__dirname, "..", "..", "assets", "diagramTemplates", "Adapter.json")
+const templatesDir = path.join(
+  __dirname,
+  "..",
+  "..",
+  "assets",
+  "diagramTemplates"
 )
 
-test.describe("Template diagram", () => {
-  test("Adapter template canvas matches baseline", async ({ page }) => {
-    await injectFixtureIntoLocalStorage(page, adapterTemplate)
-    await page.goto("/")
-    await waitForCanvasReady(page)
+const templateDiagrams = [
+  { name: "Adapter", file: "Adapter" },
+  { name: "Bridge", file: "Bridge" },
+  { name: "Command", file: "Command" },
+  { name: "Observer", file: "Observer" },
+  { name: "Factory", file: "Factory" },
+]
 
-    const editorArea = page.locator('[data-testid="editor-area"]')
-    await expect(editorArea).toHaveScreenshot("template-adapter.png")
-  })
+test.describe("Template diagrams", () => {
+  for (const { name, file } of templateDiagrams) {
+    test(`${name} template canvas matches baseline`, async ({ page }) => {
+      const template = loadJsonFile(path.join(templatesDir, `${file}.json`))
+      await injectFixtureIntoLocalStorage(page, template)
+      await page.goto("/")
+      await waitForCanvasReady(page)
+
+      const editorArea = page.locator('[data-testid="editor-area"]')
+      await expect(editorArea).toHaveScreenshot(
+        `template-${name.toLowerCase()}.png`
+      )
+    })
+  }
 })
