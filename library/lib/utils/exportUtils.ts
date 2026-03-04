@@ -754,3 +754,16 @@ function removeMarkerElements(svg: Element): void {
     .querySelectorAll("[marker-end]")
     .forEach((el) => el.removeAttribute("marker-end"))
 }
+
+/**
+ * @internal — Exported for unit testing only. Not part of the public API.
+ */
+export const __testing = {
+  extractPathPoints,
+  extractStyles,
+  resolveCSSVariable,
+  replaceCSSVariables,
+  convertStyleToAttributes,
+  removeMarkerElements,
+  mergeBounds,
+} as const
