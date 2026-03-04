@@ -63,7 +63,7 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('standalone/webapp/package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -78,15 +78,15 @@ jobs:
         run: npx playwright test tests/e2e/
         working-directory: standalone/webapp/
 
-      # Visual regression tests are not run in CI yet.
-      # Baselines must be generated inside the mcr.microsoft.com/playwright
-      # Docker image to ensure consistent rendering across platforms.
-      # Once baselines are committed from that image, uncomment the step
-      # below to enable visual regression checks in CI.
-      #
-      # - name: Run visual regression tests
-      #   run: npx playwright test tests/visual-regression/
-      #   working-directory: standalone/webapp/
+      # Visual regression baselines (*-chromium-linux.png) were generated using
+      # mcr.microsoft.com/playwright:v1.58.2-noble to match the CI environment.
+      # To regenerate after UI changes, run from the repo root:
+      #   docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
+      #     mcr.microsoft.com/playwright:v1.58.2-noble \
+      #     bash -c "npm ci && npm run build:lib && cd standalone/webapp && npx playwright test tests/visual/ --update-snapshots"
+      - name: Run visual regression tests
+        run: npx playwright test tests/visual/
+        working-directory: standalone/webapp/
 
       - name: Upload Playwright report
         if: ${{ failure() }}
