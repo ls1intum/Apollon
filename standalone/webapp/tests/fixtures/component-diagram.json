@@ -1,5 +1,5 @@
 {
-  "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "id": "fixture-component-diagram-006",
   "version": "4.0.0",
   "title": "Component Diagram",
   "type": "ComponentDiagram",
@@ -84,8 +84,8 @@
       "height": 120,
       "type": "component",
       "position": {
-        "x": 200,
-        "y": 260
+        "x": 380,
+        "y": 250
       },
       "parentId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
       "data": {
@@ -103,8 +103,8 @@
       "height": 20,
       "type": "componentInterface",
       "position": {
-        "x": 270,
-        "y": 300
+        "x": -50,
+        "y": 220
       },
       "data": {
         "name": "3/4 API"
@@ -120,8 +120,8 @@
       "height": 20,
       "type": "componentInterface",
       "position": {
-        "x": 270,
-        "y": 370
+        "x": -50,
+        "y": 380
       },
       "data": {
         "name": "1/4 API"
@@ -171,7 +171,7 @@
       "source": "a87ff679-a2f3-4e71-9bda-d16a21e1a2f3",
       "target": "c2d3e4f5-a6b7-4c8d-9e0f-1a2b3c4d5e60",
       "type": "ComponentRequiredThreeQuarterInterface",
-      "sourceHandle": "top",
+      "sourceHandle": "left-top",
       "targetHandle": "bottom",
       "data": {
         "points": []
@@ -182,7 +182,7 @@
       "source": "a87ff679-a2f3-4e71-9bda-d16a21e1a2f3",
       "target": "c2d3e4f5-a6b7-4c8d-9e0f-1a2b3c4d5e61",
       "type": "ComponentRequiredQuarterInterface",
-      "sourceHandle": "bottom",
+      "sourceHandle": "left-bottom",
       "targetHandle": "top",
       "data": {
         "points": []

@@ -1020,9 +1020,10 @@ describe("convertV2ToV4", () => {
       elements: [el],
       interactive: { elements: ["c1"], relationships: ["r1"] },
     })
-    // The interactive map is internal to the V3 model; we verify the conversion succeeds
     const result = convertV2ToV4(v2)
     expect(result.version).toBe("4.0.0")
+    expect(result.nodes.length).toBeGreaterThanOrEqual(1)
+    expect(result.nodes[0].id).toBe("c1")
   })
 
   it("converts V2 assessments to V4 assessments", () => {
@@ -1283,6 +1284,14 @@ describe("importDiagram", () => {
 
   it("throws for a string", () => {
     expect(() => importDiagram("hello")).toThrow()
+  })
+
+  it("throws for null input", () => {
+    expect(() => importDiagram(null as unknown as string)).toThrow()
+  })
+
+  it("throws for undefined input", () => {
+    expect(() => importDiagram(undefined as unknown as string)).toThrow()
   })
 
   it("prioritizes V4 detection over V3", () => {

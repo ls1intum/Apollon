@@ -1,5 +1,5 @@
 {
-  "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e70",
+  "id": "fixture-bpmn-012",
   "version": "4.0.0",
   "title": "BPMN",
   "type": "BPMN",
@@ -164,7 +164,7 @@
       "type": "bpmnAnnotation",
       "position": {
         "x": 90,
-        "y": 290
+        "y": 280
       },
       "data": {
         "name": "Must validate within 24h"
@@ -198,7 +198,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 0,
-        "y": 300
+        "y": 370
       },
       "data": {
         "name": "User Task",
@@ -217,7 +217,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 180,
-        "y": 300
+        "y": 370
       },
       "data": {
         "name": "Send Task",
@@ -236,7 +236,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 360,
-        "y": 300
+        "y": 370
       },
       "data": {
         "name": "Receive Task",
@@ -255,7 +255,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 540,
-        "y": 300
+        "y": 370
       },
       "data": {
         "name": "Manual Task",
@@ -274,7 +274,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 720,
-        "y": 300
+        "y": 370
       },
       "data": {
         "name": "Rule Task",
@@ -293,7 +293,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 900,
-        "y": 300
+        "y": 370
       },
       "data": {
         "name": "Script Task",
@@ -312,7 +312,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 0,
-        "y": 400
+        "y": 470
       },
       "data": {
         "name": "Loop Task",
@@ -331,7 +331,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 180,
-        "y": 400
+        "y": 470
       },
       "data": {
         "name": "Parallel MI",
@@ -350,7 +350,7 @@
       "type": "bpmnTask",
       "position": {
         "x": 360,
-        "y": 400
+        "y": 470
       },
       "data": {
         "name": "Sequential MI",
@@ -368,8 +368,8 @@
       "height": 40,
       "type": "bpmnGateway",
       "position": {
-        "x": 540,
-        "y": 410
+        "x": 560,
+        "y": 480
       },
       "data": {
         "name": "Inclusive",
@@ -386,8 +386,8 @@
       "height": 40,
       "type": "bpmnGateway",
       "position": {
-        "x": 660,
-        "y": 410
+        "x": 680,
+        "y": 480
       },
       "data": {
         "name": "Parallel",
@@ -404,8 +404,8 @@
       "height": 40,
       "type": "bpmnGateway",
       "position": {
-        "x": 780,
-        "y": 410
+        "x": 800,
+        "y": 480
       },
       "data": {
         "name": "Complex",
@@ -422,8 +422,8 @@
       "height": 40,
       "type": "bpmnGateway",
       "position": {
-        "x": 900,
-        "y": 410
+        "x": 920,
+        "y": 480
       },
       "data": {
         "name": "Event",
@@ -441,7 +441,7 @@
       "type": "bpmnStartEvent",
       "position": {
         "x": 0,
-        "y": 500
+        "y": 570
       },
       "data": {
         "name": "Msg Start",
@@ -458,8 +458,8 @@
       "height": 40,
       "type": "bpmnStartEvent",
       "position": {
-        "x": 60,
-        "y": 500
+        "x": 80,
+        "y": 570
       },
       "data": {
         "name": "Timer Start",
@@ -476,8 +476,8 @@
       "height": 40,
       "type": "bpmnStartEvent",
       "position": {
-        "x": 120,
-        "y": 500
+        "x": 160,
+        "y": 570
       },
       "data": {
         "name": "Cond Start",
@@ -494,8 +494,8 @@
       "height": 40,
       "type": "bpmnStartEvent",
       "position": {
-        "x": 180,
-        "y": 500
+        "x": 240,
+        "y": 570
       },
       "data": {
         "name": "Signal Start",
@@ -512,8 +512,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 260,
-        "y": 500
+        "x": 360,
+        "y": 570
       },
       "data": {
         "name": "Timer",
@@ -530,8 +530,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 320,
-        "y": 500
+        "x": 440,
+        "y": 570
       },
       "data": {
         "name": "Msg Catch",
@@ -548,8 +548,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 380,
-        "y": 500
+        "x": 520,
+        "y": 570
       },
       "data": {
         "name": "Msg Throw",
@@ -566,8 +566,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 440,
-        "y": 500
+        "x": 600,
+        "y": 570
       },
       "data": {
         "name": "Timer",
@@ -584,8 +584,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 500,
-        "y": 500
+        "x": 680,
+        "y": 570
       },
       "data": {
         "name": "Escalation",
@@ -602,8 +602,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 560,
-        "y": 500
+        "x": 760,
+        "y": 570
       },
       "data": {
         "name": "Conditional",
@@ -620,8 +620,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 620,
-        "y": 500
+        "x": 840,
+        "y": 570
       },
       "data": {
         "name": "Link In",
@@ -638,8 +638,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 680,
-        "y": 500
+        "x": 920,
+        "y": 570
       },
       "data": {
         "name": "Link Out",
@@ -656,8 +656,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 740,
-        "y": 500
+        "x": 1000,
+        "y": 570
       },
       "data": {
         "name": "Compensation",
@@ -674,8 +674,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 800,
-        "y": 500
+        "x": 1080,
+        "y": 570
       },
       "data": {
         "name": "Sig Catch",
@@ -692,8 +692,8 @@
       "height": 40,
       "type": "bpmnIntermediateEvent",
       "position": {
-        "x": 860,
-        "y": 500
+        "x": 1160,
+        "y": 570
       },
       "data": {
         "name": "Sig Throw",
@@ -711,7 +711,7 @@
       "type": "bpmnEndEvent",
       "position": {
         "x": 0,
-        "y": 600
+        "y": 670
       },
       "data": {
         "name": "Msg End",
@@ -728,8 +728,8 @@
       "height": 40,
       "type": "bpmnEndEvent",
       "position": {
-        "x": 60,
-        "y": 600
+        "x": 80,
+        "y": 670
       },
       "data": {
         "name": "Esc End",
@@ -746,8 +746,8 @@
       "height": 40,
       "type": "bpmnEndEvent",
       "position": {
-        "x": 120,
-        "y": 600
+        "x": 160,
+        "y": 670
       },
       "data": {
         "name": "Error End",
@@ -764,8 +764,8 @@
       "height": 40,
       "type": "bpmnEndEvent",
       "position": {
-        "x": 180,
-        "y": 600
+        "x": 240,
+        "y": 670
       },
       "data": {
         "name": "Comp End",
@@ -782,8 +782,8 @@
       "height": 40,
       "type": "bpmnEndEvent",
       "position": {
-        "x": 240,
-        "y": 600
+        "x": 320,
+        "y": 670
       },
       "data": {
         "name": "Signal End",
@@ -800,8 +800,8 @@
       "height": 40,
       "type": "bpmnEndEvent",
       "position": {
-        "x": 300,
-        "y": 600
+        "x": 400,
+        "y": 670
       },
       "data": {
         "name": "Term End",
@@ -818,8 +818,8 @@
       "height": 60,
       "type": "bpmnSubprocess",
       "position": {
-        "x": 400,
-        "y": 590
+        "x": 800,
+        "y": 160
       },
       "data": {
         "name": "Subprocess"
@@ -836,7 +836,7 @@
       "type": "bpmnTransaction",
       "position": {
         "x": 580,
-        "y": 590
+        "y": 660
       },
       "data": {
         "name": "Transaction"
@@ -853,7 +853,7 @@
       "type": "bpmnCallActivity",
       "position": {
         "x": 760,
-        "y": 590
+        "y": 660
       },
       "data": {
         "name": "Call Activity"
@@ -870,7 +870,7 @@
       "type": "bpmnGroup",
       "position": {
         "x": 940,
-        "y": 590
+        "y": 660
       },
       "data": {
         "name": "Group"
@@ -887,7 +887,7 @@
       "type": "bpmnDataStore",
       "position": {
         "x": 1120,
-        "y": 590
+        "y": 660
       },
       "data": {
         "name": "Data Store"

@@ -1,24 +1,24 @@
 {
-  "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "id": "fixture-class-diagram-001",
   "version": "4.0.0",
   "title": "Class Diagram",
   "type": "ClassDiagram",
   "nodes": [
     {
       "id": "550e8400-e29b-41d4-a716-446655440000",
-      "width": 300,
-      "height": 210,
+      "width": 340,
+      "height": 270,
       "type": "package",
       "position": {
-        "x": 30,
-        "y": 10
+        "x": -10,
+        "y": -50
       },
       "data": {
         "name": "Package"
       },
       "measured": {
-        "width": 300,
-        "height": 210
+        "width": 340,
+        "height": 270
       }
     },
     {
@@ -27,8 +27,8 @@
       "height": 100,
       "type": "class",
       "position": {
-        "x": 50,
-        "y": 60
+        "x": 90,
+        "y": 120
       },
       "parentId": "550e8400-e29b-41d4-a716-446655440000",
       "data": {
@@ -88,7 +88,7 @@
       "type": "class",
       "position": {
         "x": 80,
-        "y": 260
+        "y": 280
       },
       "data": {
         "name": "Dog",
@@ -121,7 +121,7 @@
       "type": "class",
       "position": {
         "x": 400,
-        "y": 250
+        "y": 390
       },
       "data": {
         "name": "Vehicle",
@@ -150,8 +150,8 @@
       "height": 140,
       "type": "class",
       "position": {
-        "x": 650,
-        "y": 50
+        "x": 720,
+        "y": 40
       },
       "data": {
         "name": "Color",
@@ -183,8 +183,8 @@
       "height": 50,
       "type": "colorDescription",
       "position": {
-        "x": 650,
-        "y": 250
+        "x": 720,
+        "y": 270
       },
       "data": {
         "name": "Legend"
@@ -224,7 +224,7 @@
       "target": "550e8400-e29b-41d4-a716-446655440002",
       "type": "ClassBidirectional",
       "sourceHandle": "right",
-      "targetHandle": "bottom",
+      "targetHandle": "bottom-left",
       "data": {
         "points": []
       }
@@ -234,7 +234,7 @@
       "source": "550e8400-e29b-41d4-a716-446655440003",
       "target": "550e8400-e29b-41d4-a716-446655440004",
       "type": "ClassAggregation",
-      "sourceHandle": "right",
+      "sourceHandle": "bottom",
       "targetHandle": "left",
       "data": {
         "points": []
@@ -256,8 +256,8 @@
       "source": "550e8400-e29b-41d4-a716-446655440001",
       "target": "550e8400-e29b-41d4-a716-446655440005",
       "type": "ClassUnidirectional",
-      "sourceHandle": "left",
-      "targetHandle": "bottom",
+      "sourceHandle": "top",
+      "targetHandle": "top",
       "data": {
         "points": []
       }
@@ -267,7 +267,7 @@
       "source": "550e8400-e29b-41d4-a716-446655440002",
       "target": "550e8400-e29b-41d4-a716-446655440004",
       "type": "ClassDependency",
-      "sourceHandle": "bottom",
+      "sourceHandle": "bottom-right",
       "targetHandle": "top",
       "data": {
         "points": []

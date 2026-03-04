@@ -1,7 +1,11 @@
-import { test, expect, type Page } from "@playwright/test"
+import { test, expect } from "@playwright/test"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
+import {
+  waitForCanvasReady,
+  injectFixtureIntoLocalStorage,
+} from "../helpers/canvas"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -91,66 +95,7 @@ const diagramFixtures = [
   { name: "Sfc", file: "sfc", fixture: loadFixture("sfc.json") },
 ] as const
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Wait until the React Flow canvas is fully rendered.
- * @param expectNodes - if true, also waits for at least one .react-flow__node
- */
-async function waitForCanvasReady(page: Page, expectNodes = true) {
-  // 1. React Flow container is visible
-  await page
-    .locator(".react-flow")
-    .first()
-    .waitFor({ state: "visible", timeout: 15_000 })
-
-  // 2. Viewport layer is attached
-  await page
-    .locator(".react-flow__viewport")
-    .first()
-    .waitFor({ state: "attached", timeout: 10_000 })
-
-  // 3. At least one node is rendered and visible (when expected)
-  if (expectNodes) {
-    await page
-      .locator(".react-flow__node")
-      .first()
-      .waitFor({ state: "visible", timeout: 15_000 })
-  }
-
-  // 4. Let layout and paint settle
-  await page.waitForTimeout(500)
-}
-
-/**
- * Inject a UMLModel fixture into localStorage so Zustand hydrates with it.
- * Must be called BEFORE navigation (page.goto).
- */
-async function injectFixtureIntoLocalStorage(
-  page: Page,
-  fixture: Record<string, unknown>
-) {
-  const modelId = fixture.id as string
-  const storeValue = JSON.stringify({
-    state: {
-      models: {
-        [modelId]: {
-          id: modelId,
-          model: fixture,
-          lastModifiedAt: new Date().toISOString(),
-        },
-      },
-      currentModelId: modelId,
-    },
-    version: 0,
-  })
-
-  await page.addInitScript((val) => {
-    localStorage.setItem("persistenceModelStore", val)
-  }, storeValue)
-}
+// Helpers imported from ../helpers/canvas
 
 // ---------------------------------------------------------------------------
 // 1. Fixture-based diagram tests (all 13 diagram types)
@@ -163,34 +108,41 @@ test.describe("Visual regression - diagram fixtures", () => {
       await page.goto("/")
       await waitForCanvasReady(page)
 
-      const canvas = page.locator(".react-flow").first()
-      await expect(canvas).toHaveScreenshot(`visual-${file}.png`)
+      // Full-page screenshot captures the sidebar (draggable UML elements),
+      // the navbar, and the React Flow canvas together — giving maximum
+      // visual regression coverage.
+      await expect(page).toHaveScreenshot(`visual-${file}.png`, {
+        fullPage: true,
+      })
     })
   }
 })
 
 // ---------------------------------------------------------------------------
-// 2. Template diagram - verifies loading via the UI (Adapter pattern)
+// 2. Template diagram – Adapter pattern loaded via fixture injection
 // ---------------------------------------------------------------------------
+// The Adapter template JSON lives in the webapp's public assets. We load it
+// via fixture injection (the same approach as the 13 diagram fixtures above)
+// so the test is deterministic and doesn't depend on Vite serving dynamic
+// imports at runtime.
+
+function loadJsonFile(filePath: string): Record<string, unknown> {
+  const raw = fs.readFileSync(filePath, "utf-8")
+  return JSON.parse(raw) as Record<string, unknown>
+}
+
+const adapterTemplate = loadJsonFile(
+  path.join(__dirname, "..", "..", "assets", "diagramTemplates", "Adapter.json")
+)
 
 test.describe("Template diagram", () => {
   test("Adapter template canvas matches baseline", async ({ page }) => {
+    await injectFixtureIntoLocalStorage(page, adapterTemplate)
     await page.goto("/")
-    await waitForCanvasReady(page, false) // No nodes yet on empty canvas
-
-    // Open the File menu, then "Start from Template"
-    await page.locator("#file-menu-button").first().click()
-    await page.getByText("Start from Template").click()
-
-    // The modal should show the Adapter template selected by default.
-    // Click "Create Diagram" to load it.
-    await page.getByRole("button", { name: "Create Diagram" }).click()
-
-    // Wait for the template to load into the canvas
     await waitForCanvasReady(page)
-    await page.waitForTimeout(500)
 
-    const canvas = page.locator(".react-flow").first()
-    await expect(canvas).toHaveScreenshot("template-adapter.png")
+    await expect(page).toHaveScreenshot("template-adapter.png", {
+      fullPage: true,
+    })
   })
 })

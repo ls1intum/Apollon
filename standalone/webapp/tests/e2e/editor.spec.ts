@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
+import { waitForCanvasReady } from "../helpers/canvas"
 
 /**
  * E2E behavioural tests for the Apollon2 UML diagram editor.
@@ -8,21 +9,7 @@ import { test, expect, type Page } from "@playwright/test"
  * interactions (select, pan) work.
  */
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-async function waitForCanvasReady(page: Page) {
-  await page
-    .locator(".react-flow")
-    .first()
-    .waitFor({ state: "visible", timeout: 15_000 })
-  await page
-    .locator(".react-flow__viewport")
-    .first()
-    .waitFor({ state: "attached", timeout: 10_000 })
-  await page.waitForTimeout(800)
-}
+// Helpers imported from ../helpers/canvas
 
 /**
  * Return the visible "File" menu button.
@@ -40,7 +27,7 @@ function fileMenuButton(page: Page) {
 test.describe("Editor loading", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await waitForCanvasReady(page)
+    await waitForCanvasReady(page, false)
   })
 
   test("app loads and shows the editor canvas", async ({ page }) => {
@@ -72,7 +59,7 @@ test.describe("Editor loading", () => {
 test.describe("Template diagram interactions", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await waitForCanvasReady(page)
+    await waitForCanvasReady(page, false)
 
     // Load the Adapter template via File → Start from Template → Create
     await fileMenuButton(page).click()
@@ -121,7 +108,7 @@ test.describe("Template diagram interactions", () => {
 test.describe("Canvas panning", () => {
   test("panning the canvas moves the viewport transform", async ({ page }) => {
     await page.goto("/")
-    await waitForCanvasReady(page)
+    await waitForCanvasReady(page, false)
 
     const viewport = page.locator(".react-flow__viewport").first()
 
@@ -157,7 +144,7 @@ test.describe("Canvas panning", () => {
 test.describe("Playground page", () => {
   test("playground loads and shows diagram type selector", async ({ page }) => {
     await page.goto("/playground")
-    await waitForCanvasReady(page)
+    await waitForCanvasReady(page, false)
 
     const selector = page.locator("select").first()
     await expect(selector).toBeVisible()
@@ -169,13 +156,13 @@ test.describe("Playground page", () => {
 
   test("changing diagram type re-renders the sidebar", async ({ page }) => {
     await page.goto("/playground")
-    await waitForCanvasReady(page)
+    await waitForCanvasReady(page, false)
 
     const typeSelector = page.locator("select").first()
 
     // Switch to ActivityDiagram
     await typeSelector.selectOption("ActivityDiagram")
-    await waitForCanvasReady(page)
+    await waitForCanvasReady(page, false)
 
     // The sidebar content should have changed – just verify the sidebar is
     // still present and has draggable items
@@ -193,7 +180,7 @@ test.describe("Playground page", () => {
 test.describe("Navbar", () => {
   test("navbar is visible with File button", async ({ page }) => {
     await page.goto("/")
-    await waitForCanvasReady(page)
+    await waitForCanvasReady(page, false)
 
     const fileButton = fileMenuButton(page)
     await expect(fileButton).toBeVisible()
@@ -201,7 +188,7 @@ test.describe("Navbar", () => {
 
   test("File menu opens and shows expected items", async ({ page }) => {
     await page.goto("/")
-    await waitForCanvasReady(page)
+    await waitForCanvasReady(page, false)
 
     await fileMenuButton(page).click()
 

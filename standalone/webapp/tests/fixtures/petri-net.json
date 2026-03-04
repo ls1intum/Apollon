@@ -1,5 +1,5 @@
 {
-  "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "id": "fixture-petri-net-008",
   "version": "4.0.0",
   "title": "Petri Net",
   "type": "PetriNet",
@@ -11,9 +11,7 @@
       "type": "petriNetPlace",
       "position": { "x": 50, "y": 70 },
       "data": { "name": "P1", "tokens": 2, "capacity": "Infinity" },
-      "selected": false,
-      "measured": { "width": 60, "height": 60 },
-      "dragging": false
+      "measured": { "width": 60, "height": 60 }
     },
     {
       "width": 30,
@@ -22,9 +20,7 @@
       "type": "petriNetTransition",
       "position": { "x": 170, "y": 70 },
       "data": { "name": "T1" },
-      "selected": false,
-      "measured": { "width": 30, "height": 60 },
-      "dragging": false
+      "measured": { "width": 30, "height": 60 }
     },
     {
       "width": 60,
@@ -33,9 +29,7 @@
       "type": "petriNetPlace",
       "position": { "x": 260, "y": 20 },
       "data": { "name": "P2", "tokens": 0, "capacity": "3" },
-      "selected": false,
-      "measured": { "width": 60, "height": 60 },
-      "dragging": false
+      "measured": { "width": 60, "height": 60 }
     },
     {
       "width": 60,
@@ -44,9 +38,7 @@
       "type": "petriNetPlace",
       "position": { "x": 260, "y": 130 },
       "data": { "name": "P3", "tokens": 1, "capacity": "Infinity" },
-      "selected": false,
-      "measured": { "width": 60, "height": 60 },
-      "dragging": false
+      "measured": { "width": 60, "height": 60 }
     },
     {
       "width": 30,
@@ -55,9 +47,7 @@
       "type": "petriNetTransition",
       "position": { "x": 380, "y": 70 },
       "data": { "name": "T2" },
-      "selected": false,
-      "measured": { "width": 30, "height": 60 },
-      "dragging": false
+      "measured": { "width": 30, "height": 60 }
     },
     {
       "width": 60,
@@ -66,9 +56,7 @@
       "type": "petriNetPlace",
       "position": { "x": 470, "y": 70 },
       "data": { "name": "P4", "tokens": 0, "capacity": "Infinity" },
-      "selected": false,
-      "measured": { "width": 60, "height": 60 },
-      "dragging": false
+      "measured": { "width": 60, "height": 60 }
     }
   ],
   "edges": [
@@ -78,8 +66,8 @@
       "target": "22222222-2222-4222-a222-222222222222",
       "targetHandle": "left",
       "type": "PetriNetArc",
-      "selected": false,
-      "id": "edge-p1-t1"
+      "id": "edge-p1-t1",
+      "data": { "points": [] }
     },
     {
       "source": "22222222-2222-4222-a222-222222222222",
@@ -87,8 +75,8 @@
       "target": "33333333-3333-4333-a333-333333333333",
       "targetHandle": "left",
       "type": "PetriNetArc",
-      "selected": false,
-      "id": "edge-t1-p2"
+      "id": "edge-t1-p2",
+      "data": { "points": [] }
     },
     {
       "source": "22222222-2222-4222-a222-222222222222",
@@ -96,8 +84,8 @@
       "target": "44444444-4444-4444-a444-444444444444",
       "targetHandle": "left",
       "type": "PetriNetArc",
-      "selected": false,
-      "id": "edge-t1-p3"
+      "id": "edge-t1-p3",
+      "data": { "points": [] }
     },
     {
       "source": "33333333-3333-4333-a333-333333333333",
@@ -105,8 +93,8 @@
       "target": "55555555-5555-4555-a555-555555555555",
       "targetHandle": "left",
       "type": "PetriNetArc",
-      "selected": false,
-      "id": "edge-p2-t2"
+      "id": "edge-p2-t2",
+      "data": { "points": [] }
     },
     {
       "source": "44444444-4444-4444-a444-444444444444",
@@ -114,8 +102,8 @@
       "target": "55555555-5555-4555-a555-555555555555",
       "targetHandle": "left",
       "type": "PetriNetArc",
-      "selected": false,
-      "id": "edge-p3-t2"
+      "id": "edge-p3-t2",
+      "data": { "points": [] }
     },
     {
       "source": "55555555-5555-4555-a555-555555555555",
@@ -123,8 +111,8 @@
       "target": "66666666-6666-4666-a666-666666666666",
       "targetHandle": "left",
       "type": "PetriNetArc",
-      "selected": false,
-      "id": "edge-t2-p4"
+      "id": "edge-t2-p4",
+      "data": { "points": [] }
     }
   ],
   "assessments": {}
