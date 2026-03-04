@@ -216,7 +216,7 @@ export const ApollonPlayground: React.FC = () => {
         <button onClick={exportAsJSON} className="border p-1 rounded-sm">
           Export as JSON
         </button>
-        <button onClick={exportAsPDF} className="border p-1 rounded-sm">
+        <button onClick={() => exportAsPDF()} className="border p-1 rounded-sm">
           Export as PDF
         </button>
 

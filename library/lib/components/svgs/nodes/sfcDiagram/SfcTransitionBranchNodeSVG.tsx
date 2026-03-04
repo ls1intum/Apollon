@@ -29,7 +29,13 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
       overflow="visible"
       {...svgAttributes}
     >
-      <circle cx={padding + 10} cy={padding + 10} r={10} fill={fillColor} stroke={strokeColor} />
+      <circle
+        cx={padding + 10}
+        cy={padding + 10}
+        r={10}
+        fill={fillColor}
+        stroke={strokeColor}
+      />
       {showHint && (
         <CustomText x={0} y={30}>
           {name}

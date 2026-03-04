@@ -1,0 +1,235 @@
+{
+  "id": "fixture-activity-diagram-003",
+  "version": "4.0.0",
+  "title": "Activity Diagram",
+  "type": "ActivityDiagram",
+  "nodes": [
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440020",
+      "width": 50,
+      "height": 50,
+      "type": "activityInitialNode",
+      "position": {
+        "x": 30,
+        "y": 100
+      },
+      "data": {
+        "name": "Start"
+      },
+      "measured": {
+        "width": 50,
+        "height": 50
+      }
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440021",
+      "width": 170,
+      "height": 130,
+      "type": "activity",
+      "position": {
+        "x": 150,
+        "y": 60
+      },
+      "data": {
+        "name": "Process Order"
+      },
+      "measured": {
+        "width": 170,
+        "height": 130
+      }
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440022",
+      "width": 160,
+      "height": 110,
+      "type": "activityMergeNode",
+      "position": {
+        "x": 370,
+        "y": 70
+      },
+      "data": {
+        "name": "In Stock?"
+      },
+      "measured": {
+        "width": 160,
+        "height": 110
+      }
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440023",
+      "width": 90,
+      "height": 50,
+      "type": "activityActionNode",
+      "position": {
+        "x": 590,
+        "y": 100
+      },
+      "data": {
+        "name": "Ship Item"
+      },
+      "measured": {
+        "width": 90,
+        "height": 50
+      }
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440024",
+      "width": 160,
+      "height": 120,
+      "type": "activityObjectNode",
+      "position": {
+        "x": 490,
+        "y": 230
+      },
+      "data": {
+        "name": "Backorder"
+      },
+      "measured": {
+        "width": 160,
+        "height": 120
+      }
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440025",
+      "width": 20,
+      "height": 90,
+      "type": "activityForkNode",
+      "position": {
+        "x": 740,
+        "y": 80
+      },
+      "data": {
+        "name": "Fork"
+      },
+      "measured": {
+        "width": 20,
+        "height": 90
+      }
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440026",
+      "width": 50,
+      "height": 50,
+      "type": "activityFinalNode",
+      "position": {
+        "x": 810,
+        "y": 100
+      },
+      "data": {
+        "name": "End"
+      },
+      "measured": {
+        "width": 50,
+        "height": 50
+      }
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440027",
+      "width": 100,
+      "height": 20,
+      "type": "activityForkNodeHorizontal",
+      "position": {
+        "x": 810,
+        "y": 200
+      },
+      "data": {
+        "name": "HFork"
+      },
+      "measured": {
+        "width": 100,
+        "height": 20
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-flow-initial-process",
+      "source": "770e8400-e29b-41d4-a716-446655440020",
+      "target": "770e8400-e29b-41d4-a716-446655440021",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-flow-process-merge",
+      "source": "770e8400-e29b-41d4-a716-446655440021",
+      "target": "770e8400-e29b-41d4-a716-446655440022",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-flow-merge-ship",
+      "source": "770e8400-e29b-41d4-a716-446655440022",
+      "target": "770e8400-e29b-41d4-a716-446655440023",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-flow-merge-backorder",
+      "source": "770e8400-e29b-41d4-a716-446655440022",
+      "target": "770e8400-e29b-41d4-a716-446655440024",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "bottom",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-flow-ship-fork",
+      "source": "770e8400-e29b-41d4-a716-446655440023",
+      "target": "770e8400-e29b-41d4-a716-446655440025",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-flow-fork-final",
+      "source": "770e8400-e29b-41d4-a716-446655440025",
+      "target": "770e8400-e29b-41d4-a716-446655440026",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "56e5f59e-f110-4327-94b2-67de3113e605",
+      "source": "770e8400-e29b-41d4-a716-446655440025",
+      "target": "770e8400-e29b-41d4-a716-446655440027",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-flow-backorder-hfork",
+      "source": "770e8400-e29b-41d4-a716-446655440024",
+      "target": "770e8400-e29b-41d4-a716-446655440027",
+      "type": "ActivityControlFlow",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

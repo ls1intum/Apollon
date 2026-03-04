@@ -34,13 +34,13 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   mainSVG.setAttribute("width", `${width}`)
   mainSVG.setAttribute("height", `${height}`)
 
-  const MainNodesGTag = document.createElement("g")
+  const MainNodesGTag = document.createElementNS(SVG_NS, "g")
   mainSVG.appendChild(MainNodesGTag)
   const allNodes = vp.querySelectorAll(".react-flow__node")
 
   allNodes.forEach((node) => {
     const styles = extractStyles(node.getAttribute("style") ?? "")
-    const newGTagForNode = document.createElement("g")
+    const newGTagForNode = document.createElementNS(SVG_NS, "g")
     const svgElement = node.querySelector("svg")
 
     newGTagForNode.setAttribute(
@@ -62,7 +62,7 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   // Get all edge elements
   const allEdgeElements = vp.querySelectorAll(".react-flow__edge")
 
-  const MainEdgesGTag = document.createElement("g")
+  const MainEdgesGTag = document.createElementNS(SVG_NS, "g")
   mainSVG.appendChild(MainEdgesGTag)
 
   // UI-only classes to skip (not part of the actual diagram)
@@ -367,13 +367,17 @@ function getBoundingBox(edges: Edge[]) {
     return undefined // No points to calculate bounds
   }
 
-  const xs = allPoints.map((p) => p.x)
-  const ys = allPoints.map((p) => p.y)
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
 
-  const minX = Math.min(...xs)
-  const maxX = Math.max(...xs)
-  const minY = Math.min(...ys)
-  const maxY = Math.max(...ys)
+  for (const p of allPoints) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
 
   return {
     x: minX,
@@ -441,13 +445,17 @@ function getEdgeBoundsFromDOM(container: HTMLElement): Rect | undefined {
     return undefined
   }
 
-  const xs = allPoints.map((p) => p.x)
-  const ys = allPoints.map((p) => p.y)
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
 
-  let minX = Math.min(...xs)
-  let maxX = Math.max(...xs)
-  let minY = Math.min(...ys)
-  let maxY = Math.max(...ys)
+  for (const p of allPoints) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
 
   // Expand bounds by half stroke width (stroke is centered on path)
   const strokeExpansion = maxStrokeWidth / 2
@@ -659,14 +667,9 @@ function replaceCSSVariables(
     Array.from(element.childNodes).forEach((child) =>
       replaceCSSVariables(child, currentColor)
     )
-  } else if (node.nodeType === Node.TEXT_NODE) {
-    const textNode = node as Text
-    const textContent = textNode.textContent ?? ""
-    const resolvedText = resolveCSSVariable(textContent)
-    if (resolvedText !== textContent) {
-      textNode.textContent = resolvedText
-    }
   }
+  // Text nodes are not processed — CSS variables only appear in attribute values,
+  // and processing text content would corrupt user-authored labels containing "var(".
 }
 
 /**
@@ -751,3 +754,16 @@ function removeMarkerElements(svg: Element): void {
     .querySelectorAll("[marker-end]")
     .forEach((el) => el.removeAttribute("marker-end"))
 }
+
+/**
+ * @internal — Exported for unit testing only. Not part of the public API.
+ */
+export const __testing = {
+  extractPathPoints,
+  extractStyles,
+  resolveCSSVariable,
+  replaceCSSVariables,
+  convertStyleToAttributes,
+  removeMarkerElements,
+  mergeBounds,
+} as const

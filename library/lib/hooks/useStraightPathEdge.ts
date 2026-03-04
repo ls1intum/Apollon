@@ -45,23 +45,38 @@ export const useStraightPathEdge = ({
 
   const hasReconnectionSupport = id && source && target && enableReconnection
 
+  // Hooks must be called unconditionally (Rules of Hooks).
+  // We always call them, but only use the results when reconnection is supported.
+  const reconnection = useEdgeReconnection(
+    id ?? "",
+    source ?? "",
+    target ?? "",
+    sourceHandleId,
+    targetHandleId
+  )
+  const handleFinder = useHandleFinder()
+
   const { isReconnectingRef, startReconnection, completeReconnection } =
     hasReconnectionSupport
-      ? useEdgeReconnection(id, source, target, sourceHandleId, targetHandleId)
+      ? reconnection
       : {
-          isReconnectingRef: { current: false },
-          startReconnection: () => {},
-          completeReconnection: () => {},
+          isReconnectingRef: {
+            current: false,
+          } as React.MutableRefObject<boolean>,
+          startReconnection:
+            (() => {}) as typeof reconnection.startReconnection,
+          completeReconnection:
+            (() => {}) as typeof reconnection.completeReconnection,
         }
 
   const { findBestHandle } = hasReconnectionSupport
-    ? useHandleFinder()
+    ? handleFinder
     : {
-        findBestHandle: () => ({
+        findBestHandle: (() => ({
           handle: null,
           node: null,
           shouldClearPoints: false,
-        }),
+        })) as typeof handleFinder.findBestHandle,
       }
 
   const { markerEnd, markerStart, strokeDashArray, markerPadding } =

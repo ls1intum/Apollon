@@ -42,7 +42,10 @@ function App() {
       <BrowserRouter>
         <AppProviders>
           <Navbar />
-          <div style={{ flex: 1, overflow: "hidden" }}>
+          <div
+            data-testid="editor-area"
+            style={{ flex: 1, overflow: "hidden" }}
+          >
             <Routes>
               <Route path="/" element={<ApollonLocal />} />
               <Route path="/playground" element={<ApollonPlayground />} />

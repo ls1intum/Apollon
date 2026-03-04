@@ -13,16 +13,26 @@ pdfMake.vfs = pdfFonts as any
 
 // Browser instance for Playwright (lazy initialized)
 let browser: Browser | null = null
+let browserLaunchPromise: Promise<Browser> | null = null
 
 async function getBrowser(): Promise<Browser> {
-  if (!browser) {
-    log.debug("Launching Playwright browser...")
-    browser = await chromium.launch({
-      headless: true,
-    })
-    log.debug("Playwright browser launched successfully")
+  if (browser) return browser
+
+  // Prevent concurrent launches — reuse the same promise
+  if (!browserLaunchPromise) {
+    browserLaunchPromise = (async () => {
+      log.debug("Launching Playwright browser...")
+      const b = await chromium.launch({
+        headless: true,
+      })
+      log.debug("Playwright browser launched successfully")
+      browser = b
+      browserLaunchPromise = null
+      return b
+    })()
   }
-  return browser
+
+  return browserLaunchPromise
 }
 
 // Cleanup browser on process exit
