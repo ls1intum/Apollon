@@ -108,12 +108,10 @@ test.describe("Visual regression - diagram fixtures", () => {
       await page.goto("/")
       await waitForCanvasReady(page)
 
-      // Full-page screenshot captures the sidebar (draggable UML elements),
-      // the navbar, and the React Flow canvas together — giving maximum
-      // visual regression coverage.
-      await expect(page).toHaveScreenshot(`visual-${file}.png`, {
-        fullPage: true,
-      })
+      // Screenshot the editor area (sidebar + canvas) excluding the navbar,
+      // so visual diffs focus on diagram rendering, not unrelated UI chrome.
+      const editorArea = page.locator('[data-testid="editor-area"]')
+      await expect(editorArea).toHaveScreenshot(`visual-${file}.png`)
     })
   }
 })
@@ -141,8 +139,7 @@ test.describe("Template diagram", () => {
     await page.goto("/")
     await waitForCanvasReady(page)
 
-    await expect(page).toHaveScreenshot("template-adapter.png", {
-      fullPage: true,
-    })
+    const editorArea = page.locator('[data-testid="editor-area"]')
+    await expect(editorArea).toHaveScreenshot("template-adapter.png")
   })
 })
