@@ -17,8 +17,8 @@ export const EditableMethodsList: React.FC<Props> = ({ nodeId }) => {
   )
   const [newItem, setNewItem] = useState("")
   const nodeData = nodes.find((node) => node.id === nodeId)
-    ?.data as ClassNodeProps
-  const methods = nodeData.methods
+    ?.data as ClassNodeProps | undefined
+  const methods = nodeData?.methods ?? []
 
   const handleMethodChange = (id: string, key: string, newName: string) => {
     const updatedItems = methods.map((item) =>

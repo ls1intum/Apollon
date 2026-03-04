@@ -458,18 +458,29 @@ export const dropElementConfigs: Readonly<
     {
       type: "communicationObjectName",
       width: 160,
-      height: 40,
-      defaultData: { name: "Object" },
+      height: 70,
+      defaultData: {
+        name: "Object",
+        methods: [],
+        attributes: [{ id: generateUUID(), name: "attribute = value" }],
+      },
       svg: CommunicationObjectNameSVG,
     },
   ],
   [UMLDiagramType.ComponentDiagram]: [
     {
       type: "component",
-      width: 170,
+      width: 180,
       height: 120,
       defaultData: { name: "Component" },
       svg: ComponentNodeSVG,
+    },
+    {
+      type: "componentSubsystem",
+      width: 180,
+      height: 120,
+      defaultData: { name: "Subsystem" },
+      svg: ComponentSubsystemNodeSVG,
     },
     {
       type: "componentInterface",
@@ -477,14 +488,8 @@ export const dropElementConfigs: Readonly<
       height: 20,
       defaultData: { name: "Interface" },
       svg: ComponentInterfaceNodeSVG,
+      marginTop: 10,
     }, // Must use INTERFACE.SIZE
-    {
-      type: "componentSubsystem",
-      width: 170,
-      height: 120,
-      defaultData: { name: "Subsystem" },
-      svg: ComponentSubsystemNodeSVG,
-    },
   ],
   [UMLDiagramType.DeploymentDiagram]: [
     {
@@ -707,8 +712,7 @@ export const dropElementConfigs: Readonly<
 export const ColorDescriptionConfig: DropElementConfig = Object.freeze({
   type: "colorDescription",
   width: 160,
-  height: 120,
-  defaultData: { name: "Colors" },
+  height: 50,
+  defaultData: { name: "Color Description" },
   svg: ColorDescriptionSVG,
-  marginTop: 20,
 })
