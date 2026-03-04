@@ -1,0 +1,207 @@
+{
+  "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+  "version": "4.0.0",
+  "title": "Flowchart",
+  "type": "Flowchart",
+  "nodes": [
+    {
+      "id": "10a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+      "width": 160,
+      "height": 70,
+      "type": "flowchartTerminal",
+      "position": {
+        "x": 150,
+        "y": 0
+      },
+      "data": {
+        "name": "Start"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    },
+    {
+      "id": "20b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "width": 160,
+      "height": 70,
+      "type": "flowchartProcess",
+      "position": {
+        "x": 150,
+        "y": 120
+      },
+      "data": {
+        "name": "Initialize x = 0"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    },
+    {
+      "id": "30c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "width": 160,
+      "height": 70,
+      "type": "flowchartDecision",
+      "position": {
+        "x": 150,
+        "y": 240
+      },
+      "data": {
+        "name": "x < 10?"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    },
+    {
+      "id": "40d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "width": 160,
+      "height": 70,
+      "type": "flowchartProcess",
+      "position": {
+        "x": 150,
+        "y": 370
+      },
+      "data": {
+        "name": "x = x + 1"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    },
+    {
+      "id": "50e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "width": 140,
+      "height": 70,
+      "type": "flowchartInputOutput",
+      "position": {
+        "x": 400,
+        "y": 240
+      },
+      "data": {
+        "name": "Print x"
+      },
+      "measured": {
+        "width": 140,
+        "height": 70
+      }
+    },
+    {
+      "id": "60f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "width": 160,
+      "height": 70,
+      "type": "flowchartFunctionCall",
+      "position": {
+        "x": 390,
+        "y": 370
+      },
+      "data": {
+        "name": "cleanup()"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    },
+    {
+      "id": "70a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+      "width": 160,
+      "height": 70,
+      "type": "flowchartTerminal",
+      "position": {
+        "x": 390,
+        "y": 490
+      },
+      "data": {
+        "name": "End"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-start-init",
+      "source": "10a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+      "target": "20b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "type": "FlowChartFlowline",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-init-decision",
+      "source": "20b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "target": "30c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "type": "FlowChartFlowline",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-decision-increment",
+      "source": "30c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "target": "40d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "type": "FlowChartFlowline",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-increment-loopback",
+      "source": "40d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "target": "20b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "type": "FlowChartFlowline",
+      "sourceHandle": "left",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-decision-print",
+      "source": "30c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "target": "50e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "type": "FlowChartFlowline",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-print-cleanup",
+      "source": "50e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "target": "60f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "type": "FlowChartFlowline",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-cleanup-end",
+      "source": "60f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "target": "70a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+      "type": "FlowChartFlowline",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

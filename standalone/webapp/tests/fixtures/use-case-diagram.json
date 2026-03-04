@@ -1,0 +1,199 @@
+{
+  "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80",
+  "version": "4.0.0",
+  "title": "Use Case Diagram",
+  "type": "UseCaseDiagram",
+  "nodes": [
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440030",
+      "width": 390,
+      "height": 470,
+      "type": "useCaseSystem",
+      "position": {
+        "x": 160,
+        "y": 0
+      },
+      "data": {
+        "name": "Online Store"
+      },
+      "measured": {
+        "width": 390,
+        "height": 470
+      }
+    },
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440031",
+      "width": 100,
+      "height": 150,
+      "type": "useCaseActor",
+      "position": {
+        "x": 0,
+        "y": 100
+      },
+      "data": {
+        "name": "Customer"
+      },
+      "measured": {
+        "width": 100,
+        "height": 150
+      }
+    },
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440032",
+      "width": 100,
+      "height": 150,
+      "type": "useCaseActor",
+      "position": {
+        "x": 620,
+        "y": 260
+      },
+      "data": {
+        "name": "Admin"
+      },
+      "measured": {
+        "width": 100,
+        "height": 150
+      }
+    },
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440033",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 210,
+        "y": 80
+      },
+      "parentId": "880e8400-e29b-41d4-a716-446655440030",
+      "data": {
+        "name": "Browse Products"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440034",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 30,
+        "y": 210
+      },
+      "parentId": "880e8400-e29b-41d4-a716-446655440030",
+      "data": {
+        "name": "Place Order"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440035",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 200,
+        "y": 330
+      },
+      "parentId": "880e8400-e29b-41d4-a716-446655440030",
+      "data": {
+        "name": "Manage Inventory"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440036",
+      "width": 100,
+      "height": 150,
+      "type": "useCaseActor",
+      "position": {
+        "x": 0,
+        "y": 350
+      },
+      "data": {
+        "name": "Premium Customer"
+      },
+      "measured": {
+        "width": 100,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-assoc-customer-browse",
+      "source": "880e8400-e29b-41d4-a716-446655440031",
+      "target": "880e8400-e29b-41d4-a716-446655440033",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-assoc-customer-order",
+      "source": "880e8400-e29b-41d4-a716-446655440031",
+      "target": "880e8400-e29b-41d4-a716-446655440034",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-include-order-browse",
+      "source": "880e8400-e29b-41d4-a716-446655440034",
+      "target": "880e8400-e29b-41d4-a716-446655440033",
+      "type": "UseCaseInclude",
+      "sourceHandle": "right",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-assoc-admin-inventory",
+      "source": "880e8400-e29b-41d4-a716-446655440032",
+      "target": "880e8400-e29b-41d4-a716-446655440035",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-extend-inventory-order",
+      "source": "880e8400-e29b-41d4-a716-446655440035",
+      "target": "880e8400-e29b-41d4-a716-446655440034",
+      "type": "UseCaseExtend",
+      "sourceHandle": "left",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-generalization-premium-customer",
+      "source": "880e8400-e29b-41d4-a716-446655440036",
+      "target": "880e8400-e29b-41d4-a716-446655440031",
+      "type": "UseCaseGeneralization",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

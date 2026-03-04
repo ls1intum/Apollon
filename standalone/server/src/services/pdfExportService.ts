@@ -220,7 +220,9 @@ const renderModelToRasterizedPngWithBrowser = async (
   model: ExportModel
 ): Promise<RasterizedResult> => {
   const browser = await getBrowser()
-  const page = await browser.newPage({ viewport: { width: 1600, height: 1200 } })
+  const page = await browser.newPage({
+    viewport: { width: 1600, height: 1200 },
+  })
   const libraryBundle = getLibraryBundle()
   const xyflowCss = getXyflowCss()
   const apollonAppCss = getApollonAppCss()
@@ -242,7 +244,9 @@ const renderModelToRasterizedPngWithBrowser = async (
       () => (globalThis as any).__apollonError
     )
     if (initError) {
-      throw new Error(`Failed to initialize browser export runtime: ${initError}`)
+      throw new Error(
+        `Failed to initialize browser export runtime: ${initError}`
+      )
     }
 
     const result = await page.evaluate(async (inputModel) => {
@@ -268,7 +272,9 @@ const renderModelToRasterizedPngWithBrowser = async (
         )
       }
 
-      const svgResult = (await apollonEditor.exportModelAsSvg(inputModel)) as SvgResult
+      const svgResult = (await apollonEditor.exportModelAsSvg(
+        inputModel
+      )) as SvgResult
       // Log SVG output for debugging
       console.log("Server SVG Output:", svgResult.svg)
       const width = Math.max(1, Number(svgResult.clip?.width) || 1)

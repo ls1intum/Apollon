@@ -1,0 +1,109 @@
+{
+  "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+  "version": "4.0.0",
+  "title": "Object Diagram",
+  "type": "ObjectDiagram",
+  "nodes": [
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440010",
+      "width": 180,
+      "height": 100,
+      "type": "objectName",
+      "position": {
+        "x": 50,
+        "y": 50
+      },
+      "data": {
+        "name": "myDog: Dog",
+        "attributes": [
+          {
+            "id": "a1",
+            "name": "name = Rex"
+          },
+          {
+            "id": "a2",
+            "name": "breed = Labrador"
+          }
+        ],
+        "methods": []
+      },
+      "measured": {
+        "width": 180,
+        "height": 100
+      }
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440011",
+      "width": 150,
+      "height": 70,
+      "type": "objectName",
+      "position": {
+        "x": 320,
+        "y": 60
+      },
+      "data": {
+        "name": "myOwner: Person",
+        "attributes": [
+          {
+            "id": "a3",
+            "name": "name = Alice"
+          }
+        ],
+        "methods": []
+      },
+      "measured": {
+        "width": 150,
+        "height": 70
+      }
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440012",
+      "width": 180,
+      "height": 70,
+      "type": "objectName",
+      "position": {
+        "x": 50,
+        "y": 210
+      },
+      "data": {
+        "name": "myCollar: Collar",
+        "attributes": [
+          {
+            "id": "a4",
+            "name": "color = red"
+          }
+        ],
+        "methods": []
+      },
+      "measured": {
+        "width": 180,
+        "height": 70
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-link-dog-owner",
+      "source": "660e8400-e29b-41d4-a716-446655440010",
+      "target": "660e8400-e29b-41d4-a716-446655440011",
+      "type": "ObjectLink",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-link-dog-collar",
+      "source": "660e8400-e29b-41d4-a716-446655440010",
+      "target": "660e8400-e29b-41d4-a716-446655440012",
+      "type": "ObjectLink",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

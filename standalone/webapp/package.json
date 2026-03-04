@@ -9,7 +9,11 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "test:e2e": "playwright test tests/e2e/",
+    "test:e2e:ui": "playwright test tests/e2e/ --ui",
+    "test:visual": "playwright test tests/visual/",
+    "test:visual:update": "playwright test tests/visual/ --update-snapshots"
   },
   "dependencies": {
     "@mui/icons-material": "6.4.2",
@@ -24,6 +28,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.17.0",
+    "@playwright/test": "^1.58.2",
     "@types/react": "18.0.0",
     "@types/react-dom": "18.0.0",
     "@vitejs/plugin-react": "4.3.4",

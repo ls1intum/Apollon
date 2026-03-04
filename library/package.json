@@ -20,7 +20,10 @@
     "build:watch": "tsc -b --watch & vite build --watch",
     "preview": "vite preview",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@emotion/react": "11.11.1",
@@ -31,18 +34,24 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "uuid": "11.0.3",
-    "zustand": "5.0.3",
-    "yjs": "13.6.20"
+    "yjs": "13.6.20",
+    "zustand": "5.0.3"
   },
   "devDependencies": {
     "@eslint/js": "9.17.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "4.3.4",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "9.17.0",
     "eslint-plugin-react": "7.37.2",
     "globals": "15.13.0",
+    "jsdom": "^28.1.0",
     "typescript": "5.7.2",
     "typescript-eslint": "8.18.1",
     "vite": "6.3.4",
-    "vite-plugin-dts": "4.3.0"
+    "vite-plugin-dts": "4.3.0",
+    "vitest": "^4.0.18"
   }
 }
