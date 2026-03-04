@@ -1,0 +1,168 @@
+{
+  "id": "fixture-syntax-tree-010",
+  "version": "4.0.0",
+  "title": "Syntax Tree",
+  "type": "SyntaxTree",
+  "nodes": [
+    {
+      "id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+      "width": 160,
+      "height": 100,
+      "type": "syntaxTreeNonterminal",
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "data": {
+        "name": "Expr"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "width": 160,
+      "height": 100,
+      "type": "syntaxTreeNonterminal",
+      "position": {
+        "x": 50,
+        "y": 150
+      },
+      "data": {
+        "name": "Term"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "width": 160,
+      "height": 100,
+      "type": "syntaxTreeNonterminal",
+      "position": {
+        "x": 350,
+        "y": 150
+      },
+      "data": {
+        "name": "Term"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+      "width": 160,
+      "height": 100,
+      "type": "syntaxTreeTerminal",
+      "position": {
+        "x": 50,
+        "y": 300
+      },
+      "data": {
+        "name": "a"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e",
+      "width": 160,
+      "height": 100,
+      "type": "syntaxTreeTerminal",
+      "position": {
+        "x": 250,
+        "y": 300
+      },
+      "data": {
+        "name": "b"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "width": 160,
+      "height": 100,
+      "type": "syntaxTreeTerminal",
+      "position": {
+        "x": 470,
+        "y": 300
+      },
+      "data": {
+        "name": "c"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-expr-term-left",
+      "source": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+      "target": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "type": "SyntaxTreeLink",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-expr-term-right",
+      "source": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+      "target": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "type": "SyntaxTreeLink",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-term-left-a",
+      "source": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "target": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+      "type": "SyntaxTreeLink",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-term-right-b",
+      "source": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "target": "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e",
+      "type": "SyntaxTreeLink",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-term-right-c",
+      "source": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "target": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "type": "SyntaxTreeLink",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

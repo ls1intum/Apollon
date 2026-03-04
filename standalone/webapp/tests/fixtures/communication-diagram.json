@@ -1,0 +1,124 @@
+{
+  "id": "fixture-communication-diagram-005",
+  "version": "4.0.0",
+  "title": "Communication Diagram",
+  "type": "CommunicationDiagram",
+  "nodes": [
+    {
+      "id": "990e8400-e29b-41d4-a716-446655440040",
+      "width": 180,
+      "height": 70,
+      "type": "communicationObjectName",
+      "position": {
+        "x": -10,
+        "y": 50
+      },
+      "data": {
+        "name": "client: Client",
+        "attributes": [
+          {
+            "id": "a1",
+            "name": "host = localhost"
+          }
+        ],
+        "methods": []
+      },
+      "measured": {
+        "width": 180,
+        "height": 70
+      }
+    },
+    {
+      "id": "990e8400-e29b-41d4-a716-446655440041",
+      "width": 180,
+      "height": 70,
+      "type": "communicationObjectName",
+      "position": {
+        "x": 350,
+        "y": 50
+      },
+      "data": {
+        "name": "server: Server",
+        "attributes": [
+          {
+            "id": "a2",
+            "name": "port = 8080"
+          }
+        ],
+        "methods": []
+      },
+      "measured": {
+        "width": 180,
+        "height": 70
+      }
+    },
+    {
+      "id": "990e8400-e29b-41d4-a716-446655440042",
+      "width": 180,
+      "height": 70,
+      "type": "communicationObjectName",
+      "position": {
+        "x": 350,
+        "y": 200
+      },
+      "data": {
+        "name": "db: Database",
+        "attributes": [
+          {
+            "id": "a3",
+            "name": "driver = postgres"
+          }
+        ],
+        "methods": []
+      },
+      "measured": {
+        "width": 180,
+        "height": 70
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-comm-client-server",
+      "source": "990e8400-e29b-41d4-a716-446655440040",
+      "target": "990e8400-e29b-41d4-a716-446655440041",
+      "type": "CommunicationLink",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "messages": [
+          {
+            "id": "msg1",
+            "name": "1: request()",
+            "direction": "source"
+          },
+          {
+            "id": "msg2",
+            "name": "2: response()",
+            "direction": "target"
+          }
+        ],
+        "points": []
+      }
+    },
+    {
+      "id": "edge-comm-server-db",
+      "source": "990e8400-e29b-41d4-a716-446655440041",
+      "target": "990e8400-e29b-41d4-a716-446655440042",
+      "type": "CommunicationLink",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "messages": [
+          {
+            "id": "msg3",
+            "name": "1.1: query()",
+            "direction": "source"
+          }
+        ],
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}
