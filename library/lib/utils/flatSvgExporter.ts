@@ -180,9 +180,15 @@ const createSvgElement = <T extends keyof SVGElementTagNameMap>(
   return document.createElementNS(SVG_NS, tag)
 }
 
-const setAttr = (element: Element, attrs: Record<string, string | number>): void => {
+const setAttr = (
+  element: Element,
+  attrs: Record<string, string | number>
+): void => {
   Object.entries(attrs).forEach(([key, value]) => {
-    element.setAttribute(key, typeof value === "number" ? formatNumber(value) : value)
+    element.setAttribute(
+      key,
+      typeof value === "number" ? formatNumber(value) : value
+    )
   })
 }
 
@@ -216,27 +222,33 @@ const getHandlePoint = (
 
   const side = getHandleSide(handle, fallbackSide)
 
-  if (normalized.includes("top-left")) return { point: { x: oneThirdX, y }, side }
-  if (normalized.includes("top-right")) return { point: { x: twoThirdX, y }, side }
+  if (normalized.includes("top-left"))
+    return { point: { x: oneThirdX, y }, side }
+  if (normalized.includes("top-right"))
+    return { point: { x: twoThirdX, y }, side }
   if (normalized.includes("bottom-left")) {
     return { point: { x: oneThirdX, y: y + height }, side }
   }
   if (normalized.includes("bottom-right")) {
     return { point: { x: twoThirdX, y: y + height }, side }
   }
-  if (normalized.includes("left-top")) return { point: { x, y: oneThirdY }, side }
-  if (normalized.includes("left-bottom")) return { point: { x, y: twoThirdY }, side }
+  if (normalized.includes("left-top"))
+    return { point: { x, y: oneThirdY }, side }
+  if (normalized.includes("left-bottom"))
+    return { point: { x, y: twoThirdY }, side }
   if (normalized.includes("right-top")) {
     return { point: { x: x + width, y: oneThirdY }, side }
   }
   if (normalized.includes("right-bottom")) {
     return { point: { x: x + width, y: twoThirdY }, side }
   }
-  if (normalized.includes("top")) return { point: { x: x + width / 2, y }, side }
+  if (normalized.includes("top"))
+    return { point: { x: x + width / 2, y }, side }
   if (normalized.includes("bottom")) {
     return { point: { x: x + width / 2, y: y + height }, side }
   }
-  if (normalized.includes("left")) return { point: { x, y: y + height / 2 }, side }
+  if (normalized.includes("left"))
+    return { point: { x, y: y + height / 2 }, side }
   if (normalized.includes("right")) {
     return { point: { x: x + width, y: y + height / 2 }, side }
   }
@@ -479,9 +491,13 @@ const getLastSegmentDirection = (points: Point[]): Point => {
 
 const toAbsolutePath = (points: Point[]): string => {
   if (points.length === 0) return ""
-  const commands = [`M ${formatNumber(points[0].x)} ${formatNumber(points[0].y)}`]
+  const commands = [
+    `M ${formatNumber(points[0].x)} ${formatNumber(points[0].y)}`,
+  ]
   for (let index = 1; index < points.length; index += 1) {
-    commands.push(`L ${formatNumber(points[index].x)} ${formatNumber(points[index].y)}`)
+    commands.push(
+      `L ${formatNumber(points[index].x)} ${formatNumber(points[index].y)}`
+    )
   }
   return commands.join(" ")
 }
@@ -641,7 +657,10 @@ const renderMarker = (
   }
 }
 
-const toDirection = (from: Point, to: Point): "top" | "bottom" | "left" | "right" => {
+const toDirection = (
+  from: Point,
+  to: Point
+): "top" | "bottom" | "left" | "right" => {
   const deltaX = to.x - from.x
   const deltaY = to.y - from.y
   if (Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -655,7 +674,9 @@ const asText = (value: unknown): string | null => {
 }
 
 const buildNodeLayouts = (model: UMLModel): Map<string, NodeLayout> => {
-  const nodeById = new Map<string, ApollonNode>(model.nodes.map((node) => [node.id, node]))
+  const nodeById = new Map<string, ApollonNode>(
+    model.nodes.map((node) => [node.id, node])
+  )
   const memo = new Map<string, { x: number; y: number }>()
 
   const absolutePosition = (node: ApollonNode): { x: number; y: number } => {
@@ -854,7 +875,9 @@ const renderClassNode = (
   const attributes = Array.isArray(nodeData.attributes)
     ? (nodeData.attributes as ClassNodeElement[])
     : []
-  const methods = Array.isArray(nodeData.methods) ? (nodeData.methods as ClassNodeElement[]) : []
+  const methods = Array.isArray(nodeData.methods)
+    ? (nodeData.methods as ClassNodeElement[])
+    : []
 
   const frame = createSvgElement("rect")
   setAttr(frame, {
@@ -887,7 +910,14 @@ const renderClassNode = (
       "text-anchor": "middle",
       fill: textColor,
     })
-    expandBoundsWithText(bounds, stereotype, layout.x + layout.width / 2, stereotypeY, "middle", fontSize * 0.85)
+    expandBoundsWithText(
+      bounds,
+      stereotype,
+      layout.x + layout.width / 2,
+      stereotypeY,
+      "middle",
+      fontSize * 0.85
+    )
 
     const isAbstract = stereotype === ClassType.Abstract
     const classNameY = layout.y + headerHeight / 2 + 10
@@ -901,7 +931,14 @@ const renderClassNode = (
       "text-anchor": "middle",
       fill: textColor,
     })
-    expandBoundsWithText(bounds, name, layout.x + layout.width / 2, classNameY, "middle", fontSize)
+    expandBoundsWithText(
+      bounds,
+      name,
+      layout.x + layout.width / 2,
+      classNameY,
+      "middle",
+      fontSize
+    )
   } else {
     const classNameY = layout.y + headerHeight / 2 + 6
     appendText(parent, name, {
@@ -913,7 +950,14 @@ const renderClassNode = (
       "text-anchor": "middle",
       fill: textColor,
     })
-    expandBoundsWithText(bounds, name, layout.x + layout.width / 2, classNameY, "middle", fontSize)
+    expandBoundsWithText(
+      bounds,
+      name,
+      layout.x + layout.width / 2,
+      classNameY,
+      "middle",
+      fontSize
+    )
   }
 
   attributes.forEach((attribute, index) => {
@@ -940,11 +984,22 @@ const renderClassNode = (
       "text-anchor": "start",
       fill: rowText,
     })
-    expandBoundsWithText(bounds, asText(attribute.name) ?? "", layout.x + padding, rowTextY, "start", fontSize)
+    expandBoundsWithText(
+      bounds,
+      asText(attribute.name) ?? "",
+      layout.x + padding,
+      rowTextY,
+      "start",
+      fontSize
+    )
   })
 
   methods.forEach((method, index) => {
-    const rowY = layout.y + headerHeight + attributes.length * attributeHeight + index * methodHeight
+    const rowY =
+      layout.y +
+      headerHeight +
+      attributes.length * attributeHeight +
+      index * methodHeight
     const rowFill = resolveColor(method.fillColor, fillColor)
     const rowText = resolveColor(method.textColor, textColor)
     const rowRect = createSvgElement("rect")
@@ -966,7 +1021,14 @@ const renderClassNode = (
       "text-anchor": "start",
       fill: rowText,
     })
-    expandBoundsWithText(bounds, asText(method.name) ?? "", layout.x + padding, rowTextY, "start", fontSize)
+    expandBoundsWithText(
+      bounds,
+      asText(method.name) ?? "",
+      layout.x + padding,
+      rowTextY,
+      "start",
+      fontSize
+    )
   })
 
   if (attributes.length > 0) {
@@ -1010,7 +1072,8 @@ const renderPackageNode = (
   fontSize: number,
   bounds: Bounds
 ): void => {
-  const data = (layout.node.data ?? {}) as DefaultNodeProps & Record<string, unknown>
+  const data = (layout.node.data ?? {}) as DefaultNodeProps &
+    Record<string, unknown>
   const { fillColor, strokeColor, textColor } = getNodeColors(data)
   const name = asText(data.name) ?? "Package"
 
@@ -1048,7 +1111,14 @@ const renderPackageNode = (
     "text-anchor": "middle",
     fill: textColor,
   })
-  expandBoundsWithText(bounds, name, layout.x + layout.width / 2, textY, "middle", fontSize)
+  expandBoundsWithText(
+    bounds,
+    name,
+    layout.x + layout.width / 2,
+    textY,
+    "middle",
+    fontSize
+  )
 }
 
 const wrapTextApprox = (
@@ -1092,7 +1162,8 @@ const renderColorDescriptionNode = (
   fontSize: number,
   bounds: Bounds
 ): void => {
-  const data = (layout.node.data ?? {}) as DefaultNodeProps & Record<string, unknown>
+  const data = (layout.node.data ?? {}) as DefaultNodeProps &
+    Record<string, unknown>
   const { fillColor, strokeColor, textColor } = getNodeColors(data)
   const name =
     asText(data.name) ?? asText(data.description) ?? "Color Description"
@@ -1126,7 +1197,14 @@ const renderColorDescriptionNode = (
     "text-anchor": "middle",
     fill: textColor,
   })
-  expandBoundsWithText(bounds, name, layout.x + layout.width / 2, textY, "middle", fontSize)
+  expandBoundsWithText(
+    bounds,
+    name,
+    layout.x + layout.width / 2,
+    textY,
+    "middle",
+    fontSize
+  )
 }
 
 const renderTitleAndDescriptionNode = (
@@ -1169,7 +1247,14 @@ const renderTitleAndDescriptionNode = (
     "text-anchor": "middle",
     fill: "#000000",
   })
-  expandBoundsWithText(bounds, title, layout.x + layout.width / 2, titleY, "middle", titleFontSize)
+  expandBoundsWithText(
+    bounds,
+    title,
+    layout.x + layout.width / 2,
+    titleY,
+    "middle",
+    titleFontSize
+  )
 
   const separatorY = layout.y + padding + titleHeight
   const separator = createSvgElement("line")
@@ -1183,8 +1268,10 @@ const renderTitleAndDescriptionNode = (
   })
   parent.appendChild(separator)
 
-  const descriptionStartY = layout.y + padding + titleHeight + separatorHeight + 10
-  const maxDescriptionHeight = layout.height - (descriptionStartY - layout.y) - padding
+  const descriptionStartY =
+    layout.y + padding + titleHeight + separatorHeight + 10
+  const maxDescriptionHeight =
+    layout.height - (descriptionStartY - layout.y) - padding
   const maxTextWidth = Math.max(20, layout.width - 2 * padding)
   const wrapped = wrapTextApprox(description, maxTextWidth, descriptionFontSize)
   const maxLines = Math.max(0, Math.floor(maxDescriptionHeight / lineHeight))
@@ -1203,7 +1290,14 @@ const renderTitleAndDescriptionNode = (
       "text-anchor": "start",
       fill: "#000000",
     })
-    expandBoundsWithText(bounds, line, layout.x + padding, y, "start", descriptionFontSize)
+    expandBoundsWithText(
+      bounds,
+      line,
+      layout.x + padding,
+      y,
+      "start",
+      descriptionFontSize
+    )
   })
 }
 
@@ -1239,7 +1333,14 @@ const renderFallbackNode = (
     "text-anchor": "middle",
     fill: textColor,
   })
-  expandBoundsWithText(bounds, name, layout.x + layout.width / 2, textY, "middle", fontSize)
+  expandBoundsWithText(
+    bounds,
+    name,
+    layout.x + layout.width / 2,
+    textY,
+    "middle",
+    fontSize
+  )
 }
 
 const toEdgeLayout = (
@@ -1427,7 +1528,13 @@ export const exportClassDiagramAsFlatSvg = (
 
   const bounds = ensureBounds()
   sortedNodes.forEach((layout) => {
-    expandBoundsWithRect(bounds, layout.x, layout.y, layout.width, layout.height)
+    expandBoundsWithRect(
+      bounds,
+      layout.x,
+      layout.y,
+      layout.width,
+      layout.height
+    )
   })
   sortedEdges.forEach((edge) => {
     edge.points.forEach((point) => expandBoundsWithPoint(bounds, point))
@@ -1457,7 +1564,9 @@ export const exportClassDiagramAsFlatSvg = (
     root.appendChild(bg)
   }
 
-  sortedEdges.forEach((edgeLayout) => renderEdge(root, edgeLayout, fontFamily, fontSize, bounds))
+  sortedEdges.forEach((edgeLayout) =>
+    renderEdge(root, edgeLayout, fontFamily, fontSize, bounds)
+  )
 
   sortedNodes.forEach((layout) => {
     if (layout.node.type === "class") {
