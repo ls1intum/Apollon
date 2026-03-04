@@ -112,6 +112,7 @@ export const LAYOUT = Object.freeze({
   LINE_WIDTH: 2,
   LINE_WIDTH_INTERFACE: 2,
   LINE_WIDTH_EDGE: 2,
+  ICON_LINE_WIDTH: 1.5,
 } as const)
 
 // Interface node geometry - single source of truth

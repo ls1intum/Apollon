@@ -5,7 +5,7 @@ import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { ReachabilityGraphMarkingProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils"
-import { MARKER_BASE_SIZE, MARKERS } from "@/constants"
+import { LAYOUT, MARKER_BASE_SIZE, MARKERS } from "@/constants"
 
 type ReachabilityGraphMarkingSVGProps = SVGComponentProps & {
   data: ReachabilityGraphMarkingProps
@@ -135,7 +135,7 @@ export const ReachabilityGraphMarkingSVG: React.FC<
               y1={arrowStartY}
               x2={arrowTip.x}
               y2={arrowTip.y}
-              strokeWidth="1"
+              strokeWidth={LAYOUT.LINE_WIDTH_EDGE}
               stroke={strokeColor}
             />
             {/* Inline arrowhead (open V-shape, matching "black-arrow" marker) */}

@@ -62,6 +62,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             x2={width - 13}
             y2={height - 13}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           <line
             x1={13}
@@ -69,6 +70,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             x2={width - 13}
             y2={13}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
         </g>
       )}
@@ -80,6 +82,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             x2={width / 2}
             y2={height - 10}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           <line
             x1={10}
@@ -87,6 +90,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             x2={width - 10}
             y2={height / 2}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
         </g>
       )}
@@ -97,6 +101,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
           r={Math.min(width, height) / 2 - 12}
           fill="none"
           stroke={strokeColor}
+          strokeWidth={LAYOUT.LINE_WIDTH}
         />
       )}
       {gatewayType === "event-based" && (
@@ -107,6 +112,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             r={Math.min(width, height) / 2 - 9}
             fill="none"
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           <circle
             cx={width / 2}
@@ -114,6 +120,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             r={Math.min(width, height) / 2 - 12}
             fill="none"
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           {/* small pentagon */}
           <path
@@ -122,6 +129,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             } L${width / 2 - 2} ${height / 2 + 3.5} L${width / 2 - 3.5} ${height / 2 - 1} Z`}
             fill="none"
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
         </g>
       )}
@@ -134,6 +142,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             x2={width - 13}
             y2={height - 13}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           <line
             x1={13}
@@ -141,6 +150,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             x2={width - 13}
             y2={13}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           {/* + */}
           <line
@@ -149,6 +159,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             x2={width / 2}
             y2={height - 10}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           <line
             x1={10}
@@ -156,6 +167,7 @@ export const BPMNGatewayNodeSVG: React.FC<BPMNGatewayNodeSVGProps> = ({
             x2={width - 10}
             y2={height / 2}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
         </g>
       )}

@@ -2,6 +2,7 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
+import { LAYOUT } from "@/constants"
 
 export const ActivityFinalNodeSVG: React.FC<SVGComponentProps> = ({
   id,
@@ -36,7 +37,7 @@ export const ActivityFinalNodeSVG: React.FC<SVGComponentProps> = ({
         r={(width / 2) * 0.8}
         fill="var(--apollon2-primary-contrast)"
         stroke="var(--apollon2-background)"
-        strokeWidth={2}
+        strokeWidth={LAYOUT.LINE_WIDTH}
       />
 
       {showAssessmentResults && (

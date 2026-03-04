@@ -1,4 +1,5 @@
 import { CustomText } from "@/components/svgs/nodes/CustomText"
+import { LAYOUT } from "@/constants"
 import { DefaultNodeProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils"
 import { SVGAttributes } from "react"
@@ -18,7 +19,7 @@ export function ColorDescriptionSVG({
   svgAttributes,
   SIDEBAR_PREVIEW_SCALE,
 }: ColorDescriptionSVGProps) {
-  const strokeWidth = 0.5
+  const strokeWidth = LAYOUT.LINE_WIDTH
 
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)

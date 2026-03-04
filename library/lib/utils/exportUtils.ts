@@ -1,6 +1,6 @@
 import { IPoint } from "@/edges/types"
 import { ReactFlowInstance, type Node, type Edge, Rect } from "@xyflow/react"
-import { CSS_VARIABLE_FALLBACKS, STROKE_COLOR } from "@/constants"
+import { CSS_VARIABLE_FALLBACKS, LAYOUT, STROKE_COLOR } from "@/constants"
 import { Point } from "./pathParsing"
 
 /**
@@ -87,9 +87,9 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
     edgePaths.forEach((path) => {
       const clonedPath = path.cloneNode(true) as Element
 
-      // Ensure explicit stroke-width for PowerPoint (default to 1 if not set)
+      // Ensure explicit stroke-width for PowerPoint (default to LINE_WIDTH_EDGE if not set)
       if (!clonedPath.getAttribute("stroke-width")) {
-        clonedPath.setAttribute("stroke-width", "1")
+        clonedPath.setAttribute("stroke-width", String(LAYOUT.LINE_WIDTH_EDGE))
       }
 
       // Ensure explicit stroke color for edge visibility
@@ -414,7 +414,9 @@ function getEdgeBoundsFromDOM(container: HTMLElement): Rect | undefined {
       allPoints.push(...extractPathPoints(d))
     }
     // Track stroke width for bounds expansion
-    const strokeWidth = parseFloat(path.getAttribute("stroke-width") ?? "1")
+    const strokeWidth = parseFloat(
+      path.getAttribute("stroke-width") ?? String(LAYOUT.LINE_WIDTH_EDGE)
+    )
     if (strokeWidth > maxStrokeWidth) {
       maxStrokeWidth = strokeWidth
     }

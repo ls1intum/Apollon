@@ -77,6 +77,7 @@ export const SfcActionTableNodeSVG: React.FC<Props> = ({
               height={rowHeight}
               fill={fillColor}
               stroke={rowStrokeColor}
+              strokeWidth={LAYOUT.LINE_WIDTH}
             />
 
             <CustomText

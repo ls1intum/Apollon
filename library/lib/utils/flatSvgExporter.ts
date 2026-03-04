@@ -892,10 +892,10 @@ const renderClassNode = (
 
   const headerFill = createSvgElement("rect")
   setAttr(headerFill, {
-    x: layout.x + 0.5,
-    y: layout.y + 0.5,
-    width: layout.width - 1,
-    height: headerHeight - 0.5,
+    x: layout.x + LAYOUT.LINE_WIDTH / 2,
+    y: layout.y + LAYOUT.LINE_WIDTH / 2,
+    width: layout.width - LAYOUT.LINE_WIDTH,
+    height: headerHeight - LAYOUT.LINE_WIDTH / 2,
     fill: fillColor,
   })
   parent.appendChild(headerFill)
@@ -968,10 +968,10 @@ const renderClassNode = (
 
     const rowRect = createSvgElement("rect")
     setAttr(rowRect, {
-      x: layout.x + 0.5,
-      y: rowY + 0.5,
-      width: layout.width - 1,
-      height: attributeHeight - 1,
+      x: layout.x + LAYOUT.LINE_WIDTH / 2,
+      y: rowY + LAYOUT.LINE_WIDTH / 2,
+      width: layout.width - LAYOUT.LINE_WIDTH,
+      height: attributeHeight - LAYOUT.LINE_WIDTH,
       fill: rowFill,
     })
     parent.appendChild(rowRect)
@@ -1005,10 +1005,10 @@ const renderClassNode = (
     const rowText = resolveColor(method.textColor, textColor)
     const rowRect = createSvgElement("rect")
     setAttr(rowRect, {
-      x: layout.x + 0.5,
-      y: rowY + 0.5,
-      width: layout.width - 1,
-      height: methodHeight - 1,
+      x: layout.x + LAYOUT.LINE_WIDTH / 2,
+      y: rowY + LAYOUT.LINE_WIDTH / 2,
+      width: layout.width - LAYOUT.LINE_WIDTH,
+      height: methodHeight - LAYOUT.LINE_WIDTH,
       fill: rowFill,
     })
     parent.appendChild(rowRect)
@@ -1216,12 +1216,13 @@ const renderTitleAndDescriptionNode = (
   bounds: Bounds
 ): void => {
   const data = (layout.node.data ?? {}) as Record<string, unknown>
+  const { fillColor, strokeColor, textColor } = getNodeColors(data)
   const title = asText(data.title) ?? "Title"
   const description = asText(data.description) ?? ""
 
   const padding = 10
   const titleHeight = 30
-  const separatorHeight = 1
+  const separatorHeight = LAYOUT.LINE_WIDTH
   const lineHeight = 18
   const titleFontSize = Math.max(14, fontSize)
   const descriptionFontSize = Math.max(12, fontSize - 2)
@@ -1232,9 +1233,9 @@ const renderTitleAndDescriptionNode = (
     y: layout.y + padding / 2,
     width: Math.max(1, layout.width - padding),
     height: Math.max(1, layout.height - padding),
-    stroke: "#000000",
-    "stroke-width": 1,
-    fill: "#ffffff",
+    stroke: strokeColor,
+    "stroke-width": LAYOUT.LINE_WIDTH,
+    fill: fillColor,
   })
   parent.appendChild(outer)
 
@@ -1246,7 +1247,7 @@ const renderTitleAndDescriptionNode = (
     "font-family": fontFamily,
     "font-weight": "700",
     "text-anchor": "middle",
-    fill: "#000000",
+    fill: textColor,
   })
   expandBoundsWithText(
     bounds,
@@ -1264,8 +1265,8 @@ const renderTitleAndDescriptionNode = (
     x2: layout.x + layout.width - padding / 2,
     y1: separatorY,
     y2: separatorY,
-    stroke: "#000000",
-    "stroke-width": separatorHeight,
+    stroke: strokeColor,
+    "stroke-width": LAYOUT.LINE_WIDTH,
   })
   parent.appendChild(separator)
 
@@ -1289,7 +1290,7 @@ const renderTitleAndDescriptionNode = (
       "font-size": descriptionFontSize,
       "font-family": fontFamily,
       "text-anchor": "start",
-      fill: "#000000",
+      fill: textColor,
     })
     expandBoundsWithText(
       bounds,
@@ -1383,7 +1384,7 @@ const renderEdge = (
   setAttr(pathElement, {
     d: pathData,
     stroke: edgeLayout.strokeColor,
-    "stroke-width": LAYOUT.LINE_WIDTH,
+    "stroke-width": LAYOUT.LINE_WIDTH_EDGE,
     fill: "none",
     "stroke-linecap": "round",
     "stroke-linejoin": "round",

@@ -16,11 +16,11 @@ import type { Page } from "@playwright/test"
 export async function extractSVGFromPage(page: Page): Promise<string> {
   return page.evaluate(() => {
     const SVG_NS = "http://www.w3.org/2000/svg"
-    const STROKE_COLOR = "#212529"
+    const STROKE_COLOR = "#000000"
 
     const CSS_VARIABLE_FALLBACKS: Record<string, string> = {
       "--apollon2-primary": "#3e8acc",
-      "--apollon2-primary-contrast": "#212529",
+      "--apollon2-primary-contrast": "#000000",
       "--apollon2-secondary": "#6c757d",
       "--apollon2-alert-warning-yellow": "#ffc107",
       "--apollon2-alert-warning-background": "#fff3cd",

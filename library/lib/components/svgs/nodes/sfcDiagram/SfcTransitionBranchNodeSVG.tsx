@@ -1,4 +1,5 @@
 import { CustomText } from "@/components"
+import { LAYOUT } from "@/constants"
 import { SfcTransitionBranchNodeProps } from "@/types"
 import { SVGComponentProps } from "@/types/SVG"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
@@ -38,6 +39,7 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
         r={radius}
         fill={fillColor}
         stroke={strokeColor}
+        strokeWidth={LAYOUT.LINE_WIDTH}
       />
       {showHint && (
         <CustomText x={cx} y={height - 2} textAnchor="middle">

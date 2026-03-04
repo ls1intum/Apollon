@@ -43,6 +43,7 @@
   --panel-shadow: 0 0 4px 0 var(--apollon2-background-variant);
   --text: var(--apollon2-primary-contrast);
   --xy-edge-stroke: var(--apollon2-primary-contrast);
+  --xy-edge-stroke-width: 2px;
   --xy-minimap-mask-background-color-props: #00000020;
 }
 .react-flow__controls-button {

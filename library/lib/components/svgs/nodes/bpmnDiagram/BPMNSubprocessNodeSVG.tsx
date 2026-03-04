@@ -99,6 +99,7 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
             height={14}
             fill="none"
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           <line
             x1={width / 2 - 4}
@@ -106,6 +107,7 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
             x2={width / 2 + 4}
             y2={height - 7}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
           <line
             x1={width / 2}
@@ -113,6 +115,7 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
             x2={width / 2}
             y2={height - 3}
             stroke={strokeColor}
+            strokeWidth={LAYOUT.LINE_WIDTH}
           />
         </>
       )}
