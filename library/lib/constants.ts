@@ -439,7 +439,7 @@ export const dropElementConfigs: Readonly<
       defaultData: { name: "Use Case" },
       svg: UseCaseNodeSVG,
     },
-     {
+    {
       type: "useCaseActor",
       width: 100,
       height: 150,
@@ -452,8 +452,7 @@ export const dropElementConfigs: Readonly<
       height: 120,
       defaultData: { name: "System" },
       svg: UseCaseSystemNodeSVG,
-    }
-   
+    },
   ],
   [UMLDiagramType.CommunicationDiagram]: [
     {
@@ -497,7 +496,11 @@ export const dropElementConfigs: Readonly<
       type: "deploymentNode",
       width: 160,
       height: 100,
-      defaultData: { name: "Node", isComponentHeaderShown: true, stereotype: "node" },
+      defaultData: {
+        name: "Node",
+        isComponentHeaderShown: true,
+        stereotype: "node",
+      },
       svg: DeploymentNodeSVG,
     },
     {
@@ -729,11 +732,17 @@ export const dropElementConfigs: Readonly<
       type: "sfcActionTable",
       width: 160,
       height: 30,
-      defaultData: { 
+      defaultData: {
         name: "Action Table",
         actionRows: [
-          { id: "1", identifier: "A", name: "Actions", fillColor: "", strokeColor: "" }
-        ]
+          {
+            id: "1",
+            identifier: "A",
+            name: "Actions",
+            fillColor: "",
+            strokeColor: "",
+          },
+        ],
       },
       svg: SfcActionTableNodeSVG,
     },

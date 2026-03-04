@@ -16,8 +16,9 @@ export const EditableAttributeList: React.FC<Props> = ({ nodeId }) => {
     useShallow((state) => ({ setNodes: state.setNodes, nodes: state.nodes }))
   )
   const [newItem, setNewItem] = useState("")
-  const nodeData = nodes.find((node) => node.id === nodeId)
-    ?.data as ClassNodeProps | undefined
+  const nodeData = nodes.find((node) => node.id === nodeId)?.data as
+    | ClassNodeProps
+    | undefined
   const attributes = nodeData?.attributes ?? []
 
   const handleAttributeChange = (id: string, key: string, newName: string) => {
