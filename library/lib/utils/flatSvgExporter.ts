@@ -2,6 +2,7 @@ import {
   CSS_VARIABLE_FALLBACKS,
   EDGES,
   FILL_COLOR,
+  INTERFACE,
   LAYOUT,
   MARKER_CONFIGS,
   MARKERS,
@@ -83,7 +84,7 @@ export type CompatibilityValidation = {
 
 const SVG_NS = "http://www.w3.org/2000/svg"
 const PACKAGE_TAB_HEIGHT = 10
-const DEFAULT_MARGIN = 20
+const DEFAULT_MARGIN = 10
 const DEFAULT_FONT_SIZE = 16
 const DEFAULT_FONT_FAMILY = "Arial, Helvetica, sans-serif"
 
@@ -633,8 +634,8 @@ const renderMarker = (
 
   if (config.type === "semicircle") {
     const strokeW = MARKERS.STROKE_WIDTH.semicircle
-    const gap = 2
-    const r = 10 + gap
+    const gap = 4
+    const r = INTERFACE.RADIUS + gap
     const halfAngle = (45 * Math.PI) / 180
     const cosHalf = Math.cos(halfAngle)
     const sinHalf = Math.sin(halfAngle)
@@ -1388,7 +1389,7 @@ const renderEdge = (
     "stroke-linejoin": "round",
   })
   if (edgeLayout.dashed) {
-    pathElement.setAttribute("stroke-dasharray", "8")
+    pathElement.setAttribute("stroke-dasharray", "10")
   }
   parent.appendChild(pathElement)
 

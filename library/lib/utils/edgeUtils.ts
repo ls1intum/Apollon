@@ -226,14 +226,14 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
       return {
         markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-arrow)",
-        strokeDashArray: "8",
+        strokeDashArray: "10",
         offset: 0,
       }
     case "ClassRealization":
       return {
         markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#white-triangle)",
-        strokeDashArray: "8",
+        strokeDashArray: "10",
         offset: 0,
       }
     case "BPMNSequenceFlow":
@@ -248,20 +248,20 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
         markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#bpmn-white-triangle)",
         markerStart: "url(#bpmn-white-circle)",
-        strokeDashArray: "8",
+        strokeDashArray: "10",
         offset: 8,
       }
     case "BPMNAssociationFlow":
       return {
         markerPadding: EDGES.MARKER_PADDING,
-        strokeDashArray: "8",
+        strokeDashArray: "10",
         offset: 0,
       }
     case "BPMNDataAssociationFlow":
       return {
         markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#bpmn-arrow)",
-        strokeDashArray: "8",
+        strokeDashArray: "10",
         offset: 8,
       }
     case "UseCaseAssociation":
@@ -274,14 +274,14 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
       return {
         markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-arrow)",
-        strokeDashArray: "4",
+        strokeDashArray: "10",
         offset: 0,
       }
     case "UseCaseExtend":
       return {
         markerPadding: EDGES.MARKER_PADDING,
         markerEnd: "url(#black-arrow)",
-        strokeDashArray: "4",
+        strokeDashArray: "10",
         offset: 0,
       }
     case "UseCaseGeneralization":

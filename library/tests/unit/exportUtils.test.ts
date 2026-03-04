@@ -143,7 +143,7 @@ describe("resolveCSSVariable", () => {
 
   it("resolves --apollon2-primary-contrast", () => {
     expect(resolveCSSVariable("var(--apollon2-primary-contrast)")).toBe(
-      "#212529"
+      "#000000"
     )
   })
 
@@ -209,7 +209,7 @@ describe("replaceCSSVariables", () => {
     svg.appendChild(path)
 
     replaceCSSVariables(svg)
-    expect(path.getAttribute("stroke")).toBe("#212529")
+    expect(path.getAttribute("stroke")).toBe("#000000")
   })
 
   it("resolves currentColor to inherited stroke color", () => {
@@ -218,8 +218,8 @@ describe("replaceCSSVariables", () => {
     svg.appendChild(rect)
 
     replaceCSSVariables(svg)
-    // Default inherited color is STROKE_COLOR (#212529)
-    expect(rect.getAttribute("fill")).toBe("#212529")
+    // Default inherited color is STROKE_COLOR (#000000)
+    expect(rect.getAttribute("fill")).toBe("#000000")
   })
 
   it("resolves currentColor using parent color attribute", () => {
@@ -240,7 +240,7 @@ describe("replaceCSSVariables", () => {
     svg.appendChild(path)
 
     replaceCSSVariables(svg)
-    expect(path.getAttribute("fill")).toBe("#212529")
+    expect(path.getAttribute("fill")).toBe("#000000")
   })
 
   it("resolves context-fill to current color", () => {
@@ -249,7 +249,7 @@ describe("replaceCSSVariables", () => {
     svg.appendChild(path)
 
     replaceCSSVariables(svg)
-    expect(path.getAttribute("stroke")).toBe("#212529")
+    expect(path.getAttribute("stroke")).toBe("#000000")
   })
 
   it("replaces custom font-family with system fonts", () => {

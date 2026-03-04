@@ -78,7 +78,7 @@ export function tryFindStraightPath(
 ): IPoint[] | null {
   // Offset determines how far the straight path extends:
   // - Standard markers (MARKER_PADDING = -3): no extra offset
-  // - Interface markers (padding = -INTERFACE.RADIUS = -10): offset by interface radius
+  // - Interface markers (padding = -INTERFACE.RADIUS = -15): offset by interface radius
   // - Other cases: default offset
   const offset =
     targetPadding === EDGES.MARKER_PADDING

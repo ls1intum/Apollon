@@ -44,7 +44,7 @@ export const BPMNGroupNodeSVG: React.FC<BPMNGroupNodeSVGProps> = ({
         stroke={strokeColor}
         strokeWidth={LAYOUT.LINE_WIDTH}
         fill={fillColor}
-        strokeDasharray="4"
+        strokeDasharray="10"
         rx={10}
         ry={10}
       />

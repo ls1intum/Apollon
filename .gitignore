@@ -67,4 +67,4 @@ ios/
 
 # Capacitor generated icons
 icons/
-venv/
+venv/.context/

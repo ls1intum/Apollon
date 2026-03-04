@@ -74,7 +74,7 @@ export const CANVAS = Object.freeze({
 export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
   Object.freeze({
     "--apollon2-primary": "#3e8acc",
-    "--apollon2-primary-contrast": "#212529",
+    "--apollon2-primary-contrast": "#000000",
     "--apollon2-secondary": "#6c757d",
     "--apollon2-alert-warning-yellow": "#ffc107",
     "--apollon2-alert-warning-background": "#fff3cd",
@@ -109,16 +109,16 @@ export const LAYOUT = Object.freeze({
   DEFAULT_ATTRIBUTE_HEIGHT: 30,
   DEFAULT_METHOD_HEIGHT: 30,
   DEFAULT_PADDING: 10,
-  LINE_WIDTH: 1,
-  LINE_WIDTH_INTERFACE: 1,
+  LINE_WIDTH: 2,
+  LINE_WIDTH_INTERFACE: 2,
   LINE_WIDTH_EDGE: 2,
 } as const)
 
 // Interface node geometry - single source of truth
 // All interface-related dimensions derive from this
 export const INTERFACE = Object.freeze({
-  SIZE: 20, // Interface node is a square (width = height)
-  RADIUS: 10, // SIZE / 2 - circle radius
+  SIZE: 30, // Interface node is a square (width = height)
+  RADIUS: 15, // SIZE / 2 - circle radius
   STROKE_WIDTH: 2, // Must match LINE_WIDTH_EDGE for consistent rendering
 } as const)
 
@@ -126,7 +126,7 @@ export const INTERFACE = Object.freeze({
 /* Edges                                                                      */
 /* -------------------------------------------------------------------------- */
 // Base marker sizes (exported for reference in marker configs)
-export const MARKER_BASE_SIZE = 22
+export const MARKER_BASE_SIZE = 18
 export const BPMN_MARKER_SIZE = 11
 
 export const EDGES = Object.freeze({
@@ -174,7 +174,7 @@ export interface MarkerConfig {
 }
 
 // Interface socket markers - radius derived from INTERFACE.RADIUS
-const INTERFACE_SOCKET_SIZE = 10 // Must equal INTERFACE.SIZE / 2
+const INTERFACE_SOCKET_SIZE = 15 // Must equal INTERFACE.SIZE / 2
 
 export const MARKER_CONFIGS = Object.freeze({
   // Class diagram markers - golden ratio inspired proportions
@@ -484,8 +484,8 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "componentInterface",
-      width: 20,
-      height: 20,
+      width: 30,
+      height: 30,
       defaultData: { name: "Interface" },
       svg: ComponentInterfaceNodeSVG,
       marginTop: 10,
@@ -519,8 +519,8 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "deploymentInterface",
-      width: 20,
-      height: 20,
+      width: 30,
+      height: 30,
       defaultData: { name: "Interface" },
       svg: DeploymentInterfaceSVG,
       marginTop: 10,

@@ -211,12 +211,12 @@ export function InlineMarker({
       const strokeW = MARKERS.STROKE_WIDTH.semicircle
       // Socket radius = Ball radius + gap for visual separation
       // Gap accounts for both stroke widths plus desired visual spacing:
-      //   circle outer edge = RADIUS + strokeWidth/2 = 10 + 1 = 11
+      //   circle outer edge = RADIUS + strokeWidth/2 = 15 + 1 = 16
       //   arc inner edge = (RADIUS + gap) - strokeWidth/2
       //   visual gap = arc_inner - circle_outer = gap - strokeWidth
       // With gap=4, strokeWidth=2: visual gap = 4 - 2 = 2px clear space
       const gap = 4
-      const r = INTERFACE.RADIUS + gap // 10 + 4 = 14
+      const r = INTERFACE.RADIUS + gap // 15 + 4 = 19
 
       // Arc span = 90° allows 4 connections (N,S,E,W) without overlap
       // For 180° semicircle: halfAngle=90°, cos=0, sin=1 → transform(r, ±r)

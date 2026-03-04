@@ -284,7 +284,7 @@ describe("getEdgeMarkerStyles", () => {
     const result = getEdgeMarkerStyles("ClassRealization")
     expect(result.markerEnd).toBe("url(#white-triangle)")
     expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
   })
 
   // Dashed arrow group (dependency)
@@ -292,18 +292,18 @@ describe("getEdgeMarkerStyles", () => {
     const result = getEdgeMarkerStyles("ClassDependency")
     expect(result.markerEnd).toBe("url(#black-arrow)")
     expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
   })
 
   it("returns dashed for ComponentDependency", () => {
     const result = getEdgeMarkerStyles("ComponentDependency")
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
     expect(result.markerEnd).toBe("url(#black-arrow)")
   })
 
   it("returns dashed for DeploymentDependency", () => {
     const result = getEdgeMarkerStyles("DeploymentDependency")
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
   })
 
   // PetriNet black-triangle
@@ -327,14 +327,14 @@ describe("getEdgeMarkerStyles", () => {
     expect(result.markerEnd).toBe("url(#bpmn-white-triangle)")
     expect(result.markerStart).toBe("url(#bpmn-white-circle)")
     expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
     expect(result.offset).toBe(8)
   })
 
   it("returns dashed style for BPMNAssociationFlow", () => {
     const result = getEdgeMarkerStyles("BPMNAssociationFlow")
     expect(result.markerEnd).toBeUndefined()
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
     expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
   })
 
@@ -342,7 +342,7 @@ describe("getEdgeMarkerStyles", () => {
     const result = getEdgeMarkerStyles("BPMNDataAssociationFlow")
     expect(result.markerEnd).toBe("url(#bpmn-arrow)")
     expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
     expect(result.offset).toBe(8)
   })
 
@@ -358,13 +358,13 @@ describe("getEdgeMarkerStyles", () => {
     const result = getEdgeMarkerStyles("UseCaseInclude")
     expect(result.markerEnd).toBe("url(#black-arrow)")
     expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("4")
+    expect(result.strokeDashArray).toBe("10")
   })
 
   it("returns black-arrow dashed for UseCaseExtend", () => {
     const result = getEdgeMarkerStyles("UseCaseExtend")
     expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.strokeDashArray).toBe("4")
+    expect(result.strokeDashArray).toBe("10")
   })
 
   it("returns white-triangle for UseCaseGeneralization", () => {
