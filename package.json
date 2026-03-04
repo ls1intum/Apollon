@@ -31,6 +31,8 @@
     "lint:fix:webapp": "npm run lint:fix --workspace=@tumaet/webapp",
     "format": "prettier --ignore-path .prettierignore --write \"**/*.+(js|ts|tsx|json)\"",
     "format:check": "prettier --ignore-path .prettierignore --check \"**/*.(js|ts|tsx|json)\"",
+    "test": "npm run test --workspace=@tumaet/apollon",
+    "test:e2e": "npm run test:e2e --workspace=@tumaet/webapp",
     "preview": "husky",
     "capacitor:add:android": "npx cap add android",
     "capacitor:add:ios": "npx cap add ios",
