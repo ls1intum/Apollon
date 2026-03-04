@@ -9,6 +9,7 @@ const {
   convertStyleToAttributes,
   removeMarkerElements,
   mergeBounds,
+  getNodeOverflowBoundsFromDOM,
 } = __testing
 
 // ---------------------------------------------------------------------------
@@ -362,12 +363,15 @@ describe("convertStyleToAttributes", () => {
     expect(path.hasAttribute("stroke-dasharray")).toBe(false)
   })
 
-  it("skips redundant opacity: 1", () => {
+  it("converts opacity: 1 to explicit attribute for non-browser renderer compatibility", () => {
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
     rect.setAttribute("style", "opacity: 1")
 
     convertStyleToAttributes(rect)
-    expect(rect.hasAttribute("opacity")).toBe(false)
+    // opacity: 1 must be explicitly set as an attribute for non-browser SVG renderers
+    // (resvg, Inkscape) that may not default to fully opaque, causing overlap artifacts
+    expect(rect.hasAttribute("opacity")).toBe(true)
+    expect(rect.getAttribute("opacity")).toBe("1")
   })
 
   it("does not overwrite existing attribute with style value", () => {
@@ -478,5 +482,135 @@ describe("mergeBounds", () => {
     const b = { x: 0, y: 0, width: 50, height: 50 }
     const result = mergeBounds(a, b)
     expect(result).toEqual({ x: -50, y: -50, width: 100, height: 100 })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getNodeOverflowBoundsFromDOM
+// ---------------------------------------------------------------------------
+describe("getNodeOverflowBoundsFromDOM", () => {
+  /**
+   * Helper: create a minimal container with a .react-flow__node
+   * containing an SVG with the given inner elements.
+   */
+  function makeContainer(
+    nodeX: number,
+    nodeY: number,
+    vbW: number,
+    vbH: number,
+    innerHTML: string
+  ): HTMLElement {
+    const container = document.createElement("div")
+    const node = document.createElement("div")
+    node.classList.add("react-flow__node")
+    node.setAttribute(
+      "style",
+      `transform: translate(${nodeX}px, ${nodeY}px); width: ${vbW}px; height: ${vbH}px`
+    )
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    svg.setAttribute("width", `${vbW}`)
+    svg.setAttribute("height", `${vbH}`)
+    svg.setAttribute("viewBox", `0 0 ${vbW} ${vbH}`)
+    svg.setAttribute("overflow", "visible")
+    svg.innerHTML = innerHTML
+    node.appendChild(svg)
+    container.appendChild(node)
+    return container
+  }
+
+  it("returns undefined when no overflow content exists", () => {
+    const container = makeContainer(
+      100,
+      100,
+      160,
+      120,
+      `<rect x="0" y="0" width="160" height="120" />`
+    )
+    expect(getNodeOverflowBoundsFromDOM(container)).toBeUndefined()
+  })
+
+  it("detects overflow from a <line> extending to negative coords", () => {
+    // Simulates the initial marking arrow: line from (-50,-50) to (3,3)
+    // Node at (40, 80), viewBox 0 0 160 120
+    const container = makeContainer(
+      40,
+      80,
+      160,
+      120,
+      `<line x1="-50" y1="-50" x2="3" y2="3" />`
+    )
+    const bounds = getNodeOverflowBoundsFromDOM(container)
+    expect(bounds).toBeDefined()
+    // Global coords: (-50, -50) → (40 + (-50)*1, 80 + (-50)*1) = (-10, 30)
+    // Global coords: (3, 3) → (40 + 3, 80 + 3) = (43, 83)
+    expect(bounds!.x).toBe(-10)
+    expect(bounds!.y).toBe(30)
+    expect(bounds!.width).toBe(53) // 43 - (-10)
+    expect(bounds!.height).toBe(53) // 83 - 30
+  })
+
+  it("detects overflow from a <path> extending to negative coords", () => {
+    const container = makeContainer(
+      40,
+      80,
+      160,
+      120,
+      `<path d="M-20,-10 L5,5 L10,10" />`
+    )
+    const bounds = getNodeOverflowBoundsFromDOM(container)
+    expect(bounds).toBeDefined()
+    // Global coords of (-20,-10): (40-20, 80-10) = (20, 70)
+    // Global coords of (10, 10): (50, 90)
+    expect(bounds!.x).toBe(20)
+    expect(bounds!.y).toBe(70)
+  })
+
+  it("detects overflow from a <polyline> extending to negative coords", () => {
+    const container = makeContainer(
+      40,
+      80,
+      160,
+      120,
+      `<polyline points="-50,-50 -5,-5" />`
+    )
+    const bounds = getNodeOverflowBoundsFromDOM(container)
+    expect(bounds).toBeDefined()
+    expect(bounds!.x).toBe(-10) // 40 + (-50)
+    expect(bounds!.y).toBe(30) // 80 + (-50)
+  })
+
+  it("ignores elements that are fully within the viewBox", () => {
+    const container = makeContainer(
+      100,
+      100,
+      160,
+      120,
+      `<line x1="10" y1="10" x2="150" y2="110" />
+       <path d="M20,20 L140,100" />
+       <circle cx="80" cy="60" r="30" />`
+    )
+    expect(getNodeOverflowBoundsFromDOM(container)).toBeUndefined()
+  })
+
+  it("detects overflow from a <circle> extending beyond viewBox", () => {
+    // Circle at (5, 5) with radius 20 — extends to (-15, -15)
+    const container = makeContainer(
+      100,
+      100,
+      160,
+      120,
+      `<circle cx="5" cy="5" r="20" />`
+    )
+    const bounds = getNodeOverflowBoundsFromDOM(container)
+    expect(bounds).toBeDefined()
+    // Global coords: (5-20, 5-20) = (-15, -15) → (100-15, 100-15) = (85, 85)
+    // Global coords: (5+20, 5+20) = (25, 25) → (125, 125)
+    expect(bounds!.x).toBe(85)
+    expect(bounds!.y).toBe(85)
+  })
+
+  it("returns undefined when container has no nodes", () => {
+    const container = document.createElement("div")
+    expect(getNodeOverflowBoundsFromDOM(container)).toBeUndefined()
   })
 })

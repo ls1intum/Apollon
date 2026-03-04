@@ -209,10 +209,14 @@ export function InlineMarker({
 
     case "semicircle": {
       const strokeW = MARKERS.STROKE_WIDTH.semicircle
-      // Socket radius = Ball radius + gap for CONCENTRIC circles
-      // Gap = 2px visual separation between socket inner edge and ball outer edge
-      const gap = 2
-      const r = INTERFACE.RADIUS + gap // 10 + 2 = 12
+      // Socket radius = Ball radius + gap for visual separation
+      // Gap accounts for both stroke widths plus desired visual spacing:
+      //   circle outer edge = RADIUS + strokeWidth/2 = 10 + 1 = 11
+      //   arc inner edge = (RADIUS + gap) - strokeWidth/2
+      //   visual gap = arc_inner - circle_outer = gap - strokeWidth
+      // With gap=4, strokeWidth=2: visual gap = 4 - 2 = 2px clear space
+      const gap = 4
+      const r = INTERFACE.RADIUS + gap // 10 + 4 = 14
 
       // Arc span = 90° allows 4 connections (N,S,E,W) without overlap
       // For 180° semicircle: halfAngle=90°, cos=0, sin=1 → transform(r, ±r)

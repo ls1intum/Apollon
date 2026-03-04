@@ -302,11 +302,10 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredInterface":
     case "DeploymentRequiredInterface":
       return {
-        // For CONCENTRIC circles: markerPadding = MARKER_PADDING + gap
+        // markerPadding = MARKER_PADDING + gap
         // MARKER_PADDING (-3) compensates for React Flow handle offset
-        // gap (2) is the visual separation between socket and ball
-        // This positions socket center exactly at ball center
-        markerPadding: EDGES.MARKER_PADDING + 2,
+        // gap (4) is the spacing between socket arc and ball circle
+        markerPadding: EDGES.MARKER_PADDING + 4,
         markerEnd: "url(#required-interface)",
         strokeDashArray: "0",
         offset: 0,
@@ -314,8 +313,8 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredQuarterInterface":
     case "DeploymentRequiredQuarterInterface":
       return {
-        // Same as full required interface - concentric circles
-        markerPadding: EDGES.MARKER_PADDING + 2,
+        // Same as full required interface
+        markerPadding: EDGES.MARKER_PADDING + 4,
         markerEnd: "url(#required-interface-quarter)",
         strokeDashArray: "0",
         offset: 0,
@@ -323,8 +322,8 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredThreeQuarterInterface":
     case "DeploymentRequiredThreeQuarterInterface":
       return {
-        // Same as full required interface - concentric circles
-        markerPadding: EDGES.MARKER_PADDING + 2,
+        // Same as full required interface
+        markerPadding: EDGES.MARKER_PADDING + 4,
         markerEnd: "url(#required-interface-threequarter)",
         strokeDashArray: "0",
         offset: 0,

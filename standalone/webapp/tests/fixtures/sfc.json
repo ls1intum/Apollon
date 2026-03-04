@@ -23,46 +23,46 @@
     },
     {
       "id": "22bb3cc4-dd5e-4f6a-7b8c-9d0e1f2a3b4c",
-      "width": 20,
-      "height": 20,
+      "width": 30,
+      "height": 30,
       "type": "sfcTransitionBranch",
       "position": {
-        "x": 170,
+        "x": 165,
         "y": 90
       },
       "data": {
         "name": ""
       },
       "measured": {
-        "width": 20,
-        "height": 20
+        "width": 30,
+        "height": 30
       }
     },
     {
       "id": "33cc4dd5-ee6f-4a7b-8c9d-0e1f2a3b4c5d",
       "width": 160,
-      "height": 70,
+      "height": 80,
       "type": "sfcStep",
       "position": {
         "x": 100,
-        "y": 130
+        "y": 140
       },
       "data": {
         "name": "Step 1"
       },
       "measured": {
         "width": 160,
-        "height": 70
+        "height": 80
       }
     },
     {
       "id": "44dd5ee6-ff7a-4b8c-9d0e-1f2a3b4c5d6e",
       "width": 160,
-      "height": 60,
+      "height": 80,
       "type": "sfcActionTable",
       "position": {
-        "x": 300,
-        "y": 130
+        "x": 280,
+        "y": 140
       },
       "data": {
         "name": "",
@@ -81,24 +81,24 @@
       },
       "measured": {
         "width": 160,
-        "height": 60
+        "height": 80
       }
     },
     {
       "id": "55ee6ff7-aa8b-4c9d-0e1f-2a3b4c5d6e7f",
-      "width": 20,
-      "height": 20,
+      "width": 30,
+      "height": 30,
       "type": "sfcTransitionBranch",
       "position": {
-        "x": 170,
-        "y": 220
+        "x": 165,
+        "y": 240
       },
       "data": {
         "name": ""
       },
       "measured": {
-        "width": 20,
-        "height": 20
+        "width": 30,
+        "height": 30
       }
     },
     {
@@ -108,7 +108,7 @@
       "type": "sfcStep",
       "position": {
         "x": 100,
-        "y": 260
+        "y": 290
       },
       "data": {
         "name": "Step 2"
@@ -120,36 +120,36 @@
     },
     {
       "id": "77aa8bb9-cc0d-4e1f-2a3b-4c5d6e7f8a9b",
-      "width": 20,
-      "height": 20,
+      "width": 30,
+      "height": 30,
       "type": "sfcTransitionBranch",
       "position": {
-        "x": 170,
-        "y": 360
+        "x": 165,
+        "y": 380
       },
       "data": {
         "name": ""
       },
       "measured": {
-        "width": 20,
-        "height": 20
+        "width": 30,
+        "height": 30
       }
     },
     {
       "id": "88bb9cc0-dd1e-4f2a-3b4c-5d6e7f8a9b0c",
       "width": 60,
-      "height": 20,
+      "height": 30,
       "type": "sfcJump",
       "position": {
         "x": 150,
-        "y": 410
+        "y": 430
       },
       "data": {
         "name": "Init"
       },
       "measured": {
         "width": 60,
-        "height": 20
+        "height": 30
       }
     }
   ],

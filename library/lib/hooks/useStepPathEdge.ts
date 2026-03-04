@@ -177,7 +177,13 @@ export const useStepPathEdge = ({
         height: targetNode.height ?? 160,
         direction: targetPosition,
       },
-      padding
+      padding,
+      {
+        sourceX: roundedSourceX,
+        sourceY: roundedSourceY,
+        targetX: roundedTargetX,
+        targetY: roundedTargetY,
+      }
     )
 
     if (straightPathPoints !== null) {
@@ -601,7 +607,13 @@ export const useStepPathEdge = ({
               height: targetNode.height ?? 160,
               direction: targetPosition,
             },
-            padding
+            padding,
+            {
+              sourceX: Math.round(newSourceX),
+              sourceY: Math.round(newSourceY),
+              targetX: Math.round(newTargetX),
+              targetY: Math.round(newTargetY),
+            }
           )
 
           if (straightPathPoints !== null) {

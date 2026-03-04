@@ -119,7 +119,7 @@ export const LAYOUT = Object.freeze({
 export const INTERFACE = Object.freeze({
   SIZE: 20, // Interface node is a square (width = height)
   RADIUS: 10, // SIZE / 2 - circle radius
-  STROKE_WIDTH: 1, // Same as LINE_WIDTH_INTERFACE
+  STROKE_WIDTH: 2, // Must match LINE_WIDTH_EDGE for consistent rendering
 } as const)
 
 /* -------------------------------------------------------------------------- */
@@ -275,7 +275,7 @@ export const MARKERS = Object.freeze({
     arrow: 1.5,
     rhombus: 1.3,
     circle: 1.3,
-    semicircle: 1, // Must match INTERFACE.STROKE_WIDTH for pixel-perfect alignment
+    semicircle: 2, // Must match INTERFACE.STROKE_WIDTH for pixel-perfect alignment
   } as const satisfies Record<MarkerShape, number>),
 } as const)
 

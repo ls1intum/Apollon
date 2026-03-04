@@ -40,7 +40,7 @@ export const DeploymentInterfaceSVG: React.FC<Props> = ({
           cx={width / 2}
           cy={height / 2}
           r={width / 2}
-          strokeWidth={LAYOUT.LINE_WIDTH}
+          strokeWidth={LAYOUT.LINE_WIDTH_EDGE}
           stroke={strokeColor}
           fill={fillColor}
         />

@@ -68,7 +68,13 @@ export function tryFindStraightPath(
     height: number
     direction: Position
   },
-  targetPadding: number
+  targetPadding: number,
+  handleCoords?: {
+    sourceX: number
+    sourceY: number
+    targetX: number
+    targetY: number
+  }
 ): IPoint[] | null {
   // Offset determines how far the straight path extends:
   // - Standard markers (MARKER_PADDING = -3): no extra offset
@@ -81,6 +87,14 @@ export function tryFindStraightPath(
         ? INTERFACE.RADIUS
         : 15
   const OVERLAP_THRESHOLD = 40
+
+  // Maximum allowed misalignment (in pixels) between actual handle positions
+  // on the axis perpendicular to the path direction. If handles are offset
+  // more than this (e.g. "right-top" vs "left-bottom"), a straight 2-point
+  // path would render as a diagonal, so we bail out and let the caller use
+  // getSmoothStepPath which produces proper orthogonal bends.
+  const HANDLE_ALIGNMENT_TOLERANCE = 1
+
   const sourceHandleEdge = source.direction
   const targetHandleEdge = target.direction
 
@@ -90,6 +104,15 @@ export function tryFindStraightPath(
     targetHandleEdge === Position.Left &&
     target.position.x >= source.position.x + source.width
   ) {
+    // If actual handle Y-coordinates are misaligned, skip straight path
+    if (
+      handleCoords &&
+      Math.abs(handleCoords.sourceY - handleCoords.targetY) >
+        HANDLE_ALIGNMENT_TOLERANCE
+    ) {
+      return null
+    }
+
     const overlapY = computeOverlap(
       [
         source.position.y,
@@ -121,6 +144,15 @@ export function tryFindStraightPath(
     targetHandleEdge === Position.Right &&
     source.position.x >= target.position.x + target.width
   ) {
+    // If actual handle Y-coordinates are misaligned, skip straight path
+    if (
+      handleCoords &&
+      Math.abs(handleCoords.sourceY - handleCoords.targetY) >
+        HANDLE_ALIGNMENT_TOLERANCE
+    ) {
+      return null
+    }
+
     const overlapY = computeOverlap(
       [
         source.position.y,
@@ -153,6 +185,15 @@ export function tryFindStraightPath(
     targetHandleEdge === Position.Top &&
     target.position.y >= source.position.y + source.height
   ) {
+    // If actual handle X-coordinates are misaligned, skip straight path
+    if (
+      handleCoords &&
+      Math.abs(handleCoords.sourceX - handleCoords.targetX) >
+        HANDLE_ALIGNMENT_TOLERANCE
+    ) {
+      return null
+    }
+
     const overlapX = computeOverlap(
       [source.position.x, source.position.x + source.width],
       [target.position.x, target.position.x + target.width]
@@ -179,6 +220,15 @@ export function tryFindStraightPath(
     targetHandleEdge === Position.Bottom &&
     source.position.y >= target.position.y + target.height
   ) {
+    // If actual handle X-coordinates are misaligned, skip straight path
+    if (
+      handleCoords &&
+      Math.abs(handleCoords.sourceX - handleCoords.targetX) >
+        HANDLE_ALIGNMENT_TOLERANCE
+    ) {
+      return null
+    }
+
     const overlapX = computeOverlap(
       [source.position.x, source.position.x + source.width],
       [target.position.x, target.position.x + target.width]

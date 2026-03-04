@@ -33,6 +33,9 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   mainSVG.setAttribute("viewBox", `${clip.x} ${clip.y} ${width} ${height}`)
   mainSVG.setAttribute("width", `${width}`)
   mainSVG.setAttribute("height", `${height}`)
+  // Use geometric precision for anti-aliasing to reduce visual artifacts
+  // where edges overlap with node borders in non-browser renderers (resvg, Inkscape)
+  mainSVG.setAttribute("shape-rendering", "geometricPrecision")
 
   const MainNodesGTag = document.createElementNS(SVG_NS, "g")
   mainSVG.appendChild(MainNodesGTag)
@@ -107,6 +110,12 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
       if (!clonedPath.getAttribute("fill")) {
         clonedPath.setAttribute("fill", "none")
       }
+
+      // Ensure fully opaque rendering for non-browser SVG renderers (resvg, Inkscape, etc.)
+      // Without explicit opacity attributes, some renderers may not default to 1.0,
+      // causing overlapping edges/borders to appear darker due to alpha compositing.
+      clonedPath.setAttribute("opacity", "1")
+      clonedPath.setAttribute("stroke-opacity", "1")
 
       MainEdgesGTag.appendChild(clonedPath)
     })
@@ -472,6 +481,137 @@ function getEdgeBoundsFromDOM(container: HTMLElement): Rect | undefined {
   }
 }
 
+/**
+ * Calculate bounds for node SVG overflow content.
+ *
+ * Some nodes render elements outside their viewBox (e.g., the initial marking
+ * arrow in Reachability Graphs extends to negative coordinates). These elements
+ * are visible because the node SVGs use overflow="visible", but they are NOT
+ * included in reactFlow.getNodesBounds() which only considers node position
+ * and dimensions.
+ *
+ * This function scans node SVGs for <line>, <path>, and <circle> elements
+ * that extend outside the node's local coordinate system (viewBox), converts
+ * them to global coordinates, and returns the bounding box of all such content.
+ */
+function getNodeOverflowBoundsFromDOM(
+  container: HTMLElement
+): Rect | undefined {
+  const allNodes = container.querySelectorAll(".react-flow__node")
+  const overflowPoints: Point[] = []
+
+  allNodes.forEach((node) => {
+    const styleStr = node.getAttribute("style") ?? ""
+    const styles = extractStyles(styleStr)
+    const nodeX = styles.transform.x
+    const nodeY = styles.transform.y
+
+    const svgEl = node.querySelector("svg")
+    if (!svgEl) return
+
+    // Parse the viewBox to understand the local coordinate system
+    const vb = svgEl.getAttribute("viewBox")
+    if (!vb) return
+    const vbParts = vb.split(/[\s,]+/).map(Number)
+    if (vbParts.length < 4) return
+    const [vbX, vbY, vbW, vbH] = vbParts
+
+    // Calculate scale from viewBox to rendered size
+    const svgW = parseFloat(svgEl.getAttribute("width") ?? `${vbW}`)
+    const svgH = parseFloat(svgEl.getAttribute("height") ?? `${vbH}`)
+    const scaleX = svgW / vbW
+    const scaleY = svgH / vbH
+
+    // Helper: convert a local SVG coordinate to global space
+    const toGlobal = (lx: number, ly: number): Point => ({
+      x: nodeX + (lx - vbX) * scaleX,
+      y: nodeY + (ly - vbY) * scaleY,
+    })
+
+    // Check if a local coordinate is outside the viewBox
+    const isOverflow = (lx: number, ly: number) =>
+      lx < vbX || ly < vbY || lx > vbX + vbW || ly > vbY + vbH
+
+    // Scan <line> elements for overflow content
+    svgEl.querySelectorAll("line").forEach((line) => {
+      const x1 = parseFloat(line.getAttribute("x1") ?? "0")
+      const y1 = parseFloat(line.getAttribute("y1") ?? "0")
+      const x2 = parseFloat(line.getAttribute("x2") ?? "0")
+      const y2 = parseFloat(line.getAttribute("y2") ?? "0")
+
+      if (isOverflow(x1, y1) || isOverflow(x2, y2)) {
+        overflowPoints.push(toGlobal(x1, y1))
+        overflowPoints.push(toGlobal(x2, y2))
+      }
+    })
+
+    // Scan <path> elements for overflow content
+    svgEl.querySelectorAll("path").forEach((path) => {
+      const d = path.getAttribute("d")
+      if (!d) return
+      const pathPoints = extractPathPoints(d)
+      const hasOverflow = pathPoints.some((p) => isOverflow(p.x, p.y))
+      if (hasOverflow) {
+        pathPoints.forEach((p) => overflowPoints.push(toGlobal(p.x, p.y)))
+      }
+    })
+
+    // Scan <polyline> elements for overflow content
+    svgEl.querySelectorAll("polyline").forEach((polyline) => {
+      const pointsAttr = polyline.getAttribute("points")
+      if (!pointsAttr) return
+      const coords = pointsAttr
+        .trim()
+        .split(/[\s,]+/)
+        .map(Number)
+      for (let i = 0; i + 1 < coords.length; i += 2) {
+        const lx = coords[i]
+        const ly = coords[i + 1]
+        if (isOverflow(lx, ly)) {
+          // If any point overflows, include all points
+          for (let j = 0; j + 1 < coords.length; j += 2) {
+            overflowPoints.push(toGlobal(coords[j], coords[j + 1]))
+          }
+          break
+        }
+      }
+    })
+
+    // Scan <circle> elements for overflow content
+    svgEl.querySelectorAll("circle").forEach((circle) => {
+      const cx = parseFloat(circle.getAttribute("cx") ?? "0")
+      const cy = parseFloat(circle.getAttribute("cy") ?? "0")
+      const r = parseFloat(circle.getAttribute("r") ?? "0")
+
+      if (isOverflow(cx - r, cy - r) || isOverflow(cx + r, cy + r)) {
+        overflowPoints.push(toGlobal(cx - r, cy - r))
+        overflowPoints.push(toGlobal(cx + r, cy + r))
+      }
+    })
+  })
+
+  if (overflowPoints.length === 0) return undefined
+
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+
+  for (const p of overflowPoints) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  }
+}
+
 function mergeBounds(a: Rect, b: Rect): Rect {
   const minX = Math.min(a.x, b.x)
   const minY = Math.min(a.y, b.y)
@@ -490,7 +630,7 @@ export function getDiagramBounds(
   reactFlow: ReactFlowInstance<Node, Edge>,
   container?: HTMLElement | null
 ): Rect {
-  const nodeBounds = reactFlow.getNodesBounds(reactFlow.getNodes())
+  let bounds = reactFlow.getNodesBounds(reactFlow.getNodes())
 
   // Prefer DOM-based edge bounds calculation (accounts for bezier control points)
   let edgeBounds: Rect | undefined
@@ -503,9 +643,19 @@ export function getDiagramBounds(
     edgeBounds = getBoundingBox(reactFlow.getEdges())
   }
 
-  if (!edgeBounds) return nodeBounds
+  if (edgeBounds) {
+    bounds = mergeBounds(bounds, edgeBounds)
+  }
 
-  return mergeBounds(nodeBounds, edgeBounds)
+  // Include overflow content from node SVGs (e.g., initial marking arrows)
+  if (container) {
+    const overflowBounds = getNodeOverflowBoundsFromDOM(container)
+    if (overflowBounds) {
+      bounds = mergeBounds(bounds, overflowBounds)
+    }
+  }
+
+  return bounds
 }
 
 function extractStyles(styleString: string) {
@@ -711,7 +861,9 @@ function convertStyleToAttributes(node: Element | ChildNode): void {
       // Skip problematic values that can cause issues in PowerPoint
       if (prop === "transition") return // CSS-only, not SVG
       if (prop === "stroke-dasharray" && value === "0") return // Redundant
-      if (prop === "opacity" && value === "1") return // Default, redundant
+      // Note: We intentionally do NOT skip opacity: 1.
+      // While it's the default in browsers, non-browser SVG renderers (resvg, Inkscape)
+      // may not apply the same default, causing overlapping elements to appear darker.
 
       // Check if this is an SVG property that should be an attribute
       if (
@@ -766,4 +918,5 @@ export const __testing = {
   convertStyleToAttributes,
   removeMarkerElements,
   mergeBounds,
+  getNodeOverflowBoundsFromDOM,
 } as const
