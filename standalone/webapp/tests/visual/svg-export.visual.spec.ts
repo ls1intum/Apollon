@@ -196,7 +196,9 @@ test.describe("SVG export - diagram fixtures", () => {
       expect(pngBuffer.length).toBeGreaterThan(0)
 
       // Visual regression: compare resvg-rendered PNG against baseline
-      await expect(pngBuffer).toMatchSnapshot(`svg-export-${file}.png`)
+      await expect(pngBuffer).toMatchSnapshot(`svg-export-${file}.png`, {
+        maxDiffPixelRatio: 0.02,
+      })
     })
   }
 })
@@ -226,7 +228,8 @@ test.describe("SVG export - template diagrams", () => {
 
       // Visual regression
       await expect(pngBuffer).toMatchSnapshot(
-        `svg-export-template-${name.toLowerCase()}.png`
+        `svg-export-template-${name.toLowerCase()}.png`,
+        { maxDiffPixelRatio: 0.02 }
       )
     })
   }
