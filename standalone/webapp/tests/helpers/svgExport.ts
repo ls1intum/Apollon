@@ -139,7 +139,8 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
           if (!prop || !value) return
           if (prop === "transition") return
           if (prop === "stroke-dasharray" && value === "0") return
-          if (prop === "opacity" && value === "1") return
+          // Note: We intentionally do NOT skip opacity: 1.
+          // Non-browser SVG renderers (resvg, Inkscape) may not default to 1.0.
           if (SVG_STYLE_PROPS.includes(prop)) {
             if (!el.hasAttribute(prop)) el.setAttribute(prop, value)
           } else {
@@ -189,7 +190,7 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
       if (y + h > maxY) maxY = y + h
     })
 
-    const margin = 20
+    const margin = 10
     const clipX = minX - margin
     const clipY = minY - margin
     const clipW = maxX - minX + margin * 2
@@ -203,6 +204,9 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
     mainSVG.setAttribute("viewBox", `${clipX} ${clipY} ${clipW} ${clipH}`)
     mainSVG.setAttribute("width", `${clipW}`)
     mainSVG.setAttribute("height", `${clipH}`)
+    // Use geometric precision for anti-aliasing to reduce visual artifacts
+    // where edges overlap with node borders in non-browser renderers (resvg, Inkscape)
+    mainSVG.setAttribute("shape-rendering", "geometricPrecision")
 
     // Nodes
     const nodesG = document.createElementNS(SVG_NS, "g")
@@ -233,12 +237,15 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
     vp.querySelectorAll(".react-flow__edge").forEach((edgeCont) => {
       edgeCont.querySelectorAll(".react-flow__edge-path").forEach((path) => {
         const c = path.cloneNode(true) as Element
-        if (!c.getAttribute("stroke-width")) c.setAttribute("stroke-width", "1")
+        if (!c.getAttribute("stroke-width")) c.setAttribute("stroke-width", "2")
         if (!c.getAttribute("stroke")) {
           const s = (c.getAttribute("style") || "").match(/stroke:\s*([^;]+)/)
           c.setAttribute("stroke", s ? s[1].trim() : STROKE_COLOR)
         }
         if (!c.getAttribute("fill")) c.setAttribute("fill", "none")
+        // Ensure fully opaque rendering for non-browser SVG renderers (resvg, Inkscape, etc.)
+        c.setAttribute("opacity", "1")
+        c.setAttribute("stroke-opacity", "1")
         edgesG.appendChild(c)
       })
       edgeCont
