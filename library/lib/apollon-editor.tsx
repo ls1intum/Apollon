@@ -18,10 +18,15 @@ import {
   AssessmentSelectionStore,
 } from "@/store/assessmentSelectionStore"
 import {
+  createAlignmentGuidesStore,
+  AlignmentGuidesStore,
+} from "@/store/alignmentGuidesStore"
+import {
   DiagramStoreContext,
   MetadataStoreContext,
   PopoverStoreContext,
   AssessmentSelectionStoreContext,
+  AlignmentGuidesStoreContext,
 } from "./store/context"
 import {
   MessageType,
@@ -41,6 +46,7 @@ export class ApollonEditor {
   private readonly metadataStore: StoreApi<MetadataStore>
   private readonly popoverStore: StoreApi<PopoverStore>
   private readonly assessmentSelectionStore: StoreApi<AssessmentSelectionStore>
+  private readonly alignmentGuidesStore: StoreApi<AlignmentGuidesStore>
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
@@ -52,6 +58,7 @@ export class ApollonEditor {
     this.metadataStore = createMetadataStore(this.ydoc)
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
+    this.alignmentGuidesStore = createAlignmentGuidesStore()
     this.syncManager = new YjsSyncClass(
       this.ydoc,
       this.diagramStore,
@@ -114,9 +121,13 @@ export class ApollonEditor {
             <AssessmentSelectionStoreContext.Provider
               value={this.assessmentSelectionStore}
             >
-              <AppWithProvider
-                onReactFlowInit={this.setReactFlowInstance.bind(this)}
-              />
+              <AlignmentGuidesStoreContext.Provider
+                value={this.alignmentGuidesStore}
+              >
+                <AppWithProvider
+                  onReactFlowInit={this.setReactFlowInstance.bind(this)}
+                />
+              </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
           </PopoverStoreContext.Provider>
         </MetadataStoreContext.Provider>
@@ -193,6 +204,7 @@ export class ApollonEditor {
     const metadataStore = createMetadataStore(ydoc)
     const popoverStore = createPopoverStore()
     const assessmentSelectionStore = createAssessmentSelectionStore()
+    const alignmentGuidesStore = createAlignmentGuidesStore()
     const diagramId = Math.random().toString(36).substring(2, 15)
 
     let setReactFlowInstance: (instance: ReactFlowInstance) => void = () => {}
@@ -218,7 +230,11 @@ export class ApollonEditor {
             <AssessmentSelectionStoreContext.Provider
               value={assessmentSelectionStore}
             >
-              <AppWithProvider onReactFlowInit={setReactFlowInstance} />
+              <AlignmentGuidesStoreContext.Provider
+                value={alignmentGuidesStore}
+              >
+                <AppWithProvider onReactFlowInit={setReactFlowInstance} />
+              </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
           </PopoverStoreContext.Provider>
         </MetadataStoreContext.Provider>

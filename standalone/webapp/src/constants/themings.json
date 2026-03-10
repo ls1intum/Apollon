@@ -18,7 +18,9 @@
     "--apollon2-switch-box-border-color": "#dee2e6",
     "--apollon2-list-group-color": "#ffffff",
     "--apollon2-btn-outline-secondary-color": "#6c757d",
-    "--apollon2-modal-bottom-border": "#e9ecef"
+    "--apollon2-modal-bottom-border": "#e9ecef",
+    "--apollon2-guide-vertical": "#d63031",
+    "--apollon2-guide-horizontal": "#0984e3"
   },
   "dark": {
     "--apollon2-primary": "#3e8acc",
@@ -39,6 +41,8 @@
     "--apollon2-switch-box-border-color": "#3d423d",
     "--apollon2-list-group-color": "#303130",
     "--apollon2-btn-outline-secondary-color": "#b8c0c5",
-    "--apollon2-modal-bottom-border": "#979797"
+    "--apollon2-modal-bottom-border": "#979797",
+    "--apollon2-guide-vertical": "#ff7675",
+    "--apollon2-guide-horizontal": "#74b9ff"
   }
 }

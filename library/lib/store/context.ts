@@ -4,6 +4,7 @@ import { DiagramStore } from "./diagramStore"
 import { MetadataStore } from "./metadataStore"
 import { PopoverStore } from "./popoverStore"
 import { AssessmentSelectionStore } from "./assessmentSelectionStore"
+import { AlignmentGuidesStore } from "./alignmentGuidesStore"
 
 export const DiagramStoreContext = createContext<StoreApi<DiagramStore> | null>(
   null
@@ -18,6 +19,9 @@ export const PopoverStoreContext = createContext<StoreApi<PopoverStore> | null>(
 
 export const AssessmentSelectionStoreContext =
   createContext<StoreApi<AssessmentSelectionStore> | null>(null)
+
+export const AlignmentGuidesStoreContext =
+  createContext<StoreApi<AlignmentGuidesStore> | null>(null)
 
 // Custom hooks for components
 export const useDiagramStore = <T>(selector: (state: DiagramStore) => T): T => {
@@ -45,5 +49,13 @@ export const useAssessmentSelectionStore = <T>(
 ): T => {
   const store = useContext(AssessmentSelectionStoreContext)
   if (!store) throw new Error("AssessmentSelectionStoreContext not provided")
+  return useStore(store, selector)
+}
+
+export const useAlignmentGuidesStore = <T>(
+  selector: (state: AlignmentGuidesStore) => T
+): T => {
+  const store = useContext(AlignmentGuidesStoreContext)
+  if (!store) throw new Error("AlignmentGuidesStoreContext not provided")
   return useStore(store, selector)
 }

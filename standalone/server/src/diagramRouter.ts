@@ -58,18 +58,18 @@ router.post(
     const pdfBuffer = await exportModelAsPdfBuffer(exportModel)
     const fileName = sanitizeFileName(exportModel.title)
 
-    res.setHeader("Content-Type", "application/pdf")
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=\"${fileName}.pdf\"`
-    )
-    res.setHeader("Content-Length", pdfBuffer.length.toString())
+      res.setHeader("Content-Type", "application/pdf")
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=\"${fileName}.pdf\"`
+      )
+      res.setHeader("Content-Length", pdfBuffer.length.toString())
 
-    return res.status(200).send(pdfBuffer)
-  } catch (error) {
-    log.error("Error in exportDiagramAsPdf endpoint:", error as Error)
-    return res.status(500).json({ error: "Failed to export diagram as PDF" })
-  }
+      return res.status(200).send(pdfBuffer)
+    } catch (error) {
+      log.error("Error in exportDiagramAsPdf endpoint:", error as Error)
+      return res.status(500).json({ error: "Failed to export diagram as PDF" })
+    }
   }
 )
 

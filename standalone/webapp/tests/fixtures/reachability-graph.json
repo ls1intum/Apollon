@@ -1,0 +1,127 @@
+{
+  "id": "fixture-reachability-graph-009",
+  "version": "4.0.0",
+  "title": "Reachability Graph",
+  "type": "ReachabilityGraph",
+  "nodes": [
+    {
+      "id": "aaaa1111-bbbb-4ccc-dddd-eeee11111111",
+      "width": 160,
+      "height": 120,
+      "type": "reachabilityGraphMarking",
+      "position": {
+        "x": 40,
+        "y": 80
+      },
+      "data": {
+        "name": "(2,0,0)",
+        "isInitialMarking": true
+      },
+      "measured": {
+        "width": 160,
+        "height": 120
+      }
+    },
+    {
+      "id": "aaaa2222-bbbb-4ccc-dddd-eeee22222222",
+      "width": 160,
+      "height": 120,
+      "type": "reachabilityGraphMarking",
+      "position": {
+        "x": 300,
+        "y": 20
+      },
+      "data": {
+        "name": "(1,1,0)",
+        "isInitialMarking": false
+      },
+      "measured": {
+        "width": 160,
+        "height": 120
+      }
+    },
+    {
+      "id": "aaaa3333-bbbb-4ccc-dddd-eeee33333333",
+      "width": 160,
+      "height": 120,
+      "type": "reachabilityGraphMarking",
+      "position": {
+        "x": 300,
+        "y": 200
+      },
+      "data": {
+        "name": "(1,0,1)",
+        "isInitialMarking": false
+      },
+      "measured": {
+        "width": 160,
+        "height": 120
+      }
+    },
+    {
+      "id": "aaaa4444-bbbb-4ccc-dddd-eeee44444444",
+      "width": 160,
+      "height": 120,
+      "type": "reachabilityGraphMarking",
+      "position": {
+        "x": 550,
+        "y": 80
+      },
+      "data": {
+        "name": "(0,1,1)",
+        "isInitialMarking": false
+      },
+      "measured": {
+        "width": 160,
+        "height": 120
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-200-110",
+      "source": "aaaa1111-bbbb-4ccc-dddd-eeee11111111",
+      "target": "aaaa2222-bbbb-4ccc-dddd-eeee22222222",
+      "type": "ReachabilityGraphArc",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-200-101",
+      "source": "aaaa1111-bbbb-4ccc-dddd-eeee11111111",
+      "target": "aaaa3333-bbbb-4ccc-dddd-eeee33333333",
+      "type": "ReachabilityGraphArc",
+      "sourceHandle": "bottom",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-110-011",
+      "source": "aaaa2222-bbbb-4ccc-dddd-eeee22222222",
+      "target": "aaaa4444-bbbb-4ccc-dddd-eeee44444444",
+      "type": "ReachabilityGraphArc",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-101-011",
+      "source": "aaaa3333-bbbb-4ccc-dddd-eeee33333333",
+      "target": "aaaa4444-bbbb-4ccc-dddd-eeee44444444",
+      "type": "ReachabilityGraphArc",
+      "sourceHandle": "right",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

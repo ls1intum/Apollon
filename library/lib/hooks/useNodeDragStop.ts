@@ -8,7 +8,7 @@ import {
 } from "@/utils"
 import { canDropIntoParent } from "@/utils/bpmnConstraints"
 import { MOUSE_UP_OFFSET_IN_PIXELS } from "@/constants"
-import { useDiagramStore } from "@/store/context"
+import { useDiagramStore, useAlignmentGuidesStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 
 export const useNodeDragStop = () => {
@@ -20,20 +20,29 @@ export const useNodeDragStop = () => {
     }))
   )
 
+  const { clearGuides } = useAlignmentGuidesStore(
+    useShallow((state) => ({
+      clearGuides: state.clearGuides,
+    }))
+  )
+
   const onNodeDragStop: OnNodeDrag<Node> = useCallback(
     (event, draggedNode) => {
+      // Clear alignment guides when drag stops
+      clearGuides()
+
       const draggedLastPoint = screenToFlowPosition({
         x:
           "changedTouches" in event
             ? // event is handled as Mouse event in the library but also it is touch event for mobile users
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (event as any as TouchEvent).changedTouches[0].clientX
+              (event as any).changedTouches[0].clientX
             : event.clientX,
         y:
           "changedTouches" in event
             ? // event is handled as Mouse event in the library but also it is touch event for mobile users
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (event as any as TouchEvent).changedTouches[0].clientY
+              (event as any).changedTouches[0].clientY
             : event.clientY,
       })
 
@@ -112,7 +121,7 @@ export const useNodeDragStop = () => {
         setNodes(updatedNodesList)
       }
     },
-    [screenToFlowPosition, nodes, getIntersectingNodes, setNodes]
+    [screenToFlowPosition, nodes, getIntersectingNodes, setNodes, clearGuides]
   )
 
   return onNodeDragStop

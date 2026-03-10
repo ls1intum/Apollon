@@ -14,12 +14,13 @@ export const JsonFileImportButton: React.FC<{ close: () => void }> = (
 
   const handleButtonClick = () => {
     fileInputRef.current?.click()
-    props.close()
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
+
+    props.close()
 
     const reader = new FileReader()
     reader.onload = (e) => {

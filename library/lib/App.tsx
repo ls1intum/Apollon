@@ -13,6 +13,7 @@ import {
   SvgMarkers,
   AssessmentSelectionDebug,
   ScrollOverlay,
+  AlignmentGuides,
 } from "@/components"
 import "@xyflow/react/dist/style.css"
 import "@/styles/app.css"
@@ -30,6 +31,7 @@ import {
   useReconnect,
   useElementInteractions,
   useDragOver,
+  useNodeDrag,
 } from "./hooks"
 import { diagramNodeTypes } from "./nodes"
 import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
@@ -72,6 +74,7 @@ function App({ onReactFlowInit }: AppProps) {
 
   const connectionLineType = getConnectionLineType(diagramType)
   const onNodeDragStop = useNodeDragStop()
+  const onNodeDrag = useNodeDrag()
   const onDragOver = useDragOver()
   const { onConnect, onConnectEnd, onConnectStart, onEdgesDelete } =
     useConnect()
@@ -102,6 +105,7 @@ function App({ onReactFlowInit }: AppProps) {
       <SvgMarkers />
       <ReactFlow
         id={`react-flow-library-${diagramId}`}
+        className="apollon-container"
         nodeTypes={diagramNodeTypes}
         edgeTypes={diagramEdgeTypes}
         nodes={nodes}
@@ -114,6 +118,7 @@ function App({ onReactFlowInit }: AppProps) {
         onEdgesDelete={onEdgesDelete}
         onConnectEnd={onConnectEnd}
         zoomOnDoubleClick={false}
+        onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
         onReconnect={onReconnect}
         connectionLineType={connectionLineType}
@@ -140,6 +145,7 @@ function App({ onReactFlowInit }: AppProps) {
         <CustomBackground />
         <CustomMiniMap />
         <CustomControls />
+        <AlignmentGuides />
         <AssessmentSelectionDebug />
       </ReactFlow>
       <ScrollOverlay />
