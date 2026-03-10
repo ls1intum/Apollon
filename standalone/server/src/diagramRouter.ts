@@ -19,26 +19,43 @@ router.post(
   "/converter/pdf",
   async (req: Request, res: Response): Promise<any> => {
     try {
-      let model: unknown = req.body?.model ?? req.body
+      let inputData: unknown = req.body?.model ?? req.body
 
-      if (typeof model === "string") {
+      if (typeof inputData === "string") {
         try {
-          model = JSON.parse(model)
+          inputData = JSON.parse(inputData)
         } catch {
           return res.status(400).json({ error: "Model must be valid JSON" })
         }
       }
 
-      if (!isExportModel(model)) {
+      // Dynamic import to avoid monorepo path resolution issues
+      const { importDiagram } = await import(
+        "../../../library/lib/utils/versionConverter.ts"
+      )
+
+      // Convert any version (V2, V3, V4) to normalized V4 format
+      let normalizedModel: any
+      try {
+        normalizedModel = importDiagram(inputData)
+      } catch (convertError) {
+        log.error("Failed to convert diagram version:", convertError as Error)
+        return res.status(400).json({
+          error: "Invalid diagram format. Expected V2, V3, or V4 UML model.",
+        })
+      }
+
+      // Validate the normalized model has required PDF export fields
+      if (!isExportModel(normalizedModel)) {
         return res.status(400).json({
           error:
-            "Invalid model payload. Expected { id, version, title, type, nodes, edges, assessments }",
+            "Diagram missing required fields after conversion. Expected { id, version, title, type, nodes, edges, assessments }",
         })
       }
 
       const exportModel: ExportModel = {
-        ...model,
-        assessments: model.assessments || {},
+        ...normalizedModel,
+        assessments: normalizedModel.assessments || {},
       }
       const pdfBuffer = await exportModelAsPdfBuffer(exportModel)
       const fileName = sanitizeFileName(exportModel.title)
