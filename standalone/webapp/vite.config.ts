@@ -15,35 +15,47 @@ export default defineConfig({
       enforce: "pre",
       async load(id) {
         // Only process library files
-        const libraryRoot = resolve(__dirname, "../../library").replace(/\\/g, "/")
+        const libraryRoot = resolve(__dirname, "../../library").replace(
+          /\\/g,
+          "/"
+        )
         const normalizedId = id.replace(/\\/g, "/")
-        
+
         if (!normalizedId.includes(libraryRoot)) {
           return null
         }
-        
+
         // Read the file
         try {
           let code = await fs.promises.readFile(id, "utf-8")
-          const libraryLibRoot = resolve(__dirname, "../../library/lib").replace(/\\/g, "/")
-          
+          const libraryLibRoot = resolve(
+            __dirname,
+            "../../library/lib"
+          ).replace(/\\/g, "/")
+
           // Replace @/ imports with absolute paths to library/lib
           code = code.replace(
             /from\s+["']@\/([^"']+)["']/g,
             (match, importPath) => {
-              const absolutePath = resolve(libraryLibRoot, importPath).replace(/\\/g, "/")
+              const absolutePath = resolve(libraryLibRoot, importPath).replace(
+                /\\/g,
+                "/"
+              )
               return `from "${absolutePath}"`
             }
           )
-          
+
           code = code.replace(
             /import\s+["']@\/([^"']+)["']/g,
             (match, importPath) => {
-              const absolutePath = resolve(libraryLibRoot, importPath).replace(/\\/g, "/")
+              const absolutePath = resolve(libraryLibRoot, importPath).replace(
+                /\\/g,
+                "/"
+              )
               return `import "${absolutePath}"`
             }
           )
-          
+
           return { code, map: null }
         } catch (e) {
           return null
