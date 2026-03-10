@@ -126,15 +126,9 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
       MainEdgesGTag.appendChild(marker.cloneNode(true))
     })
 
-    // Get text labels
-    const textElements = edgeContainer.querySelectorAll("text")
-    textElements.forEach((text) => {
-      MainEdgesGTag.appendChild(text.cloneNode(true))
-    })
-
-    // Get label groups (for complex edge labels) but exclude UI elements
+    // Get label groups first (for complex edge labels like CommunicationDiagram messages)
     const labelGroups = edgeContainer.querySelectorAll(
-      ".react-flow__edge-text, .react-flow__edge-textwrapper"
+      ".react-flow__edge-text, .react-flow__edge-textwrapper, .edge-labels"
     )
     labelGroups.forEach((group) => {
       const cloned = group.cloneNode(true) as Element
@@ -143,6 +137,19 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
         cloned.querySelectorAll?.(`.${cls}`)?.forEach((el) => el.remove())
       })
       MainEdgesGTag.appendChild(cloned)
+    })
+
+    // Get standalone text labels (not already inside label groups to avoid duplication)
+    const textElements = edgeContainer.querySelectorAll("text")
+    textElements.forEach((text) => {
+      // Check if this text is inside a label group
+      const isInsideLabelGroup = Array.from(labelGroups).some(group => 
+        group.contains(text)
+      )
+      
+      if (!isInsideLabelGroup) {
+        MainEdgesGTag.appendChild(text.cloneNode(true))
+      }
     })
   })
 
@@ -367,7 +374,7 @@ function extractPathPoints(pathD: string): Point[] {
  * Get bounding box from edge data points.
  * Falls back to stored points if available.
  */
-function getBoundingBox(edges: Edge[]) {
+function getBoundingBox(edges: Edge[], nodes: Node[]) {
   const allPoints: IPoint[] = edges.flatMap(
     (edge) => (edge.data?.points as IPoint[]) ?? []
   )
@@ -375,6 +382,37 @@ function getBoundingBox(edges: Edge[]) {
   if (allPoints.length === 0) {
     return undefined // No points to calculate bounds
   }
+
+  // Create a map for quick node lookup
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]))
+
+  // Add source and target positions for each edge to ensure we capture connection points
+  edges.forEach((edge) => {
+    const sourceNode = nodeMap.get(edge.source)
+    const targetNode = nodeMap.get(edge.target)
+
+    if (sourceNode && sourceNode.position) {
+      allPoints.push({ x: sourceNode.position.x, y: sourceNode.position.y })
+      if (sourceNode.width && sourceNode.height) {
+        // Add corners of source node to ensure complete coverage
+        allPoints.push({
+          x: sourceNode.position.x + sourceNode.width,
+          y: sourceNode.position.y + sourceNode.height,
+        })
+      }
+    }
+
+    if (targetNode && targetNode.position) {
+      allPoints.push({ x: targetNode.position.x, y: targetNode.position.y })
+      if (targetNode.width && targetNode.height) {
+        // Add corners of target node to ensure complete coverage
+        allPoints.push({
+          x: targetNode.position.x + targetNode.width,
+          y: targetNode.position.y + targetNode.height,
+        })
+      }
+    }
+  })
 
   let minX = Infinity
   let maxX = -Infinity
@@ -632,17 +670,18 @@ export function getDiagramBounds(
   reactFlow: ReactFlowInstance<Node, Edge>,
   container?: HTMLElement | null
 ): Rect {
+  const nodes = reactFlow.getNodes()
+  let edgeBounds = getBoundingBox(reactFlow.getEdges(), nodes)
   let bounds = reactFlow.getNodesBounds(reactFlow.getNodes())
 
   // Prefer DOM-based edge bounds calculation (accounts for bezier control points)
-  let edgeBounds: Rect | undefined
   if (container) {
     edgeBounds = getEdgeBoundsFromDOM(container)
   }
 
   // Fall back to stored points if DOM isn't available
   if (!edgeBounds) {
-    edgeBounds = getBoundingBox(reactFlow.getEdges())
+    edgeBounds = getBoundingBox(reactFlow.getEdges(), nodes)
   }
 
   if (edgeBounds) {

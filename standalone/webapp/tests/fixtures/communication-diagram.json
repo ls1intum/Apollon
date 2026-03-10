@@ -89,12 +89,12 @@
         "messages": [
           {
             "id": "msg1",
-            "name": "1: request()",
+            "text": "1: request()",
             "direction": "source"
           },
           {
             "id": "msg2",
-            "name": "2: response()",
+            "text": "2: response()",
             "direction": "target"
           }
         ],
@@ -112,7 +112,7 @@
         "messages": [
           {
             "id": "msg3",
-            "name": "1.1: query()",
+            "text": "1.1: query()",
             "direction": "source"
           }
         ],

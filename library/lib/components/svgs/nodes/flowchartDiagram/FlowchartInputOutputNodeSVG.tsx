@@ -37,8 +37,8 @@ export const FlowchartInputOutputNodeSVG: React.FC<Props> = ({
     >
       <g>
         {/* Parallelogram shape for input/output */}
-        <polygon
-          points={`20,0 ${width},0 ${width - 20},${height} 0,${height}`}
+        <path
+          d={`M20,0 L${width},0 L${width - 20},${height} L0,${height} Z`}
           strokeWidth={LAYOUT.LINE_WIDTH}
           stroke={strokeColor}
           fill={fillColor}

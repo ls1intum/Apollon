@@ -259,13 +259,21 @@ export class ApollonEditor {
 
     const bounds = getDiagramBounds(reactFlowInstance, container)
 
-    const margin = 10
+    const margin = 60
     const clip = {
       x: bounds.x - margin,
       y: bounds.y - margin,
       width: bounds.width + margin * 2,
       height: bounds.height + margin * 2,
     }
+
+    // Wait for edge labels (especially CommunicationDiagram messages) to render
+    // Double requestAnimationFrame ensures all components have painted
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve())
+      })
+    })
 
     const svgString = getSVG(container, clip)
 
