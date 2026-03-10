@@ -1,0 +1,236 @@
+{
+  "id": "fixture-sfc-013",
+  "version": "4.0.0",
+  "title": "SFC",
+  "type": "Sfc",
+  "nodes": [
+    {
+      "id": "11aa2bb3-cc4d-4e5f-6a7b-8c9d0e1f2a3b",
+      "width": 160,
+      "height": 70,
+      "type": "sfcStart",
+      "position": {
+        "x": 100,
+        "y": 0
+      },
+      "data": {
+        "name": "Init"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    },
+    {
+      "id": "22bb3cc4-dd5e-4f6a-7b8c-9d0e1f2a3b4c",
+      "width": 20,
+      "height": 20,
+      "type": "sfcTransitionBranch",
+      "position": {
+        "x": 170,
+        "y": 90
+      },
+      "data": {
+        "name": ""
+      },
+      "measured": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": "33cc4dd5-ee6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "width": 160,
+      "height": 70,
+      "type": "sfcStep",
+      "position": {
+        "x": 100,
+        "y": 130
+      },
+      "data": {
+        "name": "Step 1"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    },
+    {
+      "id": "44dd5ee6-ff7a-4b8c-9d0e-1f2a3b4c5d6e",
+      "width": 160,
+      "height": 60,
+      "type": "sfcActionTable",
+      "position": {
+        "x": 300,
+        "y": 130
+      },
+      "data": {
+        "name": "",
+        "actionRows": [
+          {
+            "id": "ar1",
+            "identifier": "N",
+            "name": "Action A"
+          },
+          {
+            "id": "ar2",
+            "identifier": "S",
+            "name": "Action B"
+          }
+        ]
+      },
+      "measured": {
+        "width": 160,
+        "height": 60
+      }
+    },
+    {
+      "id": "55ee6ff7-aa8b-4c9d-0e1f-2a3b4c5d6e7f",
+      "width": 20,
+      "height": 20,
+      "type": "sfcTransitionBranch",
+      "position": {
+        "x": 170,
+        "y": 220
+      },
+      "data": {
+        "name": ""
+      },
+      "measured": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": "66ff7aa8-bb9c-4d0e-1f2a-3b4c5d6e7f8a",
+      "width": 160,
+      "height": 70,
+      "type": "sfcStep",
+      "position": {
+        "x": 100,
+        "y": 260
+      },
+      "data": {
+        "name": "Step 2"
+      },
+      "measured": {
+        "width": 160,
+        "height": 70
+      }
+    },
+    {
+      "id": "77aa8bb9-cc0d-4e1f-2a3b-4c5d6e7f8a9b",
+      "width": 20,
+      "height": 20,
+      "type": "sfcTransitionBranch",
+      "position": {
+        "x": 170,
+        "y": 360
+      },
+      "data": {
+        "name": ""
+      },
+      "measured": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": "88bb9cc0-dd1e-4f2a-3b4c-5d6e7f8a9b0c",
+      "width": 60,
+      "height": 20,
+      "type": "sfcJump",
+      "position": {
+        "x": 150,
+        "y": 410
+      },
+      "data": {
+        "name": "Init"
+      },
+      "measured": {
+        "width": 60,
+        "height": 20
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-step1-actiontable",
+      "source": "33cc4dd5-ee6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "target": "44dd5ee6-ff7a-4b8c-9d0e-1f2a3b4c5d6e",
+      "type": "SfcDiagramEdge",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-step1-trans2",
+      "source": "33cc4dd5-ee6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "target": "55ee6ff7-aa8b-4c9d-0e1f-2a3b4c5d6e7f",
+      "type": "SfcDiagramEdge",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-trans2-step2",
+      "source": "55ee6ff7-aa8b-4c9d-0e1f-2a3b4c5d6e7f",
+      "target": "66ff7aa8-bb9c-4d0e-1f2a-3b4c5d6e7f8a",
+      "type": "SfcDiagramEdge",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-step2-trans3",
+      "source": "66ff7aa8-bb9c-4d0e-1f2a-3b4c5d6e7f8a",
+      "target": "77aa8bb9-cc0d-4e1f-2a3b-4c5d6e7f8a9b",
+      "type": "SfcDiagramEdge",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-trans3-jump",
+      "source": "77aa8bb9-cc0d-4e1f-2a3b-4c5d6e7f8a9b",
+      "target": "88bb9cc0-dd1e-4f2a-3b4c-5d6e7f8a9b0c",
+      "type": "SfcDiagramEdge",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "beb480ec-5c13-4b0f-a98d-7032a554b8c8",
+      "source": "22bb3cc4-dd5e-4f6a-7b8c-9d0e1f2a3b4c",
+      "target": "11aa2bb3-cc4d-4e5f-6a7b-8c9d0e1f2a3b",
+      "type": "SfcDiagramEdge",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "bdd64f82-cb78-44e9-b8c0-9af732b9b030",
+      "source": "22bb3cc4-dd5e-4f6a-7b8c-9d0e1f2a3b4c",
+      "target": "33cc4dd5-ee6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "type": "SfcDiagramEdge",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}
