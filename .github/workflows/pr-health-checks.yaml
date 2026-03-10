@@ -25,7 +25,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include=optional
 
       - name: Run Lint
         run: npm run lint
@@ -53,7 +53,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include=optional
 
       - name: Build
         run: npm run build:lib
@@ -101,7 +101,7 @@ jobs:
   # To regenerate baselines after UI changes, run from the repo root:
   #   docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
   #     mcr.microsoft.com/playwright:v1.58.2-noble \
-  #     bash -c "npm ci && npm run build:lib && cd standalone/webapp \
+  #     bash -c "npm ci --include=optional && npm run build:lib && cd standalone/webapp \
   #       && npx playwright test tests/visual/ --update-snapshots"
   visual-regression-tests:
     runs-on: ubuntu-latest
@@ -118,7 +118,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include=optional
 
       - name: Build
         run: npm run build:lib

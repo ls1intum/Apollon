@@ -8,7 +8,7 @@ COPY standalone/webapp/package*.json ./standalone/webapp/
 COPY library/package*.json ./library/
 
 # Install all workspace deps (use ci for consistent, reliable installs)
-RUN npm ci
+RUN npm ci --include=optional
 
 
 # Copy only necessary source files (no node_modules)

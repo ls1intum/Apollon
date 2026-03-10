@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY standalone/server/package*.json ./standalone/server/
 
 # Install server-only dependencies using workspaces (use ci for consistent installs)
-RUN npm ci --workspace=@tumaet/server
+RUN npm ci --workspace=@tumaet/server --include=optional
 
 # Copy server source and tsconfig only (no node_modules!)
 COPY standalone/server/src ./standalone/server/src

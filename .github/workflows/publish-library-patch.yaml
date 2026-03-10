@@ -21,7 +21,7 @@ jobs:
         run: npm install -g npm@11.1.0
 
       - name: Install all workspace dependencies
-        run: npm install
+        run: npm ci --include=optional
         working-directory: .
 
       - name: Bump patch version and create branch
