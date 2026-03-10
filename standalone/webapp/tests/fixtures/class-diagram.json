@@ -1,0 +1,278 @@
+{
+  "id": "fixture-class-diagram-001",
+  "version": "4.0.0",
+  "title": "Class Diagram",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "width": 340,
+      "height": 270,
+      "type": "package",
+      "position": {
+        "x": -10,
+        "y": -50
+      },
+      "data": {
+        "name": "Package"
+      },
+      "measured": {
+        "width": 340,
+        "height": 270
+      }
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "width": 200,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 90,
+        "y": 120
+      },
+      "parentId": "550e8400-e29b-41d4-a716-446655440000",
+      "data": {
+        "name": "Animal",
+        "methods": [
+          {
+            "id": "m1",
+            "name": "+ run()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "a1",
+            "name": "+ name: String"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 100
+      }
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "width": 200,
+      "height": 110,
+      "type": "class",
+      "position": {
+        "x": 390,
+        "y": 50
+      },
+      "data": {
+        "name": "IMovable",
+        "stereotype": "Interface",
+        "methods": [
+          {
+            "id": "m2",
+            "name": "+ move()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "a2",
+            "name": "+ speed: number"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 110
+      }
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "width": 200,
+      "height": 130,
+      "type": "class",
+      "position": {
+        "x": 80,
+        "y": 280
+      },
+      "data": {
+        "name": "Dog",
+        "methods": [
+          {
+            "id": "m3",
+            "name": "+ bark()"
+          },
+          {
+            "id": "m4",
+            "name": "+ fetch()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "a3",
+            "name": "+ breed: String"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 130
+      }
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "width": 200,
+      "height": 110,
+      "type": "class",
+      "position": {
+        "x": 400,
+        "y": 390
+      },
+      "data": {
+        "name": "Vehicle",
+        "stereotype": "Abstract",
+        "methods": [
+          {
+            "id": "m5",
+            "name": "+ drive()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "a5",
+            "name": "+ maxSpeed: number"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 110
+      }
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "width": 200,
+      "height": 140,
+      "type": "class",
+      "position": {
+        "x": 720,
+        "y": 40
+      },
+      "data": {
+        "name": "Color",
+        "stereotype": "Enumeration",
+        "methods": [],
+        "attributes": [
+          {
+            "id": "a6",
+            "name": "RED"
+          },
+          {
+            "id": "a7",
+            "name": "GREEN"
+          },
+          {
+            "id": "a8",
+            "name": "BLUE"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 140
+      }
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440006",
+      "width": 160,
+      "height": 50,
+      "type": "colorDescription",
+      "position": {
+        "x": 720,
+        "y": 270
+      },
+      "data": {
+        "name": "Legend"
+      },
+      "measured": {
+        "width": 160,
+        "height": 50
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-inheritance-dog-animal",
+      "source": "550e8400-e29b-41d4-a716-446655440003",
+      "target": "550e8400-e29b-41d4-a716-446655440001",
+      "type": "ClassInheritance",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-realization-animal-imovable",
+      "source": "550e8400-e29b-41d4-a716-446655440001",
+      "target": "550e8400-e29b-41d4-a716-446655440002",
+      "type": "ClassRealization",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-bidirectional-dog-imovable",
+      "source": "550e8400-e29b-41d4-a716-446655440003",
+      "target": "550e8400-e29b-41d4-a716-446655440002",
+      "type": "ClassBidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "bottom-left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-aggregation-dog-vehicle",
+      "source": "550e8400-e29b-41d4-a716-446655440003",
+      "target": "550e8400-e29b-41d4-a716-446655440004",
+      "type": "ClassAggregation",
+      "sourceHandle": "bottom",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-composition-vehicle-color",
+      "source": "550e8400-e29b-41d4-a716-446655440004",
+      "target": "550e8400-e29b-41d4-a716-446655440005",
+      "type": "ClassComposition",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-unidirectional-animal-color",
+      "source": "550e8400-e29b-41d4-a716-446655440001",
+      "target": "550e8400-e29b-41d4-a716-446655440005",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "top",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-dependency-imovable-vehicle",
+      "source": "550e8400-e29b-41d4-a716-446655440002",
+      "target": "550e8400-e29b-41d4-a716-446655440004",
+      "type": "ClassDependency",
+      "sourceHandle": "bottom-right",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

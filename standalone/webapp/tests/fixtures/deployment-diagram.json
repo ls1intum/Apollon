@@ -1,0 +1,278 @@
+{
+  "id": "fixture-deployment-diagram-007",
+  "version": "4.0.0",
+  "title": "Deployment Diagram",
+  "type": "DeploymentDiagram",
+  "nodes": [
+    {
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80",
+      "width": 320,
+      "height": 290,
+      "type": "deploymentNode",
+      "position": {
+        "x": 60,
+        "y": -10
+      },
+      "data": {
+        "name": "Web Server",
+        "isComponentHeaderShown": true,
+        "stereotype": "node"
+      },
+      "measured": {
+        "width": 320,
+        "height": 290
+      }
+    },
+    {
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091",
+      "width": 180,
+      "height": 100,
+      "type": "deploymentComponent",
+      "position": {
+        "x": 60,
+        "y": 70
+      },
+      "parentId": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80",
+      "data": {
+        "name": "App Container",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 100
+      }
+    },
+    {
+      "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+      "width": 160,
+      "height": 50,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 70,
+        "y": 210
+      },
+      "parentId": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80",
+      "data": {
+        "name": "config.xml"
+      },
+      "measured": {
+        "width": 160,
+        "height": 50
+      }
+    },
+    {
+      "id": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f80910213",
+      "width": 300,
+      "height": 200,
+      "type": "deploymentNode",
+      "position": {
+        "x": 570,
+        "y": 20
+      },
+      "data": {
+        "name": "DB Server",
+        "isComponentHeaderShown": true,
+        "stereotype": "node"
+      },
+      "measured": {
+        "width": 300,
+        "height": 200
+      }
+    },
+    {
+      "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8091021324",
+      "width": 180,
+      "height": 100,
+      "type": "deploymentComponent",
+      "position": {
+        "x": 60,
+        "y": 70
+      },
+      "parentId": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f80910213",
+      "data": {
+        "name": "PostgreSQL",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 100
+      }
+    },
+    {
+      "id": "f87729d4-dbbf-414e-889a-3fe71c33b253",
+      "width": 20,
+      "height": 20,
+      "type": "deploymentInterface",
+      "position": {
+        "x": 460,
+        "y": 120
+      },
+      "data": {
+        "name": "TCP/IP"
+      },
+      "measured": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": "int-prov-001",
+      "width": 20,
+      "height": 20,
+      "type": "deploymentInterface",
+      "position": {
+        "x": 200,
+        "y": 340
+      },
+      "data": {
+        "name": "Provided"
+      },
+      "measured": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": "int-req-001",
+      "width": 20,
+      "height": 20,
+      "type": "deploymentInterface",
+      "position": {
+        "x": 350,
+        "y": 340
+      },
+      "data": {
+        "name": "Required"
+      },
+      "measured": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": "int-3q-001",
+      "width": 20,
+      "height": 20,
+      "type": "deploymentInterface",
+      "position": {
+        "x": 500,
+        "y": 340
+      },
+      "data": {
+        "name": "3/4 Req"
+      },
+      "measured": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": "int-q-001",
+      "width": 20,
+      "height": 20,
+      "type": "deploymentInterface",
+      "position": {
+        "x": 650,
+        "y": 340
+      },
+      "data": {
+        "name": "1/4 Req"
+      },
+      "measured": {
+        "width": 20,
+        "height": 20
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-appcontainer-interface",
+      "source": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091",
+      "target": "f87729d4-dbbf-414e-889a-3fe71c33b253",
+      "type": "DeploymentDependency",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "2f98cc2d-5d0f-41c4-b18c-9a1db6920065",
+      "source": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f80910213",
+      "target": "f87729d4-dbbf-414e-889a-3fe71c33b253",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "right-top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "9c143a9c-350d-4f90-bf2e-fa11b8809b25",
+      "source": "f87729d4-dbbf-414e-889a-3fe71c33b253",
+      "target": "b8c9d0e1-f2a3-4b4c-5d6e-7f8091021324",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "377c3ef7-083e-42a3-acc3-89786f7f762f",
+      "source": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091",
+      "target": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+      "type": "DeploymentDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-deploy-provided",
+      "source": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+      "target": "int-prov-001",
+      "type": "DeploymentProvidedInterface",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-deploy-required",
+      "source": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+      "target": "int-req-001",
+      "type": "DeploymentRequiredInterface",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-deploy-3q",
+      "source": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+      "target": "int-3q-001",
+      "type": "DeploymentRequiredThreeQuarterInterface",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-deploy-q",
+      "source": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+      "target": "int-q-001",
+      "type": "DeploymentRequiredQuarterInterface",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

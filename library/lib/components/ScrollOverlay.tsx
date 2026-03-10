@@ -24,7 +24,7 @@ export const ScrollOverlay: React.FC = () => {
     if (!scrollLock) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
+      if (e.ctrlKey || e.metaKey) {
         e.preventDefault()
         setScrollEnabled(true)
         setShowOverlay(false)
@@ -37,7 +37,7 @@ export const ScrollOverlay: React.FC = () => {
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
+      if (!e.ctrlKey && !e.metaKey) {
         setScrollEnabled(false)
       }
     }
@@ -79,7 +79,7 @@ export const ScrollOverlay: React.FC = () => {
       <div className="scroll-overlay-hint">
         <div className="scroll-overlay-hint-content">
           <p className="scroll-overlay-hint-text">
-            Hold &quot;Space&quot; for Scrolling within Editor
+            Hold &quot;CtrlLeft&quot; + scroll to zoom the editor.
           </p>
         </div>
       </div>

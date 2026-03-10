@@ -4,6 +4,13 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   lint-and-format-check:
     runs-on: ubuntu-latest
@@ -15,6 +22,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -27,3 +35,110 @@ jobs:
 
       - name: Check build
         run: npm run build
+
+      - name: Run unit tests
+        run: npm run test
+        working-directory: library/
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build:lib
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+        working-directory: standalone/webapp/
+
+      - name: Install Playwright system deps
+        run: npx playwright install-deps chromium
+        working-directory: standalone/webapp/
+
+      - name: Run E2E tests
+        run: npx playwright test tests/e2e/
+        working-directory: standalone/webapp/
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-e2e
+          path: standalone/webapp/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-e2e
+          path: standalone/webapp/test-results/
+          retention-days: 14
+
+  # Visual regression tests run inside the same Docker image used to generate
+  # the baseline screenshots, guaranteeing pixel-perfect font rendering and
+  # system library parity.
+  #
+  # To regenerate baselines after UI changes, run from the repo root:
+  #   docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
+  #     mcr.microsoft.com/playwright:v1.58.2-noble \
+  #     bash -c "npm ci && npm run build:lib && cd standalone/webapp \
+  #       && npx playwright test tests/visual/ --update-snapshots"
+  visual-regression-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build:lib
+
+      - name: Run visual regression tests
+        run: npx playwright test tests/visual/
+        working-directory: standalone/webapp/
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-visual
+          path: standalone/webapp/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-visual
+          path: standalone/webapp/test-results/
+          retention-days: 14
