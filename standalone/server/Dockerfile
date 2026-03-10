@@ -35,4 +35,4 @@ ENV FRONTEND_URL=http://localhost:5173
 ENV MONGO_URI=mongodb://localhost:27017/apollon2DB 
 
 # Start the compiled server
-CMD ["node", "standalone/server/dist/src/server.js"]
+CMD ["node", "standalone/server/dist/server.js"]
