@@ -19,41 +19,26 @@ router.post(
   "/converter/pdf",
   async (req: Request, res: Response): Promise<any> => {
     try {
-      let inputData: unknown = req.body?.model ?? req.body
+      let model: unknown = req.body?.model ?? req.body
 
-      if (typeof inputData === "string") {
+      if (typeof model === "string") {
         try {
-          inputData = JSON.parse(inputData)
+          model = JSON.parse(model)
         } catch {
           return res.status(400).json({ error: "Model must be valid JSON" })
         }
       }
 
-      // Import from the built library package
-      const { importDiagram } = await import("@tumaet/apollon")
-
-      // Convert any version (V2, V3, V4) to normalized V4 format
-      let normalizedModel: any
-      try {
-        normalizedModel = importDiagram(inputData)
-      } catch (convertError) {
-        log.error("Failed to convert diagram version:", convertError as Error)
-        return res.status(400).json({
-          error: "Invalid diagram format. Expected V2, V3, or V4 UML model.",
-        })
-      }
-
-      // Validate the normalized model has required PDF export fields
-      if (!isExportModel(normalizedModel)) {
+      if (!isExportModel(model)) {
         return res.status(400).json({
           error:
-            "Diagram missing required fields after conversion. Expected { id, version, title, type, nodes, edges, assessments }",
+            "Invalid model payload. Expected { id, version, title, type, nodes, edges, assessments }",
         })
       }
 
       const exportModel: ExportModel = {
-        ...normalizedModel,
-        assessments: normalizedModel.assessments || {},
+        ...model,
+        assessments: model.assessments || {},
       }
       const pdfBuffer = await exportModelAsPdfBuffer(exportModel)
       const fileName = sanitizeFileName(exportModel.title)
