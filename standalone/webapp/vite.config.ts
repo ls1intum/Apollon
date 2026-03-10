@@ -11,64 +11,43 @@ export default defineConfig({
     react(),
     tailwindcss(),
     {
-      name: "apollon-rewrite-internal-alias",
+      name: "apollon-alias-resolver",
       enforce: "pre",
-      transform(code, id) {
-        const fsPrefix = "/@fs/"
-        const libraryRoot = resolve(__dirname, "../../library")
-        const absId = id.startsWith(fsPrefix) ? id.slice(fsPrefix.length) : id
-        if (!absId.startsWith(libraryRoot)) return null
-        const libraryLibRoot = resolve(libraryRoot, "lib")
-        const resolveFile = (basePath: string): string => {
-          try {
-            const stat = fs.existsSync(basePath)
-              ? fs.statSync(basePath)
-              : undefined
-            if (stat?.isFile()) return basePath
-            if (stat?.isDirectory()) {
-              const idxCandidates = [
-                "index.tsx",
-                "index.ts",
-                "index.jsx",
-                "index.js",
-                "index.mjs",
-                "index.cjs",
-              ]
-              for (const name of idxCandidates) {
-                const p = join(basePath, name)
-                if (fs.existsSync(p)) return p
-              }
-            }
-            const extCandidates = [
-              ".tsx",
-              ".ts",
-              ".jsx",
-              ".js",
-              ".mjs",
-              ".cjs",
-              ".css",
-              ".json",
-            ]
-            for (const ext of extCandidates) {
-              const p = `${basePath}${ext}`
-              if (fs.existsSync(p) && fs.statSync(p).isFile()) return p
-            }
-          } catch {
-            // ignore and fall through
-          }
-          return basePath // fall back; Vite may still resolve
+      async load(id) {
+        // Only process library files
+        const libraryRoot = resolve(__dirname, "../../library").replace(/\\/g, "/")
+        const normalizedId = id.replace(/\\/g, "/")
+        
+        if (!normalizedId.includes(libraryRoot)) {
+          return null
         }
-
-        const rewritten = code.replace(
-          /(["'])@\/(.+?)\1/g,
-          (_m: string, q: string, sub: string) => {
-            const absBase = resolve(libraryLibRoot, sub)
-            const resolvedFile = resolveFile(absBase)
-            const target = `${fsPrefix}${resolvedFile}`
-            return `${q}${target}${q}`
-          }
-        )
-        return { code: rewritten, map: null }
+        
+        // Read the file
+        try {
+          let code = await fs.promises.readFile(id, "utf-8")
+          const libraryLibRoot = resolve(__dirname, "../../library/lib").replace(/\\/g, "/")
+          
+          // Replace @/ imports with absolute paths to library/lib
+          code = code.replace(
+            /from\s+["']@\/([^"']+)["']/g,
+            (match, importPath) => {
+              const absolutePath = resolve(libraryLibRoot, importPath).replace(/\\/g, "/")
+              return `from "${absolutePath}"`
+            }
+          )
+          
+          code = code.replace(
+            /import\s+["']@\/([^"']+)["']/g,
+            (match, importPath) => {
+              const absolutePath = resolve(libraryLibRoot, importPath).replace(/\\/g, "/")
+              return `import "${absolutePath}"`
+            }
+          )
+          
+          return { code, map: null }
+        } catch (e) {
+          return null
+        }
       },
     },
   ],
