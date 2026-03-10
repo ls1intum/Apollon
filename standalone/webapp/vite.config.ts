@@ -1,6 +1,6 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
-import { resolve, join } from "path"
+import { resolve } from "path"
 import fs from "fs"
 import tailwindcss from "@tailwindcss/vite"
 // tsconfigPaths optional; using a targeted transform plugin instead
@@ -57,7 +57,7 @@ export default defineConfig({
           )
 
           return { code, map: null }
-        } catch (e) {
+        } catch {
           return null
         }
       },
