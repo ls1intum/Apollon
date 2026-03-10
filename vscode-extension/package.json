@@ -11,7 +11,7 @@
     "Other"
   ],
   "vsce": {
-  "dependencies": false
+    "dependencies": false
   },
   "activationEvents": [],
   "main": "./dist/extension.js",
