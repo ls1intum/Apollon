@@ -1,4 +1,10 @@
-import { NodeProps, NodeResizer, type Node, Handle, Position } from "@xyflow/react"
+import {
+  NodeProps,
+  NodeResizer,
+  type Node,
+  Handle,
+  Position,
+} from "@xyflow/react"
 import { DefaultNodeWrapper } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
@@ -70,28 +76,28 @@ export function FlowchartInputOutput({
     {
       id: HandleId.RightTop,
       position: Position.Right,
-      style: { 
-        top: adjustedHeight, 
+      style: {
+        top: adjustedHeight,
         left: width - (adjustedHeight / 0.3 / height) * offset,
-        ...handleStyle 
+        ...handleStyle,
       },
     },
     {
       id: HandleId.Right,
       position: Position.Right,
-      style: { 
+      style: {
         top: height / 2,
         left: width - (height / 1.2 / height) * offset,
-        ...handleStyle 
+        ...handleStyle,
       },
     },
     {
       id: HandleId.RightBottom,
       position: Position.Right,
-      style: { 
+      style: {
         top: height - adjustedHeight,
         left: width - ((height - adjustedHeight) / 0.75 / height) * offset,
-        ...handleStyle 
+        ...handleStyle,
       },
     },
     // Bottom edge: from (width - offset, height) to (0, height)
@@ -114,36 +120,41 @@ export function FlowchartInputOutput({
     {
       id: HandleId.LeftBottom,
       position: Position.Left,
-      style: { 
+      style: {
         top: height - adjustedHeight,
-        left: offset * adjustedHeight / height,
-        ...handleStyle 
+        left: (offset * adjustedHeight) / height,
+        ...handleStyle,
       },
     },
     {
       id: HandleId.Left,
       position: Position.Left,
-      style: { 
+      style: {
         top: height / 2,
-        left: offset * (height / 2) / height,
-        ...handleStyle 
+        left: (offset * (height / 2)) / height,
+        ...handleStyle,
       },
     },
     {
       id: HandleId.LeftTop,
       position: Position.Left,
-      style: { 
+      style: {
         top: adjustedHeight,
-        left: offset * (height - adjustedHeight) / height,
-        ...handleStyle 
+        left: (offset * (height - adjustedHeight)) / height,
+        ...handleStyle,
       },
     },
   ]
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id} hiddenHandles={true}>
+    <DefaultNodeWrapper
+      width={width}
+      height={height}
+      elementId={id}
+      hiddenHandles={true}
+    >
       <NodeToolbar elementId={id} />
-      
+
       {/* Custom handles for parallelogram */}
       {handles.map((handle) => (
         <Handle
@@ -179,5 +190,5 @@ export function FlowchartInputOutput({
         type="FlowchartInputOutput"
       />
     </DefaultNodeWrapper>
-    )
+  )
 }

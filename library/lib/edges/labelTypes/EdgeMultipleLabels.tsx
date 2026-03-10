@@ -89,13 +89,13 @@ export const EdgeMultipleLabels = ({
       const arrowWidth = 24
       const arrowHeight = 16
       const arrowTextSpacing = 8
-      
+
       // Estimate text width (approximately 8px per character at 14px font size)
       // Defensive: handle missing text property
       const messageText = message.text || ""
       const estimatedTextWidth = messageText.length * 8
       const totalWidth = arrowWidth + arrowTextSpacing + estimatedTextWidth
-      
+
       // Center the entire label (arrow + text) around the x position
       const labelStartX = x - totalWidth / 2
 
@@ -103,7 +103,9 @@ export const EdgeMultipleLabels = ({
         <g key={`${keyPrefix}-${index}`}>
           {/* Arrow (only for first message in group) */}
           {index === 0 && (
-            <g transform={`translate(${labelStartX}, ${y - arrowHeight / 2}) rotate(${arrowRotation}, ${arrowWidth / 2}, ${arrowHeight / 2})`}>
+            <g
+              transform={`translate(${labelStartX}, ${y - arrowHeight / 2}) rotate(${arrowRotation}, ${arrowWidth / 2}, ${arrowHeight / 2})`}
+            >
               <path
                 d="M2 8h20"
                 stroke={textColor}

@@ -143,10 +143,10 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
     const textElements = edgeContainer.querySelectorAll("text")
     textElements.forEach((text) => {
       // Check if this text is inside a label group
-      const isInsideLabelGroup = Array.from(labelGroups).some(group => 
+      const isInsideLabelGroup = Array.from(labelGroups).some((group) =>
         group.contains(text)
       )
-      
+
       if (!isInsideLabelGroup) {
         MainEdgesGTag.appendChild(text.cloneNode(true))
       }
