@@ -29,10 +29,8 @@ router.post(
         }
       }
 
-      // Dynamic import to avoid monorepo path resolution issues
-      const { importDiagram } = await import(
-        "../../../library/lib/utils/versionConverter.ts"
-      )
+      // Import from the built library package
+      const { importDiagram } = await import("@tumaet/apollon")
 
       // Convert any version (V2, V3, V4) to normalized V4 format
       let normalizedModel: any
