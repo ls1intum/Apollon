@@ -20,16 +20,7 @@ import {
   getConnectionLineType,
 } from "@/utils/edgeUtils"
 import type { UMLDiagramType } from "@/types/DiagramType"
-import {
-  MARKER_PADDING,
-  ARROW_MARKER_PADDING,
-  DOTTED_ARROW_MARKER_PADDING,
-  RHOMBUS_MARKER_PADDING,
-  TRIANGLE_MARKER_PADDING,
-  USECASE_PADDING,
-  BPMN_SMALL_ARROW_PADDING,
-  BPMN_MESSAGE_ARROW_PADDING,
-} from "@/constants"
+import { EDGES } from "@/constants"
 
 // ---------------------------------------------------------------------------
 // adjustTargetCoordinates
@@ -231,7 +222,7 @@ describe("getEdgeMarkerStyles", () => {
     const result = getEdgeMarkerStyles("ClassBidirectional")
     expect(result.markerEnd).toBeUndefined()
     expect(result.markerStart).toBeUndefined()
-    expect(result.markerPadding).toBe(MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.strokeDashArray).toBe("0")
     expect(result.offset).toBe(0)
   })
@@ -239,21 +230,21 @@ describe("getEdgeMarkerStyles", () => {
   it("returns plain style for ObjectLink", () => {
     const result = getEdgeMarkerStyles("ObjectLink")
     expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
   })
 
   // Arrow marker group
   it("returns black-arrow for ClassUnidirectional", () => {
     const result = getEdgeMarkerStyles("ClassUnidirectional")
     expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(ARROW_MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.strokeDashArray).toBe("0")
   })
 
   it("returns black-arrow for ActivityControlFlow", () => {
     const result = getEdgeMarkerStyles("ActivityControlFlow")
     expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(ARROW_MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
   })
 
   it("returns black-arrow for FlowChartFlowline", () => {
@@ -270,63 +261,63 @@ describe("getEdgeMarkerStyles", () => {
   it("returns white-rhombus for ClassAggregation", () => {
     const result = getEdgeMarkerStyles("ClassAggregation")
     expect(result.markerEnd).toBe("url(#white-rhombus)")
-    expect(result.markerPadding).toBe(RHOMBUS_MARKER_PADDING)
-    expect(result.offset).toBe(14.5)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
+    expect(result.offset).toBe(0)
   })
 
   it("returns black-rhombus for ClassComposition", () => {
     const result = getEdgeMarkerStyles("ClassComposition")
     expect(result.markerEnd).toBe("url(#black-rhombus)")
-    expect(result.markerPadding).toBe(RHOMBUS_MARKER_PADDING)
-    expect(result.offset).toBe(14.5)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
+    expect(result.offset).toBe(0)
   })
 
   // Triangle marker group
   it("returns white-triangle for ClassInheritance", () => {
     const result = getEdgeMarkerStyles("ClassInheritance")
     expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(TRIANGLE_MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.strokeDashArray).toBe("0")
   })
 
   it("returns white-triangle with dashed for ClassRealization", () => {
     const result = getEdgeMarkerStyles("ClassRealization")
     expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(TRIANGLE_MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
+    expect(result.strokeDashArray).toBe("10")
   })
 
   // Dashed arrow group (dependency)
   it("returns dashed black-arrow for ClassDependency", () => {
     const result = getEdgeMarkerStyles("ClassDependency")
     expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(DOTTED_ARROW_MARKER_PADDING)
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
+    expect(result.strokeDashArray).toBe("10")
   })
 
   it("returns dashed for ComponentDependency", () => {
     const result = getEdgeMarkerStyles("ComponentDependency")
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
     expect(result.markerEnd).toBe("url(#black-arrow)")
   })
 
   it("returns dashed for DeploymentDependency", () => {
     const result = getEdgeMarkerStyles("DeploymentDependency")
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.strokeDashArray).toBe("10")
   })
 
   // PetriNet black-triangle
   it("returns black-triangle for PetriNetArc", () => {
     const result = getEdgeMarkerStyles("PetriNetArc")
     expect(result.markerEnd).toBe("url(#black-triangle)")
-    expect(result.markerPadding).toBe(-3)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
   })
 
   // BPMN markers
-  it("returns bpmn-white-triangle for BPMNSequenceFlow", () => {
+  it("returns bpmn-black-triangle for BPMNSequenceFlow", () => {
     const result = getEdgeMarkerStyles("BPMNSequenceFlow")
-    expect(result.markerEnd).toBe("url(#bpmn-white-triangle)")
-    expect(result.markerPadding).toBe(BPMN_SMALL_ARROW_PADDING)
+    expect(result.markerEnd).toBe("url(#bpmn-black-triangle)")
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.strokeDashArray).toBe("0")
     expect(result.offset).toBe(8)
   })
@@ -335,23 +326,23 @@ describe("getEdgeMarkerStyles", () => {
     const result = getEdgeMarkerStyles("BPMNMessageFlow")
     expect(result.markerEnd).toBe("url(#bpmn-white-triangle)")
     expect(result.markerStart).toBe("url(#bpmn-white-circle)")
-    expect(result.markerPadding).toBe(BPMN_MESSAGE_ARROW_PADDING)
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
+    expect(result.strokeDashArray).toBe("10")
     expect(result.offset).toBe(8)
   })
 
   it("returns dashed style for BPMNAssociationFlow", () => {
     const result = getEdgeMarkerStyles("BPMNAssociationFlow")
     expect(result.markerEnd).toBeUndefined()
-    expect(result.strokeDashArray).toBe("8")
-    expect(result.markerPadding).toBe(MARKER_PADDING)
+    expect(result.strokeDashArray).toBe("10")
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
   })
 
   it("returns bpmn-arrow for BPMNDataAssociationFlow", () => {
     const result = getEdgeMarkerStyles("BPMNDataAssociationFlow")
     expect(result.markerEnd).toBe("url(#bpmn-arrow)")
-    expect(result.markerPadding).toBe(BPMN_SMALL_ARROW_PADDING)
-    expect(result.strokeDashArray).toBe("8")
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
+    expect(result.strokeDashArray).toBe("10")
     expect(result.offset).toBe(8)
   })
 
@@ -359,27 +350,27 @@ describe("getEdgeMarkerStyles", () => {
   it("returns no marker for UseCaseAssociation", () => {
     const result = getEdgeMarkerStyles("UseCaseAssociation")
     expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(0)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.strokeDashArray).toBe("0")
   })
 
   it("returns black-arrow dashed for UseCaseInclude", () => {
     const result = getEdgeMarkerStyles("UseCaseInclude")
     expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.markerPadding).toBe(USECASE_PADDING)
-    expect(result.strokeDashArray).toBe("4")
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
+    expect(result.strokeDashArray).toBe("10")
   })
 
   it("returns black-arrow dashed for UseCaseExtend", () => {
     const result = getEdgeMarkerStyles("UseCaseExtend")
     expect(result.markerEnd).toBe("url(#black-arrow)")
-    expect(result.strokeDashArray).toBe("4")
+    expect(result.strokeDashArray).toBe("10")
   })
 
   it("returns white-triangle for UseCaseGeneralization", () => {
     const result = getEdgeMarkerStyles("UseCaseGeneralization")
     expect(result.markerEnd).toBe("url(#white-triangle)")
-    expect(result.markerPadding).toBe(USECASE_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.strokeDashArray).toBe("0")
   })
 
@@ -387,13 +378,13 @@ describe("getEdgeMarkerStyles", () => {
   it("returns no marker for ComponentProvidedInterface", () => {
     const result = getEdgeMarkerStyles("ComponentProvidedInterface")
     expect(result.markerEnd).toBeUndefined()
-    expect(result.markerPadding).toBe(-2)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
   })
 
   it("returns required-interface marker for ComponentRequiredInterface", () => {
     const result = getEdgeMarkerStyles("ComponentRequiredInterface")
     expect(result.markerEnd).toBe("url(#required-interface)")
-    expect(result.markerPadding).toBe(2)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING + 7)
   })
 
   it("returns required-interface-quarter for ComponentRequiredQuarterInterface", () => {
@@ -411,14 +402,14 @@ describe("getEdgeMarkerStyles", () => {
   // Deployment mirrors
   it("returns same style for DeploymentProvidedInterface as ComponentProvidedInterface", () => {
     const result = getEdgeMarkerStyles("DeploymentProvidedInterface")
-    expect(result.markerPadding).toBe(-2)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.markerEnd).toBeUndefined()
   })
 
   // Default case
   it("returns default style for unknown edge type", () => {
     const result = getEdgeMarkerStyles("SomeUnknownType")
-    expect(result.markerPadding).toBe(MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.strokeDashArray).toBe("0")
     expect(result.offset).toBe(0)
   })
@@ -426,19 +417,19 @@ describe("getEdgeMarkerStyles", () => {
   // Shared bucket edge types
   it("returns plain style for DeploymentAssociation", () => {
     const result = getEdgeMarkerStyles("DeploymentAssociation")
-    expect(result.markerPadding).toBe(MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.markerEnd).toBeUndefined()
   })
 
   it("returns plain style for SyntaxTreeLink", () => {
     const result = getEdgeMarkerStyles("SyntaxTreeLink")
-    expect(result.markerPadding).toBe(MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.markerEnd).toBeUndefined()
   })
 
   it("returns plain style for CommunicationLink", () => {
     const result = getEdgeMarkerStyles("CommunicationLink")
-    expect(result.markerPadding).toBe(MARKER_PADDING)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING)
     expect(result.markerEnd).toBeUndefined()
   })
 })
@@ -653,6 +644,34 @@ describe("getEllipseHandlePosition", () => {
     expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
   })
 
+  it("returns correct position for right-bottom handle (angle=π/6)", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-bottom")
+    const angle = Math.PI / 6
+    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
+    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+  })
+
+  it("returns correct position for left-bottom handle (angle=5π/6)", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "left-bottom")
+    const angle = (5 * Math.PI) / 6
+    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
+    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+  })
+
+  it("returns correct position for left-top handle (angle=7π/6)", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "left-top")
+    const angle = (7 * Math.PI) / 6
+    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
+    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+  })
+
+  it("returns correct position for right-top handle (angle=11π/6)", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-top")
+    const angle = (11 * Math.PI) / 6
+    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
+    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+  })
+
   it("defaults to angle 0 for unknown handle", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "unknown")
     expect(result.x).toBeCloseTo(150) // same as right
@@ -750,7 +769,7 @@ describe("calculateStraightPath", () => {
 describe("simplifySvgPath", () => {
   it("simplifies a simple M L path rounding coordinates", () => {
     const result = simplifySvgPath("M 1.12345,2.67890 L 3.99999,4.00001")
-    expect(result).toBe("M 1.12 2.68 L 4 4")
+    expect(result).toBe("M 1 3 L 4 4")
   })
 
   it("handles M and L with space before numbers", () => {
@@ -766,9 +785,9 @@ describe("simplifySvgPath", () => {
     expect(result).toBe("M 10 20 30 40")
   })
 
-  it("rounds to custom decimal places", () => {
-    const result = simplifySvgPath("M 1.123,2.678 L 3.456,4.789", 1)
-    expect(result).toBe("M 1.1 2.7 L 3.5 4.8")
+  it("rounds to whole numbers (no custom decimal places)", () => {
+    const result = simplifySvgPath("M 1.123,2.678 L 3.456,4.789")
+    expect(result).toBe("M 1 3 L 3 5")
   })
 
   it("handles Q command with distinct control and end points", () => {

@@ -1,4 +1,5 @@
 import { CustomText, StyledRect } from "@/components"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -15,15 +16,15 @@ export const DeploymentArtifactSVG: React.FC<Props> = ({
   width,
   height,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
   data,
 }) => {
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
 
   return (
@@ -48,14 +49,14 @@ export const DeploymentArtifactSVG: React.FC<Props> = ({
         <g transform={`translate(${width - 25}, 7)`}>
           <path
             d="M 0 0 L 13 0 L 19.2 7.25 L 19.2 24 L 0 24 L 0 0 Z"
-            strokeWidth="1.2"
+            strokeWidth={LAYOUT.ICON_LINE_WIDTH}
             strokeMiterlimit="10"
             stroke={strokeColor}
             fill={fillColor}
           ></path>
           <path
             d="M 13 0 L 13 7.25 L 19.2 7.25"
-            strokeWidth="1.2"
+            strokeWidth={LAYOUT.ICON_LINE_WIDTH}
             strokeMiterlimit="10"
             stroke={strokeColor}
             fill="none"

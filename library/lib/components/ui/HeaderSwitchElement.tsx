@@ -1,4 +1,4 @@
-import { ZINDEX_HEADER_SWITCH } from "@/constants/zindexConstants"
+import { ZINDEX } from "@/constants"
 import React from "react"
 
 interface Props {
@@ -17,7 +17,7 @@ export const HeaderSwitchElement: React.FC<Props> = ({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: ZINDEX_HEADER_SWITCH,
+        zIndex: ZINDEX.HEADER_SWITCH,
         color: "var(--apollon2-primary-contrast)",
         ...(isComponentHeaderShown && {
           background:

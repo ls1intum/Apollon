@@ -124,6 +124,8 @@ test.describe("Visual regression - diagram fixtures", () => {
 
       // Screenshot the editor area (sidebar + canvas) excluding the navbar,
       // so visual diffs focus on diagram rendering, not unrelated UI chrome.
+      // Baselines MUST be generated inside the Playwright Docker container
+      // (see pr-health-checks.yaml) so they match the CI environment exactly.
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(`visual-${file}.png`)
     })

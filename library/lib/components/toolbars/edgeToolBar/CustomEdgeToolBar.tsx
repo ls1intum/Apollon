@@ -1,5 +1,5 @@
 import { DeleteIcon, EditIcon } from "@/components/Icon"
-import { ZINDEX_TOOLTIP } from "@/constants/zindexConstants"
+import { ZINDEX } from "@/constants"
 import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
@@ -61,7 +61,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             WebkitTransform: "translateZ(0)",
             transform: "translateZ(0)",
             position: "relative",
-            zIndex: ZINDEX_TOOLTIP,
+            zIndex: ZINDEX.TOOLTIP,
           }}
         >
           <Box

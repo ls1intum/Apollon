@@ -1,5 +1,5 @@
 import { CustomText } from "@/components"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -19,15 +19,15 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
   height,
   data,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
 }) => {
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
 
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const strokeColor = data.strokeColor || "var(--apollon2-primary-contrast)"
   const fillColor = data.fillColor || "var(--apollon2-background)"
@@ -48,7 +48,7 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
           y={0}
           width={40}
           height={leftTopBoxHeight}
-          strokeWidth={LINE_WIDTH}
+          strokeWidth={LAYOUT.LINE_WIDTH}
           stroke={strokeColor}
           fill={fillColor}
         />
@@ -59,7 +59,7 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
           y={leftTopBoxHeight}
           width={width}
           height={height - leftTopBoxHeight}
-          strokeWidth={LINE_WIDTH}
+          strokeWidth={LAYOUT.LINE_WIDTH}
           stroke={strokeColor}
           fill={fillColor}
         />

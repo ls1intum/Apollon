@@ -7,7 +7,13 @@ export const useExportAsSVG = () => {
   const downloadFile = useFileDownload()
 
   const exportSVG = async () => {
-    const apollonSVG = await editor?.exportAsSVG()
+    if (!editor) {
+      log.error("Failed to export SVG: editor is not available")
+      return
+    }
+
+    const apollonSVG = await editor.exportAsSVG()
+
     if (!apollonSVG) {
       log.error("Failed to export SVG")
       return

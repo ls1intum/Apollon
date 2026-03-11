@@ -10,14 +10,7 @@ import {
   calculateMinWidth,
   calculateMinHeight,
 } from "@/utils"
-import {
-  DEFAULT_ATTRIBUTE_HEIGHT,
-  DEFAULT_METHOD_HEIGHT,
-  DEFAULT_PADDING,
-  DEFAULT_FONT,
-  DEFAULT_HEADER_HEIGHT,
-  DEFAULT_HEADER_HEIGHT_WITH_STREOTYPE,
-} from "@/constants"
+import { LAYOUT } from "@/constants"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
@@ -43,13 +36,13 @@ export function Class({
 
   const showStereotype = !!stereotype
   const headerHeight = showStereotype
-    ? DEFAULT_HEADER_HEIGHT_WITH_STREOTYPE
-    : DEFAULT_HEADER_HEIGHT
+    ? LAYOUT.DEFAULT_HEADER_HEIGHT_WITH_STEREOTYPE
+    : LAYOUT.DEFAULT_HEADER_HEIGHT
 
-  const attributeHeight = DEFAULT_ATTRIBUTE_HEIGHT
-  const methodHeight = DEFAULT_METHOD_HEIGHT
-  const padding = DEFAULT_PADDING
-  const font = DEFAULT_FONT
+  const attributeHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+  const methodHeight = LAYOUT.DEFAULT_METHOD_HEIGHT
+  const padding = LAYOUT.DEFAULT_PADDING
+  const font = LAYOUT.DEFAULT_FONT
 
   // Calculate the widest text accurately
   const maxTextWidth = useMemo(() => {

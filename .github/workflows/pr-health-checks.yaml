@@ -94,15 +94,25 @@ jobs:
           path: standalone/webapp/test-results/
           retention-days: 14
 
-  # Visual regression tests run inside the same Docker image used to generate
-  # the baseline screenshots, guaranteeing pixel-perfect font rendering and
-  # system library parity.
+  # Visual regression tests use a SINGLE set of platform-independent baselines.
   #
-  # To regenerate baselines after UI changes, run from the repo root:
+  # - SVG export tests (svg-export.visual.spec.ts): use a bundled Liberation
+  #   Sans font with resvg's loadSystemFonts:false, so the PNG output is
+  #   byte-identical on macOS, Linux, and CI.  Baselines can be regenerated on
+  #   any OS.
+  #
+  # - Canvas screenshot tests (diagrams.visual.spec.ts): depend on Chromium's
+  #   platform-specific font rendering, so baselines MUST be generated inside
+  #   the same Docker image used by CI.
+  #
+  # To regenerate ALL baselines after UI changes, run from the repo root:
   #   docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
   #     mcr.microsoft.com/playwright:v1.58.2-noble \
   #     bash -c "npm ci && npm run build:lib && cd standalone/webapp \
   #       && npx playwright test tests/visual/ --update-snapshots"
+  #
+  # To regenerate only SVG export baselines (works on any OS):
+  #   cd standalone/webapp && npx playwright test tests/visual/svg-export --update-snapshots
   visual-regression-tests:
     runs-on: ubuntu-latest
     container:

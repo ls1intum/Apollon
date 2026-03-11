@@ -70,8 +70,8 @@ export const useMessagePositioning = (
     const forwardArrowRotation = calculateRotation(targetArrowDirection)
     const backwardArrowRotation = calculateRotation(sourceArrowDirection)
 
-    const baseOffset = 30
-    const labelOffset = 25
+    const baseOffset = 15
+    const labelOffset = 12
 
     // Position labels and arrows based on actual middle segment orientation
     let forwardArrowBoxPosition: { x: number; y: number }

@@ -1,10 +1,5 @@
 import { ClassNodeElement, CommunicationObjectNodeProps } from "@/types"
-import {
-  DEFAULT_HEADER_HEIGHT,
-  DEFAULT_ATTRIBUTE_HEIGHT,
-  DEFAULT_METHOD_HEIGHT,
-  DEFAULT_PADDING,
-} from "@/constants/dropElementConfig"
+import { LAYOUT } from "@/constants"
 import { SeparationLine } from "@/components/svgs/nodes/SeparationLine"
 import { HeaderSection } from "../HeaderSection"
 import { RowBlockSection } from "../RowBlockSection"
@@ -24,16 +19,16 @@ export const CommunicationObjectNameSVG = ({
   width,
   height,
   data,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   svgAttributes,
   showAssessmentResults = false,
 }: CommunicationObjectNameSVGProps) => {
   const { name, attributes = [], methods = [] } = data
   // Layout constants - no stereotype for communication diagrams
-  const headerHeight = DEFAULT_HEADER_HEIGHT
-  const attributeHeight = DEFAULT_ATTRIBUTE_HEIGHT
-  const methodHeight = DEFAULT_METHOD_HEIGHT
-  const padding = DEFAULT_PADDING
+  const headerHeight = LAYOUT.DEFAULT_HEADER_HEIGHT
+  const attributeHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+  const methodHeight = LAYOUT.DEFAULT_METHOD_HEIGHT
+  const padding = LAYOUT.DEFAULT_PADDING
 
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
 
@@ -47,8 +42,8 @@ export const CommunicationObjectNameSVG = ({
   const processedMethods = processElements(methods)
   const nodeScore = assessments[id]?.score
 
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
   return (

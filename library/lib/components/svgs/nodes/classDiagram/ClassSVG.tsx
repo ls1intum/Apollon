@@ -1,11 +1,5 @@
 import { ClassNodeElement, ClassNodeProps } from "@/types"
-import {
-  DEFAULT_HEADER_HEIGHT,
-  DEFAULT_ATTRIBUTE_HEIGHT,
-  DEFAULT_METHOD_HEIGHT,
-  DEFAULT_PADDING,
-  DEFAULT_HEADER_HEIGHT_WITH_STREOTYPE,
-} from "@/constants/dropElementConfig"
+import { LAYOUT } from "@/constants"
 import { SeparationLine } from "@/components/svgs/nodes/SeparationLine"
 import { HeaderSection } from "../HeaderSection"
 import { RowBlockSection } from "../RowBlockSection"
@@ -30,7 +24,7 @@ export const ClassSVG = ({
   id,
   width,
   height,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   svgAttributes,
   showAssessmentResults = false,
   data,
@@ -39,11 +33,11 @@ export const ClassSVG = ({
   const { attributes, methods, name, stereotype } = data
   const showStereotype = !!stereotype
   const headerHeight = showStereotype
-    ? DEFAULT_HEADER_HEIGHT_WITH_STREOTYPE
-    : DEFAULT_HEADER_HEIGHT
-  const attributeHeight = DEFAULT_ATTRIBUTE_HEIGHT
-  const methodHeight = DEFAULT_METHOD_HEIGHT
-  const padding = DEFAULT_PADDING
+    ? LAYOUT.DEFAULT_HEADER_HEIGHT_WITH_STEREOTYPE
+    : LAYOUT.DEFAULT_HEADER_HEIGHT
+  const attributeHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+  const methodHeight = LAYOUT.DEFAULT_METHOD_HEIGHT
+  const padding = LAYOUT.DEFAULT_PADDING
 
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
 
@@ -57,8 +51,8 @@ export const ClassSVG = ({
   const processedMethods = processElements(methods)
   const nodeScore = assessments[id]?.score
 
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
 
   return (

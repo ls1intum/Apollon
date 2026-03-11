@@ -6,7 +6,7 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import { SfcActionTableProps, SfcActionRow } from "@/types"
 import { PopoverProps } from "../types"
-import { DEFAULT_ATTRIBUTE_HEIGHT } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { DeleteIcon } from "@/components/Icon"
 import { useReactFlow } from "@xyflow/react"
 
@@ -58,10 +58,10 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
               ...node.data,
               actionRows: actionRows.filter((row) => row.id !== id),
             },
-            height: node.height! - DEFAULT_ATTRIBUTE_HEIGHT,
+            height: node.height! - LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT,
             measured: {
               ...node.measured,
-              height: node.height! - DEFAULT_ATTRIBUTE_HEIGHT,
+              height: node.height! - LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT,
             },
           }
         }
@@ -88,10 +88,10 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
               ...node.data,
               actionRows: [...actionRows, newRow],
             },
-            height: node.height! + DEFAULT_ATTRIBUTE_HEIGHT,
+            height: node.height! + LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT,
             measured: {
               ...node.measured,
-              height: node.height! + DEFAULT_ATTRIBUTE_HEIGHT,
+              height: node.height! + LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT,
             },
           }
         }

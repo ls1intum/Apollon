@@ -8,10 +8,7 @@ import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
 } from "@/utils/edgeUtils"
-import {
-  MARKER_PADDING,
-  SOURCE_CONNECTION_POINT_PADDING,
-} from "@/constants/edgeConstants"
+import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { useEdgeReconnection, BaseEdgeProps } from "../edges/GenericEdge"
@@ -48,42 +45,64 @@ export const useStraightPathEdge = ({
 
   const hasReconnectionSupport = id && source && target && enableReconnection
 
+  // Hooks must be called unconditionally (Rules of Hooks).
+  // We always call them, but only use the results when reconnection is supported.
+  const reconnection = useEdgeReconnection(
+    id ?? "",
+    source ?? "",
+    target ?? "",
+    sourceHandleId,
+    targetHandleId
+  )
+  const handleFinder = useHandleFinder()
+
   const { isReconnectingRef, startReconnection, completeReconnection } =
     hasReconnectionSupport
-      ? useEdgeReconnection(id, source, target, sourceHandleId, targetHandleId)
+      ? reconnection
       : {
-          isReconnectingRef: { current: false },
-          startReconnection: () => {},
-          completeReconnection: () => {},
+          isReconnectingRef: {
+            current: false,
+          } as React.MutableRefObject<boolean>,
+          startReconnection:
+            (() => {}) as typeof reconnection.startReconnection,
+          completeReconnection:
+            (() => {}) as typeof reconnection.completeReconnection,
         }
 
   const { findBestHandle } = hasReconnectionSupport
-    ? useHandleFinder()
+    ? handleFinder
     : {
-        findBestHandle: () => ({
+        findBestHandle: (() => ({
           handle: null,
           node: null,
           shouldClearPoints: false,
-        }),
+        })) as typeof handleFinder.findBestHandle,
       }
 
   const { markerEnd, markerStart, strokeDashArray, markerPadding } =
     getEdgeMarkerStyles(type)
 
-  const padding = markerPadding ?? MARKER_PADDING
+  const padding = markerPadding ?? EDGES.MARKER_PADDING
+
+  // Round coordinates to whole pixels for pixel-perfect rendering
+  // React Flow may return fractional values when node dimensions are odd
+  const roundedSourceX = Math.round(sourceX)
+  const roundedSourceY = Math.round(sourceY)
+  const roundedTargetX = Math.round(targetX)
+  const roundedTargetY = Math.round(targetY)
 
   const adjustedTargetCoordinates = adjustTargetCoordinates(
-    targetX,
-    targetY,
+    roundedTargetX,
+    roundedTargetY,
     targetPosition,
     padding
   )
 
   const adjustedSourceCoordinates = adjustSourceCoordinates(
-    sourceX,
-    sourceY,
+    roundedSourceX,
+    roundedSourceY,
     sourcePosition,
-    SOURCE_CONNECTION_POINT_PADDING
+    EDGES.SOURCE_CONNECTION_POINT_PADDING
   )
 
   const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>(() => ({
@@ -276,7 +295,7 @@ export const useStraightPathEdge = ({
           newSourceX,
           newSourceY,
           sourcePosition,
-          SOURCE_CONNECTION_POINT_PADDING
+          EDGES.SOURCE_CONNECTION_POINT_PADDING
         )
 
         const tempPath = calculateStraightPath(

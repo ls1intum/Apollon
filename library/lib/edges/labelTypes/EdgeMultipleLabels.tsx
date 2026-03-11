@@ -1,9 +1,6 @@
-import { ZINDEX_LABEL } from "@/constants/zindexConstants"
-import { IPoint } from "../Connection"
-import { EdgeLabelRenderer } from "@xyflow/react"
-import { MessageData } from "../EdgeProps"
 import { useMessagePositioning } from "../../hooks"
-import { Stack } from "@mui/material"
+import { IPoint } from "../Connection"
+import { MessageData } from "../EdgeProps"
 
 interface EdgeMultipleLabelsProps {
   messages?: MessageData[]
@@ -66,7 +63,12 @@ export const EdgeMultipleLabels = ({
         return { y: index * spacing, x: 0 }
       }
     } else {
-      return { y: index * spacing, x: 0 }
+      // For vertical edges, separate forward and backward messages vertically
+      if (isForward) {
+        return { y: -index * spacing, x: 0 }
+      } else {
+        return { y: index * spacing, x: 0 }
+      }
     }
   }
 
@@ -80,63 +82,75 @@ export const EdgeMultipleLabels = ({
     return messageList.map((message, index) => {
       const offset = getMessageOffset(index, isForward)
 
+      const x = pathMiddlePosition.x + labelBoxPosition.x + offset.x
+      const y = pathMiddlePosition.y + labelBoxPosition.y + offset.y
+
+      // Arrow dimensions — match the original 16x16 visual size
+      // (old code used <svg width="16" height="16" viewBox="0 0 24 24">)
+      const arrowWidth = 16
+      const arrowHeight = 16
+      const arrowTextSpacing = 4
+
+      // Defensive: handle missing text property
+      const messageText = message.text || ""
+      const estimatedTextWidth = messageText.length * 8
+      const totalWidth = arrowWidth + arrowTextSpacing + estimatedTextWidth
+
+      // Center the entire label (arrow + text) around the x position
+      const labelStartX = x - totalWidth / 2
+
       return (
-        <div key={`${keyPrefix}-${index}`}>
-          {/* Message container with arrow and text */}
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={1}
+        <g key={`${keyPrefix}-${index}`}>
+          {/* Arrow (only for first message in group) */}
+          {index === 0 && (
+            <g
+              transform={`translate(${labelStartX}, ${y - arrowHeight / 2}) rotate(${arrowRotation}, ${arrowWidth / 2}, ${arrowHeight / 2})`}
+            >
+              {/* Scale 24x24 icon paths down to fit 16x16 box */}
+              <g transform={`scale(${16 / 24})`}>
+                <path
+                  d="M2 12h20"
+                  stroke={textColor}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <path
+                  d="m17 5 5 7-5 7"
+                  stroke={textColor}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </g>
+            </g>
+          )}
+
+          {/* Label Text */}
+          <text
+            x={labelStartX + arrowWidth + arrowTextSpacing}
+            y={y}
+            textAnchor="start"
+            dominantBaseline="middle"
             style={{
-              position: "absolute",
-              transform: `translate(${pathMiddlePosition.x + labelBoxPosition.x + offset.x}px, ${pathMiddlePosition.y + labelBoxPosition.y + offset.y}px) translate(-50%, -50%)`,
-              zIndex: ZINDEX_LABEL,
+              fontSize: "14px",
+              fontWeight: 400,
+              fill: textColor,
+              userSelect: "none",
               pointerEvents: "none",
             }}
-            className="nodrag nopan"
           >
-            {/* Arrow (only for first message in group) */}
-            {index === 0 && (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{
-                  color: textColor,
-                  transform: `rotate(${arrowRotation}deg)`,
-                  transformOrigin: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <path d="M2 12h20" />
-                <path d="m17 5 5 7-5 7" />
-              </svg>
-            )}
-
-            {/* Label */}
-            <div
-              style={{
-                fontSize: "14px",
-                fontWeight: 400,
-                color: textColor,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {message.text}
-            </div>
-          </Stack>
-        </div>
+            {messageText}
+          </text>
+        </g>
       )
     })
   }
 
   return (
-    <EdgeLabelRenderer>
+    <g className="edge-labels">
       {/* Forward Messages (pointing to target) */}
       {renderMessages(
         forwardMessages,
@@ -154,6 +168,6 @@ export const EdgeMultipleLabels = ({
         "backward",
         false // isForward = false
       )}
-    </EdgeLabelRenderer>
+    </g>
   )
 }

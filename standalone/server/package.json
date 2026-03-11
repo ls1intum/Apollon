@@ -2,11 +2,9 @@
   "name": "@tumaet/server",
   "version": "1.0.0",
   "dependencies": {
-    "@tumaet/apollon": "*",
     "cors": "2.8.5",
     "dotenv": "16.4.7",
     "express": "5.1.0",
-    "jspdf": "^2.5.2",
     "mongoose": "8.14.0",
     "node-cron": "4.1.0",
     "pdfmake": "^0.3.3",

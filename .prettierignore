@@ -3,3 +3,6 @@ dist/
 android/
 ios/
 docs/
+.context/
+**/playwright-report/
+**/test-results/

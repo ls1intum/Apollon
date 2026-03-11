@@ -133,14 +133,18 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           aria-label="Toggle color settings"
         />
 
-        {sideElements}
+        {sideElements.map((element, index) => (
+          <React.Fragment key={`side-element-${index}`}>
+            {element}
+          </React.Fragment>
+        ))}
       </div>
 
       {paintOpen && (
         <div style={styles.colorPanel}>
           {!activeColorField ? (
             colorFields.map(({ key, label }) => (
-              <>
+              <React.Fragment key={`${nodeData.name}-${key}-option`}>
                 <ColorOption
                   key={`${nodeData.name}-${key}-option`}
                   label={label}
@@ -150,7 +154,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
                 {key !== colorFields[colorFields.length - 1].key && (
                   <DividerLine backgroundColor="var(--apollon2-gray)" />
                 )}
-              </>
+              </React.Fragment>
             ))
           ) : (
             <div

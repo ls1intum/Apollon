@@ -1,4 +1,4 @@
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { FC } from "react"
 
 interface SeparationLineProps {
@@ -18,6 +18,6 @@ export const SeparationLine: FC<SeparationLineProps> = ({
     y1={y}
     y2={y}
     stroke={strokeColor}
-    strokeWidth={LINE_WIDTH}
+    strokeWidth={LAYOUT.LINE_WIDTH}
   />
 )

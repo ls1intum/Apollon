@@ -35,7 +35,7 @@
     {
       "id": "660e8400-e29b-41d4-a716-446655440011",
       "width": 150,
-      "height": 70,
+      "height": 80,
       "type": "objectName",
       "position": {
         "x": 320,
@@ -53,13 +53,13 @@
       },
       "measured": {
         "width": 150,
-        "height": 70
+        "height": 80
       }
     },
     {
       "id": "660e8400-e29b-41d4-a716-446655440012",
       "width": 180,
-      "height": 70,
+      "height": 80,
       "type": "objectName",
       "position": {
         "x": 50,
@@ -77,7 +77,7 @@
       },
       "measured": {
         "width": 180,
-        "height": 70
+        "height": 80
       }
     }
   ],

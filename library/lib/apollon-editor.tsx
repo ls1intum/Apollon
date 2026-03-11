@@ -190,8 +190,8 @@ export class ApollonEditor {
     void theme
     const container = document.createElement("div")
     container.style.display = "flex"
-    container.style.width = "100px"
-    container.style.height = "100px"
+    container.style.width = "4000px"
+    container.style.height = "4000px"
     container.style.zIndex = "-1000"
     container.style.top = "0"
     container.style.position = "absolute"
@@ -257,9 +257,20 @@ export class ApollonEditor {
       throw new Error("React Flow instance not initialized")
     }
 
-    const bounds = getDiagramBounds(reactFlowInstance)
+    // Wait for ReactFlow to fully lay out nodes and measure custom handle
+    // positions (especially for non-rectangular shapes like parallelograms).
+    // setTimeout lets ResizeObserver callbacks fire; double-rAF ensures paint.
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve())
+        })
+      }, 150)
+    })
 
-    const margin = 20
+    const bounds = getDiagramBounds(reactFlowInstance, container)
+
+    const margin = 60
     const clip = {
       x: bounds.x - margin,
       y: bounds.y - margin,
