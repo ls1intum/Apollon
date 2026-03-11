@@ -159,12 +159,6 @@
   z-index: 9998;
 }
 
-/* Ensure the ghost edge (connection line shown while dragging from a handle)
-   renders above both nodes (9998) and edges (9999) */
-svg.react-flow__connectionline {
-  z-index: 10000;
-}
-
 .react-flow__minimap-mask {
   fill: "#f2f2f2";
   opacity: 0.6;
