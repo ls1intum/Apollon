@@ -252,15 +252,13 @@ describe("replaceCSSVariables", () => {
     expect(path.getAttribute("stroke")).toBe("#000000")
   })
 
-  it("replaces custom font-family with system fonts", () => {
+  it("preserves font-family as-is (no longer force-rewrites to Arial)", () => {
     const text = document.createElementNS("http://www.w3.org/2000/svg", "text")
     text.setAttribute("font-family", "Inter, sans-serif")
     svg.appendChild(text)
 
     replaceCSSVariables(svg)
-    expect(text.getAttribute("font-family")).toBe(
-      "Arial, Helvetica, sans-serif"
-    )
+    expect(text.getAttribute("font-family")).toBe("Inter, sans-serif")
   })
 
   it("normalizes unitless font-size to px", () => {
