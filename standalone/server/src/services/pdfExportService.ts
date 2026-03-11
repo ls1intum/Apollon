@@ -276,7 +276,7 @@ const renderModelToRasterizedPngWithBrowser = async (
         inputModel
       )) as SvgResult
       // Log SVG output for debugging
-      log.debug("Server SVG Output:", svgResult.svg)
+      console.log("Server SVG Output:", svgResult.svg)
       const width = Math.max(1, Number(svgResult.clip?.width) || 1)
       const height = Math.max(1, Number(svgResult.clip?.height) || 1)
       const scale = 2

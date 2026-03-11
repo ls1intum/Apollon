@@ -6,7 +6,6 @@ import {
   ApollonPlayground,
   ApollonWithConnection,
   ErrorPage,
-  RenderPage,
 } from "@/pages"
 import { SafeArea } from "capacitor-plugin-safe-area"
 import { ToastContainer } from "react-toastify"
@@ -49,7 +48,6 @@ function App() {
             <Routes>
               <Route path="/" element={<ApollonLocal />} />
               <Route path="/playground" element={<ApollonPlayground />} />
-              <Route path="/render" element={<RenderPage />} />
               <Route path="/:diagramId" element={<ApollonWithConnection />} />
               <Route path="*" element={<ErrorPage />} />
             </Routes>
