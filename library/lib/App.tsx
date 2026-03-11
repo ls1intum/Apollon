@@ -13,6 +13,7 @@ import {
   AssessmentSelectionDebug,
   ScrollOverlay,
   AlignmentGuides,
+  GhostConnectionLine,
 } from "@/components"
 import "@xyflow/react/dist/style.css"
 import "@/styles/app.css"
@@ -116,6 +117,7 @@ function App({ onReactFlowInit }: AppProps) {
         onNodeDragStop={onNodeDragStop}
         onReconnect={onReconnect}
         connectionLineType={connectionLineType}
+        connectionLineComponent={GhostConnectionLine}
         connectionMode={ConnectionMode.Loose}
         onInit={(instance) => {
           instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })
