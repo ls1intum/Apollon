@@ -384,7 +384,7 @@ describe("getEdgeMarkerStyles", () => {
   it("returns required-interface marker for ComponentRequiredInterface", () => {
     const result = getEdgeMarkerStyles("ComponentRequiredInterface")
     expect(result.markerEnd).toBe("url(#required-interface)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING + 4)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING + 2)
   })
 
   it("returns required-interface-quarter for ComponentRequiredQuarterInterface", () => {
@@ -640,6 +640,34 @@ describe("getEllipseHandlePosition", () => {
   it("returns correct position for bottom-left handle (angle=3π/4)", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "bottom-left")
     const angle = (3 * Math.PI) / 4
+    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
+    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+  })
+
+  it("returns correct position for right-bottom handle (angle=π/6)", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-bottom")
+    const angle = Math.PI / 6
+    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
+    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+  })
+
+  it("returns correct position for left-bottom handle (angle=5π/6)", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "left-bottom")
+    const angle = (5 * Math.PI) / 6
+    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
+    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+  })
+
+  it("returns correct position for left-top handle (angle=7π/6)", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "left-top")
+    const angle = (7 * Math.PI) / 6
+    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
+    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+  })
+
+  it("returns correct position for right-top handle (angle=11π/6)", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-top")
+    const angle = (11 * Math.PI) / 6
     expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
     expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
   })

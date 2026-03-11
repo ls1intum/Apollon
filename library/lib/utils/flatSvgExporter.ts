@@ -629,16 +629,18 @@ const renderMarker = (
 
   if (config.type === "semicircle") {
     const strokeW = MARKERS.STROKE_WIDTH.semicircle
-    const gap = 4
+    const gap = 2
     const r = INTERFACE.RADIUS + gap
-    const halfAngle = (45 * Math.PI) / 180
+    const arcSpanDegrees = config.arcSpanDegrees ?? 180
+    const halfAngle = ((arcSpanDegrees / 2) * Math.PI) / 180
     const cosHalf = Math.cos(halfAngle)
     const sinHalf = Math.sin(halfAngle)
+    const largeArcFlag = arcSpanDegrees > 180 ? 1 : 0
     const top = transformExact(r * (1 - cosHalf), -r * sinHalf)
     const bottom = transformExact(r * (1 - cosHalf), r * sinHalf)
     const path = createSvgElement("path")
     setAttr(path, {
-      d: `M${formatNumber(top.x)},${formatNumber(top.y)} A${formatNumber(r)},${formatNumber(r)} 0 0,0 ${formatNumber(bottom.x)},${formatNumber(bottom.y)}`,
+      d: `M${formatNumber(top.x)},${formatNumber(top.y)} A${formatNumber(r)},${formatNumber(r)} 0 ${largeArcFlag},0 ${formatNumber(bottom.x)},${formatNumber(bottom.y)}`,
       fill: "none",
       stroke: strokeColor,
       "stroke-width": strokeW,

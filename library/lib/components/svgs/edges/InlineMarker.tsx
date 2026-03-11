@@ -210,44 +210,27 @@ export function InlineMarker({
     case "semicircle": {
       const strokeW = MARKERS.STROKE_WIDTH.semicircle
       // Socket radius = Ball radius + gap for visual separation
-      // Gap accounts for both stroke widths plus desired visual spacing:
+      // Gap of 2 keeps the arc snug against the interface circle:
       //   circle outer edge = RADIUS + strokeWidth/2 = 15 + 1 = 16
-      //   arc inner edge = (RADIUS + gap) - strokeWidth/2
-      //   visual gap = arc_inner - circle_outer = gap - strokeWidth
-      // With gap=4, strokeWidth=2: visual gap = 4 - 2 = 2px clear space
-      const gap = 4
-      const r = INTERFACE.RADIUS + gap // 15 + 4 = 19
+      //   arc inner edge = (RADIUS + gap) - arcStrokeWidth/2 = 17 - 1 = 16
+      //   With gap=2 the arc inner edge is flush with the circle outer edge
+      const gap = 2
+      const r = INTERFACE.RADIUS + gap // 15 + 2 = 17
 
-      // Arc span = 90° allows 4 connections (N,S,E,W) without overlap
-      // For 180° semicircle: halfAngle=90°, cos=0, sin=1 → transform(r, ±r)
-      // For 90° arc: halfAngle=45°, cos=0.707, sin=0.707 → transform(r*0.293, ±r*0.707)
-      const arcSpanDegrees = 90
+      // Use config's arcSpanDegrees (180° for half, 90° for quarter, 270° for three-quarter)
+      const arcSpanDegrees = config.arcSpanDegrees ?? 180
       const halfAngle = ((arcSpanDegrees / 2) * Math.PI) / 180
       const cosHalf = Math.cos(halfAngle)
       const sinHalf = Math.sin(halfAngle)
 
-      // CRITICAL: Use exact floating-point coordinates (no rounding) for concentricity
-      // The arc center is implicitly computed by SVG from the endpoints and radius.
-      // If we round the endpoints independently, the computed center drifts from the ball center.
-      // With exact coordinates, the arc center lands exactly at (endPoint + r in direction),
-      // which is where the ball center is, ensuring perfect concentricity.
-      //
-      // Math verification for direction=0 (East), r=12, halfAngle=45°:
-      //   top = (endpoint.x + r*(1-cos45), endpoint.y - r*sin45) = (endpoint.x + 3.515, endpoint.y - 8.485)
-      //   bottom = (endpoint.x + 3.515, endpoint.y + 8.485)
-      //   Chord length = 16.97, chord midpoint = (endpoint.x + 3.515, endpoint.y)
-      //   SVG computes center at chord_midpoint + (sqrt(r² - (chord/2)²), 0) for sweep=0
-      //   = (endpoint.x + 3.515 + 8.485, endpoint.y) = (endpoint.x + 12, endpoint.y)
-      //   This exactly matches ball center at (endpoint.x + r, endpoint.y). QED.
+      // large-arc-flag must be 1 when arc span > 180° (SVG arc command requirement)
+      const largeArcFlag = arcSpanDegrees > 180 ? 1 : 0
+
       const transformExact = (x: number, y: number) => ({
         x: endPoint.x + x * cos - y * sin,
         y: endPoint.y + x * sin + y * cos,
       })
 
-      // Arc back (furthest from ball) touches the endpoint
-      // Arc center is at endpoint + (r, 0) in direction of travel
-      // Arc endpoints at ±halfAngle from the "back" direction (opposite to travel)
-      // Forward offset: r * (1 - cosHalf), Perpendicular offset: r * sinHalf
       const top = transformExact(r * (1 - cosHalf), -r * sinHalf)
       const bottom = transformExact(r * (1 - cosHalf), r * sinHalf)
 
@@ -255,7 +238,7 @@ export function InlineMarker({
       // so the concave opening faces TOWARD the ball
       return (
         <path
-          d={`M${top.x},${top.y} A${r},${r} 0 0,0 ${bottom.x},${bottom.y}`}
+          d={`M${top.x},${top.y} A${r},${r} 0 ${largeArcFlag},0 ${bottom.x},${bottom.y}`}
           fill="none"
           stroke={strokeColor}
           strokeWidth={strokeW}

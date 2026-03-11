@@ -53,18 +53,35 @@ export const EdgeMiddleLabels = ({
       y = (sourcePoint.y + targetPoint.y) / 2
     }
   } else {
-    const offsetX = isMiddlePathHorizontal ? 0 : 10
-    const offsetY = isMiddlePathHorizontal ? 20 : 0
-    x = pathMiddlePosition.x + offsetX
-    y = pathMiddlePosition.y + offsetY
+    const LABEL_GAP = 8
+    if (isMiddlePathHorizontal) {
+      // Horizontal edge: place label above the line
+      x = pathMiddlePosition.x
+      y = pathMiddlePosition.y - LABEL_GAP
+    } else {
+      // Vertical edge: place label to the left of the line with gap
+      x = pathMiddlePosition.x - LABEL_GAP
+      y = pathMiddlePosition.y
+    }
   }
+
+  const textAnchor = isUseCasePath
+    ? "middle"
+    : isMiddlePathHorizontal
+      ? "middle"
+      : "end"
+  const dominantBaseline = isUseCasePath
+    ? "middle"
+    : isMiddlePathHorizontal
+      ? "auto"
+      : "middle"
 
   return (
     <text
       x={x}
       y={y}
-      textAnchor="middle"
-      dominantBaseline="middle"
+      textAnchor={textAnchor}
+      dominantBaseline={dominantBaseline}
       style={{
         fontSize: "12px",
         fontWeight: 700,

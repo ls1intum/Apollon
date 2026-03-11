@@ -1,5 +1,5 @@
 import { NodeProps, type Node } from "@xyflow/react"
-import { DefaultNodeWrapper } from "../wrappers"
+import { DefaultNodeWrapper, FOUR_WAY_HANDLES_PRESET } from "../wrappers"
 import { useRef } from "react"
 import { SfcTransitionBranchNodeProps } from "@/types"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
@@ -18,7 +18,12 @@ export function SfcTransitionBranch({
   }
 
   return (
-    <DefaultNodeWrapper width={width} height={height} elementId={id}>
+    <DefaultNodeWrapper
+      width={width}
+      height={height}
+      elementId={id}
+      hiddenHandles={FOUR_WAY_HANDLES_PRESET}
+    >
       <NodeToolbar elementId={id} />
       <div ref={svgWrapperRef}>
         <SfcTransitionBranchNodeSVG

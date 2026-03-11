@@ -159,6 +159,7 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   convertStyleToAttributes(mainSVG)
   ensureTextFontDefaults(mainSVG)
   removeMarkerElements(mainSVG)
+  replaceTextDecorationWithManualUnderline(mainSVG)
 
   return mainSVG.outerHTML
 }
@@ -967,6 +968,60 @@ function ensureTextFontDefaults(svg: Element): void {
 }
 
 /**
+ * Replace `text-decoration="underline"` on `<text>` elements with manual
+ * `<line>` siblings so the underline is visible in non-browser renderers.
+ *
+ * resvg 2.6.2 has a rendering bug where 3+ `text-decoration="underline"`
+ * attributes across nested `<svg>` elements cause unrelated paths (particularly
+ * vertical lines) to disappear. This workaround removes the problematic
+ * attribute and draws explicit underline lines using `getBBox()` for accurate
+ * text measurements.
+ *
+ * The SVG must be temporarily attached to the DOM for `getBBox()` to work.
+ */
+function replaceTextDecorationWithManualUnderline(svg: SVGSVGElement): void {
+  const SVG_NS = "http://www.w3.org/2000/svg"
+  const underlinedTexts = svg.querySelectorAll(
+    'text[text-decoration="underline"]'
+  )
+
+  if (underlinedTexts.length === 0) return
+
+  // Temporarily attach to the DOM (off-screen) so getBBox() works
+  svg.style.position = "absolute"
+  svg.style.left = "-9999px"
+  svg.style.top = "-9999px"
+  document.body.appendChild(svg)
+
+  try {
+    underlinedTexts.forEach((textEl) => {
+      textEl.removeAttribute("text-decoration")
+
+      // Measure the text bounding box in SVG coordinate space
+      const bbox = (textEl as SVGTextElement).getBBox()
+
+      const line = document.createElementNS(SVG_NS, "line")
+      // Position the underline just below the text baseline
+      const underlineY = bbox.y + bbox.height
+      line.setAttribute("x1", String(bbox.x))
+      line.setAttribute("x2", String(bbox.x + bbox.width))
+      line.setAttribute("y1", String(underlineY))
+      line.setAttribute("y2", String(underlineY))
+      line.setAttribute("stroke", textEl.getAttribute("fill") || STROKE_COLOR)
+      line.setAttribute("stroke-width", "1.2")
+
+      // Insert the line as a sibling right after the text element
+      textEl.parentNode?.insertBefore(line, textEl.nextSibling)
+    })
+  } finally {
+    document.body.removeChild(svg)
+    svg.style.removeProperty("position")
+    svg.style.removeProperty("left")
+    svg.style.removeProperty("top")
+  }
+}
+
+/**
  * Final safety pass: strip any legacy <marker> references that could sneak in
  * from third-party content. Keeps exports clean for PowerPoint/Keynote.
  */
@@ -991,6 +1046,7 @@ export const __testing = {
   convertStyleToAttributes,
   ensureTextFontDefaults,
   removeMarkerElements,
+  replaceTextDecorationWithManualUnderline,
   mergeBounds,
   getNodeOverflowBoundsFromDOM,
 } as const

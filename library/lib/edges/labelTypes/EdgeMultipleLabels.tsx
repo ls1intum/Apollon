@@ -85,12 +85,12 @@ export const EdgeMultipleLabels = ({
       const x = pathMiddlePosition.x + labelBoxPosition.x + offset.x
       const y = pathMiddlePosition.y + labelBoxPosition.y + offset.y
 
-      // Arrow dimensions
-      const arrowWidth = 24
+      // Arrow dimensions — match the original 16x16 visual size
+      // (old code used <svg width="16" height="16" viewBox="0 0 24 24">)
+      const arrowWidth = 16
       const arrowHeight = 16
-      const arrowTextSpacing = 8
+      const arrowTextSpacing = 4
 
-      // Estimate text width (approximately 8px per character at 14px font size)
       // Defensive: handle missing text property
       const messageText = message.text || ""
       const estimatedTextWidth = messageText.length * 8
@@ -106,22 +106,25 @@ export const EdgeMultipleLabels = ({
             <g
               transform={`translate(${labelStartX}, ${y - arrowHeight / 2}) rotate(${arrowRotation}, ${arrowWidth / 2}, ${arrowHeight / 2})`}
             >
-              <path
-                d="M2 8h20"
-                stroke={textColor}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              <path
-                d="m17 3 5 5-5 5"
-                stroke={textColor}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
+              {/* Scale 24x24 icon paths down to fit 16x16 box */}
+              <g transform={`scale(${16 / 24})`}>
+                <path
+                  d="M2 12h20"
+                  stroke={textColor}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <path
+                  d="m17 5 5 7-5 7"
+                  stroke={textColor}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </g>
             </g>
           )}
 

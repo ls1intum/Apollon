@@ -188,6 +188,57 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
         .forEach((el) => el.removeAttribute("marker-end"))
     }
 
+    /**
+     * Replace `text-decoration="underline"` on `<text>` elements with manual
+     * `<line>` siblings so the underline is visible in non-browser renderers.
+     *
+     * resvg 2.6.2 has a rendering bug where 3+ `text-decoration="underline"`
+     * attributes across nested `<svg>` elements cause unrelated paths
+     * (particularly vertical lines) to disappear.
+     */
+    function replaceTextDecorationWithManualUnderline(
+      svg: SVGSVGElement
+    ): void {
+      const underlinedTexts = svg.querySelectorAll(
+        'text[text-decoration="underline"]'
+      )
+
+      if (underlinedTexts.length === 0) return
+
+      // Temporarily attach to the DOM (off-screen) so getBBox() works
+      svg.style.position = "absolute"
+      svg.style.left = "-9999px"
+      svg.style.top = "-9999px"
+      document.body.appendChild(svg)
+
+      try {
+        underlinedTexts.forEach((textEl) => {
+          textEl.removeAttribute("text-decoration")
+
+          const bbox = (textEl as SVGTextElement).getBBox()
+
+          const line = document.createElementNS(SVG_NS, "line")
+          const underlineY = bbox.y + bbox.height
+          line.setAttribute("x1", String(bbox.x))
+          line.setAttribute("x2", String(bbox.x + bbox.width))
+          line.setAttribute("y1", String(underlineY))
+          line.setAttribute("y2", String(underlineY))
+          line.setAttribute(
+            "stroke",
+            textEl.getAttribute("fill") || STROKE_COLOR
+          )
+          line.setAttribute("stroke-width", "1.2")
+
+          textEl.parentNode?.insertBefore(line, textEl.nextSibling)
+        })
+      } finally {
+        document.body.removeChild(svg)
+        svg.style.removeProperty("position")
+        svg.style.removeProperty("left")
+        svg.style.removeProperty("top")
+      }
+    }
+
     // ---- Build the SVG ----
     const vp = document.querySelector(".react-flow__viewport")
     if (!vp) throw new Error("React Flow viewport not found")
@@ -213,9 +264,90 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
       if (y < minY) minY = y
       if (x + w > maxX) maxX = x + w
       if (y + h > maxY) maxY = y + h
+
+      // Check for node overflow content (e.g., reachability graph initial arrow)
+      const svgEl = node.querySelector("svg")
+      if (svgEl) {
+        const vb = svgEl.getAttribute("viewBox")
+        if (vb) {
+          const vbParts = vb.split(/[\s,]+/).map(Number)
+          const [vbX, vbY, vbW, vbH] = vbParts
+          const svgW = parseFloat(svgEl.getAttribute("width") ?? String(vbW))
+          const svgH = parseFloat(svgEl.getAttribute("height") ?? String(vbH))
+          const scaleX = svgW / vbW
+          const scaleY = svgH / vbH
+
+          const toGlobal = (lx: number, ly: number) => ({
+            x: x + (lx - vbX) * scaleX,
+            y: y + (ly - vbY) * scaleY,
+          })
+
+          // Check <line> elements (e.g., initial marking arrows)
+          svgEl.querySelectorAll("line").forEach((line) => {
+            const x1 = parseFloat(line.getAttribute("x1") ?? "0")
+            const y1 = parseFloat(line.getAttribute("y1") ?? "0")
+            const x2 = parseFloat(line.getAttribute("x2") ?? "0")
+            const y2 = parseFloat(line.getAttribute("y2") ?? "0")
+            for (const gp of [toGlobal(x1, y1), toGlobal(x2, y2)]) {
+              if (gp.x < minX) minX = gp.x
+              if (gp.y < minY) minY = gp.y
+              if (gp.x > maxX) maxX = gp.x
+              if (gp.y > maxY) maxY = gp.y
+            }
+          })
+        }
+      }
     })
 
-    const margin = 10
+    // Expand bounds to include edge paths that extend outside node bounds
+    function extractPathCoords(d: string): { x: number; y: number }[] {
+      const coords: { x: number; y: number }[] = []
+      const re = /(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)/g
+      let m
+      while ((m = re.exec(d)) !== null) {
+        coords.push({ x: parseFloat(m[1]), y: parseFloat(m[2]) })
+      }
+      return coords
+    }
+
+    vp.querySelectorAll(".react-flow__edge-path").forEach((path) => {
+      const d = path.getAttribute("d")
+      if (!d) return
+      const points = extractPathCoords(d)
+      for (const p of points) {
+        if (p.x < minX) minX = p.x
+        if (p.y < minY) minY = p.y
+        if (p.x > maxX) maxX = p.x
+        if (p.y > maxY) maxY = p.y
+      }
+    })
+
+    // Include inline marker positions
+    vp.querySelectorAll("[data-inline-marker]").forEach((marker) => {
+      const tag = marker.tagName.toLowerCase()
+      if (tag === "path") {
+        const d = marker.getAttribute("d")
+        if (d) {
+          const points = extractPathCoords(d)
+          for (const p of points) {
+            if (p.x < minX) minX = p.x
+            if (p.y < minY) minY = p.y
+            if (p.x > maxX) maxX = p.x
+            if (p.y > maxY) maxY = p.y
+          }
+        }
+      } else if (tag === "circle") {
+        const cx = parseFloat(marker.getAttribute("cx") ?? "0")
+        const cy = parseFloat(marker.getAttribute("cy") ?? "0")
+        const r = parseFloat(marker.getAttribute("r") ?? "0")
+        if (cx - r < minX) minX = cx - r
+        if (cy - r < minY) minY = cy - r
+        if (cx + r > maxX) maxX = cx + r
+        if (cy + r > maxY) maxY = cy + r
+      }
+    })
+
+    const margin = 20
     const clipX = minX - margin
     const clipY = minY - margin
     const clipW = maxX - minX + margin * 2
@@ -277,9 +409,24 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
       edgeCont
         .querySelectorAll("[data-inline-marker]")
         .forEach((m) => edgesG.appendChild(m.cloneNode(true)))
-      edgeCont
-        .querySelectorAll("text")
-        .forEach((t) => edgesG.appendChild(t.cloneNode(true)))
+
+      // Get label groups first (for complex edge labels like CommunicationDiagram messages)
+      const labelGroups = edgeCont.querySelectorAll(
+        ".react-flow__edge-text, .react-flow__edge-textwrapper, .edge-labels"
+      )
+      labelGroups.forEach((group) => {
+        edgesG.appendChild(group.cloneNode(true))
+      })
+
+      // Get standalone text labels (not already inside label groups to avoid duplication)
+      edgeCont.querySelectorAll("text").forEach((t) => {
+        const isInsideLabelGroup = Array.from(labelGroups).some((group) =>
+          group.contains(t)
+        )
+        if (!isInsideLabelGroup) {
+          edgesG.appendChild(t.cloneNode(true))
+        }
+      })
     })
 
     // Post-process
@@ -287,6 +434,7 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
     convertStyleToAttrs(mainSVG)
     ensureTextFontDefaults(mainSVG)
     removeMarkers(mainSVG)
+    replaceTextDecorationWithManualUnderline(mainSVG)
 
     return mainSVG.outerHTML
   })

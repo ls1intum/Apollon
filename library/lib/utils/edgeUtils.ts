@@ -304,8 +304,8 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
       return {
         // markerPadding = MARKER_PADDING + gap
         // MARKER_PADDING (-3) compensates for React Flow handle offset
-        // gap (4) is the spacing between socket arc and ball circle
-        markerPadding: EDGES.MARKER_PADDING + 4,
+        // gap (2) is the spacing between socket arc and ball circle
+        markerPadding: EDGES.MARKER_PADDING + 2,
         markerEnd: "url(#required-interface)",
         strokeDashArray: "0",
         offset: 0,
@@ -313,8 +313,7 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredQuarterInterface":
     case "DeploymentRequiredQuarterInterface":
       return {
-        // Same as full required interface
-        markerPadding: EDGES.MARKER_PADDING + 4,
+        markerPadding: EDGES.MARKER_PADDING + 2,
         markerEnd: "url(#required-interface-quarter)",
         strokeDashArray: "0",
         offset: 0,
@@ -322,8 +321,7 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredThreeQuarterInterface":
     case "DeploymentRequiredThreeQuarterInterface":
       return {
-        // Same as full required interface
-        markerPadding: EDGES.MARKER_PADDING + 4,
+        markerPadding: EDGES.MARKER_PADDING + 2,
         markerEnd: "url(#required-interface-threequarter)",
         strokeDashArray: "0",
         offset: 0,
@@ -430,13 +428,17 @@ export function getEllipseHandlePosition(
 ): { x: number; y: number } {
   const angleMap: { [key: string]: number } = {
     right: 0,
-    "bottom-right": Math.PI / 4,
-    bottom: Math.PI / 2,
-    "bottom-left": (3 * Math.PI) / 4,
-    left: Math.PI,
-    "top-left": (5 * Math.PI) / 4,
-    top: (3 * Math.PI) / 2,
-    "top-right": (7 * Math.PI) / 4,
+    "right-bottom": Math.PI / 6, // 30°
+    "bottom-right": Math.PI / 4, // 45°
+    bottom: Math.PI / 2, // 90°
+    "bottom-left": (3 * Math.PI) / 4, // 135°
+    "left-bottom": (5 * Math.PI) / 6, // 150°
+    left: Math.PI, // 180°
+    "left-top": (7 * Math.PI) / 6, // 210°
+    "top-left": (5 * Math.PI) / 4, // 225°
+    top: (3 * Math.PI) / 2, // 270°
+    "top-right": (7 * Math.PI) / 4, // 315°
+    "right-top": (11 * Math.PI) / 6, // 330°
   }
 
   const angle = angleMap[handle] ?? 0

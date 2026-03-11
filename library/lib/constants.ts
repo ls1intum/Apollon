@@ -172,6 +172,7 @@ export interface MarkerConfig {
   readonly size: number
   readonly widthFactor: number
   readonly heightFactor: number
+  readonly arcSpanDegrees?: number // Only for semicircle type: arc span in degrees
 }
 
 // Interface socket markers - radius derived from INTERFACE.RADIUS
@@ -222,6 +223,7 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
+    arcSpanDegrees: 180,
   },
   "required-interface-quarter": {
     type: "semicircle",
@@ -229,6 +231,7 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
+    arcSpanDegrees: 90,
   },
   "required-interface-threequarter": {
     type: "semicircle",
@@ -236,6 +239,7 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
+    arcSpanDegrees: 270,
   },
   // BPMN markers - compact style
   "bpmn-white-triangle": {
@@ -726,7 +730,7 @@ export const dropElementConfigs: Readonly<
       type: "sfcTransitionBranch",
       width: 30,
       height: 30,
-      defaultData: { name: "Branch" },
+      defaultData: { name: "Branch", showHint: true },
       svg: SfcTransitionBranchNodeSVG,
     },
     {

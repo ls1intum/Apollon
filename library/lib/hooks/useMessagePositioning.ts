@@ -72,7 +72,6 @@ export const useMessagePositioning = (
 
     const baseOffset = 15
     const labelOffset = 12
-    const verticalEdgeMessageSpacing = 60
 
     // Position labels and arrows based on actual middle segment orientation
     let forwardArrowBoxPosition: { x: number; y: number }
@@ -88,17 +87,12 @@ export const useMessagePositioning = (
       backwardArrowBoxPosition = { x: 0, y: baseOffset }
       backwardLabelBoxPosition = { x: labelOffset, y: baseOffset }
     } else {
-      forwardArrowBoxPosition = { x: -verticalEdgeMessageSpacing, y: 0 }
-      forwardLabelBoxPosition = {
-        x: -verticalEdgeMessageSpacing - labelOffset,
-        y: 0,
-      }
+      // Vertical middle segment: messages left and right
+      forwardArrowBoxPosition = { x: baseOffset, y: 0 }
+      forwardLabelBoxPosition = { x: baseOffset + labelOffset, y: 0 }
 
-      backwardArrowBoxPosition = { x: verticalEdgeMessageSpacing, y: 0 }
-      backwardLabelBoxPosition = {
-        x: verticalEdgeMessageSpacing + labelOffset,
-        y: 0,
-      }
+      backwardArrowBoxPosition = { x: -baseOffset, y: 0 }
+      backwardLabelBoxPosition = { x: -baseOffset - labelOffset, y: 0 }
     }
 
     return {
