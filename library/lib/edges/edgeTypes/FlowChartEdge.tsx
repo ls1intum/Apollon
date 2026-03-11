@@ -31,6 +31,7 @@ export const FlowChartEdge = ({
   sourceHandleId,
   targetHandleId,
   data,
+  selected,
 }: BaseEdgeProps) => {
   const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
@@ -134,6 +135,7 @@ export const FlowChartEdge = ({
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
             isDiagramModifiable={isDiagramModifiable}
+            selected={selected}
             diagramType="step"
             pathType="step"
             onSourcePointerDown={(e) => handleEndpointPointerDown(e, "source")}

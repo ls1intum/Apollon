@@ -288,7 +288,7 @@ export function EdgeInlineMarkers({
   const startMarkerId = extractMarkerId(markerStart)
 
   return (
-    <>
+    <g pointerEvents="none">
       {endMarkerId &&
         (() => {
           const endInfo = getPathEndInfo(pathD)
@@ -316,6 +316,6 @@ export function EdgeInlineMarkers({
             />
           )
         })()}
-    </>
+    </g>
   )
 }
