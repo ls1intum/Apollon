@@ -57,6 +57,7 @@ export const UseCaseEdge = ({
     edgeData,
     currentPath,
     overlayPath,
+    isReconnectingRef,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -94,12 +95,14 @@ export const UseCaseEdge = ({
             }}
           />
 
-          <EdgeInlineMarkers
-            pathD={currentPath}
-            markerEnd={markerEnd}
-            markerStart={markerStart}
-            strokeColor={strokeColor}
-          />
+          {!isReconnectingRef.current && (
+            <EdgeInlineMarkers
+              pathD={currentPath}
+              markerEnd={markerEnd}
+              markerStart={markerStart}
+              strokeColor={strokeColor}
+            />
+          )}
 
           <path
             ref={pathRef}
