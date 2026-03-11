@@ -99,6 +99,7 @@ function App({ onReactFlowInit }: AppProps) {
       {mode === ApollonMode.Modelling && !readonly && <Sidebar />}
       <ReactFlow
         id={`react-flow-library-${diagramId}`}
+        className="apollon-container"
         nodeTypes={diagramNodeTypes}
         edgeTypes={diagramEdgeTypes}
         nodes={nodes}
