@@ -126,6 +126,10 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
       "fill",
       "fill-opacity",
       "opacity",
+      "font-size",
+      "font-weight",
+      "font-family",
+      "font-style",
     ]
 
     function convertStyleToAttrs(node: Element | ChildNode): void {
@@ -151,6 +155,27 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
         else el.removeAttribute("style")
       }
       Array.from(el.childNodes).forEach(convertStyleToAttrs)
+    }
+
+    /**
+     * Default font values matching the browser rendering (app.css / CustomText.tsx).
+     * Applied to <text> elements missing explicit font attributes so that
+     * non-browser renderers (resvg, Inkscape, PowerPoint) render text identically.
+     */
+    const TEXT_FONT_DEFAULTS: Record<string, string> = {
+      "font-size": "16px",
+      "font-weight": "400",
+      "font-family": "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+    }
+
+    function ensureTextFontDefaults(svg: Element): void {
+      svg.querySelectorAll("text").forEach((textEl) => {
+        for (const [attr, defaultValue] of Object.entries(TEXT_FONT_DEFAULTS)) {
+          if (!textEl.hasAttribute(attr)) {
+            textEl.setAttribute(attr, defaultValue)
+          }
+        }
+      })
     }
 
     function removeMarkers(svg: Element): void {
@@ -260,6 +285,7 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
     // Post-process
     replaceCSSVars(mainSVG)
     convertStyleToAttrs(mainSVG)
+    ensureTextFontDefaults(mainSVG)
     removeMarkers(mainSVG)
 
     return mainSVG.outerHTML

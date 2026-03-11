@@ -157,6 +157,7 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   // Process the SVG for compatibility
   replaceCSSVariables(mainSVG)
   convertStyleToAttributes(mainSVG)
+  ensureTextFontDefaults(mainSVG)
   removeMarkerElements(mainSVG)
 
   return mainSVG.outerHTML
@@ -872,6 +873,10 @@ const SVG_STYLE_TO_ATTRIBUTE = [
   "fill",
   "fill-opacity",
   "opacity",
+  "font-size",
+  "font-weight",
+  "font-family",
+  "font-style",
 ] as const
 
 /**
@@ -930,6 +935,38 @@ function convertStyleToAttributes(node: Element | ChildNode): void {
 }
 
 /**
+ * Default font values matching the browser rendering (app.css / CustomText.tsx).
+ * Applied to <text> elements that don't have explicit font attributes,
+ * ensuring non-browser SVG renderers (resvg, Inkscape, PowerPoint) render
+ * text identically to what the user sees on screen.
+ */
+const TEXT_FONT_DEFAULTS = {
+  "font-size": "16px",
+  "font-weight": "400",
+  "font-family": "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+} as const
+
+/**
+ * Ensure all <text> elements have explicit font-size, font-weight, and font-family.
+ *
+ * In the browser, text inherits these from CSS (:root font-family, default font-size).
+ * In exported SVGs opened in non-browser renderers, missing attributes cause text to
+ * render with the renderer's own defaults (often Times New Roman at an arbitrary size).
+ *
+ * This pass runs AFTER convertStyleToAttributes so any font props already extracted
+ * from inline styles are present as attributes.
+ */
+function ensureTextFontDefaults(svg: Element): void {
+  svg.querySelectorAll("text").forEach((textEl) => {
+    for (const [attr, defaultValue] of Object.entries(TEXT_FONT_DEFAULTS)) {
+      if (!textEl.hasAttribute(attr)) {
+        textEl.setAttribute(attr, defaultValue)
+      }
+    }
+  })
+}
+
+/**
  * Final safety pass: strip any legacy <marker> references that could sneak in
  * from third-party content. Keeps exports clean for PowerPoint/Keynote.
  */
@@ -952,6 +989,7 @@ export const __testing = {
   resolveCSSVariable,
   replaceCSSVariables,
   convertStyleToAttributes,
+  ensureTextFontDefaults,
   removeMarkerElements,
   mergeBounds,
   getNodeOverflowBoundsFromDOM,
