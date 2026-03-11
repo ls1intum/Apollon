@@ -121,7 +121,6 @@ export const ReachabilityGraphMarkingSVG: React.FC<
           y={height / 2}
           textAnchor="middle"
           fontWeight="600"
-          dominantBaseline="hanging"
           fill={textColor}
         >
           {name}
