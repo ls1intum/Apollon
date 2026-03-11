@@ -97,8 +97,8 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
           resolved = resolved.replace(/currentColor/gi, currentColor)
         if (resolved === "context-stroke" || resolved === "context-fill")
           resolved = currentColor
-        if (attr === "font-family" || attr === "fontFamily")
-          resolved = "Arial, Helvetica, sans-serif"
+        // Don't force-rewrite font-family — let the browser font stack pass through
+        // so the SVG export matches the on-screen rendering
         if (
           (attr === "font-size" || attr === "fontSize") &&
           /^\d+(\.\d+)?$/.test(resolved)
@@ -199,7 +199,8 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
     const mainSVG = document.createElementNS(SVG_NS, "svg")
     mainSVG.setAttribute("xmlns", SVG_NS)
     const styleEl = document.createElementNS(SVG_NS, "style")
-    styleEl.textContent = "text { font-family: Arial, Helvetica, sans-serif; }"
+    styleEl.textContent =
+      "text { font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; }"
     mainSVG.appendChild(styleEl)
     mainSVG.setAttribute("viewBox", `${clipX} ${clipY} ${clipW} ${clipH}`)
     mainSVG.setAttribute("width", `${clipW}`)

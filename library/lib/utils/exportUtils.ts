@@ -5,13 +5,14 @@ import { Point } from "./pathParsing"
 
 /**
  * Font styles for exported SVGs.
- * Uses system fonts for compatibility with external applications (PowerPoint, Inkscape).
- * Arial and Helvetica are prioritized because they're available on Windows and Mac.
- * Custom fonts like "Inter" are NOT available in PowerPoint and cause rendering issues.
+ * Uses the same font stack as the browser (app.css) so the export looks identical
+ * when opened in a browser. When opened in applications without Inter installed
+ * (e.g. PowerPoint on Windows), the fallback chain provides graceful degradation
+ * through system-ui → Avenir → Helvetica → Arial → sans-serif.
  */
 const svgFontStyles = `
     text {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     }
   `
 
@@ -826,12 +827,6 @@ function replaceCSSVariables(
         resolvedValue === "context-fill"
       ) {
         resolvedValue = currentColor
-      }
-
-      // Replace custom fonts with system fonts for export compatibility
-      // Inter is not available in PowerPoint/Inkscape, causing font metric issues
-      if (attr === "font-family" || attr === "fontFamily") {
-        resolvedValue = "Arial, Helvetica, sans-serif"
       }
 
       // Normalize font-size to always have px units
