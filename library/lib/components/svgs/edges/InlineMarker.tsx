@@ -210,12 +210,12 @@ export function InlineMarker({
     case "semicircle": {
       const strokeW = MARKERS.STROKE_WIDTH.semicircle
       // Socket radius = Ball radius + gap for visual separation
-      // Gap of 2 keeps the arc snug against the interface circle:
+      // Gap of 7 adds extra clearance between socket arc and interface circle:
       //   circle outer edge = RADIUS + strokeWidth/2 = 15 + 1 = 16
-      //   arc inner edge = (RADIUS + gap) - arcStrokeWidth/2 = 17 - 1 = 16
-      //   With gap=2 the arc inner edge is flush with the circle outer edge
-      const gap = 2
-      const r = INTERFACE.RADIUS + gap // 15 + 2 = 17
+      //   arc inner edge = (RADIUS + gap) - arcStrokeWidth/2 = 22 - 1 = 21
+      //   With gap=7, the arc inner edge sits 5px away from the circle
+      const gap = 7
+      const r = INTERFACE.RADIUS + gap // 15 + 7 = 22
 
       // Use config's arcSpanDegrees (180° for half, 90° for quarter, 270° for three-quarter)
       const arcSpanDegrees = config.arcSpanDegrees ?? 180

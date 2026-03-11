@@ -384,7 +384,7 @@ describe("getEdgeMarkerStyles", () => {
   it("returns required-interface marker for ComponentRequiredInterface", () => {
     const result = getEdgeMarkerStyles("ComponentRequiredInterface")
     expect(result.markerEnd).toBe("url(#required-interface)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING + 2)
+    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING + 7)
   })
 
   it("returns required-interface-quarter for ComponentRequiredQuarterInterface", () => {
