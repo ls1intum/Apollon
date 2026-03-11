@@ -13,8 +13,6 @@ export const useExportAsSVG = () => {
       return
     }
 
-    // Previous exporter (kept for quick rollback):
-    // const apollonSVG = await editor.exportAsSVG()
     const apollonSVG =
       editor.model.type === UMLDiagramType.ClassDiagram
         ? exportClassDiagramAsFlatSvg(editor.model)

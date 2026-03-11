@@ -77,11 +77,6 @@ export type FlatSvgExportOptions = {
   fontSize?: number
 }
 
-export type CompatibilityValidation = {
-  valid: boolean
-  violations: string[]
-}
-
 const SVG_NS = "http://www.w3.org/2000/svg"
 const PACKAGE_TAB_HEIGHT = 10
 const DEFAULT_MARGIN = 10
@@ -1616,46 +1611,5 @@ export const exportClassDiagramAsFlatSvg = (
   return {
     svg: root.outerHTML,
     clip,
-  }
-}
-
-export const validatePowerPointCompatibility = (
-  svgContent: string
-): CompatibilityValidation => {
-  const violations: string[] = []
-  const parser = new DOMParser()
-  const parsed = parser.parseFromString(svgContent, "image/svg+xml")
-  const root = parsed.documentElement
-
-  if (!root || root.tagName.toLowerCase() !== "svg") {
-    violations.push("root element is not <svg>")
-    return { valid: false, violations }
-  }
-
-  if (root.querySelector("svg")) {
-    violations.push("nested <svg> elements are present")
-  }
-  if (root.querySelector("clipPath")) {
-    violations.push("<clipPath> elements are present")
-  }
-  if (root.querySelector("marker")) {
-    violations.push("<marker> elements are present")
-  }
-  if (root.querySelector("style")) {
-    violations.push("<style> blocks are present")
-  }
-  if (root.querySelector("[transform]")) {
-    violations.push("transform attributes are present")
-  }
-  if (root.querySelector("[vector-effect]")) {
-    violations.push("vector-effect attributes are present")
-  }
-  if (svgContent.includes("var(--")) {
-    violations.push("CSS variables are present")
-  }
-
-  return {
-    valid: violations.length === 0,
-    violations,
   }
 }
