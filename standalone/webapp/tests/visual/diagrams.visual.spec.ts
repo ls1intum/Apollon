@@ -124,8 +124,12 @@ test.describe("Visual regression - diagram fixtures", () => {
 
       // Screenshot the editor area (sidebar + canvas) excluding the navbar,
       // so visual diffs focus on diagram rendering, not unrelated UI chrome.
+      // Allow a small pixel diff ratio (0.03) to accommodate cross-platform
+      // font hinting / sub-pixel rendering differences (macOS vs Linux CI).
       const editorArea = page.locator('[data-testid="editor-area"]')
-      await expect(editorArea).toHaveScreenshot(`visual-${file}.png`)
+      await expect(editorArea).toHaveScreenshot(`visual-${file}.png`, {
+        maxDiffPixelRatio: 0.03,
+      })
     })
   }
 })
@@ -169,7 +173,8 @@ test.describe("Template diagrams", () => {
 
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(
-        `template-${name.toLowerCase()}.png`
+        `template-${name.toLowerCase()}.png`,
+        { maxDiffPixelRatio: 0.03 }
       )
     })
   }
