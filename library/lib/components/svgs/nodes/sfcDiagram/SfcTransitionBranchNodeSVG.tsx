@@ -22,6 +22,7 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
   const cx = width / 2
   const cy = height / 2
   const radius = Math.min(width, height) / 2
+  const labelYOffset = 6
 
   const { strokeColor } = getCustomColorsFromData(data)
   const fillColor = data.fillColor || "var(--apollon2-primary-contrast)"
@@ -42,7 +43,12 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
         strokeWidth={LAYOUT.LINE_WIDTH}
       />
       {showHint && (
-        <CustomText x={cx} y={height - 2} textAnchor="middle">
+        <CustomText
+          x={cx}
+          y={height + labelYOffset}
+          textAnchor="middle"
+          dominantBaseline="hanging"
+        >
           {name}
         </CustomText>
       )}
