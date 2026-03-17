@@ -184,8 +184,7 @@ export const getSVG = (
 
   // Process the SVG for compatibility with non-browser renderers
   if (svgMode === "compat") {
-    const cssVarMap = buildCSSVariableMap(container)
-    replaceCSSVariables(mainSVG, STROKE_COLOR, cssVarMap)
+    replaceCSSVariables(mainSVG)
     convertStyleToAttributes(mainSVG)
     ensureTextFontDefaults(mainSVG)
     removeMarkerElements(mainSVG)
@@ -761,36 +760,6 @@ const VARIABLE_REGEX =
   /var\((--[\w-]+)(?:\s*,\s*([^)]+(?:\([^)]*\)[^)]*)*))?\)/g
 
 type CSSVariableMap = Readonly<Record<string, string>>
-
-function collectCSSVariables(element: Element | null): Record<string, string> {
-  if (
-    !element ||
-    typeof window === "undefined" ||
-    typeof window.getComputedStyle !== "function"
-  ) {
-    return {}
-  }
-
-  const vars: Record<string, string> = {}
-  const style = window.getComputedStyle(element)
-  for (let i = 0; i < style.length; i += 1) {
-    const prop = style[i]
-    if (!prop || !prop.startsWith("--")) continue
-    const value = style.getPropertyValue(prop).trim()
-    if (value) vars[prop] = value
-  }
-  return vars
-}
-
-function buildCSSVariableMap(container: HTMLElement): CSSVariableMap {
-  const vars: Record<string, string> = { ...CSS_VARIABLE_FALLBACKS }
-  if (typeof document !== "undefined") {
-    Object.assign(vars, collectCSSVariables(document.documentElement))
-  }
-  const reactFlowRoot = container.querySelector(".react-flow") ?? container
-  Object.assign(vars, collectCSSVariables(reactFlowRoot))
-  return vars
-}
 
 /**
  * Resolve a single CSS variable reference to its final value.
