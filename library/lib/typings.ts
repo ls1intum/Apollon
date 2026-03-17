@@ -71,6 +71,8 @@ export enum ApollonView {
   Highlight = "Highlight",
 }
 
+export type SvgExportMode = "web" | "compat"
+
 export type ApollonOptions = {
   type?: UMLDiagramType
   mode?: ApollonMode
@@ -110,6 +112,12 @@ export type ExportOptions = {
   keepOriginalSize?: boolean
   include?: string[]
   exclude?: string[]
+  /**
+   * Controls how SVG output is post-processed.
+   * - "web": keep CSS variables for theme-adaptive rendering in browsers
+   * - "compat": resolve CSS variables + inline attributes for PowerPoint/Inkscape
+   */
+  svgMode?: SvgExportMode
 }
 
 export type SVG = {

@@ -14,16 +14,16 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 /**
- * SVG Export Visual Regression Tests
+ * Compat SVG Export Visual Regression Tests
  *
- * Validates that SVG exports from the Apollon2 editor:
+ * Validates that compat SVG exports from the Apollon2 editor:
  * 1. Contain no CSS variables (var()), currentColor, or <marker> elements
  * 2. Render correctly in a non-browser SVG renderer (resvg — Rust-based)
  * 3. Produce pixel-consistent output across runs
  *
- * These tests prove that exported SVGs work in PowerPoint, Keynote, Inkscape,
+ * These tests prove that compat SVGs work in PowerPoint, Keynote, Inkscape,
  * and any other application that doesn't support browser-specific CSS features.
- */
+*/
 
 // ---------------------------------------------------------------------------
 // Load fixture files (same as diagrams.visual.spec.ts)
@@ -167,7 +167,7 @@ function assertNoCSSVariables(svg: string, diagramName: string) {
 
 test.describe("SVG export - diagram fixtures", () => {
   for (const { name, file, fixture, fitView } of diagramFixtures) {
-    test(`${name} SVG export has no CSS variables and renders in resvg`, async ({
+    test(`${name} compat SVG export has no CSS variables and renders in resvg`, async ({
       page,
     }) => {
       await injectFixtureIntoLocalStorage(page, fixture)
@@ -209,7 +209,7 @@ test.describe("SVG export - diagram fixtures", () => {
 
 test.describe("SVG export - template diagrams", () => {
   for (const { name, file } of templateDiagrams) {
-    test(`${name} template SVG export has no CSS variables and renders in resvg`, async ({
+    test(`${name} template compat SVG export has no CSS variables and renders in resvg`, async ({
       page,
     }) => {
       const template = loadTemplate(`${file}.json`)

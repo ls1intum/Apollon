@@ -16,23 +16,49 @@ const svgFontStyles = `
     }
   `
 
-export const getSVG = (container: HTMLElement, clip: Rect): string => {
+type SvgExportMode = "web" | "compat"
+
+const buildRootVariableStyles = (): string => {
+  const lines = Object.entries(CSS_VARIABLE_FALLBACKS).map(
+    ([apollon2Var, fallback]) => {
+      const apollonVar = apollon2Var.replace("--apollon2-", "--apollon-")
+      return `  ${apollon2Var}: var(${apollonVar}, ${fallback});`
+    }
+  )
+
+  // Keep XYFlow edge vars defined so web SVGs render without external CSS.
+  lines.push(
+    "  --xy-edge-stroke: var(--apollon2-primary-contrast);",
+    "  --xy-edge-stroke-default: var(--apollon2-primary-contrast);",
+    `  --xy-edge-stroke-width: ${LAYOUT.LINE_WIDTH_EDGE}px;`,
+    `  --xy-edge-stroke-width-default: ${LAYOUT.LINE_WIDTH_EDGE}px;`
+  )
+
+  return `:root {\n${lines.join("\n")}\n}`
+}
+
+export const getSVG = (
+  container: HTMLElement,
+  clip: Rect,
+  options?: { svgMode?: SvgExportMode }
+): string => {
   const emptySVG = "<svg></svg>"
 
   const width = clip.width
   const height = clip.height
 
+  const svgMode = options?.svgMode ?? "web"
   const vp = container.querySelector(".react-flow__viewport")
 
   if (!vp) return emptySVG
 
-  const cssVarMap = buildCSSVariableMap(container)
-
   const SVG_NS = "http://www.w3.org/2000/svg"
   const mainSVG = document.createElementNS(SVG_NS, "svg")
   mainSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-  mainSVG.appendChild(document.createElementNS(SVG_NS, "style")).textContent =
-    svgFontStyles
+  const styleEl = document.createElementNS(SVG_NS, "style")
+  styleEl.textContent =
+    (svgMode === "web" ? `${buildRootVariableStyles()}\n` : "") + svgFontStyles
+  mainSVG.appendChild(styleEl)
   mainSVG.setAttribute("viewBox", `${clip.x} ${clip.y} ${width} ${height}`)
   mainSVG.setAttribute("width", `${width}`)
   mainSVG.setAttribute("height", `${height}`)
@@ -156,12 +182,15 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
     })
   })
 
-  // Process the SVG for compatibility
-  replaceCSSVariables(mainSVG, STROKE_COLOR, cssVarMap)
-  convertStyleToAttributes(mainSVG)
-  ensureTextFontDefaults(mainSVG)
-  removeMarkerElements(mainSVG)
-  replaceTextDecorationWithManualUnderline(mainSVG)
+  // Process the SVG for compatibility with non-browser renderers
+  if (svgMode === "compat") {
+    const cssVarMap = buildCSSVariableMap(container)
+    replaceCSSVariables(mainSVG, STROKE_COLOR, cssVarMap)
+    convertStyleToAttributes(mainSVG)
+    ensureTextFontDefaults(mainSVG)
+    removeMarkerElements(mainSVG)
+    replaceTextDecorationWithManualUnderline(mainSVG)
+  }
 
   return mainSVG.outerHTML
 }

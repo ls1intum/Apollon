@@ -3,15 +3,15 @@ import type { Page } from "@playwright/test"
 /**
  * Extract the exported SVG string from the running Apollon editor.
  *
- * This replicates the full export pipeline from exportUtils.ts inside
- * the browser context via page.evaluate():
+ * This replicates the compat export pipeline (svgMode: "compat")
+ * from exportUtils.ts inside the browser context via page.evaluate():
  * 1. Find the React Flow container and compute bounding box
  * 2. Clone nodes and edges into a fresh SVG
  * 3. Replace CSS variables with fallback values
  * 4. Convert inline styles to SVG attributes (PowerPoint compat)
  * 5. Remove <marker> elements and marker-start/marker-end attributes
  *
- * The result is identical to what getSVG() produces.
+ * The result is identical to getSVG() with svgMode: "compat".
  */
 export async function extractSVGFromPage(page: Page): Promise<string> {
   return page.evaluate(() => {

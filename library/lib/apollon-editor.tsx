@@ -186,7 +186,6 @@ export class ApollonEditor {
     options?: Apollon.ExportOptions,
     theme?: DeepPartial<Apollon.Styles>
   ): Promise<Apollon.SVG> {
-    void options
     void theme
     const container = document.createElement("div")
     container.style.display = "flex"
@@ -278,7 +277,7 @@ export class ApollonEditor {
       height: bounds.height + margin * 2,
     }
 
-    const svgString = getSVG(container, clip)
+    const svgString = getSVG(container, clip, options)
 
     // Clean up
     svgRoot.unmount()
