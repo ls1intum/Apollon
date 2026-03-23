@@ -21,8 +21,7 @@ interface Props {
 
 export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const { openModal } = useModalContext()
-  const exportAsSvg = useExportAsSVG()
-  const exportAsCompatSvg = useExportAsSVG("compat", "-ppt")
+  const exportAsSvg = useExportAsSVG("compat")
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
   const exportAsPDF = useExportAsPDF()
@@ -138,14 +137,6 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
           }}
         >
           As SVG
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            exportAsCompatSvg()
-            closeMainMenu()
-          }}
-        >
-          As SVG (PowerPoint/Inkscape)
         </MenuItem>
         <MenuItem
           onClick={() => {
