@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename)
  *
  * These tests prove that compat SVGs work in PowerPoint, Keynote, Inkscape,
  * and any other application that doesn't support browser-specific CSS features.
-*/
+ */
 
 // ---------------------------------------------------------------------------
 // Load fixture files (same as diagrams.visual.spec.ts)

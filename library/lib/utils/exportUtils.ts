@@ -765,10 +765,7 @@ type CSSVariableMap = Readonly<Record<string, string>>
  * Resolve a single CSS variable reference to its final value.
  * Handles recursive var() resolution and fallback values.
  */
-function resolveCSSVariable(
-  value: string,
-  cssVarMap?: CSSVariableMap
-): string {
+function resolveCSSVariable(value: string, cssVarMap?: CSSVariableMap): string {
   let result = value
   let prevResult = ""
 
@@ -837,11 +834,7 @@ function replaceCSSVariables(
     const element = node as Element
 
     // First, resolve the 'color' attribute if present (for currentColor inheritance)
-    const currentColor = resolveCurrentColor(
-      element,
-      inheritedColor,
-      cssVarMap
-    )
+    const currentColor = resolveCurrentColor(element, inheritedColor, cssVarMap)
 
     // If element has a color attribute, resolve it first
     const colorAttr = element.getAttribute("color")

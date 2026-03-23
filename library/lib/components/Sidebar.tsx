@@ -45,13 +45,13 @@ export const Sidebar = () => {
       }}
     >
       {dropElementConfigs[diagramType].map((config, index) => {
-        const extraPreviewHeight =
-          labelPreviewTypes.has(config.type)
-            ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
-            : 0
+        const extraPreviewHeight = labelPreviewTypes.has(config.type)
+          ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+          : 0
         const previewScale = DROPS.SIDEBAR_PREVIEW_SCALE
         const previewWidth = config.width * previewScale
-        const previewHeight = (config.height + extraPreviewHeight) * previewScale
+        const previewHeight =
+          (config.height + extraPreviewHeight) * previewScale
 
         return (
           <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
