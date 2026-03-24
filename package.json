@@ -56,6 +56,7 @@
     "@emotion/styled": "11.11.0",
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "22.13.1",
+    "@types/pdfmake": "^0.3.2",
     "concurrently": "9.1.0",
     "husky": "9.1.7",
     "prettier": "3.4.2",
