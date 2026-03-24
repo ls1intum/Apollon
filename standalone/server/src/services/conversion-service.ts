@@ -122,7 +122,6 @@ export class ConversionService {
       return svgExport;
     }
     
-    console.log('SVG Export:', svgExport);
     throw new Error('Failed to extract SVG: invalid export format');
   };
 }
