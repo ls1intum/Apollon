@@ -7,7 +7,9 @@ import { ConversionResource } from "./resources/conversion-resource"
 const router = Router()
 const conversionResource = new ConversionResource()
 
-router.post('/converter/pdf', (req, res) => conversionResource.convert(req, res));
+router.post("/converter/pdf", (req, res) =>
+  conversionResource.convert(req, res)
+)
 
 router.get("/:diagramID", async (req: Request, res: Response): Promise<any> => {
   try {
