@@ -2,6 +2,7 @@
   "name": "@tumaet/server",
   "version": "1.0.0",
   "dependencies": {
+    "@tumaet/apollon": "4.2.11",
     "cors": "2.8.5",
     "dotenv": "16.4.7",
     "express": "5.1.0",

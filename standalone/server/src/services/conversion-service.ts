@@ -1,6 +1,6 @@
 import "global-jsdom/register"
+import path from "node:path"
 import type { UMLModel, SVG } from "@tumaet/apollon"
-import { importDiagram } from "@tumaet/apollon"
 
 // Mock ResizeObserver for JSDOM
 if (typeof global.ResizeObserver === "undefined") {
@@ -12,8 +12,46 @@ if (typeof global.ResizeObserver === "undefined") {
   ;(global as any).ResizeObserver = MockResizeObserver
 }
 
-// Dynamically require the ApollonEditor to avoid ESM/CommonJS issues
-const { ApollonEditor } = require("@tumaet/apollon")
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const loadApollonModuleOnce = () => {
+  try {
+    return require("@tumaet/apollon")
+  } catch {
+    const fallbackCandidates = [
+      path.resolve(process.cwd(), "library/dist/index.js"),
+      path.resolve(process.cwd(), "../library/dist/index.js"),
+      path.resolve(process.cwd(), "../../library/dist/index.js"),
+    ]
+
+    for (const fallbackPath of fallbackCandidates) {
+      try {
+        return require(fallbackPath)
+      } catch {
+        // try next fallback
+      }
+    }
+
+    throw new Error("Failed to load @tumaet/apollon module")
+  }
+}
+
+const loadApollonModule = async (retries = 20, delayMs = 300) => {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      return loadApollonModuleOnce()
+    } catch (error) {
+      lastError = error
+      await sleep(delayMs)
+    }
+  }
+
+  throw new Error(
+    `Failed to load @tumaet/apollon after ${retries} attempts: ${String(lastError)}`
+  )
+}
 
 export class ConversionService {
   private readonly EDGE_ENDPOINT_INSET_PX = -3
@@ -133,9 +171,9 @@ export class ConversionService {
       height: 10,
     })
 
-    const normalizedModel = this.normalizeModelForServerRender(
-      importDiagram(model)
-    )
+    const { ApollonEditor, importDiagram } = await loadApollonModule()
+
+    const normalizedModel = this.normalizeModelForServerRender(importDiagram(model))
     const svgExport = (await ApollonEditor.exportModelAsSvg(normalizedModel, {
       svgMode: "compat",
     })) as SVG
