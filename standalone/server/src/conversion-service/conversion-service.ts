@@ -1,5 +1,6 @@
 import 'global-jsdom/register';
 import type { UMLModel, SVG } from '@tumaet/apollon';
+import { importDiagram } from '@tumaet/apollon';
 
 // Mock ResizeObserver for JSDOM
 if (typeof global.ResizeObserver === 'undefined') {
@@ -105,7 +106,7 @@ export class ConversionService {
       height: 10,
     });
 
-    const normalizedModel = this.normalizeModelForServerRender(model);
+    const normalizedModel = this.normalizeModelForServerRender(importDiagram(model));
     const svgExport = (await ApollonEditor.exportModelAsSvg(
       normalizedModel
     )) as SVG;

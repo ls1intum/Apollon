@@ -9,14 +9,19 @@ export class ConversionResource {
 
   convert = async (req: Request, res: Response) => {
     res.status(200);
+    let model: UMLModel | undefined;
+
+    if(req.body.model) {
+      model = req.body.model;
+    }
 
     if (req.body) {
       // Support both {model: {...}} and direct model payload
-      let model = req.body.model || req.body;
+      model = req.body.model || req.body;
       if (typeof model === 'string') {
         model = JSON.parse(model);
       }
-      
+      console.log('Received model for conversion:', model);
       const { svg, clip } = await this.conversionService.convertToSvg(model as UMLModel);
       const { width, height } = clip;
 
