@@ -16,12 +16,38 @@ const svgFontStyles = `
     }
   `
 
-export const getSVG = (container: HTMLElement, clip: Rect): string => {
+type SvgExportMode = "web" | "compat"
+
+const buildRootVariableStyles = (): string => {
+  const lines = Object.entries(CSS_VARIABLE_FALLBACKS).map(
+    ([apollon2Var, fallback]) => {
+      const apollonVar = apollon2Var.replace("--apollon2-", "--apollon-")
+      return `  ${apollon2Var}: var(${apollonVar}, ${fallback});`
+    }
+  )
+
+  // Keep XYFlow edge vars defined so web SVGs render without external CSS.
+  lines.push(
+    "  --xy-edge-stroke: var(--apollon2-primary-contrast);",
+    "  --xy-edge-stroke-default: var(--apollon2-primary-contrast);",
+    `  --xy-edge-stroke-width: ${LAYOUT.LINE_WIDTH_EDGE}px;`,
+    `  --xy-edge-stroke-width-default: ${LAYOUT.LINE_WIDTH_EDGE}px;`
+  )
+
+  return `:root {\n${lines.join("\n")}\n}`
+}
+
+export const getSVG = (
+  container: HTMLElement,
+  clip: Rect,
+  options?: { svgMode?: SvgExportMode }
+): string => {
   const emptySVG = "<svg></svg>"
 
   const width = clip.width
   const height = clip.height
 
+  const svgMode = options?.svgMode ?? "web"
   const vp = container.querySelector(".react-flow__viewport")
 
   if (!vp) return emptySVG
@@ -29,8 +55,10 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   const SVG_NS = "http://www.w3.org/2000/svg"
   const mainSVG = document.createElementNS(SVG_NS, "svg")
   mainSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-  mainSVG.appendChild(document.createElementNS(SVG_NS, "style")).textContent =
-    svgFontStyles
+  const styleEl = document.createElementNS(SVG_NS, "style")
+  styleEl.textContent =
+    (svgMode === "web" ? `${buildRootVariableStyles()}\n` : "") + svgFontStyles
+  mainSVG.appendChild(styleEl)
   mainSVG.setAttribute("viewBox", `${clip.x} ${clip.y} ${width} ${height}`)
   mainSVG.setAttribute("width", `${width}`)
   mainSVG.setAttribute("height", `${height}`)
@@ -154,12 +182,14 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
     })
   })
 
-  // Process the SVG for compatibility
-  replaceCSSVariables(mainSVG)
-  convertStyleToAttributes(mainSVG)
-  ensureTextFontDefaults(mainSVG)
-  removeMarkerElements(mainSVG)
-  replaceTextDecorationWithManualUnderline(mainSVG)
+  // Process the SVG for compatibility with non-browser renderers
+  if (svgMode === "compat") {
+    replaceCSSVariables(mainSVG)
+    convertStyleToAttributes(mainSVG)
+    ensureTextFontDefaults(mainSVG)
+    removeMarkerElements(mainSVG)
+    replaceTextDecorationWithManualUnderline(mainSVG)
+  }
 
   return mainSVG.outerHTML
 }
@@ -729,11 +759,13 @@ function extractStyles(styleString: string) {
 const VARIABLE_REGEX =
   /var\((--[\w-]+)(?:\s*,\s*([^)]+(?:\([^)]*\)[^)]*)*))?\)/g
 
+type CSSVariableMap = Readonly<Record<string, string>>
+
 /**
  * Resolve a single CSS variable reference to its final value.
  * Handles recursive var() resolution and fallback values.
  */
-function resolveCSSVariable(value: string): string {
+function resolveCSSVariable(value: string, cssVarMap?: CSSVariableMap): string {
   let result = value
   let prevResult = ""
 
@@ -744,12 +776,13 @@ function resolveCSSVariable(value: string): string {
       VARIABLE_REGEX,
       (_match, variableName: string, fallback?: string) => {
         const trimmedName = variableName.trim()
-        const resolved = CSS_VARIABLE_FALLBACKS[trimmedName]
-
-        if (resolved) {
+        const mapped = cssVarMap?.[trimmedName]?.trim()
+        if (mapped) {
           // If the resolved value itself contains var(), it will be resolved in the next iteration
-          return resolved
+          return mapped
         }
+        const resolved = CSS_VARIABLE_FALLBACKS[trimmedName]
+        if (resolved) return resolved
 
         if (fallback) {
           // Fallback may itself contain var() calls
@@ -769,11 +802,15 @@ function resolveCSSVariable(value: string): string {
 /**
  * Resolve 'currentColor' keyword by looking up the resolved 'color' attribute.
  */
-function resolveCurrentColor(element: Element, inheritedColor: string): string {
+function resolveCurrentColor(
+  element: Element,
+  inheritedColor: string,
+  cssVarMap?: CSSVariableMap
+): string {
   // Check if element has a color attribute
   const colorAttr = element.getAttribute("color")
   if (colorAttr) {
-    const resolvedColor = resolveCSSVariable(colorAttr)
+    const resolvedColor = resolveCSSVariable(colorAttr, cssVarMap)
     // Handle case where color itself might be currentColor (shouldn't happen, but be safe)
     if (resolvedColor && resolvedColor !== "currentColor") {
       return resolvedColor
@@ -790,18 +827,19 @@ function resolveCurrentColor(element: Element, inheritedColor: string): string {
  */
 function replaceCSSVariables(
   node: Element | ChildNode,
-  inheritedColor: string = STROKE_COLOR
+  inheritedColor: string = STROKE_COLOR,
+  cssVarMap?: CSSVariableMap
 ): void {
   if (node.nodeType === Node.ELEMENT_NODE) {
     const element = node as Element
 
     // First, resolve the 'color' attribute if present (for currentColor inheritance)
-    const currentColor = resolveCurrentColor(element, inheritedColor)
+    const currentColor = resolveCurrentColor(element, inheritedColor, cssVarMap)
 
     // If element has a color attribute, resolve it first
     const colorAttr = element.getAttribute("color")
     if (colorAttr) {
-      const resolvedColor = resolveCSSVariable(colorAttr)
+      const resolvedColor = resolveCSSVariable(colorAttr, cssVarMap)
       if (resolvedColor !== colorAttr) {
         element.setAttribute("color", resolvedColor)
       }
@@ -813,7 +851,7 @@ function replaceCSSVariables(
       if (!attrValue) return
 
       // Resolve CSS variables first
-      let resolvedValue = resolveCSSVariable(attrValue)
+      let resolvedValue = resolveCSSVariable(attrValue, cssVarMap)
 
       // Resolve 'currentColor' keyword
       if (resolvedValue === "currentColor") {
@@ -853,7 +891,7 @@ function replaceCSSVariables(
 
     // Recursively process children, passing down the resolved color
     Array.from(element.childNodes).forEach((child) =>
-      replaceCSSVariables(child, currentColor)
+      replaceCSSVariables(child, currentColor, cssVarMap)
     )
   }
   // Text nodes are not processed — CSS variables only appear in attribute values,

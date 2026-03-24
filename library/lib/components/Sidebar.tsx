@@ -3,6 +3,7 @@ import {
   ColorDescriptionConfig,
   DROPS,
   dropElementConfigs,
+  LAYOUT,
   ZINDEX,
 } from "@/constants"
 import { DividerLine } from "./ui/DividerLine"
@@ -17,6 +18,11 @@ import { DraggableGhost } from "./DraggableGhost"
 
 export const Sidebar = () => {
   const diagramType = useMetadataStore(useShallow((state) => state.diagramType))
+  const labelPreviewTypes = new Set([
+    "sfcTransitionBranch",
+    "petriNetPlace",
+    "petriNetTransition",
+  ])
 
   if (dropElementConfigs[diagramType].length === 0) {
     return null
@@ -38,30 +44,40 @@ export const Sidebar = () => {
         flexShrink: 0,
       }}
     >
-      {dropElementConfigs[diagramType].map((config, index) => (
-        <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
-          <DraggableGhost dropElementConfig={config}>
-            <div
-              className="prevent-select"
-              style={{
-                width: config.width * DROPS.SIDEBAR_PREVIEW_SCALE,
-                height: config.height * DROPS.SIDEBAR_PREVIEW_SCALE,
-                zIndex: ZINDEX.DRAGGABLE_GHOST,
-                marginTop: config.marginTop,
-              }}
-            >
-              {React.createElement(config.svg, {
-                width: config.width,
-                height: config.height,
-                ...config.defaultData,
-                data: config.defaultData,
-                SIDEBAR_PREVIEW_SCALE: DROPS.SIDEBAR_PREVIEW_SCALE,
-                id: `sidebarElement_${index}`,
-              })}
-            </div>
-          </DraggableGhost>
-        </React.Fragment>
-      ))}
+      {dropElementConfigs[diagramType].map((config, index) => {
+        const extraPreviewHeight = labelPreviewTypes.has(config.type)
+          ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+          : 0
+        const previewScale = DROPS.SIDEBAR_PREVIEW_SCALE
+        const previewWidth = config.width * previewScale
+        const previewHeight =
+          (config.height + extraPreviewHeight) * previewScale
+
+        return (
+          <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
+            <DraggableGhost dropElementConfig={config}>
+              <div
+                className="prevent-select"
+                style={{
+                  width: previewWidth,
+                  height: previewHeight,
+                  zIndex: ZINDEX.DRAGGABLE_GHOST,
+                  marginTop: config.marginTop,
+                }}
+              >
+                {React.createElement(config.svg, {
+                  width: config.width,
+                  height: config.height,
+                  ...config.defaultData,
+                  data: config.defaultData,
+                  SIDEBAR_PREVIEW_SCALE: previewScale,
+                  id: `sidebarElement_${index}`,
+                })}
+              </div>
+            </DraggableGhost>
+          </React.Fragment>
+        )
+      })}
 
       <DividerLine style={{ margin: "3px 0" }} />
       <DraggableGhost dropElementConfig={ColorDescriptionConfig}>

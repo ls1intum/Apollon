@@ -3,15 +3,15 @@ import type { Page } from "@playwright/test"
 /**
  * Extract the exported SVG string from the running Apollon editor.
  *
- * This replicates the full export pipeline from exportUtils.ts inside
- * the browser context via page.evaluate():
+ * This replicates the compat export pipeline (svgMode: "compat")
+ * from exportUtils.ts inside the browser context via page.evaluate():
  * 1. Find the React Flow container and compute bounding box
  * 2. Clone nodes and edges into a fresh SVG
  * 3. Replace CSS variables with fallback values
  * 4. Convert inline styles to SVG attributes (PowerPoint compat)
  * 5. Remove <marker> elements and marker-start/marker-end attributes
  *
- * The result is identical to what getSVG() produces.
+ * The result is identical to getSVG() with svgMode: "compat".
  */
 export async function extractSVGFromPage(page: Page): Promise<string> {
   return page.evaluate(() => {
@@ -40,6 +40,34 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
       "--apollon2-modal-bottom-border": "#e9ecef",
     }
 
+    function collectCSSVariables(
+      element: Element | null
+    ): Record<string, string> {
+      if (
+        !element ||
+        typeof window === "undefined" ||
+        typeof window.getComputedStyle !== "function"
+      ) {
+        return {}
+      }
+
+      const vars: Record<string, string> = {}
+      const style = window.getComputedStyle(element)
+      for (let i = 0; i < style.length; i += 1) {
+        const prop = style[i]
+        if (!prop || !prop.startsWith("--")) continue
+        const value = style.getPropertyValue(prop).trim()
+        if (value) vars[prop] = value
+      }
+      return vars
+    }
+
+    const cssVarMap: Record<string, string> = {
+      ...CSS_VARIABLE_FALLBACKS,
+      ...collectCSSVariables(document.documentElement),
+      ...collectCSSVariables(document.querySelector(".react-flow")),
+    }
+
     // ---- CSS Variable Resolution ----
     const VARIABLE_REGEX =
       /var\((--[\w-]+)(?:\s*,\s*([^)]+(?:\([^)]*\)[^)]*)*))?\)/g
@@ -52,6 +80,8 @@ export async function extractSVGFromPage(page: Page): Promise<string> {
         result = result.replace(
           VARIABLE_REGEX,
           (_match: string, variableName: string, fallback?: string) => {
+            const mapped = cssVarMap[variableName.trim()]?.trim()
+            if (mapped) return mapped
             const resolved = CSS_VARIABLE_FALLBACKS[variableName.trim()]
             if (resolved) return resolved
             if (fallback) return fallback.trim()
