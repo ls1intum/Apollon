@@ -5,6 +5,7 @@ import { SVGComponentProps } from "@/types/SVG"
 import { CustomText } from "../CustomText"
 import { StyledRect } from "@/components"
 import { DefaultNodeProps } from "@/types"
+import { LAYOUT } from "@/constants"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
 
 interface Props extends SVGComponentProps {
@@ -23,15 +24,20 @@ export const PetriNetTransitionSVG: React.FC<Props> = ({
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
-  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const previewScale = SIDEBAR_PREVIEW_SCALE ?? 1
+  const scaledWidth = width * previewScale
+  const scaledHeight = height * previewScale
+  const labelHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+  const scaledLabelHeight = labelHeight * previewScale
+  const svgHeight = height + labelHeight
+  const scaledSvgHeight = scaledHeight + scaledLabelHeight
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
   return (
     <svg
       width={scaledWidth}
-      height={scaledHeight}
-      viewBox={`0 0 ${width} ${height}`}
+      height={scaledSvgHeight}
+      viewBox={`0 0 ${width} ${svgHeight}`}
       overflow="visible"
       {...svgAttributes}
     >
@@ -46,10 +52,10 @@ export const PetriNetTransitionSVG: React.FC<Props> = ({
 
       <CustomText
         x={width / 2}
-        y={-20}
+        y={height + labelHeight / 2}
         textAnchor="middle"
         fontWeight="600"
-        dominantBaseline="hanging"
+        dominantBaseline="middle"
         fill={textColor}
       >
         {name}

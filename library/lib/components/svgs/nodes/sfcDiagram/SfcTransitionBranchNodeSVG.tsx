@@ -16,8 +16,13 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
   SIDEBAR_PREVIEW_SCALE,
 }) => {
   const { name, showHint } = data
-  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
-  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const previewScale = SIDEBAR_PREVIEW_SCALE ?? 1
+  const scaledWidth = width * previewScale
+  const scaledHeight = height * previewScale
+  const labelHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+  const scaledLabelHeight = labelHeight * previewScale
+  const svgHeight = height + labelHeight
+  const scaledSvgHeight = scaledHeight + scaledLabelHeight
 
   const cx = width / 2
   const cy = height / 2
@@ -28,8 +33,8 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
   return (
     <svg
       width={scaledWidth}
-      height={scaledHeight}
-      viewBox={`0 0 ${width} ${height}`}
+      height={scaledSvgHeight}
+      viewBox={`0 0 ${width} ${svgHeight}`}
       overflow="visible"
       {...svgAttributes}
     >
@@ -42,7 +47,12 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
         strokeWidth={LAYOUT.LINE_WIDTH}
       />
       {showHint && (
-        <CustomText x={cx} y={height - 2} textAnchor="middle">
+        <CustomText
+          x={cx}
+          y={height + labelHeight / 2}
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
           {name}
         </CustomText>
       )}
