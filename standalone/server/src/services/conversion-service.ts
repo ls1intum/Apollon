@@ -108,7 +108,8 @@ export class ConversionService {
 
     const normalizedModel = this.normalizeModelForServerRender(importDiagram(model));
     const svgExport = (await ApollonEditor.exportModelAsSvg(
-      normalizedModel
+      normalizedModel,
+      { svgMode: 'compat' }
     )) as SVG;
     
     // exportModelAsSvg returns { svg: string, clip: { x, y, width, height } }
