@@ -15,6 +15,8 @@ if (typeof global.ResizeObserver === 'undefined') {
 const { ApollonEditor } = require('@tumaet/apollon');
 
 export class ConversionService {
+  private readonly EDGE_ENDPOINT_INSET_PX = -3;
+
   private calculateAdjustedQuarter = (value: number): number => {
     const quarter = value / 4;
     return Math.floor(quarter / 10) * 10;
@@ -23,23 +25,24 @@ export class ConversionService {
   private createDefaultHandles = (width: number, height: number) => {
     const adjustedWidth = this.calculateAdjustedQuarter(width);
     const adjustedHeight = this.calculateAdjustedQuarter(height);
+    const inset = this.EDGE_ENDPOINT_INSET_PX;
 
     const baseHandles = [
-      { id: 'top-left', position: 'top', x: adjustedWidth, y: 0 },
-      { id: 'top', position: 'top', x: width / 2, y: 0 },
-      { id: 'top-right', position: 'top', x: width - adjustedWidth, y: 0 },
+      { id: 'top-left', position: 'top', x: adjustedWidth, y: inset },
+      { id: 'top', position: 'top', x: width / 2, y: inset },
+      { id: 'top-right', position: 'top', x: width - adjustedWidth, y: inset },
 
-      { id: 'right-top', position: 'right', x: width, y: adjustedHeight },
-      { id: 'right', position: 'right', x: width, y: height / 2 },
-      { id: 'right-bottom', position: 'right', x: width, y: height - adjustedHeight },
+      { id: 'right-top', position: 'right', x: width - inset, y: adjustedHeight },
+      { id: 'right', position: 'right', x: width - inset, y: height / 2 },
+      { id: 'right-bottom', position: 'right', x: width - inset, y: height - adjustedHeight },
 
-      { id: 'bottom-right', position: 'bottom', x: width - adjustedWidth, y: height },
-      { id: 'bottom', position: 'bottom', x: width / 2, y: height },
-      { id: 'bottom-left', position: 'bottom', x: adjustedWidth, y: height },
+      { id: 'bottom-right', position: 'bottom', x: width - adjustedWidth, y: height - inset },
+      { id: 'bottom', position: 'bottom', x: width / 2, y: height - inset },
+      { id: 'bottom-left', position: 'bottom', x: adjustedWidth, y: height - inset },
 
-      { id: 'left-bottom', position: 'left', x: 0, y: height - adjustedHeight },
-      { id: 'left', position: 'left', x: 0, y: height / 2 },
-      { id: 'left-top', position: 'left', x: 0, y: adjustedHeight },
+      { id: 'left-bottom', position: 'left', x: inset, y: height - adjustedHeight },
+      { id: 'left', position: 'left', x: inset, y: height / 2 },
+      { id: 'left-top', position: 'left', x: inset, y: adjustedHeight },
     ];
 
     return baseHandles.flatMap((handle) => [
