@@ -8,7 +8,7 @@ import { connectToMongoDB } from "./database/connect"
 import { startDiagramCleanupJob } from "./database/cleanupJob"
 import { log } from "./logger"
 
-const PORT = process.env.PORT || 8001
+const PORT = process.env.PORT || 8000
 const serverHost = process.env.HOST || "localhost"
 // Default to localhost for local dev; Docker Compose sets MONGO_URI accordingly
 const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/apollon2DB"
