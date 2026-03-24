@@ -1,56 +1,81 @@
-import 'global-jsdom/register';
-import type { UMLModel, SVG } from '@tumaet/apollon';
-import { importDiagram } from '@tumaet/apollon';
+import "global-jsdom/register"
+import type { UMLModel, SVG } from "@tumaet/apollon"
+import { importDiagram } from "@tumaet/apollon"
 
 // Mock ResizeObserver for JSDOM
-if (typeof global.ResizeObserver === 'undefined') {
+if (typeof global.ResizeObserver === "undefined") {
   class MockResizeObserver {
     observe() {}
     unobserve() {}
     disconnect() {}
   }
-  (global as any).ResizeObserver = MockResizeObserver;
+  ;(global as any).ResizeObserver = MockResizeObserver
 }
 
 // Dynamically require the ApollonEditor to avoid ESM/CommonJS issues
-const { ApollonEditor } = require('@tumaet/apollon');
+const { ApollonEditor } = require("@tumaet/apollon")
 
 export class ConversionService {
-  private readonly EDGE_ENDPOINT_INSET_PX = -3;
+  private readonly EDGE_ENDPOINT_INSET_PX = -3
 
   private calculateAdjustedQuarter = (value: number): number => {
-    const quarter = value / 4;
-    return Math.floor(quarter / 10) * 10;
-  };
+    const quarter = value / 4
+    return Math.floor(quarter / 10) * 10
+  }
 
   private createDefaultHandles = (width: number, height: number) => {
-    const adjustedWidth = this.calculateAdjustedQuarter(width);
-    const adjustedHeight = this.calculateAdjustedQuarter(height);
-    const inset = this.EDGE_ENDPOINT_INSET_PX;
+    const adjustedWidth = this.calculateAdjustedQuarter(width)
+    const adjustedHeight = this.calculateAdjustedQuarter(height)
+    const inset = this.EDGE_ENDPOINT_INSET_PX
 
     const baseHandles = [
-      { id: 'top-left', position: 'top', x: adjustedWidth, y: inset },
-      { id: 'top', position: 'top', x: width / 2, y: inset },
-      { id: 'top-right', position: 'top', x: width - adjustedWidth, y: inset },
+      { id: "top-left", position: "top", x: adjustedWidth, y: inset },
+      { id: "top", position: "top", x: width / 2, y: inset },
+      { id: "top-right", position: "top", x: width - adjustedWidth, y: inset },
 
-      { id: 'right-top', position: 'right', x: width - inset, y: adjustedHeight },
-      { id: 'right', position: 'right', x: width - inset, y: height / 2 },
-      { id: 'right-bottom', position: 'right', x: width - inset, y: height - adjustedHeight },
+      {
+        id: "right-top",
+        position: "right",
+        x: width - inset,
+        y: adjustedHeight,
+      },
+      { id: "right", position: "right", x: width - inset, y: height / 2 },
+      {
+        id: "right-bottom",
+        position: "right",
+        x: width - inset,
+        y: height - adjustedHeight,
+      },
 
-      { id: 'bottom-right', position: 'bottom', x: width - adjustedWidth, y: height - inset },
-      { id: 'bottom', position: 'bottom', x: width / 2, y: height - inset },
-      { id: 'bottom-left', position: 'bottom', x: adjustedWidth, y: height - inset },
+      {
+        id: "bottom-right",
+        position: "bottom",
+        x: width - adjustedWidth,
+        y: height - inset,
+      },
+      { id: "bottom", position: "bottom", x: width / 2, y: height - inset },
+      {
+        id: "bottom-left",
+        position: "bottom",
+        x: adjustedWidth,
+        y: height - inset,
+      },
 
-      { id: 'left-bottom', position: 'left', x: inset, y: height - adjustedHeight },
-      { id: 'left', position: 'left', x: inset, y: height / 2 },
-      { id: 'left-top', position: 'left', x: inset, y: adjustedHeight },
-    ];
+      {
+        id: "left-bottom",
+        position: "left",
+        x: inset,
+        y: height - adjustedHeight,
+      },
+      { id: "left", position: "left", x: inset, y: height / 2 },
+      { id: "left-top", position: "left", x: inset, y: adjustedHeight },
+    ]
 
     return baseHandles.flatMap((handle) => [
-      { ...handle, type: 'source', width: 1, height: 1 },
-      { ...handle, type: 'target', width: 1, height: 1 },
-    ]);
-  };
+      { ...handle, type: "source", width: 1, height: 1 },
+      { ...handle, type: "target", width: 1, height: 1 },
+    ])
+  }
 
   /**
    * Ensures model has render-ready defaults for server-side React Flow export.
@@ -58,7 +83,7 @@ export class ConversionService {
    */
   private normalizeModelForServerRender = (model: UMLModel): UMLModel => {
     if (!model || !model.nodes) {
-      throw new Error('Invalid model: missing nodes property');
+      throw new Error("Invalid model: missing nodes property")
     }
 
     return {
@@ -77,24 +102,26 @@ export class ConversionService {
       })),
       edges: (model.edges ?? []).map((edge, index) => ({
         ...edge,
-        id: edge.id ?? `${edge.source ?? 'source'}-${edge.target ?? 'target'}-${index}`,
-        sourceHandle: edge.sourceHandle ?? 'right',
-        targetHandle: edge.targetHandle ?? 'left',
+        id:
+          edge.id ??
+          `${edge.source ?? "source"}-${edge.target ?? "target"}-${index}`,
+        sourceHandle: edge.sourceHandle ?? "right",
+        targetHandle: edge.targetHandle ?? "left",
         data: {
           ...(edge.data ?? {}),
           points: edge.data?.points ?? [],
         },
       })),
-    };
-  };
+    }
+  }
 
   convertToSvg = async (model: UMLModel): Promise<SVG> => {
-    if (typeof window.requestAnimationFrame !== 'function') {
-      (window as any).requestAnimationFrame = (cb: FrameRequestCallback) =>
-        setTimeout(() => cb(Date.now()), 16);
+    if (typeof window.requestAnimationFrame !== "function") {
+      ;(window as any).requestAnimationFrame = (cb: FrameRequestCallback) =>
+        setTimeout(() => cb(Date.now()), 16)
     }
-    if (typeof window.cancelAnimationFrame !== 'function') {
-      (window as any).cancelAnimationFrame = (id: number) => clearTimeout(id);
+    if (typeof window.cancelAnimationFrame !== "function") {
+      ;(window as any).cancelAnimationFrame = (id: number) => clearTimeout(id)
     }
 
     // JSDOM does not implement getBBox; mock it to allow SVG export.
@@ -104,24 +131,26 @@ export class ConversionService {
       y: 0,
       width: 10,
       height: 10,
-    });
+    })
 
-    const normalizedModel = this.normalizeModelForServerRender(importDiagram(model));
-    const svgExport = (await ApollonEditor.exportModelAsSvg(
-      normalizedModel
-    )) as SVG;
-    
+    const normalizedModel = this.normalizeModelForServerRender(
+      importDiagram(model)
+    )
+    const svgExport = (await ApollonEditor.exportModelAsSvg(normalizedModel, {
+      svgMode: "compat",
+    })) as SVG
+
     // exportModelAsSvg returns { svg: string, clip: { x, y, width, height } }
     if (
       svgExport &&
-      typeof svgExport.svg === 'string' &&
+      typeof svgExport.svg === "string" &&
       svgExport.clip &&
-      typeof svgExport.clip.width === 'number' &&
-      typeof svgExport.clip.height === 'number'
+      typeof svgExport.clip.width === "number" &&
+      typeof svgExport.clip.height === "number"
     ) {
-      return svgExport;
+      return svgExport
     }
-    
-    throw new Error('Failed to extract SVG: invalid export format');
-  };
+
+    throw new Error("Failed to extract SVG: invalid export format")
+  }
 }
