@@ -6,6 +6,6 @@ import { UMLRelationshipType } from '../../uml-relationship-type';
  * Transitions can have conditions that determine when flow passes from one element to another.
  */
 export class SfcTransition extends UMLRelationship {
-  static features = { ...UMLRelationship.features, straight: false, variable: false };
+  static features = { ...UMLRelationship.features, straight: false, variable: true };
   type: UMLRelationshipType = UMLRelationshipType.SfcTransition;
 }
