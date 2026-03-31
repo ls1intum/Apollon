@@ -10,9 +10,12 @@ import { ILayoutable } from '../../../services/layouter/layoutable';
 export class SfcTransitionBranch extends SfcElement {
   type = UMLElementType.SfcTransitionBranch;
 
+  padding = 15;
+
   render(canvas: ILayer): ILayoutable[] {
-    this.bounds.width = 20;
-    this.bounds.height = 20;
+    this.bounds.width = 20 + (this.padding * 2);
+    this.bounds.height = 20 + (this.padding * 2);
+
     return [this];
   }
 }

@@ -3,12 +3,22 @@ import { ThemedPolyline } from '../../../components/theme/themedComponents';
 import { SfcTransition } from './sfc-transition';
 import { Point } from '../../../utils/geometry/point';
 import { Text } from '../../../components/controls/text/text';
+import { UMLElementType } from '../../uml-element-type';
+import { useSelector } from 'react-redux';
 
 /**
  * Component for rendering transitions in sfc.
  * Displays a path with a crossbar at the center and the transition condition text.
  */
 export const SfcTransitionComponent: FunctionComponent<{ element: SfcTransition }> = ({ element }) => {
+  const allElements = useSelector((state: any) => state.elements);
+
+  const sourceElement = allElements[element.source.element];
+  const targetElement = allElements[element.target.element];
+
+  const isSourceBranch = sourceElement?.type === UMLElementType.SfcTransitionBranch;
+  const isTargetBranch = targetElement?.type === UMLElementType.SfcTransitionBranch;
+
   function getParsedName(name: string): { isNegated: boolean; displayName: string } {
     try {
       return JSON.parse(name);
@@ -17,14 +27,32 @@ export const SfcTransitionComponent: FunctionComponent<{ element: SfcTransition 
     }
   }
 
-  // Calculate the center point and perpendicular vector for the crossbar
   const path = element.path.map((p) => new Point(p.x, p.y));
+  const padding = 15;
+
+  if (path.length >= 2) {
+    if (isSourceBranch) {
+      const startLine = path[1].subtract(path[0]);
+      if (startLine.length > 0) {
+        const startNorm = startLine.normalize();
+        path[0] = path[0].subtract(startNorm.scale(padding));
+      }
+    }
+
+    if (isTargetBranch) {
+      const endLine = path[path.length - 1].subtract(path[path.length - 2]);
+      if (endLine.length > 0) {
+        const endNorm = endLine.normalize();
+        path[path.length - 1] = path[path.length - 1].add(endNorm.scale(padding));
+      }
+    }
+  }
 
   if (path.length < 2) {
     return (
       <g>
         <ThemedPolyline
-          points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
+          points={path.map((point) => `${point.x} ${point.y}`).join(',')}
           strokeColor={element.strokeColor}
           fillColor="none"
           strokeWidth={1}
@@ -76,13 +104,12 @@ export const SfcTransitionComponent: FunctionComponent<{ element: SfcTransition 
   const textPosition = center.add(perpendicular.scale(textOffset));
 
   const { isNegated, displayName } = getParsedName(element.name);
-
   const isPerpendicularMoreHorizontal = Math.abs(perpendicular.x) > Math.abs(perpendicular.y);
 
   return (
     <g>
       <ThemedPolyline
-        points={element.path.map((point) => `${point.x} ${point.y}`).join(',')}
+        points={path.map((point) => `${point.x} ${point.y}`).join(',')}
         strokeColor={element.strokeColor}
         fillColor="none"
         strokeWidth={1}
