@@ -6,12 +6,6 @@ services:
       - "8080"
     networks:
       - apollon
-    read_only: true
-    tmpfs:
-      - /tmp:noexec,nosuid,size=16m
-      - /var/cache/nginx:size=32m
-      - /var/log/nginx:size=8m
-      - /var/run:size=1m
     cap_drop:
       - ALL
     security_opt:

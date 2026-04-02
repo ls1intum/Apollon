@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   pull_request:
-    types: [labeled]
+    types: [opened, synchronize, reopened]
   push:
     branches:
       - main
@@ -10,14 +10,7 @@ on:
 jobs:
   build-and-push-workflow:
     name: ${{ matrix.name }}
-    if: |
-      github.actor != 'dependabot[bot]' &&
-      (
-        github.event_name == 'push' ||
-        (github.event_name == 'pull_request' &&
-         github.event.action == 'labeled' &&
-         github.event.label.name == 'build and push docker image')
-      )
+    if: github.actor != 'dependabot[bot]'
     strategy:
       fail-fast: false
       matrix:
