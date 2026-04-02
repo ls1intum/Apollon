@@ -3,6 +3,10 @@ name: Publish Library Patch Version
 on:
   workflow_dispatch:
 
+concurrency:
+  group: publish-library
+  cancel-in-progress: false
+
 jobs:
   publish-patch:
     runs-on: ubuntu-latest

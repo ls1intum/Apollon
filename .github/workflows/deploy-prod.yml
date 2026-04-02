@@ -7,6 +7,10 @@ on:
         type: string
         description: "Image tag to deploy (default: pr-<number> if PR exists, latest for default branch)"
 
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
