@@ -1,0 +1,11 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+	<title>apollon-type</title>
+	<defs>
+		<image  width="16" height="16" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAAXNSR0IB2cksfwAAAANQTFRFAGW9CiBtCQAAAA5JREFUeJxjZGBgJAUBAAHIABFDZFrTAAAAAElFTkSuQmCC"/>
+		<image  width="14" height="14" id="img2" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAAXNSR0IB2cksfwAAAC1QTFRFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwaAoPgAAAA90Uk5TAAEC//79+fby+PT8+vv3xl2DagAAAF1JREFUeJxjZJQXZpRfy8DIAAFA2kSAaReILrnAsgMsbnIGLM4wKw1EJz/4xM+wh5HBZQ8Dg/NeRiCG0J7bGRiilzIWH2A6faSBE27elXix7cEPmBgvJ3AfcmEQBwBHsRfs0ZkMrgAAAABJRU5ErkJggg=="/>
+	</defs>
+	<style>
+	</style>
+	<use id="Background" href="#img1" x="0" y="0"/>
+	<use id="Layer 1" href="#img2" x="1" y="1"/>
+</svg>

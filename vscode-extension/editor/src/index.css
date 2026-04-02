@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #editor-root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  @apply p-0;
+}
+
+.apollon-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--apollon-background);
+}
+
+.app-bar {
+  width: 100%;
+  background: var(--vscode-activityBar-background);
+  height: 3rem;
+  display: flex;
+  justify-content: flex-start;
+}

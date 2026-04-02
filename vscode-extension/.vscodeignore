@@ -1,0 +1,29 @@
+# Ignore source & config
+src/**
+.vscode/**
+.vscode-test-web/**
+**/.vscode-test.*
+dist/test/**
+webpack.config.js
+esbuild.js
+.github/**
+.gitignore
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/.eslintrc.json
+**/*.ts
+
+# Ignore node_modules
+node_modules/**
+
+# Ignore menu except dist
+menu/**
+!menu/dist/**
+
+# Ignore editor except dist
+editor/**
+!editor/dist/**
+
+# Ignore anything outside extension root
+../**

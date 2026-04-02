@@ -18,7 +18,6 @@ coverage/
 # Temporary files and cache
 .tmp/
 .cache/
-.vscode/
 .idea/
 .DS_Store
 *.swp
@@ -32,7 +31,6 @@ coverage/
 # Editor-specific settings
 *.sublime-workspace
 *.sublime-project
-.vscode/
 
 # OS-specific files
 Thumbs.db

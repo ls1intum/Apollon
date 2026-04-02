@@ -5,17 +5,20 @@
   "private": true,
   "workspaces": [
     "standalone/*",
-    "library"
+    "library",
+    "vscode-extension"
   ],
   "scripts": {
     "build": "npm run build:lib && concurrently \"npm run build:server\" \"npm run build:webapp\"",
     "build:lib": "npm run build --workspace=@tumaet/apollon",
     "build:server": "npm run build --workspace=@tumaet/server",
     "build:webapp": "npm run build --workspace=@tumaet/webapp",
+    "build:vscode": "npm run build:all --workspace=apollon-vscode",
     "dev": "concurrently -n lib,server,webapp -c yellow,blue,magenta \"npm run dev:lib\" \"npm run dev:server\" \"npm run dev:webapp\"",
     "dev:lib": "npm run build:watch --workspace=@tumaet/apollon",
     "dev:server": "npm run dev --workspace=@tumaet/server",
     "dev:webapp": "npm run start --workspace=@tumaet/webapp",
+    "dev:vscode": "npm run watch --workspace=apollon-vscode",
     "start": "concurrently \"npm run start:server\" \"npm run start:webapp\"",
     "start:server": "npm run start --workspace=@tumaet/server",
     "start:webapp": "npm run start --workspace=@tumaet/webapp",
@@ -42,7 +45,8 @@
     "capacitor:assets:generate:ios": "npx capacitor-assets generate --ios",
     "capacitor:assets:generate:android": "npx capacitor-assets generate --android",
     "publish:library:patch": "./scripts/publish-library-patch.sh",
-    "publish:library:minor": "./scripts/publish-library-minor.sh"
+    "publish:library:minor": "./scripts/publish-library-minor.sh",
+    "package:vscode": "npm run package --workspace=apollon-vscode"
   },
   "license": "MIT",
   "engines": {
