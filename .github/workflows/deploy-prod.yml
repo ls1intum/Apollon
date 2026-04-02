@@ -5,18 +5,93 @@ on:
     inputs:
       image-tag:
         type: string
-        description: "Image tag to deploy (default: pr-<number> if PR exists, latest for default branch)"
+        description: "Image tag to deploy (default: latest for main branch)"
+      deploy-app:
+        type: boolean
+        default: true
+        description: (Re-)deploy server + webapp
+      deploy-db:
+        type: boolean
+        default: false
+        description: (Re-)deploy Redis database. Usually not necessary.
+      deploy-proxy:
+        type: boolean
+        default: false
+        description: (Re-)deploy Caddy proxy. Usually not necessary.
 
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  setup:
+    runs-on: ubuntu-latest
+    environment:
+      name: Production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure deployment directories and network exist
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          script: |
+            mkdir -p /opt/apollon/app /opt/apollon/db /opt/apollon/proxy
+            docker network create apollon 2>/dev/null || true
+
+      - name: Copy Caddyfile to proxy directory
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          source: docker/Caddyfile
+          target: /opt/apollon/proxy
+          strip_components: 1
+
+  deploy-db:
+    needs: [setup]
+    if: ${{ inputs.deploy-db }}
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    with:
+      environment: Production
+      docker-compose-file: "./docker/compose.db.yml"
+      main-image-name: redis
+      image-tag: 7-alpine
+      deployment-base-path: "/opt/apollon/db"
+    secrets: inherit
+
+  deploy-proxy:
+    needs: [setup]
+    if: ${{ inputs.deploy-proxy }}
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    with:
+      environment: Production
+      docker-compose-file: "./docker/compose.proxy.yml"
+      main-image-name: caddy
+      image-tag: 2.9-alpine
+      deployment-base-path: "/opt/apollon/proxy"
+    secrets: inherit
+
+  deploy-app:
+    needs: [setup]
+    if: ${{ inputs.deploy-app }}
     uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
     with:
       environment: Production
       docker-compose-file: "./docker/compose.app.yml"
       main-image-name: ghcr.io/ls1intum/apollon2/apollon-server
       image-tag: ${{ inputs.image-tag }}
+      deployment-base-path: "/opt/apollon/app"
     secrets: inherit
