@@ -1,6 +1,6 @@
 services:
   webapp:
-    image: "ghcr.io/ls1intum/apollon2/apollon-webapp:${IMAGE_TAG:-latest}"
+    image: "ghcr.io/ls1intum/apollon/apollon-webapp:${IMAGE_TAG:-latest}"
     restart: unless-stopped
     expose:
       - "8080"
@@ -23,7 +23,7 @@ services:
         max-file: "5"
 
   server:
-    image: "ghcr.io/ls1intum/apollon2/apollon-server:${IMAGE_TAG:-latest}"
+    image: "ghcr.io/ls1intum/apollon/apollon-server:${IMAGE_TAG:-latest}"
     expose:
       - "8000"
       - "4444"
