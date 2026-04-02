@@ -1,9 +1,9 @@
 # Project Structure
 
-Here is a brief overview of the Apollon2 monorepo structure:
+Here is a brief overview of the Apollon monorepo structure:
 
 ```
-apollon2/
+apollon/
 ├── standalone/
 │   ├── server/
 │   │   ├── src/
@@ -32,8 +32,8 @@ The `library` package contains the core Apollon editor components and utilities 
 
 ### Standalone Server
 
-The `standalone/server` package provides the backend API and services for the Apollon application.
+The `standalone/server` package provides the REST API, WebSocket relay, and diagram persistence (Redis) for the Apollon application.
 
 ### Standalone Webapp
 
-The `standalone/webapp` package contains the frontend web application that uses the library package.
+The `standalone/webapp` package contains the web application that uses the library package.

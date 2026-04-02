@@ -1,9 +1,10 @@
 services:
   db:
-    image: mongo:latest
+    image: redis:7-alpine
     ports:
-      - "27017:27017"
+      - "6379:6379"
     volumes:
-      - dbdata:/data/db
+      - dbdata:/data
+
 volumes:
   dbdata:

@@ -2,40 +2,40 @@ FROM node:22.14.0-slim AS builder
 
 WORKDIR /app
 
-# Copy manifests needed for workspace dependency installation
 COPY package*.json ./
 COPY standalone/server/package*.json ./standalone/server/
 COPY library/package*.json ./library/
 
-# Install workspace dependencies so @tumaet/apollon links resolve correctly
-RUN npm install
+RUN npm ci
 
-# Copy sources required for build
 COPY standalone/server ./standalone/server
 COPY library ./library
 
-# Build library first (generates dist/types), then build server
 RUN npm run build:lib && npm run build:server
 
 FROM node:22.14.0-slim AS runtime
 
 WORKDIR /app
 
-# Set environment variables
-ENV HOST=0.0.0.0
-ENV PORT=8000
-ENV WSSPORT=4444
-ENV FRONTEND_URL=http://localhost:5173
-ENV MONGO_URI=mongodb://localhost:27017/apollon2DB
+LABEL org.opencontainers.image.source="https://github.com/ls1intum/Apollon" \
+      org.opencontainers.image.title="apollon-server"
 
-# Copy runtime artifacts and package manifests
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/standalone/server/package*.json ./standalone/server/
-COPY --from=builder /app/standalone/server/dist ./standalone/server/dist
-COPY --from=builder /app/library ./library
+# Install tini for proper PID 1 signal handling
+RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
 
-# Install production dependencies for the server workspace
-RUN npm install --omit=dev --workspace=@tumaet/server
+# Copy runtime artifacts (owned by node user to avoid extra chown layer)
+COPY --from=builder --chown=node:node /app/package*.json ./
+COPY --from=builder --chown=node:node /app/standalone/server/package*.json ./standalone/server/
+COPY --from=builder --chown=node:node /app/standalone/server/dist ./standalone/server/dist
+COPY --from=builder --chown=node:node /app/library/package.json ./library/
+COPY --from=builder --chown=node:node /app/library/dist ./library/dist
 
-# Start the compiled server
+# Install production dependencies only
+RUN npm ci --omit=dev --workspace=@tumaet/server
+
+EXPOSE 8000 4444
+
+USER node
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "standalone/server/dist/src/server.js"]

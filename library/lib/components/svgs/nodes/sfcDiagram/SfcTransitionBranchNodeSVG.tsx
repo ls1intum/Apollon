@@ -29,7 +29,7 @@ export const SfcTransitionBranchNodeSVG: React.FC<Props> = ({
   const radius = Math.min(width, height) / 2
 
   const { strokeColor } = getCustomColorsFromData(data)
-  const fillColor = data.fillColor || "var(--apollon2-primary-contrast)"
+  const fillColor = data.fillColor || "var(--apollon-primary-contrast)"
   return (
     <svg
       width={scaledWidth}

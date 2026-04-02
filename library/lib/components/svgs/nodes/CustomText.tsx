@@ -16,7 +16,7 @@ type Props = {
 
 export const CustomText: FC<Props & Record<string, unknown>> = ({
   children,
-  fill = "var(--apollon2-primary-contrast)",
+  fill = "var(--apollon-primary-contrast)",
   x = "50%",
   y = "50%",
   dominantBaseline = "central",

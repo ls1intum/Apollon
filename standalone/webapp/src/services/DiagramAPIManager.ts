@@ -1,9 +1,9 @@
 import { UMLModel } from "@tumaet/apollon"
-import { backendURL } from "@/constants"
+import { serverURL } from "@/constants"
 
 export class DiagramAPIManager {
   static async fetchDiagramData(diagramId: string): Promise<UMLModel> {
-    const response = await fetch(`${backendURL}/api/${diagramId}`, {
+    const response = await fetch(`${serverURL}/api/${diagramId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -16,7 +16,7 @@ export class DiagramAPIManager {
   }
 
   static async sendDiagramUpdate(diagramId: string, data: UMLModel) {
-    const response = await fetch(`${backendURL}/api/${diagramId}`, {
+    const response = await fetch(`${serverURL}/api/${diagramId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -29,7 +29,7 @@ export class DiagramAPIManager {
   }
 
   static async createDiagram(data: UMLModel): Promise<{ id: string }> {
-    const response = await fetch(`${backendURL}/api/`, {
+    const response = await fetch(`${serverURL}/api/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

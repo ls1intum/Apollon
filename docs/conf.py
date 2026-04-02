@@ -8,7 +8,7 @@ import os
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Apollon2'
+project = 'Apollon'
 copyright = '2025, Technical University of Munich, Chair for Applied Software Engineering'
 author = 'Applied Education Technologies, Technical University of Munich'
 
@@ -71,8 +71,8 @@ html_theme = 'sphinx_rtd_theme'
 html_context = {
     "display_github": True,
     "github_user": "ls1intum",
-    "github_repo": "Apollon2",
-    "github_version": "develop",
+    "github_repo": "Apollon",
+    "github_version": "main",
     "conf_py_path": "/docs/",
 }
 html_logo = "images/logo.png"

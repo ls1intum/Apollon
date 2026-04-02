@@ -50,7 +50,7 @@ export class ApollonEditor {
   private subscribers: Apollon.Subscribers = {}
   constructor(element: HTMLElement, options?: Apollon.ApollonOptions) {
     if (!(element instanceof HTMLElement)) {
-      throw new Error("Element is required to initialize Apollon2")
+      throw new Error("Element is required to initialize Apollon")
     }
 
     this.ydoc = new Y.Doc()
@@ -70,7 +70,7 @@ export class ApollonEditor {
 
     // Initialize React root
     this.root = ReactDOM.createRoot(element, {
-      identifierPrefix: `apollon2-${diagramId}`,
+      identifierPrefix: `apollon-${diagramId}`,
     })
 
     this.diagramStore.getState().setDiagramId(diagramId)
@@ -215,7 +215,7 @@ export class ApollonEditor {
     )
 
     const svgRoot = ReactDOM.createRoot(container, {
-      identifierPrefix: `apollon2-exportAsSVG-${diagramId}`,
+      identifierPrefix: `apollon-exportAsSVG-${diagramId}`,
     })
 
     diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)

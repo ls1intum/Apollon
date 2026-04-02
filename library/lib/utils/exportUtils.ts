@@ -20,16 +20,16 @@ type SvgExportMode = "web" | "compat"
 
 const buildRootVariableStyles = (): string => {
   const lines = Object.entries(CSS_VARIABLE_FALLBACKS).map(
-    ([apollon2Var, fallback]) => {
-      const apollonVar = apollon2Var.replace("--apollon2-", "--apollon-")
-      return `  ${apollon2Var}: var(${apollonVar}, ${fallback});`
+    ([cssVar, fallback]) => {
+      const apollonVar = cssVar.replace("--apollon-", "--apollon-")
+      return `  ${cssVar}: var(${apollonVar}, ${fallback});`
     }
   )
 
   // Keep XYFlow edge vars defined so web SVGs render without external CSS.
   lines.push(
-    "  --xy-edge-stroke: var(--apollon2-primary-contrast);",
-    "  --xy-edge-stroke-default: var(--apollon2-primary-contrast);",
+    "  --xy-edge-stroke: var(--apollon-primary-contrast);",
+    "  --xy-edge-stroke-default: var(--apollon-primary-contrast);",
     `  --xy-edge-stroke-width: ${LAYOUT.LINE_WIDTH_EDGE}px;`,
     `  --xy-edge-stroke-width-default: ${LAYOUT.LINE_WIDTH_EDGE}px;`
   )

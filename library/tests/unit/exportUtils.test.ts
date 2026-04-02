@@ -138,17 +138,17 @@ describe("resolveCSSVariable", () => {
   })
 
   it("resolves known CSS variable", () => {
-    expect(resolveCSSVariable("var(--apollon2-primary)")).toBe("#3e8acc")
+    expect(resolveCSSVariable("var(--apollon-primary)")).toBe("#3e8acc")
   })
 
-  it("resolves --apollon2-primary-contrast", () => {
-    expect(resolveCSSVariable("var(--apollon2-primary-contrast)")).toBe(
+  it("resolves --apollon-primary-contrast", () => {
+    expect(resolveCSSVariable("var(--apollon-primary-contrast)")).toBe(
       "#000000"
     )
   })
 
-  it("resolves --apollon2-background", () => {
-    expect(resolveCSSVariable("var(--apollon2-background)")).toBe("#ffffff")
+  it("resolves --apollon-background", () => {
+    expect(resolveCSSVariable("var(--apollon-background)")).toBe("#ffffff")
   })
 
   it("uses fallback for unknown variable", () => {
@@ -165,15 +165,15 @@ describe("resolveCSSVariable", () => {
   })
 
   it("handles nested var() calls (variable resolves to another var)", () => {
-    // --apollon2-grid resolves to "rgba(36, 39, 36, 0.1)"
-    expect(resolveCSSVariable("var(--apollon2-grid)")).toBe(
+    // --apollon-grid resolves to "rgba(36, 39, 36, 0.1)"
+    expect(resolveCSSVariable("var(--apollon-grid)")).toBe(
       "rgba(36, 39, 36, 0.1)"
     )
   })
 
   it("preserves string around var() call", () => {
-    // e.g. "1px solid var(--apollon2-primary)" should resolve the var part
-    const result = resolveCSSVariable("1px solid var(--apollon2-primary)")
+    // e.g. "1px solid var(--apollon-primary)" should resolve the var part
+    const result = resolveCSSVariable("1px solid var(--apollon-primary)")
     expect(result).toBe("1px solid #3e8acc")
   })
 
@@ -196,7 +196,7 @@ describe("replaceCSSVariables", () => {
 
   it("resolves var() in fill attribute", () => {
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
-    rect.setAttribute("fill", "var(--apollon2-primary)")
+    rect.setAttribute("fill", "var(--apollon-primary)")
     svg.appendChild(rect)
 
     replaceCSSVariables(svg)
@@ -205,7 +205,7 @@ describe("replaceCSSVariables", () => {
 
   it("resolves var() in stroke attribute", () => {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
-    path.setAttribute("stroke", "var(--apollon2-primary-contrast)")
+    path.setAttribute("stroke", "var(--apollon-primary-contrast)")
     svg.appendChild(path)
 
     replaceCSSVariables(svg)
@@ -301,7 +301,7 @@ describe("replaceCSSVariables", () => {
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g")
     const innerG = document.createElementNS("http://www.w3.org/2000/svg", "g")
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
-    rect.setAttribute("fill", "var(--apollon2-background)")
+    rect.setAttribute("fill", "var(--apollon-background)")
     innerG.appendChild(rect)
     g.appendChild(innerG)
     svg.appendChild(g)

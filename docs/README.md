@@ -1,4 +1,4 @@
-# Hephaestus Documentation
+# Apollon Documentation
 
 ## Writing Documentation
 

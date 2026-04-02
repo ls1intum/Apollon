@@ -1,19 +1,37 @@
+# Apollon v1 — proxy to existing standalone container on host
+apollon.ase.in.tum.de, apollon.ase.cit.tum.de, apollon.aet.cit.tum.de {
+	tls /etc/rbg-cert/live/host:f:asevm17.cit.tum.de.fullchain.pem /etc/rbg-cert/live/host:f:asevm17.cit.tum.de.privkey.pem
+
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		Referrer-Policy "same-origin"
+		# No X-Frame-Options — Apollon v1 must be embeddable in iframes (Artemis)
+	}
+
+	reverse_proxy host.docker.internal:8080
+}
+
+# Apollon2
 apollon2.aet.cit.tum.de {
-  # WebSocket matcher specifically for /ws path
-  @websockets {
-    path /ws*
-  }
+	tls /etc/rbg-cert/live/host:f:asevm17.cit.tum.de.fullchain.pem /etc/rbg-cert/live/host:f:asevm17.cit.tum.de.privkey.pem
 
-  # Handle WSS connections with proper headers
-  reverse_proxy @websockets server:4444 {
-    transport http {
-      versions h1.1
-    }
-  }
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Content-Type-Options "nosniff"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# No X-Frame-Options — Apollon2 must be embeddable in iframes (Artemis)
+	}
 
-  @api path /api/*
-  reverse_proxy @api server:8000
+	@websockets path /ws
+	reverse_proxy @websockets server:4444 {
+		transport http {
+			versions h1.1
+		}
+	}
 
-  # fallback for everything else
-  reverse_proxy webapp:80
+	@api path /api/*
+	reverse_proxy @api server:8000
+
+	reverse_proxy webapp:8080
 }

@@ -4,7 +4,7 @@ import { Typography as MUITypography, TypographyProps } from "@mui/material"
 export const Typography: React.FC<TypographyProps> = ({ sx, ...props }) => {
   return (
     <MUITypography
-      sx={{ ...sx, color: "var(--apollon2-primary-contrast)" }}
+      sx={{ ...sx, color: "var(--apollon-primary-contrast)" }}
       {...props}
     />
   )

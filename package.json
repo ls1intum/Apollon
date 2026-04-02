@@ -20,7 +20,7 @@
     "start:server": "npm run start --workspace=@tumaet/server",
     "start:webapp": "npm run start --workspace=@tumaet/webapp",
     "start:webapp:host": "npm run start:host --workspace=@tumaet/webapp",
-    "start:localdb": "docker-compose -f docker/compose.local.db.yml up -d ",
+    "start:localdb": "docker compose -f docker/compose.local.db.yml up -d",
     "lint": "concurrently \"npm run lint:lib\" \"npm run lint:server\" \"npm run lint:webapp\"",
     "lint:lib": "npm run lint --workspace=@tumaet/apollon",
     "lint:server": "npm run lint --workspace=@tumaet/server",

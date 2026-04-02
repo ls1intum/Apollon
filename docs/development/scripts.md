@@ -16,9 +16,15 @@ Here are the commonly used scripts defined in the monorepo:
   npm run build
   ```
 
-## Running the Application
+## Development
 
-- **Start the project:**
+- **Start dev stack with hot reload** (recommended for development):
+  ```bash
+  npm run dev
+  ```
+  Starts the library (build watch), server (tsx watch on http://localhost:8000), and webapp (Vite HMR on http://localhost:5173) concurrently.
+
+- **Start production build:**
   ```bash
   npm run start
   ```
@@ -42,12 +48,13 @@ Here are the commonly used scripts defined in the monorepo:
   npm run format:check
   ```
 
-## Dockerized local Database
+## Database
 
-- **Start local database:**
+- **Start local Redis:**
   ```bash
   npm run start:localdb
   ```
+  Starts Redis in Docker via `docker/compose.local.db.yml`.
 
 ## Library Publishing
 

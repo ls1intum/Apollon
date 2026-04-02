@@ -92,7 +92,7 @@ function App({ onReactFlowInit }: AppProps) {
         height: "100%",
         width: "100%",
         overflow: "hidden",
-        backgroundColor: "var(--apollon2-background)",
+        backgroundColor: "var(--apollon-background)",
         position: "relative",
       }}
     >

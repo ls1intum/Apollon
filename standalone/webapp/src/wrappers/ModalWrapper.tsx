@@ -52,7 +52,7 @@ const style = {
   maxWidth: "90vw", // to limit on very large screens
   width: "50vw", // ensures it's at least half screen
   gap: 1,
-  bgcolor: "var(--apollon2-background)",
+  bgcolor: "var(--apollon-background)",
 }
 
 export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
@@ -93,7 +93,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({ name, props }) => {
             <CloseOutlinedIcon sx={{ color: "grey" }} />
           </Button>
         </Box>
-        <Divider sx={{ bgcolor: "var(--apollon2-background-variant)" }} />
+        <Divider sx={{ bgcolor: "var(--apollon-background-variant)" }} />
 
         {/* Scrollable Content */}
         <Box

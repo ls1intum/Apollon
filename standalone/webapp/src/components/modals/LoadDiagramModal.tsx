@@ -64,7 +64,7 @@ export const LoadDiagramModal = () => {
               <div className="flex gap-2 flex-col">
                 <span
                   className="text-lg"
-                  style={{ color: "var(--apollon2-primary-contrast)" }}
+                  style={{ color: "var(--apollon-primary-contrast)" }}
                 >
                   {model.title}
                 </span>

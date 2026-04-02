@@ -7,7 +7,7 @@ This guide explains how to update and maintain the documentation. Our documentat
 Before you start, make sure you have:
 
 1. Python 3.8 or higher installed
-2. Git installed and [repository](https://github.com/ls1intum/apollon2) cloned locally.
+2. Git installed and [repository](https://github.com/ls1intum/apollon) cloned locally.
 
 ## Local Setup
 
@@ -73,7 +73,7 @@ Our documentation is automatically deployed through Read the Docs when changes a
 
 1. Visit [Read the Docs](https://app.readthedocs.org/)
 2. Login with your account (create one if needed)
-3. You can view build status and logs in the Apollon2 project dashboard
+3. You can view build status and logs in the Apollon project dashboard
 
 ## Contributing to Documentation
 

@@ -1,6 +1,6 @@
 # Contributing
 
-We welcome contributions to the Apollon2 project! Please follow the steps below to contribute.
+We welcome contributions to the Apollon project! Please follow the steps below to contribute.
 
 ## How to Contribute
 
@@ -64,4 +64,4 @@ We welcome contributions to the Apollon2 project! Please follow the steps below 
 3. Check linting: `npm run lint`
 4. Format code: `npm run format`
 
-Thank you for contributing to Apollon2!
+Thank you for contributing to Apollon!

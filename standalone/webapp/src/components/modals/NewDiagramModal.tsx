@@ -99,7 +99,7 @@ export const NewDiagramModal = () => {
           variant="outlined"
           sx={{
             input: {
-              color: "var(--apollon2-primary-contrast)",
+              color: "var(--apollon-primary-contrast)",
             },
           }}
         />

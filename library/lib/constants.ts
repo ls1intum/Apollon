@@ -73,30 +73,29 @@ export const CANVAS = Object.freeze({
 /* -------------------------------------------------------------------------- */
 export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
   Object.freeze({
-    "--apollon2-primary": "#3e8acc",
-    "--apollon2-primary-contrast": "#000000",
-    "--apollon2-secondary": "#6c757d",
-    "--apollon2-alert-warning-yellow": "#ffc107",
-    "--apollon2-alert-warning-background": "#fff3cd",
-    "--apollon2-alert-warning-border": "#ffeeba",
-    "--apollon2-background": "#ffffff",
-    "--apollon2-background-inverse": "#000000",
-    "--apollon2-background-variant": "#f8f9fa",
-    "--apollon2-gray": "#e9ecef",
-    "--apollon2-grid": "rgba(36, 39, 36, 0.1)",
-    "--apollon2-gray-variant": "#495057",
-    "--apollon2-alert-danger-color": "#721c24",
-    "--apollon2-alert-danger-background": "#f8d7da",
-    "--apollon2-alert-danger-border": "#f5c6cb",
-    "--apollon2-switch-box-border-color": "#dee2e6",
-    "--apollon2-list-group-color": "#ffffff",
-    "--apollon2-btn-outline-secondary-color": "#6c757d",
-    "--apollon2-modal-bottom-border": "#e9ecef",
+    "--apollon-primary": "#3e8acc",
+    "--apollon-primary-contrast": "#000000",
+    "--apollon-secondary": "#6c757d",
+    "--apollon-alert-warning-yellow": "#ffc107",
+    "--apollon-alert-warning-background": "#fff3cd",
+    "--apollon-alert-warning-border": "#ffeeba",
+    "--apollon-background": "#ffffff",
+    "--apollon-background-inverse": "#000000",
+    "--apollon-background-variant": "#f8f9fa",
+    "--apollon-gray": "#e9ecef",
+    "--apollon-grid": "rgba(36, 39, 36, 0.1)",
+    "--apollon-gray-variant": "#495057",
+    "--apollon-alert-danger-color": "#721c24",
+    "--apollon-alert-danger-background": "#f8d7da",
+    "--apollon-alert-danger-border": "#f5c6cb",
+    "--apollon-switch-box-border-color": "#dee2e6",
+    "--apollon-list-group-color": "#ffffff",
+    "--apollon-btn-outline-secondary-color": "#6c757d",
+    "--apollon-modal-bottom-border": "#e9ecef",
   })
 
-export const STROKE_COLOR =
-  CSS_VARIABLE_FALLBACKS["--apollon2-primary-contrast"]
-export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon2-background"]
+export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-primary-contrast"]
+export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
 
 /* -------------------------------------------------------------------------- */
 /* Layout                                                                     */

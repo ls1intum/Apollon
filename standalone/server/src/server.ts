@@ -4,18 +4,25 @@ import express from "express"
 import { configureMiddlewares } from "./middlewares"
 import diagramRouter from "./diagramRouter"
 import { startSocketServer } from "./relaySocketServer"
-import { connectToMongoDB } from "./database/connect"
-import { startDiagramCleanupJob } from "./database/cleanupJob"
+import { connectToRedis, redis } from "./database/connect"
 import { log } from "./logger"
 
 const PORT = process.env.PORT || 8000
 const serverHost = process.env.HOST || "localhost"
-// Default to localhost for local dev; Docker Compose sets MONGO_URI accordingly
-const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/apollon2DB"
 const app = express()
 
 // Configure middlewares
 configureMiddlewares(app)
+
+// Health endpoint
+app.get("/health", async (_req, res) => {
+  try {
+    await redis.ping()
+    res.status(200).json({ status: "ok" })
+  } catch {
+    res.status(503).json({ status: "error" })
+  }
+})
 
 // Mount routes
 app.use("/api", diagramRouter)
@@ -25,10 +32,9 @@ app.listen(PORT, () => {
   log.debug(`HTTP server running on http://${serverHost}:${PORT}`)
 })
 startSocketServer()
-startDiagramCleanupJob()
 
-// Connect to DB in background; log status but don't block server startup
-connectToMongoDB(mongoURI)
+// Connect to Redis in background; log status but don't block server startup
+connectToRedis()
   .then(() => {
     log.debug("Database connected")
   })
