@@ -24,10 +24,10 @@
   "packageRules": [
     {
       "description": "Group all minor and patch updates",
-      "matchPackagePatterns": ["*"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "minor and patch dependencies",
-      "labels": ["dependencies"]
+      "labels": ["dependencies"],
+      "matchPackageNames": ["*"]
     },
     {
       "description": "Major updates require extra care",
