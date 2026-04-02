@@ -1,21 +1,63 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "schedule": ["* 20 * * 6"],
+  "description": "Dashboard-only mode — PRs created only when approved from the dashboard",
+  "extends": [
+    "config:best-practices",
+    ":semanticCommitTypeAll(chore)",
+    ":dependencyDashboardApproval"
+  ],
+  "labels": ["dependencies"],
+
   "timezone": "Europe/Berlin",
+  "schedule": ["before 7am on monday"],
+  "minimumReleaseAge": "3 days",
+
+  "platformAutomerge": true,
+  "automergeStrategy": "squash",
+  "semanticCommitScope": "deps",
+
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Dependency Dashboard",
+
+  "postUpdateOptions": ["npmDedupe"],
+
   "packageRules": [
     {
+      "description": "Group all minor and patch updates",
       "matchPackagePatterns": ["*"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "minor and patch dependencies",
-      "groupSlug": "minor-patch",
-      "automerge": true
+      "labels": ["dependencies"]
     },
     {
-      "matchPackagePatterns": ["*"],
+      "description": "Major updates require extra care",
       "matchUpdateTypes": ["major"],
-      "groupName": "major dependencies",
-      "groupSlug": "major"
+      "minimumReleaseAge": "7 days",
+      "labels": ["dependencies", "breaking"]
+    },
+    {
+      "description": "GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "labels": ["dependencies", "ci"]
+    },
+    {
+      "description": "Docker images",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "groupName": "Docker images",
+      "labels": ["dependencies", "infrastructure"]
     }
-  ]
+  ],
+
+  "vulnerabilityAlerts": {
+    "labels": ["security", "dependencies"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null,
+    "dependencyDashboardApproval": false,
+    "prPriority": 10,
+    "automerge": true,
+    "groupName": null
+  },
+
+  "ignorePaths": ["**/node_modules/**", "**/dist/**"]
 }
