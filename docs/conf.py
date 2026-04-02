@@ -72,7 +72,7 @@ html_context = {
     "display_github": True,
     "github_user": "ls1intum",
     "github_repo": "Apollon",
-    "github_version": "develop",
+    "github_version": "main",
     "conf_py_path": "/docs/",
 }
 html_logo = "images/logo.png"
