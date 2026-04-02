@@ -56,5 +56,4 @@ services:
 
 networks:
   apollon:
-    name: apollon
-    driver: bridge
+    external: true
