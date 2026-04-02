@@ -19,6 +19,7 @@
   "dependencyDashboard": true,
   "dependencyDashboardTitle": "Dependency Dashboard",
 
+  "rebaseWhen": "conflicted",
   "postUpdateOptions": ["npmDedupe"],
 
   "packageRules": [

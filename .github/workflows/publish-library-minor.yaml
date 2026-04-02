@@ -3,6 +3,10 @@ name: Publish Library Minor Version
 on:
   workflow_dispatch:
 
+concurrency:
+  group: publish-library
+  cancel-in-progress: false
+
 jobs:
   publish-minor:
     runs-on: ubuntu-latest
