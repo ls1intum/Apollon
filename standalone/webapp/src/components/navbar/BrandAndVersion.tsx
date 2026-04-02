@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box/Box"
 import Typography from "@mui/material/Typography/Typography"
-import { secondary, appVersion } from "@/constants"
+import { secondary, apollonLibraryVersion } from "@/constants"
 
 export const BrandAndVersion = () => {
   return (
@@ -22,7 +22,7 @@ export const BrandAndVersion = () => {
         Apollon
       </Typography>
       <Typography variant="body2" sx={{ color: secondary }}>
-        {appVersion}
+        {apollonLibraryVersion}
       </Typography>
     </Box>
   )
