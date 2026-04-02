@@ -27,4 +27,5 @@ volumes:
 
 networks:
   apollon:
-    external: true
+    name: apollon
+    driver: bridge

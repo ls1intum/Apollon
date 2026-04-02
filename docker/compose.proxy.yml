@@ -10,9 +10,11 @@ services:
     environment:
       - DOMAIN=${DOMAIN:-localhost}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
     networks:
       - apollon
     cap_drop:
@@ -27,10 +29,35 @@ services:
       timeout: 3s
       retries: 3
 
+configs:
+  caddyfile:
+    content: |
+      {$$DOMAIN} {
+        header {
+          Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+          Referrer-Policy "strict-origin-when-cross-origin"
+          X-Content-Type-Options "nosniff"
+          Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        }
+
+        @websockets path /ws
+        reverse_proxy @websockets server:4444 {
+          transport http {
+            versions h1.1
+          }
+        }
+
+        @api path /api/*
+        reverse_proxy @api server:8000
+
+        reverse_proxy webapp:8080
+      }
+
 volumes:
   caddy_data:
   caddy_config:
 
 networks:
   apollon:
-    external: true
+    name: apollon
+    driver: bridge
