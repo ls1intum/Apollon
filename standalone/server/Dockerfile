@@ -23,16 +23,15 @@ LABEL org.opencontainers.image.source="https://github.com/ls1intum/Apollon2" \
 # Install tini for proper PID 1 signal handling
 RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
 
-# Copy runtime artifacts
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/standalone/server/package*.json ./standalone/server/
-COPY --from=builder /app/standalone/server/dist ./standalone/server/dist
-COPY --from=builder /app/library/package.json ./library/
-COPY --from=builder /app/library/dist ./library/dist
+# Copy runtime artifacts (owned by node user to avoid extra chown layer)
+COPY --from=builder --chown=node:node /app/package*.json ./
+COPY --from=builder --chown=node:node /app/standalone/server/package*.json ./standalone/server/
+COPY --from=builder --chown=node:node /app/standalone/server/dist ./standalone/server/dist
+COPY --from=builder --chown=node:node /app/library/package.json ./library/
+COPY --from=builder --chown=node:node /app/library/dist ./library/dist
 
 # Install production dependencies only
-RUN npm ci --omit=dev --workspace=@tumaet/server && \
-    chown -R node:node /app
+RUN npm ci --omit=dev --workspace=@tumaet/server
 
 EXPOSE 8000 4444
 

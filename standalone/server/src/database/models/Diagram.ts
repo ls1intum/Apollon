@@ -11,4 +11,4 @@ export interface Diagram {
 }
 
 /** TTL for diagrams in Redis: 60 days in seconds */
-export const DIAGRAM_TTL_SECONDS = 60 * 24 * 60 * 60
+export const DIAGRAM_TTL_SECONDS = 60 * 24 * 3600

@@ -7,7 +7,7 @@ export function configureCors() {
     // When served behind a reverse proxy (Caddy), API and webapp share the same
     // origin so CORS is a no-op. Allow all origins if FRONTEND_URL is not set.
     origin: frontendUrl ? [frontendUrl] : true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT"],
     allowedHeaders: ["Content-Type"],
   })
 }

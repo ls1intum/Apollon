@@ -4,6 +4,6 @@ import { configureCors } from "./cors"
 
 export function configureMiddlewares(app: Express) {
   app.use(configureCors()) // Configure CORS
-  app.use(express.json()) // Add the express.json middleware
+  app.use(express.json({ limit: "10mb" }))
   app.use(errorHandler) // Error handling middleware
 }
