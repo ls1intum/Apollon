@@ -1,0 +1,35 @@
+services:
+  db:
+    image: redis/redis-stack-server:7.4.0-v3
+    restart: unless-stopped
+    expose:
+      - "6379"
+    volumes:
+      - dbdata:/data
+    networks:
+      - apollon2
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --loadmodule /opt/redis-stack/lib/rejson.so
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  dbdata:
+
+networks:
+  apollon2:
+    name: apollon2
+    driver: bridge

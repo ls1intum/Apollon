@@ -4,15 +4,11 @@ services:
       context: ..
       dockerfile: ./standalone/webapp/Dockerfile
     ports:
-      - "80:80"
+      - "8080:8080"
     depends_on:
       - server
-    environment:
-      - APP_HOSTNAME=localhost
-      - VITE_BACKEND_URL=http://localhost:8000
-      - VITE_BACKEND_URL_WSS=ws://localhost:4444/ws
     networks:
-      - shared-network
+      - apollon2-local
 
   server:
     build:
@@ -24,26 +20,31 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8000
-      - WSSPORT=4444
-      - FRONTEND_URL=http://localhost:5173
-      - MONGO_URI=mongodb://db:27017/apollon2DB
+      - WS_PORT=4444
+      - REDIS_URL=redis://db:6379
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
-      - shared-network
+      - apollon2-local
 
   db:
-    image: mongo:latest
+    image: redis/redis-stack-server:7.4.0-v3
     ports:
-      - "27017:27017"
+      - "6379:6379"
     volumes:
-      - dbdata:/data/db
+      - dbdata:/data
     networks:
-      - shared-network
+      - apollon2-local
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   dbdata:
 
 networks:
-  shared-network:
+  apollon2-local:
     driver: bridge

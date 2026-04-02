@@ -24,27 +24,14 @@ jobs:
         include:
           - name: Webapp
             dockerfile: ./standalone/webapp/Dockerfile
-            build-args: |
-              VITE_BACKEND_URL_WSS=wss://apollon2.aet.cit.tum.de/ws
-              VITE_BACKEND_URL=https://apollon2.aet.cit.tum.de
             image: ghcr.io/ls1intum/apollon2/apollon-webapp
             context: .
           - name: Server
             dockerfile: ./standalone/server/Dockerfile
-            build-args: |
-              HOST=0.0.0.0
-              PORT=8000
-              WSSPORT=4444
-              YPERSISTENCE=./dbDir
-              FRONTEND_URL=https://apollon2.aet.cit.tum.de
-              MONGO_URI=mongodb://db:27017/apollon2DB
             image: ghcr.io/ls1intum/apollon2/apollon-server
             context: .
-
-    # Uses https://github.com/ls1intum/.github/pull/16/commits/a35192af6c834a72cb12fe6b772c0cfb70b45eae
-    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@feat/minor-build-improvements
+    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@main
     with:
       image-name: ${{ matrix.image }}
       docker-file: ${{ matrix.dockerfile }}
       docker-context: ${{ matrix.context }}
-      build-args: ${{ matrix.build-args }}

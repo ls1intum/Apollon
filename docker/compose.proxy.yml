@@ -1,25 +1,38 @@
 services:
   caddy:
-    image: caddy:alpine
+    image: caddy:2.9-alpine
     container_name: apollon2-caddy
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
-
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+      - /var/lib/rbg-cert:/etc/rbg-cert:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
-      - shared-network
+      - apollon2
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
 
 volumes:
   caddy_data:
   caddy_config:
 
 networks:
-  shared-network:
-    name: shared-network
+  apollon2:
+    name: apollon2
     driver: bridge

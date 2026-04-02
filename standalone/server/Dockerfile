@@ -2,40 +2,41 @@ FROM node:22.14.0-slim AS builder
 
 WORKDIR /app
 
-# Copy manifests needed for workspace dependency installation
 COPY package*.json ./
 COPY standalone/server/package*.json ./standalone/server/
 COPY library/package*.json ./library/
 
-# Install workspace dependencies so @tumaet/apollon links resolve correctly
-RUN npm install
+RUN npm ci
 
-# Copy sources required for build
 COPY standalone/server ./standalone/server
 COPY library ./library
 
-# Build library first (generates dist/types), then build server
 RUN npm run build:lib && npm run build:server
 
 FROM node:22.14.0-slim AS runtime
 
 WORKDIR /app
 
-# Set environment variables
-ENV HOST=0.0.0.0
-ENV PORT=8000
-ENV WSSPORT=4444
-ENV FRONTEND_URL=http://localhost:5173
-ENV MONGO_URI=mongodb://localhost:27017/apollon2DB
+LABEL org.opencontainers.image.source="https://github.com/ls1intum/Apollon2" \
+      org.opencontainers.image.title="apollon2-server"
 
-# Copy runtime artifacts and package manifests
+# Install tini for proper PID 1 signal handling
+RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
+
+# Copy runtime artifacts
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/standalone/server/package*.json ./standalone/server/
 COPY --from=builder /app/standalone/server/dist ./standalone/server/dist
-COPY --from=builder /app/library ./library
+COPY --from=builder /app/library/package.json ./library/
+COPY --from=builder /app/library/dist ./library/dist
 
-# Install production dependencies for the server workspace
-RUN npm install --omit=dev --workspace=@tumaet/server
+# Install production dependencies only
+RUN npm ci --omit=dev --workspace=@tumaet/server && \
+    chown -R node:node /app
 
-# Start the compiled server
+EXPOSE 8000 4444
+
+USER node
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "standalone/server/dist/src/server.js"]
