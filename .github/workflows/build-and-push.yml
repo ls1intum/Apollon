@@ -25,7 +25,7 @@ jobs:
       docker-relevant: ${{ steps.filter.outputs.docker-relevant }}
       should-skip: ${{ steps.skip-check.outputs.should_skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - id: skip-check
         uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5
