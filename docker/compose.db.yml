@@ -1,6 +1,6 @@
 services:
   db:
-    image: redis/redis-stack-server:7.4.0-v3
+    image: redis:7-alpine
     restart: unless-stopped
     expose:
       - "6379"
@@ -8,11 +8,7 @@ services:
       - dbdata:/data
     networks:
       - apollon2
-    command: >
-      redis-server
-      --appendonly yes
-      --appendfsync everysec
-      --loadmodule /opt/redis-stack/lib/rejson.so
+    command: redis-server --appendonly yes --appendfsync everysec
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

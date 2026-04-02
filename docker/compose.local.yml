@@ -29,7 +29,7 @@ services:
       - apollon2-local
 
   db:
-    image: redis/redis-stack-server:7.4.0-v3
+    image: redis:7-alpine
     ports:
       - "6379:6379"
     volumes:

@@ -1,5 +1,4 @@
 import { Request, Response, Router } from "express"
-import type { RedisJSON } from "@redis/client/dist/lib/commands/generic-transformers"
 import { redis } from "./database/connect"
 import { Diagram, DIAGRAM_TTL_SECONDS } from "./database/models/Diagram"
 import { log } from "./logger"
@@ -13,14 +12,13 @@ function diagramKey(id: string): string {
 }
 
 async function getDiagram(key: string): Promise<Diagram | null> {
-  const data = await redis.json.get(key)
-  if (!data) return null
-  return data as unknown as Diagram
+  const json = await redis.get(key)
+  if (!json) return null
+  return JSON.parse(json) as Diagram
 }
 
 async function saveDiagram(key: string, diagram: Diagram): Promise<void> {
-  await redis.json.set(key, "$", diagram as unknown as RedisJSON)
-  await redis.expire(key, DIAGRAM_TTL_SECONDS)
+  await redis.set(key, JSON.stringify(diagram), { EX: DIAGRAM_TTL_SECONDS })
 }
 
 router.post("/converter/pdf", (req, res) =>

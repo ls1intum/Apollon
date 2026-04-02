@@ -33,7 +33,7 @@
       },
       "parentId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
       "data": {
-        "name": "Frontend",
+        "name": "Client",
         "isComponentHeaderShown": true
       },
       "measured": {
@@ -52,7 +52,7 @@
       },
       "parentId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
       "data": {
-        "name": "Backend",
+        "name": "Server",
         "isComponentHeaderShown": true
       },
       "measured": {
@@ -134,7 +134,7 @@
   ],
   "edges": [
     {
-      "id": "edge-frontend-interface",
+      "id": "edge-client-interface",
       "source": "6ba7b810-9dad-4d11-80b4-00c04fd430c8",
       "target": "1b4e28ba-2fa1-4d11-a2d3-b8f04f4e5c6d",
       "type": "ComponentProvidedInterface",
@@ -145,7 +145,7 @@
       }
     },
     {
-      "id": "edge-backend-interface",
+      "id": "edge-server-interface",
       "source": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
       "target": "1b4e28ba-2fa1-4d11-a2d3-b8f04f4e5c6d",
       "type": "ComponentRequiredInterface",
@@ -156,7 +156,7 @@
       }
     },
     {
-      "id": "edge-backend-database",
+      "id": "edge-server-database",
       "source": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
       "target": "a87ff679-a2f3-4e71-9bda-d16a21e1a2f3",
       "type": "ComponentDependency",
