@@ -5,7 +5,7 @@ type Props = SVGAttributes<SVGSVGElement>
 export const MapIcon = ({
   width = 24,
   height = 24,
-  fill = "var(--apollon2-primary-contrast, #e3e3e3)",
+  fill = "var(--apollon-primary-contrast, #e3e3e3)",
   ...props
 }: Props) => (
   <svg

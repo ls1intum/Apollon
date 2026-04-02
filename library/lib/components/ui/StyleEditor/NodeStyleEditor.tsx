@@ -30,8 +30,8 @@ const styles = {
     flexDirection: "column" as const,
     marginTop: 10,
     marginBottom: 10,
-    backgroundColor: "var(--apollon2-background)",
-    border: "1px solid var(--apollon2-gray)",
+    backgroundColor: "var(--apollon-background)",
+    border: "1px solid var(--apollon-gray)",
     paddingBottom: 10,
   },
   colorOption: {
@@ -50,9 +50,9 @@ const styles = {
   resetButton: {
     marginTop: 12,
     padding: "6px 12px",
-    backgroundColor: "var(--apollon2-background)",
-    color: "var(--apollon2-primary-contrast)",
-    border: "1px solid var(--apollon2-gray)",
+    backgroundColor: "var(--apollon-background)",
+    color: "var(--apollon-primary-contrast)",
+    border: "1px solid var(--apollon-gray)",
     cursor: "pointer",
     borderRadius: 4,
     width: "fit-content",
@@ -133,14 +133,18 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
           aria-label="Toggle color settings"
         />
 
-        {sideElements}
+        {sideElements.map((element, index) => (
+          <React.Fragment key={`side-element-${index}`}>
+            {element}
+          </React.Fragment>
+        ))}
       </div>
 
       {paintOpen && (
         <div style={styles.colorPanel}>
           {!activeColorField ? (
             colorFields.map(({ key, label }) => (
-              <>
+              <React.Fragment key={`${nodeData.name}-${key}-option`}>
                 <ColorOption
                   key={`${nodeData.name}-${key}-option`}
                   label={label}
@@ -148,9 +152,9 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
                   onSelect={() => toggleColorField(key)}
                 />
                 {key !== colorFields[colorFields.length - 1].key && (
-                  <DividerLine backgroundColor="var(--apollon2-gray)" />
+                  <DividerLine backgroundColor="var(--apollon-gray)" />
                 )}
-              </>
+              </React.Fragment>
             ))
           ) : (
             <div
@@ -165,7 +169,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
                   {colorFields.find((f) => f.key === activeColorField)?.label}
                 </Typography>
                 <CrossIcon
-                  fill="var(--apollon2-primary-contrast)"
+                  fill="var(--apollon-primary-contrast)"
                   onClick={() => setActiveColorField(null)}
                 />
               </div>

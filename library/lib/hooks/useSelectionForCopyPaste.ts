@@ -11,7 +11,7 @@ import {
   getAllNodesToInclude,
   getEdgesToRemove,
 } from "@/utils/copyPasteUtils"
-import { PASTE_OFFSET } from "@/constants"
+import { CANVAS } from "@/constants"
 
 export const useSelectionForCopyPaste = () => {
   const {
@@ -96,7 +96,7 @@ export const useSelectionForCopyPaste = () => {
 
         const nodeIdMap = new Map<string, string>()
         const newElementIds: string[] = []
-        const progressiveOffset = PASTE_OFFSET * pasteCount
+        const progressiveOffset = CANVAS.PASTE_OFFSET_PX * pasteCount
 
         clipboardData.nodes.forEach((node) => {
           const newId = generateUUID()
@@ -123,8 +123,8 @@ export const useSelectionForCopyPaste = () => {
 
               if (parentNewPosition) {
                 const newPosition = {
-                  x: node.position.x + PASTE_OFFSET,
-                  y: node.position.y + PASTE_OFFSET,
+                  x: node.position.x + CANVAS.PASTE_OFFSET_PX,
+                  y: node.position.y + CANVAS.PASTE_OFFSET_PX,
                 }
 
                 nodePositions.set(node.id, newPosition)

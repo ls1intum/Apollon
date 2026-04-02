@@ -62,7 +62,7 @@ export const StereotypeButtonGroup: React.FC<StereotypeButtonGroupProps> = ({
         <PrimaryButton
           style={
             index === 0
-              ? { borderLeft: "1px solid var(--apollon2-primary)" }
+              ? { borderLeft: "1px solid var(--apollon-primary)" }
               : {}
           }
           key={stereotype}

@@ -1,6 +1,7 @@
 import { FC } from "react"
 import { ClassType } from "@/types"
 import { CustomText } from "./CustomText"
+import { LAYOUT } from "@/constants"
 
 interface HeaderSectionProps {
   showStereotype: boolean
@@ -21,15 +22,15 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
   headerHeight,
   isUnderlined = false,
   textColor,
-  fill = "var(--apollon2-background)",
+  fill = "var(--apollon-background)",
 }) => {
   return (
     <>
       <rect
-        x={0.5}
-        y={0.5}
-        width={width - 1}
-        height={headerHeight - 0.5}
+        x={LAYOUT.LINE_WIDTH / 2}
+        y={LAYOUT.LINE_WIDTH / 2}
+        width={width - LAYOUT.LINE_WIDTH}
+        height={headerHeight - LAYOUT.LINE_WIDTH / 2}
         fill={fill}
       />
       <CustomText

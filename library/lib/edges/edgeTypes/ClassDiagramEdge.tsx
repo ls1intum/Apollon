@@ -11,10 +11,11 @@ import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
 import { useRef } from "react"
-import { EDGE_HIGHTLIGHT_STROKE_WIDTH } from "@/constants"
+import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils"
+import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 
 export const ClassDiagramEdge = ({
   id,
@@ -30,6 +31,7 @@ export const ClassDiagramEdge = ({
   sourceHandleId,
   targetHandleId,
   data,
+  selected,
 }: BaseEdgeProps) => {
   const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
@@ -108,7 +110,6 @@ export const ClassDiagramEdge = ({
             key={markerKey}
             id={id}
             path={currentPath}
-            markerEnd={isReconnectingRef.current ? undefined : markerEnd}
             pointerEvents="none"
             style={{
               stroke: strokeColor,
@@ -122,12 +123,22 @@ export const ClassDiagramEdge = ({
             }}
           />
 
+          {/* Inline markers for export compatibility (survives ungrouping) */}
+          {!isReconnectingRef.current && (
+            <EdgeInlineMarkers
+              pathD={currentPath}
+              markerEnd={markerEnd}
+              markerStart={markerStart}
+              strokeColor={strokeColor}
+            />
+          )}
+
           <path
             ref={pathRef}
             className="edge-overlay"
             d={overlayPath}
             fill="none"
-            strokeWidth={EDGE_HIGHTLIGHT_STROKE_WIDTH}
+            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{
               opacity: isReconnectingRef.current ? 0 : 0.4,
@@ -138,6 +149,7 @@ export const ClassDiagramEdge = ({
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
             isDiagramModifiable={isDiagramModifiable}
+            selected={selected}
             diagramType="step"
             pathType="step"
             onSourcePointerDown={(e) => handleEndpointPointerDown(e, "source")}

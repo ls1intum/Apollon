@@ -10,13 +10,7 @@ import {
   calculateMinWidth,
   calculateMinHeight,
 } from "@/utils"
-import {
-  DEFAULT_ATTRIBUTE_HEIGHT,
-  DEFAULT_METHOD_HEIGHT,
-  DEFAULT_PADDING,
-  DEFAULT_FONT,
-  DEFAULT_HEADER_HEIGHT,
-} from "@/constants"
+import { LAYOUT } from "@/constants"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
@@ -39,11 +33,11 @@ export function CommunicationObjectName({
   const communicationObjectSvgWrapperRef = useRef<HTMLDivElement | null>(null)
 
   // Communication diagrams don't have stereotypes, so header height is consistent
-  const headerHeight = DEFAULT_HEADER_HEIGHT
-  const attributeHeight = DEFAULT_ATTRIBUTE_HEIGHT
-  const methodHeight = DEFAULT_METHOD_HEIGHT
-  const padding = DEFAULT_PADDING
-  const font = DEFAULT_FONT
+  const headerHeight = LAYOUT.DEFAULT_HEADER_HEIGHT
+  const attributeHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+  const methodHeight = LAYOUT.DEFAULT_METHOD_HEIGHT
+  const padding = LAYOUT.DEFAULT_PADDING
+  const font = LAYOUT.DEFAULT_FONT
 
   // Calculate the widest text accurately
   const maxTextWidth = useMemo(() => {

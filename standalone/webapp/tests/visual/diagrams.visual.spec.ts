@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 /**
- * Visual regression tests for the Apollon2 UML diagram editor.
+ * Visual regression tests for the Apollon UML diagram editor.
  *
  * Each test injects a fixture UMLModel into localStorage (via addInitScript)
  * so that Zustand's persist store hydrates with a real diagram before the
@@ -124,6 +124,8 @@ test.describe("Visual regression - diagram fixtures", () => {
 
       // Screenshot the editor area (sidebar + canvas) excluding the navbar,
       // so visual diffs focus on diagram rendering, not unrelated UI chrome.
+      // Baselines MUST be generated inside the Playwright Docker container
+      // (see pr-health-checks.yaml) so they match the CI environment exactly.
       const editorArea = page.locator('[data-testid="editor-area"]')
       await expect(editorArea).toHaveScreenshot(`visual-${file}.png`)
     })

@@ -19,11 +19,11 @@
 }
 
 .alignment-guide-vertical {
-  stroke: var(--apollon2-guide-vertical, #d63031);
+  stroke: var(--apollon-guide-vertical, #d63031);
 }
 
 .alignment-guide-horizontal {
-  stroke: var(--apollon2-guide-horizontal, #0984e3);
+  stroke: var(--apollon-guide-horizontal, #0984e3);
 }
 
 @keyframes alignmentPulse {

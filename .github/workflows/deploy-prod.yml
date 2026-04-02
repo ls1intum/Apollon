@@ -6,24 +6,17 @@ on:
       image-tag:
         type: string
         description: "Image tag to deploy (default: pr-<number> if PR exists, latest for default branch)"
-      
-jobs:  
-  deploy-webapp:
-    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
-    with:
-      environment: Production
-      docker-compose-file: "./docker/compose.webapp.yml"
-      main-image-name: ghcr.io/ls1intum/apollon2/apollon-webapp
-      image-tag: ${{ inputs.image-tag }}
-      #deployment-base-path: "/opt/apollon2/webapp"
-    secrets: inherit
 
-  deploy-server:
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
     uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
     with:
       environment: Production
-      docker-compose-file: "./docker/compose.server.yml"
+      docker-compose-file: "./docker/compose.app.yml"
       main-image-name: ghcr.io/ls1intum/apollon2/apollon-server
       image-tag: ${{ inputs.image-tag }}
-      #deployment-base-path: "/opt/apollon2/server"
     secrets: inherit

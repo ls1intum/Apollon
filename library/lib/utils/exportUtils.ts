@@ -1,41 +1,53 @@
 import { IPoint } from "@/edges/types"
 import { ReactFlowInstance, type Node, type Edge, Rect } from "@xyflow/react"
+import { CSS_VARIABLE_FALLBACKS, LAYOUT, STROKE_COLOR } from "@/constants"
+import { Point } from "./pathParsing"
 
-// Define CSS variables to embed in the SVG
-// Light theme variables
-const cssVariables = `
-    :root {
-  --apollon2-primary: var(--apollon-primary, #3e8acc);
-  --apollon2-primary-contrast: var(--apollon-primary-contrast, #212529);
-  --apollon2-secondary: var(--apollon-secondary, #6c757d);
-  --apollon2-alert-warning-yellow: var(--apollon-alert-warning-yellow, #ffc107);
-  --apollon2-alert-warning-background: var(--apollon-alert-warning-background, #fff3cd);
-  --apollon2-alert-warning-border: var(--apollon-alert-warning-border, #ffeeba);
-  --apollon2-background: var(--apollon-background, white);
-  --apollon2-background-inverse: var(--apollon-background-inverse, #000000);
-  --apollon2-background-variant: var(--apollon-background-variant, #f8f9fa);
-  --apollon2-gray: var(--apollon-gray, #e9ecef);
-  --apollon2-grid: var(--apollon-grid, rgba(36, 39, 36, 0.1));
-  --apollon2-gray-variant: var(--apollon-gray-variant, #495057);
-  --apollon2-alert-danger-color: var(--apollon-alert-danger-color, #721c24);
-  --apollon2-alert-danger-background: var(--apollon-alert-danger-background, #f8d7da);
-  --apollon2-alert-danger-border: var(--apollon-alert-danger-border, #f5c6cb);
-  --apollon2-switch-box-border-color: var(--apollon-switch-box-border-color, #dee2e6);
-  --apollon2-list-group-color: var(--apollon-list-group-color, #ffffff);
-  --apollon2-btn-outline-secondary-color: var(--apollon-btn-outline-secondary-color, #6c757d);
-  --apollon2-modal-bottom-border: var(--apollon-modal-bottom-border, #e9ecef);
-    }
+/**
+ * Font styles for exported SVGs.
+ * Uses the same font stack as the browser (app.css) so the export looks identical
+ * when opened in a browser. When opened in applications without Inter installed
+ * (e.g. PowerPoint on Windows), the fallback chain provides graceful degradation
+ * through system-ui → Avenir → Helvetica → Arial → sans-serif.
+ */
+const svgFontStyles = `
     text {
       font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     }
   `
 
-export const getSVG = (container: HTMLElement, clip: Rect): string => {
+type SvgExportMode = "web" | "compat"
+
+const buildRootVariableStyles = (): string => {
+  const lines = Object.entries(CSS_VARIABLE_FALLBACKS).map(
+    ([cssVar, fallback]) => {
+      const apollonVar = cssVar.replace("--apollon-", "--apollon-")
+      return `  ${cssVar}: var(${apollonVar}, ${fallback});`
+    }
+  )
+
+  // Keep XYFlow edge vars defined so web SVGs render without external CSS.
+  lines.push(
+    "  --xy-edge-stroke: var(--apollon-primary-contrast);",
+    "  --xy-edge-stroke-default: var(--apollon-primary-contrast);",
+    `  --xy-edge-stroke-width: ${LAYOUT.LINE_WIDTH_EDGE}px;`,
+    `  --xy-edge-stroke-width-default: ${LAYOUT.LINE_WIDTH_EDGE}px;`
+  )
+
+  return `:root {\n${lines.join("\n")}\n}`
+}
+
+export const getSVG = (
+  container: HTMLElement,
+  clip: Rect,
+  options?: { svgMode?: SvgExportMode }
+): string => {
   const emptySVG = "<svg></svg>"
 
   const width = clip.width
   const height = clip.height
 
+  const svgMode = options?.svgMode ?? "web"
   const vp = container.querySelector(".react-flow__viewport")
 
   if (!vp) return emptySVG
@@ -43,30 +55,24 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   const SVG_NS = "http://www.w3.org/2000/svg"
   const mainSVG = document.createElementNS(SVG_NS, "svg")
   mainSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-  mainSVG.appendChild(document.createElementNS(SVG_NS, "style")).textContent =
-    cssVariables
+  const styleEl = document.createElementNS(SVG_NS, "style")
+  styleEl.textContent =
+    (svgMode === "web" ? `${buildRootVariableStyles()}\n` : "") + svgFontStyles
+  mainSVG.appendChild(styleEl)
   mainSVG.setAttribute("viewBox", `${clip.x} ${clip.y} ${width} ${height}`)
   mainSVG.setAttribute("width", `${width}`)
   mainSVG.setAttribute("height", `${height}`)
+  // Use geometric precision for anti-aliasing to reduce visual artifacts
+  // where edges overlap with node borders in non-browser renderers (resvg, Inkscape)
+  mainSVG.setAttribute("shape-rendering", "geometricPrecision")
 
-  const svgMarkers = container
-    .querySelector("#apollon2_svg-markers")
-    ?.querySelector("defs")
-
-  if (svgMarkers) {
-    mainSVG.appendChild(svgMarkers)
-  }
-
-  const handles = vp.querySelectorAll(".react-flow__handle")
-  handles.forEach((handle) => handle.remove())
-
-  const MainNodesGTag = document.createElement("g")
+  const MainNodesGTag = document.createElementNS(SVG_NS, "g")
   mainSVG.appendChild(MainNodesGTag)
   const allNodes = vp.querySelectorAll(".react-flow__node")
 
   allNodes.forEach((node) => {
     const styles = extractStyles(node.getAttribute("style") ?? "")
-    const newGTagForNode = document.createElement("g")
+    const newGTagForNode = document.createElementNS(SVG_NS, "g")
     const svgElement = node.querySelector("svg")
 
     newGTagForNode.setAttribute(
@@ -74,7 +80,13 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
       `translate(${styles.transform.x}, ${styles.transform.y})`
     )
     if (svgElement) {
-      newGTagForNode.appendChild(svgElement)
+      // Clone the SVG to avoid removing it from the live DOM
+      const clonedSvg = svgElement.cloneNode(true) as Element
+      // Remove handles from the clone (they're UI-only connection points)
+      clonedSvg
+        .querySelectorAll(".react-flow__handle")
+        ?.forEach((el) => el.remove())
+      newGTagForNode.appendChild(clonedSvg)
     }
     MainNodesGTag.appendChild(newGTagForNode)
   })
@@ -82,24 +94,320 @@ export const getSVG = (container: HTMLElement, clip: Rect): string => {
   // Get all edge elements
   const allEdgeElements = vp.querySelectorAll(".react-flow__edge")
 
-  const MainEdgesGTag = document.createElement("g")
+  const MainEdgesGTag = document.createElementNS(SVG_NS, "g")
   mainSVG.appendChild(MainEdgesGTag)
 
-  const edgeCircles = vp.querySelectorAll(".edge-circle")
-  edgeCircles.forEach((circle) => circle.remove())
+  // UI-only classes to skip (not part of the actual diagram)
+  const uiOnlyClasses = [
+    "edge-circle",
+    "edge-overlay",
+    "edge-container", // Container wraps paths, we want the paths not the container
+    "react-flow__edge-interaction",
+    "react-flow__edgeupdater",
+    "react-flow__edgeupdater-source",
+    "react-flow__edgeupdater-target",
+    "target-edge-marker-grab",
+  ]
 
-  // Add all SVG elements from each edge container
+  // Add edge paths, inline markers, and text labels (clone to avoid modifying live DOM)
   allEdgeElements.forEach((edgeContainer) => {
-    const svgElements = edgeContainer.querySelectorAll("path, text, g, circle")
-    svgElements.forEach((element) => {
-      MainEdgesGTag.appendChild(element.cloneNode(true))
+    // Only get direct paths with the edge-path class (the actual visible edge)
+    const edgePaths = edgeContainer.querySelectorAll(".react-flow__edge-path")
+    edgePaths.forEach((path) => {
+      const clonedPath = path.cloneNode(true) as Element
+
+      // Ensure explicit stroke-width for PowerPoint (default to LINE_WIDTH_EDGE if not set)
+      if (!clonedPath.getAttribute("stroke-width")) {
+        clonedPath.setAttribute("stroke-width", String(LAYOUT.LINE_WIDTH_EDGE))
+      }
+
+      // Ensure explicit stroke color for edge visibility
+      // The stroke may be set via CSS style that gets lost during export
+      if (!clonedPath.getAttribute("stroke")) {
+        // Check if there's an inline style with stroke
+        const styleAttr = clonedPath.getAttribute("style") || ""
+        const strokeMatch = styleAttr.match(/stroke:\s*([^;]+)/)
+        if (strokeMatch) {
+          clonedPath.setAttribute("stroke", strokeMatch[1].trim())
+        } else {
+          // Default to the primary contrast color (black)
+          clonedPath.setAttribute("stroke", STROKE_COLOR)
+        }
+      }
+
+      // Ensure explicit fill for paths (PowerPoint may not default to none)
+      if (!clonedPath.getAttribute("fill")) {
+        clonedPath.setAttribute("fill", "none")
+      }
+
+      // Ensure fully opaque rendering for non-browser SVG renderers (resvg, Inkscape, etc.)
+      // Without explicit opacity attributes, some renderers may not default to 1.0,
+      // causing overlapping edges/borders to appear darker due to alpha compositing.
+      clonedPath.setAttribute("opacity", "1")
+      clonedPath.setAttribute("stroke-opacity", "1")
+
+      MainEdgesGTag.appendChild(clonedPath)
+    })
+
+    // Inline marker shapes (drawn instead of <marker> defs)
+    const inlineMarkers = edgeContainer.querySelectorAll("[data-inline-marker]")
+    inlineMarkers.forEach((marker) => {
+      MainEdgesGTag.appendChild(marker.cloneNode(true))
+    })
+
+    // Get label groups first (for complex edge labels like CommunicationDiagram messages)
+    const labelGroups = edgeContainer.querySelectorAll(
+      ".react-flow__edge-text, .react-flow__edge-textwrapper, .edge-labels"
+    )
+    labelGroups.forEach((group) => {
+      const cloned = group.cloneNode(true) as Element
+      // Remove any UI elements that might be nested
+      uiOnlyClasses.forEach((cls) => {
+        cloned.querySelectorAll?.(`.${cls}`)?.forEach((el) => el.remove())
+      })
+      MainEdgesGTag.appendChild(cloned)
+    })
+
+    // Get standalone text labels (not already inside label groups to avoid duplication)
+    const textElements = edgeContainer.querySelectorAll("text")
+    textElements.forEach((text) => {
+      // Check if this text is inside a label group
+      const isInsideLabelGroup = Array.from(labelGroups).some((group) =>
+        group.contains(text)
+      )
+
+      if (!isInsideLabelGroup) {
+        MainEdgesGTag.appendChild(text.cloneNode(true))
+      }
     })
   })
+
+  // Process the SVG for compatibility with non-browser renderers
+  if (svgMode === "compat") {
+    replaceCSSVariables(mainSVG)
+    convertStyleToAttributes(mainSVG)
+    ensureTextFontDefaults(mainSVG)
+    removeMarkerElements(mainSVG)
+    replaceTextDecorationWithManualUnderline(mainSVG)
+  }
 
   return mainSVG.outerHTML
 }
 
-function getBoundingBox(edges: Edge[]) {
+/**
+ * Extract all coordinate points from an SVG path string.
+ * This includes endpoints AND control points for bezier curves,
+ * which is important because bezier curves are bounded by the
+ * convex hull of all their control points.
+ *
+ * For S (smooth cubic) and T (smooth quadratic) commands, we also
+ * include the reflected control point which may extend the bounds.
+ */
+function extractPathPoints(pathD: string): Point[] {
+  if (!pathD) return []
+
+  const points: Point[] = []
+  // Tokenize commands to track current position for relative coords
+  const commands =
+    pathD.match(/[MmLlHhVvCcSsQqTtAaZz][^MmLlHhVvCcSsQqTtAaZz]*/g) ?? []
+
+  let currentX = 0
+  let currentY = 0
+  // Track last control point for S and T commands
+  let lastControlX = 0
+  let lastControlY = 0
+  let lastCommandType = ""
+
+  for (const cmd of commands) {
+    const type = cmd[0]
+    const isRelative = type === type.toLowerCase()
+    const absType = type.toUpperCase()
+    const params =
+      cmd
+        .slice(1)
+        .match(/-?\d*\.?\d+(?:[eE][-+]?\d+)?/g)
+        ?.map(Number) ?? []
+
+    switch (absType) {
+      case "M": // MoveTo
+      case "L": // LineTo
+        for (let i = 0; i + 1 < params.length; i += 2) {
+          if (isRelative) {
+            currentX += params[i]
+            currentY += params[i + 1]
+          } else {
+            currentX = params[i]
+            currentY = params[i + 1]
+          }
+          points.push({ x: currentX, y: currentY })
+        }
+        // Reset control point tracking for non-curve commands
+        lastControlX = currentX
+        lastControlY = currentY
+        break
+
+      case "H": // Horizontal LineTo
+        for (const x of params) {
+          currentX = isRelative ? currentX + x : x
+          points.push({ x: currentX, y: currentY })
+        }
+        lastControlX = currentX
+        lastControlY = currentY
+        break
+
+      case "V": // Vertical LineTo
+        for (const y of params) {
+          currentY = isRelative ? currentY + y : y
+          points.push({ x: currentX, y: currentY })
+        }
+        lastControlX = currentX
+        lastControlY = currentY
+        break
+
+      case "C": // Cubic Bezier (x1 y1 x2 y2 x y)
+        // Include ALL control points - curve is bounded by convex hull
+        for (let i = 0; i + 5 < params.length; i += 6) {
+          const cp1x = isRelative ? currentX + params[i] : params[i]
+          const cp1y = isRelative ? currentY + params[i + 1] : params[i + 1]
+          const cp2x = isRelative ? currentX + params[i + 2] : params[i + 2]
+          const cp2y = isRelative ? currentY + params[i + 3] : params[i + 3]
+          const endX = isRelative ? currentX + params[i + 4] : params[i + 4]
+          const endY = isRelative ? currentY + params[i + 5] : params[i + 5]
+
+          points.push({ x: cp1x, y: cp1y })
+          points.push({ x: cp2x, y: cp2y })
+          points.push({ x: endX, y: endY })
+
+          // Track last control point for potential S command
+          lastControlX = cp2x
+          lastControlY = cp2y
+          currentX = endX
+          currentY = endY
+        }
+        break
+
+      case "S": // Smooth Cubic Bezier (x2 y2 x y)
+        // S command uses reflected control point from previous C or S
+        for (let i = 0; i + 3 < params.length; i += 4) {
+          // Calculate reflected control point (cp1)
+          // If previous command was C or S, reflect the last control point
+          // Otherwise, cp1 equals current point
+          let cp1x: number, cp1y: number
+          if (lastCommandType === "C" || lastCommandType === "S") {
+            cp1x = 2 * currentX - lastControlX
+            cp1y = 2 * currentY - lastControlY
+          } else {
+            cp1x = currentX
+            cp1y = currentY
+          }
+
+          const cp2x = isRelative ? currentX + params[i] : params[i]
+          const cp2y = isRelative ? currentY + params[i + 1] : params[i + 1]
+          const endX = isRelative ? currentX + params[i + 2] : params[i + 2]
+          const endY = isRelative ? currentY + params[i + 3] : params[i + 3]
+
+          // Include reflected control point in bounds
+          points.push({ x: cp1x, y: cp1y })
+          points.push({ x: cp2x, y: cp2y })
+          points.push({ x: endX, y: endY })
+
+          lastControlX = cp2x
+          lastControlY = cp2y
+          currentX = endX
+          currentY = endY
+        }
+        break
+
+      case "Q": // Quadratic Bezier (x1 y1 x y)
+        for (let i = 0; i + 3 < params.length; i += 4) {
+          const cpx = isRelative ? currentX + params[i] : params[i]
+          const cpy = isRelative ? currentY + params[i + 1] : params[i + 1]
+          const endX = isRelative ? currentX + params[i + 2] : params[i + 2]
+          const endY = isRelative ? currentY + params[i + 3] : params[i + 3]
+
+          points.push({ x: cpx, y: cpy })
+          points.push({ x: endX, y: endY })
+
+          lastControlX = cpx
+          lastControlY = cpy
+          currentX = endX
+          currentY = endY
+        }
+        break
+
+      case "T": // Smooth Quadratic (x y)
+        // T command uses reflected control point from previous Q or T
+        for (let i = 0; i + 1 < params.length; i += 2) {
+          // Calculate reflected control point
+          let cpx: number, cpy: number
+          if (lastCommandType === "Q" || lastCommandType === "T") {
+            cpx = 2 * currentX - lastControlX
+            cpy = 2 * currentY - lastControlY
+          } else {
+            cpx = currentX
+            cpy = currentY
+          }
+
+          const endX = isRelative ? currentX + params[i] : params[i]
+          const endY = isRelative ? currentY + params[i + 1] : params[i + 1]
+
+          // Include reflected control point in bounds
+          points.push({ x: cpx, y: cpy })
+          points.push({ x: endX, y: endY })
+
+          lastControlX = cpx
+          lastControlY = cpy
+          currentX = endX
+          currentY = endY
+        }
+        break
+
+      case "A": // Arc (rx ry x-axis-rotation large-arc sweep x y)
+        // For arcs, we include endpoints and add arc extrema estimation
+        for (let i = 0; i + 6 < params.length; i += 7) {
+          const rx = params[i]
+          const ry = params[i + 1]
+          const endX = isRelative ? currentX + params[i + 5] : params[i + 5]
+          const endY = isRelative ? currentY + params[i + 6] : params[i + 6]
+
+          // Include endpoint
+          points.push({ x: endX, y: endY })
+
+          // Conservative bounds: include points that represent potential arc extrema
+          // Arc can extend up to rx/ry beyond the chord between start and end
+          const midX = (currentX + endX) / 2
+          const midY = (currentY + endY) / 2
+          // Add potential extrema points (conservative estimate)
+          points.push({ x: midX - rx, y: midY })
+          points.push({ x: midX + rx, y: midY })
+          points.push({ x: midX, y: midY - ry })
+          points.push({ x: midX, y: midY + ry })
+
+          currentX = endX
+          currentY = endY
+        }
+        lastControlX = currentX
+        lastControlY = currentY
+        break
+
+      case "Z": // Close path
+        // Z doesn't add points, just closes to start
+        lastControlX = currentX
+        lastControlY = currentY
+        break
+    }
+
+    lastCommandType = absType
+  }
+
+  return points
+}
+
+/**
+ * Get bounding box from edge data points.
+ * Falls back to stored points if available.
+ */
+function getBoundingBox(edges: Edge[], nodes: Node[]) {
   const allPoints: IPoint[] = edges.flatMap(
     (edge) => (edge.data?.points as IPoint[]) ?? []
   )
@@ -108,13 +416,266 @@ function getBoundingBox(edges: Edge[]) {
     return undefined // No points to calculate bounds
   }
 
-  const xs = allPoints.map((p) => p.x)
-  const ys = allPoints.map((p) => p.y)
+  // Create a map for quick node lookup
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]))
 
-  const minX = Math.min(...xs)
-  const maxX = Math.max(...xs)
-  const minY = Math.min(...ys)
-  const maxY = Math.max(...ys)
+  // Add source and target positions for each edge to ensure we capture connection points
+  edges.forEach((edge) => {
+    const sourceNode = nodeMap.get(edge.source)
+    const targetNode = nodeMap.get(edge.target)
+
+    if (sourceNode && sourceNode.position) {
+      allPoints.push({ x: sourceNode.position.x, y: sourceNode.position.y })
+      if (sourceNode.width && sourceNode.height) {
+        // Add corners of source node to ensure complete coverage
+        allPoints.push({
+          x: sourceNode.position.x + sourceNode.width,
+          y: sourceNode.position.y + sourceNode.height,
+        })
+      }
+    }
+
+    if (targetNode && targetNode.position) {
+      allPoints.push({ x: targetNode.position.x, y: targetNode.position.y })
+      if (targetNode.width && targetNode.height) {
+        // Add corners of target node to ensure complete coverage
+        allPoints.push({
+          x: targetNode.position.x + targetNode.width,
+          y: targetNode.position.y + targetNode.height,
+        })
+      }
+    }
+  })
+
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+
+  for (const p of allPoints) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  }
+}
+
+/**
+ * Calculate bounding box from actual rendered edge paths in the DOM.
+ * This accounts for:
+ * - Bezier curve control points that may extend beyond waypoints
+ * - Circle markers (which use <circle> elements, not <path>)
+ * - Stroke width that extends beyond the mathematical path
+ */
+function getEdgeBoundsFromDOM(container: HTMLElement): Rect | undefined {
+  const edgePaths = container.querySelectorAll(".react-flow__edge-path")
+  const allPoints: Point[] = []
+  let maxStrokeWidth = 0
+
+  edgePaths.forEach((path) => {
+    const d = path.getAttribute("d")
+    if (d) {
+      allPoints.push(...extractPathPoints(d))
+    }
+    // Track stroke width for bounds expansion
+    const strokeWidth = parseFloat(
+      path.getAttribute("stroke-width") ?? String(LAYOUT.LINE_WIDTH_EDGE)
+    )
+    if (strokeWidth > maxStrokeWidth) {
+      maxStrokeWidth = strokeWidth
+    }
+  })
+
+  // Check inline markers - both path and circle elements
+  const markers = container.querySelectorAll("[data-inline-marker]")
+  markers.forEach((marker) => {
+    const tagName = marker.tagName.toLowerCase()
+
+    if (tagName === "path") {
+      const d = marker.getAttribute("d")
+      if (d) {
+        allPoints.push(...extractPathPoints(d))
+      }
+    } else if (tagName === "circle") {
+      // Handle circle markers (used for BPMN diagrams)
+      const cx = parseFloat(marker.getAttribute("cx") ?? "0")
+      const cy = parseFloat(marker.getAttribute("cy") ?? "0")
+      const r = parseFloat(marker.getAttribute("r") ?? "0")
+      const strokeWidth = parseFloat(marker.getAttribute("stroke-width") ?? "0")
+      const totalRadius = r + strokeWidth / 2
+
+      // Add bounding box corners for the circle
+      allPoints.push({ x: cx - totalRadius, y: cy - totalRadius })
+      allPoints.push({ x: cx + totalRadius, y: cy + totalRadius })
+    }
+
+    // Track marker stroke width
+    const strokeWidth = parseFloat(marker.getAttribute("stroke-width") ?? "0")
+    if (strokeWidth > maxStrokeWidth) {
+      maxStrokeWidth = strokeWidth
+    }
+  })
+
+  if (allPoints.length === 0) {
+    return undefined
+  }
+
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+
+  for (const p of allPoints) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
+
+  // Expand bounds by half stroke width (stroke is centered on path)
+  const strokeExpansion = maxStrokeWidth / 2
+  minX -= strokeExpansion
+  minY -= strokeExpansion
+  maxX += strokeExpansion
+  maxY += strokeExpansion
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  }
+}
+
+/**
+ * Calculate bounds for node SVG overflow content.
+ *
+ * Some nodes render elements outside their viewBox (e.g., the initial marking
+ * arrow in Reachability Graphs extends to negative coordinates). These elements
+ * are visible because the node SVGs use overflow="visible", but they are NOT
+ * included in reactFlow.getNodesBounds() which only considers node position
+ * and dimensions.
+ *
+ * This function scans node SVGs for <line>, <path>, and <circle> elements
+ * that extend outside the node's local coordinate system (viewBox), converts
+ * them to global coordinates, and returns the bounding box of all such content.
+ */
+function getNodeOverflowBoundsFromDOM(
+  container: HTMLElement
+): Rect | undefined {
+  const allNodes = container.querySelectorAll(".react-flow__node")
+  const overflowPoints: Point[] = []
+
+  allNodes.forEach((node) => {
+    const styleStr = node.getAttribute("style") ?? ""
+    const styles = extractStyles(styleStr)
+    const nodeX = styles.transform.x
+    const nodeY = styles.transform.y
+
+    const svgEl = node.querySelector("svg")
+    if (!svgEl) return
+
+    // Parse the viewBox to understand the local coordinate system
+    const vb = svgEl.getAttribute("viewBox")
+    if (!vb) return
+    const vbParts = vb.split(/[\s,]+/).map(Number)
+    if (vbParts.length < 4) return
+    const [vbX, vbY, vbW, vbH] = vbParts
+
+    // Calculate scale from viewBox to rendered size
+    const svgW = parseFloat(svgEl.getAttribute("width") ?? `${vbW}`)
+    const svgH = parseFloat(svgEl.getAttribute("height") ?? `${vbH}`)
+    const scaleX = svgW / vbW
+    const scaleY = svgH / vbH
+
+    // Helper: convert a local SVG coordinate to global space
+    const toGlobal = (lx: number, ly: number): Point => ({
+      x: nodeX + (lx - vbX) * scaleX,
+      y: nodeY + (ly - vbY) * scaleY,
+    })
+
+    // Check if a local coordinate is outside the viewBox
+    const isOverflow = (lx: number, ly: number) =>
+      lx < vbX || ly < vbY || lx > vbX + vbW || ly > vbY + vbH
+
+    // Scan <line> elements for overflow content
+    svgEl.querySelectorAll("line").forEach((line) => {
+      const x1 = parseFloat(line.getAttribute("x1") ?? "0")
+      const y1 = parseFloat(line.getAttribute("y1") ?? "0")
+      const x2 = parseFloat(line.getAttribute("x2") ?? "0")
+      const y2 = parseFloat(line.getAttribute("y2") ?? "0")
+
+      if (isOverflow(x1, y1) || isOverflow(x2, y2)) {
+        overflowPoints.push(toGlobal(x1, y1))
+        overflowPoints.push(toGlobal(x2, y2))
+      }
+    })
+
+    // Scan <path> elements for overflow content
+    svgEl.querySelectorAll("path").forEach((path) => {
+      const d = path.getAttribute("d")
+      if (!d) return
+      const pathPoints = extractPathPoints(d)
+      const hasOverflow = pathPoints.some((p) => isOverflow(p.x, p.y))
+      if (hasOverflow) {
+        pathPoints.forEach((p) => overflowPoints.push(toGlobal(p.x, p.y)))
+      }
+    })
+
+    // Scan <polyline> elements for overflow content
+    svgEl.querySelectorAll("polyline").forEach((polyline) => {
+      const pointsAttr = polyline.getAttribute("points")
+      if (!pointsAttr) return
+      const coords = pointsAttr
+        .trim()
+        .split(/[\s,]+/)
+        .map(Number)
+      for (let i = 0; i + 1 < coords.length; i += 2) {
+        const lx = coords[i]
+        const ly = coords[i + 1]
+        if (isOverflow(lx, ly)) {
+          // If any point overflows, include all points
+          for (let j = 0; j + 1 < coords.length; j += 2) {
+            overflowPoints.push(toGlobal(coords[j], coords[j + 1]))
+          }
+          break
+        }
+      }
+    })
+
+    // Scan <circle> elements for overflow content
+    svgEl.querySelectorAll("circle").forEach((circle) => {
+      const cx = parseFloat(circle.getAttribute("cx") ?? "0")
+      const cy = parseFloat(circle.getAttribute("cy") ?? "0")
+      const r = parseFloat(circle.getAttribute("r") ?? "0")
+
+      if (isOverflow(cx - r, cy - r) || isOverflow(cx + r, cy + r)) {
+        overflowPoints.push(toGlobal(cx - r, cy - r))
+        overflowPoints.push(toGlobal(cx + r, cy + r))
+      }
+    })
+  })
+
+  if (overflowPoints.length === 0) return undefined
+
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+
+  for (const p of overflowPoints) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
 
   return {
     x: minX,
@@ -139,14 +700,36 @@ function mergeBounds(a: Rect, b: Rect): Rect {
 }
 
 export function getDiagramBounds(
-  reactFlow: ReactFlowInstance<Node, Edge>
+  reactFlow: ReactFlowInstance<Node, Edge>,
+  container?: HTMLElement | null
 ): Rect {
-  const nodeBounds = reactFlow.getNodesBounds(reactFlow.getNodes())
-  const edgeBounds = getBoundingBox(reactFlow.getEdges())
+  const nodes = reactFlow.getNodes()
+  let edgeBounds = getBoundingBox(reactFlow.getEdges(), nodes)
+  let bounds = reactFlow.getNodesBounds(reactFlow.getNodes())
 
-  if (!edgeBounds) return nodeBounds
+  // Prefer DOM-based edge bounds calculation (accounts for bezier control points)
+  if (container) {
+    edgeBounds = getEdgeBoundsFromDOM(container)
+  }
 
-  return mergeBounds(nodeBounds, edgeBounds)
+  // Fall back to stored points if DOM isn't available
+  if (!edgeBounds) {
+    edgeBounds = getBoundingBox(reactFlow.getEdges(), nodes)
+  }
+
+  if (edgeBounds) {
+    bounds = mergeBounds(bounds, edgeBounds)
+  }
+
+  // Include overflow content from node SVGs (e.g., initial marking arrows)
+  if (container) {
+    const overflowBounds = getNodeOverflowBoundsFromDOM(container)
+    if (overflowBounds) {
+      bounds = mergeBounds(bounds, overflowBounds)
+    }
+  }
+
+  return bounds
 }
 
 function extractStyles(styleString: string) {
@@ -165,3 +748,343 @@ function extractStyles(styleString: string) {
     height: heightMatch ? heightMatch[1].trim() : null,
   }
 }
+
+/**
+ * Regex to match CSS var() function calls.
+ * Captures: (1) variable name, (2) optional fallback value
+ *
+ * This regex handles nested parentheses in fallbacks like rgba(36, 39, 36, 0.1)
+ * by capturing everything after the comma until the matching closing paren.
+ */
+const VARIABLE_REGEX =
+  /var\((--[\w-]+)(?:\s*,\s*([^)]+(?:\([^)]*\)[^)]*)*))?\)/g
+
+type CSSVariableMap = Readonly<Record<string, string>>
+
+/**
+ * Resolve a single CSS variable reference to its final value.
+ * Handles recursive var() resolution and fallback values.
+ */
+function resolveCSSVariable(value: string, cssVarMap?: CSSVariableMap): string {
+  let result = value
+  let prevResult = ""
+
+  // Keep resolving until no more var() calls are found (handles nested vars)
+  while (result !== prevResult && result.includes("var(")) {
+    prevResult = result
+    result = result.replace(
+      VARIABLE_REGEX,
+      (_match, variableName: string, fallback?: string) => {
+        const trimmedName = variableName.trim()
+        const mapped = cssVarMap?.[trimmedName]?.trim()
+        if (mapped) {
+          // If the resolved value itself contains var(), it will be resolved in the next iteration
+          return mapped
+        }
+        const resolved = CSS_VARIABLE_FALLBACKS[trimmedName]
+        if (resolved) return resolved
+
+        if (fallback) {
+          // Fallback may itself contain var() calls
+          return fallback.trim()
+        }
+
+        // Variable not found, no fallback - return empty
+        // Note: Unresolved variable ${trimmedName} will result in empty value
+        return ""
+      }
+    )
+  }
+
+  return result
+}
+
+/**
+ * Resolve 'currentColor' keyword by looking up the resolved 'color' attribute.
+ */
+function resolveCurrentColor(
+  element: Element,
+  inheritedColor: string,
+  cssVarMap?: CSSVariableMap
+): string {
+  // Check if element has a color attribute
+  const colorAttr = element.getAttribute("color")
+  if (colorAttr) {
+    const resolvedColor = resolveCSSVariable(colorAttr, cssVarMap)
+    // Handle case where color itself might be currentColor (shouldn't happen, but be safe)
+    if (resolvedColor && resolvedColor !== "currentColor") {
+      return resolvedColor
+    }
+  }
+  return inheritedColor
+}
+
+/**
+ * Replace CSS variables and currentColor in all attributes of an element tree.
+ *
+ * @param node - The DOM node to process
+ * @param inheritedColor - The inherited 'currentColor' value from parent elements
+ */
+function replaceCSSVariables(
+  node: Element | ChildNode,
+  inheritedColor: string = STROKE_COLOR,
+  cssVarMap?: CSSVariableMap
+): void {
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const element = node as Element
+
+    // First, resolve the 'color' attribute if present (for currentColor inheritance)
+    const currentColor = resolveCurrentColor(element, inheritedColor, cssVarMap)
+
+    // If element has a color attribute, resolve it first
+    const colorAttr = element.getAttribute("color")
+    if (colorAttr) {
+      const resolvedColor = resolveCSSVariable(colorAttr, cssVarMap)
+      if (resolvedColor !== colorAttr) {
+        element.setAttribute("color", resolvedColor)
+      }
+    }
+
+    // Process all attributes (including 'style')
+    element.getAttributeNames().forEach((attr) => {
+      const attrValue = element.getAttribute(attr)
+      if (!attrValue) return
+
+      // Resolve CSS variables first
+      let resolvedValue = resolveCSSVariable(attrValue, cssVarMap)
+
+      // Resolve 'currentColor' keyword
+      if (resolvedValue === "currentColor") {
+        resolvedValue = currentColor
+      } else if (resolvedValue.includes("currentColor")) {
+        resolvedValue = resolvedValue.replace(/currentColor/gi, currentColor)
+      }
+
+      // Resolve SVG2 context-stroke and context-fill (not supported by Inkscape/external renderers)
+      // These are used in markers to inherit stroke/fill from the referencing element
+      if (
+        resolvedValue === "context-stroke" ||
+        resolvedValue === "context-fill"
+      ) {
+        resolvedValue = currentColor
+      }
+
+      // Normalize font-size to always have px units
+      // Some renderers interpret unitless values differently (px vs pt)
+      if (attr === "font-size" || attr === "fontSize") {
+        // Check if it's a unitless number
+        if (/^\d+(\.\d+)?$/.test(resolvedValue)) {
+          resolvedValue = `${resolvedValue}px`
+        }
+      }
+
+      // Remove CSS-only attributes not valid for external SVG renderers
+      if (attr === "pointer-events" || attr === "pointerEvents") {
+        element.removeAttribute(attr)
+        return // Skip setting the attribute
+      }
+
+      if (resolvedValue !== attrValue) {
+        element.setAttribute(attr, resolvedValue)
+      }
+    })
+
+    // Recursively process children, passing down the resolved color
+    Array.from(element.childNodes).forEach((child) =>
+      replaceCSSVariables(child, currentColor, cssVarMap)
+    )
+  }
+  // Text nodes are not processed — CSS variables only appear in attribute values,
+  // and processing text content would corrupt user-authored labels containing "var(".
+}
+
+/**
+ * SVG style properties that should be converted to attributes for PowerPoint compatibility.
+ * PowerPoint has poor support for CSS in style attributes but handles direct SVG attributes well.
+ */
+const SVG_STYLE_TO_ATTRIBUTE = [
+  "stroke",
+  "stroke-width",
+  "stroke-dasharray",
+  "stroke-linecap",
+  "stroke-linejoin",
+  "stroke-opacity",
+  "fill",
+  "fill-opacity",
+  "opacity",
+  "font-size",
+  "font-weight",
+  "font-family",
+  "font-style",
+] as const
+
+/**
+ * Convert inline style properties to direct SVG attributes for better compatibility.
+ * PowerPoint and some other applications don't properly parse CSS in style attributes.
+ */
+function convertStyleToAttributes(node: Element | ChildNode): void {
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return
+  }
+
+  const element = node as Element
+  const styleAttr = element.getAttribute("style")
+
+  if (styleAttr) {
+    const remainingStyles: string[] = []
+
+    // Parse style attribute and convert SVG properties to attributes
+    styleAttr.split(";").forEach((declaration) => {
+      const [prop, value] = declaration.split(":").map((s) => s.trim())
+      if (!prop || !value) return
+
+      // Skip problematic values that can cause issues in PowerPoint
+      if (prop === "transition") return // CSS-only, not SVG
+      if (prop === "stroke-dasharray" && value === "0") return // Redundant
+      // Note: We intentionally do NOT skip opacity: 1.
+      // While it's the default in browsers, non-browser SVG renderers (resvg, Inkscape)
+      // may not apply the same default, causing overlapping elements to appear darker.
+
+      // Check if this is an SVG property that should be an attribute
+      if (
+        SVG_STYLE_TO_ATTRIBUTE.includes(
+          prop as (typeof SVG_STYLE_TO_ATTRIBUTE)[number]
+        )
+      ) {
+        // Only set if not already present as an attribute
+        if (!element.hasAttribute(prop)) {
+          element.setAttribute(prop, value)
+        }
+      } else {
+        // Keep non-SVG properties in style
+        remainingStyles.push(`${prop}: ${value}`)
+      }
+    })
+
+    // Update or remove style attribute
+    if (remainingStyles.length > 0) {
+      element.setAttribute("style", remainingStyles.join("; "))
+    } else {
+      element.removeAttribute("style")
+    }
+  }
+
+  // Recursively process children
+  Array.from(element.childNodes).forEach(convertStyleToAttributes)
+}
+
+/**
+ * Default font values matching the browser rendering (app.css / CustomText.tsx).
+ * Applied to <text> elements that don't have explicit font attributes,
+ * ensuring non-browser SVG renderers (resvg, Inkscape, PowerPoint) render
+ * text identically to what the user sees on screen.
+ */
+const TEXT_FONT_DEFAULTS = {
+  "font-size": "16px",
+  "font-weight": "400",
+  "font-family": "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+} as const
+
+/**
+ * Ensure all <text> elements have explicit font-size, font-weight, and font-family.
+ *
+ * In the browser, text inherits these from CSS (:root font-family, default font-size).
+ * In exported SVGs opened in non-browser renderers, missing attributes cause text to
+ * render with the renderer's own defaults (often Times New Roman at an arbitrary size).
+ *
+ * This pass runs AFTER convertStyleToAttributes so any font props already extracted
+ * from inline styles are present as attributes.
+ */
+function ensureTextFontDefaults(svg: Element): void {
+  svg.querySelectorAll("text").forEach((textEl) => {
+    for (const [attr, defaultValue] of Object.entries(TEXT_FONT_DEFAULTS)) {
+      if (!textEl.hasAttribute(attr)) {
+        textEl.setAttribute(attr, defaultValue)
+      }
+    }
+  })
+}
+
+/**
+ * Replace `text-decoration="underline"` on `<text>` elements with manual
+ * `<line>` siblings so the underline is visible in non-browser renderers.
+ *
+ * resvg 2.6.2 has a rendering bug where 3+ `text-decoration="underline"`
+ * attributes across nested `<svg>` elements cause unrelated paths (particularly
+ * vertical lines) to disappear. This workaround removes the problematic
+ * attribute and draws explicit underline lines using `getBBox()` for accurate
+ * text measurements.
+ *
+ * The SVG must be temporarily attached to the DOM for `getBBox()` to work.
+ */
+function replaceTextDecorationWithManualUnderline(svg: SVGSVGElement): void {
+  const SVG_NS = "http://www.w3.org/2000/svg"
+  const underlinedTexts = svg.querySelectorAll(
+    'text[text-decoration="underline"]'
+  )
+
+  if (underlinedTexts.length === 0) return
+
+  // Temporarily attach to the DOM (off-screen) so getBBox() works
+  svg.style.position = "absolute"
+  svg.style.left = "-9999px"
+  svg.style.top = "-9999px"
+  document.body.appendChild(svg)
+
+  try {
+    underlinedTexts.forEach((textEl) => {
+      textEl.removeAttribute("text-decoration")
+
+      // Measure the text bounding box in SVG coordinate space
+      const bbox = (textEl as SVGTextElement).getBBox()
+
+      const line = document.createElementNS(SVG_NS, "line")
+      // Position the underline just below the text baseline
+      const underlineY = bbox.y + bbox.height
+      line.setAttribute("x1", String(bbox.x))
+      line.setAttribute("x2", String(bbox.x + bbox.width))
+      line.setAttribute("y1", String(underlineY))
+      line.setAttribute("y2", String(underlineY))
+      line.setAttribute("stroke", textEl.getAttribute("fill") || STROKE_COLOR)
+      line.setAttribute("stroke-width", "1.2")
+
+      // Insert the line as a sibling right after the text element
+      textEl.parentNode?.insertBefore(line, textEl.nextSibling)
+    })
+  } finally {
+    document.body.removeChild(svg)
+    svg.style.removeProperty("position")
+    svg.style.removeProperty("left")
+    svg.style.removeProperty("top")
+  }
+}
+
+/**
+ * Final safety pass: strip any legacy <marker> references that could sneak in
+ * from third-party content. Keeps exports clean for PowerPoint/Keynote.
+ */
+function removeMarkerElements(svg: Element): void {
+  svg.querySelectorAll("marker").forEach((el) => el.remove())
+  svg
+    .querySelectorAll("[marker-start]")
+    .forEach((el) => el.removeAttribute("marker-start"))
+  svg
+    .querySelectorAll("[marker-end]")
+    .forEach((el) => el.removeAttribute("marker-end"))
+}
+
+/**
+ * @internal — Exported for unit testing only. Not part of the public API.
+ */
+export const __testing = {
+  extractPathPoints,
+  extractStyles,
+  resolveCSSVariable,
+  replaceCSSVariables,
+  convertStyleToAttributes,
+  ensureTextFontDefaults,
+  removeMarkerElements,
+  replaceTextDecorationWithManualUnderline,
+  mergeBounds,
+  getNodeOverflowBoundsFromDOM,
+} as const

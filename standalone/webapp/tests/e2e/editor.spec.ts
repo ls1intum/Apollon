@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test"
 import { waitForCanvasReady } from "../helpers/canvas"
 
 /**
- * E2E behavioural tests for the Apollon2 UML diagram editor.
+ * E2E behavioural tests for the Apollon UML diagram editor.
  *
  * These cover the critical user journeys on the local (/) page and verify
  * that the editor loads correctly, the sidebar is usable and basic

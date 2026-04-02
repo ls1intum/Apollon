@@ -1,5 +1,5 @@
 import { DeleteIcon, EditIcon } from "@/components/Icon"
-import { ZINDEX_TOOLTIP } from "@/constants/zindexConstants"
+import { ZINDEX } from "@/constants"
 import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
@@ -46,8 +46,8 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
       {showToolbar && (
         <Box
           sx={{
-            backgroundColor: "var(--apollon2-background)",
-            boxShadow: "0 0 4px 0 var(--apollon2-background-variant)",
+            backgroundColor: "var(--apollon-background)",
+            boxShadow: "0 0 4px 0 var(--apollon-background-variant)",
             borderRadius: "8px",
             padding: "8px",
             display: "flex",
@@ -61,14 +61,14 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             WebkitTransform: "translateZ(0)",
             transform: "translateZ(0)",
             position: "relative",
-            zIndex: ZINDEX_TOOLTIP,
+            zIndex: ZINDEX.TOOLTIP,
           }}
         >
           <Box
             sx={{
               width: "16px",
               height: "16px",
-              backgroundColor: "var(--apollon2-background)",
+              backgroundColor: "var(--apollon-background)",
               borderRadius: 1,
               display: "flex",
               justifyContent: "center",
@@ -85,7 +85,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             sx={{
               width: "16px",
               height: "16px",
-              backgroundColor: "var(--apollon2-background)",
+              backgroundColor: "var(--apollon-background)",
               borderRadius: 1,
               display: "flex",
               justifyContent: "center",

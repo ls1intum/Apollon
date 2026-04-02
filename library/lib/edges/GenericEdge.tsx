@@ -117,6 +117,7 @@ export const EdgeEndpointMarkers = ({
   sourcePoint,
   targetPoint,
   isDiagramModifiable,
+  selected,
   diagramType,
   pathType,
   onSourcePointerDown,
@@ -125,12 +126,20 @@ export const EdgeEndpointMarkers = ({
   sourcePoint: IPoint
   targetPoint: IPoint
   isDiagramModifiable: boolean
+  selected?: boolean
   diagramType: string
   pathType: string
   onSourcePointerDown: (e: React.PointerEvent) => void
   onTargetPointerDown: (e: React.PointerEvent) => void
 }) => {
   if (!isDiagramModifiable || diagramType === "usecase") return null
+
+  // Only render grab circles when the edge is selected.
+  // These circles sit in the edge SVG layer (z-index 9999) above node handles
+  // (z-index 9998). When unselected, they would intercept pointer events
+  // intended for node handles, preventing new edge creation from handles
+  // that already have an edge connected.
+  if (!selected) return null
 
   return (
     <>

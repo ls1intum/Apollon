@@ -1,0 +1,60 @@
+services:
+  webapp:
+    image: "ghcr.io/ls1intum/apollon2/apollon-webapp:${IMAGE_TAG:-latest}"
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - apollon
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  server:
+    image: "ghcr.io/ls1intum/apollon2/apollon-server:${IMAGE_TAG:-latest}"
+    expose:
+      - "8000"
+      - "4444"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - WS_PORT=4444
+      - REDIS_URL=redis://db:6379
+    restart: unless-stopped
+    networks:
+      - apollon
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+networks:
+  apollon:
+    name: apollon
+    driver: bridge

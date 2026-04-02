@@ -1,4 +1,4 @@
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { DefaultNodeProps } from "@/types"
 import { SVGComponentProps } from "@/types/SVG"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
@@ -12,13 +12,16 @@ export const SfcJumpNodeSVG: React.FC<Props> = ({
   height,
   data,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
 }) => {
   const { name } = data
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
-  const sideLength = 20
-  const halfSideLength = sideLength / 2
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const diamondSize = 20
+  const padding = 8
+  const diamondX = padding
+  const diamondY = (height - diamondSize) / 2
+  const diamondHalfSize = diamondSize / 2
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
 
@@ -39,16 +42,18 @@ export const SfcJumpNodeSVG: React.FC<Props> = ({
         stroke="none"
       />
       <polyline
-        points={`0,0 0,${sideLength} ${sideLength},${halfSideLength} 0,0`}
+        points={`${diamondX},${diamondY} ${diamondX},${diamondY + diamondSize} ${diamondX + diamondSize},${diamondY + diamondHalfSize} ${diamondX},${diamondY}`}
         fill={fillColor}
         stroke={strokeColor}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
+        strokeLinejoin="miter"
       />
       <text
         fill={textColor}
-        x={sideLength + 5}
-        y={halfSideLength + 5}
+        x={diamondX + diamondSize + padding}
+        y={diamondY + diamondHalfSize}
         style={{ fontWeight: 600 }}
+        dominantBaseline="middle"
       >
         {name}
       </text>

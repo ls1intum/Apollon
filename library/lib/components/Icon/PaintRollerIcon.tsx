@@ -3,7 +3,7 @@ import { SVGAttributes } from "react"
 export const PaintRollerIcon = ({
   width = 16,
   height = 16,
-  fill = "var(--apollon2-primary-contrast, #e3e3e3)",
+  fill = "var(--apollon-primary-contrast, #e3e3e3)",
   ...props
 }: SVGAttributes<SVGSVGElement>) => (
   <svg

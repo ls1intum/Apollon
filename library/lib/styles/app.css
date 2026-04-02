@@ -4,41 +4,40 @@
   font-weight: 400;
   /* box-sizing: border-box; */
 
-  --apollon2-primary: var(--apollon-primary, #3e8acc);
-  --apollon2-primary-contrast: var(--apollon-primary-contrast, #212529);
-  --apollon2-secondary: var(--apollon-secondary, #6c757d);
-  --apollon2-alert-warning-yellow: var(--apollon-alert-warning-yellow, #ffc107);
-  --apollon2-alert-warning-background: var(--apollon-alert-warning-background, #fff3cd);
-  --apollon2-alert-warning-border: var(--apollon-alert-warning-border, #ffeeba);
-  --apollon2-background: var(--apollon-background, white);
-  --apollon2-background-inverse: var(--apollon-background-inverse, #000000);
-  --apollon2-background-variant: var(--apollon-background-variant, #f8f9fa);
-  --apollon2-gray: var(--apollon-gray, #e9ecef);
-  --apollon2-grid: var(--apollon-grid, rgba(36, 39, 36, 0.1));
-  --apollon2-gray-variant: var(--apollon-gray-variant, #495057);
-  --apollon2-alert-danger-color: var(--apollon-alert-danger-color, #721c24);
-  --apollon2-alert-danger-background: var(--apollon-alert-danger-background, #f8d7da);
-  --apollon2-alert-danger-border: var(--apollon-alert-danger-border, #f5c6cb);
-  --apollon2-switch-box-border-color: var(--apollon-switch-box-border-color, #dee2e6);
-  --apollon2-list-group-color: var(--apollon-list-group-color, #ffffff);
-  --apollon2-btn-outline-secondary-color: var(--apollon-btn-outline-secondary-color, #6c757d);
-  --apollon2-modal-bottom-border: var(--apollon-modal-bottom-border, #e9ecef);
-  --xy-controls-button-background-color: var(--apollon2-background);
-
+  --apollon-primary: #3e8acc;
+  --apollon-primary-contrast: #000000;
+  --apollon-secondary: #6c757d;
+  --apollon-alert-warning-yellow: #ffc107;
+  --apollon-alert-warning-background: #fff3cd;
+  --apollon-alert-warning-border: #ffeeba;
+  --apollon-background: white;
+  --apollon-background-inverse: #000000;
+  --apollon-background-variant: #f8f9fa;
+  --apollon-gray: #e9ecef;
+  --apollon-grid: rgba(36, 39, 36, 0.1);
+  --apollon-gray-variant: #495057;
+  --apollon-alert-danger-color: #721c24;
+  --apollon-alert-danger-background: #f8d7da;
+  --apollon-alert-danger-border: #f5c6cb;
+  --apollon-switch-box-border-color: #dee2e6;
+  --apollon-list-group-color: #ffffff;
+  --apollon-btn-outline-secondary-color: #6c757d;
+  --apollon-modal-bottom-border: #e9ecef;
+  --xy-controls-button-background-color: var(--apollon-background);
 }
 
-
 .react-flow {
-  --panel-background: var(--apollon2-background);
-  --panel-shadow: 0 0 4px 0 var(--apollon2-background-variant);
-  --text: var(--apollon2-primary-contrast);
-  --xy-edge-stroke: var(--apollon2-primary-contrast);
+  --panel-background: var(--apollon-background);
+  --panel-shadow: 0 0 4px 0 var(--apollon-background-variant);
+  --text: var(--apollon-primary-contrast);
+  --xy-edge-stroke: var(--apollon-primary-contrast);
+  --xy-edge-stroke-width: 2px;
   --xy-minimap-mask-background-color-props: #00000020;
-
 }
 .react-flow__controls-button {
   background: none;
-  border-bottom: none;}
+  border-bottom: none;
+}
 
 .react-flow__panel,
 .react-flow__node-toolbar {
@@ -79,7 +78,6 @@
 .react-flow__resize-control.handle {
   z-index: 20;
 }
-
 
 .react-flow__node:hover .react-flow__handle {
   opacity: 0.6;
@@ -149,6 +147,19 @@
   z-index: 9998;
 }
 
+/* Connection line shown when dragging from a node handle to create a new edge.
+   Must sit above nodes (9998) and edges (9999) so the ghost line is visible.
+   Stroke inherits the project's edge color/width so it matches existing edges. */
+svg.react-flow__connectionline {
+  z-index: 10000;
+}
+
+.react-flow__connection-path {
+  stroke: var(--xy-edge-stroke);
+  stroke-width: var(--xy-edge-stroke-width);
+  opacity: 0.5;
+}
+
 .react-flow__minimap-mask {
   fill: "#f2f2f2";
   opacity: 0.6;
@@ -161,8 +172,8 @@
 }
 
 .control-button {
-  background-color: var(--apollon2-background);
-  border: 1px solid var(--apollon2-gray-variant);
+  background-color: var(--apollon-background);
+  border: 1px solid var(--apollon-gray-variant);
   border-radius: 8px;
   padding: 6px 8px;
   cursor: pointer;
@@ -178,7 +189,7 @@
 }
 
 .control-button:hover:not(.disabled) {
-  background-color: var(--apollon2-background-variant);
+  background-color: var(--apollon-background-variant);
 }
 
 .control-button.disabled {
@@ -187,33 +198,35 @@
 }
 
 .control-button.disabled:hover {
-  background-color: var(--apollon2-background); /* Prevent hover effect when disabled */
+  background-color: var(
+    --apollon-background
+  ); /* Prevent hover effect when disabled */
 }
 
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {
-  cursor: grab; 
+  cursor: grab;
 }
 .horizontally-not-resizable .react-flow__resize-control.bottom.line:hover {
-  cursor: grab; 
+  cursor: grab;
 }
 .vertically-not-resizable .react-flow__resize-control.right.line:hover {
-  cursor: grab; 
+  cursor: grab;
 }
 .vertically-not-resizable .react-flow__resize-control.left.line:hover {
-  cursor: grab; 
+  cursor: grab;
 }
 
-.MuiSelect-select{
-  color: var(--apollon2-primary-contrast) !important;
+.MuiSelect-select {
+  color: var(--apollon-primary-contrast) !important;
 }
-.MuiFormLabel-root{
-  color: var(--apollon2-primary-contrast) !important;
+.MuiFormLabel-root {
+  color: var(--apollon-primary-contrast) !important;
 }
-.MuiOutlinedInput-notchedOutline{
-  border-color: var(--apollon2-primary-contrast) !important;
+.MuiOutlinedInput-notchedOutline {
+  border-color: var(--apollon-primary-contrast) !important;
 }
-.MuiSvgIcon-root{
-  color: var(--apollon2-primary-contrast) !important;
+.MuiSvgIcon-root {
+  color: var(--apollon-primary-contrast) !important;
 }
 .scroll-overlay {
   position: absolute;
@@ -241,8 +254,8 @@
 }
 
 .scroll-overlay-hint-content {
-  background-color: var(--apollon2-background);
-  border: 2px solid var(--apollon2-primary);
+  background-color: var(--apollon-background);
+  border: 2px solid var(--apollon-primary);
   border-radius: 8px;
   padding: 16px 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -253,7 +266,7 @@
 
 .scroll-overlay-hint-text {
   margin: 0;
-  color: var(--apollon2-primary);
+  color: var(--apollon-primary);
   font-weight: 600;
   font-size: 14px;
   text-align: center;

@@ -1,11 +1,12 @@
 import React, { useMemo, useCallback, SVGAttributes } from "react"
+import { LAYOUT } from "@/constants"
 
 interface TitleAndDescriptionSVGProps {
   width: number
   height: number
   title: string
   description: string
-  transformScale?: number
+  SIDEBAR_PREVIEW_SCALE?: number
   svgAttributes?: SVGAttributes<SVGElement>
 }
 
@@ -14,12 +15,12 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
   height,
   title,
   description,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   svgAttributes,
 }) => {
   const padding = 10 // Padding inside the SVG
   const titleHeight = 30 // Fixed height for the title
-  const separatorHeight = 1 // Height of the separator line
+  const separatorHeight = LAYOUT.LINE_WIDTH // Height of the separator line
   const lineHeight = 18 // Line height for description
   const descriptionStartY = padding + titleHeight + separatorHeight + 10 // Space for description
   const maxDescriptionHeight = height - descriptionStartY - padding // Max height for description
@@ -65,8 +66,8 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
     return wrappedLines
   }, [description, maxTextWidth, maxDescriptionHeight, lineHeight, wrapText])
 
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   return (
     <svg
@@ -82,9 +83,9 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
         y={padding / 2}
         width={width - padding}
         height={height - padding}
-        stroke="black"
-        strokeWidth="1"
-        fill="white"
+        stroke="var(--apollon-primary-contrast)"
+        strokeWidth={LAYOUT.LINE_WIDTH}
+        fill="var(--apollon-background)"
       />
 
       {/* Title */}
@@ -93,7 +94,7 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
         y={padding + titleHeight / 2}
         fontSize="16"
         fontWeight="bold"
-        fill="black"
+        fill="var(--apollon-primary-contrast)"
         textAnchor="middle"
         alignmentBaseline="middle"
       >
@@ -106,8 +107,8 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
         x2={width - padding / 2}
         y1={padding + titleHeight}
         y2={padding + titleHeight}
-        stroke="black"
-        strokeWidth={separatorHeight}
+        stroke="var(--apollon-primary-contrast)"
+        strokeWidth={LAYOUT.LINE_WIDTH}
       />
 
       {/* Description */}
@@ -117,7 +118,7 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
           x={padding}
           y={descriptionStartY + index * lineHeight}
           fontSize="14"
-          fill="black"
+          fill="var(--apollon-primary-contrast)"
           alignmentBaseline="hanging"
         >
           {line}

@@ -2,21 +2,60 @@ name: Build and Push Docker Image
 
 on:
   pull_request:
-    types: [labeled]
+    types: [opened, synchronize, reopened]
   push:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
 jobs:
+  detect-changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      docker-relevant: ${{ steps.filter.outputs.docker-relevant }}
+      should-skip: ${{ steps.skip-check.outputs.should_skip }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: skip-check
+        uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5
+        with:
+          # Never skip push-to-main — always need fresh images after merge
+          do_not_skip: '["push", "workflow_dispatch"]'
+
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3
+        id: filter
+        if: steps.skip-check.outputs.should_skip != 'true'
+        with:
+          filters: |
+            docker-relevant:
+              - 'library/**'
+              - 'standalone/**'
+              - 'docker/**'
+              - 'nginx.conf'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig*.json'
+              - '.github/workflows/build-and-push.yml'
+
   build-and-push-workflow:
     name: ${{ matrix.name }}
-    if: |
+    needs: [detect-changes]
+    if: >
       github.actor != 'dependabot[bot]' &&
-      (
-        github.event_name == 'push' ||
-        (github.event_name == 'pull_request' &&
-         github.event.action == 'labeled' &&
-         github.event.label.name == 'build and push docker image')
+      needs.detect-changes.outputs.should-skip != 'true' && (
+        needs.detect-changes.outputs.docker-relevant == 'true' ||
+        github.event_name == 'push'
       )
     strategy:
       fail-fast: false
@@ -24,27 +63,33 @@ jobs:
         include:
           - name: Webapp
             dockerfile: ./standalone/webapp/Dockerfile
-            build-args: |
-              VITE_BACKEND_URL_WSS=wss://apollon2.aet.cit.tum.de/ws
-              VITE_BACKEND_URL=https://apollon2.aet.cit.tum.de
             image: ghcr.io/ls1intum/apollon2/apollon-webapp
             context: .
           - name: Server
             dockerfile: ./standalone/server/Dockerfile
-            build-args: |
-              HOST=0.0.0.0
-              PORT=8000
-              WSSPORT=4444
-              YPERSISTENCE=./dbDir
-              FRONTEND_URL=https://apollon2.aet.cit.tum.de
-              MONGO_URI=mongodb://db:27017/apollon2DB
             image: ghcr.io/ls1intum/apollon2/apollon-server
             context: .
-
-    # Uses https://github.com/ls1intum/.github/pull/16/commits/a35192af6c834a72cb12fe6b772c0cfb70b45eae
-    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@feat/minor-build-improvements
+    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@main
     with:
       image-name: ${{ matrix.image }}
       docker-file: ${{ matrix.dockerfile }}
       docker-context: ${{ matrix.context }}
-      build-args: ${{ matrix.build-args }}
+
+  # Gate job for required checks — handles skipped builds correctly
+  docker-build-gate:
+    name: Docker Build Gate
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-and-push-workflow]
+    if: always()
+    steps:
+      - name: Evaluate results
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "Docker build failed"
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "Docker build was cancelled"
+            exit 1
+          fi
+          echo "Docker build passed or was skipped"

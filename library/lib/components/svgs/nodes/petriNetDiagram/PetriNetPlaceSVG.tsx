@@ -3,7 +3,7 @@ import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { CustomText } from "../CustomText"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { PetriNetPlaceProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils"
 
@@ -14,7 +14,7 @@ interface Props extends SVGComponentProps {
 export const PetriNetPlaceSVG: React.FC<Props> = ({
   id,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
   data,
   width,
@@ -23,8 +23,13 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
   const { name, tokens, capacity } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const previewScale = SIDEBAR_PREVIEW_SCALE ?? 1
+  const scaledWidth = width * previewScale
+  const scaledHeight = height * previewScale
+  const labelHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+  const scaledLabelHeight = labelHeight * previewScale
+  const svgHeight = height + labelHeight
+  const scaledSvgHeight = scaledHeight + scaledLabelHeight
 
   const centerX = width / 2
   const centerY = height / 2
@@ -75,8 +80,8 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
   return (
     <svg
       width={scaledWidth}
-      height={scaledHeight}
-      viewBox={`0 0 ${width} ${height}`}
+      height={scaledSvgHeight}
+      viewBox={`0 0 ${width} ${svgHeight}`}
       overflow="visible"
       {...svgAttributes}
     >
@@ -86,7 +91,7 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
         r={width / 2}
         fill={fillColor}
         stroke={strokeColor}
-        strokeWidth={LINE_WIDTH}
+        strokeWidth={LAYOUT.LINE_WIDTH}
       />
 
       {typeof capacity === "number" && (
@@ -97,10 +102,10 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
 
       <CustomText
         x={width / 2}
-        y={height + 10}
+        y={height + labelHeight / 2}
         textAnchor="middle"
         fontWeight="600"
-        dominantBaseline="central"
+        dominantBaseline="middle"
         fill={textColor}
       >
         {name}

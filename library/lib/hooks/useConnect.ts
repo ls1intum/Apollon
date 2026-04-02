@@ -9,6 +9,7 @@ import {
 } from "@xyflow/react"
 import { useCallback, useRef } from "react"
 import { findClosestHandle, generateUUID, getDefaultEdgeType } from "@/utils"
+import { DiagramNodeTypeRecord } from "@/nodes"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 
@@ -104,6 +105,12 @@ export const useConnect = () => {
 
         if (!internalNodeData) return
 
+        const useFourHandles =
+          nodeOnTop.type === DiagramNodeTypeRecord.componentInterface ||
+          nodeOnTop.type === DiagramNodeTypeRecord.petriNetPlace ||
+          nodeOnTop.type === DiagramNodeTypeRecord.petriNetTransition ||
+          nodeOnTop.type === DiagramNodeTypeRecord.sfcTransitionBranch
+
         const targetHandle = findClosestHandle({
           point: dropPosition,
           rect: {
@@ -112,6 +119,7 @@ export const useConnect = () => {
             width: nodeOnTop.width!,
             height: nodeOnTop.height!,
           },
+          useFourHandles,
         })
 
         if (startEdge.current) {

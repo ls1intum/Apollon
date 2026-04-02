@@ -1,8 +1,27 @@
+.git
+.github
+.gitignore
+.context
+.env
+.env.*
+*.md
+LICENSE
+.vscode
+.idea
+docker/
+docs/
+coverage/
+playwright-report/
+test-results/
+*.log
+
 node_modules/
 dist/
 
 standalone/webapp/dist
 standalone/webapp/node_modules
+standalone/webapp/android
+standalone/webapp/ios
 
 standalone/server/dist
 standalone/server/node_modules

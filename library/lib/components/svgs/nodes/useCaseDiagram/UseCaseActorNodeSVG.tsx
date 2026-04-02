@@ -1,5 +1,5 @@
 import { CustomText } from "@/components"
-import { LINE_WIDTH } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -17,14 +17,14 @@ export const UseCaseActorNodeSVG: React.FC<Props> = ({
   height,
   data,
   svgAttributes,
-  transformScale,
+  SIDEBAR_PREVIEW_SCALE,
   showAssessmentResults = false,
 }) => {
   const { name } = data
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
-  const scaledWidth = width * (transformScale ?? 1)
-  const scaledHeight = height * (transformScale ?? 1)
+  const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
+  const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
 
@@ -37,7 +37,7 @@ export const UseCaseActorNodeSVG: React.FC<Props> = ({
       {...svgAttributes}
     >
       <g>
-        <g strokeWidth={LINE_WIDTH} stroke={strokeColor}>
+        <g strokeWidth={LAYOUT.LINE_WIDTH} stroke={strokeColor}>
           <circle cx="45" cy="25" r="15" fill={fillColor} />
           <line x1="45" y1="40" x2="45" y2="80" />
           <line x1="15" y1="55" x2="75" y2="55" />

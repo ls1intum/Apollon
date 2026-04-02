@@ -43,9 +43,9 @@ Thumbs.db
 coverage/
 jest-cache/
 jest-output/
-test-results/
-playwright-report/
-blob-report/
+**/test-results/
+**/playwright-report/
+**/blob-report/
 
 # Monorepo specific
 standalone/*/node_modules/
@@ -66,3 +66,4 @@ ios/
 # Capacitor generated icons
 icons/
 venv/
+.context/

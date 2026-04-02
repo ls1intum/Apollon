@@ -15,6 +15,15 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
+  // Remove {platform} from snapshot paths so a single set of baselines works
+  // across macOS and Linux.  SVG export tests use a bundled font (Liberation
+  // Sans) for deterministic resvg rendering.  Canvas screenshot baselines are
+  // generated inside the Playwright Docker container to guarantee consistency;
+  // see the "visual-regression-tests" CI job and the docker command in
+  // pr-health-checks.yaml.
+  snapshotPathTemplate:
+    "{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{ext}",
+
   expect: {
     toHaveScreenshot: {
       maxDiffPixelRatio: 0.01,

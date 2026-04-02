@@ -1,1 +1,1 @@
-export * from "./markers"
+export * from "./InlineMarker"

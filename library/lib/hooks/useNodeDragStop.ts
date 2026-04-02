@@ -7,7 +7,7 @@ import {
   sortNodesTopologically,
 } from "@/utils"
 import { canDropIntoParent } from "@/utils/bpmnConstraints"
-import { MOUSE_UP_OFFSET_IN_PIXELS } from "@/constants"
+import { CANVAS } from "@/constants"
 import { useDiagramStore, useAlignmentGuidesStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 
@@ -49,8 +49,8 @@ export const useNodeDragStop = () => {
       const intersectionsWithDroppedLocation = getIntersectingNodes({
         x: draggedLastPoint.x,
         y: draggedLastPoint.y,
-        width: MOUSE_UP_OFFSET_IN_PIXELS,
-        height: MOUSE_UP_OFFSET_IN_PIXELS,
+        width: CANVAS.MOUSE_UP_OFFSET_PX,
+        height: CANVAS.MOUSE_UP_OFFSET_PX,
       }).filter((n) => {
         return (
           isParentNodeType(n.type) &&

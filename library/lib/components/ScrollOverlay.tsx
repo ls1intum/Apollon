@@ -5,7 +5,7 @@ import { useShallow } from "zustand/shallow"
 /**
  * ScrollOverlay Component
  * Displays an overlay when user tries to scroll but scrollLock is enabled.
- * Press Space to temporarily unlock scrolling.
+ * Press Ctrl or Cmd to temporarily unlock scrolling.
  */
 export const ScrollOverlay: React.FC = () => {
   const { scrollLock, scrollEnabled, setScrollEnabled } = useMetadataStore(
@@ -19,13 +19,16 @@ export const ScrollOverlay: React.FC = () => {
   const [showOverlay, setShowOverlay] = useState(false)
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Handle Space key to temporarily enable scrolling
+  // Handle Ctrl key to temporarily enable scrolling
   useEffect(() => {
     if (!scrollLock) return
 
+    const apollonContainer = document.querySelector(
+      ".apollon-container"
+    ) as HTMLElement
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
-        e.preventDefault()
         setScrollEnabled(true)
         setShowOverlay(false)
         // Clear any pending hide timeout
@@ -37,7 +40,7 @@ export const ScrollOverlay: React.FC = () => {
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (!e.ctrlKey && !e.metaKey) {
+      if (e.ctrlKey || e.metaKey) {
         setScrollEnabled(false)
       }
     }
@@ -58,14 +61,14 @@ export const ScrollOverlay: React.FC = () => {
       }, 500)
     }
 
-    window.addEventListener("keydown", handleKeyDown)
-    window.addEventListener("keyup", handleKeyUp)
-    window.addEventListener("wheel", handleWheel, { passive: true })
+    apollonContainer.addEventListener("keydown", handleKeyDown)
+    apollonContainer.addEventListener("keyup", handleKeyUp)
+    apollonContainer.addEventListener("wheel", handleWheel, { passive: true })
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-      window.removeEventListener("keyup", handleKeyUp)
-      window.removeEventListener("wheel", handleWheel)
+      apollonContainer.removeEventListener("keydown", handleKeyDown)
+      apollonContainer.removeEventListener("keyup", handleKeyUp)
+      apollonContainer.removeEventListener("wheel", handleWheel)
       if (hideTimeoutRef.current) {
         clearTimeout(hideTimeoutRef.current)
       }

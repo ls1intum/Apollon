@@ -8,10 +8,11 @@ import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { useToolbar } from "@/hooks"
 import { useRef } from "react"
-import { EDGE_HIGHTLIGHT_STROKE_WIDTH } from "@/constants"
+import { EDGES } from "@/constants"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
+import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
 
 export const UseCaseEdge = ({
   id,
@@ -56,6 +57,7 @@ export const UseCaseEdge = ({
     edgeData,
     currentPath,
     overlayPath,
+    isReconnectingRef,
     markerEnd,
     markerStart,
     strokeDashArray,
@@ -86,7 +88,6 @@ export const UseCaseEdge = ({
             key={markerKey}
             id={id}
             path={currentPath}
-            markerEnd={markerEnd}
             pointerEvents="none"
             style={{
               stroke: strokeColor,
@@ -94,12 +95,21 @@ export const UseCaseEdge = ({
             }}
           />
 
+          {!isReconnectingRef.current && (
+            <EdgeInlineMarkers
+              pathD={currentPath}
+              markerEnd={markerEnd}
+              markerStart={markerStart}
+              strokeColor={strokeColor}
+            />
+          )}
+
           <path
             ref={pathRef}
             className="edge-overlay"
             d={overlayPath}
             fill="none"
-            strokeWidth={EDGE_HIGHTLIGHT_STROKE_WIDTH}
+            strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{ opacity: 0.4 }}
           />

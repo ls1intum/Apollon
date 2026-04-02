@@ -1,14 +1,15 @@
 import React from "react"
 import {
   ColorDescriptionConfig,
+  DROPS,
   dropElementConfigs,
-  transformScale,
-} from "@/constants/dropElementConfig"
+  LAYOUT,
+  ZINDEX,
+} from "@/constants"
 import { DividerLine } from "./ui/DividerLine"
 import { useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
-import { ZINDEX_DRAGGABLE_GHOST } from "@/constants/zindexConstants"
 
 /* ========================================================================
    Sidebar Component
@@ -17,6 +18,11 @@ import { ZINDEX_DRAGGABLE_GHOST } from "@/constants/zindexConstants"
 
 export const Sidebar = () => {
   const diagramType = useMetadataStore(useShallow((state) => state.diagramType))
+  const labelPreviewTypes = new Set([
+    "sfcTransitionBranch",
+    "petriNetPlace",
+    "petriNetTransition",
+  ])
 
   if (dropElementConfigs[diagramType].length === 0) {
     return null
@@ -28,7 +34,7 @@ export const Sidebar = () => {
         width: "180px",
         minWidth: "180px",
         height: "100%",
-        backgroundColor: "var(--apollon2-background)",
+        backgroundColor: "var(--apollon-background)",
         display: "flex",
         flexDirection: "column",
         padding: "10px",
@@ -38,39 +44,49 @@ export const Sidebar = () => {
         flexShrink: 0,
       }}
     >
-      {dropElementConfigs[diagramType].map((config, index) => (
-        <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
-          <DraggableGhost dropElementConfig={config}>
-            <div
-              className="prevent-select"
-              style={{
-                width: config.width * transformScale,
-                height: config.height * transformScale,
-                zIndex: ZINDEX_DRAGGABLE_GHOST,
-                marginTop: config.marginTop,
-              }}
-            >
-              {React.createElement(config.svg, {
-                width: config.width,
-                height: config.height,
-                ...config.defaultData,
-                data: config.defaultData,
-                transformScale,
-                id: `sidebarElement_${index}`,
-              })}
-            </div>
-          </DraggableGhost>
-        </React.Fragment>
-      ))}
+      {dropElementConfigs[diagramType].map((config, index) => {
+        const extraPreviewHeight = labelPreviewTypes.has(config.type)
+          ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+          : 0
+        const previewScale = DROPS.SIDEBAR_PREVIEW_SCALE
+        const previewWidth = config.width * previewScale
+        const previewHeight =
+          (config.height + extraPreviewHeight) * previewScale
+
+        return (
+          <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
+            <DraggableGhost dropElementConfig={config}>
+              <div
+                className="prevent-select"
+                style={{
+                  width: previewWidth,
+                  height: previewHeight,
+                  zIndex: ZINDEX.DRAGGABLE_GHOST,
+                  marginTop: config.marginTop,
+                }}
+              >
+                {React.createElement(config.svg, {
+                  width: config.width,
+                  height: config.height,
+                  ...config.defaultData,
+                  data: config.defaultData,
+                  SIDEBAR_PREVIEW_SCALE: previewScale,
+                  id: `sidebarElement_${index}`,
+                })}
+              </div>
+            </DraggableGhost>
+          </React.Fragment>
+        )
+      })}
 
       <DividerLine style={{ margin: "3px 0" }} />
       <DraggableGhost dropElementConfig={ColorDescriptionConfig}>
         <div
           className="prevent-select"
           style={{
-            width: ColorDescriptionConfig.width * transformScale,
-            height: ColorDescriptionConfig.height * transformScale,
-            zIndex: ZINDEX_DRAGGABLE_GHOST,
+            width: ColorDescriptionConfig.width * DROPS.SIDEBAR_PREVIEW_SCALE,
+            height: ColorDescriptionConfig.height * DROPS.SIDEBAR_PREVIEW_SCALE,
+            zIndex: ZINDEX.DRAGGABLE_GHOST,
             marginTop: ColorDescriptionConfig.marginTop,
           }}
         >
@@ -79,7 +95,7 @@ export const Sidebar = () => {
             height: ColorDescriptionConfig.height,
             ...ColorDescriptionConfig.defaultData,
             data: ColorDescriptionConfig.defaultData,
-            transformScale,
+            SIDEBAR_PREVIEW_SCALE: DROPS.SIDEBAR_PREVIEW_SCALE,
             id: "sidebarElement_ColorDescription",
           })}
         </div>

@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     copyPublicDir: false,
     lib: {
-      name: "apollon2-library",
+      name: "apollon-library",
       entry: resolve(__dirname, "lib/index.tsx"),
       formats: ["es"],
       cssFileName: "style",

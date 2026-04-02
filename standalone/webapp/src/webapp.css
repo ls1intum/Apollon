@@ -34,7 +34,7 @@ body {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  /* background-color: var(--apollon2-background); */
+  /* background-color: var(--apollon-background); */
   height: 100%;
 
 }
@@ -44,6 +44,6 @@ body {
 }
 
 .MuiMenu-list {
-  background-color: var(--apollon2-background) !important;
-  color: var(--apollon2-primary-contrast) !important;
+  background-color: var(--apollon-background) !important;
+  color: var(--apollon-primary-contrast) !important;
 }

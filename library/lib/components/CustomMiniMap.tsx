@@ -49,7 +49,7 @@ import {
   ReachabilityGraphMarkingSVG,
 } from "./svgs"
 import { DiagramNodeType } from "@/typings"
-import { ZINDEX_MINIMAP, ZINDEX_PANEL } from "@/constants/zindexConstants"
+import { ZINDEX } from "@/constants"
 import { MapIcon } from "./Icon/MapIcon"
 import { SouthEastArrowIcon } from "./Icon/SouthEastArrowIcon"
 import {
@@ -77,7 +77,7 @@ export const CustomMiniMap = () => {
   if (minimapCollapsed) {
     return (
       <Panel position="bottom-right" onClick={() => setMinimapCollapsed(false)}>
-        <MapIcon fill="var(--apollon2-primary-contrast)" />
+        <MapIcon fill="var(--apollon-primary-contrast)" />
       </Panel>
     )
   }
@@ -94,9 +94,9 @@ export const CustomMiniMap = () => {
           bottom: 0,
           right: 0,
           display: "flex",
-          zIndex: ZINDEX_PANEL,
+          zIndex: ZINDEX.PANEL,
           padding: 8,
-          backgroundColor: "var(--apollon2-background)",
+          backgroundColor: "var(--apollon-background)",
           borderRadius: "4px",
           justifyContent: "center",
           alignItems: "center",
@@ -104,7 +104,7 @@ export const CustomMiniMap = () => {
           boxShadow: "0 0 4px 0 rgb(0 0 0 / 0.2)",
         }}
       >
-        <SouthEastArrowIcon fill="var(--apollon2-primary-contrast)" />
+        <SouthEastArrowIcon fill="var(--apollon-primary-contrast)" />
       </div>
 
       <MiniMap
@@ -112,7 +112,7 @@ export const CustomMiniMap = () => {
         onClick={() => setMinimapCollapsed(true)}
         nodeComponent={MiniMapNode}
         offsetScale={20}
-        style={{ zIndex: ZINDEX_MINIMAP }}
+        style={{ zIndex: ZINDEX.MINIMAP }}
       />
     </Panel>
   )

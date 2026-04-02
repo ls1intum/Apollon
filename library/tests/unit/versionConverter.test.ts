@@ -184,7 +184,7 @@ describe("convertV3NodeTypeToV4", () => {
     ["ActivityForkNode", "activityForkNode"],
     ["ActivityForkNodeHorizontal", "activityForkNodeHorizontal"],
     ["ActivityMergeNode", "activityMergeNode"],
-    ["ActivityDecisionNode", "activityDecisionNode"],
+    ["ActivityDecisionNode", "activityMergeNode"],
     ["Activity", "activity"],
     ["UseCase", "useCase"],
     ["UseCaseActor", "useCaseActor"],

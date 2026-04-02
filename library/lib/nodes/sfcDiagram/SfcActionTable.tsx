@@ -8,7 +8,7 @@ import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { SfcActionTableProps } from "@/types"
 import { SfcActionTableNodeSVG } from "@/components"
-import { DEFAULT_ATTRIBUTE_HEIGHT } from "@/constants"
+import { LAYOUT } from "@/constants"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 export function SfcActionTable({
@@ -35,9 +35,9 @@ export function SfcActionTable({
 
   // Calculate minimum height based on rows (no header needed)
   const minHeight = useMemo(() => {
-    const rowsHeight = actionRows.length * DEFAULT_ATTRIBUTE_HEIGHT
+    const rowsHeight = actionRows.length * LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
     // Ensure minimum height for at least one row
-    return Math.max(rowsHeight, DEFAULT_ATTRIBUTE_HEIGHT)
+    return Math.max(rowsHeight, LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT)
   }, [actionRows.length])
 
   // Auto-expand height when content changes (like class diagram)
