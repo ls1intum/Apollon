@@ -1,12 +1,12 @@
 import cors from "cors"
 
 export function configureCors() {
-  const frontendUrl = process.env.FRONTEND_URL
+  const corsOrigin = process.env.CORS_ORIGIN
 
   return cors({
     // When served behind a reverse proxy (Caddy), API and webapp share the same
-    // origin so CORS is a no-op. Allow all origins if FRONTEND_URL is not set.
-    origin: frontendUrl ? [frontendUrl] : true,
+    // origin so CORS is a no-op. Allow all origins if CORS_ORIGIN is not set.
+    origin: corsOrigin ? [corsOrigin] : true,
     methods: ["GET", "POST", "PUT"],
     allowedHeaders: ["Content-Type"],
   })

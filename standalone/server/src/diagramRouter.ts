@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, Router } from "express"
+import type { RedisJSON } from "@redis/client/dist/lib/commands/generic-transformers"
 import { redis } from "./database/connect"
 import { Diagram, DIAGRAM_TTL_SECONDS } from "./database/models/Diagram"
 import { log } from "./logger"
@@ -12,38 +12,51 @@ function diagramKey(id: string): string {
   return `diagram:${id}`
 }
 
+async function getDiagram(key: string): Promise<Diagram | null> {
+  const data = await redis.json.get(key)
+  if (!data) return null
+  return data as unknown as Diagram
+}
+
+async function saveDiagram(key: string, diagram: Diagram): Promise<void> {
+  await redis.json.set(key, "$", diagram as unknown as RedisJSON)
+  await redis.expire(key, DIAGRAM_TTL_SECONDS)
+}
+
 router.post("/converter/pdf", (req, res) =>
   conversionResource.convert(req, res)
 )
 
-router.get("/:diagramID", async (req: Request, res: Response): Promise<any> => {
-  try {
-    const diagramID = req.params.diagramID as string
-    const data = await redis.json.get(diagramKey(diagramID))
-    if (!data) {
-      return res.status(404).json({ error: "Diagram not found" })
+router.get(
+  "/:diagramID",
+  async (req: Request<{ diagramID: string }>, res: Response): Promise<void> => {
+    try {
+      const diagram = await getDiagram(diagramKey(req.params.diagramID))
+      if (!diagram) {
+        res.status(404).json({ error: "Diagram not found" })
+        return
+      }
+      res.status(200).json(diagram)
+    } catch (error) {
+      log.error("Error in getDiagram endpoint:", error)
+      res.status(500).json({ error: "Internal server error" })
     }
-    res.status(200).json(data)
-  } catch (error) {
-    log.error("Error in getDiagram endpoint:", error as Error)
-    res.status(500).json({ error: "Internal server error" })
   }
-})
+)
 
-router.post("/", async (req: Request, res: Response): Promise<any> => {
+router.post("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const { id, version, title, type, nodes, edges, assessments } = req.body
 
     if (!id || !version || !title || !type) {
-      return res
+      res
         .status(400)
         .json({ error: "ID, version, title, and type are required" })
+      return
     }
 
     const now = new Date().toISOString()
-    const existing = (await redis.json.get(
-      diagramKey(id)
-    )) as unknown as Diagram | null
+    const existing = await getDiagram(diagramKey(id))
 
     const diagram: Diagram = {
       id,
@@ -57,54 +70,52 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
       updatedAt: now,
     }
 
-    await redis.json.set(diagramKey(id), "$", diagram as any)
-    await redis.expire(diagramKey(id), DIAGRAM_TTL_SECONDS)
-
+    await saveDiagram(diagramKey(id), diagram)
     res.status(existing ? 200 : 201).json(diagram)
   } catch (error) {
-    log.error("Error in setDiagram endpoint:", error as Error)
+    log.error("Error in setDiagram endpoint:", error)
     res.status(500).json({ error: "Internal server error" })
   }
 })
 
-router.put("/:diagramID", async (req: Request, res: Response): Promise<any> => {
-  try {
-    const diagramID = req.params.diagramID as string
-    const { version, title, type, nodes, edges, assessments } = req.body
+router.put(
+  "/:diagramID",
+  async (req: Request<{ diagramID: string }>, res: Response): Promise<void> => {
+    try {
+      const { version, title, type, nodes, edges, assessments } = req.body
 
-    if (!version || !title || !type) {
-      return res
-        .status(400)
-        .json({ error: "Version, title, and type are required" })
+      if (!version || !title || !type) {
+        res.status(400).json({ error: "Version, title, and type are required" })
+        return
+      }
+
+      const key = diagramKey(req.params.diagramID)
+      const existing = await getDiagram(key)
+
+      if (!existing) {
+        res.status(404).json({ error: "Diagram not found" })
+        return
+      }
+
+      const diagram: Diagram = {
+        id: req.params.diagramID,
+        version,
+        title,
+        type,
+        nodes: nodes || [],
+        edges: edges || [],
+        assessments: assessments || {},
+        createdAt: existing.createdAt,
+        updatedAt: new Date().toISOString(),
+      }
+
+      await saveDiagram(key, diagram)
+      res.status(200).json(diagram)
+    } catch (error) {
+      log.error("Error in updateDiagram endpoint:", error)
+      res.status(500).json({ error: "Internal server error" })
     }
-
-    const key = diagramKey(diagramID)
-    const existing = (await redis.json.get(key)) as unknown as Diagram | null
-
-    if (!existing) {
-      return res.status(404).json({ error: "Diagram not found" })
-    }
-
-    const diagram: Diagram = {
-      id: diagramID,
-      version,
-      title,
-      type,
-      nodes: nodes || [],
-      edges: edges || [],
-      assessments: assessments || {},
-      createdAt: existing.createdAt,
-      updatedAt: new Date().toISOString(),
-    }
-
-    await redis.json.set(key, "$", diagram as any)
-    await redis.expire(key, DIAGRAM_TTL_SECONDS)
-
-    res.status(200).json(diagram)
-  } catch (error) {
-    log.error("Error in updateDiagram endpoint:", error as Error)
-    res.status(500).json({ error: "Internal server error" })
   }
-})
+)
 
 export default router

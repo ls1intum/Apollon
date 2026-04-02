@@ -1,5 +1,5 @@
 import { ApollonEditor } from "@tumaet/apollon"
-import { backendWSSUrl } from "@/constants"
+import { serverWSSUrl } from "@/constants"
 import { WebSocketMessage } from "@/types"
 import { log } from "@/logger"
 
@@ -30,7 +30,7 @@ export class WebSocketManager {
   }
 
   private createWebSocket() {
-    const url = `${backendWSSUrl}?diagramId=${this.diagramId}`
+    const url = `${serverWSSUrl}?diagramId=${this.diagramId}`
     this.websocket = new WebSocket(url)
 
     this.websocket.onopen = () => {
