@@ -132,7 +132,7 @@ jobs:
   #
   # To regenerate ALL baselines after UI changes, run from the repo root:
   #   docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
-  #     mcr.microsoft.com/playwright:v1.58.2-noble \
+  #     mcr.microsoft.com/playwright:v1.59.1-noble \
   #     bash -c "npm ci && npm run build:lib && cd standalone/webapp \
   #       && npx playwright test tests/visual/ --update-snapshots"
   #
@@ -143,7 +143,7 @@ jobs:
     if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
