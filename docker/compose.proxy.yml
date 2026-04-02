@@ -7,13 +7,12 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-      - /var/lib/rbg-cert:/etc/rbg-cert:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - apollon
     cap_drop:
@@ -34,5 +33,4 @@ volumes:
 
 networks:
   apollon:
-    name: apollon
-    driver: bridge
+    external: true
