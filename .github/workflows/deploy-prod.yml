@@ -30,8 +30,8 @@ jobs:
     with:
       environment: Production
       docker-compose-file: "./docker/compose.db.yml"
-      main-image-name: redis
-      image-tag: 7-alpine
+      main-image-name: ghcr.io/ls1intum/apollon2/apollon-server
+      image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/db"
     secrets: inherit
 
@@ -41,8 +41,8 @@ jobs:
     with:
       environment: Production
       docker-compose-file: "./docker/compose.proxy.yml"
-      main-image-name: caddy
-      image-tag: 2.9-alpine
+      main-image-name: ghcr.io/ls1intum/apollon2/apollon-server
+      image-tag: ${{ inputs.image-tag }}
       deployment-base-path: "/opt/apollon/proxy"
     secrets: inherit
 
