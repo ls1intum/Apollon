@@ -30,7 +30,7 @@ jobs:
       name: Production
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Ensure deployment directories and network exist
         uses: appleboy/ssh-action@v1.0.3
