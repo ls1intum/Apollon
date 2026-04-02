@@ -1,8 +1,4 @@
-import {
-  appVersion,
-  apollon2RepositoryLink,
-  apollonLibraryVersion,
-} from "@/constants"
+import { appVersion, repositoryLink, apollonLibraryVersion } from "@/constants"
 import { useModalContext } from "@/contexts"
 import { Button } from "@mui/material"
 import { Typography } from "../Typography"
@@ -20,7 +16,7 @@ export const AboutModal = () => {
             <Typography>
               <a
                 className="text-blue-500 hover:text-purple-800"
-                href={apollon2RepositoryLink}
+                href={repositoryLink}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -38,7 +34,7 @@ export const AboutModal = () => {
             <Typography>
               <a
                 className="text-blue-500 hover:text-purple-800"
-                href={apollon2RepositoryLink}
+                href={repositoryLink}
                 target="_blank"
                 rel="noreferrer"
               >

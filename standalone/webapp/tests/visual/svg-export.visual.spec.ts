@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename)
 /**
  * Compat SVG Export Visual Regression Tests
  *
- * Validates that compat SVG exports from the Apollon2 editor:
+ * Validates that compat SVG exports from the Apollon editor:
  * 1. Contain no CSS variables (var()), currentColor, or <marker> elements
  * 2. Render correctly in a non-browser SVG renderer (resvg — Rust-based)
  * 3. Produce pixel-consistent output across runs

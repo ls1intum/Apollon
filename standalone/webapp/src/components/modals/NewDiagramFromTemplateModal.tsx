@@ -77,7 +77,7 @@ export const NewDiagramFromTemplateModal = () => {
               p: 1,
               mt: 0.5,
               mb: 1,
-              bgcolor: "var(--apollon2-gray)",
+              bgcolor: "var(--apollon-gray)",
               borderRadius: 1,
             }}
           >

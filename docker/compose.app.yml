@@ -1,11 +1,11 @@
 services:
   webapp:
-    image: "ghcr.io/ls1intum/apollon2/apollon-webapp:${IMAGE_TAG:-latest}"
+    image: "ghcr.io/ls1intum/apollon/apollon-webapp:${IMAGE_TAG:-latest}"
     restart: unless-stopped
     expose:
       - "8080"
     networks:
-      - apollon2
+      - apollon
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=16m
@@ -29,7 +29,7 @@ services:
         max-file: "5"
 
   server:
-    image: "ghcr.io/ls1intum/apollon2/apollon-server:${IMAGE_TAG:-latest}"
+    image: "ghcr.io/ls1intum/apollon/apollon-server:${IMAGE_TAG:-latest}"
     expose:
       - "8000"
       - "4444"
@@ -40,7 +40,7 @@ services:
       - REDIS_URL=redis://db:6379
     restart: unless-stopped
     networks:
-      - apollon2
+      - apollon
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=64m
@@ -61,6 +61,6 @@ services:
         max-file: "5"
 
 networks:
-  apollon2:
-    name: apollon2
+  apollon:
+    name: apollon
     driver: bridge

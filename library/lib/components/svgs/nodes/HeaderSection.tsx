@@ -22,7 +22,7 @@ export const HeaderSection: FC<HeaderSectionProps> = ({
   headerHeight,
   isUnderlined = false,
   textColor,
-  fill = "var(--apollon2-background)",
+  fill = "var(--apollon-background)",
 }) => {
   return (
     <>

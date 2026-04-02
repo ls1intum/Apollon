@@ -14,7 +14,7 @@ interface Props {
 
 // bug report url
 export const bugReportURL =
-  "https://github.com/ls1intum/apollon2/issues/new?labels=bug&template=bug-report.md"
+  "https://github.com/ls1intum/Apollon/issues/new?labels=bug&template=bug-report.md"
 
 export const NavbarHelp: FC<Props> = ({ color }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -76,8 +76,8 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
       >
         <MenuItem
           sx={{
-            background: "var(--apollon2-background)",
-            color: "var(--apollon2-primary-contrast)",
+            background: "var(--apollon-background)",
+            color: "var(--apollon-primary-contrast)",
           }}
           onClick={openHelpModal}
         >

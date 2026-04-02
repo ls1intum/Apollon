@@ -8,7 +8,7 @@ services:
     depends_on:
       - server
     networks:
-      - apollon2-local
+      - apollon-local
 
   server:
     build:
@@ -26,7 +26,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - apollon2-local
+      - apollon-local
 
   db:
     image: redis:7-alpine
@@ -35,7 +35,7 @@ services:
     volumes:
       - dbdata:/data
     networks:
-      - apollon2-local
+      - apollon-local
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -46,5 +46,5 @@ volumes:
   dbdata:
 
 networks:
-  apollon2-local:
+  apollon-local:
     driver: bridge

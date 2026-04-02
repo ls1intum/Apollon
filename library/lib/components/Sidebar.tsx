@@ -34,7 +34,7 @@ export const Sidebar = () => {
         width: "180px",
         minWidth: "180px",
         height: "100%",
-        backgroundColor: "var(--apollon2-background)",
+        backgroundColor: "var(--apollon-background)",
         display: "flex",
         flexDirection: "column",
         padding: "10px",

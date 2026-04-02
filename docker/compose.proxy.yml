@@ -1,7 +1,7 @@
 services:
   caddy:
     image: caddy:2.9-alpine
-    container_name: apollon2-caddy
+    container_name: apollon-caddy
     restart: unless-stopped
     ports:
       - "80:80"
@@ -15,7 +15,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
-      - apollon2
+      - apollon
     cap_drop:
       - ALL
     cap_add:
@@ -33,6 +33,6 @@ volumes:
   caddy_config:
 
 networks:
-  apollon2:
-    name: apollon2
+  apollon:
+    name: apollon
     driver: bridge

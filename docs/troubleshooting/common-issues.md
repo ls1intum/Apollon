@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common issues and their solutions when working with the Apollon2 monorepo.
+Common issues and their solutions when working with the Apollon monorepo.
 
 ## Node.js Version Issues
 

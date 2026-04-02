@@ -1,14 +1,14 @@
 # Setup Instructions
 
-Follow these steps to set up the Apollon2 monorepo on your local machine.
+Follow these steps to set up the Apollon monorepo on your local machine.
 
 ## Initial Setup
 
 1. **Clone the repository:**
 
    ```bash
-   git clone git@github.com:ls1intum/Apollon2.git
-   cd Apollon2
+   git clone git@github.com:ls1intum/Apollon.git
+   cd Apollon
    ```
 
 2. **Use the correct Node.js version:**

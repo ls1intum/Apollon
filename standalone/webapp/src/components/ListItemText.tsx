@@ -7,7 +7,7 @@ import {
 export const ListItemText: React.FC<ListItemTextProps> = ({ sx, ...props }) => {
   return (
     <MUIListItemText
-      sx={{ ...sx, color: "var(--apollon2-primary-contrast)" }}
+      sx={{ ...sx, color: "var(--apollon-primary-contrast)" }}
       {...props}
     />
   )

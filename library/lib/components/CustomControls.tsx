@@ -48,8 +48,8 @@ export const CustomControls = () => {
                 height={16}
                 fill={
                   canUndo
-                    ? "var(--apollon2-primary-contrast)"
-                    : "var(--apollon2-secondary)"
+                    ? "var(--apollon-primary-contrast)"
+                    : "var(--apollon-secondary)"
                 }
               />
             </button>
@@ -70,8 +70,8 @@ export const CustomControls = () => {
                 height={16}
                 fill={
                   canRedo
-                    ? "var(--apollon2-primary-contrast)"
-                    : "var(--apollon2-secondary)"
+                    ? "var(--apollon-primary-contrast)"
+                    : "var(--apollon-secondary)"
                 }
               />
             </button>
@@ -81,7 +81,7 @@ export const CustomControls = () => {
       <div
         style={{
           userSelect: "none",
-          border: "1px solid var(--apollon2-primary-contrast)",
+          border: "1px solid var(--apollon-primary-contrast)",
           borderRadius: 8,
           paddingLeft: 4,
           paddingRight: 4,
@@ -90,7 +90,7 @@ export const CustomControls = () => {
           height: "100%",
           alignItems: "center",
           justifyContent: "center",
-          color: "var(--apollon2-primary-contrast)",
+          color: "var(--apollon-primary-contrast)",
         }}
         onClick={() => zoomTo(1)}
       >

@@ -7,7 +7,7 @@ services:
     volumes:
       - dbdata:/data
     networks:
-      - apollon2
+      - apollon
     command: redis-server --appendonly yes --appendfsync everysec
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -26,6 +26,6 @@ volumes:
   dbdata:
 
 networks:
-  apollon2:
-    name: apollon2
+  apollon:
+    name: apollon
     driver: bridge

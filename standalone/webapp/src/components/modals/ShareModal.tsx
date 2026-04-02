@@ -96,7 +96,7 @@ export const ShareModal = () => {
         </div>
       </div>
       <fieldset className="border border-gray-300 p-2 rounded-xl w-fill ">
-        <legend className="text-sm px-2 text-[var(--apollon2-primary-contrast)]">
+        <legend className="text-sm px-2 text-[var(--apollon-primary-contrast)]">
           Recently shared Diagram:
         </legend>
         <div className="flex items-center ">
@@ -104,7 +104,7 @@ export const ShareModal = () => {
             type="text"
             value={window.location.href}
             readOnly
-            className="grow h-[42px] px-3 py-2 border rounded-md border-r-0 rounded-r-none border-[var(--apollon2-primary-contrast)] bg-[var(--apollon2-background)] text-[var(--apollon2-primary-contrast)]"
+            className="grow h-[42px] px-3 py-2 border rounded-md border-r-0 rounded-r-none border-[var(--apollon-primary-contrast)] bg-[var(--apollon-background)] text-[var(--apollon-primary-contrast)]"
           />
           <APButton
             onClick={() => copyToClipboard(window.location.href)}

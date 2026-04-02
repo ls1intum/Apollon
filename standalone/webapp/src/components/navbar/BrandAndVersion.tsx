@@ -19,7 +19,7 @@ export const BrandAndVersion = () => {
           fontWeight: 700,
         }}
       >
-        Apollon2
+        Apollon
       </Typography>
       <Typography variant="body2" sx={{ color: secondary }}>
         {appVersion}

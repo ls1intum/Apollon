@@ -40,7 +40,7 @@ export const ApollonLocal: React.FC = () => {
     setEditor(instance)
 
     return () => {
-      log.debug("Cleaning up Apollon2 instance")
+      log.debug("Cleaning up Apollon instance")
       instance.destroy()
     }
   }, [diagram?.id, state?.timeStapToCreate])

@@ -29,9 +29,9 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
-  const strokeColor = data.strokeColor || "var(--apollon2-primary-contrast)"
-  const fillColor = data.fillColor || "var(--apollon2-background)"
-  const textColor = data.textColor || "var(--apollon2-primary-contrast)"
+  const strokeColor = data.strokeColor || "var(--apollon-primary-contrast)"
+  const fillColor = data.fillColor || "var(--apollon-background)"
+  const textColor = data.textColor || "var(--apollon-primary-contrast)"
 
   return (
     <svg

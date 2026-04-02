@@ -1,9 +1,9 @@
 # Project Structure
 
-Here is a brief overview of the Apollon2 monorepo structure:
+Here is a brief overview of the Apollon monorepo structure:
 
 ```
-apollon2/
+apollon/
 ├── standalone/
 │   ├── server/
 │   │   ├── src/

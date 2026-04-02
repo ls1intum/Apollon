@@ -1,4 +1,4 @@
-<!-- Thanks for contributing to Apollon2! Before you submit your pull request, please make sure to check the following boxes by putting an x in the [ ] (don't: [x ], [ x], do: [x]) -->
+<!-- Thanks for contributing to Apollon! Before you submit your pull request, please make sure to check the following boxes by putting an x in the [ ] (don't: [x ], [ x], do: [x]) -->
 <!-- If your pull request is not ready for review yet, create a draft pull request! -->
 
 ### Checklist
@@ -11,7 +11,7 @@
 <!-- Why is this change required? What problem does it solve? -->
 <!-- If it fixes an open issue, please link to the issue here. -->
 
-This PR completes https://github.com/ls1intum/Apollon2/issues/xx
+This PR completes https://github.com/ls1intum/Apollon/issues/xx
 
 ### Description
 

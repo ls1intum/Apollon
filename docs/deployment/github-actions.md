@@ -1,6 +1,6 @@
 # GitHub Actions
 
-Deployment is through [GitHub Action triggers](https://github.com/ls1intum/Apollon2/actions/workflows/deploy-prod.yml).
+Deployment is through [GitHub Action triggers](https://github.com/ls1intum/Apollon/actions/workflows/deploy-prod.yml).
 
 Click on "Run workflow" dropdown and select the main branch, then run the workflow.
 

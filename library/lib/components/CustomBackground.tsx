@@ -6,14 +6,14 @@ export const CustomBackground = () => {
       <Background
         id="1"
         gap={10}
-        color="var(--apollon2-gray)"
+        color="var(--apollon-gray)"
         variant={BackgroundVariant.Lines}
       />
 
       <Background
         id="2"
         gap={50}
-        color="var(--apollon2-grid)"
+        color="var(--apollon-grid)"
         variant={BackgroundVariant.Lines}
       />
     </>

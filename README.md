@@ -1,13 +1,13 @@
-# Apollon2 Re-Engineering
+# Apollon
 
-Welcome to the Apollon2 Monorepo! This repository uses **npm workspaces** to manage multiple packages (including a server, webapp, and library) in a single codebase.
+Welcome to the Apollon Monorepo! This repository uses **npm workspaces** to manage multiple packages (including a server, webapp, and library) in a single codebase.
 
 ## Quick Start
 
 ```bash
 # Clone the repository
-git clone git@github.com:ls1intum/Apollon2.git
-cd Apollon2
+git clone git@github.com:ls1intum/Apollon.git
+cd Apollon
 
 # Use correct Node.js version
 nvm install && nvm use
@@ -39,20 +39,20 @@ No `.env` files needed — defaults match the local setup.
 | Library | React, TypeScript, React Flow, Yjs (CRDT), Zustand, Vite |
 | Server | Express 5, Redis (RedisJSON), WebSocket relay |
 | Webapp | React, TypeScript, Vite, MUI, Tailwind |
-| Database | Redis with RedisJSON (diagrams expire after 60 days via native TTL) |
+| Database | Redis with RedisJSON (diagrams expire after 120 days via native TTL) |
 | Reverse Proxy | Caddy (production) |
 
 ## Documentation
 
 For complete documentation, setup instructions, and guides, visit:
 
-**[https://apollon2.readthedocs.io/en/latest/](https://apollon2.readthedocs.io/en/latest/)**
+**[https://apollon.readthedocs.io/en/latest/](https://apollon.readthedocs.io/en/latest/)**
 
-- [Getting Started](https://apollon2.readthedocs.io/en/latest/getting-started/requirements.html) - Requirements and setup
-- [Development](https://apollon2.readthedocs.io/en/latest/development/project-structure.html) - Project structure and workflow
-- [Mobile Development](https://apollon2.readthedocs.io/en/latest/mobile/ios-android-setup.html) - iOS and Android with Capacitor
-- [Deployment](https://apollon2.readthedocs.io/en/latest/deployment/github-actions.html) - GitHub Actions and Docker Compose
-- [Troubleshooting](https://apollon2.readthedocs.io/en/latest/troubleshooting/common-issues.html) - Common issues
+- [Getting Started](https://apollon.readthedocs.io/en/latest/getting-started/requirements.html) - Requirements and setup
+- [Development](https://apollon.readthedocs.io/en/latest/development/project-structure.html) - Project structure and workflow
+- [Mobile Development](https://apollon.readthedocs.io/en/latest/mobile/ios-android-setup.html) - iOS and Android with Capacitor
+- [Deployment](https://apollon.readthedocs.io/en/latest/deployment/github-actions.html) - GitHub Actions and Docker Compose
+- [Troubleshooting](https://apollon.readthedocs.io/en/latest/troubleshooting/common-issues.html) - Common issues
 
 ## Requirements
 
@@ -62,4 +62,4 @@ For complete documentation, setup instructions, and guides, visit:
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://apollon2.readthedocs.io/en/latest/contributing.html) for detailed instructions.
+We welcome contributions! Please see our [Contributing Guide](https://apollon.readthedocs.io/en/latest/contributing.html) for detailed instructions.

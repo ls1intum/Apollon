@@ -1,4 +1,4 @@
-# Apollon2: Reengineered Diagram Editor
+# Apollon: Reengineered Diagram Editor
 
 ```{figure} ./images/ApollomitLyraundSonnensymbolen.png
 :width: 200px

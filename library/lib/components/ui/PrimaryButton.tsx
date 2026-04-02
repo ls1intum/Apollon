@@ -9,9 +9,9 @@ const buttonBaseStyle: React.CSSProperties = {
   padding: "4px 8px",
   fontWeight: 500,
   fontSize: "0.875rem",
-  border: "1px solid var(--apollon2-primary)",
-  backgroundColor: "var(--apollon2-background)",
-  color: "var(--apollon2-primary)",
+  border: "1px solid var(--apollon-primary)",
+  backgroundColor: "var(--apollon-background)",
+  color: "var(--apollon-primary)",
   cursor: "pointer",
 }
 
@@ -24,11 +24,9 @@ export const PrimaryButton: React.FC<Props> = ({
   const buttonStyle: React.CSSProperties = {
     ...buttonBaseStyle,
     backgroundColor: isSelected
-      ? "var(--apollon2-primary)"
-      : "var(--apollon2-background)",
-    color: isSelected
-      ? "var(--apollon2-background)"
-      : "var(--apollon2-primary)",
+      ? "var(--apollon-primary)"
+      : "var(--apollon-background)",
+    color: isSelected ? "var(--apollon-background)" : "var(--apollon-primary)",
     ...style,
   }
 

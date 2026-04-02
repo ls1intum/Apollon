@@ -11,7 +11,7 @@ export const DividerLine: React.FC<DividerLineProps> = ({
   width = "100%",
   height = "1px",
   style,
-  backgroundColor = "var(--apollon2-primary-contrast)",
+  backgroundColor = "var(--apollon-primary-contrast)",
 }) => (
   <div
     style={{

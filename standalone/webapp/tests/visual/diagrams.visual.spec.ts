@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 /**
- * Visual regression tests for the Apollon2 UML diagram editor.
+ * Visual regression tests for the Apollon UML diagram editor.
  *
  * Each test injects a fixture UMLModel into localStorage (via addInitScript)
  * so that Zustand's persist store hydrates with a real diagram before the
