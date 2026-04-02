@@ -13,6 +13,6 @@ jobs:
     with:
       environment: Production
       docker-compose-file: "./docker/compose.app.yml"
-      main-image-name: ghcr.io/ls1intum/apollon/apollon-server
+      main-image-name: ghcr.io/ls1intum/apollon2/apollon-server
       image-tag: ${{ inputs.image-tag }}
     secrets: inherit

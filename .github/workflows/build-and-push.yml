@@ -24,11 +24,11 @@ jobs:
         include:
           - name: Webapp
             dockerfile: ./standalone/webapp/Dockerfile
-            image: ghcr.io/ls1intum/apollon/apollon-webapp
+            image: ghcr.io/ls1intum/apollon2/apollon-webapp
             context: .
           - name: Server
             dockerfile: ./standalone/server/Dockerfile
-            image: ghcr.io/ls1intum/apollon/apollon-server
+            image: ghcr.io/ls1intum/apollon2/apollon-server
             context: .
     uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@main
     with:
