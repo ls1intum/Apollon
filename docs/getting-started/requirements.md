@@ -36,6 +36,12 @@ npm comes with Node.js. Verify your npm version:
 npm -v
 ```
 
+## Docker
+
+Docker is required to run Redis locally for development.
+
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) for your platform.
+
 ## Verifying Versions
 
 After setup, verify that you have the correct versions installed:

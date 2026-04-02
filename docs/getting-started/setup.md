@@ -24,23 +24,24 @@ Follow these steps to set up the Apollon2 monorepo on your local machine.
    npm install
    ```
 
-4. **Create .env files for standalone/webapp and standalone/server**
-
-   Check .env.examples files and create values
-
-5. **Build all packages:**
+4. **Build all packages:**
 
    ```bash
    npm run build
    ```
 
-6. **Run Docker and start database via docker:**
+5. **Start Redis** (requires Docker):
 
    ```bash
    npm run start:localdb
    ```
 
-7. **Start the project:**
+6. **Start development with hot reload:**
+
    ```bash
-   npm run start
+   npm run dev
    ```
+
+   This starts the library (build watch), server (http://localhost:8000), and webapp (http://localhost:5173) with hot reload.
+
+No `.env` files are needed — all defaults match the local setup. See `standalone/server/.env.example` and `standalone/webapp/.env.example` if you need to override defaults.

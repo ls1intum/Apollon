@@ -2,12 +2,6 @@
 
 Welcome to the Apollon2 Monorepo! This repository uses **npm workspaces** to manage multiple packages (including a server, webapp, and library) in a single codebase.
 
-## 📚 Documentation
-
-**For complete documentation, setup instructions, and guides, please visit:**
-
-**🔗 [https://apollon2.readthedocs.io/en/latest/](https://apollon2.readthedocs.io/en/latest/)**
-
 ## Quick Start
 
 ```bash
@@ -24,35 +18,48 @@ npm install
 # Build all packages
 npm run build
 
-# Setup DB (make sure docker is running)
+# Start Redis (requires Docker)
 npm run start:localdb
 
-# Start the project
-npm run start
+# Start dev stack with hot reload
+npm run dev
 ```
 
-## What's in the Documentation
+This starts:
+- **Library** build watch (auto-rebuilds on changes)
+- **Server** (tsx watch) on http://localhost:8000 with WebSocket relay on ws://localhost:4444
+- **Webapp** (Vite HMR) on http://localhost:5173
 
-- **🚀 [Getting Started](https://apollon2.readthedocs.io/en/latest/getting-started/requirements.html)** - Requirements and setup instructions
-- **💻 [Development](https://apollon2.readthedocs.io/en/latest/development/project-structure.html)** - Project structure and development workflow
-- **📱 [Mobile Development](https://apollon2.readthedocs.io/en/latest/mobile/ios-android-setup.html)** - iOS and Android setup with Capacitor
-- **🚀 [Deployment](https://apollon2.readthedocs.io/en/latest/deployment/github-actions.html)** - Github actions deployment and NPM publishing
-- **🛠️ [Troubleshooting](https://apollon2.readthedocs.io/en/latest/troubleshooting/common-issues.html)** - Common issues and solutions
-- **🤝 [Contributing](https://apollon2.readthedocs.io/en/latest/contributing.html)** - How to contribute to the project
+No `.env` files needed — defaults match the local setup.
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Library | React, TypeScript, React Flow, Yjs (CRDT), Zustand, Vite |
+| Server | Express 5, Redis (RedisJSON), WebSocket relay |
+| Webapp | React, TypeScript, Vite, MUI, Tailwind |
+| Database | Redis with RedisJSON (diagrams expire after 60 days via native TTL) |
+| Reverse Proxy | Caddy (production) |
+
+## Documentation
+
+For complete documentation, setup instructions, and guides, visit:
+
+**[https://apollon2.readthedocs.io/en/latest/](https://apollon2.readthedocs.io/en/latest/)**
+
+- [Getting Started](https://apollon2.readthedocs.io/en/latest/getting-started/requirements.html) - Requirements and setup
+- [Development](https://apollon2.readthedocs.io/en/latest/development/project-structure.html) - Project structure and workflow
+- [Mobile Development](https://apollon2.readthedocs.io/en/latest/mobile/ios-android-setup.html) - iOS and Android with Capacitor
+- [Deployment](https://apollon2.readthedocs.io/en/latest/deployment/github-actions.html) - GitHub Actions and Docker Compose
+- [Troubleshooting](https://apollon2.readthedocs.io/en/latest/troubleshooting/common-issues.html) - Common issues
 
 ## Requirements
 
 - **Node.js** (version specified in `.nvmrc`)
 - **npm** 7+ (for workspace support)
-- **Docker** (for containerized deployment)
+- **Docker** (for running Redis locally)
 
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](https://apollon2.readthedocs.io/en/latest/contributing.html) for detailed instructions.
-
-## Development with Hot Reload
-
-Run the full dev stack with hot reload:
-
-- npm run dev (from the repo root)
-- Starts: library build watch, server (tsx watch) on <http://localhost:8000>, webapp (Vite HMR) on <http://localhost:5173>
