@@ -18,10 +18,10 @@ export const HeaderSwitchElement: React.FC<Props> = ({
         alignItems: "center",
         justifyContent: "center",
         zIndex: ZINDEX.HEADER_SWITCH,
-        color: "var(--apollon-primary-contrast)",
+        color: "var(--apollon-primary-contrast, #000000)",
         ...(isComponentHeaderShown && {
           background:
-            "linear-gradient(to top right, transparent calc(50% - 1px), var(--apollon-primary-contrast) 50%, transparent calc(50% + 1px))",
+            "linear-gradient(to top right, transparent calc(50% - 1px), var(--apollon-primary-contrast, #000000) 50%, transparent calc(50% + 1px))",
         }),
       }}
     >

@@ -83,9 +83,9 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
         y={padding / 2}
         width={width - padding}
         height={height - padding}
-        stroke="var(--apollon-primary-contrast)"
+        stroke="var(--apollon-primary-contrast, #000000)"
         strokeWidth={LAYOUT.LINE_WIDTH}
-        fill="var(--apollon-background)"
+        fill="var(--apollon-background, white)"
       />
 
       {/* Title */}
@@ -94,7 +94,7 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
         y={padding + titleHeight / 2}
         fontSize="16"
         fontWeight="bold"
-        fill="var(--apollon-primary-contrast)"
+        fill="var(--apollon-primary-contrast, #000000)"
         textAnchor="middle"
         alignmentBaseline="middle"
       >
@@ -107,7 +107,7 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
         x2={width - padding / 2}
         y1={padding + titleHeight}
         y2={padding + titleHeight}
-        stroke="var(--apollon-primary-contrast)"
+        stroke="var(--apollon-primary-contrast, #000000)"
         strokeWidth={LAYOUT.LINE_WIDTH}
       />
 
@@ -118,7 +118,7 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
           x={padding}
           y={descriptionStartY + index * lineHeight}
           fontSize="14"
-          fill="var(--apollon-primary-contrast)"
+          fill="var(--apollon-primary-contrast, #000000)"
           alignmentBaseline="hanging"
         >
           {line}

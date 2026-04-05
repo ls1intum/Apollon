@@ -46,8 +46,8 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
       {showToolbar && (
         <Box
           sx={{
-            backgroundColor: "var(--apollon-background)",
-            boxShadow: "0 0 4px 0 var(--apollon-background-variant)",
+            backgroundColor: "var(--apollon-background, white)",
+            boxShadow: "0 0 4px 0 var(--apollon-background-variant, #f8f9fa)",
             borderRadius: "8px",
             padding: "8px",
             display: "flex",
@@ -68,7 +68,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             sx={{
               width: "16px",
               height: "16px",
-              backgroundColor: "var(--apollon-background)",
+              backgroundColor: "var(--apollon-background, white)",
               borderRadius: 1,
               display: "flex",
               justifyContent: "center",
@@ -85,7 +85,7 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
             sx={{
               width: "16px",
               height: "16px",
-              backgroundColor: "var(--apollon-background)",
+              backgroundColor: "var(--apollon-background, white)",
               borderRadius: 1,
               display: "flex",
               justifyContent: "center",

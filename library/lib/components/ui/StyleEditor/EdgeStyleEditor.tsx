@@ -28,8 +28,8 @@ const styles = {
     flexDirection: "column" as const,
     marginTop: 10,
     marginBottom: 10,
-    backgroundColor: "var(--apollon-background)",
-    border: "1px solid var(--apollon-gray)",
+    backgroundColor: "var(--apollon-background, white)",
+    border: "1px solid var(--apollon-gray, #e9ecef)",
     paddingBottom: 10,
   },
   colorOption: {
@@ -48,9 +48,9 @@ const styles = {
   resetButton: {
     marginTop: 12,
     padding: "6px 12px",
-    backgroundColor: "var(--apollon-background)",
-    color: "var(--apollon-primary-contrast)",
-    border: "1px solid var(--apollon-gray)",
+    backgroundColor: "var(--apollon-background, white)",
+    color: "var(--apollon-primary-contrast, #000000)",
+    border: "1px solid var(--apollon-gray, #e9ecef)",
     cursor: "pointer",
     borderRadius: 4,
     width: "fit-content",
@@ -123,7 +123,7 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
                   onSelect={() => toggleColorField(key)}
                 />
                 {key !== colorFields[colorFields.length - 1].key && (
-                  <DividerLine backgroundColor="var(--apollon-gray)" />
+                  <DividerLine backgroundColor="var(--apollon-gray, #e9ecef)" />
                 )}
               </>
             ))
@@ -140,7 +140,7 @@ export const EdgeStyleEditor: React.FC<EdgeStyleEditorProps> = ({
                   {colorFields.find((f) => f.key === activeColorField)?.label}
                 </Typography>
                 <CrossIcon
-                  fill="var(--apollon-primary-contrast)"
+                  fill="var(--apollon-primary-contrast, #000000)"
                   onClick={() => setActiveColorField(null)}
                 />
               </div>

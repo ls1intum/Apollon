@@ -73,8 +73,8 @@ export const GiveFeedbackAssessmentBox = ({ elementId, name, type }: Props) => {
               borderRadius: "4px",
               padding: "4px",
               flex: 1,
-              backgroundColor: "var(--apollon-background)",
-              color: "var(--apollon-primary-contrast)",
+              backgroundColor: "var(--apollon-background, white)",
+              color: "var(--apollon-primary-contrast, #000000)",
             }}
             maxLength={20}
             type="number"
@@ -99,8 +99,8 @@ export const GiveFeedbackAssessmentBox = ({ elementId, name, type }: Props) => {
               padding: "4px",
               flex: 1,
               resize: "vertical",
-              backgroundColor: "var(--apollon-background)",
-              color: "var(--apollon-primary-contrast)",
+              backgroundColor: "var(--apollon-background, white)",
+              color: "var(--apollon-primary-contrast, #000000)",
             }}
             placeholder="You can enter feedback here..."
             maxLength={500}

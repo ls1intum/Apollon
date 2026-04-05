@@ -6,9 +6,9 @@ export const TextField: React.FC<TextFieldProps> = ({ sx, ...props }) => {
     <MUITextField
       sx={{
         ...sx,
-        bgcolor: "var(--apollon-background)",
+        bgcolor: "var(--apollon-background, white)",
         input: {
-          color: "var(--apollon-primary-contrast)",
+          color: "var(--apollon-primary-contrast, #000000)",
           border: "none",
         },
       }}
