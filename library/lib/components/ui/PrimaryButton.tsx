@@ -26,7 +26,9 @@ export const PrimaryButton: React.FC<Props> = ({
     backgroundColor: isSelected
       ? "var(--apollon-primary, #3e8acc)"
       : "var(--apollon-background, white)",
-    color: isSelected ? "var(--apollon-background, white)" : "var(--apollon-primary, #3e8acc)",
+    color: isSelected
+      ? "var(--apollon-background, white)"
+      : "var(--apollon-primary, #3e8acc)",
     ...style,
   }
 
