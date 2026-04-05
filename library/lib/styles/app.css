@@ -1,38 +1,11 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  /* box-sizing: border-box; */
-
-  --apollon-primary: #3e8acc;
-  --apollon-primary-contrast: #000000;
-  --apollon-secondary: #6c757d;
-  --apollon-alert-warning-yellow: #ffc107;
-  --apollon-alert-warning-background: #fff3cd;
-  --apollon-alert-warning-border: #ffeeba;
-  --apollon-background: white;
-  --apollon-background-inverse: #000000;
-  --apollon-background-variant: #f8f9fa;
-  --apollon-gray: #e9ecef;
-  --apollon-grid: rgba(36, 39, 36, 0.1);
-  --apollon-gray-variant: #495057;
-  --apollon-alert-danger-color: #721c24;
-  --apollon-alert-danger-background: #f8d7da;
-  --apollon-alert-danger-border: #f5c6cb;
-  --apollon-switch-box-border-color: #dee2e6;
-  --apollon-list-group-color: #ffffff;
-  --apollon-btn-outline-secondary-color: #6c757d;
-  --apollon-modal-bottom-border: #e9ecef;
-  --xy-controls-button-background-color: var(--apollon-background);
-}
-
 .react-flow {
-  --panel-background: var(--apollon-background);
-  --panel-shadow: 0 0 4px 0 var(--apollon-background-variant);
-  --text: var(--apollon-primary-contrast);
-  --xy-edge-stroke: var(--apollon-primary-contrast);
+  --panel-background: var(--apollon-background, white);
+  --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
+  --text: var(--apollon-primary-contrast, #000000);
+  --xy-edge-stroke: var(--apollon-primary-contrast, #000000);
   --xy-edge-stroke-width: 2px;
   --xy-minimap-mask-background-color-props: #00000020;
+  --xy-controls-button-background-color: var(--apollon-background, white);
 }
 .react-flow__controls-button {
   background: none;
@@ -172,8 +145,8 @@ svg.react-flow__connectionline {
 }
 
 .control-button {
-  background-color: var(--apollon-background);
-  border: 1px solid var(--apollon-gray-variant);
+  background-color: var(--apollon-background, white);
+  border: 1px solid var(--apollon-gray-variant, #495057);
   border-radius: 8px;
   padding: 6px 8px;
   cursor: pointer;
@@ -189,7 +162,7 @@ svg.react-flow__connectionline {
 }
 
 .control-button:hover:not(.disabled) {
-  background-color: var(--apollon-background-variant);
+  background-color: var(--apollon-background-variant, #f8f9fa);
 }
 
 .control-button.disabled {
@@ -198,9 +171,7 @@ svg.react-flow__connectionline {
 }
 
 .control-button.disabled:hover {
-  background-color: var(
-    --apollon-background
-  ); /* Prevent hover effect when disabled */
+  background-color: var(--apollon-background, white);
 }
 
 .horizontally-not-resizable .react-flow__resize-control.top.line:hover {
@@ -216,17 +187,17 @@ svg.react-flow__connectionline {
   cursor: grab;
 }
 
-.MuiSelect-select {
-  color: var(--apollon-primary-contrast) !important;
+.apollon-editor .MuiSelect-select {
+  color: var(--apollon-primary-contrast, #000000) !important;
 }
-.MuiFormLabel-root {
-  color: var(--apollon-primary-contrast) !important;
+.apollon-editor .MuiFormLabel-root {
+  color: var(--apollon-primary-contrast, #000000) !important;
 }
-.MuiOutlinedInput-notchedOutline {
-  border-color: var(--apollon-primary-contrast) !important;
+.apollon-editor .MuiOutlinedInput-notchedOutline {
+  border-color: var(--apollon-primary-contrast, #000000) !important;
 }
-.MuiSvgIcon-root {
-  color: var(--apollon-primary-contrast) !important;
+.apollon-editor .MuiSvgIcon-root {
+  color: var(--apollon-primary-contrast, #000000) !important;
 }
 .scroll-overlay {
   position: absolute;
@@ -254,8 +225,8 @@ svg.react-flow__connectionline {
 }
 
 .scroll-overlay-hint-content {
-  background-color: var(--apollon-background);
-  border: 2px solid var(--apollon-primary);
+  background-color: var(--apollon-background, white);
+  border: 2px solid var(--apollon-primary, #3e8acc);
   border-radius: 8px;
   padding: 16px 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -266,7 +237,7 @@ svg.react-flow__connectionline {
 
 .scroll-overlay-hint-text {
   margin: 0;
-  color: var(--apollon-primary);
+  color: var(--apollon-primary, #3e8acc);
   font-weight: 600;
   font-size: 14px;
   text-align: center;

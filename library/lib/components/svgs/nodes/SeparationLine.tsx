@@ -10,7 +10,7 @@ interface SeparationLineProps {
 export const SeparationLine: FC<SeparationLineProps> = ({
   y,
   width,
-  strokeColor = "var(--apollon-primary-contrast)",
+  strokeColor = "var(--apollon-primary-contrast, #000000)",
 }) => (
   <line
     x1="0"

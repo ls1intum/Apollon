@@ -77,7 +77,7 @@ export const CustomMiniMap = () => {
   if (minimapCollapsed) {
     return (
       <Panel position="bottom-right" onClick={() => setMinimapCollapsed(false)}>
-        <MapIcon fill="var(--apollon-primary-contrast)" />
+        <MapIcon fill="var(--apollon-primary-contrast, #000000)" />
       </Panel>
     )
   }
@@ -96,7 +96,7 @@ export const CustomMiniMap = () => {
           display: "flex",
           zIndex: ZINDEX.PANEL,
           padding: 8,
-          backgroundColor: "var(--apollon-background)",
+          backgroundColor: "var(--apollon-background, white)",
           borderRadius: "4px",
           justifyContent: "center",
           alignItems: "center",
@@ -104,7 +104,7 @@ export const CustomMiniMap = () => {
           boxShadow: "0 0 4px 0 rgb(0 0 0 / 0.2)",
         }}
       >
-        <SouthEastArrowIcon fill="var(--apollon-primary-contrast)" />
+        <SouthEastArrowIcon fill="var(--apollon-primary-contrast, #000000)" />
       </div>
 
       <MiniMap
