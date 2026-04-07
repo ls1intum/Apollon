@@ -41,30 +41,30 @@ interface Props {
   className?: string
 }
 
-function calculateAdjustedQuarter(x: number): number {
-  const quarter = x / 4 // Calculate 1/4 of x
-  return Math.floor(quarter / 10) * 10 // Round down to nearest multiple of 10
-}
+// function calculateAdjustedQuarter(x: number): number {
+//   const quarter = x / 4 // Calculate 1/4 of x
+//   return Math.floor(quarter / 10) * 10 // Round down to nearest multiple of 10
+// }
 
 export function DefaultNodeWrapper({
   elementId,
   children,
-  width = 0,
-  height = 0,
+  // width = 0,
+  // height = 0,
   hiddenHandles = [],
   className,
 }: Props) {
   const { getNode } = useReactFlow()
   const nodeType = getNode(elementId)?.type
-  const adjustedWidth = calculateAdjustedQuarter(width)
-  const adjustedHeight = calculateAdjustedQuarter(height)
+  // const adjustedWidth = calculateAdjustedQuarter(width)
+  // const adjustedHeight = calculateAdjustedQuarter(height)
   const selected = useIsOnlyThisElementSelected(elementId)
   const isDiagramModifiable = useDiagramModifiable()
 
   const selectedHandleStyle = {
     opacity: 0.6,
     padding: 4,
-    backgroundColor: "rgb(99, 154, 242)",
+    backgroundColor: "rgb(80, 199, 247)",
     zIndex: 10,
     border: "0px",
   }
@@ -74,24 +74,9 @@ export function DefaultNodeWrapper({
   // Define all handles with their properties
   const handles = [
     {
-      id: HandleId.TopLeft,
-      position: Position.Top,
-      style: { left: adjustedWidth, ...handleStyle },
-    },
-    {
       id: HandleId.Top,
       position: Position.Top,
       style: { ...handleStyle },
-    },
-    {
-      id: HandleId.TopRight,
-      position: Position.Top,
-      style: { left: width - adjustedWidth, ...handleStyle },
-    },
-    {
-      id: HandleId.RightTop,
-      position: Position.Right,
-      style: { top: adjustedHeight, ...handleStyle },
     },
     {
       id: HandleId.Right,
@@ -99,39 +84,14 @@ export function DefaultNodeWrapper({
       style: { ...handleStyle },
     },
     {
-      id: HandleId.RightBottom,
-      position: Position.Right,
-      style: { top: height - adjustedHeight, ...handleStyle },
-    },
-    {
-      id: HandleId.BottomRight,
-      position: Position.Bottom,
-      style: { left: width - adjustedWidth, ...handleStyle },
-    },
-    {
       id: HandleId.Bottom,
       position: Position.Bottom,
       style: { ...handleStyle },
     },
     {
-      id: HandleId.BottomLeft,
-      position: Position.Bottom,
-      style: { left: adjustedWidth, ...handleStyle },
-    },
-    {
-      id: HandleId.LeftBottom,
-      position: Position.Left,
-      style: { top: height - adjustedHeight, ...handleStyle },
-    },
-    {
       id: HandleId.Left,
       position: Position.Left,
       style: { ...handleStyle },
-    },
-    {
-      id: HandleId.LeftTop,
-      position: Position.Left,
-      style: { top: adjustedHeight, ...handleStyle },
     },
   ]
 
