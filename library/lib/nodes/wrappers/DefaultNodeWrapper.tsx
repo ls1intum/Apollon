@@ -40,16 +40,9 @@ interface Props {
   className?: string
 }
 
-// function calculateAdjustedQuarter(x: number): number {
-//   const quarter = x / 4 // Calculate 1/4 of x
-//   return Math.floor(quarter / 10) * 10 // Round down to nearest multiple of 10
-// }
-
 export function DefaultNodeWrapper({
   elementId,
   children,
-  // width = 0,
-  // height = 0,
   hiddenHandles = [],
   className,
 }: Props) {
