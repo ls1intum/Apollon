@@ -87,13 +87,13 @@ function App({ onReactFlowInit }: AppProps) {
 
   return (
     <div
-      className="apollon-editor"
+      className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""}`}
       style={{
         display: "flex",
         height: "100%",
         width: "100%",
         overflow: "hidden",
-        backgroundColor: "var(--apollon-background, white)",
+        backgroundColor: "var(--apollon-background, #ffffff)",
         position: "relative",
       }}
     >

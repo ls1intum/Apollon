@@ -21,6 +21,10 @@ async function saveDiagram(key: string, diagram: Diagram): Promise<void> {
   await redis.set(key, JSON.stringify(diagram), { EX: DIAGRAM_TTL_SECONDS })
 }
 
+router.get("/converter/status", (req, res) => {
+  conversionResource.status(req, res)
+})
+
 router.post("/converter/pdf", (req, res) =>
   conversionResource.convert(req, res)
 )

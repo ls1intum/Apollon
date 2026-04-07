@@ -16,7 +16,7 @@ export const useExportAsPNG = () => {
       return
     }
 
-    const apollonSVG: SVG = await editor.exportAsSVG()
+    const apollonSVG: SVG = await editor.exportAsSVG({ svgMode: "compat" })
 
     const pngBlob = await convertRenderedSVGToPNG(
       apollonSVG,

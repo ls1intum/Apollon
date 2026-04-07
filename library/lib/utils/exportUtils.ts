@@ -18,25 +18,6 @@ const svgFontStyles = `
 
 type SvgExportMode = "web" | "compat"
 
-const buildRootVariableStyles = (): string => {
-  const lines = Object.entries(CSS_VARIABLE_FALLBACKS).map(
-    ([cssVar, fallback]) => {
-      const apollonVar = cssVar.replace("--apollon-", "--apollon-")
-      return `  ${cssVar}: var(${apollonVar}, ${fallback});`
-    }
-  )
-
-  // Keep XYFlow edge vars defined so web SVGs render without external CSS.
-  lines.push(
-    "  --xy-edge-stroke: var(--apollon-primary-contrast);",
-    "  --xy-edge-stroke-default: var(--apollon-primary-contrast);",
-    `  --xy-edge-stroke-width: ${LAYOUT.LINE_WIDTH_EDGE}px;`,
-    `  --xy-edge-stroke-width-default: ${LAYOUT.LINE_WIDTH_EDGE}px;`
-  )
-
-  return `:root {\n${lines.join("\n")}\n}`
-}
-
 export const getSVG = (
   container: HTMLElement,
   clip: Rect,
@@ -56,8 +37,9 @@ export const getSVG = (
   const mainSVG = document.createElementNS(SVG_NS, "svg")
   mainSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg")
   const styleEl = document.createElementNS(SVG_NS, "style")
-  styleEl.textContent =
-    (svgMode === "web" ? `${buildRootVariableStyles()}\n` : "") + svgFontStyles
+  // In web mode, keep CSS variables unresolved so the host app theme can drive
+  // light/dark colors. Compat mode resolves variables to static values below.
+  styleEl.textContent = svgFontStyles
   mainSVG.appendChild(styleEl)
   mainSVG.setAttribute("viewBox", `${clip.x} ${clip.y} ${width} ${height}`)
   mainSVG.setAttribute("width", `${width}`)

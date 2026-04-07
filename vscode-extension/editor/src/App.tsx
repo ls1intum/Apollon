@@ -20,7 +20,9 @@ function App() {
   }
 
   const exportDiagram = async () => {
-    const diagramSVG = await editor!.exportAsSVG()
+    const diagramSVG = await editor!.exportAsSVG({
+      svgMode: exportType === "png" ? "compat" : "web",
+    })
     let exportContent
 
     switch (exportType) {
