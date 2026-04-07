@@ -58,8 +58,11 @@ export function DefaultNodeWrapper({
   const isDiagramModifiable = useDiagramModifiable()
 
   const baseHandleStyle = {
-    backgroundColor: "rgba(0, 100, 255, 0.2)",
-    border: "3px solid #0064ff",
+    width: 8,
+    height: 8,
+    position: "absolute" as const,
+    backgroundColor: "transparent",
+    border: "none",
     zIndex: 10,
     transition: "opacity 120ms ease",
     overflow: "visible",
@@ -71,62 +74,26 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.Top,
       position: Position.Top,
-      style: {
-        ...baseHandleStyle,
-        width: 40,
-        height: 20,
-        transform: "translate(-50%, -100%)",
-        borderBottom: "none",
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-      },
+      className: "apollon-arc-handle apollon-arc-handle--top",
+      style: { ...baseHandleStyle },
     },
     {
       id: HandleId.Right,
       position: Position.Right,
-      style: {
-        ...baseHandleStyle,
-        width: 20,
-        height: 40,
-        transform: "translate(100%, -50%)",
-        borderLeft: "none",
-        borderTopRightRadius: 20,
-        borderBottomRightRadius: 20,
-        borderTopLeftRadius: 0,
-        borderBottomLeftRadius: 0,
-      },
+      className: "apollon-arc-handle apollon-arc-handle--right",
+      style: { ...baseHandleStyle },
     },
     {
       id: HandleId.Bottom,
       position: Position.Bottom,
-      style: {
-        ...baseHandleStyle,
-        width: 40,
-        height: 20,
-        transform: "translate(-50%, 100%)",
-        borderTop: "none",
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
-      },
+      className: "apollon-arc-handle apollon-arc-handle--bottom",
+      style: { ...baseHandleStyle },
     },
     {
       id: HandleId.Left,
       position: Position.Left,
-      style: {
-        ...baseHandleStyle,
-        width: 20,
-        height: 40,
-        transform: "translate(-100%, -50%)",
-        borderRight: "none",
-        borderTopLeftRadius: 20,
-        borderBottomLeftRadius: 20,
-        borderTopRightRadius: 0,
-        borderBottomRightRadius: 0,
-      },
+      className: "apollon-arc-handle apollon-arc-handle--left",
+      style: { ...baseHandleStyle },
     },
   ]
 
@@ -146,6 +113,7 @@ export function DefaultNodeWrapper({
                   <Handle
                     key={handle.id}
                     id={handle.id}
+                    className={handle.className}
                     type="source"
                     position={handle.position}
                     style={handle.style}
