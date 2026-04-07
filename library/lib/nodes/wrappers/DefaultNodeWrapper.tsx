@@ -1,7 +1,6 @@
 import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSelectableWrapper"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { Handle, Position, useReactFlow } from "@xyflow/react"
 
 // Define enum for handle IDs
@@ -56,42 +55,78 @@ export function DefaultNodeWrapper({
 }: Props) {
   const { getNode } = useReactFlow()
   const nodeType = getNode(elementId)?.type
-  // const adjustedWidth = calculateAdjustedQuarter(width)
-  // const adjustedHeight = calculateAdjustedQuarter(height)
-  const selected = useIsOnlyThisElementSelected(elementId)
   const isDiagramModifiable = useDiagramModifiable()
 
-  const selectedHandleStyle = {
-    opacity: 0.6,
-    padding: 4,
-    backgroundColor: "rgb(80, 199, 247)",
+  const baseHandleStyle = {
+    backgroundColor: "rgba(0, 100, 255, 0.2)",
+    border: "3px solid #0064ff",
     zIndex: 10,
-    border: "0px",
+    transition: "opacity 120ms ease",
+    overflow: "visible",
+    boxSizing: "border-box" as const,
   }
-
-  const handleStyle = selected ? selectedHandleStyle : { border: "0px" }
 
   // Define all handles with their properties
   const handles = [
     {
       id: HandleId.Top,
       position: Position.Top,
-      style: { ...handleStyle },
+      style: {
+        ...baseHandleStyle,
+        width: 40,
+        height: 20,
+        transform: "translate(-50%, -100%)",
+        borderBottom: "none",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+      },
     },
     {
       id: HandleId.Right,
       position: Position.Right,
-      style: { ...handleStyle },
+      style: {
+        ...baseHandleStyle,
+        width: 20,
+        height: 40,
+        transform: "translate(100%, -50%)",
+        borderLeft: "none",
+        borderTopRightRadius: 20,
+        borderBottomRightRadius: 20,
+        borderTopLeftRadius: 0,
+        borderBottomLeftRadius: 0,
+      },
     },
     {
       id: HandleId.Bottom,
       position: Position.Bottom,
-      style: { ...handleStyle },
+      style: {
+        ...baseHandleStyle,
+        width: 40,
+        height: 20,
+        transform: "translate(-50%, 100%)",
+        borderTop: "none",
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+      },
     },
     {
       id: HandleId.Left,
       position: Position.Left,
-      style: { ...handleStyle },
+      style: {
+        ...baseHandleStyle,
+        width: 20,
+        height: 40,
+        transform: "translate(-100%, -50%)",
+        borderRight: "none",
+        borderTopLeftRadius: 20,
+        borderBottomLeftRadius: 20,
+        borderTopRightRadius: 0,
+        borderBottomRightRadius: 0,
+      },
     },
   ]
 
