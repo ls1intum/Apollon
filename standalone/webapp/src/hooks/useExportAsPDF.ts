@@ -8,7 +8,7 @@ export const useExportAsPDF = () => {
   const exportAsPDF = async () => {
     if (!editor) return
 
-    const ApollonSVG = await editor.exportAsSVG()
+    const ApollonSVG = await editor.exportAsSVG({ svgMode: "compat" })
     const { clip } = ApollonSVG
     const width = clip.width
     const height = clip.height
