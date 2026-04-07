@@ -64,7 +64,7 @@
   width: 40px;
   height: 20px;
   left: 50%;
-  top: -20px;
+  top: -16px;
   transform: translateX(-50%);
   border-bottom: none;
   border-top-left-radius: 20px;
@@ -74,7 +74,7 @@
 .react-flow__handle.apollon-arc-handle--right::before {
   width: 20px;
   height: 40px;
-  left: 8px;
+  left: 4px;
   top: 50%;
   transform: translateY(-50%);
   border-left: none;
@@ -86,7 +86,7 @@
   width: 40px;
   height: 20px;
   left: 50%;
-  top: 8px;
+  top: 4px;
   transform: translateX(-50%);
   border-top: none;
   border-bottom-left-radius: 20px;
@@ -96,7 +96,7 @@
 .react-flow__handle.apollon-arc-handle--left::before {
   width: 20px;
   height: 40px;
-  left: -20px;
+  left: -16px;
   top: 50%;
   transform: translateY(-50%);
   border-right: none;
