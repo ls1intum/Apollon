@@ -137,17 +137,40 @@ export const useConnect = () => {
                   sourceHandle: targetHandle,
                 }
 
+          // Disallow loop from a handle to the same handle on the same node.
+          if (
+            newEdge.source === newEdge.target &&
+            newEdge.sourceHandle === newEdge.targetHandle
+          ) {
+            startEdge.current = null
+            connectionStartParams.current = null
+            return
+          }
+
           setEdges((eds) =>
             eds.map((edge) => (edge.id === newEdge.id ? newEdge : edge))
           )
         } else {
+          const sourceNodeId = connectionState.fromNode!.id
+          const sourceHandleId = connectionState.fromHandle?.id
+
+          // Disallow loop from a handle to itself, but allow loops to other handles.
+          if (
+            sourceNodeId === nodeOnTop.id &&
+            sourceHandleId === targetHandle
+          ) {
+            startEdge.current = null
+            connectionStartParams.current = null
+            return
+          }
+
           setEdges((eds) =>
             eds.concat({
               id: generateUUID(),
-              source: connectionState.fromNode!.id,
+              source: sourceNodeId,
               target: nodeOnTop.id,
               type: defaultEdgeType,
-              sourceHandle: connectionState.fromHandle?.id,
+              sourceHandle: sourceHandleId,
               targetHandle,
             })
           )

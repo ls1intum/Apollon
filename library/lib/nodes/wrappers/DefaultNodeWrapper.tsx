@@ -154,6 +154,14 @@ export function DefaultNodeWrapper({
                     type="source"
                     position={handle.position}
                     style={handle.style}
+                    isValidConnection={(connection) =>
+                      !(
+                        connection.source === elementId &&
+                        connection.target === elementId &&
+                        connection.sourceHandle === handle.id &&
+                        connection.targetHandle === handle.id
+                      )
+                    }
                     isConnectable={isDiagramModifiable}
                   />
                 )
