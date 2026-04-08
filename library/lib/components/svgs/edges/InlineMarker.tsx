@@ -33,6 +33,8 @@ export interface MarkerProps {
 const isMarkerId = (id: string): id is keyof typeof MARKER_CONFIGS =>
   id in MARKER_CONFIGS
 
+const THEME_BACKGROUND_COLOR = "var(--apollon-background, #ffffff)"
+
 /**
  * Extract marker ID from a url() reference.
  * e.g., "url(#black-arrow)" -> "black-arrow"
@@ -117,7 +119,7 @@ export function InlineMarker({
       return (
         <path
           d={`M${tip.x},${tip.y} L${left.x},${left.y} L${right.x},${right.y} Z`}
-          fill={filled ? strokeColor : FILL_COLOR}
+          fill={filled ? strokeColor : THEME_BACKGROUND_COLOR}
           stroke={strokeColor}
           strokeWidth={strokeW}
           data-inline-marker="true"
@@ -181,7 +183,7 @@ export function InlineMarker({
       return (
         <path
           d={`M${front.x},${front.y} L${right.x},${right.y} L${back.x},${back.y} L${left.x},${left.y} Z`}
-          fill={filled ? strokeColor : FILL_COLOR}
+          fill={filled ? strokeColor : THEME_BACKGROUND_COLOR}
           stroke={strokeColor}
           strokeWidth={strokeW}
           data-inline-marker="true"
