@@ -1,6 +1,5 @@
 import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSelectableWrapper"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
-import { CANVAS } from "@/constants"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { Handle, Position, useReactFlow } from "@xyflow/react"
 
@@ -48,11 +47,8 @@ export function DefaultNodeWrapper({
   className,
 }: Props) {
   const { getNode } = useReactFlow()
-  const node = getNode(elementId)
-  const nodeType = node?.type
+  const nodeType = getNode(elementId)?.type
   const isDiagramModifiable = useDiagramModifiable()
-  const snapGap = CANVAS.SNAP_TO_GRID_PX * 2
-  const targetHandleSize = CANVAS.SNAP_TO_GRID_PX
 
   const baseHandleStyle = {
     width: 8,
@@ -66,13 +62,29 @@ export function DefaultNodeWrapper({
     boxSizing: "border-box" as const,
   }
 
-  // Define all handles with their properties
+  // Keep all handle ids available for compatibility with existing edges,
+  // but only the primary four are visible.
   const handles = [
+    {
+      id: HandleId.TopLeft,
+      position: Position.Top,
+      style: { ...baseHandleStyle, left: "33.333%" },
+    },
     {
       id: HandleId.Top,
       position: Position.Top,
       className: "apollon-arc-handle apollon-arc-handle--top",
       style: { ...baseHandleStyle },
+    },
+    {
+      id: HandleId.TopRight,
+      position: Position.Top,
+      style: { ...baseHandleStyle, left: "66.666%" },
+    },
+    {
+      id: HandleId.RightTop,
+      position: Position.Right,
+      style: { ...baseHandleStyle, top: "33.333%" },
     },
     {
       id: HandleId.Right,
@@ -81,10 +93,30 @@ export function DefaultNodeWrapper({
       style: { ...baseHandleStyle },
     },
     {
+      id: HandleId.RightBottom,
+      position: Position.Right,
+      style: { ...baseHandleStyle, top: "66.666%" },
+    },
+    {
+      id: HandleId.BottomRight,
+      position: Position.Bottom,
+      style: { ...baseHandleStyle, left: "66.666%" },
+    },
+    {
       id: HandleId.Bottom,
       position: Position.Bottom,
       className: "apollon-arc-handle apollon-arc-handle--bottom",
       style: { ...baseHandleStyle },
+    },
+    {
+      id: HandleId.BottomLeft,
+      position: Position.Bottom,
+      style: { ...baseHandleStyle, left: "33.333%" },
+    },
+    {
+      id: HandleId.LeftBottom,
+      position: Position.Left,
+      style: { ...baseHandleStyle, top: "66.666%" },
     },
     {
       id: HandleId.Left,
@@ -92,96 +124,19 @@ export function DefaultNodeWrapper({
       className: "apollon-arc-handle apollon-arc-handle--left",
       style: { ...baseHandleStyle },
     },
-  ]
-
-  const nodeWidth = node?.width ?? 120
-  const nodeHeight = node?.height ?? 80
-
-  const getRatios = (size: number): number[] => {
-    if (size <= snapGap) {
-      return [0.5]
-    }
-
-    const steps = Math.max(2, Math.floor(size / snapGap))
-    return Array.from({ length: steps + 1 }, (_, index) => index / steps)
-  }
-
-  const horizontalRatios = getRatios(nodeWidth)
-  const verticalRatios = getRatios(nodeHeight)
-
-  const invisibleTargetBaseStyle = {
-    width: targetHandleSize,
-    height: targetHandleSize,
-    position: "absolute" as const,
-    backgroundColor: "transparent",
-    border: "none",
-    borderRadius: "50%",
-    opacity: 0,
-    zIndex: 6,
-    pointerEvents: "all" as const,
-  }
-
-  const makeTargetHandleStyle = (position: Position, ratio: number) => {
-    switch (position) {
-      case Position.Top:
-        return {
-          ...invisibleTargetBaseStyle,
-          top: -targetHandleSize / 2,
-          left: `${ratio * 100}%`,
-          transform: "translateX(-50%)",
-        }
-      case Position.Right:
-        return {
-          ...invisibleTargetBaseStyle,
-          right: -targetHandleSize / 2,
-          top: `${ratio * 100}%`,
-          transform: "translateY(-50%)",
-        }
-      case Position.Bottom:
-        return {
-          ...invisibleTargetBaseStyle,
-          bottom: -targetHandleSize / 2,
-          left: `${ratio * 100}%`,
-          transform: "translateX(-50%)",
-        }
-      case Position.Left:
-        return {
-          ...invisibleTargetBaseStyle,
-          left: -targetHandleSize / 2,
-          top: `${ratio * 100}%`,
-          transform: "translateY(-50%)",
-        }
-      default:
-        return invisibleTargetBaseStyle
-    }
-  }
-
-  const targetHandles = [
-    ...horizontalRatios.map((ratio, index) => ({
-      id: `top-snap-${index}`,
-      side: HandleId.Top,
-      position: Position.Top,
-      ratio,
-    })),
-    ...horizontalRatios.map((ratio, index) => ({
-      id: `bottom-snap-${index}`,
-      side: HandleId.Bottom,
-      position: Position.Bottom,
-      ratio,
-    })),
-    ...verticalRatios.map((ratio, index) => ({
-      id: `left-snap-${index}`,
-      side: HandleId.Left,
+    {
+      id: HandleId.LeftTop,
       position: Position.Left,
-      ratio,
-    })),
-    ...verticalRatios.map((ratio, index) => ({
-      id: `right-snap-${index}`,
-      side: HandleId.Right,
-      position: Position.Right,
-      ratio,
-    })),
+      style: { ...baseHandleStyle, top: "33.333%" },
+    },
   ]
+
+  const visibleHandleIds = new Set<HandleId>([
+    HandleId.Top,
+    HandleId.Right,
+    HandleId.Bottom,
+    HandleId.Left,
+  ])
 
   return (
     <AssessmentSelectableWrapper elementId={elementId}>
@@ -193,34 +148,34 @@ export function DefaultNodeWrapper({
       >
         {hiddenHandles !== true && (
           <>
-            {handles.map(
-              (handle) =>
-                !hiddenHandles.includes(handle.id) && (
-                  <Handle
-                    key={handle.id}
-                    id={handle.id}
-                    className={handle.className}
-                    type="source"
-                    position={handle.position}
-                    style={handle.style}
-                    isConnectable={isDiagramModifiable}
-                  />
-                )
-            )}
+            {handles.map((handle) => {
+              if (hiddenHandles.includes(handle.id)) {
+                return null
+              }
 
-            {targetHandles.map(
-              (handle) =>
-                !hiddenHandles.includes(handle.side) && (
-                  <Handle
-                    key={handle.id}
-                    id={handle.id}
-                    type="target"
-                    position={handle.position}
-                    style={makeTargetHandleStyle(handle.position, handle.ratio)}
-                    isConnectable={isDiagramModifiable}
-                  />
-                )
-            )}
+              const isPrimaryHandle = visibleHandleIds.has(handle.id)
+
+              return (
+                <Handle
+                  key={handle.id}
+                  id={handle.id}
+                  className={handle.className}
+                  type="source"
+                  position={handle.position}
+                  style={
+                    isPrimaryHandle
+                      ? handle.style
+                      : {
+                          ...handle.style,
+                          opacity: 0,
+                          pointerEvents: "none",
+                        }
+                  }
+                  isConnectable={isDiagramModifiable}
+                  isConnectableStart={isPrimaryHandle && isDiagramModifiable}
+                />
+              )
+            })}
           </>
         )}
 
