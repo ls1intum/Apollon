@@ -1,9 +1,9 @@
 import { spawn } from "node:child_process"
+import fs from "node:fs"
 import net from "node:net"
+import path from "node:path"
 import process from "node:process"
-import readline from "node:readline"
-
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm"
+import concurrently from "concurrently"
 
 const DEFAULT_PORTS = {
   webapp: 5173,
@@ -11,6 +11,8 @@ const DEFAULT_PORTS = {
   websocket: 4444,
   redis: 6379,
 }
+
+const repoRoot = process.cwd()
 
 function readPort(name, fallback) {
   const rawValue = process.env[name]
@@ -116,6 +118,20 @@ function parseRedisUrl(redisUrl) {
     port: Number(url.port || DEFAULT_PORTS.redis),
     url: `redis://${url.hostname || "127.0.0.1"}:${Number(url.port || DEFAULT_PORTS.redis)}`,
   }
+}
+
+function commandBinary(relativeDirectory, binaryName) {
+  const binary = process.platform === "win32" ? `${binaryName}.cmd` : binaryName
+  const hoisted = path.join(repoRoot, "node_modules", ".bin", binary)
+  if (fs.existsSync(hoisted)) {
+    return hoisted
+  }
+
+  return path.join(repoRoot, relativeDirectory, "node_modules", ".bin", binary)
+}
+
+function shellQuote(value) {
+  return JSON.stringify(value)
 }
 
 function runCommand(command, args, options = {}) {
@@ -244,31 +260,9 @@ async function resolveRedisEndpoint(preferredRedisPort, reservedPorts) {
   }
 }
 
-function prefixStream(stream, prefix) {
-  const reader = readline.createInterface({ input: stream })
-  reader.on("line", (line) => {
-    console.log(`[${prefix}] ${line}`)
-  })
-}
-
-function startProcess(name, args, env) {
-  const child = spawn(npmCommand, args, {
-    cwd: process.cwd(),
-    env,
-    stdio: ["inherit", "pipe", "pipe"],
-  })
-
-  prefixStream(child.stdout, name)
-  prefixStream(child.stderr, name)
-
-  child.once("error", (error) => {
-    console.error(`[${name}] Failed to start:`, error)
-  })
-
-  return child
-}
-
 async function main() {
+  delete process.env.NO_COLOR
+
   const preferredPorts = getPreferredPorts()
   const reservedPorts = new Set()
   const serverPort = await findAvailablePort(
@@ -307,65 +301,57 @@ async function main() {
     APOLLON_WS_PORT: String(websocketPort),
   }
 
-  const children = [
-    startProcess(
-      "lib",
-      ["run", "build:watch", "--workspace=@tumaet/apollon"],
-      sharedEnv
-    ),
-    startProcess(
-      "server",
-      ["run", "dev", "--workspace=@tumaet/server"],
+  const coloredEnv = {
+    ...sharedEnv,
+    FORCE_COLOR: sharedEnv.FORCE_COLOR || "1",
+  }
+  delete coloredEnv.NO_COLOR
+
+  const { result } = concurrently(
+    [
       {
-        ...sharedEnv,
-        HOST: "127.0.0.1",
-        PORT: String(serverPort),
-        WS_PORT: String(websocketPort),
-        REDIS_URL: redis.url,
-      }
-    ),
-    startProcess(
-      "webapp",
-      ["run", "start", "--workspace=@tumaet/webapp"],
-      sharedEnv
-    ),
-  ]
-
-  let shuttingDown = false
-
-  const stopChildren = (signal = "SIGTERM") => {
-    if (shuttingDown) {
-      return
+        command: `${shellQuote(commandBinary("library", "tsc"))} -b --watch & ${shellQuote(commandBinary("library", "vite"))} build --watch`,
+        name: "lib",
+        env: coloredEnv,
+        cwd: path.join(repoRoot, "library"),
+      },
+      {
+        command: `${shellQuote(commandBinary("standalone/server", "tsx"))} watch --clear-screen=false src/server.ts`,
+        name: "server",
+        env: {
+          ...coloredEnv,
+          HOST: "127.0.0.1",
+          PORT: String(serverPort),
+          WS_PORT: String(websocketPort),
+          REDIS_URL: redis.url,
+        },
+        cwd: path.join(repoRoot, "standalone/server"),
+      },
+      {
+        command: shellQuote(commandBinary("standalone/webapp", "vite")),
+        name: "webapp",
+        env: coloredEnv,
+        cwd: path.join(repoRoot, "standalone/webapp"),
+      },
+    ],
+    {
+      prefix: "name",
+      prefixColors: ["yellow", "blue", "magenta"],
+      killOthers: ["success", "failure"],
+      handleInput: true,
     }
+  )
 
-    shuttingDown = true
-    for (const child of children) {
-      if (!child.killed) {
-        child.kill(signal)
-      }
+  try {
+    await result
+  } catch (events) {
+    const expectedInterrupt = Array.isArray(events)
+      && events.every((event) => event.exitCode === "SIGINT" || event.exitCode === "SIGTERM")
+
+    if (!expectedInterrupt) {
+      process.exitCode = 1
     }
   }
-
-  process.on("SIGINT", () => {
-    stopChildren("SIGINT")
-  })
-  process.on("SIGTERM", () => {
-    stopChildren("SIGTERM")
-  })
-
-  children.forEach((child) => {
-    child.once("close", (code, signal) => {
-      if (!shuttingDown) {
-        const reason =
-          signal !== null
-            ? `signal ${signal}`
-            : `exit code ${code === null ? "unknown" : code}`
-        console.error(`[dev] Stopping development stack because a process exited with ${reason}.`)
-        stopChildren()
-        process.exitCode = code ?? 1
-      }
-    })
-  })
 }
 
 main().catch((error) => {
