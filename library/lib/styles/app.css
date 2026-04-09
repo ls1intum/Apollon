@@ -53,8 +53,8 @@
 .react-flow__handle.apollon-arc-handle::before {
   content: "";
   position: absolute;
-  background-color: #0064ff;
-  opacity: 0.2;
+  background-color: var(--apollon-primary, #3e8acc);
+  opacity: 0.4;
   box-sizing: border-box;
   pointer-events: all;
   cursor: crosshair;
