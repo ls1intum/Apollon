@@ -18,9 +18,6 @@ npm install
 # Build all packages
 npm run build
 
-# Start Redis (requires Docker)
-npm run start:localdb
-
 # Start dev stack with hot reload
 npm run dev
 ```
@@ -29,6 +26,8 @@ This starts:
 - **Library** build watch (auto-rebuilds on changes)
 - **Server** (tsx watch) on http://localhost:8000 with WebSocket relay on ws://localhost:4444
 - **Webapp** (Vite HMR) on http://localhost:5173
+
+`npm run dev` also starts the local Redis container automatically, so Docker still needs to be available.
 
 No `.env` files needed — defaults match the local setup.
 
@@ -58,7 +57,7 @@ For complete documentation, setup instructions, and guides, visit:
 
 - **Node.js** (version specified in `.nvmrc`)
 - **npm** 7+ (for workspace support)
-- **Docker** (for running Redis locally)
+- **Docker** (for running Redis locally via `npm run dev` or `npm run start:localdb`)
 
 ## Contributing
 

@@ -22,7 +22,7 @@ Here are the commonly used scripts defined in the monorepo:
   ```bash
   npm run dev
   ```
-  Starts the library (build watch), server (tsx watch on http://localhost:8000), and webapp (Vite HMR on http://localhost:5173) concurrently.
+  Starts the library (build watch), server (tsx watch on http://localhost:8000), and webapp (Vite HMR on http://localhost:5173) concurrently. The command also starts the local Redis container and waits until it is reachable before booting the server.
 
 - **Start production build:**
   ```bash
