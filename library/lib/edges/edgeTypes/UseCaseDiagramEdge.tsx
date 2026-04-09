@@ -140,6 +140,7 @@ export const UseCaseEdge = ({
           pathMiddlePosition={edgeData.pathMiddlePosition}
           sourcePoint={edgeData.sourcePoint}
           targetPoint={edgeData.targetPoint}
+          textColor={textColor}
         />
 
         <CommonEdgeElements
