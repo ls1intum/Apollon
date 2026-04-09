@@ -112,6 +112,18 @@
   z-index: 20;
 }
 
+.react-flow__resize-control {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.react-flow__node:hover .react-flow__resize-control,
+.react-flow__node.selected .react-flow__resize-control {
+  opacity: 1;
+  pointer-events: all;
+}
+
 .react-flow__node:hover .react-flow__handle {
   opacity: 1;
   background-color: transparent;

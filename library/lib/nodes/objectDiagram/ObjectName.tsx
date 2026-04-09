@@ -13,7 +13,6 @@ import {
 import { LAYOUT } from "@/constants"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 export function ObjectName({
@@ -29,7 +28,6 @@ export function ObjectName({
     }))
   )
 
-  const selected = useIsOnlyThisElementSelected(id)
   const isDiagramModifiable = useDiagramModifiable()
 
   const objectSvgWrapperRef = useRef<HTMLDivElement | null>(null)
@@ -135,7 +133,7 @@ export function ObjectName({
       <NodeToolbar elementId={id} />
       <NodeResizer
         nodeId={id}
-        isVisible={isDiagramModifiable && !!selected}
+        isVisible={isDiagramModifiable}
         minWidth={minWidth}
         minHeight={minHeight}
         maxHeight={minHeight}

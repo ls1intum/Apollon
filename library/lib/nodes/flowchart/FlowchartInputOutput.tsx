@@ -8,7 +8,6 @@ import {
 import { DefaultNodeWrapper } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
-import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { FlowchartInputOutputNodeSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 import { HandleId } from "../wrappers"
@@ -31,7 +30,6 @@ export function FlowchartInputOutput({
   const svgWrapperRef = useRef<HTMLDivElement | null>(null)
   const { onResize } = useHandleOnResize(parentId)
   const isDiagramModifiable = useDiagramModifiable()
-  const selected = useIsOnlyThisElementSelected(id)
 
   if (!width || !height) {
     return null
@@ -50,7 +48,9 @@ export function FlowchartInputOutput({
     border: "0px",
   }
 
-  const handleStyle = selected ? selectedHandleStyle : { border: "0px" }
+  const handleStyle = isDiagramModifiable
+    ? selectedHandleStyle
+    : { border: "0px" }
 
   // Custom handles for parallelogram shape
   // Left edge goes from (0, height) to (offset, 0)
@@ -168,7 +168,7 @@ export function FlowchartInputOutput({
       ))}
 
       <NodeResizer
-        isVisible={isDiagramModifiable && !!selected}
+        isVisible={isDiagramModifiable}
         onResize={onResize}
         minHeight={50}
         minWidth={50}
