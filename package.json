@@ -14,7 +14,7 @@
     "build:server": "npm run build --workspace=@tumaet/server",
     "build:webapp": "npm run build --workspace=@tumaet/webapp",
     "build:vscode": "npm run build:all --workspace=apollon-vscode",
-    "dev": "concurrently -n lib,server,webapp -c yellow,blue,magenta \"npm run dev:lib\" \"npm run dev:server\" \"npm run dev:webapp\"",
+    "dev": "node scripts/dev.mjs",
     "dev:lib": "npm run build:watch --workspace=@tumaet/apollon",
     "dev:server": "npm run ensure:localdb && npm run dev --workspace=@tumaet/server",
     "dev:webapp": "npm run start --workspace=@tumaet/webapp",

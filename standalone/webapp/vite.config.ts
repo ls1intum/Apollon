@@ -5,6 +5,10 @@ import fs from "fs"
 import tailwindcss from "@tailwindcss/vite"
 // tsconfigPaths optional; using a targeted transform plugin instead
 
+const webappPort = Number(process.env.APOLLON_WEBAPP_PORT || 5173)
+const serverPort = Number(process.env.APOLLON_SERVER_PORT || 8000)
+const wsPort = Number(process.env.APOLLON_WS_PORT || 4444)
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -77,9 +81,9 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "@emotion/react", "@emotion/styled"],
   },
   server: {
-    port: 5173,
+    port: webappPort,
     host: true,
-    strictPort: true,
+    strictPort: false,
     fs: {
       // Allow serving files from the monorepo root and the library package
       allow: [
@@ -89,11 +93,11 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: `http://127.0.0.1:${serverPort}`,
         changeOrigin: true,
       },
       "/ws": {
-        target: "ws://localhost:4444",
+        target: `ws://127.0.0.1:${wsPort}`,
         ws: true,
         changeOrigin: true,
       },

@@ -33,19 +33,36 @@ function delay(ms) {
   })
 }
 
-function canConnect(host, port) {
+function pingRedis(host, port) {
   return new Promise((resolve) => {
     const socket = net.createConnection({ host, port })
+    let settled = false
+    let response = ""
 
     const finish = (ready) => {
+      if (settled) {
+        return
+      }
+
+      settled = true
       socket.removeAllListeners()
       socket.destroy()
       resolve(ready)
     }
 
-    socket.once("connect", () => finish(true))
+    socket.once("connect", () => {
+      socket.write("*1\r\n$4\r\nPING\r\n")
+    })
+    socket.on("data", (chunk) => {
+      response += chunk.toString("utf8")
+
+      if (response.includes("+PONG")) {
+        finish(true)
+      }
+    })
     socket.once("error", () => finish(false))
     socket.setTimeout(RETRY_DELAY_MS, () => finish(false))
+    socket.once("close", () => finish(false))
   })
 }
 
@@ -56,7 +73,7 @@ async function main() {
   console.log(`Waiting for Redis on ${label}...`)
 
   while (Date.now() - start < DEFAULT_TIMEOUT_MS) {
-    if (await canConnect(host, port)) {
+    if (await pingRedis(host, port)) {
       console.log(`Redis is ready on ${label}.`)
       return
     }

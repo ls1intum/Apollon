@@ -36,6 +36,6 @@ Follow these steps to set up the Apollon monorepo on your local machine.
    npm run dev
    ```
 
-   This starts the library (build watch), server (http://localhost:8000), webapp (http://localhost:5173), and the local Redis container used by the server.
+   This starts the library (build watch), server, webapp, and the local Redis dependency used by the server. If the default local ports are already in use, the command selects free ports automatically and prints the chosen URLs in the terminal output.
 
 No `.env` files are needed — all defaults match the local setup. See `standalone/server/.env.example` and `standalone/webapp/.env.example` if you need to override defaults.
