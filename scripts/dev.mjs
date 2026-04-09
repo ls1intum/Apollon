@@ -3,7 +3,6 @@ import fs from "node:fs"
 import net from "node:net"
 import path from "node:path"
 import process from "node:process"
-import concurrently from "concurrently"
 
 const DEFAULT_PORTS = {
   webapp: 5173,
@@ -13,6 +12,13 @@ const DEFAULT_PORTS = {
 }
 
 const repoRoot = process.cwd()
+const SHUTDOWN_GRACE_MS = 4_000
+const PREFIX_COLORS = {
+  lib: "\u001B[33m",
+  server: "\u001B[34m",
+  webapp: "\u001B[35m",
+}
+const PREFIX_RESET = "\u001B[39m"
 
 function readPort(name, fallback) {
   const rawValue = process.env[name]
@@ -130,8 +136,9 @@ function commandBinary(relativeDirectory, binaryName) {
   return path.join(repoRoot, relativeDirectory, "node_modules", ".bin", binary)
 }
 
-function shellQuote(value) {
-  return JSON.stringify(value)
+function colorPrefix(name) {
+  const color = PREFIX_COLORS[name] || ""
+  return `${color}[${name}]${PREFIX_RESET}`
 }
 
 function runCommand(command, args, options = {}) {
@@ -260,6 +267,129 @@ async function resolveRedisEndpoint(preferredRedisPort, reservedPorts) {
   }
 }
 
+function prefixOutput(name, stream) {
+  let buffer = ""
+
+  stream.setEncoding("utf8")
+  stream.on("data", (chunk) => {
+    buffer += chunk
+
+    while (true) {
+      const newlineIndex = buffer.search(/\r?\n/)
+      if (newlineIndex === -1) {
+        break
+      }
+
+      const newlineLength = buffer[newlineIndex] === "\r" && buffer[newlineIndex + 1] === "\n"
+        ? 2
+        : 1
+      const line = buffer.slice(0, newlineIndex)
+
+      console.log(`${colorPrefix(name)} ${line}`)
+      buffer = buffer.slice(newlineIndex + newlineLength)
+    }
+  })
+
+  stream.on("end", () => {
+    if (buffer.length > 0) {
+      console.log(`${colorPrefix(name)} ${buffer}`)
+      buffer = ""
+    }
+  })
+}
+
+function spawnManagedProcess({ name, command, args, cwd, env }) {
+  const child = spawn(command, args, {
+    cwd,
+    env,
+    stdio: ["ignore", "pipe", "pipe"],
+    detached: process.platform !== "win32",
+  })
+
+  prefixOutput(name, child.stdout)
+  prefixOutput(name, child.stderr)
+
+  child.on("error", (error) => {
+    console.error(`${colorPrefix(name)} Failed to start:`, error)
+  })
+
+  return child
+}
+
+async function killProcessTree(child, signal) {
+  if (!child.pid || child.killed) {
+    return
+  }
+
+  if (process.platform === "win32") {
+    const taskkillArgs = ["/pid", String(child.pid), "/t"]
+    if (signal === "SIGKILL") {
+      taskkillArgs.push("/f")
+    }
+
+    try {
+      await runCommand("taskkill", taskkillArgs)
+    } catch {
+      // Ignore errors for already-exited processes.
+    }
+    return
+  }
+
+  try {
+    process.kill(-child.pid, signal)
+  } catch {
+    try {
+      child.kill(signal)
+    } catch {
+      // Ignore errors for already-exited processes.
+    }
+  }
+}
+
+function waitForClose(child, timeoutMs) {
+  return new Promise((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      resolve(true)
+      return
+    }
+
+    const timeout = setTimeout(() => {
+      cleanup()
+      resolve(false)
+    }, timeoutMs)
+
+    const onClose = () => {
+      cleanup()
+      resolve(true)
+    }
+
+    const cleanup = () => {
+      clearTimeout(timeout)
+      child.off("close", onClose)
+    }
+
+    child.once("close", onClose)
+  })
+}
+
+async function stopManagedProcesses(children) {
+  await Promise.all(children.map((child) => killProcessTree(child, "SIGTERM")))
+
+  const results = await Promise.all(
+    children.map((child) => waitForClose(child, SHUTDOWN_GRACE_MS))
+  )
+
+  const stubbornChildren = children.filter((_, index) => !results[index])
+  if (stubbornChildren.length === 0) {
+    return
+  }
+
+  await Promise.all(
+    stubbornChildren.map((child) => killProcessTree(child, "SIGKILL"))
+  )
+  await Promise.all(stubbornChildren.map((child) => waitForClose(child, 1_000)))
+}
+
 async function main() {
   delete process.env.NO_COLOR
 
@@ -307,51 +437,103 @@ async function main() {
   }
   delete coloredEnv.NO_COLOR
 
-  const { result } = concurrently(
-    [
-      {
-        command: `${shellQuote(commandBinary("library", "tsc"))} -b --watch & ${shellQuote(commandBinary("library", "vite"))} build --watch`,
-        name: "lib",
-        env: coloredEnv,
-        cwd: path.join(repoRoot, "library"),
+  const children = [
+    spawnManagedProcess({
+      name: "lib",
+      command: commandBinary("library", "tsc"),
+      args: ["-b", "--watch"],
+      cwd: path.join(repoRoot, "library"),
+      env: coloredEnv,
+    }),
+    spawnManagedProcess({
+      name: "lib",
+      command: commandBinary("library", "vite"),
+      args: ["build", "--watch"],
+      cwd: path.join(repoRoot, "library"),
+      env: coloredEnv,
+    }),
+    spawnManagedProcess({
+      name: "server",
+      command: commandBinary("standalone/server", "tsx"),
+      args: ["watch", "--clear-screen=false", "src/server.ts"],
+      cwd: path.join(repoRoot, "standalone/server"),
+      env: {
+        ...coloredEnv,
+        HOST: "127.0.0.1",
+        PORT: String(serverPort),
+        WS_PORT: String(websocketPort),
+        REDIS_URL: redis.url,
       },
-      {
-        command: `${shellQuote(commandBinary("standalone/server", "tsx"))} watch --clear-screen=false src/server.ts`,
-        name: "server",
-        env: {
-          ...coloredEnv,
-          HOST: "127.0.0.1",
-          PORT: String(serverPort),
-          WS_PORT: String(websocketPort),
-          REDIS_URL: redis.url,
-        },
-        cwd: path.join(repoRoot, "standalone/server"),
-      },
-      {
-        command: shellQuote(commandBinary("standalone/webapp", "vite")),
-        name: "webapp",
-        env: coloredEnv,
-        cwd: path.join(repoRoot, "standalone/webapp"),
-      },
-    ],
-    {
-      prefix: "name",
-      prefixColors: ["yellow", "blue", "magenta"],
-      killOthers: ["success", "failure"],
-      handleInput: true,
-    }
-  )
+    }),
+    spawnManagedProcess({
+      name: "webapp",
+      command: commandBinary("standalone/webapp", "vite"),
+      args: [],
+      cwd: path.join(repoRoot, "standalone/webapp"),
+      env: coloredEnv,
+    }),
+  ]
 
-  try {
-    await result
-  } catch (events) {
-    const expectedInterrupt = Array.isArray(events)
-      && events.every((event) => event.exitCode === "SIGINT" || event.exitCode === "SIGTERM")
+  let shuttingDown = false
+  let resolved = false
 
-    if (!expectedInterrupt) {
-      process.exitCode = 1
+  const done = new Promise((resolve) => {
+    const finish = (exitCode) => {
+      if (resolved) {
+        return
+      }
+
+      resolved = true
+      resolve(exitCode)
     }
-  }
+
+    const shutdown = async (exitCode) => {
+      if (shuttingDown) {
+        finish(exitCode)
+        return
+      }
+
+      shuttingDown = true
+      await stopManagedProcesses(children)
+      finish(exitCode)
+    }
+
+    process.once("SIGINT", () => {
+      shutdown(0).catch((error) => {
+        console.error("[dev] Failed to stop cleanly after SIGINT:", error)
+        finish(1)
+      })
+    })
+    process.once("SIGTERM", () => {
+      shutdown(0).catch((error) => {
+        console.error("[dev] Failed to stop cleanly after SIGTERM:", error)
+        finish(1)
+      })
+    })
+
+    children.forEach((child) => {
+      child.once("close", (code, signal) => {
+        if (shuttingDown) {
+          return
+        }
+
+        const reason =
+          signal !== null
+            ? `signal ${signal}`
+            : `exit code ${code === null ? "unknown" : code}`
+        console.error(
+          `[dev] Stopping development stack because a process exited with ${reason}.`
+        )
+
+        shutdown(code === 0 ? 1 : code ?? 1).catch((error) => {
+          console.error("[dev] Failed to stop cleanly after child exit:", error)
+          finish(1)
+        })
+      })
+    })
+  })
+
+  process.exitCode = await done
 }
 
 main().catch((error) => {
