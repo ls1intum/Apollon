@@ -6,28 +6,44 @@ import { Handle, Position, useReactFlow } from "@xyflow/react"
 // Define enum for handle IDs
 export enum HandleId {
   TopLeft = "top-left",
+  TopMidLeft = "top-mid-left",
   Top = "top",
+  TopMidRight = "top-mid-right",
   TopRight = "top-right",
   RightTop = "right-top",
+  RightMidTop = "right-mid-top",
   Right = "right",
+  RightMidBottom = "right-mid-bottom",
   RightBottom = "right-bottom",
   BottomRight = "bottom-right",
+  BottomMidRight = "bottom-mid-right",
   Bottom = "bottom",
+  BottomMidLeft = "bottom-mid-left",
   BottomLeft = "bottom-left",
   LeftBottom = "left-bottom",
+  LeftMidBottom = "left-mid-bottom",
   Left = "left",
+  LeftMidTop = "left-mid-top",
   LeftTop = "left-top",
 }
 
 // Preset for hiding corner and intermediate handles, showing only main directional handles
 export const FOUR_WAY_HANDLES_PRESET: HandleId[] = [
   HandleId.TopLeft,
+  HandleId.TopMidLeft,
+  HandleId.TopMidRight,
   HandleId.TopRight,
   HandleId.RightTop,
+  HandleId.RightMidTop,
+  HandleId.RightMidBottom,
   HandleId.RightBottom,
   HandleId.BottomRight,
+  HandleId.BottomMidRight,
+  HandleId.BottomMidLeft,
   HandleId.BottomLeft,
   HandleId.LeftBottom,
+  HandleId.LeftMidBottom,
+  HandleId.LeftMidTop,
   HandleId.LeftTop,
 ]
 
@@ -68,7 +84,12 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.TopLeft,
       position: Position.Top,
-      style: { ...baseHandleStyle, left: "33.333%" },
+      style: { ...baseHandleStyle, left: "20%" },
+    },
+    {
+      id: HandleId.TopMidLeft,
+      position: Position.Top,
+      style: { ...baseHandleStyle, left: "35%" },
     },
     {
       id: HandleId.Top,
@@ -77,14 +98,24 @@ export function DefaultNodeWrapper({
       style: { ...baseHandleStyle },
     },
     {
+      id: HandleId.TopMidRight,
+      position: Position.Top,
+      style: { ...baseHandleStyle, left: "65%" },
+    },
+    {
       id: HandleId.TopRight,
       position: Position.Top,
-      style: { ...baseHandleStyle, left: "66.666%" },
+      style: { ...baseHandleStyle, left: "80%" },
     },
     {
       id: HandleId.RightTop,
       position: Position.Right,
-      style: { ...baseHandleStyle, top: "33.333%" },
+      style: { ...baseHandleStyle, top: "20%" },
+    },
+    {
+      id: HandleId.RightMidTop,
+      position: Position.Right,
+      style: { ...baseHandleStyle, top: "35%" },
     },
     {
       id: HandleId.Right,
@@ -93,14 +124,24 @@ export function DefaultNodeWrapper({
       style: { ...baseHandleStyle },
     },
     {
+      id: HandleId.RightMidBottom,
+      position: Position.Right,
+      style: { ...baseHandleStyle, top: "65%" },
+    },
+    {
       id: HandleId.RightBottom,
       position: Position.Right,
-      style: { ...baseHandleStyle, top: "66.666%" },
+      style: { ...baseHandleStyle, top: "80%" },
     },
     {
       id: HandleId.BottomRight,
       position: Position.Bottom,
-      style: { ...baseHandleStyle, left: "66.666%" },
+      style: { ...baseHandleStyle, left: "80%" },
+    },
+    {
+      id: HandleId.BottomMidRight,
+      position: Position.Bottom,
+      style: { ...baseHandleStyle, left: "65%" },
     },
     {
       id: HandleId.Bottom,
@@ -109,14 +150,24 @@ export function DefaultNodeWrapper({
       style: { ...baseHandleStyle },
     },
     {
+      id: HandleId.BottomMidLeft,
+      position: Position.Bottom,
+      style: { ...baseHandleStyle, left: "35%" },
+    },
+    {
       id: HandleId.BottomLeft,
       position: Position.Bottom,
-      style: { ...baseHandleStyle, left: "33.333%" },
+      style: { ...baseHandleStyle, left: "20%" },
     },
     {
       id: HandleId.LeftBottom,
       position: Position.Left,
-      style: { ...baseHandleStyle, top: "66.666%" },
+      style: { ...baseHandleStyle, top: "80%" },
+    },
+    {
+      id: HandleId.LeftMidBottom,
+      position: Position.Left,
+      style: { ...baseHandleStyle, top: "65%" },
     },
     {
       id: HandleId.Left,
@@ -125,9 +176,14 @@ export function DefaultNodeWrapper({
       style: { ...baseHandleStyle },
     },
     {
+      id: HandleId.LeftMidTop,
+      position: Position.Left,
+      style: { ...baseHandleStyle, top: "35%" },
+    },
+    {
       id: HandleId.LeftTop,
       position: Position.Left,
-      style: { ...baseHandleStyle, top: "33.333%" },
+      style: { ...baseHandleStyle, top: "20%" },
     },
   ]
 
