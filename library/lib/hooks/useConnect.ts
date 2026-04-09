@@ -133,6 +133,7 @@ export const useConnect = () => {
             height: nodeOnTop.height,
           },
           useFourHandles: isFourHandleNode(nodeOnTop.type),
+          useEllipseHandles: nodeOnTop.type === DiagramNodeTypeRecord.useCase,
         })
 
         if (!targetHandle) return

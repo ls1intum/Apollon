@@ -134,6 +134,8 @@ export const ActivityDiagramEdge = ({
           <EdgeEndpointMarkers
             sourcePoint={sourcePoint}
             targetPoint={targetPoint}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
             isDiagramModifiable={isDiagramModifiable}
             selected={selected}
             diagramType="step"

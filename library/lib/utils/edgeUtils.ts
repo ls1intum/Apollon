@@ -343,12 +343,14 @@ interface FindClosestHandleParams {
   point: XYPosition
   rect: Rect
   useFourHandles?: boolean
+  useEllipseHandles?: boolean
 }
 
 export function findClosestHandle({
   point,
   rect,
   useFourHandles = false,
+  useEllipseHandles = false,
 }: FindClosestHandleParams): string {
   // Start with basic 4 handles (top, bottom, left, right)
   const points: { label: string; position: XYPosition }[] = [
@@ -366,40 +368,85 @@ export function findClosestHandle({
 
   // If not a 4-handle node, append additional handles
   if (!useFourHandles) {
-    points.push(
-      {
-        label: "top-left",
-        position: { x: rect.x + rect.width / 3, y: rect.y },
-      },
-      {
-        label: "top-right",
-        position: { x: rect.x + (2 / 3) * rect.width, y: rect.y },
-      },
-      {
-        label: "bottom-left",
-        position: { x: rect.x + rect.width / 3, y: rect.y + rect.height },
-      },
-      {
-        label: "bottom-right",
-        position: { x: rect.x + (2 / 3) * rect.width, y: rect.y + rect.height },
-      },
-      {
-        label: "left-top",
-        position: { x: rect.x, y: rect.y + rect.height / 3 },
-      },
-      {
-        label: "left-bottom",
-        position: { x: rect.x, y: rect.y + (2 / 3) * rect.height },
-      },
-      {
-        label: "right-top",
-        position: { x: rect.x + rect.width, y: rect.y + rect.height / 3 },
-      },
-      {
-        label: "right-bottom",
-        position: { x: rect.x + rect.width, y: rect.y + (2 / 3) * rect.height },
-      }
-    )
+    if (useEllipseHandles) {
+      const centerX = rect.x + rect.width / 2
+      const centerY = rect.y + rect.height / 2
+      const radiusX = rect.width / 2
+      const radiusY = rect.height / 2
+
+      const ellipseHandleLabels = [
+        "top-left",
+        "top-mid-left",
+        "top-mid-right",
+        "top-right",
+        "right-top",
+        "right-mid-top",
+        "right-mid-bottom",
+        "right-bottom",
+        "bottom-right",
+        "bottom-mid-right",
+        "bottom-mid-left",
+        "bottom-left",
+        "left-bottom",
+        "left-mid-bottom",
+        "left-mid-top",
+        "left-top",
+      ]
+
+      points.push(
+        ...ellipseHandleLabels.map((label) => ({
+          label,
+          position: getEllipseHandlePosition(
+            centerX,
+            centerY,
+            radiusX,
+            radiusY,
+            label
+          ),
+        }))
+      )
+    } else {
+      points.push(
+        {
+          label: "top-left",
+          position: { x: rect.x + rect.width / 3, y: rect.y },
+        },
+        {
+          label: "top-right",
+          position: { x: rect.x + (2 / 3) * rect.width, y: rect.y },
+        },
+        {
+          label: "bottom-left",
+          position: { x: rect.x + rect.width / 3, y: rect.y + rect.height },
+        },
+        {
+          label: "bottom-right",
+          position: {
+            x: rect.x + (2 / 3) * rect.width,
+            y: rect.y + rect.height,
+          },
+        },
+        {
+          label: "left-top",
+          position: { x: rect.x, y: rect.y + rect.height / 3 },
+        },
+        {
+          label: "left-bottom",
+          position: { x: rect.x, y: rect.y + (2 / 3) * rect.height },
+        },
+        {
+          label: "right-top",
+          position: { x: rect.x + rect.width, y: rect.y + rect.height / 3 },
+        },
+        {
+          label: "right-bottom",
+          position: {
+            x: rect.x + rect.width,
+            y: rect.y + (2 / 3) * rect.height,
+          },
+        }
+      )
+    }
   }
 
   let closest = points[0]
@@ -426,26 +473,114 @@ export function getEllipseHandlePosition(
   radiusY: number,
   handle: string
 ): { x: number; y: number } {
-  const angleMap: { [key: string]: number } = {
-    right: 0,
-    "right-bottom": Math.PI / 6, // 30°
-    "bottom-right": Math.PI / 4, // 45°
-    bottom: Math.PI / 2, // 90°
-    "bottom-left": (3 * Math.PI) / 4, // 135°
-    "left-bottom": (5 * Math.PI) / 6, // 150°
-    left: Math.PI, // 180°
-    "left-top": (7 * Math.PI) / 6, // 210°
-    "top-left": (5 * Math.PI) / 4, // 225°
-    top: (3 * Math.PI) / 2, // 270°
-    "top-right": (7 * Math.PI) / 4, // 315°
-    "right-top": (11 * Math.PI) / 6, // 330°
+  const normalizedHandleMap: Record<string, { x: number; y: number }> = {
+    right: { x: 1, y: 0 },
+    "right-mid-bottom": { x: Math.sqrt(1 - 0.3 ** 2), y: 0.3 },
+    "right-bottom": { x: Math.sqrt(1 - 0.6 ** 2), y: 0.6 },
+    "bottom-right": { x: 0.6, y: Math.sqrt(1 - 0.6 ** 2) },
+    "bottom-mid-right": { x: 0.3, y: Math.sqrt(1 - 0.3 ** 2) },
+    bottom: { x: 0, y: 1 },
+    "bottom-mid-left": { x: -0.3, y: Math.sqrt(1 - 0.3 ** 2) },
+    "bottom-left": { x: -0.6, y: Math.sqrt(1 - 0.6 ** 2) },
+    "left-bottom": { x: -Math.sqrt(1 - 0.6 ** 2), y: 0.6 },
+    "left-mid-bottom": { x: -Math.sqrt(1 - 0.3 ** 2), y: 0.3 },
+    left: { x: -1, y: 0 },
+    "left-mid-top": { x: -Math.sqrt(1 - 0.3 ** 2), y: -0.3 },
+    "left-top": { x: -Math.sqrt(1 - 0.6 ** 2), y: -0.6 },
+    "top-left": { x: -0.6, y: -Math.sqrt(1 - 0.6 ** 2) },
+    "top-mid-left": { x: -0.3, y: -Math.sqrt(1 - 0.3 ** 2) },
+    top: { x: 0, y: -1 },
+    "top-mid-right": { x: 0.3, y: -Math.sqrt(1 - 0.3 ** 2) },
+    "top-right": { x: 0.6, y: -Math.sqrt(1 - 0.6 ** 2) },
+    "right-top": { x: Math.sqrt(1 - 0.6 ** 2), y: -0.6 },
+    "right-mid-top": { x: Math.sqrt(1 - 0.3 ** 2), y: -0.3 },
   }
 
-  const angle = angleMap[handle] ?? 0
+  const normalizedPoint =
+    normalizedHandleMap[handle] ?? normalizedHandleMap.right
 
   return {
-    x: centerX + radiusX * Math.cos(angle),
-    y: centerY + radiusY * Math.sin(angle),
+    x: centerX + radiusX * normalizedPoint.x,
+    y: centerY + radiusY * normalizedPoint.y,
+  }
+}
+
+interface EllipseBoundaryPointParams {
+  centerX: number
+  centerY: number
+  radiusX: number
+  radiusY: number
+  towardX: number
+  towardY: number
+  offset?: number
+  fallbackHandle?: string
+}
+
+/**
+ * Returns the exact intersection between an ellipse and the ray that starts
+ * in its center and points toward an external point.
+ */
+export function getEllipseBoundaryPoint({
+  centerX,
+  centerY,
+  radiusX,
+  radiusY,
+  towardX,
+  towardY,
+  offset = 0,
+  fallbackHandle = "right",
+}: EllipseBoundaryPointParams): { x: number; y: number } {
+  if (radiusX <= 0 || radiusY <= 0) {
+    return { x: centerX, y: centerY }
+  }
+
+  const dx = towardX - centerX
+  const dy = towardY - centerY
+
+  let boundaryX: number
+  let boundaryY: number
+  let directionX: number
+  let directionY: number
+
+  if (dx === 0 && dy === 0) {
+    const fallbackPoint = getEllipseHandlePosition(
+      centerX,
+      centerY,
+      radiusX,
+      radiusY,
+      fallbackHandle
+    )
+
+    boundaryX = fallbackPoint.x
+    boundaryY = fallbackPoint.y
+    directionX = boundaryX - centerX
+    directionY = boundaryY - centerY
+  } else {
+    const scale =
+      1 /
+      Math.sqrt(
+        (dx * dx) / (radiusX * radiusX) + (dy * dy) / (radiusY * radiusY)
+      )
+
+    boundaryX = centerX + dx * scale
+    boundaryY = centerY + dy * scale
+    directionX = dx
+    directionY = dy
+  }
+
+  if (offset === 0) {
+    return { x: boundaryX, y: boundaryY }
+  }
+
+  const directionLength = Math.hypot(directionX, directionY)
+
+  if (directionLength === 0) {
+    return { x: boundaryX, y: boundaryY }
+  }
+
+  return {
+    x: boundaryX + (directionX / directionLength) * offset,
+    y: boundaryY + (directionY / directionLength) * offset,
   }
 }
 
@@ -456,11 +591,16 @@ export function calculateOverlayPath(
   targetY: number,
   type: string
 ): string {
-  // Round coordinates to whole pixels for pixel-perfect rendering
-  const sX = Math.round(sourceX)
-  const sY = Math.round(sourceY)
-  const tX = Math.round(targetX)
-  const tY = Math.round(targetY)
+  const preserveExactCoordinates =
+    type === "UseCaseAssociation" ||
+    type === "UseCaseInclude" ||
+    type === "UseCaseExtend" ||
+    type === "UseCaseGeneralization"
+
+  const sX = preserveExactCoordinates ? sourceX : Math.round(sourceX)
+  const sY = preserveExactCoordinates ? sourceY : Math.round(sourceY)
+  const tX = preserveExactCoordinates ? targetX : Math.round(targetX)
+  const tY = preserveExactCoordinates ? targetY : Math.round(targetY)
 
   if (
     type == "UseCaseInclude" ||
@@ -497,11 +637,16 @@ export function calculateStraightPath(
   targetY: number,
   type: string
 ): string {
-  // Round coordinates to whole pixels for pixel-perfect rendering
-  const sX = Math.round(sourceX)
-  const sY = Math.round(sourceY)
-  const tX = Math.round(targetX)
-  const tY = Math.round(targetY)
+  const preserveExactCoordinates =
+    type === "UseCaseAssociation" ||
+    type === "UseCaseInclude" ||
+    type === "UseCaseExtend" ||
+    type === "UseCaseGeneralization"
+
+  const sX = preserveExactCoordinates ? sourceX : Math.round(sourceX)
+  const sY = preserveExactCoordinates ? sourceY : Math.round(sourceY)
+  const tX = preserveExactCoordinates ? targetX : Math.round(targetX)
+  const tY = preserveExactCoordinates ? targetY : Math.round(targetY)
 
   const dx = tX - sX
   const dy = tY - sY

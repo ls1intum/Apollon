@@ -1,7 +1,6 @@
 .react-flow {
   --panel-background: var(--apollon-background, #ffffff);
-  --panel-shadow: 0 0 4px 0
-    var(--apollon-background-variant, #f8f9fa);
+  --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
   --text: var(--apollon-primary-contrast, #000000);
   --xy-edge-stroke: var(--apollon-primary-contrast, #000000);
   --xy-edge-stroke-width: 2px;
@@ -102,6 +101,38 @@
   border-right: none;
   border-top-left-radius: 20px;
   border-bottom-left-radius: 20px;
+}
+
+.react-flow__handle.apollon-ellipse-handle::before {
+  content: "";
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--apollon-primary, #3e8acc);
+  opacity: 0.45;
+  border-radius: 999px;
+  box-sizing: border-box;
+  pointer-events: all;
+  cursor: crosshair;
+}
+
+.react-flow__handle.apollon-ellipse-handle--top::before {
+  clip-path: inset(0 0 50% 0);
+}
+
+.react-flow__handle.apollon-ellipse-handle--right::before {
+  clip-path: inset(0 0 0 50%);
+}
+
+.react-flow__handle.apollon-ellipse-handle--bottom::before {
+  clip-path: inset(50% 0 0 0);
+}
+
+.react-flow__handle.apollon-ellipse-handle--left::before {
+  clip-path: inset(0 50% 0 0);
 }
 
 .react-flow__resize-control line {

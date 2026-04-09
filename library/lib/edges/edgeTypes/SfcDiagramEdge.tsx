@@ -1,5 +1,9 @@
 import { BaseEdge } from "@xyflow/react"
-import { BaseEdgeProps, CommonEdgeElements } from "../GenericEdge"
+import {
+  BaseEdgeProps,
+  CommonEdgeElements,
+  EdgeEndpointMarkers,
+} from "../GenericEdge"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -53,6 +57,7 @@ export const SfcDiagramEdge = ({
   sourceHandleId,
   targetHandleId,
   data,
+  selected,
 }: BaseEdgeProps) => {
   const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
@@ -82,6 +87,9 @@ export const SfcDiagramEdge = ({
     markerStart,
     strokeDashArray,
     handlePointerDown,
+    handleEndpointPointerDown,
+    sourcePoint,
+    targetPoint,
     isDiagramModifiable,
   } = useStepPathEdge({
     id,
@@ -185,6 +193,19 @@ export const SfcDiagramEdge = ({
             style={{
               opacity: isReconnectingRef.current ? 0 : 0.4,
             }}
+          />
+
+          <EdgeEndpointMarkers
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
+            isDiagramModifiable={isDiagramModifiable}
+            selected={selected}
+            diagramType="step"
+            pathType="step"
+            onSourcePointerDown={(e) => handleEndpointPointerDown(e, "source")}
+            onTargetPointerDown={(e) => handleEndpointPointerDown(e, "target")}
           />
 
           {isDiagramModifiable &&

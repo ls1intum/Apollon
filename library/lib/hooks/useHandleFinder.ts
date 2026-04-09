@@ -77,6 +77,14 @@ export const useHandleFinder = () => {
           point: dropPosition,
           rect: nodeBounds,
         })
+
+        if (nodeOnTop.type === DiagramNodeTypeRecord.useCase) {
+          handle = findClosestHandle({
+            point: dropPosition,
+            rect: nodeBounds,
+            useEllipseHandles: true,
+          })
+        }
       }
       return {
         handle,

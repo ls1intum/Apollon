@@ -1,5 +1,9 @@
 import { BaseEdge } from "@xyflow/react"
-import { BaseEdgeProps, CommonEdgeElements } from "../GenericEdge"
+import {
+  BaseEdgeProps,
+  CommonEdgeElements,
+  EdgeEndpointMarkers,
+} from "../GenericEdge"
 import { useStraightPathEdge } from "@/hooks/useStraightPathEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -25,6 +29,7 @@ export const SyntaxTreeEdge = ({
   sourceHandleId,
   targetHandleId,
   data,
+  selected,
 }: BaseEdgeProps) => {
   const anchorRef = useRef<SVGSVGElement | null>(null)
   const { handleDelete } = useToolbar({ id })
@@ -48,6 +53,9 @@ export const SyntaxTreeEdge = ({
     markerStart,
     strokeDashArray,
     isDiagramModifiable,
+    handleEndpointPointerDown,
+    sourcePoint,
+    targetPoint,
   } = useStraightPathEdge({
     id,
     type,
@@ -90,6 +98,19 @@ export const SyntaxTreeEdge = ({
             strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{ opacity: 0.4 }}
+          />
+
+          <EdgeEndpointMarkers
+            sourcePoint={sourcePoint}
+            targetPoint={targetPoint}
+            sourcePosition={sourcePosition}
+            targetPosition={targetPosition}
+            isDiagramModifiable={isDiagramModifiable}
+            selected={selected}
+            diagramType="straight"
+            pathType="straight"
+            onSourcePointerDown={(e) => handleEndpointPointerDown(e, "source")}
+            onTargetPointerDown={(e) => handleEndpointPointerDown(e, "target")}
           />
         </g>
 

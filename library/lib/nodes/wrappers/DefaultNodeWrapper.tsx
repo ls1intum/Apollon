@@ -1,6 +1,8 @@
 import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSelectableWrapper"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
+import { DiagramNodeTypeRecord } from "@/nodes"
+import { getEllipseHandlePosition } from "@/utils"
 import { Handle, Position, useReactFlow } from "@xyflow/react"
 
 // Define enum for handle IDs
@@ -58,6 +60,8 @@ interface Props {
 
 export function DefaultNodeWrapper({
   elementId,
+  width,
+  height,
   children,
   hiddenHandles = [],
   className,
@@ -193,6 +197,33 @@ export function DefaultNodeWrapper({
     HandleId.Bottom,
     HandleId.Left,
   ])
+  const isUseCaseEllipse =
+    nodeType === DiagramNodeTypeRecord.useCase &&
+    width != null &&
+    height != null
+
+  const getEllipseHandleStyle = (handleId: HandleId) => {
+    if (!isUseCaseEllipse || width == null || height == null) {
+      return null
+    }
+
+    const point = getEllipseHandlePosition(
+      width / 2,
+      height / 2,
+      width / 2,
+      height / 2,
+      handleId
+    )
+
+    return {
+      ...baseHandleStyle,
+      left: point.x,
+      top: point.y,
+      right: "auto",
+      bottom: "auto",
+      transform: "translate(-50%, -50%)",
+    }
+  }
 
   return (
     <AssessmentSelectableWrapper elementId={elementId}>
@@ -215,14 +246,18 @@ export function DefaultNodeWrapper({
                 <Handle
                   key={handle.id}
                   id={handle.id}
-                  className={handle.className}
+                  className={
+                    isUseCaseEllipse && isPrimaryHandle
+                      ? `apollon-ellipse-handle apollon-ellipse-handle--${handle.id}`
+                      : handle.className
+                  }
                   type="source"
                   position={handle.position}
                   style={
                     isPrimaryHandle
-                      ? handle.style
+                      ? (getEllipseHandleStyle(handle.id) ?? handle.style)
                       : {
-                          ...handle.style,
+                          ...(getEllipseHandleStyle(handle.id) ?? handle.style),
                           opacity: 0,
                           pointerEvents: "none",
                         }

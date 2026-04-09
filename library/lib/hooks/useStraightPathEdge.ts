@@ -7,12 +7,17 @@ import {
   getEdgeMarkerStyles,
   adjustSourceCoordinates,
   adjustTargetCoordinates,
+  getEllipseBoundaryPoint,
+  getEllipseHandlePosition,
 } from "@/utils/edgeUtils"
 import { EDGES } from "@/constants"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { useEdgeReconnection, BaseEdgeProps } from "../edges/GenericEdge"
 import { useHandleFinder } from "./useHandleFinder"
+import { DiagramNodeTypeRecord } from "@/nodes"
+import { useDiagramStore } from "@/store/context"
+import { useShallow } from "zustand/shallow"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -38,7 +43,17 @@ export const useStraightPathEdge = ({
 }: Omit<BaseEdgeProps, "data"> & { enableReconnection?: boolean }) => {
   const pathRef = useRef<SVGPathElement | null>(null)
   const isDiagramModifiable = useDiagramModifiable()
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, getNode, getInternalNode } = useReactFlow()
+  const persistedEdgeHandles = useDiagramStore(
+    useShallow((state) => {
+      const edge = state.edges.find((currentEdge) => currentEdge.id === id)
+
+      return {
+        sourceHandle: edge?.sourceHandle ?? null,
+        targetHandle: edge?.targetHandle ?? null,
+      }
+    })
+  )
   const [tempReconnectPath, setTempReconnectPath] = useState<string | null>(
     null
   )
@@ -91,19 +106,147 @@ export const useStraightPathEdge = ({
   const roundedTargetX = Math.round(targetX)
   const roundedTargetY = Math.round(targetY)
 
-  const adjustedTargetCoordinates = adjustTargetCoordinates(
+  const provisionalTargetCoordinates = adjustTargetCoordinates(
     roundedTargetX,
     roundedTargetY,
     targetPosition,
     padding
   )
 
-  const adjustedSourceCoordinates = adjustSourceCoordinates(
+  const provisionalSourceCoordinates = adjustSourceCoordinates(
     roundedSourceX,
     roundedSourceY,
     sourcePosition,
     EDGES.SOURCE_CONNECTION_POINT_PADDING
   )
+
+  const getAbsoluteNodeBounds = useCallback(
+    (nodeId?: string | null) => {
+      if (!nodeId) {
+        return null
+      }
+
+      const node = getNode(nodeId)
+      const internalNode = getInternalNode(nodeId)
+      const width = node?.width ?? node?.measured?.width
+      const height = node?.height ?? node?.measured?.height
+
+      if (!node || !internalNode || width == null || height == null) {
+        return null
+      }
+
+      return {
+        type: node.type,
+        x: internalNode.internals.positionAbsolute.x,
+        y: internalNode.internals.positionAbsolute.y,
+        width,
+        height,
+      }
+    },
+    [getInternalNode, getNode]
+  )
+
+  const sourceNodeBounds = getAbsoluteNodeBounds(source)
+  const targetNodeBounds = getAbsoluteNodeBounds(target)
+  const resolvedSourceHandleId =
+    sourceHandleId ?? persistedEdgeHandles.sourceHandle ?? null
+  const resolvedTargetHandleId =
+    targetHandleId ?? persistedEdgeHandles.targetHandle ?? null
+
+  const sourceIsUseCaseEllipse =
+    sourceNodeBounds?.type === DiagramNodeTypeRecord.useCase
+  const targetIsUseCaseEllipse =
+    targetNodeBounds?.type === DiagramNodeTypeRecord.useCase
+
+  const sourceEllipseCenter = sourceNodeBounds
+    ? {
+        x: sourceNodeBounds.x + sourceNodeBounds.width / 2,
+        y: sourceNodeBounds.y + sourceNodeBounds.height / 2,
+      }
+    : null
+
+  const targetEllipseCenter = targetNodeBounds
+    ? {
+        x: targetNodeBounds.x + targetNodeBounds.width / 2,
+        y: targetNodeBounds.y + targetNodeBounds.height / 2,
+      }
+    : null
+
+  const adjustedSourceCoordinates =
+    sourceIsUseCaseEllipse && sourceNodeBounds && sourceEllipseCenter
+      ? (() => {
+          const ellipseBoundaryPoint = resolvedSourceHandleId
+            ? getEllipseHandlePosition(
+                sourceEllipseCenter.x,
+                sourceEllipseCenter.y,
+                sourceNodeBounds.width / 2,
+                sourceNodeBounds.height / 2,
+                resolvedSourceHandleId
+              )
+            : (() => {
+                const oppositePoint =
+                  targetIsUseCaseEllipse && targetEllipseCenter
+                    ? targetEllipseCenter
+                    : {
+                        x: provisionalTargetCoordinates.targetX,
+                        y: provisionalTargetCoordinates.targetY,
+                      }
+
+                return getEllipseBoundaryPoint({
+                  centerX: sourceEllipseCenter.x,
+                  centerY: sourceEllipseCenter.y,
+                  radiusX: sourceNodeBounds.width / 2,
+                  radiusY: sourceNodeBounds.height / 2,
+                  towardX: oppositePoint.x,
+                  towardY: oppositePoint.y,
+                  fallbackHandle: sourcePosition,
+                })
+              })()
+
+          return {
+            sourceX: ellipseBoundaryPoint.x,
+            sourceY: ellipseBoundaryPoint.y,
+          }
+        })()
+      : provisionalSourceCoordinates
+
+  const adjustedTargetCoordinates =
+    targetIsUseCaseEllipse && targetNodeBounds && targetEllipseCenter
+      ? (() => {
+          const ellipseBoundaryPoint = resolvedTargetHandleId
+            ? getEllipseHandlePosition(
+                targetEllipseCenter.x,
+                targetEllipseCenter.y,
+                targetNodeBounds.width / 2,
+                targetNodeBounds.height / 2,
+                resolvedTargetHandleId
+              )
+            : (() => {
+                const oppositePoint =
+                  sourceIsUseCaseEllipse && sourceEllipseCenter
+                    ? sourceEllipseCenter
+                    : {
+                        x: provisionalSourceCoordinates.sourceX,
+                        y: provisionalSourceCoordinates.sourceY,
+                      }
+
+                return getEllipseBoundaryPoint({
+                  centerX: targetEllipseCenter.x,
+                  centerY: targetEllipseCenter.y,
+                  radiusX: targetNodeBounds.width / 2,
+                  radiusY: targetNodeBounds.height / 2,
+                  towardX: oppositePoint.x,
+                  towardY: oppositePoint.y,
+                  fallbackHandle: targetPosition,
+                })
+              })()
+
+          return {
+            targetX: ellipseBoundaryPoint.x,
+            targetY: ellipseBoundaryPoint.y,
+          }
+        })()
+      : provisionalTargetCoordinates
 
   const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>(() => ({
     x:

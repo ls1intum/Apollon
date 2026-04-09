@@ -8,6 +8,7 @@ import {
   getEdgeMarkerStyles,
   findClosestHandle,
   getEllipseHandlePosition,
+  getEllipseBoundaryPoint,
   calculateOverlayPath,
   calculateStraightPath,
   simplifySvgPath,
@@ -581,6 +582,16 @@ describe("findClosestHandle", () => {
     })
     expect(result).toBe("top-left")
   })
+
+  it("uses ellipse-perimeter coordinates when requested", () => {
+    const result = findClosestHandle({
+      point: { x: 60, y: 18 },
+      rect,
+      useEllipseHandles: true,
+    })
+
+    expect(result).toBe("top-left")
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -616,66 +627,137 @@ describe("getEllipseHandlePosition", () => {
     expect(result.y).toBeCloseTo(70) // 100 + 30*sin(3π/2) = 100 - 30
   })
 
-  it("returns correct position for bottom-right handle (angle=π/4)", () => {
+  it("returns correct position for bottom-right handle on the ellipse outline", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "bottom-right")
-    const angle = Math.PI / 4
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+    expect(result.x).toBeCloseTo(cx + rx * 0.6)
+    expect(result.y).toBeCloseTo(cy + ry * Math.sqrt(1 - 0.6 ** 2))
   })
 
-  it("returns correct position for top-left handle (angle=5π/4)", () => {
+  it("returns correct position for top-left handle on the ellipse outline", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "top-left")
-    const angle = (5 * Math.PI) / 4
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+    expect(result.x).toBeCloseTo(cx - rx * 0.6)
+    expect(result.y).toBeCloseTo(cy - ry * Math.sqrt(1 - 0.6 ** 2))
   })
 
-  it("returns correct position for top-right handle (angle=7π/4)", () => {
+  it("returns correct position for top-mid-left handle on the ellipse outline", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "top-mid-left")
+    expect(result.x).toBeCloseTo(cx - rx * 0.3)
+    expect(result.y).toBeCloseTo(cy - ry * Math.sqrt(1 - 0.3 ** 2))
+  })
+
+  it("returns correct position for top-right handle on the ellipse outline", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "top-right")
-    const angle = (7 * Math.PI) / 4
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+    expect(result.x).toBeCloseTo(cx + rx * 0.6)
+    expect(result.y).toBeCloseTo(cy - ry * Math.sqrt(1 - 0.6 ** 2))
   })
 
-  it("returns correct position for bottom-left handle (angle=3π/4)", () => {
+  it("returns correct position for bottom-left handle on the ellipse outline", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "bottom-left")
-    const angle = (3 * Math.PI) / 4
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+    expect(result.x).toBeCloseTo(cx - rx * 0.6)
+    expect(result.y).toBeCloseTo(cy + ry * Math.sqrt(1 - 0.6 ** 2))
   })
 
-  it("returns correct position for right-bottom handle (angle=π/6)", () => {
+  it("returns correct position for right-bottom handle on the ellipse outline", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-bottom")
-    const angle = Math.PI / 6
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+    expect(result.x).toBeCloseTo(cx + rx * Math.sqrt(1 - 0.6 ** 2))
+    expect(result.y).toBeCloseTo(cy + ry * 0.6)
   })
 
-  it("returns correct position for left-bottom handle (angle=5π/6)", () => {
+  it("returns correct position for right-mid-top handle on the ellipse outline", () => {
+    const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-mid-top")
+    expect(result.x).toBeCloseTo(cx + rx * Math.sqrt(1 - 0.3 ** 2))
+    expect(result.y).toBeCloseTo(cy - ry * 0.3)
+  })
+
+  it("returns correct position for left-bottom handle on the ellipse outline", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "left-bottom")
-    const angle = (5 * Math.PI) / 6
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+    expect(result.x).toBeCloseTo(cx - rx * Math.sqrt(1 - 0.6 ** 2))
+    expect(result.y).toBeCloseTo(cy + ry * 0.6)
   })
 
-  it("returns correct position for left-top handle (angle=7π/6)", () => {
+  it("returns correct position for left-top handle on the ellipse outline", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "left-top")
-    const angle = (7 * Math.PI) / 6
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+    expect(result.x).toBeCloseTo(cx - rx * Math.sqrt(1 - 0.6 ** 2))
+    expect(result.y).toBeCloseTo(cy - ry * 0.6)
   })
 
-  it("returns correct position for right-top handle (angle=11π/6)", () => {
+  it("returns correct position for right-top handle on the ellipse outline", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-top")
-    const angle = (11 * Math.PI) / 6
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
+    expect(result.x).toBeCloseTo(cx + rx * Math.sqrt(1 - 0.6 ** 2))
+    expect(result.y).toBeCloseTo(cy - ry * 0.6)
   })
 
   it("defaults to angle 0 for unknown handle", () => {
     const result = getEllipseHandlePosition(cx, cy, rx, ry, "unknown")
     expect(result.x).toBeCloseTo(150) // same as right
     expect(result.y).toBeCloseTo(100)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getEllipseBoundaryPoint
+// ---------------------------------------------------------------------------
+describe("getEllipseBoundaryPoint", () => {
+  it("returns the exact horizontal boundary point for a rightward ray", () => {
+    const result = getEllipseBoundaryPoint({
+      centerX: 100,
+      centerY: 50,
+      radiusX: 80,
+      radiusY: 40,
+      towardX: 300,
+      towardY: 50,
+    })
+
+    expect(result).toEqual({ x: 180, y: 50 })
+  })
+
+  it("returns a diagonal point that lies on the ellipse equation", () => {
+    const result = getEllipseBoundaryPoint({
+      centerX: 100,
+      centerY: 50,
+      radiusX: 80,
+      radiusY: 40,
+      towardX: 220,
+      towardY: 110,
+    })
+
+    const normalizedEllipseValue =
+      (result.x - 100) ** 2 / 80 ** 2 + (result.y - 50) ** 2 / 40 ** 2
+
+    const rayCrossProduct =
+      (result.x - 100) * (110 - 50) - (result.y - 50) * (220 - 100)
+
+    expect(normalizedEllipseValue).toBeCloseTo(1, 10)
+    expect(rayCrossProduct).toBeCloseTo(0, 10)
+  })
+
+  it("applies offset along the outgoing ray after the ellipse boundary", () => {
+    const result = getEllipseBoundaryPoint({
+      centerX: 100,
+      centerY: 50,
+      radiusX: 80,
+      radiusY: 40,
+      towardX: 300,
+      towardY: 50,
+      offset: 10,
+    })
+
+    expect(result).toEqual({ x: 190, y: 50 })
+  })
+
+  it("falls back to a handle direction when the target point equals the center", () => {
+    const result = getEllipseBoundaryPoint({
+      centerX: 100,
+      centerY: 50,
+      radiusX: 80,
+      radiusY: 40,
+      towardX: 100,
+      towardY: 50,
+      fallbackHandle: "top",
+    })
+
+    expect(result.x).toBeCloseTo(100, 10)
+    expect(result.y).toBeCloseTo(10, 10)
   })
 })
 

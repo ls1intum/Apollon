@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react"
-import { useReactFlow, type Node } from "@xyflow/react"
+import { useReactFlow, Position, type Node } from "@xyflow/react"
 import { ExtendedEdgeProps } from "./EdgeProps"
 import { CustomEdgeToolbar } from "@/components"
 import { IPoint } from "./Connection"
@@ -116,6 +116,8 @@ export const useEdgeReconnection = (
 export const EdgeEndpointMarkers = ({
   sourcePoint,
   targetPoint,
+  sourcePosition,
+  targetPosition,
   isDiagramModifiable,
   selected,
   diagramType,
@@ -125,6 +127,8 @@ export const EdgeEndpointMarkers = ({
 }: {
   sourcePoint: IPoint
   targetPoint: IPoint
+  sourcePosition: Position
+  targetPosition: Position
   isDiagramModifiable: boolean
   selected?: boolean
   diagramType: string
@@ -132,7 +136,7 @@ export const EdgeEndpointMarkers = ({
   onSourcePointerDown: (e: React.PointerEvent) => void
   onTargetPointerDown: (e: React.PointerEvent) => void
 }) => {
-  if (!isDiagramModifiable || diagramType === "usecase") return null
+  if (!isDiagramModifiable) return null
 
   // Only render grab circles when the edge is selected.
   // These circles sit in the edge SVG layer (z-index 9999) above node handles
@@ -141,11 +145,31 @@ export const EdgeEndpointMarkers = ({
   // that already have an edge connected.
   if (!selected) return null
 
+  const grabOffset = diagramType === "step" ? 14 : 12
+
+  const offsetPoint = (point: IPoint, position: Position): IPoint => {
+    switch (position) {
+      case Position.Top:
+        return { x: point.x, y: point.y - grabOffset }
+      case Position.Right:
+        return { x: point.x + grabOffset, y: point.y }
+      case Position.Bottom:
+        return { x: point.x, y: point.y + grabOffset }
+      case Position.Left:
+        return { x: point.x - grabOffset, y: point.y }
+      default:
+        return point
+    }
+  }
+
+  const sourceGrabPoint = offsetPoint(sourcePoint, sourcePosition)
+  const targetGrabPoint = offsetPoint(targetPoint, targetPosition)
+
   return (
     <>
       <circle
-        cx={sourcePoint.x}
-        cy={sourcePoint.y}
+        cx={sourceGrabPoint.x}
+        cy={sourceGrabPoint.y}
         r={pathType === "straight" ? 8 : 10}
         fill="transparent"
         stroke="transparent"
@@ -156,8 +180,8 @@ export const EdgeEndpointMarkers = ({
       />
       <circle
         className="target-edge-marker-grab"
-        cx={targetPoint.x}
-        cy={targetPoint.y}
+        cx={targetGrabPoint.x}
+        cy={targetGrabPoint.y}
         r={pathType === "straight" ? 8 : 10}
         fill="transparent"
         stroke="transparent"
