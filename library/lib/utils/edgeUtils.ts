@@ -428,17 +428,25 @@ export function getEllipseHandlePosition(
 ): { x: number; y: number } {
   const angleMap: { [key: string]: number } = {
     right: 0,
-    "right-bottom": Math.PI / 6, // 30°
-    "bottom-right": Math.PI / 4, // 45°
+    "right-mid-bottom": Math.PI / 10, // 18°
+    "right-bottom": Math.PI / 5, // 36°
+    "bottom-right": (3 * Math.PI) / 10, // 54°
+    "bottom-mid-right": (2 * Math.PI) / 5, // 72°
     bottom: Math.PI / 2, // 90°
-    "bottom-left": (3 * Math.PI) / 4, // 135°
-    "left-bottom": (5 * Math.PI) / 6, // 150°
+    "bottom-mid-left": (3 * Math.PI) / 5, // 108°
+    "bottom-left": (7 * Math.PI) / 10, // 126°
+    "left-bottom": (4 * Math.PI) / 5, // 144°
+    "left-mid-bottom": (9 * Math.PI) / 10, // 162°
     left: Math.PI, // 180°
-    "left-top": (7 * Math.PI) / 6, // 210°
-    "top-left": (5 * Math.PI) / 4, // 225°
+    "left-mid-top": (11 * Math.PI) / 10, // 198°
+    "left-top": (6 * Math.PI) / 5, // 216°
+    "top-left": (13 * Math.PI) / 10, // 234°
+    "top-mid-left": (7 * Math.PI) / 5, // 252°
     top: (3 * Math.PI) / 2, // 270°
-    "top-right": (7 * Math.PI) / 4, // 315°
-    "right-top": (11 * Math.PI) / 6, // 330°
+    "top-mid-right": (8 * Math.PI) / 5, // 288°
+    "top-right": (17 * Math.PI) / 10, // 306°
+    "right-top": (9 * Math.PI) / 5, // 324°
+    "right-mid-top": (19 * Math.PI) / 10, // 342°
   }
 
   const angle = angleMap[handle] ?? 0
