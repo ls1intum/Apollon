@@ -18,17 +18,18 @@ npm install
 # Build all packages
 npm run build
 
-# Start Redis (requires Docker)
-npm run start:localdb
-
 # Start dev stack with hot reload
 npm run dev
 ```
 
 This starts:
 - **Library** build watch (auto-rebuilds on changes)
-- **Server** (tsx watch) on http://localhost:8000 with WebSocket relay on ws://localhost:4444
-- **Webapp** (Vite HMR) on http://localhost:5173
+- **Server** (tsx watch) on a printed local HTTP port with a matching WebSocket relay port
+- **Webapp** (Vite HMR) on a printed local dev URL
+
+`npm run dev` also handles local port collisions for the webapp, server, WebSocket relay, and Redis. It reuses an existing local Redis when possible and otherwise starts the local Redis container on a free host port. Docker still needs to be available when no compatible local Redis is already running.
+
+If you need to pin preferred ports, set `APOLLON_WEBAPP_PORT`, `APOLLON_SERVER_PORT`, `APOLLON_WS_PORT`, or `APOLLON_REDIS_PORT` before running `npm run dev`.
 
 No `.env` files needed — defaults match the local setup.
 
@@ -58,7 +59,7 @@ For complete documentation, setup instructions, and guides, visit:
 
 - **Node.js** (version specified in `.nvmrc`)
 - **npm** 7+ (for workspace support)
-- **Docker** (for running Redis locally)
+- **Docker** (for running Redis locally via `npm run dev` or `npm run start:localdb`)
 
 ## Contributing
 
