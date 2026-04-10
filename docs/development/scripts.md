@@ -22,7 +22,8 @@ Here are the commonly used scripts defined in the monorepo:
   ```bash
   npm run dev
   ```
-  Starts the library (build watch), server (tsx watch on http://localhost:8000), and webapp (Vite HMR on http://localhost:5173) concurrently.
+  Starts the library (build watch), server, and webapp concurrently. The command also resolves local port collisions for the webapp, server, WebSocket relay, and Redis, and it starts the local Redis container only when no compatible local Redis instance is already reachable.
+  You can prefer custom ports by setting `APOLLON_WEBAPP_PORT`, `APOLLON_SERVER_PORT`, `APOLLON_WS_PORT`, or `APOLLON_REDIS_PORT` before starting the stack.
 
 - **Start production build:**
   ```bash
