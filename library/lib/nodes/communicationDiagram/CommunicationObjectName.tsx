@@ -13,7 +13,6 @@ import {
 import { LAYOUT } from "@/constants"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 export function CommunicationObjectName({
@@ -28,7 +27,6 @@ export function CommunicationObjectName({
       setNodes: state.setNodes,
     }))
   )
-  const selected = useIsOnlyThisElementSelected(id)
   const isDiagramModifiable = useDiagramModifiable()
   const communicationObjectSvgWrapperRef = useRef<HTMLDivElement | null>(null)
 
@@ -134,7 +132,7 @@ export function CommunicationObjectName({
 
       <NodeResizer
         nodeId={id}
-        isVisible={isDiagramModifiable && !!selected}
+        isVisible={isDiagramModifiable}
         minWidth={minWidth}
         minHeight={minHeight}
         maxHeight={minHeight}

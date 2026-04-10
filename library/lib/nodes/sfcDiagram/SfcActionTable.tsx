@@ -5,7 +5,6 @@ import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { SfcActionTableProps } from "@/types"
 import { SfcActionTableNodeSVG } from "@/components"
 import { LAYOUT } from "@/constants"
@@ -19,7 +18,6 @@ export function SfcActionTable({
 }: NodeProps<Node<SfcActionTableProps>>) {
   const svgWrapperRef = useRef<HTMLDivElement | null>(null)
   const isDiagramModifiable = useDiagramModifiable()
-  const selected = useIsOnlyThisElementSelected(id)
 
   const { setNodes } = useDiagramStore(
     useShallow((state) => ({
@@ -67,7 +65,7 @@ export function SfcActionTable({
 
       <NodeResizer
         nodeId={id}
-        isVisible={isDiagramModifiable && !!selected}
+        isVisible={isDiagramModifiable}
         minWidth={120}
         minHeight={minHeight}
         maxHeight={minHeight}

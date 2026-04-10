@@ -6,7 +6,6 @@ import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { DeploymentArtifactSVG } from "@/components"
 import { useHandleOnResize } from "@/hooks"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 export function DeploymentArtifact({
@@ -19,7 +18,6 @@ export function DeploymentArtifact({
   const svgWrapperRef = useRef<HTMLDivElement | null>(null)
   const { onResize } = useHandleOnResize(parentId)
   const isDiagramModifiable = useDiagramModifiable()
-  const selected = useIsOnlyThisElementSelected(id)
 
   if (!width || !height) {
     return null
@@ -30,7 +28,7 @@ export function DeploymentArtifact({
       <NodeToolbar elementId={id} />
 
       <NodeResizer
-        isVisible={isDiagramModifiable && !!selected}
+        isVisible={isDiagramModifiable}
         onResize={onResize}
         minHeight={50}
         minWidth={50}

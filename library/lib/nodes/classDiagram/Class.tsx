@@ -13,7 +13,6 @@ import {
 import { LAYOUT } from "@/constants"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
 export function Class({
@@ -29,7 +28,6 @@ export function Class({
   )
   const { name, stereotype, attributes, methods } = data
 
-  const selected = useIsOnlyThisElementSelected(id)
   const isDiagramModifiable = useDiagramModifiable()
 
   const classSvgWrapperRef = useRef<HTMLDivElement | null>(null)
@@ -142,7 +140,7 @@ export function Class({
 
       <NodeResizer
         nodeId={id}
-        isVisible={isDiagramModifiable && !!selected}
+        isVisible={isDiagramModifiable}
         minWidth={minWidth}
         minHeight={minHeight}
         maxHeight={minHeight}

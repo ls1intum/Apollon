@@ -6,7 +6,6 @@ import { DefaultNodeProps } from "@/types"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useRef } from "react"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 
 export function ColorDescription({
   width,
@@ -15,7 +14,6 @@ export function ColorDescription({
   id,
 }: NodeProps<Node<DefaultNodeProps>>) {
   const anchorEl = useRef<HTMLDivElement | null>(null)
-  const selected = useIsOnlyThisElementSelected(id)
   const isDiagramModifiable = useDiagramModifiable()
   if (!width || !height) {
     return null
@@ -29,10 +27,7 @@ export function ColorDescription({
       hiddenHandles={true}
     >
       <NodeToolbar elementId={id} />
-      <NodeResizer
-        minHeight={40}
-        isVisible={isDiagramModifiable && !!selected}
-      />
+      <NodeResizer minHeight={40} isVisible={isDiagramModifiable} />
 
       <div ref={anchorEl}>
         <ColorDescriptionSVG data={data} width={width} height={height} />

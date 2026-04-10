@@ -9,6 +9,7 @@ interface EdgeIncludeExtendLabelsProps {
   isUseCasePath?: boolean
   showRelationshipLabels?: boolean
   relationshipType?: "include" | "extend"
+  textColor?: string
 }
 
 export const EdgeIncludeExtendLabel = ({
@@ -16,6 +17,7 @@ export const EdgeIncludeExtendLabel = ({
   targetPoint,
   showRelationshipLabels = false,
   relationshipType = "include",
+  textColor = "var(--apollon-primary-contrast, #000000)",
 }: EdgeIncludeExtendLabelsProps) => {
   return (
     <>
@@ -45,7 +47,7 @@ export const EdgeIncludeExtendLabel = ({
               className="edge-label"
               style={{
                 fontSize: "12px",
-                fill: "var(--apollon-primary-contrast, #000000)",
+                fill: textColor,
                 fontStyle: "italic",
                 userSelect: "none",
                 fontWeight: "bold",

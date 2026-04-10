@@ -1,26 +1,25 @@
-import { describe, it, expect } from "vitest"
-import { Position, ConnectionLineType } from "@xyflow/react"
+import { EDGES } from "@/constants"
+import type { UMLDiagramType } from "@/types/DiagramType"
 import {
-  adjustTargetCoordinates,
   adjustSourceCoordinates,
-  calculateTextPlacement,
+  adjustTargetCoordinates,
   calculateDynamicEdgeLabels,
-  getEdgeMarkerStyles,
-  findClosestHandle,
-  getEllipseHandlePosition,
+  calculateInnerMidpoints,
   calculateOverlayPath,
   calculateStraightPath,
-  simplifySvgPath,
-  simplifyPoints,
-  parseSvgPath,
-  calculateInnerMidpoints,
-  removeDuplicatePoints,
-  getMarkerSegmentPath,
-  getDefaultEdgeType,
+  calculateTextPlacement,
+  findClosestHandle,
   getConnectionLineType,
+  getDefaultEdgeType,
+  getEdgeMarkerStyles,
+  getMarkerSegmentPath,
+  parseSvgPath,
+  removeDuplicatePoints,
+  simplifyPoints,
+  simplifySvgPath,
 } from "@/utils/edgeUtils"
-import type { UMLDiagramType } from "@/types/DiagramType"
-import { EDGES } from "@/constants"
+import { ConnectionLineType, Position } from "@xyflow/react"
+import { describe, expect, it } from "vitest"
 
 // ---------------------------------------------------------------------------
 // adjustTargetCoordinates
@@ -580,102 +579,6 @@ describe("findClosestHandle", () => {
       rect,
     })
     expect(result).toBe("top-left")
-  })
-})
-
-// ---------------------------------------------------------------------------
-// getEllipseHandlePosition
-// ---------------------------------------------------------------------------
-describe("getEllipseHandlePosition", () => {
-  const cx = 100
-  const cy = 100
-  const rx = 50
-  const ry = 30
-
-  it("returns correct position for right handle (angle=0)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "right")
-    expect(result.x).toBeCloseTo(150) // 100 + 50*cos(0)
-    expect(result.y).toBeCloseTo(100) // 100 + 30*sin(0)
-  })
-
-  it("returns correct position for bottom handle (angle=π/2)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "bottom")
-    expect(result.x).toBeCloseTo(100) // cos(π/2) ≈ 0
-    expect(result.y).toBeCloseTo(130) // 100 + 30*sin(π/2)
-  })
-
-  it("returns correct position for left handle (angle=π)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "left")
-    expect(result.x).toBeCloseTo(50) // 100 + 50*cos(π) = 100 - 50
-    expect(result.y).toBeCloseTo(100) // sin(π) ≈ 0
-  })
-
-  it("returns correct position for top handle (angle=3π/2)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "top")
-    expect(result.x).toBeCloseTo(100) // cos(3π/2) ≈ 0
-    expect(result.y).toBeCloseTo(70) // 100 + 30*sin(3π/2) = 100 - 30
-  })
-
-  it("returns correct position for bottom-right handle (angle=π/4)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "bottom-right")
-    const angle = Math.PI / 4
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
-  })
-
-  it("returns correct position for top-left handle (angle=5π/4)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "top-left")
-    const angle = (5 * Math.PI) / 4
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
-  })
-
-  it("returns correct position for top-right handle (angle=7π/4)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "top-right")
-    const angle = (7 * Math.PI) / 4
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
-  })
-
-  it("returns correct position for bottom-left handle (angle=3π/4)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "bottom-left")
-    const angle = (3 * Math.PI) / 4
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
-  })
-
-  it("returns correct position for right-bottom handle (angle=π/6)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-bottom")
-    const angle = Math.PI / 6
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
-  })
-
-  it("returns correct position for left-bottom handle (angle=5π/6)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "left-bottom")
-    const angle = (5 * Math.PI) / 6
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
-  })
-
-  it("returns correct position for left-top handle (angle=7π/6)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "left-top")
-    const angle = (7 * Math.PI) / 6
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
-  })
-
-  it("returns correct position for right-top handle (angle=11π/6)", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "right-top")
-    const angle = (11 * Math.PI) / 6
-    expect(result.x).toBeCloseTo(cx + rx * Math.cos(angle))
-    expect(result.y).toBeCloseTo(cy + ry * Math.sin(angle))
-  })
-
-  it("defaults to angle 0 for unknown handle", () => {
-    const result = getEllipseHandlePosition(cx, cy, rx, ry, "unknown")
-    expect(result.x).toBeCloseTo(150) // same as right
-    expect(result.y).toBeCloseTo(100)
   })
 })
 

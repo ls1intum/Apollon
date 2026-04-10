@@ -29,6 +29,15 @@ export const useConnect = () => {
   const diagramType = useMetadataStore(useShallow((state) => state.diagramType))
 
   const defaultEdgeType = getDefaultEdgeType(diagramType)
+
+  const isFourHandleNode = useCallback(
+    (nodeType?: string) =>
+      nodeType === DiagramNodeTypeRecord.componentInterface ||
+      nodeType === DiagramNodeTypeRecord.petriNetPlace ||
+      nodeType === DiagramNodeTypeRecord.petriNetTransition ||
+      nodeType === DiagramNodeTypeRecord.sfcTransitionBranch,
+    []
+  )
   const getDropPosition = useCallback(
     (event: MouseEvent | TouchEvent) => {
       const { clientX, clientY } =
@@ -100,27 +109,33 @@ export const useConnect = () => {
         })
 
         if (intersectingNodes.length === 0) return
-        const nodeOnTop = intersectingNodes[intersectingNodes.length - 1]
+
+        const fromNodeId = connectionState.fromNode?.id
+        const nodeOnTop =
+          intersectingNodes.findLast((node) => node.id !== fromNodeId) ??
+          intersectingNodes[intersectingNodes.length - 1]
+
         const internalNodeData = getInternalNode(nodeOnTop.id)
 
-        if (!internalNodeData) return
-
-        const useFourHandles =
-          nodeOnTop.type === DiagramNodeTypeRecord.componentInterface ||
-          nodeOnTop.type === DiagramNodeTypeRecord.petriNetPlace ||
-          nodeOnTop.type === DiagramNodeTypeRecord.petriNetTransition ||
-          nodeOnTop.type === DiagramNodeTypeRecord.sfcTransitionBranch
+        if (
+          !internalNodeData ||
+          nodeOnTop.width == null ||
+          nodeOnTop.height == null
+        )
+          return
 
         const targetHandle = findClosestHandle({
           point: dropPosition,
           rect: {
             x: internalNodeData.internals.positionAbsolute.x,
             y: internalNodeData.internals.positionAbsolute.y,
-            width: nodeOnTop.width!,
-            height: nodeOnTop.height!,
+            width: nodeOnTop.width,
+            height: nodeOnTop.height,
           },
-          useFourHandles,
+          useFourHandles: isFourHandleNode(nodeOnTop.type),
         })
+
+        if (!targetHandle) return
 
         if (startEdge.current) {
           const updatedEdge = edges.find(
@@ -179,7 +194,15 @@ export const useConnect = () => {
       startEdge.current = null
       connectionStartParams.current = null
     },
-    [edges, getDropPosition, getIntersectingNodes, setEdges, defaultEdgeType]
+    [
+      defaultEdgeType,
+      edges,
+      getDropPosition,
+      getInternalNode,
+      getIntersectingNodes,
+      isFourHandleNode,
+      setEdges,
+    ]
   )
 
   const onEdgesDelete: OnEdgesDelete = useCallback(() => {
