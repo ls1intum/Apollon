@@ -21,7 +21,7 @@ function App() {
 
   const exportDiagram = async () => {
     const diagramSVG = await editor!.exportAsSVG({
-      svgMode: exportType === "png" ? "compat" : "web",
+      svgMode: "compat",
     })
     let exportContent
 
