@@ -83,7 +83,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@tumaet/apollon": "^4.2.7",
+    "@tumaet/apollon": "^4.2.16",
     "@vscode/vsce": "^3.2.1",
     "styled-components": "6.1.8",
     "uuid": "^11.0.2"

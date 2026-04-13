@@ -47,7 +47,61 @@
 
 .react-flow__handle {
   opacity: 0;
+  background-color: transparent;
+}
+
+.react-flow__handle.apollon-arc-handle::before {
+  content: "";
+  position: absolute;
   background-color: var(--apollon-primary, #3e8acc);
+  opacity: 0.4;
+  box-sizing: border-box;
+  pointer-events: all;
+  cursor: crosshair;
+}
+
+.react-flow__handle.apollon-arc-handle--top::before {
+  width: 40px;
+  height: 20px;
+  left: 50%;
+  top: -16px;
+  transform: translateX(-50%);
+  border-bottom: none;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.react-flow__handle.apollon-arc-handle--right::before {
+  width: 20px;
+  height: 40px;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left: none;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.react-flow__handle.apollon-arc-handle--bottom::before {
+  width: 40px;
+  height: 20px;
+  left: 50%;
+  top: 4px;
+  transform: translateX(-50%);
+  border-top: none;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.react-flow__handle.apollon-arc-handle--left::before {
+  width: 20px;
+  height: 40px;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-right: none;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
 }
 
 .react-flow__resize-control line {
@@ -58,14 +112,30 @@
   z-index: 20;
 }
 
+.react-flow__resize-control {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.react-flow__node:hover .react-flow__resize-control,
+.react-flow__node.selected .react-flow__resize-control {
+  opacity: 1;
+  pointer-events: all;
+}
+
 .react-flow__node:hover .react-flow__handle {
-  opacity: 0.6;
-  background-color: var(--apollon-primary, #3e8acc);
+  opacity: 1;
+  background-color: transparent;
+  pointer-events: all;
+  cursor: crosshair;
 }
 
 .react-flow__node.selected .react-flow__handle {
-  opacity: 0.6;
-  background-color: var(--apollon-primary, #3e8acc);
+  opacity: 1;
+  background-color: transparent;
+  pointer-events: all;
+  cursor: crosshair;
 }
 
 .edge-circle {
@@ -112,10 +182,14 @@
 
 .react-flow__node:hover {
   opacity: 0.9;
+  box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
+  border-radius: 4px;
 }
 
 .react-flow__node.selected {
   opacity: 0.9;
+  box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
+  border-radius: 4px;
 }
 
 .react-flow__edges {

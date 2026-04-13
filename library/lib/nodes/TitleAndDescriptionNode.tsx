@@ -8,7 +8,6 @@ type Props = Node<{
 }>
 
 export function TitleAndDesctiption({
-  selected,
   width,
   height,
   id,
@@ -27,7 +26,7 @@ export function TitleAndDesctiption({
         description={description || ""}
       />
       <NodeResizer
-        isVisible={!!selected}
+        isVisible
         minHeight={200}
         handleStyle={{ width: 8, height: 8 }}
       />
