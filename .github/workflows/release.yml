@@ -86,19 +86,8 @@ jobs:
         run: npm run test
         working-directory: library
 
-      - name: Determine npm dist-tag
-        id: dist-tag
-        run: |
-          VERSION=$(node -p "require('./library/package.json').version")
-          if echo "$VERSION" | grep -qE "(alpha|beta|rc)"; then
-            echo "tag=next" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag=latest" >> "$GITHUB_OUTPUT"
-          fi
-          echo "Publishing @tumaet/apollon@$VERSION to npm with dist-tag ${{ steps.dist-tag.outputs.tag || 'latest' }}"
-
       - name: Publish to npm
-        run: npm publish --access public --tag ${{ steps.dist-tag.outputs.tag }} --provenance
+        run: npm publish --access public --tag latest --provenance
         working-directory: library
 
   tag-docker-images:
@@ -145,7 +134,7 @@ jobs:
         with:
           name: "v${{ needs.verify-version.outputs.version }}"
           generate_release_notes: true
-          prerelease: ${{ contains(needs.verify-version.outputs.version, '-') }}
+          prerelease: false
 
   deploy-staging:
     name: Deploy to Staging
