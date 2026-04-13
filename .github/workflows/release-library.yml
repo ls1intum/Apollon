@@ -1,0 +1,79 @@
+name: Release Library
+
+on:
+  push:
+    tags:
+      - "lib/v*"
+
+concurrency:
+  group: release-library
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish-library:
+    name: Publish Library to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.14.0
+          registry-url: https://registry.npmjs.org/
+
+      - name: Set correct npm version
+        run: npm install -g npm@11.1.0
+
+      - name: Extract and verify version
+        id: version
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/lib/v}"
+          PACKAGE_VERSION=$(node -p "require('./library/package.json').version")
+          if [ "$PACKAGE_VERSION" != "$TAG_NAME" ]; then
+            echo "::error::Version mismatch: library/package.json has $PACKAGE_VERSION but tag is lib/v$TAG_NAME"
+            echo "Bump the version in library/package.json before tagging."
+            exit 1
+          fi
+          echo "version=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build library
+        run: npm run build
+        working-directory: library
+
+      - name: Run library tests
+        run: npm run test
+        working-directory: library
+
+      - name: Determine npm dist-tag
+        id: dist-tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if echo "$VERSION" | grep -qE "(alpha|beta|rc)"; then
+            echo "tag=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        run: npm publish --access public --tag ${{ steps.dist-tag.outputs.tag }} --provenance
+        working-directory: library
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: lib/v${{ steps.version.outputs.version }}
+          name: "Library v${{ steps.version.outputs.version }}"
+          generate_release_notes: true
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}

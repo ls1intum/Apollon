@@ -1,0 +1,94 @@
+name: Release Standalone
+
+on:
+  push:
+    tags:
+      - "standalone/v*"
+
+concurrency:
+  group: release-standalone
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  verify-version:
+    name: Verify Version Consistency
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Extract and verify version
+        id: version
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/standalone/v}"
+          WEBAPP_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+          SERVER_VERSION=$(node -p "require('./standalone/server/package.json').version")
+
+          if [ "$WEBAPP_VERSION" != "$TAG_NAME" ]; then
+            echo "::error::Version mismatch: webapp has $WEBAPP_VERSION but tag is standalone/v$TAG_NAME"
+            exit 1
+          fi
+          if [ "$SERVER_VERSION" != "$TAG_NAME" ]; then
+            echo "::error::Version mismatch: server has $SERVER_VERSION but tag is standalone/v$TAG_NAME"
+            exit 1
+          fi
+          echo "version=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+  tag-docker-images:
+    name: Tag Docker Images
+    needs: [verify-version]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - ghcr.io/ls1intum/apollon/apollon-webapp
+          - ghcr.io/ls1intum/apollon/apollon-server
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retag image with release version
+        run: |
+          VERSION="${{ needs.verify-version.outputs.version }}"
+          IMAGE="${{ matrix.image }}"
+          COMMIT_SHA="${{ github.sha }}"
+
+          echo "Retagging $IMAGE:sha-$COMMIT_SHA -> $IMAGE:$VERSION"
+          docker buildx imagetools create \
+            --tag "$IMAGE:$VERSION" \
+            "$IMAGE:sha-$COMMIT_SHA"
+
+  create-release:
+    name: Create GitHub Release
+    needs: [verify-version, tag-docker-images]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: standalone/v${{ needs.verify-version.outputs.version }}
+          name: "Standalone v${{ needs.verify-version.outputs.version }}"
+          generate_release_notes: true
+          prerelease: ${{ contains(needs.verify-version.outputs.version, '-') }}
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [verify-version, tag-docker-images]
+    uses: ./.github/workflows/deploy-staging.yml
+    with:
+      image-tag: ${{ needs.verify-version.outputs.version }}
+      deploy-app: true
+    secrets: inherit

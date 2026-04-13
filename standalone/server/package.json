@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/server",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "dependencies": {
     "@tumaet/apollon": "*",
     "cors": "2.8.5",
