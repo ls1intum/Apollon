@@ -93,3 +93,14 @@ jobs:
             exit 1
           fi
           echo "Docker build passed or was skipped"
+
+  # Auto-deploy to staging after successful main builds
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [docker-build-gate, build-and-push-workflow]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.docker-build-gate.result == 'success' && needs.build-and-push-workflow.result == 'success'
+    uses: ./.github/workflows/deploy-staging.yml
+    with:
+      image-tag: latest
+      deploy-app: true
+    secrets: inherit
