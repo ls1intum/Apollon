@@ -3,6 +3,13 @@ name: Version Bump
 on:
   workflow_dispatch:
     inputs:
+      scope:
+        type: choice
+        description: What changed?
+        required: true
+        options:
+          - library
+          - standalone
       bump:
         type: choice
         description: Version bump type
@@ -25,44 +32,59 @@ jobs:
       - name: Bump version
         id: bump
         run: |
-          cd library
-          npm version ${{ inputs.bump }} --no-git-tag-version
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          cd ..
+          SCOPE="${{ inputs.scope }}"
+          BUMP="${{ inputs.bump }}"
 
-          # Sync all package.json files to the same version
-          node -e "
-            const fs = require('fs');
-            const files = [
-              'standalone/webapp/package.json',
-              'standalone/server/package.json'
-            ];
-            for (const f of files) {
-              const pkg = JSON.parse(fs.readFileSync(f, 'utf8'));
+          if [ "$SCOPE" = "library" ]; then
+            # Library changed: bump library, then sync standalone to match
+            cd library
+            npm version "$BUMP" --no-git-tag-version
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            cd ..
+
+            node -e "
+              const fs = require('fs');
+              for (const f of ['standalone/webapp/package.json', 'standalone/server/package.json']) {
+                const pkg = JSON.parse(fs.readFileSync(f, 'utf8'));
+                pkg.version = '$NEW_VERSION';
+                fs.writeFileSync(f, JSON.stringify(pkg, null, 2) + '\n');
+              }
+            "
+          else
+            # Standalone only: bump standalone, leave library as-is
+            cd standalone/webapp
+            npm version "$BUMP" --no-git-tag-version
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            cd ../..
+
+            node -e "
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('standalone/server/package.json', 'utf8'));
               pkg.version = '$NEW_VERSION';
-              fs.writeFileSync(f, JSON.stringify(pkg, null, 2) + '\n');
-            }
-          "
+              fs.writeFileSync('standalone/server/package.json', JSON.stringify(pkg, null, 2) + '\n');
+            "
+          fi
 
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create Pull Request
         run: |
           VERSION="${{ steps.bump.outputs.version }}"
+          SCOPE="${{ inputs.scope }}"
           BRANCH="chore/release-v${VERSION}"
 
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git checkout -b "$BRANCH"
           git add library/package.json standalone/webapp/package.json standalone/server/package.json
-          git commit -m "chore: bump version to $VERSION"
+          git commit -m "chore: bump version to $VERSION ($SCOPE ${{ inputs.bump }})"
           git push origin "$BRANCH"
 
           gh pr create \
             --base main \
             --head "$BRANCH" \
             --title "chore: release v${VERSION}" \
-            --body "Bumps all package versions to \`$VERSION\`.
+            --body "**Scope:** $SCOPE ${{ inputs.bump }}
 
           After merging, create the release:
           \`\`\`
