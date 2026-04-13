@@ -60,6 +60,7 @@ jobs:
     needs: [verify-version]
     if: needs.verify-version.outputs.library-changed == 'true'
     runs-on: ubuntu-latest
+    environment: npm-publish
     permissions:
       contents: read
       id-token: write
@@ -99,8 +100,6 @@ jobs:
       - name: Publish to npm
         run: npm publish --access public --tag ${{ steps.dist-tag.outputs.tag }} --provenance
         working-directory: library
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   tag-docker-images:
     name: Tag Docker Images
