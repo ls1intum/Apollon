@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy to Staging
 
 on:
   workflow_dispatch:
@@ -38,7 +38,7 @@ on:
         description: (Re-)deploy Caddy proxy. Usually not necessary.
 
 concurrency:
-  group: deploy-production
+  group: deploy-staging
   cancel-in-progress: false
 
 jobs:
@@ -46,7 +46,7 @@ jobs:
     if: ${{ inputs.deploy-db }}
     uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
     with:
-      environment: Production
+      environment: Staging
       docker-compose-file: "./docker/compose.db.yml"
       main-image-name: ghcr.io/ls1intum/apollon/apollon-server
       image-tag: ${{ inputs.image-tag }}
@@ -57,7 +57,7 @@ jobs:
     if: ${{ inputs.deploy-proxy }}
     uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
     with:
-      environment: Production
+      environment: Staging
       docker-compose-file: "./docker/compose.proxy.yml"
       main-image-name: ghcr.io/ls1intum/apollon/apollon-server
       image-tag: ${{ inputs.image-tag }}
@@ -68,7 +68,7 @@ jobs:
     if: ${{ inputs.deploy-app }}
     uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
     with:
-      environment: Production
+      environment: Staging
       docker-compose-file: "./docker/compose.app.yml"
       main-image-name: ghcr.io/ls1intum/apollon/apollon-server
       image-tag: ${{ inputs.image-tag }}
