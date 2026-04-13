@@ -22,6 +22,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -45,18 +47,34 @@ jobs:
           fi
           echo "Version $PACKAGE_VERSION matches release tag $TAG_NAME"
 
+      - name: Check if library changed since last release
+        id: lib-check
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGED=$(git diff --name-only "$PREV_TAG"..HEAD -- library/ | wc -l | tr -d ' ')
+          else
+            CHANGED=1
+          fi
+          echo "changed=$([[ $CHANGED -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "Library changed: $CHANGED files since $PREV_TAG"
+
       - name: Install dependencies
+        if: steps.lib-check.outputs.changed == 'true'
         run: npm ci
 
       - name: Build library
+        if: steps.lib-check.outputs.changed == 'true'
         run: npm run build
         working-directory: library
 
       - name: Run library tests
+        if: steps.lib-check.outputs.changed == 'true'
         run: npm run test
         working-directory: library
 
       - name: Determine npm dist-tag
+        if: steps.lib-check.outputs.changed == 'true'
         id: dist-tag
         run: |
           VERSION=$(node -p "require('./library/package.json').version")
@@ -67,10 +85,15 @@ jobs:
           fi
 
       - name: Publish to npm
+        if: steps.lib-check.outputs.changed == 'true'
         run: npm publish --access public --tag ${{ steps.dist-tag.outputs.tag }} --provenance
         working-directory: library
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Skip npm publish
+        if: steps.lib-check.outputs.changed != 'true'
+        run: echo "Library unchanged since last release — skipping npm publish"
 
   tag-docker-images:
     name: Tag Docker Images
@@ -94,11 +117,12 @@ jobs:
         run: |
           TAG_NAME="${{ github.event.release.tag_name }}"
           IMAGE="${{ matrix.image }}"
+          COMMIT_SHA="${{ github.event.release.target_commitish }}"
 
-          echo "Retagging $IMAGE:latest -> $IMAGE:$TAG_NAME"
+          echo "Retagging $IMAGE:sha-$COMMIT_SHA -> $IMAGE:$TAG_NAME"
           docker buildx imagetools create \
             --tag "$IMAGE:$TAG_NAME" \
-            "$IMAGE:latest"
+            "$IMAGE:sha-$COMMIT_SHA"
 
   deploy-staging:
     name: Deploy to Staging

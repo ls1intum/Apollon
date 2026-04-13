@@ -74,6 +74,7 @@ jobs:
       image-name: ${{ matrix.image }}
       docker-file: ${{ matrix.dockerfile }}
       docker-context: ${{ matrix.context }}
+      tags: "type=sha,format=long"
 
   # Gate job for required checks — handles skipped builds correctly
   docker-build-gate:
@@ -101,6 +102,6 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.docker-build-gate.result == 'success' && needs.build-and-push-workflow.result == 'success'
     uses: ./.github/workflows/deploy-staging.yml
     with:
-      image-tag: latest
+      image-tag: sha-${{ github.sha }}
       deploy-app: true
     secrets: inherit
