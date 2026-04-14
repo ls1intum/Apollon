@@ -683,8 +683,6 @@ function getTextBoundsFromDOM(
   let minY = Infinity
   let maxY = -Infinity
   let foundVisibleText = false
-  let nodeTextCount = 0
-  let edgeTextCount = 0
 
   const mergeRect = (x1: number, y1: number, x2: number, y2: number) => {
     const localMinX = Math.min(x1, x2)
@@ -757,7 +755,6 @@ function getTextBoundsFromDOM(
         const y2 = nodeY + (bbox.y + bbox.height - vbY) * scaleY
 
         mergeRect(x1, y1, x2, y2)
-        nodeTextCount++
       } catch {
         // Ignore text nodes that cannot be measured in the current renderer.
       }
@@ -792,7 +789,6 @@ function getTextBoundsFromDOM(
       const ys = corners.map((point) => point.y)
 
       mergeRect(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))
-      edgeTextCount++
     } catch {
       // Ignore text nodes that cannot be measured in the current renderer.
     }
