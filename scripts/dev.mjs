@@ -298,8 +298,36 @@ function prefixOutput(name, stream) {
   })
 }
 
+function quoteWindowsCmdArgument(value) {
+  const stringValue = String(value)
+  if (stringValue.length === 0) {
+    return "\"\""
+  }
+
+  if (!/[ \t"&()<>^|]/.test(stringValue)) {
+    return stringValue
+  }
+
+  return `"${stringValue.replace(/"/g, "\"\"")}"`
+}
+
+function resolveManagedSpawnCommand(command, args) {
+  if (process.platform !== "win32" || !/\.(cmd|bat)$/i.test(command)) {
+    return { command, args }
+  }
+
+  const comspec = process.env.ComSpec || process.env.COMSPEC || "cmd.exe"
+  const commandLine = [quoteWindowsCmdArgument(command), ...args.map(quoteWindowsCmdArgument)].join(" ")
+
+  return {
+    command: comspec,
+    args: ["/d", "/s", "/c", commandLine],
+  }
+}
+
 function spawnManagedProcess({ name, command, args, cwd, env }) {
-  const child = spawn(command, args, {
+  const spawnCommand = resolveManagedSpawnCommand(command, args)
+  const child = spawn(spawnCommand.command, spawnCommand.args, {
     cwd,
     env,
     stdio: ["ignore", "pipe", "pipe"],
