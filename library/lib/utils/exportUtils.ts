@@ -667,6 +667,147 @@ function getNodeOverflowBoundsFromDOM(
   }
 }
 
+/**
+ * Calculate bounds for rendered SVG text and labels.
+ *
+ * Some labels extend beyond node/edge geometry and are not reliably captured by
+ * node or edge path bounds alone. Measuring rendered text via getBBox() gives us
+ * the actual SVG-space bounds that should be included in the export clip.
+ */
+function getTextBoundsFromDOM(
+  container: HTMLElement,
+  reactFlow: ReactFlowInstance<Node, Edge>
+): Rect | undefined {
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+  let foundVisibleText = false
+  let nodeTextCount = 0
+  let edgeTextCount = 0
+
+  const mergeRect = (x1: number, y1: number, x2: number, y2: number) => {
+    const localMinX = Math.min(x1, x2)
+    const localMinY = Math.min(y1, y2)
+    const localMaxX = Math.max(x1, x2)
+    const localMaxY = Math.max(y1, y2)
+
+    if (
+      !Number.isFinite(localMinX) ||
+      !Number.isFinite(localMinY) ||
+      !Number.isFinite(localMaxX) ||
+      !Number.isFinite(localMaxY)
+    ) {
+      return
+    }
+
+    minX = Math.min(minX, localMinX)
+    minY = Math.min(minY, localMinY)
+    maxX = Math.max(maxX, localMaxX)
+    maxY = Math.max(maxY, localMaxY)
+    foundVisibleText = true
+  }
+
+  // Node text is usually inside nested node SVGs, so getBBox() is local to the
+  // node SVG coordinate system. Convert it to flow coordinates manually using
+  // node transform + SVG viewBox scale.
+  const nodeElements = container.querySelectorAll(".react-flow__node")
+  nodeElements.forEach((nodeEl) => {
+    const styleStr = nodeEl.getAttribute("style") ?? ""
+    const styles = extractStyles(styleStr)
+    const nodeX = styles.transform.x
+    const nodeY = styles.transform.y
+
+    const svgEl = nodeEl.querySelector("svg")
+    if (!svgEl) return
+
+    const viewBox = svgEl.getAttribute("viewBox")
+    if (!viewBox) return
+
+    const vbParts = viewBox.split(/[\s,]+/).map(Number)
+    if (vbParts.length < 4) return
+    const [vbX, vbY, vbW, vbH] = vbParts
+
+    const svgW = parseFloat(svgEl.getAttribute("width") ?? `${vbW}`)
+    const svgH = parseFloat(svgEl.getAttribute("height") ?? `${vbH}`)
+    if (!Number.isFinite(svgW) || !Number.isFinite(svgH) || vbW === 0 || vbH === 0) {
+      return
+    }
+    const scaleX = svgW / vbW
+    const scaleY = svgH / vbH
+
+    svgEl.querySelectorAll("text").forEach((textEl) => {
+      try {
+        const bbox = (textEl as SVGGraphicsElement).getBBox()
+        if (
+          !Number.isFinite(bbox.x) ||
+          !Number.isFinite(bbox.y) ||
+          !Number.isFinite(bbox.width) ||
+          !Number.isFinite(bbox.height)
+        ) {
+          return
+        }
+        if (bbox.width === 0 && bbox.height === 0) {
+          return
+        }
+
+        const x1 = nodeX + (bbox.x - vbX) * scaleX
+        const y1 = nodeY + (bbox.y - vbY) * scaleY
+        const x2 = nodeX + (bbox.x + bbox.width - vbX) * scaleX
+        const y2 = nodeY + (bbox.y + bbox.height - vbY) * scaleY
+
+        mergeRect(x1, y1, x2, y2)
+        nodeTextCount++
+      } catch {
+        // Ignore text nodes that cannot be measured in the current renderer.
+      }
+    })
+  })
+
+  // Edge text is rendered in the edge layer; measuring screen rect and mapping
+  // back to flow coordinates keeps us aligned with the current viewport transform.
+  const edgeTextElements = container.querySelectorAll(".react-flow__edge text")
+  edgeTextElements.forEach((textEl) => {
+    try {
+      const rect = (textEl as SVGGraphicsElement).getBoundingClientRect()
+      if (
+        !Number.isFinite(rect.left) ||
+        !Number.isFinite(rect.top) ||
+        !Number.isFinite(rect.right) ||
+        !Number.isFinite(rect.bottom)
+      ) {
+        return
+      }
+      if (rect.width === 0 && rect.height === 0) {
+        return
+      }
+
+      const corners = [
+        reactFlow.screenToFlowPosition({ x: rect.left, y: rect.top }),
+        reactFlow.screenToFlowPosition({ x: rect.right, y: rect.top }),
+        reactFlow.screenToFlowPosition({ x: rect.left, y: rect.bottom }),
+        reactFlow.screenToFlowPosition({ x: rect.right, y: rect.bottom }),
+      ]
+      const xs = corners.map((point) => point.x)
+      const ys = corners.map((point) => point.y)
+
+      mergeRect(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))
+      edgeTextCount++
+    } catch {
+      // Ignore text nodes that cannot be measured in the current renderer.
+    }
+  })
+
+  if (!foundVisibleText) return undefined
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  }
+}
+
 function mergeBounds(a: Rect, b: Rect): Rect {
   const minX = Math.min(a.x, b.x)
   const minY = Math.min(a.y, b.y)
@@ -708,6 +849,11 @@ export function getDiagramBounds(
     const overflowBounds = getNodeOverflowBoundsFromDOM(container)
     if (overflowBounds) {
       bounds = mergeBounds(bounds, overflowBounds)
+    }
+
+    const textBounds = getTextBoundsFromDOM(container, reactFlow)
+    if (textBounds) {
+      bounds = mergeBounds(bounds, textBounds)
     }
   }
 
