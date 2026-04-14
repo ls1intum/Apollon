@@ -1,4 +1,4 @@
-import { EDGES } from "@/constants"
+import { EDGES, INTERFACE } from "@/constants"
 import type { UMLDiagramType } from "@/types/DiagramType"
 import {
   adjustSourceCoordinates,
@@ -383,7 +383,9 @@ describe("getEdgeMarkerStyles", () => {
   it("returns required-interface marker for ComponentRequiredInterface", () => {
     const result = getEdgeMarkerStyles("ComponentRequiredInterface")
     expect(result.markerEnd).toBe("url(#required-interface)")
-    expect(result.markerPadding).toBe(EDGES.MARKER_PADDING + 7)
+    expect(result.markerPadding).toBe(
+      EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP
+    )
   })
 
   it("returns required-interface-quarter for ComponentRequiredQuarterInterface", () => {
