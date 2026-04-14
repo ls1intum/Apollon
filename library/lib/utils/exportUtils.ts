@@ -728,7 +728,12 @@ function getTextBoundsFromDOM(
 
     const svgW = parseFloat(svgEl.getAttribute("width") ?? `${vbW}`)
     const svgH = parseFloat(svgEl.getAttribute("height") ?? `${vbH}`)
-    if (!Number.isFinite(svgW) || !Number.isFinite(svgH) || vbW === 0 || vbH === 0) {
+    if (
+      !Number.isFinite(svgW) ||
+      !Number.isFinite(svgH) ||
+      vbW === 0 ||
+      vbH === 0
+    ) {
       return
     }
     const scaleX = svgW / vbW
@@ -788,7 +793,12 @@ function getTextBoundsFromDOM(
       const xs = corners.map((point) => point.x)
       const ys = corners.map((point) => point.y)
 
-      mergeRect(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys))
+      mergeRect(
+        Math.min(...xs),
+        Math.min(...ys),
+        Math.max(...xs),
+        Math.max(...ys)
+      )
     } catch {
       // Ignore text nodes that cannot be measured in the current renderer.
     }
