@@ -629,7 +629,7 @@ const renderMarker = (
 
   if (config.type === "semicircle") {
     const strokeW = MARKERS.STROKE_WIDTH.semicircle
-    const gap = 7 // Keep in sync with InlineMarker semicircle gap.
+    const gap = INTERFACE.SOCKET_GAP
     const r = INTERFACE.RADIUS + gap
     const arcSpanDegrees = config.arcSpanDegrees ?? 180
     const halfAngle = ((arcSpanDegrees / 2) * Math.PI) / 180

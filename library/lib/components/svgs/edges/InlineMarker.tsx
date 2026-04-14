@@ -212,14 +212,14 @@ export function InlineMarker({
     case "semicircle": {
       const strokeW = MARKERS.STROKE_WIDTH.semicircle
       // Socket radius = Ball radius + gap for visual separation
-      // Gap of 7 adds extra clearance between socket arc and interface circle:
+      // Keep the socket close to the interface so it reads as a side attachment:
       //   circle outer edge = RADIUS + strokeWidth/2 = 15 + 1 = 16
-      //   arc inner edge = (RADIUS + gap) - arcStrokeWidth/2 = 22 - 1 = 21
-      //   With gap=7, the arc inner edge sits 5px away from the circle
-      const gap = 7
-      const r = INTERFACE.RADIUS + gap // 15 + 7 = 22
+      //   arc inner edge = (RADIUS + gap) - arcStrokeWidth/2 = 19 - 1 = 18
+      //   With gap=4, the arc inner edge sits 2px away from the circle
+      const gap = INTERFACE.SOCKET_GAP
+      const r = INTERFACE.RADIUS + gap // 15 + 4 = 19
 
-      // Use config's arcSpanDegrees (180° for half, 90° for quarter, 270° for three-quarter)
+      // Use config-defined arc span (e.g. 150° default, 90° quarter, 270° three-quarter)
       const arcSpanDegrees = config.arcSpanDegrees ?? 180
       const halfAngle = ((arcSpanDegrees / 2) * Math.PI) / 180
       const cosHalf = Math.cos(halfAngle)
