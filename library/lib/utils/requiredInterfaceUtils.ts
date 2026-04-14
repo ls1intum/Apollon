@@ -53,7 +53,8 @@ export function resolveRequiredInterfaceEdgeType({
   }
 
   const requiredEdgesOnTarget = edges.filter(
-    (edge) => edge.target === target && edge.type && requiredTypes.includes(edge.type)
+    (edge) =>
+      edge.target === target && edge.type && requiredTypes.includes(edge.type)
   )
 
   if (requiredEdgesOnTarget.length <= 1) {
