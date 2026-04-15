@@ -117,10 +117,10 @@ export const edgeConfig = {
 
   // Component edges - different midpoint settings
   ComponentDependency: { allowMidpointDragging: true },
-  ComponentProvidedInterface: { allowMidpointDragging: false },
-  ComponentRequiredInterface: { allowMidpointDragging: false },
-  ComponentRequiredThreeQuarterInterface: { allowMidpointDragging: false },
-  ComponentRequiredQuarterInterface: { allowMidpointDragging: false },
+  ComponentProvidedInterface: { allowMidpointDragging: true },
+  ComponentRequiredInterface: { allowMidpointDragging: true },
+  ComponentRequiredThreeQuarterInterface: { allowMidpointDragging: true },
+  ComponentRequiredQuarterInterface: { allowMidpointDragging: true },
 
   // Deployment edges - with relationship labels
   DeploymentAssociation: {
