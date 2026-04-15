@@ -1,12 +1,28 @@
-import { spawn } from "node:child_process"
 import { Request, Response } from "express"
+import { Worker } from "node:worker_threads"
+import path from "node:path"
 import type { UMLModel } from "@tumaet/apollon"
 
 type QueueEntry = {
+  id: number
   model: UMLModel
   resolve: (pdf: Buffer) => void
   reject: (error: Error) => void
 }
+
+type WorkerSuccess = {
+  id: number
+  ok: true
+  pdf: Uint8Array
+}
+
+type WorkerFailure = {
+  id: number
+  ok: false
+  error: string
+}
+
+type WorkerMessage = WorkerSuccess | WorkerFailure
 
 export class ConversionResource {
   private readonly conversionTimeoutMs = Number(
@@ -15,15 +31,97 @@ export class ConversionResource {
   private readonly maxQueueLength = Number(
     process.env.CONVERTER_MAX_QUEUE_LENGTH ?? 20
   )
-  private readonly workerMaxOldSpaceMb = Number(
+  private readonly workerMaxOldGenerationMb = Number(
     process.env.CONVERTER_WORKER_MAX_OLD_SPACE_MB ?? 256
   )
+  private readonly workerStackMb = Number(
+    process.env.CONVERTER_WORKER_STACK_MB ?? 8
+  )
 
-  private readonly queue: QueueEntry[] = []
-  private processing = false
+  private worker: Worker
+  private queue: QueueEntry[] = []
+  private activeJob:
+    | {
+        id: number
+        timeout: NodeJS.Timeout
+        resolve: (pdf: Buffer) => void
+        reject: (error: Error) => void
+      }
+    | undefined
+  private nextId = 1
 
-  private processQueue = async () => {
-    if (this.processing) {
+  constructor() {
+    this.worker = this.createWorker()
+  }
+
+  private createWorker() {
+    const workerPath = path.resolve(
+      __dirname,
+      "../workers/pdf-conversion-worker-thread.js"
+    )
+
+    const worker = new Worker(workerPath, {
+      env: {
+        ...process.env,
+      },
+      resourceLimits: {
+        maxOldGenerationSizeMb: this.workerMaxOldGenerationMb,
+        stackSizeMb: this.workerStackMb,
+      },
+    })
+
+    worker.on("message", (message: WorkerMessage) => {
+      this.handleWorkerMessage(message)
+    })
+
+    worker.on("error", (error) => {
+      this.restartWorker(error)
+    })
+
+    worker.on("exit", (code) => {
+      if (code !== 0) {
+        this.restartWorker(
+          new Error(`PDF worker thread exited with code ${code}`)
+        )
+      }
+    })
+
+    return worker
+  }
+
+  private handleWorkerMessage(message: WorkerMessage) {
+    if (!this.activeJob || this.activeJob.id !== message.id) {
+      return
+    }
+
+    clearTimeout(this.activeJob.timeout)
+    const activeJob = this.activeJob
+    this.activeJob = undefined
+
+    if (message.ok) {
+      activeJob.resolve(Buffer.from(message.pdf))
+    } else {
+      activeJob.reject(new Error(message.error))
+    }
+
+    this.processQueue()
+  }
+
+  private restartWorker(error: Error) {
+    if (this.activeJob) {
+      clearTimeout(this.activeJob.timeout)
+      const activeJob = this.activeJob
+      this.activeJob = undefined
+      activeJob.reject(error)
+    }
+
+    void this.worker.terminate()
+    this.worker = this.createWorker()
+    this.processQueue()
+  }
+
+  private processQueue() {
+    if (this.activeJob) {
       return
     }
 
@@ -32,87 +130,20 @@ export class ConversionResource {
       return
     }
 
-    this.processing = true
+    const timeout = setTimeout(() => {
+      this.restartWorker(new Error("PDF conversion worker timed out"))
+    }, this.conversionTimeoutMs)
 
-    try {
-      const pdf = await this.runWorker(nextEntry.model)
-      nextEntry.resolve(pdf)
-    } catch (error) {
-      nextEntry.reject(error as Error)
-    } finally {
-      this.processing = false
-      void this.processQueue()
+    this.activeJob = {
+      id: nextEntry.id,
+      timeout,
+      resolve: nextEntry.resolve,
+      reject: nextEntry.reject,
     }
-  }
 
-  private runWorker = async (model: UMLModel): Promise<Buffer> => {
-    const workerPath = require.resolve("../workers/pdf-conversion-worker")
-
-    return await new Promise<Buffer>((resolve, reject) => {
-      const worker = spawn(process.execPath, [workerPath], {
-        stdio: ["pipe", "pipe", "pipe"],
-        env: {
-          ...process.env,
-          NODE_OPTIONS: [
-            process.env.NODE_OPTIONS,
-            `--max-old-space-size=${this.workerMaxOldSpaceMb}`,
-          ]
-            .filter(Boolean)
-            .join(" "),
-        },
-      })
-
-      const stdoutChunks: Buffer[] = []
-      const stderrChunks: Buffer[] = []
-      let settled = false
-
-      const finish = (callback: () => void) => {
-        if (settled) {
-          return
-        }
-
-        settled = true
-        clearTimeout(timeout)
-        callback()
-      }
-
-      const timeout = setTimeout(() => {
-        worker.kill("SIGKILL")
-        finish(() => reject(new Error("PDF conversion worker timed out")))
-      }, this.conversionTimeoutMs)
-
-      worker.stdout.on("data", (chunk: Buffer) => {
-        stdoutChunks.push(chunk)
-      })
-
-      worker.stderr.on("data", (chunk: Buffer | string) => {
-        stderrChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-      })
-
-      worker.on("error", (error) => {
-        finish(() => reject(error))
-      })
-
-      worker.on("close", (code, signal) => {
-        finish(() => {
-          if (code === 0) {
-            resolve(Buffer.concat(stdoutChunks))
-            return
-          }
-
-          const errorOutput = Buffer.concat(stderrChunks)
-            .toString("utf-8")
-            .trim()
-          reject(
-            new Error(
-              errorOutput ||
-                `PDF conversion worker exited with code ${code ?? "unknown"} and signal ${signal ?? "none"}`
-            )
-          )
-        })
-      })
-
-      worker.stdin.end(JSON.stringify(model))
+    this.worker.postMessage({
+      id: nextEntry.id,
+      model: nextEntry.model,
     })
   }
 
@@ -122,8 +153,13 @@ export class ConversionResource {
     }
 
     return await new Promise<Buffer>((resolve, reject) => {
-      this.queue.push({ model, resolve, reject })
-      void this.processQueue()
+      this.queue.push({
+        id: this.nextId++,
+        model,
+        resolve,
+        reject,
+      })
+      this.processQueue()
     })
   }
 

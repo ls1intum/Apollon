@@ -1,23 +1,25 @@
+import { parentPort } from "node:worker_threads"
 import pdfMake from "pdfmake/build/pdfmake"
 import pdfFonts from "pdfmake/build/vfs_fonts"
 import type { UMLModel } from "@tumaet/apollon"
 import { ConversionService } from "../services/conversion-service"
 
-async function readStdin(): Promise<string> {
-  return await new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-
-    process.stdin.on("data", (chunk: Buffer) => {
-      chunks.push(chunk)
-    })
-
-    process.stdin.on("end", () => {
-      resolve(Buffer.concat(chunks).toString("utf-8"))
-    })
-
-    process.stdin.on("error", reject)
-  })
+type WorkerRequest = {
+  id: number
+  model: UMLModel
 }
+
+type WorkerResponse =
+  | {
+      id: number
+      ok: true
+      pdf: Uint8Array
+    }
+  | {
+      id: number
+      ok: false
+      error: string
+    }
 
 async function renderPdf(model: UMLModel): Promise<Buffer> {
   const conversionService = new ConversionService()
@@ -55,25 +57,24 @@ async function renderPdf(model: UMLModel): Promise<Buffer> {
   })
 }
 
-async function main() {
-  const input = await readStdin()
-  const model = JSON.parse(input) as UMLModel
-  const pdf = await renderPdf(model)
-  await new Promise<void>((resolve, reject) => {
-    process.stdout.write(pdf, (error) => {
-      if (error) {
-        reject(error)
-        return
-      }
+parentPort?.on("message", async (message: WorkerRequest) => {
+  let response: WorkerResponse
 
-      resolve()
-    })
-  })
-}
+  try {
+    const pdf = await renderPdf(message.model)
+    response = {
+      id: message.id,
+      ok: true,
+      pdf: new Uint8Array(pdf),
+    }
+  } catch (error) {
+    response = {
+      id: message.id,
+      ok: false,
+      error:
+        error instanceof Error ? error.stack || error.message : String(error),
+    }
+  }
 
-main().catch((error) => {
-  const message =
-    error instanceof Error ? error.stack || error.message : String(error)
-  process.stderr.write(`${message}\n`)
-  process.exit(1)
+  parentPort?.postMessage(response)
 })
