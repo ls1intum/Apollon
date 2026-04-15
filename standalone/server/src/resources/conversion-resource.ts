@@ -71,16 +71,29 @@ export class ConversionResource {
     })
 
     worker.on("message", (message: WorkerMessage) => {
+      if (this.worker !== worker) {
+        return
+      }
+
       this.handleWorkerMessage(message)
     })
 
     worker.on("error", (error) => {
-      this.restartWorker(error)
+      if (this.worker !== worker) {
+        return
+      }
+
+      this.restartWorker(worker, error)
     })
 
     worker.on("exit", (code) => {
+      if (this.worker !== worker) {
+        return
+      }
+
       if (code !== 0) {
         this.restartWorker(
+          worker,
           new Error(`PDF worker thread exited with code ${code}`)
         )
       }
@@ -107,7 +120,11 @@ export class ConversionResource {
     this.processQueue()
   }
 
-  private restartWorker(error: Error) {
+  private restartWorker(worker: Worker, error: Error) {
+    if (this.worker !== worker) {
+      return
+    }
+
     if (this.activeJob) {
       clearTimeout(this.activeJob.timeout)
       const activeJob = this.activeJob
@@ -115,7 +132,7 @@ export class ConversionResource {
       activeJob.reject(error)
     }
 
-    void this.worker.terminate()
+    void worker.terminate().catch(() => undefined)
     this.worker = this.createWorker()
     this.processQueue()
   }
@@ -131,7 +148,10 @@ export class ConversionResource {
     }
 
     const timeout = setTimeout(() => {
-      this.restartWorker(new Error("PDF conversion worker timed out"))
+      this.restartWorker(
+        this.worker,
+        new Error("PDF conversion worker timed out")
+      )
     }, this.conversionTimeoutMs)
 
     this.activeJob = {
