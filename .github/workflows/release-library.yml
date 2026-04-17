@@ -58,6 +58,17 @@ jobs:
             exit 1
           fi
 
+          # Monotonicity: library tag must be strictly greater than the
+          # previous library tag. Symmetric with the standalone track.
+          LATEST=$(git tag --list '@tumaet/apollon@*' --sort=-v:refname | grep -Fxv "$GITHUB_REF_NAME" | head -n1 | sed 's|^@tumaet/apollon@||' || true)
+          if [ -n "$LATEST" ]; then
+            HIGHEST=$(printf '%s\n%s\n' "$LATEST" "$VERSION" | sort -V | tail -n1)
+            if [ "$HIGHEST" != "$VERSION" ] || [ "$LATEST" = "$VERSION" ]; then
+              echo "::error::Tag @tumaet/apollon@$VERSION is not strictly greater than latest library tag @tumaet/apollon@$LATEST."
+              exit 1
+            fi
+          fi
+
           # Idempotency: if the version is already on npm, skip publish
           # (the re-run path after a partial failure).
           PUBLISHED=$(npm view --json "@tumaet/apollon@$VERSION" version 2>/dev/null | tr -d '"' | tr -d '[:space:]' || true)

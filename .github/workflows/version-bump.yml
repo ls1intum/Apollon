@@ -42,6 +42,23 @@ jobs:
       - name: Set correct npm version
         run: npm install -g npm@11.1.0
 
+      - name: Require changes in the scoped path since the last scoped tag
+        env:
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          git fetch --tags --quiet
+          if [ "$SCOPE" = "library" ]; then
+            LAST=$(git tag --list '@tumaet/apollon@*' --sort=-v:refname | head -n1)
+            PATH_PATTERN=library/
+          else
+            LAST=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+            PATH_PATTERN=standalone/
+          fi
+          if [ -n "$LAST" ] && git diff --quiet "$LAST"..HEAD -- "$PATH_PATTERN"; then
+            echo "::error::No changes under $PATH_PATTERN since $LAST. Refusing to cut an empty $SCOPE release."
+            exit 1
+          fi
+
       - name: Bump version
         id: bump
         env:
@@ -71,6 +88,7 @@ jobs:
       - name: Commit bump
         id: commit
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.bump.outputs.version }}
           SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
@@ -84,6 +102,13 @@ jobs:
           fi
           echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
           echo "title=${COMMIT_TITLE}" >> "$GITHUB_OUTPUT"
+
+          # Refuse to overwrite a branch that already backs an open PR —
+          # would otherwise force-push through reviewer-visible work.
+          if gh pr list --head "$BRANCH" --state open --json number --jq 'length' | grep -q '^[1-9]'; then
+            echo "::error::An open PR already exists for branch $BRANCH. Close or merge it before rerunning."
+            exit 1
+          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
