@@ -13,7 +13,7 @@ Both workflows trigger automatically when their version changes on `main`. There
 
 1. Actions → **Version Bump** → pick `scope` (`library` or `standalone`) and bump type. Merge the PR that opens.
 2. For a **library** release: `release-library.yml` fires, tags `@tumaet/apollon@X.Y.Z`, runs `npm publish --provenance`, creates the GitHub Release. Skipped if the version is already on npm.
-3. For a **standalone** release: `release-standalone.yml` fires after the push-to-main Docker build succeeds, retags `sha-<commit>` → `X.Y.Z`, cosign-signs the images, tags `vX.Y.Z`, creates the GitHub Release, and deploys to staging. Skipped if a release for that version already exists.
+3. For a **standalone** release: `release-standalone.yml` fires after the push-to-main Docker build succeeds, retags `sha-<commit>` → `X.Y.Z`, cosign-signs the images, tags `vX.Y.Z`, and creates the GitHub Release. Staging is already running the same digest under the `sha-<commit>` tag from the push-to-main deploy, so no second deploy is needed. Skipped if a release for that version already exists.
 4. Promote to production: Actions → **Deploy to Production** → `image-tag: X.Y.Z`.
 
 ## Verify a Docker image signature

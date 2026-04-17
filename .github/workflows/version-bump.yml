@@ -113,7 +113,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
-          git add library/package.json standalone/webapp/package.json standalone/server/package.json package-lock.json
+          if [ "$SCOPE" = "library" ]; then
+            git add library/package.json package-lock.json
+          else
+            git add standalone/webapp/package.json standalone/server/package.json package-lock.json
+          fi
 
           cat > /tmp/commit-msg.txt <<COMMIT_MSG
           ${COMMIT_TITLE}

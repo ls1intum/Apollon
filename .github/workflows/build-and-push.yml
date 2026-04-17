@@ -94,7 +94,6 @@ jobs:
           fi
           echo "Docker build passed or was skipped"
 
-  # Auto-deploy to staging after successful main builds
   deploy-staging:
     name: Deploy to Staging
     needs: [docker-build-gate, build-and-push-workflow]

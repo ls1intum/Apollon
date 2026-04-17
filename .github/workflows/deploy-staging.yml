@@ -5,6 +5,7 @@ on:
     inputs:
       image-tag:
         type: string
+        required: true
         description: "Image tag to deploy (e.g., 3.0.1 or sha-abc123)"
       deploy-app:
         type: boolean
