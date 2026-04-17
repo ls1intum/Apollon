@@ -5,8 +5,6 @@
 
 A UML modeling editor for React. Mount it into any DOM node. 13 diagram types, SVG/PNG/PDF/JSON export, optional real-time collaboration via Yjs.
 
-> Replaces the deprecated [`@ls1intum/apollon`](https://www.npmjs.com/package/@ls1intum/apollon) — see that page for the migration guide.
-
 ## Install
 
 ```sh
