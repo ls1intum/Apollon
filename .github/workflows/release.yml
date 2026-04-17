@@ -9,21 +9,21 @@ concurrency:
   group: release
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  packages: write
-  id-token: write
+# Default to no permissions; each job opts into only what it needs.
+permissions: {}
 
 jobs:
   verify-version:
     name: Verify Version
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
       publish-library: ${{ steps.version.outputs.publish-library }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
@@ -32,6 +32,18 @@ jobs:
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "::error::Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on main. Refusing to release."
             exit 1
+          fi
+
+      - name: Tag must be greater than the latest released tag
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          LATEST=$(git tag --list 'v*' --sort=-v:refname | grep -v "^${GITHUB_REF_NAME}$" | head -n1 | sed 's/^v//' || true)
+          if [ -n "$LATEST" ]; then
+            HIGHEST=$(printf '%s\n%s\n' "$LATEST" "$TAG_VERSION" | sort -V | tail -n1)
+            if [ "$HIGHEST" != "$TAG_VERSION" ] || [ "$LATEST" = "$TAG_VERSION" ]; then
+              echo "::error::Tag v$TAG_VERSION is not strictly greater than latest released tag v$LATEST."
+              exit 1
+            fi
           fi
 
       - name: Extract and verify version
@@ -60,8 +72,8 @@ jobs:
           # npm publish is idempotent: skipped if the version is already on
           # the registry. Server-only hotfixes that republish unchanged
           # library content still bump the monorepo version and take this
-          # path — that's expected under the fixed-versioning model.
-          PUBLISHED=$(npm view @tumaet/apollon@"$LIB_VERSION" version 2>/dev/null || echo "")
+          # path — expected under the fixed-versioning model.
+          PUBLISHED=$(npm view --json "@tumaet/apollon@$LIB_VERSION" version 2>/dev/null | tr -d '"[:space:]' || true)
           if [ "$PUBLISHED" = "$LIB_VERSION" ]; then
             echo "Library v$LIB_VERSION already on npm — skipping publish"
             echo "publish-library=false" >> "$GITHUB_OUTPUT"
@@ -78,7 +90,7 @@ jobs:
             ghcr.io/ls1intum/apollon/apollon-webapp \
             ghcr.io/ls1intum/apollon/apollon-server; do
             if ! docker buildx imagetools inspect "$IMAGE:sha-$GITHUB_SHA" > /dev/null 2>&1; then
-              echo "::error::Missing image $IMAGE:sha-$GITHUB_SHA. Push to main must build images before this tag can be released."
+              echo "::error::Missing image $IMAGE:sha-$GITHUB_SHA. The push-to-main Docker build for this commit must finish green before the tag can be released."
               exit 1
             fi
           done
@@ -92,14 +104,14 @@ jobs:
     environment: npm-publish
     permissions:
       contents: read
-      id-token: write
+      id-token: write # OIDC for npm trusted publishing + provenance
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22.14.0
-          registry-url: https://registry.npmjs.org/
+          registry-url: https://registry.npmjs.org/ # required so the setup-node shim knows which audience to mint the OIDC token for
 
       - name: Set correct npm version
         run: npm install -g npm@11.1.0
@@ -120,12 +132,13 @@ jobs:
         working-directory: library
 
   tag-docker-images:
-    name: Tag Docker Images
+    name: Tag and Sign Docker Images
     needs: [verify-version]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      packages: write
+      packages: write # retag images in GHCR
+      id-token: write # OIDC for keyless cosign signing
     strategy:
       matrix:
         image:
@@ -133,13 +146,16 @@ jobs:
           - ghcr.io/ls1intum/apollon/apollon-server
     steps:
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Retag image with release version
+      - name: Install cosign
+        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+
+      - name: Retag and sign
         run: |
           VERSION="${{ needs.verify-version.outputs.version }}"
           IMAGE="${{ matrix.image }}"
@@ -150,6 +166,10 @@ jobs:
             --tag "$IMAGE:$VERSION" \
             "$IMAGE:sha-$COMMIT_SHA"
 
+          DIGEST=$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{.Manifest.Digest}}')
+          echo "Signing $IMAGE@$DIGEST via cosign keyless (OIDC)"
+          cosign sign --yes "$IMAGE@$DIGEST"
+
   create-release:
     name: Create GitHub Release
     needs: [verify-version, publish-library, tag-docker-images]
@@ -159,19 +179,19 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           name: "v${{ needs.verify-version.outputs.version }}"
           generate_release_notes: true
           body: |
             ## Release artifacts
 
-            - **Library:** [`@tumaet/apollon@${{ needs.verify-version.outputs.version }}`](https://www.npmjs.com/package/@tumaet/apollon/v/${{ needs.verify-version.outputs.version }})
-            - **Docker (webapp):** `ghcr.io/ls1intum/apollon/apollon-webapp:${{ needs.verify-version.outputs.version }}`
-            - **Docker (server):** `ghcr.io/ls1intum/apollon/apollon-server:${{ needs.verify-version.outputs.version }}`
+            - **Library:** [`@tumaet/apollon@${{ needs.verify-version.outputs.version }}`](https://www.npmjs.com/package/@tumaet/apollon/v/${{ needs.verify-version.outputs.version }}) (published with `--provenance`)
+            - **Docker (webapp):** `ghcr.io/ls1intum/apollon/apollon-webapp:${{ needs.verify-version.outputs.version }}` (cosign-signed)
+            - **Docker (server):** `ghcr.io/ls1intum/apollon/apollon-server:${{ needs.verify-version.outputs.version }}` (cosign-signed)
           prerelease: false
 
   deploy-staging:

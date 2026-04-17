@@ -52,15 +52,27 @@ Rationale: the tag, the npm page, and the Docker image tags all share a
 number. A reader seeing `v4.2.20` on GitHub, npm, and the production
 image has one mental model — not three.
 
+## Supply chain
+
+- The library is published with `--provenance`; the npm page carries a
+  "Built and signed on GitHub Actions" badge linked to the Sigstore
+  transparency log entry for the build.
+- Docker images are signed keyless with
+  [cosign](https://github.com/sigstore/cosign) (OIDC-backed) when they
+  are retagged from `sha-<commit>` to `<version>`. Verify with
+  `cosign verify --certificate-identity-regexp='https://github.com/ls1intum/Apollon/\.github/workflows/release\.yml@.*' --certificate-oidc-issuer=https://token.actions.githubusercontent.com ghcr.io/ls1intum/apollon/apollon-server:<version>`.
+
 ## Prerequisites
 
 - **npm trusted publisher** configured on npmjs.com for
   `ls1intum/Apollon` → `.github/workflows/release.yml` → environment
-  `npm-publish`. No `NPM_TOKEN` secret needed; `--provenance` is attested.
+  `npm-publish`. No `NPM_TOKEN` secret needed.
 - **GitHub Environment `npm-publish`** with the deployment branch rule
   scoped to `refs/tags/v*`.
 - **Tag only after** the push-to-main Docker build for that commit has
   finished green — the release workflow will fail fast otherwise.
+- **Tags are monotonic** — the workflow refuses a tag that is not
+  strictly greater than the latest released `v*` tag.
 
 ## Recovery
 

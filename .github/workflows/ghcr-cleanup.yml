@@ -9,14 +9,15 @@ concurrency:
   group: ghcr-cleanup
   cancel-in-progress: false
 
-permissions:
-  packages: write
+permissions: {}
 
 jobs:
   prune-sha-tags:
     name: Prune old sha-* tags
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      packages: write
     strategy:
       matrix:
         package:
