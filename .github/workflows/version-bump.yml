@@ -3,6 +3,13 @@ name: Version Bump
 on:
   workflow_dispatch:
     inputs:
+      scope:
+        type: choice
+        description: Which track to bump
+        required: true
+        options:
+          - library
+          - standalone
       bump:
         type: choice
         description: Version bump type
@@ -35,26 +42,27 @@ jobs:
       - name: Set correct npm version
         run: npm install -g npm@11.1.0
 
-      - name: Bump library and sync standalone
+      - name: Bump version
         id: bump
+        env:
+          SCOPE: ${{ inputs.scope }}
+          BUMP: ${{ inputs.bump }}
         run: |
-          # Library is the primary version source.
-          (cd library && npm version "${{ inputs.bump }}" --no-git-tag-version)
-          NEW_VERSION=$(node -p "require('./library/package.json').version")
-
-          # Standalone (webapp + server) always tracks the library version.
-          # NEW_VERSION is passed through env to avoid shell interpolation
-          # into the node script (injection hygiene).
-          NEW_VERSION="$NEW_VERSION" node -e '
-            const fs = require("fs");
-            const v = process.env.NEW_VERSION;
-            for (const f of ["standalone/webapp/package.json", "standalone/server/package.json"]) {
-              const pkg = JSON.parse(fs.readFileSync(f, "utf8"));
+          if [ "$SCOPE" = "library" ]; then
+            (cd library && npm version "$BUMP" --no-git-tag-version)
+            NEW_VERSION=$(node -p "require('./library/package.json').version")
+          else
+            # Standalone: bump webapp, mirror into server.
+            (cd standalone/webapp && npm version "$BUMP" --no-git-tag-version)
+            NEW_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+            NEW_VERSION="$NEW_VERSION" node -e '
+              const fs = require("fs");
+              const v = process.env.NEW_VERSION;
+              const pkg = JSON.parse(fs.readFileSync("standalone/server/package.json", "utf8"));
               pkg.version = v;
-              fs.writeFileSync(f, JSON.stringify(pkg, null, 2) + "\n");
-            }
-          '
-
+              fs.writeFileSync("standalone/server/package.json", JSON.stringify(pkg, null, 2) + "\n");
+            '
+          fi
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Regenerate package-lock.json
@@ -64,10 +72,18 @@ jobs:
         id: commit
         env:
           VERSION: ${{ steps.bump.outputs.version }}
+          SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
         run: |
-          BRANCH="chore/release-v${VERSION}"
+          if [ "$SCOPE" = "library" ]; then
+            BRANCH="chore/library-v${VERSION}"
+            COMMIT_TITLE="chore: release @tumaet/apollon@${VERSION}"
+          else
+            BRANCH="chore/standalone-v${VERSION}"
+            COMMIT_TITLE="chore: release standalone v${VERSION}"
+          fi
           echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "title=${COMMIT_TITLE}" >> "$GITHUB_OUTPUT"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -75,9 +91,9 @@ jobs:
           git add library/package.json standalone/webapp/package.json standalone/server/package.json package-lock.json
 
           cat > /tmp/commit-msg.txt <<COMMIT_MSG
-          chore: release v${VERSION}
+          ${COMMIT_TITLE}
 
-          ${BUMP} bump of the monorepo version (library drives, standalone tracks).
+          Scope: ${SCOPE} ${BUMP}
           COMMIT_MSG
           git commit -F /tmp/commit-msg.txt
 
@@ -87,27 +103,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.bump.outputs.version }}
+          SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
           BRANCH: ${{ steps.commit.outputs.branch }}
+          TITLE: ${{ steps.commit.outputs.title }}
         run: |
-          cat > /tmp/pr-body.md <<PR_BODY
-          **Bump type:** \`${BUMP}\`
+          if [ "$SCOPE" = "library" ]; then
+            TAG_NAME="@tumaet/apollon@${VERSION}"
+          else
+            TAG_NAME="v${VERSION}"
+          fi
 
-          All three \`package.json\` files bumped to \`${VERSION}\`: library drives the version, webapp and server track it.
+          cat > /tmp/pr-body.md <<PR_BODY
+          **Scope:** \`${SCOPE}\` (\`${BUMP}\`)
 
           After this PR is merged, cut the release:
 
           \`\`\`sh
           git checkout main && git pull
-          git tag v${VERSION}
-          git push origin v${VERSION}
+          git tag '${TAG_NAME}'
+          git push origin '${TAG_NAME}'
           \`\`\`
-
-          The \`Release\` workflow then publishes \`@tumaet/apollon@${VERSION}\` to npm, retags the Docker images from \`sha-<commit>\` to \`${VERSION}\`, creates the GitHub Release, and deploys to staging.
           PR_BODY
 
           gh pr create \
             --base main \
             --head "$BRANCH" \
-            --title "chore: release v${VERSION}" \
+            --title "$TITLE" \
             --body-file /tmp/pr-body.md

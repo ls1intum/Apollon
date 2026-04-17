@@ -1,7 +1,7 @@
 {
   "name": "@tumaet/webapp",
   "private": true,
-  "version": "4.2.18",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "start": "vite",

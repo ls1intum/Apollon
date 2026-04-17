@@ -1,0 +1,130 @@
+name: Release Library
+
+on:
+  push:
+    tags:
+      - "@tumaet/apollon@*"
+
+concurrency:
+  group: release-library
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  verify:
+    name: Verify tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Tag must point to a commit on main
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on main. Refusing to release."
+            exit 1
+          fi
+
+      - name: Tag must not already have a GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release $GITHUB_REF_NAME already exists. Bump the library version instead of re-pushing the same tag."
+            exit 1
+          fi
+
+      - name: Extract and verify library version
+        id: version
+        run: |
+          # Tag shape: @tumaet/apollon@<semver>
+          VERSION="${GITHUB_REF_NAME##*@}"
+          if [[ "$VERSION" == *-* || "$VERSION" == *+* ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME is not strict SemVer MAJOR.MINOR.PATCH."
+            exit 1
+          fi
+
+          LIB_VERSION=$(node -p "require('./library/package.json').version")
+          if [ "$LIB_VERSION" != "$VERSION" ]; then
+            echo "::error::library/package.json has $LIB_VERSION but tag encodes $VERSION"
+            exit 1
+          fi
+
+          # Idempotency: if the version is already on npm, skip publish
+          # (the re-run path after a partial failure).
+          PUBLISHED=$(npm view --json "@tumaet/apollon@$VERSION" version 2>/dev/null | tr -d '"' | tr -d '[:space:]' || true)
+          if [ "$PUBLISHED" = "$VERSION" ]; then
+            echo "@tumaet/apollon@$VERSION already on npm — skipping publish"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish to npm
+    needs: [verify]
+    if: needs.verify.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write # OIDC for npm trusted publishing + provenance
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 22.14.0
+          registry-url: https://registry.npmjs.org/
+
+      - name: Set correct npm version
+        run: npm install -g npm@11.1.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build library
+        run: npm run build
+        working-directory: library
+
+      - name: Test library
+        run: npm run test
+        working-directory: library
+
+      - name: Publish
+        run: npm publish --access public --tag latest --provenance
+        working-directory: library
+
+  create-release:
+    name: Create GitHub Release
+    needs: [verify, publish]
+    if: always() && (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          name: "@tumaet/apollon@${{ needs.verify.outputs.version }}"
+          generate_release_notes: true
+          body: |
+            ## Library release
+
+            [`@tumaet/apollon@${{ needs.verify.outputs.version }}`](https://www.npmjs.com/package/@tumaet/apollon/v/${{ needs.verify.outputs.version }}) — published with `--provenance` via npm OIDC trusted publishing.
+
+            This release tags the library only. The standalone webapp and server versions are unaffected; they release independently under `v<x.y.z>` tags.
+          prerelease: false
