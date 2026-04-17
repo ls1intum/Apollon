@@ -59,4 +59,4 @@ Here are the commonly used scripts defined in the monorepo:
 
 ## Releases
 
-Releases are tag-driven and run entirely on GitHub Actions — there are no local publish scripts. See [Publishing the library to npm](../deployment/npm-publishing.md) for the end-to-end flow.
+Releases run entirely on GitHub Actions — there are no local publish scripts. Cut a release by dispatching the **Version Bump** workflow and merging the PR it opens. See [Releases](../deployment/npm-publishing.md) for the end-to-end flow.
