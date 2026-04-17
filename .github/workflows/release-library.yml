@@ -62,7 +62,7 @@ jobs:
           node-version: 22.14.0
           registry-url: https://registry.npmjs.org/
 
-      - run: npm install -g npm@11.1.0
+      - run: npm install -g npm@11.5.1 # 11.5.1+ required for npm OIDC trusted publishing
 
       - run: npm ci
 
