@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
 [![npm license](https://img.shields.io/npm/l/@tumaet/apollon)](https://github.com/ls1intum/Apollon/blob/main/LICENSE)
 
-An embeddable UML modeling editor for React. 13 diagram types, SVG/PNG/PDF/JSON export, optional real-time collaboration via Yjs.
+A UML modeling editor for React. Mount it into any DOM node. 13 diagram types, SVG/PNG/PDF/JSON export, optional real-time collaboration via Yjs.
 
 > Replaces the deprecated [`@ls1intum/apollon`](https://www.npmjs.com/package/@ls1intum/apollon) — see that page for the migration guide.
 
@@ -63,15 +63,15 @@ Use any Yjs-compatible transport (WebSocket, WebRTC, `y-websocket`, etc.).
 
 ## Export
 
-- `editor.exportAsSVG(options)` — resolves to `{ svg, clip }` ready to render or serialize.
-- The same pipeline drives PNG and PDF renders — see `dist/index.d.ts` for the full `ExportOptions` / `SvgExportMode` shape.
-- `editor.model` gives you the full `UMLModel` as JSON.
+- `editor.exportAsSVG(options)` resolves to `{ svg, clip }`, ready to render or serialize.
+- PNG and PDF use the same pipeline via `ExportOptions` (`svgMode: "web" | "compat"`); see `dist/index.d.ts`.
+- `editor.model` returns the full `UMLModel` as JSON.
 
 ## Related
 
 - Source and issue tracker: <https://github.com/ls1intum/Apollon>
 - Standalone web editor, server, and mobile apps live in the same monorepo.
-- Used by [Artemis](https://artemis.tum.de/), TUM's interactive learning platform.
+- Developed alongside [Artemis](https://artemis.tum.de/), TUM's interactive learning platform.
 
 ## License
 
