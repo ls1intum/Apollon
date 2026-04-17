@@ -78,27 +78,39 @@ jobs:
       - name: Regenerate package-lock.json
         run: npm install --package-lock-only --ignore-scripts
 
-      - name: Create Pull Request
+      - name: Commit bump
+        id: commit
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          SCOPE: ${{ inputs.scope }}
+          BUMP: ${{ inputs.bump }}
         run: |
-          VERSION="${{ steps.bump.outputs.version }}"
-          SCOPE="${{ inputs.scope }}"
-          BUMP="${{ inputs.bump }}"
           BRANCH="chore/release-v${VERSION}"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add library/package.json standalone/webapp/package.json standalone/server/package.json package-lock.json
-          git commit -m "chore: release v${VERSION}
 
-          Scope: ${SCOPE} ${BUMP}"
+          git commit -F - <<COMMIT_MSG
+          chore: release v${VERSION}
+
+          Scope: ${SCOPE} ${BUMP}
+          COMMIT_MSG
+
           git push origin "$BRANCH"
 
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "chore: release v${VERSION}" \
-            --body "**Scope:** \`${SCOPE}\` (\`${BUMP}\`)
+      - name: Open pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.bump.outputs.version }}
+          SCOPE: ${{ inputs.scope }}
+          BUMP: ${{ inputs.bump }}
+          BRANCH: ${{ steps.commit.outputs.branch }}
+        run: |
+          cat > /tmp/pr-body.md <<PR_BODY
+          **Scope:** \`${SCOPE}\` (\`${BUMP}\`)
 
           After this PR is merged, cut the release by pushing the matching tag from \`main\`:
 
@@ -108,6 +120,11 @@ jobs:
           git push origin v${VERSION}
           \`\`\`
 
-          The \`Release\` workflow will then publish the library to npm (if the library version is new), retag Docker images from \`sha-<commit>\` to \`${VERSION}\`, create the GitHub Release, and deploy to staging."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          The \`Release\` workflow will then publish the library to npm (if the library version is new), retag Docker images from \`sha-<commit>\` to \`${VERSION}\`, create the GitHub Release, and deploy to staging.
+          PR_BODY
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: release v${VERSION}" \
+            --body-file /tmp/pr-body.md

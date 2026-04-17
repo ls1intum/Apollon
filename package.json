@@ -38,7 +38,7 @@
     "format:check": "prettier --ignore-path .prettierignore --check \"**/*.(js|ts|tsx|json)\"",
     "test": "npm run test --workspace=@tumaet/apollon",
     "test:e2e": "npm run test:e2e --workspace=@tumaet/webapp",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "capacitor:add:android": "npx cap add android",
     "capacitor:add:ios": "npx cap add ios",
     "capacitor:sync": "npx cap sync",

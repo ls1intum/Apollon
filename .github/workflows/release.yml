@@ -30,7 +30,6 @@ jobs:
 
       - name: Tag must point to a commit on main
         run: |
-          git fetch origin main --depth=1
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "::error::Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on main. Refusing to release."
             exit 1
@@ -173,7 +172,8 @@ jobs:
 
   deploy-staging:
     name: Deploy to Staging
-    needs: [verify-version, tag-docker-images]
+    needs: [verify-version, publish-library, tag-docker-images]
+    if: always() && needs.tag-docker-images.result == 'success' && (needs.publish-library.result == 'success' || needs.publish-library.result == 'skipped')
     uses: ./.github/workflows/deploy-staging.yml
     with:
       image-tag: ${{ needs.verify-version.outputs.version }}
