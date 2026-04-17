@@ -21,7 +21,6 @@ jobs:
     timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.version }}
-      library-version: ${{ steps.version.outputs.library-version }}
       publish-library: ${{ steps.version.outputs.publish-library }}
     steps:
       - uses: actions/checkout@v6
@@ -43,17 +42,25 @@ jobs:
           WEBAPP_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
           SERVER_VERSION=$(node -p "require('./standalone/server/package.json').version")
 
-          # Tag must match standalone versions (library is independent)
-          if [ "$WEBAPP_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::standalone/webapp/package.json has $WEBAPP_VERSION but tag is v$TAG_VERSION"
+          # Library is the version source of truth; the tag must match it,
+          # and standalone (webapp + server) must match the library.
+          if [ "$LIB_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::library/package.json has $LIB_VERSION but tag is v$TAG_VERSION"
             exit 1
           fi
-          if [ "$SERVER_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::standalone/server/package.json has $SERVER_VERSION but tag is v$TAG_VERSION"
+          if [ "$WEBAPP_VERSION" != "$LIB_VERSION" ]; then
+            echo "::error::standalone/webapp/package.json has $WEBAPP_VERSION but library is $LIB_VERSION"
+            exit 1
+          fi
+          if [ "$SERVER_VERSION" != "$LIB_VERSION" ]; then
+            echo "::error::standalone/server/package.json has $SERVER_VERSION but library is $LIB_VERSION"
             exit 1
           fi
 
-          # Publish library only if this version is not already on npm
+          # npm publish is idempotent: skipped if the version is already on
+          # the registry. Server-only hotfixes that republish unchanged
+          # library content still bump the monorepo version and take this
+          # path — that's expected under the fixed-versioning model.
           PUBLISHED=$(npm view @tumaet/apollon@"$LIB_VERSION" version 2>/dev/null || echo "")
           if [ "$PUBLISHED" = "$LIB_VERSION" ]; then
             echo "Library v$LIB_VERSION already on npm — skipping publish"
@@ -64,7 +71,6 @@ jobs:
           fi
 
           echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
-          echo "library-version=$LIB_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verify Docker images exist for this commit
         run: |
@@ -163,7 +169,7 @@ jobs:
           body: |
             ## Release artifacts
 
-            - **Library:** [`@tumaet/apollon@${{ needs.verify-version.outputs.library-version }}`](https://www.npmjs.com/package/@tumaet/apollon/v/${{ needs.verify-version.outputs.library-version }})
+            - **Library:** [`@tumaet/apollon@${{ needs.verify-version.outputs.version }}`](https://www.npmjs.com/package/@tumaet/apollon/v/${{ needs.verify-version.outputs.version }})
             - **Docker (webapp):** `ghcr.io/ls1intum/apollon/apollon-webapp:${{ needs.verify-version.outputs.version }}`
             - **Docker (server):** `ghcr.io/ls1intum/apollon/apollon-server:${{ needs.verify-version.outputs.version }}`
           prerelease: false

@@ -3,13 +3,6 @@ name: Version Bump
 on:
   workflow_dispatch:
     inputs:
-      scope:
-        type: choice
-        description: What changed?
-        required: true
-        options:
-          - library
-          - standalone
       bump:
         type: choice
         description: Version bump type
@@ -41,37 +34,22 @@ jobs:
       - name: Set correct npm version
         run: npm install -g npm@11.1.0
 
-      - name: Bump versions
+      - name: Bump library and sync standalone
         id: bump
         run: |
-          SCOPE="${{ inputs.scope }}"
-          BUMP="${{ inputs.bump }}"
+          # Library is the primary version source.
+          (cd library && npm version "${{ inputs.bump }}" --no-git-tag-version)
+          NEW_VERSION=$(node -p "require('./library/package.json').version")
 
-          if [ "$SCOPE" = "library" ]; then
-            # Library changed: bump library, then sync standalone to match
-            (cd library && npm version "$BUMP" --no-git-tag-version)
-            NEW_VERSION=$(node -p "require('./library/package.json').version")
-
-            node -e "
-              const fs = require('fs');
-              for (const f of ['standalone/webapp/package.json', 'standalone/server/package.json']) {
-                const pkg = JSON.parse(fs.readFileSync(f, 'utf8'));
-                pkg.version = '$NEW_VERSION';
-                fs.writeFileSync(f, JSON.stringify(pkg, null, 2) + '\n');
-              }
-            "
-          else
-            # Standalone only: bump webapp, sync server
-            (cd standalone/webapp && npm version "$BUMP" --no-git-tag-version)
-            NEW_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
-
-            node -e "
-              const fs = require('fs');
-              const pkg = JSON.parse(fs.readFileSync('standalone/server/package.json', 'utf8'));
+          # Standalone (webapp + server) always tracks the library version.
+          node -e "
+            const fs = require('fs');
+            for (const f of ['standalone/webapp/package.json', 'standalone/server/package.json']) {
+              const pkg = JSON.parse(fs.readFileSync(f, 'utf8'));
               pkg.version = '$NEW_VERSION';
-              fs.writeFileSync('standalone/server/package.json', JSON.stringify(pkg, null, 2) + '\n');
-            "
-          fi
+              fs.writeFileSync(f, JSON.stringify(pkg, null, 2) + '\n');
+            }
+          "
 
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
@@ -82,7 +60,6 @@ jobs:
         id: commit
         env:
           VERSION: ${{ steps.bump.outputs.version }}
-          SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
         run: |
           BRANCH="chore/release-v${VERSION}"
@@ -93,11 +70,12 @@ jobs:
           git checkout -b "$BRANCH"
           git add library/package.json standalone/webapp/package.json standalone/server/package.json package-lock.json
 
-          git commit -F - <<COMMIT_MSG
+          cat > /tmp/commit-msg.txt <<COMMIT_MSG
           chore: release v${VERSION}
 
-          Scope: ${SCOPE} ${BUMP}
+          ${BUMP} bump of the monorepo version (library drives, standalone tracks).
           COMMIT_MSG
+          git commit -F /tmp/commit-msg.txt
 
           git push --force-with-lease origin "$BRANCH"
 
@@ -105,14 +83,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.bump.outputs.version }}
-          SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
           BRANCH: ${{ steps.commit.outputs.branch }}
         run: |
           cat > /tmp/pr-body.md <<PR_BODY
-          **Scope:** \`${SCOPE}\` (\`${BUMP}\`)
+          **Bump type:** \`${BUMP}\`
 
-          After this PR is merged, cut the release by pushing the matching tag from \`main\`:
+          All three \`package.json\` files bumped to \`${VERSION}\`: library drives the version, webapp and server track it.
+
+          After this PR is merged, cut the release:
 
           \`\`\`sh
           git checkout main && git pull
@@ -120,7 +99,7 @@ jobs:
           git push origin v${VERSION}
           \`\`\`
 
-          The \`Release\` workflow will then publish the library to npm (if the library version is new), retag Docker images from \`sha-<commit>\` to \`${VERSION}\`, create the GitHub Release, and deploy to staging.
+          The \`Release\` workflow then publishes \`@tumaet/apollon@${VERSION}\` to npm, retags the Docker images from \`sha-<commit>\` to \`${VERSION}\`, creates the GitHub Release, and deploys to staging.
           PR_BODY
 
           gh pr create \
