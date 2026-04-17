@@ -99,7 +99,7 @@ jobs:
           Scope: ${SCOPE} ${BUMP}
           COMMIT_MSG
 
-          git push origin "$BRANCH"
+          git push --force-with-lease origin "$BRANCH"
 
       - name: Open pull request
         env:

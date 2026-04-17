@@ -75,3 +75,32 @@ The previous `prepatch --preid=alpha` workflow has been retired. If you need a
 prerelease channel, introduce it deliberately (new `dist-tag`, dedicated
 workflow) rather than ad-hoc — the current pipeline assumes stable releases on
 the `latest` tag.
+
+## Prerequisites
+
+- **Tag the commit only after the push-to-main Docker build for that commit
+  has finished green.** The `Release` workflow verifies both
+  `sha-<commit>` images exist in GHCR and fails fast otherwise.
+- **npm trusted publisher** configured on npmjs.com for
+  `ls1intum/Apollon` → `.github/workflows/release.yml` → environment
+  `npm-publish`. No `NPM_TOKEN` secret is needed.
+- **GitHub Environment `npm-publish`** exists on this repo with the
+  deployment branch rule restricted to `refs/tags/v*`.
+
+## Recovery
+
+Every step is idempotent, so re-running a failed release is safe:
+
+- **`verify-version` failed.** Fix the underlying issue (tag not on main,
+  missing Docker image, mismatched versions), delete the tag, cut a new
+  one.
+- **`publish-library` failed after `npm publish` succeeded.** The next
+  run's `verify-version` will see the version on npm and skip the
+  publish step. Nothing to clean up.
+- **`tag-docker-images` failed partway through the matrix.**
+  `docker buildx imagetools create` overwrites tag pointers, so re-running
+  simply re-applies both legs.
+- **`create-release` failed.** `softprops/action-gh-release` updates
+  existing releases in-place, so re-running replaces the release body.
+- **`deploy-staging` failed.** Use Actions → **Deploy to Staging** with
+  the same `image-tag` to retry independently.

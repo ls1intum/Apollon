@@ -156,18 +156,16 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         with:
           name: "v${{ needs.verify-version.outputs.version }}"
           generate_release_notes: true
-          append_body: true
           body: |
-            ---
+            ## Release artifacts
 
-            **Library:** [`@tumaet/apollon@${{ needs.verify-version.outputs.library-version }}`](https://www.npmjs.com/package/@tumaet/apollon/v/${{ needs.verify-version.outputs.library-version }})
-            **Docker images:**
-            - `ghcr.io/ls1intum/apollon/apollon-webapp:${{ needs.verify-version.outputs.version }}`
-            - `ghcr.io/ls1intum/apollon/apollon-server:${{ needs.verify-version.outputs.version }}`
+            - **Library:** [`@tumaet/apollon@${{ needs.verify-version.outputs.library-version }}`](https://www.npmjs.com/package/@tumaet/apollon/v/${{ needs.verify-version.outputs.library-version }})
+            - **Docker (webapp):** `ghcr.io/ls1intum/apollon/apollon-webapp:${{ needs.verify-version.outputs.version }}`
+            - **Docker (server):** `ghcr.io/ls1intum/apollon/apollon-server:${{ needs.verify-version.outputs.version }}`
           prerelease: false
 
   deploy-staging:
