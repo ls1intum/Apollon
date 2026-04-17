@@ -65,22 +65,31 @@ jobs:
           SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
         run: |
+          # scope=library  → bump library by $BUMP; also patch-bump standalone
+          #                  so the new library code can be cut as a Docker
+          #                  release in the same PR merge.
+          # scope=standalone → bump standalone by $BUMP; library untouched.
           if [ "$SCOPE" = "library" ]; then
             (cd library && npm version "$BUMP" --no-git-tag-version)
-            NEW_VERSION=$(node -p "require('./library/package.json').version")
+            LIB_VERSION=$(node -p "require('./library/package.json').version")
+            STANDALONE_BUMP=patch
           else
-            # Standalone: bump webapp, mirror into server.
-            (cd standalone/webapp && npm version "$BUMP" --no-git-tag-version)
-            NEW_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
-            NEW_VERSION="$NEW_VERSION" node -e '
-              const fs = require("fs");
-              const v = process.env.NEW_VERSION;
-              const pkg = JSON.parse(fs.readFileSync("standalone/server/package.json", "utf8"));
-              pkg.version = v;
-              fs.writeFileSync("standalone/server/package.json", JSON.stringify(pkg, null, 2) + "\n");
-            '
+            LIB_VERSION=""
+            STANDALONE_BUMP="$BUMP"
           fi
-          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+          (cd standalone/webapp && npm version "$STANDALONE_BUMP" --no-git-tag-version)
+          STANDALONE_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+          STANDALONE_VERSION="$STANDALONE_VERSION" node -e '
+            const fs = require("fs");
+            const v = process.env.STANDALONE_VERSION;
+            const pkg = JSON.parse(fs.readFileSync("standalone/server/package.json", "utf8"));
+            pkg.version = v;
+            fs.writeFileSync("standalone/server/package.json", JSON.stringify(pkg, null, 2) + "\n");
+          '
+
+          echo "library_version=${LIB_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "standalone_version=${STANDALONE_VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Regenerate package-lock.json
         run: npm install --package-lock-only --ignore-scripts
@@ -89,16 +98,17 @@ jobs:
         id: commit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.bump.outputs.version }}
+          LIB_VERSION: ${{ steps.bump.outputs.library_version }}
+          STANDALONE_VERSION: ${{ steps.bump.outputs.standalone_version }}
           SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
         run: |
           if [ "$SCOPE" = "library" ]; then
-            BRANCH="chore/library-v${VERSION}"
-            COMMIT_TITLE="chore: release @tumaet/apollon@${VERSION}"
+            BRANCH="chore/library-v${LIB_VERSION}"
+            COMMIT_TITLE="chore: release @tumaet/apollon@${LIB_VERSION} + standalone v${STANDALONE_VERSION}"
           else
-            BRANCH="chore/standalone-v${VERSION}"
-            COMMIT_TITLE="chore: release standalone v${VERSION}"
+            BRANCH="chore/standalone-v${STANDALONE_VERSION}"
+            COMMIT_TITLE="chore: release standalone v${STANDALONE_VERSION}"
           fi
           echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
           echo "title=${COMMIT_TITLE}" >> "$GITHUB_OUTPUT"
@@ -114,7 +124,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           if [ "$SCOPE" = "library" ]; then
-            git add library/package.json package-lock.json
+            git add library/package.json standalone/webapp/package.json standalone/server/package.json package-lock.json
           else
             git add standalone/webapp/package.json standalone/server/package.json package-lock.json
           fi
@@ -133,14 +143,27 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
+          LIB_VERSION: ${{ steps.bump.outputs.library_version }}
+          STANDALONE_VERSION: ${{ steps.bump.outputs.standalone_version }}
           BRANCH: ${{ steps.commit.outputs.branch }}
           TITLE: ${{ steps.commit.outputs.title }}
         run: |
-          cat > /tmp/pr-body.md <<PR_BODY
-          **Scope:** \`${SCOPE}\` (\`${BUMP}\`)
+          if [ "$SCOPE" = "library" ]; then
+            cat > /tmp/pr-body.md <<PR_BODY
+          **Scope:** \`library\` (\`${BUMP}\`)
 
-          Merging this PR publishes the release automatically — the \`Release ${SCOPE^}\` workflow picks up the version change, tags, publishes, and (for standalone) deploys to staging.
+          Merging this PR publishes **both** artifacts automatically:
+
+          - \`@tumaet/apollon@${LIB_VERSION}\` to npm (via \`Release Library\`)
+          - Docker images tagged \`${STANDALONE_VERSION}\` (via \`Release Standalone\`, patch-bumped so the new library code can be cut as a Docker release)
           PR_BODY
+          else
+            cat > /tmp/pr-body.md <<PR_BODY
+          **Scope:** \`standalone\` (\`${BUMP}\`)
+
+          Merging this PR cuts the standalone release automatically — \`Release Standalone\` retags Docker images as \`${STANDALONE_VERSION}\` and creates the GitHub Release. The library is untouched.
+          PR_BODY
+          fi
 
           gh pr create \
             --base main \
