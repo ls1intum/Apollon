@@ -12,7 +12,7 @@ Both workflows trigger automatically when their version changes on `main`. There
 ## Cut a release
 
 1. Actions → **Version Bump** → pick `scope` and bump type. Merge the PR that opens.
-   - **`library`** bumps `library/package.json` by the chosen type **and** patch-bumps standalone, so a library change ships to npm **and** as a new Docker release from the same PR merge.
+   - **`library`** bumps `library/package.json` **and** `standalone/{webapp,server}/package.json` by the same bump type, so a library change ships to npm **and** as a new Docker release from the same PR merge.
    - **`standalone`** bumps only `standalone/{webapp,server}/package.json`; the library is untouched.
 2. On merge:
    - `release-library.yml` fires when `library/package.json` changes: `npm publish --provenance` → tag `@tumaet/apollon@X.Y.Z` → GitHub Release. Skipped if the version is already on npm.

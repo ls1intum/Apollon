@@ -65,20 +65,18 @@ jobs:
           SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
         run: |
-          # scope=library  → bump library by $BUMP; also patch-bump standalone
-          #                  so the new library code can be cut as a Docker
-          #                  release in the same PR merge.
+          # scope=library  → bump library and standalone by $BUMP (standalone
+          #                  mirrors library, since a library minor ships a
+          #                  new feature to users of the standalone too).
           # scope=standalone → bump standalone by $BUMP; library untouched.
           if [ "$SCOPE" = "library" ]; then
             (cd library && npm version "$BUMP" --no-git-tag-version)
             LIB_VERSION=$(node -p "require('./library/package.json').version")
-            STANDALONE_BUMP=patch
           else
             LIB_VERSION=""
-            STANDALONE_BUMP="$BUMP"
           fi
 
-          (cd standalone/webapp && npm version "$STANDALONE_BUMP" --no-git-tag-version)
+          (cd standalone/webapp && npm version "$BUMP" --no-git-tag-version)
           STANDALONE_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
           STANDALONE_VERSION="$STANDALONE_VERSION" node -e '
             const fs = require("fs");
