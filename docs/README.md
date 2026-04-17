@@ -1,46 +1,45 @@
-# Apollon Documentation
+# Apollon documentation
 
-## Writing Documentation
+Markdown sources for the Apollon documentation site.
 
-We are using [Sphinx](http://www.sphinx-doc.org/en/stable/) to generate the documentation. The documentation is written in Markdown format.
+> **Migration in progress.** The docs are moving from Sphinx to [Docusaurus](https://docusaurus.io/). Until the migration lands, the Sphinx toolchain below still builds a working static site.
 
-### Installation
+## Browse the sources
 
-Optional: Create a virtual environment
+Every page is a plain Markdown file; GitHub renders them directly:
 
-```bash
+- [`index.md`](./index.md) — overview and index.
+- [`getting-started/`](./getting-started) — requirements and first-run setup.
+- [`development/`](./development) — project structure, scripts, workflow.
+- [`mobile/`](./mobile) — Capacitor setup for iOS and Android.
+- [`deployment/`](./deployment) — GitHub Actions and Docker Compose.
+- [`troubleshooting/`](./troubleshooting) — common issues.
+- [`contributing.md`](./contributing.md) — contribution guidelines.
+
+## Build locally (Sphinx)
+
+```sh
 python3 -m venv venv
-```
-
-Activate the virtual environment:
-
-```bash
-# Unix:
-source venv/bin/activate
-# Windows:
-.\venv\Scripts\activate
-```
-
-Install the required packages
-
-```bash
+source venv/bin/activate    # Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Live Preview
+Live preview:
 
-To preview the documentation, run the following command:
-
-```bash
+```sh
 make livehtml
 ```
 
-### Building the Documentation
+Static build:
 
-To build the documentation, run the following command:
-
-```bash
+```sh
 make html
 ```
 
-The generated documentation will be in the `_build/html` directory.
+Output lands in `_build/html`.
+
+## Writing
+
+- Keep pages short and task-oriented; link between them rather than growing one monolith.
+- Prefer fenced code blocks with language tags (` ```sh `, ` ```ts `) so future Docusaurus syntax highlighting inherits cleanly.
+- Internal links use relative paths so they survive the move to Docusaurus.
