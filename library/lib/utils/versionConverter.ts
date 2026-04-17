@@ -13,6 +13,7 @@ import {
   V3Messages,
 } from "./v3Typings"
 import { log } from "../logger"
+import { INTERFACE } from "../constants"
 
 import {
   ClassNodeProps,
@@ -29,6 +30,34 @@ import {
   ReachabilityGraphMarkingProps,
 } from "../types/nodes/NodeProps"
 import { MessageData } from "@/edges/EdgeProps"
+
+function normalizeImportedInterfaceGeometry(
+  nodeType: string,
+  position: { x: number; y: number },
+  width: number,
+  height: number
+): { position: { x: number; y: number }; width: number; height: number } {
+  const isInterfaceNode =
+    nodeType === "componentInterface" || nodeType === "deploymentInterface"
+
+  if (!isInterfaceNode) {
+    return { position, width, height }
+  }
+
+  if (width === INTERFACE.SIZE && height === INTERFACE.SIZE) {
+    return { position, width, height }
+  }
+
+  // Keep the node center stable while normalizing to the standard interface size.
+  return {
+    position: {
+      x: position.x + (width - INTERFACE.SIZE) / 2,
+      y: position.y + (height - INTERFACE.SIZE) / 2,
+    },
+    width: INTERFACE.SIZE,
+    height: INTERFACE.SIZE,
+  }
+}
 
 interface V2DiagramFormat {
   version: string
@@ -636,6 +665,7 @@ function convertV3ElementToV4Node(
   element: V3UMLElement,
   allElements: Record<string, V3UMLElement>
 ): ApollonNode {
+  const nodeType = convertV3NodeTypeToV4(element.type)
   let position = { x: element.bounds.x, y: element.bounds.y }
   if (element.owner) {
     const parent = allElements[element.owner]
@@ -645,16 +675,22 @@ function convertV3ElementToV4Node(
   }
 
   const data = convertV3NodeDataToV4(element, allElements)
+  const normalizedGeometry = normalizeImportedInterfaceGeometry(
+    nodeType,
+    position,
+    element.bounds.width,
+    element.bounds.height
+  )
 
   const baseNode: ApollonNode = {
     id: element.id,
-    type: convertV3NodeTypeToV4(element.type) as any,
-    position,
-    width: element.bounds.width,
-    height: element.bounds.height,
+    type: nodeType as any,
+    position: normalizedGeometry.position,
+    width: normalizedGeometry.width,
+    height: normalizedGeometry.height,
     measured: {
-      width: element.bounds.width,
-      height: element.bounds.height,
+      width: normalizedGeometry.width,
+      height: normalizedGeometry.height,
     },
     data,
     ...(element.owner && { parentId: element.owner }),

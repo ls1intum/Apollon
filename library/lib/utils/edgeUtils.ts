@@ -1,4 +1,4 @@
-import { EDGES } from "@/constants"
+import { EDGES, INTERFACE } from "@/constants"
 import { IPoint } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
 import { Position, Rect, XYPosition, ConnectionLineType } from "@xyflow/react"
@@ -304,8 +304,8 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
       return {
         // markerPadding = MARKER_PADDING + gap
         // MARKER_PADDING (-3) compensates for React Flow handle offset
-        // gap (7) is the spacing between socket arc and ball circle
-        markerPadding: EDGES.MARKER_PADDING + 7,
+        // gap is the spacing between socket arc and ball circle
+        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
         markerEnd: "url(#required-interface)",
         strokeDashArray: "0",
         offset: 0,
@@ -313,7 +313,7 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredQuarterInterface":
     case "DeploymentRequiredQuarterInterface":
       return {
-        markerPadding: EDGES.MARKER_PADDING + 7,
+        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
         markerEnd: "url(#required-interface-quarter)",
         strokeDashArray: "0",
         offset: 0,
@@ -321,7 +321,7 @@ export function getEdgeMarkerStyles(edgeType: string): EdgeMarkerStyles {
     case "ComponentRequiredThreeQuarterInterface":
     case "DeploymentRequiredThreeQuarterInterface":
       return {
-        markerPadding: EDGES.MARKER_PADDING + 7,
+        markerPadding: EDGES.MARKER_PADDING + INTERFACE.SOCKET_GAP,
         markerEnd: "url(#required-interface-threequarter)",
         strokeDashArray: "0",
         offset: 0,

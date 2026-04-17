@@ -54,7 +54,7 @@ import {
 import { ReachabilityGraphMarkingSVG } from "@/components/svgs/nodes/reachabilityGraphDiagram/ReachabilityGraphMarkingSVG"
 import { DiagramNodeType } from "@/nodes"
 import { ClassType, UMLDiagramType } from "@/types"
-import { generateUUID } from "@/utils"
+import { v4 as uuidv4 } from "uuid"
 
 /* -------------------------------------------------------------------------- */
 /* Canvas                                                                     */
@@ -114,12 +114,18 @@ export const LAYOUT = Object.freeze({
   ICON_LINE_WIDTH: 1.5,
 } as const)
 
-// Interface node geometry - single source of truth
-// All interface-related dimensions derive from this
+const generateUUID = () => uuidv4()
+
+export const INTERFACE_SIZE = 30
+export const INTERFACE_RADIUS = INTERFACE_SIZE / 2
+export const INTERFACE_STROKE_WIDTH = 2
+export const INTERFACE_SOCKET_GAP = 4
+
 export const INTERFACE = Object.freeze({
-  SIZE: 30, // Interface node is a square (width = height)
-  RADIUS: 15, // SIZE / 2 - circle radius
-  STROKE_WIDTH: 2, // Must match LINE_WIDTH_EDGE for consistent rendering
+  SIZE: INTERFACE_SIZE,
+  RADIUS: INTERFACE_RADIUS,
+  STROKE_WIDTH: INTERFACE_STROKE_WIDTH,
+  SOCKET_GAP: INTERFACE_SOCKET_GAP,
 } as const)
 
 /* -------------------------------------------------------------------------- */
@@ -175,7 +181,7 @@ export interface MarkerConfig {
 }
 
 // Interface socket markers - radius derived from INTERFACE.RADIUS
-const INTERFACE_SOCKET_SIZE = 15 // Must equal INTERFACE.SIZE / 2
+const INTERFACE_SOCKET_SIZE = INTERFACE_RADIUS // Must equal INTERFACE.SIZE / 2
 
 export const MARKER_CONFIGS = Object.freeze({
   // Class diagram markers - golden ratio inspired proportions
@@ -222,7 +228,7 @@ export const MARKER_CONFIGS = Object.freeze({
     size: INTERFACE_SOCKET_SIZE,
     widthFactor: 1,
     heightFactor: 1,
-    arcSpanDegrees: 180,
+    arcSpanDegrees: 150,
   },
   "required-interface-quarter": {
     type: "semicircle",
@@ -488,8 +494,8 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "componentInterface",
-      width: 30,
-      height: 30,
+      width: INTERFACE_SIZE,
+      height: INTERFACE_SIZE,
       defaultData: { name: "Interface" },
       svg: ComponentInterfaceNodeSVG,
       marginTop: 10,
@@ -523,8 +529,8 @@ export const dropElementConfigs: Readonly<
     },
     {
       type: "deploymentInterface",
-      width: 30,
-      height: 30,
+      width: INTERFACE_SIZE,
+      height: INTERFACE_SIZE,
       defaultData: { name: "Interface" },
       svg: DeploymentInterfaceSVG,
       marginTop: 10,
