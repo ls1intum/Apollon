@@ -3,6 +3,7 @@ services:
     image: caddy:2.9-alpine
     container_name: apollon-caddy
     restart: unless-stopped
+    init: true
     ports:
       - "80:80"
       - "443:443"
@@ -24,9 +25,9 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      test: ["CMD", "caddy", "version"]
       interval: 30s
-      timeout: 3s
+      timeout: 10s
       retries: 3
 
 configs:
