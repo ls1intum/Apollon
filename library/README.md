@@ -16,13 +16,20 @@ npm install @tumaet/apollon
 ## Usage
 
 ```ts
-import { ApollonEditor } from "@tumaet/apollon"
+import {
+  ApollonEditor,
+  ApollonMode,
+  Locale,
+  UMLDiagramType,
+} from "@tumaet/apollon"
 
-const container = document.getElementById("apollon")!
+const container = document.getElementById("apollon")
+if (!container) throw new Error("#apollon container missing")
+
 const editor = new ApollonEditor(container, {
-  type: "ClassDiagram",
-  mode: "Modelling",
-  locale: "en",
+  type: UMLDiagramType.ClassDiagram,
+  mode: ApollonMode.Modelling,
+  locale: Locale.en,
   // model, theme, readonly, enablePopups, colorEnabled, scale,
   // collaborationEnabled, scrollLock — see `ApollonOptions`
 })
@@ -44,7 +51,9 @@ editor.unsubscribe(subscriptionId)
 editor.destroy()
 ```
 
-Full type definitions ship with the package (`dist/index.d.ts`).
+The editor mounts into the DOM and is client-only. In SSR frameworks (Next.js, Remix), instantiate inside `useEffect` or behind a dynamic import. Call `editor.destroy()` before re-mounting on the same container.
+
+Type definitions ship with the package (`dist/index.d.ts`).
 
 ## Supported diagrams
 
@@ -63,9 +72,9 @@ Use any Yjs-compatible transport (WebSocket, WebRTC, `y-websocket`, etc.).
 
 ## Export
 
-- `editor.exportAsSVG(options)` resolves to `{ svg, clip }`, ready to render or serialize.
+- `editor.exportAsSVG(options)` resolves to `{ svg, clip }` — render or serialize as-is.
 - PNG and PDF use the same pipeline via `ExportOptions` (`svgMode: "web" | "compat"`); see `dist/index.d.ts`.
-- `editor.model` returns the full `UMLModel` as JSON.
+- `editor.model` returns the `UMLModel` as JSON.
 
 ## Related
 

@@ -5,14 +5,19 @@
   "keywords": [
     "apollon",
     "uml",
+    "uml-editor",
     "diagram",
-    "editor",
+    "diagram-editor",
     "modeling",
     "react",
     "typescript",
     "collaborative",
     "yjs",
-    "bpmn"
+    "bpmn",
+    "petri-net",
+    "activity-diagram",
+    "class-diagram",
+    "flowchart"
   ],
   "homepage": "https://github.com/ls1intum/Apollon#readme",
   "bugs": {
@@ -28,12 +33,13 @@
     "name": "TUM Applied Education Technologies",
     "url": "https://aet.cit.tum.de/"
   },
+  "funding": "https://github.com/ls1intum/Apollon",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "source": "lib/index.tsx",
   "engines": {
-    "node": ">=22.14.0"
+    "node": ">=20.0.0"
   },
   "publishConfig": {
     "access": "public"
