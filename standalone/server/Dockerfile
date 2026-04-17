@@ -18,7 +18,12 @@ FROM node:22.14.0-slim AS runtime
 WORKDIR /app
 
 LABEL org.opencontainers.image.source="https://github.com/ls1intum/Apollon" \
-      org.opencontainers.image.title="apollon-server"
+      org.opencontainers.image.url="https://github.com/ls1intum/Apollon" \
+      org.opencontainers.image.documentation="https://github.com/ls1intum/Apollon#readme" \
+      org.opencontainers.image.title="apollon-server" \
+      org.opencontainers.image.description="Apollon standalone server — Express + Redis + WebSocket relay powering the Apollon UML editor." \
+      org.opencontainers.image.vendor="TUM Applied Education Technologies" \
+      org.opencontainers.image.licenses="MIT"
 
 # Install tini for proper PID 1 signal handling
 RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
