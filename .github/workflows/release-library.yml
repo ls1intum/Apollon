@@ -84,5 +84,13 @@ jobs:
           gh release create "$TAG" \
             --title "$TAG" \
             --target "$GITHUB_SHA" \
+            --verify-tag \
+            --latest=false \
             --generate-notes \
-            --notes "[\`@tumaet/apollon@${VERSION}\`](https://www.npmjs.com/package/@tumaet/apollon/v/${VERSION}) published with \`--provenance\` via npm OIDC trusted publishing."
+            --notes "Install:
+
+          \`\`\`sh
+          npm install @tumaet/apollon@${VERSION}
+          \`\`\`
+
+          Published to npm with [provenance](https://docs.npmjs.com/generating-provenance-statements) via OIDC trusted publishing: [\`@tumaet/apollon@${VERSION}\`](https://www.npmjs.com/package/@tumaet/apollon/v/${VERSION})."
