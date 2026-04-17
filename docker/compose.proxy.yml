@@ -3,6 +3,7 @@ services:
     image: caddy:2.9-alpine
     container_name: apollon-caddy
     restart: unless-stopped
+    init: true
     ports:
       - "80:80"
       - "443:443"
