@@ -95,5 +95,18 @@ jobs:
           gh release create "v${VERSION}" \
             --title "v${VERSION}" \
             --target "$COMMIT_SHA" \
+            --verify-tag \
+            --latest \
             --generate-notes \
-            --notes "\`ghcr.io/ls1intum/apollon/apollon-{webapp,server}:${VERSION}\` — cosign-signed, retagged from \`sha-${COMMIT_SHA}\`."
+            --notes "## Docker images
+
+          - \`ghcr.io/ls1intum/apollon/apollon-webapp:${VERSION}\`
+          - \`ghcr.io/ls1intum/apollon/apollon-server:${VERSION}\`
+
+          Signed with [Sigstore cosign](https://docs.sigstore.dev/cosign/verifying/verify/) (keyless, GitHub OIDC). Verify with:
+
+          \`\`\`sh
+          cosign verify ghcr.io/ls1intum/apollon/apollon-webapp:${VERSION} \\
+            --certificate-identity-regexp='^https://github\\.com/ls1intum/Apollon/\\.github/workflows/release-standalone\\.yml@refs/heads/main\$' \\
+            --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+          \`\`\`"
