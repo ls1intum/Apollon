@@ -51,7 +51,7 @@ jobs:
             LAST=$(git tag --list '@tumaet/apollon@*' --sort=-v:refname | head -n1)
             PATH_PATTERN=library/
           else
-            LAST=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+            LAST=$(git tag --list 'standalone-v*' --sort=-v:refname | head -n1)
             PATH_PATTERN=standalone/
           fi
           if [ -n "$LAST" ] && git diff --quiet "$LAST"..HEAD -- "$PATH_PATTERN"; then
@@ -153,13 +153,13 @@ jobs:
           Merging this PR publishes **both** artifacts automatically:
 
           - \`@tumaet/apollon@${LIB_VERSION}\` to npm (via \`Release Library\`)
-          - Docker images tagged \`${STANDALONE_VERSION}\` (via \`Release Standalone\`, patch-bumped so the new library code can be cut as a Docker release)
+          - \`standalone-v${STANDALONE_VERSION}\` — Docker images tagged \`${STANDALONE_VERSION}\` (via \`Release Standalone\`, mirrored so the new library code ships as a Docker release)
           PR_BODY
           else
             cat > /tmp/pr-body.md <<PR_BODY
           **Scope:** \`standalone\` (\`${BUMP}\`)
 
-          Merging this PR cuts the standalone release automatically — \`Release Standalone\` retags Docker images as \`${STANDALONE_VERSION}\` and creates the GitHub Release. The library is untouched.
+          Merging this PR cuts \`standalone-v${STANDALONE_VERSION}\` automatically — \`Release Standalone\` retags Docker images as \`${STANDALONE_VERSION}\` and creates the GitHub Release. The library is untouched.
           PR_BODY
           fi
 

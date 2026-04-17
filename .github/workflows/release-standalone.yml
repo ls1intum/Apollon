@@ -43,7 +43,7 @@ jobs:
             echo "::error::standalone version $WEBAPP is not strict SemVer MAJOR.MINOR.PATCH."
             exit 1
           fi
-          if gh release view "v$WEBAPP" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          if gh release view "standalone-v$WEBAPP" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "release=false" >> "$GITHUB_OUTPUT"
           else
             echo "release=true" >> "$GITHUB_OUTPUT"
@@ -92,8 +92,8 @@ jobs:
           VERSION: ${{ needs.check.outputs.version }}
           COMMIT_SHA: ${{ needs.check.outputs.sha }}
         run: |
-          gh release create "v${VERSION}" \
-            --title "v${VERSION}" \
+          gh release create "standalone-v${VERSION}" \
+            --title "standalone-v${VERSION}" \
             --target "$COMMIT_SHA" \
             --generate-notes \
             --notes "\`ghcr.io/ls1intum/apollon/apollon-{webapp,server}:${VERSION}\` — cosign-signed, retagged from \`sha-${COMMIT_SHA}\`."
