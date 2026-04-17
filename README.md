@@ -52,7 +52,7 @@ Override ports via `APOLLON_WEBAPP_PORT`, `APOLLON_SERVER_PORT`, `APOLLON_WS_POR
 | Server        | Express 5, Redis (RedisJSON), WebSocket relay                        |
 | Webapp        | React, TypeScript, Vite, MUI, Tailwind                               |
 | Storage       | Redis with RedisJSON (diagrams expire after 120 days via native TTL) |
-| Reverse proxy | Caddy (production)                                                   |
+| Reverse proxy | Traefik v3 (production)                                              |
 
 ## Requirements
 

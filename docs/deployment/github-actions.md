@@ -16,7 +16,7 @@ See [Releases](npm-publishing.md) for the release-cut procedure.
 
 | File | Purpose | Lifecycle |
 | ---- | ------- | --------- |
-| `docker/compose.proxy.yml` | Caddy reverse proxy | deployed once; stays up during app deploys |
+| `docker/compose.proxy.yml` | Traefik reverse proxy + maintenance page | deployed once; stays up during app deploys |
 | `docker/compose.db.yml` | Redis | deployed once; stays up during app deploys |
 | `docker/compose.app.yml` | Server + webapp | deployed by CI on every merge + release |
 

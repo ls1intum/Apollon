@@ -5,11 +5,28 @@ services:
     expose:
       - "8080"
     networks:
-      - apollon
+      - apollon-network
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=apollon-network"
+      - "traefik.http.routers.http-webapp.entryPoints=http"
+      - "traefik.http.routers.http-webapp.middlewares=redirect-to-https"
+      - "traefik.http.routers.http-webapp.rule=Host(`${APP_HOSTNAME}`)"
+      - "traefik.http.routers.http-webapp.service=http-webapp"
+      - "traefik.http.routers.http-webapp.priority=2"
+      - "traefik.http.routers.https-webapp.entryPoints=https"
+      - "traefik.http.routers.https-webapp.middlewares=secure-headers"
+      - "traefik.http.routers.https-webapp.rule=Host(`${APP_HOSTNAME}`)"
+      - "traefik.http.routers.https-webapp.service=https-webapp"
+      - "traefik.http.routers.https-webapp.tls=true"
+      - "traefik.http.routers.https-webapp.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.https-webapp.priority=3"
+      - "traefik.http.services.http-webapp.loadbalancer.server.port=8080"
+      - "traefik.http.services.https-webapp.loadbalancer.server.port=8080"
     healthcheck:
       test:
         [
@@ -32,6 +49,7 @@ services:
 
   server:
     image: "ghcr.io/ls1intum/apollon/server:${IMAGE_TAG:-latest}"
+    restart: unless-stopped
     expose:
       - "8000"
       - "4444"
@@ -40,9 +58,8 @@ services:
       - PORT=8000
       - WS_PORT=4444
       - REDIS_URL=redis://db:6379
-    restart: unless-stopped
     networks:
-      - apollon
+      - apollon-network
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=64m
@@ -50,6 +67,38 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=apollon-network"
+      # HTTP API: /api (no stripprefix — server mounts routes under /api internally)
+      - "traefik.http.routers.http-server-api.entryPoints=http"
+      - "traefik.http.routers.http-server-api.middlewares=redirect-to-https"
+      - "traefik.http.routers.http-server-api.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.http-server-api.service=http-server-api"
+      - "traefik.http.routers.http-server-api.priority=10"
+      - "traefik.http.routers.https-server-api.entryPoints=https"
+      - "traefik.http.routers.https-server-api.middlewares=secure-headers"
+      - "traefik.http.routers.https-server-api.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.https-server-api.service=https-server-api"
+      - "traefik.http.routers.https-server-api.tls=true"
+      - "traefik.http.routers.https-server-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.https-server-api.priority=20"
+      - "traefik.http.services.http-server-api.loadbalancer.server.port=8000"
+      - "traefik.http.services.https-server-api.loadbalancer.server.port=8000"
+      # WebSocket relay: /ws → port 4444 (Traefik v3 forwards Upgrade headers automatically)
+      - "traefik.http.routers.http-server-ws.entryPoints=http"
+      - "traefik.http.routers.http-server-ws.middlewares=redirect-to-https"
+      - "traefik.http.routers.http-server-ws.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.http-server-ws.service=http-server-ws"
+      - "traefik.http.routers.http-server-ws.priority=10"
+      - "traefik.http.routers.https-server-ws.entryPoints=https"
+      - "traefik.http.routers.https-server-ws.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.https-server-ws.service=https-server-ws"
+      - "traefik.http.routers.https-server-ws.tls=true"
+      - "traefik.http.routers.https-server-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.https-server-ws.priority=20"
+      - "traefik.http.services.http-server-ws.loadbalancer.server.port=4444"
+      - "traefik.http.services.https-server-ws.loadbalancer.server.port=4444"
     healthcheck:
       test:
         [
@@ -69,6 +118,6 @@ services:
         max-file: "5"
 
 networks:
-  apollon:
-    name: apollon
-    driver: bridge
+  apollon-network:
+    name: apollon-network
+    external: true

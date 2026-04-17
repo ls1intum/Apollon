@@ -18,7 +18,7 @@ on:
       deploy-proxy:
         type: boolean
         default: false
-        description: (Re-)deploy Caddy proxy. Usually not necessary.
+        description: (Re-)deploy Traefik reverse proxy. Usually not necessary.
   workflow_call:
     inputs:
       image-tag:
@@ -36,7 +36,7 @@ on:
       deploy-proxy:
         type: boolean
         default: false
-        description: (Re-)deploy Caddy proxy. Usually not necessary.
+        description: (Re-)deploy Traefik reverse proxy. Usually not necessary.
 
 concurrency:
   group: deploy-production
