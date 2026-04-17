@@ -1,35 +1,25 @@
 # Publishing the library to npm
 
-The `@tumaet/apollon` library is published to npm by the **Release** workflow
-(`.github/workflows/release.yml`) whenever a tag matching `v*` is pushed to
-`main`. There are no local publish scripts — the flow is entirely
-GitHub-driven.
+Releases are tag-driven and run from the **Release** workflow
+(`.github/workflows/release.yml`). Pushing a `v*` tag to `main` publishes
+the library to npm (if the version is new), retags the Docker images for
+that commit, creates the GitHub Release, and deploys to staging.
 
-## Trust model
+## Flow
 
-- npm publishing uses **OIDC trusted publishing** via the `npm-publish` GitHub
-  Environment. No `NPM_TOKEN` secret is used.
-- Provenance is attested (`npm publish --provenance`), so the npm page shows
-  "Built and signed on GitHub Actions".
-- The trusted publisher configuration on npmjs.com must include this
-  repository and the `Release` workflow.
+1. **Bump.** Actions → **Version Bump** → pick a scope and bump type. The
+   workflow opens a PR that updates the relevant `package.json` files and
+   the root `package-lock.json`.
 
-## End-to-end flow
+   | Scope | Bumps |
+   | ----- | ----- |
+   | `library` | `library/package.json` + `standalone/{webapp,server}/package.json` (standalone follows library) |
+   | `standalone` | `standalone/{webapp,server}/package.json` only |
 
-1. **Bump versions.** Actions → **Version Bump** → pick a scope and bump type.
-   The workflow opens a PR that updates the relevant `package.json` files
-   and the root `package-lock.json`.
-
-   | Scope | What it bumps | When |
-   | ----- | ------------- | ---- |
-   | `library` | `library/package.json` + both `standalone/*/package.json` (standalone follows library) | Library code changed |
-   | `standalone` | Only `standalone/webapp/package.json` and `standalone/server/package.json` | Server or webapp change, library unchanged |
-
-2. **Merge the bump PR.** Push to `main` triggers the normal
-   **Build and Push Docker Image** workflow, which tags images as
+2. **Merge the bump PR.** The push to `main` builds Docker images tagged
    `sha-<commit>` and auto-deploys them to staging.
 
-3. **Cut the release tag from `main`:**
+3. **Tag from `main`** (wait until the push-to-main build is green):
 
    ```sh
    git checkout main && git pull
@@ -37,70 +27,44 @@ GitHub-driven.
    git push origin v<version>
    ```
 
-   The tag version must match the **standalone** version; the library version
-   is independent and published only when it is new on npm.
+   The tag version must match the **standalone** version. The library
+   version is independent.
 
-4. **The `Release` workflow:**
-   - Verifies the tag commit is an ancestor of `main`.
-   - Verifies `library` / `standalone` versions match the tag.
-   - Verifies both Docker images `sha-<commit>` exist in GHCR.
-   - Publishes the library to npm with provenance (skipped if the version is
-     already on the registry).
-   - Retags Docker images from `sha-<commit>` to `<version>`.
-   - Creates a GitHub Release with auto-generated notes + a footer that pins
-     the library version and Docker image tags.
-   - Deploys `<version>` to staging.
+4. **Promote to production.** Actions → **Deploy to Production** →
+   `image-tag: <version>`.
 
-5. **Promote to production.** Actions → **Deploy to Production** → enter the
-   image tag (e.g. `4.2.19`) and run.
-
-## Version-tracking model
-
-Two independent version streams:
+## Two version tracks, one release tag
 
 | | Source | Artifact |
 | - | - | - |
 | **Library** | `library/package.json` | `@tumaet/apollon` on npm |
 | **Standalone** | `standalone/{webapp,server}/package.json` | `ghcr.io/ls1intum/apollon/apollon-{webapp,server}` Docker images |
 
-The release tag always matches the standalone version. The library version is
-published when it is not already on npm — so a `standalone`-scope bump cuts a
-new Docker release without republishing the library, and a `library`-scope bump
-publishes a new npm version and ships the same version to Docker in a single
-tag.
-
-## No alpha / prerelease flow
-
-The previous `prepatch --preid=alpha` workflow has been retired. If you need a
-prerelease channel, introduce it deliberately (new `dist-tag`, dedicated
-workflow) rather than ad-hoc — the current pipeline assumes stable releases on
-the `latest` tag.
+The release tag matches the standalone version. The library publishes
+only when its version is new on npm — a `standalone`-scope bump cuts a
+Docker-only release, and a `library`-scope bump ships both.
 
 ## Prerequisites
 
-- **Tag the commit only after the push-to-main Docker build for that commit
-  has finished green.** The `Release` workflow verifies both
-  `sha-<commit>` images exist in GHCR and fails fast otherwise.
 - **npm trusted publisher** configured on npmjs.com for
   `ls1intum/Apollon` → `.github/workflows/release.yml` → environment
-  `npm-publish`. No `NPM_TOKEN` secret is needed.
-- **GitHub Environment `npm-publish`** exists on this repo with the
-  deployment branch rule restricted to `refs/tags/v*`.
+  `npm-publish`. No `NPM_TOKEN` secret needed; `--provenance` is attested.
+- **GitHub Environment `npm-publish`** with the deployment branch rule
+  scoped to `refs/tags/v*`.
+- **Tag only after** the push-to-main Docker build for that commit has
+  finished green — the release workflow will fail fast otherwise.
 
 ## Recovery
 
-Every step is idempotent, so re-running a failed release is safe:
+Every step is idempotent; re-running a failed release is safe:
 
-- **`verify-version` failed.** Fix the underlying issue (tag not on main,
-  missing Docker image, mismatched versions), delete the tag, cut a new
-  one.
-- **`publish-library` failed after `npm publish` succeeded.** The next
-  run's `verify-version` will see the version on npm and skip the
-  publish step. Nothing to clean up.
-- **`tag-docker-images` failed partway through the matrix.**
-  `docker buildx imagetools create` overwrites tag pointers, so re-running
-  simply re-applies both legs.
-- **`create-release` failed.** `softprops/action-gh-release` updates
-  existing releases in-place, so re-running replaces the release body.
-- **`deploy-staging` failed.** Use Actions → **Deploy to Staging** with
-  the same `image-tag` to retry independently.
+- **`verify-version` failed** — fix the input (tag not on main, missing
+  image, mismatched versions), delete and re-cut the tag.
+- **`publish-library` failed after `npm publish` succeeded** — the next
+  run sees the version on npm and skips.
+- **`tag-docker-images` partially failed** — `docker buildx imagetools
+  create` overwrites pointers; re-run is a no-op on the succeeded legs.
+- **`create-release` failed** — re-run updates the existing release
+  in-place.
+- **`deploy-staging` failed** — Actions → **Deploy to Staging** with the
+  same `image-tag`.
