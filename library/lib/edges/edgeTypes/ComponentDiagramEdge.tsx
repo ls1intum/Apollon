@@ -6,7 +6,6 @@ import {
 } from "../GenericEdge"
 import { useDiagramStore, usePopoverStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
-import { Position } from "@xyflow/react"
 import { useEdgeConfig } from "@/hooks/useEdgeConfig"
 import { useStepPathEdge } from "@/hooks/useStepPathEdge"
 import { useToolbar } from "@/hooks"
@@ -16,26 +15,13 @@ import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { AssessmentSelectableWrapper } from "@/components"
 import { getCustomColorsFromDataForEdge } from "@/utils/layoutUtils"
 import { EdgeInlineMarkers } from "@/components/svgs/edges/InlineMarker"
+import { resolveRequiredInterfaceEdgeType } from "@/utils"
 
-const arePositionsOpposite = (pos1: Position, pos2: Position): boolean => {
-  return (
-    (pos1 === Position.Left && pos2 === Position.Right) ||
-    (pos1 === Position.Right && pos2 === Position.Left) ||
-    (pos1 === Position.Top && pos2 === Position.Bottom) ||
-    (pos1 === Position.Bottom && pos2 === Position.Top)
-  )
-}
-
-const getPositionFromHandleId = (handleId: string | null): Position => {
-  if (!handleId) return Position.Right // default
-
-  if (handleId.includes("left")) return Position.Left
-  if (handleId.includes("right")) return Position.Right
-  if (handleId.includes("top")) return Position.Top
-  if (handleId.includes("bottom")) return Position.Bottom
-
-  return Position.Right
-}
+const COMPONENT_REQUIRED_INTERFACE_TYPES = [
+  "ComponentRequiredInterface",
+  "ComponentRequiredQuarterInterface",
+  "ComponentRequiredThreeQuarterInterface",
+] as const
 
 export const ComponentDiagramEdge = ({
   id,
@@ -80,48 +66,16 @@ export const ComponentDiagramEdge = ({
     useShallow((state) => state.setPopOverElementId)
   )
 
-  const dynamicEdgeType = (() => {
-    if (type !== "ComponentRequiredInterface") {
-      return type
-    }
-
-    const currentRequiredInterfaces = edges.filter(
-      (edge) =>
-        edge.target === target && edge.type === "ComponentRequiredInterface"
-    )
-
-    const currentAllInterfaces = edges.filter(
-      (edge) =>
-        edge.target === target &&
-        (edge.type === "ComponentRequiredInterface" ||
-          edge.type === "ComponentProvidedInterface")
-    )
-
-    const currentTargetPosition = getPositionFromHandleId(targetHandleId!)
-    const hasOppositeRequiredInterface = currentRequiredInterfaces
-      .filter((edge) => edge.id !== id)
-      .some((otherEdge) => {
-        const otherPosition = getPositionFromHandleId(otherEdge.targetHandle!)
-        return arePositionsOpposite(currentTargetPosition, otherPosition)
-      })
-
-    switch (currentRequiredInterfaces.length) {
-      case 1:
-        if (currentAllInterfaces.length === currentRequiredInterfaces.length) {
-          return "ComponentRequiredInterface"
-        } else {
-          return "ComponentRequiredThreeQuarterInterface"
-        }
-      case 2:
-        if (hasOppositeRequiredInterface) {
-          return "ComponentRequiredThreeQuarterInterface"
-        } else {
-          return "ComponentRequiredQuarterInterface"
-        }
-      default:
-        return "ComponentRequiredQuarterInterface"
-    }
-  })()
+  const dynamicEdgeType = resolveRequiredInterfaceEdgeType({
+    type,
+    id,
+    target,
+    targetHandleId,
+    edges,
+    requiredTypes: COMPONENT_REQUIRED_INTERFACE_TYPES,
+    defaultType: "ComponentRequiredInterface",
+    reducedType: "ComponentRequiredQuarterInterface",
+  })
 
   const {
     pathRef,

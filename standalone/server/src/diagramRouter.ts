@@ -2,10 +2,20 @@ import { Request, Response, Router } from "express"
 import { redis } from "./database/connect"
 import { Diagram, DIAGRAM_TTL_SECONDS } from "./database/models/Diagram"
 import { log } from "./logger"
-import { ConversionResource } from "./resources/conversion-resource"
 
 const router = Router()
-const conversionResource = new ConversionResource()
+
+let conversionResourcePromise: Promise<{
+  convert: (req: Request, res: Response) => Promise<void>
+}> | null = null
+
+async function getConversionResource() {
+  conversionResourcePromise ??= import("./resources/conversion-resource").then(
+    ({ ConversionResource }) => new ConversionResource()
+  )
+
+  return conversionResourcePromise
+}
 
 function diagramKey(id: string): string {
   return `diagram:${id}`
@@ -21,13 +31,18 @@ async function saveDiagram(key: string, diagram: Diagram): Promise<void> {
   await redis.set(key, JSON.stringify(diagram), { EX: DIAGRAM_TTL_SECONDS })
 }
 
-router.get("/converter/status", (req, res) => {
-  conversionResource.status(req, res)
+router.get("/converter/status", (_req, res) => {
+  res.sendStatus(200)
 })
 
-router.post("/converter/pdf", (req, res) =>
-  conversionResource.convert(req, res)
-)
+router.post("/converter/pdf", async (req, res, next) => {
+  try {
+    const conversionResource = await getConversionResource()
+    await conversionResource.convert(req, res)
+  } catch (error) {
+    next(error)
+  }
+})
 
 router.get(
   "/:diagramID",

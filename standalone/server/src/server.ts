@@ -2,6 +2,7 @@
 import "./loadEnvironment"
 import express from "express"
 import { configureMiddlewares } from "./middlewares"
+import { errorHandler } from "./middlewares/errors"
 import diagramRouter from "./diagramRouter"
 import { startSocketServer } from "./relaySocketServer"
 import { connectToRedis, redis } from "./database/connect"
@@ -26,6 +27,7 @@ app.get("/health", async (_req, res) => {
 
 // Mount routes
 app.use("/api", diagramRouter)
+app.use(errorHandler)
 
 // Start servers immediately for a fast dev feedback loop
 app.listen(PORT, () => {
