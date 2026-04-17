@@ -1,6 +1,6 @@
 # @tumaet/webapp
 
-The standalone web frontend for [Apollon](../../README.md). Wraps the [`@tumaet/apollon`](../../library) library with routing, diagram persistence, sharing, and assessment UI.
+The browser-hosted web app for [Apollon](../../README.md). Wraps the [`@tumaet/apollon`](../../library) library with routing, diagram persistence, sharing, and assessment UI.
 
 Part of the Apollon monorepo — run it from the repo root with `npm run dev`, not from here.
 

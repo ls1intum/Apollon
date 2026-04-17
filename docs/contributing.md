@@ -1,67 +1,33 @@
 # Contributing
 
-We welcome contributions to the Apollon project! Please follow the steps below to contribute.
+Contributions are welcome. The steps below are the short version; the root [README](../README.md) covers repo setup.
 
-## How to Contribute
+## Flow
 
-1. **Fork the repository**
+1. Fork the repo, then branch off `main`:
 
-   Create a fork of the repository on GitHub.
-
-2. **Create a feature branch**
-
-   Create a new branch for your feature or bug fix:
-
-   ```bash
-   git checkout -b feature/your-feature-name
+   ```sh
+   git checkout -b feature/<short-name>
    ```
 
-3. **Make your changes**
+2. Make your change. Keep to the existing TypeScript + React conventions; Prettier and ESLint are authoritative.
 
-   - Follow the existing code style and conventions
-   - Add tests for new functionality
-   - Update documentation if needed
+3. Verify locally:
 
-4. **Test your changes**
-
-   Make sure all tests pass:
-
-   ```bash
+   ```sh
    npm run lint
+   npm run test
    npm run build
    ```
 
-5. **Commit your changes**
+4. Commit with a [conventional commits](https://www.conventionalcommits.org/) prefix (`commitlint.config.mjs` enforces this):
 
-   Follow the commit message conventions defined in `commitlint.config.mjs`:
-
-   ```bash
-   git add .
-   git commit -m "feat: add new feature description"
+   ```sh
+   git commit -m "feat: <what changed>"
    ```
 
-6. **Push to your fork**
+5. Push your branch and open a pull request against `main`.
 
-   ```bash
-   git push origin feature/your-feature-name
-   ```
+## Releases
 
-7. **Submit a pull request**
-
-   Create a pull request from your feature branch to the main repository.
-
-## Code Style
-
-- Follow the existing TypeScript and React conventions
-- Use Prettier for code formatting (configured in `.prettierrc`)
-- Ensure ESLint checks pass
-- Write meaningful commit messages following conventional commits
-
-## Development Workflow
-
-1. Install dependencies: `npm install`
-2. Start development: `npm run start`
-3. Check linting: `npm run lint`
-4. Format code: `npm run format`
-
-Thank you for contributing to Apollon!
+Releases are dispatch-and-merge; see [Releases](deployment/npm-publishing.md).
