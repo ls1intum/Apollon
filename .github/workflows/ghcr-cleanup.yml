@@ -30,12 +30,9 @@ jobs:
           account: ls1intum
           token: ${{ secrets.GITHUB_TOKEN }}
           image-names: ${{ matrix.package }}
-          # Match only continuous-delivery sha-* tags. Every other pattern
-          # (semver releases like 3.0.1, or anything else) is explicitly
-          # excluded. If a digest carries both a sha-* tag and a release
-          # tag, the action's multi-tag rule refuses to delete the version
-          # because at least one tag doesn't match — so release images are
-          # safe on two grounds.
+          # Release images are protected by both the explicit !v* !*.*.*
+          # negations and the action's multi-tag rule (a digest carrying
+          # any non-matching tag is refused).
           image-tags: "sha-* !v* !*.*.*"
           tag-selection: tagged
           cut-off: 30d

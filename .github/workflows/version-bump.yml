@@ -127,28 +127,15 @@ jobs:
       - name: Open pull request
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.bump.outputs.version }}
           SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
           BRANCH: ${{ steps.commit.outputs.branch }}
           TITLE: ${{ steps.commit.outputs.title }}
         run: |
-          if [ "$SCOPE" = "library" ]; then
-            TAG_NAME="@tumaet/apollon@${VERSION}"
-          else
-            TAG_NAME="v${VERSION}"
-          fi
-
           cat > /tmp/pr-body.md <<PR_BODY
           **Scope:** \`${SCOPE}\` (\`${BUMP}\`)
 
-          After this PR is merged, cut the release:
-
-          \`\`\`sh
-          git checkout main && git pull
-          git tag '${TAG_NAME}'
-          git push origin '${TAG_NAME}'
-          \`\`\`
+          Merging this PR publishes the release automatically — the \`Release ${SCOPE^}\` workflow picks up the version change, tags, publishes, and (for standalone) deploys to staging.
           PR_BODY
 
           gh pr create \
