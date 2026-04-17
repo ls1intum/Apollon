@@ -43,14 +43,17 @@ jobs:
           NEW_VERSION=$(node -p "require('./library/package.json').version")
 
           # Standalone (webapp + server) always tracks the library version.
-          node -e "
-            const fs = require('fs');
-            for (const f of ['standalone/webapp/package.json', 'standalone/server/package.json']) {
-              const pkg = JSON.parse(fs.readFileSync(f, 'utf8'));
-              pkg.version = '$NEW_VERSION';
-              fs.writeFileSync(f, JSON.stringify(pkg, null, 2) + '\n');
+          # NEW_VERSION is passed through env to avoid shell interpolation
+          # into the node script (injection hygiene).
+          NEW_VERSION="$NEW_VERSION" node -e '
+            const fs = require("fs");
+            const v = process.env.NEW_VERSION;
+            for (const f of ["standalone/webapp/package.json", "standalone/server/package.json"]) {
+              const pkg = JSON.parse(fs.readFileSync(f, "utf8"));
+              pkg.version = v;
+              fs.writeFileSync(f, JSON.stringify(pkg, null, 2) + "\n");
             }
-          "
+          '
 
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 

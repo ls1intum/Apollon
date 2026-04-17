@@ -34,6 +34,20 @@ jobs:
             exit 1
           fi
 
+      - name: Tag must not already have a GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Catches the case where an earlier release under this tag was
+          # created, the tag was deleted, and the same name is re-pushed
+          # at a different commit. The monotonicity check alone does not
+          # see this because `git tag --list` after checkout contains only
+          # the currently-pushed tag.
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release $GITHUB_REF_NAME already exists. Bump the version instead of re-pushing the same tag."
+            exit 1
+          fi
+
       - name: Tag must be strict SemVer and greater than the latest tag
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"

@@ -85,8 +85,9 @@ image has one mental model — not three.
 Every step is idempotent; re-running a failed release is safe:
 
 - **`verify-version` failed** — fix the input (tag not on main, missing
-  image, version mismatch between library and standalone), delete and
-  re-cut the tag.
+  image, version mismatch between library and standalone) and **bump to
+  the next version**; the workflow refuses to re-run a tag that already
+  has a GitHub Release, so don't delete and re-push the same tag name.
 - **`publish-library` failed after `npm publish` succeeded** — the next
   run sees the version on npm and skips.
 - **`tag-docker-images` partially failed** — `docker buildx imagetools
