@@ -57,7 +57,7 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME is not strict SemVer MAJOR.MINOR.PATCH."
             exit 1
           fi
-          LATEST=$(git tag --list 'v*' --sort=-v:refname | grep -v "^${GITHUB_REF_NAME}$" | head -n1 | sed 's/^v//' || true)
+          LATEST=$(git tag --list 'v*' --sort=-v:refname | grep -Fxv "$GITHUB_REF_NAME" | head -n1 | sed 's/^v//' || true)
           if [ -n "$LATEST" ]; then
             HIGHEST=$(printf '%s\n%s\n' "$LATEST" "$TAG_VERSION" | sort -V | tail -n1)
             if [ "$HIGHEST" != "$TAG_VERSION" ] || [ "$LATEST" = "$TAG_VERSION" ]; then

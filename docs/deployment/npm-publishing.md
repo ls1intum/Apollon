@@ -77,8 +77,11 @@ image has one mental model — not three.
   scoped to `refs/tags/v*`.
 - **Tag only after** the push-to-main Docker build for that commit has
   finished green — the release workflow will fail fast otherwise.
-- **Tags are monotonic** — the workflow refuses a tag that is not
-  strictly greater than the latest released `v*` tag.
+- **Tags are strict SemVer, monotonic, and single-use.** The workflow
+  rejects prerelease (`-rc.1`) and build-metadata (`+…`) suffixes,
+  rejects any tag that isn't strictly greater than the latest `v*`
+  tag, and rejects any tag name that already has a GitHub Release
+  (even if the tag itself was deleted).
 
 ## Recovery
 
