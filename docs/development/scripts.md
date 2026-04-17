@@ -57,15 +57,6 @@ Here are the commonly used scripts defined in the monorepo:
   ```
   Starts Redis in Docker via `docker/compose.local.db.yml`.
 
-## Library Publishing
+## Releases
 
-- **Publish patch version:**
-
-  ```bash
-  npm run publish:library:patch
-  ```
-
-- **Publish minor version:**
-  ```bash
-  npm run publish:library:minor
-  ```
+Releases run entirely on GitHub Actions — there are no local publish scripts. Cut a release by dispatching the **Version Bump** workflow and merging the PR it opens. See [Releases](../deployment/npm-publishing.md) for the end-to-end flow.

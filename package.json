@@ -38,7 +38,7 @@
     "format:check": "prettier --ignore-path .prettierignore --check \"**/*.(js|ts|tsx|json)\"",
     "test": "npm run test --workspace=@tumaet/apollon",
     "test:e2e": "npm run test:e2e --workspace=@tumaet/webapp",
-    "preview": "husky",
+    "prepare": "husky || true",
     "capacitor:add:android": "npx cap add android",
     "capacitor:add:ios": "npx cap add ios",
     "capacitor:sync": "npx cap sync",
@@ -46,8 +46,6 @@
     "capacitor:open:ios": "npx cap open ios",
     "capacitor:assets:generate:ios": "npx capacitor-assets generate --ios",
     "capacitor:assets:generate:android": "npx capacitor-assets generate --android",
-    "publish:library:patch": "./scripts/publish-library-patch.sh",
-    "publish:library:minor": "./scripts/publish-library-minor.sh",
     "package:vscode": "npm run package --workspace=apollon-vscode"
   },
   "license": "MIT",

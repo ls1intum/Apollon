@@ -1,0 +1,170 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        type: choice
+        description: Which track to bump
+        required: true
+        options:
+          - library
+          - standalone
+      bump:
+        type: choice
+        description: Version bump type
+        required: true
+        options:
+          - patch
+          - minor
+          - major
+
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 22.14.0
+
+      - name: Set correct npm version
+        run: npm install -g npm@11.1.0
+
+      - name: Require changes in the scoped path since the last scoped tag
+        env:
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          git fetch --tags --quiet
+          if [ "$SCOPE" = "library" ]; then
+            LAST=$(git tag --list '@tumaet/apollon@*' --sort=-v:refname | head -n1)
+            PATH_PATTERN=library/
+          else
+            LAST=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+            PATH_PATTERN=standalone/
+          fi
+          if [ -n "$LAST" ] && git diff --quiet "$LAST"..HEAD -- "$PATH_PATTERN"; then
+            echo "::error::No changes under $PATH_PATTERN since $LAST. Refusing to cut an empty $SCOPE release."
+            exit 1
+          fi
+
+      - name: Bump version
+        id: bump
+        env:
+          SCOPE: ${{ inputs.scope }}
+          BUMP: ${{ inputs.bump }}
+        run: |
+          # scope=library  → bump library and standalone by $BUMP (standalone
+          #                  mirrors library, since a library minor ships a
+          #                  new feature to users of the standalone too).
+          # scope=standalone → bump standalone by $BUMP; library untouched.
+          if [ "$SCOPE" = "library" ]; then
+            (cd library && npm version "$BUMP" --no-git-tag-version)
+            LIB_VERSION=$(node -p "require('./library/package.json').version")
+          else
+            LIB_VERSION=""
+          fi
+
+          (cd standalone/webapp && npm version "$BUMP" --no-git-tag-version)
+          STANDALONE_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+          STANDALONE_VERSION="$STANDALONE_VERSION" node -e '
+            const fs = require("fs");
+            const v = process.env.STANDALONE_VERSION;
+            const pkg = JSON.parse(fs.readFileSync("standalone/server/package.json", "utf8"));
+            pkg.version = v;
+            fs.writeFileSync("standalone/server/package.json", JSON.stringify(pkg, null, 2) + "\n");
+          '
+
+          echo "library_version=${LIB_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "standalone_version=${STANDALONE_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Regenerate package-lock.json
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Commit bump
+        id: commit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LIB_VERSION: ${{ steps.bump.outputs.library_version }}
+          STANDALONE_VERSION: ${{ steps.bump.outputs.standalone_version }}
+          SCOPE: ${{ inputs.scope }}
+          BUMP: ${{ inputs.bump }}
+        run: |
+          if [ "$SCOPE" = "library" ]; then
+            BRANCH="chore/library-v${LIB_VERSION}"
+            COMMIT_TITLE="chore: release @tumaet/apollon@${LIB_VERSION} + standalone v${STANDALONE_VERSION}"
+          else
+            BRANCH="chore/standalone-v${STANDALONE_VERSION}"
+            COMMIT_TITLE="chore: release standalone v${STANDALONE_VERSION}"
+          fi
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "title=${COMMIT_TITLE}" >> "$GITHUB_OUTPUT"
+
+          # Refuse to overwrite a branch that already backs an open PR —
+          # would otherwise force-push through reviewer-visible work.
+          if gh pr list --head "$BRANCH" --state open --json number --jq 'length' | grep -q '^[1-9]'; then
+            echo "::error::An open PR already exists for branch $BRANCH. Close or merge it before rerunning."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          if [ "$SCOPE" = "library" ]; then
+            git add library/package.json standalone/webapp/package.json standalone/server/package.json package-lock.json
+          else
+            git add standalone/webapp/package.json standalone/server/package.json package-lock.json
+          fi
+
+          cat > /tmp/commit-msg.txt <<COMMIT_MSG
+          ${COMMIT_TITLE}
+
+          Scope: ${SCOPE} ${BUMP}
+          COMMIT_MSG
+          git commit -F /tmp/commit-msg.txt
+
+          git push --force-with-lease origin "$BRANCH"
+
+      - name: Open pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SCOPE: ${{ inputs.scope }}
+          BUMP: ${{ inputs.bump }}
+          LIB_VERSION: ${{ steps.bump.outputs.library_version }}
+          STANDALONE_VERSION: ${{ steps.bump.outputs.standalone_version }}
+          BRANCH: ${{ steps.commit.outputs.branch }}
+          TITLE: ${{ steps.commit.outputs.title }}
+        run: |
+          if [ "$SCOPE" = "library" ]; then
+            cat > /tmp/pr-body.md <<PR_BODY
+          **Scope:** \`library\` (\`${BUMP}\`)
+
+          Merging this PR publishes **both** artifacts automatically:
+
+          - \`@tumaet/apollon@${LIB_VERSION}\` to npm (via \`Release Library\`)
+          - Docker images tagged \`${STANDALONE_VERSION}\` (via \`Release Standalone\`, patch-bumped so the new library code can be cut as a Docker release)
+          PR_BODY
+          else
+            cat > /tmp/pr-body.md <<PR_BODY
+          **Scope:** \`standalone\` (\`${BUMP}\`)
+
+          Merging this PR cuts the standalone release automatically — \`Release Standalone\` retags Docker images as \`${STANDALONE_VERSION}\` and creates the GitHub Release. The library is untouched.
+          PR_BODY
+          fi
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "$TITLE" \
+            --body-file /tmp/pr-body.md

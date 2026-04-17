@@ -1,0 +1,99 @@
+name: Release Standalone
+
+on:
+  workflow_run:
+    workflows: [Build and Push Docker Image]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: release-standalone
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  check:
+    name: Check for new version
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
+      sha: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - id: v
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WEBAPP=$(node -p "require('./standalone/webapp/package.json').version")
+          SERVER=$(node -p "require('./standalone/server/package.json').version")
+          if [ "$WEBAPP" != "$SERVER" ]; then
+            echo "::error::standalone/webapp is $WEBAPP but standalone/server is $SERVER"
+            exit 1
+          fi
+          if [[ "$WEBAPP" == *-* || "$WEBAPP" == *+* ]]; then
+            echo "::error::standalone version $WEBAPP is not strict SemVer MAJOR.MINOR.PATCH."
+            exit 1
+          fi
+          if gh release view "v$WEBAPP" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$WEBAPP" >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Retag, sign, release, deploy
+    needs: [check]
+    if: needs.check.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # tag + GitHub Release
+      packages: write # retag images in GHCR
+      id-token: write # OIDC for keyless cosign signing
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ needs.check.outputs.sha }}
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+
+      - name: Retag and sign images
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+          COMMIT_SHA: ${{ needs.check.outputs.sha }}
+        run: |
+          for IMAGE in \
+            ghcr.io/ls1intum/apollon/apollon-webapp \
+            ghcr.io/ls1intum/apollon/apollon-server; do
+            docker buildx imagetools create --tag "$IMAGE:$VERSION" "$IMAGE:sha-$COMMIT_SHA"
+            DIGEST=$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{.Manifest.Digest}}')
+            cosign sign --yes "$IMAGE@$DIGEST"
+          done
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.check.outputs.version }}
+          COMMIT_SHA: ${{ needs.check.outputs.sha }}
+        run: |
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --target "$COMMIT_SHA" \
+            --generate-notes \
+            --notes "\`ghcr.io/ls1intum/apollon/apollon-{webapp,server}:${VERSION}\` — cosign-signed, retagged from \`sha-${COMMIT_SHA}\`."

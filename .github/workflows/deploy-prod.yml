@@ -5,7 +5,8 @@ on:
     inputs:
       image-tag:
         type: string
-        description: "Image tag to deploy (default: latest for main branch)"
+        required: true
+        description: "Image tag to deploy (e.g., 3.0.1 or sha-abc123)"
       deploy-app:
         type: boolean
         default: true
@@ -40,6 +41,8 @@ on:
 concurrency:
   group: deploy-production
   cancel-in-progress: false
+
+permissions: {}
 
 jobs:
   deploy-db:

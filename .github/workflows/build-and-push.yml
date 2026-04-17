@@ -14,7 +14,6 @@ concurrency:
 permissions:
   contents: read
   packages: write
-  pull-requests: read
 
 jobs:
   detect-changes:
@@ -25,7 +24,7 @@ jobs:
       docker-relevant: ${{ steps.filter.outputs.docker-relevant }}
       should-skip: ${{ steps.skip-check.outputs.should_skip }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - id: skip-check
         uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5
@@ -74,6 +73,7 @@ jobs:
       image-name: ${{ matrix.image }}
       docker-file: ${{ matrix.dockerfile }}
       docker-context: ${{ matrix.context }}
+      tags: "type=sha,format=long"
 
   # Gate job for required checks — handles skipped builds correctly
   docker-build-gate:
@@ -93,3 +93,13 @@ jobs:
             exit 1
           fi
           echo "Docker build passed or was skipped"
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [docker-build-gate, build-and-push-workflow]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.docker-build-gate.result == 'success' && needs.build-and-push-workflow.result == 'success'
+    uses: ./.github/workflows/deploy-staging.yml
+    with:
+      image-tag: sha-${{ github.sha }}
+      deploy-app: true
+    secrets: inherit

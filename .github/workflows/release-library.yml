@@ -1,0 +1,88 @@
+name: Release Library
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - library/package.json
+
+concurrency:
+  group: release-library
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  check:
+    name: Check for new version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      publish: ${{ steps.v.outputs.publish }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.sha }}
+
+      - id: v
+        run: |
+          VERSION=$(node -p "require('./library/package.json').version")
+          if [[ "$VERSION" == *-* || "$VERSION" == *+* ]]; then
+            echo "::error::library version $VERSION is not strict SemVer MAJOR.MINOR.PATCH."
+            exit 1
+          fi
+          PUBLISHED=$(npm view --json "@tumaet/apollon@$VERSION" version 2>/dev/null | tr -d '"' | tr -d '[:space:]' || true)
+          if [ "$PUBLISHED" = "$VERSION" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish and release
+    needs: [check]
+    if: needs.check.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm-publish
+    permissions:
+      contents: write # create tag + GitHub Release
+      id-token: write # OIDC for npm trusted publishing + provenance
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 22.14.0
+          registry-url: https://registry.npmjs.org/
+
+      - run: npm install -g npm@11.1.0
+
+      - run: npm ci
+
+      - run: npm run build
+        working-directory: library
+
+      - run: npm run test
+        working-directory: library
+
+      - run: npm publish --access public --tag latest --provenance
+        working-directory: library
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          TAG="@tumaet/apollon@${VERSION}"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --target "$GITHUB_SHA" \
+            --generate-notes \
+            --notes "[\`@tumaet/apollon@${VERSION}\`](https://www.npmjs.com/package/@tumaet/apollon/v/${VERSION}) published with \`--provenance\` via npm OIDC trusted publishing."
