@@ -18,8 +18,8 @@ FROM nginx:1.27-alpine AS runtime
 LABEL org.opencontainers.image.source="https://github.com/ls1intum/Apollon" \
       org.opencontainers.image.url="https://github.com/ls1intum/Apollon" \
       org.opencontainers.image.documentation="https://github.com/ls1intum/Apollon#readme" \
-      org.opencontainers.image.title="apollon-webapp" \
-      org.opencontainers.image.description="Apollon standalone webapp — the browser frontend of the Apollon UML modeling editor." \
+      org.opencontainers.image.title="Apollon Webapp" \
+      org.opencontainers.image.description="Browser-hosted web app for the Apollon UML modeling editor." \
       org.opencontainers.image.vendor="TUM Applied Education Technologies" \
       org.opencontainers.image.licenses="MIT"
 

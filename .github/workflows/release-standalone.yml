@@ -79,8 +79,8 @@ jobs:
           COMMIT_SHA: ${{ needs.check.outputs.sha }}
         run: |
           for IMAGE in \
-            ghcr.io/ls1intum/apollon/apollon-webapp \
-            ghcr.io/ls1intum/apollon/apollon-server; do
+            ghcr.io/ls1intum/apollon/webapp \
+            ghcr.io/ls1intum/apollon/server; do
             docker buildx imagetools create --tag "$IMAGE:$VERSION" "$IMAGE:sha-$COMMIT_SHA"
             DIGEST=$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{.Manifest.Digest}}')
             cosign sign --yes "$IMAGE@$DIGEST"
@@ -100,13 +100,13 @@ jobs:
             --generate-notes \
             --notes "## Docker images
 
-          - \`ghcr.io/ls1intum/apollon/apollon-webapp:${VERSION}\`
-          - \`ghcr.io/ls1intum/apollon/apollon-server:${VERSION}\`
+          - \`ghcr.io/ls1intum/apollon/webapp:${VERSION}\`
+          - \`ghcr.io/ls1intum/apollon/server:${VERSION}\`
 
           Signed with [Sigstore cosign](https://docs.sigstore.dev/cosign/verifying/verify/) (keyless, GitHub OIDC). Verify with:
 
           \`\`\`sh
-          cosign verify ghcr.io/ls1intum/apollon/apollon-webapp:${VERSION} \\
+          cosign verify ghcr.io/ls1intum/apollon/webapp:${VERSION} \\
             --certificate-identity-regexp='^https://github\\.com/ls1intum/Apollon/\\.github/workflows/release-standalone\\.yml@refs/heads/main\$' \\
             --certificate-oidc-issuer=https://token.actions.githubusercontent.com
           \`\`\`"

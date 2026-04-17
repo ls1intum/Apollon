@@ -1,81 +1,36 @@
 # Troubleshooting
 
-Common issues and their solutions when working with the Apollon monorepo.
+## Wrong Node.js version
 
-## Node.js Version Issues
-
-**Problem:** Encountering issues with Node.js versions or npm compatibility.
-
-**Solution:** Ensure you have the correct version installed by running:
-
-```bash
+```sh
 nvm use
 ```
 
-This will automatically switch to the Node.js version specified in the `.nvmrc` file.
+Picks up the version pinned in `.nvmrc`.
 
-## Package Build Failures
+## Build fails after a dependency change
 
-**Problem:** A package fails to build during the build process.
+```sh
+rm -rf node_modules package-lock.json
+npm install
+```
 
-**Solution:** Check the individual `package.json` for specific build scripts and dependencies. You can also try:
+Run from the monorepo root so npm workspaces resolve correctly.
 
-1. Clean install dependencies:
+## Docker ports in use
 
-   ```bash
-   rm -rf node_modules
-   npm install
-   ```
+`npm run dev` resolves port collisions automatically. For direct `docker compose` commands, stop whatever is holding the port and retry:
 
-2. Build packages individually:
-   ```bash
-   cd standalone/server
-   npm run build
-   ```
+```sh
+docker compose -f ./docker/compose.local.yml down
+docker compose -f ./docker/compose.local.yml up --build
+```
 
-## Workspace Dependencies
+## Capacitor (iOS / Android) mobile build fails
 
-**Problem:** Dependencies not resolving correctly in the monorepo.
+Install Xcode (iOS) or Android Studio (Android), then re-sync:
 
-**Solution:** Make sure you're running npm commands from the root of the monorepo to take advantage of npm workspaces.
-
-## Docker Issues
-
-**Problem:** Docker containers not starting or building correctly.
-
-**Solution:**
-
-1. Make sure Docker is running
-2. Check if ports are already in use
-3. Try rebuilding the containers:
-   ```bash
-   docker compose -f ./docker/compose.local.yml down
-   docker compose -f ./docker/compose.local.yml build --no-cache
-   docker compose -f ./docker/compose.local.yml up -d
-   ```
-
-## Environment Variables
-
-**Problem:** Application not working due to missing environment variables.
-
-**Solution:** Make sure you have created `.env` files based on the `.env.example` files in:
-
-- `standalone/webapp/`
-- `standalone/server/`
-
-## Mobile Development Issues
-
-**Problem:** Capacitor commands failing or mobile apps not building.
-
-**Solution:**
-
-1. Make sure you have the required mobile development tools installed (Xcode for iOS, Android Studio for Android)
-2. Sync Capacitor files:
-   ```bash
-   npm run capacitor:sync
-   ```
-3. Clean and rebuild:
-   ```bash
-   npm run build
-   npm run capacitor:sync
-   ```
+```sh
+npm run build
+npm run capacitor:sync
+```

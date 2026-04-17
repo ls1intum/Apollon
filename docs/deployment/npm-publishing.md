@@ -27,7 +27,7 @@ Both workflows trigger automatically when their version changes on `main`. There
 cosign verify \
   --certificate-identity-regexp='^https://github\.com/ls1intum/Apollon/\.github/workflows/release-standalone\.yml@refs/heads/main$' \
   --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
-  ghcr.io/ls1intum/apollon/apollon-server:<version>
+  ghcr.io/ls1intum/apollon/server:<version>
 ```
 
 ## One-time setup

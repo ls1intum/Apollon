@@ -4,7 +4,7 @@ Ensure you have the following installed:
 
 ## Node.js
 
-This project uses a specific Node.js version as indicated in the `.nvmrc` file.
+The required Node.js version is pinned in `.nvmrc`.
 
 Use [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm) to install/manage Node versions:
 
@@ -28,7 +28,7 @@ nvm use
 
 ## npm
 
-This monorepo uses npm workspaces, which are supported out-of-the-box in npm 7+.
+Apollon uses npm workspaces, which require npm 7 or newer.
 
 npm comes with Node.js. Verify your npm version:
 

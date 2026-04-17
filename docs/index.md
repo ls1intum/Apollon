@@ -1,14 +1,18 @@
-# Apollon: Reengineered Diagram Editor
+# Apollon
 
 ```{figure} ./images/ApollomitLyraundSonnensymbolen.png
 :width: 200px
-Apollon /əˈpɒlən/ is the Greek god of music, prophecy, healing, and the sun, embodying the harmony of intellectual clarity and artistic expression.
 ```
 
-## Main Features
+Apollon is an open-source UML modeling editor for the web. It publishes the embeddable [`@tumaet/apollon`](https://www.npmjs.com/package/@tumaet/apollon) React library and ships a standalone web app + server built on top of it.
 
-1. **Diagram editing** - **Interactive Node and Edge Design:** Supports UML class diagrams with custom nodes, draggable interfaces, and live property editing. - **SVG Rendering:** Clean export to SVG without reliance on embedded HTML (foreignObject), making it perfect for printing or archiving.
-   Intuitive Diagram Editing
+## What you can draw
+
+13 UML and modeling diagram types: Class, Object, Activity, Use Case, Communication, Component, Deployment, Petri Net, Reachability Graph, Syntax Tree, Flowchart, BPMN, and SFC.
+
+## What you can export
+
+SVG, PNG, PDF, and JSON.
 
 ```{toctree}
 :caption: Getting Started

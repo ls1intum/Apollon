@@ -1,39 +1,39 @@
-# Project Structure
+# Project structure
 
-Here is a brief overview of the Apollon monorepo structure:
+Apollon is an npm-workspaces monorepo. Top-level layout:
 
 ```
-apollon/
+Apollon/
+├── library/                  # @tumaet/apollon — npm library
+│   ├── lib/                  # TypeScript source
+│   ├── tests/
+│   └── package.json
 ├── standalone/
-│   ├── server/
+│   ├── server/               # @tumaet/server — Express + Redis + WebSocket relay
 │   │   ├── src/
-│   │   ├── package.json
-│   │   └── ...
-│   └── webapp/
+│   │   ├── Dockerfile
+│   │   └── package.json
+│   └── webapp/               # @tumaet/webapp — the browser-hosted app
 │       ├── src/
-│       ├── package.json
-│       └── ...
-├── library
-│   ├── src/
-│   ├── package.json
-|   └── ...
-│
-├── .nvmrc                # Specifies the Node.js version
-├── .prettierrc           # Configuration file for formating typescript files
-├── commitlint.config.mj  # Checking commit messages in format
-└── README.md             # Project documentation
+│       ├── tests/            # Playwright e2e + visual regression
+│       ├── Dockerfile
+│       └── package.json
+├── vscode-extension/         # apollon-vscode — VS Code extension (webviews in editor/ and menu/)
+├── docker/                   # Compose files for local + production
+├── docs/                     # Documentation sources (this directory)
+├── scripts/                  # dev.mjs and other monorepo helpers
+├── .github/workflows/        # CI, release, and deploy workflows
+├── .nvmrc                    # Node.js version (consumed by nvm)
+├── commitlint.config.mjs     # Conventional-commits enforcement
+├── package.json              # Root workspace manifest
+└── README.md
 ```
 
-## Package Overview
+## Workspaces
 
-### Library Package
-
-The `library` package contains the core Apollon editor components and utilities that can be used as a standalone library.
-
-### Standalone Server
-
-The `standalone/server` package provides the REST API, WebSocket relay, and diagram persistence (Redis) for the Apollon application.
-
-### Standalone Webapp
-
-The `standalone/webapp` package contains the web application that uses the library package.
+| Workspace                 | Name                | Published as                                           |
+| ------------------------- | ------------------- | ------------------------------------------------------ |
+| `library/`                | `@tumaet/apollon`   | [npm](https://www.npmjs.com/package/@tumaet/apollon)   |
+| `standalone/webapp/`      | `@tumaet/webapp`    | `ghcr.io/ls1intum/apollon/webapp`                      |
+| `standalone/server/`      | `@tumaet/server`    | `ghcr.io/ls1intum/apollon/server`                      |
+| `vscode-extension/`       | `apollon-vscode`    | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |

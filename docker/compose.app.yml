@@ -1,6 +1,6 @@
 services:
   webapp:
-    image: "ghcr.io/ls1intum/apollon/apollon-webapp:${IMAGE_TAG:-latest}"
+    image: "ghcr.io/ls1intum/apollon/webapp:${IMAGE_TAG:-latest}"
     restart: unless-stopped
     expose:
       - "8080"
@@ -11,7 +11,15 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/",
+        ]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -23,7 +31,7 @@ services:
         max-file: "5"
 
   server:
-    image: "ghcr.io/ls1intum/apollon/apollon-server:${IMAGE_TAG:-latest}"
+    image: "ghcr.io/ls1intum/apollon/server:${IMAGE_TAG:-latest}"
     expose:
       - "8000"
       - "4444"
@@ -43,7 +51,13 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:8000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:8000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
