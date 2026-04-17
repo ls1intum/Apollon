@@ -1,10 +1,40 @@
 {
   "name": "@tumaet/apollon",
   "version": "4.2.18",
+  "description": "An embeddable UML modeling editor for React. 13 diagram types, SVG/PNG/PDF/JSON export, optional real-time collaboration via Yjs.",
+  "keywords": [
+    "apollon",
+    "uml",
+    "diagram",
+    "editor",
+    "modeling",
+    "react",
+    "typescript",
+    "collaborative",
+    "yjs",
+    "bpmn"
+  ],
+  "homepage": "https://github.com/ls1intum/Apollon#readme",
+  "bugs": {
+    "url": "https://github.com/ls1intum/Apollon/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ls1intum/Apollon.git",
+    "directory": "library"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "TUM Applied Education Technologies",
+    "url": "https://aet.cit.tum.de/"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "source": "lib/index.tsx",
+  "engines": {
+    "node": ">=22.14.0"
+  },
   "publishConfig": {
     "access": "public"
   },
