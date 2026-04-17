@@ -1,0 +1,35 @@
+name: GHCR Cleanup
+
+on:
+  schedule:
+    - cron: "0 3 * * 0" # Sundays at 03:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: ghcr-cleanup
+  cancel-in-progress: false
+
+permissions:
+  packages: write
+
+jobs:
+  prune-sha-tags:
+    name: Prune old sha-* tags
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        package:
+          - apollon/apollon-webapp
+          - apollon/apollon-server
+    steps:
+      - name: Delete stale sha-tagged versions
+        uses: snok/container-retention-policy@4f22ef80902ad409ed55a99dc5133cc1250a0d03 # v3.0.0
+        with:
+          account: ls1intum
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: ${{ matrix.package }}
+          image-tags: "sha-*"
+          tag-selection: tagged
+          cut-off: 30d
+          keep-n-most-recent: 20

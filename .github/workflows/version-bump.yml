@@ -19,9 +19,18 @@ on:
           - minor
           - major
 
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   bump:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
 
@@ -29,7 +38,10 @@ jobs:
         with:
           node-version: 22.14.0
 
-      - name: Bump version
+      - name: Set correct npm version
+        run: npm install -g npm@11.1.0
+
+      - name: Bump versions
         id: bump
         run: |
           SCOPE="${{ inputs.scope }}"
@@ -37,10 +49,8 @@ jobs:
 
           if [ "$SCOPE" = "library" ]; then
             # Library changed: bump library, then sync standalone to match
-            cd library
-            npm version "$BUMP" --no-git-tag-version
-            NEW_VERSION=$(node -p "require('./package.json').version")
-            cd ..
+            (cd library && npm version "$BUMP" --no-git-tag-version)
+            NEW_VERSION=$(node -p "require('./library/package.json').version")
 
             node -e "
               const fs = require('fs');
@@ -51,11 +61,9 @@ jobs:
               }
             "
           else
-            # Standalone only: bump standalone, leave library as-is
-            cd standalone/webapp
-            npm version "$BUMP" --no-git-tag-version
-            NEW_VERSION=$(node -p "require('./package.json').version")
-            cd ../..
+            # Standalone only: bump webapp, sync server
+            (cd standalone/webapp && npm version "$BUMP" --no-git-tag-version)
+            NEW_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
 
             node -e "
               const fs = require('fs');
@@ -67,30 +75,39 @@ jobs:
 
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Regenerate package-lock.json
+        run: npm install --package-lock-only --ignore-scripts
+
       - name: Create Pull Request
         run: |
           VERSION="${{ steps.bump.outputs.version }}"
           SCOPE="${{ inputs.scope }}"
+          BUMP="${{ inputs.bump }}"
           BRANCH="chore/release-v${VERSION}"
 
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
-          git add library/package.json standalone/webapp/package.json standalone/server/package.json
-          git commit -m "chore: bump version to $VERSION ($SCOPE ${{ inputs.bump }})"
+          git add library/package.json standalone/webapp/package.json standalone/server/package.json package-lock.json
+          git commit -m "chore: release v${VERSION}
+
+          Scope: ${SCOPE} ${BUMP}"
           git push origin "$BRANCH"
 
           gh pr create \
             --base main \
             --head "$BRANCH" \
             --title "chore: release v${VERSION}" \
-            --body "**Scope:** $SCOPE ${{ inputs.bump }}
+            --body "**Scope:** \`${SCOPE}\` (\`${BUMP}\`)
 
-          After merging, create the release:
-          \`\`\`
+          After this PR is merged, cut the release by pushing the matching tag from \`main\`:
+
+          \`\`\`sh
           git checkout main && git pull
           git tag v${VERSION}
           git push origin v${VERSION}
-          \`\`\`"
+          \`\`\`
+
+          The \`Release\` workflow will then publish the library to npm (if the library version is new), retag Docker images from \`sha-<commit>\` to \`${VERSION}\`, create the GitHub Release, and deploy to staging."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

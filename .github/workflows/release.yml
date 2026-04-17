@@ -18,12 +18,23 @@ jobs:
   verify-version:
     name: Verify Version
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.version }}
       library-version: ${{ steps.version.outputs.library-version }}
       publish-library: ${{ steps.version.outputs.publish-library }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Tag must point to a commit on main
+        run: |
+          git fetch origin main --depth=1
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on main. Refusing to release."
+            exit 1
+          fi
 
       - name: Extract and verify version
         id: version
@@ -33,7 +44,7 @@ jobs:
           WEBAPP_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
           SERVER_VERSION=$(node -p "require('./standalone/server/package.json').version")
 
-          # Tag must match standalone versions
+          # Tag must match standalone versions (library is independent)
           if [ "$WEBAPP_VERSION" != "$TAG_VERSION" ]; then
             echo "::error::standalone/webapp/package.json has $WEBAPP_VERSION but tag is v$TAG_VERSION"
             exit 1
@@ -43,7 +54,7 @@ jobs:
             exit 1
           fi
 
-          # Check if this library version is already on npm
+          # Publish library only if this version is not already on npm
           PUBLISHED=$(npm view @tumaet/apollon@"$LIB_VERSION" version 2>/dev/null || echo "")
           if [ "$PUBLISHED" = "$LIB_VERSION" ]; then
             echo "Library v$LIB_VERSION already on npm — skipping publish"
@@ -56,11 +67,23 @@ jobs:
           echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
           echo "library-version=$LIB_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Verify Docker images exist for this commit
+        run: |
+          for IMAGE in \
+            ghcr.io/ls1intum/apollon/apollon-webapp \
+            ghcr.io/ls1intum/apollon/apollon-server; do
+            if ! docker buildx imagetools inspect "$IMAGE:sha-$GITHUB_SHA" > /dev/null 2>&1; then
+              echo "::error::Missing image $IMAGE:sha-$GITHUB_SHA. Push to main must build images before this tag can be released."
+              exit 1
+            fi
+          done
+
   publish-library:
     name: Publish Library to npm
     needs: [verify-version]
     if: needs.verify-version.outputs.publish-library == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: npm-publish
     permissions:
       contents: read
@@ -95,6 +118,7 @@ jobs:
     name: Tag Docker Images
     needs: [verify-version]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       packages: write
     strategy:
@@ -123,9 +147,10 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [verify-version, tag-docker-images]
-    if: always() && needs.tag-docker-images.result == 'success'
+    needs: [verify-version, publish-library, tag-docker-images]
+    if: always() && needs.tag-docker-images.result == 'success' && (needs.publish-library.result == 'success' || needs.publish-library.result == 'skipped')
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
@@ -136,6 +161,14 @@ jobs:
         with:
           name: "v${{ needs.verify-version.outputs.version }}"
           generate_release_notes: true
+          append_body: true
+          body: |
+            ---
+
+            **Library:** [`@tumaet/apollon@${{ needs.verify-version.outputs.library-version }}`](https://www.npmjs.com/package/@tumaet/apollon/v/${{ needs.verify-version.outputs.library-version }})
+            **Docker images:**
+            - `ghcr.io/ls1intum/apollon/apollon-webapp:${{ needs.verify-version.outputs.version }}`
+            - `ghcr.io/ls1intum/apollon/apollon-server:${{ needs.verify-version.outputs.version }}`
           prerelease: false
 
   deploy-staging:

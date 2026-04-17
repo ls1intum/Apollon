@@ -1,38 +1,77 @@
-# Publishing Library to NPM
+# Publishing the library to npm
 
-Publish a new patch or minor version of the library package to npm using npm scripts or GitHub Actions.
+The `@tumaet/apollon` library is published to npm by the **Release** workflow
+(`.github/workflows/release.yml`) whenever a tag matching `v*` is pushed to
+`main`. There are no local publish scripts — the flow is entirely
+GitHub-driven.
 
-Alpha prerelease versions (e.g., 4.0.3-alpha.0) are created with prepatch or preminor, later updated to stable (e.g., 4.0.3 or 4.1.0).
+## Trust model
 
-## Version Increments
+- npm publishing uses **OIDC trusted publishing** via the `npm-publish` GitHub
+  Environment. No `NPM_TOKEN` secret is used.
+- Provenance is attested (`npm publish --provenance`), so the npm page shows
+  "Built and signed on GitHub Actions".
+- The trusted publisher configuration on npmjs.com must include this
+  repository and the `Release` workflow.
 
-- **Patch:** 4.0.2 → 4.0.3-alpha.0 → 4.0.3 (bug fixes)
-- **Minor:** 4.0.2 → 4.1.0-alpha.0 → 4.1.0 (new features)
+## End-to-end flow
 
-## Local Publishing
+1. **Bump versions.** Actions → **Version Bump** → pick a scope and bump type.
+   The workflow opens a PR that updates the relevant `package.json` files
+   and the root `package-lock.json`.
 
-Run from the monorepo root:
+   | Scope | What it bumps | When |
+   | ----- | ------------- | ---- |
+   | `library` | `library/package.json` + both `standalone/*/package.json` (standalone follows library) | Library code changed |
+   | `standalone` | Only `standalone/webapp/package.json` and `standalone/server/package.json` | Server or webapp change, library unchanged |
 
-```bash
-npm run publish:library:patch  # For patch (scripts/publish-library-patch.sh)
-npm run publish:library:minor  # For minor (scripts/publish-library-minor.sh)
-```
+2. **Merge the bump PR.** Push to `main` triggers the normal
+   **Build and Push Docker Image** workflow, which tags images as
+   `sha-<commit>` and auto-deploys them to staging.
 
-## GitHub Actions
+3. **Cut the release tag from `main`:**
 
-Trigger the Publish Library Patch Version workflow (`.github/workflows/publish-library-patch.yml`) in GitHub Actions.
+   ```sh
+   git checkout main && git pull
+   git tag v<version>
+   git push origin v<version>
+   ```
 
-Same as local script but automated.
+   The tag version must match the **standalone** version; the library version
+   is independent and published only when it is new on npm.
 
-There is also workflow for minor version bump.
+4. **The `Release` workflow:**
+   - Verifies the tag commit is an ancestor of `main`.
+   - Verifies `library` / `standalone` versions match the tag.
+   - Verifies both Docker images `sha-<commit>` exist in GHCR.
+   - Publishes the library to npm with provenance (skipped if the version is
+     already on the registry).
+   - Retags Docker images from `sha-<commit>` to `<version>`.
+   - Creates a GitHub Release with auto-generated notes + a footer that pins
+     the library version and Docker image tags.
+   - Deploys `<version>` to staging.
 
-### Requirements
+5. **Promote to production.** Actions → **Deploy to Production** → enter the
+   image tag (e.g. `4.2.19`) and run.
 
-- **NPM_TOKEN** in repository secrets
-- Currently temporarily classic token from npm is used
+## Version-tracking model
 
-## Notes
+Two independent version streams:
 
-- Alpha versions are for testing; update to stable after PR approval
-- Make sure all tests pass before publishing
-- Follow semantic versioning guidelines
+| | Source | Artifact |
+| - | - | - |
+| **Library** | `library/package.json` | `@tumaet/apollon` on npm |
+| **Standalone** | `standalone/{webapp,server}/package.json` | `ghcr.io/ls1intum/apollon/apollon-{webapp,server}` Docker images |
+
+The release tag always matches the standalone version. The library version is
+published when it is not already on npm — so a `standalone`-scope bump cuts a
+new Docker release without republishing the library, and a `library`-scope bump
+publishes a new npm version and ships the same version to Docker in a single
+tag.
+
+## No alpha / prerelease flow
+
+The previous `prepatch --preid=alpha` workflow has been retired. If you need a
+prerelease channel, introduce it deliberately (new `dist-tag`, dedicated
+workflow) rather than ad-hoc — the current pipeline assumes stable releases on
+the `latest` tag.
