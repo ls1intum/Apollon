@@ -34,9 +34,15 @@ jobs:
             exit 1
           fi
 
-      - name: Tag must be greater than the latest released tag
+      - name: Tag must be strict SemVer and greater than the latest tag
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          # Prerelease / build-metadata tags are not supported by this
+          # pipeline (sort -V orders them wrong for SemVer).
+          if [[ "$TAG_VERSION" == *-* || "$TAG_VERSION" == *+* ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME is not strict SemVer MAJOR.MINOR.PATCH."
+            exit 1
+          fi
           LATEST=$(git tag --list 'v*' --sort=-v:refname | grep -v "^${GITHUB_REF_NAME}$" | head -n1 | sed 's/^v//' || true)
           if [ -n "$LATEST" ]; then
             HIGHEST=$(printf '%s\n%s\n' "$LATEST" "$TAG_VERSION" | sort -V | tail -n1)
@@ -73,7 +79,7 @@ jobs:
           # the registry. Server-only hotfixes that republish unchanged
           # library content still bump the monorepo version and take this
           # path — expected under the fixed-versioning model.
-          PUBLISHED=$(npm view --json "@tumaet/apollon@$LIB_VERSION" version 2>/dev/null | tr -d '"[:space:]' || true)
+          PUBLISHED=$(npm view --json "@tumaet/apollon@$LIB_VERSION" version 2>/dev/null | tr -d '"' | tr -d '[:space:]' || true)
           if [ "$PUBLISHED" = "$LIB_VERSION" ]; then
             echo "Library v$LIB_VERSION already on npm — skipping publish"
             echo "publish-library=false" >> "$GITHUB_OUTPUT"

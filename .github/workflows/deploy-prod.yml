@@ -41,6 +41,8 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 
+permissions: {}
+
 jobs:
   deploy-db:
     if: ${{ inputs.deploy-db }}

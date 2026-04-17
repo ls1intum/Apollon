@@ -59,8 +59,14 @@ image has one mental model — not three.
   transparency log entry for the build.
 - Docker images are signed keyless with
   [cosign](https://github.com/sigstore/cosign) (OIDC-backed) when they
-  are retagged from `sha-<commit>` to `<version>`. Verify with
-  `cosign verify --certificate-identity-regexp='https://github.com/ls1intum/Apollon/\.github/workflows/release\.yml@.*' --certificate-oidc-issuer=https://token.actions.githubusercontent.com ghcr.io/ls1intum/apollon/apollon-server:<version>`.
+  are retagged from `sha-<commit>` to `<version>`. Verify with:
+
+  ```sh
+  cosign verify \
+    --certificate-identity-regexp='^https://github\.com/ls1intum/Apollon/\.github/workflows/release\.yml@refs/tags/v.*$' \
+    --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
+    ghcr.io/ls1intum/apollon/apollon-server:<version>
+  ```
 
 ## Prerequisites
 
