@@ -5,9 +5,9 @@ Two independently versioned artifacts, each with its own release workflow:
 | Artifact | Version source | Tag | Workflow |
 | -------- | -------------- | --- | -------- |
 | `@tumaet/apollon` (npm) | `library/package.json` | `@tumaet/apollon@X.Y.Z` | `release-library.yml` |
-| Standalone Docker images | `standalone/{webapp,server}/package.json` | `standalone-vX.Y.Z` | `release-standalone.yml` |
+| Standalone Docker images | `standalone/{webapp,server}/package.json` | `vX.Y.Z` | `release-standalone.yml` |
 
-Standalone tags are prefixed because plain `vX.Y.Z` tags collide with legacy Apollon releases on this repo's history.
+Standalone starts at `4.2.18` (the library version at the time of the release-pipeline switchover). Future `vX.Y.Z` tags advance from there and do not collide with legacy tags.
 
 Both workflows trigger automatically when their version changes on `main`. There is **one** manual step per release: merge the bump PR.
 
@@ -18,7 +18,7 @@ Both workflows trigger automatically when their version changes on `main`. There
    - **`standalone`** bumps only `standalone/{webapp,server}/package.json`; the library is untouched.
 2. On merge:
    - `release-library.yml` fires when `library/package.json` changes: `npm publish --provenance` → tag `@tumaet/apollon@X.Y.Z` → GitHub Release. Skipped if the version is already on npm.
-   - `release-standalone.yml` fires after the push-to-main Docker build succeeds: retag `sha-<commit>` → `X.Y.Z` → cosign-sign → tag `standalone-vX.Y.Z` → GitHub Release. Staging is already running the same digest under the `sha-<commit>` tag from the push-to-main deploy, so no second deploy is needed. Skipped if a release for that version already exists.
+   - `release-standalone.yml` fires after the push-to-main Docker build succeeds: retag `sha-<commit>` → `X.Y.Z` → cosign-sign → tag `vX.Y.Z` → GitHub Release. Staging is already running the same digest under the `sha-<commit>` tag from the push-to-main deploy, so no second deploy is needed. Skipped if a release for that version already exists.
 3. Promote to production: Actions → **Deploy to Production** → `image-tag: X.Y.Z`.
 
 ## Verify a Docker image signature
