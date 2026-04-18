@@ -55,4 +55,4 @@ We accept no liability for any loss or damage caused by using this platform. The
 
 ## Data Protection
 
-See the [Privacy Statement](/privacy) for information on how TUM processes personal data in connection with Apollon.
+See the [Privacy](/privacy) page for how TUM processes personal data in connection with Apollon.

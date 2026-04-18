@@ -50,6 +50,16 @@ deployment/npm-publishing
 ```
 
 ```{toctree}
+:caption: Administration
+:includehidden:
+:maxdepth: 2
+
+admin/legal-pages
+admin/dsms/README
+admin/dsms/SUBMISSION-GUIDE
+```
+
+```{toctree}
 :caption: Troubleshooting
 :includehidden:
 :maxdepth: 2
