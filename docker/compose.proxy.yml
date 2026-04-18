@@ -41,7 +41,7 @@ services:
       - "traefik.http.middlewares.secure-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
       - "traefik.http.middlewares.secure-headers.headers.permissionsPolicy=camera=(), microphone=(), geolocation=()"
     healthcheck:
-      test: "wget -qO- http://localhost:80/ping || exit 1"
+      test: "wget -qO- http://127.0.0.1:80/ping || exit 1"
       interval: 5s
       timeout: 3s
       retries: 5
@@ -75,7 +75,7 @@ services:
       - "traefik.http.routers.http-maintenance.priority=1"
       - "traefik.http.routers.https-maintenance.priority=1"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
       interval: 30s
       timeout: 5s
       retries: 5
