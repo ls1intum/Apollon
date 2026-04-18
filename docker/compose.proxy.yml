@@ -28,7 +28,7 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@tum.de}"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@tum.de"
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.errorpage.errors.status=501,502,503,504"
