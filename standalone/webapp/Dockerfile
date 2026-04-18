@@ -27,9 +27,11 @@ RUN rm /etc/nginx/conf.d/default.conf
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/standalone/webapp/dist /usr/share/nginx/html
+COPY standalone/webapp/docker/entrypoint.sh /docker-entrypoint.d/40-apollon-env.sh
 
-# Prepare directories for non-root nginx
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
+# Prepare directories for non-root nginx; allow the entrypoint to write env.js.
+RUN chmod +x /docker-entrypoint.d/40-apollon-env.sh && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
     touch /var/run/nginx.pid && \

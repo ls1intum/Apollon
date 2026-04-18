@@ -6,6 +6,8 @@ import {
   ApollonPlayground,
   ApollonWithConnection,
   ErrorPage,
+  ImprintPage,
+  PrivacyPage,
 } from "@/pages"
 import { SafeArea } from "capacitor-plugin-safe-area"
 import { ToastContainer } from "react-toastify"
@@ -48,6 +50,8 @@ function App() {
             <Routes>
               <Route path="/" element={<ApollonLocal />} />
               <Route path="/playground" element={<ApollonPlayground />} />
+              <Route path="/imprint" element={<ImprintPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/:diagramId" element={<ApollonWithConnection />} />
               <Route path="*" element={<ErrorPage />} />
             </Routes>
