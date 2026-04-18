@@ -112,93 +112,130 @@ export function LegalPage({
   }, [page, profile, resolver])
 
   return (
-    <Container
-      component="main"
-      maxWidth="md"
+    <Box
       sx={{
-        py: { xs: 4, md: 6 },
-        overflowY: "auto",
         height: "100%",
+        overflowY: "auto",
+        bgcolor: "var(--apollon-background)",
+        color: "var(--apollon-primary-contrast)",
       }}
     >
-      <Typography variant="h3" component="h1" gutterBottom>
-        {title}
-      </Typography>
-
-      {resolved?.source === "disclaimer" ? (
-        <Alert
-          severity="error"
-          role="alert"
-          data-testid="legal-disclaimer-banner"
-          sx={{ my: 2 }}
-        >
-          {DISCLAIMER_BANNER}
-        </Alert>
-      ) : null}
-
-      {error ? (
-        <Alert severity="error" role="alert" sx={{ my: 2 }}>
-          {ERROR_COPY}
-        </Alert>
-      ) : null}
-
-      {resolved ? (
-        <Box
-          component="article"
-          lang="en"
-          data-testid="legal-content"
-          data-source={resolved.source}
+      <Container
+        component="main"
+        maxWidth="md"
+        sx={{
+          py: { xs: 3, md: 6 },
+          px: { xs: 2, sm: 3 },
+        }}
+      >
+        <Typography
+          variant="h3"
+          component="h1"
+          gutterBottom
           sx={{
-            "& h1, & h2, & h3, & h4, & h5, & h6": {
-              mt: 3,
-              mb: 1,
-              fontWeight: 600,
-            },
-            "& p, & ul, & ol": { mb: 2, lineHeight: 1.7 },
-            "& ul, & ol": { pl: 3 },
-            "& li": { mb: 0.5 },
-            "& a": { textDecoration: "underline" },
-            "& table": {
-              borderCollapse: "collapse",
-              width: "100%",
-              my: 2,
-            },
-            "& th, & td": {
-              border: "1px solid",
-              borderColor: "divider",
-              p: 1,
-              textAlign: "left",
-            },
-            "& code": {
-              bgcolor: "action.hover",
-              px: 0.5,
-              borderRadius: 0.5,
-              fontSize: "0.95em",
-            },
-            "& pre": {
-              bgcolor: "action.hover",
-              p: 2,
-              borderRadius: 1,
-              overflowX: "auto",
-            },
-            "& blockquote": {
-              borderLeft: "4px solid",
-              borderColor: "divider",
-              pl: 2,
-              my: 2,
-              color: "text.secondary",
-            },
+            color: "var(--apollon-primary-contrast)",
+            fontSize: { xs: "1.8rem", md: "2.5rem" },
           }}
         >
-          <ReactMarkdown
-            skipHtml
-            remarkPlugins={[remarkGfm]}
-            components={MARKDOWN_COMPONENTS}
+          {title}
+        </Typography>
+
+        {resolved?.source === "disclaimer" ? (
+          <Alert
+            severity="error"
+            role="alert"
+            data-testid="legal-disclaimer-banner"
+            sx={{ my: 2 }}
           >
-            {resolved.markdown}
-          </ReactMarkdown>
-        </Box>
-      ) : null}
-    </Container>
+            {DISCLAIMER_BANNER}
+          </Alert>
+        ) : null}
+
+        {error ? (
+          <Alert severity="error" role="alert" sx={{ my: 2 }}>
+            {ERROR_COPY}
+          </Alert>
+        ) : null}
+
+        {resolved ? (
+          <Box
+            component="article"
+            lang="en"
+            data-testid="legal-content"
+            data-source={resolved.source}
+            sx={{
+              overflowWrap: "anywhere",
+              wordBreak: "break-word",
+              color: "var(--apollon-primary-contrast)",
+              "& h1, & h2, & h3, & h4, & h5, & h6": {
+                mt: 3,
+                mb: 1,
+                fontWeight: 600,
+                lineHeight: 1.3,
+                color: "var(--apollon-primary-contrast)",
+              },
+              "& h2": { fontSize: { xs: "1.35rem", md: "1.5rem" } },
+              "& h3": { fontSize: { xs: "1.15rem", md: "1.25rem" } },
+              "& p, & ul, & ol": { mb: 2, lineHeight: 1.7 },
+              "& ul, & ol": { pl: 3 },
+              "& li": { mb: 0.5 },
+              "& a": {
+                color: "var(--apollon-primary)",
+                textDecoration: "underline",
+              },
+              // Tables are authored by operators; on narrow screens let them
+              // scroll horizontally rather than break the page layout.
+              "& table": {
+                display: "block",
+                overflowX: "auto",
+                borderCollapse: "collapse",
+                width: "100%",
+                my: 2,
+                WebkitOverflowScrolling: "touch",
+              },
+              "& th, & td": {
+                border: "1px solid var(--apollon-gray)",
+                p: 1,
+                textAlign: "left",
+                verticalAlign: "top",
+              },
+              "& th": { bgcolor: "var(--apollon-background-variant)" },
+              "& code": {
+                bgcolor: "var(--apollon-background-variant)",
+                px: 0.5,
+                borderRadius: 0.5,
+                fontSize: "0.95em",
+                wordBreak: "break-all",
+              },
+              "& pre": {
+                bgcolor: "var(--apollon-background-variant)",
+                p: 2,
+                borderRadius: 1,
+                overflowX: "auto",
+              },
+              "& blockquote": {
+                borderLeft: "4px solid var(--apollon-gray)",
+                pl: 2,
+                my: 2,
+                color: "var(--apollon-gray)",
+              },
+              "& hr": {
+                border: "none",
+                borderTop: "1px solid var(--apollon-gray)",
+                my: 3,
+              },
+            }}
+          >
+            <ReactMarkdown
+              skipHtml
+              remarkPlugins={[remarkGfm]}
+              components={MARKDOWN_COMPONENTS}
+            >
+              {resolved.markdown}
+            </ReactMarkdown>
+          </Box>
+        ) : null}
+      </Container>
+    </Box>
   )
 }

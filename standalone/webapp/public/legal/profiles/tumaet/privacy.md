@@ -4,22 +4,22 @@ Privacy Statement for Apollon in accordance with Art. 13 GDPR.
 
 ## 1. Controller
 
-Technical University of Munich (Technische Universität München)
-Arcisstraße 21, 80333 Munich, Germany
+Technical University of Munich (Technische Universität München)  
+Arcisstraße 21, 80333 Munich, Germany  
 represented by its President, Prof. Dr. Thomas F. Hofmann.
 
 Operational responsibility for Apollon lies with:
 
-Research Group for Applied Education Technologies (AET)
-TUM School of Computation, Information and Technology
-Department of Computer Science
-Boltzmannstraße 3, 85748 Garching bei München, Germany
+Research Group for Applied Education Technologies (AET)  
+TUM School of Computation, Information and Technology  
+Department of Computer Science  
+Boltzmannstraße 3, 85748 Garching bei München, Germany  
 Email: [ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de)
 
 ## 2. Data Protection Officer
 
-Technical University of Munich — Office of the Data Protection Officer
-Arcisstraße 21, 80333 Munich, Germany
+Technical University of Munich — Office of the Data Protection Officer  
+Arcisstraße 21, 80333 Munich, Germany  
 Email: [beauftragter@datenschutz.tum.de](mailto:beauftragter@datenschutz.tum.de)
 
 ## 3. What Apollon is and how data flows
@@ -30,11 +30,23 @@ Apollon has **no user accounts, no login, no cookies, and no analytics or tracki
 
 ## 4. What personal data we process
 
-| Category | What | Where | Basis |
-|---|---|---|---|
-| Server access logs | IP address, timestamp, HTTP method, URL, status code, user-agent, referrer | Reverse-proxy and application logs on TUM infrastructure | Art. 6(1)(e) GDPR + Art. 4 BayHIG + Art. 25 BayDSG — operation and security of a university IT service |
-| WebSocket relay | Connection metadata while a diagram session is open; messages are forwarded in memory and not logged | Server process memory only | Art. 6(1)(e) GDPR + Art. 4 BayHIG |
-| Diagram content | The diagram data you author, including any free text you enter into labels | Redis (TUM-hosted), per-diagram TTL of 120 days | Art. 6(1)(e) GDPR + Art. 4 BayHIG |
+### Server access logs
+
+- **What:** IP address, timestamp, HTTP method, URL, status code, user-agent, referrer.
+- **Where:** reverse-proxy and application logs on TUM infrastructure.
+- **Legal basis:** Art. 6(1)(e) GDPR + Art. 4 BayHIG + Art. 25 BayDSG — operation and security of a university IT service.
+
+### WebSocket relay
+
+- **What:** connection metadata while a diagram session is open; messages are forwarded in memory and not logged.
+- **Where:** server process memory only.
+- **Legal basis:** Art. 6(1)(e) GDPR + Art. 4 BayHIG.
+
+### Diagram content
+
+- **What:** the diagram data you author, including any free text you enter into labels.
+- **Where:** Redis (TUM-hosted), per-diagram TTL of 120 days.
+- **Legal basis:** Art. 6(1)(e) GDPR + Art. 4 BayHIG.
 
 **We do not process special categories of data** within the meaning of Art. 9 GDPR and do not intentionally collect any identifying personal data beyond the above.
 
@@ -52,11 +64,9 @@ Your data is processed by TUM and TUM's operational units only. We do not share 
 
 ## 7. Retention
 
-| Category | Retention |
-|---|---|
-| Diagram content in Redis | 120 days from creation, enforced by Redis native TTL |
-| Server logs | Per the TUM/AET operational baseline; rotated on a days-to-weeks timescale, not merged with other sources |
-| WebSocket session data | Held only while the session is open; not persisted |
+- **Diagram content in Redis:** 120 days from creation, enforced by Redis native TTL.
+- **Server logs:** per the TUM/AET operational baseline; rotated on a days-to-weeks timescale, not merged with other sources.
+- **WebSocket session data:** held only while the session is open; not persisted.
 
 ## 8. Your rights
 
@@ -77,8 +87,8 @@ Contact us via the channels in sections 1 and 2.
 
 You can lodge a complaint with a supervisory authority, in particular the authority competent for TUM:
 
-Bayerischer Landesbeauftragter für den Datenschutz (BayLfD)
-Wagmüllerstraße 18, 80538 Munich, Germany
+Bayerischer Landesbeauftragter für den Datenschutz (BayLfD)  
+Wagmüllerstraße 18, 80538 Munich, Germany  
 [datenschutz-bayern.de](https://www.datenschutz-bayern.de)
 
 ## 10. Automated decision-making
