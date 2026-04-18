@@ -68,6 +68,7 @@ Docs are migrating to [Docusaurus](https://docusaurus.io/); in the meantime brow
 - [Project structure & development](./docs/development/project-structure.md)
 - [Mobile (iOS / Android via Capacitor)](./docs/mobile/ios-android-setup.md)
 - [Deployment (GitHub Actions, Docker)](./docs/deployment/github-actions.md)
+- [Administration — legal pages & TUM DSMS](./docs/admin/legal-pages.md)
 - [Troubleshooting](./docs/troubleshooting/common-issues.md)
 
 ## Contributing

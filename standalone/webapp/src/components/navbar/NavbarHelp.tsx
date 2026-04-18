@@ -1,5 +1,6 @@
 import { useState, MouseEvent, FC } from "react"
 import Button from "@mui/material/Button"
+import Divider from "@mui/material/Divider"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography/Typography"
@@ -51,6 +52,16 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
     handleClose()
   }
 
+  const linkToImprint = () => {
+    navigate("/imprint")
+    handleClose()
+  }
+
+  const linkToPrivacy = () => {
+    navigate("/privacy")
+    handleClose()
+  }
+
   return (
     <>
       <Button
@@ -86,6 +97,9 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
         <MenuItem onClick={openAboutModal}>About Apollon</MenuItem>
         <MenuItem onClick={openBugReport}>Report a Problem</MenuItem>
         <MenuItem onClick={linkToPlayground}>Open Playground</MenuItem>
+        <Divider />
+        <MenuItem onClick={linkToImprint}>Imprint</MenuItem>
+        <MenuItem onClick={linkToPrivacy}>Privacy</MenuItem>
       </Menu>
     </>
   )

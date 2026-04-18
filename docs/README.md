@@ -13,6 +13,7 @@ Every page is a plain Markdown file; GitHub renders them directly:
 - [`development/`](./development) — project structure, scripts, workflow.
 - [`mobile/`](./mobile) — Capacitor setup for iOS and Android.
 - [`deployment/`](./deployment) — GitHub Actions and Docker Compose.
+- [`admin/`](./admin) — operator guide for legal pages (imprint & privacy) and the TUM DSMS submission package.
 - [`troubleshooting/`](./troubleshooting) — common issues.
 - [`contributing.md`](./contributing.md) — contribution guidelines.
 
