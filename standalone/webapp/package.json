@@ -22,9 +22,9 @@
     "@tumaet/apollon": "*",
     "@types/node": "22.13.8",
     "jspdf": "^4.2.1",
-    "react-markdown": "^10.1.0",
+    "react-markdown": "10.1.0",
     "react-router": "7.12.0",
-    "remark-gfm": "^4.0.1",
+    "remark-gfm": "4.0.1",
     "tailwindcss": "4.0.17",
     "zustand": "5.0.3"
   },
