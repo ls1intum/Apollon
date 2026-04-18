@@ -99,7 +99,7 @@ export const NavbarHelp: FC<Props> = ({ color }) => {
         <MenuItem onClick={linkToPlayground}>Open Playground</MenuItem>
         <Divider />
         <MenuItem onClick={linkToImprint}>Imprint</MenuItem>
-        <MenuItem onClick={linkToPrivacy}>Privacy Statement</MenuItem>
+        <MenuItem onClick={linkToPrivacy}>Privacy</MenuItem>
       </Menu>
     </>
   )

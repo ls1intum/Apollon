@@ -24,7 +24,7 @@ The live privacy page is at <https://apollon.aet.cit.tum.de/privacy>. Open it an
 - **No** Schrems-II / SCC boilerplate — we make no third-country transfers.
 - **No** cookie banner on the site (not required for the current config).
 
-If any of the above is wrong, fix the Markdown source in `standalone/webapp/public/legal/profiles/apollon-tum/privacy.md` first.
+If any of the above is wrong, fix the Markdown source in `standalone/webapp/public/legal/profiles/tumaet/privacy.md` first.
 
 ## Phase 2 — Create the VT in DSMS (30 min)
 

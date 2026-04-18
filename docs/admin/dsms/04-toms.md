@@ -48,7 +48,7 @@ Documents the measures taken per Art. 32 GDPR. Structured along the categories o
 
 ## 4. Testability + evaluation (Art. 32(1)(d))
 
-- Privacy page and imprint source are versioned in the repository under `standalone/webapp/public/legal/profiles/apollon-tum/`. Every change is reviewable in PRs.
+- Privacy page and imprint source are versioned in the repository under `standalone/webapp/public/legal/profiles/tumaet/`. Every change is reviewable in PRs.
 - End-to-end tests (Playwright) cover the public pages including legal pages and hostile-markdown sanitisation.
 - Dependency scanning runs on CI (npm audit + Dependabot).
 - Docker images are signed with cosign and pushed to GHCR. Image provenance is verifiable.

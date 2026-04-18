@@ -11,7 +11,7 @@ For each page (`imprint`, `privacy`) the webapp tries, in order:
 | # | Path | Layer | When to use |
 |---|---|---|---|
 | 1 | `/legal-overrides/<page>.md` | Operator bind-mount (runtime-editable) | Forks, staging edits, anything you want to change without rebuilding the image |
-| 2 | `/legal/profiles/<LEGAL_PROFILE>/<page>.md` | Bundled profile (baked into the image) | Canonical deployments — e.g., `apollon-tum` for TUM |
+| 2 | `/legal/profiles/<LEGAL_PROFILE>/<page>.md` | Bundled profile (baked into the image) | Canonical deployments — e.g., `tumaet` for TUM |
 | 3 | `/legal/_disclaimer/<page>.md` | Safety fallback (shipped with the code) | Not valid for production; shows a red "not configured" banner |
 
 The first layer that responds with a non-empty, non-HTML body wins. Each page renders independently; `imprint` and `privacy` can come from different layers.
@@ -20,7 +20,7 @@ The first layer that responds with a non-empty, non-HTML body wins. Each page re
 
 ### Mode A — canonical TUM deployment
 
-Set `LEGAL_PROFILE=apollon-tum` in your environment. The bundled profile at `webapp/public/legal/profiles/apollon-tum/` is used as-is. Do **not** use this value if you are not TUM — the content identifies TUM as the operator.
+Set `LEGAL_PROFILE=tumaet` in your environment. The bundled profile at `webapp/public/legal/profiles/tumaet/` is used as-is. Do **not** use this value if you are not TUM — the content identifies TUM as the operator.
 
 ### Mode B — your own operator identity (fork)
 
@@ -76,7 +76,7 @@ Apollon's privacy notice must cover, at minimum:
 9. **Automated decisions** — state "none" (Apollon has none by default).
 10. **Voluntariness** — state that use is voluntary.
 
-The TUM profile (`apollon-tum`) is a concrete, audit-reviewed reference.
+The TUM profile (`tumaet`) is a concrete, audit-reviewed reference.
 
 ### Markdown safety
 
@@ -93,7 +93,7 @@ Operator Markdown is untrusted by the renderer:
 After deployment, run:
 
 ```sh
-curl -sI https://YOUR_HOST/legal/profiles/apollon-tum/imprint.md | head
+curl -sI https://YOUR_HOST/legal/profiles/tumaet/imprint.md | head
 # Expect: HTTP/1.1 200, Content-Type: text/markdown; charset=utf-8
 ```
 

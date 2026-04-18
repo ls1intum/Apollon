@@ -2,7 +2,7 @@ export type LegalPageId = "imprint" | "privacy"
 
 export const LEGAL_PAGE_TITLES: Record<LegalPageId, string> = {
   imprint: "Imprint",
-  privacy: "Privacy Statement",
+  privacy: "Privacy",
 }
 
 export interface ResolvedLegalContent {

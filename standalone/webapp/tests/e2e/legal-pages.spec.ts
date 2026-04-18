@@ -4,7 +4,7 @@ import { test, expect, type Page, type Route } from "@playwright/test"
  * E2E coverage for the /imprint and /privacy cascade.
  *
  * What we assert:
- * - The bundled apollon-tum profile is served when no override is mounted,
+ * - The bundled tumaet profile is served when no override is mounted,
  *   no disclaimer banner appears, and no disclaimer warning hits the console.
  * - Override layer wins over profile and disclaimer.
  * - Profile layer serves when override is absent and LEGAL_PROFILE is set.
@@ -14,7 +14,7 @@ import { test, expect, type Page, type Route } from "@playwright/test"
  *
  * The dev server used by Playwright is `npm run start`, which points at the
  * Vite dev server. Vite serves `public/` files directly, so the on-disk
- * `public/legal/_disclaimer/*.md` and `public/legal/profiles/apollon-tum/*.md`
+ * `public/legal/_disclaimer/*.md` and `public/legal/profiles/tumaet/*.md`
  * are the exact bytes the browser sees.
  */
 
@@ -43,10 +43,10 @@ async function mockMarkdown(
 }
 
 test.describe("Legal pages — cascade", () => {
-  test("bundled apollon-tum profile is rendered, no disclaimer banner", async ({
+  test("bundled tumaet profile is rendered, no disclaimer banner", async ({
     page,
   }) => {
-    await pageWithProfile(page, "apollon-tum")
+    await pageWithProfile(page, "tumaet")
     const warnings: string[] = []
     page.on("console", (msg) => {
       if (msg.type() === "warning") warnings.push(msg.text())
@@ -67,7 +67,7 @@ test.describe("Legal pages — cascade", () => {
   })
 
   test("override wins over profile", async ({ page }) => {
-    await pageWithProfile(page, "apollon-tum")
+    await pageWithProfile(page, "tumaet")
     await mockMarkdown(
       page,
       "**/legal-overrides/imprint.md",
@@ -107,7 +107,7 @@ test.describe("Legal pages — cascade", () => {
   test("HTML content-type from override triggers fall-through (SPA-fallback defence)", async ({
     page,
   }) => {
-    await pageWithProfile(page, "apollon-tum")
+    await pageWithProfile(page, "tumaet")
     // Pretend the override exists as /index.html (classic SPA catchall)
     await mockMarkdown(
       page,
@@ -151,7 +151,7 @@ test.describe("Legal pages — XSS hardening", () => {
   test("hostile markdown does not inject scripts, iframes, on* handlers, javascript: links, or data: images", async ({
     page,
   }) => {
-    await pageWithProfile(page, "apollon-tum")
+    await pageWithProfile(page, "tumaet")
     await mockMarkdown(page, "**/legal-overrides/imprint.md", HOSTILE)
 
     const pageErrors: string[] = []
@@ -226,7 +226,7 @@ test.describe("Legal pages — XSS hardening", () => {
   test("external links open in new tab with rel=noopener noreferrer", async ({
     page,
   }) => {
-    await pageWithProfile(page, "apollon-tum")
+    await pageWithProfile(page, "tumaet")
     await mockMarkdown(
       page,
       "**/legal-overrides/imprint.md",

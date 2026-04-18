@@ -22,7 +22,7 @@ The live imprint and privacy pages are served at:
 - <https://apollon.aet.cit.tum.de/imprint>
 - <https://apollon.aet.cit.tum.de/privacy>
 
-Markdown source lives under [`standalone/webapp/public/legal/profiles/apollon-tum/`](../../../standalone/webapp/public/legal/profiles/apollon-tum/).
+Markdown source lives under [`standalone/webapp/public/legal/profiles/tumaet/`](../../../standalone/webapp/public/legal/profiles/tumaet/).
 
 ## Why Apollon is narrower than Hephaestus or Helios
 

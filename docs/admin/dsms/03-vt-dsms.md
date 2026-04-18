@@ -141,7 +141,7 @@ See `04-toms.md`. Paste into the DSMS TOMs field or upload as an attachment.
 Privacy statement at: <https://apollon.aet.cit.tum.de/privacy>
 Imprint at: <https://apollon.aet.cit.tum.de/imprint>
 
-Both are versioned in the repository under `standalone/webapp/public/legal/profiles/apollon-tum/`.
+Both are versioned in the repository under `standalone/webapp/public/legal/profiles/tumaet/`.
 
 ### 16. Automated decision-making / profiling (Art. 22)
 
