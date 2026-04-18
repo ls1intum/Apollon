@@ -116,6 +116,9 @@ export function LegalPage({
       sx={{
         height: "100%",
         overflowY: "auto",
+        // Stop the scroll from chaining into the document; prevents the
+        // white body from showing in the rubber-band overscroll on macOS.
+        overscrollBehavior: "contain",
         bgcolor: "var(--apollon-background)",
         color: "var(--apollon-primary-contrast)",
       }}
