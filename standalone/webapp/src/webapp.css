@@ -5,6 +5,12 @@ html {
   overflow: hidden;
   position: fixed;
   width: 100%;
+  /* Paint the viewport with the theme background so the browser's
+     rubber-band overscroll zone matches the active theme instead of
+     showing the white user-agent default. The CSS variable is kept in
+     sync with the useThemeStore state via documentElement.style. */
+  background-color: var(--apollon-background);
+  color: var(--apollon-primary-contrast);
 }
 
 body {
