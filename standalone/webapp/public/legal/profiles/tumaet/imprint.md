@@ -38,7 +38,7 @@ Boltzmannstraße 3
 
 For questions regarding Apollon, please contact:
 
-Email: [krusche@tum.de](mailto:krusche@tum.de)
+Email: [ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de)
 Issues: [github.com/ls1intum/Apollon/issues](https://github.com/ls1intum/Apollon/issues)
 
 ## Terms of Use

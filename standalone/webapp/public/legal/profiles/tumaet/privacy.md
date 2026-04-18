@@ -10,12 +10,11 @@ represented by its President, Prof. Dr. Thomas F. Hofmann.
 
 Operational responsibility for Apollon lies with:
 
-Prof. Dr. Stephan Krusche
-Applied Education Technologies (AET)
+Research Group for Applied Education Technologies (AET)
 TUM School of Computation, Information and Technology
 Department of Computer Science
 Boltzmannstraße 3, 85748 Garching bei München, Germany
-Email: [krusche@tum.de](mailto:krusche@tum.de)
+Email: [ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de)
 
 ## 2. Data Protection Officer
 

@@ -42,10 +42,10 @@ Responsible unit:   Research Group for Applied Education Technologies (AET)
                     Department of Computer Science
                     Boltzmannstraße 3, 85748 Garching bei München
 
-Head of unit:       Prof. Dr. Stephan Krusche  <krusche@tum.de>
+Head of unit:       Prof. Dr. Stephan Krusche (per TUM website)
 Apollon support:    Via GitHub Issues at https://github.com/ls1intum/Apollon/issues
-                    Data-protection requests: krusche@tum.de
-                    or beauftragter@datenschutz.tum.de (TUM DPO)
+                    Operational contact: ls1.admin@in.tum.de
+                    Data-protection requests: beauftragter@datenschutz.tum.de (TUM DPO)
 ```
 
 ### 2. Joint controllers (Art. 26 GDPR)
@@ -166,7 +166,7 @@ Not applicable as a separate upload; Apollon is self-hosted by AET on TUM infras
 
 ### 21. Data-subject rights contact
 
-Primary: <krusche@tum.de>. Secondary: TUM DPO <beauftragter@datenschutz.tum.de>.
+Primary: <beauftragter@datenschutz.tum.de> (TUM DPO). Operational queries: <ls1.admin@in.tum.de> (AET admins).
 
 ### 22. Attachments to upload in DSMS
 

@@ -61,4 +61,4 @@ Export DSB comments, update the relevant file, and re-submit.
 - TUM DPO: [beauftragter@datenschutz.tum.de](mailto:beauftragter@datenschutz.tum.de)
 - DSMS tool support: [support@datenschutz.tum.de](mailto:support@datenschutz.tum.de)
 - TUM DSMS overview: <https://www.datenschutz.tum.de/datenschutz/verarbeitungstaetigkeit/>
-- Apollon operational contact: [krusche@tum.de](mailto:krusche@tum.de)
+- Apollon operational contact: [ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de)
