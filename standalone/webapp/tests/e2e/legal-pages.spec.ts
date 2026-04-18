@@ -97,7 +97,7 @@ test.describe("Legal pages — cascade", () => {
 
     const article = page.locator('[data-testid="legal-content"]')
     await expect(article).toHaveAttribute("data-source", "disclaimer")
-    await expect(article).toContainText("not been configured")
+    await expect(article).toContainText("not configured")
 
     await expect
       .poll(() => warnings.some((w) => w.includes("Disclaimer fallback")))
