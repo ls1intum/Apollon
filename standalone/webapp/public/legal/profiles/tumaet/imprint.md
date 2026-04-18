@@ -2,12 +2,11 @@ Information in accordance with § 5 DDG (Digitale-Dienste-Gesetz — German Digi
 
 ## Publisher
 
-Technical University of Munich (Technische Universität München)
-
-Arcisstraße 21
+Technical University of Munich (Technische Universität München)  
+Arcisstraße 21  
 80333 Munich, Germany
 
-Phone: +49 (0)89 289-01
+Phone: +49 (0)89 289-01  
 Email: [poststelle@tum.de](mailto:poststelle@tum.de) — [www.tum.de](https://www.tum.de)
 
 ## Authorized Representative
@@ -16,7 +15,7 @@ The Technical University of Munich is a public corporation (Körperschaft des ö
 
 ## Regulatory Authority
 
-Bayerisches Staatsministerium für Wissenschaft und Kunst
+Bayerisches Staatsministerium für Wissenschaft und Kunst  
 Salvatorstraße 2, 80333 Munich, Germany
 
 ## VAT Identification Number
@@ -27,18 +26,18 @@ DE811193231 (in accordance with § 27a UStG — German VAT Act)
 
 Responsible for the content of this platform in accordance with § 18(2) MStV (Medienstaatsvertrag — German Interstate Media Treaty):
 
-Prof. Dr. Stephan Krusche
-Applied Education Technologies (AET)
-TUM School of Computation, Information and Technology
-Department of Computer Science
-Boltzmannstraße 3
+Prof. Dr. Stephan Krusche  
+Applied Education Technologies (AET)  
+TUM School of Computation, Information and Technology  
+Department of Computer Science  
+Boltzmannstraße 3  
 85748 Garching bei München, Germany
 
 ## Contact
 
 For questions regarding Apollon, please contact:
 
-Email: [ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de)
+Email: [ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de)  
 Issues: [github.com/ls1intum/Apollon/issues](https://github.com/ls1intum/Apollon/issues)
 
 ## Terms of Use
