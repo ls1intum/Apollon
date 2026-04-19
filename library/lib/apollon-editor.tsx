@@ -99,8 +99,21 @@ export class ApollonEditor {
     if (options?.view) {
       this.metadataStore.getState().setView(options.view)
     }
-    if (options?.enableQuizMode !== undefined) {
-      this.metadataStore.getState().setEnableQuizMode(options.enableQuizMode)
+    const availableViews = options?.availableViews
+      ? Array.from(
+          new Set([
+            Apollon.ApollonView.Modelling,
+            ...options.availableViews,
+            ...(options.view ? [options.view] : []),
+          ])
+        )
+      : options?.view === Apollon.ApollonView.Highlight
+        ? [Apollon.ApollonView.Modelling, Apollon.ApollonView.Highlight]
+        : undefined
+    if (availableViews) {
+      this.metadataStore
+        .getState()
+        .setAvailableViews(availableViews)
     }
     if (options?.enablePopups !== undefined) {
       this.popoverStore.getState().setPopupEnabled(options.enablePopups)

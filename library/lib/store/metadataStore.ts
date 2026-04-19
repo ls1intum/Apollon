@@ -11,14 +11,14 @@ export type MetadataStore = {
   diagramType: UMLDiagramType
   mode: ApollonMode
   view: ApollonView
-  enableQuizMode: boolean
+  availableViews: ApollonView[]
   readonly: boolean
   debug: boolean
   scrollLock: boolean
   scrollEnabled: boolean
   setMode: (mode: ApollonMode) => void
   setView: (view: ApollonView) => void
-  setEnableQuizMode: (enableQuizMode: boolean) => void
+  setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
@@ -35,7 +35,7 @@ type InitialMetadataState = {
   diagramType: UMLDiagramType
   mode: ApollonMode
   view: ApollonView
-  enableQuizMode: boolean
+  availableViews: ApollonView[]
   readonly: boolean
   debug: boolean
   scrollLock: boolean
@@ -46,7 +46,7 @@ const initialMetadataState: InitialMetadataState = {
   diagramType: UMLDiagramType.ClassDiagram,
   mode: ApollonMode.Modelling,
   view: ApollonView.Modelling,
-  enableQuizMode: false,
+  availableViews: [ApollonView.Modelling],
   readonly: false,
   debug: false,
   scrollLock: false,
@@ -112,8 +112,12 @@ export const createMetadataStore = (
           set({ view }, undefined, "setView")
         },
 
-        setEnableQuizMode: (enableQuizMode) => {
-          set({ enableQuizMode }, undefined, "setEnableQuizMode")
+        setAvailableViews: (availableViews) => {
+          set(
+            { availableViews },
+            undefined,
+            "setAvailableViews"
+          )
         },
 
         setReadonly: (readonly) => {

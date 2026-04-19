@@ -16,12 +16,11 @@ interface AssessmentSelectableWrapperProps {
 export const AssessmentSelectableWrapper: React.FC<
   AssessmentSelectableWrapperProps
 > = ({ elementId, children, asElement = "div" }) => {
-  const { mode, readonly, view, enableQuizMode } = useMetadataStore(
+  const { mode, readonly, view } = useMetadataStore(
     useShallow((state) => ({
       mode: state.mode,
       readonly: state.readonly,
       view: state.view,
-      enableQuizMode: state.enableQuizMode,
     }))
   )
   const { isElementInteractive, toggleInteractiveElement } = useDiagramStore(
@@ -40,7 +39,6 @@ export const AssessmentSelectableWrapper: React.FC<
   } = useAssessmentSelection(elementId)
 
   const showInteractiveInteraction =
-    enableQuizMode &&
     mode === ApollonMode.Modelling &&
     view === ApollonView.Highlight &&
     !readonly

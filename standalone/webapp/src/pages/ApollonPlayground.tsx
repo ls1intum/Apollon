@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react"
 import {
   ApollonEditor,
   ApollonMode,
+  ApollonView,
   Locale,
   UMLDiagramType,
   ApollonOptions,
@@ -47,11 +48,11 @@ export const ApollonPlayground: React.FC = () => {
 
   const [apollonOptions, setApollonOptions] = useState<ApollonOptions>({
     mode: ApollonMode.Modelling,
+    availableViews: [ApollonView.Modelling],
     locale: Locale.en,
     readonly: false,
     debug: false,
     scrollLock: false,
-    enableQuizMode: false,
   })
 
   useEffect(() => {
@@ -199,15 +200,20 @@ export const ApollonPlayground: React.FC = () => {
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={apollonOptions.enableQuizMode}
+            checked={
+              apollonOptions.availableViews?.includes(ApollonView.Highlight) ??
+              false
+            }
             onChange={(event) => {
               setApollonOptions((prev) => ({
                 ...prev!,
-                enableQuizMode: event.target.checked,
+                availableViews: event.target.checked
+                  ? [ApollonView.Modelling, ApollonView.Highlight]
+                  : [ApollonView.Modelling],
               }))
             }}
           />
-          <label className="font-semibold">Enable Quiz Mode</label>
+          <label className="font-semibold">Enable Highlight View</label>
         </div>
 
         {apollonOptions.mode === ApollonMode.Assessment &&

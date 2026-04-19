@@ -18,14 +18,17 @@ import { ApollonView } from "@/typings"
    ======================================================================== */
 
 export const Sidebar = () => {
-  const { diagramType, view, setView, enableQuizMode } = useMetadataStore(
+  const { diagramType, view, setView, availableViews } = useMetadataStore(
     useShallow((state) => ({
       diagramType: state.diagramType,
       view: state.view,
       setView: state.setView,
-      enableQuizMode: state.enableQuizMode,
+      availableViews: state.availableViews,
     }))
   )
+  const showInteractiveSelectionView =
+    availableViews.includes(ApollonView.Highlight) ||
+    view === ApollonView.Highlight
   const labelPreviewTypes = new Set([
     "sfcTransitionBranch",
     "petriNetPlace",
@@ -52,7 +55,7 @@ export const Sidebar = () => {
         flexShrink: 0,
       }}
     >
-      {enableQuizMode && (
+      {showInteractiveSelectionView && (
         <div
           style={{
             width: "100%",
@@ -101,12 +104,12 @@ export const Sidebar = () => {
               fontWeight: 600,
             }}
           >
-            Quiz Elements
+            Select Elements
           </button>
         </div>
       )}
 
-      {enableQuizMode && view === ApollonView.Highlight && (
+      {view === ApollonView.Highlight && (
         <div
           style={{
             width: "100%",
@@ -115,11 +118,11 @@ export const Sidebar = () => {
             color: "var(--apollon-primary-contrast, #000000)",
           }}
         >
-          Click nodes or relationships to mark the quiz-relevant elements.
+          Click nodes or relationships to toggle whether they are interactive.
         </div>
       )}
 
-      {(!enableQuizMode || view === ApollonView.Modelling) &&
+      {view === ApollonView.Modelling &&
         dropElementConfigs[diagramType].map((config, index) => {
           const extraPreviewHeight = labelPreviewTypes.has(config.type)
             ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
@@ -155,7 +158,7 @@ export const Sidebar = () => {
           )
         })}
 
-      {(!enableQuizMode || view === ApollonView.Modelling) && (
+      {view === ApollonView.Modelling && (
         <>
           <DividerLine style={{ margin: "3px 0" }} />
           <DraggableGhost dropElementConfig={ColorDescriptionConfig}>

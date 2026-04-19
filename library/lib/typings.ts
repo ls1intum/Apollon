@@ -83,6 +83,7 @@ export type ApollonOptions = {
   type?: UMLDiagramType
   mode?: ApollonMode
   view?: ApollonView
+  availableViews?: ApollonView[]
   readonly?: boolean
   enablePopups?: boolean
   model?: UMLModel
@@ -94,7 +95,6 @@ export type ApollonOptions = {
   debug?: boolean
   collaborationEnabled?: boolean
   scrollLock?: boolean
-  enableQuizMode?: boolean
 }
 
 export type FeedbackCorrectionStatus = {
