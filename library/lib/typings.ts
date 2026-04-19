@@ -55,6 +55,11 @@ export type ApollonEdge = {
   }
 }
 
+export type InteractiveElements = {
+  elements: Record<string, boolean>
+  relationships: Record<string, boolean>
+}
+
 export type UMLModel = {
   version: `4.${number}.${number}`
   id: string
@@ -63,6 +68,7 @@ export type UMLModel = {
   nodes: ApollonNode[]
   edges: ApollonEdge[]
   assessments: { [id: string]: Assessment }
+  interactive?: InteractiveElements
 }
 
 export enum ApollonView {
@@ -76,6 +82,7 @@ export type SvgExportMode = "web" | "compat"
 export type ApollonOptions = {
   type?: UMLDiagramType
   mode?: ApollonMode
+  view?: ApollonView
   readonly?: boolean
   enablePopups?: boolean
   model?: UMLModel
@@ -87,6 +94,7 @@ export type ApollonOptions = {
   debug?: boolean
   collaborationEnabled?: boolean
   scrollLock?: boolean
+  enableQuizMode?: boolean
 }
 
 export type FeedbackCorrectionStatus = {

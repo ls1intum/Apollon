@@ -4,17 +4,21 @@ import { parseDiagramType } from "@/utils"
 import * as Y from "yjs"
 import { getDiagramMetadata } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
-import { ApollonMode } from "@/typings"
+import { ApollonMode, ApollonView } from "@/typings"
 
 export type MetadataStore = {
   diagramTitle: string
   diagramType: UMLDiagramType
   mode: ApollonMode
+  view: ApollonView
+  enableQuizMode: boolean
   readonly: boolean
   debug: boolean
   scrollLock: boolean
   scrollEnabled: boolean
   setMode: (mode: ApollonMode) => void
+  setView: (view: ApollonView) => void
+  setEnableQuizMode: (enableQuizMode: boolean) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
@@ -30,6 +34,8 @@ type InitialMetadataState = {
   diagramTitle: string
   diagramType: UMLDiagramType
   mode: ApollonMode
+  view: ApollonView
+  enableQuizMode: boolean
   readonly: boolean
   debug: boolean
   scrollLock: boolean
@@ -39,6 +45,8 @@ const initialMetadataState: InitialMetadataState = {
   diagramTitle: "Untitled Diagram",
   diagramType: UMLDiagramType.ClassDiagram,
   mode: ApollonMode.Modelling,
+  view: ApollonView.Modelling,
+  enableQuizMode: false,
   readonly: false,
   debug: false,
   scrollLock: false,
@@ -98,6 +106,14 @@ export const createMetadataStore = (
 
         setMode: (mode) => {
           set({ mode }, undefined, "setMode")
+        },
+
+        setView: (view) => {
+          set({ view }, undefined, "setView")
+        },
+
+        setEnableQuizMode: (enableQuizMode) => {
+          set({ enableQuizMode }, undefined, "setEnableQuizMode")
         },
 
         setReadonly: (readonly) => {

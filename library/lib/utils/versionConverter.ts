@@ -814,6 +814,23 @@ export function convertV3ToV4(v3Data: V3DiagramFormat | V3UMLModel): UMLModel {
     nodes,
     edges,
     assessments,
+    interactive:
+      model.interactive &&
+      (Object.values(model.interactive.elements ?? {}).some(Boolean) ||
+        Object.values(model.interactive.relationships ?? {}).some(Boolean))
+        ? {
+            elements: Object.fromEntries(
+              Object.entries(model.interactive.elements ?? {}).filter(
+                ([, included]) => included
+              )
+            ),
+            relationships: Object.fromEntries(
+              Object.entries(model.interactive.relationships ?? {}).filter(
+                ([, included]) => included
+              )
+            ),
+          }
+        : undefined,
   }
 }
 

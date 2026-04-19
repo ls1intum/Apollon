@@ -10,6 +10,7 @@ import { DividerLine } from "./ui/DividerLine"
 import { useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { DraggableGhost } from "./DraggableGhost"
+import { ApollonView } from "@/typings"
 
 /* ========================================================================
    Sidebar Component
@@ -17,7 +18,14 @@ import { DraggableGhost } from "./DraggableGhost"
    ======================================================================== */
 
 export const Sidebar = () => {
-  const diagramType = useMetadataStore(useShallow((state) => state.diagramType))
+  const { diagramType, view, setView, enableQuizMode } = useMetadataStore(
+    useShallow((state) => ({
+      diagramType: state.diagramType,
+      view: state.view,
+      setView: state.setView,
+      enableQuizMode: state.enableQuizMode,
+    }))
+  )
   const labelPreviewTypes = new Set([
     "sfcTransitionBranch",
     "petriNetPlace",
@@ -44,62 +52,136 @@ export const Sidebar = () => {
         flexShrink: 0,
       }}
     >
-      {dropElementConfigs[diagramType].map((config, index) => {
-        const extraPreviewHeight = labelPreviewTypes.has(config.type)
-          ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
-          : 0
-        const previewScale = DROPS.SIDEBAR_PREVIEW_SCALE
-        const previewWidth = config.width * previewScale
-        const previewHeight =
-          (config.height + extraPreviewHeight) * previewScale
-
-        return (
-          <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
-            <DraggableGhost dropElementConfig={config}>
-              <div
-                className="prevent-select"
-                style={{
-                  width: previewWidth,
-                  height: previewHeight,
-                  zIndex: ZINDEX.DRAGGABLE_GHOST,
-                  marginTop: config.marginTop,
-                }}
-              >
-                {React.createElement(config.svg, {
-                  width: config.width,
-                  height: config.height,
-                  ...config.defaultData,
-                  data: config.defaultData,
-                  SIDEBAR_PREVIEW_SCALE: previewScale,
-                  id: `sidebarElement_${index}`,
-                })}
-              </div>
-            </DraggableGhost>
-          </React.Fragment>
-        )
-      })}
-
-      <DividerLine style={{ margin: "3px 0" }} />
-      <DraggableGhost dropElementConfig={ColorDescriptionConfig}>
+      {enableQuizMode && (
         <div
-          className="prevent-select"
           style={{
-            width: ColorDescriptionConfig.width * DROPS.SIDEBAR_PREVIEW_SCALE,
-            height: ColorDescriptionConfig.height * DROPS.SIDEBAR_PREVIEW_SCALE,
-            zIndex: ZINDEX.DRAGGABLE_GHOST,
-            marginTop: ColorDescriptionConfig.marginTop,
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
           }}
         >
-          {React.createElement(ColorDescriptionConfig.svg, {
-            width: ColorDescriptionConfig.width,
-            height: ColorDescriptionConfig.height,
-            ...ColorDescriptionConfig.defaultData,
-            data: ColorDescriptionConfig.defaultData,
-            SIDEBAR_PREVIEW_SCALE: DROPS.SIDEBAR_PREVIEW_SCALE,
-            id: "sidebarElement_ColorDescription",
-          })}
+          <button
+            type="button"
+            onClick={() => setView(ApollonView.Modelling)}
+            style={{
+              borderRadius: "8px",
+              border: "1px solid var(--apollon-primary-contrast, #000000)",
+              background:
+                view === ApollonView.Modelling
+                  ? "var(--apollon-primary, #3e8acc)"
+                  : "transparent",
+              color:
+                view === ApollonView.Modelling
+                  ? "var(--apollon-background, #ffffff)"
+                  : "var(--apollon-primary-contrast, #000000)",
+              padding: "8px 10px",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Model
+          </button>
+          <button
+            type="button"
+            onClick={() => setView(ApollonView.Highlight)}
+            style={{
+              borderRadius: "8px",
+              border: "1px solid var(--apollon-primary-contrast, #000000)",
+              background:
+                view === ApollonView.Highlight
+                  ? "var(--apollon-primary, #3e8acc)"
+                  : "transparent",
+              color:
+                view === ApollonView.Highlight
+                  ? "var(--apollon-background, #ffffff)"
+                  : "var(--apollon-primary-contrast, #000000)",
+              padding: "8px 10px",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Quiz Elements
+          </button>
         </div>
-      </DraggableGhost>
+      )}
+
+      {enableQuizMode && view === ApollonView.Highlight && (
+        <div
+          style={{
+            width: "100%",
+            fontSize: "12px",
+            lineHeight: 1.4,
+            color: "var(--apollon-primary-contrast, #000000)",
+          }}
+        >
+          Click nodes or relationships to mark the quiz-relevant elements.
+        </div>
+      )}
+
+      {(!enableQuizMode || view === ApollonView.Modelling) &&
+        dropElementConfigs[diagramType].map((config, index) => {
+          const extraPreviewHeight = labelPreviewTypes.has(config.type)
+            ? LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+            : 0
+          const previewScale = DROPS.SIDEBAR_PREVIEW_SCALE
+          const previewWidth = config.width * previewScale
+          const previewHeight =
+            (config.height + extraPreviewHeight) * previewScale
+
+          return (
+            <React.Fragment key={`${config.type}_${config.defaultData?.name}`}>
+              <DraggableGhost dropElementConfig={config}>
+                <div
+                  className="prevent-select"
+                  style={{
+                    width: previewWidth,
+                    height: previewHeight,
+                    zIndex: ZINDEX.DRAGGABLE_GHOST,
+                    marginTop: config.marginTop,
+                  }}
+                >
+                  {React.createElement(config.svg, {
+                    width: config.width,
+                    height: config.height,
+                    ...config.defaultData,
+                    data: config.defaultData,
+                    SIDEBAR_PREVIEW_SCALE: previewScale,
+                    id: `sidebarElement_${index}`,
+                  })}
+                </div>
+              </DraggableGhost>
+            </React.Fragment>
+          )
+        })}
+
+      {(!enableQuizMode || view === ApollonView.Modelling) && (
+        <>
+          <DividerLine style={{ margin: "3px 0" }} />
+          <DraggableGhost dropElementConfig={ColorDescriptionConfig}>
+            <div
+              className="prevent-select"
+              style={{
+                width:
+                  ColorDescriptionConfig.width * DROPS.SIDEBAR_PREVIEW_SCALE,
+                height:
+                  ColorDescriptionConfig.height * DROPS.SIDEBAR_PREVIEW_SCALE,
+                zIndex: ZINDEX.DRAGGABLE_GHOST,
+                marginTop: ColorDescriptionConfig.marginTop,
+              }}
+            >
+              {React.createElement(ColorDescriptionConfig.svg, {
+                width: ColorDescriptionConfig.width,
+                height: ColorDescriptionConfig.height,
+                ...ColorDescriptionConfig.defaultData,
+                data: ColorDescriptionConfig.defaultData,
+                SIDEBAR_PREVIEW_SCALE: DROPS.SIDEBAR_PREVIEW_SCALE,
+                id: "sidebarElement_ColorDescription",
+              })}
+            </div>
+          </DraggableGhost>
+        </>
+      )}
     </aside>
   )
 }

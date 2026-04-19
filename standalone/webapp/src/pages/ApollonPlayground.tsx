@@ -51,6 +51,7 @@ export const ApollonPlayground: React.FC = () => {
     readonly: false,
     debug: false,
     scrollLock: false,
+    enableQuizMode: false,
   })
 
   useEffect(() => {
@@ -193,6 +194,20 @@ export const ApollonPlayground: React.FC = () => {
             }}
           />
           <label className="font-semibold">Scroll Lock</label>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={apollonOptions.enableQuizMode}
+            onChange={(event) => {
+              setApollonOptions((prev) => ({
+                ...prev!,
+                enableQuizMode: event.target.checked,
+              }))
+            }}
+          />
+          <label className="font-semibold">Enable Quiz Mode</label>
         </div>
 
         {apollonOptions.mode === ApollonMode.Assessment &&
