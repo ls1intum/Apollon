@@ -221,8 +221,7 @@ export const createDiagramStore = (
           set(
             {
               interactiveElements: prunedInteractive?.elements ?? {},
-              interactiveRelationships:
-                prunedInteractive?.relationships ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "setInteractive"
@@ -273,8 +272,7 @@ export const createDiagramStore = (
             {
               nodes,
               interactiveElements: prunedInteractive?.elements ?? {},
-              interactiveRelationships:
-                prunedInteractive?.relationships ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "setNodes"
@@ -304,8 +302,7 @@ export const createDiagramStore = (
             {
               edges,
               interactiveElements: prunedInteractive?.elements ?? {},
-              interactiveRelationships:
-                prunedInteractive?.relationships ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "setEdges"
@@ -332,8 +329,7 @@ export const createDiagramStore = (
               nodes,
               edges,
               interactiveElements: prunedInteractive?.elements ?? {},
-              interactiveRelationships:
-                prunedInteractive?.relationships ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "setNodesAndEdges"
@@ -440,8 +436,7 @@ export const createDiagramStore = (
             {
               nodes: nextNodes,
               interactiveElements: prunedInteractive?.elements ?? {},
-              interactiveRelationships:
-                prunedInteractive?.relationships ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "onNodesChange"
@@ -533,8 +528,7 @@ export const createDiagramStore = (
             {
               edges: nextEdges,
               interactiveElements: prunedInteractive?.elements ?? {},
-              interactiveRelationships:
-                prunedInteractive?.relationships ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "onEdgesChange"
@@ -595,8 +589,7 @@ export const createDiagramStore = (
             {
               nodes: preserveSelectedNodesAfterYdoc,
               interactiveElements: prunedInteractive?.elements ?? {},
-              interactiveRelationships:
-                prunedInteractive?.relationships ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "updateNodesFromYjs"
@@ -649,8 +642,7 @@ export const createDiagramStore = (
             {
               edges: preserveSelectedEdgesAfterYdoc,
               interactiveElements: prunedInteractive?.elements ?? {},
-              interactiveRelationships:
-                prunedInteractive?.relationships ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "updateEdgesFromYjs"

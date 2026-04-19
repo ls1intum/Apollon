@@ -113,11 +113,7 @@ export const createMetadataStore = (
         },
 
         setAvailableViews: (availableViews) => {
-          set(
-            { availableViews },
-            undefined,
-            "setAvailableViews"
-          )
+          set({ availableViews }, undefined, "setAvailableViews")
         },
 
         setReadonly: (readonly) => {

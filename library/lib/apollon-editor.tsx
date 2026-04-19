@@ -111,9 +111,7 @@ export class ApollonEditor {
         ? [Apollon.ApollonView.Modelling, Apollon.ApollonView.Highlight]
         : undefined
     if (availableViews) {
-      this.metadataStore
-        .getState()
-        .setAvailableViews(availableViews)
+      this.metadataStore.getState().setAvailableViews(availableViews)
     }
     if (options?.enablePopups !== undefined) {
       this.popoverStore.getState().setPopupEnabled(options.enablePopups)
