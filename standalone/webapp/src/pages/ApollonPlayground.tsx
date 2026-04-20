@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react"
 import {
   ApollonEditor,
   ApollonMode,
+  ApollonView,
   Locale,
   UMLDiagramType,
   ApollonOptions,
@@ -47,6 +48,7 @@ export const ApollonPlayground: React.FC = () => {
 
   const [apollonOptions, setApollonOptions] = useState<ApollonOptions>({
     mode: ApollonMode.Modelling,
+    availableViews: [ApollonView.Modelling],
     locale: Locale.en,
     readonly: false,
     debug: false,
@@ -193,6 +195,25 @@ export const ApollonPlayground: React.FC = () => {
             }}
           />
           <label className="font-semibold">Scroll Lock</label>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={
+              apollonOptions.availableViews?.includes(ApollonView.Highlight) ??
+              false
+            }
+            onChange={(event) => {
+              setApollonOptions((prev) => ({
+                ...prev!,
+                availableViews: event.target.checked
+                  ? [ApollonView.Modelling, ApollonView.Highlight]
+                  : [ApollonView.Modelling],
+              }))
+            }}
+          />
+          <label className="font-semibold">Enable Highlight View</label>
         </div>
 
         {apollonOptions.mode === ApollonMode.Assessment &&

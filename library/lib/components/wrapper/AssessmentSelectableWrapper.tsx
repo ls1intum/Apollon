@@ -1,5 +1,8 @@
 import React from "react"
 import { useAssessmentSelection } from "@/hooks/useAssessmentSelection"
+import { useDiagramStore, useMetadataStore } from "@/store"
+import { ApollonMode, ApollonView } from "@/typings"
+import { useShallow } from "zustand/shallow"
 
 interface AssessmentSelectableWrapperProps {
   elementId: string
@@ -13,6 +16,19 @@ interface AssessmentSelectableWrapperProps {
 export const AssessmentSelectableWrapper: React.FC<
   AssessmentSelectableWrapperProps
 > = ({ elementId, children, asElement = "div" }) => {
+  const { mode, readonly, view } = useMetadataStore(
+    useShallow((state) => ({
+      mode: state.mode,
+      readonly: state.readonly,
+      view: state.view,
+    }))
+  )
+  const { isElementInteractive, toggleInteractiveElement } = useDiagramStore(
+    useShallow((state) => ({
+      isElementInteractive: state.isElementInteractive,
+      toggleInteractiveElement: state.toggleInteractiveElement,
+    }))
+  )
   const {
     isSelected,
     isHighlighted,
@@ -21,6 +37,52 @@ export const AssessmentSelectableWrapper: React.FC<
     handleElementMouseEnter,
     handleElementMouseLeave,
   } = useAssessmentSelection(elementId)
+
+  const showInteractiveInteraction =
+    mode === ApollonMode.Modelling &&
+    view === ApollonView.Highlight &&
+    !readonly
+  const isInteractiveSelected = isElementInteractive(elementId)
+
+  if (showInteractiveInteraction) {
+    const handleInteractiveClick = (event: React.PointerEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
+      toggleInteractiveElement(elementId)
+    }
+
+    if (asElement == "g") {
+      return (
+        <g
+          style={{
+            cursor: "pointer",
+            ...(isInteractiveSelected && {
+              filter: "drop-shadow(0 0 4px rgba(25, 118, 210, 0.75))",
+            }),
+          }}
+          onPointerDown={handleInteractiveClick}
+        >
+          {children}
+        </g>
+      )
+    }
+
+    return (
+      <div
+        style={{
+          cursor: "pointer",
+          ...(isInteractiveSelected && {
+            outline: "2px solid #1976d2",
+            outlineOffset: "2px",
+            backgroundColor: "rgba(25, 118, 210, 0.12)",
+          }),
+        }}
+        onPointerDown={handleInteractiveClick}
+      >
+        {children}
+      </div>
+    )
+  }
 
   if (!showAssessmentInteraction) {
     return <>{children}</>

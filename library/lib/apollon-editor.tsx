@@ -6,8 +6,9 @@ import {
   mapFromReactFlowNodeToApollonNode,
   mapFromReactFlowEdgeToApollonEdge,
   DeepPartial,
+  filterRenderedElements,
   getSVG,
-  getDiagramBounds,
+  getRenderedDiagramBounds,
 } from "./utils"
 import { UMLDiagramType } from "./types"
 import { createDiagramStore, DiagramStore } from "@/store/diagramStore"
@@ -89,10 +90,28 @@ export class ApollonEditor {
       const assessments = options.model.assessments || {}
       this.diagramStore.getState().setNodesAndEdges(nodes, edges)
       this.diagramStore.getState().setAssessments(assessments)
+      this.diagramStore.getState().setInteractive(options.model.interactive)
     }
 
     if (options?.mode) {
       this.metadataStore.getState().setMode(options.mode)
+    }
+    if (options?.view) {
+      this.metadataStore.getState().setView(options.view)
+    }
+    const availableViews = options?.availableViews
+      ? Array.from(
+          new Set([
+            Apollon.ApollonView.Modelling,
+            ...options.availableViews,
+            ...(options.view ? [options.view] : []),
+          ])
+        )
+      : options?.view === Apollon.ApollonView.Highlight
+        ? [Apollon.ApollonView.Modelling, Apollon.ApollonView.Highlight]
+        : undefined
+    if (availableViews) {
+      this.metadataStore.getState().setAvailableViews(availableViews)
     }
     if (options?.enablePopups !== undefined) {
       this.popoverStore.getState().setPopupEnabled(options.enablePopups)
@@ -267,7 +286,9 @@ export class ApollonEditor {
       }, 150)
     })
 
-    const bounds = getDiagramBounds(reactFlowInstance, container)
+    filterRenderedElements(container, options)
+
+    const bounds = getRenderedDiagramBounds(reactFlowInstance, container)
 
     const margin = 60
     const clip = {
@@ -358,6 +379,26 @@ export class ApollonEditor {
     this.metadataStore.getState().updateDiagramTitle(name)
   }
 
+  public toggleInteractiveElementsMode(forceEnabled?: boolean): void {
+    const currentView = this.metadataStore.getState().view
+    const shouldEnable =
+      forceEnabled ?? currentView !== Apollon.ApollonView.Highlight
+
+    this.metadataStore
+      .getState()
+      .setView(
+        shouldEnable
+          ? Apollon.ApollonView.Highlight
+          : Apollon.ApollonView.Modelling
+      )
+  }
+
+  public getInteractiveForSerialization():
+    | Apollon.InteractiveElements
+    | undefined {
+    return this.diagramStore.getState().getInteractiveForSerialization()
+  }
+
   public getDiagramMetadata() {
     const { diagramTitle, diagramType } = this.metadataStore.getState()
     return { diagramTitle, diagramType }
@@ -366,6 +407,7 @@ export class ApollonEditor {
   get model(): Apollon.UMLModel {
     const { nodes, edges, diagramId } = this.diagramStore.getState()
     const { diagramTitle, diagramType } = this.metadataStore.getState()
+    const interactive = this.getInteractiveForSerialization()
     return {
       id: diagramId,
       version: "4.0.0",
@@ -374,21 +416,35 @@ export class ApollonEditor {
       nodes: nodes.map((node) => mapFromReactFlowNodeToApollonNode(node)),
       edges: edges.map((edge) => mapFromReactFlowEdgeToApollonEdge(edge)),
       assessments: this.diagramStore.getState().assessments,
+      ...(interactive && { interactive }),
     }
   }
 
   set model(model: Apollon.UMLModel) {
-    const { nodes, edges, assessments } = model
+    const { nodes, edges, assessments, interactive } = model
 
     this.diagramStore.getState().setNodesAndEdges(nodes, edges)
     this.diagramStore.getState().setAssessments(assessments)
+    this.diagramStore.getState().setInteractive(interactive)
     this.metadataStore
       .getState()
       .updateMetaData(model.title, parseDiagramType(model.type))
   }
 
   public getSelectedElements(): string[] {
-    return this.assessmentSelectionStore.getState().selectedElementIds
+    const { mode, readonly } = this.metadataStore.getState()
+    if (mode === Apollon.ApollonMode.Assessment && readonly) {
+      return this.assessmentSelectionStore.getState().selectedElementIds
+    }
+    return this.diagramStore.getState().selectedElementIds
+  }
+
+  get view(): Apollon.ApollonView {
+    return this.metadataStore.getState().view
+  }
+
+  set view(view: Apollon.ApollonView) {
+    this.metadataStore.getState().setView(view)
   }
 
   public addOrUpdateAssessment(assessment: Apollon.Assessment): void {

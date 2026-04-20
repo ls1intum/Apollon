@@ -18,10 +18,53 @@ const svgFontStyles = `
 
 type SvgExportMode = "web" | "compat"
 
+type ExportFilterOptions = {
+  include?: string[]
+  exclude?: string[]
+  svgMode?: SvgExportMode
+}
+
+function shouldRenderElement(
+  elementId: string | null,
+  options?: ExportFilterOptions
+): boolean {
+  if (!elementId) {
+    return true
+  }
+
+  if (options?.include && options.include.length > 0) {
+    return options.include.includes(elementId)
+  }
+
+  if (options?.exclude && options.exclude.length > 0) {
+    return !options.exclude.includes(elementId)
+  }
+
+  return true
+}
+
+export function filterRenderedElements(
+  container: HTMLElement,
+  options?: ExportFilterOptions
+): void {
+  if (!options?.include?.length && !options?.exclude?.length) {
+    return
+  }
+
+  container
+    .querySelectorAll(".react-flow__node, .react-flow__edge")
+    .forEach((element) => {
+      const elementId = element.getAttribute("data-id") || element.id || null
+      if (!shouldRenderElement(elementId, options)) {
+        element.remove()
+      }
+    })
+}
+
 export const getSVG = (
   container: HTMLElement,
   clip: Rect,
-  options?: { svgMode?: SvgExportMode }
+  options?: ExportFilterOptions
 ): string => {
   const emptySVG = "<svg></svg>"
 
@@ -449,6 +492,127 @@ function getBoundingBox(edges: Edge[], nodes: Node[]) {
   }
 }
 
+function getNodeBoundsFromDOM(
+  container: HTMLElement,
+  reactFlow?: ReactFlowInstance<Node, Edge>
+): Rect | undefined {
+  const nodeElements = container.querySelectorAll(".react-flow__node")
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  let foundNode = false
+
+  nodeElements.forEach((nodeEl) => {
+    const styleStr = nodeEl.getAttribute("style") ?? ""
+    const styles = extractStyles(styleStr)
+    const svgElement = nodeEl.querySelector("svg")
+    const renderedSvgRect = svgElement?.getBoundingClientRect()
+    if (svgElement) {
+      const viewBox = svgElement.getAttribute("viewBox")
+      if (viewBox) {
+        const viewBoxParts = viewBox.split(/[\s,]+/).map(Number)
+        if (viewBoxParts.length >= 4) {
+          const [vbX, vbY, vbW, vbH] = viewBoxParts
+          const svgWidth =
+            renderedSvgRect?.width ??
+            parseFloat(svgElement.getAttribute("width") ?? `${vbW}`)
+          const svgHeight =
+            renderedSvgRect?.height ??
+            parseFloat(svgElement.getAttribute("height") ?? `${vbH}`)
+
+          if (
+            Number.isFinite(svgWidth) &&
+            Number.isFinite(svgHeight) &&
+            vbW !== 0 &&
+            vbH !== 0
+          ) {
+            try {
+              const bbox = (svgElement as SVGGraphicsElement).getBBox()
+              if (
+                Number.isFinite(bbox.x) &&
+                Number.isFinite(bbox.y) &&
+                Number.isFinite(bbox.width) &&
+                Number.isFinite(bbox.height) &&
+                (bbox.width > 0 || bbox.height > 0)
+              ) {
+                const scaleX = svgWidth / vbW
+                const scaleY = svgHeight / vbH
+                const bboxX = styles.transform.x + (bbox.x - vbX) * scaleX
+                const bboxY = styles.transform.y + (bbox.y - vbY) * scaleY
+                const bboxMaxX =
+                  styles.transform.x + (bbox.x + bbox.width - vbX) * scaleX
+                const bboxMaxY =
+                  styles.transform.y + (bbox.y + bbox.height - vbY) * scaleY
+
+                foundNode = true
+                minX = Math.min(minX, bboxX)
+                minY = Math.min(minY, bboxY)
+                maxX = Math.max(maxX, bboxMaxX)
+                maxY = Math.max(maxY, bboxMaxY)
+                return
+              }
+            } catch {
+              // Fall back to screen-rect or wrapper-based bounds when getBBox()
+              // is unavailable in the current renderer.
+            }
+          }
+        }
+      }
+    }
+
+    if (renderedSvgRect && reactFlow) {
+      const topLeft = reactFlow.screenToFlowPosition({
+        x: renderedSvgRect.left,
+        y: renderedSvgRect.top,
+      })
+      const bottomRight = reactFlow.screenToFlowPosition({
+        x: renderedSvgRect.right,
+        y: renderedSvgRect.bottom,
+      })
+
+      if (
+        Number.isFinite(topLeft.x) &&
+        Number.isFinite(topLeft.y) &&
+        Number.isFinite(bottomRight.x) &&
+        Number.isFinite(bottomRight.y)
+      ) {
+        foundNode = true
+        minX = Math.min(minX, topLeft.x)
+        minY = Math.min(minY, topLeft.y)
+        maxX = Math.max(maxX, bottomRight.x)
+        maxY = Math.max(maxY, bottomRight.y)
+        return
+      }
+    }
+
+    const width = renderedSvgRect?.width ?? parseFloat(styles.width ?? "")
+    const height = renderedSvgRect?.height ?? parseFloat(styles.height ?? "")
+
+    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+      return
+    }
+
+    foundNode = true
+    minX = Math.min(minX, styles.transform.x)
+    minY = Math.min(minY, styles.transform.y)
+    maxX = Math.max(maxX, styles.transform.x + width)
+    maxY = Math.max(maxY, styles.transform.y + height)
+  })
+
+  if (!foundNode) {
+    return undefined
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  }
+}
+
 /**
  * Calculate bounding box from actual rendered edge paths in the DOM.
  * This accounts for:
@@ -866,6 +1030,36 @@ export function getDiagramBounds(
   return bounds
 }
 
+export function getRenderedDiagramBounds(
+  reactFlow: ReactFlowInstance<Node, Edge>,
+  container: HTMLElement
+): Rect {
+  let bounds = getNodeBoundsFromDOM(container, reactFlow)
+
+  const edgeBounds = getEdgeBoundsFromDOM(container)
+  if (bounds && edgeBounds) {
+    bounds = mergeBounds(bounds, edgeBounds)
+  } else if (!bounds && edgeBounds) {
+    bounds = edgeBounds
+  }
+
+  const overflowBounds = getNodeOverflowBoundsFromDOM(container)
+  if (bounds && overflowBounds) {
+    bounds = mergeBounds(bounds, overflowBounds)
+  } else if (!bounds && overflowBounds) {
+    bounds = overflowBounds
+  }
+
+  const textBounds = getTextBoundsFromDOM(container, reactFlow)
+  if (bounds && textBounds) {
+    bounds = mergeBounds(bounds, textBounds)
+  } else if (!bounds && textBounds) {
+    bounds = textBounds
+  }
+
+  return bounds ?? { x: 0, y: 0, width: 0, height: 0 }
+}
+
 function extractStyles(styleString: string) {
   const transformMatch = styleString.match(
     /transform:\s*translate\((-?\d+\.?\d*)px,\s*(-?\d+\.?\d*)px\)/
@@ -1211,6 +1405,8 @@ function removeMarkerElements(svg: Element): void {
  * @internal — Exported for unit testing only. Not part of the public API.
  */
 export const __testing = {
+  filterRenderedElements,
+  getRenderedDiagramBounds,
   extractPathPoints,
   extractStyles,
   resolveCSSVariable,
@@ -1220,5 +1416,6 @@ export const __testing = {
   removeMarkerElements,
   replaceTextDecorationWithManualUnderline,
   mergeBounds,
+  getNodeBoundsFromDOM,
   getNodeOverflowBoundsFromDOM,
 } as const

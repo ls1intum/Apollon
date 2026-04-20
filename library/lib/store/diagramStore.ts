@@ -13,7 +13,11 @@ import * as Y from "yjs"
 import { sortNodesTopologically } from "@/utils"
 import { getNodesMap, getEdgesMap, getAssessments } from "@/sync/ydoc"
 import { deepEqual } from "@/utils/storeUtils"
-import { Assessment } from "@/typings"
+import { Assessment, InteractiveElements } from "@/typings"
+import {
+  pruneInteractiveElements,
+  toggleInteractiveRecord,
+} from "@/utils/interactiveUtils"
 
 export type DiagramStoreData = {
   nodes: Node[]
@@ -26,6 +30,8 @@ type InitialDiagramState = {
   selectedElementIds: string[]
   diagramId: string
   assessments: Record<string, Assessment>
+  interactiveElements: Record<string, boolean>
+  interactiveRelationships: Record<string, boolean>
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
@@ -37,6 +43,8 @@ const initialDiagramState: InitialDiagramState = {
   selectedElementIds: [],
   diagramId: Math.random().toString(36).substring(2, 15),
   assessments: {},
+  interactiveElements: {},
+  interactiveRelationships: {},
   canUndo: false,
   canRedo: false,
   undoManager: null,
@@ -48,6 +56,8 @@ export type DiagramStore = {
   selectedElementIds: string[]
   diagramId: string
   assessments: Record<string, Assessment>
+  interactiveElements: Record<string, boolean>
+  interactiveRelationships: Record<string, boolean>
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
@@ -77,6 +87,10 @@ export type DiagramStore = {
   redo: () => void
   initializeUndoManager: () => void
   updateUndoRedoState: () => void
+  toggleInteractiveElement: (elementId: string) => void
+  getInteractiveForSerialization: () => InteractiveElements | undefined
+  setInteractive: (interactive: InteractiveElements | undefined) => void
+  isElementInteractive: (elementId: string) => boolean
 }
 
 export const createDiagramStore = (
@@ -161,6 +175,66 @@ export const createDiagramStore = (
           set({ selectedElementIds }, undefined, "setSelectedElementsId")
         },
 
+        toggleInteractiveElement: (elementId) => {
+          const isNode = get().nodes.some((node) => node.id === elementId)
+          const isEdge = get().edges.some((edge) => edge.id === elementId)
+
+          if (!isNode && !isEdge) {
+            return
+          }
+
+          set(
+            (state) => ({
+              interactiveElements: isNode
+                ? toggleInteractiveRecord(state.interactiveElements, elementId)
+                : state.interactiveElements,
+              interactiveRelationships: isEdge
+                ? toggleInteractiveRecord(
+                    state.interactiveRelationships,
+                    elementId
+                  )
+                : state.interactiveRelationships,
+            }),
+            undefined,
+            "toggleInteractiveElement"
+          )
+        },
+
+        getInteractiveForSerialization: () => {
+          return pruneInteractiveElements(
+            {
+              elements: get().interactiveElements,
+              relationships: get().interactiveRelationships,
+            },
+            get().nodes,
+            get().edges
+          )
+        },
+
+        setInteractive: (interactive) => {
+          const prunedInteractive = pruneInteractiveElements(
+            interactive,
+            get().nodes,
+            get().edges
+          )
+
+          set(
+            {
+              interactiveElements: prunedInteractive?.elements ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
+            },
+            undefined,
+            "setInteractive"
+          )
+        },
+
+        isElementInteractive: (elementId) => {
+          return !!(
+            get().interactiveElements[elementId] ||
+            get().interactiveRelationships[elementId]
+          )
+        },
+
         addNode: (node) => {
           ydoc.transact(() => {
             getNodesMap(ydoc).set(node.id, node)
@@ -186,7 +260,23 @@ export const createDiagramStore = (
             getNodesMap(ydoc).clear()
             nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
           }, "store")
-          set({ nodes }, undefined, "setNodes")
+          const prunedInteractive = pruneInteractiveElements(
+            {
+              elements: get().interactiveElements,
+              relationships: get().interactiveRelationships,
+            },
+            nodes,
+            get().edges
+          )
+          set(
+            {
+              nodes,
+              interactiveElements: prunedInteractive?.elements ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
+            },
+            undefined,
+            "setNodes"
+          )
         },
 
         setEdges: (payload) => {
@@ -200,7 +290,23 @@ export const createDiagramStore = (
             getEdgesMap(ydoc).clear()
             edges.forEach((edge) => getEdgesMap(ydoc).set(edge.id, edge))
           }, "store")
-          set({ edges }, undefined, "setEdges")
+          const prunedInteractive = pruneInteractiveElements(
+            {
+              elements: get().interactiveElements,
+              relationships: get().interactiveRelationships,
+            },
+            get().nodes,
+            edges
+          )
+          set(
+            {
+              edges,
+              interactiveElements: prunedInteractive?.elements ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
+            },
+            undefined,
+            "setEdges"
+          )
         },
 
         setNodesAndEdges: (nodes, edges) => {
@@ -210,7 +316,24 @@ export const createDiagramStore = (
             nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
             edges.forEach((edge) => getEdgesMap(ydoc).set(edge.id, edge))
           }, "store")
-          set({ nodes, edges }, undefined, "setNodesAndEdges")
+          const prunedInteractive = pruneInteractiveElements(
+            {
+              elements: get().interactiveElements,
+              relationships: get().interactiveRelationships,
+            },
+            nodes,
+            edges
+          )
+          set(
+            {
+              nodes,
+              edges,
+              interactiveElements: prunedInteractive?.elements ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
+            },
+            undefined,
+            "setNodesAndEdges"
+          )
         },
 
         onNodesChange: (changes) => {
@@ -300,7 +423,24 @@ export const createDiagramStore = (
               }
             }
           }, "store")
-          set({ nodes: nextNodes }, undefined, "onNodesChange")
+          const prunedInteractive = pruneInteractiveElements(
+            {
+              elements: get().interactiveElements,
+              relationships: get().interactiveRelationships,
+            },
+            nextNodes,
+            get().edges
+          )
+
+          set(
+            {
+              nodes: nextNodes,
+              interactiveElements: prunedInteractive?.elements ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
+            },
+            undefined,
+            "onNodesChange"
+          )
         },
 
         onEdgesChange: (changes) => {
@@ -375,7 +515,24 @@ export const createDiagramStore = (
               }
             }
           }, "store")
-          set({ edges: nextEdges }, undefined, "onEdgesChange")
+          const prunedInteractive = pruneInteractiveElements(
+            {
+              elements: get().interactiveElements,
+              relationships: get().interactiveRelationships,
+            },
+            get().nodes,
+            nextEdges
+          )
+
+          set(
+            {
+              edges: nextEdges,
+              interactiveElements: prunedInteractive?.elements ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
+            },
+            undefined,
+            "onEdgesChange"
+          )
         },
 
         reset: () => {
@@ -419,9 +576,20 @@ export const createDiagramStore = (
             )
           }
 
+          const prunedInteractive = pruneInteractiveElements(
+            {
+              elements: get().interactiveElements,
+              relationships: get().interactiveRelationships,
+            },
+            preserveSelectedNodesAfterYdoc,
+            get().edges
+          )
+
           set(
             {
               nodes: preserveSelectedNodesAfterYdoc,
+              interactiveElements: prunedInteractive?.elements ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
             },
             undefined,
             "updateNodesFromYjs"
@@ -461,8 +629,21 @@ export const createDiagramStore = (
             )
           }
 
+          const prunedInteractive = pruneInteractiveElements(
+            {
+              elements: get().interactiveElements,
+              relationships: get().interactiveRelationships,
+            },
+            get().nodes,
+            preserveSelectedEdgesAfterYdoc
+          )
+
           set(
-            { edges: preserveSelectedEdgesAfterYdoc },
+            {
+              edges: preserveSelectedEdgesAfterYdoc,
+              interactiveElements: prunedInteractive?.elements ?? {},
+              interactiveRelationships: prunedInteractive?.relationships ?? {},
+            },
             undefined,
             "updateEdgesFromYjs"
           )
