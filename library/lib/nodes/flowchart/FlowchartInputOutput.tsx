@@ -2,8 +2,8 @@ import {
   NodeProps,
   NodeResizer,
   type Node,
-  Handle,
   Position,
+  useUpdateNodeInternals,
 } from "@xyflow/react"
 import { DefaultNodeWrapper } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
@@ -11,9 +11,9 @@ import { DefaultNodeProps } from "@/types"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { FlowchartInputOutputNodeSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
-import { HandleId } from "../wrappers"
+import { HandleId, NodeConnectionHandle } from "../wrappers"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 
 function calculateAdjustedQuarter(x: number): number {
@@ -30,8 +30,15 @@ export function FlowchartInputOutput({
 }: NodeProps<Node<DefaultNodeProps>>) {
   const svgWrapperRef = useRef<HTMLDivElement | null>(null)
   const { onResize } = useHandleOnResize(parentId)
+  const updateNodeInternals = useUpdateNodeInternals()
   const isDiagramModifiable = useDiagramModifiable()
   const selected = useIsOnlyThisElementSelected(id)
+
+  useEffect(() => {
+    if (width && height) {
+      updateNodeInternals(id)
+    }
+  }, [height, id, updateNodeInternals, width])
 
   if (!width || !height) {
     return null
@@ -42,16 +49,6 @@ export function FlowchartInputOutput({
   const adjustedWidth = calculateAdjustedQuarter(width)
   const adjustedHeight = calculateAdjustedQuarter(height)
 
-  const selectedHandleStyle = {
-    opacity: 0.6,
-    padding: 4,
-    backgroundColor: "rgb(99, 154, 242)",
-    zIndex: 10,
-    border: "0px",
-  }
-
-  const handleStyle = selected ? selectedHandleStyle : { border: "0px" }
-
   // Custom handles for parallelogram shape
   // Left edge goes from (0, height) to (offset, 0)
   // Right edge goes from (width, 0) to (width - offset, height)
@@ -60,17 +57,17 @@ export function FlowchartInputOutput({
     {
       id: HandleId.TopLeft,
       position: Position.Top,
-      style: { left: offset + adjustedWidth, ...handleStyle },
+      style: { left: offset + adjustedWidth },
     },
     {
       id: HandleId.Top,
       position: Position.Top,
-      style: { left: (offset + width) / 2, ...handleStyle },
+      style: { left: (offset + width) / 2 },
     },
     {
       id: HandleId.TopRight,
       position: Position.Top,
-      style: { left: width - adjustedWidth, ...handleStyle },
+      style: { left: width - adjustedWidth },
     },
     // Right edge: from (width, 0) to (width - offset, height) - slanted
     {
@@ -79,7 +76,6 @@ export function FlowchartInputOutput({
       style: {
         top: adjustedHeight,
         left: width - (adjustedHeight / 0.3 / height) * offset,
-        ...handleStyle,
       },
     },
     {
@@ -88,7 +84,6 @@ export function FlowchartInputOutput({
       style: {
         top: height / 2,
         left: width - (height / 1.2 / height) * offset,
-        ...handleStyle,
       },
     },
     {
@@ -97,24 +92,23 @@ export function FlowchartInputOutput({
       style: {
         top: height - adjustedHeight,
         left: width - ((height - adjustedHeight) / 0.75 / height) * offset,
-        ...handleStyle,
       },
     },
     // Bottom edge: from (width - offset, height) to (0, height)
     {
       id: HandleId.BottomRight,
       position: Position.Bottom,
-      style: { left: width - offset - adjustedWidth, ...handleStyle },
+      style: { left: width - offset - adjustedWidth },
     },
     {
       id: HandleId.Bottom,
       position: Position.Bottom,
-      style: { left: (width - offset) / 2, ...handleStyle },
+      style: { left: (width - offset) / 2 },
     },
     {
       id: HandleId.BottomLeft,
       position: Position.Bottom,
-      style: { left: adjustedWidth, ...handleStyle },
+      style: { left: adjustedWidth },
     },
     // Left edge: from (0, height) to (offset, 0) - slanted
     {
@@ -123,7 +117,6 @@ export function FlowchartInputOutput({
       style: {
         top: height - adjustedHeight,
         left: (offset * adjustedHeight) / height,
-        ...handleStyle,
       },
     },
     {
@@ -132,7 +125,6 @@ export function FlowchartInputOutput({
       style: {
         top: height / 2,
         left: (offset * (height / 2)) / height,
-        ...handleStyle,
       },
     },
     {
@@ -141,7 +133,6 @@ export function FlowchartInputOutput({
       style: {
         top: adjustedHeight,
         left: (offset * (height - adjustedHeight)) / height,
-        ...handleStyle,
       },
     },
   ]
@@ -157,13 +148,13 @@ export function FlowchartInputOutput({
 
       {/* Custom handles for parallelogram */}
       {handles.map((handle) => (
-        <Handle
+        <NodeConnectionHandle
           key={handle.id}
           id={handle.id}
-          type="source"
           position={handle.position}
           style={handle.style}
           isConnectable={isDiagramModifiable}
+          selected={selected}
         />
       ))}
 

@@ -2,19 +2,19 @@ import {
   NodeProps,
   NodeResizer,
   type Node,
-  Handle,
   Position,
+  useUpdateNodeInternals,
 } from "@xyflow/react"
 import { DefaultNodeWrapper } from "../wrappers"
 import { useHandleOnResize } from "@/hooks"
 import { DefaultNodeProps } from "@/types"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { PopoverManager } from "@/components/popovers/PopoverManager"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { UseCaseNodeSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
-import { HandleId } from "../wrappers"
+import { HandleId, NodeConnectionHandle } from "../wrappers"
 import { getEllipseHandlePosition } from "@/utils/edgeUtils"
 
 export function UseCase({
@@ -26,8 +26,15 @@ export function UseCase({
 }: NodeProps<Node<DefaultNodeProps>>) {
   const svgWrapperRef = useRef<HTMLDivElement | null>(null)
   const { onResize } = useHandleOnResize(parentId)
+  const updateNodeInternals = useUpdateNodeInternals()
   const isDiagramModifiable = useDiagramModifiable()
   const selected = useIsOnlyThisElementSelected(id)
+
+  useEffect(() => {
+    if (width && height) {
+      updateNodeInternals(id)
+    }
+  }, [height, id, updateNodeInternals, width])
 
   if (!width || !height) {
     return null
@@ -38,16 +45,6 @@ export function UseCase({
   const centerY = height / 2
   const radiusX = width / 2
   const radiusY = height / 2
-
-  const selectedHandleStyle = {
-    opacity: 0.6,
-    padding: 4,
-    backgroundColor: "rgb(99, 154, 242)",
-    zIndex: 10,
-    border: "0px",
-  }
-
-  const handleStyle = selected ? selectedHandleStyle : { border: "0px" }
 
   // All 12 handles placed on the ellipse perimeter
   const handleDefs: { id: HandleId; position: Position }[] = [
@@ -78,7 +75,6 @@ export function UseCase({
       style: {
         left: pos.x,
         top: pos.y,
-        ...handleStyle,
       },
     }
   })
@@ -94,13 +90,13 @@ export function UseCase({
 
       {/* Custom handles placed on ellipse perimeter */}
       {handles.map((handle) => (
-        <Handle
+        <NodeConnectionHandle
           key={handle.id}
           id={handle.id}
-          type="source"
           position={handle.position}
           style={handle.style}
           isConnectable={isDiagramModifiable}
+          selected={selected}
         />
       ))}
 
