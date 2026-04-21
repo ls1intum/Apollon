@@ -22,12 +22,15 @@ jobs:
     outputs:
       version: ${{ steps.v.outputs.version }}
       publish: ${{ steps.v.outputs.publish }}
+      release: ${{ steps.v.outputs.release }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.sha }}
 
       - id: v
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(node -p "require('./library/package.json').version")
           if [[ "$VERSION" == *-* || "$VERSION" == *+* ]]; then
@@ -40,12 +43,18 @@ jobs:
           else
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
+          TAG="@tumaet/apollon@${VERSION}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   publish:
     name: Publish and release
     needs: [check]
-    if: needs.check.outputs.publish == 'true'
+    if: needs.check.outputs.publish == 'true' || needs.check.outputs.release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: npm-publish
@@ -73,9 +82,27 @@ jobs:
         working-directory: library
 
       - run: npm publish --access public --tag latest --provenance
+        if: needs.check.outputs.publish == 'true'
         working-directory: library
 
+      - name: Ensure release tag exists
+        if: needs.check.outputs.release == 'true'
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          TAG="@tumaet/apollon@${VERSION}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists on origin"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG"
+
       - name: Create GitHub Release
+        if: needs.check.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.check.outputs.version }}

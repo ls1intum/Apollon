@@ -86,6 +86,22 @@ jobs:
             cosign sign --yes "$IMAGE@$DIGEST"
           done
 
+      - name: Ensure release tag exists
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+          COMMIT_SHA: ${{ needs.check.outputs.sha }}
+        run: |
+          TAG="v${VERSION}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists on origin"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" "$COMMIT_SHA"
+          git push origin "refs/tags/$TAG"
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
