@@ -53,55 +53,41 @@
 .react-flow__handle.apollon-arc-handle::before {
   content: "";
   position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   background-color: var(--apollon-primary, #3e8acc);
   opacity: 0.4;
+  border-radius: 999px;
   box-sizing: border-box;
   pointer-events: all;
   cursor: crosshair;
 }
 
 .react-flow__handle.apollon-arc-handle--top::before {
-  width: 40px;
-  height: 20px;
   left: 50%;
-  top: -16px;
-  transform: translateX(-50%);
-  border-bottom: none;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .react-flow__handle.apollon-arc-handle--right::before {
-  width: 20px;
-  height: 40px;
-  left: 4px;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%);
-  border-left: none;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
+  transform: translate(-50%, -50%);
 }
 
 .react-flow__handle.apollon-arc-handle--bottom::before {
-  width: 40px;
-  height: 20px;
   left: 50%;
-  top: 4px;
-  transform: translateX(-50%);
-  border-top: none;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .react-flow__handle.apollon-arc-handle--left::before {
-  width: 20px;
-  height: 40px;
-  left: -16px;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%);
-  border-right: none;
-  border-top-left-radius: 20px;
-  border-bottom-left-radius: 20px;
+  transform: translate(-50%, -50%);
 }
 
 .react-flow__resize-control line {

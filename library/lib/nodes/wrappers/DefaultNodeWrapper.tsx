@@ -79,7 +79,7 @@ export function DefaultNodeWrapper({
   }
 
   // Keep all handle ids available for compatibility with existing edges,
-  // but only the primary four are visible.
+  // but only 3 handles per side are visible.
   const handles = [
     {
       id: HandleId.TopLeft,
@@ -188,10 +188,18 @@ export function DefaultNodeWrapper({
   ]
 
   const visibleHandleIds = new Set<HandleId>([
+    HandleId.TopLeft,
     HandleId.Top,
+    HandleId.TopRight,
+    HandleId.RightTop,
     HandleId.Right,
+    HandleId.RightBottom,
+    HandleId.BottomRight,
     HandleId.Bottom,
+    HandleId.BottomLeft,
+    HandleId.LeftBottom,
     HandleId.Left,
+    HandleId.LeftTop,
   ])
 
   return (
