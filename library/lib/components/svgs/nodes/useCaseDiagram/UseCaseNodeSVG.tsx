@@ -51,9 +51,10 @@ export const UseCaseNodeSVG: React.FC<Props> = ({
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
+  const textHorizontalPadding = 32
 
   const wrappedLines = useMemo(() => {
-    return wrapText(name, width - 20)
+    return wrapText(name, width - textHorizontalPadding)
   }, [name, width])
 
   return (
