@@ -6,6 +6,8 @@
   --xy-edge-stroke-width: 2px;
   --xy-minimap-mask-background-color-props: #00000020;
   --xy-controls-button-background-color: var(--apollon-background, white);
+  --apollon-resize-line-hit-area: 8px;
+  --apollon-resize-line-visible-width: 1px;
 }
 .react-flow__controls-button {
   background: none;
@@ -39,12 +41,52 @@
   fill: var(--text);
 }
 
-.react-flow__resize-control line {
-  z-index: 9;
-}
-
 .react-flow__resize-control.handle {
   z-index: 20;
+}
+
+.react-flow__resize-control.line {
+  z-index: 9;
+  background: transparent;
+  border-width: 0 !important;
+}
+
+.react-flow__resize-control.line::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background-color: var(
+    --xy-resize-background-color,
+    var(--xy-resize-background-color-default)
+  );
+}
+
+.react-flow__resize-control.line.left,
+.react-flow__resize-control.line.right {
+  width: var(--apollon-resize-line-hit-area);
+}
+
+.react-flow__resize-control.line.left::before,
+.react-flow__resize-control.line.right::before {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--apollon-resize-line-visible-width);
+  transform: translateX(-50%);
+}
+
+.react-flow__resize-control.line.top,
+.react-flow__resize-control.line.bottom {
+  height: var(--apollon-resize-line-hit-area);
+}
+
+.react-flow__resize-control.line.top::before,
+.react-flow__resize-control.line.bottom::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--apollon-resize-line-visible-width);
+  transform: translateY(-50%);
 }
 
 .react-flow__handle.apollon-node-handle {
