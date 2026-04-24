@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { CustomText, MultilineText, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -63,30 +63,37 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
           />
         </g>
 
-        {/* Name Text */}
-        <CustomText
-          x="50%"
-          y={30}
-          textAnchor="middle"
+        {/* Stereotype header (single line by convention) */}
+        {isComponentHeaderShown && stereotype && stereotype.length > 0 && (
+          <CustomText
+            x={width / 2}
+            y={22}
+            textAnchor="middle"
+            fontWeight="bold"
+            dominantBaseline="middle"
+            fill={textColor}
+            fontSize="85%"
+          >
+            {`«${stereotype}»`}
+          </CustomText>
+        )}
+
+        {/* Name Text (wrapped) */}
+        <MultilineText
+          text={name}
+          x={width / 2}
+          y={
+            isComponentHeaderShown && stereotype && stereotype.length > 0
+              ? 40
+              : 30
+          }
+          maxWidth={width - 24}
+          fontSize={16}
           fontWeight="bold"
-          dominantBaseline="middle"
           fill={textColor}
-        >
-          {isComponentHeaderShown && stereotype && stereotype.length > 0 ? (
-            <>
-              <tspan x="50%" dy="-8" fontSize="85%">
-                {`«${stereotype}»`}
-              </tspan>
-              <tspan x="50%" dy="18" textDecoration="underline">
-                {name}
-              </tspan>
-            </>
-          ) : (
-            <tspan x="50%" dy="0" textDecoration="underline">
-              {name}
-            </tspan>
-          )}
-        </CustomText>
+          verticalAnchor="top"
+          textDecoration="underline"
+        />
       </g>
 
       {showAssessmentResults && (

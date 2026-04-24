@@ -3,6 +3,7 @@ import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { CustomText } from "../CustomText"
+import { MultilineText } from "@/components"
 import { LAYOUT } from "@/constants"
 import { PetriNetPlaceProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils"
@@ -100,16 +101,17 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
         </CustomText>
       )}
 
-      <CustomText
+      {/* Label sits in the fixed-height strip below the circle. Wrap
+          against the shape diameter so long names break under the shape. */}
+      <MultilineText
+        text={name}
         x={width / 2}
         y={height + labelHeight / 2}
-        textAnchor="middle"
+        maxWidth={Math.max(width, 80)}
+        fontSize={16}
         fontWeight="600"
-        dominantBaseline="middle"
         fill={textColor}
-      >
-        {name}
-      </CustomText>
+      />
 
       {renderTokens()}
 

@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { CustomText, MultilineText, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -63,30 +63,33 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
           />
         </g>
 
-        {/* Name Text */}
-        <CustomText
+        {/* Optional «component» header. Kept as a single-line label — the
+            wrapped name renders below it. */}
+        {isComponentHeaderShown && (
+          <CustomText
+            x={width / 2}
+            y={height / 2 - 11}
+            textAnchor="middle"
+            fontWeight="bold"
+            dominantBaseline="middle"
+            fill={textColor}
+            fontSize="0.8em"
+          >
+            {"«component»"}
+          </CustomText>
+        )}
+
+        {/* Name Text (wrapped) — leave room on the right for the icon. */}
+        <MultilineText
+          text={name}
           x={width / 2}
-          y={height / 2}
-          textAnchor="middle"
+          y={isComponentHeaderShown ? height / 2 + 8 : height / 2}
+          maxWidth={width - 48}
+          fontSize={16}
           fontWeight="bold"
-          dominantBaseline="central"
           fill={textColor}
-        >
-          {isComponentHeaderShown ? (
-            <>
-              <tspan x={width / 2} dy="-0.6em" fontSize="0.8em">
-                {"«component»"}
-              </tspan>
-              <tspan x={width / 2} dy="1.2em">
-                {name}
-              </tspan>
-            </>
-          ) : (
-            <tspan x={width / 2} dy="0">
-              {name}
-            </tspan>
-          )}
-        </CustomText>
+          verticalAnchor={isComponentHeaderShown ? "top" : "middle"}
+        />
       </g>
 
       {showAssessmentResults && (

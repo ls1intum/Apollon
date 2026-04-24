@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { MultilineText, StyledRect } from "@/components"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -45,17 +45,17 @@ export const UseCaseSystemNodeSVG: React.FC<Props> = ({
           stroke={strokeColor}
         />
 
-        {/* Name Text */}
-        <CustomText
+        {/* Name Text — anchored near the top edge of the system boundary. */}
+        <MultilineText
+          text={name}
           x={width / 2}
-          y={20}
-          textAnchor="middle"
+          y={10}
+          maxWidth={width - 24}
+          fontSize={16}
           fontWeight="600"
-          dominantBaseline="hanging"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+          verticalAnchor="top"
+        />
       </g>
 
       {showAssessmentResults && (

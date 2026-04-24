@@ -1,4 +1,4 @@
-import { CustomText } from "@/components"
+import { MultilineText } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -44,19 +44,17 @@ export const FlowchartInputOutputNodeSVG: React.FC<Props> = ({
           fill={fillColor}
         />
 
-        {/* Name Text */}
-        <CustomText
+        {/* Name Text — parallelogram slants inward by 20px on each side, so
+            we use a slightly smaller max width to avoid crossing the slopes. */}
+        <MultilineText
+          text={name}
           x={width / 2}
           y={height / 2}
-          textAnchor="middle"
+          maxWidth={width - 48}
+          fontSize={16}
           fontWeight="600"
-          dominantBaseline="central"
           fill={textColor}
-        >
-          <tspan x={width / 2} dy="0">
-            {name}
-          </tspan>
-        </CustomText>
+        />
       </g>
 
       {showAssessmentResults && (

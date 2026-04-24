@@ -2,8 +2,7 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
-import { CustomText } from "../CustomText"
-import { StyledRect } from "@/components"
+import { MultilineText, StyledRect } from "@/components"
 import { DefaultNodeProps } from "@/types"
 import { LAYOUT } from "@/constants"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
@@ -50,16 +49,17 @@ export const PetriNetTransitionSVG: React.FC<Props> = ({
         stroke={strokeColor}
       />
 
-      <CustomText
+      {/* Label sits in the fixed-height strip below the rectangle. Wrap
+          against the shape width so long names break under the shape. */}
+      <MultilineText
+        text={name}
         x={width / 2}
         y={height + labelHeight / 2}
-        textAnchor="middle"
+        maxWidth={Math.max(width, 80)}
+        fontSize={16}
         fontWeight="600"
-        dominantBaseline="middle"
         fill={textColor}
-      >
-        {name}
-      </CustomText>
+      />
 
       {showAssessmentResults && (
         <AssessmentIcon x={width - 15} y={-15} score={nodeScore} />

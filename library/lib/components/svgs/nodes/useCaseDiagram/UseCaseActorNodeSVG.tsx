@@ -1,4 +1,4 @@
-import { CustomText } from "@/components"
+import { MultilineText } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -45,17 +45,18 @@ export const UseCaseActorNodeSVG: React.FC<Props> = ({
           <line x1="45" y1="80" x2="75" y2="110" />
         </g>
 
-        <CustomText
+        {/* Actor label sits outside the stick figure, below the feet (y=110).
+            The 90-wide viewBox leaves little room, so we wrap against the
+            viewBox width and center on the figure's vertical axis (x=45). */}
+        <MultilineText
+          text={name}
           x={45}
           y={130}
-          textAnchor="middle"
+          maxWidth={90}
+          fontSize={16}
           fontWeight="bold"
-          dominantBaseline="middle"
-          pointerEvents="none"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+        />
       </g>
 
       {showAssessmentResults && (

@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { CustomText, MultilineText, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -63,30 +63,32 @@ export const ComponentSubsystemNodeSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Name Text */}
-        <CustomText
+        {/* Optional «subsystem» header (single line). */}
+        {isComponentSubsystemHeaderShown && (
+          <CustomText
+            x={width / 2}
+            y={22}
+            textAnchor="middle"
+            fontWeight="bold"
+            dominantBaseline="middle"
+            fill={textColor}
+            fontSize="0.8em"
+          >
+            {"«subsystem»"}
+          </CustomText>
+        )}
+
+        {/* Name Text (wrapped) — leave room on the right for the icon. */}
+        <MultilineText
+          text={name}
           x={width / 2}
-          y={30}
-          textAnchor="middle"
+          y={isComponentSubsystemHeaderShown ? 38 : 22}
+          maxWidth={width - 48}
+          fontSize={16}
           fontWeight="bold"
-          dominantBaseline="central"
           fill={textColor}
-        >
-          {isComponentSubsystemHeaderShown ? (
-            <>
-              <tspan x={width / 2} dy="-0.6em" fontSize="0.8em">
-                {"«subsystem»"}
-              </tspan>
-              <tspan x={width / 2} dy="1.2em">
-                {name}
-              </tspan>
-            </>
-          ) : (
-            <tspan x={width / 2} dy="0">
-              {name}
-            </tspan>
-          )}
-        </CustomText>
+          verticalAnchor="top"
+        />
       </g>
 
       {showAssessmentResults && (

@@ -1,4 +1,4 @@
-import { CustomText } from "@/components"
+import { MultilineText } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -65,17 +65,17 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
           fill={fillColor}
         />
 
-        {/* Name Text */}
-        <CustomText
+        {/* Name Text — anchored just below the left-top tab. */}
+        <MultilineText
+          text={name}
           x={width / 2}
           y={leftTopBoxHeight + padding}
-          textAnchor="middle"
+          maxWidth={width - 24}
+          fontSize={16}
           fontWeight="600"
-          dominantBaseline="hanging"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+          verticalAnchor="top"
+        />
       </g>
 
       {showAssessmentResults && (

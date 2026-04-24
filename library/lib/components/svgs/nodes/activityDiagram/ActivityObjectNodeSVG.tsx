@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { MultilineText, StyledRect } from "@/components"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -45,15 +45,15 @@ export const ActivityObjectNodeSVG: React.FC<Props> = ({
         />
 
         {/* Name Text */}
-        <CustomText
+        <MultilineText
+          text={name}
           x={width / 2}
           y={height / 2}
-          textAnchor="middle"
+          maxWidth={width - 16}
+          fontSize={16}
           fontWeight="bold"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+        />
       </g>
 
       {showAssessmentResults && (

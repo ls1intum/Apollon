@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { MultilineText, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -286,15 +286,15 @@ export const BPMNTaskNodeSVG: React.FC<BPMNTaskNodeSVGProps> = ({
         />
 
         {icon}
-        <CustomText
+        <MultilineText
+          text={name}
           x={width / 2}
           y={height / 2}
-          textAnchor="middle"
+          maxWidth={width - 16}
+          fontSize={16}
           fontWeight="bold"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+        />
         {markerEl}
       </g>
 

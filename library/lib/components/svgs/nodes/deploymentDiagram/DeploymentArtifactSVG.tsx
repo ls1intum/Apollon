@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { MultilineText, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -63,17 +63,19 @@ export const DeploymentArtifactSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Name Text */}
-        <CustomText
+        {/* Name Text — anchor top so wrapping grows downward from the
+            original single-line baseline near y=25. Max width leaves room
+            for the artifact icon in the top-right corner. */}
+        <MultilineText
+          text={name}
           x={width / 2}
-          y={25}
-          textAnchor="middle"
+          y={15}
+          maxWidth={width - 60}
+          fontSize={16}
           fontWeight="bold"
-          dominantBaseline="middle"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+          verticalAnchor="top"
+        />
       </g>
 
       {showAssessmentResults && (
