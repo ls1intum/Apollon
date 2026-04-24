@@ -133,7 +133,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
             }
             sx={{ flex: 1 }}
             size="small"
-            value={nodeData.name}
+            value={nodeData.name ?? ""}
             placeholder={inputPlaceholder}
             // Only enable multiline — which lets Enter insert a hard line
             // break — for node types whose SVG actually wraps the label.

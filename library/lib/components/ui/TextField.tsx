@@ -1,11 +1,13 @@
 import React from "react"
 import { TextField as MUITextField, TextFieldProps } from "@mui/material"
 
-// Our theme layer: background + input text / placeholder / outline colors
-// that respect the Apollon CSS variables so the field tracks light/dark
+// Our theme layer: background + input text + placeholder colors that
+// track the Apollon CSS variables, so the field adapts to light/dark
 // without any explicit mode-switching logic. Targets `.MuiInputBase-input`
-// so the same rules apply to `<input>` (single-line) and `<textarea>`
-// (when the consumer sets `multiline`).
+// so the same rules cover `<input>` (single-line) and `<textarea>`
+// (when the consumer sets `multiline`). The outline border color is
+// handled globally by `.apollon-editor .MuiOutlinedInput-notchedOutline`
+// in `app.css` (with `!important`), so it's not duplicated here.
 const apollonTextFieldSx = {
   bgcolor: "var(--apollon-background, white)",
   "& .MuiInputBase-input": {
@@ -16,15 +18,6 @@ const apollonTextFieldSx = {
   "& .MuiInputBase-input::placeholder": {
     color: "var(--apollon-gray-variant, #495057)",
     opacity: 0.7,
-  },
-  "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: "var(--apollon-gray-variant, #495057)",
-  },
-  "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: "var(--apollon-primary-contrast, #000000)",
-  },
-  "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "var(--apollon-primary-contrast, #000000)",
   },
 } as const
 
