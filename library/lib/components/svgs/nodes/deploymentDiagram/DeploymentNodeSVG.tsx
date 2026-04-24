@@ -1,5 +1,4 @@
-import { CustomText, MultilineText, StyledRect } from "@/components"
-import { maxLinesForHeight } from "@/utils/svgTextLayout"
+import { StereotypeAndName, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -12,6 +11,11 @@ interface Props extends SVGComponentProps {
   data: DeploymentNodeProps
 }
 
+// Top-anchored placement: deployment nodes are containers, so the label
+// sits near the top edge and the body below is reserved for children.
+// Top-anchor y matches the legacy hanging-baseline placement at y≈22.
+const DEPLOYMENT_NAME_TOP_ANCHOR_Y = 22
+
 export const DeploymentNodeSVG: React.FC<Props> = ({
   id,
   width,
@@ -22,6 +26,8 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
   data,
 }) => {
   const { name, stereotype, isComponentHeaderShown } = data
+  const hasStereotype =
+    !!isComponentHeaderShown && !!stereotype && stereotype.length > 0
 
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
@@ -64,43 +70,17 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
           />
         </g>
 
-        {/* Stereotype header (single line by convention) */}
-        {isComponentHeaderShown && stereotype && stereotype.length > 0 && (
-          <CustomText
-            x={width / 2}
-            y={22}
-            textAnchor="middle"
-            fontWeight="bold"
-            dominantBaseline="middle"
-            fill={textColor}
-            fontSize="85%"
-          >
-            {`«${stereotype}»`}
-          </CustomText>
-        )}
-
-        {/* Name Text (wrapped) */}
-        <MultilineText
-          text={name}
-          x={width / 2}
-          y={
-            isComponentHeaderShown && stereotype && stereotype.length > 0
-              ? 40
-              : 30
-          }
-          maxWidth={width - 24}
-          fontSize={LAYOUT.NAME_FONT_SIZE}
-          fontWeight="bold"
-          fill={textColor}
+        <StereotypeAndName
+          name={name}
+          stereotype={stereotype}
+          showStereotype={hasStereotype}
+          width={width}
+          height={height}
+          sideReserve={24}
           verticalAnchor="top"
-          textDecoration="underline"
-          maxLines={maxLinesForHeight(
-            height -
-              (isComponentHeaderShown && stereotype && stereotype.length > 0
-                ? 40
-                : 20),
-            LAYOUT.NAME_LINE_HEIGHT
-          )}
+          topAnchorY={DEPLOYMENT_NAME_TOP_ANCHOR_Y}
+          nameTextDecoration="underline"
+          fill={textColor}
         />
       </g>
 

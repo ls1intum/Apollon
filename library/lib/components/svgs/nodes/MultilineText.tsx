@@ -116,7 +116,10 @@ export const MultilineText: FC<Props> = ({
   // fragments a wrapped label into "Register" "new" "user…" instead of
   // the whole sentence. `aria-label` on the parent <text> overrides that
   // with the original (un-truncated) string so the label remains
-  // intelligible even when the visual rendering is ellipsised.
+  // intelligible even when the visual rendering is ellipsised. Skip the
+  // attribute entirely for whitespace-only content — otherwise some
+  // screen readers announce "group" for a named-but-empty element.
+  const accessibleName = text.trim() ? text : undefined
   return (
     <text
       x={x}
@@ -129,7 +132,7 @@ export const MultilineText: FC<Props> = ({
       fontStyle={fontStyle}
       fill={fill}
       pointerEvents={pointerEvents}
-      aria-label={text}
+      aria-label={accessibleName}
       {...rest}
     >
       {displayLines.map((line, i) => (

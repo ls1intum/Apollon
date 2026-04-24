@@ -1,4 +1,4 @@
-import { DiagramNodeTypeRecord } from "@/nodes"
+import { DiagramNodeTypeRecord, type DiagramNodeType } from "@/nodes"
 import { XYPosition, type Node } from "@xyflow/react"
 import { log } from "../logger"
 
@@ -101,79 +101,121 @@ export function sortNodesTopologically(nodes: Node[]): Node[] {
 }
 
 /**
- * Does this node's SVG renderer support multi-line label text?
+ * Per-node-type label capabilities — the single source of truth for what
+ * the rename popover and the SVG renderer must agree on.
  *
- * The rename input in `NodeStyleEditor` is rendered as a single-line text
- * field by default; callers use this predicate to decide whether the input
- * should instead be multiline, so the editor only accepts `\n` for nodes
- * whose SVG actually wraps and repaints them. If a node draws its label
- * with `MultilineText` or one of the `layoutTextIn…` shape helpers, the
- * answer is yes; if it draws with plain `CustomText` (Petri-net labels,
- * class tables, BPMN events/gateways, edge labels), the answer is no.
+ *   `wrapsName`         — the node's SVG renders `data.name` through
+ *                         `MultilineText` or one of the `layoutTextIn…`
+ *                         shape helpers. When true, the rename popover
+ *                         exposes a multiline input (Enter inserts `\n`).
+ *   `rendersNameLabel`  — the node renders `data.name` at all. When false,
+ *                         the rename popover hides the input entirely
+ *                         (pure-symbol nodes like activity initial/final/
+ *                         fork have no text to repaint).
  *
- * The list below is the single source of truth. Adding a new node that
- * wraps text MUST add an entry here, and removing wrapping from an
- * existing node MUST remove its entry — otherwise the editor and the
- * renderer drift.
+ * This is declared as `Record<DiagramNodeType, …> satisfies …` so adding
+ * a new enum entry to `DiagramNodeTypeRecord` without classifying it here
+ * becomes a compile error rather than a silent default. Change this table
+ * only when a node's SVG wrapping behaviour actually changes.
  */
-export const supportsMultilineName = (nodeType?: string): boolean => {
-  if (!nodeType) return false
-  switch (nodeType) {
-    case DiagramNodeTypeRecord.activity:
-    case DiagramNodeTypeRecord.activityActionNode:
-    case DiagramNodeTypeRecord.activityObjectNode:
-    case DiagramNodeTypeRecord.activityMergeNode:
-    case DiagramNodeTypeRecord.useCase:
-    case DiagramNodeTypeRecord.useCaseActor:
-    case DiagramNodeTypeRecord.useCaseSystem:
-    case DiagramNodeTypeRecord.component:
-    case DiagramNodeTypeRecord.componentSubsystem:
-    case DiagramNodeTypeRecord.deploymentNode:
-    case DiagramNodeTypeRecord.deploymentComponent:
-    case DiagramNodeTypeRecord.deploymentArtifact:
-    case DiagramNodeTypeRecord.flowchartTerminal:
-    case DiagramNodeTypeRecord.flowchartProcess:
-    case DiagramNodeTypeRecord.flowchartDecision:
-    case DiagramNodeTypeRecord.flowchartInputOutput:
-    case DiagramNodeTypeRecord.flowchartFunctionCall:
-    case DiagramNodeTypeRecord.syntaxTreeTerminal:
-    case DiagramNodeTypeRecord.syntaxTreeNonterminal:
-    case DiagramNodeTypeRecord.bpmnTask:
-    case DiagramNodeTypeRecord.bpmnSubprocess:
-    case DiagramNodeTypeRecord.bpmnTransaction:
-    case DiagramNodeTypeRecord.bpmnCallActivity:
-    case DiagramNodeTypeRecord.bpmnAnnotation:
-    case DiagramNodeTypeRecord.bpmnGroup:
-    case DiagramNodeTypeRecord.reachabilityGraphMarking:
-    case DiagramNodeTypeRecord.sfcStep:
-    case DiagramNodeTypeRecord.package:
-    case DiagramNodeTypeRecord.colorDescription:
-      return true
-    default:
-      return false
-  }
+type NodeLabelCapabilities = {
+  wrapsName: boolean
+  rendersNameLabel: boolean
 }
 
+const NODE_LABEL_CAPABILITIES = {
+  // Class diagram
+  package: { wrapsName: true, rendersNameLabel: true },
+  class: { wrapsName: false, rendersNameLabel: true },
+  objectName: { wrapsName: false, rendersNameLabel: true },
+  communicationObjectName: { wrapsName: false, rendersNameLabel: true },
+  colorDescription: { wrapsName: true, rendersNameLabel: true },
+  titleAndDesctiption: { wrapsName: false, rendersNameLabel: true },
+
+  // Activity diagram
+  activity: { wrapsName: true, rendersNameLabel: true },
+  activityActionNode: { wrapsName: true, rendersNameLabel: true },
+  activityObjectNode: { wrapsName: true, rendersNameLabel: true },
+  activityMergeNode: { wrapsName: true, rendersNameLabel: true },
+  activityInitialNode: { wrapsName: false, rendersNameLabel: false },
+  activityFinalNode: { wrapsName: false, rendersNameLabel: false },
+  activityForkNode: { wrapsName: false, rendersNameLabel: false },
+  activityForkNodeHorizontal: { wrapsName: false, rendersNameLabel: false },
+
+  // Use case diagram
+  useCase: { wrapsName: true, rendersNameLabel: true },
+  useCaseActor: { wrapsName: true, rendersNameLabel: true },
+  useCaseSystem: { wrapsName: true, rendersNameLabel: true },
+
+  // Component diagram
+  component: { wrapsName: true, rendersNameLabel: true },
+  componentSubsystem: { wrapsName: true, rendersNameLabel: true },
+  componentInterface: { wrapsName: false, rendersNameLabel: true },
+
+  // Deployment diagram
+  deploymentNode: { wrapsName: true, rendersNameLabel: true },
+  deploymentComponent: { wrapsName: true, rendersNameLabel: true },
+  deploymentArtifact: { wrapsName: true, rendersNameLabel: true },
+  deploymentInterface: { wrapsName: false, rendersNameLabel: true },
+
+  // Flowchart
+  flowchartTerminal: { wrapsName: true, rendersNameLabel: true },
+  flowchartProcess: { wrapsName: true, rendersNameLabel: true },
+  flowchartDecision: { wrapsName: true, rendersNameLabel: true },
+  flowchartInputOutput: { wrapsName: true, rendersNameLabel: true },
+  flowchartFunctionCall: { wrapsName: true, rendersNameLabel: true },
+
+  // Syntax tree
+  syntaxTreeTerminal: { wrapsName: true, rendersNameLabel: true },
+  syntaxTreeNonterminal: { wrapsName: true, rendersNameLabel: true },
+
+  // Petri net (labels are single-line below the shape by convention)
+  petriNetTransition: { wrapsName: false, rendersNameLabel: true },
+  petriNetPlace: { wrapsName: false, rendersNameLabel: true },
+
+  // BPMN
+  bpmnTask: { wrapsName: true, rendersNameLabel: true },
+  bpmnSubprocess: { wrapsName: true, rendersNameLabel: true },
+  bpmnTransaction: { wrapsName: true, rendersNameLabel: true },
+  bpmnCallActivity: { wrapsName: true, rendersNameLabel: true },
+  bpmnAnnotation: { wrapsName: true, rendersNameLabel: true },
+  bpmnGroup: { wrapsName: true, rendersNameLabel: true },
+  bpmnStartEvent: { wrapsName: false, rendersNameLabel: true },
+  bpmnIntermediateEvent: { wrapsName: false, rendersNameLabel: true },
+  bpmnEndEvent: { wrapsName: false, rendersNameLabel: true },
+  bpmnGateway: { wrapsName: false, rendersNameLabel: true },
+  bpmnPool: { wrapsName: false, rendersNameLabel: true },
+  bpmnDataObject: { wrapsName: false, rendersNameLabel: true },
+  bpmnDataStore: { wrapsName: false, rendersNameLabel: true },
+
+  // Reachability graph
+  reachabilityGraphMarking: { wrapsName: true, rendersNameLabel: true },
+
+  // SFC
+  sfcStep: { wrapsName: true, rendersNameLabel: true },
+  sfcStart: { wrapsName: false, rendersNameLabel: true },
+  sfcJump: { wrapsName: false, rendersNameLabel: true },
+  sfcTransitionBranch: { wrapsName: false, rendersNameLabel: true },
+  sfcActionTable: { wrapsName: false, rendersNameLabel: true },
+} as const satisfies Record<DiagramNodeType, NodeLabelCapabilities>
+
 /**
- * Does this node render a user-editable text label at all?
- *
- * Some "symbol" nodes (activity initial / final / fork, SFC symbols, etc.)
- * have no SVG text — they're pure decoration. Surfacing a rename input
- * for them in the popover is confusing because any text the user types
- * is stored but never repaints. Callers use this predicate to decide
- * whether the rename input should appear; false means hide it entirely.
+ * Does this node's SVG renderer wrap its label? Drives whether the rename
+ * popover accepts multiline input — see `NODE_LABEL_CAPABILITIES`.
+ */
+export const supportsMultilineName = (nodeType?: string): boolean =>
+  !!nodeType &&
+  nodeType in NODE_LABEL_CAPABILITIES &&
+  NODE_LABEL_CAPABILITIES[nodeType as DiagramNodeType].wrapsName
+
+/**
+ * Does this node render a user-editable text label at all? False for
+ * pure-symbol nodes so the rename popover hides its input for them.
  */
 export const rendersNameLabel = (nodeType?: string): boolean => {
   if (!nodeType) return true
-  switch (nodeType) {
-    case DiagramNodeTypeRecord.activityInitialNode:
-    case DiagramNodeTypeRecord.activityFinalNode:
-    case DiagramNodeTypeRecord.activityForkNode:
-    case DiagramNodeTypeRecord.activityForkNodeHorizontal:
-      return false
-    default:
-      return true
-  }
+  if (!(nodeType in NODE_LABEL_CAPABILITIES)) return true
+  return NODE_LABEL_CAPABILITIES[nodeType as DiagramNodeType].rendersNameLabel
 }
 
 export const isParentNodeType = (nodeType?: string) => {

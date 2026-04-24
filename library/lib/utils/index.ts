@@ -15,11 +15,6 @@ export * from "./bpmnConstraints"
 export * from "./versionConverter"
 export * from "./labelUtils"
 export * from "./alignmentUtils"
-// Historical note: a `./flatSvgExporter` module previously lived here. It was
-// a string-serializer with its own character-count wrap heuristic and had no
-// call sites. It has been deleted — consumers should use
-// `ApollonEditor.exportAsSVG`, which re-renders the React tree (including
-// canvas-measured `MultilineText` wrapping) and serializes via DOM cloning.
 export * from "./requiredInterfaceUtils"
 // Deliberately narrow: only the helpers that node SVGs genuinely need to
 // reach for get re-exported through the public barrel. Internal machinery

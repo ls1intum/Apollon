@@ -1,5 +1,4 @@
-import { CustomText, MultilineText, StyledRect } from "@/components"
-import { maxLinesForHeight } from "@/utils/svgTextLayout"
+import { StereotypeAndName, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -11,6 +10,10 @@ import { getCustomColorsFromData } from "@/utils/layoutUtils"
 interface Props extends SVGComponentProps {
   data: ComponentSubsystemNodeProps
 }
+
+// Component-icon variant reserves ~32 px on the right for the icon; add the
+// usual left/right padding so the wrapped name doesn't crowd either side.
+const SUBSYSTEM_SIDE_RESERVE = 48
 
 export const ComponentSubsystemNodeSVG: React.FC<Props> = ({
   id,
@@ -64,38 +67,15 @@ export const ComponentSubsystemNodeSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Optional «subsystem» header (single line). Matches pre-change
-            visual position: center y = 30 - 9.6 ≈ 20. */}
-        {isComponentSubsystemHeaderShown && (
-          <CustomText
-            x={width / 2}
-            y={20}
-            textAnchor="middle"
-            fontWeight="bold"
-            dominantBaseline="middle"
-            fill={textColor}
-            fontSize="0.8em"
-          >
-            {"«subsystem»"}
-          </CustomText>
-        )}
-
-        {/* Name Text (wrapped) — leave room on the right for the icon.
-            Name's first line center lands at original y = 30 (no header)
-            or y ≈ 40 (with header). */}
-        <MultilineText
-          text={name}
-          x={width / 2}
-          y={isComponentSubsystemHeaderShown ? 40 : 30}
-          maxWidth={width - 48}
-          fontSize={LAYOUT.NAME_FONT_SIZE}
-          fontWeight="bold"
-          fill={textColor}
+        <StereotypeAndName
+          name={name}
+          stereotype="subsystem"
+          showStereotype={!!isComponentSubsystemHeaderShown}
+          width={width}
+          height={height}
+          sideReserve={SUBSYSTEM_SIDE_RESERVE}
           verticalAnchor="top"
-          maxLines={maxLinesForHeight(
-            height - (isComponentSubsystemHeaderShown ? 40 : 20),
-            LAYOUT.NAME_LINE_HEIGHT
-          )}
+          fill={textColor}
         />
       </g>
 

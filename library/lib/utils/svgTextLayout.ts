@@ -162,8 +162,13 @@ export const wrapTextInRect = (
     }
     return { lines, maxLineWidth, overflow }
   } catch {
+    // Preserve literal line breaks even in the degraded path — dropping
+    // them would collapse a multi-paragraph label into a single line on
+    // environments where pretext can't measure.
+    const fallbackLines =
+      whiteSpace === "pre-wrap" ? trimmed.split(/\r?\n/) : [trimmed]
     return {
-      lines: [trimmed],
+      lines: fallbackLines,
       maxLineWidth: sanitizedWidth,
       overflow: false,
     }
@@ -242,13 +247,22 @@ const layoutTextInShape = (
     blockHeight: 0,
     overflow: false,
   }
-  const fallbackLayout = (t: string): ShapeLayout => ({
-    lines: [{ text: t, width: Math.max(0, width - 2 * paddingX) }],
-    lineHeight,
-    lineOffsets: [0],
-    blockHeight: lineHeight,
-    overflow: false,
-  })
+  const fallbackLayout = (t: string): ShapeLayout => {
+    // Preserve hard line breaks in pre-wrap mode — degrading to a single
+    // blob would lose legitimate paragraph structure when the label can
+    // still be read, even without canvas measurement.
+    const rawLines = whiteSpace === "pre-wrap" ? t.split(/\r?\n/) : [t]
+    const innerWidth = Math.max(0, width - 2 * paddingX)
+    const n = rawLines.length
+    const top = -(n * lineHeight) / 2
+    return {
+      lines: rawLines.map((line) => ({ text: line, width: innerWidth })),
+      lineHeight,
+      lineOffsets: rawLines.map((_, i) => top + (i + 0.5) * lineHeight),
+      blockHeight: n * lineHeight,
+      overflow: false,
+    }
+  }
 
   const trimmed = text ?? ""
   if (!trimmed) return emptyLayout
