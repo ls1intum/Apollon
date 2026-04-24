@@ -67,7 +67,7 @@ Apollon's privacy notice must cover, at minimum:
 
 1. **Controller** (Art. 4(7) GDPR) — your legal identity and contact.
 2. **DPO** — name or office, per Art. 37 GDPR.
-3. **Processings** — list each, with purpose, legal basis (cite GDPR article + any national law), data categories, retention. For Apollon this minimally includes: server access logs, WebSocket relay metadata, Redis-stored diagram content (120-day TTL).
+3. **Processings** — list each, with purpose, legal basis (cite GDPR article + any national law), data categories, retention. For an out-of-the-box Apollon deployment this minimally includes: Redis-stored diagram content (120-day TTL) and WebSocket relay metadata (ephemeral). Operational events (startups, cert renewals, crit-level errors) contain no personal data by design — nginx runs with `access_log off;` and `error_log … crit;`, Traefik with `--accesslog=false`, and Express silent in production. If your fork re-enables per-request access logging at any layer, add that as an additional processing and document its retention.
 4. **Recipients** — who else sees the data; "none" is a valid answer.
 5. **Third-country transfers** — state "none" if you host in the EU; otherwise cite adequacy (Art. 45 GDPR) or safeguards (Art. 46 GDPR).
 6. **Retention** — concrete time frames per category.
