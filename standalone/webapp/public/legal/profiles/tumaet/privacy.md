@@ -18,14 +18,15 @@ Apollon has **no user accounts, no login, no cookies, and no analytics**. You ar
 
 ## 2. What personal data is processed
 
-| What | Where it lives | Why |
-|---|---|---|
-| Diagram content you author, including any free text in labels | Redis (TUM-operated, Germany); automatically deleted 120 days after the last write | Store your diagram so you and people with the share link can keep editing and viewing it |
-| WebSocket connection metadata while a diagram session is open | Server process memory only; never written to disk | Relay live collaborative edits to other participants |
-| Operational events about the service itself — startups, Let's Encrypt certificate renewals, critical errors | On TUM-operated servers in Germany; size-bounded ring buffer via Docker's built-in log driver | Operate the service reliably and securely; support incident response |
-| Theme preference (light/dark) | Your own browser (localStorage key `theme-storage`); never sent to TUM | Remember your chosen appearance |
+**Diagram content.** The UML data you author, including any free text you type into labels. Stored in a TUM-operated Redis database in Germany and deleted automatically 120 days after the last write, so that you and anyone with the share link can keep editing and viewing your diagram.
 
-*Legal basis for the Redis, WebSocket, and operational-log processing: Art. 6(1)(e) GDPR in conjunction with Art. 4 Abs. 1 BayDSG and Art. 2, 4 BayHIG (performance of TUM's statutory teaching and research tasks, including the secure operation of the IT services needed to carry them out). Legal basis for the theme preference: § 25 Abs. 2 Nr. 2 TDDDG (Telekommunikation-Digitale-Dienste-Datenschutz-Gesetz) — strictly necessary for a service you have explicitly requested; no consent is required.*
+**WebSocket session data.** Connection metadata and relayed edits while a diagram session is open. Held in server-process memory only, never written to disk, and discarded when the session closes.
+
+**Operational events about the service itself.** Service startups, Let's Encrypt certificate renewals, and critical errors. Captured on TUM-operated servers in Germany and held in a size-bounded ring buffer by Docker's built-in log driver. These events concern the service, not end users, and contain no personal data by design.
+
+**Theme preference.** Your chosen light/dark appearance. Stored in your own browser as a localStorage entry named `theme-storage`; it is never transmitted to TUM and remains on your device until you clear your browser storage.
+
+*Legal basis for the Redis, WebSocket, and operational-event processing: Art. 6(1)(e) GDPR in conjunction with Art. 4 Abs. 1 BayDSG and Art. 2, 4 BayHIG (performance of TUM's statutory teaching and research tasks, including the secure operation of the IT services needed to carry them out). Legal basis for the theme preference: § 25 Abs. 2 Nr. 2 TDDDG (Telekommunikation-Digitale-Dienste-Datenschutz-Gesetz) — strictly necessary for a service you have explicitly requested; no consent is required.*
 
 Apollon deliberately does not run per-request access logging: the reverse proxy (Traefik) and the web server (nginx) are configured with access logs disabled, nginx error logs are restricted to critical-level events, and the Express server runs silently in production. The remaining log stream consists of operational events about the service itself and contains no personal data by design.
 
@@ -49,13 +50,15 @@ Anyone with a diagram's share link can view and edit that diagram. This is the i
 
 ## 5. Retention
 
-| Category | Retention |
-|---|---|
-| Diagram content in Redis | Deleted 120 days after the last write, enforced by the Redis native TTL |
-| WebSocket session data | Only while the session is open; never persisted |
-| Operational events about the service | Held in a size-bounded ring buffer by the Docker log driver (≤ 250 MB per container, rotated on size). No time-based retention cap is necessary because these events contain no personal data by design; they are not merged with other sources and are accessed only to resolve operational incidents |
-| Theme preference in localStorage | Remains on your device until you clear your browser storage |
-| Backups containing personal data | None. Only source code, configuration, and container images are backed up (via Git and GHCR); these contain no personal data |
+**Diagram content in Redis** is deleted 120 days after the last write, enforced by the Redis native TTL.
+
+**WebSocket session data** is held only while the session is open and is never persisted.
+
+**Operational events about the service** are held in a size-bounded ring buffer (approximately 250 MB per container) by Docker's built-in log driver. No time-based retention cap is required because these events contain no personal data by design; they are not merged with other sources and are accessed only to resolve operational incidents.
+
+**Your theme preference** remains on your device until you clear your browser storage.
+
+**No backups containing personal data exist.** Only source code, configuration, and container images are backed up (via Git and GHCR), and these contain no personal data.
 
 ## 6. Your rights
 
