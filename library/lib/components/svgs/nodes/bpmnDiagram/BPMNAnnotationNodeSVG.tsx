@@ -57,10 +57,10 @@ export const BPMNAnnotationNodeSVG: React.FC<BPMNAnnotationNodeSVGProps> = ({
         x={(width + 20) / 2}
         y={height / 2}
         maxWidth={width - 28}
-        fontSize={16}
+        fontSize={LAYOUT.NAME_FONT_SIZE}
         fontWeight="bold"
         fill={textColor}
-        maxLines={maxLinesForHeight(height - 16, 19)}
+        maxLines={maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)}
       />
 
       {showAssessmentResults && (

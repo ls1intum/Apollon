@@ -74,13 +74,13 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
           x={width / 2}
           y={leftTopBoxHeight + padding + 7}
           maxWidth={width - 24}
-          fontSize={16}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="600"
           fill={textColor}
           verticalAnchor="top"
           maxLines={maxLinesForHeight(
             height - leftTopBoxHeight - padding - 16,
-            19
+            LAYOUT.NAME_LINE_HEIGHT
           )}
         />
       </g>

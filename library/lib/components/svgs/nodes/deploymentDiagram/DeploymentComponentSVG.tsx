@@ -1,5 +1,4 @@
-import { CustomText, MultilineText, StyledRect } from "@/components"
-import { maxLinesForHeight, wrapTextInRect } from "@/utils/svgTextLayout"
+import { StereotypeAndName, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -7,12 +6,6 @@ import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { DeploymentComponentProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
-import { useMemo } from "react"
-
-const NAME_FONT_SIZE = 16
-const NAME_LINE_HEIGHT = 19
-const STEREOTYPE_LINE_HEIGHT = 15
-const STEREOTYPE_NAME_GAP = 4
 
 interface Props extends SVGComponentProps {
   data: DeploymentComponentProps
@@ -33,40 +26,6 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
-
-  // Center the {header, name} pair as a group so multi-line names don't
-  // drift the header off the vertical midline. See ComponentNodeSVG for
-  // the original rationale.
-  const nameMaxWidth = width - 48
-  const nameMaxLines = isComponentHeaderShown
-    ? maxLinesForHeight(
-        height - STEREOTYPE_LINE_HEIGHT - STEREOTYPE_NAME_GAP - 8,
-        NAME_LINE_HEIGHT
-      )
-    : maxLinesForHeight(height - 16, NAME_LINE_HEIGHT)
-  const nameLineCount = useMemo(() => {
-    if (!name) return 0
-    const wrapped = wrapTextInRect(
-      name,
-      nameMaxWidth,
-      { fontSize: NAME_FONT_SIZE, fontWeight: "bold" },
-      { lineHeight: NAME_LINE_HEIGHT, maxLines: nameMaxLines }
-    )
-    return Math.max(1, wrapped.lines.length)
-  }, [name, nameMaxWidth, nameMaxLines])
-  const groupHeight = isComponentHeaderShown
-    ? STEREOTYPE_LINE_HEIGHT +
-      STEREOTYPE_NAME_GAP +
-      nameLineCount * NAME_LINE_HEIGHT
-    : nameLineCount * NAME_LINE_HEIGHT
-  const groupTop = height / 2 - groupHeight / 2
-  const stereotypeCenterY = groupTop + STEREOTYPE_LINE_HEIGHT / 2
-  const nameFirstLineCenterY = isComponentHeaderShown
-    ? groupTop +
-      STEREOTYPE_LINE_HEIGHT +
-      STEREOTYPE_NAME_GAP +
-      NAME_LINE_HEIGHT / 2
-    : groupTop + NAME_LINE_HEIGHT / 2
 
   return (
     <svg
@@ -104,35 +63,13 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
           />
         </g>
 
-        {/* «component» stereotype — stacks with the wrapped name as a
-            single group, centered vertically in the shape. */}
-        {isComponentHeaderShown && (
-          <CustomText
-            x={width / 2}
-            y={stereotypeCenterY}
-            textAnchor="middle"
-            fontWeight="bold"
-            dominantBaseline="middle"
-            fill={textColor}
-            fontSize="0.8em"
-          >
-            {"«component»"}
-          </CustomText>
-        )}
-
-        {/* Wrapped name — placement keeps the {header, name} block
-            centered in the node regardless of line count. */}
-        <MultilineText
-          text={name}
-          x={width / 2}
-          y={nameFirstLineCenterY}
-          maxWidth={nameMaxWidth}
-          fontSize={NAME_FONT_SIZE}
-          fontWeight="bold"
-          lineHeight={NAME_LINE_HEIGHT}
+        <StereotypeAndName
+          name={name}
+          stereotype="component"
+          showStereotype={!!isComponentHeaderShown}
+          width={width}
+          height={height}
           fill={textColor}
-          verticalAnchor="top"
-          maxLines={nameMaxLines}
         />
       </g>
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { DividerLine, TextField, Typography } from "@/components/ui"
 import { PaintRollerIcon } from "@/components/Icon/PaintRollerIcon"
 import { CrossIcon } from "@/components/Icon"
@@ -21,7 +21,7 @@ interface NodeStyleEditorProps {
    * character that never repaints. See `supportsMultilineName()` in
    * `utils/nodeUtils.ts` for the canonical per-type list.
    */
-  multilineName?: boolean
+  isMultilineName?: boolean
 }
 
 const styles = {
@@ -86,25 +86,22 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
   inputPlaceholder = "Enter node name",
   noStrokeUpdate = false,
   showNameInputChange = true,
-  multilineName = false,
+  isMultilineName = false,
   title,
   preElements = [],
 }) => {
-  // Mapping for color fields
+  // Three small literals; re-computed on every render is cheaper than memoizing.
   const colorFields: { key: keyof DefaultNodeProps; label: string }[] =
-    useMemo(() => {
-      if (noStrokeUpdate) {
-        return [
+    noStrokeUpdate
+      ? [
           { key: "fillColor", label: "Fill Color" },
           { key: "textColor", label: "Text Color" },
         ]
-      }
-      return [
-        { key: "fillColor", label: "Fill Color" },
-        { key: "strokeColor", label: "Line Color" },
-        { key: "textColor", label: "Text Color" },
-      ]
-    }, [noStrokeUpdate])
+      : [
+          { key: "fillColor", label: "Fill Color" },
+          { key: "strokeColor", label: "Line Color" },
+          { key: "textColor", label: "Text Color" },
+        ]
 
   const [paintOpen, setPaintOpen] = useState(false)
   const [activeColorField, setActiveColorField] = useState<
@@ -126,7 +123,6 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
         )}
         {showNameInputChange && (
           <TextField
-            id="outlined-basic"
             variant="outlined"
             onChange={(event) =>
               handleDataFieldUpdate("name", event.target.value)
@@ -138,9 +134,9 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
             // Only enable multiline — which lets Enter insert a hard line
             // break — for node types whose SVG actually wraps the label.
             // Single-line nodes keep their classic single-line <input>.
-            multiline={multilineName}
-            minRows={multilineName ? 1 : undefined}
-            maxRows={multilineName ? 6 : undefined}
+            multiline={isMultilineName}
+            minRows={isMultilineName ? 1 : undefined}
+            maxRows={isMultilineName ? 6 : undefined}
           />
         )}
         <PaintRollerIcon

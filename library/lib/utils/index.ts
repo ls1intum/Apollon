@@ -21,4 +21,21 @@ export * from "./alignmentUtils"
 // `ApollonEditor.exportAsSVG`, which re-renders the React tree (including
 // canvas-measured `MultilineText` wrapping) and serializes via DOM cloning.
 export * from "./requiredInterfaceUtils"
-export * from "./svgTextLayout"
+// Deliberately narrow: only the helpers that node SVGs genuinely need to
+// reach for get re-exported through the public barrel. Internal machinery
+// (the prepared-text cache, `toCanvasFont`, `clearPrepareCache`, type
+// aliases, the `layoutTextInShape` kernel) stays module-private so we can
+// evolve the measurement backend without it counting as a breaking API
+// change.
+export {
+  wrapTextInRect,
+  layoutTextInEllipse,
+  layoutTextInDiamond,
+  maxLinesForHeight,
+} from "./svgTextLayout"
+export type {
+  WrappedText,
+  ShapeLayout,
+  SvgFontSpec,
+  WhiteSpaceMode,
+} from "./svgTextLayout"

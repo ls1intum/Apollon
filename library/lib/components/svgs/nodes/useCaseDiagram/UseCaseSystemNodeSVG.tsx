@@ -1,3 +1,4 @@
+import { LAYOUT } from "@/constants"
 import { MultilineText, StyledRect } from "@/components"
 import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { useDiagramStore } from "@/store"
@@ -54,11 +55,11 @@ export const UseCaseSystemNodeSVG: React.FC<Props> = ({
           x={width / 2}
           y={22}
           maxWidth={width - 24}
-          fontSize={16}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="600"
           fill={textColor}
           verticalAnchor="top"
-          maxLines={maxLinesForHeight(height - 28, 19)}
+          maxLines={maxLinesForHeight(height - 28, LAYOUT.NAME_LINE_HEIGHT)}
         />
       </g>
 

@@ -55,7 +55,7 @@ export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
         sideElements={sideElements}
         inputPlaceholder={placeholder}
         showNameInputChange={rendersNameLabel(node.type)}
-        multilineName={supportsMultilineName(node.type)}
+        isMultilineName={supportsMultilineName(node.type)}
       />
 
       {children}

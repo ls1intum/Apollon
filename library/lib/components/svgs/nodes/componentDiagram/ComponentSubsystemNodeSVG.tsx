@@ -88,13 +88,13 @@ export const ComponentSubsystemNodeSVG: React.FC<Props> = ({
           x={width / 2}
           y={isComponentSubsystemHeaderShown ? 40 : 30}
           maxWidth={width - 48}
-          fontSize={16}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="bold"
           fill={textColor}
           verticalAnchor="top"
           maxLines={maxLinesForHeight(
             height - (isComponentSubsystemHeaderShown ? 40 : 20),
-            19
+            LAYOUT.NAME_LINE_HEIGHT
           )}
         />
       </g>

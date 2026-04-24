@@ -125,10 +125,13 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
         x={width / 2}
         y={height / 2}
         maxWidth={width - 16}
-        fontSize={16}
+        fontSize={LAYOUT.NAME_FONT_SIZE}
         fontWeight="bold"
         fill={textColor}
-        maxLines={maxLinesForHeight(height - (isSubprocess ? 28 : 16), 19)}
+        maxLines={maxLinesForHeight(
+          height - (isSubprocess ? 28 : 16),
+          LAYOUT.NAME_LINE_HEIGHT
+        )}
       />
 
       {showAssessmentResults && (

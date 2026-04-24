@@ -89,7 +89,7 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
               : 30
           }
           maxWidth={width - 24}
-          fontSize={16}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="bold"
           fill={textColor}
           verticalAnchor="top"
@@ -99,7 +99,7 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
               (isComponentHeaderShown && stereotype && stereotype.length > 0
                 ? 40
                 : 20),
-            19
+            LAYOUT.NAME_LINE_HEIGHT
           )}
         />
       </g>

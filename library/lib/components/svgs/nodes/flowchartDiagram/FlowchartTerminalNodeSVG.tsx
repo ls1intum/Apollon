@@ -1,3 +1,4 @@
+import { LAYOUT } from "@/constants"
 import { MultilineText, StyledRect } from "@/components"
 import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { useDiagramStore } from "@/store"
@@ -53,10 +54,10 @@ export const FlowchartTerminalNodeSVG: React.FC<Props> = ({
           x={width / 2}
           y={height / 2}
           maxWidth={width - 24}
-          fontSize={16}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="600"
           fill={textColor}
-          maxLines={maxLinesForHeight(height - 16, 19)}
+          maxLines={maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)}
         />
       </g>
 

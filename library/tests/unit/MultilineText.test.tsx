@@ -134,4 +134,26 @@ describe("MultilineText", () => {
     expect(tspans.length).toBe(2)
     expect(tspans[tspans.length - 1].textContent).toMatch(/…$/)
   })
+
+  it("exposes the full untruncated text via aria-label", () => {
+    const full = "one two three four five six"
+    const { container } = renderInSvg(
+      <MultilineText
+        text={full}
+        x={100}
+        y={50}
+        maxWidth={40}
+        fontSize={16}
+        maxLines={2}
+      />
+    )
+    const text = container.querySelector("text")
+    expect(text?.getAttribute("aria-label")).toBe(full)
+    // The per-line tspans must be hidden from assistive tech — otherwise
+    // a screen reader would read each wrapped fragment as a separate
+    // utterance, fragmenting the label.
+    for (const tspan of container.querySelectorAll("tspan")) {
+      expect(tspan.getAttribute("aria-hidden")).toBe("true")
+    }
+  })
 })

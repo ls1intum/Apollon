@@ -74,11 +74,11 @@ export const DeploymentArtifactSVG: React.FC<Props> = ({
           x={width / 2}
           y={25}
           maxWidth={width - 60}
-          fontSize={16}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="bold"
           fill={textColor}
           verticalAnchor="top"
-          maxLines={maxLinesForHeight(height - 16, 19)}
+          maxLines={maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)}
         />
       </g>
 

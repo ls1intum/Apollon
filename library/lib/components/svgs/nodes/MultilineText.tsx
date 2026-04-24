@@ -112,6 +112,11 @@ export const MultilineText: FC<Props> = ({
     firstLineCenterY = y - ((n - 1) * resolvedLineHeight) / 2
   }
 
+  // Assistive tech reads each <tspan> as a separate utterance, which
+  // fragments a wrapped label into "Register" "new" "user…" instead of
+  // the whole sentence. `aria-label` on the parent <text> overrides that
+  // with the original (un-truncated) string so the label remains
+  // intelligible even when the visual rendering is ellipsised.
   return (
     <text
       x={x}
@@ -124,10 +129,16 @@ export const MultilineText: FC<Props> = ({
       fontStyle={fontStyle}
       fill={fill}
       pointerEvents={pointerEvents}
+      aria-label={text}
       {...rest}
     >
       {displayLines.map((line, i) => (
-        <tspan key={i} x={x} y={firstLineCenterY + i * resolvedLineHeight}>
+        <tspan
+          key={i}
+          x={x}
+          y={firstLineCenterY + i * resolvedLineHeight}
+          aria-hidden="true"
+        >
           {line}
         </tspan>
       ))}

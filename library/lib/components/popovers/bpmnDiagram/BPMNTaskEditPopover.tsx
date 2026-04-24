@@ -23,7 +23,7 @@ export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           handleDataFieldUpdate(key, value)
         }
         nodeData={data}
-        multilineName={supportsMultilineName(node.type)}
+        isMultilineName={supportsMultilineName(node.type)}
       />
 
       <FormControl fullWidth size="small">

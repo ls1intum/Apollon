@@ -142,22 +142,32 @@ export const wrapTextInRect = (
     options.lineHeight ??
     (typeof font === "string" ? 16 : Math.round(font.fontSize * 1.2))
   const whiteSpace = options.whiteSpace ?? "pre-wrap"
-  const prepared = getPrepared(trimmed, fontString, whiteSpace)
   const sanitizedWidth = Math.max(1, maxWidth)
-  const result = layoutWithLines(prepared, sanitizedWidth, lineHeight)
-  let lines = result.lines.map((line) => line.text)
-  let maxLineWidth = lines.reduce(
-    (w, _line, i) => Math.max(w, result.lines[i].width),
-    0
-  )
-  let overflow = false
-  if (options.maxLines !== undefined && lines.length > options.maxLines) {
-    lines = lines.slice(0, options.maxLines)
-    const trimmedLines = result.lines.slice(0, options.maxLines)
-    maxLineWidth = trimmedLines.reduce((w, l) => Math.max(w, l.width), 0)
-    overflow = true
+  // Pretext internally uses canvas.measureText; in environments where
+  // `document.createElement("canvas")` isn't available (some SSR / jsdom-
+  // without-canvas configurations) the call throws. A single bad render
+  // shouldn't kill the surrounding editor tree, so fall back to a minimal
+  // single-line shape that preserves the original text without wrapping.
+  try {
+    const prepared = getPrepared(trimmed, fontString, whiteSpace)
+    const result = layoutWithLines(prepared, sanitizedWidth, lineHeight)
+    let lines = result.lines.map((line) => line.text)
+    let maxLineWidth = result.lines.reduce((w, l) => Math.max(w, l.width), 0)
+    let overflow = false
+    if (options.maxLines !== undefined && lines.length > options.maxLines) {
+      lines = lines.slice(0, options.maxLines)
+      const trimmedLines = result.lines.slice(0, options.maxLines)
+      maxLineWidth = trimmedLines.reduce((w, l) => Math.max(w, l.width), 0)
+      overflow = true
+    }
+    return { lines, maxLineWidth, overflow }
+  } catch {
+    return {
+      lines: [trimmed],
+      maxLineWidth: sanitizedWidth,
+      overflow: false,
+    }
   }
-  return { lines, maxLineWidth, overflow }
 }
 
 export type ShapeLayout = {
@@ -171,9 +181,6 @@ export type ShapeLayout = {
   /** True when input text exceeded the shape's capacity and was truncated. */
   overflow: boolean
 }
-
-/** @deprecated kept as an alias for backwards compatibility. */
-export type EllipseLayout = ShapeLayout
 
 type ShapeOptions = {
   paddingX?: number
@@ -235,6 +242,13 @@ const layoutTextInShape = (
     blockHeight: 0,
     overflow: false,
   }
+  const fallbackLayout = (t: string): ShapeLayout => ({
+    lines: [{ text: t, width: Math.max(0, width - 2 * paddingX) }],
+    lineHeight,
+    lineOffsets: [0],
+    blockHeight: lineHeight,
+    overflow: false,
+  })
 
   const trimmed = text ?? ""
   if (!trimmed) return emptyLayout
@@ -243,7 +257,14 @@ const layoutTextInShape = (
   const ry = Math.max(0, height / 2 - paddingY)
   if (rx <= 0 || ry <= 0) return emptyLayout
 
-  const prepared = getPrepared(trimmed, fontString, whiteSpace)
+  // See `wrapTextInRect` for the rationale — preserve the label if the
+  // canvas measurement path is unavailable.
+  let prepared
+  try {
+    prepared = getPrepared(trimmed, fontString, whiteSpace)
+  } catch {
+    return fallbackLayout(trimmed)
+  }
 
   // Max line count vertically feasible inside the shape.
   const verticalCap = Math.max(1, Math.floor((2 * ry) / lineHeight))
@@ -254,9 +275,15 @@ const layoutTextInShape = (
     return next === null
   }
 
+  // Each line's visual center offset relative to the shape's vertical center
+  // for a block of `n` lines. Hoisted out of the per-iteration body so the
+  // happy path and the overflow path share one formula.
+  const centerOffsets = (n: number): number[] => {
+    const top = -(n * lineHeight) / 2
+    return Array.from({ length: n }, (_, i) => top + (i + 0.5) * lineHeight)
+  }
+
   let bestLines: LayoutLine[] | null = null
-  let bestOffsets: number[] = []
-  let bestWidths: number[] = []
 
   for (let n = 1; n <= maxLines; n++) {
     const blockHeight = n * lineHeight
@@ -276,7 +303,6 @@ const layoutTextInShape = (
 
     let cursor: LayoutCursor = { segmentIndex: 0, graphemeIndex: 0 }
     const lines: LayoutLine[] = []
-    let fits = true
     for (let i = 0; i < n; i++) {
       const range = layoutNextLineRange(prepared, cursor, widths[i])
       if (range === null) break // text fully consumed before reaching N lines
@@ -284,25 +310,18 @@ const layoutTextInShape = (
       cursor = range.end
     }
 
-    if (lines.length === n && !isCursorAtEnd(cursor)) fits = false
-
+    const fits = lines.length < n || isCursorAtEnd(cursor)
     if (fits) {
-      const actualBlockHeight = lines.length * lineHeight
-      const actualTop = -actualBlockHeight / 2
       return {
         lines: lines.map((l) => ({ text: l.text, width: l.width })),
         lineHeight,
-        lineOffsets: lines.map((_, i) => actualTop + (i + 0.5) * lineHeight),
-        blockHeight: actualBlockHeight,
+        lineOffsets: centerOffsets(lines.length),
+        blockHeight: lines.length * lineHeight,
         overflow: false,
       }
     }
 
     bestLines = lines
-    bestWidths = widths
-    const actualBlockHeight = lines.length * lineHeight
-    const actualTop = -actualBlockHeight / 2
-    bestOffsets = lines.map((_, i) => actualTop + (i + 0.5) * lineHeight)
   }
 
   if (bestLines && bestLines.length > 0) {
@@ -311,29 +330,25 @@ const layoutTextInShape = (
     const rendered = bestLines.map((l) => ({ text: l.text, width: l.width }))
     const last = rendered[rendered.length - 1]
     last.text = `${last.text.trimEnd()}${HORIZONTAL_ELLIPSIS}`
-    // Keep bestWidths usage minimal — `maxLineWidth` on the ShapeLayout isn't
-    // exposed, but we reference it to keep the variable alive for potential
-    // future consumers (shrinkwrap, hit-testing).
-    void bestWidths
-
     return {
       lines: rendered,
       lineHeight,
-      lineOffsets: bestOffsets,
+      lineOffsets: centerOffsets(bestLines.length),
       blockHeight: bestLines.length * lineHeight,
       overflow: true,
     }
   }
 
-  // Degenerate fallback: one line at maximum shape width. Pretext will still
-  // wrap only as far as the word boundaries allow. Reuses the already-prepared
-  // text from the loop above rather than re-preparing it.
-  const natural = measureNaturalWidth(prepared)
-  const fallbackWidth = Math.min(natural, rx * 2)
+  // Degenerate fallback: one line at the shape's natural width, clamped to
+  // the shape diameter. Reaches this branch only when even a single line
+  // can't be computed by the main loop — typically a shape that pinches to
+  // zero height (impossible after the `rx <= 0 || ry <= 0` guard above), so
+  // kept as defense-in-depth.
+  const fallbackWidth = Math.min(measureNaturalWidth(prepared), rx * 2)
   const fallback = layoutNextLineRange(
     prepared,
     { segmentIndex: 0, graphemeIndex: 0 },
-    Math.max(1, fallbackWidth)
+    fallbackWidth
   )
   if (!fallback) return emptyLayout
   const materialized = materializeLineRange(prepared, fallback)
