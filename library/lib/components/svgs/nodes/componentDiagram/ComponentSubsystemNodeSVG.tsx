@@ -1,4 +1,5 @@
 import { CustomText, MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -63,11 +64,12 @@ export const ComponentSubsystemNodeSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Optional «subsystem» header (single line). */}
+        {/* Optional «subsystem» header (single line). Matches pre-change
+            visual position: center y = 30 - 9.6 ≈ 20. */}
         {isComponentSubsystemHeaderShown && (
           <CustomText
             x={width / 2}
-            y={22}
+            y={20}
             textAnchor="middle"
             fontWeight="bold"
             dominantBaseline="middle"
@@ -78,16 +80,22 @@ export const ComponentSubsystemNodeSVG: React.FC<Props> = ({
           </CustomText>
         )}
 
-        {/* Name Text (wrapped) — leave room on the right for the icon. */}
+        {/* Name Text (wrapped) — leave room on the right for the icon.
+            Name's first line center lands at original y = 30 (no header)
+            or y ≈ 40 (with header). */}
         <MultilineText
           text={name}
           x={width / 2}
-          y={isComponentSubsystemHeaderShown ? 38 : 22}
+          y={isComponentSubsystemHeaderShown ? 40 : 30}
           maxWidth={width - 48}
           fontSize={16}
           fontWeight="bold"
           fill={textColor}
           verticalAnchor="top"
+          maxLines={maxLinesForHeight(
+            height - (isComponentSubsystemHeaderShown ? 40 : 20),
+            19
+          )}
         />
       </g>
 

@@ -1,4 +1,5 @@
 import { MultilineText } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -44,8 +45,11 @@ export const FlowchartInputOutputNodeSVG: React.FC<Props> = ({
           fill={fillColor}
         />
 
-        {/* Name Text — parallelogram slants inward by 20px on each side, so
-            we use a slightly smaller max width to avoid crossing the slopes. */}
+        {/* Name Text — parallelogram slants inward by 20px on each side.
+            The 48-px horizontal reserve is an approximation: the true
+            inner width varies with y, and a tall multi-line block at
+            the top/bottom of the shape can still kiss the slopes. Good
+            enough for typical aspect ratios; revisit if reports come in. */}
         <MultilineText
           text={name}
           x={width / 2}
@@ -54,6 +58,7 @@ export const FlowchartInputOutputNodeSVG: React.FC<Props> = ({
           fontSize={16}
           fontWeight="600"
           fill={textColor}
+          maxLines={maxLinesForHeight(height - 16, 19)}
         />
       </g>
 

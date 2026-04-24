@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
+  clearPrepareCache,
   layoutTextInEllipse,
   toCanvasFont,
   wrapTextInRect,
@@ -104,6 +105,15 @@ describe("layoutTextInEllipse", () => {
     for (const offset of layout.lineOffsets) {
       expect(Math.abs(offset) + 17 / 2).toBeLessThanOrEqual(maxAllowed + 0.001)
     }
+  })
+
+  it("is safe to call clearPrepareCache between layouts", () => {
+    // Regression guard: the prepared-text cache is re-populated after clear;
+    // subsequent calls must not throw or return an empty result for valid text.
+    wrapTextInRect("hello world", 200, { fontSize: 14 })
+    clearPrepareCache()
+    const after = wrapTextInRect("hello world", 200, { fontSize: 14 })
+    expect(after.lines.length).toBe(1)
   })
 
   it("gives lines at ellipse extremities a narrower available width", () => {

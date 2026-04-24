@@ -1,4 +1,5 @@
 import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { SVGComponentProps } from "@/types/SVG"
@@ -127,6 +128,7 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
         fontSize={16}
         fontWeight="bold"
         fill={textColor}
+        maxLines={maxLinesForHeight(height - (isSubprocess ? 28 : 16), 19)}
       />
 
       {showAssessmentResults && (

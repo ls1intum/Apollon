@@ -52,7 +52,7 @@ describe("MultilineText", () => {
     expect(Math.abs(sum)).toBeLessThan(0.5)
   })
 
-  it("places the first line at y when verticalAnchor=top", () => {
+  it("centers the first line exactly on y when verticalAnchor=top", () => {
     const { container } = renderInSvg(
       <MultilineText
         text="one two three"
@@ -67,7 +67,71 @@ describe("MultilineText", () => {
     const firstLineY = parseFloat(
       container.querySelector("tspan")!.getAttribute("y") || "0"
     )
-    // With verticalAnchor=top, the first line's center y is y + lineHeight/2.
-    expect(firstLineY).toBeCloseTo(40, 1)
+    // "top" places the first line's visual center exactly at `y` — the
+    // intent is a drop-in replacement for dominantBaseline="middle" so
+    // single-line nodes keep their pre-change position.
+    expect(firstLineY).toBeCloseTo(30, 1)
+  })
+
+  it("centers the last line exactly on y when verticalAnchor=bottom", () => {
+    const { container } = renderInSvg(
+      <MultilineText
+        text="one two three"
+        x={100}
+        y={60}
+        maxWidth={40}
+        fontSize={16}
+        lineHeight={20}
+        verticalAnchor="bottom"
+      />
+    )
+    const tspans = Array.from(container.querySelectorAll("tspan"))
+    const lastLineY = parseFloat(
+      tspans[tspans.length - 1].getAttribute("y") || "0"
+    )
+    const firstLineY = parseFloat(tspans[0].getAttribute("y") || "0")
+    // Bottom-anchored: last line lands on `y`; earlier lines stack above by
+    // exactly `lineHeight`. Guards against a block-direction regression that
+    // would still land the last line on y while misplacing the first.
+    expect(lastLineY).toBeCloseTo(60, 1)
+    expect(firstLineY).toBeCloseTo(60 - (tspans.length - 1) * 20, 1)
+  })
+
+  it("single-line placement is a drop-in for dominantBaseline=middle", () => {
+    // Regression guard: for a short label that fits on one line, the rendered
+    // tspan's y must equal the `y` prop exactly, regardless of anchor mode.
+    // This is what makes MultilineText safely swappable for <CustomText>
+    // wherever the old code used dominantBaseline="middle".
+    for (const anchor of ["top", "middle", "bottom"] as const) {
+      const { container } = renderInSvg(
+        <MultilineText
+          text="short"
+          x={100}
+          y={42}
+          maxWidth={500}
+          fontSize={16}
+          lineHeight={20}
+          verticalAnchor={anchor}
+        />
+      )
+      const tspan = container.querySelector("tspan")!
+      expect(parseFloat(tspan.getAttribute("y") || "0")).toBeCloseTo(42, 1)
+    }
+  })
+
+  it("appends an ellipsis when maxLines truncates the content", () => {
+    const { container } = renderInSvg(
+      <MultilineText
+        text="one two three four five six"
+        x={100}
+        y={50}
+        maxWidth={40}
+        fontSize={16}
+        maxLines={2}
+      />
+    )
+    const tspans = container.querySelectorAll("tspan")
+    expect(tspans.length).toBe(2)
+    expect(tspans[tspans.length - 1].textContent).toMatch(/…$/)
   })
 })

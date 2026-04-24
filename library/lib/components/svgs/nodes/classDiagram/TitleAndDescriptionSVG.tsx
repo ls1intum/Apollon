@@ -45,10 +45,11 @@ export const TitleAndDescriptionSVG: React.FC<TitleAndDescriptionSVGProps> = ({
       }
     )
     if (!wrapped.overflow || wrapped.lines.length === 0) return wrapped.lines
+    // Use U+2026 (single-glyph ellipsis) with no leading space, matching
+    // what `MultilineText` emits when its `maxLines` truncates a line.
     const withEllipsis = [...wrapped.lines]
-    withEllipsis[withEllipsis.length - 1] = `${
-      withEllipsis[withEllipsis.length - 1]
-    } ...`
+    withEllipsis[withEllipsis.length - 1] =
+      `${withEllipsis[withEllipsis.length - 1].trimEnd()}…`
     return withEllipsis
   }, [description, maxTextWidth, maxDescriptionHeight])
 

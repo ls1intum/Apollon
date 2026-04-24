@@ -6,6 +6,8 @@ import { MultilineText, StyledRect } from "@/components"
 import { DefaultNodeProps } from "@/types"
 import { LAYOUT } from "@/constants"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
+import { wrapTextInRect } from "@/utils/svgTextLayout"
+import { useMemo } from "react"
 
 interface Props extends SVGComponentProps {
   data: DefaultNodeProps
@@ -26,7 +28,22 @@ export const PetriNetTransitionSVG: React.FC<Props> = ({
   const previewScale = SIDEBAR_PREVIEW_SCALE ?? 1
   const scaledWidth = width * previewScale
   const scaledHeight = height * previewScale
-  const labelHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
+  const labelLineHeight = 19
+  const labelMaxWidth = width
+  const labelMaxLines = 3
+  const labelLineCount = useMemo(() => {
+    const wrapped = wrapTextInRect(
+      name ?? "",
+      labelMaxWidth,
+      { fontSize: 16, fontWeight: 600 },
+      { lineHeight: labelLineHeight, maxLines: labelMaxLines }
+    )
+    return Math.max(1, wrapped.lines.length)
+  }, [name, labelMaxWidth, labelLineHeight, labelMaxLines])
+  const labelHeight = Math.max(
+    LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT,
+    labelLineCount * labelLineHeight + 8
+  )
   const scaledLabelHeight = labelHeight * previewScale
   const svgHeight = height + labelHeight
   const scaledSvgHeight = scaledHeight + scaledLabelHeight
@@ -49,16 +66,20 @@ export const PetriNetTransitionSVG: React.FC<Props> = ({
         stroke={strokeColor}
       />
 
-      {/* Label sits in the fixed-height strip below the rectangle. Wrap
-          against the shape width so long names break under the shape. */}
+      {/* Label sits in a strip below the rectangle. The strip auto-sizes
+          to the wrapped text so multi-line labels never clip into the
+          shape above or overflow outside the SVG element. A soft cap
+          at `labelMaxLines` keeps extreme inputs bounded. */}
       <MultilineText
         text={name}
         x={width / 2}
         y={height + labelHeight / 2}
-        maxWidth={Math.max(width, 80)}
+        maxWidth={labelMaxWidth}
         fontSize={16}
-        fontWeight="600"
+        fontWeight={600}
+        lineHeight={labelLineHeight}
         fill={textColor}
+        maxLines={labelMaxLines}
       />
 
       {showAssessmentResults && (

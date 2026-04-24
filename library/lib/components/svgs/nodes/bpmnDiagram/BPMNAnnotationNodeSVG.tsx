@@ -1,4 +1,5 @@
 import { MultilineText } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { SVGComponentProps } from "@/types/SVG"
@@ -59,6 +60,7 @@ export const BPMNAnnotationNodeSVG: React.FC<BPMNAnnotationNodeSVGProps> = ({
         fontSize={16}
         fontWeight="bold"
         fill={textColor}
+        maxLines={maxLinesForHeight(height - 16, 19)}
       />
 
       {showAssessmentResults && (

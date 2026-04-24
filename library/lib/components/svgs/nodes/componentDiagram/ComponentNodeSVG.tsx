@@ -1,4 +1,5 @@
 import { CustomText, MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -64,11 +65,12 @@ export const ComponentNodeSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Optional «component» header (single line). */}
+        {/* Optional «component» header (single line). Matches pre-change
+            position: stereotype sits ~9.6 above the centerline. */}
         {isComponentHeaderShown && (
           <CustomText
             x={width / 2}
-            y={height / 2 - 11}
+            y={height / 2 - 10}
             textAnchor="middle"
             fontWeight="bold"
             dominantBaseline="middle"
@@ -79,16 +81,22 @@ export const ComponentNodeSVG: React.FC<Props> = ({
           </CustomText>
         )}
 
-        {/* Name Text (wrapped) — leave room on the right for the icon. */}
+        {/* Name Text (wrapped) — leave room on the right for the icon.
+            Name's first line center lands at original ~height/2+9.6 when
+            the header is shown, or at the geometric center otherwise. */}
         <MultilineText
           text={name}
           x={width / 2}
-          y={isComponentHeaderShown ? height / 2 + 8 : height / 2}
+          y={isComponentHeaderShown ? height / 2 + 10 : height / 2}
           maxWidth={width - 48}
           fontSize={16}
           fontWeight="bold"
           fill={textColor}
           verticalAnchor={isComponentHeaderShown ? "top" : "middle"}
+          maxLines={maxLinesForHeight(
+            height / 2 - (isComponentHeaderShown ? 10 : 8),
+            19
+          )}
         />
       </g>
 

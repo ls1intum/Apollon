@@ -9,7 +9,16 @@ type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
   text: string
   /** Anchor x coordinate (meaning depends on `textAnchor`). */
   x: number
-  /** Anchor y coordinate (meaning depends on `verticalAnchor`). */
+  /**
+   * Anchor y coordinate (meaning depends on `verticalAnchor`).
+   *
+   * For every anchor mode we treat `y` as if it were the `y` of a single-line
+   * `<text>` with `dominantBaseline="middle"`. That makes `MultilineText` a
+   * drop-in replacement for the old `<CustomText>` pattern: the first line (or
+   * the only line) renders at exactly the same visual position as before, and
+   * additional lines grow in the natural direction (down for `top`, up for
+   * `bottom`, split either way for `middle`).
+   */
   y: number
   /** Maximum line width in SVG user units. */
   maxWidth: number
@@ -20,14 +29,18 @@ type Props = Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
   fontStyle?: string
   /** Line height in SVG user units. Defaults to `round(fontSize * 1.2)`. */
   lineHeight?: number
-  /** "middle" centers the block on `y`; "top" treats `y` as the top; "bottom" as the bottom. */
+  /**
+   * Where the first (for `"top"`), last (`"bottom"`) or middle line (`"middle"`)
+   * sits relative to `y`. See the `y` prop above for the precise semantics.
+   */
   verticalAnchor?: VerticalAnchor
   textAnchor?: TextAnchor
   fill?: string
-  /** Cap on line count; remaining content is dropped (no ellipsis added here). */
+  /**
+   * Cap on line count. When specified and the text does not fit, the last
+   * rendered line is appended with a Unicode horizontal ellipsis (`…`).
+   */
   maxLines?: number
-  /** Optional callback for consumers that want to know how many lines were rendered. */
-  onLayout?: (info: { lineCount: number; blockHeight: number }) => void
 }
 
 const DEFAULT_FONT_FAMILY =
@@ -56,7 +69,6 @@ export const MultilineText: FC<Props> = ({
   fill = "var(--apollon-primary-contrast, #000000)",
   maxLines,
   pointerEvents = "none",
-  onLayout,
   ...rest
 }) => {
   const resolvedLineHeight = lineHeight ?? Math.round(fontSize * 1.2)
@@ -76,25 +88,29 @@ export const MultilineText: FC<Props> = ({
   )
 
   if (!text || wrapped.lines.length === 0) {
-    onLayout?.({ lineCount: 0, blockHeight: 0 })
     return null
   }
 
-  const lines = wrapped.lines
-  const n = lines.length
-  const blockHeight = n * resolvedLineHeight
+  const displayLines =
+    wrapped.overflow && wrapped.lines.length > 0
+      ? wrapped.lines.map((line, i) =>
+          i === wrapped.lines.length - 1 ? `${line.trimEnd()}…` : line
+        )
+      : wrapped.lines
 
-  // Compute the center-y of the first line based on vertical anchoring.
+  const n = displayLines.length
+
+  // Anchor semantics: treat `y` as if for a single-line <text> with
+  // dominantBaseline="middle". First/last/middle line's visual center lands
+  // exactly on `y`, extra lines grow in the natural direction.
   let firstLineCenterY: number
   if (verticalAnchor === "top") {
-    firstLineCenterY = y + resolvedLineHeight / 2
+    firstLineCenterY = y
   } else if (verticalAnchor === "bottom") {
-    firstLineCenterY = y - blockHeight + resolvedLineHeight / 2
+    firstLineCenterY = y - (n - 1) * resolvedLineHeight
   } else {
-    firstLineCenterY = y - blockHeight / 2 + resolvedLineHeight / 2
+    firstLineCenterY = y - ((n - 1) * resolvedLineHeight) / 2
   }
-
-  onLayout?.({ lineCount: n, blockHeight })
 
   return (
     <text
@@ -110,7 +126,7 @@ export const MultilineText: FC<Props> = ({
       pointerEvents={pointerEvents}
       {...rest}
     >
-      {lines.map((line, i) => (
+      {displayLines.map((line, i) => (
         <tspan key={i} x={x} y={firstLineCenterY + i * resolvedLineHeight}>
           {line}
         </tspan>

@@ -1,4 +1,5 @@
 import { CustomText, MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -93,6 +94,13 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
           fill={textColor}
           verticalAnchor="top"
           textDecoration="underline"
+          maxLines={maxLinesForHeight(
+            height -
+              (isComponentHeaderShown && stereotype && stereotype.length > 0
+                ? 40
+                : 20),
+            19
+          )}
         />
       </g>
 

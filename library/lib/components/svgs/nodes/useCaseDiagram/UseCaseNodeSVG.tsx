@@ -14,11 +14,14 @@ interface Props extends SVGComponentProps {
 }
 
 // Text style for the use-case label. Explicit sizing so both pretext's canvas
-// measurement and the SVG renderer stay in sync.
-const LABEL_FONT_SIZE = 14
+// measurement and the SVG renderer stay in sync. 16px matches the browser's
+// SVG default and the rest of the library's un-sized <text> rendering.
+const LABEL_FONT_SIZE = 16
 const LABEL_FONT_WEIGHT = 600
 const LABEL_LINE_HEIGHT = Math.round(LABEL_FONT_SIZE * 1.2)
-// Keep text from kissing the ellipse outline even at the widest point.
+// Asymmetric ellipse padding: wider horizontally (where glyphs hit the curve
+// at a glancing angle) than vertically (where the curve is closer to the
+// label's cap/descender). Prevents text from kissing the outline.
 const ELLIPSE_PADDING_X = 8
 const ELLIPSE_PADDING_Y = 6
 

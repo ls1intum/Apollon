@@ -1,7 +1,8 @@
-import { CustomText } from "@/components/svgs/nodes/CustomText"
+import { MultilineText } from "@/components"
 import { LAYOUT } from "@/constants"
 import { DefaultNodeProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { SVGAttributes } from "react"
 
 export type ColorDescriptionSVGProps = {
@@ -52,17 +53,19 @@ export function ColorDescriptionSVG({
           stroke={strokeColor}
           fill={fillColor}
         />
-        {/* Description Text */}
-        <CustomText
+        {/* Description Text — wrap inside the shape, leaving room for the
+            notched top-right corner. Vertical lines are capped at what
+            fits inside the node height. */}
+        <MultilineText
+          text={name}
           x={width / 2}
           y={height / 2}
-          dominantBaseline="middle"
-          textAnchor="middle"
+          maxWidth={width - 24}
+          fontSize={16}
           fontWeight="600"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+          maxLines={maxLinesForHeight(height - 16, 19)}
+        />
       </g>
     </svg>
   )

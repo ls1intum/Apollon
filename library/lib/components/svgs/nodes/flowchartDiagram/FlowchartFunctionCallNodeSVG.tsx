@@ -1,4 +1,5 @@
 import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -76,6 +77,7 @@ export const FlowchartFunctionCallNodeSVG: React.FC<Props> = ({
           fontSize={16}
           fontWeight="600"
           fill={textColor}
+          maxLines={maxLinesForHeight(height - 16, 19)}
         />
       </g>
 

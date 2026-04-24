@@ -65,11 +65,13 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
           fill={fillColor}
         />
 
-        {/* Name Text — anchored just below the left-top tab. */}
+        {/* Name Text — anchored just below the left-top tab. First line's
+            center lands a few px below the tab bottom to preserve the
+            visible position of the original hanging-baseline layout. */}
         <MultilineText
           text={name}
           x={width / 2}
-          y={leftTopBoxHeight + padding}
+          y={leftTopBoxHeight + padding + 7}
           maxWidth={width - 24}
           fontSize={16}
           fontWeight="600"

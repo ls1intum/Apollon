@@ -5,6 +5,7 @@ import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { DefaultNodeProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 
 export type ActivityActionNodeSVGProps = SVGComponentProps & {
   data: DefaultNodeProps
@@ -55,6 +56,7 @@ export const ActivityActionNodeSVG: React.FC<ActivityActionNodeSVGProps> = ({
           fontSize={16}
           fontWeight="bold"
           fill={textColor}
+          maxLines={maxLinesForHeight(height - 16, 19)}
         />
       </g>
 

@@ -1,4 +1,5 @@
 import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -63,18 +64,21 @@ export const DeploymentArtifactSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Name Text — anchor top so wrapping grows downward from the
-            original single-line baseline near y=25. Max width leaves room
-            for the artifact icon in the top-right corner. */}
+        {/* Name Text — anchor the first line's center at the original
+            single-line y=25 and grow downward. Max width leaves room for
+            the artifact icon in the top-right corner; max lines are
+            capped to what fits in the node's actual height (single line
+            at the default 50px, more as the user resizes). */}
         <MultilineText
           text={name}
           x={width / 2}
-          y={15}
+          y={25}
           maxWidth={width - 60}
           fontSize={16}
           fontWeight="bold"
           fill={textColor}
           verticalAnchor="top"
+          maxLines={maxLinesForHeight(height - 16, 19)}
         />
       </g>
 

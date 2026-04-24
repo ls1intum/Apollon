@@ -45,11 +45,13 @@ export const UseCaseSystemNodeSVG: React.FC<Props> = ({
           stroke={strokeColor}
         />
 
-        {/* Name Text — anchored near the top edge of the system boundary. */}
+        {/* Name Text — anchored near the top edge of the system boundary.
+            First line's center lands at y=22 to match the original
+            hanging-baseline layout (roughly top-of-cap at y=16). */}
         <MultilineText
           text={name}
           x={width / 2}
-          y={10}
+          y={22}
           maxWidth={width - 24}
           fontSize={16}
           fontWeight="600"

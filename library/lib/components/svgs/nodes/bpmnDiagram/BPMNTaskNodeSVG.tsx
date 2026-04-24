@@ -1,4 +1,5 @@
 import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -286,6 +287,10 @@ export const BPMNTaskNodeSVG: React.FC<BPMNTaskNodeSVGProps> = ({
         />
 
         {icon}
+        {/* Cap the wrapped block so it can't collide with the top-left
+            task-type icon or the bottom-center marker. Reserves are only
+            charged when the corresponding decoration is actually drawn,
+            so a plain task keeps its full vertical budget. */}
         <MultilineText
           text={name}
           x={width / 2}
@@ -294,6 +299,10 @@ export const BPMNTaskNodeSVG: React.FC<BPMNTaskNodeSVGProps> = ({
           fontSize={16}
           fontWeight="bold"
           fill={textColor}
+          maxLines={maxLinesForHeight(
+            height - (taskType ? 30 : 8) - (marker ? 20 : 8),
+            19
+          )}
         />
         {markerEl}
       </g>
