@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { supportsMultilineName } from "@/utils/nodeUtils"
+import { rendersNameLabel, supportsMultilineName } from "@/utils/nodeUtils"
 import { DiagramNodeTypeRecord } from "@/nodes"
 
 /**
@@ -92,4 +92,25 @@ describe("supportsMultilineName", () => {
       expect(supportsMultilineName(type)).toBe(false)
     })
   }
+})
+
+describe("rendersNameLabel", () => {
+  const symbolNodes = [
+    DiagramNodeTypeRecord.activityInitialNode,
+    DiagramNodeTypeRecord.activityFinalNode,
+    DiagramNodeTypeRecord.activityForkNode,
+    DiagramNodeTypeRecord.activityForkNodeHorizontal,
+  ]
+
+  for (const type of symbolNodes) {
+    it(`hides the rename input for the "${type}" symbol`, () => {
+      expect(rendersNameLabel(type)).toBe(false)
+    })
+  }
+
+  it("defaults to true for unknown / non-symbol types", () => {
+    expect(rendersNameLabel(undefined)).toBe(true)
+    expect(rendersNameLabel("class")).toBe(true)
+    expect(rendersNameLabel(DiagramNodeTypeRecord.bpmnTask)).toBe(true)
+  })
 })

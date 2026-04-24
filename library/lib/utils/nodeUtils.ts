@@ -154,6 +154,28 @@ export const supportsMultilineName = (nodeType?: string): boolean => {
   }
 }
 
+/**
+ * Does this node render a user-editable text label at all?
+ *
+ * Some "symbol" nodes (activity initial / final / fork, SFC symbols, etc.)
+ * have no SVG text — they're pure decoration. Surfacing a rename input
+ * for them in the popover is confusing because any text the user types
+ * is stored but never repaints. Callers use this predicate to decide
+ * whether the rename input should appear; false means hide it entirely.
+ */
+export const rendersNameLabel = (nodeType?: string): boolean => {
+  if (!nodeType) return true
+  switch (nodeType) {
+    case DiagramNodeTypeRecord.activityInitialNode:
+    case DiagramNodeTypeRecord.activityFinalNode:
+    case DiagramNodeTypeRecord.activityForkNode:
+    case DiagramNodeTypeRecord.activityForkNodeHorizontal:
+      return false
+    default:
+      return true
+  }
+}
+
 export const isParentNodeType = (nodeType?: string) => {
   if (!nodeType) {
     return false
