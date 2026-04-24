@@ -1,5 +1,5 @@
 import { CustomText, MultilineText, StyledRect } from "@/components"
-import { maxLinesForHeight } from "@/utils/svgTextLayout"
+import { maxLinesForHeight, wrapTextInRect } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -7,6 +7,12 @@ import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { ComponentNodeProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
+import { useMemo } from "react"
+
+const NAME_FONT_SIZE = 16
+const NAME_LINE_HEIGHT = 19
+const STEREOTYPE_LINE_HEIGHT = 15
+const STEREOTYPE_NAME_GAP = 4
 
 interface Props extends SVGComponentProps {
   data: ComponentNodeProps
@@ -28,6 +34,41 @@ export const ComponentNodeSVG: React.FC<Props> = ({
   const { name, isComponentHeaderShown } = data
 
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
+
+  // Compute the wrapped name up-front so we can center the stereotype
+  // header + name as a single visual group, rather than pinning each to
+  // fixed offsets that only look right for a one-line name.
+  const nameMaxWidth = width - 48
+  const nameMaxLines = isComponentHeaderShown
+    ? maxLinesForHeight(
+        height - STEREOTYPE_LINE_HEIGHT - STEREOTYPE_NAME_GAP - 8,
+        NAME_LINE_HEIGHT
+      )
+    : maxLinesForHeight(height - 16, NAME_LINE_HEIGHT)
+  const nameLineCount = useMemo(() => {
+    if (!name) return 0
+    const wrapped = wrapTextInRect(
+      name,
+      nameMaxWidth,
+      { fontSize: NAME_FONT_SIZE, fontWeight: "bold" },
+      { lineHeight: NAME_LINE_HEIGHT, maxLines: nameMaxLines }
+    )
+    return Math.max(1, wrapped.lines.length)
+  }, [name, nameMaxWidth, nameMaxLines])
+
+  const groupHeight = isComponentHeaderShown
+    ? STEREOTYPE_LINE_HEIGHT +
+      STEREOTYPE_NAME_GAP +
+      nameLineCount * NAME_LINE_HEIGHT
+    : nameLineCount * NAME_LINE_HEIGHT
+  const groupTop = height / 2 - groupHeight / 2
+  const stereotypeCenterY = groupTop + STEREOTYPE_LINE_HEIGHT / 2
+  const nameFirstLineCenterY = isComponentHeaderShown
+    ? groupTop +
+      STEREOTYPE_LINE_HEIGHT +
+      STEREOTYPE_NAME_GAP +
+      NAME_LINE_HEIGHT / 2
+    : groupTop + NAME_LINE_HEIGHT / 2
 
   return (
     <svg
@@ -65,12 +106,13 @@ export const ComponentNodeSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Optional «component» header (single line). Matches pre-change
-            position: stereotype sits ~9.6 above the centerline. */}
+        {/* «component» stereotype header — sits above the name block and
+            moves upward as the name wraps so the whole {header, name}
+            group stays vertically centered in the node. */}
         {isComponentHeaderShown && (
           <CustomText
             x={width / 2}
-            y={height / 2 - 10}
+            y={stereotypeCenterY}
             textAnchor="middle"
             fontWeight="bold"
             dominantBaseline="middle"
@@ -81,23 +123,20 @@ export const ComponentNodeSVG: React.FC<Props> = ({
           </CustomText>
         )}
 
-        {/* Name Text (wrapped) — leave room on the right for the icon.
-            Name's first line center lands at original ~height/2+9.6 when
-            the header is shown, or at the geometric center otherwise. */}
+        {/* Wrapped name — the right padding leaves room for the icon, and
+            the first-line center is positioned so the {header, name} group
+            is centered as a unit (see `groupHeight` / `groupTop` above). */}
         <MultilineText
           text={name}
           x={width / 2}
-          y={isComponentHeaderShown ? height / 2 + 10 : height / 2}
-          maxWidth={width - 48}
-          fontSize={16}
+          y={nameFirstLineCenterY}
+          maxWidth={nameMaxWidth}
+          fontSize={NAME_FONT_SIZE}
           fontWeight="bold"
+          lineHeight={NAME_LINE_HEIGHT}
           fill={textColor}
-          verticalAnchor={isComponentHeaderShown ? "top" : "middle"}
-          maxLines={
-            isComponentHeaderShown
-              ? maxLinesForHeight(height / 2 - 10, 19)
-              : maxLinesForHeight(height - 16, 19)
-          }
+          verticalAnchor="top"
+          maxLines={nameMaxLines}
         />
       </g>
 

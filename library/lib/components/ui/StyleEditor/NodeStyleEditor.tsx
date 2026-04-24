@@ -126,6 +126,9 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
             size="small"
             value={nodeData.name}
             placeholder={inputPlaceholder}
+            multiline
+            minRows={1}
+            maxRows={6}
           />
         )}
         <PaintRollerIcon

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   clearPrepareCache,
+  layoutTextInDiamond,
   layoutTextInEllipse,
   toCanvasFont,
   wrapTextInRect,
@@ -60,6 +61,53 @@ describe("wrapTextInRect", () => {
     )
     expect(result.lines.length).toBe(2)
     expect(result.overflow).toBe(true)
+  })
+
+  it("honors literal newlines when whiteSpace is pre-wrap (default)", () => {
+    const result = wrapTextInRect("hello\nworld", 500, { fontSize: 14 })
+    expect(result.lines.length).toBe(2)
+    expect(result.lines[0].trimEnd()).toBe("hello")
+    expect(result.lines[1].trimEnd()).toBe("world")
+  })
+
+  it("collapses newlines when whiteSpace is normal", () => {
+    const result = wrapTextInRect(
+      "hello\nworld",
+      500,
+      { fontSize: 14 },
+      { whiteSpace: "normal" }
+    )
+    expect(result.lines.length).toBe(1)
+  })
+})
+
+describe("layoutTextInDiamond", () => {
+  it("wraps text into multiple lines inside a diamond", () => {
+    const layout = layoutTextInDiamond(
+      "aaa bbb ccc ddd eee fff ggg hhh",
+      200,
+      200,
+      { fontSize: 14 },
+      17
+    )
+    expect(layout.lines.length).toBeGreaterThan(1)
+    // Every line must fit within the full diamond diameter.
+    for (const line of layout.lines) {
+      expect(line.width).toBeLessThanOrEqual(200)
+    }
+  })
+
+  it("appends an ellipsis to the final line on overflow", () => {
+    const layout = layoutTextInDiamond(
+      "A very long label that cannot possibly fit in such a tiny diamond",
+      60,
+      40,
+      { fontSize: 14 },
+      17
+    )
+    expect(layout.overflow).toBe(true)
+    const last = layout.lines[layout.lines.length - 1]
+    expect(last.text.endsWith("…")).toBe(true)
   })
 })
 

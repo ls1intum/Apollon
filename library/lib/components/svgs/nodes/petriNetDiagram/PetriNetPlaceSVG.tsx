@@ -3,11 +3,9 @@ import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { CustomText } from "../CustomText"
-import { MultilineText } from "@/components"
 import { LAYOUT } from "@/constants"
 import { PetriNetPlaceProps } from "@/types"
-import { getCustomColorsFromData, wrapTextInRect } from "@/utils"
-import { useMemo } from "react"
+import { getCustomColorsFromData } from "@/utils"
 
 interface Props extends SVGComponentProps {
   data: PetriNetPlaceProps
@@ -28,24 +26,11 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
   const previewScale = SIDEBAR_PREVIEW_SCALE ?? 1
   const scaledWidth = width * previewScale
   const scaledHeight = height * previewScale
-  const labelLineHeight = 19
-  // Wrap against the shape width so long names break *under* the shape
-  // without extending past it horizontally.
-  const labelMaxWidth = width
-  const labelMaxLines = 3 // soft cap; beyond this, the final line truncates.
-  const labelLineCount = useMemo(() => {
-    const wrapped = wrapTextInRect(
-      name ?? "",
-      labelMaxWidth,
-      { fontSize: 16, fontWeight: 600 },
-      { lineHeight: labelLineHeight, maxLines: labelMaxLines }
-    )
-    return Math.max(1, wrapped.lines.length)
-  }, [name, labelMaxWidth, labelLineHeight, labelMaxLines])
-  const labelHeight = Math.max(
-    LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT,
-    labelLineCount * labelLineHeight + 8
-  )
+  // Petri-net convention: the label is a single line rendered below the
+  // shape and is allowed to extend horizontally past the node footprint.
+  // Wrapping the label looks crowded and hurts readability, and hiding
+  // characters behind an ellipsis is worse than letting the name breathe.
+  const labelHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
   const scaledLabelHeight = labelHeight * previewScale
   const svgHeight = height + labelHeight
   const scaledSvgHeight = scaledHeight + scaledLabelHeight
@@ -119,22 +104,16 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
         </CustomText>
       )}
 
-      {/* Label sits in a strip below the circle. We size the strip to
-          exactly hold the wrapped text so multi-line labels never clip
-          through the circle or overflow outside the SVG element. The
-          soft cap at `labelMaxLines` keeps the visible extent bounded
-          even when the user pastes a paragraph into the name. */}
-      <MultilineText
-        text={name}
+      <CustomText
         x={width / 2}
         y={height + labelHeight / 2}
-        maxWidth={labelMaxWidth}
-        fontSize={16}
-        fontWeight={600}
-        lineHeight={labelLineHeight}
+        textAnchor="middle"
+        fontWeight="600"
+        dominantBaseline="middle"
         fill={textColor}
-        maxLines={labelMaxLines}
-      />
+      >
+        {name}
+      </CustomText>
 
       {renderTokens()}
 

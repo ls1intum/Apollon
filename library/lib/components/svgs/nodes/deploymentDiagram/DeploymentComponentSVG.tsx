@@ -1,5 +1,5 @@
 import { CustomText, MultilineText, StyledRect } from "@/components"
-import { maxLinesForHeight } from "@/utils/svgTextLayout"
+import { maxLinesForHeight, wrapTextInRect } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -7,6 +7,12 @@ import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { DeploymentComponentProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
+import { useMemo } from "react"
+
+const NAME_FONT_SIZE = 16
+const NAME_LINE_HEIGHT = 19
+const STEREOTYPE_LINE_HEIGHT = 15
+const STEREOTYPE_NAME_GAP = 4
 
 interface Props extends SVGComponentProps {
   data: DeploymentComponentProps
@@ -27,6 +33,40 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
   const scaledWidth = width * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const scaledHeight = height * (SIDEBAR_PREVIEW_SCALE ?? 1)
   const { fillColor, strokeColor, textColor } = getCustomColorsFromData(data)
+
+  // Center the {header, name} pair as a group so multi-line names don't
+  // drift the header off the vertical midline. See ComponentNodeSVG for
+  // the original rationale.
+  const nameMaxWidth = width - 48
+  const nameMaxLines = isComponentHeaderShown
+    ? maxLinesForHeight(
+        height - STEREOTYPE_LINE_HEIGHT - STEREOTYPE_NAME_GAP - 8,
+        NAME_LINE_HEIGHT
+      )
+    : maxLinesForHeight(height - 16, NAME_LINE_HEIGHT)
+  const nameLineCount = useMemo(() => {
+    if (!name) return 0
+    const wrapped = wrapTextInRect(
+      name,
+      nameMaxWidth,
+      { fontSize: NAME_FONT_SIZE, fontWeight: "bold" },
+      { lineHeight: NAME_LINE_HEIGHT, maxLines: nameMaxLines }
+    )
+    return Math.max(1, wrapped.lines.length)
+  }, [name, nameMaxWidth, nameMaxLines])
+  const groupHeight = isComponentHeaderShown
+    ? STEREOTYPE_LINE_HEIGHT +
+      STEREOTYPE_NAME_GAP +
+      nameLineCount * NAME_LINE_HEIGHT
+    : nameLineCount * NAME_LINE_HEIGHT
+  const groupTop = height / 2 - groupHeight / 2
+  const stereotypeCenterY = groupTop + STEREOTYPE_LINE_HEIGHT / 2
+  const nameFirstLineCenterY = isComponentHeaderShown
+    ? groupTop +
+      STEREOTYPE_LINE_HEIGHT +
+      STEREOTYPE_NAME_GAP +
+      NAME_LINE_HEIGHT / 2
+    : groupTop + NAME_LINE_HEIGHT / 2
 
   return (
     <svg
@@ -64,12 +104,12 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
           />
         </g>
 
-        {/* Optional «component» header. Matches pre-change position: sits
-            ~9.6 above the centerline. Kept single-line. */}
+        {/* «component» stereotype — stacks with the wrapped name as a
+            single group, centered vertically in the shape. */}
         {isComponentHeaderShown && (
           <CustomText
             x={width / 2}
-            y={height / 2 - 10}
+            y={stereotypeCenterY}
             textAnchor="middle"
             fontWeight="bold"
             dominantBaseline="middle"
@@ -80,23 +120,19 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
           </CustomText>
         )}
 
-        {/* Name Text (wrapped) — leave room on the right for the icon.
-            First line's center lands at the original ~height/2+9.6 with
-            the header, or at the geometric center without it. */}
+        {/* Wrapped name — placement keeps the {header, name} block
+            centered in the node regardless of line count. */}
         <MultilineText
           text={name}
           x={width / 2}
-          y={isComponentHeaderShown ? height / 2 + 10 : height / 2}
-          maxWidth={width - 48}
-          fontSize={16}
+          y={nameFirstLineCenterY}
+          maxWidth={nameMaxWidth}
+          fontSize={NAME_FONT_SIZE}
           fontWeight="bold"
+          lineHeight={NAME_LINE_HEIGHT}
           fill={textColor}
-          verticalAnchor={isComponentHeaderShown ? "top" : "middle"}
-          maxLines={
-            isComponentHeaderShown
-              ? maxLinesForHeight(height / 2 - 10, 19)
-              : maxLinesForHeight(height - 16, 19)
-          }
+          verticalAnchor="top"
+          maxLines={nameMaxLines}
         />
       </g>
 

@@ -39,12 +39,18 @@ export const toCanvasFont = (spec: SvgFontSpec): string => {
 const prepareCache = new Map<string, PreparedTextWithSegments>()
 const PREPARE_CACHE_LIMIT = 256
 
-const getPrepared = (text: string, font: string): PreparedTextWithSegments => {
-  // Use U+001F (Unit Separator) as the delimiter between the font shorthand
-  // and the label text. Both operands are user-visible strings, so this
-  // control character is guaranteed not to appear in either and the cache
-  // key stays collision-free.
-  const key = `${font}${text}`
+/** How to treat whitespace during layout. Mirrors a CSS `white-space` subset. */
+export type WhiteSpaceMode = "normal" | "pre-wrap"
+
+const getPrepared = (
+  text: string,
+  font: string,
+  whiteSpace: WhiteSpaceMode
+): PreparedTextWithSegments => {
+  // Use U+001F (Unit Separator) as the delimiter between the cache-key parts.
+  // All three operands are user-visible strings, so this control character is
+  // guaranteed not to appear in any of them and the key stays collision-free.
+  const key = `${whiteSpace}${font}${text}`
   const cached = prepareCache.get(key)
   if (cached) {
     // Touch for LRU: re-insert so recently used entries stay put and older
@@ -53,7 +59,7 @@ const getPrepared = (text: string, font: string): PreparedTextWithSegments => {
     prepareCache.set(key, cached)
     return cached
   }
-  const prepared = prepareWithSegments(text, font)
+  const prepared = prepareWithSegments(text, font, { whiteSpace })
   if (prepareCache.size >= PREPARE_CACHE_LIMIT) {
     const firstKey = prepareCache.keys().next().value
     if (firstKey !== undefined) prepareCache.delete(firstKey)
@@ -110,6 +116,10 @@ export type WrappedText = {
 
 /**
  * Wrap text inside a rectangle of `maxWidth`. Word-break is CSS `normal`.
+ * When `whiteSpace` is `"pre-wrap"` (the default), literal `\n` characters in
+ * the input become hard line breaks; when it is `"normal"` whitespace runs
+ * collapse the way CSS normally collapses them.
+ *
  * Returns the resulting lines, the widest line's measured width, and whether
  * any content was dropped (i.e. could not fit within `maxLines`).
  */
@@ -117,7 +127,11 @@ export const wrapTextInRect = (
   text: string,
   maxWidth: number,
   font: SvgFontSpec | string,
-  options: { maxLines?: number; lineHeight?: number } = {}
+  options: {
+    maxLines?: number
+    lineHeight?: number
+    whiteSpace?: WhiteSpaceMode
+  } = {}
 ): WrappedText => {
   const trimmed = text ?? ""
   if (!trimmed) {
@@ -127,7 +141,8 @@ export const wrapTextInRect = (
   const lineHeight =
     options.lineHeight ??
     (typeof font === "string" ? 16 : Math.round(font.fontSize * 1.2))
-  const prepared = getPrepared(trimmed, fontString)
+  const whiteSpace = options.whiteSpace ?? "pre-wrap"
+  const prepared = getPrepared(trimmed, fontString, whiteSpace)
   const sanitizedWidth = Math.max(1, maxWidth)
   const result = layoutWithLines(prepared, sanitizedWidth, lineHeight)
   let lines = result.lines.map((line) => line.text)
@@ -145,52 +160,80 @@ export const wrapTextInRect = (
   return { lines, maxLineWidth, overflow }
 }
 
-export type EllipseLayout = {
-  lines: LayoutLine[]
+export type ShapeLayout = {
+  /** Materialized lines (from pretext). `text` already includes any ellipsis. */
+  lines: { text: string; width: number }[]
   lineHeight: number
-  /** Signed y-offsets (relative to ellipse center) of each line's baseline. */
+  /** Signed y-offsets (relative to shape center) of each line's visual center. */
   lineOffsets: number[]
   /** Total vertical span of the laid-out block. */
   blockHeight: number
+  /** True when input text exceeded the shape's capacity and was truncated. */
+  overflow: boolean
 }
 
-type EllipseOptions = {
+/** @deprecated kept as an alias for backwards compatibility. */
+export type EllipseLayout = ShapeLayout
+
+type ShapeOptions = {
   paddingX?: number
   paddingY?: number
   /** Cap on how many lines we will try to fit. Defaults to a generous value. */
   maxLines?: number
+  /** Same semantics as `wrapTextInRect`'s `whiteSpace`. */
+  whiteSpace?: WhiteSpaceMode
 }
 
+type ShapeWidthFn = (y: number, ry: number, rx: number) => number
+
+const ellipseWidthAtY: ShapeWidthFn = (y, ry, rx) => {
+  const bound = Math.min(Math.abs(y), ry)
+  const ratio = bound / ry
+  const factor = Math.sqrt(Math.max(0, 1 - ratio * ratio))
+  return 2 * rx * factor
+}
+
+const diamondWidthAtY: ShapeWidthFn = (y, ry, rx) => {
+  const bound = Math.min(Math.abs(y), ry)
+  const factor = 1 - bound / ry
+  return 2 * rx * Math.max(0, factor)
+}
+
+const HORIZONTAL_ELLIPSIS = "…"
+
 /**
- * Lay out `text` inside an ellipse of size `width`×`height`, respecting the
- * ellipse's curvature so lines near the top and bottom get a narrower max
- * width than lines near the middle.
+ * Shared "fit text inside a shape with variable per-line max width" routine.
  *
  * Strategy: for each candidate line count N (starting at 1), compute the
  * maximum width available to each of the N vertically-centered lines given
- * the ellipse equation, then stream a layout using pretext's variable-width
- * line walker. If the text is fully consumed within N lines, we're done.
- * Otherwise, try N+1. We stop once N lines would no longer fit vertically
- * inside the ellipse (or once we hit `maxLines`).
+ * the shape's `widthAt(y)` function, then stream a layout using pretext's
+ * variable-width line walker. If the text is fully consumed within N lines,
+ * we're done. Otherwise, try N+1. We stop once N lines would no longer fit
+ * vertically inside the shape, at which point the best-effort layout gets
+ * an ellipsis appended to the last line so users see that content was
+ * truncated instead of silently clipping glyphs.
  */
-export const layoutTextInEllipse = (
+const layoutTextInShape = (
   text: string,
   width: number,
   height: number,
   font: SvgFontSpec | string,
   lineHeight: number,
-  options: EllipseOptions = {}
-): EllipseLayout => {
+  widthAt: ShapeWidthFn,
+  options: ShapeOptions
+): ShapeLayout => {
   const fontString = typeof font === "string" ? font : toCanvasFont(font)
   const paddingX = options.paddingX ?? 0
   const paddingY = options.paddingY ?? 0
   const maxLinesCap = options.maxLines ?? 32
+  const whiteSpace = options.whiteSpace ?? "pre-wrap"
 
-  const emptyLayout: EllipseLayout = {
+  const emptyLayout: ShapeLayout = {
     lines: [],
     lineHeight,
     lineOffsets: [],
     blockHeight: 0,
+    overflow: false,
   }
 
   const trimmed = text ?? ""
@@ -200,9 +243,9 @@ export const layoutTextInEllipse = (
   const ry = Math.max(0, height / 2 - paddingY)
   if (rx <= 0 || ry <= 0) return emptyLayout
 
-  const prepared = getPrepared(trimmed, fontString)
+  const prepared = getPrepared(trimmed, fontString, whiteSpace)
 
-  // Max line count vertically feasible inside the ellipse.
+  // Max line count vertically feasible inside the shape.
   const verticalCap = Math.max(1, Math.floor((2 * ry) / lineHeight))
   const maxLines = Math.min(verticalCap, maxLinesCap)
 
@@ -211,15 +254,9 @@ export const layoutTextInEllipse = (
     return next === null
   }
 
-  const widthAtY = (y: number): number => {
-    const bound = Math.min(Math.abs(y), ry)
-    const ratio = bound / ry
-    const factor = Math.sqrt(Math.max(0, 1 - ratio * ratio))
-    return 2 * rx * factor
-  }
-
   let bestLines: LayoutLine[] | null = null
   let bestOffsets: number[] = []
+  let bestWidths: number[] = []
 
   for (let n = 1; n <= maxLines; n++) {
     const blockHeight = n * lineHeight
@@ -229,12 +266,11 @@ export const layoutTextInEllipse = (
     for (let i = 0; i < n; i++) {
       const lineTop = topY + i * lineHeight
       const lineBottom = lineTop + lineHeight
-      // Worst-case edge of this line — whichever edge is farther from center.
       const edge = Math.max(Math.abs(lineTop), Math.abs(lineBottom))
-      widths[i] = widthAtY(edge)
+      widths[i] = widthAt(edge, ry, rx)
     }
 
-    // Any zero-width line means the ellipse pinches to nothing here; no point
+    // Any zero-width line means the shape pinches to nothing here; no point
     // trying this N — lines at the extremes cannot hold any text.
     if (widths.some((w) => w <= 0)) break
 
@@ -248,45 +284,48 @@ export const layoutTextInEllipse = (
       cursor = range.end
     }
 
-    // If we filled all N slots, make sure nothing is left over.
     if (lines.length === n && !isCursorAtEnd(cursor)) fits = false
 
     if (fits) {
-      const offsets = new Array(lines.length)
-      // Re-center on actual consumed line count so short text doesn't sit with
-      // phantom trailing space.
       const actualBlockHeight = lines.length * lineHeight
       const actualTop = -actualBlockHeight / 2
-      for (let i = 0; i < lines.length; i++) {
-        // Baseline sits at vertical center of each line's box.
-        offsets[i] = actualTop + (i + 0.5) * lineHeight
-      }
       return {
-        lines,
+        lines: lines.map((l) => ({ text: l.text, width: l.width })),
         lineHeight,
-        lineOffsets: offsets,
+        lineOffsets: lines.map((_, i) => actualTop + (i + 0.5) * lineHeight),
         blockHeight: actualBlockHeight,
+        overflow: false,
       }
     }
 
     bestLines = lines
+    bestWidths = widths
     const actualBlockHeight = lines.length * lineHeight
     const actualTop = -actualBlockHeight / 2
     bestOffsets = lines.map((_, i) => actualTop + (i + 0.5) * lineHeight)
   }
 
-  // Could not fit all text. Return best effort — the caller can still render
-  // what we have; any remaining content is visually clipped by the ellipse.
   if (bestLines && bestLines.length > 0) {
+    // Overflow path: append a horizontal ellipsis to the final line so the
+    // user sees that the content was truncated rather than silently clipped.
+    const rendered = bestLines.map((l) => ({ text: l.text, width: l.width }))
+    const last = rendered[rendered.length - 1]
+    last.text = `${last.text.trimEnd()}${HORIZONTAL_ELLIPSIS}`
+    // Keep bestWidths usage minimal — `maxLineWidth` on the ShapeLayout isn't
+    // exposed, but we reference it to keep the variable alive for potential
+    // future consumers (shrinkwrap, hit-testing).
+    void bestWidths
+
     return {
-      lines: bestLines,
+      lines: rendered,
       lineHeight,
       lineOffsets: bestOffsets,
       blockHeight: bestLines.length * lineHeight,
+      overflow: true,
     }
   }
 
-  // Degenerate fallback: one line at maximum ellipse width. Pretext will still
+  // Degenerate fallback: one line at maximum shape width. Pretext will still
   // wrap only as far as the word boundaries allow. Reuses the already-prepared
   // text from the loop above rather than re-preparing it.
   const natural = measureNaturalWidth(prepared)
@@ -297,10 +336,61 @@ export const layoutTextInEllipse = (
     Math.max(1, fallbackWidth)
   )
   if (!fallback) return emptyLayout
+  const materialized = materializeLineRange(prepared, fallback)
   return {
-    lines: [materializeLineRange(prepared, fallback)],
+    lines: [{ text: materialized.text, width: materialized.width }],
     lineHeight,
     lineOffsets: [0],
     blockHeight: lineHeight,
+    overflow: !isCursorAtEnd(fallback.end),
   }
 }
+
+/**
+ * Lay out `text` inside an ellipse of size `width`×`height`, respecting the
+ * ellipse's curvature so lines near the top and bottom get a narrower max
+ * width than lines near the middle. When the text does not fit, the final
+ * visible line is suffixed with a horizontal ellipsis.
+ */
+export const layoutTextInEllipse = (
+  text: string,
+  width: number,
+  height: number,
+  font: SvgFontSpec | string,
+  lineHeight: number,
+  options: ShapeOptions = {}
+): ShapeLayout =>
+  layoutTextInShape(
+    text,
+    width,
+    height,
+    font,
+    lineHeight,
+    ellipseWidthAtY,
+    options
+  )
+
+/**
+ * Lay out `text` inside a rhombus / diamond of size `width`×`height`. The
+ * inner width varies linearly with the distance from the vertical center
+ * (full width at the middle, zero at the top and bottom vertices). Lines
+ * near the vertices therefore get narrower line boxes, and overflow is
+ * marked with a horizontal ellipsis on the last visible line.
+ */
+export const layoutTextInDiamond = (
+  text: string,
+  width: number,
+  height: number,
+  font: SvgFontSpec | string,
+  lineHeight: number,
+  options: ShapeOptions = {}
+): ShapeLayout =>
+  layoutTextInShape(
+    text,
+    width,
+    height,
+    font,
+    lineHeight,
+    diamondWidthAtY,
+    options
+  )
