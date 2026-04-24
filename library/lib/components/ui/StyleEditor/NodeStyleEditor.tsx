@@ -14,6 +14,14 @@ interface NodeStyleEditorProps {
   noStrokeUpdate?: boolean
   showNameInputChange?: boolean
   title?: string
+  /**
+   * Whether the name input accepts newlines (Enter inserts a hard break).
+   * Default `false`. Set to `true` ONLY for node types whose SVG actually
+   * renders wrapped labels — otherwise typing a newline would save a
+   * character that never repaints. See `supportsMultilineName()` in
+   * `utils/nodeUtils.ts` for the canonical per-type list.
+   */
+  multilineName?: boolean
 }
 
 const styles = {
@@ -78,6 +86,7 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
   inputPlaceholder = "Enter node name",
   noStrokeUpdate = false,
   showNameInputChange = true,
+  multilineName = false,
   title,
   preElements = [],
 }) => {
@@ -126,9 +135,12 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
             size="small"
             value={nodeData.name}
             placeholder={inputPlaceholder}
-            multiline
-            minRows={1}
-            maxRows={6}
+            // Only enable multiline — which lets Enter insert a hard line
+            // break — for node types whose SVG actually wraps the label.
+            // Single-line nodes keep their classic single-line <input>.
+            multiline={multilineName}
+            minRows={multilineName ? 1 : undefined}
+            maxRows={multilineName ? 6 : undefined}
           />
         )}
         <PaintRollerIcon

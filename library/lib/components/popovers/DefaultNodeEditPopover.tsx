@@ -3,6 +3,7 @@ import { useDiagramStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import { PopoverProps } from "./types"
 import { NodeStyleEditor } from "../ui"
+import { supportsMultilineName } from "@/utils/nodeUtils"
 
 export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
   elementId,
@@ -53,6 +54,7 @@ export const DefaultNodeEditPopover: React.FC<PopoverProps> = ({
         handleDataFieldUpdate={handleDataFieldUpdate}
         sideElements={sideElements}
         inputPlaceholder={placeholder}
+        multilineName={supportsMultilineName(node.type)}
       />
 
       {children}

@@ -100,6 +100,60 @@ export function sortNodesTopologically(nodes: Node[]): Node[] {
   return sorted
 }
 
+/**
+ * Does this node's SVG renderer support multi-line label text?
+ *
+ * The rename input in `NodeStyleEditor` is rendered as a single-line text
+ * field by default; callers use this predicate to decide whether the input
+ * should instead be multiline, so the editor only accepts `\n` for nodes
+ * whose SVG actually wraps and repaints them. If a node draws its label
+ * with `MultilineText` or one of the `layoutTextIn…` shape helpers, the
+ * answer is yes; if it draws with plain `CustomText` (Petri-net labels,
+ * class tables, BPMN events/gateways, edge labels), the answer is no.
+ *
+ * The list below is the single source of truth. Adding a new node that
+ * wraps text MUST add an entry here, and removing wrapping from an
+ * existing node MUST remove its entry — otherwise the editor and the
+ * renderer drift.
+ */
+export const supportsMultilineName = (nodeType?: string): boolean => {
+  if (!nodeType) return false
+  switch (nodeType) {
+    case DiagramNodeTypeRecord.activity:
+    case DiagramNodeTypeRecord.activityActionNode:
+    case DiagramNodeTypeRecord.activityObjectNode:
+    case DiagramNodeTypeRecord.activityMergeNode:
+    case DiagramNodeTypeRecord.useCase:
+    case DiagramNodeTypeRecord.useCaseActor:
+    case DiagramNodeTypeRecord.useCaseSystem:
+    case DiagramNodeTypeRecord.component:
+    case DiagramNodeTypeRecord.componentSubsystem:
+    case DiagramNodeTypeRecord.deploymentNode:
+    case DiagramNodeTypeRecord.deploymentComponent:
+    case DiagramNodeTypeRecord.deploymentArtifact:
+    case DiagramNodeTypeRecord.flowchartTerminal:
+    case DiagramNodeTypeRecord.flowchartProcess:
+    case DiagramNodeTypeRecord.flowchartDecision:
+    case DiagramNodeTypeRecord.flowchartInputOutput:
+    case DiagramNodeTypeRecord.flowchartFunctionCall:
+    case DiagramNodeTypeRecord.syntaxTreeTerminal:
+    case DiagramNodeTypeRecord.syntaxTreeNonterminal:
+    case DiagramNodeTypeRecord.bpmnTask:
+    case DiagramNodeTypeRecord.bpmnSubprocess:
+    case DiagramNodeTypeRecord.bpmnTransaction:
+    case DiagramNodeTypeRecord.bpmnCallActivity:
+    case DiagramNodeTypeRecord.bpmnAnnotation:
+    case DiagramNodeTypeRecord.bpmnGroup:
+    case DiagramNodeTypeRecord.reachabilityGraphMarking:
+    case DiagramNodeTypeRecord.sfcStep:
+    case DiagramNodeTypeRecord.package:
+    case DiagramNodeTypeRecord.colorDescription:
+      return true
+    default:
+      return false
+  }
+}
+
 export const isParentNodeType = (nodeType?: string) => {
   if (!nodeType) {
     return false
