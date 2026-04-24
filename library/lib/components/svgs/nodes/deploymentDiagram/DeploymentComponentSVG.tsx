@@ -92,10 +92,11 @@ export const DeploymentComponentSVG: React.FC<Props> = ({
           fontWeight="bold"
           fill={textColor}
           verticalAnchor={isComponentHeaderShown ? "top" : "middle"}
-          maxLines={maxLinesForHeight(
-            height / 2 - (isComponentHeaderShown ? 10 : 8),
-            19
-          )}
+          maxLines={
+            isComponentHeaderShown
+              ? maxLinesForHeight(height / 2 - 10, 19)
+              : maxLinesForHeight(height - 16, 19)
+          }
         />
       </g>
 

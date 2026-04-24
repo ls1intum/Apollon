@@ -1,4 +1,5 @@
 import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -57,6 +58,7 @@ export const UseCaseSystemNodeSVG: React.FC<Props> = ({
           fontWeight="600"
           fill={textColor}
           verticalAnchor="top"
+          maxLines={maxLinesForHeight(height - 28, 19)}
         />
       </g>
 

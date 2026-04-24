@@ -1,4 +1,5 @@
 import { MultilineText } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -77,6 +78,10 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
           fontWeight="600"
           fill={textColor}
           verticalAnchor="top"
+          maxLines={maxLinesForHeight(
+            height - leftTopBoxHeight - padding - 16,
+            19
+          )}
         />
       </g>
 

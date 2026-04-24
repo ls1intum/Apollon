@@ -125,7 +125,8 @@ export const wrapTextInRect = (
   }
   const fontString = typeof font === "string" ? font : toCanvasFont(font)
   const lineHeight =
-    options.lineHeight ?? (typeof font === "string" ? 16 : font.fontSize * 1.2)
+    options.lineHeight ??
+    (typeof font === "string" ? 16 : Math.round(font.fontSize * 1.2))
   const prepared = getPrepared(trimmed, fontString)
   const sanitizedWidth = Math.max(1, maxWidth)
   const result = layoutWithLines(prepared, sanitizedWidth, lineHeight)

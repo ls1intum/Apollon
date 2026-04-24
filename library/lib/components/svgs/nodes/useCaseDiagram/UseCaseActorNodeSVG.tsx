@@ -48,8 +48,8 @@ export const UseCaseActorNodeSVG: React.FC<Props> = ({
         {/* Actor label sits outside the stick figure, below the feet (y=110).
             Anchor the first line's center at the original single-line y=130
             and grow the remaining lines downward so the label never crosses
-            the feet. The viewBox is overflow="visible", so additional lines
-            render below y=140. */}
+            the feet. Soft-cap at 3 lines so extreme paste-ins can't extend
+            arbitrarily far below the actor and overlap adjacent nodes. */}
         <MultilineText
           text={name}
           x={45}
@@ -59,6 +59,7 @@ export const UseCaseActorNodeSVG: React.FC<Props> = ({
           fontWeight="bold"
           fill={textColor}
           verticalAnchor="top"
+          maxLines={3}
         />
       </g>
 
