@@ -2,6 +2,8 @@
 
 Documents every external entity that might qualify as a processor (Art. 28 GDPR) and the status of the required contract (Auftragsverarbeitungsvertrag, AVV).
 
+*Stand: 2026-04-24 · Version 1.0*
+
 ## Summary
 
 **No external processors.** Apollon is self-hosted on TUM / AET infrastructure; no personal data leaves TUM.
@@ -31,7 +33,7 @@ GitHub / GHCR do receive data from AET staff — commits, CI logs, image uploads
 
 ## Follow-up if the VT surface changes
 
-If a future Apollon deployment adds any of the following, amend this file **and** the VT and **and** the privacy notice before deploying:
+If a future Apollon deployment adds any of the following, amend this file, the VT, **and** the privacy notice before deploying:
 
 - Any authentication provider (Keycloak, GitHub OAuth, SAML, etc.) — would make the IdP a recipient and possibly a processor.
 - Any analytics or error telemetry (Sentry, PostHog, Matomo) — would make the vendor a processor.

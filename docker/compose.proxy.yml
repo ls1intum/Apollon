@@ -16,6 +16,10 @@ services:
       - "--ping.entrypoint=http"
       - "--api.dashboard=false"
       - "--api.insecure=false"
+      # Explicitly disable per-request access logging so no client IPs are
+      # persisted by the reverse proxy. This is also the Traefik default;
+      # kept explicit for auditability.
+      - "--accesslog=false"
       - "--entrypoints.http.address=:80"
       - "--entrypoints.https.address=:443"
       - "--entrypoints.http.http.encodequerysemicolons=true"
