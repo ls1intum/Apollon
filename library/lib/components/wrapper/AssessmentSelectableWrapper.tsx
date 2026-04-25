@@ -4,6 +4,11 @@ import { useDiagramStore, useMetadataStore } from "@/store"
 import { ApollonMode, ApollonView } from "@/typings"
 import { useShallow } from "zustand/shallow"
 
+const INTERACTIVE_SELECTION_COLOR =
+  "var(--apollon-interactive-selection, #f39c12)"
+const INTERACTIVE_SELECTION_FILL =
+  "color-mix(in srgb, var(--apollon-interactive-selection, #f39c12) 18%, transparent)"
+
 interface AssessmentSelectableWrapperProps {
   elementId: string
   children: React.ReactNode
@@ -23,9 +28,12 @@ export const AssessmentSelectableWrapper: React.FC<
       view: state.view,
     }))
   )
-  const { isElementInteractive, toggleInteractiveElement } = useDiagramStore(
+  const { isInteractiveSelected, toggleInteractiveElement } = useDiagramStore(
     useShallow((state) => ({
-      isElementInteractive: state.isElementInteractive,
+      isInteractiveSelected:
+        state.interactiveElements[elementId] ||
+        state.interactiveRelationships[elementId] ||
+        false,
       toggleInteractiveElement: state.toggleInteractiveElement,
     }))
   )
@@ -42,7 +50,6 @@ export const AssessmentSelectableWrapper: React.FC<
     mode === ApollonMode.Modelling &&
     view === ApollonView.Highlight &&
     !readonly
-  const isInteractiveSelected = isElementInteractive(elementId)
 
   if (showInteractiveInteraction) {
     const handleInteractiveClick = (event: React.PointerEvent) => {
@@ -54,10 +61,16 @@ export const AssessmentSelectableWrapper: React.FC<
     if (asElement == "g") {
       return (
         <g
+          className={`nodrag nopan apollon-interactive-selection${
+            isInteractiveSelected
+              ? " apollon-interactive-selection--selected"
+              : ""
+          }`}
+          data-apollon-element-id={elementId}
           style={{
             cursor: "pointer",
             ...(isInteractiveSelected && {
-              filter: "drop-shadow(0 0 4px rgba(25, 118, 210, 0.75))",
+              filter: `drop-shadow(0 0 4px ${INTERACTIVE_SELECTION_COLOR})`,
             }),
           }}
           onPointerDown={handleInteractiveClick}
@@ -69,12 +82,18 @@ export const AssessmentSelectableWrapper: React.FC<
 
     return (
       <div
+        className={`nodrag nopan apollon-interactive-selection${
+          isInteractiveSelected
+            ? " apollon-interactive-selection--selected"
+            : ""
+        }`}
+        data-apollon-element-id={elementId}
         style={{
           cursor: "pointer",
           ...(isInteractiveSelected && {
-            outline: "2px solid #1976d2",
+            outline: `2px solid ${INTERACTIVE_SELECTION_COLOR}`,
             outlineOffset: "2px",
-            backgroundColor: "rgba(25, 118, 210, 0.12)",
+            backgroundColor: INTERACTIVE_SELECTION_FILL,
           }),
         }}
         onPointerDown={handleInteractiveClick}
@@ -115,6 +134,8 @@ export const AssessmentSelectableWrapper: React.FC<
 
     return (
       <g
+        className="nodrag nopan"
+        data-apollon-element-id={elementId}
         style={gStyle}
         onPointerDown={handleElementClick}
         onMouseEnter={handleElementMouseEnter}
@@ -126,6 +147,8 @@ export const AssessmentSelectableWrapper: React.FC<
   }
   return (
     <div
+      className="nodrag nopan"
+      data-apollon-element-id={elementId}
       style={combinedStyle}
       onPointerDown={handleElementClick}
       onMouseEnter={handleElementMouseEnter}
