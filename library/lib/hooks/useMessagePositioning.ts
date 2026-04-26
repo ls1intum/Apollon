@@ -70,8 +70,9 @@ export const useMessagePositioning = (
     const forwardArrowRotation = calculateRotation(targetArrowDirection)
     const backwardArrowRotation = calculateRotation(sourceArrowDirection)
 
-    const baseOffset = 15
-    const labelOffset = 12
+    const BASE_OFFSET_X = -90
+    const BASE_OFFSET_Y = 20
+    const LABEL_OFFSET = 18
 
     // Position labels and arrows based on actual middle segment orientation
     let forwardArrowBoxPosition: { x: number; y: number }
@@ -80,19 +81,20 @@ export const useMessagePositioning = (
     let backwardLabelBoxPosition: { x: number; y: number }
 
     if (isHorizontalEdge) {
-      // Horizontal middle segment: messages above and below
-      forwardArrowBoxPosition = { x: 0, y: -baseOffset }
-      forwardLabelBoxPosition = { x: labelOffset, y: -baseOffset }
+      // Horizontal edge: labels above and below, arrow + label go left→right
+      forwardArrowBoxPosition = { x: 0, y: -BASE_OFFSET_Y }
+      forwardLabelBoxPosition = { x: LABEL_OFFSET, y: -BASE_OFFSET_Y }
 
-      backwardArrowBoxPosition = { x: 0, y: baseOffset }
-      backwardLabelBoxPosition = { x: labelOffset, y: baseOffset }
+      backwardArrowBoxPosition = { x: 0, y: BASE_OFFSET_Y }
+      backwardLabelBoxPosition = { x: LABEL_OFFSET, y: BASE_OFFSET_Y }
     } else {
-      // Vertical middle segment: messages left and right
-      forwardArrowBoxPosition = { x: baseOffset, y: 0 }
-      forwardLabelBoxPosition = { x: baseOffset + labelOffset, y: 0 }
+      // Vertical edge: forward label on the RIGHT side
+      forwardArrowBoxPosition = { x: BASE_OFFSET_X, y: 0 }
+      forwardLabelBoxPosition = { x: BASE_OFFSET_X + LABEL_OFFSET, y: 0 }
 
-      backwardArrowBoxPosition = { x: -baseOffset, y: 0 }
-      backwardLabelBoxPosition = { x: -baseOffset - labelOffset, y: 0 }
+      // Vertical edge: backward label on the LEFT side
+      backwardArrowBoxPosition = { x: -BASE_OFFSET_X, y: 0 }
+      backwardLabelBoxPosition = { x: -(BASE_OFFSET_X + LABEL_OFFSET), y: 0 }
     }
 
     return {
