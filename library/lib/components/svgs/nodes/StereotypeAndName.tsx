@@ -65,7 +65,7 @@ export const StereotypeAndName: FC<Props> = ({
   height,
   sideReserve,
   verticalAnchor = "center",
-  topAnchorY = 22,
+  topAnchorY = 30,
   nameTextDecoration,
   fontWeight = "bold",
   fill,
@@ -112,18 +112,11 @@ export const StereotypeAndName: FC<Props> = ({
   const { stereotypeCenterY, nameFirstLineCenterY } = (() => {
     if (verticalAnchor === "top") {
       return {
-        stereotypeCenterY:
-          topAnchorY -
-          LAYOUT.STEREOTYPE_LINE_HEIGHT / 2 -
-          LAYOUT.STEREOTYPE_NAME_GAP -
-          LAYOUT.NAME_LINE_HEIGHT / 2 +
-          LAYOUT.NAME_LINE_HEIGHT / 2,
+        stereotypeCenterY: topAnchorY - LAYOUT.STEREOTYPE_LINE_HEIGHT / 2,
         nameFirstLineCenterY: showStereotype
           ? topAnchorY +
-            LAYOUT.STEREOTYPE_LINE_HEIGHT +
-            LAYOUT.STEREOTYPE_NAME_GAP -
-            LAYOUT.NAME_LINE_HEIGHT / 2 +
-            LAYOUT.NAME_LINE_HEIGHT / 2
+            LAYOUT.STEREOTYPE_LINE_HEIGHT -
+            LAYOUT.STEREOTYPE_NAME_GAP
           : topAnchorY,
       }
     }
