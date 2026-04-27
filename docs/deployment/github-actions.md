@@ -36,7 +36,7 @@ Set per GitHub Environment. Values are deployment-specific; names are fixed.
 
 | Var | Purpose | Example |
 | --- | --- | --- |
-| `APP_HOSTNAME_ALIASES_RULE` | Traefik matcher listing additional hostnames that should permanently 301-redirect to `APP_HOSTNAME`. Each listed hostname also receives its own Let's Encrypt certificate so HTTPS bookmarks redirect cleanly. Leave unset on environments without aliases. | `` Host(`apollon-prod.aet.cit.tum.de`, `apollon.ase.cit.tum.de`, `apollon.ase.in.tum.de`) `` |
+| `APP_HOSTNAME_ALIASES_RULE` | Traefik matcher listing additional hostnames that should permanently 301-redirect to `APP_HOSTNAME`. Each listed hostname also receives its own Let's Encrypt certificate so HTTPS bookmarks redirect cleanly. Combine multiple hosts with `\|\|` — Traefik v3's `Host()` matcher takes a single argument. Leave unset on environments without aliases. | `` Host(`apollon-prod.aet.cit.tum.de`) \|\| Host(`apollon.ase.cit.tum.de`) \|\| Host(`apollon.ase.in.tum.de`) `` |
 
 ## Run locally in Docker
 
