@@ -78,6 +78,19 @@ services:
       - "traefik.http.routers.https-maintenance.tls=true"
       - "traefik.http.routers.http-maintenance.priority=1"
       - "traefik.http.routers.https-maintenance.priority=1"
+      - "traefik.http.middlewares.redirect-to-canonical.redirectregex.regex=^https?://[^/]+/(.*)"
+      - "traefik.http.middlewares.redirect-to-canonical.redirectregex.replacement=https://${APP_HOSTNAME}/$${1}"
+      - "traefik.http.middlewares.redirect-to-canonical.redirectregex.permanent=true"
+      - "traefik.http.routers.http-aliases.entryPoints=http"
+      - "traefik.http.routers.http-aliases.rule=${APP_HOSTNAME_ALIASES_RULE:-HostRegexp(`^aliases-disabled$`)}"
+      - "traefik.http.routers.http-aliases.middlewares=redirect-to-canonical"
+      - "traefik.http.routers.http-aliases.priority=1"
+      - "traefik.http.routers.https-aliases.entryPoints=https"
+      - "traefik.http.routers.https-aliases.rule=${APP_HOSTNAME_ALIASES_RULE:-HostRegexp(`^aliases-disabled$`)}"
+      - "traefik.http.routers.https-aliases.middlewares=redirect-to-canonical"
+      - "traefik.http.routers.https-aliases.tls=true"
+      - "traefik.http.routers.https-aliases.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.https-aliases.priority=1"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
       interval: 30s
