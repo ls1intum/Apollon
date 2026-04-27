@@ -61,47 +61,39 @@
 }
 
 .react-flow__handle.apollon-arc-handle--top::before {
-  width: 40px;
-  height: 20px;
+  width: 28px;
+  height: 14px;
   left: 50%;
-  top: -16px;
-  transform: translateX(-50%);
-  border-bottom: none;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  top: 50%;
+  transform: translate(-50%, -100%);
+  border-radius: 14px 14px 0 0;
 }
 
 .react-flow__handle.apollon-arc-handle--right::before {
-  width: 20px;
-  height: 40px;
-  left: 4px;
+  width: 14px;
+  height: 28px;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%);
-  border-left: none;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
+  transform: translate(0, -50%);
+  border-radius: 0 14px 14px 0;
 }
 
 .react-flow__handle.apollon-arc-handle--bottom::before {
-  width: 40px;
-  height: 20px;
+  width: 28px;
+  height: 14px;
   left: 50%;
-  top: 4px;
-  transform: translateX(-50%);
-  border-top: none;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+  top: 50%;
+  transform: translate(-50%, 0);
+  border-radius: 0 0 14px 14px;
 }
 
 .react-flow__handle.apollon-arc-handle--left::before {
-  width: 20px;
-  height: 40px;
-  left: -16px;
+  width: 14px;
+  height: 28px;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%);
-  border-right: none;
-  border-top-left-radius: 20px;
-  border-bottom-left-radius: 20px;
+  transform: translate(-100%, -50%);
+  border-radius: 14px 0 0 14px;
 }
 
 .react-flow__resize-control line {
