@@ -1,11 +1,9 @@
+import { INTERACTIVE_SELECTION_COLOR } from "@/constants"
 import { useAssessmentSelection } from "@/hooks"
 import { useDiagramStore, useMetadataStore } from "@/store"
 import { ApollonMode, ApollonView } from "@/typings"
 import { FC } from "react"
 import { useShallow } from "zustand/shallow"
-
-const INTERACTIVE_SELECTION_COLOR =
-  "var(--apollon-interactive-selection, #f39c12)"
 
 // Assessment selectable wrapper for SVG elements
 interface AssessmentSelectableElementProps {

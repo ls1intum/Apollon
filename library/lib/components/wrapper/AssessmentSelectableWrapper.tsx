@@ -1,13 +1,12 @@
 import React from "react"
+import {
+  INTERACTIVE_SELECTION_COLOR,
+  INTERACTIVE_SELECTION_FILL,
+} from "@/constants"
 import { useAssessmentSelection } from "@/hooks/useAssessmentSelection"
 import { useDiagramStore, useMetadataStore } from "@/store"
 import { ApollonMode, ApollonView } from "@/typings"
 import { useShallow } from "zustand/shallow"
-
-const INTERACTIVE_SELECTION_COLOR =
-  "var(--apollon-interactive-selection, #f39c12)"
-const INTERACTIVE_SELECTION_FILL =
-  "color-mix(in srgb, var(--apollon-interactive-selection, #f39c12) 18%, transparent)"
 
 interface AssessmentSelectableWrapperProps {
   elementId: string
