@@ -134,7 +134,6 @@ function App({ onReactFlowInit }: AppProps) {
         edgesReconnectable={isDiagramModifiable}
         nodesConnectable={isDiagramModifiable}
         nodesDraggable={isDiagramModifiable}
-        elementsSelectable={isDiagramModifiable}
         panOnScroll={!scrollLock || scrollEnabled}
         zoomOnScroll={!scrollLock || scrollEnabled}
       >
