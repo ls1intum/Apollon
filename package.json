@@ -70,27 +70,27 @@
     "@commitlint/config-conventional": "19.6.0",
     "@emotion/react": "11.11.1",
     "@emotion/styled": "11.11.0",
-    "@resvg/resvg-js": "^2.6.2",
+    "@resvg/resvg-js": "2.6.2",
     "@types/node": "22.13.1",
-    "@types/pdfmake": "^0.3.2",
+    "@types/pdfmake": "0.3.2",
     "concurrently": "9.1.0",
     "husky": "9.1.7",
     "prettier": "3.4.2",
     "vite": "6.4.1",
-    "yaml": "^2.4.2"
+    "yaml": "2.8.3"
   },
   "dependencies": {
-    "@capacitor/android": "^8.0.0",
+    "@capacitor/android": "8.3.0",
     "@capacitor/assets": "3.0.5",
-    "@capacitor/cli": "^8.0.0",
-    "@capacitor/core": "^8.0.0",
-    "@capacitor/file-transfer": "^2.0.0",
-    "@capacitor/filesystem": "^8.0.0",
-    "@capacitor/ios": "^8.0.0",
-    "@capacitor/share": "^8.0.0",
-    "@capacitor/splash-screen": "^8.0.0",
-    "@capacitor/status-bar": "^8.0.0",
+    "@capacitor/cli": "8.3.0",
+    "@capacitor/core": "8.3.0",
+    "@capacitor/file-transfer": "2.0.4",
+    "@capacitor/filesystem": "8.1.2",
+    "@capacitor/ios": "8.3.0",
+    "@capacitor/share": "8.0.1",
+    "@capacitor/splash-screen": "8.0.1",
+    "@capacitor/status-bar": "8.0.2",
     "capacitor-plugin-safe-area": "4.0.0",
-    "iobuffer": "^6.0.1"
+    "iobuffer": "6.0.1"
   }
 }
