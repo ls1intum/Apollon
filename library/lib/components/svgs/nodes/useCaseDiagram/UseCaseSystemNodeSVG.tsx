@@ -1,4 +1,6 @@
-import { CustomText, StyledRect } from "@/components"
+import { LAYOUT } from "@/constants"
+import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -45,17 +47,20 @@ export const UseCaseSystemNodeSVG: React.FC<Props> = ({
           stroke={strokeColor}
         />
 
-        {/* Name Text */}
-        <CustomText
+        {/* Name Text — anchored near the top edge of the system boundary.
+            First line's center lands at y=22 to match the original
+            hanging-baseline layout (roughly top-of-cap at y=16). */}
+        <MultilineText
+          text={name}
           x={width / 2}
-          y={20}
-          textAnchor="middle"
+          y={22}
+          maxWidth={width - 24}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="600"
-          dominantBaseline="hanging"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+          verticalAnchor="top"
+          maxLines={maxLinesForHeight(height - 28, LAYOUT.NAME_LINE_HEIGHT)}
+        />
       </g>
 
       {showAssessmentResults && (

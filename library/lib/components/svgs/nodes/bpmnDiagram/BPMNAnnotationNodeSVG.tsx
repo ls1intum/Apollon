@@ -1,4 +1,5 @@
-import { CustomText } from "@/components"
+import { MultilineText } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { SVGComponentProps } from "@/types/SVG"
@@ -51,15 +52,16 @@ export const BPMNAnnotationNodeSVG: React.FC<BPMNAnnotationNodeSVGProps> = ({
         stroke="none"
         strokeWidth={0}
       />
-      <CustomText
-        x={width / 2}
+      <MultilineText
+        text={name}
+        x={(width + 20) / 2}
         y={height / 2}
-        textAnchor="middle"
+        maxWidth={width - 28}
+        fontSize={LAYOUT.NAME_FONT_SIZE}
         fontWeight="bold"
         fill={textColor}
-      >
-        {name}
-      </CustomText>
+        maxLines={maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)}
+      />
 
       {showAssessmentResults && (
         <AssessmentIcon x={width - 15} y={-15} score={nodeScore} />

@@ -1,4 +1,6 @@
-import { CustomText, StyledRect } from "@/components"
+import { LAYOUT } from "@/constants"
+import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
@@ -45,15 +47,16 @@ export const ActivityObjectNodeSVG: React.FC<Props> = ({
         />
 
         {/* Name Text */}
-        <CustomText
+        <MultilineText
+          text={name}
           x={width / 2}
           y={height / 2}
-          textAnchor="middle"
+          maxWidth={width - 16}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="bold"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+          maxLines={maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)}
+        />
       </g>
 
       {showAssessmentResults && (

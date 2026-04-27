@@ -1,4 +1,5 @@
-import { CustomText } from "@/components"
+import { MultilineText } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -65,17 +66,23 @@ export const PackageSVG: React.FC<PackageSVGProps> = ({
           fill={fillColor}
         />
 
-        {/* Name Text */}
-        <CustomText
+        {/* Name Text — anchored just below the left-top tab. First line's
+            center lands a few px below the tab bottom to preserve the
+            visible position of the original hanging-baseline layout. */}
+        <MultilineText
+          text={name}
           x={width / 2}
-          y={leftTopBoxHeight + padding}
-          textAnchor="middle"
+          y={leftTopBoxHeight + padding + 7}
+          maxWidth={width - 24}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="600"
-          dominantBaseline="hanging"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+          verticalAnchor="top"
+          maxLines={maxLinesForHeight(
+            height - leftTopBoxHeight - padding - 16,
+            LAYOUT.NAME_LINE_HEIGHT
+          )}
+        />
       </g>
 
       {showAssessmentResults && (
