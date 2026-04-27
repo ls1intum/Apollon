@@ -1,5 +1,6 @@
-import { CustomText, StyledRect } from "@/components"
+import { MultilineText, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
+import { maxLinesForHeight } from "@/index"
 import { DefaultNodeProps } from "@/types"
 import { SVGComponentProps } from "@/types/SVG"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
@@ -46,16 +47,16 @@ export const SfcStartNodeSVG: React.FC<Props> = ({
         stroke={strokeColor}
         strokeWidth={LAYOUT.LINE_WIDTH}
       />
-      <CustomText
+      <MultilineText
+        text={name}
         x={width / 2}
         y={height / 2}
-        textAnchor="middle"
-        dominantBaseline="central"
-        style={{ fontWeight: 600 }}
+        maxWidth={width - 16}
+        fontSize={LAYOUT.NAME_FONT_SIZE}
+        fontWeight="600"
         fill={textColor}
-      >
-        {name}
-      </CustomText>
+        maxLines={maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)}
+      />
     </svg>
   )
 }

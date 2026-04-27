@@ -1,4 +1,5 @@
-import { CustomText, StyledRect } from "@/components"
+import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -66,19 +67,18 @@ export const FlowchartFunctionCallNodeSVG: React.FC<Props> = ({
           strokeWidth={LAYOUT.LINE_WIDTH}
         />
 
-        {/* Name Text */}
-        <CustomText
+        {/* Name Text — inner rectangle sits between the double vertical
+            lines at x=10 and x=width-10, so wrap inside that area. */}
+        <MultilineText
+          text={name}
           x={width / 2}
           y={height / 2}
-          textAnchor="middle"
+          maxWidth={width - 36}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="600"
-          dominantBaseline="central"
           fill={textColor}
-        >
-          <tspan x={width / 2} dy="0">
-            {name}
-          </tspan>
-        </CustomText>
+          maxLines={maxLinesForHeight(height - 16, LAYOUT.NAME_LINE_HEIGHT)}
+        />
       </g>
 
       {showAssessmentResults && (

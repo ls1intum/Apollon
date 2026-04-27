@@ -2,8 +2,7 @@ import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
-import { CustomText } from "../CustomText"
-import { StyledRect } from "@/components"
+import { CustomText, StyledRect } from "@/components"
 import { DefaultNodeProps } from "@/types"
 import { LAYOUT } from "@/constants"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
@@ -27,6 +26,8 @@ export const PetriNetTransitionSVG: React.FC<Props> = ({
   const previewScale = SIDEBAR_PREVIEW_SCALE ?? 1
   const scaledWidth = width * previewScale
   const scaledHeight = height * previewScale
+  // Petri-net convention: the label is a single line rendered below the
+  // shape and is allowed to extend horizontally past the node footprint.
   const labelHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
   const scaledLabelHeight = labelHeight * previewScale
   const svgHeight = height + labelHeight

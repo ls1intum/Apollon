@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { DividerLine, TextField, Typography } from "@/components/ui"
 import { PaintRollerIcon } from "@/components/Icon/PaintRollerIcon"
 import { CrossIcon } from "@/components/Icon"
@@ -14,6 +14,14 @@ interface NodeStyleEditorProps {
   noStrokeUpdate?: boolean
   showNameInputChange?: boolean
   title?: string
+  /**
+   * Whether the name input accepts newlines (Enter inserts a hard break).
+   * Default `false`. Set to `true` ONLY for node types whose SVG actually
+   * renders wrapped labels — otherwise typing a newline would save a
+   * character that never repaints. See `supportsMultilineName()` in
+   * `utils/nodeUtils.ts` for the canonical per-type list.
+   */
+  isMultilineName?: boolean
 }
 
 const styles = {
@@ -78,24 +86,22 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
   inputPlaceholder = "Enter node name",
   noStrokeUpdate = false,
   showNameInputChange = true,
+  isMultilineName = false,
   title,
   preElements = [],
 }) => {
-  // Mapping for color fields
+  // Three small literals; re-computed on every render is cheaper than memoizing.
   const colorFields: { key: keyof DefaultNodeProps; label: string }[] =
-    useMemo(() => {
-      if (noStrokeUpdate) {
-        return [
+    noStrokeUpdate
+      ? [
           { key: "fillColor", label: "Fill Color" },
           { key: "textColor", label: "Text Color" },
         ]
-      }
-      return [
-        { key: "fillColor", label: "Fill Color" },
-        { key: "strokeColor", label: "Line Color" },
-        { key: "textColor", label: "Text Color" },
-      ]
-    }, [noStrokeUpdate])
+      : [
+          { key: "fillColor", label: "Fill Color" },
+          { key: "strokeColor", label: "Line Color" },
+          { key: "textColor", label: "Text Color" },
+        ]
 
   const [paintOpen, setPaintOpen] = useState(false)
   const [activeColorField, setActiveColorField] = useState<
@@ -117,15 +123,20 @@ export const NodeStyleEditor: React.FC<NodeStyleEditorProps> = ({
         )}
         {showNameInputChange && (
           <TextField
-            id="outlined-basic"
             variant="outlined"
             onChange={(event) =>
               handleDataFieldUpdate("name", event.target.value)
             }
             sx={{ flex: 1 }}
             size="small"
-            value={nodeData.name}
+            value={nodeData.name ?? ""}
             placeholder={inputPlaceholder}
+            // Only enable multiline — which lets Enter insert a hard line
+            // break — for node types whose SVG actually wraps the label.
+            // Single-line nodes keep their classic single-line <input>.
+            multiline={isMultilineName}
+            minRows={isMultilineName ? 1 : undefined}
+            maxRows={isMultilineName ? 6 : undefined}
           />
         )}
         <PaintRollerIcon
