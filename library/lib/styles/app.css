@@ -1,7 +1,6 @@
 .react-flow {
   --panel-background: var(--apollon-background, #ffffff);
-  --panel-shadow: 0 0 4px 0
-    var(--apollon-background-variant, #f8f9fa);
+  --panel-shadow: 0 0 4px 0 var(--apollon-background-variant, #f8f9fa);
   --text: var(--apollon-primary-contrast, #000000);
   --xy-edge-stroke: var(--apollon-primary-contrast, #000000);
   --xy-edge-stroke-width: 2px;
@@ -182,6 +181,28 @@
   opacity: 0.9;
   box-shadow: 0 0 0 2px var(--apollon-primary, #3e8acc);
   border-radius: 4px;
+}
+
+.apollon-interactive-selection {
+  --apollon-interactive-selection-color: var(
+    --apollon-interactive-selection,
+    #f39c12
+  );
+}
+
+.apollon-interactive-selection--selected [stroke]:not([stroke="none"]) {
+  stroke: var(--apollon-interactive-selection-color);
+}
+
+.apollon-interactive-selection--selected .react-flow__edge-path {
+  stroke-width: 3px;
+}
+
+.apollon-interactive-selection--selected .edge-overlay,
+.apollon-interactive-selection--selected .edge-marker-highlight {
+  opacity: 0.45;
+  stroke: var(--apollon-interactive-selection-color);
+  stroke-width: 15px;
 }
 
 .react-flow__edges {
