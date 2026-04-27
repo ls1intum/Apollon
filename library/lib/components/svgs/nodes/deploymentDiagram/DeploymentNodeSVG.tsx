@@ -11,11 +11,6 @@ interface Props extends SVGComponentProps {
   data: DeploymentNodeProps
 }
 
-// Top-anchored placement: deployment nodes are containers, so the label
-// sits near the top edge and the body below is reserved for children.
-// Top-anchor y matches the legacy hanging-baseline placement at y≈22.
-const DEPLOYMENT_NAME_TOP_ANCHOR_Y = 22
-
 export const DeploymentNodeSVG: React.FC<Props> = ({
   id,
   width,
@@ -78,7 +73,6 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
           height={height}
           sideReserve={24}
           verticalAnchor="top"
-          topAnchorY={DEPLOYMENT_NAME_TOP_ANCHOR_Y}
           nameTextDecoration="underline"
           fill={textColor}
         />
