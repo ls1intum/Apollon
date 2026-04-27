@@ -79,11 +79,12 @@ export function DefaultNodeWrapper({
   }
 
   // Keep all handle ids available for compatibility with existing edges,
-  // but only the primary four are visible.
+  // but only 3 handles per side are visible.
   const handles = [
     {
       id: HandleId.TopLeft,
       position: Position.Top,
+      className: "apollon-arc-handle apollon-arc-handle--top",
       style: { ...baseHandleStyle, left: "20%" },
     },
     {
@@ -105,11 +106,13 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.TopRight,
       position: Position.Top,
+      className: "apollon-arc-handle apollon-arc-handle--top",
       style: { ...baseHandleStyle, left: "80%" },
     },
     {
       id: HandleId.RightTop,
       position: Position.Right,
+      className: "apollon-arc-handle apollon-arc-handle--right",
       style: { ...baseHandleStyle, top: "20%" },
     },
     {
@@ -131,11 +134,13 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.RightBottom,
       position: Position.Right,
+      className: "apollon-arc-handle apollon-arc-handle--right",
       style: { ...baseHandleStyle, top: "80%" },
     },
     {
       id: HandleId.BottomRight,
       position: Position.Bottom,
+      className: "apollon-arc-handle apollon-arc-handle--bottom",
       style: { ...baseHandleStyle, left: "80%" },
     },
     {
@@ -157,11 +162,13 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.BottomLeft,
       position: Position.Bottom,
+      className: "apollon-arc-handle apollon-arc-handle--bottom",
       style: { ...baseHandleStyle, left: "20%" },
     },
     {
       id: HandleId.LeftBottom,
       position: Position.Left,
+      className: "apollon-arc-handle apollon-arc-handle--left",
       style: { ...baseHandleStyle, top: "80%" },
     },
     {
@@ -183,15 +190,24 @@ export function DefaultNodeWrapper({
     {
       id: HandleId.LeftTop,
       position: Position.Left,
+      className: "apollon-arc-handle apollon-arc-handle--left",
       style: { ...baseHandleStyle, top: "20%" },
     },
   ]
 
   const visibleHandleIds = new Set<HandleId>([
+    HandleId.TopLeft,
     HandleId.Top,
+    HandleId.TopRight,
+    HandleId.RightTop,
     HandleId.Right,
+    HandleId.RightBottom,
+    HandleId.BottomRight,
     HandleId.Bottom,
+    HandleId.BottomLeft,
+    HandleId.LeftBottom,
     HandleId.Left,
+    HandleId.LeftTop,
   ])
 
   return (

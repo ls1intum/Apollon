@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { StereotypeAndName, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -64,30 +64,14 @@ export const ComponentNodeSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Name Text */}
-        <CustomText
-          x={width / 2}
-          y={height / 2}
-          textAnchor="middle"
-          fontWeight="bold"
-          dominantBaseline="central"
+        <StereotypeAndName
+          name={name}
+          stereotype="component"
+          showStereotype={!!isComponentHeaderShown}
+          width={width}
+          height={height}
           fill={textColor}
-        >
-          {isComponentHeaderShown ? (
-            <>
-              <tspan x={width / 2} dy="-0.6em" fontSize="0.8em">
-                {"«component»"}
-              </tspan>
-              <tspan x={width / 2} dy="1.2em">
-                {name}
-              </tspan>
-            </>
-          ) : (
-            <tspan x={width / 2} dy="0">
-              {name}
-            </tspan>
-          )}
-        </CustomText>
+        />
       </g>
 
       {showAssessmentResults && (

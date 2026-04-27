@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { StereotypeAndName, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -10,6 +10,10 @@ import { getCustomColorsFromData } from "@/utils/layoutUtils"
 interface Props extends SVGComponentProps {
   data: ComponentSubsystemNodeProps
 }
+
+// Component-icon variant reserves ~32 px on the right for the icon; add the
+// usual left/right padding so the wrapped name doesn't crowd either side.
+const SUBSYSTEM_SIDE_RESERVE = 48
 
 export const ComponentSubsystemNodeSVG: React.FC<Props> = ({
   id,
@@ -63,30 +67,16 @@ export const ComponentSubsystemNodeSVG: React.FC<Props> = ({
           ></path>
         </g>
 
-        {/* Name Text */}
-        <CustomText
-          x={width / 2}
-          y={30}
-          textAnchor="middle"
-          fontWeight="bold"
-          dominantBaseline="central"
+        <StereotypeAndName
+          name={name}
+          stereotype="subsystem"
+          showStereotype={!!isComponentSubsystemHeaderShown}
+          width={width}
+          height={height}
+          sideReserve={SUBSYSTEM_SIDE_RESERVE}
+          verticalAnchor="top"
           fill={textColor}
-        >
-          {isComponentSubsystemHeaderShown ? (
-            <>
-              <tspan x={width / 2} dy="-0.6em" fontSize="0.8em">
-                {"«subsystem»"}
-              </tspan>
-              <tspan x={width / 2} dy="1.2em">
-                {name}
-              </tspan>
-            </>
-          ) : (
-            <tspan x={width / 2} dy="0">
-              {name}
-            </tspan>
-          )}
-        </CustomText>
+        />
       </g>
 
       {showAssessmentResults && (

@@ -203,7 +203,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
           data-field="identifier"
           data-new="true"
           sx={{
-            backgroundColor: "#fff",
+            backgroundColor: "var(--apollon-background, white)",
             width: "60px",
           }}
         />
@@ -226,7 +226,7 @@ export const SfcActionTableEditPopover: React.FC<PopoverProps> = ({
           data-field="name"
           data-new="true"
           sx={{
-            backgroundColor: "#fff",
+            backgroundColor: "var(--apollon-background, white)",
           }}
         />
       </Box>

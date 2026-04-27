@@ -5,6 +5,7 @@ import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { DefaultNodeProps } from "@/types"
 import { SfcStartNodeSVG } from "@/components"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
+import { PopoverManager } from "@/components/popovers/PopoverManager"
 
 export function SfcStart({
   id,
@@ -32,6 +33,12 @@ export function SfcStart({
           showAssessmentResults={!isDiagramModifiable}
         />
       </div>
+
+      <PopoverManager
+        anchorEl={svgWrapperRef.current}
+        elementId={id}
+        type="default"
+      />
     </DefaultNodeWrapper>
   )
 }

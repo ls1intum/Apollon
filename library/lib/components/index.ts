@@ -1,4 +1,6 @@
 export * from "./svgs/nodes/CustomText"
+export * from "./svgs/nodes/MultilineText"
+export * from "./svgs/nodes/StereotypeAndName"
 export * from "./Sidebar"
 export * from "./ui/DividerLine"
 export * from "./popovers"

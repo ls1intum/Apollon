@@ -26,6 +26,10 @@ export const PetriNetPlaceSVG: React.FC<Props> = ({
   const previewScale = SIDEBAR_PREVIEW_SCALE ?? 1
   const scaledWidth = width * previewScale
   const scaledHeight = height * previewScale
+  // Petri-net convention: the label is a single line rendered below the
+  // shape and is allowed to extend horizontally past the node footprint.
+  // Wrapping the label looks crowded and hurts readability, and hiding
+  // characters behind an ellipsis is worse than letting the name breathe.
   const labelHeight = LAYOUT.DEFAULT_ATTRIBUTE_HEIGHT
   const scaledLabelHeight = labelHeight * previewScale
   const svgHeight = height + labelHeight
