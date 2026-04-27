@@ -8,6 +8,16 @@ import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { UseCaseActorNodeSVG } from "@/components/svgs/nodes/useCaseDiagram/UseCaseActorNodeSVG"
 import { NodeToolbar } from "@/components/toolbars/NodeToolbar"
 
+// The actor node IS resizable, but `UseCaseActorNodeSVG` draws the stick
+// figure and the label at fixed pixel sizes — resizing grows the node's
+// bounding box (giving the label more room to wrap / the figure room to
+// breathe) without stretching the iconic figure or the label font.
+//
+// `minWidth` guarantees the stick figure (90px wide) never clips; `minHeight`
+// leaves room for the figure (110px) + a gap + one full label line.
+const ACTOR_MIN_WIDTH = 90
+const ACTOR_MIN_HEIGHT = 140
+
 export function UseCaseActor({
   id,
   width,
@@ -29,8 +39,8 @@ export function UseCaseActor({
       <NodeResizer
         isVisible={isDiagramModifiable}
         onResize={onResize}
-        minHeight={50}
-        minWidth={50}
+        minWidth={ACTOR_MIN_WIDTH}
+        minHeight={ACTOR_MIN_HEIGHT}
         handleStyle={{ width: 8, height: 8 }}
       />
       <div ref={svgWrapperRef}>

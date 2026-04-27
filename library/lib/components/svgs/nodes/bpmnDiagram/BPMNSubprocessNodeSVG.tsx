@@ -1,4 +1,5 @@
-import { CustomText, StyledRect } from "@/components"
+import { MultilineText, StyledRect } from "@/components"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { SVGComponentProps } from "@/types/SVG"
@@ -119,15 +120,19 @@ export const BPMNSubprocessNodeSVG: React.FC<BPMNSubprocessNodeSVGProps> = ({
           />
         </>
       )}
-      <CustomText
+      <MultilineText
+        text={name}
         x={width / 2}
         y={height / 2}
-        textAnchor="middle"
+        maxWidth={width - 16}
+        fontSize={LAYOUT.NAME_FONT_SIZE}
         fontWeight="bold"
         fill={textColor}
-      >
-        {name}
-      </CustomText>
+        maxLines={maxLinesForHeight(
+          height - (isSubprocess ? 28 : 16),
+          LAYOUT.NAME_LINE_HEIGHT
+        )}
+      />
 
       {showAssessmentResults && (
         <AssessmentIcon x={width - 15} y={-15} score={nodeScore} />

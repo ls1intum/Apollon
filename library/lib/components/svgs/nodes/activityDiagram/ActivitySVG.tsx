@@ -1,10 +1,12 @@
-import { CustomText, StyledRect } from "@/components"
+import { LAYOUT } from "@/constants"
+import { MultilineText, StyledRect } from "@/components"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
 import AssessmentIcon from "../../AssessmentIcon"
 import { SVGComponentProps } from "@/types/SVG"
 import { DefaultNodeProps } from "@/types"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
+import { maxLinesForHeight } from "@/utils/svgTextLayout"
 
 export type ActivitySVGProps = SVGComponentProps & {
   data: DefaultNodeProps
@@ -46,17 +48,21 @@ export const ActivitySVG: React.FC<ActivitySVGProps> = ({
           stroke={strokeColor}
         />
 
-        {/* Name Text */}
-        <CustomText
+        {/* Name Text — anchored near the top edge of the activity
+            container; first line center lands at y=22 to match the
+            original hanging-baseline placement. Wrapped downward,
+            capped to what fits in the node's height. */}
+        <MultilineText
+          text={name}
           x={width / 2}
-          y={20}
-          textAnchor="middle"
+          y={22}
+          maxWidth={width - 24}
+          fontSize={LAYOUT.NAME_FONT_SIZE}
           fontWeight="600"
-          dominantBaseline="hanging"
           fill={textColor}
-        >
-          {name}
-        </CustomText>
+          verticalAnchor="top"
+          maxLines={maxLinesForHeight(height - 28, LAYOUT.NAME_LINE_HEIGHT)}
+        />
       </g>
 
       {showAssessmentResults && (

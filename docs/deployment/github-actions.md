@@ -24,13 +24,19 @@ See [Releases](npm-publishing.md) for the release-cut procedure.
 
 Set per GitHub Environment. Values are deployment-specific; names are fixed.
 
-| Var | Purpose |
-| --- | --- |
-| `APP_HOSTNAME` | Public hostname the reverse proxy serves. |
-| `ACME_EMAIL` | Registration email for Let's Encrypt. |
-| `VM_HOST` | SSH target the deploy workflow connects to. |
-| `VM_USERNAME` | SSH user on the VM. |
-| `VM_SSH_PRIVATE_KEY` | SSH key (secret). |
+| Var | Purpose | Example |
+| --- | --- | --- |
+| `APP_HOSTNAME` | Single public hostname the reverse proxy serves and that Let's Encrypt issues a certificate for. | `apollon.aet.cit.tum.de` |
+| `ACME_EMAIL` | Registration email for Let's Encrypt. | `admin@tum.de` |
+| `VM_HOST` | SSH target the deploy workflow connects to. May differ from `APP_HOSTNAME`. | `apollon-prod.aet.cit.tum.de` |
+| `VM_USERNAME` | SSH user on the VM. | `github_deployment` |
+| `VM_SSH_PRIVATE_KEY` | SSH key (secret). | — |
+
+### Optional environment variables
+
+| Var | Purpose | Example |
+| --- | --- | --- |
+| `APP_HOSTNAME_ALIASES_RULE` | Traefik matcher listing additional hostnames that should permanently 301-redirect to `APP_HOSTNAME`. Each listed hostname also receives its own Let's Encrypt certificate so HTTPS bookmarks redirect cleanly. Leave unset on environments without aliases. | `` Host(`apollon-prod.aet.cit.tum.de`, `apollon.ase.cit.tum.de`, `apollon.ase.in.tum.de`) `` |
 
 ## Run locally in Docker
 

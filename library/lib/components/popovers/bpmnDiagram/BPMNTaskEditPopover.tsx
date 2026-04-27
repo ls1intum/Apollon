@@ -3,6 +3,7 @@ import { NodeStyleEditor } from "@/components/ui"
 import { useReactFlow } from "@xyflow/react"
 import { PopoverProps } from "../types"
 import { BPMNMarkerType, BPMNTaskProps, BPMNTaskType } from "@/types"
+import { supportsMultilineName } from "@/utils/nodeUtils"
 
 export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
   const { getNode, updateNodeData } = useReactFlow()
@@ -22,6 +23,7 @@ export const BPMNTaskEditPopover: React.FC<PopoverProps> = ({ elementId }) => {
           handleDataFieldUpdate(key, value)
         }
         nodeData={data}
+        isMultilineName={supportsMultilineName(node.type)}
       />
 
       <FormControl fullWidth size="small">

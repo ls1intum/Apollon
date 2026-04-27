@@ -1,4 +1,4 @@
-import { CustomText, StyledRect } from "@/components"
+import { StereotypeAndName, StyledRect } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
 import { useShallow } from "zustand/shallow"
@@ -21,6 +21,8 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
   data,
 }) => {
   const { name, stereotype, isComponentHeaderShown } = data
+  const hasStereotype =
+    !!isComponentHeaderShown && !!stereotype && stereotype.length > 0
 
   const assessments = useDiagramStore(useShallow((state) => state.assessments))
   const nodeScore = assessments[id]?.score
@@ -63,30 +65,17 @@ export const DeploymentNodeSVG: React.FC<Props> = ({
           />
         </g>
 
-        {/* Name Text */}
-        <CustomText
-          x="50%"
-          y={30}
-          textAnchor="middle"
-          fontWeight="bold"
-          dominantBaseline="middle"
+        <StereotypeAndName
+          name={name}
+          stereotype={stereotype}
+          showStereotype={hasStereotype}
+          width={width}
+          height={height}
+          sideReserve={24}
+          verticalAnchor="top"
+          nameTextDecoration="underline"
           fill={textColor}
-        >
-          {isComponentHeaderShown && stereotype && stereotype.length > 0 ? (
-            <>
-              <tspan x="50%" dy="-8" fontSize="85%">
-                {`«${stereotype}»`}
-              </tspan>
-              <tspan x="50%" dy="18" textDecoration="underline">
-                {name}
-              </tspan>
-            </>
-          ) : (
-            <tspan x="50%" dy="0" textDecoration="underline">
-              {name}
-            </tspan>
-          )}
-        </CustomText>
+        />
       </g>
 
       {showAssessmentResults && (

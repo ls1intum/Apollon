@@ -275,6 +275,14 @@ export class ApollonEditor {
       throw new Error("React Flow instance not initialized")
     }
 
+    // Wait for webfonts to load before we measure: canvas text measurement
+    // (used by the wrap layout) otherwise falls back to the generic-family
+    // metrics and the exported SVG's wrap decisions would drift from the
+    // on-screen render. Best-effort — older browsers may lack document.fonts.
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      await document.fonts.ready.catch(() => {})
+    }
+
     // Wait for ReactFlow to fully lay out nodes and measure custom handle
     // positions (especially for non-rectangular shapes like parallelograms).
     // setTimeout lets ResizeObserver callbacks fire; double-rAF ensures paint.
