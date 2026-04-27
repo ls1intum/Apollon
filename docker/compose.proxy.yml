@@ -78,7 +78,6 @@ services:
       - "traefik.http.routers.https-maintenance.tls=true"
       - "traefik.http.routers.http-maintenance.priority=1"
       - "traefik.http.routers.https-maintenance.priority=1"
-      # `$${1}` is a Compose-escaped `${1}` for Traefik's regex backreference.
       - "traefik.http.middlewares.redirect-to-canonical.redirectregex.regex=^https?://[^/]+/(.*)"
       - "traefik.http.middlewares.redirect-to-canonical.redirectregex.replacement=https://${APP_HOSTNAME}/$${1}"
       - "traefik.http.middlewares.redirect-to-canonical.redirectregex.permanent=true"
