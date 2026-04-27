@@ -79,6 +79,7 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-alert-warning-yellow": "#ffc107",
     "--apollon-alert-warning-background": "#fff3cd",
     "--apollon-alert-warning-border": "#ffeeba",
+    "--apollon-interactive-selection": "#f39c12",
     "--apollon-background": "#ffffff",
     "--apollon-background-inverse": "#000000",
     "--apollon-background-variant": "#f8f9fa",
@@ -96,6 +97,8 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
 
 export const STROKE_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-primary-contrast"]
 export const FILL_COLOR = CSS_VARIABLE_FALLBACKS["--apollon-background"]
+export const INTERACTIVE_SELECTION_COLOR = `var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]})`
+export const INTERACTIVE_SELECTION_FILL = `color-mix(in srgb, var(--apollon-interactive-selection, ${CSS_VARIABLE_FALLBACKS["--apollon-interactive-selection"]}) 18%, transparent)`
 
 /* -------------------------------------------------------------------------- */
 /* Layout                                                                     */

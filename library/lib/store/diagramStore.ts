@@ -15,6 +15,7 @@ import { getNodesMap, getEdgesMap, getAssessments } from "@/sync/ydoc"
 import { deepEqual } from "@/utils/storeUtils"
 import { Assessment, InteractiveElements } from "@/typings"
 import {
+  getNestedNodeElementIds,
   pruneInteractiveElements,
   toggleInteractiveRecord,
 } from "@/utils/interactiveUtils"
@@ -32,6 +33,7 @@ type InitialDiagramState = {
   assessments: Record<string, Assessment>
   interactiveElements: Record<string, boolean>
   interactiveRelationships: Record<string, boolean>
+  interactiveSelectionInitialized: boolean
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
@@ -45,6 +47,7 @@ const initialDiagramState: InitialDiagramState = {
   assessments: {},
   interactiveElements: {},
   interactiveRelationships: {},
+  interactiveSelectionInitialized: false,
   canUndo: false,
   canRedo: false,
   undoManager: null,
@@ -58,6 +61,7 @@ export type DiagramStore = {
   assessments: Record<string, Assessment>
   interactiveElements: Record<string, boolean>
   interactiveRelationships: Record<string, boolean>
+  interactiveSelectionInitialized: boolean
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
@@ -177,23 +181,31 @@ export const createDiagramStore = (
 
         toggleInteractiveElement: (elementId) => {
           const isNode = get().nodes.some((node) => node.id === elementId)
+          const isNestedNodeElement = getNestedNodeElementIds(get().nodes).has(
+            elementId
+          )
           const isEdge = get().edges.some((edge) => edge.id === elementId)
 
-          if (!isNode && !isEdge) {
+          if (!isNode && !isNestedNodeElement && !isEdge) {
             return
           }
 
           set(
             (state) => ({
-              interactiveElements: isNode
-                ? toggleInteractiveRecord(state.interactiveElements, elementId)
-                : state.interactiveElements,
+              interactiveElements:
+                isNode || isNestedNodeElement
+                  ? toggleInteractiveRecord(
+                      state.interactiveElements,
+                      elementId
+                    )
+                  : state.interactiveElements,
               interactiveRelationships: isEdge
                 ? toggleInteractiveRecord(
                     state.interactiveRelationships,
                     elementId
                   )
                 : state.interactiveRelationships,
+              interactiveSelectionInitialized: true,
             }),
             undefined,
             "toggleInteractiveElement"
@@ -201,13 +213,19 @@ export const createDiagramStore = (
         },
 
         getInteractiveForSerialization: () => {
-          return pruneInteractiveElements(
+          const interactive = pruneInteractiveElements(
             {
               elements: get().interactiveElements,
               relationships: get().interactiveRelationships,
             },
             get().nodes,
             get().edges
+          )
+          return (
+            interactive ??
+            (get().interactiveSelectionInitialized
+              ? { elements: {}, relationships: {} }
+              : undefined)
           )
         },
 
@@ -222,6 +240,7 @@ export const createDiagramStore = (
             {
               interactiveElements: prunedInteractive?.elements ?? {},
               interactiveRelationships: prunedInteractive?.relationships ?? {},
+              interactiveSelectionInitialized: interactive !== undefined,
             },
             undefined,
             "setInteractive"

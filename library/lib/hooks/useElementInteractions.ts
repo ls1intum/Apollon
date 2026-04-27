@@ -18,17 +18,20 @@ export const useElementInteractions = () => {
   )
 
   const onBeforeDelete: OnBeforeDelete = () => {
-    if (isDiagramModifiable) {
-      return new Promise((resolve) => resolve(true))
-    }
-    return new Promise((resolve) => resolve(false))
+    return new Promise((resolve) => resolve(isDiagramModifiable))
   }
 
   const onNodeDoubleClick: NodeMouseHandler<Node> = (_event, node) => {
+    if (!isDiagramModifiable) {
+      return
+    }
     setPopOverElementId(node.id)
   }
 
   const onEdgeDoubleClick: EdgeMouseHandler<Edge> = (_event, edge) => {
+    if (!isDiagramModifiable) {
+      return
+    }
     setPopOverElementId(edge.id)
   }
   return {
