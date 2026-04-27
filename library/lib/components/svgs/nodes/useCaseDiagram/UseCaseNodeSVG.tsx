@@ -1,13 +1,13 @@
 import { CustomText } from "@/components"
 import { LAYOUT } from "@/constants"
 import { useDiagramStore } from "@/store"
-import { useShallow } from "zustand/shallow"
-import AssessmentIcon from "../../AssessmentIcon"
-import { SVGComponentProps } from "@/types/SVG"
 import { DefaultNodeProps } from "@/types"
+import { SVGComponentProps } from "@/types/SVG"
 import { getCustomColorsFromData } from "@/utils/layoutUtils"
 import { layoutTextInEllipse } from "@/utils/svgTextLayout"
 import { useMemo } from "react"
+import { useShallow } from "zustand/shallow"
+import AssessmentIcon from "../../AssessmentIcon"
 
 interface Props extends SVGComponentProps {
   data: DefaultNodeProps
