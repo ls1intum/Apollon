@@ -13,10 +13,12 @@ import {
   createStraightPathDetour,
   calculateTextPlacement,
   findClosestHandle,
+  findStraightConnectionHandles,
   getConnectionLineType,
   getDefaultEdgeType,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
+  getPositionFromHandleId,
   getStraightPathOrientation,
   orthogonalizePoints,
   parseSvgPath,
@@ -587,6 +589,132 @@ describe("findClosestHandle", () => {
       rect,
     })
     expect(result).toBe("top-left")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// straight connection handle selection
+// ---------------------------------------------------------------------------
+describe("straight connection handle selection", () => {
+  describe("getPositionFromHandleId", () => {
+    it("uses the handle prefix as the attached side", () => {
+      expect(getPositionFromHandleId("top-left")).toBe(Position.Top)
+      expect(getPositionFromHandleId("right-mid-bottom")).toBe(Position.Right)
+      expect(getPositionFromHandleId("bottom-right")).toBe(Position.Bottom)
+      expect(getPositionFromHandleId("left-top")).toBe(Position.Left)
+    })
+
+    it("returns null for empty or unknown handles", () => {
+      expect(getPositionFromHandleId(null)).toBeNull()
+      expect(getPositionFromHandleId("unknown")).toBeNull()
+    })
+  })
+
+  describe("findStraightConnectionHandles", () => {
+    it("selects the opposite target handle for a vertical straight route", () => {
+      const result = findStraightConnectionHandles({
+        sourceRect: { x: 0, y: 0, width: 100, height: 60 },
+        targetRect: { x: 0, y: 120, width: 100, height: 60 },
+        sourceHandle: "bottom",
+        targetHandle: "top",
+      })
+
+      expect(result).toEqual({
+        sourceHandle: "bottom",
+        targetHandle: "top",
+      })
+    })
+
+    it("uses hidden target midpoint handles when they make the route straighter", () => {
+      const result = findStraightConnectionHandles({
+        sourceRect: { x: 0, y: 0, width: 100, height: 60 },
+        targetRect: { x: 20, y: 120, width: 100, height: 60 },
+        sourceHandle: "bottom-right",
+        targetHandle: "top",
+      })
+
+      expect(result).toEqual({
+        sourceHandle: "bottom-right",
+        targetHandle: "top-mid-right",
+      })
+    })
+
+    it("can slide the source handle on the same side for a straighter new edge", () => {
+      const result = findStraightConnectionHandles({
+        sourceRect: { x: 0, y: 0, width: 100, height: 60 },
+        targetRect: { x: 15, y: 120, width: 100, height: 60 },
+        sourceHandle: "bottom-left",
+        targetHandle: "top-left",
+        allowSourceHandleAdjustment: true,
+      })
+
+      expect(result).toEqual({
+        sourceHandle: "bottom-mid-left",
+        targetHandle: "top-left",
+      })
+    })
+
+    it("selects the opposite target handle for a horizontal straight route", () => {
+      const result = findStraightConnectionHandles({
+        sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+        targetRect: { x: 150, y: 0, width: 100, height: 100 },
+        sourceHandle: "right-bottom",
+        targetHandle: "left-bottom",
+      })
+
+      expect(result).toEqual({
+        sourceHandle: "right-bottom",
+        targetHandle: "left-bottom",
+      })
+    })
+
+    it("respects nodes that only expose four handles", () => {
+      const result = findStraightConnectionHandles({
+        sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+        targetRect: { x: 150, y: 0, width: 100, height: 100 },
+        sourceHandle: "right-bottom",
+        targetHandle: "left",
+        useFourTargetHandles: true,
+      })
+
+      expect(result).toEqual({
+        sourceHandle: "right-bottom",
+        targetHandle: "left",
+      })
+    })
+
+    it("falls back when the source side does not face the target", () => {
+      const result = findStraightConnectionHandles({
+        sourceRect: { x: 0, y: 120, width: 100, height: 60 },
+        targetRect: { x: 0, y: 0, width: 100, height: 60 },
+        sourceHandle: "bottom",
+        targetHandle: "top",
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it("falls back when no target-side point can continue the source axis", () => {
+      const result = findStraightConnectionHandles({
+        sourceRect: { x: 0, y: 0, width: 100, height: 60 },
+        targetRect: { x: 200, y: 120, width: 100, height: 60 },
+        sourceHandle: "bottom",
+        targetHandle: "top",
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it("falls back immediately when the selected target side is not opposite", () => {
+      const result = findStraightConnectionHandles({
+        sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+        targetRect: { x: 150, y: 0, width: 100, height: 100 },
+        sourceHandle: "right",
+        targetHandle: "top",
+      })
+
+      expect(result).toBeNull()
+    })
   })
 })
 
