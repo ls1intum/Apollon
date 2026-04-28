@@ -339,6 +339,280 @@ function distance(p1: XYPosition, p2: XYPosition): number {
   return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
 }
 
+type HandleAxis = "x" | "y"
+
+interface HandlePositionSpec {
+  label: string
+  side: Position
+  ratio: number
+}
+
+interface HandlePositionCandidate extends HandlePositionSpec {
+  position: XYPosition
+}
+
+const BASIC_HANDLE_IDS = new Set(["top", "right", "bottom", "left"])
+
+// Mirrors DefaultNodeWrapper's rectangular handle layout. Hidden midpoint
+// handles are included because edges may attach to them programmatically.
+const RECTANGULAR_HANDLE_SPECS: HandlePositionSpec[] = [
+  { label: "top-left", side: Position.Top, ratio: 0.2 },
+  { label: "top-mid-left", side: Position.Top, ratio: 0.35 },
+  { label: "top", side: Position.Top, ratio: 0.5 },
+  { label: "top-mid-right", side: Position.Top, ratio: 0.65 },
+  { label: "top-right", side: Position.Top, ratio: 0.8 },
+  { label: "right-top", side: Position.Right, ratio: 0.2 },
+  { label: "right-mid-top", side: Position.Right, ratio: 0.35 },
+  { label: "right", side: Position.Right, ratio: 0.5 },
+  { label: "right-mid-bottom", side: Position.Right, ratio: 0.65 },
+  { label: "right-bottom", side: Position.Right, ratio: 0.8 },
+  { label: "bottom-right", side: Position.Bottom, ratio: 0.8 },
+  { label: "bottom-mid-right", side: Position.Bottom, ratio: 0.65 },
+  { label: "bottom", side: Position.Bottom, ratio: 0.5 },
+  { label: "bottom-mid-left", side: Position.Bottom, ratio: 0.35 },
+  { label: "bottom-left", side: Position.Bottom, ratio: 0.2 },
+  { label: "left-bottom", side: Position.Left, ratio: 0.8 },
+  { label: "left-mid-bottom", side: Position.Left, ratio: 0.65 },
+  { label: "left", side: Position.Left, ratio: 0.5 },
+  { label: "left-mid-top", side: Position.Left, ratio: 0.35 },
+  { label: "left-top", side: Position.Left, ratio: 0.2 },
+]
+
+function getRectangularHandlePosition(
+  rect: Rect,
+  spec: HandlePositionSpec
+): XYPosition {
+  switch (spec.side) {
+    case Position.Top:
+      return { x: rect.x + rect.width * spec.ratio, y: rect.y }
+    case Position.Right:
+      return { x: rect.x + rect.width, y: rect.y + rect.height * spec.ratio }
+    case Position.Bottom:
+      return { x: rect.x + rect.width * spec.ratio, y: rect.y + rect.height }
+    case Position.Left:
+      return { x: rect.x, y: rect.y + rect.height * spec.ratio }
+  }
+}
+
+function getRectangularHandleCandidates({
+  rect,
+  side,
+  useFourHandles = false,
+}: {
+  rect: Rect
+  side?: Position
+  useFourHandles?: boolean
+}): HandlePositionCandidate[] {
+  return RECTANGULAR_HANDLE_SPECS.filter((spec) => {
+    if (useFourHandles && !BASIC_HANDLE_IDS.has(spec.label)) return false
+    if (side && spec.side !== side) return false
+    return true
+  }).map((spec) => ({
+    ...spec,
+    position: getRectangularHandlePosition(rect, spec),
+  }))
+}
+
+export function getPositionFromHandleId(
+  handleId?: string | null
+): Position | null {
+  if (!handleId) return null
+
+  if (handleId === "top" || handleId.startsWith("top-")) {
+    return Position.Top
+  }
+  if (handleId === "right" || handleId.startsWith("right-")) {
+    return Position.Right
+  }
+  if (handleId === "bottom" || handleId.startsWith("bottom-")) {
+    return Position.Bottom
+  }
+  if (handleId === "left" || handleId.startsWith("left-")) {
+    return Position.Left
+  }
+
+  return null
+}
+
+function getOppositePosition(position: Position): Position {
+  switch (position) {
+    case Position.Top:
+      return Position.Bottom
+    case Position.Right:
+      return Position.Left
+    case Position.Bottom:
+      return Position.Top
+    case Position.Left:
+      return Position.Right
+  }
+}
+
+function getStraightPathAxis(position: Position): HandleAxis {
+  return position === Position.Left || position === Position.Right ? "y" : "x"
+}
+
+function getSideRange(rect: Rect, side: Position): [number, number] {
+  if (side === Position.Top || side === Position.Bottom) {
+    return [rect.x, rect.x + rect.width]
+  }
+
+  return [rect.y, rect.y + rect.height]
+}
+
+function isInRange(
+  value: number,
+  [start, end]: [number, number],
+  tolerance: number
+): boolean {
+  return value >= start - tolerance && value <= end + tolerance
+}
+
+function isTargetInStraightDirection(
+  sourceRect: Rect,
+  targetRect: Rect,
+  sourceSide: Position
+): boolean {
+  switch (sourceSide) {
+    case Position.Top:
+      return sourceRect.y >= targetRect.y + targetRect.height
+    case Position.Right:
+      return targetRect.x >= sourceRect.x + sourceRect.width
+    case Position.Bottom:
+      return targetRect.y >= sourceRect.y + sourceRect.height
+    case Position.Left:
+      return sourceRect.x >= targetRect.x + targetRect.width
+  }
+}
+
+function getHandlePoint(
+  rect: Rect,
+  handleId?: string | null
+): XYPosition | null {
+  if (!handleId) return null
+
+  const spec = RECTANGULAR_HANDLE_SPECS.find(
+    (candidate) => candidate.label === handleId
+  )
+  if (!spec) return null
+
+  return getRectangularHandlePosition(rect, spec)
+}
+
+interface FindStraightConnectionHandlesParams {
+  sourceRect: Rect
+  targetRect: Rect
+  sourceHandle?: string | null
+  targetHandle?: string | null
+  targetPoint?: XYPosition
+  useFourSourceHandles?: boolean
+  useFourTargetHandles?: boolean
+  allowSourceHandleAdjustment?: boolean
+  alignmentTolerance?: number
+}
+
+export function findStraightConnectionHandles({
+  sourceRect,
+  targetRect,
+  sourceHandle,
+  targetHandle,
+  targetPoint,
+  useFourSourceHandles = false,
+  useFourTargetHandles = false,
+  allowSourceHandleAdjustment = false,
+  alignmentTolerance = 1,
+}: FindStraightConnectionHandlesParams):
+  | { sourceHandle: string; targetHandle: string }
+  | null {
+  const sourceSide = getPositionFromHandleId(sourceHandle)
+  if (!sourceHandle || !sourceSide) return null
+
+  if (!isTargetInStraightDirection(sourceRect, targetRect, sourceSide)) {
+    return null
+  }
+
+  const targetSide = getPositionFromHandleId(targetHandle)
+  if (targetSide !== getOppositePosition(sourceSide)) {
+    return null
+  }
+
+  const sourcePoint = getHandlePoint(sourceRect, sourceHandle)
+  if (!sourcePoint) return null
+
+  const axis = getStraightPathAxis(sourceSide)
+  const targetSideRange = getSideRange(targetRect, targetSide)
+
+  const sourceCandidates = allowSourceHandleAdjustment
+    ? getRectangularHandleCandidates({
+        rect: sourceRect,
+        side: sourceSide,
+        useFourHandles: useFourSourceHandles,
+      })
+    : [
+        {
+          label: sourceHandle,
+          side: sourceSide,
+          ratio: 0,
+          position: sourcePoint,
+        },
+      ]
+
+  const candidates = getRectangularHandleCandidates({
+    rect: targetRect,
+    side: targetSide,
+    useFourHandles: useFourTargetHandles,
+  })
+
+  if (candidates.length === 0) return null
+
+  const preferredPoint = targetPoint ?? getHandlePoint(targetRect, targetHandle)
+
+  const pairs = sourceCandidates.flatMap((sourceCandidate) => {
+    const sourceAxisValue = sourceCandidate.position[axis]
+    if (!isInRange(sourceAxisValue, targetSideRange, alignmentTolerance)) {
+      return []
+    }
+
+    return candidates.map((targetCandidate) => ({
+      source: sourceCandidate,
+      target: targetCandidate,
+    }))
+  })
+
+  if (pairs.length === 0) return null
+
+  const bestPair = pairs.reduce((best, pair) => {
+    const bestAxisDistance = Math.abs(
+      best.target.position[axis] - best.source.position[axis]
+    )
+    const candidateAxisDistance = Math.abs(
+      pair.target.position[axis] - pair.source.position[axis]
+    )
+
+    if (candidateAxisDistance !== bestAxisDistance) {
+      return candidateAxisDistance < bestAxisDistance ? pair : best
+    }
+
+    const bestSourceDistance = distance(best.source.position, sourcePoint)
+    const candidateSourceDistance = distance(pair.source.position, sourcePoint)
+
+    if (candidateSourceDistance !== bestSourceDistance) {
+      return candidateSourceDistance < bestSourceDistance ? pair : best
+    }
+
+    if (!preferredPoint) return best
+
+    return distance(pair.target.position, preferredPoint) <
+      distance(best.target.position, preferredPoint)
+      ? pair
+      : best
+  })
+
+  return {
+    sourceHandle: bestPair.source.label,
+    targetHandle: bestPair.target.label,
+  }
+}
+
 interface FindClosestHandleParams {
   point: XYPosition
   rect: Rect
@@ -606,6 +880,266 @@ export function simplifyPoints(points: IPoint[]): IPoint[] {
   }
   result.push(points[points.length - 1])
   return result
+}
+
+export type StraightPathOrientation = "horizontal" | "vertical"
+
+export function getStraightPathOrientation(
+  points: IPoint[],
+  tolerance: number = 1
+): StraightPathOrientation | null {
+  if (points.length !== 2) return null
+
+  const [start, end] = points
+  const isVertical = Math.abs(start.x - end.x) <= tolerance
+  const isHorizontal = Math.abs(start.y - end.y) <= tolerance
+
+  if (isVertical && Math.abs(start.y - end.y) > tolerance) {
+    return "vertical"
+  }
+
+  if (isHorizontal && Math.abs(start.x - end.x) > tolerance) {
+    return "horizontal"
+  }
+
+  return null
+}
+
+export function orthogonalizePoints(
+  points: IPoint[],
+  tolerance: number = 1
+): IPoint[] {
+  if (points.length < 2) return points
+
+  const orthogonalPoints: IPoint[] = [{ ...points[0] }]
+
+  for (let i = 1; i < points.length; i++) {
+    const previous = orthogonalPoints[orthogonalPoints.length - 1]
+    const next = { ...points[i] }
+    const isVertical = Math.abs(previous.x - next.x) <= tolerance
+    const isHorizontal = Math.abs(previous.y - next.y) <= tolerance
+
+    if (isVertical || isHorizontal) {
+      orthogonalPoints.push(next)
+      continue
+    }
+
+    const previousOrientation =
+      orthogonalPoints.length >= 2
+        ? getStraightPathOrientation(
+            [orthogonalPoints[orthogonalPoints.length - 2], previous],
+            tolerance
+          )
+        : null
+    const elbow =
+      previousOrientation === "vertical"
+        ? { x: next.x, y: previous.y }
+        : { x: previous.x, y: next.y }
+
+    orthogonalPoints.push(elbow, next)
+  }
+
+  return simplifyPoints(removeDuplicatePoints(orthogonalPoints))
+}
+
+function midpointBetween(start: IPoint, end: IPoint): IPoint {
+  return {
+    x: start.x + (end.x - start.x) / 2,
+    y: start.y + (end.y - start.y) / 2,
+  }
+}
+
+function isPointOutsideSide(
+  point: IPoint,
+  anchor: IPoint,
+  side: Position,
+  minDistance: number
+): boolean {
+  switch (side) {
+    case Position.Top:
+      return point.y <= anchor.y - minDistance
+    case Position.Bottom:
+      return point.y >= anchor.y + minDistance
+    case Position.Left:
+      return point.x <= anchor.x - minDistance
+    case Position.Right:
+      return point.x >= anchor.x + minDistance
+  }
+}
+
+function alignPointOutsideSide(
+  point: IPoint,
+  anchor: IPoint,
+  side: Position,
+  minDistance: number
+): IPoint {
+  switch (side) {
+    case Position.Top:
+      return {
+        x: anchor.x,
+        y: isPointOutsideSide(point, anchor, side, minDistance)
+          ? point.y
+          : anchor.y - minDistance,
+      }
+    case Position.Bottom:
+      return {
+        x: anchor.x,
+        y: isPointOutsideSide(point, anchor, side, minDistance)
+          ? point.y
+          : anchor.y + minDistance,
+      }
+    case Position.Left:
+      return {
+        x: isPointOutsideSide(point, anchor, side, minDistance)
+          ? point.x
+          : anchor.x - minDistance,
+        y: anchor.y,
+      }
+    case Position.Right:
+      return {
+        x: isPointOutsideSide(point, anchor, side, minDistance)
+          ? point.x
+          : anchor.x + minDistance,
+        y: anchor.y,
+      }
+  }
+}
+
+export function calculateStraightPathDetourRange(
+  points: IPoint[],
+  breakpoints: IPoint[],
+  breakpointIndex: number
+): { start: IPoint; end: IPoint } | null {
+  if (!getStraightPathOrientation(points) || breakpoints.length === 0) {
+    return null
+  }
+
+  const breakpoint = breakpoints[breakpointIndex]
+  if (!breakpoint) return null
+
+  const [sourcePoint, targetPoint] = points
+  const previousBreakpoint = breakpoints[breakpointIndex - 1]
+  const nextBreakpoint = breakpoints[breakpointIndex + 1]
+
+  return {
+    start: previousBreakpoint ?? midpointBetween(sourcePoint, breakpoint),
+    end: nextBreakpoint ?? midpointBetween(breakpoint, targetPoint),
+  }
+}
+
+export function calculateStraightPathBreakpoints(
+  points: IPoint[],
+  maxBreakpoints: number = 1,
+  minSpacing: number = 40
+): IPoint[] {
+  const orientation = getStraightPathOrientation(points)
+  if (!orientation) return []
+
+  const [start, end] = points
+  const length =
+    orientation === "vertical"
+      ? Math.abs(end.y - start.y)
+      : Math.abs(end.x - start.x)
+  const breakpointCount = Math.min(
+    maxBreakpoints,
+    Math.max(0, Math.floor(length / minSpacing) - 1)
+  )
+
+  if (breakpointCount === 0) return []
+
+  return Array.from({ length: breakpointCount }, (_, index) => {
+    const ratio = (index + 1) / (breakpointCount + 1)
+    return {
+      x: Number((start.x + (end.x - start.x) * ratio).toFixed(2)),
+      y: Number((start.y + (end.y - start.y) * ratio).toFixed(2)),
+    }
+  })
+}
+
+export function createStraightPathDetour(
+  points: IPoint[],
+  breakpoint: IPoint,
+  dragPoint: IPoint,
+  minDetourOffset: number = 4,
+  breakpoints: IPoint[] = [breakpoint],
+  breakpointIndex: number = 0
+): IPoint[] {
+  const orientation = getStraightPathOrientation(points)
+  if (!orientation) return points
+
+  const [start, end] = points
+  const detourRange = calculateStraightPathDetourRange(
+    points,
+    breakpoints,
+    breakpointIndex
+  )
+  if (!detourRange) return points
+
+  const detourOffset =
+    orientation === "vertical"
+      ? Math.abs(dragPoint.x - start.x)
+      : Math.abs(dragPoint.y - start.y)
+
+  if (detourOffset < minDetourOffset) {
+    return points
+  }
+
+  const detourPoints =
+    orientation === "vertical"
+      ? [
+          start,
+          detourRange.start,
+          { x: dragPoint.x, y: detourRange.start.y },
+          { x: dragPoint.x, y: detourRange.end.y },
+          detourRange.end,
+          end,
+        ]
+      : [
+          start,
+          detourRange.start,
+          { x: detourRange.start.x, y: dragPoint.y },
+          { x: detourRange.end.x, y: dragPoint.y },
+          detourRange.end,
+          end,
+        ]
+
+  return orthogonalizePoints(detourPoints)
+}
+
+export function alignCustomPathEndpointSegments(
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position,
+  minEndpointSegmentLength: number = 20
+): IPoint[] {
+  if (points.length === 0) return points
+  if (points.length === 1) return [sourcePoint, targetPoint]
+
+  const nextPoints = points.map((point) => ({ ...point }))
+  const lastIndex = nextPoints.length - 1
+  nextPoints[0] = sourcePoint
+  nextPoints[lastIndex] = targetPoint
+
+  if (nextPoints.length > 2) {
+    nextPoints[1] = alignPointOutsideSide(
+      nextPoints[1],
+      sourcePoint,
+      sourcePosition,
+      minEndpointSegmentLength
+    )
+
+    const beforeTargetIndex = lastIndex - 1
+    nextPoints[beforeTargetIndex] = alignPointOutsideSide(
+      nextPoints[beforeTargetIndex],
+      targetPoint,
+      targetPosition,
+      minEndpointSegmentLength
+    )
+  }
+
+  return orthogonalizePoints(nextPoints)
 }
 
 export function parseSvgPath(path: string): IPoint[] {
