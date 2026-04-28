@@ -21,7 +21,12 @@ import {
   removeDuplicatePoints,
   parseSvgPath,
   calculateInnerMidpoints,
+  alignCustomPathEndpointSegments,
+  calculateStraightPathBreakpoints,
+  createStraightPathDetour,
   getMarkerSegmentPath,
+  orthogonalizePoints,
+  getStraightPathOrientation,
 } from "@/utils/edgeUtils"
 import { useEdgeState, useEdgeReconnection } from "../edges/GenericEdge"
 import { useDiagramModifiable } from "./useDiagramModifiable"
@@ -239,7 +244,7 @@ export const useStepPathEdge = ({
     },
   })
 
-  // Reset custom points when nodes move
+  // Keep custom routes when connected nodes move.
   useEffect(() => {
     const currentSourcePos = {
       x: sourceNode.position.x,
@@ -271,40 +276,43 @@ export const useStepPathEdge = ({
       }
 
       if (customPoints.length > 0) {
+        let newPoints = customPoints
+
         if (sourceChanged && targetChanged) {
           const deltaX = currentSourcePos.x - prevSourcePos.x
           const deltaY = currentSourcePos.y - prevSourcePos.y
-          const newPoints = customPoints.map((point) =>
-            screenToFlowPosition({
-              x: point.x + deltaX,
-              y: point.y + deltaY,
-            })
-          )
 
-          setCustomPoints(newPoints)
-          setEdges((edges) =>
-            edges.map((edge) =>
-              edge.id === id
-                ? {
-                    ...edge,
-                    data: { ...edge.data, points: newPoints },
-                  }
-                : edge
-            )
-          )
-        } else {
-          setCustomPoints([])
-          setEdges((edges) =>
-            edges.map((edge) =>
-              edge.id === id
-                ? {
-                    ...edge,
-                    data: { ...edge.data, points: undefined },
-                  }
-                : edge
-            )
-          )
+          newPoints = customPoints.map((point) => ({
+            x: point.x + deltaX,
+            y: point.y + deltaY,
+          }))
         }
+
+        newPoints = alignCustomPathEndpointSegments(
+          newPoints,
+          {
+            x: adjustedSourceCoordinates.sourceX,
+            y: adjustedSourceCoordinates.sourceY,
+          },
+          {
+            x: adjustedTargetCoordinates.targetX,
+            y: adjustedTargetCoordinates.targetY,
+          },
+          sourcePosition,
+          targetPosition
+        )
+
+        setCustomPoints(newPoints)
+        setEdges((edges) =>
+          edges.map((edge) =>
+            edge.id === id
+              ? {
+                  ...edge,
+                  data: { ...edge.data, points: newPoints },
+                }
+              : edge
+          )
+        )
       }
     }
   }, [
@@ -315,6 +323,12 @@ export const useStepPathEdge = ({
     targetNode.position.y,
     targetNode.parentId,
     customPoints,
+    adjustedSourceCoordinates.sourceX,
+    adjustedSourceCoordinates.sourceY,
+    adjustedTargetCoordinates.targetX,
+    adjustedTargetCoordinates.targetY,
+    sourcePosition,
+    targetPosition,
     id,
     setEdges,
     setCustomPoints,
@@ -360,7 +374,23 @@ export const useStepPathEdge = ({
       }
     }
 
-    return points
+    if (points.length > 2) {
+      return alignCustomPathEndpointSegments(
+        points,
+        {
+          x: adjustedSourceCoordinates.sourceX,
+          y: adjustedSourceCoordinates.sourceY,
+        },
+        {
+          x: adjustedTargetCoordinates.targetX,
+          y: adjustedTargetCoordinates.targetY,
+        },
+        sourcePosition,
+        targetPosition
+      )
+    }
+
+    return orthogonalizePoints(points)
   }, [
     customPoints,
     computedPoints,
@@ -370,6 +400,8 @@ export const useStepPathEdge = ({
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
+    sourcePosition,
+    targetPosition,
   ])
 
   const currentPath = useMemo(() => {
@@ -386,8 +418,11 @@ export const useStepPathEdge = ({
   }, [currentPath, markerSegmentPath])
 
   const midpoints = useMemo(() => {
-    if (!allowMidpointDragging || activePoints.length < 3) return []
-    return calculateInnerMidpoints(activePoints)
+    if (!allowMidpointDragging) return []
+    const innerMidpoints = calculateInnerMidpoints(activePoints)
+    return innerMidpoints.length > 0
+      ? innerMidpoints
+      : calculateStraightPathBreakpoints(activePoints)
   }, [activePoints, allowMidpointDragging])
 
   useEffect(() => {
@@ -436,12 +471,24 @@ export const useStepPathEdge = ({
 
       // Store initial state
       const currentMidpoint = midpoints[index]
+      if (!currentMidpoint) return
+
+      const straightPathOrientation = getStraightPathOrientation(activePoints)
+      const isStraightPathBreakpoint = straightPathOrientation !== null
+      const straightPathBasePoints = [...activePoints]
+      const initialPointerPosition = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      })
+      let hasDragged = false
+
       draggingIndexRef.current = index
       dragOffsetRef.current = {
-        x: event.clientX - currentMidpoint.x,
-        y: event.clientY - currentMidpoint.y,
+        x: initialPointerPosition.x - currentMidpoint.x,
+        y: initialPointerPosition.y - currentMidpoint.y,
       }
       dragPointsRef.current = [...activePoints]
+      finalPointsRef.current = [...activePoints]
 
       // Get DOM elements for direct manipulation (like React Flow does for nodes)
       const circleEl = event.target as SVGCircleElement
@@ -452,28 +499,66 @@ export const useStepPathEdge = ({
       const overlayPath = container?.querySelector(
         ".edge-overlay"
       ) as SVGPathElement | null
+      const midpointElements = Array.from(
+        container?.querySelectorAll(".edge-circle") ?? []
+      ) as SVGCircleElement[]
+
+      if (isStraightPathBreakpoint) {
+        midpointElements.forEach((element) => {
+          if (element !== circleEl) {
+            element.style.display = "none"
+          }
+        })
+      }
 
       const handlePointerMove = (e: PointerEvent) => {
         if (draggingIndexRef.current === null) return
 
         const idx = draggingIndexRef.current
-        const newX = e.clientX - dragOffsetRef.current.x
-        const newY = e.clientY - dragOffsetRef.current.y
+        const pointerPosition = screenToFlowPosition({
+          x: e.clientX,
+          y: e.clientY,
+        })
+        const newX = pointerPosition.x - dragOffsetRef.current.x
+        const newY = pointerPosition.y - dragOffsetRef.current.y
 
-        // Determine if this segment is horizontal or vertical
-        const pts = dragPointsRef.current
-        const isVertical = Math.abs(pts[idx + 1].x - pts[idx + 2].x) < 1
+        let newPoints: IPoint[]
+        if (isStraightPathBreakpoint) {
+          newPoints = createStraightPathDetour(
+            straightPathBasePoints,
+            currentMidpoint,
+            { x: newX, y: newY },
+            undefined,
+            midpoints,
+            idx
+          )
 
-        // Update the two points that define this segment
-        const newPoints = [...pts]
-        if (isVertical) {
-          newPoints[idx + 1] = { x: newX, y: pts[idx + 1].y }
-          newPoints[idx + 2] = { x: newX, y: pts[idx + 2].y }
+          const handlePoint =
+            straightPathOrientation === "vertical"
+              ? { x: newX, y: currentMidpoint.y }
+              : { x: currentMidpoint.x, y: newY }
+
+          circleEl.setAttribute("cx", String(handlePoint.x))
+          circleEl.setAttribute("cy", String(handlePoint.y))
         } else {
-          newPoints[idx + 1] = { x: pts[idx + 1].x, y: newY }
-          newPoints[idx + 2] = { x: pts[idx + 2].x, y: newY }
+          // Determine if this segment is horizontal or vertical
+          const pts = dragPointsRef.current
+          const isVertical = Math.abs(pts[idx + 1].x - pts[idx + 2].x) < 1
+
+          // Update the two points that define this segment
+          newPoints = [...pts]
+          if (isVertical) {
+            newPoints[idx + 1] = { x: newX, y: pts[idx + 1].y }
+            newPoints[idx + 2] = { x: newX, y: pts[idx + 2].y }
+          } else {
+            newPoints[idx + 1] = { x: pts[idx + 1].x, y: newY }
+            newPoints[idx + 2] = { x: pts[idx + 2].x, y: newY }
+          }
+          dragPointsRef.current = newPoints
         }
-        dragPointsRef.current = newPoints
+
+        newPoints = orthogonalizePoints(newPoints)
+        hasDragged = true
         finalPointsRef.current = newPoints
 
         // Direct DOM updates for instant feedback
@@ -484,24 +569,58 @@ export const useStepPathEdge = ({
           `${pathD} ${getMarkerSegmentPath(newPoints, offset, targetPosition)}`
         )
 
-        // Update circle position
-        const mids = calculateInnerMidpoints(newPoints)
-        if (mids[idx]) {
-          circleEl.setAttribute("cx", String(mids[idx].x))
-          circleEl.setAttribute("cy", String(mids[idx].y))
+        if (!isStraightPathBreakpoint) {
+          const mids = calculateInnerMidpoints(newPoints)
+          midpointElements.forEach((element, elementIndex) => {
+            const midpoint = mids[elementIndex]
+            if (midpoint) {
+              element.setAttribute("cx", String(midpoint.x))
+              element.setAttribute("cy", String(midpoint.y))
+            }
+          })
         }
       }
 
       const handlePointerUp = () => {
+        const nextPoints = finalPointsRef.current
+        const collapsedToStraight =
+          hasDragged &&
+          nextPoints.length === 2 &&
+          getStraightPathOrientation(nextPoints) !== null
+        const shouldPersist =
+          hasDragged &&
+          nextPoints.length > 2 &&
+          getStraightPathOrientation(nextPoints) === null
+
         // Sync to React state only on release
-        setCustomPoints(finalPointsRef.current)
-        setEdges((eds) =>
-          eds.map((e) =>
-            e.id === id
-              ? { ...e, data: { ...e.data, points: finalPointsRef.current } }
-              : e
+        if (shouldPersist) {
+          setCustomPoints(nextPoints)
+          setEdges((eds) =>
+            eds.map((e) =>
+              e.id === id
+                ? { ...e, data: { ...e.data, points: nextPoints } }
+                : e
+            )
           )
-        )
+        } else if (collapsedToStraight) {
+          setCustomPoints([])
+          setEdges((eds) =>
+            eds.map((e) =>
+              e.id === id
+                ? { ...e, data: { ...e.data, points: undefined } }
+                : e
+            )
+          )
+        } else {
+          midpointElements.forEach((element, elementIndex) => {
+            const midpoint = midpoints[elementIndex]
+            element.style.display = ""
+            if (midpoint) {
+              element.setAttribute("cx", String(midpoint.x))
+              element.setAttribute("cy", String(midpoint.y))
+            }
+          })
+        }
         draggingIndexRef.current = null
         document.removeEventListener("pointermove", handlePointerMove)
         document.removeEventListener("pointerup", handlePointerUp)
@@ -519,6 +638,7 @@ export const useStepPathEdge = ({
       setCustomPoints,
       offset,
       targetPosition,
+      screenToFlowPosition,
     ]
   )
 

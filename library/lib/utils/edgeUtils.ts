@@ -608,6 +608,266 @@ export function simplifyPoints(points: IPoint[]): IPoint[] {
   return result
 }
 
+export type StraightPathOrientation = "horizontal" | "vertical"
+
+export function getStraightPathOrientation(
+  points: IPoint[],
+  tolerance: number = 1
+): StraightPathOrientation | null {
+  if (points.length !== 2) return null
+
+  const [start, end] = points
+  const isVertical = Math.abs(start.x - end.x) <= tolerance
+  const isHorizontal = Math.abs(start.y - end.y) <= tolerance
+
+  if (isVertical && Math.abs(start.y - end.y) > tolerance) {
+    return "vertical"
+  }
+
+  if (isHorizontal && Math.abs(start.x - end.x) > tolerance) {
+    return "horizontal"
+  }
+
+  return null
+}
+
+export function orthogonalizePoints(
+  points: IPoint[],
+  tolerance: number = 1
+): IPoint[] {
+  if (points.length < 2) return points
+
+  const orthogonalPoints: IPoint[] = [{ ...points[0] }]
+
+  for (let i = 1; i < points.length; i++) {
+    const previous = orthogonalPoints[orthogonalPoints.length - 1]
+    const next = { ...points[i] }
+    const isVertical = Math.abs(previous.x - next.x) <= tolerance
+    const isHorizontal = Math.abs(previous.y - next.y) <= tolerance
+
+    if (isVertical || isHorizontal) {
+      orthogonalPoints.push(next)
+      continue
+    }
+
+    const previousOrientation =
+      orthogonalPoints.length >= 2
+        ? getStraightPathOrientation(
+            [orthogonalPoints[orthogonalPoints.length - 2], previous],
+            tolerance
+          )
+        : null
+    const elbow =
+      previousOrientation === "vertical"
+        ? { x: next.x, y: previous.y }
+        : { x: previous.x, y: next.y }
+
+    orthogonalPoints.push(elbow, next)
+  }
+
+  return simplifyPoints(removeDuplicatePoints(orthogonalPoints))
+}
+
+function midpointBetween(start: IPoint, end: IPoint): IPoint {
+  return {
+    x: start.x + (end.x - start.x) / 2,
+    y: start.y + (end.y - start.y) / 2,
+  }
+}
+
+function isPointOutsideSide(
+  point: IPoint,
+  anchor: IPoint,
+  side: Position,
+  minDistance: number
+): boolean {
+  switch (side) {
+    case Position.Top:
+      return point.y <= anchor.y - minDistance
+    case Position.Bottom:
+      return point.y >= anchor.y + minDistance
+    case Position.Left:
+      return point.x <= anchor.x - minDistance
+    case Position.Right:
+      return point.x >= anchor.x + minDistance
+  }
+}
+
+function alignPointOutsideSide(
+  point: IPoint,
+  anchor: IPoint,
+  side: Position,
+  minDistance: number
+): IPoint {
+  switch (side) {
+    case Position.Top:
+      return {
+        x: anchor.x,
+        y: isPointOutsideSide(point, anchor, side, minDistance)
+          ? point.y
+          : anchor.y - minDistance,
+      }
+    case Position.Bottom:
+      return {
+        x: anchor.x,
+        y: isPointOutsideSide(point, anchor, side, minDistance)
+          ? point.y
+          : anchor.y + minDistance,
+      }
+    case Position.Left:
+      return {
+        x: isPointOutsideSide(point, anchor, side, minDistance)
+          ? point.x
+          : anchor.x - minDistance,
+        y: anchor.y,
+      }
+    case Position.Right:
+      return {
+        x: isPointOutsideSide(point, anchor, side, minDistance)
+          ? point.x
+          : anchor.x + minDistance,
+        y: anchor.y,
+      }
+  }
+}
+
+export function calculateStraightPathDetourRange(
+  points: IPoint[],
+  breakpoints: IPoint[],
+  breakpointIndex: number
+): { start: IPoint; end: IPoint } | null {
+  if (!getStraightPathOrientation(points) || breakpoints.length === 0) {
+    return null
+  }
+
+  const breakpoint = breakpoints[breakpointIndex]
+  if (!breakpoint) return null
+
+  const [sourcePoint, targetPoint] = points
+  const previousBreakpoint = breakpoints[breakpointIndex - 1]
+  const nextBreakpoint = breakpoints[breakpointIndex + 1]
+
+  return {
+    start: previousBreakpoint ?? midpointBetween(sourcePoint, breakpoint),
+    end: nextBreakpoint ?? midpointBetween(breakpoint, targetPoint),
+  }
+}
+
+export function calculateStraightPathBreakpoints(
+  points: IPoint[],
+  maxBreakpoints: number = 1,
+  minSpacing: number = 40
+): IPoint[] {
+  const orientation = getStraightPathOrientation(points)
+  if (!orientation) return []
+
+  const [start, end] = points
+  const length =
+    orientation === "vertical"
+      ? Math.abs(end.y - start.y)
+      : Math.abs(end.x - start.x)
+  const breakpointCount = Math.min(
+    maxBreakpoints,
+    Math.max(0, Math.floor(length / minSpacing) - 1)
+  )
+
+  if (breakpointCount === 0) return []
+
+  return Array.from({ length: breakpointCount }, (_, index) => {
+    const ratio = (index + 1) / (breakpointCount + 1)
+    return {
+      x: Number((start.x + (end.x - start.x) * ratio).toFixed(2)),
+      y: Number((start.y + (end.y - start.y) * ratio).toFixed(2)),
+    }
+  })
+}
+
+export function createStraightPathDetour(
+  points: IPoint[],
+  breakpoint: IPoint,
+  dragPoint: IPoint,
+  minDetourOffset: number = 4,
+  breakpoints: IPoint[] = [breakpoint],
+  breakpointIndex: number = 0
+): IPoint[] {
+  const orientation = getStraightPathOrientation(points)
+  if (!orientation) return points
+
+  const [start, end] = points
+  const detourRange = calculateStraightPathDetourRange(
+    points,
+    breakpoints,
+    breakpointIndex
+  )
+  if (!detourRange) return points
+
+  const detourOffset =
+    orientation === "vertical"
+      ? Math.abs(dragPoint.x - start.x)
+      : Math.abs(dragPoint.y - start.y)
+
+  if (detourOffset < minDetourOffset) {
+    return points
+  }
+
+  const detourPoints =
+    orientation === "vertical"
+      ? [
+          start,
+          detourRange.start,
+          { x: dragPoint.x, y: detourRange.start.y },
+          { x: dragPoint.x, y: detourRange.end.y },
+          detourRange.end,
+          end,
+        ]
+      : [
+          start,
+          detourRange.start,
+          { x: detourRange.start.x, y: dragPoint.y },
+          { x: detourRange.end.x, y: dragPoint.y },
+          detourRange.end,
+          end,
+        ]
+
+  return orthogonalizePoints(detourPoints)
+}
+
+export function alignCustomPathEndpointSegments(
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position,
+  minEndpointSegmentLength: number = 20
+): IPoint[] {
+  if (points.length === 0) return points
+  if (points.length === 1) return [sourcePoint, targetPoint]
+
+  const nextPoints = points.map((point) => ({ ...point }))
+  const lastIndex = nextPoints.length - 1
+  nextPoints[0] = sourcePoint
+  nextPoints[lastIndex] = targetPoint
+
+  if (nextPoints.length > 2) {
+    nextPoints[1] = alignPointOutsideSide(
+      nextPoints[1],
+      sourcePoint,
+      sourcePosition,
+      minEndpointSegmentLength
+    )
+
+    const beforeTargetIndex = lastIndex - 1
+    nextPoints[beforeTargetIndex] = alignPointOutsideSide(
+      nextPoints[beforeTargetIndex],
+      targetPoint,
+      targetPosition,
+      minEndpointSegmentLength
+    )
+  }
+
+  return orthogonalizePoints(nextPoints)
+}
+
 export function parseSvgPath(path: string): IPoint[] {
   const tokens = simplifySvgPath(path).replace(/,/g, " ").trim().split(/\s+/)
   const points: IPoint[] = []

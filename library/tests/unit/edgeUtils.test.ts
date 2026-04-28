@@ -7,12 +7,18 @@ import {
   calculateInnerMidpoints,
   calculateOverlayPath,
   calculateStraightPath,
+  alignCustomPathEndpointSegments,
+  calculateStraightPathDetourRange,
+  calculateStraightPathBreakpoints,
+  createStraightPathDetour,
   calculateTextPlacement,
   findClosestHandle,
   getConnectionLineType,
   getDefaultEdgeType,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
+  getStraightPathOrientation,
+  orthogonalizePoints,
   parseSvgPath,
   removeDuplicatePoints,
   simplifyPoints,
@@ -923,6 +929,414 @@ describe("calculateInnerMidpoints", () => {
     expect(result[0]).toEqual({ x: 100, y: 50 })
     expect(result[1]).toEqual({ x: 150, y: 100 })
     expect(result[2]).toEqual({ x: 200, y: 150 })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// straight path breakpoint helpers
+// ---------------------------------------------------------------------------
+describe("straight path breakpoint helpers", () => {
+  describe("getStraightPathOrientation", () => {
+    it("detects vertical two-point paths", () => {
+      expect(
+        getStraightPathOrientation([
+          { x: 10, y: 0 },
+          { x: 10, y: 200 },
+        ])
+      ).toBe("vertical")
+    })
+
+    it("detects horizontal two-point paths", () => {
+      expect(
+        getStraightPathOrientation([
+          { x: 0, y: 20 },
+          { x: 200, y: 20 },
+        ])
+      ).toBe("horizontal")
+    })
+
+    it("rejects diagonal, zero-length, and multi-point paths", () => {
+      expect(
+        getStraightPathOrientation([
+          { x: 0, y: 0 },
+          { x: 100, y: 50 },
+        ])
+      ).toBeNull()
+      expect(
+        getStraightPathOrientation([
+          { x: 5, y: 5 },
+          { x: 5, y: 5 },
+        ])
+      ).toBeNull()
+      expect(
+        getStraightPathOrientation([
+          { x: 0, y: 0 },
+          { x: 0, y: 50 },
+          { x: 50, y: 50 },
+        ])
+      ).toBeNull()
+    })
+  })
+
+  describe("calculateStraightPathBreakpoints", () => {
+    it("creates one centered handle for a long vertical path", () => {
+      const result = calculateStraightPathBreakpoints([
+        { x: 10, y: 0 },
+        { x: 10, y: 200 },
+      ])
+
+      expect(result).toEqual([{ x: 10, y: 100 }])
+    })
+
+    it("creates one handle for a medium horizontal path", () => {
+      const result = calculateStraightPathBreakpoints([
+        { x: 0, y: 20 },
+        { x: 100, y: 20 },
+      ])
+
+      expect(result).toEqual([{ x: 50, y: 20 }])
+    })
+
+    it("centers reversed paths", () => {
+      const result = calculateStraightPathBreakpoints([
+        { x: 10, y: 200 },
+        { x: 10, y: 0 },
+      ])
+
+      expect(result).toEqual([{ x: 10, y: 100 }])
+    })
+
+    it("returns no handles for short or non-orthogonal paths", () => {
+      expect(
+        calculateStraightPathBreakpoints([
+          { x: 0, y: 0 },
+          { x: 0, y: 70 },
+        ])
+      ).toEqual([])
+      expect(
+        calculateStraightPathBreakpoints([
+          { x: 0, y: 0 },
+          { x: 100, y: 50 },
+        ])
+      ).toEqual([])
+    })
+  })
+
+  describe("orthogonalizePoints", () => {
+    it("turns a diagonal segment into orthogonal elbow segments", () => {
+      const result = orthogonalizePoints([
+        { x: 0, y: 0 },
+        { x: 100, y: 80 },
+      ])
+
+      expect(result).toEqual([
+        { x: 0, y: 0 },
+        { x: 0, y: 80 },
+        { x: 100, y: 80 },
+      ])
+    })
+
+    it("alternates after an existing vertical segment to avoid diagonal tilt", () => {
+      const result = orthogonalizePoints([
+        { x: 0, y: 0 },
+        { x: 0, y: 50 },
+        { x: 100, y: 80 },
+      ])
+
+      expect(result).toEqual([
+        { x: 0, y: 0 },
+        { x: 0, y: 50 },
+        { x: 100, y: 50 },
+        { x: 100, y: 80 },
+      ])
+    })
+
+    it("leaves already orthogonal paths unchanged", () => {
+      const points = [
+        { x: 0, y: 0 },
+        { x: 0, y: 50 },
+        { x: 100, y: 50 },
+      ]
+
+      expect(orthogonalizePoints(points)).toEqual(points)
+    })
+  })
+
+  describe("calculateStraightPathDetourRange", () => {
+    const straightPath = [
+      { x: 10, y: 0 },
+      { x: 10, y: 200 },
+    ]
+    const breakpoints = [
+      { x: 10, y: 50 },
+      { x: 10, y: 100 },
+      { x: 10, y: 150 },
+    ]
+
+    it("maps the first handle to the source-side span", () => {
+      expect(
+        calculateStraightPathDetourRange(straightPath, breakpoints, 0)
+      ).toEqual({
+        start: { x: 10, y: 25 },
+        end: { x: 10, y: 100 },
+      })
+    })
+
+    it("maps the middle handle to the neighboring handles", () => {
+      expect(
+        calculateStraightPathDetourRange(straightPath, breakpoints, 1)
+      ).toEqual({
+        start: { x: 10, y: 50 },
+        end: { x: 10, y: 150 },
+      })
+    })
+
+    it("maps the last handle to the target-side span", () => {
+      expect(
+        calculateStraightPathDetourRange(straightPath, breakpoints, 2)
+      ).toEqual({
+        start: { x: 10, y: 100 },
+        end: { x: 10, y: 175 },
+      })
+    })
+  })
+
+  describe("createStraightPathDetour", () => {
+    it("creates an orthogonal detour from the middle vertical handle", () => {
+      const straightPath = [
+        { x: 10, y: 0 },
+        { x: 10, y: 200 },
+      ]
+      const breakpoints = [
+        { x: 10, y: 50 },
+        { x: 10, y: 100 },
+        { x: 10, y: 150 },
+      ]
+      const result = createStraightPathDetour(
+        straightPath,
+        breakpoints[1],
+        { x: 70, y: 100 },
+        4,
+        breakpoints,
+        1
+      )
+
+      expect(result).toEqual([
+        { x: 10, y: 0 },
+        { x: 10, y: 50 },
+        { x: 70, y: 50 },
+        { x: 70, y: 150 },
+        { x: 10, y: 150 },
+        { x: 10, y: 200 },
+      ])
+    })
+
+    it("creates an orthogonal detour from the target-side vertical handle", () => {
+      const straightPath = [
+        { x: 10, y: 0 },
+        { x: 10, y: 200 },
+      ]
+      const breakpoints = [
+        { x: 10, y: 50 },
+        { x: 10, y: 100 },
+        { x: 10, y: 150 },
+      ]
+      const result = createStraightPathDetour(
+        straightPath,
+        breakpoints[2],
+        { x: 70, y: 150 },
+        4,
+        breakpoints,
+        2
+      )
+
+      expect(result).toEqual([
+        { x: 10, y: 0 },
+        { x: 10, y: 100 },
+        { x: 70, y: 100 },
+        { x: 70, y: 175 },
+        { x: 10, y: 175 },
+        { x: 10, y: 200 },
+      ])
+    })
+
+    it("creates an orthogonal detour from the source-side vertical handle", () => {
+      const straightPath = [
+        { x: 10, y: 0 },
+        { x: 10, y: 200 },
+      ]
+      const breakpoints = [
+        { x: 10, y: 50 },
+        { x: 10, y: 100 },
+        { x: 10, y: 150 },
+      ]
+      const result = createStraightPathDetour(
+        straightPath,
+        breakpoints[0],
+        { x: 70, y: 50 },
+        4,
+        breakpoints,
+        0
+      )
+
+      expect(result).toEqual([
+        { x: 10, y: 0 },
+        { x: 10, y: 25 },
+        { x: 70, y: 25 },
+        { x: 70, y: 100 },
+        { x: 10, y: 100 },
+        { x: 10, y: 200 },
+      ])
+    })
+
+    it("creates an orthogonal detour from the middle horizontal handle", () => {
+      const straightPath = [
+        { x: 0, y: 20 },
+        { x: 200, y: 20 },
+      ]
+      const breakpoints = [
+        { x: 50, y: 20 },
+        { x: 100, y: 20 },
+        { x: 150, y: 20 },
+      ]
+      const result = createStraightPathDetour(
+        straightPath,
+        breakpoints[1],
+        { x: 100, y: 80 },
+        4,
+        breakpoints,
+        1
+      )
+
+      expect(result).toEqual([
+        { x: 0, y: 20 },
+        { x: 50, y: 20 },
+        { x: 50, y: 80 },
+        { x: 150, y: 80 },
+        { x: 150, y: 20 },
+        { x: 200, y: 20 },
+      ])
+    })
+
+    it("does not persist tiny detours or diagonal paths", () => {
+      const verticalPath = [
+        { x: 10, y: 0 },
+        { x: 10, y: 200 },
+      ]
+
+      expect(
+        createStraightPathDetour(
+          verticalPath,
+          { x: 10, y: 50 },
+          { x: 12, y: 50 }
+        )
+      ).toEqual(verticalPath)
+
+      const diagonalPath = [
+        { x: 0, y: 0 },
+        { x: 100, y: 50 },
+      ]
+
+      expect(
+        createStraightPathDetour(
+          diagonalPath,
+          { x: 50, y: 25 },
+          { x: 70, y: 50 }
+        )
+      ).toEqual(diagonalPath)
+    })
+  })
+
+  describe("alignCustomPathEndpointSegments", () => {
+    it("preserves a custom route while updating vertical endpoint approaches", () => {
+      const result = alignCustomPathEndpointSegments(
+        [
+          { x: 10, y: 0 },
+          { x: 10, y: 50 },
+          { x: 70, y: 50 },
+          { x: 70, y: 125 },
+          { x: 10, y: 125 },
+          { x: 10, y: 200 },
+        ],
+        { x: 30, y: 20 },
+        { x: 10, y: 240 },
+        Position.Bottom,
+        Position.Top
+      )
+
+      expect(result).toEqual([
+        { x: 30, y: 20 },
+        { x: 30, y: 50 },
+        { x: 70, y: 50 },
+        { x: 70, y: 125 },
+        { x: 10, y: 125 },
+        { x: 10, y: 240 },
+      ])
+    })
+
+    it("preserves a custom route while updating horizontal endpoint approaches", () => {
+      const result = alignCustomPathEndpointSegments(
+        [
+          { x: 0, y: 20 },
+          { x: 50, y: 20 },
+          { x: 50, y: 80 },
+          { x: 125, y: 80 },
+          { x: 125, y: 20 },
+          { x: 200, y: 20 },
+        ],
+        { x: -20, y: 40 },
+        { x: 240, y: 10 },
+        Position.Right,
+        Position.Left
+      )
+
+      expect(result).toEqual([
+        { x: -20, y: 40 },
+        { x: 50, y: 40 },
+        { x: 50, y: 80 },
+        { x: 125, y: 80 },
+        { x: 125, y: 10 },
+        { x: 240, y: 10 },
+      ])
+    })
+
+    it("forces the target approach to respect the attached top side", () => {
+      const result = alignCustomPathEndpointSegments(
+        [
+          { x: 0, y: 0 },
+          { x: 0, y: 80 },
+          { x: 100, y: 80 },
+          { x: 100, y: 140 },
+          { x: 50, y: 140 },
+        ],
+        { x: 0, y: 0 },
+        { x: 50, y: 100 },
+        Position.Bottom,
+        Position.Top
+      )
+
+      expect(result[result.length - 2]).toEqual({ x: 50, y: 80 })
+      expect(result[result.length - 1]).toEqual({ x: 50, y: 100 })
+    })
+
+    it("forces the target approach to respect the attached left side", () => {
+      const result = alignCustomPathEndpointSegments(
+        [
+          { x: 0, y: 0 },
+          { x: 80, y: 0 },
+          { x: 80, y: 100 },
+          { x: 140, y: 100 },
+          { x: 100, y: 50 },
+        ],
+        { x: 0, y: 0 },
+        { x: 100, y: 50 },
+        Position.Right,
+        Position.Left
+      )
+
+      expect(result[result.length - 2]).toEqual({ x: 80, y: 50 })
+      expect(result[result.length - 1]).toEqual({ x: 100, y: 50 })
+    })
   })
 })
 
