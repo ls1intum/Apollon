@@ -4,7 +4,62 @@ import { IPoint } from "@/edges"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
 import { useIsOnlyThisElementSelected } from "@/hooks/useIsOnlyThisElementSelected"
 import { Box } from "@mui/material"
-import { useMemo } from "react"
+import { useLayoutEffect, useMemo, useState } from "react"
+
+const TOOLBAR_WIDTH = 32
+const TOOLBAR_HEIGHT = 56
+const TOOLBAR_GAP = 20
+const DRAGGER_CLEARANCE = 14
+
+const getDefaultToolbarPosition = (position: IPoint) => ({
+  x: position.x + 4,
+  y: position.y - 8,
+})
+
+const overlapsDragger = (toolbarPosition: IPoint, dragger: IPoint) => {
+  return (
+    dragger.x >= toolbarPosition.x - DRAGGER_CLEARANCE &&
+    dragger.x <= toolbarPosition.x + TOOLBAR_WIDTH + DRAGGER_CLEARANCE &&
+    dragger.y >= toolbarPosition.y - DRAGGER_CLEARANCE &&
+    dragger.y <= toolbarPosition.y + TOOLBAR_HEIGHT + DRAGGER_CLEARANCE
+  )
+}
+
+const getToolbarCandidates = (position: IPoint) => [
+  {
+    x: position.x + TOOLBAR_GAP,
+    y: position.y - TOOLBAR_HEIGHT / 2,
+  },
+  {
+    x: position.x - TOOLBAR_WIDTH - TOOLBAR_GAP,
+    y: position.y - TOOLBAR_HEIGHT / 2,
+  },
+  {
+    x: position.x - TOOLBAR_WIDTH / 2,
+    y: position.y - TOOLBAR_HEIGHT - TOOLBAR_GAP,
+  },
+  {
+    x: position.x - TOOLBAR_WIDTH / 2,
+    y: position.y + TOOLBAR_GAP,
+  },
+  {
+    x: position.x + TOOLBAR_GAP,
+    y: position.y - TOOLBAR_HEIGHT - TOOLBAR_GAP,
+  },
+  {
+    x: position.x - TOOLBAR_WIDTH - TOOLBAR_GAP,
+    y: position.y - TOOLBAR_HEIGHT - TOOLBAR_GAP,
+  },
+  {
+    x: position.x + TOOLBAR_GAP,
+    y: position.y + TOOLBAR_GAP,
+  },
+  {
+    x: position.x - TOOLBAR_WIDTH - TOOLBAR_GAP,
+    y: position.y + TOOLBAR_GAP,
+  },
+  getDefaultToolbarPosition(position),
+]
 
 interface CustomEdgeToolbarProps {
   edgeId: string
@@ -28,20 +83,48 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
     return selected && isDiagramModifiable
   }, [selected, isDiagramModifiable])
 
-  const toolbarPosition = useMemo(() => {
-    return {
-      x: position.x - 16,
-      y: position.y - 28,
+  const [toolbarPosition, setToolbarPosition] = useState<IPoint>(() =>
+    getDefaultToolbarPosition(position)
+  )
+
+  useLayoutEffect(() => {
+    const defaultPosition = getDefaultToolbarPosition(position)
+
+    if (!showToolbar || !anchorRef.current) {
+      setToolbarPosition(defaultPosition)
+      return
     }
-  }, [position.x, position.y, edgeId])
+
+    const edgeGroup = anchorRef.current.parentElement
+    const draggers = Array.from(
+      edgeGroup?.querySelectorAll<SVGCircleElement>(".edge-circle") ?? []
+    )
+      .map((circle) => ({
+        x: Number(circle.getAttribute("cx")),
+        y: Number(circle.getAttribute("cy")),
+      }))
+      .filter(({ x, y }) => Number.isFinite(x) && Number.isFinite(y))
+
+    const nextPosition =
+      getToolbarCandidates(position).find((candidate) =>
+        draggers.every((dragger) => !overlapsDragger(candidate, dragger))
+      ) ?? defaultPosition
+
+    setToolbarPosition((currentPosition) =>
+      currentPosition.x === nextPosition.x &&
+      currentPosition.y === nextPosition.y
+        ? currentPosition
+        : nextPosition
+    )
+  }, [anchorRef, position.x, position.y, showToolbar, edgeId])
 
   return (
     <foreignObject
       ref={anchorRef}
-      width={32}
-      height={56}
-      x={toolbarPosition.x + 20}
-      y={toolbarPosition.y + 20}
+      width={TOOLBAR_WIDTH}
+      height={TOOLBAR_HEIGHT}
+      x={toolbarPosition.x}
+      y={toolbarPosition.y}
     >
       {showToolbar && (
         <Box
