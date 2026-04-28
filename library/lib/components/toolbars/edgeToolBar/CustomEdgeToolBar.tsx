@@ -106,9 +106,11 @@ export const CustomEdgeToolbar: React.FC<CustomEdgeToolbarProps> = ({
       .filter(({ x, y }) => Number.isFinite(x) && Number.isFinite(y))
 
     const nextPosition =
-      getToolbarCandidates(position).find((candidate) =>
-        draggers.every((dragger) => !overlapsDragger(candidate, dragger))
-      ) ?? defaultPosition
+      draggers.length === 0
+        ? defaultPosition
+        : (getToolbarCandidates(position).find((candidate) =>
+            draggers.every((dragger) => !overlapsDragger(candidate, dragger))
+          ) ?? defaultPosition)
 
     setToolbarPosition((currentPosition) =>
       currentPosition.x === nextPosition.x &&
