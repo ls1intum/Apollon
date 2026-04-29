@@ -16,7 +16,11 @@ import CloseIcon from "@mui/icons-material/Close"
 import { useEffect, useMemo, useState, type FC } from "react"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
-import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
+import {
+  selectVersions,
+  useVersionStore,
+  type PendingVersion,
+} from "@/stores/useVersionStore"
 import { ApiError } from "@/services/DiagramApiClient"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
@@ -44,7 +48,7 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"))
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
-  const versions = useVersionStore((s) => s.versions[diagramId] ?? [])
+  const versions = useVersionStore((s) => selectVersions(s, diagramId))
   const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
   const loading = useVersionStore((s) => s.loading)
   const errorCode = useVersionStore((s) => s.error)
@@ -344,7 +348,7 @@ type GroupedEntry =
       versions: PendingVersion[]
     }
 
-function groupAutoRuns(versions: PendingVersion[]): GroupedEntry[] {
+function groupAutoRuns(versions: readonly PendingVersion[]): GroupedEntry[] {
   const out: GroupedEntry[] = []
   let i = 0
   while (i < versions.length) {

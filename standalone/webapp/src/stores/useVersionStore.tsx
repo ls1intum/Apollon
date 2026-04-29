@@ -106,6 +106,22 @@ export type VersionStore = State & Actions
 
 const UNDO_WINDOW_MS = 10_000
 
+/**
+ * Stable empty-array reference for selectors that fall back when a key is
+ * absent. Returning a fresh `[]` literal each call would defeat Zustand's
+ * default referential-equality check and trigger the infinite-loop warning
+ * "The result of getSnapshot should be cached" in `useSyncExternalStore`.
+ */
+const EMPTY_VERSIONS: readonly PendingVersion[] = Object.freeze([])
+
+/** Selector helper — referentially stable when the diagram has no entry. */
+export function selectVersions(
+  state: State,
+  diagramId: string
+): readonly PendingVersion[] {
+  return state.versions[diagramId] ?? EMPTY_VERSIONS
+}
+
 export const useVersionStore = create<VersionStore>()(
   devtools(
     persist(

@@ -2,7 +2,7 @@ import { Button, Stack } from "@mui/material"
 import { useState } from "react"
 import { toast } from "react-toastify"
 import { useModalContext } from "@/contexts"
-import { useVersionStore } from "@/stores/useVersionStore"
+import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import { Typography } from "@/components/Typography"
 import { log } from "@/logger"
 import { versioningStrings as t } from "./strings"
@@ -16,7 +16,7 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const { closeModal } = useModalContext()
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
   const target = useVersionStore((s) =>
-    (s.versions[diagramId] ?? []).find((v) => v.id === versionId)
+    selectVersions(s, diagramId).find((v) => v.id === versionId)
   )
   const [working, setWorking] = useState(false)
 

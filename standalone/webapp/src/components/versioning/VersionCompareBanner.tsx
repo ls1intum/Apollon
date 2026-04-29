@@ -11,7 +11,7 @@ import CloseIcon from "@mui/icons-material/Close"
 import { useEffect, useMemo, useState, type FC } from "react"
 import { diffModel, type DiagramDiff, type UMLModel } from "@tumaet/apollon"
 import { useEditorContext } from "@/contexts"
-import { useVersionStore } from "@/stores/useVersionStore"
+import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 import { versioningStrings as t } from "./strings"
 
@@ -25,7 +25,7 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
   const compare = useVersionStore((s) => s.compare)
   const swap = useVersionStore((s) => s.swapCompare)
   const close = useVersionStore((s) => s.closeCompare)
-  const versions = useVersionStore((s) => s.versions[diagramId] ?? [])
+  const versions = useVersionStore((s) => selectVersions(s, diagramId))
   const { editor } = useEditorContext()
   const [baselineModel, setBaselineModel] = useState<UMLModel | undefined>()
   const [comparandModel, setComparandModel] = useState<UMLModel | undefined>()
