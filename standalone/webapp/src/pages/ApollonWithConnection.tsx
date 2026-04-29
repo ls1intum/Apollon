@@ -50,6 +50,7 @@ export const ApollonWithConnection: React.FC = () => {
     name: string
     color: string
   } | null>(null)
+  const lastSyncToastAt = useRef(0)
 
   // Stable primitives so we don't re-init the editor on unrelated URL changes.
   const viewType = searchParams.get("view")
@@ -257,6 +258,14 @@ export const ApollonWithConnection: React.FC = () => {
                   lastObservedHeadRev.current = meta.currentHeadRev
                 } else {
                   lastObservedHeadRev.current = undefined
+                }
+                const now = Date.now()
+                if (now - lastSyncToastAt.current > 60_000) {
+                  lastSyncToastAt.current = now
+                  toast.info(t.syncedFromCollaborator, {
+                    toastId: "version-sync-from-collaborator",
+                    autoClose: 2000,
+                  })
                 }
               } else {
                 log.error("Autosave failed", err)

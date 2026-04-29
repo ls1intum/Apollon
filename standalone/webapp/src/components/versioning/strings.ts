@@ -11,8 +11,9 @@ export const versioningStrings = {
     "Save a version before risky changes. You can always come back to this exact state.",
   emptyCta: "Save current as version",
   createPlaceholder:
-    "Describe what changed (optional). Press Enter — first line is the name.",
+    "Name this version (optional). Add details on a new line — first line becomes the name.",
   createButton: "Save version",
+  createHint: "Tip: ⌘⇧S / Ctrl+Shift+S opens this drawer from anywhere.",
   saving: "Saving…",
   retry: "Retry",
   counter: (n: number, max: number) => `${n} / ${max} versions kept`,

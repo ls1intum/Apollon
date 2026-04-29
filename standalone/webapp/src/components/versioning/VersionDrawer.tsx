@@ -84,8 +84,12 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
     if (!editor || submitting) return
     setSubmitting(true)
     const lines = draft.split("\n")
-    const name = (lines[0] ?? "").trim()
+    const typedName = (lines[0] ?? "").trim()
     const description = lines.slice(1).join("\n").trim()
+    // The form is intentionally optional — a user clicking "Save version"
+    // without typing anything still gets a recognisable row, dated by
+    // creation time. They can rename inline afterwards.
+    const name = typedName || `Snapshot — ${new Date().toLocaleString()}`
     try {
       await createVersion(diagramId, editor.model, {
         name,
