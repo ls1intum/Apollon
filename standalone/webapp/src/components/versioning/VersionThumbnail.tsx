@@ -1,7 +1,7 @@
 import { Box, Skeleton } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded"
-import { useEffect, useRef, useState, type FC } from "react"
+import { useEffect, useMemo, useRef, useState, type FC } from "react"
 import { serverURL } from "@/constants"
 
 /**
@@ -12,6 +12,13 @@ import { serverURL } from "@/constants"
  * the server's `Cache-Control: immutable` header).
  *
  * Falls back to a kind icon on error or while loading.
+ *
+ * The fetched SVG is rewritten so it (a) preserves its aspect ratio and
+ * centres in the thumbnail viewport (`preserveAspectRatio="xMidYMid meet"`),
+ * (b) uses `width="100%"` `height="100%"` instead of any fixed size from
+ * the original render, and (c) drops any explicit `background` so the
+ * thumbnail picks up the surrounding theme background (works in both
+ * light and dark mode).
  */
 
 const cache = new Map<string, string>() // key = `${diagramId}/${versionId}`
@@ -22,6 +29,19 @@ interface Props {
   /** When true, render the small list-row variant; otherwise compare-banner size. */
   compact?: boolean
   isAuto?: boolean
+}
+
+function normaliseSvgForThumbnail(svgText: string): string {
+  // Drop any width/height attributes on the root <svg> and force the SVG
+  // to scale + centre via preserveAspectRatio. Cheap regex — server output
+  // is well-formed, no untrusted XML parsing needed.
+  return svgText
+    .replace(/<svg([^>]*)\swidth="[^"]*"/i, "<svg$1")
+    .replace(/<svg([^>]*)\sheight="[^"]*"/i, "<svg$1")
+    .replace(
+      /<svg([^>]*?)>/i,
+      `<svg$1 width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`
+    )
 }
 
 export const VersionThumbnail: FC<Props> = ({
@@ -55,8 +75,9 @@ export const VersionThumbnail: FC<Props> = ({
           })
           .then((text) => {
             if (cancelled) return
-            cache.set(cacheKey, text)
-            setSvg(text)
+            const normalised = normaliseSvgForThumbnail(text)
+            cache.set(cacheKey, normalised)
+            setSvg(normalised)
           })
           .catch(() => {
             if (cancelled) return
@@ -76,6 +97,10 @@ export const VersionThumbnail: FC<Props> = ({
   const w = compact ? 64 : 160
   const h = compact ? 40 : 100
 
+  // Memoise the SVG markup so React's diff doesn't re-write
+  // dangerouslySetInnerHTML on unrelated re-renders.
+  const inner = useMemo(() => (svg ? { __html: svg } : undefined), [svg])
+
   return (
     <Box
       ref={ref}
@@ -83,27 +108,35 @@ export const VersionThumbnail: FC<Props> = ({
         width: w,
         height: h,
         flexShrink: 0,
+        // Theme-aware background so thumbnails sit cleanly against both
+        // light and dark sidebars. `action.hover` is the same token MUI
+        // uses for selected list rows — visually quiet in both modes.
         bgcolor: "action.hover",
+        border: 1,
+        borderColor: "divider",
         borderRadius: 1,
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        // Icon fallback colour — picks up the theme palette.
         color: isAuto ? "text.secondary" : "primary.main",
       }}
       aria-hidden
     >
-      {svg ? (
-        // Inline SVG via dangerouslySetInnerHTML — the server already
-        // produced it from a typed model and we control the source. The
-        // SVG is wrapped in a 100% × 100% sizing container.
+      {inner ? (
         <Box
+          // Centred inner box for the SVG. preserveAspectRatio in the SVG
+          // itself does the visual centring; the wrapper just sizes it.
           sx={{
             width: "100%",
             height: "100%",
-            "& svg": { width: "100%", height: "100%", display: "block" },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            "& > svg": { width: "100%", height: "100%", display: "block" },
           }}
-          dangerouslySetInnerHTML={{ __html: svg }}
+          dangerouslySetInnerHTML={inner}
         />
       ) : errored ? (
         <KindIcon fontSize={compact ? "small" : "medium"} aria-hidden />

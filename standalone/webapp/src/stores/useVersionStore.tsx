@@ -37,6 +37,8 @@ interface State {
   // Per-diagram in-memory state (refetched on reload).
   versions: Record<DiagramId, PendingVersion[]>
   nextCursor: Record<DiagramId, string | undefined>
+  /** Server-reported total count, independent of how many pages are loaded. */
+  totals: Record<DiagramId, number>
   preview: PreviewState | null
   /** When set, surfaces an "undo restore" snackbar in the UI. */
   undoRestore: UndoRestoreState | null
@@ -129,6 +131,7 @@ export const useVersionStore = create<VersionStore>()(
         drawerOpenByDiagram: {},
         versions: {},
         nextCursor: {},
+        totals: {},
         preview: null,
         undoRestore: null,
         compare: null,
@@ -157,13 +160,14 @@ export const useVersionStore = create<VersionStore>()(
         fetchVersions: async (diagramId) => {
           set({ loading: true, error: null })
           try {
-            const { versions, nextCursor } = await VersionApiClient.list(
+            const { versions, nextCursor, total } = await VersionApiClient.list(
               diagramId,
               { limit: 25 }
             )
             set((s) => ({
               versions: { ...s.versions, [diagramId]: versions },
               nextCursor: { ...s.nextCursor, [diagramId]: nextCursor },
+              totals: { ...s.totals, [diagramId]: total },
               loading: false,
             }))
           } catch (err) {
@@ -177,7 +181,7 @@ export const useVersionStore = create<VersionStore>()(
         loadMoreVersions: async (diagramId) => {
           const cursor = get().nextCursor[diagramId]
           if (!cursor) return
-          const { versions, nextCursor } = await VersionApiClient.list(
+          const { versions, nextCursor, total } = await VersionApiClient.list(
             diagramId,
             { limit: 25, before: cursor }
           )
@@ -187,6 +191,7 @@ export const useVersionStore = create<VersionStore>()(
               [diagramId]: [...(s.versions[diagramId] ?? []), ...versions],
             },
             nextCursor: { ...s.nextCursor, [diagramId]: nextCursor },
+            totals: { ...s.totals, [diagramId]: total },
           }))
         },
 

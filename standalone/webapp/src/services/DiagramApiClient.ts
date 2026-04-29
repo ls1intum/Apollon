@@ -123,6 +123,8 @@ export const DiagramApiClient = {
 export interface ListVersionsResponse {
   versions: VersionSummary[]
   nextCursor?: string
+  /** Total number of versions in the index (across all pages). */
+  total: number
 }
 
 export interface RestoreVersionResponse {

@@ -26,6 +26,7 @@ beforeEach(() => {
   vi.spyOn(VersionApiClient, "list").mockResolvedValue({
     versions: [],
     nextCursor: undefined,
+    total: 0,
   })
 })
 

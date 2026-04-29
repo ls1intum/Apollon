@@ -1,8 +1,8 @@
 import {
-  Alert,
   Box,
   CircularProgress,
   IconButton,
+  Paper,
   Stack,
   Typography,
 } from "@mui/material"
@@ -101,12 +101,25 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
     : 0
 
   return (
-    <Alert
-      severity="info"
-      icon={false}
-      sx={{ alignItems: "stretch", "& .MuiAlert-message": { width: "100%" } }}
-      action={
-        <Stack direction="row" spacing={0.5} alignItems="flex-start">
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 1.5,
+        // `background.default` reads correctly in light + dark; `Alert`'s
+        // hardcoded info-blue tint clashed against the dark sidebar.
+        bgcolor: "background.default",
+      }}
+    >
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mb: 1 }}
+      >
+        <Typography variant="caption" color="text.secondary">
+          {t.diffChanged}
+        </Typography>
+        <Stack direction="row" spacing={0.5}>
           <IconButton
             size="small"
             onClick={swap}
@@ -124,8 +137,7 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
             <CloseIcon fontSize="small" />
           </IconButton>
         </Stack>
-      }
-    >
+      </Stack>
       {/* Side-by-side thumbnails so the user sees what they're comparing
           before they read the diff text. "current" shows a placeholder
           card because thumbnails are server-rendered from stored snapshots
@@ -184,7 +196,7 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
           />
         </Stack>
       )}
-    </Alert>
+    </Paper>
   )
 }
 

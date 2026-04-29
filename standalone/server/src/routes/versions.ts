@@ -234,7 +234,10 @@ export function mountVersionRoutes(
           slice.map((id) => readVersionMeta(redis, params.diagramId, id))
         )
         const versions = summaries.filter((s): s is VersionSummary => !!s)
-        res.status(200).json({ versions, nextCursor })
+        // Total count across the whole index — lets the client render an
+        // accurate "N / cap" header without waiting for every page to load.
+        const total = await redis.zCard(k.versionsIndex(params.diagramId))
+        res.status(200).json({ versions, nextCursor, total })
       }
     )
   )

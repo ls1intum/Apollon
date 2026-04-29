@@ -34,6 +34,10 @@ const MAX_VERSIONS = Number(
     ?.VITE_MAX_VERSIONS_PER_DIAGRAM ?? 50
 )
 const MAX_DESCRIPTION_LENGTH = 240
+/** Sidebar width on desktop. Narrow enough to keep the canvas usable. */
+const SIDEBAR_WIDTH = 320
+/** Slide-in animation duration matched to MUI's standard transition. */
+const SIDEBAR_ANIMATION_MS = 220
 
 interface Props {
   diagramId: string
@@ -50,6 +54,7 @@ interface Props {
 const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
+  const total = useVersionStore((s) => s.totals[diagramId])
   const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
   const loading = useVersionStore((s) => s.loading)
   const errorCode = useVersionStore((s) => s.error)
@@ -157,7 +162,11 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
             <Typography variant="h6">{t.drawerTitle}</Typography>
             <Typography variant="caption" color="text.secondary">
               {t.counter(
-                versions.filter((v) => !v.pending).length,
+                // Prefer the server-reported total so the counter is
+                // accurate before "Load older" has been clicked. Fall back
+                // to the locally-loaded count while the first fetch is in
+                // flight (otherwise we'd flash 0/50).
+                total ?? versions.filter((v) => !v.pending).length,
                 MAX_VERSIONS
               )}
             </Typography>
@@ -330,24 +339,48 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
 }
 
 /**
- * Persistent desktop sidebar. Renders inline as a flex sibling of the
- * canvas (see ApollonWithConnection layout). Hides itself when closed.
+ * Persistent desktop sidebar. Inline flex sibling of the canvas. Animates
+ * in by transitioning `width` from 0 → SIDEBAR_WIDTH; the canvas reflows
+ * smoothly alongside instead of being overlaid. The inner Box stays at a
+ * fixed width so the contents don't shimmer during the animation — the
+ * outer Box clips them via `overflow: hidden`.
+ *
+ * The body is unmounted when fully closed (after the animation finishes)
+ * to avoid running its `fetchVersions` effect for diagrams the user never
+ * opens, and to release the SVG-thumbnail observer.
  */
 export const VersionSidebar: FC<Props> = ({ diagramId }) => {
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
-  if (!open) return null
+  const [mounted, setMounted] = useState(open)
+  useEffect(() => {
+    if (open) {
+      setMounted(true)
+      return
+    }
+    const handle = setTimeout(() => setMounted(false), SIDEBAR_ANIMATION_MS)
+    return () => clearTimeout(handle)
+  }, [open])
+
   return (
     <Box
       sx={{
-        width: 400,
+        width: open ? SIDEBAR_WIDTH : 0,
         flexShrink: 0,
-        borderLeft: 1,
+        overflow: "hidden",
+        transition: (theme) =>
+          theme.transitions.create("width", {
+            duration: SIDEBAR_ANIMATION_MS,
+            easing: theme.transitions.easing.easeInOut,
+          }),
+        borderLeft: open ? 1 : 0,
         borderColor: "divider",
         bgcolor: "background.paper",
-        overflow: "hidden",
       }}
+      aria-hidden={!open}
     >
-      <VersionSidebarBody diagramId={diagramId} />
+      <Box sx={{ width: SIDEBAR_WIDTH, height: "100%" }}>
+        {mounted && <VersionSidebarBody diagramId={diagramId} />}
+      </Box>
     </Box>
   )
 }
