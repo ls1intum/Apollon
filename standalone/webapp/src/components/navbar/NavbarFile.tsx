@@ -3,7 +3,7 @@ import Button from "@mui/material/Button"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
-import { useParams } from "react-router"
+import { useLocation } from "react-router"
 import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
 import {
@@ -23,7 +23,13 @@ interface Props {
 
 export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const { openModal } = useModalContext()
-  const { diagramId } = useParams()
+  // Navbar is rendered above <Routes>, so useParams returns {}. Extract
+  // the diagramId from the pathname instead.
+  const location = useLocation()
+  const firstSegment = location.pathname.split("/").filter(Boolean)[0]
+  const RESERVED = new Set(["playground", "imprint", "privacy", "legal"])
+  const diagramId =
+    firstSegment && !RESERVED.has(firstSegment) ? firstSegment : undefined
   const openDrawer = useVersionStore((s) => s.openDrawer)
   const exportAsSvg = useExportAsSVG("compat")
   const exportAsPng = useExportAsPNG()
