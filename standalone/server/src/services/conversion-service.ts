@@ -163,14 +163,36 @@ export class ConversionService {
       ;(window as any).cancelAnimationFrame = (id: number) => clearTimeout(id)
     }
 
-    // JSDOM does not implement getBBox; mock it to allow SVG export.
-    // @ts-ignore - JSDOM does not implement getBBox.
-    window.SVGElement.prototype.getBBox = () => ({
-      x: 0,
-      y: 0,
-      width: 10,
-      height: 10,
-    })
+    // JSDOM does not implement SVGGraphicsElement.getBBox; provide a
+    // realistic implementation that derives the element's geometry from
+    // its `viewBox`, `width`, or `height` attributes. The library's
+    // `getNodeBoundsFromDOM` (in @tumaet/apollon's exportUtils) calls
+    // `getBBox()` first and uses the result to compute the diagram's
+    // clip / viewBox for the exported SVG. A constant `(0,0,10,10)` mock
+    // collapsed every node's measured size to a tiny rect at origin, so
+    // the resulting viewBox framed empty space adjacent to the diagram —
+    // thumbnails ended up off-centre or showing nothing. Reading the
+    // viewBox attribute (which the library already sets on every shape's
+    // SVG) gives the right answer for every node it has rendered.
+    // @ts-ignore - JSDOM lacks getBBox.
+    window.SVGElement.prototype.getBBox = function () {
+      const el = this as unknown as Element
+      const vb = el.getAttribute?.("viewBox")
+      if (vb) {
+        const [x, y, w, h] = vb.split(/[\s,]+/).map(Number)
+        if ([x, y, w, h].every((n) => Number.isFinite(n))) {
+          return { x, y, width: w, height: h }
+        }
+      }
+      const w = parseFloat(el.getAttribute?.("width") ?? "")
+      const h = parseFloat(el.getAttribute?.("height") ?? "")
+      return {
+        x: 0,
+        y: 0,
+        width: Number.isFinite(w) ? w : 0,
+        height: Number.isFinite(h) ? h : 0,
+      }
+    }
 
     const { ApollonEditor, importDiagram } = await loadApollonModule()
 
