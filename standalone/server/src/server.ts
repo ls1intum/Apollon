@@ -1,48 +1,78 @@
-// First load environment variables from .env file
+// Load environment first so config picks up .env values.
 import "./loadEnvironment"
-import express from "express"
-import { configureMiddlewares } from "./middlewares"
-import { errorHandler } from "./middlewares/errors"
-import diagramRouter from "./diagramRouter"
-import { startSocketServer } from "./relaySocketServer"
-import { connectToRedis, redis } from "./database/connect"
-import { log } from "./logger"
+import { loadConfig } from "./config"
+import { logger } from "./logger"
+import { buildApp } from "./http/app"
+import { bootLoadFunction, createRedisClient } from "./redis"
+import { startRelayServer } from "./ws"
 
-const PORT = process.env.PORT || 8000
-const serverHost = process.env.HOST || "localhost"
-const app = express()
+async function main() {
+  const config = loadConfig()
 
-// Configure middlewares
-configureMiddlewares(app)
+  const redis = createRedisClient(config.REDIS_URL)
+  redis
+    .connect()
+    .then(async () => {
+      logger.info({ event: "redis.connected" }, "redis connected")
+      try {
+        await bootLoadFunction(redis)
+      } catch (err) {
+        logger.error(
+          { err },
+          "redis function load failed — versioning will not work"
+        )
+      }
+    })
+    .catch((err) => {
+      logger.warn({ err }, "redis connection failed; running without DB")
+    })
 
-// Health endpoint
-app.get("/health", async (_req, res) => {
-  try {
-    await redis.ping()
-    res.status(200).json({ status: "ok" })
-  } catch {
-    res.status(503).json({ status: "error" })
-  }
-})
-
-// Mount routes
-app.use("/api", diagramRouter)
-app.use(errorHandler)
-
-// Start servers immediately for a fast dev feedback loop
-app.listen(PORT, () => {
-  log.debug(`HTTP server running on http://${serverHost}:${PORT}`)
-})
-startSocketServer()
-
-// Connect to Redis in background; log status but don't block server startup
-connectToRedis()
-  .then(() => {
-    log.debug("Database connected")
+  const relay = startRelayServer({
+    port: config.WS_PORT,
+    host: config.HOST,
   })
-  .catch((err) => {
-    log.warn(
-      "Database not connected. Continuing without DB:",
-      (err as Error)?.message || err
+
+  const app = buildApp({ config, redis, relay })
+  const httpServer = app.listen(config.PORT, config.HOST, () => {
+    logger.info(
+      { event: "http.listen", host: config.HOST, port: config.PORT },
+      "http server listening"
     )
   })
+
+  // Graceful shutdown:
+  //   1. Stop accepting new HTTP connections (server.close), wait for
+  //      in-flight requests to drain. Critical for k8s rolling deploys —
+  //      without this, in-flight responses are torn off mid-stream.
+  //   2. Close the WebSocket relay (closes peer sockets cleanly).
+  //   3. Quit Redis last so any final logging that hits Redis still works.
+  const shutdown = async (signal: string) => {
+    logger.info({ event: "shutdown.begin", signal }, "shutdown")
+    try {
+      await new Promise<void>((resolve, reject) => {
+        httpServer.close((err) => (err ? reject(err) : resolve()))
+      })
+    } catch (err) {
+      logger.error({ err }, "http server close failed")
+    }
+    try {
+      await relay.close()
+    } catch (err) {
+      logger.error({ err }, "ws close failed")
+    }
+    try {
+      await redis.quit()
+    } catch (err) {
+      logger.error({ err }, "redis quit failed")
+    }
+    logger.info({ event: "shutdown.complete" })
+    process.exit(0)
+  }
+  process.on("SIGINT", () => void shutdown("SIGINT"))
+  process.on("SIGTERM", () => void shutdown("SIGTERM"))
+}
+
+main().catch((err) => {
+  logger.error({ err }, "fatal startup error")
+  process.exit(1)
+})

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, @typescript-eslint/ban-ts-comment */
 import "global-jsdom/register"
 import path from "node:path"
 import type { UMLModel, SVG } from "@tumaet/apollon"

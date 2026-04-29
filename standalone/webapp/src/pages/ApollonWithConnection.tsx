@@ -1,11 +1,29 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useEditorContext, useModalContext } from "@/contexts"
-import { ApollonEditor, ApollonMode, ApollonOptions } from "@tumaet/apollon"
+import {
+  ApollonEditor,
+  ApollonMode,
+  importDiagram,
+  type ApollonOptions,
+  type UMLModel,
+} from "@tumaet/apollon"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { toast } from "react-toastify"
+import { Box } from "@mui/material"
 import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
-import { DiagramAPIManager } from "@/services/DiagramAPIManager"
+import { ApiError, DiagramApiClient } from "@/services/DiagramApiClient"
+import { useVersionStore } from "@/stores/useVersionStore"
+import {
+  UndoRestoreSnackbar,
+  VersionDrawer,
+  VersionPreviewBanner,
+  VersionSidebar,
+} from "@/components/versioning"
+import { versioningStrings as t } from "@/components/versioning/strings"
+import { useElementWidth } from "@/hooks/useElementWidth"
+import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
+import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
 import { collabColorFromName, randomCollabName } from "@/utils/collaboration"
 import { CollaboratorCursors } from "@/components/CollaboratorCursors"
@@ -14,26 +32,48 @@ import { CollaboratorSelectionHighlights } from "@/components/CollaboratorSelect
 
 export const ApollonWithConnection: React.FC = () => {
   const { diagramId } = useParams()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { setEditor } = useEditorContext()
+  const { setEditor, editor } = useEditorContext()
   const { openModal } = useModalContext()
   const [isLoading, setIsLoading] = useState(true)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const canvasColumnRef = useRef<HTMLDivElement | null>(null)
+  const canvasColumnWidth = useElementWidth(canvasColumnRef)
   const wsManagerRef = useRef<WebSocketManager | null>(null)
   const syncIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const diagramIsUpdated = useRef(false)
+  const lastObservedHeadRev = useRef<number | undefined>(undefined)
+  const editorRef = useRef<ApollonEditor | null>(null)
   const hasPromptedRef = useRef(false)
   const [collaborationUser, setCollaborationUser] = useState<{
     name: string
     color: string
   } | null>(null)
 
+  // Stable primitives so we don't re-init the editor on unrelated URL changes.
+  const viewType = searchParams.get("view")
+  const previewFromUrl = searchParams.get("version")
   const isCollaborationActive =
-    searchParams.get("view") === DiagramView.COLLABORATE && !!collaborationUser
+    viewType === DiagramView.COLLABORATE && !!collaborationUser
+
+  const preview = useVersionStore((s) => s.preview)
+  const exitPreview = useVersionStore((s) => s.exitPreview)
+  const restoreVersion = useVersionStore((s) => s.restoreVersion)
+  const applyControlEvent = useVersionStore((s) => s.applyControlEvent)
+  const fetchVersions = useVersionStore((s) => s.fetchVersions)
+
+  useVersionShortcut(diagramId)
+
+  useFlushOnUnload({
+    diagramId,
+    getModel: () => editorRef.current?.model,
+    isDirty: () => diagramIsUpdated.current,
+  })
 
   useEffect(() => {
     let instance: ApollonEditor | null = null
+    let cancelled = false
     let cleanupCursorTracking: (() => void) | null = null
     let selectionSubscriptionId: number | null = null
     let modelChangeSubscriptionId: number | null = null
@@ -42,7 +82,6 @@ export const ApollonWithConnection: React.FC = () => {
       if (!containerRef.current || !diagramId) return
 
       try {
-        const viewType = searchParams.get("view")
         const validViews = Object.values(DiagramView)
         if (!viewType || !validViews.includes(viewType as DiagramView)) {
           toast.error("Invalid view type")
@@ -76,7 +115,8 @@ export const ApollonWithConnection: React.FC = () => {
           return
         }
 
-        const diagram = await DiagramAPIManager.fetchDiagramData(diagramId)
+        const diagram = await DiagramApiClient.fetchDiagram(diagramId)
+        if (cancelled) return
         log.debug("Fetched diagram data:", diagram)
 
         const editorOptions: ApollonOptions = {
@@ -90,15 +130,13 @@ export const ApollonWithConnection: React.FC = () => {
         } else if (viewType === DiagramView.SEE_FEEDBACK) {
           editorOptions.mode = ApollonMode.Assessment
           editorOptions.readonly = true
-        } else if (viewType === DiagramView.EDIT) {
-          editorOptions.mode = ApollonMode.Modelling
-          editorOptions.readonly = false
         } else {
           editorOptions.mode = ApollonMode.Modelling
           editorOptions.readonly = false
         }
 
         instance = new ApollonEditor(containerRef.current!, editorOptions)
+        editorRef.current = instance
         setEditor(instance)
         setIsLoading(false)
 
@@ -120,8 +158,28 @@ export const ApollonWithConnection: React.FC = () => {
             toast.error("WebSocket error")
           )
           wsManagerRef.current.startConnection()
+          wsManagerRef.current.onControl((event) => {
+            applyControlEvent(diagramId, event)
+            if (event.type === "VERSION_RESTORED") {
+              DiagramApiClient.fetchDiagram(diagramId)
+                .then((next) => {
+                  if (instance) instance.model = next
+                })
+                .catch(() =>
+                  toast.error(
+                    "A collaborator restored a version but we couldn't refresh.",
+                    { toastId: "version-restored-refetch-failed" }
+                  )
+                )
+              toast.info(t.collaboratorRestoredTitle("an earlier version"), {
+                toastId: "version-restored-by-collaborator",
+                autoClose: 4000,
+              })
+            }
+          })
         }
 
+        // Live cursor tracking for collaboration views.
         if (isCollaborationView && collaborationUser) {
           const element = containerRef.current
           const rafRef = { current: 0 as number }
@@ -180,19 +238,54 @@ export const ApollonWithConnection: React.FC = () => {
           )
         }
 
+        // Autosave loop — gated when previewing.
         syncIntervalRef.current = setInterval(() => {
-          if (diagramIsUpdated.current && diagramId) {
-            DiagramAPIManager.sendDiagramUpdate(
-              diagramId,
-              instance!.model
-            ).catch(() => toast.error("Failed to sync changes"))
-            diagramIsUpdated.current = false
-          }
+          const previewing = useVersionStore.getState().preview !== null
+          if (previewing) return
+          if (!diagramIsUpdated.current || !diagramId || !instance) return
+          DiagramApiClient.sendDiagramUpdate(diagramId, instance.model, {
+            ifMatch: lastObservedHeadRev.current,
+          })
+            .then((res) => {
+              lastObservedHeadRev.current = res.headRev
+              diagramIsUpdated.current = false
+            })
+            .catch(async (err) => {
+              if (err instanceof ApiError && err.code === "REVISION_MISMATCH") {
+                const meta = err.meta as { currentHeadRev?: number } | undefined
+                if (typeof meta?.currentHeadRev === "number") {
+                  lastObservedHeadRev.current = meta.currentHeadRev
+                } else {
+                  lastObservedHeadRev.current = undefined
+                }
+              } else {
+                log.error("Autosave failed", err)
+                toast.error("Failed to sync changes")
+              }
+            })
         }, 5000)
 
         modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
+          if (useVersionStore.getState().preview !== null) return
           diagramIsUpdated.current = true
         })
+
+        void fetchVersions(diagramId)
+
+        if (previewFromUrl) {
+          try {
+            await useVersionStore
+              .getState()
+              .enterPreview(diagramId, previewFromUrl)
+            if (cancelled) return
+            const previewModel = useVersionStore.getState().preview?.body
+            if (previewModel) {
+              instance.model = previewModel
+            }
+          } catch {
+            if (!cancelled) toast.error("This version is no longer available.")
+          }
+        }
       } catch {
         toast.error("Failed to initialize diagram")
         navigate("/")
@@ -202,6 +295,7 @@ export const ApollonWithConnection: React.FC = () => {
     initialize()
 
     return () => {
+      cancelled = true
       setEditor(undefined)
       wsManagerRef.current?.cleanup()
       if (syncIntervalRef.current) {
@@ -218,20 +312,147 @@ export const ApollonWithConnection: React.FC = () => {
         }
       }
       instance?.destroy()
+      editorRef.current = null
     }
-  }, [diagramId, searchParams, setEditor, openModal, collaborationUser])
+  }, [diagramId, viewType, collaborationUser])
+
+  // ---------------------------------------------------------------------------
+  // Exit preview when the user removes ?version= from the URL directly.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!previewFromUrl && preview !== null) {
+      exitPreview()
+    }
+  }, [previewFromUrl])
+
+  // ---------------------------------------------------------------------------
+  // Reflect preview-state into the canvas.
+  // ---------------------------------------------------------------------------
+  const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
+
+  useEffect(() => {
+    if (!editor) return
+    if (preview) {
+      wsManagerRef.current?.setPreviewMode(true)
+      try {
+        editor.model = importDiagram(preview.body) as UMLModel
+        editor.setReadonly(true)
+        editor.fitView()
+      } catch (err) {
+        wsManagerRef.current?.setPreviewMode(false)
+        log.error("Failed to apply previewed snapshot", err)
+        const isSchemaError =
+          err instanceof Error && /schema|version|import/i.test(err.message)
+        toast.error(
+          isSchemaError ? t.failureSchemaUnsupported : t.previewFailed
+        )
+      }
+    } else {
+      editor.setReadonly(baseReadonly)
+      if (!diagramId) return
+      DiagramApiClient.fetchDiagram(diagramId)
+        .then((head) => {
+          editor.model = importDiagram(head) as UMLModel
+          editor.fitView()
+        })
+        .catch((err) => {
+          log.error("Failed to reload diagram after exiting preview", err)
+          toast.error(t.failureSchemaUnsupported)
+        })
+        .finally(() => {
+          wsManagerRef.current?.setPreviewMode(false)
+          wsManagerRef.current?.requestResync()
+        })
+    }
+  }, [preview, editor, diagramId, baseReadonly])
+
+  // ---------------------------------------------------------------------------
+  // Version-saved callback.
+  // ---------------------------------------------------------------------------
+  const handleVersionSaved = useCallback((headRev?: number) => {
+    if (typeof headRev === "number") {
+      lastObservedHeadRev.current = headRev
+    }
+    diagramIsUpdated.current = false
+  }, [])
+
+  // ---------------------------------------------------------------------------
+  // Preview banner handlers.
+  // ---------------------------------------------------------------------------
+  const handleExitPreview = useCallback(() => {
+    if (!diagramId) return
+    exitPreview()
+    if (searchParams.has("version")) {
+      const next = new URLSearchParams(searchParams)
+      next.delete("version")
+      setSearchParams(next, { replace: true })
+    }
+  }, [diagramId, exitPreview, searchParams, setSearchParams])
+
+  const handleRestoreFromPreview = useCallback(
+    async (versionId: string) => {
+      if (!diagramId || !editor) return
+      try {
+        const { headRev } = await restoreVersion(
+          diagramId,
+          versionId,
+          editor.model
+        )
+        handleVersionSaved(headRev)
+        toast.success(t.restoredSnack(""))
+        if (searchParams.has("version")) {
+          const next = new URLSearchParams(searchParams)
+          next.delete("version")
+          setSearchParams(next, { replace: true })
+        }
+      } catch (err) {
+        if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
+          toast.error(t.failureSchemaUnsupported)
+        } else {
+          toast.error("Restore failed.")
+        }
+      }
+    },
+    [
+      diagramId,
+      editor,
+      handleVersionSaved,
+      restoreVersion,
+      searchParams,
+      setSearchParams,
+    ]
+  )
 
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
       {isLoading && (
-        <div className="flex grow justify-center  items-center ">
+        <div className="flex grow justify-center items-center">
           Preparing the diagram for collaboration...
         </div>
       )}
 
-      <div className={isLoading ? "invisible" : "h-full "}>
-        <div className="h-full" style={{ position: "relative" }}>
-          <div className="h-full" ref={containerRef} />
+      <Box
+        sx={{
+          display: "flex",
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          ref={canvasColumnRef}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            height: "100%",
+            position: "relative",
+          }}
+        >
+          <Box
+            className={isLoading ? "invisible" : ""}
+            ref={containerRef}
+            sx={{ width: "100%", height: "100%" }}
+          />
           <CollaboratorPresenceBar isActive={isCollaborationActive} />
           <CollaboratorCursors
             containerRef={containerRef}
@@ -241,8 +462,45 @@ export const ApollonWithConnection: React.FC = () => {
             containerRef={containerRef}
             isActive={isCollaborationActive}
           />
-        </div>
-      </div>
+          {!isLoading && preview && diagramId && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 12,
+                left: 0,
+                right: 0,
+                display: "flex",
+                justifyContent: "center",
+                pointerEvents: "none",
+                zIndex: 5,
+                px: 2,
+                "& > *": { pointerEvents: "auto" },
+              }}
+            >
+              <VersionPreviewBanner
+                containerWidth={canvasColumnWidth}
+                diagramId={diagramId}
+                onExit={handleExitPreview}
+                onRestore={handleRestoreFromPreview}
+              />
+            </Box>
+          )}
+        </Box>
+        {diagramId && (
+          <VersionSidebar
+            diagramId={diagramId}
+            onVersionSaved={handleVersionSaved}
+          />
+        )}
+      </Box>
+
+      {diagramId && (
+        <VersionDrawer
+          diagramId={diagramId}
+          onVersionSaved={handleVersionSaved}
+        />
+      )}
+      <UndoRestoreSnackbar />
     </div>
   )
 }

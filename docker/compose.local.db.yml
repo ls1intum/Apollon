@@ -1,10 +1,16 @@
 services:
   db:
-    image: redis:7-alpine
+    image: redis/redis-stack-server:latest
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - dbdata:/data
+    command:
+      - redis-stack-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
 
 volumes:
   dbdata:

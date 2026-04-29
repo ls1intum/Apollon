@@ -9,6 +9,7 @@ import {
   HowToUseModal,
   PPTXExportModal,
 } from "@/components/modals"
+import { DeleteVersionModal } from "@/components/versioning"
 import { useModalContext } from "@/contexts"
 import { ModalName, ModalProps } from "@/types"
 import { Modal, Paper, Box, Button, Divider } from "@mui/material"
@@ -32,7 +33,7 @@ const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
   EXPORT_PPTX: PPTXExportModal,
   HowToUseModal: HowToUseModal,
   AboutModal: AboutModal,
-  // Add other modals here
+  DELETE_VERSION: DeleteVersionModal as React.ComponentType<unknown>,
 }
 
 const MODAL_TITLES: Record<ModalName, string> = {
@@ -44,7 +45,7 @@ const MODAL_TITLES: Record<ModalName, string> = {
   EXPORT_PPTX: "Export as PPTX",
   HowToUseModal: "How to use this editor?",
   AboutModal: "Information about Apollon",
-  // Add other modals here
+  DELETE_VERSION: "Delete version",
 }
 
 const style = {

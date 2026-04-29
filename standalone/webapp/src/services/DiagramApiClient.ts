@@ -1,0 +1,205 @@
+import type { UMLModel } from "@tumaet/apollon"
+import { serverURL } from "@/constants"
+import type {
+  ApiErrorBody,
+  ApiErrorCode,
+  Diagram,
+  VersionSummary,
+} from "@/types"
+
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code: ApiErrorCode,
+    message: string,
+    public readonly meta?: Record<string, unknown>
+  ) {
+    super(message)
+    this.name = "ApiError"
+  }
+}
+
+interface RequestOpts {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
+  body?: unknown
+  headers?: Record<string, string>
+  signal?: AbortSignal
+  /** When true, sends/receives credentials (cookies). Default: true. */
+  credentials?: RequestCredentials
+}
+
+async function request<T>(
+  path: string,
+  opts: RequestOpts = {}
+): Promise<{ data: T; res: Response }> {
+  const url = `${serverURL}${path}`
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    ...opts.headers,
+  }
+  if (opts.body !== undefined && !(opts.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json"
+  }
+  const res = await fetch(url, {
+    method: opts.method ?? "GET",
+    headers,
+    body:
+      opts.body === undefined
+        ? undefined
+        : opts.body instanceof FormData
+          ? opts.body
+          : JSON.stringify(opts.body),
+    credentials: opts.credentials ?? "include",
+    signal: opts.signal,
+  })
+
+  if (res.status === 204) {
+    return { data: undefined as unknown as T, res }
+  }
+
+  let parsed: unknown = undefined
+  const contentType = res.headers.get("content-type") ?? ""
+  if (contentType.includes("application/json")) {
+    parsed = await res.json().catch(() => undefined)
+  }
+
+  if (!res.ok) {
+    const body = (parsed as ApiErrorBody | undefined) ?? {
+      error: "INTERNAL" as ApiErrorCode,
+      message: `Request failed with status ${res.status}`,
+      requestId: "",
+    }
+    throw new ApiError(res.status, body.error, body.message, body)
+  }
+
+  return { data: parsed as T, res }
+}
+
+// ---------------------------------------------------------------------------
+// Diagram CRUD
+// ---------------------------------------------------------------------------
+
+export const DiagramApiClient = {
+  async fetchDiagram(diagramId: string): Promise<Diagram> {
+    const { data } = await request<Diagram>(`/api/diagrams/${diagramId}`)
+    return data
+  },
+
+  /**
+   * Autosave PUT. Returns the new headRev so clients can carry it as
+   * `If-Match` on the next save (advisory race detection).
+   */
+  async sendDiagramUpdate(
+    diagramId: string,
+    model: UMLModel,
+    opts: { ifMatch?: number } = {}
+  ): Promise<{ headRev: number; updatedAt: string }> {
+    const headers: Record<string, string> = {}
+    if (opts.ifMatch !== undefined) headers["If-Match"] = String(opts.ifMatch)
+    const { data } = await request<{ headRev: number; updatedAt: string }>(
+      `/api/diagrams/${diagramId}`,
+      { method: "PUT", body: model, headers }
+    )
+    return data
+  },
+
+  async createDiagram(model: UMLModel): Promise<Diagram> {
+    const { data } = await request<Diagram>(`/api/diagrams`, {
+      method: "POST",
+      body: model,
+    })
+    return data
+  },
+
+  async deleteDiagram(diagramId: string): Promise<void> {
+    await request<void>(`/api/diagrams/${diagramId}`, { method: "DELETE" })
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Version history
+// ---------------------------------------------------------------------------
+
+export interface ListVersionsResponse {
+  versions: VersionSummary[]
+  nextCursor?: string
+}
+
+export interface RestoreVersionResponse {
+  headRev: number
+  updatedAt: string
+  autoSnapshotVersionId: string
+}
+
+export const VersionApiClient = {
+  async list(
+    diagramId: string,
+    opts: { limit?: number; before?: string } = {}
+  ): Promise<ListVersionsResponse> {
+    const params = new URLSearchParams()
+    if (opts.limit !== undefined) params.set("limit", String(opts.limit))
+    if (opts.before !== undefined) params.set("before", opts.before)
+    const qs = params.toString()
+    const { data } = await request<ListVersionsResponse>(
+      `/api/diagrams/${diagramId}/versions${qs ? `?${qs}` : ""}`
+    )
+    return data
+  },
+
+  async create(
+    diagramId: string,
+    body: UMLModel,
+    opts: { name?: string; description?: string } = {}
+  ): Promise<VersionSummary> {
+    const { data } = await request<VersionSummary>(
+      `/api/diagrams/${diagramId}/versions`,
+      {
+        method: "POST",
+        body: { name: opts.name, description: opts.description, body },
+      }
+    )
+    return data
+  },
+
+  async getBody(diagramId: string, versionId: string): Promise<Diagram> {
+    const { data } = await request<Diagram>(
+      `/api/diagrams/${diagramId}/versions/${versionId}`
+    )
+    return data
+  },
+
+  async restore(
+    diagramId: string,
+    versionId: string,
+    opts: { currentBody?: UMLModel } = {}
+  ): Promise<RestoreVersionResponse> {
+    const { data } = await request<RestoreVersionResponse>(
+      `/api/diagrams/${diagramId}/versions/${versionId}/restore`,
+      { method: "POST", body: { currentBody: opts.currentBody } }
+    )
+    return data
+  },
+
+  async editInfo(
+    diagramId: string,
+    versionId: string,
+    patch: { name?: string; description?: string }
+  ): Promise<VersionSummary> {
+    const { data } = await request<VersionSummary>(
+      `/api/diagrams/${diagramId}/versions/${versionId}`,
+      { method: "PATCH", body: patch }
+    )
+    return data
+  },
+
+  async delete(diagramId: string, versionId: string): Promise<void> {
+    await request<void>(`/api/diagrams/${diagramId}/versions/${versionId}`, {
+      method: "DELETE",
+    })
+  },
+
+  /** Convenience permalink to the version body for embedding in `<a href>`. */
+  permalink(diagramId: string, versionId: string): string {
+    return `${window.location.origin}/${diagramId}?version=${versionId}`
+  },
+}

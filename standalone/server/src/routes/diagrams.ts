@@ -1,0 +1,209 @@
+import { Router } from "express"
+import { randomBytes } from "node:crypto"
+import type { Config } from "../config"
+import { k, type Redis } from "../redis"
+import type { Diagram } from "../types"
+import type { RelayHook } from "../http/app"
+import { Errors } from "../http/errors"
+import { validate } from "../http/middleware/validate"
+import { setOwnerCookie } from "../http/middleware/owner"
+import { logger } from "../logger"
+import { DiagramBody, DiagramIdParams, PutDiagramBody } from "./_schemas"
+
+interface Deps {
+  config: Config
+  redis: Redis
+}
+
+// ---------------------------------------------------------------------------
+// HEAD persistence — exported for the version routes' restore + snapshot
+// flows.
+// ---------------------------------------------------------------------------
+
+/** Returns the current HEAD diagram or null if missing. */
+export async function readDiagram(
+  redis: Redis,
+  id: string
+): Promise<Diagram | null> {
+  const result = (await redis.json.get(k.diagram(id), { path: "$" })) as
+    | Diagram[]
+    | null
+  if (!result || !Array.isArray(result) || result.length === 0) return null
+  return (result[0] as Diagram | undefined) ?? null
+}
+
+/** Atomically writes HEAD, bumps headRev, updates updatedAt, and bumps TTLs. */
+export async function saveHead(
+  redis: Redis,
+  config: Config,
+  diagram: Diagram
+): Promise<{ headRev: number; updatedAt: string }> {
+  const updatedAt = new Date().toISOString()
+  const persisted = { ...diagram, updatedAt }
+  const ttl = config.DIAGRAM_TTL_SECONDS
+  const head = k.diagram(diagram.id)
+  const meta = k.diagramMeta(diagram.id)
+
+  // Diagram is a plain JSON object (no class instances, no Date values, no
+  // undefined fields after spread) so node-redis's JSON.SET accepts it as
+  // RedisJSON-compatible. The structural type check is loose at the boundary;
+  // the runtime shape is exactly what server validation produced upstream.
+  const multi = redis.multi()
+  multi.json.set(head, "$", persisted as never)
+  multi.expire(head, ttl)
+  multi.hSet(meta, {
+    title: diagram.title,
+    type: diagram.type,
+    updatedAt,
+    librarySchemaVersion: diagram.version,
+  })
+  multi.hIncrBy(meta, "headRev", 1)
+  multi.expire(meta, ttl)
+  const replies = (await multi.exec()) as unknown[]
+  const headRev = Number(replies[3] ?? 0)
+  return { headRev, updatedAt }
+}
+
+/** Cascade-deletes the diagram and its entire version family. */
+export async function cascadeDeleteDiagram(
+  redis: Redis,
+  id: string
+): Promise<number> {
+  let deleted = 0
+  const pattern = `diagram:{${id}}*`
+  for await (const keys of redis.scanIterator({
+    MATCH: pattern,
+    COUNT: 200,
+  })) {
+    if (keys.length > 0) {
+      deleted += (await redis.del(keys)) ?? 0
+    }
+  }
+  return deleted
+}
+
+function generateDiagramId(): string {
+  return randomBytes(16)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "")
+}
+
+// ---------------------------------------------------------------------------
+// Router
+// ---------------------------------------------------------------------------
+
+export function mountDiagramRoutes(
+  { config, redis }: Deps,
+  relay?: RelayHook
+): Router {
+  const router = Router()
+
+  router.post(
+    "/diagrams",
+    validate(
+      { body: DiagramBody.omit({ id: true }).partial() },
+      async (_req, res, _next, { body }) => {
+        const id = generateDiagramId()
+        const now = new Date().toISOString()
+        const diagram: Diagram = {
+          id,
+          version: body.version ?? "4.0.0",
+          title: body.title ?? "",
+          type: (body.type as Diagram["type"]) ?? "ClassDiagram",
+          nodes: (body.nodes ?? []) as Diagram["nodes"],
+          edges: (body.edges ?? []) as Diagram["edges"],
+          assessments: (body.assessments ?? {}) as Diagram["assessments"],
+          createdAt: now,
+          updatedAt: now,
+        }
+        await saveHead(redis, config, diagram)
+        setOwnerCookie(res, id, config.OWNER_SECRET)
+        res.status(201).json(diagram)
+      }
+    )
+  )
+
+  router.get(
+    "/diagrams/:diagramId",
+    validate(
+      { params: DiagramIdParams },
+      async (_req, res, _next, { params }) => {
+        const diagram = await readDiagram(redis, params.diagramId)
+        if (!diagram) throw Errors.notFound("diagram not found")
+        res.status(200).json(diagram)
+      }
+    )
+  )
+
+  router.put(
+    "/diagrams/:diagramId",
+    validate(
+      { params: DiagramIdParams, body: PutDiagramBody },
+      async (req, res, _next, { params, body }) => {
+        const existing = await readDiagram(redis, params.diagramId)
+
+        // If-Match advisory race detection. Optional; the client drives the
+        // retry loop. LWW remains the documented contract — this header
+        // exists only to give clients a chance to refetch + rebase.
+        const ifMatch = req.header("if-match")
+        if (ifMatch && existing) {
+          const headRevStr = await redis.hGet(
+            k.diagramMeta(params.diagramId),
+            "headRev"
+          )
+          const currentHeadRev = headRevStr ? Number(headRevStr) : 0
+          const sent = Number(ifMatch.replace(/^"|"$/g, ""))
+          if (Number.isFinite(sent) && sent !== currentHeadRev) {
+            throw Errors.revisionMismatch(currentHeadRev)
+          }
+        }
+
+        const merged: Diagram = {
+          id: params.diagramId,
+          version: body.version,
+          title: body.title,
+          type: body.type as Diagram["type"],
+          nodes: body.nodes as Diagram["nodes"],
+          edges: body.edges as Diagram["edges"],
+          assessments: body.assessments as Diagram["assessments"],
+          createdAt: existing?.createdAt ?? new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+        const { headRev, updatedAt } = await saveHead(redis, config, merged)
+
+        // Issue the owner cookie on first PUT for diagrams created before
+        // the soft-cookie feature shipped (back-compat).
+        if (!req.isOwner) {
+          setOwnerCookie(res, params.diagramId, config.OWNER_SECRET)
+        }
+
+        res.setHeader("etag", `"${headRev}"`)
+        res.status(200).json({ headRev, updatedAt })
+      }
+    )
+  )
+
+  router.delete(
+    "/diagrams/:diagramId",
+    validate(
+      { params: DiagramIdParams },
+      async (_req, res, _next, { params }) => {
+        const deleted = await cascadeDeleteDiagram(redis, params.diagramId)
+        relay?.publishControl(params.diagramId, { type: "DIAGRAM_DELETED" })
+        logger.info(
+          {
+            event: "diagram.deleted",
+            diagramId: params.diagramId,
+            deletedKeys: deleted,
+          },
+          "diagram deleted"
+        )
+        res.status(204).end()
+      }
+    )
+  )
+
+  return router
+}

@@ -3,6 +3,7 @@ import Button from "@mui/material/Button"
 import Menu from "@mui/material/Menu"
 import MenuItem from "@mui/material/MenuItem"
 import Typography from "@mui/material/Typography"
+import { useParams } from "react-router"
 import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
 import {
@@ -11,6 +12,7 @@ import {
   useExportAsSVG,
   useExportAsPDF,
 } from "@/hooks"
+import { useVersionStore } from "@/stores/useVersionStore"
 import { JsonFileImportButton } from "./JsonFileImportButton"
 import { KeyboardArrowDownIcon } from "../Icon"
 
@@ -21,6 +23,8 @@ interface Props {
 
 export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const { openModal } = useModalContext()
+  const { diagramId } = useParams()
+  const openDrawer = useVersionStore((s) => s.openDrawer)
   const exportAsSvg = useExportAsSVG("compat")
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
@@ -65,9 +69,7 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         aria-haspopup="true"
         aria-expanded={isMenuOpen ? "true" : undefined}
         onClick={openMainMenu}
-        sx={{
-          textTransform: "none",
-        }}
+        sx={{ textTransform: "none" }}
       >
         <Typography color={color ?? secondary} component="span">
           File
@@ -99,6 +101,16 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         >
           Load Diagram
         </MenuItem>
+        {diagramId && (
+          <MenuItem
+            onClick={() => {
+              openDrawer(diagramId)
+              closeMainMenu()
+            }}
+          >
+            Version history
+          </MenuItem>
+        )}
         <JsonFileImportButton close={closeMainMenu} />
         <MenuItem
           onClick={openSubMenu}
