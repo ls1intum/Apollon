@@ -108,19 +108,18 @@ export const VersionThumbnail: FC<Props> = ({
         width: w,
         height: h,
         flexShrink: 0,
-        // Theme-aware background so thumbnails sit cleanly against both
-        // light and dark sidebars. `action.hover` is the same token MUI
-        // uses for selected list rows — visually quiet in both modes.
-        bgcolor: "action.hover",
-        border: 1,
-        borderColor: "divider",
+        // App theming is via CSS custom properties on `documentElement`
+        // (see `useThemeStore` + `themings.json`), not MUI's ThemeProvider.
+        // We use those vars directly so the thumbnail follows the dark
+        // toggle.
+        bgcolor: "var(--apollon-background-variant)",
+        border: "1px solid var(--apollon-switch-box-border-color)",
         borderRadius: 1,
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        // Icon fallback colour — picks up the theme palette.
-        color: isAuto ? "text.secondary" : "primary.main",
+        color: isAuto ? "var(--apollon-secondary)" : "var(--apollon-primary)",
       }}
       aria-hidden
     >

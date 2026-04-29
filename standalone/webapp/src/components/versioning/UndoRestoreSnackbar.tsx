@@ -1,4 +1,4 @@
-import { Alert, Button, Snackbar } from "@mui/material"
+import { Box, Button, Paper, Snackbar } from "@mui/material"
 import { useEffect, useState, type FC } from "react"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
@@ -9,6 +9,10 @@ import { versioningStrings as t } from "./strings"
 /**
  * Surfaces the post-restore Undo affordance for ~10s. Mounted globally near
  * the editor; reads from `useVersionStore.undoRestore`.
+ *
+ * App theming is via CSS custom properties on `documentElement` — not MUI's
+ * ThemeProvider — so we use a custom Paper instead of `<Alert>` to follow
+ * the dark toggle correctly.
  */
 export const UndoRestoreSnackbar: FC = () => {
   const undo = useVersionStore((s) => s.undoRestore)
@@ -45,21 +49,39 @@ export const UndoRestoreSnackbar: FC = () => {
       anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       onClose={dismiss}
     >
-      <Alert
-        severity="success"
-        action={
-          <Button
-            color="inherit"
-            size="small"
-            onClick={onUndo}
-            disabled={submitting}
-          >
-            {t.undoRestore}
-          </Button>
-        }
+      <Paper
+        elevation={6}
+        sx={{
+          px: 2,
+          py: 1.25,
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          minWidth: 320,
+          bgcolor: "var(--apollon-background-variant)",
+          color: "var(--apollon-primary-contrast)",
+          border: "1px solid var(--apollon-switch-box-border-color)",
+          borderLeft: "3px solid var(--apollon-primary)",
+          borderRadius: 1,
+        }}
+        role="alert"
       >
-        {t.restoredSnack("the previous version")}
-      </Alert>
+        <Box sx={{ flex: 1 }}>{t.restoredSnack("the previous version")}</Box>
+        <Button
+          size="small"
+          onClick={onUndo}
+          disabled={submitting}
+          sx={{
+            textTransform: "none",
+            color: "var(--apollon-primary)",
+            "&.Mui-disabled": {
+              color: "var(--apollon-secondary)",
+            },
+          }}
+        >
+          {t.undoRestore}
+        </Button>
+      </Paper>
     </Snackbar>
   )
 }

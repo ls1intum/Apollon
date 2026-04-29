@@ -84,10 +84,22 @@ export const VersionListItem: FC<Props> = ({
       }`}
       sx={{
         opacity: version.pending ? 0.7 : 1,
-        bgcolor: isPreviewing ? "action.selected" : undefined,
-        borderLeft: version.failed ? "3px solid red" : "3px solid transparent",
+        // Theme-aware: app uses CSS custom properties on `documentElement`
+        // (see `useThemeStore` + `themings.json`), not MUI's ThemeProvider.
+        // MUI palette tokens (action.selected/hover, text.secondary) ignore
+        // the app's dark toggle and have to be replaced with `--apollon-*`.
+        bgcolor: isPreviewing
+          ? "var(--apollon-background-variant)"
+          : "transparent",
+        borderLeft: version.failed
+          ? "3px solid var(--apollon-alert-danger-color)"
+          : "3px solid transparent",
+        color: "var(--apollon-primary-contrast)",
         gap: 1.5,
         py: 1,
+        "&:hover": {
+          bgcolor: "var(--apollon-background-variant)",
+        },
       }}
     >
       {version.pending ? (
@@ -96,7 +108,7 @@ export const VersionListItem: FC<Props> = ({
             width: 64,
             height: 40,
             flexShrink: 0,
-            bgcolor: "action.hover",
+            bgcolor: "var(--apollon-background-variant)",
             borderRadius: 1,
           }}
           aria-hidden
@@ -128,6 +140,21 @@ export const VersionListItem: FC<Props> = ({
                 setEditing(false)
               }
             }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                color: "var(--apollon-primary-contrast)",
+                backgroundColor: "var(--apollon-background)",
+                "& fieldset": {
+                  borderColor: "var(--apollon-switch-box-border-color)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "var(--apollon-primary-contrast)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "var(--apollon-primary)",
+                },
+              },
+            }}
           />
         ) : (
           <Tooltip title={version.name || t.unnamed}>
@@ -136,7 +163,10 @@ export const VersionListItem: FC<Props> = ({
               fontWeight={600}
               noWrap
               onDoubleClick={() => setEditing(true)}
-              sx={{ cursor: "text" }}
+              sx={{
+                cursor: "text",
+                color: "var(--apollon-primary-contrast)",
+              }}
             >
               {version.name || t.unnamed}
             </Typography>
@@ -147,13 +177,19 @@ export const VersionListItem: FC<Props> = ({
             <Typography
               variant="caption"
               noWrap
-              sx={{ display: "block", color: "text.secondary" }}
+              sx={{
+                display: "block",
+                color: "var(--apollon-secondary)",
+              }}
             >
               {version.description}
             </Typography>
           </Tooltip>
         )}
-        <Typography variant="caption" color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{ color: "var(--apollon-secondary)" }}
+        >
           {ago}
           {isAuto && ` · ${t.autoSnapshot}`}
           {version.pending && ` · ${t.saving}`}
@@ -167,6 +203,7 @@ export const VersionListItem: FC<Props> = ({
           onClick={openMenu}
           aria-label={`Actions for version '${version.name || t.unnamed}'`}
           disabled={Boolean(version.pending)}
+          sx={{ color: "var(--apollon-primary-contrast)" }}
         >
           <MoreVertIcon fontSize="small" />
         </IconButton>
@@ -176,6 +213,21 @@ export const VersionListItem: FC<Props> = ({
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
         onClose={closeMenu}
+        slotProps={{
+          paper: {
+            sx: {
+              backgroundColor: "var(--apollon-background)",
+              color: "var(--apollon-primary-contrast)",
+              border: "1px solid var(--apollon-switch-box-border-color)",
+              "& .MuiMenuItem-root": {
+                color: "var(--apollon-primary-contrast)",
+                "&:hover": {
+                  backgroundColor: "var(--apollon-background-variant)",
+                },
+              },
+            },
+          },
+        }}
       >
         <MenuItem
           onClick={() => {
@@ -215,7 +267,7 @@ export const VersionListItem: FC<Props> = ({
             closeMenu()
             onDelete(version.id)
           }}
-          sx={{ color: "error.main" }}
+          sx={{ color: "var(--apollon-alert-danger-color) !important" }}
         >
           {t.delete}
         </MenuItem>

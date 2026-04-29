@@ -105,9 +105,12 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
       variant="outlined"
       sx={{
         p: 1.5,
-        // `background.default` reads correctly in light + dark; `Alert`'s
-        // hardcoded info-blue tint clashed against the dark sidebar.
-        bgcolor: "background.default",
+        // App theming is via CSS custom properties on `documentElement`,
+        // not MUI ThemeProvider. Use `--apollon-*` so the compare banner
+        // follows the app's light/dark toggle.
+        bgcolor: "var(--apollon-background-variant)",
+        borderColor: "var(--apollon-switch-box-border-color)",
+        color: "var(--apollon-primary-contrast)",
       }}
     >
       <Stack
@@ -116,7 +119,10 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
         justifyContent="space-between"
         sx={{ mb: 1 }}
       >
-        <Typography variant="caption" color="text.secondary">
+        <Typography
+          variant="caption"
+          sx={{ color: "var(--apollon-secondary)" }}
+        >
           {t.diffChanged}
         </Typography>
         <Stack direction="row" spacing={0.5}>
@@ -125,6 +131,7 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
             onClick={swap}
             aria-label={t.swapCompare}
             title={t.swapCompare}
+            sx={{ color: "var(--apollon-primary-contrast)" }}
           >
             <SwapHorizIcon fontSize="small" />
           </IconButton>
@@ -133,6 +140,7 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
             onClick={close}
             aria-label={t.closeCompare}
             title={t.closeCompare}
+            sx={{ color: "var(--apollon-primary-contrast)" }}
           >
             <CloseIcon fontSize="small" />
           </IconButton>
@@ -152,7 +160,7 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
           sx={{
             display: "flex",
             alignItems: "center",
-            color: "text.secondary",
+            color: "var(--apollon-secondary)",
           }}
         >
           →
@@ -165,13 +173,16 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
       </Stack>
 
       {loadError ? (
-        <Typography variant="body2" color="error">
+        <Typography
+          variant="body2"
+          sx={{ color: "var(--apollon-alert-danger-color)" }}
+        >
           {loadError}
         </Typography>
       ) : loading ? (
-        <CircularProgress size={16} />
+        <CircularProgress size={16} sx={{ color: "var(--apollon-primary)" }} />
       ) : !diff || totalChanges === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{ color: "var(--apollon-secondary)" }}>
           {t.diffEmpty}
         </Typography>
       ) : (
@@ -200,10 +211,14 @@ export const VersionCompareBanner: FC<Props> = ({ diagramId }) => {
   )
 }
 
+// Semantic accent colours for the diff stripes. The MUI palette tokens
+// (`success.main`, `error.main`, `warning.main`) are theme-blind in this
+// app — there's no MUI ThemeProvider — so we use static hexes that read
+// as added/removed/changed in both light and dark backgrounds.
 const STRIPE_COLOR: Record<"added" | "removed" | "changed", string> = {
-  added: "success.main",
-  removed: "error.main",
-  changed: "warning.main",
+  added: "#22c55e",
+  removed: "#ef4444",
+  changed: "#f59e0b",
 }
 
 interface ComparePaneProps {
@@ -220,7 +235,7 @@ const ComparePane: FC<ComparePaneProps> = ({ label, ref, diagramId }) => (
         display: "block",
         fontWeight: 600,
         mb: 0.5,
-        color: "text.primary",
+        color: "var(--apollon-primary-contrast)",
       }}
       noWrap
       title={label}
@@ -231,12 +246,13 @@ const ComparePane: FC<ComparePaneProps> = ({ label, ref, diagramId }) => (
       <Box
         sx={{
           height: 100,
-          bgcolor: "action.hover",
+          bgcolor: "var(--apollon-background)",
+          border: "1px solid var(--apollon-switch-box-border-color)",
           borderRadius: 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "text.secondary",
+          color: "var(--apollon-secondary)",
           fontSize: "0.75rem",
         }}
         aria-hidden
@@ -260,7 +276,14 @@ const DiffSection: FC<DiffSectionProps> = ({ kind, label, count, entries }) => {
   if (entries.length === 0) return null
   return (
     <Box>
-      <Typography variant="caption" fontWeight={700} sx={{ display: "block" }}>
+      <Typography
+        variant="caption"
+        fontWeight={700}
+        sx={{
+          display: "block",
+          color: "var(--apollon-primary-contrast)",
+        }}
+      >
         {label} ({count})
       </Typography>
       <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
@@ -269,18 +292,18 @@ const DiffSection: FC<DiffSectionProps> = ({ kind, label, count, entries }) => {
             component="li"
             key={`${kind}-${e.id}`}
             sx={{
-              borderLeft: 2,
-              borderColor: STRIPE_COLOR[kind],
+              borderLeft: `2px solid ${STRIPE_COLOR[kind]}`,
               pl: 1,
               mb: 0.25,
               listStyle: "none",
               fontSize: "0.85rem",
+              color: "var(--apollon-primary-contrast)",
             }}
           >
             <Box component="span" sx={{ fontWeight: 600 }}>
               {e.name || e.id.slice(0, 8)}
             </Box>{" "}
-            <Box component="span" sx={{ color: "text.secondary" }}>
+            <Box component="span" sx={{ color: "var(--apollon-secondary)" }}>
               · {e.type}
             </Box>
           </Box>
@@ -306,7 +329,14 @@ const ChangedSection: FC<ChangedSectionProps> = ({
   if (entries.length === 0) return null
   return (
     <Box>
-      <Typography variant="caption" fontWeight={700} sx={{ display: "block" }}>
+      <Typography
+        variant="caption"
+        fontWeight={700}
+        sx={{
+          display: "block",
+          color: "var(--apollon-primary-contrast)",
+        }}
+      >
         {t.diffChanged} ({count})
       </Typography>
       <Stack spacing={0.25}>
@@ -340,8 +370,7 @@ const ChangedRow: FC<{
   return (
     <Box
       sx={{
-        borderLeft: 2,
-        borderColor: STRIPE_COLOR.changed,
+        borderLeft: `2px solid ${STRIPE_COLOR.changed}`,
         pl: 1,
       }}
     >
@@ -360,7 +389,7 @@ const ChangedRow: FC<{
           textAlign: "left",
           fontSize: "0.85rem",
           width: "100%",
-          color: "text.primary",
+          color: "var(--apollon-primary-contrast)",
         }}
         aria-expanded={expanded}
       >
@@ -372,7 +401,7 @@ const ChangedRow: FC<{
         <Box component="span" sx={{ fontWeight: 600 }}>
           {element.name || element.id.slice(0, 8)}
         </Box>
-        <Box component="span" sx={{ color: "text.secondary" }}>
+        <Box component="span" sx={{ color: "var(--apollon-secondary)" }}>
           · {element.type} · {element.fields.length} field
           {element.fields.length === 1 ? "" : "s"}
         </Box>
@@ -386,11 +415,14 @@ const ChangedRow: FC<{
               sx={{
                 listStyle: "none",
                 fontSize: "0.8rem",
-                color: "text.secondary",
+                color: "var(--apollon-secondary)",
                 fontFamily: "monospace",
               }}
             >
-              <Box component="span" sx={{ color: "text.primary" }}>
+              <Box
+                component="span"
+                sx={{ color: "var(--apollon-primary-contrast)" }}
+              >
                 {field}
               </Box>
               : <FieldValue record={beforeRecord} path={field} />

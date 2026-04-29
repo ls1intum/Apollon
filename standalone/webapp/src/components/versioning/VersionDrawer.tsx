@@ -142,56 +142,90 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
     openModal("DELETE_VERSION", { diagramId, versionId })
   }
 
+  const totalDisplay = total ?? versions.filter((v) => !v.pending).length
+
   return (
     <Box
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        // Theme is driven by CSS custom properties on document root
+        // (see `useThemeStore` + `themings.json`), not MUI's ThemeProvider.
+        // All colors use those variables so the sidebar follows the app's
+        // light/dark toggle.
+        bgcolor: "var(--apollon-background)",
+        color: "var(--apollon-primary-contrast)",
       }}
       role="complementary"
       aria-label={t.drawerTitle}
     >
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+      {/* Header: a single line. The navbar already says "Version history"
+          (the button toggling this sidebar), so the redundant title is
+          dropped. We surface only the count and the "last version • Xm ago"
+          context — that's the information the user actually scans for. */}
+      <Box
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderBottom: "1px solid var(--apollon-modal-bottom-border)",
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
         <Stack
           direction="row"
-          alignItems="center"
-          justifyContent="space-between"
+          alignItems="baseline"
+          spacing={1}
+          sx={{ flex: 1, minWidth: 0 }}
         >
-          <Box>
-            <Typography variant="h6">{t.drawerTitle}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {t.counter(
-                // Prefer the server-reported total so the counter is
-                // accurate before "Load older" has been clicked. Fall back
-                // to the locally-loaded count while the first fetch is in
-                // flight (otherwise we'd flash 0/50).
-                total ?? versions.filter((v) => !v.pending).length,
-                MAX_VERSIONS
-              )}
-            </Typography>
-          </Box>
-          <IconButton
-            onClick={() => closeDrawer(diagramId)}
-            aria-label={t.closeSidebar}
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 600,
+              color: "var(--apollon-primary-contrast)",
+              whiteSpace: "nowrap",
+            }}
           >
-            <CloseIcon />
-          </IconButton>
+            {totalDisplay}
+            <Box
+              component="span"
+              sx={{ color: "var(--apollon-secondary)", fontWeight: 400 }}
+            >
+              {" / "}
+              {MAX_VERSIONS}
+            </Box>
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "var(--apollon-secondary)",
+              flex: 1,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={headerSubtitle}
+          >
+            · {headerSubtitle}
+          </Typography>
         </Stack>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ display: "block", mt: 0.5 }}
+        <IconButton
+          size="small"
+          onClick={() => closeDrawer(diagramId)}
+          aria-label={t.closeSidebar}
+          sx={{ color: "var(--apollon-primary-contrast)" }}
         >
-          {headerSubtitle}
-        </Typography>
+          <CloseIcon fontSize="small" />
+        </IconButton>
       </Box>
 
       <Box
         sx={{
           p: 2,
-          borderBottom: 1,
-          borderColor: "divider",
+          borderBottom: "1px solid var(--apollon-modal-bottom-border)",
           display: "flex",
           flexDirection: "column",
           gap: 1,
@@ -209,13 +243,35 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
           inputProps={{
             "aria-label": "Version name and description",
           }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              color: "var(--apollon-primary-contrast)",
+              backgroundColor: "var(--apollon-background)",
+              "& fieldset": {
+                borderColor: "var(--apollon-switch-box-border-color)",
+              },
+              "&:hover fieldset": {
+                borderColor: "var(--apollon-primary-contrast)",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "var(--apollon-primary)",
+              },
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "var(--apollon-secondary)",
+              opacity: 1,
+            },
+          }}
         />
         <Stack
           direction="row"
           justifyContent="space-between"
           alignItems="center"
         >
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{ color: "var(--apollon-secondary)" }}
+          >
             {draft.length} / {MAX_DESCRIPTION_LENGTH}
           </Typography>
           <Button
@@ -223,6 +279,14 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
             size="small"
             onClick={handleCreate}
             disabled={submitting || !editor}
+            sx={{
+              textTransform: "none",
+              backgroundColor: "var(--apollon-primary)",
+              "&:hover": {
+                backgroundColor: "var(--apollon-primary)",
+                opacity: 0.9,
+              },
+            }}
           >
             {submitting ? <CircularProgress size={14} /> : t.createButton}
           </Button>
@@ -238,7 +302,10 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
       <Box sx={{ flex: 1, overflow: "auto" }}>
         {errorCode === "REDIS_UNAVAILABLE" ? (
           <Box sx={{ p: 2 }}>
-            <Typography variant="body2" color="warning.main">
+            <Typography
+              variant="body2"
+              sx={{ color: "var(--apollon-alert-warning-yellow)" }}
+            >
               {t.failureRedis}
             </Typography>
           </Box>
@@ -256,16 +323,34 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
           </List>
         ) : versions.length === 0 ? (
           <Box sx={{ p: 4, textAlign: "center" }}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                mb: 1,
+                fontWeight: 600,
+                color: "var(--apollon-primary-contrast)",
+              }}
+            >
               {t.emptyTitle}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "var(--apollon-secondary)", mb: 2 }}
+            >
               {t.emptyBody}
             </Typography>
             <Button
               variant="contained"
               onClick={handleCreate}
               disabled={submitting || !editor}
+              sx={{
+                textTransform: "none",
+                backgroundColor: "var(--apollon-primary)",
+                "&:hover": {
+                  backgroundColor: "var(--apollon-primary)",
+                  opacity: 0.9,
+                },
+              }}
             >
               {t.emptyCta}
             </Button>
@@ -326,6 +411,10 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
                   size="small"
                   onClick={() => loadMoreVersions(diagramId)}
                   disabled={loading}
+                  sx={{
+                    textTransform: "none",
+                    color: "var(--apollon-primary)",
+                  }}
                 >
                   {t.loadOlder}
                 </Button>
@@ -372,9 +461,8 @@ export const VersionSidebar: FC<Props> = ({ diagramId }) => {
             duration: SIDEBAR_ANIMATION_MS,
             easing: theme.transitions.easing.easeInOut,
           }),
-        borderLeft: open ? 1 : 0,
-        borderColor: "divider",
-        bgcolor: "background.paper",
+        borderLeft: open ? "1px solid var(--apollon-modal-bottom-border)" : 0,
+        bgcolor: "var(--apollon-background)",
       }}
       aria-hidden={!open}
     >
@@ -477,12 +565,15 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
           background: "transparent",
           border: 0,
           p: 1.5,
-          color: "text.secondary",
+          color: "var(--apollon-secondary)",
           cursor: "pointer",
           fontSize: "0.85rem",
           display: "flex",
           alignItems: "center",
           gap: 0.5,
+          "&:hover": {
+            background: "var(--apollon-background-variant)",
+          },
         }}
         aria-expanded={expanded}
         aria-label={`${group.versions.length} auto-saved versions`}
