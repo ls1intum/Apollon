@@ -1,5 +1,4 @@
 import {
-  Box,
   IconButton,
   ListItem,
   ListItemSecondaryAction,
@@ -8,10 +7,10 @@ import {
   TextField,
   Tooltip,
   Typography,
+  Box,
 } from "@mui/material"
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
-import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded"
 import MoreVertIcon from "@mui/icons-material/MoreVert"
+import { VersionThumbnail } from "./VersionThumbnail"
 import { useState, type FC, type MouseEvent } from "react"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
@@ -74,7 +73,6 @@ export const VersionListItem: FC<Props> = ({
   }
 
   const isAuto = version.kind === "auto"
-  const KindIcon = isAuto ? HistoryRoundedIcon : BookmarkRoundedIcon
   const ago = relativeTime(version.createdAt)
 
   return (
@@ -92,20 +90,25 @@ export const VersionListItem: FC<Props> = ({
         py: 1,
       }}
     >
-      <Box
-        sx={{
-          width: 36,
-          height: 36,
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: isAuto ? "text.secondary" : "primary.main",
-        }}
-        aria-hidden
-      >
-        <KindIcon fontSize="small" titleAccess={isAuto ? "Auto" : "User"} />
-      </Box>
+      {version.pending ? (
+        <Box
+          sx={{
+            width: 64,
+            height: 40,
+            flexShrink: 0,
+            bgcolor: "action.hover",
+            borderRadius: 1,
+          }}
+          aria-hidden
+        />
+      ) : (
+        <VersionThumbnail
+          diagramId={diagramId}
+          versionId={version.id}
+          isAuto={isAuto}
+          compact
+        />
+      )}
 
       <Box sx={{ flex: 1, minWidth: 0 }}>
         {editing ? (

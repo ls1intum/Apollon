@@ -13,6 +13,8 @@ import {
   useTheme,
 } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close"
+import ExpandLessIcon from "@mui/icons-material/ExpandLess"
+import ChevronRightIcon from "@mui/icons-material/ChevronRight"
 import { useEffect, useMemo, useState, type FC } from "react"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
@@ -38,15 +40,14 @@ interface Props {
 }
 
 /**
- * The complete version-history drawer. Header (title + counter + dirty
- * indicator) + create form + list + compare banner + skeleton + empty state,
- * all in one component because each individual sub-piece is small enough that
- * splitting would only add navigation cost.
+ * Chrome-free body of the version-history panel. Reused by:
+ *
+ *  - `VersionSidebar` (desktop ≥ md): rendered inline as a flex sibling of
+ *    the canvas so it doesn't overlay the user's work.
+ *  - `VersionDrawer` (mobile <sm): rendered inside an MUI bottom-sheet
+ *    Drawer because there isn't room for two columns on small viewports.
  */
-export const VersionDrawer: FC<Props> = ({ diagramId }) => {
-  const theme = useTheme()
-  const isSmall = useMediaQuery(theme.breakpoints.down("sm"))
-  const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
+const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
   const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
@@ -67,8 +68,8 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
   const [activeRowId, setActiveRowId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (open) void fetchVersions(diagramId)
-  }, [open, diagramId, fetchVersions])
+    void fetchVersions(diagramId)
+  }, [diagramId, fetchVersions])
 
   const groupedVersions = useMemo(() => groupAutoRuns(versions), [versions])
 
@@ -86,9 +87,6 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
     const lines = draft.split("\n")
     const typedName = (lines[0] ?? "").trim()
     const description = lines.slice(1).join("\n").trim()
-    // The form is intentionally optional — a user clicking "Save version"
-    // without typing anything still gets a recognisable row, dated by
-    // creation time. They can rename inline afterwards.
     const name = typedName || `Snapshot — ${new Date().toLocaleString()}`
     try {
       await createVersion(diagramId, editor.model, {
@@ -113,7 +111,7 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
     try {
       await enterPreview(diagramId, versionId, editor.model)
     } catch {
-      toast.error("Failed to load preview.")
+      toast.error(t.previewFailed)
     }
   }
 
@@ -125,13 +123,12 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
         versionId,
         editor.model
       )
-      // The undo-restore snackbar is rendered globally (separate component).
       void autoSnapshotVersionId
     } catch (err) {
       if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
         toast.error(t.failureSchemaUnsupported)
       } else {
-        toast.error("Restore failed.")
+        toast.error(t.restoreFailed)
       }
     }
   }
@@ -141,16 +138,11 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
   }
 
   return (
-    <Drawer
-      anchor={isSmall ? "bottom" : "right"}
-      open={open}
-      onClose={() => closeDrawer(diagramId)}
-      PaperProps={{
-        sx: {
-          width: isSmall ? "100%" : 400,
-          height: isSmall ? "80vh" : "100%",
-          maxWidth: "100vw",
-        },
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
       role="complementary"
       aria-label={t.drawerTitle}
@@ -172,7 +164,7 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
           </Box>
           <IconButton
             onClick={() => closeDrawer(diagramId)}
-            aria-label="Close version history"
+            aria-label={t.closeSidebar}
           >
             <CloseIcon />
           </IconButton>
@@ -186,7 +178,6 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
         </Typography>
       </Box>
 
-      {/* Inline create form */}
       <Box
         sx={{
           p: 2,
@@ -229,14 +220,12 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
         </Stack>
       </Box>
 
-      {/* Compare banner — shows above the list when active */}
       {compareState && (
         <Box sx={{ p: 1 }}>
           <VersionCompareBanner diagramId={diagramId} />
         </Box>
       )}
 
-      {/* Body */}
       <Box sx={{ flex: 1, overflow: "auto" }}>
         {errorCode === "REDIS_UNAVAILABLE" ? (
           <Box sx={{ p: 2 }}>
@@ -329,13 +318,61 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
                   onClick={() => loadMoreVersions(diagramId)}
                   disabled={loading}
                 >
-                  Load older versions
+                  {t.loadOlder}
                 </Button>
               </Box>
             )}
           </List>
         )}
       </Box>
+    </Box>
+  )
+}
+
+/**
+ * Persistent desktop sidebar. Renders inline as a flex sibling of the
+ * canvas (see ApollonWithConnection layout). Hides itself when closed.
+ */
+export const VersionSidebar: FC<Props> = ({ diagramId }) => {
+  const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
+  if (!open) return null
+  return (
+    <Box
+      sx={{
+        width: 400,
+        flexShrink: 0,
+        borderLeft: 1,
+        borderColor: "divider",
+        bgcolor: "background.paper",
+        overflow: "hidden",
+      }}
+    >
+      <VersionSidebarBody diagramId={diagramId} />
+    </Box>
+  )
+}
+
+/**
+ * Mobile fallback. On `<sm` viewports there isn't room for a 400-pixel
+ * column, so we keep the bottom-sheet pattern for the small-screen case.
+ */
+export const VersionDrawer: FC<Props> = ({ diagramId }) => {
+  const theme = useTheme()
+  const isSmall = useMediaQuery(theme.breakpoints.down("sm"))
+  const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
+  const closeDrawer = useVersionStore((s) => s.closeDrawer)
+  // Desktop uses the inline sidebar; this component is mobile-only.
+  if (!isSmall) return null
+  return (
+    <Drawer
+      anchor="bottom"
+      open={open}
+      onClose={() => closeDrawer(diagramId)}
+      PaperProps={{
+        sx: { height: "80vh", width: "100%" },
+      }}
+    >
+      <VersionSidebarBody diagramId={diagramId} />
     </Drawer>
   )
 }
@@ -410,11 +447,19 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
           color: "text.secondary",
           cursor: "pointer",
           fontSize: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
         }}
         aria-expanded={expanded}
         aria-label={`${group.versions.length} auto-saved versions`}
       >
-        {expanded ? "▾" : "▸"} {group.versions.length} auto-saved versions
+        {expanded ? (
+          <ExpandLessIcon fontSize="small" aria-hidden />
+        ) : (
+          <ChevronRightIcon fontSize="small" aria-hidden />
+        )}
+        {group.versions.length} auto-saved versions
       </Box>
       {expanded &&
         group.versions.map((v) => (

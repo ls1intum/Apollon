@@ -6,6 +6,10 @@ export const versioningStrings = {
   drawerTitle: "Version history",
   navMenuItem: "Version history",
   fabTooltip: "Version history (⌥⇧H)",
+  closeSidebar: "Close version history",
+  loadOlder: "Load older versions",
+  previewFailed: "Failed to load preview.",
+  restoreFailed: "Restore failed.",
   emptyTitle: "No saved versions yet",
   emptyBody:
     "Save a version before risky changes. You can always come back to this exact state.",
@@ -13,7 +17,6 @@ export const versioningStrings = {
   createPlaceholder:
     "Name this version (optional). Add details on a new line — first line becomes the name.",
   createButton: "Save version",
-  createHint: "Tip: ⌘⇧S / Ctrl+Shift+S opens this drawer from anywhere.",
   saving: "Saving…",
   retry: "Retry",
   counter: (n: number, max: number) => `${n} / ${max} versions kept`,
@@ -55,7 +58,6 @@ export const versioningStrings = {
     "This diagram is too large to version (over 5 MB). Try splitting it into smaller diagrams.",
   failureSchemaUnsupported:
     "This snapshot was created by an older version of the editor and can't be restored automatically.",
-  failureSchemaUnsupportedCta: "Export as JSON",
   failureVersionDeleted: "This version was deleted by a collaborator.",
   failureReturnToCurrent: "Return to current version",
   syncedFromCollaborator: "Synced changes from another collaborator.",

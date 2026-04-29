@@ -29,6 +29,22 @@ interface Deps {
   redis: Redis
 }
 
+/**
+ * jsdom-backed `ConversionService` is heavy to construct (boots a worker
+ * thread); cache one instance for SVG renders triggered by the version
+ * thumbnail endpoint. Constructed lazily so tests that don't hit it don't
+ * pay the boot cost.
+ */
+let _conversion: {
+  convertToSvg: typeof import("../services/conversion-service").ConversionService.prototype.convertToSvg
+} | null = null
+function sharedConversionService(
+  Ctor: typeof import("../services/conversion-service").ConversionService
+) {
+  if (!_conversion) _conversion = new Ctor()
+  return _conversion
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -305,17 +321,37 @@ export function mountVersionRoutes(
   )
 
   // GET /diagrams/:diagramId/versions/:versionId — immutable body.
+  // `?type=svg` returns the rendered SVG snapshot for thumbnail use.
   router.get(
     "/diagrams/:diagramId/versions/:versionId",
     validate(
-      { params: DiagramIdAndVersionIdParams },
-      async (_req, res, _next, { params }) => {
+      {
+        params: DiagramIdAndVersionIdParams,
+        query: z.object({ type: z.enum(["json", "svg"]).optional() }),
+      },
+      async (_req, res, _next, { params, query }) => {
         const body = await readVersionBody(
           redis,
           params.diagramId,
           params.versionId
         )
         if (!body) throw Errors.notFound("version not found")
+        if (query.type === "svg") {
+          const { ConversionService } = await import(
+            "../services/conversion-service"
+          )
+          const conversion = sharedConversionService(ConversionService)
+          // The wire `Diagram.version` is a free `string`; the library's
+          // UMLModel pins it to a `4.${number}.${number}` template literal.
+          // Cross the boundary with a single deliberate cast.
+          const { svg } = await conversion.convertToSvg(
+            body as unknown as Parameters<typeof conversion.convertToSvg>[0]
+          )
+          res.setHeader("etag", `"${params.versionId}-svg"`)
+          res.setHeader("cache-control", "private, max-age=86400, immutable")
+          res.type("image/svg+xml").status(200).send(svg)
+          return
+        }
         res.setHeader("etag", `"${params.versionId}"`)
         res.setHeader("cache-control", "private, max-age=86400, immutable")
         res.status(200).json(body)

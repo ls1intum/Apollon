@@ -390,6 +390,6 @@ export const useVersionStore = create<VersionStore>()(
         }),
       }
     ),
-    { name: "Apollon Version Store DevTools" }
+    { name: "apollon-version-store" }
   )
 )

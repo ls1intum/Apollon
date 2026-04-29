@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router"
 import { ModalProvider, EditorProvider } from "@/contexts"
-import { VersionDrawer } from "./VersionDrawer"
+import { VersionSidebar } from "./VersionDrawer"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 
@@ -51,15 +51,15 @@ function mount(diagramId: string) {
     <MemoryRouter>
       <EditorProvider>
         <ModalProvider>
-          <VersionDrawer diagramId={diagramId} />
+          <VersionSidebar diagramId={diagramId} />
         </ModalProvider>
       </EditorProvider>
     </MemoryRouter>
   )
 }
 
-describe("VersionDrawer (regression: infinite render loop)", () => {
-  it("mounts closed without warnings on a diagram with no fetched versions", () => {
+describe("VersionSidebar (regression: infinite render loop)", () => {
+  it("mounts hidden without warnings on a diagram with no fetched versions", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     const error = vi.spyOn(console, "error").mockImplementation(() => {})
     expect(() => mount("never-fetched")).not.toThrow()

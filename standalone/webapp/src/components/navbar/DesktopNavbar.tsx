@@ -1,5 +1,6 @@
 import AppBar from "@mui/material/AppBar"
 import Box from "@mui/material/Box"
+import Stack from "@mui/material/Stack"
 import Toolbar from "@mui/material/Toolbar"
 import Typography from "@mui/material/Typography"
 import Button from "@mui/material/Button"
@@ -85,7 +86,6 @@ export const DesktopNavbar = () => {
           >
             <Typography color={secondary}>Share</Typography>
           </Button>
-          <VersionHistoryButton />
           <NavbarHelp />
           <TextField
             sx={{ input: { color: "white", padding: 1 }, marginLeft: 1 }}
@@ -99,7 +99,12 @@ export const DesktopNavbar = () => {
           />
         </Box>
       </Toolbar>
-      <ThemeSwitcherMenu />
+      {/* Right cluster: version history sits immediately to the left of the
+          theme toggle so it's the rightmost product affordance. */}
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <VersionHistoryButton />
+        <ThemeSwitcherMenu />
+      </Stack>
     </AppBar>
   )
 }
