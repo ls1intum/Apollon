@@ -606,9 +606,7 @@ export const useStepPathEdge = ({
           setCustomPoints([])
           setEdges((eds) =>
             eds.map((e) =>
-              e.id === id
-                ? { ...e, data: { ...e.data, points: undefined } }
-                : e
+              e.id === id ? { ...e, data: { ...e.data, points: undefined } } : e
             )
           )
         } else {

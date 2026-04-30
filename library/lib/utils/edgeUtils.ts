@@ -520,9 +520,10 @@ export function findStraightConnectionHandles({
   useFourTargetHandles = false,
   allowSourceHandleAdjustment = false,
   alignmentTolerance = 1,
-}: FindStraightConnectionHandlesParams):
-  | { sourceHandle: string; targetHandle: string }
-  | null {
+}: FindStraightConnectionHandlesParams): {
+  sourceHandle: string
+  targetHandle: string
+} | null {
   const sourceSide = getPositionFromHandleId(sourceHandle)
   if (!sourceHandle || !sourceSide) return null
 
