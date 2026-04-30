@@ -192,6 +192,34 @@ export class ApollonEditor {
     return this.reactFlowInstance.flowToScreenPosition(position)
   }
 
+  public fitView(options?: { padding?: number; duration?: number }): void {
+    const padding = options?.padding ?? 0.15
+    const duration = options?.duration ?? 200
+    const maxAttempts = 10
+    let attempts = 0
+
+    const attempt = () => {
+      attempts++
+      const rf = this.reactFlowInstance
+      if (!rf) return
+      const rfNodes = rf.getNodes()
+      const expected = this.diagramStore.getState().nodes.length
+      const allMeasured =
+        rfNodes.length >= expected &&
+        rfNodes.every(
+          (n) =>
+            (n.measured?.width ?? n.width ?? 0) > 0 &&
+            (n.measured?.height ?? n.height ?? 0) > 0
+        )
+      if (allMeasured || attempts >= maxAttempts) {
+        rf.fitView({ padding, duration, maxZoom: 1.0 })
+        return
+      }
+      requestAnimationFrame(attempt)
+    }
+    requestAnimationFrame(attempt)
+  }
+
   set diagramType(type: UMLDiagramType) {
     this.metadataStore.getState().updateDiagramType(type)
     this.diagramStore.getState().setNodesAndEdges([], [])
@@ -468,6 +496,41 @@ export class ApollonEditor {
 
   public updateDiagramTitle(name: string) {
     this.metadataStore.getState().updateDiagramTitle(name)
+  }
+
+  /**
+   * Toggles the editor's read-only state at runtime. Used by hosting apps
+   * to lock the canvas while previewing an immutable snapshot (e.g. the
+   * version-history preview), without tearing down and re-mounting the
+   * editor instance.
+   */
+  public setReadonly(readonly: boolean): void {
+    this.metadataStore.getState().setReadonly(readonly)
+  }
+
+  /**
+   * Returns the editor's current Yjs state vector — a compact summary of
+   * everything the doc has observed. Used by hosting apps for O(1) dirty
+   * detection: snapshot the SV at the time of the last persisted version,
+   * compare on each change. Cheaper than (and more correct than) JSON
+   * deep-compare against a re-fetched body.
+   *
+   * Two state vectors compare equal iff the docs would produce identical
+   * full-state encodings. A new SV is returned each call (defensive copy);
+   * callers can persist it as `Uint8Array` without further wrapping.
+   */
+  public getStateVector(): Uint8Array {
+    return Y.encodeStateVector(this.ydoc)
+  }
+
+  /**
+   * Direct access to the underlying Y.Doc. Hosting apps wire optional
+   * persistence transports (e.g. `y-indexeddb` for offline / multi-tab) by
+   * passing this to a transport adapter. Prefer `setReadonly` / `model`
+   * accessors for routine state mutation.
+   */
+  public getYDoc(): Y.Doc {
+    return this.ydoc
   }
 
   public toggleInteractiveElementsMode(forceEnabled?: boolean): void {
