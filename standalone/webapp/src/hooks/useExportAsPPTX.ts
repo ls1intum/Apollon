@@ -32,6 +32,7 @@ export const useExportAsPPTX = () => {
     }
 
     const slideSize = settings.slideSize ?? "fit"
+    const diagramFit = settings.diagramFit ?? "shrink"
     const fontFace = settings.fontFace ?? "auto"
     const background = settings.background ?? "white"
     const fileName =
@@ -39,7 +40,11 @@ export const useExportAsPPTX = () => {
 
     const slideCanvas =
       slideSize === "fit" ? undefined : SLIDE_DIMENSIONS_IN[slideSize]
-    const viewport = computeSlideViewport(apollonSVG.clip, slideCanvas)
+    const viewport = computeSlideViewport(
+      apollonSVG.clip,
+      slideCanvas,
+      diagramFit
+    )
 
     const PptxGenJS = (await import("pptxgenjs")).default
     const pres = new PptxGenJS()

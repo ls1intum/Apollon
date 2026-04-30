@@ -18,6 +18,7 @@ import { useExportAsPPTX } from "@/hooks"
 import {
   BackgroundOption,
   DEFAULT_PPTX_PERSISTED_SETTINGS,
+  DiagramFitOption,
   FontFaceOption,
   loadPptxSettings,
   savePptxSettings,
@@ -54,6 +55,9 @@ export const PPTXExportModal = () => {
 
   const [fileName, setFileName] = useState(defaultFileName)
   const [slideSize, setSlideSize] = useState<SlideSizeOption>(persisted.slideSize)
+  const [diagramFit, setDiagramFit] = useState<DiagramFitOption>(
+    persisted.diagramFit
+  )
   const [fontFace, setFontFace] = useState<FontFaceOption>(persisted.fontFace)
   const [background, setBackground] = useState<BackgroundOption>(
     persisted.background
@@ -71,6 +75,7 @@ export const PPTXExportModal = () => {
 
   const resetToDefaults = () => {
     setSlideSize(DEFAULT_PPTX_PERSISTED_SETTINGS.slideSize)
+    setDiagramFit(DEFAULT_PPTX_PERSISTED_SETTINGS.diagramFit)
     setFontFace(DEFAULT_PPTX_PERSISTED_SETTINGS.fontFace)
     setBackground(DEFAULT_PPTX_PERSISTED_SETTINGS.background)
     setFileName(defaultFileName)
@@ -81,10 +86,11 @@ export const PPTXExportModal = () => {
     if (!canSubmit) return
     setSubmitting(true)
     try {
-      savePptxSettings({ slideSize, fontFace, background })
+      savePptxSettings({ slideSize, diagramFit, fontFace, background })
       await exportPptx({
         fileName: trimmedFileName,
         slideSize,
+        diagramFit,
         fontFace,
         background,
       })
@@ -170,6 +176,46 @@ export const PPTXExportModal = () => {
             />
           </RadioGroup>
         </FormControl>
+
+        {slideSize !== "fit" && (
+          <FormControl>
+            <FormLabel>Diagram size on slide</FormLabel>
+            <RadioGroup
+              row
+              value={diagramFit}
+              onChange={(e) =>
+                setDiagramFit(e.target.value as DiagramFitOption)
+              }
+            >
+              <FormControlLabel
+                value="shrink"
+                control={<Radio />}
+                label="Shrink to fit"
+              />
+              <FormControlLabel
+                value="fill"
+                control={<Radio />}
+                label="Fill slide"
+              />
+              <FormControlLabel
+                value="actual"
+                control={<Radio />}
+                label="Actual size"
+              />
+            </RadioGroup>
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", mt: 0.5 }}
+            >
+              {diagramFit === "shrink" &&
+                "Keeps the source size when it fits; only shrinks larger diagrams."}
+              {diagramFit === "fill" &&
+                "Scales the diagram up or down to fill the slide canvas (preserves aspect ratio)."}
+              {diagramFit === "actual" &&
+                "Centres the diagram at its source size; may overflow the slide."}
+            </Typography>
+          </FormControl>
+        )}
 
         <FormControl fullWidth>
           <FormLabel sx={{ mb: 1 }}>Font</FormLabel>

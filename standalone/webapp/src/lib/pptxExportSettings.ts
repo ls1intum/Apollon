@@ -13,6 +13,19 @@
 export type SlideSizeOption = "fit" | "widescreen" | "standard"
 
 /**
+ * How the diagram fills the slide canvas when the canvas isn't sized to the
+ * diagram (i.e. SlideSizeOption !== "fit"):
+ *
+ *   - "shrink": only scale down if too large (default; preserves source size)
+ *   - "fill":   scale up or down to fill the canvas, preserving aspect ratio
+ *   - "actual": never scale; centre the diagram regardless of canvas size
+ *
+ * For SlideSizeOption "fit" the canvas matches the diagram exactly so this
+ * value has no effect.
+ */
+export type DiagramFitOption = "shrink" | "fill" | "actual"
+
+/**
  * "auto" picks the best font for the current platform at export time:
  * SF Pro Text on macOS/iOS (matches `system-ui` in the browser preview),
  * Inter elsewhere. Concrete names override the auto-detection.
@@ -30,6 +43,7 @@ export type BackgroundOption = "white" | "transparent"
 
 export type PptxPersistedSettings = {
   slideSize: SlideSizeOption
+  diagramFit: DiagramFitOption
   fontFace: FontFaceOption
   background: BackgroundOption
 }
@@ -41,6 +55,7 @@ export type PptxExportSettings = PptxPersistedSettings & {
 
 export const DEFAULT_PPTX_PERSISTED_SETTINGS: PptxPersistedSettings = {
   slideSize: "fit",
+  diagramFit: "shrink",
   fontFace: "auto",
   background: "white",
 }

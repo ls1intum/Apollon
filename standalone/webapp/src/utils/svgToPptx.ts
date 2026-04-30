@@ -869,9 +869,9 @@ function emitTextLines(
     else leftPx = line.anchorX
     // SVG `<text y>` is the baseline; PowerPoint's text-box anchors glyphs
     // differently, leaving labels slightly higher than the SVG baseline.
-    // Empirically a +4 px nudge (≈ 0.042 in / 3 pt) lines them up with
+    // Empirically a +4.5 px nudge (≈ 0.047 in / 3.4 pt) lines them up with
     // the surrounding shapes for the font sizes Apollon uses (11–18 px).
-    const TEXT_BASELINE_OFFSET_PX = 4
+    const TEXT_BASELINE_OFFSET_PX = 4.5
     const topPx =
       line.baselineY -
       fontSize * 0.82 -
@@ -1027,13 +1027,23 @@ export type SvgToPptxOptions = {
 }
 
 /**
+ * How the diagram is sized relative to a fixed slide canvas. "shrink" keeps
+ * source size when it fits and only scales down when the diagram is too
+ * large. "fill" always scales (up or down) to fill the canvas. "actual"
+ * never scales (the diagram may overflow the canvas).
+ */
+export type DiagramFit = "shrink" | "fill" | "actual"
+
+/**
  * Compute the viewport (slide-canvas size + SVG→slide transform) for a given
- * clip and slide-size choice. The diagram is centred in the canvas, scaled
- * down (never up) to fit, preserving aspect ratio.
+ * clip, slide-canvas, and fit mode. The diagram is centred in the canvas.
+ * When `slideCanvasInches` is omitted, the canvas matches the diagram exactly
+ * (1:1 fit-to-content) and `fit` is ignored.
  */
 export function computeSlideViewport(
   clip: { width: number; height: number },
-  slideCanvasInches?: { width: number; height: number }
+  slideCanvasInches?: { width: number; height: number },
+  fit: DiagramFit = "shrink"
 ): SlideViewport {
   const clipWidthIn = clip.width / PX_PER_INCH
   const clipHeightIn = clip.height / PX_PER_INCH
@@ -1050,8 +1060,19 @@ export function computeSlideViewport(
     slideCanvasInches.width / Math.max(clipWidthIn, 0.0001),
     slideCanvasInches.height / Math.max(clipHeightIn, 0.0001)
   )
-  // Never enlarge: small diagrams sit centred with whitespace around them.
-  const scale = Math.min(1, fitFactor)
+  let scale: number
+  switch (fit) {
+    case "fill":
+      scale = fitFactor
+      break
+    case "actual":
+      scale = 1
+      break
+    case "shrink":
+    default:
+      scale = Math.min(1, fitFactor)
+      break
+  }
   const drawnWidth = clipWidthIn * scale
   const drawnHeight = clipHeightIn * scale
   return {
