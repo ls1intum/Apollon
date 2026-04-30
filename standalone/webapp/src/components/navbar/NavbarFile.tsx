@@ -10,6 +10,7 @@ import {
   useExportAsPNG,
   useExportAsSVG,
   useExportAsPDF,
+  useExportAsPPTX,
 } from "@/hooks"
 import { JsonFileImportButton } from "./JsonFileImportButton"
 import { KeyboardArrowDownIcon } from "../Icon"
@@ -25,6 +26,7 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
   const exportAsPDF = useExportAsPDF()
+  const exportAsPPTX = useExportAsPPTX()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(
     null
@@ -169,6 +171,14 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
           }}
         >
           As PDF
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            exportAsPPTX()
+            closeMainMenu()
+          }}
+        >
+          As PPTX (Animatable)
         </MenuItem>
       </Menu>
     </>
