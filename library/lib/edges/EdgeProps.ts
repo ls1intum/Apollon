@@ -1,5 +1,6 @@
 import { Edge, EdgeProps } from "@xyflow/react"
 import { IPoint } from "./Connection"
+import { EdgeMode } from "./edgeMode"
 
 // Define message structure with direction
 export interface MessageData {
@@ -13,7 +14,8 @@ export type CustomEdgeProps = {
   sourceMultiplicity: string | null
   targetRole: string | null
   targetMultiplicity: string | null
-  points: IPoint[]
+  points?: IPoint[]
+  edgeMode?: EdgeMode
   label?: string | null
   messages?: MessageData[] // For communication diagram edges with direction-aware messages
   strokeColor?: string

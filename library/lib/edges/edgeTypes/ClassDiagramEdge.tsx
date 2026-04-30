@@ -182,8 +182,8 @@ export const ClassDiagramEdge = ({
           sourceY={sourceY}
           targetX={targetX}
           targetY={targetY}
-          sourcePosition={sourcePosition}
-          targetPosition={targetPosition}
+          sourcePosition={edgeData.sourcePosition}
+          targetPosition={edgeData.targetPosition}
           textColor={textColor}
         />
 

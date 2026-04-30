@@ -1,13 +1,17 @@
 import { useCallback, useMemo, useEffect, useRef, useState } from "react"
-import { getSmoothStepPath, useReactFlow } from "@xyflow/react"
+import {
+  getSmoothStepPath,
+  Position,
+  useReactFlow,
+  type Rect,
+} from "@xyflow/react"
 import { log } from "../logger"
-import { EDGES } from "@/constants"
+import { EDGES, MARKER_BASE_SIZE, MARKER_CONFIGS } from "@/constants"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
   getPositionOnCanvas,
 } from "@/utils"
-import { Position } from "@xyflow/react"
 import {
   IPoint,
   pointsToSvgPath,
@@ -28,7 +32,15 @@ import {
   orthogonalizePoints,
   getStraightPathOrientation,
 } from "@/utils/edgeUtils"
+import { extractMarkerId } from "@/utils/pathParsing"
+import { computeAutoEdgeRoute } from "@/utils/edgeRouting"
 import { useEdgeState, useEdgeReconnection } from "../edges/GenericEdge"
+import {
+  EdgeMode,
+  resolveEdgeMode,
+  toAutoEdgeData,
+  toManualEdgeData,
+} from "../edges/edgeMode"
 import { useDiagramModifiable } from "./useDiagramModifiable"
 import { useHandleFinder } from "./useHandleFinder"
 
@@ -45,7 +57,7 @@ interface UseStepPathEdgeProps {
   targetPosition: Position
   sourceHandleId?: string | null
   targetHandleId?: string | null
-  data?: { points?: IPoint[] }
+  data?: { points?: IPoint[]; edgeMode?: EdgeMode }
   allowMidpointDragging?: boolean
   enableReconnection?: boolean
   enableStraightPath?: boolean
@@ -57,6 +69,9 @@ export interface StepPathEdgeData {
   isMiddlePathHorizontal: boolean
   sourcePoint: IPoint
   targetPoint: IPoint
+  sourcePosition: Position
+  targetPosition: Position
+  edgeMode: EdgeMode
 }
 
 export const useStepPathEdge = ({
@@ -77,6 +92,22 @@ export const useStepPathEdge = ({
   enableReconnection = true,
   enableStraightPath = false,
 }: UseStepPathEdgeProps) => {
+  const resolveMarkerSideInset = useCallback(
+    (markerUrl?: string): number => {
+      const markerId = extractMarkerId(markerUrl)
+      if (!markerId) {
+        return MARKER_BASE_SIZE
+      }
+
+      if (!(markerId in MARKER_CONFIGS)) {
+        return MARKER_BASE_SIZE
+      }
+
+      const markerConfig = MARKER_CONFIGS[markerId as keyof typeof MARKER_CONFIGS]
+      return markerConfig.size * markerConfig.widthFactor
+    },
+    []
+  )
   const draggingIndexRef = useRef<number | null>(null)
   const dragOffsetRef = useRef<IPoint>({ x: 0, y: 0 })
   const pathRef = useRef<SVGPathElement | null>(null)
@@ -100,6 +131,7 @@ export const useStepPathEdge = ({
     tempReconnectPoints,
     setTempReconnectPoints,
   } = useEdgeState(data?.points)
+  const resolvedEdgeMode = useMemo(() => resolveEdgeMode(data), [data])
   const {
     isReconnectingRef,
     reconnectingEndRef,
@@ -122,6 +154,18 @@ export const useStepPathEdge = ({
     offset = 0,
   } = getEdgeMarkerStyles(type)
   const padding = markerPadding ?? EDGES.MARKER_PADDING
+  const autoTargetEndpointPadding = Math.max(
+    0,
+    padding - EDGES.MARKER_PADDING
+  )
+  const sourceSideInset = useMemo(
+    () => resolveMarkerSideInset(markerStart),
+    [markerStart, resolveMarkerSideInset]
+  )
+  const targetSideInset = useMemo(
+    () => resolveMarkerSideInset(markerEnd),
+    [markerEnd, resolveMarkerSideInset]
+  )
   const sourceNode = getNode(source)!
   const targetNode = getNode(target)!
   const allNodes = getNodes()
@@ -142,26 +186,96 @@ export const useStepPathEdge = ({
   const roundedTargetX = Math.round(targetX)
   const roundedTargetY = Math.round(targetY)
 
-  const adjustedTargetCoordinates = adjustTargetCoordinates(
+  const manualAdjustedTargetCoordinates = adjustTargetCoordinates(
     roundedTargetX,
     roundedTargetY,
     targetPosition,
     padding
   )
-  const adjustedSourceCoordinates = adjustSourceCoordinates(
+  const manualAdjustedSourceCoordinates = adjustSourceCoordinates(
     roundedSourceX,
     roundedSourceY,
     sourcePosition,
     EDGES.SOURCE_CONNECTION_POINT_PADDING
   )
+  const sourceRect = useMemo<Rect>(
+    () => ({
+      x: sourceAbsolutePosition.x,
+      y: sourceAbsolutePosition.y,
+      width: sourceNode.width ?? 100,
+      height: sourceNode.height ?? 160,
+    }),
+    [sourceAbsolutePosition, sourceNode.width, sourceNode.height]
+  )
+  const targetRect = useMemo<Rect>(
+    () => ({
+      x: targetAbsolutePosition.x,
+      y: targetAbsolutePosition.y,
+      width: targetNode.width ?? 100,
+      height: targetNode.height ?? 160,
+    }),
+    [targetAbsolutePosition, targetNode.width, targetNode.height]
+  )
+  const autoRoute = useMemo(() => {
+    if (resolvedEdgeMode !== "AUTO" || !enableStraightPath) {
+      return null
+    }
+
+    return computeAutoEdgeRoute({
+      sourceRect,
+      targetRect,
+      markerPadding: padding,
+      sourcePadding: 0,
+      targetEndpointPadding: autoTargetEndpointPadding,
+      sourceSideInset,
+      targetSideInset,
+      preferStraight: true,
+      allowOrthogonalFallback: false,
+      borderRadius: EDGES.STEP_BORDER_RADIUS,
+      offset: 30,
+    })
+  }, [
+    resolvedEdgeMode,
+    enableStraightPath,
+    sourceRect,
+    targetRect,
+    padding,
+    autoTargetEndpointPadding,
+    sourceSideInset,
+    targetSideInset,
+  ])
+
+  const resolvedSourcePosition = autoRoute?.sourcePosition ?? sourcePosition
+  const resolvedTargetPosition = autoRoute?.targetPosition ?? targetPosition
+  const resolvedSourcePoint = autoRoute?.sourcePoint ?? {
+    x: manualAdjustedSourceCoordinates.sourceX,
+    y: manualAdjustedSourceCoordinates.sourceY,
+  }
+  const resolvedTargetPoint = autoRoute?.targetPoint ?? {
+    x: manualAdjustedTargetCoordinates.targetX,
+    y: manualAdjustedTargetCoordinates.targetY,
+  }
+  const resolvedSourceCoordinates = {
+    sourceX: resolvedSourcePoint.x,
+    sourceY: resolvedSourcePoint.y,
+  }
+  const resolvedTargetCoordinates = {
+    targetX: resolvedTargetPoint.x,
+    targetY: resolvedTargetPoint.y,
+  }
+
   const basePath = useMemo(() => {
+    if (resolvedEdgeMode === "AUTO" && autoRoute) {
+      return pointsToSvgPath(autoRoute.points)
+    }
+
     if (!enableStraightPath) {
       const [edgePath] = getSmoothStepPath({
-        sourceX: adjustedSourceCoordinates.sourceX,
-        sourceY: adjustedSourceCoordinates.sourceY,
+        sourceX: manualAdjustedSourceCoordinates.sourceX,
+        sourceY: manualAdjustedSourceCoordinates.sourceY,
         sourcePosition,
-        targetX: adjustedTargetCoordinates.targetX,
-        targetY: adjustedTargetCoordinates.targetY,
+        targetX: manualAdjustedTargetCoordinates.targetX,
+        targetY: manualAdjustedTargetCoordinates.targetY,
         targetPosition,
         borderRadius: EDGES.STEP_BORDER_RADIUS,
         offset: 30,
@@ -195,11 +309,11 @@ export const useStepPathEdge = ({
       return pointsToSvgPath(straightPathPoints)
     } else {
       const [edgePath] = getSmoothStepPath({
-        sourceX: adjustedSourceCoordinates.sourceX,
-        sourceY: adjustedSourceCoordinates.sourceY,
+        sourceX: manualAdjustedSourceCoordinates.sourceX,
+        sourceY: manualAdjustedSourceCoordinates.sourceY,
         sourcePosition,
-        targetX: adjustedTargetCoordinates.targetX,
-        targetY: adjustedTargetCoordinates.targetY,
+        targetX: manualAdjustedTargetCoordinates.targetX,
+        targetY: manualAdjustedTargetCoordinates.targetY,
         targetPosition,
         borderRadius: EDGES.STEP_BORDER_RADIUS,
         offset: 30,
@@ -207,6 +321,8 @@ export const useStepPathEdge = ({
       return edgePath
     }
   }, [
+    resolvedEdgeMode,
+    autoRoute,
     enableStraightPath,
     sourceAbsolutePosition,
     targetAbsolutePosition,
@@ -219,6 +335,10 @@ export const useStepPathEdge = ({
     targetX,
     targetY,
     padding,
+    manualAdjustedSourceCoordinates.sourceX,
+    manualAdjustedSourceCoordinates.sourceY,
+    manualAdjustedTargetCoordinates.targetX,
+    manualAdjustedTargetCoordinates.targetY,
   ])
 
   const computedPoints = useMemo(() => {
@@ -275,7 +395,7 @@ export const useStepPathEdge = ({
         target: currentTargetPos,
       }
 
-      if (customPoints.length > 0) {
+      if (resolvedEdgeMode === "MANUAL" && customPoints.length > 0) {
         let newPoints = customPoints
 
         if (sourceChanged && targetChanged) {
@@ -291,15 +411,15 @@ export const useStepPathEdge = ({
         newPoints = alignCustomPathEndpointSegments(
           newPoints,
           {
-            x: adjustedSourceCoordinates.sourceX,
-            y: adjustedSourceCoordinates.sourceY,
+            x: resolvedSourceCoordinates.sourceX,
+            y: resolvedSourceCoordinates.sourceY,
           },
           {
-            x: adjustedTargetCoordinates.targetX,
-            y: adjustedTargetCoordinates.targetY,
+            x: resolvedTargetCoordinates.targetX,
+            y: resolvedTargetCoordinates.targetY,
           },
-          sourcePosition,
-          targetPosition
+          resolvedSourcePosition,
+          resolvedTargetPosition
         )
 
         setCustomPoints(newPoints)
@@ -308,7 +428,7 @@ export const useStepPathEdge = ({
             edge.id === id
               ? {
                   ...edge,
-                  data: { ...edge.data, points: newPoints },
+                  data: toManualEdgeData(newPoints, edge.data),
                 }
               : edge
           )
@@ -322,13 +442,14 @@ export const useStepPathEdge = ({
     targetNode.position.x,
     targetNode.position.y,
     targetNode.parentId,
+    resolvedEdgeMode,
     customPoints,
-    adjustedSourceCoordinates.sourceX,
-    adjustedSourceCoordinates.sourceY,
-    adjustedTargetCoordinates.targetX,
-    adjustedTargetCoordinates.targetY,
-    sourcePosition,
-    targetPosition,
+    resolvedSourceCoordinates.sourceX,
+    resolvedSourceCoordinates.sourceY,
+    resolvedTargetCoordinates.targetX,
+    resolvedTargetCoordinates.targetY,
+    resolvedSourcePosition,
+    resolvedTargetPosition,
     id,
     setEdges,
     setCustomPoints,
@@ -338,6 +459,8 @@ export const useStepPathEdge = ({
     let points: IPoint[]
     if (tempReconnectPoints) {
       points = tempReconnectPoints
+    } else if (resolvedEdgeMode === "AUTO" && autoRoute) {
+      points = autoRoute.points
     } else if (data?.points && data.points.length > 0) {
       points = data.points
     } else {
@@ -348,12 +471,12 @@ export const useStepPathEdge = ({
     // This handles stale stored points when nodes have moved
     if (points.length >= 2) {
       const adjustedFirst = {
-        x: adjustedSourceCoordinates.sourceX,
-        y: adjustedSourceCoordinates.sourceY,
+        x: resolvedSourceCoordinates.sourceX,
+        y: resolvedSourceCoordinates.sourceY,
       }
       const adjustedLast = {
-        x: adjustedTargetCoordinates.targetX,
-        y: adjustedTargetCoordinates.targetY,
+        x: resolvedTargetCoordinates.targetX,
+        y: resolvedTargetCoordinates.targetY,
       }
       // Only update if significantly different (more than 1px) to avoid unnecessary re-renders
       const firstDiff =
@@ -374,34 +497,36 @@ export const useStepPathEdge = ({
       }
     }
 
-    if (points.length > 2) {
+    if (resolvedEdgeMode === "MANUAL" && points.length > 2) {
       return alignCustomPathEndpointSegments(
         points,
         {
-          x: adjustedSourceCoordinates.sourceX,
-          y: adjustedSourceCoordinates.sourceY,
+          x: resolvedSourceCoordinates.sourceX,
+          y: resolvedSourceCoordinates.sourceY,
         },
         {
-          x: adjustedTargetCoordinates.targetX,
-          y: adjustedTargetCoordinates.targetY,
+          x: resolvedTargetCoordinates.targetX,
+          y: resolvedTargetCoordinates.targetY,
         },
-        sourcePosition,
-        targetPosition
+        resolvedSourcePosition,
+        resolvedTargetPosition
       )
     }
 
     return orthogonalizePoints(points)
   }, [
+    resolvedEdgeMode,
+    autoRoute,
     customPoints,
     computedPoints,
     tempReconnectPoints,
     data?.points,
-    adjustedSourceCoordinates.sourceX,
-    adjustedSourceCoordinates.sourceY,
-    adjustedTargetCoordinates.targetX,
-    adjustedTargetCoordinates.targetY,
-    sourcePosition,
-    targetPosition,
+    resolvedSourceCoordinates.sourceX,
+    resolvedSourceCoordinates.sourceY,
+    resolvedTargetCoordinates.targetX,
+    resolvedTargetCoordinates.targetY,
+    resolvedSourcePosition,
+    resolvedTargetPosition,
   ])
 
   const currentPath = useMemo(() => {
@@ -409,8 +534,8 @@ export const useStepPathEdge = ({
   }, [activePoints])
 
   const markerSegmentPath = useMemo(
-    () => getMarkerSegmentPath(activePoints, offset, targetPosition),
-    [activePoints, offset, targetPosition]
+    () => getMarkerSegmentPath(activePoints, offset, resolvedTargetPosition),
+    [activePoints, offset, resolvedTargetPosition]
   )
 
   const overlayPath = useMemo(() => {
@@ -566,7 +691,7 @@ export const useStepPathEdge = ({
         mainPath?.setAttribute("d", pathD)
         overlayPath?.setAttribute(
           "d",
-          `${pathD} ${getMarkerSegmentPath(newPoints, offset, targetPosition)}`
+          `${pathD} ${getMarkerSegmentPath(newPoints, offset, resolvedTargetPosition)}`
         )
 
         if (!isStraightPathBreakpoint) {
@@ -598,7 +723,7 @@ export const useStepPathEdge = ({
           setEdges((eds) =>
             eds.map((e) =>
               e.id === id
-                ? { ...e, data: { ...e.data, points: nextPoints } }
+                ? { ...e, data: toManualEdgeData(nextPoints, e.data) }
                 : e
             )
           )
@@ -606,7 +731,7 @@ export const useStepPathEdge = ({
           setCustomPoints([])
           setEdges((eds) =>
             eds.map((e) =>
-              e.id === id ? { ...e, data: { ...e.data, points: undefined } } : e
+              e.id === id ? { ...e, data: toAutoEdgeData(e.data) } : e
             )
           )
         } else {
@@ -635,7 +760,7 @@ export const useStepPathEdge = ({
       allowMidpointDragging,
       setCustomPoints,
       offset,
-      targetPosition,
+      resolvedTargetPosition,
       screenToFlowPosition,
     ]
   )
@@ -659,10 +784,12 @@ export const useStepPathEdge = ({
           y: moveEvent.clientY,
         })
 
-        let newSourceX = sourceX
-        let newSourceY = sourceY
-        let newTargetX = targetX
-        let newTargetY = targetY
+        let newSourceX = activePoints[0]?.x ?? sourceX
+        let newSourceY = activePoints[0]?.y ?? sourceY
+        let newTargetX =
+          activePoints[activePoints.length - 1]?.x ?? targetX
+        let newTargetY =
+          activePoints[activePoints.length - 1]?.y ?? targetY
 
         if (reconnectingEndRef.current === "source") {
           newSourceX = newEndpoint.x
@@ -679,23 +806,23 @@ export const useStepPathEdge = ({
           const adjustedTargetCoordinates = adjustTargetCoordinates(
             newTargetX,
             newTargetY,
-            targetPosition,
+            resolvedTargetPosition,
             padding
           )
           const adjustedSourceCoordinates = adjustSourceCoordinates(
             newSourceX,
             newSourceY,
-            sourcePosition,
+            resolvedSourcePosition,
             EDGES.SOURCE_CONNECTION_POINT_PADDING
           )
 
           const [edgePath] = getSmoothStepPath({
             sourceX: adjustedSourceCoordinates.sourceX,
             sourceY: adjustedSourceCoordinates.sourceY,
-            sourcePosition,
+            sourcePosition: resolvedSourcePosition,
             targetX: adjustedTargetCoordinates.targetX,
             targetY: adjustedTargetCoordinates.targetY,
-            targetPosition,
+            targetPosition: resolvedTargetPosition,
             borderRadius: EDGES.STEP_BORDER_RADIUS,
             offset: 30,
           })
@@ -717,13 +844,13 @@ export const useStepPathEdge = ({
               position: { x: newSourceAbsolute.x, y: newSourceAbsolute.y },
               width: sourceNode.width ?? 100,
               height: sourceNode.height ?? 160,
-              direction: sourcePosition,
+              direction: resolvedSourcePosition,
             },
             {
               position: { x: newTargetAbsolute.x, y: newTargetAbsolute.y },
               width: targetNode.width ?? 100,
               height: targetNode.height ?? 160,
-              direction: targetPosition,
+              direction: resolvedTargetPosition,
             },
             padding,
             {
@@ -740,23 +867,23 @@ export const useStepPathEdge = ({
             const adjustedTargetCoordinates = adjustTargetCoordinates(
               newTargetX,
               newTargetY,
-              targetPosition,
+              resolvedTargetPosition,
               padding
             )
             const adjustedSourceCoordinates = adjustSourceCoordinates(
               newSourceX,
               newSourceY,
-              sourcePosition,
+              resolvedSourcePosition,
               EDGES.SOURCE_CONNECTION_POINT_PADDING
             )
 
             const [edgePath] = getSmoothStepPath({
               sourceX: adjustedSourceCoordinates.sourceX,
               sourceY: adjustedSourceCoordinates.sourceY,
-              sourcePosition,
+              sourcePosition: resolvedSourcePosition,
               targetX: adjustedTargetCoordinates.targetX,
               targetY: adjustedTargetCoordinates.targetY,
-              targetPosition,
+              targetPosition: resolvedTargetPosition,
               borderRadius: EDGES.STEP_BORDER_RADIUS,
               offset: 30,
             })
@@ -805,8 +932,8 @@ export const useStepPathEdge = ({
       sourceY,
       targetX,
       targetY,
-      sourcePosition,
-      targetPosition,
+      resolvedSourcePosition,
+      resolvedTargetPosition,
       type,
       padding,
       sourceAbsolutePosition,
@@ -817,10 +944,10 @@ export const useStepPathEdge = ({
     ]
   )
 
-  const sourcePoint = activePoints[0] || { x: sourceX, y: sourceY }
+  const sourcePoint = activePoints[0] || resolvedSourcePoint
   const targetPoint = activePoints[activePoints.length - 1] || {
-    x: targetX,
-    y: targetY,
+    x: resolvedTargetPoint.x,
+    y: resolvedTargetPoint.y,
   }
 
   const edgeData: StepPathEdgeData = {
@@ -829,6 +956,9 @@ export const useStepPathEdge = ({
     isMiddlePathHorizontal,
     sourcePoint,
     targetPoint,
+    sourcePosition: resolvedSourcePosition,
+    targetPosition: resolvedTargetPosition,
+    edgeMode: resolvedEdgeMode,
   }
 
   return {

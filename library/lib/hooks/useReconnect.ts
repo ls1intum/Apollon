@@ -1,6 +1,7 @@
 import { useCallback } from "react"
 import { useDiagramStore } from "@/store"
 import { Edge, Connection } from "@xyflow/react"
+import { toAutoEdgeData } from "@/edges/edgeMode"
 
 export const useReconnect = () => {
   const setEdges = useDiagramStore((state) => state.setEdges)
@@ -12,10 +13,7 @@ export const useReconnect = () => {
         target: newConnection.target,
         sourceHandle: newConnection.sourceHandle || oldEdge.sourceHandle,
         targetHandle: newConnection.targetHandle || oldEdge.targetHandle,
-        data: {
-          ...oldEdge.data,
-          points: [],
-        },
+        data: toAutoEdgeData(oldEdge.data),
       }
 
       setEdges((edges) =>

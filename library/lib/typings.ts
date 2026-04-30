@@ -1,10 +1,12 @@
 import { DiagramEdgeType, IPoint } from "./edges/types"
+import { EdgeMode } from "./edges/edgeMode"
 import { DiagramNodeType } from "./nodes/types"
 import { UMLDiagramType } from "./types/DiagramType"
 import { Styles } from "./styles/theme"
 import { DeepPartial } from "./utils"
 
 export { UMLDiagramType, type DiagramNodeType, type DiagramEdgeType }
+export { type EdgeMode }
 export { type Styles }
 
 export type Unsubscriber = () => void
@@ -52,6 +54,7 @@ export type ApollonEdge = {
   data: {
     [key: string]: unknown
     points: IPoint[]
+    edgeMode?: EdgeMode
   }
 }
 

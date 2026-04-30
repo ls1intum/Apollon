@@ -16,6 +16,7 @@ import {
   generateUUID,
   getDefaultEdgeType,
 } from "@/utils"
+import { toAutoEdgeData } from "@/edges/edgeMode"
 import { DiagramNodeTypeRecord } from "@/nodes"
 import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
@@ -228,6 +229,7 @@ export const useConnect = () => {
         id: generateUUID(),
         type: defaultEdgeType,
         selected: false,
+        data: toAutoEdgeData(),
       }
 
       addEdge(newEdge)
@@ -356,6 +358,7 @@ export const useConnect = () => {
               type: defaultEdgeType,
               sourceHandle: preferredHandles.sourceHandle,
               targetHandle: preferredHandles.targetHandle,
+              data: toAutoEdgeData(),
             })
           )
         }
