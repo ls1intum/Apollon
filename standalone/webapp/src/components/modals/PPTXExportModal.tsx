@@ -39,11 +39,9 @@ const FONT_OPTIONS: ReadonlyArray<{
 const stripPptxExtension = (name: string) => name.replace(/\.pptx$/i, "")
 
 const FIT_HELPER_TEXT: Record<DiagramFitOption, string> = {
-  shrink:
-    "Keeps the source size when it fits; only shrinks larger diagrams.",
+  shrink: "Keeps the source size when it fits; only shrinks larger diagrams.",
   fill: "Scales the diagram up or down to fill the slide canvas (preserves aspect ratio).",
-  actual:
-    "Centres the diagram at its source size; may overflow the slide.",
+  actual: "Centres the diagram at its source size; may overflow the slide.",
 }
 
 const inputColorSx = { input: { color: "var(--apollon-primary-contrast)" } }
@@ -61,9 +59,7 @@ export const PPTXExportModal = () => {
   const idFont = useId()
   const idBackground = useId()
 
-  const defaultFileName = stripPptxExtension(
-    editor?.model.title || "diagram"
-  )
+  const defaultFileName = stripPptxExtension(editor?.model.title || "diagram")
 
   // Read persisted settings exactly once so first paint is consistent.
   const [initial] = useState(loadPptxSettings)
@@ -172,8 +168,8 @@ export const PPTXExportModal = () => {
               <div className="flex flex-col">
                 <Typography>Fit to content</Typography>
                 <Typography variant="caption" className="text-gray-500">
-                  Slide canvas matches the diagram bounds. Best for
-                  standalone files.
+                  Slide canvas matches the diagram bounds. Best for standalone
+                  files.
                 </Typography>
               </div>
             }
@@ -185,8 +181,8 @@ export const PPTXExportModal = () => {
               <div className="flex flex-col">
                 <Typography>Widescreen 16:9 (13.33″ × 7.5″)</Typography>
                 <Typography variant="caption" className="text-gray-500">
-                  Diagram centred on a 16:9 canvas. Drops cleanly into
-                  modern decks.
+                  Diagram centred on a 16:9 canvas. Drops cleanly into modern
+                  decks.
                 </Typography>
               </div>
             }
@@ -220,9 +216,7 @@ export const PPTXExportModal = () => {
             row
             aria-labelledby={idDiagramFit}
             value={diagramFit}
-            onChange={(e) =>
-              setDiagramFit(e.target.value as DiagramFitOption)
-            }
+            onChange={(e) => setDiagramFit(e.target.value as DiagramFitOption)}
           >
             <FormControlLabel
               value="shrink"
@@ -286,9 +280,7 @@ export const PPTXExportModal = () => {
           row
           aria-labelledby={idBackground}
           value={background}
-          onChange={(e) =>
-            setBackground(e.target.value as BackgroundOption)
-          }
+          onChange={(e) => setBackground(e.target.value as BackgroundOption)}
         >
           <FormControlLabel value="white" control={<Radio />} label="White" />
           <FormControlLabel

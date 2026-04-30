@@ -60,7 +60,11 @@ describe("computeSlideViewport", () => {
 
   it("centres the diagram within the canvas", () => {
     const canvas = { width: 13.333, height: 7.5 }
-    const v = computeSlideViewport({ width: 480, height: 240 }, canvas, "shrink")
+    const v = computeSlideViewport(
+      { width: 480, height: 240 },
+      canvas,
+      "shrink"
+    )
     const drawnW = (480 / 96) * v.scale
     const drawnH = (240 / 96) * v.scale
     expect(v.offsetX).toBeCloseTo((canvas.width - drawnW) / 2, 6)

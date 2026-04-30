@@ -25,8 +25,7 @@ const NUMBER_RE = /[+-]?\d*\.?\d+(?:[eE][+-]?\d+)?/g
  */
 function tokenizeArcArgs(argStr: string): number[] {
   // Pattern: rx, ry, rot, flag, flag, x, y  (× any number of repetitions)
-  const tokenRe =
-    /([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)|([01])/g
+  const tokenRe = /([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)|([01])/g
   const nums: number[] = []
   let m: RegExpExecArray | null
   let i = 0 // 0..6 within the current 7-tuple
@@ -96,7 +95,9 @@ function arcToCubics(
   let rx = Math.abs(rxIn)
   let ry = Math.abs(ryIn)
   if (rx === 0 || ry === 0) {
-    return [{ c1: { x: x1, y: y1 }, c2: { x: x2, y: y2 }, pt: { x: x2, y: y2 } }]
+    return [
+      { c1: { x: x1, y: y1 }, c2: { x: x2, y: y2 }, pt: { x: x2, y: y2 } },
+    ]
   }
   const phi = (phiDeg * Math.PI) / 180
   const cosPhi = Math.cos(phi)
@@ -119,8 +120,7 @@ function arcToCubics(
   }
   const sign = largeArc === sweep ? -1 : 1
   let sq =
-    (rxSq * rySq - rxSq * y1pSq - rySq * x1pSq) /
-    (rxSq * y1pSq + rySq * x1pSq)
+    (rxSq * rySq - rxSq * y1pSq - rySq * x1pSq) / (rxSq * y1pSq + rySq * x1pSq)
   sq = sq < 0 ? 0 : sq
   const coef = sign * Math.sqrt(sq)
   const cxp = (coef * (rx * y1p)) / ry
@@ -277,7 +277,10 @@ export function parsePath(d: string): PathSegment[] {
         const [c, d2, e, f] = consume(4)
         const c1 =
           prevCmd === "C" || prevCmd === "S"
-            ? { x: 2 * cx - (prevCubicCtrl?.x ?? cx), y: 2 * cy - (prevCubicCtrl?.y ?? cy) }
+            ? {
+                x: 2 * cx - (prevCubicCtrl?.x ?? cx),
+                y: 2 * cy - (prevCubicCtrl?.y ?? cy),
+              }
             : { x: cx, y: cy }
         const c2x = rel ? cx + c : c
         const c2y = rel ? cy + d2 : d2
@@ -338,7 +341,17 @@ export function parsePath(d: string): PathSegment[] {
         const [rx, ry, rot, laFlag, swFlag, ex, ey] = consume(7)
         const x = rel ? cx + ex : ex
         const y = rel ? cy + ey : ey
-        const cubics = arcToCubics(cx, cy, rx, ry, rot, !!laFlag, !!swFlag, x, y)
+        const cubics = arcToCubics(
+          cx,
+          cy,
+          rx,
+          ry,
+          rot,
+          !!laFlag,
+          !!swFlag,
+          x,
+          y
+        )
         for (const cu of cubics) out.push({ type: "C", ...cu })
         cx = x
         cy = y

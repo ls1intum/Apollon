@@ -89,7 +89,8 @@ const pickValid = <T extends string>(
   candidate: unknown,
   fallback: T
 ): T =>
-  typeof candidate === "string" && (values as ReadonlyArray<string>).includes(candidate)
+  typeof candidate === "string" &&
+  (values as ReadonlyArray<string>).includes(candidate)
     ? (candidate as T)
     : fallback
 

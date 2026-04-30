@@ -105,14 +105,7 @@ function parseTransform(value: string | null): Mat {
       const ty = nums[1] || 0
       m = multiply(m, [1, 0, 0, 1, tx, ty])
     } else if (fn === "matrix" && nums.length === 6) {
-      m = multiply(m, [
-        nums[0],
-        nums[1],
-        nums[2],
-        nums[3],
-        nums[4],
-        nums[5],
-      ])
+      m = multiply(m, [nums[0], nums[1], nums[2], nums[3], nums[4], nums[5]])
     } else if (fn === "scale") {
       const sx = nums[0] || 1
       const sy = nums.length > 1 ? nums[1] : sx
@@ -170,13 +163,19 @@ const hexByte = (n: number) =>
 function resolveColor(raw: string | null | undefined): ResolvedColor | null {
   if (!raw) return null
   const v = raw.trim()
-  if (!v || v === "none" || v === "transparent" || v === "currentColor") return null
+  if (!v || v === "none" || v === "transparent" || v === "currentColor")
+    return null
   if (v.startsWith("#")) {
     const hex = v.slice(1)
     if (hex.length === 3) {
       return {
         hex: (
-          hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
+          hex[0] +
+          hex[0] +
+          hex[1] +
+          hex[1] +
+          hex[2] +
+          hex[2]
         ).toUpperCase(),
         alpha: 1,
       }
@@ -245,7 +244,10 @@ function dashType(
   value: string | null
 ): "dash" | "dashDot" | "sysDot" | undefined {
   if (!value || value === "none" || value === "0") return undefined
-  const tokens = value.split(/[\s,]+/).map(Number).filter(Number.isFinite)
+  const tokens = value
+    .split(/[\s,]+/)
+    .map(Number)
+    .filter(Number.isFinite)
   if (tokens.length === 0) return undefined
   const sum = tokens.reduce((a, b) => a + b, 0)
   if (sum < 6) return "sysDot"
@@ -344,10 +346,7 @@ function fillProps(p: PaintStyle): pptxgen.ShapeFillProps {
   }
 }
 
-function lineProps(
-  ctx: EmitContext,
-  p: PaintStyle
-): pptxgen.ShapeLineProps {
+function lineProps(ctx: EmitContext, p: PaintStyle): pptxgen.ShapeLineProps {
   if (!p.stroke || p.strokeWidth <= 0) return { type: "none" }
   const a = p.opacity * p.strokeOpacity
   if (a <= 0) return { type: "none" }
@@ -395,7 +394,13 @@ type EmitContext = {
   ownerName: string | null
   /** Font face actually written to the PPTX. */
   exportFontFace: string
-  measureText: (text: string, fontSize: number, bold: boolean, italic: boolean, fontFace: string) => number
+  measureText: (
+    text: string,
+    fontSize: number,
+    bold: boolean,
+    italic: boolean,
+    fontFace: string
+  ) => number
 }
 
 const toSlideX = (ctx: EmitContext, x: number): number =>
@@ -450,7 +455,10 @@ const APOLLON_GENERIC_FONTS = new Set([
  * Apollon system stack ("Inter", "system-ui", "sans-serif" etc.) we override
  * with the chosen export font; if it's an explicit family we respect it.
  */
-function resolveExportFontFace(svgFontFace: string, exportFace: string): string {
+function resolveExportFontFace(
+  svgFontFace: string,
+  exportFace: string
+): string {
   const normalized = svgFontFace.trim().toLowerCase()
   return APOLLON_GENERIC_FONTS.has(normalized) ? exportFace : svgFontFace
 }
@@ -492,7 +500,8 @@ function emitRect(
   const isRound = Math.max(rx, ry) > 0
   const radius = Math.max(rx, ry)
   const minSide = Math.min(w, h)
-  const radiusFrac = isRound && minSide > 0 ? Math.min(0.5, radius / minSide) : 0
+  const radiusFrac =
+    isRound && minSide > 0 ? Math.min(0.5, radius / minSide) : 0
 
   const props: pptxgen.ShapeProps = {
     x: toSlideX(ctx, topLeftSvgX),
@@ -619,12 +628,7 @@ function emitPolygonOrPolyline(
   )
 }
 
-function emitPath(
-  ctx: EmitContext,
-  el: Element,
-  ctm: Mat,
-  paint: PaintStyle
-) {
+function emitPath(ctx: EmitContext, el: Element, ctm: Mat, paint: PaintStyle) {
   const d = el.getAttribute("d")
   if (!d) return
   const localSegs = parsePath(d)
@@ -690,9 +694,7 @@ function emitPathSegments(
         y: toSlideSize(ctx, s.pt.y - by),
       })
     } else if (s.type === "C") {
-      if (
-        !isFinitePoint(s.pt.x, s.pt.y, s.c1.x, s.c1.y, s.c2.x, s.c2.y)
-      )
+      if (!isFinitePoint(s.pt.x, s.pt.y, s.c1.x, s.c1.y, s.c2.x, s.c2.y))
         continue
       points.push({
         x: toSlideSize(ctx, s.pt.x - bx),
@@ -778,7 +780,9 @@ function readTextStyle(
     ? fwRaw === "bold" || fwRaw === "bolder" || (Number(fwRaw) || 0) >= 600
     : inherit.bold
   const fsRaw = getAttr(el, "font-style", style)
-  const italic = fsRaw ? fsRaw === "italic" || fsRaw === "oblique" : inherit.italic
+  const italic = fsRaw
+    ? fsRaw === "italic" || fsRaw === "oblique"
+    : inherit.italic
   const tdRaw = getAttr(el, "text-decoration", style)
   const underline = tdRaw ? /underline/.test(tdRaw) : inherit.underline
   const fill = getAttr(el, "fill", style)
@@ -788,7 +792,9 @@ function readTextStyle(
       : fill === "none" || fill === "transparent"
         ? inherit.color
         : (resolveColor(fill)?.hex ?? inherit.color)
-  const taRaw = getAttr(el, "text-anchor", style) as TextStyle["textAnchor"] | null
+  const taRaw = getAttr(el, "text-anchor", style) as
+    | TextStyle["textAnchor"]
+    | null
   const textAnchor = taRaw ?? inherit.textAnchor
 
   return {
@@ -891,8 +897,7 @@ function buildTextLines(
     const dx = dxAttr !== null ? parseFloat(dxAttr) || 0 : 0
     // A tspan starts a new line if it sets x/y or has a non-zero dy. A pure
     // dx is an in-line cursor advance, NOT a line break.
-    const startsNewLine =
-      xAttr !== null || yAttr !== null || dy !== 0
+    const startsNewLine = xAttr !== null || yAttr !== null || dy !== 0
     if (startsNewLine) {
       const newX = xAttr !== null ? parseFloat(xAttr) : cursorX + dx
       const newY = yAttr !== null ? parseFloat(yAttr) : cursorY + dy
@@ -932,7 +937,10 @@ function emitTextLines(
     )
     let totalWidthPx = 0
     for (const r of line.runs) {
-      const runFace = resolveExportFontFace(r.style.fontFace, ctx.exportFontFace)
+      const runFace = resolveExportFontFace(
+        r.style.fontFace,
+        ctx.exportFontFace
+      )
       totalWidthPx += ctx.measureText(
         r.text,
         r.style.fontSize,
@@ -1064,8 +1072,10 @@ function walk(
   }
 
   if (tag === "rect") return emitRect(ctx, el, localCtm, paint, elStyle)
-  if (tag === "circle") return emitEllipse(ctx, el, localCtm, paint, elStyle, true)
-  if (tag === "ellipse") return emitEllipse(ctx, el, localCtm, paint, elStyle, false)
+  if (tag === "circle")
+    return emitEllipse(ctx, el, localCtm, paint, elStyle, true)
+  if (tag === "ellipse")
+    return emitEllipse(ctx, el, localCtm, paint, elStyle, false)
   if (tag === "line") return emitLine(ctx, el, localCtm, paint, elStyle)
   if (tag === "polygon")
     return emitPolygonOrPolyline(ctx, el, localCtm, paint, true)
@@ -1230,4 +1240,3 @@ export function renderSvgToSlide(
     }
   })
 }
-
