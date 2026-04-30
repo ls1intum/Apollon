@@ -1,14 +1,14 @@
 /**
- * User-controllable settings for the PPTX export dialog.
+ * Settings surfaced by the PPTX export dialog. Each option is one PowerPoint
+ * tweaks the user can't trivially redo post-export and that has more than one
+ * sensible default.
  *
- * Design goal: as few fields as actually pull their weight. Anything that has
- * a sensible default for 95% of users, or that PowerPoint itself can change
- * post-export, lives outside this surface.
- *
- * Persisted to localStorage so the dialog remembers the user's last choices.
- * Filename is intentionally NOT persisted — it always defaults to the active
- * diagram's title at the moment the dialog opens.
+ * Persisted to localStorage so the dialog re-opens with the user's last
+ * choices. The filename is intentionally NOT persisted — it always defaults to
+ * the active diagram's title at the moment the dialog opens.
  */
+
+import { log } from "@/logger"
 
 export type SlideSizeOption = "fit" | "widescreen" | "standard"
 
@@ -60,6 +60,39 @@ export const DEFAULT_PPTX_PERSISTED_SETTINGS: PptxPersistedSettings = {
   background: "white",
 }
 
+const SLIDE_SIZE_VALUES: ReadonlyArray<SlideSizeOption> = [
+  "fit",
+  "widescreen",
+  "standard",
+]
+const DIAGRAM_FIT_VALUES: ReadonlyArray<DiagramFitOption> = [
+  "shrink",
+  "fill",
+  "actual",
+]
+const FONT_FACE_VALUES: ReadonlyArray<FontFaceOption> = [
+  "auto",
+  "Inter",
+  "SF Pro Text",
+  "Calibri",
+  "Arial",
+  "Helvetica",
+  "Aptos",
+]
+const BACKGROUND_VALUES: ReadonlyArray<BackgroundOption> = [
+  "white",
+  "transparent",
+]
+
+const pickValid = <T extends string>(
+  values: ReadonlyArray<T>,
+  candidate: unknown,
+  fallback: T
+): T =>
+  typeof candidate === "string" && (values as ReadonlyArray<string>).includes(candidate)
+    ? (candidate as T)
+    : fallback
+
 const STORAGE_KEY = "apollon.pptxExportSettings.v1"
 
 export function loadPptxSettings(): PptxPersistedSettings {
@@ -69,9 +102,32 @@ export function loadPptxSettings(): PptxPersistedSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return DEFAULT_PPTX_PERSISTED_SETTINGS
-    const parsed = JSON.parse(raw) as Partial<PptxPersistedSettings>
-    return { ...DEFAULT_PPTX_PERSISTED_SETTINGS, ...parsed }
-  } catch {
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    return {
+      slideSize: pickValid(
+        SLIDE_SIZE_VALUES,
+        parsed.slideSize,
+        DEFAULT_PPTX_PERSISTED_SETTINGS.slideSize
+      ),
+      diagramFit: pickValid(
+        DIAGRAM_FIT_VALUES,
+        parsed.diagramFit,
+        DEFAULT_PPTX_PERSISTED_SETTINGS.diagramFit
+      ),
+      fontFace: pickValid(
+        FONT_FACE_VALUES,
+        parsed.fontFace,
+        DEFAULT_PPTX_PERSISTED_SETTINGS.fontFace
+      ),
+      background: pickValid(
+        BACKGROUND_VALUES,
+        parsed.background,
+        DEFAULT_PPTX_PERSISTED_SETTINGS.background
+      ),
+    }
+  } catch (err) {
+    // Corrupt JSON, SecurityError in private mode, etc. Defaults are safe.
+    log.warn("Failed to load PPTX settings; using defaults", err)
     return DEFAULT_PPTX_PERSISTED_SETTINGS
   }
 }
@@ -85,9 +141,12 @@ export function savePptxSettings(settings: PptxPersistedSettings): void {
   }
 }
 
-/** Slide-canvas dimensions in inches for fixed-size options. */
+/**
+ * Slide-canvas dimensions in inches for fixed-size options. Numbers from the
+ * PowerPoint defaults: 16:9 widescreen = 13.333″ × 7.5″, 4:3 standard = 10″ × 7.5″.
+ */
 export const SLIDE_DIMENSIONS_IN: Record<
-  Exclude<SlideSizeOption, "fit">,
+  "widescreen" | "standard",
   { width: number; height: number }
 > = {
   widescreen: { width: 13.333, height: 7.5 },

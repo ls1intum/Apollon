@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test tests/e2e/",
     "test:e2e:ui": "playwright test tests/e2e/ --ui",
     "test:visual": "playwright test tests/visual/",
@@ -25,6 +27,7 @@
     "pptxgenjs": "4.0.1",
     "react-markdown": "10.1.0",
     "react-router": "7.12.0",
+    "react-toastify": "11.0.5",
     "remark-gfm": "4.0.1",
     "tailwindcss": "4.0.17",
     "zustand": "5.0.3"
@@ -32,16 +35,19 @@
   "devDependencies": {
     "@eslint/js": "9.17.0",
     "@playwright/test": "1.59.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
     "@types/react": "18.0.0",
     "@types/react-dom": "18.0.0",
     "@vitejs/plugin-react": "4.3.4",
     "eslint": "9.17.0",
     "eslint-plugin-react": "7.37.2",
     "globals": "15.13.0",
-    "react-toastify": "11.0.5",
+    "jsdom": "28.1.0",
     "typescript": "5.7.2",
     "typescript-eslint": "8.18.1",
     "vite": "6.4.1",
-    "vite-tsconfig-paths": "5.1.4"
+    "vite-tsconfig-paths": "5.1.4",
+    "vitest": "4.1.2"
   }
 }

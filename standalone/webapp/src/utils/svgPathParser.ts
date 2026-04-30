@@ -15,7 +15,41 @@ export type PathSegment =
   | { type: "C"; c1: Pt; c2: Pt; pt: Pt }
   | { type: "Z" }
 
-const NUMBER_RE = /-?\d*\.?\d+(?:[eE][+-]?\d+)?/g
+const NUMBER_RE = /[+-]?\d*\.?\d+(?:[eE][+-]?\d+)?/g
+
+/**
+ * SVG-spec arc flag: a single `0` or `1` that may NOT have a separator from
+ * the surrounding numbers. So `A 5 5 0 11 10 10` means `largeArc=1, sweep=1,
+ * x=10, y=10` — the canonical greedy number tokenizer would mis-read `11` as
+ * one number. We tokenize arcs separately to honor the spec.
+ */
+function tokenizeArcArgs(argStr: string): number[] {
+  // Pattern: rx, ry, rot, flag, flag, x, y  (× any number of repetitions)
+  const tokenRe =
+    /([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)|([01])/g
+  const nums: number[] = []
+  let m: RegExpExecArray | null
+  let i = 0 // 0..6 within the current 7-tuple
+  while ((m = tokenRe.exec(argStr)) !== null) {
+    if (i === 3 || i === 4) {
+      // Force flag interpretation: read a single digit only.
+      const start = m.index
+      const ch = argStr[start]
+      if (ch === "0" || ch === "1") {
+        nums.push(ch === "1" ? 1 : 0)
+        // Reset regex past the single digit.
+        tokenRe.lastIndex = start + 1
+      } else {
+        // Defensive: if no flag digit found, fall back to whatever was matched.
+        nums.push(parseFloat(m[0]))
+      }
+    } else {
+      nums.push(parseFloat(m[0]))
+    }
+    i = (i + 1) % 7
+  }
+  return nums
+}
 
 export function tokenizePath(d: string): Array<{
   cmd: string
@@ -27,11 +61,16 @@ export function tokenizePath(d: string): Array<{
   while ((m = cmdRe.exec(d)) !== null) {
     const cmd = m[1]
     const argStr = m[2]
-    const nums: number[] = []
-    let nm: RegExpExecArray | null
-    NUMBER_RE.lastIndex = 0
-    while ((nm = NUMBER_RE.exec(argStr)) !== null) {
-      nums.push(parseFloat(nm[0]))
+    let nums: number[]
+    if (cmd === "A" || cmd === "a") {
+      nums = tokenizeArcArgs(argStr)
+    } else {
+      nums = []
+      let nm: RegExpExecArray | null
+      NUMBER_RE.lastIndex = 0
+      while ((nm = NUMBER_RE.exec(argStr)) !== null) {
+        nums.push(parseFloat(nm[0]))
+      }
     }
     tokens.push({ cmd, args: nums })
   }
@@ -78,7 +117,7 @@ function arcToCubics(
     rxSq = rx * rx
     rySq = ry * ry
   }
-  let sign = largeArc === sweep ? -1 : 1
+  const sign = largeArc === sweep ? -1 : 1
   let sq =
     (rxSq * rySq - rxSq * y1pSq - rySq * x1pSq) /
     (rxSq * y1pSq + rySq * x1pSq)
@@ -110,19 +149,16 @@ function arcToCubics(
   const delta = dTheta / segments
   const t =
     ((8 / 3) * Math.sin(delta / 4) * Math.sin(delta / 4)) / Math.sin(delta / 2)
-  sign = 1 // unused
   const result: Array<{ c1: Pt; c2: Pt; pt: Pt }> = []
   let theta = theta1
   let curX = x1
   let curY = y1
   for (let i = 0; i < segments; i++) {
-    const cosTheta1 = Math.cos(theta)
     const sinTheta1 = Math.sin(theta)
+    const cosTheta1 = Math.cos(theta)
     const theta2 = theta + delta
     const cosTheta2 = Math.cos(theta2)
     const sinTheta2 = Math.sin(theta2)
-    const e1x = cx + rx * cosTheta1 * cosPhi - ry * sinTheta1 * sinPhi
-    const e1y = cy + rx * cosTheta1 * sinPhi + ry * sinTheta1 * cosPhi
     const e2x = cx + rx * cosTheta2 * cosPhi - ry * sinTheta2 * sinPhi
     const e2y = cy + rx * cosTheta2 * sinPhi + ry * sinTheta2 * cosPhi
     const c1x = curX + t * (-rx * sinTheta1 * cosPhi - ry * cosTheta1 * sinPhi)
@@ -134,8 +170,6 @@ function arcToCubics(
       c2: { x: c2x, y: c2y },
       pt: { x: e2x, y: e2y },
     })
-    void e1x
-    void e1y
     curX = e2x
     curY = e2y
     theta = theta2

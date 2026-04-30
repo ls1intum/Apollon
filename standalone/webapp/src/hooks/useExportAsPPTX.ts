@@ -1,17 +1,16 @@
 import { useEditorContext } from "@/contexts"
-import { log } from "@/logger"
-import { useFileDownload } from "./useFileDownload"
-import { computeSlideViewport, renderSvgToSlide } from "@/utils/svgToPptx"
 import {
   PptxExportSettings,
   SLIDE_DIMENSIONS_IN,
 } from "@/lib/pptxExportSettings"
+import { computeSlideViewport, renderSvgToSlide } from "@/utils/svgToPptx"
+import { useFileDownload } from "./useFileDownload"
 
 /**
- * Trigger a PPTX export. The hook itself takes no parameters; the returned
- * function accepts the user-chosen settings (filename, slide size, font,
- * background) at call time. Smart defaults are applied for any setting the
- * caller omits — useful for programmatic exports that bypass the dialog.
+ * Trigger a PPTX export. The returned function accepts the user-chosen
+ * settings at call time (the hook itself is parameter-free). Errors are
+ * propagated so the caller can render its own UI (the dialog toasts on
+ * failure); programmatic callers should `try/catch` the returned promise.
  */
 export const useExportAsPPTX = () => {
   const { editor } = useEditorContext()
@@ -19,17 +18,12 @@ export const useExportAsPPTX = () => {
 
   const exportAsPPTX = async (
     settings: Partial<PptxExportSettings> = {}
-  ) => {
+  ): Promise<void> => {
     if (!editor) {
-      log.error("Editor context is not available")
-      return
+      throw new Error("Editor context is not available")
     }
 
     const apollonSVG = await editor.exportAsSVG({ svgMode: "compat" })
-    if (!apollonSVG) {
-      log.error("Failed to export SVG for PPTX conversion")
-      return
-    }
 
     const slideSize = settings.slideSize ?? "fit"
     const diagramFit = settings.diagramFit ?? "shrink"

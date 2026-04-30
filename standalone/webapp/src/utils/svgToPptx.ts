@@ -22,9 +22,27 @@
  */
 import type pptxgen from "pptxgenjs"
 import { parsePath, pathBBox, type PathSegment, type Pt } from "./svgPathParser"
+import type { DiagramFitOption } from "@/lib/pptxExportSettings"
 
 const PX_PER_INCH = 96
 const PT_PER_PX = 0.75
+
+/**
+ * Vertical compensation for the SVG-baseline → PPTX-text-box-top mismatch.
+ * Empirically tuned for Apollon's 11–18 px label sizes (commits 4f7755a1,
+ * 97a939a8, de2838df, 4f7755a1 walked it from 7 → 3.5 → 4 → 4.5 px).
+ */
+const TEXT_BASELINE_OFFSET_PX = 4.5
+/** Approximate cap-height fraction for the sans-serif stack we emit. */
+const TEXT_CAP_HEIGHT_RATIO = 0.82
+/** Slack added to canvas-measured run width so glyph edges don't clip. */
+const TEXT_BOX_HORIZONTAL_SLACK_FACTOR = 0.4
+/** Lower bound on text-box width (in em) so very short runs still render. */
+const TEXT_BOX_MIN_WIDTH_FACTOR = 1.5
+/** Text-box height as a fraction of font-size (line-box rough estimate). */
+const TEXT_BOX_HEIGHT_FACTOR = 1.35
+/** Truncation point for animation-pane shape names. */
+const SHAPE_NAME_LABEL_LIMIT = 40
 
 type Mat = readonly [number, number, number, number, number, number]
 const IDENTITY: Mat = [1, 0, 0, 1, 0, 0]
@@ -87,7 +105,14 @@ function parseTransform(value: string | null): Mat {
       const ty = nums[1] || 0
       m = multiply(m, [1, 0, 0, 1, tx, ty])
     } else if (fn === "matrix" && nums.length === 6) {
-      m = multiply(m, nums as unknown as Mat)
+      m = multiply(m, [
+        nums[0],
+        nums[1],
+        nums[2],
+        nums[3],
+        nums[4],
+        nums[5],
+      ])
     } else if (fn === "scale") {
       const sx = nums[0] || 1
       const sy = nums.length > 1 ? nums[1] : sx
@@ -111,45 +136,78 @@ function parseTransform(value: string | null): Mat {
 }
 
 /**
- * Resolve a color string ("#rgb", "#rrggbb", "rgb(…)", or named) to a 6-char
- * uppercase hex. Returns null for "none"/"transparent" / unrecognized.
+ * Subset of CSS named colors that Apollon's compat-mode export can produce
+ * after CSS-variable resolution. Hoisted to module scope to avoid per-call
+ * allocation.
  */
-function resolveColor(raw: string | null | undefined): string | null {
+const NAMED_COLORS: Record<string, string> = {
+  black: "000000",
+  white: "FFFFFF",
+  red: "FF0000",
+  green: "008000",
+  blue: "0000FF",
+  gray: "808080",
+  grey: "808080",
+}
+
+type ResolvedColor = { hex: string; alpha: number }
+
+const hexByte = (n: number) =>
+  Math.max(0, Math.min(255, Math.round(n)))
+    .toString(16)
+    .padStart(2, "0")
+
+/**
+ * Resolve a color string ("#rgb", "#rrggbb", "#rrggbbaa", "rgb(…)", "rgba(…)",
+ * or named) into a 6-char uppercase hex plus an alpha channel in [0, 1].
+ *
+ * Returns null for "none" / "transparent" / unrecognized so callers can decide
+ * whether to skip emission. `currentColor` returns null too — Apollon's compat
+ * mode resolves these upstream, so seeing one in the export is a contract
+ * violation worth letting bubble up as "missing fill" rather than silently
+ * substituting.
+ */
+function resolveColor(raw: string | null | undefined): ResolvedColor | null {
   if (!raw) return null
   const v = raw.trim()
   if (!v || v === "none" || v === "transparent" || v === "currentColor") return null
   if (v.startsWith("#")) {
     const hex = v.slice(1)
     if (hex.length === 3) {
-      return (hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]).toUpperCase()
+      return {
+        hex: (
+          hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
+        ).toUpperCase(),
+        alpha: 1,
+      }
     }
-    if (hex.length === 6) return hex.toUpperCase()
-    if (hex.length === 8) return hex.slice(0, 6).toUpperCase()
+    if (hex.length === 6) return { hex: hex.toUpperCase(), alpha: 1 }
+    if (hex.length === 8) {
+      const alpha = parseInt(hex.slice(6, 8), 16) / 255
+      return {
+        hex: hex.slice(0, 6).toUpperCase(),
+        alpha: Number.isFinite(alpha) ? alpha : 1,
+      }
+    }
+    return null
   }
   if (v.startsWith("rgb")) {
     const nums = v
       .replace(/[^\d.,-]/g, "")
       .split(",")
       .map(Number)
-    if (nums.length >= 3) {
-      const [r, g, b] = nums
-      const h = (n: number) =>
-        Math.max(0, Math.min(255, Math.round(n)))
-          .toString(16)
-          .padStart(2, "0")
-      return (h(r) + h(g) + h(b)).toUpperCase()
+    if (nums.length >= 3 && nums.slice(0, 3).every(Number.isFinite)) {
+      const [r, g, b, a] = nums
+      const alpha = nums.length >= 4 && Number.isFinite(a) ? a : 1
+      return {
+        hex: (hexByte(r) + hexByte(g) + hexByte(b)).toUpperCase(),
+        alpha,
+      }
     }
+    return null
   }
-  const named: Record<string, string> = {
-    black: "000000",
-    white: "FFFFFF",
-    red: "FF0000",
-    green: "008000",
-    blue: "0000FF",
-    gray: "808080",
-    grey: "808080",
-  }
-  return named[v.toLowerCase()] ?? null
+  const named = NAMED_COLORS[v.toLowerCase()]
+  return named ? { hex: named, alpha: 1 } : null
 }
 
 function styleToObject(s: string | null): Record<string, string> {
@@ -178,16 +236,14 @@ function getNum(
   return Number.isFinite(n) ? n : fallback
 }
 
-function dashType(value: string | null):
-  | "solid"
-  | "dash"
-  | "dashDot"
-  | "lgDash"
-  | "lgDashDot"
-  | "lgDashDotDot"
-  | "sysDash"
-  | "sysDot"
-  | undefined {
+/**
+ * Map an SVG `stroke-dasharray` to one of the OOXML preset dash kinds. Lossy
+ * — pptxgenjs doesn't expose custom dash arrays — but covers the dotted /
+ * short-dash / long-dash families Apollon emits.
+ */
+function dashType(
+  value: string | null
+): "dash" | "dashDot" | "sysDot" | undefined {
   if (!value || value === "none" || value === "0") return undefined
   const tokens = value.split(/[\s,]+/).map(Number).filter(Number.isFinite)
   if (tokens.length === 0) return undefined
@@ -202,10 +258,8 @@ function dashType(value: string | null):
 /* ------------------------------------------------------------------ */
 
 type PaintStyle = {
-  fill: string | null // hex without # ("UNSET" = inherit)
-  fillRaw: string | null // raw value for "none" tracking
+  fill: string | null
   stroke: string | null
-  strokeRaw: string | null
   strokeWidth: number
   strokeDash: string | null
   opacity: number
@@ -214,15 +268,26 @@ type PaintStyle = {
 }
 
 const DEFAULT_PAINT: PaintStyle = {
-  fill: "000000", // SVG spec default for fill is black
-  fillRaw: "#000000",
+  // SVG spec default for fill is black; default stroke is none.
+  fill: "000000",
   stroke: null,
-  strokeRaw: null,
   strokeWidth: 1,
   strokeDash: null,
   opacity: 1,
   fillOpacity: 1,
   strokeOpacity: 1,
+}
+
+/**
+ * Parse a numeric SVG attribute, falling back to `parent` when the value is
+ * absent OR malformed (NaN). Crucially treats `0` as a valid input: a
+ * `||`-style fallback would reinterpret legal `stroke-width="0"` or
+ * `opacity="0"` as "inherit", which is wrong per SVG spec.
+ */
+const parseNumOrInherit = (raw: string | null, parent: number): number => {
+  if (raw === null) return parent
+  const n = parseFloat(raw)
+  return Number.isFinite(n) ? n : parent
 }
 
 function inheritPaint(
@@ -238,58 +303,60 @@ function inheritPaint(
   const foRaw = getAttr(el, "fill-opacity", style)
   const soRaw = getAttr(el, "stroke-opacity", style)
 
+  const fillResolved = fillRaw === null ? null : resolveColor(fillRaw)
+  const strokeResolved = strokeRaw === null ? null : resolveColor(strokeRaw)
+
   return {
     fill:
       fillRaw === null
         ? parent.fill
         : fillRaw === "none" || fillRaw === "transparent"
           ? null
-          : (resolveColor(fillRaw) ?? parent.fill),
-    fillRaw: fillRaw ?? parent.fillRaw,
+          : (fillResolved?.hex ?? parent.fill),
     stroke:
       strokeRaw === null
         ? parent.stroke
         : strokeRaw === "none" || strokeRaw === "transparent"
           ? null
-          : (resolveColor(strokeRaw) ?? parent.stroke),
-    strokeRaw: strokeRaw ?? parent.strokeRaw,
-    strokeWidth:
-      swRaw === null ? parent.strokeWidth : parseFloat(swRaw) || parent.strokeWidth,
+          : (strokeResolved?.hex ?? parent.stroke),
+    strokeWidth: parseNumOrInherit(swRaw, parent.strokeWidth),
     strokeDash: sdRaw ?? parent.strokeDash,
-    opacity: opRaw === null ? parent.opacity : parseFloat(opRaw) || 0,
+    opacity: parseNumOrInherit(opRaw, parent.opacity),
+    // Multiply any rgba/#rrggbbaa alpha into the corresponding paint-opacity
+    // so callers see one channel; SVG spec lets fill-opacity and the color's
+    // own alpha both contribute, and PPTX has only one transparency knob.
     fillOpacity:
-      foRaw === null ? parent.fillOpacity : parseFloat(foRaw) || 0,
+      parseNumOrInherit(foRaw, parent.fillOpacity) * (fillResolved?.alpha ?? 1),
     strokeOpacity:
-      soRaw === null ? parent.strokeOpacity : parseFloat(soRaw) || 0,
+      parseNumOrInherit(soRaw, parent.strokeOpacity) *
+      (strokeResolved?.alpha ?? 1),
   }
 }
 
-function fillProps(p: PaintStyle): pptxgen.ShapeFillProps | { type: "none" } {
+function fillProps(p: PaintStyle): pptxgen.ShapeFillProps {
   if (!p.fill) return { type: "none" }
   const a = p.opacity * p.fillOpacity
   if (a <= 0) return { type: "none" }
-  const transparency = Math.round((1 - a) * 100)
-  return { type: "solid", color: p.fill, transparency }
+  return {
+    type: "solid",
+    color: p.fill,
+    transparency: Math.round((1 - a) * 100),
+  }
 }
 
 function lineProps(
   ctx: EmitContext,
-  p: PaintStyle,
-  override?: { width?: number; dash?: string | null }
-):
-  | (pptxgen.ShapeLineProps & { type: "solid" })
-  | { type: "none" } {
-  const stroke = p.stroke
-  if (!stroke) return { type: "none" }
+  p: PaintStyle
+): pptxgen.ShapeLineProps {
+  if (!p.stroke || p.strokeWidth <= 0) return { type: "none" }
   const a = p.opacity * p.strokeOpacity
   if (a <= 0) return { type: "none" }
-  const w = override?.width ?? p.strokeWidth
   return {
     type: "solid",
-    color: stroke,
-    width: toStrokePt(ctx, w),
+    color: p.stroke,
+    width: toStrokePt(ctx, p.strokeWidth),
     transparency: Math.round((1 - a) * 100),
-    dashType: dashType(override?.dash ?? p.strokeDash),
+    dashType: dashType(p.strokeDash),
   }
 }
 
@@ -305,7 +372,7 @@ function lineProps(
  * For fixed slide sizes, scale shrinks the diagram so it fits inside the
  * canvas (no enlargement past 1× in/px), and offset centres it.
  */
-export type SlideViewport = {
+type SlideViewport = {
   /** Slide width in inches. */
   slideWidth: number
   /** Slide height in inches. */
@@ -363,32 +430,35 @@ function detectExportFontFace(override?: string): string {
 }
 
 /**
+ * Apollon-default font-family tokens that should be rewritten to whatever the
+ * user picked at export time; explicit non-generic names are preserved.
+ */
+const APOLLON_GENERIC_FONTS = new Set([
+  "inter",
+  "system-ui",
+  "-apple-system",
+  "blinkmacsystemfont",
+  "avenir",
+  "helvetica",
+  "arial",
+  "sans-serif",
+  "",
+])
+
+/**
  * Decide what font to emit for a given SVG run. If the SVG declared the
  * Apollon system stack ("Inter", "system-ui", "sans-serif" etc.) we override
  * with the chosen export font; if it's an explicit family we respect it.
  */
 function resolveExportFontFace(svgFontFace: string, exportFace: string): string {
   const normalized = svgFontFace.trim().toLowerCase()
-  const generics = new Set([
-    "inter",
-    "system-ui",
-    "-apple-system",
-    "blinkmacsystemfont",
-    "avenir",
-    "helvetica",
-    "arial",
-    "sans-serif",
-    "",
-  ])
-  return generics.has(normalized) ? exportFace : svgFontFace
+  return APOLLON_GENERIC_FONTS.has(normalized) ? exportFace : svgFontFace
 }
 
-function nextName(ctx: EmitContext, kind: string, label?: string): string {
-  const owner = ctx.ownerName ? `${ctx.ownerName} · ` : ""
-  const tail = label ? ` "${label.slice(0, 40)}"` : ` ${++ctx.counter.n}`
-  if (!label) return `${owner}${kind}${tail}`
+function nextName(ctx: EmitContext, kind: string): string {
   ctx.counter.n++
-  return `${owner}${kind}${tail}`
+  const owner = ctx.ownerName ? `${ctx.ownerName} · ` : ""
+  return `${owner}${kind} ${ctx.counter.n}`
 }
 
 /* ------------------------------------------------------------------ */
@@ -521,10 +591,8 @@ function emitPolygonOrPolyline(
   el: Element,
   ctm: Mat,
   paint: PaintStyle,
-  style: Record<string, string>,
   closed: boolean
 ) {
-  void style
   const pointsAttr = el.getAttribute("points") ?? ""
   const nums = pointsAttr
     .split(/[\s,]+/)
@@ -580,11 +648,19 @@ function emitPath(
   )
 }
 
+type PathKind = "Path" | "Polygon" | "Polyline" | "Arrowhead"
+type PptxPoints = NonNullable<pptxgen.ShapeProps["points"]>
+// pptxgenjs accepts a string here at runtime even though the typed enum
+// (still) omits "custGeom" in v4.0.1; cast once, document why.
+const CUST_GEOM = "custGeom" as unknown as pptxgen.ShapeType
+
+const isFinitePoint = (...vs: number[]) => vs.every(Number.isFinite)
+
 function emitPathSegments(
   ctx: EmitContext,
   segs: PathSegment[],
   paint: PaintStyle,
-  kind: string
+  kind: PathKind
 ) {
   if (segs.length === 0) return
   const bbox = pathBBox(segs)
@@ -596,23 +672,29 @@ function emitPathSegments(
   const bw = Math.max(bbox.width + pad * 2, 0.001)
   const bh = Math.max(bbox.height + pad * 2, 0.001)
 
-  const points: pptxgen.ShapeProps["points"] = []
+  const points: PptxPoints = []
   let started = false
   for (const s of segs) {
     if (s.type === "M") {
-      points!.push({
+      if (!isFinitePoint(s.pt.x, s.pt.y)) continue
+      points.push({
         x: toSlideSize(ctx, s.pt.x - bx),
         y: toSlideSize(ctx, s.pt.y - by),
         moveTo: started,
       })
       started = true
     } else if (s.type === "L") {
-      points!.push({
+      if (!isFinitePoint(s.pt.x, s.pt.y)) continue
+      points.push({
         x: toSlideSize(ctx, s.pt.x - bx),
         y: toSlideSize(ctx, s.pt.y - by),
       })
     } else if (s.type === "C") {
-      points!.push({
+      if (
+        !isFinitePoint(s.pt.x, s.pt.y, s.c1.x, s.c1.y, s.c2.x, s.c2.y)
+      )
+        continue
+      points.push({
         x: toSlideSize(ctx, s.pt.x - bx),
         y: toSlideSize(ctx, s.pt.y - by),
         curve: {
@@ -624,11 +706,12 @@ function emitPathSegments(
         },
       })
     } else if (s.type === "Z") {
-      points!.push({ close: true })
+      points.push({ close: true })
     }
   }
+  if (points.length === 0) return
 
-  ctx.slide.addShape("custGeom" as unknown as pptxgen.ShapeType, {
+  ctx.slide.addShape(CUST_GEOM, {
     x: toSlideX(ctx, bx),
     y: toSlideY(ctx, by),
     w: toSlideSize(ctx, bw),
@@ -637,7 +720,7 @@ function emitPathSegments(
     fill: fillProps(paint),
     line: lineProps(ctx, paint),
     objectName: nextName(ctx, kind),
-  } as pptxgen.ShapeProps)
+  })
 }
 
 /* ------------------------------------------------------------------ */
@@ -704,7 +787,7 @@ function readTextStyle(
       ? inherit.color
       : fill === "none" || fill === "transparent"
         ? inherit.color
-        : (resolveColor(fill) ?? inherit.color)
+        : (resolveColor(fill)?.hex ?? inherit.color)
   const taRaw = getAttr(el, "text-anchor", style) as TextStyle["textAnchor"] | null
   const textAnchor = taRaw ?? inherit.textAnchor
 
@@ -755,10 +838,8 @@ type TextLine = {
 function buildTextLines(
   textEl: Element,
   ctm: Mat,
-  parentStyle: Record<string, string>,
   inheritStyle: TextStyle
 ): TextLine[] {
-  void parentStyle
   const textStyleSelf = readTextStyle(
     textEl,
     styleToObject(textEl.getAttribute("style")),
@@ -806,20 +887,23 @@ function buildTextLines(
     const yAttr = el.getAttribute("y")
     const dxAttr = el.getAttribute("dx")
     const dyAttr = el.getAttribute("dy")
+    const dy = dyAttr !== null ? parseFloat(dyAttr) || 0 : 0
+    const dx = dxAttr !== null ? parseFloat(dxAttr) || 0 : 0
+    // A tspan starts a new line if it sets x/y or has a non-zero dy. A pure
+    // dx is an in-line cursor advance, NOT a line break.
     const startsNewLine =
-      xAttr !== null || yAttr !== null || (dyAttr !== null && parseFloat(dyAttr) !== 0)
+      xAttr !== null || yAttr !== null || dy !== 0
     if (startsNewLine) {
-      const newX =
-        xAttr !== null
-          ? parseFloat(xAttr)
-          : cursorX + (parseFloat(dxAttr || "0") || 0)
-      const newY =
-        yAttr !== null
-          ? parseFloat(yAttr)
-          : cursorY + (parseFloat(dyAttr || "0") || 0)
+      const newX = xAttr !== null ? parseFloat(xAttr) : cursorX + dx
+      const newY = yAttr !== null ? parseFloat(yAttr) : cursorY + dy
       cursorX = newX
       cursorY = newY
       newLineAt(newX, newY, tspanStyle.textAnchor)
+    } else if (dx !== 0) {
+      // Approximate the dx by padding the next run with leading spaces — we
+      // can't truly inject horizontal whitespace inside an addText() run set,
+      // but PPTX preserves leading space.
+      cursorX += dx
     }
     el.childNodes.forEach((c) => walk(c, tspanStyle))
   }
@@ -857,24 +941,25 @@ function emitTextLines(
         runFace
       )
     }
-    // Tight box; we set autoFit=false and wrap=false so PPTX renders the run
-    // exactly. A small horizontal slack avoids one-pixel clipping on edge
-    // glyphs in PowerPoint and Keynote (both add a tiny inset).
-    const widthPx = Math.max(totalWidthPx + fontSize * 0.4, fontSize * 1.5)
-    const heightPx = fontSize * 1.35
+    // Tight box; autoFit=false and wrap=false make PPTX render the run as-is.
+    // The horizontal slack avoids one-pixel clipping at edge glyphs in
+    // PowerPoint (it adds a tiny inset).
+    const widthPx = Math.max(
+      totalWidthPx + fontSize * TEXT_BOX_HORIZONTAL_SLACK_FACTOR,
+      fontSize * TEXT_BOX_MIN_WIDTH_FACTOR
+    )
+    const heightPx = fontSize * TEXT_BOX_HEIGHT_FACTOR
 
     let leftPx: number
     if (line.textAnchor === "middle") leftPx = line.anchorX - widthPx / 2
     else if (line.textAnchor === "end") leftPx = line.anchorX - widthPx
     else leftPx = line.anchorX
     // SVG `<text y>` is the baseline; PowerPoint's text-box anchors glyphs
-    // differently, leaving labels slightly higher than the SVG baseline.
-    // Empirically a +4.5 px nudge (≈ 0.047 in / 3.4 pt) lines them up with
-    // the surrounding shapes for the font sizes Apollon uses (11–18 px).
-    const TEXT_BASELINE_OFFSET_PX = 4.5
+    // higher than that. The constant offset compensates for the resulting
+    // visual drift; tuned against the 11–18 px font sizes Apollon emits.
     const topPx =
       line.baselineY -
-      fontSize * 0.82 -
+      fontSize * TEXT_CAP_HEIGHT_RATIO -
       (heightPx - fontSize) / 2 +
       TEXT_BASELINE_OFFSET_PX
 
@@ -918,7 +1003,7 @@ function emitTextLines(
         line: { type: "none" },
         wrap: false,
         autoFit: false,
-        objectName: `${ownerName} · "${fullText.trim().slice(0, 40)}"`,
+        objectName: `${ownerName} · "${fullText.trim().slice(0, SHAPE_NAME_LABEL_LIMIT)}"`,
       }
     )
   }
@@ -983,12 +1068,12 @@ function walk(
   if (tag === "ellipse") return emitEllipse(ctx, el, localCtm, paint, elStyle, false)
   if (tag === "line") return emitLine(ctx, el, localCtm, paint, elStyle)
   if (tag === "polygon")
-    return emitPolygonOrPolyline(ctx, el, localCtm, paint, elStyle, true)
+    return emitPolygonOrPolyline(ctx, el, localCtm, paint, true)
   if (tag === "polyline")
-    return emitPolygonOrPolyline(ctx, el, localCtm, paint, elStyle, false)
+    return emitPolygonOrPolyline(ctx, el, localCtm, paint, false)
   if (tag === "path") return emitPath(ctx, el, localCtm, paint)
   if (tag === "text") {
-    const lines = buildTextLines(el, localCtm, elStyle, inheritedTextStyle)
+    const lines = buildTextLines(el, localCtm, inheritedTextStyle)
     emitTextLines(ctx, lines, ctx.ownerName ?? "Label", localCtm)
     return
   }
@@ -1027,23 +1112,19 @@ export type SvgToPptxOptions = {
 }
 
 /**
- * How the diagram is sized relative to a fixed slide canvas. "shrink" keeps
- * source size when it fits and only scales down when the diagram is too
- * large. "fill" always scales (up or down) to fill the canvas. "actual"
- * never scales (the diagram may overflow the canvas).
- */
-export type DiagramFit = "shrink" | "fill" | "actual"
-
-/**
  * Compute the viewport (slide-canvas size + SVG→slide transform) for a given
  * clip, slide-canvas, and fit mode. The diagram is centred in the canvas.
  * When `slideCanvasInches` is omitted, the canvas matches the diagram exactly
  * (1:1 fit-to-content) and `fit` is ignored.
+ *
+ * The slide canvas is clamped to a 1″ minimum because PowerPoint refuses to
+ * open files with sub-1″ slides on some renderer paths (observed on Office
+ * for Mac 16.x); the diagram still anchors at (0, 0) inside that minimum.
  */
 export function computeSlideViewport(
   clip: { width: number; height: number },
   slideCanvasInches?: { width: number; height: number },
-  fit: DiagramFit = "shrink"
+  fit: DiagramFitOption = "shrink"
 ): SlideViewport {
   const clipWidthIn = clip.width / PX_PER_INCH
   const clipHeightIn = clip.height / PX_PER_INCH
@@ -1114,15 +1195,20 @@ export function renderSvgToSlide(
     measureText: makeCanvasMeasurer(),
   }
 
-  // First pass: top-level <g> groups separately so we can label nodes vs edges
-  // distinctly. Apollon's getSVG() emits exactly two: the nodes group, then
-  // the edges group.
+  // Apollon's getSVG() emits exactly two top-level <g>s — nodes then edges —
+  // so we name the first "Node", the second "Edge", and anything else
+  // "Group N". This labelling drives the Animation Pane in PowerPoint, so
+  // it stays robust if upstream ever adds a third layer.
   const topGroups = Array.from(svg.children).filter(
     (c) => c.tagName.toLowerCase() === "g"
   )
+  const ownerForIndex = (idx: number, total: number): string => {
+    if (total === 2) return idx === 0 ? "Node" : "Edge"
+    return `Group ${idx + 1}`
+  }
 
   topGroups.forEach((g, idx) => {
-    ctx.ownerName = idx === 0 ? "Node" : "Edge"
+    ctx.ownerName = ownerForIndex(idx, topGroups.length)
     g.childNodes.forEach((child) => {
       if (child.nodeType === Node.ELEMENT_NODE) {
         ctx.counter.n = 0

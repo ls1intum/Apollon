@@ -1,19 +1,18 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
+import { FormEvent, useEffect, useId, useRef, useState } from "react"
 import {
-  Box,
   Button,
-  FormControl,
   FormControlLabel,
   MenuItem,
   Radio,
   RadioGroup,
   Select,
-  Stack,
   TextField,
-  Link,
 } from "@mui/material"
+import { toast } from "react-toastify"
+import { Typography } from "@/components/Typography"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useExportAsPPTX } from "@/hooks"
+import { log } from "@/logger"
 import {
   BackgroundOption,
   DEFAULT_PPTX_PERSISTED_SETTINGS,
@@ -23,9 +22,11 @@ import {
   savePptxSettings,
   SlideSizeOption,
 } from "@/lib/pptxExportSettings"
-import { Typography } from "@/components/Typography"
 
-const FONT_OPTIONS: Array<{ value: FontFaceOption; label: string }> = [
+const FONT_OPTIONS: ReadonlyArray<{
+  value: FontFaceOption
+  label: string
+}> = [
   { value: "auto", label: "Auto (matches your platform)" },
   { value: "Inter", label: "Inter" },
   { value: "SF Pro Text", label: "SF Pro Text (macOS)" },
@@ -35,72 +36,45 @@ const FONT_OPTIONS: Array<{ value: FontFaceOption; label: string }> = [
   { value: "Helvetica", label: "Helvetica" },
 ]
 
-/**
- * MUI controls don't read Apollon's CSS theme variables on their own — there
- * is no MUI ThemeProvider in this app. Each component has to bridge the gap
- * via `sx`. These constants centralize the colors so the dialog renders
- * correctly in both light and dark mode using the same `--apollon-*` tokens
- * as the rest of the editor.
- */
-const TEXT_PRIMARY = "var(--apollon-primary-contrast)"
-const TEXT_SECONDARY = "var(--apollon-secondary)"
-const INPUT_BORDER = "var(--apollon-switch-box-border-color)"
-const INPUT_BORDER_HOVER = "var(--apollon-primary-contrast)"
-const ACCENT = "var(--apollon-primary)"
+const stripPptxExtension = (name: string) => name.replace(/\.pptx$/i, "")
 
-const inputSx = {
-  // Text inside the field itself
-  "& .MuiInputBase-input": { color: TEXT_PRIMARY },
-  "& .MuiInputBase-root": { color: TEXT_PRIMARY },
-  // Outlined-variant border + label
-  "& .MuiOutlinedInput-notchedOutline": { borderColor: INPUT_BORDER },
-  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: INPUT_BORDER_HOVER },
-  "& .Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: ACCENT },
-  "& .MuiInputLabel-root": { color: TEXT_SECONDARY },
-  "& .MuiInputLabel-root.Mui-focused": { color: ACCENT },
-  // Caret in select dropdowns
-  "& .MuiSelect-icon": { color: TEXT_SECONDARY },
-} as const
+const FIT_HELPER_TEXT: Record<DiagramFitOption, string> = {
+  shrink:
+    "Keeps the source size when it fits; only shrinks larger diagrams.",
+  fill: "Scales the diagram up or down to fill the slide canvas (preserves aspect ratio).",
+  actual:
+    "Centres the diagram at its source size; may overflow the slide.",
+}
 
-const radioSx = {
-  color: TEXT_SECONDARY,
-  "&.Mui-checked": { color: ACCENT },
-} as const
-
-const labelSx = {
-  fontWeight: 500,
-  display: "block",
-  mb: 0.5,
-  color: TEXT_PRIMARY,
-} as const
-
-const helperSx = {
-  color: TEXT_SECONDARY,
-  display: "block",
-  mt: 0.5,
-} as const
-
-const stripPptxExtension = (name: string) =>
-  name.endsWith(".pptx") ? name.slice(0, -".pptx".length) : name
+const inputColorSx = { input: { color: "var(--apollon-primary-contrast)" } }
 
 export const PPTXExportModal = () => {
   const { editor } = useEditorContext()
   const { closeModal } = useModalContext()
   const exportPptx = useExportAsPPTX()
 
-  const persisted = useMemo(() => loadPptxSettings(), [])
+  // Generate stable ids for label↔control association so screen readers
+  // announce each field by its label. `useId` is stable across renders.
+  const idFileName = useId()
+  const idSlideSize = useId()
+  const idDiagramFit = useId()
+  const idFont = useId()
+  const idBackground = useId()
+
   const defaultFileName = stripPptxExtension(
     editor?.model.title || "diagram"
   )
 
+  // Read persisted settings exactly once so first paint is consistent.
+  const [initial] = useState(loadPptxSettings)
   const [fileName, setFileName] = useState(defaultFileName)
-  const [slideSize, setSlideSize] = useState<SlideSizeOption>(persisted.slideSize)
+  const [slideSize, setSlideSize] = useState<SlideSizeOption>(initial.slideSize)
   const [diagramFit, setDiagramFit] = useState<DiagramFitOption>(
-    persisted.diagramFit
+    initial.diagramFit
   )
-  const [fontFace, setFontFace] = useState<FontFaceOption>(persisted.fontFace)
+  const [fontFace, setFontFace] = useState<FontFaceOption>(initial.fontFace)
   const [background, setBackground] = useState<BackgroundOption>(
-    persisted.background
+    initial.background
   )
   const [submitting, setSubmitting] = useState(false)
   const fileNameRef = useRef<HTMLInputElement>(null)
@@ -135,226 +109,224 @@ export const PPTXExportModal = () => {
         background,
       })
       closeModal()
+    } catch (err) {
+      log.error("PPTX export failed", err as Error)
+      toast.error("PPTX export failed. Please try again.")
     } finally {
       setSubmitting(false)
     }
   }
 
-  const radioOptionLabel = (
-    title: string,
-    description?: string
-  ) => (
-    <Box>
-      <Typography sx={{ color: TEXT_PRIMARY }}>{title}</Typography>
-      {description && (
-        <Typography variant="caption" sx={{ color: TEXT_SECONDARY }}>
-          {description}
-        </Typography>
-      )}
-    </Box>
-  )
-
   return (
-    <Box
-      component="form"
-      onSubmit={handleSubmit}
-      sx={{ color: TEXT_PRIMARY }}
-    >
-      <Stack spacing={3}>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor={idFileName}
+          className="form-label text-sm"
+          style={{ color: "var(--apollon-primary-contrast)" }}
+        >
+          File name
+        </label>
         <TextField
+          id={idFileName}
           inputRef={fileNameRef}
-          label="File name"
-          value={fileName}
-          onChange={(e) => setFileName(e.target.value)}
           fullWidth
           required
-          sx={inputSx}
+          value={fileName}
+          onChange={(e) => setFileName(e.target.value)}
+          variant="outlined"
+          sx={inputColorSx}
           slotProps={{
             input: {
               endAdornment: (
-                <Typography sx={{ color: TEXT_SECONDARY, pr: 1 }}>
+                <Typography
+                  className="text-gray-500"
+                  sx={{ pr: 1, color: "inherit" }}
+                >
                   .pptx
                 </Typography>
               ),
             },
           }}
         />
+      </div>
 
-        <FormControl>
-          <Typography variant="body2" sx={labelSx}>
-            Slide size
-          </Typography>
-          <RadioGroup
-            value={slideSize}
-            onChange={(e) => setSlideSize(e.target.value as SlideSizeOption)}
+      <div className="flex flex-col gap-2">
+        <Typography
+          id={idSlideSize}
+          variant="body2"
+          component="span"
+          className="form-label"
+        >
+          Slide size
+        </Typography>
+        <RadioGroup
+          aria-labelledby={idSlideSize}
+          value={slideSize}
+          onChange={(e) => setSlideSize(e.target.value as SlideSizeOption)}
+        >
+          <FormControlLabel
+            value="fit"
+            control={<Radio />}
+            label={
+              <div className="flex flex-col">
+                <Typography>Fit to content</Typography>
+                <Typography variant="caption" className="text-gray-500">
+                  Slide canvas matches the diagram bounds. Best for
+                  standalone files.
+                </Typography>
+              </div>
+            }
+          />
+          <FormControlLabel
+            value="widescreen"
+            control={<Radio />}
+            label={
+              <div className="flex flex-col">
+                <Typography>Widescreen 16:9 (13.33″ × 7.5″)</Typography>
+                <Typography variant="caption" className="text-gray-500">
+                  Diagram centred on a 16:9 canvas. Drops cleanly into
+                  modern decks.
+                </Typography>
+              </div>
+            }
+          />
+          <FormControlLabel
+            value="standard"
+            control={<Radio />}
+            label={
+              <div className="flex flex-col">
+                <Typography>Standard 4:3 (10″ × 7.5″)</Typography>
+                <Typography variant="caption" className="text-gray-500">
+                  Older deck format.
+                </Typography>
+              </div>
+            }
+          />
+        </RadioGroup>
+      </div>
+
+      {slideSize !== "fit" && (
+        <div className="flex flex-col gap-1">
+          <Typography
+            id={idDiagramFit}
+            variant="body2"
+            component="span"
+            className="form-label"
           >
-            <FormControlLabel
-              value="fit"
-              sx={{ color: TEXT_PRIMARY }}
-              control={<Radio sx={radioSx} />}
-              label={radioOptionLabel(
-                "Fit to content",
-                "Slide canvas matches the diagram bounds. Best for standalone files."
-              )}
-            />
-            <FormControlLabel
-              value="widescreen"
-              sx={{ color: TEXT_PRIMARY }}
-              control={<Radio sx={radioSx} />}
-              label={radioOptionLabel(
-                "Widescreen 16:9 (13.33″ × 7.5″)",
-                "Diagram centred and scaled to fit. Drops cleanly into modern decks."
-              )}
-            />
-            <FormControlLabel
-              value="standard"
-              sx={{ color: TEXT_PRIMARY }}
-              control={<Radio sx={radioSx} />}
-              label={radioOptionLabel(
-                "Standard 4:3 (10″ × 7.5″)",
-                "Older deck format."
-              )}
-            />
-          </RadioGroup>
-        </FormControl>
-
-        {slideSize !== "fit" && (
-          <FormControl>
-            <Typography variant="body2" sx={labelSx}>
-              Diagram size on slide
-            </Typography>
-            <RadioGroup
-              row
-              value={diagramFit}
-              onChange={(e) =>
-                setDiagramFit(e.target.value as DiagramFitOption)
-              }
-            >
-              <FormControlLabel
-                value="shrink"
-                sx={{ color: TEXT_PRIMARY }}
-                control={<Radio sx={radioSx} />}
-                label="Shrink to fit"
-              />
-              <FormControlLabel
-                value="fill"
-                sx={{ color: TEXT_PRIMARY }}
-                control={<Radio sx={radioSx} />}
-                label="Fill slide"
-              />
-              <FormControlLabel
-                value="actual"
-                sx={{ color: TEXT_PRIMARY }}
-                control={<Radio sx={radioSx} />}
-                label="Actual size"
-              />
-            </RadioGroup>
-            <Typography variant="caption" sx={helperSx}>
-              {diagramFit === "shrink" &&
-                "Keeps the source size when it fits; only shrinks larger diagrams."}
-              {diagramFit === "fill" &&
-                "Scales the diagram up or down to fill the slide canvas (preserves aspect ratio)."}
-              {diagramFit === "actual" &&
-                "Centres the diagram at its source size; may overflow the slide."}
-            </Typography>
-          </FormControl>
-        )}
-
-        <FormControl fullWidth>
-          <Typography variant="body2" sx={labelSx}>
-            Font
-          </Typography>
-          <Select
-            value={fontFace}
-            onChange={(e) => setFontFace(e.target.value as FontFaceOption)}
-            size="small"
-            sx={inputSx}
-          >
-            {FONT_OPTIONS.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </MenuItem>
-            ))}
-          </Select>
-          <Typography variant="caption" sx={helperSx}>
-            PowerPoint stores a single font name without fallbacks; pick one
-            installed wherever the file will be opened.
-          </Typography>
-        </FormControl>
-
-        <FormControl>
-          <Typography variant="body2" sx={labelSx}>
-            Background
+            Diagram size on slide
           </Typography>
           <RadioGroup
             row
-            value={background}
+            aria-labelledby={idDiagramFit}
+            value={diagramFit}
             onChange={(e) =>
-              setBackground(e.target.value as BackgroundOption)
+              setDiagramFit(e.target.value as DiagramFitOption)
             }
           >
             <FormControlLabel
-              value="white"
-              sx={{ color: TEXT_PRIMARY }}
-              control={<Radio sx={radioSx} />}
-              label="White"
+              value="shrink"
+              control={<Radio />}
+              label="Shrink to fit"
             />
             <FormControlLabel
-              value="transparent"
-              sx={{ color: TEXT_PRIMARY }}
-              control={<Radio sx={radioSx} />}
-              label="Transparent"
+              value="fill"
+              control={<Radio />}
+              label="Fill slide"
+            />
+            <FormControlLabel
+              value="actual"
+              control={<Radio />}
+              label="Actual size"
             />
           </RadioGroup>
-        </FormControl>
+          <Typography variant="caption" className="text-gray-500">
+            {FIT_HELPER_TEXT[diagramFit]}
+          </Typography>
+        </div>
+      )}
 
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ pt: 1 }}
+      <div className="flex flex-col gap-1">
+        <span
+          id={idFont}
+          className="form-label text-sm"
+          style={{ color: "var(--apollon-primary-contrast)" }}
         >
-          <Link
-            component="button"
-            type="button"
-            onClick={resetToDefaults}
-            sx={{
-              fontSize: "0.85rem",
-              color: ACCENT,
-              textDecorationColor: ACCENT,
-            }}
+          Font
+        </span>
+        <Select
+          value={fontFace}
+          onChange={(e) => setFontFace(e.target.value as FontFaceOption)}
+          size="small"
+          inputProps={{ "aria-labelledby": idFont, "aria-label": "Font" }}
+          sx={{ color: "var(--apollon-primary-contrast)" }}
+        >
+          {FONT_OPTIONS.map((opt) => (
+            <MenuItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </MenuItem>
+          ))}
+        </Select>
+        <Typography variant="caption" className="text-gray-500">
+          PowerPoint stores a single font name without fallbacks; pick one
+          installed wherever the file will be opened.
+        </Typography>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Typography
+          id={idBackground}
+          variant="body2"
+          component="span"
+          className="form-label"
+        >
+          Background
+        </Typography>
+        <RadioGroup
+          row
+          aria-labelledby={idBackground}
+          value={background}
+          onChange={(e) =>
+            setBackground(e.target.value as BackgroundOption)
+          }
+        >
+          <FormControlLabel value="white" control={<Radio />} label="White" />
+          <FormControlLabel
+            value="transparent"
+            control={<Radio />}
+            label="Transparent"
+          />
+        </RadioGroup>
+      </div>
+
+      <div className="flex items-center justify-between pt-1">
+        <button
+          type="button"
+          onClick={resetToDefaults}
+          className="text-sm hover:underline"
+          style={{ color: "var(--apollon-primary)" }}
+        >
+          Reset to defaults
+        </button>
+        <div className="flex gap-1">
+          <Button
+            variant="contained"
+            onClick={closeModal}
+            disabled={submitting}
+            sx={{ bgcolor: "gray", textTransform: "none" }}
           >
-            Reset to defaults
-          </Link>
-          <Stack direction="row" spacing={1}>
-            <Button
-              onClick={closeModal}
-              disabled={submitting}
-              sx={{
-                color: TEXT_PRIMARY,
-                textTransform: "none",
-                "&:hover": {
-                  bgcolor: "var(--apollon-background-variant)",
-                },
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              type="submit"
-              disabled={!canSubmit}
-              sx={{
-                textTransform: "none",
-                bgcolor: ACCENT,
-                "&:hover": { bgcolor: ACCENT, filter: "brightness(0.92)" },
-              }}
-            >
-              {submitting ? "Exporting…" : "Export"}
-            </Button>
-          </Stack>
-        </Stack>
-      </Stack>
-    </Box>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            type="submit"
+            disabled={!canSubmit}
+            sx={{ textTransform: "none" }}
+          >
+            {submitting ? "Exporting…" : "Export"}
+          </Button>
+        </div>
+      </div>
+    </form>
   )
 }
