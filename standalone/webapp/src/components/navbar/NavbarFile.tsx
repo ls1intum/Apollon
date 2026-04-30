@@ -178,7 +178,7 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
             closeMainMenu()
           }}
         >
-          As PPTX
+          As PPTX (Presentation)
         </MenuItem>
       </Menu>
     </>

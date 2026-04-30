@@ -305,7 +305,50 @@ type EmitContext = {
   clipY: number
   counter: { n: number }
   ownerName: string | null
+  /** Font face actually written to the PPTX. */
+  exportFontFace: string
   measureText: (text: string, fontSize: number, bold: boolean, italic: boolean, fontFace: string) => number
+}
+
+/**
+ * Apollon renders text in `Inter, system-ui, Avenir, Helvetica, Arial,
+ * sans-serif`. PPTX/OOXML stores a single font name with no fallback chain,
+ * so we have to pick one that's actually installed wherever the file is
+ * opened. Mac users (and the receiving Mac viewers) get SF Pro Text — the
+ * system font that drives `system-ui` in their browser preview, so the
+ * exported file matches what they saw on screen. Everyone else gets Inter.
+ */
+function detectExportFontFace(override?: string): string {
+  if (override) return override
+  if (typeof navigator === "undefined") return "Inter"
+  const ua = navigator.userAgent || ""
+  // `navigator.platform` is partially deprecated but still the most reliable
+  // Mac signal in practice; fall back to userAgent.
+  const platform =
+    (navigator as Navigator & { platform?: string }).platform || ""
+  const isMac = /Mac|iPhone|iPad|iPod/.test(platform) || /Macintosh/.test(ua)
+  return isMac ? "SF Pro Text" : "Inter"
+}
+
+/**
+ * Decide what font to emit for a given SVG run. If the SVG declared the
+ * Apollon system stack ("Inter", "system-ui", "sans-serif" etc.) we override
+ * with the chosen export font; if it's an explicit family we respect it.
+ */
+function resolveExportFontFace(svgFontFace: string, exportFace: string): string {
+  const normalized = svgFontFace.trim().toLowerCase()
+  const generics = new Set([
+    "inter",
+    "system-ui",
+    "-apple-system",
+    "blinkmacsystemfont",
+    "avenir",
+    "helvetica",
+    "arial",
+    "sans-serif",
+    "",
+  ])
+  return generics.has(normalized) ? exportFace : svgFontFace
 }
 
 function nextName(ctx: EmitContext, kind: string, label?: string): string {
@@ -760,14 +803,19 @@ function emitTextLines(
     if (!fullText.trim()) continue
     const dominant = line.runs[0].style
     const fontSize = dominant.fontSize
+    const dominantExportFace = resolveExportFontFace(
+      dominant.fontFace,
+      ctx.exportFontFace
+    )
     let totalWidthPx = 0
     for (const r of line.runs) {
+      const runFace = resolveExportFontFace(r.style.fontFace, ctx.exportFontFace)
       totalWidthPx += ctx.measureText(
         r.text,
         r.style.fontSize,
         r.style.bold,
         r.style.italic,
-        r.style.fontFace
+        runFace
       )
     }
     // Tight box; we set autoFit=false and wrap=false so PPTX renders the run
@@ -805,7 +853,7 @@ function emitTextLines(
       line.runs.map((r) => ({
         text: r.text,
         options: {
-          fontFace: r.style.fontFace,
+          fontFace: resolveExportFontFace(r.style.fontFace, ctx.exportFontFace),
           fontSize: ptFromPx(r.style.fontSize),
           bold: r.style.bold,
           italic: r.style.italic,
@@ -822,7 +870,7 @@ function emitTextLines(
         align,
         valign: "middle",
         margin: 0,
-        fontFace: dominant.fontFace,
+        fontFace: dominantExportFace,
         fontSize: ptFromPx(dominant.fontSize),
         bold: dominant.bold,
         italic: dominant.italic,
@@ -921,6 +969,11 @@ function walk(
 
 export type SvgToPptxOptions = {
   background?: string
+  /**
+   * Override the font face emitted into the PPTX. When omitted, defaults to
+   * "SF Pro Text" on Mac/iOS exporters and "Inter" everywhere else.
+   */
+  fontFace?: string
 }
 
 export function renderSvgToSlide(
@@ -946,6 +999,7 @@ export function renderSvgToSlide(
     clipY: clip.y,
     counter: { n: 0 },
     ownerName: null,
+    exportFontFace: detectExportFontFace(options.fontFace),
     measureText: makeCanvasMeasurer(),
   }
 
