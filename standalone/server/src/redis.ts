@@ -27,6 +27,13 @@ export const k = {
   versionBody: (id: string, vid: string) => `diagram:{${id}}:version:${vid}`,
   versionMeta: (id: string, vid: string) =>
     `diagram:{${id}}:version:${vid}:meta`,
+  /**
+   * NX+EX marker preventing more than one auto-version per
+   * AUTO_VERSION_INTERVAL_SECONDS for a given diagram. The TTL is the gap
+   * itself: the marker expires automatically and the next PUT after expiry
+   * is eligible to fire a new auto-version.
+   */
+  autoVersionMarker: (id: string) => `diagram:{${id}}:auto-version-marker`,
 }
 
 // ---------------------------------------------------------------------------
@@ -75,6 +82,63 @@ export function gunzipJson<T>(s: string): T {
 
 export const COMMIT_VERSION_SOURCE = `#!lua name=apollon
 
+-- Eviction priority: prefer rows where BOTH name and description are empty —
+-- those are raw, unnamed autosaves (= recovery infrastructure). User-saved
+-- versions (and autosaves the user later named via "Name this version") are
+-- protected milestones; we only fall back to evicting them if every unnamed
+-- autosave has already been pruned. Matches Figma's mental model: autosaves
+-- are background safety, named versions are the user's deliberate timeline.
+--
+-- Returns parallel arrays: { evictedIds[], evictedKinds[] } where each kind
+-- is 'unnamed' (empty meta — disposable) or 'named' (the user cared, but we
+-- evicted anyway because the cap was hit by named rows alone). The client
+-- uses this to show a truthful toast ("removed an autosave" vs the much
+-- stronger "removed a named version") instead of always claiming autosave.
+local function evict_with_priority(versionsKey, headKey, count, maxV)
+  local need = count - maxV
+  if need <= 0 then return { {}, {} } end
+
+  local all = redis.call('ZRANGE', versionsKey, 0, -1)  -- oldest-first
+  local evictedIds = {}
+  local evictedKinds = {}
+  local protectedQueue = {}
+
+  -- First pass: drop unnamed autosaves oldest-first up to need.
+  for _, vid in ipairs(all) do
+    local metaKey = headKey .. ':version:' .. vid .. ':meta'
+    local meta = redis.call('HMGET', metaKey, 'name', 'description')
+    local name = meta[1] or ''
+    local desc = meta[2] or ''
+    if name == '' and desc == '' then
+      if #evictedIds < need then
+        redis.call('DEL', headKey .. ':version:' .. vid)
+        redis.call('DEL', metaKey)
+        redis.call('ZREM', versionsKey, vid)
+        table.insert(evictedIds, vid)
+        table.insert(evictedKinds, 'unnamed')
+      end
+    else
+      table.insert(protectedQueue, vid)
+    end
+  end
+
+  -- Second pass: fall back to the oldest protected (named) rows when the
+  -- unnamed pool was exhausted. In normal operation this branch is not
+  -- taken — the cap is sized so unnamed autosaves alone cover churn.
+  if #evictedIds < need then
+    for _, vid in ipairs(protectedQueue) do
+      if #evictedIds >= need then break end
+      redis.call('DEL', headKey .. ':version:' .. vid)
+      redis.call('DEL', headKey .. ':version:' .. vid .. ':meta')
+      redis.call('ZREM', versionsKey, vid)
+      table.insert(evictedIds, vid)
+      table.insert(evictedKinds, 'named')
+    end
+  end
+
+  return { evictedIds, evictedKinds }
+end
+
 local function commit_snapshot(keys, args)
   -- keys[1] = diagram:{id}
   -- keys[2] = diagram:{id}:versions
@@ -99,13 +163,20 @@ local function commit_snapshot(keys, args)
   local vMetaKey = vKey .. ':meta'
   local ttl = tonumber(args[3])
 
+  -- Monotonic per-diagram counter. Survives eviction — used as the
+  -- displayed "#N" so the user sees their absolute creation rank, not
+  -- the rank-among-currently-stored. HINCRBY auto-creates the field
+  -- starting at 1 on the first commit.
+  local seq = redis.call('HINCRBY', keys[3], 'versionSeq', 1)
+
   redis.call('SET', vKey, args[9], 'EX', ttl)
   redis.call('HSET', vMetaKey,
     'name', args[5],
     'description', args[6],
     'createdAt', args[2],
     'kind', args[7],
-    'librarySchemaVersion', args[8])
+    'librarySchemaVersion', args[8],
+    'seq', tostring(seq))
   redis.call('EXPIRE', vMetaKey, ttl)
 
   redis.call('ZADD', keys[2], args[2], vid)
@@ -113,18 +184,9 @@ local function commit_snapshot(keys, args)
 
   local count = redis.call('ZCARD', keys[2])
   local maxV = tonumber(args[4])
-  local evicted = {}
-  if count > maxV then
-    local victims = redis.call('ZRANGE', keys[2], 0, count - maxV - 1)
-    for _, evictId in ipairs(victims) do
-      redis.call('DEL', keys[1] .. ':version:' .. evictId)
-      redis.call('DEL', keys[1] .. ':version:' .. evictId .. ':meta')
-      table.insert(evicted, evictId)
-    end
-    redis.call('ZREMRANGEBYRANK', keys[2], 0, count - maxV - 1)
-  end
+  local evictResult = evict_with_priority(keys[2], keys[1], count, maxV)
 
-  return { vid, evicted }
+  return { vid, evictResult[1], evictResult[2], tostring(seq) }
 end
 
 -- Truly atomic restore: writes the auto-snapshot + flips HEAD + bumps
@@ -163,29 +225,27 @@ local function restore_version(keys, args)
   local autoMeta = autoKey .. ':meta'
   local ttl = tonumber(args[3])
 
+  -- Pre-restore snapshot keeps a non-empty name (passed in args[6]) so it
+  -- counts as protected — eviction won't sweep it the way it sweeps raw
+  -- autosaves. The name is auto-generated server-side: "Before restoring
+  -- '<X>'", giving the user a self-explanatory recovery anchor.
+  local autoSeq = redis.call('HINCRBY', keys[3], 'versionSeq', 1)
   redis.call('SET', autoKey, args[8], 'EX', ttl)
   redis.call('HSET', autoMeta,
     'name', args[6],
     'description', '',
     'createdAt', args[2],
     'kind', 'auto',
-    'librarySchemaVersion', args[7])
+    'librarySchemaVersion', args[7],
+    'seq', tostring(autoSeq))
   redis.call('EXPIRE', autoMeta, ttl)
   redis.call('ZADD', keys[2], args[2], autoVid)
   redis.call('EXPIRE', keys[2], ttl)
 
   local count = redis.call('ZCARD', keys[2])
   local maxV = tonumber(args[5])
-  local evicted = {}
-  if count > maxV then
-    local victims = redis.call('ZRANGE', keys[2], 0, count - maxV - 1)
-    for _, evictId in ipairs(victims) do
-      redis.call('DEL', keys[1] .. ':version:' .. evictId)
-      redis.call('DEL', keys[1] .. ':version:' .. evictId .. ':meta')
-      table.insert(evicted, evictId)
-    end
-    redis.call('ZREMRANGEBYRANK', keys[2], 0, count - maxV - 1)
-  end
+  local evictResult = evict_with_priority(keys[2], keys[1], count, maxV)
+  local evicted = evictResult[1]
 
   local ttlHead = tonumber(args[4])
   redis.call('JSON.SET', keys[1], '$', args[10])

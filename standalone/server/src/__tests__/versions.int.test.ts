@@ -161,18 +161,21 @@ describe("POST /api/diagrams/:id/versions/:vid/restore", () => {
     const head = await request(app).get(`/api/diagrams/${id}`)
     expect(head.body.title).toBe("First")
 
-    // List has v1 + auto-snapshot.
+    // List has at least v1 + the pre-restore auto-snapshot. The HEAD PUT
+    // above can also trigger a wall-clock auto-version (there's no marker
+    // for a fresh diagram, so its first PUT is eligible) — that's correct
+    // behavior, so we only assert on the pre-restore row's presence.
     const list = await request(app).get(`/api/diagrams/${id}/versions`)
-    expect(list.body.versions.length).toBe(2)
-    const auto = list.body.versions.find(
-      (v: { kind: string }) => v.kind === "auto"
+    expect(list.body.versions.length).toBeGreaterThanOrEqual(2)
+    const preRestore = list.body.versions.find((v: { name: string }) =>
+      v.name.startsWith("Before restoring")
     )
-    expect(auto).toBeDefined()
-    expect(auto.name).toContain("Auto-saved before restoring")
+    expect(preRestore).toBeDefined()
+    expect(preRestore.kind).toBe("auto")
 
     // Auto-snapshot body matches the pre-restore canvas.
     const autoBody = await request(app).get(
-      `/api/diagrams/${id}/versions/${auto.id}`
+      `/api/diagrams/${id}/versions/${preRestore.id}`
     )
     expect(autoBody.body.title).toBe("Second")
   })
@@ -238,6 +241,232 @@ describe("FIFO eviction at the configured cap", () => {
     const names = list.body.versions.map((v: { name: string }) => v.name)
     expect(names).not.toContain("v0")
     expect(names[0]).toBe(`v${cap}`)
+  })
+
+  it("eviction priority: drops unnamed autosaves before named milestones", async () => {
+    // Mix: 3 oldest unnamed autosaves (kind=auto, name=""), then enough
+    // named versions to exceed the cap. We expect the unnamed rows to
+    // disappear first; named versions stay intact.
+    const cap = loadConfig().MAX_VERSIONS_PER_DIAGRAM
+    const id = await newDiagram()
+
+    // Seed 3 unnamed autosaves directly via the version POST. The route
+    // defaults `name` to "" when not provided and the body's `kind` is
+    // forced to `user` server-side; to get genuine `kind=auto` rows we'd
+    // need the auto-version path. Workaround: mark them as user but with
+    // empty name+description so eviction priority still treats them as
+    // "unnamed" (the priority gate is name-emptiness, not kind).
+    for (let i = 0; i < 3; i++) {
+      await request(app)
+        .post(`/api/diagrams/${id}/versions`)
+        .send({ body: { ...baseDiagram, id } })
+    }
+    // Then `cap` named versions — total = cap + 3, eviction needs to drop 3.
+    for (let i = 0; i < cap; i++) {
+      await request(app)
+        .post(`/api/diagrams/${id}/versions`)
+        .send({ name: `named-${i}`, body: { ...baseDiagram, id } })
+    }
+
+    const list = await request(app)
+      .get(`/api/diagrams/${id}/versions`)
+      .query({ limit: cap * 2 })
+    expect(list.body.versions.length).toBe(cap)
+    const names = list.body.versions.map((v: { name: string }) => v.name)
+    // All three unnamed rows should be gone — names[] contains no empties.
+    expect(names.every((n: string) => n.length > 0)).toBe(true)
+    // Every named row survived.
+    for (let i = 0; i < cap; i++) expect(names).toContain(`named-${i}`)
+  })
+
+  it("eviction fallback: removes oldest named when no unnamed remain, surfaces evictedKinds", async () => {
+    const cap = loadConfig().MAX_VERSIONS_PER_DIAGRAM
+    const id = await newDiagram()
+    for (let i = 0; i < cap; i++) {
+      await request(app)
+        .post(`/api/diagrams/${id}/versions`)
+        .send({ name: `v${i}`, body: { ...baseDiagram, id } })
+    }
+    // Cap+1th save: no unnamed rows exist, so eviction must drop the
+    // oldest named row (`v0`). Response surfaces this via evictedKinds
+    // so the client can word the toast accurately.
+    const overflow = await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({ name: `v${cap}`, body: { ...baseDiagram, id } })
+    expect(overflow.status).toBe(201)
+    expect(overflow.body.evictedKinds).toEqual(["named"])
+    expect(overflow.body.evictedVersionIds).toHaveLength(1)
+  })
+
+  it("seq counter survives eviction — display number is creation rank, not stored rank", async () => {
+    const cap = loadConfig().MAX_VERSIONS_PER_DIAGRAM
+    const id = await newDiagram()
+    for (let i = 0; i < cap + 5; i++) {
+      await request(app)
+        .post(`/api/diagrams/${id}/versions`)
+        .send({ name: `v${i}`, body: { ...baseDiagram, id } })
+    }
+    const list = await request(app)
+      .get(`/api/diagrams/${id}/versions`)
+      .query({ limit: cap })
+    // Newest row's seq should be cap+5 (1-indexed monotonic), not `cap`.
+    // This is the "I made #51, why does it say #50?" bug from the user
+    // — fixed by the per-diagram HINCRBY counter.
+    expect(list.body.versions[0]!.seq).toBe(cap + 5)
+    // Oldest *surviving* row's seq is 6 (rows 1..5 evicted).
+    expect(list.body.versions[list.body.versions.length - 1]!.seq).toBe(6)
+  })
+})
+
+describe("auto-versioning on the HEAD PUT path", () => {
+  it("does not snapshot empty diagrams (no nodes, no edges)", async () => {
+    const id = await newDiagram()
+    // PUT with the same empty body — should not produce an auto-version.
+    await request(app)
+      .put(`/api/diagrams/${id}`)
+      .send({ ...baseDiagram, id })
+    // Give the fire-and-forget tryAutoVersion a moment to run.
+    await new Promise((r) => setTimeout(r, 50))
+    const list = await request(app).get(`/api/diagrams/${id}/versions`)
+    expect(list.body.versions).toHaveLength(0)
+  })
+
+  it("defers the first auto-version: no phantom row before the user's first manual save", async () => {
+    const id = await newDiagram()
+    // First PUT with content. Without a prior version, tryAutoVersion
+    // skips so the user doesn't see a row in history they didn't ask
+    // for. HEAD's 5s autosave still covers crash safety.
+    await request(app)
+      .put(`/api/diagrams/${id}`)
+      .send({
+        ...baseDiagram,
+        id,
+        nodes: [
+          {
+            id: "n1",
+            type: "Class",
+            position: { x: 0, y: 0 },
+            data: { name: "A" },
+          } as never,
+        ],
+      })
+    await new Promise((r) => setTimeout(r, 50))
+
+    const list = await request(app).get(`/api/diagrams/${id}/versions`)
+    expect(list.body.versions.length).toBe(0)
+  })
+
+  it("auto-version fires only after a baseline exists; respects the marker", async () => {
+    const id = await newDiagram()
+    // Step 1: user makes a manual save → baseline (latest) row exists.
+    await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({
+        name: "Initial",
+        body: {
+          ...baseDiagram,
+          id,
+          nodes: [
+            {
+              id: "n1",
+              type: "Class",
+              position: { x: 0, y: 0 },
+              data: { name: "A" },
+            } as never,
+          ],
+        },
+      })
+
+    // Step 2: clear the auto-version marker so the next PUT is eligible.
+    // (In production the marker is held for 30 min after a PUT — far
+    // beyond a test's wall-clock; manual save bypasses it. We DEL it
+    // here to simulate "the next 30-min window has come".)
+    const redis = await getRedis()
+    await redis.del(k.autoVersionMarker(id))
+
+    // Step 3: PUT with edited content → tryAutoVersion sees prior
+    // version, fingerprint differs → commits an auto row.
+    await request(app)
+      .put(`/api/diagrams/${id}`)
+      .send({
+        ...baseDiagram,
+        id,
+        nodes: [
+          {
+            id: "n1",
+            type: "Class",
+            position: { x: 100, y: 100 },
+            data: { name: "A2" },
+          } as never,
+        ],
+      })
+    await new Promise((r) => setTimeout(r, 50))
+
+    const list = await request(app).get(`/api/diagrams/${id}/versions`)
+    expect(list.body.versions.length).toBe(2)
+    expect(list.body.versions[0]!.kind).toBe("auto")
+    expect(list.body.versions[0]!.name).toBe("")
+
+    // Step 4: another PUT within the 30-min window → marker held, no
+    // additional auto-version. Total stays at 2.
+    await request(app)
+      .put(`/api/diagrams/${id}`)
+      .send({
+        ...baseDiagram,
+        id,
+        nodes: [
+          {
+            id: "n1",
+            type: "Class",
+            position: { x: 200, y: 200 },
+            data: { name: "A3" },
+          } as never,
+        ],
+      })
+    await new Promise((r) => setTimeout(r, 50))
+
+    const second = await request(app).get(`/api/diagrams/${id}/versions`)
+    expect(second.body.versions.length).toBe(2)
+  })
+
+  it("marker is released when the redis Lua call fails — next PUT can retry", async () => {
+    // Inject a failure: write a corrupt latest-version body so
+    // gunzipJson throws during the fingerprint compare. The catch path
+    // should DEL the marker, leaving the next PUT eligible.
+    const redis = await getRedis()
+    const id = await newDiagram()
+    // Seed a real version first.
+    await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({ name: "seed", body: { ...baseDiagram, id, title: "seed" } })
+    // Now corrupt the body so `gunzipJson` will throw.
+    const versionsIndex = k.versionsIndex(id)
+    const ids = (await redis.zRange(versionsIndex, 0, 0, {
+      REV: true,
+    })) as string[]
+    expect(ids.length).toBe(1)
+    await redis.set(k.versionBody(id, ids[0]!), "not-base64-gzip")
+
+    // PUT triggers tryAutoVersion → gunzipJson throws → marker released.
+    await request(app)
+      .put(`/api/diagrams/${id}`)
+      .send({
+        ...baseDiagram,
+        id,
+        nodes: [
+          {
+            id: "n1",
+            type: "Class",
+            position: { x: 0, y: 0 },
+            data: { name: "A" },
+          } as never,
+        ],
+      })
+    await new Promise((r) => setTimeout(r, 50))
+
+    // Marker should be absent (released by the finally block).
+    const marker = await redis.get(k.autoVersionMarker(id))
+    expect(marker).toBeNull()
   })
 })
 

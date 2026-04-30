@@ -27,6 +27,14 @@ export interface VersionSummary {
   createdAt: string
   kind: VersionKind
   librarySchemaVersion: string
+  /**
+   * Monotonic per-diagram counter assigned at commit time. Survives
+   * eviction — versions keep their seq even after older versions are
+   * pruned, so the display number reflects "the Nth version you ever
+   * made," not "the Nth version still stored." `undefined` for legacy
+   * rows committed before this counter existed.
+   */
+  seq?: number
 }
 
 export type VersionKind = "user" | "auto"

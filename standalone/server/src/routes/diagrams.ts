@@ -8,6 +8,7 @@ import { Errors } from "../http/errors"
 import { validate } from "../http/middleware/validate"
 import { setOwnerCookie } from "../http/middleware/owner"
 import { logger } from "../logger"
+import { tryAutoVersion } from "../services/autoVersion"
 import { DiagramBody, DiagramIdParams, PutDiagramBody } from "./_schemas"
 
 interface Deps {
@@ -178,6 +179,22 @@ export function mountDiagramRoutes(
         if (!req.isOwner) {
           setOwnerCookie(res, params.diagramId, config.OWNER_SECRET)
         }
+
+        // Fire-and-forget auto-version. The HEAD response is what the client
+        // is waiting on; auto-versioning is bookkeeping that shouldn't block
+        // the autosave hot path. Errors are logged inside tryAutoVersion so
+        // any failure is observable without surfacing to the user (the most
+        // recent HEAD already persisted).
+        void tryAutoVersion(
+          { config, redis, relay },
+          params.diagramId,
+          merged
+        ).catch((err) => {
+          logger.error(
+            { err, diagramId: params.diagramId, event: "version.auto.failed" },
+            "auto-version failed"
+          )
+        })
 
         res.setHeader("etag", `"${headRev}"`)
         res.status(200).json({ headRev, updatedAt })

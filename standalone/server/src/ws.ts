@@ -63,24 +63,31 @@ export function startRelayServer(opts: StartOptions): RelayServer {
             ? raw.toString("utf-8")
             : ""
 
-      // Fast prefix sniff: control envelopes start with '{"kind":'.
-      const isControl = message.startsWith(ENVELOPE_PREFIX)
-      if (isControl) {
+      // Drop client-published control envelopes. Only server-side route
+      // handlers emit `VERSION_*` / `DIAGRAM_DELETED` via `publishControl`
+      // — the relay never forwards a control envelope it received from a
+      // client. Without this gate, a URL bearer could forge events that
+      // never happened (delete a version client-side, rename it, etc.)
+      // and the rest of the room would mutate local state to match.
+      // Surface as a warning so an attacker probing the relay shows up
+      // in logs.
+      if (message.startsWith(ENVELOPE_PREFIX)) {
         try {
           const parsed = JSON.parse(message) as Envelope
-          if (parsed && parsed.kind === "control" && parsed.control) {
-            // Re-broadcast control events to every client in the room
-            // including sender (single convergence path; clients dedupe).
-            broadcast(rooms, diagramId, message, null)
+          if (parsed && parsed.kind === "control") {
+            logger.warn(
+              { diagramId, type: parsed.control?.type },
+              "ws control envelope from client dropped"
+            )
             return
           }
         } catch {
-          // Fall through to opaque passthrough on parse failure.
+          // Not JSON — fall through to opaque passthrough.
         }
       }
 
-      // Opaque passthrough — preserves the existing Yjs sync semantics.
-      // Sender is excluded (peers already see the sender's local changes).
+      // Opaque passthrough — preserves Yjs sync semantics. Sender is
+      // excluded; peers already saw the sender's local changes.
       broadcast(rooms, diagramId, message, ws)
     })
 

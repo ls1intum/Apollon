@@ -18,6 +18,15 @@ const ConfigSchema = z.object({
   DIAGRAM_TTL_SECONDS: intEnv(120 * 24 * 3600),
   /** TTL for version body+meta keys, in seconds. HEAD + 1 day margin. */
   VERSION_TTL_SECONDS: intEnv(121 * 24 * 3600),
+  /**
+   * Wall-clock interval for auto-versioning. The HEAD PUT path attempts to
+   * acquire a per-diagram NX-EX marker keyed `:auto-version-marker`; on
+   * success and only if the diagram is structurally different from its
+   * latest snapshot, an empty-name `kind: "auto"` row is committed.
+   *
+   * Default 1800 = 30 min, mirroring Figma's checkpoint cadence.
+   */
+  AUTO_VERSION_INTERVAL_SECONDS: intEnv(30 * 60),
 })
 
 export type Config = z.infer<typeof ConfigSchema>

@@ -29,22 +29,6 @@ interface Deps {
   redis: Redis
 }
 
-/**
- * jsdom-backed `ConversionService` is heavy to construct (boots a worker
- * thread); cache one instance for SVG renders triggered by the version
- * thumbnail endpoint. Constructed lazily so tests that don't hit it don't
- * pay the boot cost.
- */
-let _conversion: {
-  convertToSvg: typeof import("../services/conversion-service").ConversionService.prototype.convertToSvg
-} | null = null
-function sharedConversionService(
-  Ctor: typeof import("../services/conversion-service").ConversionService
-) {
-  if (!_conversion) _conversion = new Ctor()
-  return _conversion
-}
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -56,6 +40,7 @@ async function readVersionMeta(
 ): Promise<VersionSummary | null> {
   const meta = await redis.hGetAll(k.versionMeta(diagramId, versionId))
   if (!meta || Object.keys(meta).length === 0) return null
+  const parsedSeq = meta.seq ? Number(meta.seq) : NaN
   return {
     id: versionId,
     diagramId,
@@ -64,6 +49,7 @@ async function readVersionMeta(
     createdAt: new Date(Number(meta.createdAt ?? 0)).toISOString(),
     kind: ((meta.kind as VersionKind | undefined) ?? "user") as VersionKind,
     librarySchemaVersion: meta.librarySchemaVersion ?? "",
+    seq: Number.isFinite(parsedSeq) ? parsedSeq : undefined,
   }
 }
 
@@ -93,8 +79,17 @@ interface CommitSnapshotInput {
 async function commitSnapshot(
   redis: Redis,
   input: CommitSnapshotInput
-): Promise<{ vid: string; evicted: string[] }> {
+): Promise<{
+  vid: string
+  evictedIds: string[]
+  evictedKinds: ("unnamed" | "named")[]
+  seq: number
+}> {
   const gz = gzipJson(input.body)
+  // Lua reply shape: [vid, evictedIds[], evictedKinds[], seq]. Indexes
+  // are positional; parallel arrays for evictions so the client can
+  // word the eviction toast accurately ("autosave was removed" vs
+  // "named version was removed").
   const reply = (await fcall(
     redis,
     "commit_snapshot",
@@ -114,8 +109,13 @@ async function commitSnapshot(
       input.librarySchemaVersion,
       gz,
     ]
-  )) as [string, string[]]
-  return { vid: reply[0], evicted: reply[1] ?? [] }
+  )) as [string, string[], ("unnamed" | "named")[], string]
+  return {
+    vid: reply[0],
+    evictedIds: reply[1] ?? [],
+    evictedKinds: reply[2] ?? [],
+    seq: Number(reply[3] ?? 0),
+  }
 }
 
 interface RestoreVersionInput {
@@ -305,14 +305,24 @@ export function mountVersionRoutes(
               diagramId: params.diagramId,
               versionId: vid,
               kind: "user",
-              evictedVersionIds: result.evicted,
+              seq: summary.seq,
+              evictedVersionIds: result.evictedIds,
+              evictedKinds: result.evictedKinds,
               librarySchemaVersion: flushed.version,
               requestId: req.requestId,
             },
             "version.created"
           )
 
-          res.status(201).json(summary)
+          // Surface evicted IDs + kinds to the client so it can word the
+          // toast accurately. "named" eviction means we hit the cap with
+          // 50 named rows and dropped the oldest one — that's user data
+          // loss that needs a stronger message than "autosave removed".
+          res.status(201).json({
+            ...summary,
+            evictedVersionIds: result.evictedIds,
+            evictedKinds: result.evictedKinds,
+          })
         } catch (err) {
           if (err instanceof RedisAppError && err.code === "NO_HEAD") {
             throw Errors.noHead()
@@ -323,38 +333,23 @@ export function mountVersionRoutes(
     )
   )
 
-  // GET /diagrams/:diagramId/versions/:versionId — immutable body.
-  // `?type=svg` returns the rendered SVG snapshot for thumbnail use.
+  // GET /diagrams/:diagramId/versions/:versionId — immutable JSON body.
+  // Thumbnails render client-side from this body via the library's
+  // `ApollonEditor.exportModelAsSvg`; the previous `?type=svg` branch is
+  // gone — booting JSDOM + the full library bundle on the server for a
+  // 64×40 thumbnail was the wrong tradeoff (and didn't work in local
+  // mode). PDF export is unaffected — it has its own worker path.
   router.get(
     "/diagrams/:diagramId/versions/:versionId",
     validate(
-      {
-        params: DiagramIdAndVersionIdParams,
-        query: z.object({ type: z.enum(["json", "svg"]).optional() }),
-      },
-      async (_req, res, _next, { params, query }) => {
+      { params: DiagramIdAndVersionIdParams },
+      async (_req, res, _next, { params }) => {
         const body = await readVersionBody(
           redis,
           params.diagramId,
           params.versionId
         )
         if (!body) throw Errors.notFound("version not found")
-        if (query.type === "svg") {
-          const { ConversionService } = await import(
-            "../services/conversion-service"
-          )
-          const conversion = sharedConversionService(ConversionService)
-          // The wire `Diagram.version` is a free `string`; the library's
-          // UMLModel pins it to a `4.${number}.${number}` template literal.
-          // Cross the boundary with a single deliberate cast.
-          const { svg } = await conversion.convertToSvg(
-            body as unknown as Parameters<typeof conversion.convertToSvg>[0]
-          )
-          res.setHeader("etag", `"${params.versionId}-svg"`)
-          res.setHeader("cache-control", "private, max-age=86400, immutable")
-          res.type("image/svg+xml").status(200).send(svg)
-          return
-        }
         res.setHeader("etag", `"${params.versionId}"`)
         res.setHeader("cache-control", "private, max-age=86400, immutable")
         res.status(200).json(body)
@@ -398,9 +393,11 @@ export function mountVersionRoutes(
           )
           if (!fromMeta) throw Errors.notFound("version not found")
 
+          // Pre-restore snapshot gets a self-explanatory name so it survives
+          // eviction priority (unnamed autos go first; this one is named).
           const autoName = fromMeta.name
-            ? `Auto-saved before restoring '${fromMeta.name}'`
-            : `Auto-saved before restoring ${params.versionId.slice(0, 8)}`
+            ? `Before restoring '${fromMeta.name}'`
+            : `Before restoring snapshot ${params.versionId.slice(0, 8)}`
 
           const result = await restoreVersion(redis, {
             diagramId: params.diagramId,
