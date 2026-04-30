@@ -92,22 +92,19 @@ export const useStepPathEdge = ({
   enableReconnection = true,
   enableStraightPath = false,
 }: UseStepPathEdgeProps) => {
-  const resolveMarkerSideInset = useCallback(
-    (markerUrl?: string): number => {
-      const markerId = extractMarkerId(markerUrl)
-      if (!markerId) {
-        return MARKER_BASE_SIZE
-      }
+  const resolveMarkerSideInset = useCallback((markerUrl?: string): number => {
+    const markerId = extractMarkerId(markerUrl)
+    if (!markerId) {
+      return MARKER_BASE_SIZE
+    }
 
-      if (!(markerId in MARKER_CONFIGS)) {
-        return MARKER_BASE_SIZE
-      }
+    if (!(markerId in MARKER_CONFIGS)) {
+      return MARKER_BASE_SIZE
+    }
 
-      const markerConfig = MARKER_CONFIGS[markerId as keyof typeof MARKER_CONFIGS]
-      return markerConfig.size * markerConfig.widthFactor
-    },
-    []
-  )
+    const markerConfig = MARKER_CONFIGS[markerId as keyof typeof MARKER_CONFIGS]
+    return markerConfig.size * markerConfig.widthFactor
+  }, [])
   const draggingIndexRef = useRef<number | null>(null)
   const dragOffsetRef = useRef<IPoint>({ x: 0, y: 0 })
   const pathRef = useRef<SVGPathElement | null>(null)
@@ -154,10 +151,7 @@ export const useStepPathEdge = ({
     offset = 0,
   } = getEdgeMarkerStyles(type)
   const padding = markerPadding ?? EDGES.MARKER_PADDING
-  const autoTargetEndpointPadding = Math.max(
-    0,
-    padding - EDGES.MARKER_PADDING
-  )
+  const autoTargetEndpointPadding = Math.max(0, padding - EDGES.MARKER_PADDING)
   const sourceSideInset = useMemo(
     () => resolveMarkerSideInset(markerStart),
     [markerStart, resolveMarkerSideInset]
@@ -786,10 +780,8 @@ export const useStepPathEdge = ({
 
         let newSourceX = activePoints[0]?.x ?? sourceX
         let newSourceY = activePoints[0]?.y ?? sourceY
-        let newTargetX =
-          activePoints[activePoints.length - 1]?.x ?? targetX
-        let newTargetY =
-          activePoints[activePoints.length - 1]?.y ?? targetY
+        let newTargetX = activePoints[activePoints.length - 1]?.x ?? targetX
+        let newTargetY = activePoints[activePoints.length - 1]?.y ?? targetY
 
         if (reconnectingEndRef.current === "source") {
           newSourceX = newEndpoint.x

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest"
 import { Position } from "@xyflow/react"
 import { computeAutoEdgeRoute } from "@/utils/edgeRouting"
-import { resolveEdgeMode, toAutoEdgeData, toManualEdgeData } from "@/edges/edgeMode"
+import {
+  resolveEdgeMode,
+  toAutoEdgeData,
+  toManualEdgeData,
+} from "@/edges/edgeMode"
 import { EDGES, MARKER_BASE_SIZE } from "@/constants"
 
 describe("resolveEdgeMode", () => {

@@ -241,7 +241,8 @@ export function computeAutoEdgeRoute({
       pathType: "straight" as const,
     }
   }).filter(
-    (candidate): candidate is NonNullable<typeof candidate> => candidate !== null
+    (candidate): candidate is NonNullable<typeof candidate> =>
+      candidate !== null
   )
 
   if (preferStraight && straightCandidates.length > 0) {
