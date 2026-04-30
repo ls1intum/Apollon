@@ -782,9 +782,9 @@ function emitTextLines(
     else leftPx = line.anchorX
     // SVG `<text y>` is the baseline; PowerPoint's text-box anchors glyphs
     // differently, leaving labels slightly higher than the SVG baseline.
-    // Empirically a +3.5 px nudge (≈ 0.036 in / 2.6 pt) lines them up with
+    // Empirically a +4 px nudge (≈ 0.042 in / 3 pt) lines them up with
     // the surrounding shapes for the font sizes Apollon uses (11–18 px).
-    const TEXT_BASELINE_OFFSET_PX = 3.5
+    const TEXT_BASELINE_OFFSET_PX = 4
     const topPx =
       line.baselineY -
       fontSize * 0.82 -
