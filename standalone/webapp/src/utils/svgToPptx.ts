@@ -25,8 +25,6 @@ import { parsePath, pathBBox, type PathSegment, type Pt } from "./svgPathParser"
 
 const PX_PER_INCH = 96
 const PT_PER_PX = 0.75
-const px = (n: number) => n / PX_PER_INCH
-const ptFromPx = (n: number) => n * PT_PER_PX
 
 type Mat = readonly [number, number, number, number, number, number]
 const IDENTITY: Mat = [1, 0, 0, 1, 0, 0]
@@ -275,6 +273,7 @@ function fillProps(p: PaintStyle): pptxgen.ShapeFillProps | { type: "none" } {
 }
 
 function lineProps(
+  ctx: EmitContext,
   p: PaintStyle,
   override?: { width?: number; dash?: string | null }
 ):
@@ -288,7 +287,7 @@ function lineProps(
   return {
     type: "solid",
     color: stroke,
-    width: ptFromPx(w),
+    width: toStrokePt(ctx, w),
     transparency: Math.round((1 - a) * 100),
     dashType: dashType(override?.dash ?? p.strokeDash),
   }
@@ -298,17 +297,50 @@ function lineProps(
 /* Shape emit context                                                  */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The viewport defines how a point in SVG-px space (with origin at the
+ * diagram's clip) is projected onto the PPTX slide canvas (in inches).
+ *
+ * For "fit" slide-size, scale=1/96 (px → in) and offset=0.
+ * For fixed slide sizes, scale shrinks the diagram so it fits inside the
+ * canvas (no enlargement past 1× in/px), and offset centres it.
+ */
+export type SlideViewport = {
+  /** Slide width in inches. */
+  slideWidth: number
+  /** Slide height in inches. */
+  slideHeight: number
+  /** Multiplier applied to every linear length in SVG-px (1 = unscaled). */
+  scale: number
+  /** Slide x-origin in inches for the diagram's clip top-left. */
+  offsetX: number
+  /** Slide y-origin in inches for the diagram's clip top-left. */
+  offsetY: number
+}
+
 type EmitContext = {
   pres: pptxgen
   slide: pptxgen.Slide
   clipX: number
   clipY: number
+  viewport: SlideViewport
   counter: { n: number }
   ownerName: string | null
   /** Font face actually written to the PPTX. */
   exportFontFace: string
   measureText: (text: string, fontSize: number, bold: boolean, italic: boolean, fontFace: string) => number
 }
+
+const toSlideX = (ctx: EmitContext, x: number): number =>
+  (x - ctx.clipX) * (ctx.viewport.scale / PX_PER_INCH) + ctx.viewport.offsetX
+const toSlideY = (ctx: EmitContext, y: number): number =>
+  (y - ctx.clipY) * (ctx.viewport.scale / PX_PER_INCH) + ctx.viewport.offsetY
+const toSlideSize = (ctx: EmitContext, s: number): number =>
+  s * (ctx.viewport.scale / PX_PER_INCH)
+const toFontPt = (ctx: EmitContext, fsPx: number): number =>
+  fsPx * ctx.viewport.scale * PT_PER_PX
+const toStrokePt = (ctx: EmitContext, swPx: number): number =>
+  swPx * ctx.viewport.scale * PT_PER_PX
 
 /**
  * Apollon renders text in `Inter, system-ui, Avenir, Helvetica, Arial,
@@ -384,8 +416,8 @@ function emitRect(
   // rotate around it. PPTX rotates around the shape's center.
   const localCenter = { x: x + w / 2, y: y + h / 2 }
   const center = apply(ctm, localCenter)
-  const minX = center.x - w / 2 - ctx.clipX
-  const minY = center.y - h / 2 - ctx.clipY
+  const topLeftSvgX = center.x - w / 2
+  const topLeftSvgY = center.y - h / 2
 
   const isRound = Math.max(rx, ry) > 0
   const radius = Math.max(rx, ry)
@@ -393,13 +425,13 @@ function emitRect(
   const radiusFrac = isRound && minSide > 0 ? Math.min(0.5, radius / minSide) : 0
 
   const props: pptxgen.ShapeProps = {
-    x: px(minX),
-    y: px(minY),
-    w: px(w),
-    h: px(h),
+    x: toSlideX(ctx, topLeftSvgX),
+    y: toSlideY(ctx, topLeftSvgY),
+    w: toSlideSize(ctx, w),
+    h: toSlideSize(ctx, h),
     rotate: rotateDeg,
     fill: fillProps(paint),
-    line: lineProps(paint),
+    line: lineProps(ctx, paint),
     ...(isRound ? { rectRadius: radiusFrac } : {}),
     objectName: nextName(ctx, isRound ? "Rounded rect" : "Rect"),
   }
@@ -435,17 +467,17 @@ function emitEllipse(
   const center = apply(ctm, { x: cx, y: cy })
   const w = 2 * rx * scaleX
   const h = 2 * ry * scaleY
-  const minX = center.x - w / 2 - ctx.clipX
-  const minY = center.y - h / 2 - ctx.clipY
+  const topLeftSvgX = center.x - w / 2
+  const topLeftSvgY = center.y - h / 2
 
   ctx.slide.addShape(ctx.pres.ShapeType.ellipse, {
-    x: px(minX),
-    y: px(minY),
-    w: px(w),
-    h: px(h),
+    x: toSlideX(ctx, topLeftSvgX),
+    y: toSlideY(ctx, topLeftSvgY),
+    w: toSlideSize(ctx, w),
+    h: toSlideSize(ctx, h),
     rotate: rotateDeg,
     fill: fillProps(paint),
-    line: lineProps(paint),
+    line: lineProps(ctx, paint),
     objectName: nextName(ctx, isCircle ? "Circle" : "Ellipse"),
   })
 }
@@ -465,21 +497,21 @@ function emitLine(
   const p2 = apply(ctm, { x: x2, y: y2 })
   if (!paint.stroke) return
 
-  const minX = Math.min(p1.x, p2.x) - ctx.clipX
-  const minY = Math.min(p1.y, p2.y) - ctx.clipY
+  const minSvgX = Math.min(p1.x, p2.x)
+  const minSvgY = Math.min(p1.y, p2.y)
   const w = Math.abs(p2.x - p1.x)
   const h = Math.abs(p2.y - p1.y)
   const flipH = p1.x > p2.x
   const flipV = p1.y > p2.y
 
   ctx.slide.addShape(ctx.pres.ShapeType.line, {
-    x: px(minX),
-    y: px(minY),
-    w: px(Math.max(w, 0.0001)),
-    h: px(Math.max(h, 0.0001)),
+    x: toSlideX(ctx, minSvgX),
+    y: toSlideY(ctx, minSvgY),
+    w: toSlideSize(ctx, Math.max(w, 0.0001)),
+    h: toSlideSize(ctx, Math.max(h, 0.0001)),
     flipH,
     flipV,
-    line: lineProps(paint),
+    line: lineProps(ctx, paint),
     objectName: nextName(ctx, "Line"),
   })
 }
@@ -568,20 +600,27 @@ function emitPathSegments(
   let started = false
   for (const s of segs) {
     if (s.type === "M") {
-      points!.push({ x: px(s.pt.x - bx), y: px(s.pt.y - by), moveTo: started })
+      points!.push({
+        x: toSlideSize(ctx, s.pt.x - bx),
+        y: toSlideSize(ctx, s.pt.y - by),
+        moveTo: started,
+      })
       started = true
     } else if (s.type === "L") {
-      points!.push({ x: px(s.pt.x - bx), y: px(s.pt.y - by) })
+      points!.push({
+        x: toSlideSize(ctx, s.pt.x - bx),
+        y: toSlideSize(ctx, s.pt.y - by),
+      })
     } else if (s.type === "C") {
       points!.push({
-        x: px(s.pt.x - bx),
-        y: px(s.pt.y - by),
+        x: toSlideSize(ctx, s.pt.x - bx),
+        y: toSlideSize(ctx, s.pt.y - by),
         curve: {
           type: "cubic",
-          x1: px(s.c1.x - bx),
-          y1: px(s.c1.y - by),
-          x2: px(s.c2.x - bx),
-          y2: px(s.c2.y - by),
+          x1: toSlideSize(ctx, s.c1.x - bx),
+          y1: toSlideSize(ctx, s.c1.y - by),
+          x2: toSlideSize(ctx, s.c2.x - bx),
+          y2: toSlideSize(ctx, s.c2.y - by),
         },
       })
     } else if (s.type === "Z") {
@@ -590,13 +629,13 @@ function emitPathSegments(
   }
 
   ctx.slide.addShape("custGeom" as unknown as pptxgen.ShapeType, {
-    x: px(bx - ctx.clipX),
-    y: px(by - ctx.clipY),
-    w: px(bw),
-    h: px(bh),
+    x: toSlideX(ctx, bx),
+    y: toSlideY(ctx, by),
+    w: toSlideSize(ctx, bw),
+    h: toSlideSize(ctx, bh),
     points,
     fill: fillProps(paint),
-    line: lineProps(paint),
+    line: lineProps(ctx, paint),
     objectName: nextName(ctx, kind),
   } as pptxgen.ShapeProps)
 }
@@ -854,7 +893,7 @@ function emitTextLines(
         text: r.text,
         options: {
           fontFace: resolveExportFontFace(r.style.fontFace, ctx.exportFontFace),
-          fontSize: ptFromPx(r.style.fontSize),
+          fontSize: toFontPt(ctx, r.style.fontSize),
           bold: r.style.bold,
           italic: r.style.italic,
           underline: r.style.underline ? { style: "sng" } : undefined,
@@ -862,16 +901,16 @@ function emitTextLines(
         },
       })),
       {
-        x: px(leftPx - ctx.clipX),
-        y: px(topPx - ctx.clipY),
-        w: px(widthPx),
-        h: px(heightPx),
+        x: toSlideX(ctx, leftPx),
+        y: toSlideY(ctx, topPx),
+        w: toSlideSize(ctx, widthPx),
+        h: toSlideSize(ctx, heightPx),
         rotate: rotateDeg,
         align,
         valign: "middle",
         margin: 0,
         fontFace: dominantExportFace,
-        fontSize: ptFromPx(dominant.fontSize),
+        fontSize: toFontPt(ctx, dominant.fontSize),
         bold: dominant.bold,
         italic: dominant.italic,
         color: dominant.color ?? "000000",
@@ -968,12 +1007,60 @@ function walk(
 /* ------------------------------------------------------------------ */
 
 export type SvgToPptxOptions = {
-  background?: string
+  /**
+   * Slide background color as a 6-char hex (no `#`). Pass `null` to omit any
+   * background and inherit the slide-master default (effectively transparent
+   * inside PowerPoint, since the master is white but no override is written).
+   */
+  background?: string | null
   /**
    * Override the font face emitted into the PPTX. When omitted, defaults to
    * "SF Pro Text" on Mac/iOS exporters and "Inter" everywhere else.
    */
   fontFace?: string
+  /**
+   * Pre-computed viewport (slide canvas size and SVG→slide transform). When
+   * omitted the converter assumes "fit to content" and the slide canvas
+   * matches the diagram clip 1:1.
+   */
+  viewport?: SlideViewport
+}
+
+/**
+ * Compute the viewport (slide-canvas size + SVG→slide transform) for a given
+ * clip and slide-size choice. The diagram is centred in the canvas, scaled
+ * down (never up) to fit, preserving aspect ratio.
+ */
+export function computeSlideViewport(
+  clip: { width: number; height: number },
+  slideCanvasInches?: { width: number; height: number }
+): SlideViewport {
+  const clipWidthIn = clip.width / PX_PER_INCH
+  const clipHeightIn = clip.height / PX_PER_INCH
+  if (!slideCanvasInches) {
+    return {
+      slideWidth: Math.max(clipWidthIn, 1),
+      slideHeight: Math.max(clipHeightIn, 1),
+      scale: 1,
+      offsetX: 0,
+      offsetY: 0,
+    }
+  }
+  const fitFactor = Math.min(
+    slideCanvasInches.width / Math.max(clipWidthIn, 0.0001),
+    slideCanvasInches.height / Math.max(clipHeightIn, 0.0001)
+  )
+  // Never enlarge: small diagrams sit centred with whitespace around them.
+  const scale = Math.min(1, fitFactor)
+  const drawnWidth = clipWidthIn * scale
+  const drawnHeight = clipHeightIn * scale
+  return {
+    slideWidth: slideCanvasInches.width,
+    slideHeight: slideCanvasInches.height,
+    scale,
+    offsetX: (slideCanvasInches.width - drawnWidth) / 2,
+    offsetY: (slideCanvasInches.height - drawnHeight) / 2,
+  }
 }
 
 export function renderSvgToSlide(
@@ -988,15 +1075,18 @@ export function renderSvgToSlide(
   const svg = doc.documentElement
   if (!svg || svg.tagName.toLowerCase() !== "svg") return
 
-  if (options.background) {
+  if (options.background != null) {
     slide.background = { color: options.background }
   }
+
+  const viewport = options.viewport ?? computeSlideViewport(clip)
 
   const ctx: EmitContext = {
     pres,
     slide,
     clipX: clip.x,
     clipY: clip.y,
+    viewport,
     counter: { n: 0 },
     ownerName: null,
     exportFontFace: detectExportFontFace(options.fontFace),
@@ -1034,10 +1124,3 @@ export function renderSvgToSlide(
   })
 }
 
-export const slideSizeFromClip = (clip: {
-  width: number
-  height: number
-}): { width: number; height: number } => ({
-  width: clip.width / PX_PER_INCH,
-  height: clip.height / PX_PER_INCH,
-})

@@ -3,6 +3,7 @@ export type ModalName =
   | "NEW_DIAGRAM_FROM_TEMPLATE"
   | "SHARE"
   | "LOAD_DIAGRAM"
+  | "EXPORT_PPTX"
   | "HowToUseModal"
   | "AboutModal"
 

@@ -1,26 +1,25 @@
 import { useEditorContext } from "@/contexts"
 import { log } from "@/logger"
 import { useFileDownload } from "./useFileDownload"
-import { renderSvgToSlide, slideSizeFromClip } from "@/utils/svgToPptx"
+import { computeSlideViewport, renderSvgToSlide } from "@/utils/svgToPptx"
+import {
+  PptxExportSettings,
+  SLIDE_DIMENSIONS_IN,
+} from "@/lib/pptxExportSettings"
 
 /**
- * Export the current diagram as a PPTX where every shape, line, and text label
- * is its own animatable PowerPoint object.
- *
- * Flow:
- *  1. Reuse the existing compat-mode SVG export (CSS-vars resolved, arrowheads
- *     inlined, markers stripped).
- *  2. Lazy-load `pptxgenjs` so users who never export PPTX pay no bundle cost.
- *  3. Match the slide canvas exactly to the diagram clip — no scaling, no
- *     letterboxing.
- *  4. Walk the SVG tree and emit one `<p:sp>` per visible element via
- *     `renderSvgToSlide`.
+ * Trigger a PPTX export. The hook itself takes no parameters; the returned
+ * function accepts the user-chosen settings (filename, slide size, font,
+ * background) at call time. Smart defaults are applied for any setting the
+ * caller omits — useful for programmatic exports that bypass the dialog.
  */
 export const useExportAsPPTX = () => {
   const { editor } = useEditorContext()
   const downloadFile = useFileDownload()
 
-  const exportAsPPTX = async () => {
+  const exportAsPPTX = async (
+    settings: Partial<PptxExportSettings> = {}
+  ) => {
     if (!editor) {
       log.error("Editor context is not available")
       return
@@ -32,6 +31,16 @@ export const useExportAsPPTX = () => {
       return
     }
 
+    const slideSize = settings.slideSize ?? "fit"
+    const fontFace = settings.fontFace ?? "auto"
+    const background = settings.background ?? "white"
+    const fileName =
+      (settings.fileName?.trim() || editor.model.title || "diagram") + ".pptx"
+
+    const slideCanvas =
+      slideSize === "fit" ? undefined : SLIDE_DIMENSIONS_IN[slideSize]
+    const viewport = computeSlideViewport(apollonSVG.clip, slideCanvas)
+
     const PptxGenJS = (await import("pptxgenjs")).default
     const pres = new PptxGenJS()
     pres.title =
@@ -40,20 +49,20 @@ export const useExportAsPPTX = () => {
       "Apollon Diagram"
     pres.author = "Apollon"
 
-    const layoutSize = slideSizeFromClip(apollonSVG.clip)
     pres.defineLayout({
       name: "APOLLON_DIAGRAM",
-      width: Math.max(layoutSize.width, 1),
-      height: Math.max(layoutSize.height, 1),
+      width: viewport.slideWidth,
+      height: viewport.slideHeight,
     })
     pres.layout = "APOLLON_DIAGRAM"
 
     const slide = pres.addSlide()
     renderSvgToSlide(apollonSVG.svg, apollonSVG.clip, pres, slide, {
-      background: "FFFFFF",
+      background: background === "white" ? "FFFFFF" : null,
+      fontFace: fontFace === "auto" ? undefined : fontFace,
+      viewport,
     })
 
-    const fileName = `${editor.model.title || "diagram"}.pptx`
     const blob = (await pres.write({ outputType: "blob" })) as Blob
     const file = new File([blob], fileName, {
       type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
