@@ -2,13 +2,15 @@
 
 ## Required infrastructure
 
-- **Redis Stack 8** (`redis/redis-stack-server:latest`) — provides
-  RedisJSON ≥ 2.0. Plain `redis:8-alpine` does not bundle the JSON module
-  with default config; the server boot gate refuses to start otherwise.
+- **Redis Stack** (`redis/redis-stack-server:7.4.0-v0` is the pinned
+  test image; production `compose.db.yml` uses the same tag) — provides
+  RedisJSON ≥ 2.0, required for HEAD storage. Plain `redis:7-alpine` /
+  `redis:8-alpine` do not bundle the JSON module.
 - **Node.js ≥ 22.14**, **npm ≥ 11.1**.
 
 The server checks `MODULE LIST` at startup and asserts ReJSON is loaded;
-boot fails fast on a missing module.
+on missing module the boot fails closed (process exits non-zero) rather
+than serving traffic with broken versioning.
 
 ## Environment variables
 
@@ -26,6 +28,7 @@ boot fails fast on a missing module.
 | `MAX_NAME_LENGTH` | `80` | Version name char limit |
 | `DIAGRAM_TTL_SECONDS` | `10368000` | HEAD TTL (120 d) |
 | `VERSION_TTL_SECONDS` | `10454400` | Version body+meta TTL (121 d) |
+| `AUTO_VERSION_INTERVAL_SECONDS` | `1800` | Marker TTL = auto-version cadence (30 min) |
 
 ## Durability
 

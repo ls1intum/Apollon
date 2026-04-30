@@ -15,11 +15,15 @@ anything.
   name, lines 2+ the description.
 - **Automatic (every 30 min):** the HEAD PUT path attempts a per-diagram
   Redis `SET NX EX 1800` on `diagram:{id}:auto-version-marker`. On
-  acquire, the server diffs HEAD against the latest snapshot's body
-  (`structuralFingerprint` — order-stable JSON over title/type/version/
-  nodes/edges/assessments). If the fingerprints differ it commits an
-  empty-name `kind: "auto"` row; if they match the marker stays for the
-  full 30 min so the next 5-second autosave PUT doesn't re-evaluate.
+  acquire, the server diffs HEAD against the latest snapshot's body via
+  `structuralFingerprint` — JSON over a fixed projection
+  (title/type/version/nodes/edges/assessments) with React-Flow's
+  transient/layout/capability fields stripped. The same projection runs
+  client-side in `VersionDrawer.tsx` (the `VOLATILE_KEYS` set), pinned
+  by the `selection-only churn` integration test. If the fingerprints
+  differ it commits an empty-name `kind: "auto"` row; if they match the
+  marker stays for the full 30 min so the next 5-second autosave PUT
+  doesn't re-evaluate.
 - **Pre-restore safety:** Restore captures the user's pre-restore canvas
   as a `kind: "auto"` row whose `name` is auto-generated
   (`Before restoring 'X'`). The non-empty name protects it from
@@ -95,11 +99,6 @@ collaborator's save), then on every `subscribeToModelChange` event
 recomputes and compares. While previewing (`useVersionStore.preview !==
 null`) the gate is forced disabled — saving the previewed body would
 just duplicate.
-
-`editor.getStateVector(): Uint8Array` and `editor.getYDoc(): Y.Doc` are
-still exposed for hosting apps that need them for transport adapters or
-multi-tab coordination, but the version-history dirty gate doesn't use
-them.
 
 ### Restore (collab)
 
@@ -214,60 +213,12 @@ different browser. Continue?" Friction, not security.
 ## Library API additions
 
 ```ts
-import { ApollonEditor, type UMLModel } from "@tumaet/apollon"
+import { ApollonEditor } from "@tumaet/apollon"
 
-editor.setReadonly(true)              // toggle canvas read-only at runtime
-editor.fitView()                      // poll-then-fit; safe right after a model swap
-editor.getStateVector(): Uint8Array   // CRDT state vector — embedders use it for
-                                      // transport adapters / multi-tab coordination
-editor.getYDoc(): Y.Doc               // direct CRDT access for transports
+editor.setReadonly(true)   // toggle canvas read-only at runtime
+editor.fitView()           // safe to call right after a model swap
 ```
 
-The library still exports `diffModel(a, b)` for embedders that want
-element-level diffs, but Apollon Standalone no longer uses it: the
-in-product compare-versions feature was retired in favor of preview +
-restore as the only navigation primitives. Removing it eliminated
-~500 lines of UI code and three race-prone async flows. `diffModel`
-itself stays — pure-functional, no editor state, useful elsewhere.
-
-## Local-mode versioning (planned)
-
-`ApollonLocal` (no-server deployment) currently has *no* version history
-— `usePersistenceModelStore` overwrites a single localStorage entry on
-every change. Local-mode users deserve the same Figma-shaped sidebar
-this PR ships for collab.
-
-The implementation plan, deferred to a follow-up so this PR's
-collab-mode work can ship without coupling to irreversible local
-decisions:
-
-- **Storage:** IndexedDB. `localStorage` is sync, string-only, capped at
-  ~5–10 MB per origin — wrong tool for gzipped snapshot bodies.
-- **Backend abstraction:** introduce a `VersionBackend` interface with
-  the same shape as `VersionApiClient`. Two implementations:
-  - `HttpVersionBackend` — wraps the existing client, used in collab.
-  - `IndexedDbVersionBackend` — stores `{ meta, gzippedBody }` keyed by
-    `[diagramId, versionId]`, mirrors the server's eviction priority
-    in TS.
-  `useVersionStore` calls the interface; the editor mode picks the impl.
-- **Yjs persistence (the irreversible decision):** opt-in `y-indexeddb`
-  for the editor's `Y.Doc` so reload preserves CRDT state and two tabs
-  on the same local diagram converge via BroadcastChannel. **Once
-  shipped, the canonical Y-shape and `schemaVersion` key freeze across
-  every browser** that touches the app. This PR pre-pins those
-  decisions:
-  1. Y-shape stays flat (whole-object Y.Map values, today's shape).
-  2. Compaction trigger: on every named-version creation
-     (`Y.encodeStateAsUpdate` → `clearData()` → reseed).
-  3. Restore is a hard reset of local Y.Doc (`destroy()` → new Y.Doc
-     → reseed from JSON via `importDiagram`). No surgical merges.
-  4. A `schemaVersion` key in the metadata Y.Map is the escape hatch:
-     mismatch on load → export to JSON → `importDiagram` → fresh doc.
-- **Multi-tab safety:** `BroadcastChannel` leader election —
-  most-recent-focused tab owns the auto-version timer.
-- **Migration on Share:** when a local-only diagram becomes
-  collaborative, bulk-push local versions in chronological order via a
-  `POST .../versions/bulk` route. Cap-aware: if local has 60 named and
-  server cap is 50, the oldest 10 are dropped with a one-shot toast.
-  Local copy is not deleted; remains as fallback. `pre_restore`-named
-  rows are not migrated (disposable by nature).
+Local-mode versioning (no-server deployment) is not in scope for this
+release; `ApollonLocal` continues to overwrite a single localStorage
+entry on every change.

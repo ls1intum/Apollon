@@ -60,16 +60,15 @@ If the JSON is truly corrupt and there is no recoverable HEAD:
 
 ## 503 spike
 
-Symptom: `/health` flips to 503; users see "Version history is temporarily
-unavailable."
+Symptom: `/health` flips to 503; client requests fail with
+`REDIS_UNAVAILABLE`.
 
 1. `systemctl status apollon-standalone` — is Express up?
 2. `systemctl status redis-stack-server` — is Redis up?
 3. `redis-cli INFO replication` — is the primary writable?
 4. `redis-cli INFO persistence` — AOF rewrite stuck?
-
-The webapp polls `/health` every 30s while degraded and re-enables the drawer
-on recovery automatically.
+5. `redis-cli FUNCTION LIST` — is the `apollon` library loaded? If not,
+   restart the server (boot re-loads idempotently).
 
 ## OWNER_SECRET rotation
 
@@ -88,8 +87,9 @@ Steps:
 
 Apollon Standalone holds only ephemeral diagram data with a 120-day TTL.
 Users export-as-JSON for permanent local copies. AOF (`appendfsync everysec`)
-is enabled so up to ~1s of writes can be lost on hard crash; named-snapshot
-endpoints additionally `WAIT 0 100ms` for AOF fsync before responding 201.
+is enabled, so up to ~1s of writes can be lost on a hard crash. Snapshot
+and restore endpoints do not call `WAIT` — see `operations.md → Durability`
+for the rationale.
 
 ## Function reload
 

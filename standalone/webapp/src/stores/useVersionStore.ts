@@ -15,12 +15,12 @@ export interface PendingVersion extends VersionSummary {
   failed?: boolean
 }
 
-export interface PreviewState {
+interface PreviewState {
   versionId: VersionId
   body: UMLModel
 }
 
-export interface UndoRestoreState {
+interface UndoRestoreState {
   diagramId: DiagramId
   autoSnapshotVersionId: VersionId
   expiresAt: number
@@ -51,8 +51,9 @@ interface Actions {
   fetchVersions: (diagramId: DiagramId) => Promise<void>
   loadMoreVersions: (diagramId: DiagramId) => Promise<void>
   /**
-   * Optimistic create. Adds a pending row with a client-generated temp id,
-   * then reconciles with the server response (matched by name+timestamp).
+   * Optimistic create. Adds a pending row with a client-generated temp id;
+   * the server response carries the same id back and the row is reconciled
+   * by `id === tempId` (see line ~207).
    */
   createVersion: (
     diagramId: DiagramId,
@@ -384,10 +385,14 @@ export const useVersionStore = create<VersionStore>()(
               // the version list so the new auto-snapshot row appears.
               void get().fetchVersions(diagramId)
               return
+            case "DIAGRAM_DELETED":
+              // The page-level effect handles routing on diagram delete; the
+              // version store has nothing local to clean up (the diagram's
+              // map entries are dropped on the next fetch / page transition).
+              return
             default:
-              // Forward-compat: a future server may add new event types. Log
-              // and ignore so the build doesn't break older clients during a
-              // staggered rollout.
+              // Unknown event from a newer server during staggered rollout —
+              // log and ignore rather than crash older clients.
               log.warn(
                 "Unknown control event type",
                 (event as { type: string }).type

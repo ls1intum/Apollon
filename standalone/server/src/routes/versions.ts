@@ -316,8 +316,9 @@ export function mountVersionRoutes(
 
           // Surface evicted IDs + kinds to the client so it can word the
           // toast accurately. "named" eviction means we hit the cap with
-          // 50 named rows and dropped the oldest one — that's user data
-          // loss that needs a stronger message than "autosave removed".
+          // `MAX_VERSIONS_PER_DIAGRAM` named rows and dropped the oldest
+          // one — that's user data loss that needs a stronger message
+          // than "autosave removed".
           res.status(201).json({
             ...summary,
             evictedVersionIds: result.evictedIds,

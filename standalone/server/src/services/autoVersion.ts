@@ -33,21 +33,44 @@ interface AutoVersionDeps {
 }
 
 /**
- * A coarse "anything meaningful changed" check for the auto-version trigger.
- * Order-stable JSON of the persistent fields — drops `updatedAt` (which
- * advances on every save) and `createdAt` (immutable). False positives (we
- * snapshot when we strictly didn't need to) are cheap; false negatives are
- * the failure mode we don't want, since they cost the user a recovery point.
+ * A coarse "anything user-meaningful changed" check for the auto-version
+ * trigger. Mirrors the webapp's `structuralFingerprint`
+ * (VersionDrawer.tsx → VOLATILE_KEYS) so the server gate doesn't fire on
+ * pure UI churn that the client correctly considered idle. The replacer
+ * strips React-Flow's transient/layout/capability fields, which Yjs
+ * happily round-trips to HEAD when a user merely clicks or drags. Without
+ * this, every focus event on a node would flip the fingerprint and burn
+ * an auto-version slot. False positives are cheap; false negatives cost
+ * a recovery point.
+ *
+ * Keep the key set in sync with VersionDrawer.tsx — the integration test
+ * `versions.int.test.ts > tryAutoVersion skips on selection-only churn`
+ * pins this contract.
  */
+const VOLATILE_KEYS = new Set([
+  "selected",
+  "dragging",
+  "resizing",
+  "hidden",
+  "measured",
+  "selectable",
+  "draggable",
+  "connectable",
+  "deletable",
+])
+
 function structuralFingerprint(d: Diagram): string {
-  return JSON.stringify({
-    title: d.title,
-    type: d.type,
-    version: d.version,
-    nodes: d.nodes,
-    edges: d.edges,
-    assessments: d.assessments,
-  })
+  return JSON.stringify(
+    {
+      title: d.title,
+      type: d.type,
+      version: d.version,
+      nodes: d.nodes,
+      edges: d.edges,
+      assessments: d.assessments,
+    },
+    (key, value) => (VOLATILE_KEYS.has(key) ? undefined : value)
+  )
 }
 
 export async function tryAutoVersion(

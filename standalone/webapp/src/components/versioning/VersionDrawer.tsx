@@ -52,7 +52,7 @@ const SIDEBAR_ANIMATION_MS = 220
  * (e.g. the preview banner) responds to its own container width via
  * `useElementWidth`, not this constant.
  */
-export const MOBILE_QUERY = "(max-width: 767.95px)"
+const MOBILE_QUERY = "(max-width: 767.95px)"
 
 // Sidebar lives on the navbar's dark plate, independent of the document
 // theme — these are the on-dark text shades and rgba state tints used
@@ -78,10 +78,11 @@ export const ROW_SELECTED_BG = "rgba(255, 255, 255, 0.10)"
  *   - `selectable`, `draggable`, `connectable`, `deletable` — capability
  *     flags, set by config not by the user editing
  *
- * This mirrors `structuralFingerprint` in `services/autoVersion.ts` on the
- * server. False positives (we mark dirty when user-meaningful state didn't
- * really change) are cheap; false negatives are the failure mode we don't
- * want, since they'd cost the user a recovery point.
+ * Mirrors `structuralFingerprint` in `services/autoVersion.ts` on the
+ * server — both use this exact key set, pinned by an integration test.
+ * Drift here means the server fires spurious auto-versions on UI churn
+ * the client correctly ignored. False positives are cheap; false
+ * negatives cost the user a recovery point.
  */
 const VOLATILE_KEYS = new Set([
   "selected",

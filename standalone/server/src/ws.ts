@@ -32,8 +32,17 @@ const ENVELOPE_PREFIX = '{"kind":'
  * this gives a single convergence path for version events; clients dedupe
  * by versionId.
  */
+// Cap on a single WS frame the relay will accept and forward. Yjs updates
+// for Apollon-sized diagrams are well under this; the cap exists so a URL
+// bearer can't fan-out megabyte-scale payloads to every peer in the room.
+const MAX_PAYLOAD_BYTES = 1_048_576 // 1 MiB
+
 export function startRelayServer(opts: StartOptions): RelayServer {
-  const wss = new WebSocketServer({ port: opts.port, host: opts.host })
+  const wss = new WebSocketServer({
+    port: opts.port,
+    host: opts.host,
+    maxPayload: MAX_PAYLOAD_BYTES,
+  })
   const rooms: Map<string, Set<ExtendedWebSocket>> = new Map()
 
   wss.on("error", (err: NodeJS.ErrnoException) => {

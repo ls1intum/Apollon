@@ -429,6 +429,56 @@ describe("auto-versioning on the HEAD PUT path", () => {
     expect(second.body.versions.length).toBe(2)
   })
 
+  it("skips on selection-only churn — volatile React-Flow keys do not flip the fingerprint", async () => {
+    // Pin the contract that the server's `structuralFingerprint` strips
+    // the same volatile-key set the webapp drops in `VersionDrawer.tsx`.
+    // Without this gate, a single node click would write `selected: true`
+    // through Yjs to HEAD and the next 30-min window would commit a
+    // spurious auto-version even though the user did nothing
+    // user-meaningful. If this test ever fails after editing the key set
+    // on either side, the gate is drifting — re-mirror both sides.
+    const id = await newDiagram()
+    const baseNode = {
+      id: "n1",
+      type: "Class",
+      position: { x: 0, y: 0 },
+      data: { name: "A" },
+    } as never
+    await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({
+        name: "Initial",
+        body: { ...baseDiagram, id, nodes: [baseNode] },
+      })
+
+    const redis = await getRedis()
+    await redis.del(k.autoVersionMarker(id))
+
+    // Same diagram, but the node now carries every volatile flag a
+    // real React-Flow render would attach. The fingerprint should treat
+    // this as identical to the seed and skip the auto-version commit.
+    const dirtyNode = {
+      ...baseNode,
+      selected: true,
+      dragging: true,
+      resizing: false,
+      hidden: false,
+      measured: { width: 200, height: 100 },
+      selectable: true,
+      draggable: true,
+      connectable: true,
+      deletable: true,
+    } as never
+    await request(app)
+      .put(`/api/diagrams/${id}`)
+      .send({ ...baseDiagram, id, nodes: [dirtyNode] })
+    await new Promise((r) => setTimeout(r, 50))
+
+    const list = await request(app).get(`/api/diagrams/${id}/versions`)
+    expect(list.body.versions.length).toBe(1)
+    expect(list.body.versions[0]!.name).toBe("Initial")
+  })
+
   it("marker is released when the redis Lua call fails — next PUT can retry", async () => {
     // Inject a failure: write a corrupt latest-version body so
     // gunzipJson throws during the fingerprint compare. The catch path

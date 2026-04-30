@@ -508,31 +508,6 @@ export class ApollonEditor {
     this.metadataStore.getState().setReadonly(readonly)
   }
 
-  /**
-   * Returns the editor's current Yjs state vector — a compact summary of
-   * everything the doc has observed. Used by hosting apps for O(1) dirty
-   * detection: snapshot the SV at the time of the last persisted version,
-   * compare on each change. Cheaper than (and more correct than) JSON
-   * deep-compare against a re-fetched body.
-   *
-   * Two state vectors compare equal iff the docs would produce identical
-   * full-state encodings. A new SV is returned each call (defensive copy);
-   * callers can persist it as `Uint8Array` without further wrapping.
-   */
-  public getStateVector(): Uint8Array {
-    return Y.encodeStateVector(this.ydoc)
-  }
-
-  /**
-   * Direct access to the underlying Y.Doc. Hosting apps wire optional
-   * persistence transports (e.g. `y-indexeddb` for offline / multi-tab) by
-   * passing this to a transport adapter. Prefer `setReadonly` / `model`
-   * accessors for routine state mutation.
-   */
-  public getYDoc(): Y.Doc {
-    return this.ydoc
-  }
-
   public toggleInteractiveElementsMode(forceEnabled?: boolean): void {
     const currentView = this.metadataStore.getState().view
     const shouldEnable =

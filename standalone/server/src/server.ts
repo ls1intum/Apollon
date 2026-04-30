@@ -9,23 +9,26 @@ import { startRelayServer } from "./ws"
 async function main() {
   const config = loadConfig()
 
+  // Connect Redis and load the apollon Lua library BEFORE accepting
+  // traffic. If either fails we exit non-zero — serving HTTP with a
+  // half-initialised backend means every FCALL races against the load
+  // and clients see "Function not found" errors. Fail closed: the
+  // process supervisor (k8s, docker, systemd) will restart us.
   const redis = createRedisClient(config.REDIS_URL)
-  redis
-    .connect()
-    .then(async () => {
-      logger.info({ event: "redis.connected" }, "redis connected")
-      try {
-        await bootLoadFunction(redis)
-      } catch (err) {
-        logger.error(
-          { err },
-          "redis function load failed — versioning will not work"
-        )
-      }
-    })
-    .catch((err) => {
-      logger.warn({ err }, "redis connection failed; running without DB")
-    })
+  await redis.connect()
+  logger.info({ event: "redis.connected" }, "redis connected")
+  await bootLoadFunction(redis)
+
+  // If Redis disconnects and reconnects (restart, failover) the function
+  // library has to be re-loaded — Redis Functions are persisted to AOF/RDB,
+  // but only on a Redis whose persistence is healthy. Re-loading is
+  // idempotent (`FUNCTION LOAD REPLACE`), so it's safe to fire on every
+  // ready event.
+  redis.on("ready", () => {
+    bootLoadFunction(redis).catch((err) =>
+      logger.error({ err }, "function library re-load on reconnect failed")
+    )
+  })
 
   const relay = startRelayServer({
     port: config.WS_PORT,

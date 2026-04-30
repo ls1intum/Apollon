@@ -1,7 +1,10 @@
 /**
- * Centralized strings for the versioning UI. English-only in the first
- * release; punted to the wider webapp i18n when that lands. Keep keys
- * stable. Each key here has at least one reference; orphans are pruned
+ * Drawer-local strings for the versioning UI. English-only in the first
+ * release; punted to the wider webapp i18n when that lands. Toast copy
+ * emitted from stores/pages (eviction warnings, REDIS_UNAVAILABLE,
+ * collaborator-restore notice) stays inline at its emission site by
+ * convention — the table here covers the drawer's static UI only. Keep
+ * keys stable. Each key has at least one reference; orphans are pruned
  * aggressively because adding strings without consumers is how
  * translation drift starts.
  */
@@ -9,7 +12,6 @@ export const versioningStrings = {
   drawerTitle: "Version history",
   navMenuItem: "Version history",
   fabTooltip: "Version history (⌥⇧H)",
-  closeSidebar: "Close version history",
   loadOlder: "Load older versions",
   previewFailed: "Failed to load preview.",
   restoreFailed: "Restore failed.",
@@ -18,7 +20,6 @@ export const versioningStrings = {
   createPlaceholder: "Describe this version (optional)",
   createButton: "Save version",
   saving: "Saving…",
-  counter: (n: number, max: number) => `${n} / ${max}`,
   lastVersion: (ago: string) => `Last saved ${ago}`,
   noVersionYet: "No version saved yet",
   copyLink: "Copy link to this version",

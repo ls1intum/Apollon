@@ -63,8 +63,10 @@ export function gunzipJson<T>(s: string): T {
 //   commit_snapshot     — writes a new snapshot body (gzipped raw bytes),
 //                         HSETs metadata, ZADDs the index, FIFO-prunes the
 //                         oldest snapshot when the cap is exceeded. Single
-//                         quota across kinds (user + auto). FIFO eviction
-//                         relies on monotonic-ULID-as-tiebreaker on score.
+//                         quota across kinds (user + auto). Same-millisecond
+//                         ZSET ties fall back to lex order on the ULID — see
+//                         `list_versions_before` for the cursor-pagination
+//                         counterpart.
 //
 //   restore_version     — rolls HEAD back to a stored snapshot, atomically
 //                         capturing the pre-restore HEAD as a kind='auto'
@@ -229,6 +231,20 @@ local function restore_version(keys, args)
   -- counts as protected — eviction won't sweep it the way it sweeps raw
   -- autosaves. The name is auto-generated server-side: "Before restoring
   -- '<X>'", giving the user a self-explanatory recovery anchor.
+  --
+  -- Order: HEAD swap goes first, then the auto-snapshot is committed and
+  -- eviction runs. Lua does not roll back side effects of earlier
+  -- redis.call's, so if JSON.SET fails (RedisJSON OOM, malformed input)
+  -- we want to abort BEFORE eviction has destroyed older rows. Doing
+  -- eviction first risks losing named milestones to a HEAD-write that
+  -- never lands.
+  local ttlHead = tonumber(args[4])
+  redis.call('JSON.SET', keys[1], '$', args[10])
+  redis.call('EXPIRE', keys[1], ttlHead)
+  redis.call('HSET', keys[3], 'updatedAt', args[2])
+  local newRev = redis.call('HINCRBY', keys[3], 'headRev', 1)
+  redis.call('EXPIRE', keys[3], ttlHead)
+
   local autoSeq = redis.call('HINCRBY', keys[3], 'versionSeq', 1)
   redis.call('SET', autoKey, args[8], 'EX', ttl)
   redis.call('HSET', autoMeta,
@@ -246,13 +262,6 @@ local function restore_version(keys, args)
   local maxV = tonumber(args[5])
   local evictResult = evict_with_priority(keys[2], keys[1], count, maxV)
   local evicted = evictResult[1]
-
-  local ttlHead = tonumber(args[4])
-  redis.call('JSON.SET', keys[1], '$', args[10])
-  redis.call('EXPIRE', keys[1], ttlHead)
-  redis.call('HSET', keys[3], 'updatedAt', args[2])
-  local newRev = redis.call('HINCRBY', keys[3], 'headRev', 1)
-  redis.call('EXPIRE', keys[3], ttlHead)
 
   return { autoVid, tostring(newRev), evicted }
 end
@@ -327,7 +336,8 @@ redis.register_function{
 
 redis.register_function{
   function_name = 'list_versions_before',
-  callback = list_versions_before
+  callback = list_versions_before,
+  flags = { 'no-writes' }
 }
 `
 
