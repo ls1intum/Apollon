@@ -1,11 +1,26 @@
 import { useEditorContext } from "@/contexts"
 import { log } from "@/logger"
 import { useFileDownload } from "./useFileDownload"
-import { renderSvgToSlide, slideSizeFromClip } from "@/utils/svgToPptx"
+import {
+  renderSvgToSlide,
+  slideSizeFromClip,
+  type TargetApp,
+} from "@/utils/svgToPptx"
+
+type Options = {
+  /**
+   * Target presentation app. Both produce a `.pptx` file (Keynote opens
+   * `.pptx` natively); the flag lets the converter make app-specific tweaks
+   * where the two renderers diverge.
+   */
+  target?: TargetApp
+  /** Optional filename suffix to disambiguate (e.g. "-keynote"). */
+  fileNameSuffix?: string
+}
 
 /**
  * Export the current diagram as a PPTX where every shape, line, and text label
- * is its own animatable PowerPoint object.
+ * is its own animatable PowerPoint/Keynote object.
  *
  * Flow:
  *  1. Reuse the existing compat-mode SVG export (CSS-vars resolved, arrowheads
@@ -16,7 +31,7 @@ import { renderSvgToSlide, slideSizeFromClip } from "@/utils/svgToPptx"
  *  4. Walk the SVG tree and emit one `<p:sp>` per visible element via
  *     `renderSvgToSlide`.
  */
-export const useExportAsPPTX = () => {
+export const useExportAsPPTX = (options: Options = {}) => {
   const { editor } = useEditorContext()
   const downloadFile = useFileDownload()
 
@@ -51,9 +66,12 @@ export const useExportAsPPTX = () => {
     const slide = pres.addSlide()
     renderSvgToSlide(apollonSVG.svg, apollonSVG.clip, pres, slide, {
       background: "FFFFFF",
+      target: options.target ?? "powerpoint",
     })
 
-    const fileName = `${editor.model.title || "diagram"}.pptx`
+    const baseTitle = editor.model.title || "diagram"
+    const suffix = options.fileNameSuffix ?? ""
+    const fileName = `${baseTitle}${suffix}.pptx`
     const blob = (await pres.write({ outputType: "blob" })) as Blob
     const file = new File([blob], fileName, {
       type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",

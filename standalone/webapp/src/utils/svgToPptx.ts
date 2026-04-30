@@ -3,13 +3,22 @@
  * native PPTX shapes on a single slide. The goal is *animatability*: each
  * visible diagram element (rectangle, line, text label, arrowhead) becomes its
  * own `<p:sp>` so users can apply per-element animations from PowerPoint's
- * Animation Pane.
+ * (or Keynote's) Animation panel.
  *
  * Coordinate strategy: PPTX uses inches; pixels → inches via PX_PER_INCH (96).
  * Apollon's SVG sets `viewBox="clip.x clip.y W H"`, so we subtract the clip
  * origin from every absolute coordinate. Inside each `.react-flow__node` group
  * the inner `<svg>` has its own viewBox that maps 1:1 onto its pixel size, so
- * we recurse with an accumulated translate offset.
+ * we recurse with an accumulated transform.
+ *
+ * Paint inheritance: SVG lets a parent `<g>` set `stroke`, `fill`,
+ * `stroke-width` etc. for its descendants. The walker carries an inherited
+ * paint-style object so children that omit those attributes pick them up
+ * (Apollon's use-case actor stick figure relies on this for its lines).
+ *
+ * Rotation: 2D affine matrices that came from `rotate()` are decomposed back
+ * into rotation + scale + flip and applied to the emitted shape's `rotate`
+ * property so PowerPoint/Keynote render them correctly.
  */
 import type pptxgen from "pptxgenjs"
 import { parsePath, pathBBox, type PathSegment, type Pt } from "./svgPathParser"
@@ -35,6 +44,33 @@ const multiply = (a: Mat, b: Mat): Mat => [
   a[0] * b[4] + a[2] * b[5] + a[4],
   a[1] * b[4] + a[3] * b[5] + a[5],
 ]
+
+/**
+ * Decompose an affine matrix into rotation (degrees) + uniform scale +
+ * (optional) flip. We only emit a non-zero `rotate` when the rotation is
+ * appreciable, otherwise PowerPoint adds tiny visual jitter.
+ */
+function decomposeRotation(m: Mat): {
+  rotateDeg: number
+  scaleX: number
+  scaleY: number
+} {
+  const a = m[0]
+  const b = m[1]
+  const c = m[2]
+  const d = m[3]
+  const scaleX = Math.sqrt(a * a + b * b) || 1
+  const scaleY = Math.sqrt(c * c + d * d) || 1
+  // Determinant negative → reflection. We don't carry that into shape flipH/V
+  // because Apollon's compat-mode export doesn't reflect anything.
+  const rotateRad = Math.atan2(b, a)
+  const rotateDeg = (rotateRad * 180) / Math.PI
+  return {
+    rotateDeg: Math.abs(rotateDeg) < 0.01 ? 0 : rotateDeg,
+    scaleX,
+    scaleY,
+  }
+}
 
 /** Parse `transform="..."` supporting translate(), matrix(), scale(), rotate(). */
 function parseTransform(value: string | null): Mat {
@@ -77,14 +113,13 @@ function parseTransform(value: string | null): Mat {
 }
 
 /**
- * Resolve `fill`/`stroke` attribute or inline-style value to a 6-char hex
- * (uppercase) or `null` if "none" / transparent. Apollon's compat-mode export
- * has already resolved CSS variables, so we only need to handle direct values.
+ * Resolve a color string ("#rgb", "#rrggbb", "rgb(…)", or named) to a 6-char
+ * uppercase hex. Returns null for "none"/"transparent" / unrecognized.
  */
 function resolveColor(raw: string | null | undefined): string | null {
   if (!raw) return null
   const v = raw.trim()
-  if (!v || v === "none" || v === "transparent") return null
+  if (!v || v === "none" || v === "transparent" || v === "currentColor") return null
   if (v.startsWith("#")) {
     const hex = v.slice(1)
     if (hex.length === 3) {
@@ -107,7 +142,6 @@ function resolveColor(raw: string | null | undefined): string | null {
       return (h(r) + h(g) + h(b)).toUpperCase()
     }
   }
-  // Named colors — handle the few that show up in Apollon's CSS_VARIABLE_FALLBACKS
   const named: Record<string, string> = {
     black: "000000",
     white: "FFFFFF",
@@ -159,32 +193,130 @@ function dashType(value: string | null):
   if (!value || value === "none" || value === "0") return undefined
   const tokens = value.split(/[\s,]+/).map(Number).filter(Number.isFinite)
   if (tokens.length === 0) return undefined
-  // Heuristics good enough for Apollon's stroke-dasharray usages.
   const sum = tokens.reduce((a, b) => a + b, 0)
   if (sum < 6) return "sysDot"
   if (tokens.length >= 4) return "dashDot"
   return "dash"
 }
 
+/* ------------------------------------------------------------------ */
+/* Inherited paint                                                     */
+/* ------------------------------------------------------------------ */
+
+type PaintStyle = {
+  fill: string | null // hex without # ("UNSET" = inherit)
+  fillRaw: string | null // raw value for "none" tracking
+  stroke: string | null
+  strokeRaw: string | null
+  strokeWidth: number
+  strokeDash: string | null
+  opacity: number
+  fillOpacity: number
+  strokeOpacity: number
+}
+
+const DEFAULT_PAINT: PaintStyle = {
+  fill: "000000", // SVG spec default for fill is black
+  fillRaw: "#000000",
+  stroke: null,
+  strokeRaw: null,
+  strokeWidth: 1,
+  strokeDash: null,
+  opacity: 1,
+  fillOpacity: 1,
+  strokeOpacity: 1,
+}
+
+function inheritPaint(
+  el: Element,
+  style: Record<string, string>,
+  parent: PaintStyle
+): PaintStyle {
+  const fillRaw = getAttr(el, "fill", style)
+  const strokeRaw = getAttr(el, "stroke", style)
+  const swRaw = getAttr(el, "stroke-width", style)
+  const sdRaw = getAttr(el, "stroke-dasharray", style)
+  const opRaw = getAttr(el, "opacity", style)
+  const foRaw = getAttr(el, "fill-opacity", style)
+  const soRaw = getAttr(el, "stroke-opacity", style)
+
+  return {
+    fill:
+      fillRaw === null
+        ? parent.fill
+        : fillRaw === "none" || fillRaw === "transparent"
+          ? null
+          : (resolveColor(fillRaw) ?? parent.fill),
+    fillRaw: fillRaw ?? parent.fillRaw,
+    stroke:
+      strokeRaw === null
+        ? parent.stroke
+        : strokeRaw === "none" || strokeRaw === "transparent"
+          ? null
+          : (resolveColor(strokeRaw) ?? parent.stroke),
+    strokeRaw: strokeRaw ?? parent.strokeRaw,
+    strokeWidth:
+      swRaw === null ? parent.strokeWidth : parseFloat(swRaw) || parent.strokeWidth,
+    strokeDash: sdRaw ?? parent.strokeDash,
+    opacity: opRaw === null ? parent.opacity : parseFloat(opRaw) || 0,
+    fillOpacity:
+      foRaw === null ? parent.fillOpacity : parseFloat(foRaw) || 0,
+    strokeOpacity:
+      soRaw === null ? parent.strokeOpacity : parseFloat(soRaw) || 0,
+  }
+}
+
+function fillProps(p: PaintStyle): pptxgen.ShapeFillProps | { type: "none" } {
+  if (!p.fill) return { type: "none" }
+  const a = p.opacity * p.fillOpacity
+  if (a <= 0) return { type: "none" }
+  const transparency = Math.round((1 - a) * 100)
+  return { type: "solid", color: p.fill, transparency }
+}
+
+function lineProps(
+  p: PaintStyle,
+  override?: { width?: number; dash?: string | null }
+):
+  | (pptxgen.ShapeLineProps & { type: "solid" })
+  | { type: "none" } {
+  const stroke = p.stroke
+  if (!stroke) return { type: "none" }
+  const a = p.opacity * p.strokeOpacity
+  if (a <= 0) return { type: "none" }
+  const w = override?.width ?? p.strokeWidth
+  return {
+    type: "solid",
+    color: stroke,
+    width: ptFromPx(w),
+    transparency: Math.round((1 - a) * 100),
+    dashType: dashType(override?.dash ?? p.strokeDash),
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Shape emit context                                                  */
+/* ------------------------------------------------------------------ */
+
+export type TargetApp = "powerpoint" | "keynote"
+
 type EmitContext = {
   pres: pptxgen
   slide: pptxgen.Slide
   clipX: number
   clipY: number
-  // running counter for animation-pane fallback names
   counter: { n: number }
   ownerName: string | null
+  target: TargetApp
+  measureText: (text: string, fontSize: number, bold: boolean, italic: boolean, fontFace: string) => number
 }
 
-function nextName(ctx: EmitContext, kind: string): string {
+function nextName(ctx: EmitContext, kind: string, label?: string): string {
   const owner = ctx.ownerName ? `${ctx.ownerName} · ` : ""
-  return `${owner}${kind} ${++ctx.counter.n}`
-}
-
-function shapeBaseProps(_ctx: EmitContext, name: string) {
-  return {
-    objectName: name,
-  }
+  const tail = label ? ` "${label.slice(0, 40)}"` : ` ${++ctx.counter.n}`
+  if (!label) return `${owner}${kind}${tail}`
+  ctx.counter.n++
+  return `${owner}${kind}${tail}`
 }
 
 /* ------------------------------------------------------------------ */
@@ -195,6 +327,7 @@ function emitRect(
   ctx: EmitContext,
   el: Element,
   ctm: Mat,
+  paint: PaintStyle,
   style: Record<string, string>
 ) {
   const x = getNum(el, "x", style, 0)
@@ -205,52 +338,30 @@ function emitRect(
   const rx = getNum(el, "rx", style, 0)
   const ry = getNum(el, "ry", style, rx)
 
-  const corners: Pt[] = [
-    apply(ctm, { x, y }),
-    apply(ctm, { x: x + w, y }),
-    apply(ctm, { x: x + w, y: y + h }),
-    apply(ctm, { x, y: y + h }),
-  ]
-  const minX = Math.min(...corners.map((c) => c.x)) - ctx.clipX
-  const minY = Math.min(...corners.map((c) => c.y)) - ctx.clipY
-  const maxX = Math.max(...corners.map((c) => c.x)) - ctx.clipX
-  const maxY = Math.max(...corners.map((c) => c.y)) - ctx.clipY
-  const width = maxX - minX
-  const height = maxY - minY
-  if (width <= 0 || height <= 0) return
-
-  const fill = resolveColor(getAttr(el, "fill", style))
-  const stroke = resolveColor(getAttr(el, "stroke", style))
-  const strokeWidth = getNum(el, "stroke-width", style, 1)
-  const opacity = getNum(el, "opacity", style, 1)
-  const fillOpacity = getNum(el, "fill-opacity", style, 1)
-  const strokeDash = getAttr(el, "stroke-dasharray", style)
+  const { rotateDeg } = decomposeRotation(ctm)
+  // We compute the axis-aligned bbox in *unrotated* space (origin at the
+  // rect's local 0,0) then translate the bbox center via CTM and ask PPTX to
+  // rotate around it. PPTX rotates around the shape's center.
+  const localCenter = { x: x + w / 2, y: y + h / 2 }
+  const center = apply(ctm, localCenter)
+  const minX = center.x - w / 2 - ctx.clipX
+  const minY = center.y - h / 2 - ctx.clipY
 
   const isRound = Math.max(rx, ry) > 0
   const radius = Math.max(rx, ry)
-  const minSide = Math.min(width, height)
+  const minSide = Math.min(w, h)
   const radiusFrac = isRound && minSide > 0 ? Math.min(0.5, radius / minSide) : 0
 
   const props: pptxgen.ShapeProps = {
     x: px(minX),
     y: px(minY),
-    w: px(width),
-    h: px(height),
-    fill:
-      fill && fillOpacity * opacity > 0
-        ? { type: "solid", color: fill, transparency: Math.round((1 - fillOpacity * opacity) * 100) }
-        : { type: "none" },
-    line:
-      stroke && opacity > 0
-        ? {
-            type: "solid",
-            color: stroke,
-            width: ptFromPx(strokeWidth),
-            dashType: dashType(strokeDash),
-          }
-        : { type: "none" },
+    w: px(w),
+    h: px(h),
+    rotate: rotateDeg,
+    fill: fillProps(paint),
+    line: lineProps(paint),
     ...(isRound ? { rectRadius: radiusFrac } : {}),
-    ...shapeBaseProps(ctx, nextName(ctx, isRound ? "Rounded rect" : "Rect")),
+    objectName: nextName(ctx, isRound ? "Rounded rect" : "Rect"),
   }
 
   ctx.slide.addShape(
@@ -263,6 +374,7 @@ function emitEllipse(
   ctx: EmitContext,
   el: Element,
   ctm: Mat,
+  paint: PaintStyle,
   style: Record<string, string>,
   isCircle: boolean
 ) {
@@ -279,47 +391,22 @@ function emitEllipse(
     ry = getNum(el, "ry", style, 0)
   }
   if (rx <= 0 || ry <= 0) return
-
-  // For PPTX ellipse position is bbox top-left; we sample the four extremes
-  // (works for translate/scale only — Apollon doesn't rotate ellipses).
-  const corners: Pt[] = [
-    apply(ctm, { x: cx - rx, y: cy - ry }),
-    apply(ctm, { x: cx + rx, y: cy - ry }),
-    apply(ctm, { x: cx + rx, y: cy + ry }),
-    apply(ctm, { x: cx - rx, y: cy + ry }),
-  ]
-  const minX = Math.min(...corners.map((c) => c.x)) - ctx.clipX
-  const minY = Math.min(...corners.map((c) => c.y)) - ctx.clipY
-  const width = Math.max(...corners.map((c) => c.x)) - ctx.clipX - minX
-  const height = Math.max(...corners.map((c) => c.y)) - ctx.clipY - minY
-  if (width <= 0 || height <= 0) return
-
-  const fill = resolveColor(getAttr(el, "fill", style))
-  const stroke = resolveColor(getAttr(el, "stroke", style))
-  const strokeWidth = getNum(el, "stroke-width", style, 1)
-  const fillOpacity = getNum(el, "fill-opacity", style, 1)
-  const opacity = getNum(el, "opacity", style, 1)
-  const strokeDash = getAttr(el, "stroke-dasharray", style)
+  const { rotateDeg, scaleX, scaleY } = decomposeRotation(ctm)
+  const center = apply(ctm, { x: cx, y: cy })
+  const w = 2 * rx * scaleX
+  const h = 2 * ry * scaleY
+  const minX = center.x - w / 2 - ctx.clipX
+  const minY = center.y - h / 2 - ctx.clipY
 
   ctx.slide.addShape(ctx.pres.ShapeType.ellipse, {
     x: px(minX),
     y: px(minY),
-    w: px(width),
-    h: px(height),
-    fill:
-      fill && fillOpacity * opacity > 0
-        ? { type: "solid", color: fill, transparency: Math.round((1 - fillOpacity * opacity) * 100) }
-        : { type: "none" },
-    line:
-      stroke && opacity > 0
-        ? {
-            type: "solid",
-            color: stroke,
-            width: ptFromPx(strokeWidth),
-            dashType: dashType(strokeDash),
-          }
-        : { type: "none" },
-    ...shapeBaseProps(ctx, nextName(ctx, isCircle ? "Circle" : "Ellipse")),
+    w: px(w),
+    h: px(h),
+    rotate: rotateDeg,
+    fill: fillProps(paint),
+    line: lineProps(paint),
+    objectName: nextName(ctx, isCircle ? "Circle" : "Ellipse"),
   })
 }
 
@@ -327,6 +414,7 @@ function emitLine(
   ctx: EmitContext,
   el: Element,
   ctm: Mat,
+  paint: PaintStyle,
   style: Record<string, string>
 ) {
   const x1 = getNum(el, "x1", style, 0)
@@ -335,13 +423,8 @@ function emitLine(
   const y2 = getNum(el, "y2", style, 0)
   const p1 = apply(ctm, { x: x1, y: y1 })
   const p2 = apply(ctm, { x: x2, y: y2 })
+  if (!paint.stroke) return
 
-  const stroke = resolveColor(getAttr(el, "stroke", style))
-  if (!stroke) return
-  const strokeWidth = getNum(el, "stroke-width", style, 1)
-  const strokeDash = getAttr(el, "stroke-dasharray", style)
-
-  // PPTX LINE shape uses bbox; flipH/flipV chooses direction.
   const minX = Math.min(p1.x, p2.x) - ctx.clipX
   const minY = Math.min(p1.y, p2.y) - ctx.clipY
   const w = Math.abs(p2.x - p1.x)
@@ -356,13 +439,8 @@ function emitLine(
     h: px(Math.max(h, 0.0001)),
     flipH,
     flipV,
-    line: {
-      type: "solid",
-      color: stroke,
-      width: ptFromPx(strokeWidth),
-      dashType: dashType(strokeDash),
-    },
-    ...shapeBaseProps(ctx, nextName(ctx, "Line")),
+    line: lineProps(paint),
+    objectName: nextName(ctx, "Line"),
   })
 }
 
@@ -370,9 +448,11 @@ function emitPolygonOrPolyline(
   ctx: EmitContext,
   el: Element,
   ctm: Mat,
+  paint: PaintStyle,
   style: Record<string, string>,
   closed: boolean
 ) {
+  void style
   const pointsAttr = el.getAttribute("points") ?? ""
   const nums = pointsAttr
     .split(/[\s,]+/)
@@ -387,14 +467,23 @@ function emitPolygonOrPolyline(
   segs.push({ type: "M", pt: pts[0] })
   for (let i = 1; i < pts.length; i++) segs.push({ type: "L", pt: pts[i] })
   if (closed) segs.push({ type: "Z" })
-  emitPathSegments(ctx, segs, el, style, closed ? "Polygon" : "Polyline")
+  emitPathSegments(
+    ctx,
+    segs,
+    paint,
+    el.hasAttribute("data-inline-marker")
+      ? "Arrowhead"
+      : closed
+        ? "Polygon"
+        : "Polyline"
+  )
 }
 
 function emitPath(
   ctx: EmitContext,
   el: Element,
   ctm: Mat,
-  style: Record<string, string>
+  paint: PaintStyle
 ) {
   const d = el.getAttribute("d")
   if (!d) return
@@ -411,22 +500,25 @@ function emitPath(
       }
     return { type: "Z" }
   })
-  emitPathSegments(ctx, segs, el, style, "Path")
+  emitPathSegments(
+    ctx,
+    segs,
+    paint,
+    el.hasAttribute("data-inline-marker") ? "Arrowhead" : "Path"
+  )
 }
 
 function emitPathSegments(
   ctx: EmitContext,
   segs: PathSegment[],
-  el: Element,
-  style: Record<string, string>,
+  paint: PaintStyle,
   kind: string
 ) {
   if (segs.length === 0) return
   const bbox = pathBBox(segs)
-  // Apollon strokes can extend outside path anchors — pad the bbox by half
-  // stroke width so PPTX's path-w/path-h doesn't clip the stroke itself.
-  const strokeWidth = getNum(el, "stroke-width", style, 1)
-  const pad = Math.max(0.5, strokeWidth / 2)
+  // Pad bbox by half the stroke width so PPTX path-w/path-h doesn't clip the
+  // stroke itself when an endpoint sits exactly on the bbox edge.
+  const pad = Math.max(0.5, paint.strokeWidth / 2)
   const bx = bbox.x - pad
   const by = bbox.y - pad
   const bw = Math.max(bbox.width + pad * 2, 0.001)
@@ -457,42 +549,16 @@ function emitPathSegments(
     }
   }
 
-  const fill = resolveColor(getAttr(el, "fill", style))
-  const stroke = resolveColor(getAttr(el, "stroke", style))
-  const fillOpacity = getNum(el, "fill-opacity", style, 1)
-  const opacity = getNum(el, "opacity", style, 1)
-  const strokeDash = getAttr(el, "stroke-dasharray", style)
-  const fillRule = getAttr(el, "fill-rule", style)
-
-  ctx.slide.addShape(
-    "custGeom" as unknown as pptxgen.ShapeType,
-    {
-      x: px(bx - ctx.clipX),
-      y: px(by - ctx.clipY),
-      w: px(bw),
-      h: px(bh),
-      points,
-      fill:
-        fill && fillOpacity * opacity > 0
-          ? {
-              type: "solid",
-              color: fill,
-              transparency: Math.round((1 - fillOpacity * opacity) * 100),
-            }
-          : { type: "none" },
-      line:
-        stroke && opacity > 0
-          ? {
-              type: "solid",
-              color: stroke,
-              width: ptFromPx(strokeWidth),
-              dashType: dashType(strokeDash),
-            }
-          : { type: "none" },
-      ...shapeBaseProps(ctx, nextName(ctx, kind)),
-    } as pptxgen.ShapeProps
-  )
-  void fillRule
+  ctx.slide.addShape("custGeom" as unknown as pptxgen.ShapeType, {
+    x: px(bx - ctx.clipX),
+    y: px(by - ctx.clipY),
+    w: px(bw),
+    h: px(bh),
+    points,
+    fill: fillProps(paint),
+    line: lineProps(paint),
+    objectName: nextName(ctx, kind),
+  } as pptxgen.ShapeProps)
 }
 
 /* ------------------------------------------------------------------ */
@@ -501,12 +567,38 @@ function emitPathSegments(
 
 type TextStyle = {
   fontFace: string
-  fontSize: number
+  fontSize: number // px
   bold: boolean
   italic: boolean
   underline: boolean
   color: string | null
   textAnchor: "start" | "middle" | "end"
+}
+
+const DEFAULT_TEXT_STYLE: TextStyle = {
+  fontFace: "Inter",
+  fontSize: 14,
+  bold: false,
+  italic: false,
+  underline: false,
+  color: "000000",
+  textAnchor: "start",
+}
+
+/**
+ * Parse a font-size value (with unit handling for `%`, `em`, `pt`, `px`,
+ * unitless). Relative units are resolved against the inherited size.
+ */
+function parseFontSize(raw: string, inherited: number): number {
+  const m = /^(-?\d*\.?\d+)\s*([a-zA-Z%]*)$/.exec(raw.trim())
+  if (!m) return inherited
+  const n = parseFloat(m[1])
+  const unit = m[2].toLowerCase()
+  if (unit === "%") return (n / 100) * inherited
+  if (unit === "em") return n * inherited
+  if (unit === "pt") return n / PT_PER_PX
+  // px or unitless → px
+  return n
 }
 
 function readTextStyle(
@@ -516,21 +608,24 @@ function readTextStyle(
 ): TextStyle {
   const fontFamily = getAttr(el, "font-family", style) ?? inherit.fontFace
   const fontSizeRaw = getAttr(el, "font-size", style)
-  let fontSize = inherit.fontSize
-  if (fontSizeRaw) {
-    const m = /^(-?\d*\.?\d+)/.exec(fontSizeRaw)
-    if (m) fontSize = parseFloat(m[1])
-  }
+  const fontSize = fontSizeRaw
+    ? parseFontSize(fontSizeRaw, inherit.fontSize)
+    : inherit.fontSize
   const fwRaw = getAttr(el, "font-weight", style)
   const bold = fwRaw
-    ? fwRaw === "bold" || (Number(fwRaw) || 0) >= 600
+    ? fwRaw === "bold" || fwRaw === "bolder" || (Number(fwRaw) || 0) >= 600
     : inherit.bold
   const fsRaw = getAttr(el, "font-style", style)
-  const italic = fsRaw ? fsRaw === "italic" : inherit.italic
+  const italic = fsRaw ? fsRaw === "italic" || fsRaw === "oblique" : inherit.italic
   const tdRaw = getAttr(el, "text-decoration", style)
   const underline = tdRaw ? /underline/.test(tdRaw) : inherit.underline
   const fill = getAttr(el, "fill", style)
-  const color = fill ? resolveColor(fill) : inherit.color
+  const color =
+    fill === null
+      ? inherit.color
+      : fill === "none" || fill === "transparent"
+        ? inherit.color
+        : (resolveColor(fill) ?? inherit.color)
   const taRaw = getAttr(el, "text-anchor", style) as TextStyle["textAnchor"] | null
   const textAnchor = taRaw ?? inherit.textAnchor
 
@@ -545,59 +640,53 @@ function readTextStyle(
   }
 }
 
-const DEFAULT_TEXT_STYLE: TextStyle = {
-  fontFace: "Inter",
-  fontSize: 14,
-  bold: false,
-  italic: false,
-  underline: false,
-  color: "000000",
-  textAnchor: "start",
+/** Browser-side text width measurer using a single shared canvas. */
+function makeCanvasMeasurer(): EmitContext["measureText"] {
+  if (typeof document === "undefined") {
+    // Node/jsdom path — fall back to a heuristic.
+    return (text, fontSize, bold) => {
+      const factor = bold ? 0.62 : 0.55
+      return text.length * fontSize * factor
+    }
+  }
+  const canvas = document.createElement("canvas")
+  const ctx2d = canvas.getContext("2d")
+  if (!ctx2d) {
+    return (text, fontSize, bold) => {
+      const factor = bold ? 0.62 : 0.55
+      return text.length * fontSize * factor
+    }
+  }
+  return (text, fontSize, bold, italic, fontFace) => {
+    const weight = bold ? "700" : "400"
+    const styleStr = italic ? "italic" : "normal"
+    ctx2d.font = `${styleStr} ${weight} ${fontSize}px ${fontFace || "Inter"}, system-ui, Arial, sans-serif`
+    return ctx2d.measureText(text).width
+  }
 }
 
-/**
- * Approximate text width in pixels. SVG text widths can only be measured at
- * render time; when our function runs the live measurement is gone. We use a
- * conservative heuristic (`0.6em` average glyph width) that empirically lands
- * close enough that PowerPoint's rendering agrees once `valign` is set.
- */
-function approxTextWidthPx(text: string, fontSize: number, bold: boolean): number {
-  const factor = bold ? 0.62 : 0.55
-  return text.length * fontSize * factor
-}
-
-type TextRun = {
-  text: string
-  style: TextStyle
-}
-
+type TextRun = { text: string; style: TextStyle }
 type TextLine = {
   runs: TextRun[]
-  // anchor x is the SVG x of the line-start for textAnchor=start, otherwise
-  // the absolute x given by the parent <text>/<tspan>.
   anchorX: number
   baselineY: number
   textAnchor: "start" | "middle" | "end"
 }
 
-/**
- * Walk a <text> element, splitting on <tspan> children that carry their own
- * `x`/`y` (treat as new line). Returns one TextLine per visual line so we can
- * emit one PPTX text-box per line — that's what gives independent animation.
- */
 function buildTextLines(
   textEl: Element,
   ctm: Mat,
   parentStyle: Record<string, string>,
   inheritStyle: TextStyle
 ): TextLine[] {
+  void parentStyle
   const textStyleSelf = readTextStyle(
     textEl,
     styleToObject(textEl.getAttribute("style")),
     inheritStyle
   )
-  const baseX = getNum(textEl, "x", parentStyle, 0)
-  const baseY = getNum(textEl, "y", parentStyle, 0)
+  const baseX = getNum(textEl, "x", {}, 0)
+  const baseY = getNum(textEl, "y", {}, 0)
   const out: TextLine[] = []
   let curLine: TextLine | null = null
   let cursorX = baseX
@@ -607,16 +696,10 @@ function buildTextLines(
     if (curLine && curLine.runs.length > 0) out.push(curLine)
     curLine = null
   }
-
   const newLineAt = (x: number, y: number, anchor: TextLine["textAnchor"]) => {
     flush()
     const p = apply(ctm, { x, y })
-    curLine = {
-      runs: [],
-      anchorX: p.x,
-      baselineY: p.y,
-      textAnchor: anchor,
-    }
+    curLine = { runs: [], anchorX: p.x, baselineY: p.y, textAnchor: anchor }
   }
 
   newLineAt(cursorX, cursorY, textStyleSelf.textAnchor)
@@ -632,7 +715,6 @@ function buildTextLines(
     if (node.nodeType !== Node.ELEMENT_NODE) return
     const el = node as Element
     if (el.tagName.toLowerCase() !== "tspan") {
-      // Unknown nested element — recurse anyway.
       el.childNodes.forEach((c) => walk(c, inherited))
       return
     }
@@ -648,8 +730,14 @@ function buildTextLines(
     const startsNewLine =
       xAttr !== null || yAttr !== null || (dyAttr !== null && parseFloat(dyAttr) !== 0)
     if (startsNewLine) {
-      const newX = xAttr !== null ? parseFloat(xAttr) : cursorX + (parseFloat(dxAttr || "0") || 0)
-      const newY = yAttr !== null ? parseFloat(yAttr) : cursorY + (parseFloat(dyAttr || "0") || 0)
+      const newX =
+        xAttr !== null
+          ? parseFloat(xAttr)
+          : cursorX + (parseFloat(dxAttr || "0") || 0)
+      const newY =
+        yAttr !== null
+          ? parseFloat(yAttr)
+          : cursorY + (parseFloat(dyAttr || "0") || 0)
       cursorX = newX
       cursorY = newY
       newLineAt(newX, newY, tspanStyle.textAnchor)
@@ -665,31 +753,50 @@ function buildTextLines(
 function emitTextLines(
   ctx: EmitContext,
   lines: TextLine[],
-  ownerLabel: string
+  ownerLabel: string,
+  ctm: Mat
 ) {
+  const { rotateDeg } = decomposeRotation(ctm)
   for (const line of lines) {
     if (line.runs.length === 0) continue
     const fullText = line.runs.map((r) => r.text).join("")
     if (!fullText.trim()) continue
     const dominant = line.runs[0].style
     const fontSize = dominant.fontSize
-    const totalWidthPx = line.runs.reduce(
-      (sum, r) => sum + approxTextWidthPx(r.text, r.style.fontSize, r.style.bold),
-      0
-    )
-    // Buffer to avoid clipping at edges; PowerPoint adds its own padding too.
-    const widthPx = Math.max(totalWidthPx * 1.15 + fontSize * 0.5, fontSize * 1.5)
-    const heightPx = fontSize * 1.4
+    let totalWidthPx = 0
+    for (const r of line.runs) {
+      totalWidthPx += ctx.measureText(
+        r.text,
+        r.style.fontSize,
+        r.style.bold,
+        r.style.italic,
+        r.style.fontFace
+      )
+    }
+    // Tight box; we set autoFit=false and wrap=false so PPTX renders the run
+    // exactly. A small horizontal slack avoids one-pixel clipping on edge
+    // glyphs in PowerPoint and Keynote (both add a tiny inset).
+    const widthPx = Math.max(totalWidthPx + fontSize * 0.4, fontSize * 1.5)
+    const heightPx = fontSize * 1.35
 
     let leftPx: number
     if (line.textAnchor === "middle") leftPx = line.anchorX - widthPx / 2
     else if (line.textAnchor === "end") leftPx = line.anchorX - widthPx
     else leftPx = line.anchorX
-    // SVG y is the baseline; place the text-box top at baseline - fontSize*0.85
-    const topPx = line.baselineY - fontSize * 0.85 - (heightPx - fontSize * 1.2) / 2
+    // SVG `<text y>` is the baseline; place the box top at baseline - 0.82*size
+    // (cap-height ratio for typical sans-serif), which empirically matches
+    // PowerPoint's text-box vertical metrics with valign=middle.
+    const topPx = line.baselineY - fontSize * 0.82 - (heightPx - fontSize) / 2
 
     const align: "left" | "center" | "right" =
-      line.textAnchor === "middle" ? "center" : line.textAnchor === "end" ? "right" : "left"
+      line.textAnchor === "middle"
+        ? "center"
+        : line.textAnchor === "end"
+          ? "right"
+          : "left"
+
+    const ownerName = `${ownerLabel}`
+    ctx.counter.n++
 
     ctx.slide.addText(
       line.runs.map((r) => ({
@@ -708,6 +815,7 @@ function emitTextLines(
         y: px(topPx - ctx.clipY),
         w: px(widthPx),
         h: px(heightPx),
+        rotate: rotateDeg,
         align,
         valign: "middle",
         margin: 0,
@@ -720,7 +828,7 @@ function emitTextLines(
         line: { type: "none" },
         wrap: false,
         autoFit: false,
-        ...shapeBaseProps(ctx, `${ownerLabel} · "${fullText.trim().slice(0, 40)}"`),
+        objectName: `${ownerName} · "${fullText.trim().slice(0, 40)}"`,
       }
     )
   }
@@ -734,11 +842,11 @@ function walk(
   ctx: EmitContext,
   el: Element,
   ctm: Mat,
-  inheritedTextStyle: TextStyle
+  inheritedTextStyle: TextStyle,
+  inheritedPaint: PaintStyle
 ) {
   const tag = el.tagName.toLowerCase()
 
-  // Skip definitions, masks, etc.
   if (
     tag === "defs" ||
     tag === "style" ||
@@ -753,22 +861,18 @@ function walk(
     return
   }
 
-  // Bail on display:none / visibility:hidden
   const elStyle = styleToObject(el.getAttribute("style"))
   const display = getAttr(el, "display", elStyle)
   const vis = getAttr(el, "visibility", elStyle)
   if (display === "none" || vis === "hidden") return
 
-  // Apply transform
   const tf = parseTransform(el.getAttribute("transform"))
   const localCtm = multiply(ctm, tf)
+  const paint = inheritPaint(el, elStyle, inheritedPaint)
 
   if (tag === "svg" || tag === "g" || tag === "a" || tag === "symbol") {
     const childTextStyle = readTextStyle(el, elStyle, inheritedTextStyle)
     let childCtm = localCtm
-    // Inner <svg> with viewBox: apply (preserveAspectRatio defaults to xMidYMid
-    // meet) — Apollon's per-node SVGs use width=viewBoxW, height=viewBoxH so the
-    // mapping is identity. Handle x/y offset though.
     if (tag === "svg") {
       const svgX = getNum(el, "x", elStyle, 0)
       const svgY = getNum(el, "y", elStyle, 0)
@@ -778,33 +882,32 @@ function walk(
     }
     el.childNodes.forEach((c) => {
       if (c.nodeType === Node.ELEMENT_NODE) {
-        walk(ctx, c as Element, childCtm, childTextStyle)
+        walk(ctx, c as Element, childCtm, childTextStyle, paint)
       }
     })
     return
   }
 
-  if (tag === "rect") return emitRect(ctx, el, localCtm, elStyle)
-  if (tag === "circle") return emitEllipse(ctx, el, localCtm, elStyle, true)
-  if (tag === "ellipse") return emitEllipse(ctx, el, localCtm, elStyle, false)
-  if (tag === "line") return emitLine(ctx, el, localCtm, elStyle)
-  if (tag === "polygon") return emitPolygonOrPolyline(ctx, el, localCtm, elStyle, true)
-  if (tag === "polyline") return emitPolygonOrPolyline(ctx, el, localCtm, elStyle, false)
-  if (tag === "path") return emitPath(ctx, el, localCtm, elStyle)
+  if (tag === "rect") return emitRect(ctx, el, localCtm, paint, elStyle)
+  if (tag === "circle") return emitEllipse(ctx, el, localCtm, paint, elStyle, true)
+  if (tag === "ellipse") return emitEllipse(ctx, el, localCtm, paint, elStyle, false)
+  if (tag === "line") return emitLine(ctx, el, localCtm, paint, elStyle)
+  if (tag === "polygon")
+    return emitPolygonOrPolyline(ctx, el, localCtm, paint, elStyle, true)
+  if (tag === "polyline")
+    return emitPolygonOrPolyline(ctx, el, localCtm, paint, elStyle, false)
+  if (tag === "path") return emitPath(ctx, el, localCtm, paint)
   if (tag === "text") {
     const lines = buildTextLines(el, localCtm, elStyle, inheritedTextStyle)
-    emitTextLines(ctx, lines, ctx.ownerName ?? "Label")
+    emitTextLines(ctx, lines, ctx.ownerName ?? "Label", localCtm)
     return
   }
-  if (tag === "foreignobject") {
-    // Apollon's exported SVG should never contain foreignObject in compat mode,
-    // but if it does we ignore it (could rasterize as a fallback in future).
-    return
-  }
+  if (tag === "foreignobject") return
+
   // Unknown element: recurse so we don't drop nested children.
   el.childNodes.forEach((c) => {
     if (c.nodeType === Node.ELEMENT_NODE) {
-      walk(ctx, c as Element, localCtm, inheritedTextStyle)
+      walk(ctx, c as Element, localCtm, inheritedTextStyle, paint)
     }
   })
 }
@@ -814,8 +917,9 @@ function walk(
 /* ------------------------------------------------------------------ */
 
 export type SvgToPptxOptions = {
-  /** Optional override for the slide background color (hex without #). */
   background?: string
+  /** Tweaks for Keynote's renderer (currently advisory; reserved for future). */
+  target?: TargetApp
 }
 
 export function renderSvgToSlide(
@@ -841,30 +945,28 @@ export function renderSvgToSlide(
     clipY: clip.y,
     counter: { n: 0 },
     ownerName: null,
+    target: options.target ?? "powerpoint",
+    measureText: makeCanvasMeasurer(),
   }
 
-  // Walk top-level <g> groups separately so we can label nodes vs edges nicely.
+  // First pass: top-level <g> groups separately so we can label nodes vs edges
+  // distinctly. Apollon's getSVG() emits exactly two: the nodes group, then
+  // the edges group.
   const topGroups = Array.from(svg.children).filter(
     (c) => c.tagName.toLowerCase() === "g"
   )
-  const isOnlyGs = topGroups.length === svg.children.length - countNonGroups(svg)
-  void isOnlyGs
 
-  // First top-level group = nodes, second = edges (matches getSVG() output).
   topGroups.forEach((g, idx) => {
     ctx.ownerName = idx === 0 ? "Node" : "Edge"
     g.childNodes.forEach((child) => {
       if (child.nodeType === Node.ELEMENT_NODE) {
-        // For each per-node <g translate(...)>, derive a friendlier owner name
-        // from its first inner <svg>'s data-id — but Apollon doesn't put the
-        // id on the SVG, so just number them.
         ctx.counter.n = 0
-        walk(ctx, child as Element, IDENTITY, DEFAULT_TEXT_STYLE)
+        walk(ctx, child as Element, IDENTITY, DEFAULT_TEXT_STYLE, DEFAULT_PAINT)
       }
     })
   })
 
-  // Walk anything outside top-level groups (e.g. orphan <text>) — defensive.
+  // Defensive: anything outside top-level groups
   ctx.ownerName = null
   svg.childNodes.forEach((child) => {
     if (
@@ -873,17 +975,9 @@ export function renderSvgToSlide(
       (child as Element).tagName.toLowerCase() !== "style" &&
       (child as Element).tagName.toLowerCase() !== "defs"
     ) {
-      walk(ctx, child as Element, IDENTITY, DEFAULT_TEXT_STYLE)
+      walk(ctx, child as Element, IDENTITY, DEFAULT_TEXT_STYLE, DEFAULT_PAINT)
     }
   })
-}
-
-function countNonGroups(el: Element): number {
-  let n = 0
-  for (const c of Array.from(el.children)) {
-    if (c.tagName.toLowerCase() !== "g") n++
-  }
-  return n
 }
 
 export const slideSizeFromClip = (clip: {

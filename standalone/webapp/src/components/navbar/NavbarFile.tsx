@@ -26,7 +26,11 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
   const exportAsPDF = useExportAsPDF()
-  const exportAsPPTX = useExportAsPPTX()
+  const exportAsPowerPoint = useExportAsPPTX({ target: "powerpoint" })
+  const exportAsKeynote = useExportAsPPTX({
+    target: "keynote",
+    fileNameSuffix: "-keynote",
+  })
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(
     null
@@ -174,11 +178,19 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         </MenuItem>
         <MenuItem
           onClick={() => {
-            exportAsPPTX()
+            exportAsPowerPoint()
             closeMainMenu()
           }}
         >
-          As PPTX (Animatable)
+          As PowerPoint
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            exportAsKeynote()
+            closeMainMenu()
+          }}
+        >
+          As Keynote
         </MenuItem>
       </Menu>
     </>
