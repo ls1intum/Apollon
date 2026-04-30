@@ -298,8 +298,6 @@ function lineProps(
 /* Shape emit context                                                  */
 /* ------------------------------------------------------------------ */
 
-export type TargetApp = "powerpoint" | "keynote"
-
 type EmitContext = {
   pres: pptxgen
   slide: pptxgen.Slide
@@ -307,7 +305,6 @@ type EmitContext = {
   clipY: number
   counter: { n: number }
   ownerName: string | null
-  target: TargetApp
   measureText: (text: string, fontSize: number, bold: boolean, italic: boolean, fontFace: string) => number
 }
 
@@ -783,10 +780,16 @@ function emitTextLines(
     if (line.textAnchor === "middle") leftPx = line.anchorX - widthPx / 2
     else if (line.textAnchor === "end") leftPx = line.anchorX - widthPx
     else leftPx = line.anchorX
-    // SVG `<text y>` is the baseline; place the box top at baseline - 0.82*size
-    // (cap-height ratio for typical sans-serif), which empirically matches
-    // PowerPoint's text-box vertical metrics with valign=middle.
-    const topPx = line.baselineY - fontSize * 0.82 - (heightPx - fontSize) / 2
+    // SVG `<text y>` is the baseline; PowerPoint/Keynote text-boxes anchor the
+    // glyph differently, leaving labels visibly higher than the SVG baseline.
+    // Empirically a +7 px shift (≈ 0.073 in / 5.25 pt) lines them up with the
+    // surrounding shapes for the font sizes Apollon uses (11–18 px).
+    const TEXT_BASELINE_OFFSET_PX = 7
+    const topPx =
+      line.baselineY -
+      fontSize * 0.82 -
+      (heightPx - fontSize) / 2 +
+      TEXT_BASELINE_OFFSET_PX
 
     const align: "left" | "center" | "right" =
       line.textAnchor === "middle"
@@ -918,8 +921,6 @@ function walk(
 
 export type SvgToPptxOptions = {
   background?: string
-  /** Tweaks for Keynote's renderer (currently advisory; reserved for future). */
-  target?: TargetApp
 }
 
 export function renderSvgToSlide(
@@ -945,7 +946,6 @@ export function renderSvgToSlide(
     clipY: clip.y,
     counter: { n: 0 },
     ownerName: null,
-    target: options.target ?? "powerpoint",
     measureText: makeCanvasMeasurer(),
   }
 
