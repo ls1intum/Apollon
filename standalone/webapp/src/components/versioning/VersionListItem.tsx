@@ -1,36 +1,48 @@
 import {
+  Box,
+  Divider,
   IconButton,
+  InputBase,
   ListItem,
   ListItemSecondaryAction,
   Menu,
   MenuItem,
-  TextField,
-  Tooltip,
   Typography,
-  Box,
 } from "@mui/material"
 import MoreVertIcon from "@mui/icons-material/MoreVert"
 import { VersionThumbnail } from "./VersionThumbnail"
-import { useState, type FC, type MouseEvent } from "react"
+import { useState, type FC, type KeyboardEvent, type MouseEvent } from "react"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
+import {
+  ROW_HOVER_BG,
+  ROW_SELECTED_BG,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  isNamedVersion,
+} from "./VersionDrawer"
 
 interface Props {
   diagramId: string
   version: PendingVersion
+  /** Display rank among saved versions (newest = highest). Undefined for pending. */
+  versionNumber?: number
   isPreviewing: boolean
   onPreview: (versionId: string) => void
   onRestore: (versionId: string) => void
   onDelete: (versionId: string) => void
 }
 
+const MAX_DESCRIPTION_LENGTH = 240
+
 export const VersionListItem: FC<Props> = ({
   diagramId,
   version,
+  versionNumber,
   isPreviewing,
   onPreview,
   onRestore,
@@ -38,24 +50,51 @@ export const VersionListItem: FC<Props> = ({
 }) => {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [editing, setEditing] = useState(false)
-  const [draftName, setDraftName] = useState(version.name)
+  const [draft, setDraft] = useState(version.description ?? "")
   const editVersionInfo = useVersionStore((s) => s.editVersionInfo)
-  const startCompare = useVersionStore((s) => s.startCompare)
 
   const openMenu = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
     setMenuAnchor(e.currentTarget)
   }
   const closeMenu = () => setMenuAnchor(null)
 
-  const submitRename = async () => {
+  const startEditing = () => {
+    setDraft(version.description ?? "")
+    setEditing(true)
+  }
+
+  const submitEdit = async () => {
     setEditing(false)
-    if (!draftName.trim() || draftName === version.name) return
+    const next = draft.trim()
+    if (next === (version.description ?? "").trim()) return
     try {
-      await editVersionInfo(diagramId, version.id, { name: draftName.trim() })
+      // Description is the only user-facing label on a row. `name` stays
+      // server-side for system messages (pre-restore copy, restored
+      // snackbars) — derived from the composer's first line on create,
+      // never edited from this surface.
+      await editVersionInfo(diagramId, version.id, { description: next })
     } catch (err) {
-      log.error("Rename failed", err)
+      log.error("Edit description failed", err)
       toast.error(t.failureToCreate)
-      setDraftName(version.name)
+      setDraft(version.description ?? "")
+    }
+  }
+
+  const cancelEdit = () => {
+    setDraft(version.description ?? "")
+    setEditing(false)
+  }
+
+  const onEditKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Plain Enter inserts a newline (so users can add a multi-line
+    // description). Cmd/Ctrl+Enter submits — same rule as the composer.
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      void submitEdit()
+    } else if (e.key === "Escape") {
+      e.preventDefault()
+      cancelEdit()
     }
   }
 
@@ -72,34 +111,44 @@ export const VersionListItem: FC<Props> = ({
     }
   }
 
-  const isAuto = version.kind === "auto"
+  const named = isNamedVersion(version)
   const ago = relativeTime(version.createdAt)
+  const description = version.description?.trim()
+  // Pre-restore rows arrive with `name = "Before restoring 'X'"` and an
+  // empty description. Fall through to `name` so the row still shows that
+  // self-explanatory label without dragging a separate "title" field into
+  // the UI. User-saved rows always have description, so this fallback is
+  // a no-op for them.
+  const label = description || version.name?.trim() || ""
+  const clickable = !version.pending && !editing
+
+  // Whole row triggers preview when clicked. The menu button and the inline
+  // edit field stop propagation so they don't double-fire.
+  const handleRowClick = () => {
+    if (!clickable) return
+    onPreview(version.id)
+  }
 
   return (
     <ListItem
       role="option"
       aria-selected={isPreviewing}
-      aria-label={`Version '${version.name || t.unnamed}', created ${ago}, ${
-        isAuto ? "auto-saved before restore" : "user snapshot"
-      }`}
+      aria-label={`Version ${
+        versionNumber ? `#${versionNumber}` : "(saving)"
+      }, created ${ago}${label ? ` — ${label}` : ""}`}
+      onClick={handleRowClick}
       sx={{
         opacity: version.pending ? 0.7 : 1,
-        // Theme-aware: app uses CSS custom properties on `documentElement`
-        // (see `useThemeStore` + `themings.json`), not MUI's ThemeProvider.
-        // MUI palette tokens (action.selected/hover, text.secondary) ignore
-        // the app's dark toggle and have to be replaced with `--apollon-*`.
-        bgcolor: isPreviewing
-          ? "var(--apollon-background-variant)"
-          : "transparent",
+        bgcolor: isPreviewing ? ROW_SELECTED_BG : "transparent",
         borderLeft: version.failed
           ? "3px solid var(--apollon-alert-danger-color)"
           : "3px solid transparent",
-        color: "var(--apollon-primary-contrast)",
+        color: TEXT_PRIMARY,
         gap: 1.5,
         py: 1,
-        "&:hover": {
-          bgcolor: "var(--apollon-background-variant)",
-        },
+        alignItems: "flex-start",
+        cursor: clickable ? "pointer" : "default",
+        "&:hover": clickable ? { bgcolor: ROW_HOVER_BG } : undefined,
       }}
     >
       {version.pending ? (
@@ -108,102 +157,86 @@ export const VersionListItem: FC<Props> = ({
             width: 64,
             height: 40,
             flexShrink: 0,
-            bgcolor: "var(--apollon-background-variant)",
+            bgcolor: ROW_HOVER_BG,
             borderRadius: 1,
+            mt: 0.25,
           }}
           aria-hidden
         />
       ) : (
-        <VersionThumbnail
-          diagramId={diagramId}
-          versionId={version.id}
-          isAuto={isAuto}
-          compact
-        />
+        <Box sx={{ mt: 0.25 }}>
+          <VersionThumbnail
+            diagramId={diagramId}
+            versionId={version.id}
+            isAuto={!named}
+            compact
+          />
+        </Box>
       )}
 
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Box sx={{ flex: 1, minWidth: 0, pr: 4 }}>
         {editing ? (
-          <TextField
+          <InputBase
             autoFocus
-            size="small"
+            multiline
+            maxRows={6}
             fullWidth
-            value={draftName}
-            onChange={(e) => setDraftName(e.target.value)}
-            onBlur={submitRename}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault()
-                ;(e.currentTarget as HTMLInputElement).blur()
-              } else if (e.key === "Escape") {
-                setDraftName(version.name)
-                setEditing(false)
-              }
-            }}
+            value={draft}
+            onChange={(e) =>
+              setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
+            }
+            onClick={(e) => e.stopPropagation()}
+            onBlur={() => void submitEdit()}
+            onKeyDown={onEditKeyDown}
+            placeholder={t.createPlaceholder}
+            inputProps={{ "aria-label": "Edit description" }}
             sx={{
-              "& .MuiOutlinedInput-root": {
-                color: "var(--apollon-primary-contrast)",
-                backgroundColor: "var(--apollon-background)",
-                "& fieldset": {
-                  borderColor: "var(--apollon-switch-box-border-color)",
-                },
-                "&:hover fieldset": {
-                  borderColor: "var(--apollon-primary-contrast)",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "var(--apollon-primary)",
-                },
-              },
+              fontSize: "0.875rem",
+              color: TEXT_PRIMARY,
+              p: 0,
+              mb: 0.25,
+              "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
             }}
           />
         ) : (
-          <Tooltip title={version.name || t.unnamed}>
+          label && (
             <Typography
               variant="body2"
-              fontWeight={600}
-              noWrap
-              onDoubleClick={() => setEditing(true)}
               sx={{
-                cursor: "text",
-                color: "var(--apollon-primary-contrast)",
+                color: TEXT_PRIMARY,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                lineHeight: 1.35,
+                mb: 0.25,
               }}
             >
-              {version.name || t.unnamed}
+              {label}
             </Typography>
-          </Tooltip>
-        )}
-        {version.description && (
-          <Tooltip title={version.description}>
-            <Typography
-              variant="caption"
-              noWrap
-              sx={{
-                display: "block",
-                color: "var(--apollon-secondary)",
-              }}
-            >
-              {version.description}
-            </Typography>
-          </Tooltip>
+          )
         )}
         <Typography
           variant="caption"
-          sx={{ color: "var(--apollon-secondary)" }}
+          sx={{ color: TEXT_MUTED, display: "block" }}
         >
+          {versionNumber !== undefined && (
+            <Box component="span" sx={{ fontWeight: 600 }}>
+              #{versionNumber}
+            </Box>
+          )}
+          {versionNumber !== undefined && " · "}
           {ago}
-          {isAuto && ` · ${t.autoSnapshot}`}
           {version.pending && ` · ${t.saving}`}
           {version.failed && ` · failed`}
         </Typography>
       </Box>
 
-      <ListItemSecondaryAction>
+      <ListItemSecondaryAction sx={{ top: 12, transform: "none" }}>
         <IconButton
           size="small"
           onClick={openMenu}
-          aria-label={`Actions for version '${version.name || t.unnamed}'`}
+          aria-label="Version actions"
           disabled={Boolean(version.pending)}
-          sx={{ color: "var(--apollon-primary-contrast)" }}
+          sx={{ color: TEXT_PRIMARY }}
         >
           <MoreVertIcon fontSize="small" />
         </IconButton>
@@ -229,48 +262,48 @@ export const VersionListItem: FC<Props> = ({
           },
         }}
       >
-        <MenuItem
-          onClick={() => {
-            closeMenu()
-            onPreview(version.id)
-          }}
-        >
-          {t.preview}
-        </MenuItem>
+        {/* "Preview" is intentionally absent: clicking the row already
+            previews. The kebab is reserved for actions that aren't
+            obvious from the row itself. */}
         <MenuItem
           onClick={() => {
             closeMenu()
             onRestore(version.id)
           }}
         >
-          {t.restore}
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            closeMenu()
-            startCompare(diagramId, version.id, "current")
-          }}
-        >
-          {t.compareWithCurrent}
+          {t.restoreThis}
         </MenuItem>
         <MenuItem onClick={copyLink}>{t.copyLink}</MenuItem>
+        {/* Adding a description on an empty-meta row promotes it visually
+            (no longer eligible for collapse) and protects it from the
+            eviction-priority sweep. Pure metadata — no protocol event.
+
+            We defer `startEditing` past the menu's focus-restoration
+            tick (MUI Menu returns focus to the kebab on close). Without
+            the rAF, the InputBase's autoFocus loses to that, fires
+            onBlur immediately, and `submitEdit` early-returns on the
+            unchanged empty draft — making the action look broken. */}
         <MenuItem
           onClick={() => {
             closeMenu()
-            setEditing(true)
+            requestAnimationFrame(() => startEditing())
           }}
         >
-          {t.edit}
+          {description ? t.editDescription : t.addDescription}
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            closeMenu()
-            onDelete(version.id)
-          }}
-          sx={{ color: "var(--apollon-alert-danger-color) !important" }}
-        >
-          {t.delete}
-        </MenuItem>
+        {named && [
+          <Divider key="divider" sx={{ my: 0.5 }} />,
+          <MenuItem
+            key="delete"
+            onClick={() => {
+              closeMenu()
+              onDelete(version.id)
+            }}
+            sx={{ color: "var(--apollon-alert-danger-color) !important" }}
+          >
+            {t.delete}
+          </MenuItem>,
+        ]}
       </Menu>
     </ListItem>
   )

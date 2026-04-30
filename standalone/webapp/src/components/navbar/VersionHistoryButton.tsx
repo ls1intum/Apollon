@@ -5,6 +5,17 @@ import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"
 import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
 
+interface Props {
+  /**
+   * Foreground color for the icon + label. Defaults to `secondary` —
+   * the navbar's muted on-dark gray. Mobile passes `"black"` because
+   * the button is rendered inside the hamburger Menu's light-bg dropdown
+   * (where on-dark gray would be near-invisible). Other navbar children
+   * (`NavbarFile`, `NavbarHelp`) follow the same prop convention.
+   */
+  color?: string
+}
+
 /**
  * Discoverable navbar entry point for the version-history sidebar.
  *
@@ -12,7 +23,7 @@ import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
  * sidebar is hidden because there's no diagramId to attach versions to —
  * the user must Share first.
  */
-export const VersionHistoryButton = () => {
+export const VersionHistoryButton = ({ color = secondary }: Props) => {
   const diagramId = useDiagramIdFromPath()
   const openDrawer = useVersionStore((s) => s.openDrawer)
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
@@ -32,14 +43,10 @@ export const VersionHistoryButton = () => {
         aria-label={t.drawerTitle}
         aria-pressed={isOpen}
         startIcon={
-          <HistoryRoundedIcon
-            fontSize="small"
-            htmlColor={secondary}
-            aria-hidden
-          />
+          <HistoryRoundedIcon fontSize="small" htmlColor={color} aria-hidden />
         }
       >
-        <span style={{ color: secondary }}>{t.navMenuItem}</span>
+        <span style={{ color }}>{t.navMenuItem}</span>
       </Button>
     </Tooltip>
   )

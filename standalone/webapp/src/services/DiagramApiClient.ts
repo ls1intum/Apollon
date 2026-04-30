@@ -152,14 +152,21 @@ export const VersionApiClient = {
     diagramId: string,
     body: UMLModel,
     opts: { name?: string; description?: string } = {}
-  ): Promise<VersionSummary> {
-    const { data } = await request<VersionSummary>(
-      `/api/diagrams/${diagramId}/versions`,
-      {
-        method: "POST",
-        body: { name: opts.name, description: opts.description, body },
+  ): Promise<
+    VersionSummary & {
+      evictedVersionIds?: string[]
+      evictedKinds?: ("unnamed" | "named")[]
+    }
+  > {
+    const { data } = await request<
+      VersionSummary & {
+        evictedVersionIds?: string[]
+        evictedKinds?: ("unnamed" | "named")[]
       }
-    )
+    >(`/api/diagrams/${diagramId}/versions`, {
+      method: "POST",
+      body: { name: opts.name, description: opts.description, body },
+    })
     return data
   },
 
@@ -200,8 +207,22 @@ export const VersionApiClient = {
     })
   },
 
-  /** Convenience permalink to the version body for embedding in `<a href>`. */
+  /**
+   * Convenience permalink to a specific version, opened in preview mode.
+   *
+   * Preserves the current `view` query parameter — `ApollonWithConnection`
+   * rejects URLs that omit it ("Invalid view type") because the editor's
+   * mode (collaborate / give-feedback / see-feedback) is configured up
+   * front from that param. Without preserving it, a copied link would
+   * 404 on click. Falls back to `collaborate` if the current page has no
+   * `view` (e.g. local mode), since shared links overwhelmingly target
+   * collaborative diagrams.
+   */
   permalink(diagramId: string, versionId: string): string {
-    return `${window.location.origin}/${diagramId}?version=${versionId}`
+    const current = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams()
+    params.set("view", current.get("view") ?? "collaborate")
+    params.set("version", versionId)
+    return `${window.location.origin}/${diagramId}?${params.toString()}`
   },
 }

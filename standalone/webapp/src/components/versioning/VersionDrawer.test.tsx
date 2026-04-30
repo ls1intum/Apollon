@@ -40,7 +40,6 @@ afterEach(() => {
     nextCursor: {},
     preview: null,
     undoRestore: null,
-    compare: null,
     loading: false,
     error: null,
   })
@@ -79,10 +78,9 @@ describe("VersionSidebar (regression: infinite render loop)", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     const error = vi.spyOn(console, "error").mockImplementation(() => {})
     expect(() => mount("abc")).not.toThrow()
-    // Empty-state CTA from strings.ts should render.
-    expect(
-      await screen.findByRole("heading", { name: /no saved versions yet/i })
-    ).toBeDefined()
+    // Section subtitle ("No version saved yet") should render in place of
+    // the previous standalone empty-state heading.
+    expect(await screen.findByText(/no version saved yet/i)).toBeDefined()
     const warnings = warn.mock.calls.map((c) => String(c[0])).join("\n")
     const errors = error.mock.calls.map((c) => String(c[0])).join("\n")
     expect(warnings).not.toMatch(/getSnapshot should be cached/)

@@ -4,18 +4,23 @@ import {
   CircularProgress,
   Drawer,
   IconButton,
+  InputBase,
   List,
   Skeleton,
-  Stack,
-  TextField,
+  Tooltip,
   Typography,
   useMediaQuery,
-  useTheme,
 } from "@mui/material"
-import CloseIcon from "@mui/icons-material/Close"
 import ExpandLessIcon from "@mui/icons-material/ExpandLess"
 import ChevronRightIcon from "@mui/icons-material/ChevronRight"
-import { useEffect, useMemo, useState, type FC } from "react"
+import HistoryToggleOffIcon from "@mui/icons-material/HistoryToggleOff"
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type FC,
+  type KeyboardEvent,
+} from "react"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
 import {
@@ -24,20 +29,90 @@ import {
   type PendingVersion,
 } from "@/stores/useVersionStore"
 import { ApiError } from "@/services/DiagramApiClient"
+import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
+import { CurrentVersionRow } from "./CurrentVersionRow"
 import { VersionListItem } from "./VersionListItem"
-import { VersionCompareBanner } from "./VersionCompareBanner"
 
-const MAX_VERSIONS = Number(
-  (import.meta as unknown as { env?: Record<string, string> }).env
-    ?.VITE_MAX_VERSIONS_PER_DIAGRAM ?? 50
-)
+import { MAX_VERSIONS_PER_DIAGRAM as MAX_VERSIONS } from "@/constants"
+
 const MAX_DESCRIPTION_LENGTH = 240
 /** Sidebar width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
 /** Slide-in animation duration matched to MUI's standard transition. */
 const SIDEBAR_ANIMATION_MS = 220
+
+/**
+ * Switches the sidebar to a bottom-sheet drawer at the same breakpoint
+ * the navbar switches to its hamburger (`md:hidden` in `Navbar.tsx`,
+ * Tailwind's md = 768px). This is the *only* place where a viewport
+ * media query is the right tool — sidebar↔bottom-sheet is a page-level
+ * layout decision driven by viewport chrome. Component-internal layout
+ * (e.g. the preview banner) responds to its own container width via
+ * `useElementWidth`, not this constant.
+ */
+export const MOBILE_QUERY = "(max-width: 767.95px)"
+
+// Sidebar lives on the navbar's dark plate, independent of the document
+// theme — these are the on-dark text shades and rgba state tints used
+// throughout. Kept local to this file because they're specific to that
+// always-dark surface.
+export const TEXT_PRIMARY = "rgba(255, 255, 255, 0.92)"
+export const TEXT_MUTED = "rgba(255, 255, 255, 0.55)"
+export const ROW_HOVER_BG = "rgba(255, 255, 255, 0.06)"
+export const ROW_SELECTED_BG = "rgba(255, 255, 255, 0.10)"
+
+/**
+ * Structural fingerprint for dirty detection. We deliberately do NOT use
+ * the editor's Yjs state vector here, even though that would be O(1):
+ * React-Flow writes auto-derived layout noise (`measured`, transient
+ * `position` round-trips, etc.) to the same Y.Maps as user-authored
+ * content, so the SV bumps on every click as the renderer remeasures
+ * the focused node. SV says "anything observed changed"; the question we
+ * actually want to answer is "did anything _user-meaningful_ change."
+ *
+ * The replacer drops:
+ *   - `selected`, `dragging`, `resizing`, `hidden` — UI/transient flags
+ *   - `measured` — React-Flow's measurement output, fluctuates on focus
+ *   - `selectable`, `draggable`, `connectable`, `deletable` — capability
+ *     flags, set by config not by the user editing
+ *
+ * This mirrors `structuralFingerprint` in `services/autoVersion.ts` on the
+ * server. False positives (we mark dirty when user-meaningful state didn't
+ * really change) are cheap; false negatives are the failure mode we don't
+ * want, since they'd cost the user a recovery point.
+ */
+const VOLATILE_KEYS = new Set([
+  "selected",
+  "dragging",
+  "resizing",
+  "hidden",
+  "measured",
+  "selectable",
+  "draggable",
+  "connectable",
+  "deletable",
+])
+
+function structuralFingerprint(model: {
+  nodes: unknown
+  edges: unknown
+  assessments?: unknown
+  title?: unknown
+  type?: unknown
+}): string {
+  return JSON.stringify(
+    {
+      nodes: model.nodes,
+      edges: model.edges,
+      assessments: model.assessments,
+      title: model.title,
+      type: model.type,
+    },
+    (key, value) => (VOLATILE_KEYS.has(key) ? undefined : value)
+  )
+}
 
 interface Props {
   diagramId: string
@@ -52,7 +127,6 @@ interface Props {
  *    Drawer because there isn't room for two columns on small viewports.
  */
 const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
-  const closeDrawer = useVersionStore((s) => s.closeDrawer)
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
   const total = useVersionStore((s) => s.totals[diagramId])
   const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
@@ -63,7 +137,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
   const createVersion = useVersionStore((s) => s.createVersion)
   const enterPreview = useVersionStore((s) => s.enterPreview)
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
-  const compareState = useVersionStore((s) => s.compare)
+  const previewState = useVersionStore((s) => s.preview)
 
   const { editor } = useEditorContext()
   const { openModal } = useModalContext()
@@ -76,23 +150,87 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
     void fetchVersions(diagramId)
   }, [diagramId, fetchVersions])
 
-  const groupedVersions = useMemo(() => groupAutoRuns(versions), [versions])
+  // Filter: when off, hide every unnamed row entirely (matches Figma's "Show
+  // autosave versions" toggle). Default ON so users see their full history
+  // out of the box; flipping it off gives a clean milestone-only view.
+  const [showAutosaves, setShowAutosaves] = useState(true)
+  const filteredVersions = useMemo(
+    () => (showAutosaves ? versions : versions.filter(isNamedVersion)),
+    [versions, showAutosaves]
+  )
+  const groupedVersions = useMemo(
+    () => groupUnnamedRuns(filteredVersions),
+    [filteredVersions]
+  )
 
   const latestVersion = versions[0]
-  const headerSubtitle = latestVersion
-    ? t.lastVersion(
-        latestVersion.name || t.unnamed,
-        relativeTime(latestVersion.createdAt)
-      )
+  const sectionSubtitle = latestVersion
+    ? t.lastVersion(relativeTime(latestVersion.createdAt))
     : t.noVersionYet
 
+  // ---------------------------------------------------------------------------
+  // Dirty-detection via structural fingerprint. Whenever a snapshot lands
+  // (manual save, server-fired auto-version, collaborator save) we capture
+  // a fingerprint of the editor's model at that moment. On every Yjs/store
+  // change we recompute the fingerprint and compare. Selection clicks,
+  // measurement noise, and other React-Flow ephemera are filtered out by
+  // the replacer in `structuralFingerprint` — only user-meaningful changes
+  // flip the state.
+  // ---------------------------------------------------------------------------
+  const latestSavedVersion = useMemo(
+    () => versions.find((v) => !v.pending && !v.failed),
+    [versions]
+  )
+  const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
+  const [hasChanges, setHasChanges] = useState(true)
+
+  // Re-baseline the fingerprint on every new latest-saved version. By the
+  // time the version list reflects the new row, the editor model already
+  // matches the snapshot (locally we passed editor.model as the body; for
+  // collaborator/server events Yjs has converged). Capturing the
+  // fingerprint *now* is the right reference for "no changes since save".
+  useEffect(() => {
+    if (!editor) return
+    if (!latestSavedVersion) {
+      setSavedFingerprint(null)
+      setHasChanges(true)
+      return
+    }
+    setSavedFingerprint(structuralFingerprint(editor.model))
+    setHasChanges(false)
+  }, [editor, latestSavedVersion?.id])
+
+  useEffect(() => {
+    if (!editor) return
+    if (savedFingerprint === null) {
+      setHasChanges(true)
+      return
+    }
+    const recompute = () => {
+      setHasChanges(structuralFingerprint(editor.model) !== savedFingerprint)
+    }
+    recompute()
+    const subId = editor.subscribeToModelChange(recompute)
+    return () => {
+      editor.unsubscribe(subId)
+    }
+  }, [editor, savedFingerprint])
+
+  // While previewing, `editor.model` reflects the previewed snapshot — saving
+  // it would just duplicate that version (or produce a misleading "new"
+  // version of old content). Block Save in that mode regardless of diff.
+  const canSave = Boolean(editor) && hasChanges && previewState === null
+
   const handleCreate = async () => {
-    if (!editor || submitting) return
+    if (!editor || submitting || !canSave) return
     setSubmitting(true)
-    const lines = draft.split("\n")
-    const typedName = (lines[0] ?? "").trim()
-    const description = lines.slice(1).join("\n").trim()
-    const name = typedName || `Snapshot — ${new Date().toLocaleString()}`
+    const description = draft.trim()
+    // Name is now an internal label only — the UI surfaces the description.
+    // Default to a timestamped snapshot when no description is provided so
+    // restored snackbars and copy-link tooltips stay readable.
+    const name = description
+      ? description.split("\n")[0]!.slice(0, 80)
+      : `Snapshot — ${new Date().toLocaleString()}`
     try {
       await createVersion(diagramId, editor.model, {
         name,
@@ -114,7 +252,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
   const handlePreview = async (versionId: string) => {
     if (!editor) return
     try {
-      await enterPreview(diagramId, versionId, editor.model)
+      await enterPreview(diagramId, versionId)
     } catch {
       toast.error(t.previewFailed)
     }
@@ -144,160 +282,181 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
 
   const totalDisplay = total ?? versions.filter((v) => !v.pending).length
 
+  // Map version id → display number (#N). Prefer the server-assigned
+  // monotonic `seq` so the number reflects "Nth version you ever made"
+  // and survives eviction. Pre-`seq` rows fall back to a derived
+  // rank-among-stored: that's what we used to display, accurate for
+  // diagrams that never hit the cap and degrade-gracefully for legacy
+  // rows committed before the counter existed.
+  const versionNumberById = useMemo(() => {
+    const saved = versions.filter((v) => !v.pending)
+    const map = new Map<string, number>()
+    const fallbackTop = total ?? saved.length
+    saved.forEach((v, i) => {
+      if (typeof v.seq === "number") map.set(v.id, v.seq)
+      else map.set(v.id, fallbackTop - i)
+    })
+    return map
+  }, [versions, total])
+
+  const handleComposerKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Cmd/Ctrl+Enter saves; plain Enter inserts a newline (multi-line desc).
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      void handleCreate()
+    }
+  }
+
   return (
     <Box
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        // Theme is driven by CSS custom properties on document root
-        // (see `useThemeStore` + `themings.json`), not MUI's ThemeProvider.
-        // All colors use those variables so the sidebar follows the app's
-        // light/dark toggle.
-        bgcolor: "var(--apollon-background)",
-        color: "var(--apollon-primary-contrast)",
+        // Whole sidebar paints the navbar dark colour so it visually
+        // continues the top bar in both themes. Text is light, with rgba
+        // hover/selected tints so dark/light toggle isn't needed here.
+        bgcolor: NAVBAR_BACKGROUND_COLOR,
+        color: TEXT_PRIMARY,
       }}
       role="complementary"
       aria-label={t.drawerTitle}
     >
-      {/* Header: a single line. The navbar already says "Version history"
-          (the button toggling this sidebar), so the redundant title is
-          dropped. We surface only the count and the "last version • Xm ago"
-          context — that's the information the user actually scans for. */}
+      {/* Composer: flat textarea with the Save button stacked underneath
+          so the save target is unambiguous and the textarea owns the full
+          width. Cmd/Ctrl+Enter submits; plain Enter inserts a newline.
+
+          Hidden entirely while previewing — there's nothing meaningful to
+          save while the canvas reflects an old snapshot, and showing it
+          alongside the read-only banner is contradictory UX. */}
+      {previewState === null && (
+        <Box
+          sx={{
+            px: 2,
+            pt: 1.5,
+            pb: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
+            gap: 0.75,
+          }}
+        >
+          <InputBase
+            multiline
+            maxRows={4}
+            fullWidth
+            placeholder={t.createPlaceholder}
+            value={draft}
+            onChange={(e) =>
+              setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
+            }
+            onKeyDown={handleComposerKeyDown}
+            inputProps={{ "aria-label": "Describe this version" }}
+            sx={{
+              fontSize: "0.85rem",
+              color: TEXT_PRIMARY,
+              "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
+            }}
+          />
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handleCreate}
+            disabled={submitting || !canSave}
+            title={
+              !canSave && previewState !== null
+                ? "Exit preview to save a new version"
+                : !canSave && !hasChanges
+                  ? "No changes since the last saved version"
+                  : undefined
+            }
+            disableElevation
+            sx={{
+              alignSelf: "flex-end",
+              textTransform: "none",
+              px: 1.75,
+              py: 0.5,
+              fontWeight: 600,
+              color: NAVBAR_BACKGROUND_COLOR,
+              backgroundColor: TEXT_PRIMARY,
+              "&:hover": { backgroundColor: "#ffffff" },
+              "&.Mui-disabled": {
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                color: TEXT_MUTED,
+              },
+            }}
+          >
+            {submitting ? (
+              <CircularProgress size={14} sx={{ color: TEXT_MUTED }} />
+            ) : (
+              t.createButton
+            )}
+          </Button>
+        </Box>
+      )}
+
+      {/* Section meta: counter + "last saved Xm ago" + autosave filter
+          toggle. Borderless — separation comes from spacing. The toggle
+          mirrors Figma's "Show autosave versions" — default on; flipping
+          off hides every empty-meta row for a milestone-only view. */}
       <Box
         sx={{
           px: 2,
-          py: 1.5,
-          borderBottom: "1px solid var(--apollon-modal-bottom-border)",
+          py: 0.5,
           display: "flex",
           alignItems: "center",
           gap: 1,
         }}
       >
-        <Stack
-          direction="row"
-          alignItems="baseline"
-          spacing={1}
-          sx={{ flex: 1, minWidth: 0 }}
+        <Typography
+          variant="caption"
+          sx={{ color: TEXT_PRIMARY, fontWeight: 600, whiteSpace: "nowrap" }}
         >
-          <Typography
-            variant="subtitle2"
-            sx={{
-              fontWeight: 600,
-              color: "var(--apollon-primary-contrast)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {totalDisplay}
-            <Box
-              component="span"
-              sx={{ color: "var(--apollon-secondary)", fontWeight: 400 }}
-            >
-              {" / "}
-              {MAX_VERSIONS}
-            </Box>
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "var(--apollon-secondary)",
-              flex: 1,
-              minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-            title={headerSubtitle}
-          >
-            · {headerSubtitle}
-          </Typography>
-        </Stack>
-        <IconButton
-          size="small"
-          onClick={() => closeDrawer(diagramId)}
-          aria-label={t.closeSidebar}
-          sx={{ color: "var(--apollon-primary-contrast)" }}
-        >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Box>
-
-      <Box
-        sx={{
-          p: 2,
-          borderBottom: "1px solid var(--apollon-modal-bottom-border)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
-        <TextField
-          multiline
-          rows={2}
-          size="small"
-          placeholder={t.createPlaceholder}
-          value={draft}
-          onChange={(e) =>
-            setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
-          }
-          inputProps={{
-            "aria-label": "Version name and description",
-          }}
+          {totalDisplay}
+          <Box component="span" sx={{ color: TEXT_MUTED, fontWeight: 400 }}>
+            {" / "}
+            {MAX_VERSIONS}
+          </Box>
+        </Typography>
+        <Typography
+          variant="caption"
           sx={{
-            "& .MuiOutlinedInput-root": {
-              color: "var(--apollon-primary-contrast)",
-              backgroundColor: "var(--apollon-background)",
-              "& fieldset": {
-                borderColor: "var(--apollon-switch-box-border-color)",
-              },
-              "&:hover fieldset": {
-                borderColor: "var(--apollon-primary-contrast)",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "var(--apollon-primary)",
-              },
-            },
-            "& .MuiInputBase-input::placeholder": {
-              color: "var(--apollon-secondary)",
-              opacity: 1,
-            },
+            color: TEXT_MUTED,
+            flex: 1,
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
-        />
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
+          title={sectionSubtitle}
         >
-          <Typography
-            variant="caption"
-            sx={{ color: "var(--apollon-secondary)" }}
-          >
-            {draft.length} / {MAX_DESCRIPTION_LENGTH}
-          </Typography>
-          <Button
-            variant="contained"
+          · {sectionSubtitle}
+        </Typography>
+        <Tooltip
+          title={
+            showAutosaves ? "Hide autosave versions" : "Show autosave versions"
+          }
+        >
+          <IconButton
             size="small"
-            onClick={handleCreate}
-            disabled={submitting || !editor}
-            sx={{
-              textTransform: "none",
-              backgroundColor: "var(--apollon-primary)",
-              "&:hover": {
-                backgroundColor: "var(--apollon-primary)",
-                opacity: 0.9,
-              },
-            }}
+            onClick={() => setShowAutosaves((v) => !v)}
+            aria-label={
+              showAutosaves
+                ? "Hide autosave versions"
+                : "Show autosave versions"
+            }
+            aria-pressed={showAutosaves}
+            sx={{ color: showAutosaves ? TEXT_PRIMARY : TEXT_MUTED, p: 0.25 }}
           >
-            {submitting ? <CircularProgress size={14} /> : t.createButton}
-          </Button>
-        </Stack>
+            <HistoryToggleOffIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Box>
 
-      {compareState && (
-        <Box sx={{ p: 1 }}>
-          <VersionCompareBanner diagramId={diagramId} />
-        </Box>
-      )}
+      <CurrentVersionRow
+        hasChanges={hasChanges}
+        latestSavedVersion={latestSavedVersion}
+      />
 
       <Box sx={{ flex: 1, overflow: "auto" }}>
         {errorCode === "REDIS_UNAVAILABLE" ? (
@@ -322,38 +481,10 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
             ))}
           </List>
         ) : versions.length === 0 ? (
-          <Box sx={{ p: 4, textAlign: "center" }}>
-            <Typography
-              variant="subtitle1"
-              sx={{
-                mb: 1,
-                fontWeight: 600,
-                color: "var(--apollon-primary-contrast)",
-              }}
-            >
-              {t.emptyTitle}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ color: "var(--apollon-secondary)", mb: 2 }}
-            >
+          <Box sx={{ px: 3, py: 4, textAlign: "center" }}>
+            <Typography variant="body2" sx={{ color: TEXT_MUTED }}>
               {t.emptyBody}
             </Typography>
-            <Button
-              variant="contained"
-              onClick={handleCreate}
-              disabled={submitting || !editor}
-              sx={{
-                textTransform: "none",
-                backgroundColor: "var(--apollon-primary)",
-                "&:hover": {
-                  backgroundColor: "var(--apollon-primary)",
-                  opacity: 0.9,
-                },
-              }}
-            >
-              {t.emptyCta}
-            </Button>
           </Box>
         ) : (
           <List
@@ -392,12 +523,14 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
                   onDelete={handleDelete}
                   activeRowId={activeRowId}
                   setActiveRowId={setActiveRowId}
+                  versionNumberById={versionNumberById}
                 />
               ) : (
                 <VersionListItem
                   key={entry.version.id}
                   diagramId={diagramId}
                   version={entry.version}
+                  versionNumber={versionNumberById.get(entry.version.id)}
                   isPreviewing={entry.version.id === activeRowId}
                   onPreview={handlePreview}
                   onRestore={handleRestore}
@@ -411,10 +544,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
                   size="small"
                   onClick={() => loadMoreVersions(diagramId)}
                   disabled={loading}
-                  sx={{
-                    textTransform: "none",
-                    color: "var(--apollon-primary)",
-                  }}
+                  sx={{ textTransform: "none", color: TEXT_PRIMARY }}
                 >
                   {t.loadOlder}
                 </Button>
@@ -439,6 +569,11 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
  * opens, and to release the SVG-thumbnail observer.
  */
 export const VersionSidebar: FC<Props> = ({ diagramId }) => {
+  // Below the navbar's mobile threshold the bottom-sheet
+  // `<VersionDrawer>` takes over; render nothing here so the sidebar
+  // doesn't eat 320px of width on phones or in the awkward
+  // 600–768px range where the navbar is already mobile.
+  const isSmall = useMediaQuery(MOBILE_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const [mounted, setMounted] = useState(open)
   useEffect(() => {
@@ -449,6 +584,8 @@ export const VersionSidebar: FC<Props> = ({ diagramId }) => {
     const handle = setTimeout(() => setMounted(false), SIDEBAR_ANIMATION_MS)
     return () => clearTimeout(handle)
   }, [open])
+
+  if (isSmall) return null
 
   return (
     <Box
@@ -461,8 +598,7 @@ export const VersionSidebar: FC<Props> = ({ diagramId }) => {
             duration: SIDEBAR_ANIMATION_MS,
             easing: theme.transitions.easing.easeInOut,
           }),
-        borderLeft: open ? "1px solid var(--apollon-modal-bottom-border)" : 0,
-        bgcolor: "var(--apollon-background)",
+        bgcolor: NAVBAR_BACKGROUND_COLOR,
       }}
       aria-hidden={!open}
     >
@@ -478,8 +614,7 @@ export const VersionSidebar: FC<Props> = ({ diagramId }) => {
  * column, so we keep the bottom-sheet pattern for the small-screen case.
  */
 export const VersionDrawer: FC<Props> = ({ diagramId }) => {
-  const theme = useTheme()
-  const isSmall = useMediaQuery(theme.breakpoints.down("sm"))
+  const isSmall = useMediaQuery(MOBILE_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   // Desktop uses the inline sidebar; this component is mobile-only.
@@ -499,7 +634,14 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
 }
 
 // ---------------------------------------------------------------------------
-// Auto-snapshot grouping — collapse consecutive auto rows under an expander.
+// Sidebar grouping — collapse consecutive *unnamed* rows under an expander.
+//
+// The display split tracks `name`/`description`, not `kind`. A version with
+// either field non-empty is a milestone (always rendered as a full row); an
+// empty-meta row is an autosave (eligible for collapse). Naming an autosave
+// (via "Name this version") promotes it visually without changing its kind.
+// This matches Figma: autosaves and named versions live in the same list,
+// autosaves between named ones collapse so the timeline stays scannable.
 // ---------------------------------------------------------------------------
 
 type GroupedEntry =
@@ -510,18 +652,23 @@ type GroupedEntry =
       versions: PendingVersion[]
     }
 
-function groupAutoRuns(versions: readonly PendingVersion[]): GroupedEntry[] {
+/** True when the version has user-authored metadata (name or description). */
+export function isNamedVersion(v: PendingVersion): boolean {
+  return Boolean(v.name?.trim() || v.description?.trim())
+}
+
+function groupUnnamedRuns(versions: readonly PendingVersion[]): GroupedEntry[] {
   const out: GroupedEntry[] = []
   let i = 0
   while (i < versions.length) {
     const v = versions[i]!
-    if (v.kind !== "auto") {
+    if (isNamedVersion(v)) {
       out.push({ kind: "single", version: v })
       i++
       continue
     }
     const run: PendingVersion[] = []
-    while (i < versions.length && versions[i]!.kind === "auto") {
+    while (i < versions.length && !isNamedVersion(versions[i]!)) {
       run.push(versions[i]!)
       i++
     }
@@ -542,6 +689,7 @@ interface AutoGroupRowProps {
   onDelete: (id: string) => void
   activeRowId: string | null
   setActiveRowId: (id: string | null) => void
+  versionNumberById: Map<string, number>
 }
 
 const AutoGroupRow: FC<AutoGroupRowProps> = ({
@@ -551,6 +699,7 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
   onRestore,
   onDelete,
   activeRowId,
+  versionNumberById,
 }) => {
   const [expanded, setExpanded] = useState(false)
   return (
@@ -565,15 +714,13 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
           background: "transparent",
           border: 0,
           p: 1.5,
-          color: "var(--apollon-secondary)",
+          color: TEXT_MUTED,
           cursor: "pointer",
           fontSize: "0.85rem",
           display: "flex",
           alignItems: "center",
           gap: 0.5,
-          "&:hover": {
-            background: "var(--apollon-background-variant)",
-          },
+          "&:hover": { background: ROW_HOVER_BG },
         }}
         aria-expanded={expanded}
         aria-label={`${group.versions.length} auto-saved versions`}
@@ -591,6 +738,7 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
             key={v.id}
             diagramId={diagramId}
             version={v}
+            versionNumber={versionNumberById.get(v.id)}
             isPreviewing={v.id === activeRowId}
             onPreview={onPreview}
             onRestore={onRestore}

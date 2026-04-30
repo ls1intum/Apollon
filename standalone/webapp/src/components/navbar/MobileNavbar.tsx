@@ -118,7 +118,7 @@ export default function MobileNavbar() {
                 >
                   <Typography color="black">Share</Typography>
                 </Button>
-                <VersionHistoryButton />
+                <VersionHistoryButton color="black" />
                 <NavbarHelp color="black" />
 
                 {/* Diagram Name Input Field */}

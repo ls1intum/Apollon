@@ -52,7 +52,6 @@ export const ApollonWithConnection: React.FC = () => {
   } | null>(null)
   const lastSyncToastAt = useRef(0)
 
-  // Stable primitives so we don't re-init the editor on unrelated URL changes.
   const viewType = searchParams.get("view")
   const previewFromUrl = searchParams.get("version")
   const isCollaborationActive =
@@ -180,7 +179,6 @@ export const ApollonWithConnection: React.FC = () => {
           })
         }
 
-        // Live cursor tracking for collaboration views.
         if (isCollaborationView && collaborationUser) {
           const element = containerRef.current
           const rafRef = { current: 0 as number }
@@ -239,7 +237,6 @@ export const ApollonWithConnection: React.FC = () => {
           )
         }
 
-        // Autosave loop — gated when previewing.
         syncIntervalRef.current = setInterval(() => {
           const previewing = useVersionStore.getState().preview !== null
           if (previewing) return
@@ -325,18 +322,12 @@ export const ApollonWithConnection: React.FC = () => {
     }
   }, [diagramId, viewType, collaborationUser])
 
-  // ---------------------------------------------------------------------------
-  // Exit preview when the user removes ?version= from the URL directly.
-  // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!previewFromUrl && preview !== null) {
       exitPreview()
     }
   }, [previewFromUrl])
 
-  // ---------------------------------------------------------------------------
-  // Reflect preview-state into the canvas.
-  // ---------------------------------------------------------------------------
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
 
   useEffect(() => {
@@ -375,9 +366,6 @@ export const ApollonWithConnection: React.FC = () => {
     }
   }, [preview, editor, diagramId, baseReadonly])
 
-  // ---------------------------------------------------------------------------
-  // Version-saved callback.
-  // ---------------------------------------------------------------------------
   const handleVersionSaved = useCallback((headRev?: number) => {
     if (typeof headRev === "number") {
       lastObservedHeadRev.current = headRev
@@ -385,9 +373,6 @@ export const ApollonWithConnection: React.FC = () => {
     diagramIsUpdated.current = false
   }, [])
 
-  // ---------------------------------------------------------------------------
-  // Preview banner handlers.
-  // ---------------------------------------------------------------------------
   const handleExitPreview = useCallback(() => {
     if (!diagramId) return
     exitPreview()

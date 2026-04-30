@@ -1,17 +1,14 @@
 import { create } from "zustand"
 import { devtools, persist, createJSONStorage } from "zustand/middleware"
+import { toast } from "react-toastify"
 import type { UMLModel } from "@tumaet/apollon"
 import { ApiError, VersionApiClient } from "@/services/DiagramApiClient"
+import { MAX_VERSIONS_PER_DIAGRAM } from "@/constants"
 import { log } from "@/logger"
 import type { ApiErrorCode, ControlEvent, VersionSummary } from "@/types"
 
 type DiagramId = string
 type VersionId = string
-
-interface CompareState {
-  baseline: VersionId | "current"
-  comparand: VersionId | "current"
-}
 
 export interface PendingVersion extends VersionSummary {
   pending?: true
@@ -21,8 +18,6 @@ export interface PendingVersion extends VersionSummary {
 export interface PreviewState {
   versionId: VersionId
   body: UMLModel
-  /** The diagram body we observed BEFORE entering preview, for clean exit. */
-  headSnapshot: UMLModel
 }
 
 export interface UndoRestoreState {
@@ -42,8 +37,6 @@ interface State {
   preview: PreviewState | null
   /** When set, surfaces an "undo restore" snackbar in the UI. */
   undoRestore: UndoRestoreState | null
-  /** When non-null, comparison banner is active. */
-  compare: CompareState | null
   loading: boolean
   error: ApiErrorCode | null
 }
@@ -74,11 +67,7 @@ interface Actions {
   deleteVersion: (diagramId: DiagramId, versionId: VersionId) => Promise<void>
 
   // ---- Preview / Restore ------------------------------------------------
-  enterPreview: (
-    diagramId: DiagramId,
-    versionId: VersionId,
-    headSnapshot: UMLModel
-  ) => Promise<void>
+  enterPreview: (diagramId: DiagramId, versionId: VersionId) => Promise<void>
   exitPreview: () => void
   restoreVersion: (
     diagramId: DiagramId,
@@ -90,15 +79,6 @@ interface Actions {
     currentBody: UMLModel
   ) => Promise<void>
   dismissUndoRestore: () => void
-
-  // ---- Compare ----------------------------------------------------------
-  startCompare: (
-    diagramId: DiagramId,
-    baseline: VersionId | "current",
-    comparand?: VersionId | "current"
-  ) => void
-  swapCompare: () => void
-  closeCompare: () => void
 
   // ---- Realtime ---------------------------------------------------------
   applyControlEvent: (diagramId: DiagramId, event: ControlEvent) => void
@@ -134,7 +114,6 @@ export const useVersionStore = create<VersionStore>()(
         totals: {},
         preview: null,
         undoRestore: null,
-        compare: null,
         loading: false,
         error: null,
 
@@ -216,15 +195,62 @@ export const useVersionStore = create<VersionStore>()(
             },
           }))
           try {
-            const summary = await VersionApiClient.create(diagramId, body, opts)
-            set((s) => ({
-              versions: {
-                ...s.versions,
-                [diagramId]: (s.versions[diagramId] ?? []).map((v) =>
-                  v.id === tempId ? summary : v
-                ),
-              },
-            }))
+            const result = await VersionApiClient.create(diagramId, body, opts)
+            const { evictedVersionIds, evictedKinds, ...summary } = result
+            set((s) => {
+              const currentList = s.versions[diagramId] ?? []
+              // Strip both the optimistic placeholder and any rows the
+              // server just evicted to fit the cap. Without this, the
+              // evicted rows linger in the local list — a stale view of
+              // server truth — until the next fetch.
+              const evictedSet = new Set(evictedVersionIds ?? [])
+              const reconciled = currentList
+                .map((v) => (v.id === tempId ? (summary as PendingVersion) : v))
+                .filter((v) => !evictedSet.has(v.id))
+              const prevTotal = s.totals[diagramId]
+              return {
+                versions: { ...s.versions, [diagramId]: reconciled },
+                totals: {
+                  ...s.totals,
+                  // Server returns `total = ZCARD` on list; we don't have a
+                  // fresh value from POST, so derive: prev + 1 - evicted.
+                  // Caps at MAX naturally because eviction count makes the
+                  // delta zero once we're saturated.
+                  [diagramId]:
+                    typeof prevTotal === "number"
+                      ? prevTotal + 1 - (evictedVersionIds?.length ?? 0)
+                      : reconciled.filter((v) => !v.pending).length,
+                },
+              }
+            })
+            // Surface eviction with a kind-accurate message. Two
+            // distinct cases:
+            //   - "unnamed" only: a recovery-infra autosave was dropped
+            //     to make room. Low-stakes, informational.
+            //   - any "named":   a user-saved milestone was dropped
+            //     because the cap was hit by named rows alone. That's
+            //     real data loss and warrants a stronger warning.
+            if (evictedVersionIds && evictedVersionIds.length > 0) {
+              const namedCount = (evictedKinds ?? []).filter(
+                (k) => k === "named"
+              ).length
+              if (namedCount > 0) {
+                toast.warning(
+                  namedCount === 1
+                    ? `Saved. Your oldest named version was removed — the ${MAX_VERSIONS_PER_DIAGRAM}-version cap is full.`
+                    : `Saved. ${namedCount} oldest named versions were removed — the ${MAX_VERSIONS_PER_DIAGRAM}-version cap is full.`,
+                  { autoClose: 8000 }
+                )
+              } else {
+                const n = evictedVersionIds.length
+                toast.info(
+                  n === 1
+                    ? "Saved. An older autosave was removed to fit the version cap."
+                    : `Saved. ${n} older autosaves were removed to fit the version cap.`,
+                  { autoClose: 5000 }
+                )
+              }
+            }
             return summary
           } catch (err) {
             set((s) => ({
@@ -271,9 +297,9 @@ export const useVersionStore = create<VersionStore>()(
         },
 
         // ---- Preview / Restore ----------------------------------------------
-        enterPreview: async (diagramId, versionId, headSnapshot) => {
+        enterPreview: async (diagramId, versionId) => {
           const body = await VersionApiClient.getBody(diagramId, versionId)
-          set({ preview: { versionId, body, headSnapshot } })
+          set({ preview: { versionId, body } })
         },
 
         exitPreview: () => set({ preview: null }),
@@ -314,22 +340,6 @@ export const useVersionStore = create<VersionStore>()(
         },
 
         dismissUndoRestore: () => set({ undoRestore: null }),
-
-        // ---- Compare --------------------------------------------------------
-        startCompare: (_diagramId, baseline, comparand = "current") =>
-          set({ compare: { baseline, comparand } }),
-        swapCompare: () =>
-          set((s) =>
-            s.compare
-              ? {
-                  compare: {
-                    baseline: s.compare.comparand,
-                    comparand: s.compare.baseline,
-                  },
-                }
-              : s
-          ),
-        closeCompare: () => set({ compare: null }),
 
         // ---- Realtime -------------------------------------------------------
         applyControlEvent: (diagramId, event) => {

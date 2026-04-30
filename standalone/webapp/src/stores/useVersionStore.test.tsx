@@ -25,7 +25,6 @@ function reset() {
     nextCursor: {},
     preview: null,
     undoRestore: null,
-    compare: null,
     loading: false,
     error: null,
   })
@@ -89,34 +88,12 @@ describe("useVersionStore.applyControlEvent", () => {
   })
 })
 
-describe("useVersionStore.compare", () => {
-  it("startCompare → swapCompare flips baseline ↔ comparand", () => {
-    useVersionStore.getState().startCompare("d1", "v1", "current")
-    expect(useVersionStore.getState().compare).toEqual({
-      baseline: "v1",
-      comparand: "current",
-    })
-    useVersionStore.getState().swapCompare()
-    expect(useVersionStore.getState().compare).toEqual({
-      baseline: "current",
-      comparand: "v1",
-    })
-  })
-
-  it("closeCompare resets state", () => {
-    useVersionStore.getState().startCompare("d1", "v1", "v2")
-    useVersionStore.getState().closeCompare()
-    expect(useVersionStore.getState().compare).toBeNull()
-  })
-})
-
 describe("useVersionStore.preview", () => {
   it("exitPreview clears state", () => {
     useVersionStore.setState({
       preview: {
         versionId: "v1",
         body: { id: "d1" } as never,
-        headSnapshot: { id: "d1" } as never,
       },
     })
     useVersionStore.getState().exitPreview()

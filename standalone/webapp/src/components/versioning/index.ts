@@ -1,7 +1,6 @@
 export { VersionDrawer, VersionSidebar } from "./VersionDrawer"
 export { VersionListItem } from "./VersionListItem"
 export { VersionPreviewBanner } from "./VersionPreviewBanner"
-export { VersionCompareBanner } from "./VersionCompareBanner"
 export { VersionThumbnail } from "./VersionThumbnail"
 export { UndoRestoreSnackbar } from "./UndoRestoreSnackbar"
 export { DeleteVersionModal } from "./DeleteVersionModal"

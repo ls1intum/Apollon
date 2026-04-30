@@ -2,26 +2,42 @@ import { Box, Skeleton } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded"
 import { useEffect, useMemo, useRef, useState, type FC } from "react"
-import { serverURL } from "@/constants"
+import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
+import { VersionApiClient } from "@/services/DiagramApiClient"
+import { log } from "@/logger"
 
 /**
- * Per-version SVG thumbnail. Lazily fetched when the row enters the
- * viewport via IntersectionObserver, then cached in a module-level Map
- * for the rest of the session. Snapshots are immutable, so a permanent
- * in-memory cache is correct (the browser HTTP cache also pins them via
- * the server's `Cache-Control: immutable` header).
+ * Per-version SVG thumbnail. The body JSON is fetched lazily when the row
+ * enters the viewport (`IntersectionObserver`) and rendered client-side via
+ * `ApollonEditor.exportModelAsSvg`. Result is data-URL'd and stamped into
+ * an `<img>` so the browser handles `object-fit: contain` framing for free.
  *
- * Falls back to a kind icon on error or while loading.
+ * Why not server-side render? The previous implementation hit a server
+ * endpoint that booted JSDOM + the full library bundle on every cold call,
+ * cost a network round-trip per thumbnail, and didn't exist in local mode.
+ * Snapshots are immutable JSON and the library can render in-browser — the
+ * server's job here was a wasted boundary.
  *
- * The fetched SVG is rewritten so it (a) preserves its aspect ratio and
- * centres in the thumbnail viewport (`preserveAspectRatio="xMidYMid meet"`),
- * (b) uses `width="100%"` `height="100%"` instead of any fixed size from
- * the original render, and (c) drops any explicit `background` so the
- * thumbnail picks up the surrounding theme background (works in both
- * light and dark mode).
+ * Concurrency note: `exportModelAsSvg` mounts a temporary 4000x4000 div
+ * during rendering, so we serialize via a tiny module-level queue to avoid
+ * stacking many of those at once. With viewport-gated lazy loading the
+ * burst size is naturally bounded (visible rows only) but the mutex keeps
+ * us safe on long lists during fast scrolling.
  */
 
+// Module-level cache: snapshots are immutable, so a permanent in-memory
+// data URL is correct. Cleared on full reload.
 const cache = new Map<string, string>() // key = `${diagramId}/${versionId}`
+
+// Single-flight render queue. Prevents overlapping `exportModelAsSvg`
+// calls from racing on the shared temp DOM container.
+let renderQueue: Promise<unknown> = Promise.resolve()
+function enqueueRender<T>(fn: () => Promise<T>): Promise<T> {
+  const next = renderQueue.then(fn, fn)
+  // Don't let a rejected render poison the chain for the next thumbnail.
+  renderQueue = next.catch(() => {})
+  return next
+}
 
 interface Props {
   diagramId: string
@@ -31,17 +47,8 @@ interface Props {
   isAuto?: boolean
 }
 
-function normaliseSvgForThumbnail(svgText: string): string {
-  // Drop any width/height attributes on the root <svg> and force the SVG
-  // to scale + centre via preserveAspectRatio. Cheap regex — server output
-  // is well-formed, no untrusted XML parsing needed.
-  return svgText
-    .replace(/<svg([^>]*)\swidth="[^"]*"/i, "<svg$1")
-    .replace(/<svg([^>]*)\sheight="[^"]*"/i, "<svg$1")
-    .replace(
-      /<svg([^>]*?)>/i,
-      `<svg$1 width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`
-    )
+function svgToDataUrl(svgText: string): string {
+  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgText)))}`
 }
 
 export const VersionThumbnail: FC<Props> = ({
@@ -51,12 +58,12 @@ export const VersionThumbnail: FC<Props> = ({
   isAuto = false,
 }) => {
   const cacheKey = `${diagramId}/${versionId}`
-  const [svg, setSvg] = useState<string | null>(cache.get(cacheKey) ?? null)
+  const [src, setSrc] = useState<string | null>(cache.get(cacheKey) ?? null)
   const [errored, setErrored] = useState(false)
   const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (svg || errored) return
+    if (src || errored) return
     const node = ref.current
     if (!node) return
     let cancelled = false
@@ -65,22 +72,27 @@ export const VersionThumbnail: FC<Props> = ({
         const first = entries[0]
         if (!first?.isIntersecting) return
         observer.disconnect()
-        fetch(
-          `${serverURL}/api/diagrams/${diagramId}/versions/${versionId}?type=svg`,
-          { credentials: "include" }
-        )
-          .then((res) => {
-            if (!res.ok) throw new Error(`status ${res.status}`)
-            return res.text()
+        VersionApiClient.getBody(diagramId, versionId)
+          .then((body) => {
+            if (cancelled) return null
+            // `Diagram` (server wire form) is `UMLModel & {...}`; route
+            // through `importDiagram` so older-schema snapshots forward-
+            // convert to whatever the current library understands before
+            // rendering.
+            const model = importDiagram(body) as UMLModel
+            return enqueueRender(() =>
+              ApollonEditor.exportModelAsSvg(model, { svgMode: "compat" })
+            )
           })
-          .then((text) => {
-            if (cancelled) return
-            const normalised = normaliseSvgForThumbnail(text)
-            cache.set(cacheKey, normalised)
-            setSvg(normalised)
+          .then((result) => {
+            if (cancelled || !result) return
+            const url = svgToDataUrl(result.svg)
+            cache.set(cacheKey, url)
+            setSrc(url)
           })
-          .catch(() => {
+          .catch((err) => {
             if (cancelled) return
+            log.error("Thumbnail render failed", err)
             setErrored(true)
           })
       },
@@ -91,15 +103,13 @@ export const VersionThumbnail: FC<Props> = ({
       cancelled = true
       observer.disconnect()
     }
-  }, [diagramId, versionId, cacheKey, svg, errored])
+  }, [diagramId, versionId, cacheKey, src, errored])
 
   const KindIcon = isAuto ? HistoryRoundedIcon : BookmarkRoundedIcon
   const w = compact ? 64 : 160
   const h = compact ? 40 : 100
 
-  // Memoise the SVG markup so React's diff doesn't re-write
-  // dangerouslySetInnerHTML on unrelated re-renders.
-  const inner = useMemo(() => (svg ? { __html: svg } : undefined), [svg])
+  const imgSrc = useMemo(() => src, [src])
 
   return (
     <Box
@@ -108,34 +118,31 @@ export const VersionThumbnail: FC<Props> = ({
         width: w,
         height: h,
         flexShrink: 0,
-        // App theming is via CSS custom properties on `documentElement`
-        // (see `useThemeStore` + `themings.json`), not MUI's ThemeProvider.
-        // We use those vars directly so the thumbnail follows the dark
-        // toggle.
-        bgcolor: "var(--apollon-background-variant)",
-        border: "1px solid var(--apollon-switch-box-border-color)",
+        // Fixed light plate — the library exports diagrams with concrete
+        // dark stroke/text colors regardless of host theme, so a white
+        // backdrop keeps thumbnails legible in light and dark mode.
+        bgcolor: "#ffffff",
         borderRadius: 1,
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: isAuto ? "var(--apollon-secondary)" : "var(--apollon-primary)",
+        color: isAuto ? "#9aa0a6" : "#1a73e8",
       }}
       aria-hidden
     >
-      {inner ? (
-        <Box
-          // Centred inner box for the SVG. preserveAspectRatio in the SVG
-          // itself does the visual centring; the wrapper just sizes it.
-          sx={{
+      {imgSrc ? (
+        <img
+          src={imgSrc}
+          alt=""
+          style={{
             width: "100%",
             height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            "& > svg": { width: "100%", height: "100%", display: "block" },
+            objectFit: "contain",
+            display: "block",
+            padding: 2,
+            boxSizing: "border-box",
           }}
-          dangerouslySetInnerHTML={inner}
         />
       ) : errored ? (
         <KindIcon fontSize={compact ? "small" : "medium"} aria-hidden />

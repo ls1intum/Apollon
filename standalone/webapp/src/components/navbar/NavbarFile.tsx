@@ -6,13 +6,11 @@ import Typography from "@mui/material/Typography"
 import { secondary } from "@/constants"
 import { useModalContext } from "@/contexts"
 import {
-  useDiagramIdFromPath,
   useExportAsJSON,
   useExportAsPNG,
   useExportAsSVG,
   useExportAsPDF,
 } from "@/hooks"
-import { useVersionStore } from "@/stores/useVersionStore"
 import { JsonFileImportButton } from "./JsonFileImportButton"
 import { KeyboardArrowDownIcon } from "../Icon"
 
@@ -23,8 +21,6 @@ interface Props {
 
 export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
   const { openModal } = useModalContext()
-  const diagramId = useDiagramIdFromPath()
-  const openDrawer = useVersionStore((s) => s.openDrawer)
   const exportAsSvg = useExportAsSVG("compat")
   const exportAsPng = useExportAsPNG()
   const exportAsJSON = useExportAsJSON()
@@ -101,16 +97,12 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         >
           Load Diagram
         </MenuItem>
-        {diagramId && (
-          <MenuItem
-            onClick={() => {
-              openDrawer(diagramId)
-              closeMainMenu()
-            }}
-          >
-            Version history
-          </MenuItem>
-        )}
+        {/* Version history lives in its own dedicated nav button
+            (`<VersionHistoryButton>`), not here — it had been duplicated
+            in the File menu for discoverability, but the standalone
+            button is more visible and hosting it twice meant the menu
+            entry felt like it "did nothing" from the user's POV
+            (clicking either toggles the same drawer). One source. */}
         <JsonFileImportButton close={closeMainMenu} />
         <MenuItem
           onClick={openSubMenu}

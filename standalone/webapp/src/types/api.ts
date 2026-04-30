@@ -25,6 +25,13 @@ export interface VersionSummary {
   createdAt: string
   kind: VersionKind
   librarySchemaVersion: string
+  /**
+   * Monotonic per-diagram counter assigned at commit time. Reflects "Nth
+   * version you ever made," not rank-among-currently-stored — survives
+   * eviction so the displayed `#N` stays stable. `undefined` for legacy
+   * rows committed before the counter was added.
+   */
+  seq?: number
 }
 
 export type ApiErrorCode =
