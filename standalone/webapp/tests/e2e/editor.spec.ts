@@ -20,13 +20,54 @@ function fileMenuButton(page: Page) {
   return page.locator("#file-menu-button").first()
 }
 
+async function openTemporaryLocalDiagram(page: Page) {
+  const modelId = "e2e-local-model-id"
+
+  await page.goto("/")
+  await page.evaluate((id) => {
+    const storeValue = JSON.stringify({
+      state: {
+        models: {
+          [id]: {
+            id,
+            model: {
+              id,
+              type: "ClassDiagram",
+              assessments: {},
+              edges: [],
+              nodes: [],
+              title: "E2E Diagram",
+              version: "4.0.0",
+            },
+            lastModifiedAt: new Date().toISOString(),
+          },
+        },
+        currentModelId: id,
+      },
+      version: 0,
+    })
+
+    localStorage.setItem("persistenceModelStore", storeValue)
+  }, modelId)
+
+  await page.goto(`/local/${modelId}`)
+  const isLegacyRouting =
+    (await page.getByText("Something went wrong.").count()) > 0
+
+  if (isLegacyRouting) {
+    await page.goto("/")
+  } else {
+    await expect(page).toHaveURL(new RegExp(`/local/${modelId}$`))
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Basic loading
 // ---------------------------------------------------------------------------
 
 test.describe("Editor loading", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
   })
 
@@ -58,7 +99,7 @@ test.describe("Editor loading", () => {
 
 test.describe("Template diagram interactions", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     // Load the Adapter template via File → Start from Template → Create
@@ -107,7 +148,7 @@ test.describe("Template diagram interactions", () => {
 
 test.describe("Canvas panning", () => {
   test("panning the canvas moves the viewport transform", async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     const viewport = page.locator(".react-flow__viewport").first()
@@ -179,7 +220,7 @@ test.describe("Playground page", () => {
 
 test.describe("Navbar", () => {
   test("navbar is visible with File button", async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     const fileButton = fileMenuButton(page)
@@ -187,7 +228,7 @@ test.describe("Navbar", () => {
   })
 
   test("File menu opens and shows expected items", async ({ page }) => {
-    await page.goto("/")
+    await openTemporaryLocalDiagram(page)
     await waitForCanvasReady(page, false)
 
     await fileMenuButton(page).click()
