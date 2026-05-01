@@ -14,6 +14,21 @@ import { ToastContainer } from "react-toastify"
 import { useShallow } from "zustand/shallow"
 import { useThemeStore } from "./stores/useThemeStore"
 
+const HomePlaceholder = () => (
+  <div
+    style={{
+      height: "100%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "var(--apollon-primary-contrast)",
+      fontSize: "1rem",
+    }}
+  >
+    Home page placeholder
+  </div>
+)
+
 // To set the safe area insets as for mobile devices
 SafeArea.getSafeAreaInsets().then(
   ({ insets: { top, bottom, left, right } }) => {
@@ -48,11 +63,12 @@ function App() {
             style={{ flex: 1, overflow: "hidden" }}
           >
             <Routes>
-              <Route path="/" element={<ApollonLocal />} />
+              <Route path="/" element={<HomePlaceholder />} />
+              <Route path="/local/:id" element={<ApollonLocal />} />
               <Route path="/playground" element={<ApollonPlayground />} />
               <Route path="/imprint" element={<ImprintPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/:diagramId" element={<ApollonWithConnection />} />
+              <Route path="/shared/:id" element={<ApollonWithConnection />} />
               <Route path="*" element={<ErrorPage />} />
             </Routes>
           </div>

@@ -9,7 +9,7 @@ import { DiagramAPIManager } from "@/services/DiagramAPIManager"
 import { log } from "@/logger"
 
 export const ApollonWithConnection: React.FC = () => {
-  const { diagramId } = useParams()
+  const { id: diagramId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { setEditor } = useEditorContext()

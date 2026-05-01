@@ -24,9 +24,9 @@ export const ShareModal = () => {
       const model = editor.model
       const { id: diagramID } = await DiagramAPIManager.createDiagram(model)
 
-      const newurl = `${window.location.origin}/${diagramID}?view=${viewType}`
+      const newurl = `${window.location.origin}/shared/${diagramID}?view=${viewType}`
       copyToClipboard(newurl)
-      navigate(`/${diagramID}?view=${viewType}`)
+      navigate(`/shared/${diagramID}?view=${viewType}`)
 
       toast.success(
         `The link has been copied to your clipboard and can be shared to collaborate, simply by pasting the link. You can re-access the link by going to share menu.`,

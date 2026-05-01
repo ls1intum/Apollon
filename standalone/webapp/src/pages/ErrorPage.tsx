@@ -1,7 +1,19 @@
 import React from "react"
 import { useNavigate } from "react-router"
 
-export const ErrorPage: React.FC = () => {
+type ErrorPageProps = {
+  title?: string
+  message?: string
+  buttonLabel?: string
+  backPath?: string
+}
+
+export const ErrorPage: React.FC<ErrorPageProps> = ({
+  title = "Oops!",
+  message = "Something went wrong.",
+  buttonLabel = "Go Home",
+  backPath = "/",
+}) => {
   const navigate = useNavigate()
 
   return (
@@ -17,10 +29,10 @@ export const ErrorPage: React.FC = () => {
       }}
     >
       <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#d9534f" }}>
-        Oops!
+        {title}
       </h1>
       <p style={{ fontSize: "1.2rem", color: "#333", marginTop: "8px" }}>
-        Something went wrong.
+        {message}
       </p>
       <button
         style={{
@@ -32,9 +44,9 @@ export const ErrorPage: React.FC = () => {
           borderRadius: "5px",
           cursor: "pointer",
         }}
-        onClick={() => navigate("/")}
+        onClick={() => navigate(backPath)}
       >
-        Go Home
+        {buttonLabel}
       </button>
     </div>
   )

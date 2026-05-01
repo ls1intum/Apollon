@@ -40,13 +40,8 @@ export const NewDiagramFromTemplateModal = () => {
       if (!jsonData) {
         throw new Error("Selected template data not found")
       }
-      const timeStapToCreate = new Date().getTime()
-
       createModel(jsonData)
-      navigate("..", {
-        relative: "route",
-        state: { timeStapToCreate },
-      })
+      navigate(`/local/${jsonData.id}`)
 
       closeModal()
     } catch (err: unknown) {

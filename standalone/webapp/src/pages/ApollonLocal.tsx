@@ -1,32 +1,21 @@
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { useEditorContext } from "@/contexts"
-import { ApollonEditor, UMLDiagramType } from "@tumaet/apollon"
+import { ApollonEditor } from "@tumaet/apollon"
 import React, { useEffect, useRef } from "react"
-import { useLocation } from "react-router"
+import { useParams } from "react-router"
 import { log } from "@/logger"
+import { ErrorPage } from "./ErrorPage"
 
 export const ApollonLocal: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const { setEditor } = useEditorContext()
-  const { state } = useLocation()
-
-  const currentModelId = usePersistenceModelStore(
-    (store) => store.currentModelId
-  )
+  const { id: diagramId } = useParams()
   const diagram = usePersistenceModelStore((store) =>
-    currentModelId ? store.models[currentModelId] : null
-  )
-  const createModelByTitleAndType = usePersistenceModelStore(
-    (store) => store.createModelByTitleAndType
+    diagramId ? store.models[diagramId] : null
   )
   const updateModel = usePersistenceModelStore((store) => store.updateModel)
 
   useEffect(() => {
-    if (!diagram) {
-      createModelByTitleAndType("Class Diagram", UMLDiagramType.ClassDiagram)
-      return
-    }
-
     if (!containerRef.current || !diagram) return
 
     const instance = new ApollonEditor(containerRef.current, {
@@ -42,8 +31,13 @@ export const ApollonLocal: React.FC = () => {
     return () => {
       log.debug("Cleaning up Apollon instance")
       instance.destroy()
+      setEditor(undefined)
     }
-  }, [diagram?.id, state?.timeStapToCreate])
+  }, [diagram?.id, setEditor, updateModel])
+
+  if (!diagramId || !diagram) {
+    return <ErrorPage message="Diagram not found." buttonLabel="Back to Home" />
+  }
 
   return (
     <div
