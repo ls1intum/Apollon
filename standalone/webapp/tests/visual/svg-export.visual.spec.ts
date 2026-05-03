@@ -48,6 +48,14 @@ function loadTemplate(filename: string): Record<string, unknown> {
   return JSON.parse(raw) as Record<string, unknown>
 }
 
+function resolveLocalDiagramRoute(fixture: Record<string, unknown>) {
+  const id = fixture.id
+  if (typeof id !== "string" || !id) {
+    throw new Error("Fixture is missing a valid 'id' for /local/:id navigation")
+  }
+  return `/local/${id}`
+}
+
 const diagramFixtures = [
   {
     name: "ClassDiagram",
@@ -171,7 +179,7 @@ test.describe("SVG export - diagram fixtures", () => {
       page,
     }) => {
       await injectFixtureIntoLocalStorage(page, fixture)
-      await page.goto("/")
+      await page.goto(resolveLocalDiagramRoute(fixture))
       await waitForCanvasReady(page)
 
       if (fitView) {
@@ -214,7 +222,7 @@ test.describe("SVG export - template diagrams", () => {
     }) => {
       const template = loadTemplate(`${file}.json`)
       await injectFixtureIntoLocalStorage(page, template)
-      await page.goto("/")
+      await page.goto(resolveLocalDiagramRoute(template))
       await waitForCanvasReady(page)
 
       const svgString = await extractSVGFromPage(page)
