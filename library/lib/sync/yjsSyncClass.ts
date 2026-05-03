@@ -1,5 +1,3 @@
-import * as Y from "yjs"
-import { StoreApi } from "zustand"
 import { DiagramStore } from "@/store/diagramStore"
 import { MetadataStore } from "@/store/metadataStore"
 import {
@@ -8,12 +6,21 @@ import {
   getEdgesMap,
   getNodesMap,
 } from "@/sync/ydoc"
-import { Edge, Node } from "@xyflow/react"
 import { Assessment } from "@/typings"
+import { Edge, Node } from "@xyflow/react"
+import {
+  applyAwarenessUpdate,
+  Awareness,
+  encodeAwarenessUpdate,
+} from "y-protocols/awareness"
+import * as Y from "yjs"
+import { StoreApi } from "zustand"
 
 export enum MessageType {
   YjsSYNC = 0,
   YjsUpdate = 1,
+  AwarenessSync = 2,
+  AwarenessUpdate = 3,
 }
 
 export type SendBroadcastMessage = (base64data: string) => void
@@ -24,6 +31,7 @@ export class YjsSyncClass {
   private readonly ydoc: Y.Doc
   private readonly diagramStore: StoreApi<DiagramStore>
   private readonly metadataStore: StoreApi<MetadataStore>
+  private readonly awareness: Awareness
 
   constructor(
     ydoc: Y.Doc,
@@ -33,6 +41,7 @@ export class YjsSyncClass {
     this.ydoc = ydoc
     this.diagramStore = diagramStore
     this.metadataStore = metadataStore
+    this.awareness = new Awareness(this.ydoc)
     this.stopYjsObserver = this.startYjsObserver()
   }
 
@@ -42,6 +51,58 @@ export class YjsSyncClass {
 
   public setSendBroadcastMessage = (sendFn: SendBroadcastMessage) => {
     this.sendBroadcastMessage = sendFn
+
+    const localState = this.awareness.getLocalState()
+    if (localState) {
+      const awarenessUpdate = encodeAwarenessUpdate(this.awareness, [
+        this.awareness.clientID,
+      ])
+      this.sendFramedMessage(MessageType.AwarenessUpdate, awarenessUpdate)
+    }
+  }
+
+  public setLocalAwarenessUser = (user: { name: string; color: string }) => {
+    this.awareness.setLocalStateField("user", user)
+  }
+
+  public setLocalAwarenessCursor = (
+    cursor: { x: number; y: number } | null
+  ) => {
+    this.awareness.setLocalStateField("cursor", cursor)
+  }
+
+  public setLocalAwarenessSelectedElement = (
+    selectedElementId: string | null
+  ) => {
+    this.awareness.setLocalStateField("selectedElementId", selectedElementId)
+  }
+
+  public subscribeToAwarenessChanges = (
+    callback: (states: Map<number, unknown>) => void
+  ) => {
+    const handler = () => callback(this.awareness.getStates())
+    this.awareness.on("change", handler)
+    return () => {
+      this.awareness.off("change", handler)
+    }
+  }
+
+  public getLocalAwarenessClientId = () => this.awareness.clientID
+
+  private sendFramedMessage = (
+    messageType: MessageType,
+    payload: Uint8Array
+  ) => {
+    if (!this.sendBroadcastMessage) {
+      return
+    }
+
+    const fullMessage = new Uint8Array(1 + payload.length)
+    fullMessage[0] = messageType
+    fullMessage.set(payload, 1)
+
+    const base64Message = YjsSyncClass.uint8ToBase64(fullMessage)
+    this.sendBroadcastMessage(base64Message)
   }
 
   private applyUpdate = (update: Uint8Array, transactionOrigin: string) => {
@@ -57,15 +118,15 @@ export class YjsSyncClass {
       const update = decodedData.slice(1)
       this.applyUpdate(update, "remote")
     } else if (messageType === MessageType.YjsSYNC) {
-      if (this.sendBroadcastMessage) {
-        const syncMessage = Y.encodeStateAsUpdate(this.ydoc)
-        const fullMessage = new Uint8Array(1 + syncMessage.length)
-        fullMessage[0] = MessageType.YjsUpdate
-        fullMessage.set(syncMessage, 1)
-
-        const base64Message = YjsSyncClass.uint8ToBase64(fullMessage)
-        this.sendBroadcastMessage(base64Message)
-      }
+      const syncMessage = Y.encodeStateAsUpdate(this.ydoc)
+      this.sendFramedMessage(MessageType.YjsUpdate, syncMessage)
+    } else if (messageType === MessageType.AwarenessUpdate) {
+      const awarenessUpdate = decodedData.slice(1)
+      applyAwarenessUpdate(this.awareness, awarenessUpdate, "remote")
+    } else if (messageType === MessageType.AwarenessSync) {
+      const clientIds = Array.from(this.awareness.getStates().keys())
+      const awarenessUpdate = encodeAwarenessUpdate(this.awareness, clientIds)
+      this.sendFramedMessage(MessageType.AwarenessUpdate, awarenessUpdate)
     }
   }
 
@@ -133,11 +194,7 @@ export class YjsSyncClass {
           this.isUndoRedoTransaction(transaction))
       ) {
         const syncMessage = Y.encodeStateAsUpdate(this.ydoc)
-        const fullMessage = new Uint8Array(1 + syncMessage.length)
-        fullMessage[0] = MessageType.YjsUpdate
-        fullMessage.set(syncMessage, 1)
-        const base64Message = YjsSyncClass.uint8ToBase64(fullMessage)
-        this.sendBroadcastMessage(base64Message)
+        this.sendFramedMessage(MessageType.YjsUpdate, syncMessage)
       }
 
       // Update store state for undo/redo operations
@@ -149,11 +206,41 @@ export class YjsSyncClass {
       }
     }
 
+    const handleAwarenessUpdate = (
+      {
+        added,
+        updated,
+        removed,
+      }: {
+        added: number[]
+        updated: number[]
+        removed: number[]
+      },
+      origin: unknown
+    ) => {
+      // Prevent rebroadcast loops for remote updates.
+      if (origin === "remote") {
+        return
+      }
+
+      const changedClients = [...added, ...updated, ...removed]
+      if (changedClients.length === 0) {
+        return
+      }
+
+      const awarenessUpdate = encodeAwarenessUpdate(
+        this.awareness,
+        changedClients
+      )
+      this.sendFramedMessage(MessageType.AwarenessUpdate, awarenessUpdate)
+    }
+
     getNodesMap(this.ydoc).observe(nodesChangeObserver)
     getEdgesMap(this.ydoc).observe(edgesObserver)
     getAssessments(this.ydoc).observe(assessmentObserver)
     getDiagramMetadata(this.ydoc).observe(metadataObserver)
     this.ydoc.on("update", handleYjsUpdate)
+    this.awareness.on("update", handleAwarenessUpdate)
 
     return () => {
       getNodesMap(this.ydoc).unobserve(nodesChangeObserver)
@@ -161,6 +248,7 @@ export class YjsSyncClass {
       getAssessments(this.ydoc).unobserve(assessmentObserver)
       getDiagramMetadata(this.ydoc).unobserve(metadataObserver)
       this.ydoc.off("update", handleYjsUpdate)
+      this.awareness.off("update", handleAwarenessUpdate)
     }
   }
 

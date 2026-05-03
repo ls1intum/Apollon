@@ -15,6 +15,22 @@ export type Subscribers = {
 
 export type UMLModelElementType = DiagramNodeType | DiagramEdgeType
 
+export type CollaborationUser = {
+  name: string
+  color: string
+}
+
+export type CollaborationCursor = {
+  x: number
+  y: number
+}
+
+export type CollaborationState = {
+  user?: CollaborationUser
+  cursor?: CollaborationCursor | null
+  selectedElementId?: string | null
+}
+
 export enum Locale {
   en = "en",
   de = "de",

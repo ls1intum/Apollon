@@ -11,7 +11,7 @@ import { log } from "@/logger"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
-  const { closeModal } = useModalContext()
+  const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
@@ -45,6 +45,17 @@ export const ShareModal = () => {
     navigator.clipboard.writeText(link)
   }
 
+  const handleCollaborate = () => {
+    const storedName = sessionStorage.getItem("apollon-collab-name") || ""
+    openModal("COLLABORATE_NAME", {
+      initialName: storedName,
+      onConfirm: (name: string) => {
+        sessionStorage.setItem("apollon-collab-name", name)
+        handleShareButtonPress(DiagramView.COLLABORATE)
+      },
+    })
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -68,11 +79,7 @@ export const ShareModal = () => {
           </APButton>
         </div>
         <div>
-          <APButton
-            variant="outline"
-            fullWidth
-            onClick={() => handleShareButtonPress(DiagramView.COLLABORATE)}
-          >
+          <APButton variant="outline" fullWidth onClick={handleCollaborate}>
             Collaborate
           </APButton>
         </div>

@@ -33,7 +33,7 @@ import {
   MessageType,
   SendBroadcastMessage,
   YjsSyncClass,
-} from "@/sync/yjsSyncClass"
+} from "./sync/yjsSyncClass"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
@@ -167,6 +167,29 @@ export class ApollonEditor {
 
   public getEdges(): Edge[] {
     return this.reactFlowInstance ? this.reactFlowInstance.getEdges() : []
+  }
+
+  public getViewport(): { x: number; y: number; zoom: number } | null {
+    if (!this.reactFlowInstance) {
+      return null
+    }
+    return this.reactFlowInstance.getViewport()
+  }
+
+  public screenToFlowPosition(position: { x: number; y: number }) {
+    if (!this.reactFlowInstance) {
+      return null
+    }
+    return this.reactFlowInstance.screenToFlowPosition(position, {
+      snapToGrid: false,
+    })
+  }
+
+  public flowToScreenPosition(position: { x: number; y: number }) {
+    if (!this.reactFlowInstance) {
+      return null
+    }
+    return this.reactFlowInstance.flowToScreenPosition(position)
   }
 
   set diagramType(type: UMLDiagramType) {
@@ -367,6 +390,28 @@ export class ApollonEditor {
     return subscriberId
   }
 
+  public subscribeToSelectionChange(
+    callback: (selectedElementIds: string[]) => void
+  ) {
+    const subscriberId = this.getNewSubscriptionId()
+    const unsubscribeCallback = this.diagramStore.subscribe((state) =>
+      callback(state.selectedElementIds)
+    )
+    this.subscribers[subscriberId] = unsubscribeCallback
+    return subscriberId
+  }
+
+  public subscribeToAwarenessChanges(
+    callback: (states: Map<number, Apollon.CollaborationState>) => void
+  ) {
+    const subscriberId = this.getNewSubscriptionId()
+    const unsubscribeCallback = this.syncManager.subscribeToAwarenessChanges(
+      callback as (states: Map<number, unknown>) => void
+    )
+    this.subscribers[subscriberId] = unsubscribeCallback
+    return subscriberId
+  }
+
   public unsubscribe(subscriberId: number) {
     const unsubscribeCallback = this.subscribers[subscriberId]
     if (unsubscribeCallback) {
@@ -381,6 +426,22 @@ export class ApollonEditor {
 
   public receiveBroadcastedMessage(base64Data: string) {
     this.syncManager.handleReceivedData(base64Data)
+  }
+
+  public setLocalAwarenessUser(user: Apollon.CollaborationUser) {
+    this.syncManager.setLocalAwarenessUser(user)
+  }
+
+  public setLocalAwarenessCursor(cursor: Apollon.CollaborationCursor | null) {
+    this.syncManager.setLocalAwarenessCursor(cursor)
+  }
+
+  public setLocalAwarenessSelectedElement(selectedElementId: string | null) {
+    this.syncManager.setLocalAwarenessSelectedElement(selectedElementId)
+  }
+
+  public getLocalAwarenessClientId(): number {
+    return this.syncManager.getLocalAwarenessClientId()
   }
 
   public updateDiagramTitle(name: string) {
@@ -461,6 +522,13 @@ export class ApollonEditor {
 
   static generateInitialSyncMessage(): string {
     const syncMessage = new Uint8Array(new Uint8Array([MessageType.YjsSYNC]))
+    return YjsSyncClass.uint8ToBase64(syncMessage)
+  }
+
+  static generateInitialAwarenessSyncMessage(): string {
+    const syncMessage = new Uint8Array(
+      new Uint8Array([MessageType.AwarenessSync])
+    )
     return YjsSyncClass.uint8ToBase64(syncMessage)
   }
 }
