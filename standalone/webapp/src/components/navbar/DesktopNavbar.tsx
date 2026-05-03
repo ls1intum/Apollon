@@ -111,6 +111,7 @@ export const DesktopNavbar = () => {
             onChange={(event) => {
               const newTitle = event.target.value
               editor?.updateDiagramTitle(newTitle)
+              setDiagramTitle(newTitle)
             }}
             placeholder="Diagram Name"
             variant="outlined"
