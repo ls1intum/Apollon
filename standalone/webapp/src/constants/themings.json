@@ -20,7 +20,15 @@
     "--apollon-btn-outline-secondary-color": "#6c757d",
     "--apollon-modal-bottom-border": "#e9ecef",
     "--apollon-guide-vertical": "#d63031",
-    "--apollon-guide-horizontal": "#0984e3"
+    "--apollon-guide-horizontal": "#0984e3",
+    "--home-bg-primary": "#fcfdff",
+    "--home-bg-secondary": "#f2f4f7",
+    "--home-bg-card": "#ffffff",
+    "--home-border-color": "#b9c5d1",
+    "--home-text-primary": "#17212b",
+    "--home-text-secondary": "#44586c",
+    "--home-accent-color": "#1e5a96",
+    "--home-accent-soft": "#e3ebf4"
   },
   "dark": {
     "--apollon-primary": "#3e8acc",
@@ -43,6 +51,14 @@
     "--apollon-btn-outline-secondary-color": "#b8c0c5",
     "--apollon-modal-bottom-border": "#979797",
     "--apollon-guide-vertical": "#ff7675",
-    "--apollon-guide-horizontal": "#74b9ff"
+    "--apollon-guide-horizontal": "#74b9ff",
+    "--home-bg-primary": "#0f141b",
+    "--home-bg-secondary": "#17202a",
+    "--home-bg-card": "#1b2632",
+    "--home-border-color": "#314255",
+    "--home-text-primary": "#ebf2f9",
+    "--home-text-secondary": "#a8b7c8",
+    "--home-accent-color": "#67afea",
+    "--home-accent-soft": "#223548"
   }
 }

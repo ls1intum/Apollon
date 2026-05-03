@@ -65,7 +65,7 @@ export const useThemeStore = create<ThemeState>()(
       },
     }),
     {
-      name: "theme-storage",
+      name: "apollon-theme",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         systemThemePreference: state.systemThemePreference,

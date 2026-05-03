@@ -25,20 +25,32 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
         justifyContent: "center",
         height: "100vh",
         textAlign: "center",
-        backgroundColor: "#f8f8f8",
+        backgroundColor: "var(--apollon-background)",
       }}
     >
-      <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#d9534f" }}>
+      <h1
+        style={{
+          fontSize: "2rem",
+          fontWeight: "bold",
+          color: "var(--apollon-guide-vertical)",
+        }}
+      >
         {title}
       </h1>
-      <p style={{ fontSize: "1.2rem", color: "#333", marginTop: "8px" }}>
+      <p
+        style={{
+          fontSize: "1.2rem",
+          color: "var(--apollon-primary-contrast)",
+          marginTop: "8px",
+        }}
+      >
         {message}
       </p>
       <button
         style={{
           marginTop: "16px",
           padding: "10px 20px",
-          backgroundColor: "#007bff",
+          backgroundColor: "var(--apollon-primary)",
           color: "#fff",
           border: "none",
           borderRadius: "5px",

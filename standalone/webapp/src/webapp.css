@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+:root {
+  --home-bg-primary: #fcfdff;
+  --home-bg-secondary: #f2f4f7;
+  --home-bg-card: #ffffff;
+  --home-border-color: #b9c5d1;
+  --home-text-primary: #17212b;
+  --home-text-secondary: #44586c;
+  --home-accent-color: #1e5a96;
+  --home-accent-soft: #e3ebf4;
+}
+
 html {
   height: 100%;
   overflow: hidden;
@@ -34,15 +45,35 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  background-color: var(--apollon-background);
+  color: var(--apollon-primary-contrast);
 }
 
 #root {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  /* background-color: var(--apollon-background); */
   height: 100%;
 
+}
+
+.home-diagram-card {
+  contain: layout paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 256px;
+}
+
+.home-diagram-card:hover .home-diagram-card-meta-normal,
+.home-diagram-card:hover .home-diagram-card-meta-compact,
+.home-diagram-card:focus-visible .home-diagram-card-meta-normal,
+.home-diagram-card:focus-visible .home-diagram-card-meta-compact {
+  will-change: transform, opacity;
+}
+
+@supports not (content-visibility: auto) {
+  .home-diagram-card {
+    contain: layout paint;
+  }
 }
 
 .apollon-editor {
@@ -53,3 +84,4 @@ body {
   background-color: var(--apollon-background) !important;
   color: var(--apollon-primary-contrast) !important;
 }
+
