@@ -28,16 +28,25 @@ export const DesktopNavbar = () => {
   }
 
   useEffect(() => {
-    if (editor && !unsubscribeId.current) {
-      editor.subscribeToDiagramNameChange((diagramTitle) => {
+    if (!editor) {
+      unsubscribeId.current = undefined
+      return
+    }
+
+    unsubscribeId.current = editor.subscribeToDiagramNameChange(
+      (diagramTitle) => {
         setDiagramTitle(diagramTitle)
-      })
+      }
+    )
+    setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
+
+    return () => {
+      if (unsubscribeId.current !== undefined) {
+        editor.unsubscribe(unsubscribeId.current)
+        unsubscribeId.current = undefined
+      }
     }
-    // Update diagram title when editor is available
-    if (editor) {
-      setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
-    }
-  }, [editor, setDiagramTitle, unsubscribeId])
+  }, [editor])
 
   return (
     <AppBar
@@ -53,12 +62,23 @@ export const DesktopNavbar = () => {
       elevation={0}
     >
       <Toolbar disableGutters>
-        <div
+        <button
+          type="button"
           onClick={goHome}
-          style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            background: "none",
+            border: "none",
+            padding: 0,
+            margin: 0,
+            color: "inherit",
+            font: "inherit",
+          }}
         >
           <img
-            alt="Logo"
+            alt="TU Munich logo"
             src={TumLogo}
             width="60"
             height="30"
@@ -66,7 +86,7 @@ export const DesktopNavbar = () => {
           />
 
           <BrandAndVersion />
-        </div>
+        </button>
 
         {/* Spacer */}
         <Box
