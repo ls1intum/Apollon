@@ -40,8 +40,9 @@ export const useHomeScrollSpy = () => {
         }))
         .sort((a, b) => a.top - b.top)
 
+      const threshold = scrollContainer.getBoundingClientRect().height * 0.42
       const matched = sectionRects.find(
-        (entry) => entry.top >= 0 && entry.top <= window.innerHeight * 0.42
+        (entry) => entry.top >= 0 && entry.top <= threshold
       )
 
       if (matched && matched.anchor !== activeAnchorRef.current) {

@@ -54,7 +54,52 @@ body {
   flex-direction: column;
   flex-grow: 1;
   height: 100%;
+}
 
+html,
+body,
+#root {
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+.home-page-scrollbar {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color:
+    color-mix(in srgb, var(--home-accent-color) 58%, var(--home-bg-secondary))
+    color-mix(in srgb, var(--home-bg-secondary) 78%, transparent);
+}
+
+.home-page-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.home-page-scrollbar::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--home-bg-secondary) 78%,
+    var(--home-bg-primary)
+  );
+}
+
+.home-page-scrollbar::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--home-accent-color) 58%,
+    var(--home-bg-secondary)
+  );
+  background-clip: content-box;
+}
+
+.home-page-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(
+    in srgb,
+    var(--home-accent-color) 72%,
+    var(--home-bg-secondary)
+  );
 }
 
 .home-diagram-card {
@@ -84,4 +129,5 @@ body {
   background-color: var(--apollon-background) !important;
   color: var(--apollon-primary-contrast) !important;
 }
+
 

@@ -1,12 +1,14 @@
 import { useMemo, type ReactElement } from "react"
 import { useNavigate } from "react-router"
 import type { UMLModel } from "@tumaet/apollon"
+import { toast } from "react-toastify"
 import { useThemeStore } from "@/stores/useThemeStore"
 import { log } from "@/logger"
 import { DeferredHomeStats } from "@/components/home/DeferredHomeStats"
 import { HomeDiagramSections } from "@/components/home/HomeDiagramSections"
 import { HomeNavbar } from "@/components/navbar/HomeNavbar"
 import { useHomeScrollSpy, type HomeAnchor } from "@/hooks/useHomeScrollSpy"
+import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 
 type HomeNavItem = {
   id: HomeAnchor
@@ -114,13 +116,11 @@ export const HomePage = () => {
           ? crypto.randomUUID()
           : `${Date.now()}-${Math.random().toString(16).slice(2)}`
 
-      const { usePersistenceModelStore } = await import(
-        "@/stores/usePersistenceModelStore"
-      )
       usePersistenceModelStore.getState().createModel(clonedModel)
       navigate(`/local/${clonedModel.id}`)
     } catch (error) {
       log.error("Error creating diagram from template:", error as Error)
+      toast.error("Failed to create diagram from template.")
     }
   }
 
@@ -142,24 +142,35 @@ export const HomePage = () => {
 
       <main
         ref={contentRef}
-        className="relative z-10 mx-auto h-[calc(100%-72px)] overflow-y-auto px-4 pb-24 pt-4 md:px-6 md:pb-10 md:pt-6"
+        className="home-page-scrollbar relative z-10 mx-auto h-[calc(100%-72px)] overflow-y-auto px-4 pb-24 pt-4 md:px-6 md:pb-10 md:pt-6"
       >
         <section
-          className={`relative overflow-hidden rounded-2xl border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-5 transition-[opacity,transform] duration-700 md:p-8 ${
+          className={`relative overflow-hidden rounded-2xl border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-5 transition-[opacity,transform,background-color,border-color,box-shadow] duration-700 md:p-8 ${
             isDarkTheme
               ? "shadow-[0_16px_32px_-24px_rgba(0,0,0,0.62),0_7px_14px_-10px_rgba(0,0,0,0.42)]"
               : "shadow-[0_14px_28px_-24px_rgba(24,38,52,0.18),0_6px_12px_-10px_rgba(24,38,52,0.12)]"
           } ${appearClass}`}
         >
-          {isDarkTheme ? (
-            <>
-              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--home-accent-color)_17%,transparent)_0%,transparent_52%,color-mix(in_srgb,var(--apollon-guide-horizontal)_14%,transparent)_100%)]" />
-              <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[var(--home-accent-color)] opacity-20 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-[var(--apollon-guide-horizontal)] opacity-14 blur-3xl" />
-            </>
-          ) : (
-            <div className="pointer-events-none absolute inset-0 bg-[color-mix(in_srgb,var(--home-bg-secondary)_52%,transparent)]" />
-          )}
+          <div
+            className={`pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--home-accent-color)_17%,transparent)_0%,transparent_52%,color-mix(in_srgb,var(--apollon-guide-horizontal)_14%,transparent)_100%)] transition-opacity duration-300 ${
+              isDarkTheme ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <div
+            className={`pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[var(--home-accent-color)] blur-3xl transition-opacity duration-300 ${
+              isDarkTheme ? "opacity-20" : "opacity-0"
+            }`}
+          />
+          <div
+            className={`pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-[var(--apollon-guide-horizontal)] blur-3xl transition-opacity duration-300 ${
+              isDarkTheme ? "opacity-14" : "opacity-0"
+            }`}
+          />
+          <div
+            className={`pointer-events-none absolute inset-0 bg-[color-mix(in_srgb,var(--home-bg-secondary)_52%,transparent)] transition-opacity duration-300 ${
+              isDarkTheme ? "opacity-0" : "opacity-100"
+            }`}
+          />
 
           <div className="relative space-y-4">
             <span className="inline-flex items-center rounded-full border border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
@@ -202,7 +213,7 @@ export const HomePage = () => {
         </section>
 
         <section
-          className={`relative mt-4 hidden rounded-xl border border-[var(--home-border-color)] bg-[var(--home-bg-primary)]/90 p-2 backdrop-blur transition-[opacity,transform] duration-700 md:sticky md:top-0 md:z-20 md:mt-5 md:block md:p-2.5 ${appearClass}`}
+          className={`relative mt-4 hidden rounded-xl border border-[var(--home-border-color)] bg-[var(--home-bg-primary)]/90 p-2 backdrop-blur transition-[opacity,transform,background-color,border-color] duration-700 md:sticky md:top-0 md:z-20 md:mt-5 md:block md:p-2.5 ${appearClass}`}
           style={{ transitionDelay: "80ms" }}
         >
           <div className="pointer-events-none absolute inset-0 rounded-xl bg-[linear-gradient(90deg,color-mix(in_srgb,var(--home-accent-color)_10%,transparent),transparent_35%,color-mix(in_srgb,var(--apollon-guide-horizontal)_8%,transparent))]" />
@@ -238,7 +249,7 @@ export const HomePage = () => {
         >
           <section
             ref={templateRef}
-            className={`mt-10 scroll-mt-28 space-y-4 transition-[opacity,transform] duration-700 ${appearClass}`}
+            className={`mt-10 scroll-mt-28 space-y-4 transition-[opacity,transform,color] duration-700 ${appearClass}`}
             style={{ transitionDelay: "170ms" }}
           >
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">

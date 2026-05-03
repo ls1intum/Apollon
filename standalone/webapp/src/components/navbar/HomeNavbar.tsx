@@ -6,7 +6,7 @@ import { ThemeSwitcherMenu } from "./ThemeSwitcher"
 export const HomeNavbar = () => {
   return (
     <header
-      className="sticky top-0 z-40 flex min-h-[64px] items-center border-b border-[var(--home-border-color)] px-4 shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+      className="sticky top-0 z-40 flex min-h-[64px] items-center border-b border-[var(--home-border-color)] px-4 shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-colors duration-200"
       style={{ backgroundColor: NAVBAR_BACKGROUND_COLOR }}
     >
       <div className="flex min-w-0 items-center overflow-hidden md:w-20 lg:w-56">
