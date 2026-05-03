@@ -4,85 +4,10 @@ import { ApollonEditor } from "@tumaet/apollon"
 import React, { useEffect, useRef } from "react"
 import { useParams } from "react-router"
 import { log } from "@/logger"
+import { normalizeThumbnailSvg } from "@/utils/thumbnailSvg"
 import { ErrorPage } from "./ErrorPage"
 
-const THUMBNAIL_MAX_WIDTH = 400
-const THUMBNAIL_MAX_HEIGHT = 300
 const THUMBNAIL_DEBOUNCE_MS = 2000
-
-const parseSvgDimension = (value: string | null): number | null => {
-  if (!value) return null
-  const parsed = Number.parseFloat(value)
-  if (!Number.isFinite(parsed) || parsed <= 0) return null
-  return parsed
-}
-
-const getDimensionsFromViewBox = (
-  viewBox: string | null
-): { width: number; height: number } | null => {
-  if (!viewBox) return null
-  const parts = viewBox
-    .trim()
-    .split(/[\s,]+/)
-    .map((part) => Number.parseFloat(part))
-
-  if (parts.length !== 4 || parts.some((part) => !Number.isFinite(part))) {
-    return null
-  }
-
-  const width = parts[2]
-  const height = parts[3]
-  if (width <= 0 || height <= 0) {
-    return null
-  }
-
-  return { width, height }
-}
-
-const normalizeThumbnailSvg = (
-  svgString: string,
-  fallbackWidth?: number,
-  fallbackHeight?: number
-): string => {
-  const parser = new DOMParser()
-  const parsedDocument = parser.parseFromString(svgString, "image/svg+xml")
-  const parseError = parsedDocument.querySelector("parsererror")
-  const svgElement = parsedDocument.documentElement
-
-  if (parseError || !svgElement || svgElement.tagName.toLowerCase() !== "svg") {
-    return svgString
-  }
-
-  const widthAttribute = parseSvgDimension(svgElement.getAttribute("width"))
-  const heightAttribute = parseSvgDimension(svgElement.getAttribute("height"))
-  const viewBoxDimensions = getDimensionsFromViewBox(
-    svgElement.getAttribute("viewBox")
-  )
-
-  const sourceWidth =
-    widthAttribute ??
-    viewBoxDimensions?.width ??
-    fallbackWidth ??
-    THUMBNAIL_MAX_WIDTH
-  const sourceHeight =
-    heightAttribute ??
-    viewBoxDimensions?.height ??
-    fallbackHeight ??
-    THUMBNAIL_MAX_HEIGHT
-
-  const scale = Math.min(
-    1,
-    THUMBNAIL_MAX_WIDTH / sourceWidth,
-    THUMBNAIL_MAX_HEIGHT / sourceHeight
-  )
-  const targetWidth = Math.max(1, Math.round(sourceWidth * scale))
-  const targetHeight = Math.max(1, Math.round(sourceHeight * scale))
-
-  svgElement.setAttribute("width", `${targetWidth}`)
-  svgElement.setAttribute("height", `${targetHeight}`)
-
-  return new XMLSerializer().serializeToString(svgElement)
-}
 
 export const ApollonLocal: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null)
