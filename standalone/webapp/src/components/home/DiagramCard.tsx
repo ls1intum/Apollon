@@ -86,7 +86,8 @@ const DiagramCardComponent = ({
     () => (thumbnailSvg ? toSvgDataUrl(thumbnailSvg) : null),
     [thumbnailSvg]
   )
-  const shouldRenderThumbnail = !showPlaceholderIcon && Boolean(thumbnailDataUrl)
+  const shouldRenderThumbnail =
+    !showPlaceholderIcon && Boolean(thumbnailDataUrl)
 
   useEffect(() => {
     const updateRelativeDate = () => {

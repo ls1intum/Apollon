@@ -30,9 +30,12 @@ async function seedDiagrams(
     }
   }
   await page.goto("/")
-  await page.evaluate((storeValue) => {
-    localStorage.setItem("persistenceModelStore", storeValue)
-  }, JSON.stringify({ state: { models, currentModelId: null }, version: 1 }))
+  await page.evaluate(
+    (storeValue) => {
+      localStorage.setItem("persistenceModelStore", storeValue)
+    },
+    JSON.stringify({ state: { models, currentModelId: null }, version: 1 })
+  )
   await page.goto("/")
   await page.waitForLoadState("networkidle")
   // DiagramGallery is lazy-loaded; wait for it to render with seeded data
@@ -177,7 +180,10 @@ test.describe("Home page — diagram gallery", () => {
 
   test("shows the correct diagram count badge", async ({ page }) => {
     // The count badge is a <span> near the "Recent Diagrams" heading
-    const countBadge = page.locator("h3", { hasText: "Recent Diagrams" }).locator("..").getByText("3")
+    const countBadge = page
+      .locator("h3", { hasText: "Recent Diagrams" })
+      .locator("..")
+      .getByText("3")
     await expect(countBadge).toBeVisible()
   })
 
@@ -208,7 +214,10 @@ test.describe("Home page — diagram gallery", () => {
     page,
   }) => {
     // All 3 are ClassDiagram — clicking the chip keeps all 3 visible
-    const chip = page.getByRole("button", { name: "Class Diagram", exact: true })
+    const chip = page.getByRole("button", {
+      name: "Class Diagram",
+      exact: true,
+    })
     await chip.click()
     await expect(page.locator('[role="listitem"]')).toHaveCount(3)
     // Active chip has the accent shadow class
@@ -238,13 +247,9 @@ test.describe("Home page — load more", () => {
     await seedDiagrams(page, diagrams)
   })
 
-  test("shows 9 cards initially and a 'Load more' button", async ({
-    page,
-  }) => {
+  test("shows 9 cards initially and a 'Load more' button", async ({ page }) => {
     await expect(page.locator('[role="listitem"]')).toHaveCount(9)
-    await expect(
-      page.getByRole("button", { name: "Load more" })
-    ).toBeVisible()
+    await expect(page.getByRole("button", { name: "Load more" })).toBeVisible()
   })
 
   test("'Load more' reveals the remaining cards", async ({ page }) => {
@@ -262,15 +267,11 @@ test.describe("Home page — load more", () => {
 
 test.describe("Home page — diagram card actions", () => {
   test.beforeEach(async ({ page }) => {
-    await seedDiagrams(page, [
-      { id: "card-test", title: "Card Test Diagram" },
-    ])
+    await seedDiagrams(page, [{ id: "card-test", title: "Card Test Diagram" }])
   })
 
   test("three-dot menu opens action dropdown", async ({ page }) => {
-    await page
-      .getByRole("button", { name: "Open diagram actions" })
-      .click()
+    await page.getByRole("button", { name: "Open diagram actions" }).click()
     // Scope to the dropdown panel to avoid matching the card body button
     const dropdown = page.locator(".absolute.right-0.z-40.mt-2")
     await expect(
@@ -285,35 +286,27 @@ test.describe("Home page — diagram card actions", () => {
   })
 
   test("clicking 'Open' navigates to the editor", async ({ page }) => {
-    await page
-      .getByRole("button", { name: "Open diagram actions" })
-      .click()
+    await page.getByRole("button", { name: "Open diagram actions" }).click()
     const dropdown = page.locator(".absolute.right-0.z-40.mt-2")
     await dropdown.getByRole("button", { name: "Open", exact: true }).click()
     await expect(page).toHaveURL(/\/local\/card-test$/)
   })
 
   test("clicking 'Duplicate' creates a new card", async ({ page }) => {
-    await page
-      .getByRole("button", { name: "Open diagram actions" })
-      .click()
+    await page.getByRole("button", { name: "Open diagram actions" }).click()
     await page.getByRole("button", { name: "Duplicate" }).click()
     await expect(page.locator('[role="listitem"]')).toHaveCount(2)
   })
 
   test("Delete shows confirm panel", async ({ page }) => {
-    await page
-      .getByRole("button", { name: "Open diagram actions" })
-      .click()
+    await page.getByRole("button", { name: "Open diagram actions" }).click()
     await page.getByRole("button", { name: "Delete" }).click()
     await expect(page.getByText("Delete this diagram?")).toBeVisible()
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible()
   })
 
   test("Cancel dismisses the confirm panel", async ({ page }) => {
-    await page
-      .getByRole("button", { name: "Open diagram actions" })
-      .click()
+    await page.getByRole("button", { name: "Open diagram actions" }).click()
     await page.getByRole("button", { name: "Delete" }).click()
     await page.getByRole("button", { name: "Cancel" }).click()
     await expect(page.getByText("Delete this diagram?")).not.toBeVisible()
@@ -322,24 +315,18 @@ test.describe("Home page — diagram card actions", () => {
   test("confirming Delete removes the card and shows empty state", async ({
     page,
   }) => {
-    await page
-      .getByRole("button", { name: "Open diagram actions" })
-      .click()
+    await page.getByRole("button", { name: "Open diagram actions" }).click()
     // First "Delete" opens the confirm panel
     await page.getByRole("button", { name: "Delete" }).click()
     // The confirm "Delete" button is inside the confirm panel — scope to it
-    const confirmPanel = page.locator(
-      ".space-y-2.rounded-md.border"
-    )
+    const confirmPanel = page.locator(".space-y-2.rounded-md.border")
     await confirmPanel.getByRole("button", { name: "Delete" }).click()
     await expect(page.locator('[role="listitem"]')).toHaveCount(0)
     await expect(page.getByText("No diagrams yet")).toBeVisible()
   })
 
   test("clicking card body navigates to the editor", async ({ page }) => {
-    await page
-      .getByRole("button", { name: "Open Card Test Diagram" })
-      .click()
+    await page.getByRole("button", { name: "Open Card Test Diagram" }).click()
     await expect(page).toHaveURL(/\/local\/card-test$/)
   })
 })
@@ -354,9 +341,7 @@ test.describe("Home page — template section", () => {
     await page.waitForLoadState("networkidle")
   })
 
-  test("template section is present with all 5 templates", async ({
-    page,
-  }) => {
+  test("template section is present with all 5 templates", async ({ page }) => {
     // Scroll the <main> scroll container to the template section
     await page.evaluate(() => {
       const heading = Array.from(document.querySelectorAll("h2")).find((el) =>
@@ -365,11 +350,17 @@ test.describe("Home page — template section", () => {
       heading?.scrollIntoView({ block: "start" })
     })
     await page.waitForTimeout(300)
-    for (const name of ["Adapter", "Bridge", "Command", "Observer", "Factory"]) {
+    for (const name of [
+      "Adapter",
+      "Bridge",
+      "Command",
+      "Observer",
+      "Factory",
+    ]) {
       // getByRole accessible name includes full subtree text; scope via <p> child instead
-      const btn = page
-        .locator("button")
-        .filter({ has: page.locator("p", { hasText: new RegExp(`^${name}$`) }) })
+      const btn = page.locator("button").filter({
+        has: page.locator("p", { hasText: new RegExp(`^${name}$`) }),
+      })
       await expect(btn).toBeVisible()
     }
   })
@@ -418,7 +409,9 @@ test.describe("Home page — new diagram section", () => {
 
   test("diagram type grid section exists with heading", async ({ page }) => {
     await page.evaluate(() => {
-      document.getElementById("new-diagram-section")?.scrollIntoView({ block: "start" })
+      document
+        .getElementById("new-diagram-section")
+        ?.scrollIntoView({ block: "start" })
     })
     await page.waitForTimeout(300)
     await expect(
@@ -430,7 +423,9 @@ test.describe("Home page — new diagram section", () => {
     page,
   }) => {
     await page.evaluate(() => {
-      document.getElementById("new-diagram-section")?.scrollIntoView({ block: "start" })
+      document
+        .getElementById("new-diagram-section")
+        ?.scrollIntoView({ block: "start" })
     })
     await page.waitForTimeout(300)
     const section = page.locator("#new-diagram-section")
@@ -522,8 +517,6 @@ test.describe("Home page — accessibility basics", () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto("/")
     await page.waitForLoadState("networkidle")
-    await expect(
-      page.locator('nav[aria-label="Page sections"]')
-    ).toBeAttached()
+    await expect(page.locator('nav[aria-label="Page sections"]')).toBeAttached()
   })
 })

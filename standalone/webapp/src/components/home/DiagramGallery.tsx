@@ -243,7 +243,9 @@ export const DiagramGallery = ({
                     diagram={diagram}
                     isMostRecent={index === 0}
                     showPlaceholderIcon={isDiagramEmpty(diagram)}
-                    isThumbnailLoading={Boolean(loadingThumbnailIds[diagram.id])}
+                    isThumbnailLoading={Boolean(
+                      loadingThumbnailIds[diagram.id]
+                    )}
                   />
                 ))}
               </div>

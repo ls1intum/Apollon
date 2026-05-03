@@ -69,10 +69,7 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
     const worker = async () => {
       thumbnailWorkerActiveRef.current = true
 
-      while (
-        thumbnailQueueRef.current.length > 0 &&
-        !isUnmountedRef.current
-      ) {
+      while (thumbnailQueueRef.current.length > 0 && !isUnmountedRef.current) {
         const nextDiagram = thumbnailQueueRef.current.shift()
         if (!nextDiagram) {
           continue
@@ -100,16 +97,16 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
         }
 
         try {
-          const thumbnailSvg = await renderThumbnailSvgFromModel(nextDiagram.model)
+          const thumbnailSvg = await renderThumbnailSvgFromModel(
+            nextDiagram.model
+          )
           if (isUnmountedRef.current) {
             markLoading(id, false)
             break
           }
-          usePersistenceModelStore.getState().setThumbnail(
-            id,
-            thumbnailSvg,
-            nextDiagram.lastModifiedAt
-          )
+          usePersistenceModelStore
+            .getState()
+            .setThumbnail(id, thumbnailSvg, nextDiagram.lastModifiedAt)
           failedThumbnailByLastModifiedRef.current.delete(id)
         } catch (error) {
           failedThumbnailByLastModifiedRef.current.set(
@@ -207,12 +204,7 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
     }
 
     processThumbnailQueue()
-  }, [
-    canWarmThumbnails,
-    isPending,
-    processThumbnailQueue,
-    visibleDiagrams,
-  ])
+  }, [canWarmThumbnails, isPending, processThumbnailQueue, visibleDiagrams])
 
   return loadingThumbnailIds
 }
