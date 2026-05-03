@@ -2,6 +2,9 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import themings from "@/constants/themings.json"
 
+const THEME_STORE_VERSION = 2
+const LEGACY_THEME_STORE_NAME = "theme-storage"
+
 interface ThemeState {
   systemThemePreference: string | null
   userThemePreference: string | null
@@ -66,12 +69,38 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: "apollon-theme",
+      version: THEME_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         systemThemePreference: state.systemThemePreference,
         userThemePreference: state.userThemePreference,
         currentTheme: state.currentTheme,
       }),
+      migrate: (persistedState, version) => {
+        if (version >= THEME_STORE_VERSION) {
+          return persistedState as ThemeState
+        }
+
+        try {
+          const rawLegacyValue = localStorage.getItem(LEGACY_THEME_STORE_NAME)
+          if (rawLegacyValue) {
+            const parsedLegacyValue = JSON.parse(rawLegacyValue) as {
+              state?: Partial<ThemeState>
+            }
+            localStorage.removeItem(LEGACY_THEME_STORE_NAME)
+            if (parsedLegacyValue?.state) {
+              return {
+                ...(persistedState as object),
+                ...parsedLegacyValue.state,
+              } as ThemeState
+            }
+          }
+        } catch {
+          // If migration fails, fallback to current persisted state.
+        }
+
+        return persistedState as ThemeState
+      },
     }
   )
 )

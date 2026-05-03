@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router"
 import { AppProviders } from "./AppProviders"
 import { DeferredToastContainer } from "./components/DeferredToastContainer"
 import { ErrorPage } from "@/pages/ErrorPage"
+import { log } from "@/logger"
 
 const HomePage = lazy(() =>
   import("@/pages/HomePage").then((module) => ({ default: module.HomePage }))
@@ -54,7 +55,7 @@ const AppLayout = () => {
   return (
     <>
       {!isHomeRoute && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div style={{ height: 56 }} />}>
           <Navbar />
         </Suspense>
       )}
@@ -76,28 +77,32 @@ const AppLayout = () => {
 }
 
 // To set the safe area insets as for mobile devices
-void import("capacitor-plugin-safe-area").then(({ SafeArea }) => {
-  void SafeArea.getSafeAreaInsets().then(
-    ({ insets: { top, bottom, left, right } }) => {
-      document.documentElement.style.setProperty(
-        "--safe-area-inset-top",
-        `${top}px`
-      )
-      document.documentElement.style.setProperty(
-        "--safe-area-inset-bottom",
-        `${bottom}px`
-      )
-      document.documentElement.style.setProperty(
-        "--safe-area-inset-left",
-        `${left}px`
-      )
-      document.documentElement.style.setProperty(
-        "--safe-area-inset-right",
-        `${right}px`
-      )
-    }
-  )
-})
+void import("capacitor-plugin-safe-area")
+  .then(({ SafeArea }) => {
+    void SafeArea.getSafeAreaInsets().then(
+      ({ insets: { top, bottom, left, right } }) => {
+        document.documentElement.style.setProperty(
+          "--safe-area-inset-top",
+          `${top}px`
+        )
+        document.documentElement.style.setProperty(
+          "--safe-area-inset-bottom",
+          `${bottom}px`
+        )
+        document.documentElement.style.setProperty(
+          "--safe-area-inset-left",
+          `${left}px`
+        )
+        document.documentElement.style.setProperty(
+          "--safe-area-inset-right",
+          `${right}px`
+        )
+      }
+    )
+  })
+  .catch((error) => {
+    log.error("Failed to initialize safe-area insets", error as Error)
+  })
 
 function App() {
   return (

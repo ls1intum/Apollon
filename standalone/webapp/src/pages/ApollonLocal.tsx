@@ -15,6 +15,7 @@ export const ApollonLocal: React.FC = () => {
     typeof setTimeout
   > | null>(null)
   const thumbnailExportSequenceRef = useRef(0)
+  const isThumbnailExportCanceledRef = useRef(false)
   const { setEditor } = useEditorContext()
   const { id: diagramId } = useParams()
   const diagram = usePersistenceModelStore((store) =>
@@ -25,6 +26,7 @@ export const ApollonLocal: React.FC = () => {
 
   useEffect(() => {
     if (!containerRef.current || !diagram) return
+    isThumbnailExportCanceledRef.current = false
 
     const instance = new ApollonEditor(containerRef.current, {
       model: diagram.model,
@@ -40,7 +42,10 @@ export const ApollonLocal: React.FC = () => {
       thumbnailExportTimeoutRef.current = setTimeout(async () => {
         try {
           const exportedSvg = await instance.exportAsSVG({ svgMode: "compat" })
-          if (sequence !== thumbnailExportSequenceRef.current) {
+          if (
+            sequence !== thumbnailExportSequenceRef.current ||
+            isThumbnailExportCanceledRef.current
+          ) {
             return
           }
 
@@ -60,6 +65,8 @@ export const ApollonLocal: React.FC = () => {
     setEditor(instance)
 
     return () => {
+      isThumbnailExportCanceledRef.current = true
+      thumbnailExportSequenceRef.current += 1
       if (thumbnailExportTimeoutRef.current) {
         clearTimeout(thumbnailExportTimeoutRef.current)
         thumbnailExportTimeoutRef.current = null

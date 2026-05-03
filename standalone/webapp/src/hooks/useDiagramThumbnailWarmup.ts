@@ -104,6 +104,12 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
             markLoading(id, false)
             break
           }
+          const latestModelLastModifiedAt =
+            usePersistenceModelStore.getState().models[id]?.lastModifiedAt
+          if (latestModelLastModifiedAt !== nextDiagram.lastModifiedAt) {
+            markLoading(id, false)
+            continue
+          }
           usePersistenceModelStore
             .getState()
             .setThumbnail(id, thumbnailSvg, nextDiagram.lastModifiedAt)
@@ -162,6 +168,7 @@ export const useDiagramThumbnailWarmup = <T extends ThumbnailWarmupDiagram>({
   }, [])
 
   useEffect(() => {
+    isUnmountedRef.current = false
     return () => {
       isUnmountedRef.current = true
       thumbnailQueueRef.current = []
