@@ -53,11 +53,15 @@ const formatRelativeLastModified = (lastModifiedAt: string, nowMs: number) => {
 type DiagramCardProps = {
   diagram: RecentDiagram
   isMostRecent?: boolean
+  isThumbnailLoading?: boolean
+  showPlaceholderIcon?: boolean
 }
 
 const DiagramCardComponent = ({
   diagram,
   isMostRecent = false,
+  isThumbnailLoading = false,
+  showPlaceholderIcon = false,
 }: DiagramCardProps) => {
   const navigate = useNavigate()
   const deleteModel = usePersistenceModelStore((state) => state.deleteModel)
@@ -82,6 +86,7 @@ const DiagramCardComponent = ({
     () => (thumbnailSvg ? toSvgDataUrl(thumbnailSvg) : null),
     [thumbnailSvg]
   )
+  const shouldRenderThumbnail = !showPlaceholderIcon && Boolean(thumbnailDataUrl)
 
   useEffect(() => {
     const updateRelativeDate = () => {
@@ -145,16 +150,23 @@ const DiagramCardComponent = ({
       >
         <div className="relative h-[calc(100%-96px)] min-h-0 overflow-hidden border-b border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] transition-[height,background-color] duration-[360ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:h-[calc(100%-56px)]">
           <div className="pointer-events-none absolute inset-0 z-0 bg-[var(--home-accent-color)]/0 transition-colors duration-300 ease-out group-hover:bg-[var(--home-accent-color)]/12" />
-          {thumbnailDataUrl ? (
+          {shouldRenderThumbnail ? (
             <img
-              src={thumbnailDataUrl}
+              src={thumbnailDataUrl!}
               alt={`${title} thumbnail`}
               className="relative z-10 h-full w-full object-contain p-2"
               loading="lazy"
             />
           ) : (
             <div className="relative z-10 flex h-full w-full items-center justify-center bg-[var(--home-bg-secondary)] text-[var(--home-accent-color)] transition-colors duration-200 group-hover:bg-[var(--home-accent-soft)] group-hover:text-[var(--home-accent-color)]">
-              {getDiagramTypeIcon(diagram.type, "h-16 w-16")}
+              {isThumbnailLoading ? (
+                <div className="flex flex-col items-center gap-2 text-xs font-medium text-[var(--home-text-secondary)]">
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--home-border-color)] border-t-[var(--home-accent-color)]" />
+                  <span>Generating preview...</span>
+                </div>
+              ) : (
+                getDiagramTypeIcon(diagram.type, "h-16 w-16")
+              )}
             </div>
           )}
 
@@ -210,7 +222,10 @@ const DiagramCardComponent = ({
           className="cursor-pointer rounded-md border border-transparent bg-[var(--home-bg-card)] p-1.5 text-[var(--home-text-secondary)] opacity-75 shadow-sm transition-colors duration-200 hover:bg-[var(--home-accent-color)] hover:text-white focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2 group-hover:opacity-100"
           onClick={(event) => {
             event.stopPropagation()
-            setIsMenuOpen((prevState) => !prevState)
+            setIsMenuOpen((prevState) => {
+              if (prevState) setIsDeleteConfirmOpen(false)
+              return !prevState
+            })
           }}
         >
           <svg

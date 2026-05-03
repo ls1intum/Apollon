@@ -19,6 +19,7 @@ type PersistenceModelStore = {
   models: Record<string, PersistentModelEntity>
   thumbnails: Record<string, string>
   thumbnailRevisions: Record<string, number>
+  thumbnailLastModifiedAt: Record<string, string>
   currentModelId: string | null
   setCurrentModelId: (id: string) => void
   createModel: (model: UMLModel) => void
@@ -26,7 +27,7 @@ type PersistenceModelStore = {
   updateModel: (model: UMLModel) => void
   duplicateModel: (id: string) => string
   deleteModel: (id: string) => void
-  setThumbnail: (id: string, svgString: string) => void
+  setThumbnail: (id: string, svgString: string, lastModifiedAt?: string) => void
   getThumbnail: (id: string) => string | null
   getCurrentModel: () => PersistentModelEntity | null
 }
@@ -35,7 +36,12 @@ type PersistedPersistenceModelStore = Pick<
   PersistenceModelStore,
   "models" | "currentModelId"
 > &
-  Partial<Pick<PersistenceModelStore, "thumbnails" | "thumbnailRevisions">>
+  Partial<
+    Pick<
+      PersistenceModelStore,
+      "thumbnails" | "thumbnailRevisions" | "thumbnailLastModifiedAt"
+    >
+  >
 
 const populateNewModel = () => ({
   id: uuidv4(),
@@ -60,6 +66,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
         },
         thumbnails: {},
         thumbnailRevisions: {},
+        thumbnailLastModifiedAt: {},
         currentModelId: null,
 
         setCurrentModelId: (id) =>
@@ -183,6 +190,12 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
                     [duplicatedId]: state.thumbnailRevisions[id],
                   }
                 : state.thumbnailRevisions,
+              thumbnailLastModifiedAt: state.thumbnailLastModifiedAt[id]
+                ? {
+                    ...state.thumbnailLastModifiedAt,
+                    [duplicatedId]: state.thumbnailLastModifiedAt[id],
+                  }
+                : state.thumbnailLastModifiedAt,
             }),
             false,
             "duplicateModel"
@@ -200,10 +213,14 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
               const { [id]: __, ...thumbnailRest } = state.thumbnails
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const { [id]: ___, ...revisionRest } = state.thumbnailRevisions
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { [id]: ____, ...thumbnailLastModifiedAtRest } =
+                state.thumbnailLastModifiedAt
               return {
                 models: rest,
                 thumbnails: thumbnailRest,
                 thumbnailRevisions: revisionRest,
+                thumbnailLastModifiedAt: thumbnailLastModifiedAtRest,
               }
             },
             false,
@@ -211,7 +228,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
           )
         },
 
-        setThumbnail: (id, svgString) =>
+        setThumbnail: (id, svgString, lastModifiedAt) =>
           set(
             (state) => ({
               thumbnails: {
@@ -221,6 +238,13 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
               thumbnailRevisions: {
                 ...state.thumbnailRevisions,
                 [id]: (state.thumbnailRevisions[id] ?? 0) + 1,
+              },
+              thumbnailLastModifiedAt: {
+                ...state.thumbnailLastModifiedAt,
+                [id]:
+                  lastModifiedAt ??
+                  state.models[id]?.lastModifiedAt ??
+                  new Date().toISOString(),
               },
             }),
             false,
@@ -248,6 +272,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             ...state,
             thumbnails: {},
             thumbnailRevisions: {},
+            thumbnailLastModifiedAt: {},
           }
         },
       }

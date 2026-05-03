@@ -1,14 +1,22 @@
-import { useDeferredValue, useMemo, useState } from "react"
-import type { UMLDiagramType } from "@tumaet/apollon"
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
+import type { UMLDiagramType, UMLModel } from "@tumaet/apollon"
 import { playgroundModelId } from "@/constants/playgroundDefaultDiagram"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
+import { useDiagramThumbnailWarmup } from "@/hooks/useDiagramThumbnailWarmup"
 import { useRecentDiagramFilters } from "@/hooks/useRecentDiagramFilters"
 import { getDiagramTypeLabel } from "./DiagramTypeGrid"
 import { DiagramCard, type RecentDiagram } from "./DiagramCard"
 
 const normalize = (value: string) => value.trim().toLowerCase()
-const INITIAL_VISIBLE_COUNT = 24
-const LOAD_MORE_STEP = 24
+const INITIAL_VISIBLE_COUNT = 9
+const LOAD_MORE_STEP = 9
+
+type GalleryDiagram = RecentDiagram & {
+  model: UMLModel
+}
+
+const isDiagramEmpty = (diagram: GalleryDiagram) =>
+  diagram.model.nodes.length === 0 && diagram.model.edges.length === 0
 
 const sortByLastModifiedDesc = (a: RecentDiagram, b: RecentDiagram) =>
   new Date(b.lastModifiedAt).getTime() - new Date(a.lastModifiedAt).getTime()
@@ -87,7 +95,7 @@ export const DiagramGallery = ({
   const { searchTerm, selectedTypes, setSearch, toggleTypeFilter } =
     useRecentDiagramFilters(initialSearchTerm)
 
-  const allDiagrams = useMemo<RecentDiagram[]>(() => {
+  const allDiagrams = useMemo<GalleryDiagram[]>(() => {
     return Object.entries(models)
       .filter(([id]) => id !== playgroundModelId)
       .map(([id, persistentModelEntity]) => ({
@@ -95,6 +103,7 @@ export const DiagramGallery = ({
         title: persistentModelEntity.model.title,
         type: persistentModelEntity.model.type,
         lastModifiedAt: persistentModelEntity.lastModifiedAt,
+        model: persistentModelEntity.model,
       }))
       .sort(sortByLastModifiedDesc)
   }, [models])
@@ -121,7 +130,15 @@ export const DiagramGallery = ({
 
   const deferredFilteredDiagrams = useDeferredValue(filteredDiagrams)
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT)
+  const prevAllDiagramsLengthRef = useRef(allDiagrams.length)
   const isPending = deferredFilteredDiagrams !== filteredDiagrams
+
+  useEffect(() => {
+    if (allDiagrams.length < prevAllDiagramsLengthRef.current) {
+      setVisibleCount(INITIAL_VISIBLE_COUNT)
+    }
+    prevAllDiagramsLengthRef.current = allDiagrams.length
+  }, [allDiagrams.length])
 
   const hasActiveFilters =
     searchTerm.trim().length > 0 || selectedTypes.length > 0
@@ -130,6 +147,12 @@ export const DiagramGallery = ({
     : `${allDiagrams.length}`
   const visibleDiagrams = deferredFilteredDiagrams.slice(0, visibleCount)
   const hasMoreDiagrams = deferredFilteredDiagrams.length > visibleCount
+
+  const loadingThumbnailIds = useDiagramThumbnailWarmup({
+    visibleDiagrams,
+    isPending,
+    isDiagramEmpty,
+  })
 
   const scrollToTypeGrid = () => {
     const target = document.getElementById("new-diagram-section")
@@ -219,6 +242,8 @@ export const DiagramGallery = ({
                     key={diagram.id}
                     diagram={diagram}
                     isMostRecent={index === 0}
+                    showPlaceholderIcon={isDiagramEmpty(diagram)}
+                    isThumbnailLoading={Boolean(loadingThumbnailIds[diagram.id])}
                   />
                 ))}
               </div>
