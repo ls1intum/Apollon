@@ -60,6 +60,8 @@ services:
       - "8000"
       - "4444"
     environment:
+      # Engages production gating in the Express logger; see standalone/server/src/logger.ts.
+      - NODE_ENV=production
       - HOST=0.0.0.0
       - PORT=8000
       - WS_PORT=4444

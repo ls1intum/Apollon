@@ -1,7 +1,5 @@
 Information in accordance with § 5 DDG (Digitale-Dienste-Gesetz) and § 18 MStV (Medienstaatsvertrag).
 
-*Last updated: 2026-04-24.*
-
 ## Service Provider
 
 Technical University of Munich (Technische Universität München)
@@ -45,13 +43,11 @@ For questions, support, or bug reports regarding Apollon:
 
 Texts, images, graphics, and the visual design of Apollon are protected by copyright. Private reproduction is permitted within the limits of § 53 UrhG. Any other reproduction, distribution, or public communication — electronic or printed — requires prior written consent from the person responsible for the content.
 
-The **source code** of Apollon is separately published under the MIT License at [github.com/ls1intum/Apollon](https://github.com/ls1intum/Apollon). The MIT License governs only the source-code repository and does not extend to the content, branding, or visual design of this service.
+The **source code** of Apollon is separately published under the MIT License at [github.com/ls1intum/Apollon](https://github.com/ls1intum/Apollon).
 
 ## Liability Disclaimer
 
-TUM has compiled the information on Apollon with due care but gives no warranty that it is up to date, correct, or complete. Use of Apollon does not create a contractual relationship.
-
-TUM accepts no liability for damage caused by use of Apollon. Statutory liability for breach of official duty (§ 839 BGB — German Civil Code) is unaffected by this disclaimer.
+TUM has compiled the information on Apollon with due care but gives no warranty that it is up to date, correct, or complete. TUM accepts no liability for damage caused by use of Apollon. Statutory liability for breach of official duty (§ 839 BGB — German Civil Code) is unaffected by this disclaimer.
 
 ## Data Protection
 
