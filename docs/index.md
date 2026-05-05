@@ -56,7 +56,9 @@ deployment/npm-publishing
 
 admin/legal-pages
 admin/dsms/README
-admin/dsms/SUBMISSION-GUIDE
+admin/dsms/record-of-processing
+admin/dsms/dpia-prescreen
+admin/dsms/processor-checklist
 ```
 
 ```{toctree}
