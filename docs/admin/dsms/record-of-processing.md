@@ -136,10 +136,16 @@ Testing and evaluation (Art. 32(1)(d))
 
 ## Legal basis (Art. 6 GDPR + national norms)
 
-Art. 6(1)(e) GDPR. Lit. (f) is excluded for public authorities by the second subparagraph of Art. 6(1) GDPR. Lit. (b) does not apply because Apollon is offered free of charge as part of TUM's public teaching and research mission, not under a contract. Recital 45 GDPR confirms that processing in performance of a public-interest task must have a basis in Member State law, supplied here by Art. 4(1) BayDSG read with Art. 2 BayHIG.
+Selected basis: **Art. 6(1)(e) GDPR** (public-interest task), in conjunction with Art. 4(1) BayDSG and Art. 2 BayHIG.
+
+Paste-ready content for the DSMS "Other legal basis" textarea:
 
 ```
-Art. 4(1) of the Bavarian Data Protection Act (BayDSG) — the Bavarian implementation of Art. 6(1)(e) GDPR for public bodies, authorising processing necessary to carry out a task assigned to the body — read with Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG), which defines TUM's statutory tasks (research, teaching, and the transfer of knowledge).
+- Provision of the editor; storage and relay of diagrams the user has chosen to share; live collaboration (display name, cursor, selection): Art. 6(1)(e) GDPR in conjunction with Art. 4(1) of the Bavarian Data Protection Act (BayDSG) and Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG) — performance of the university's statutory teaching and research tasks, including operation of the IT services required to carry them out.
+- Operational logs (service-level events with no personal data by design): Art. 6(1)(e) GDPR in conjunction with Art. 4(1) BayDSG and Art. 2 BayHIG — operation and IT security of university services as part of fulfilling those tasks.
+- Browser-side storage on the user's own device (theme-storage, persistenceModelStore, apollon-collab-name): § 25(2) no. 2 TDDDG — each entry is strictly necessary for a service the user has expressly requested.
+
+Single legal basis for all user groups (TUM members and external participants): Art. 6(1)(e) GDPR. Lit. (f) is excluded for public authorities by the second subparagraph of Art. 6(1) GDPR; lit. (b) does not apply because the service is offered free of charge as part of TUM's public mission, not under a contract. Recital 45 GDPR requires the public-interest basis to be supplied by Member-State law (here: Art. 4(1) BayDSG and Art. 2 BayHIG).
 ```
 
 No special categories of personal data (Art. 9(1) GDPR) and no criminal-conviction data (Art. 10 GDPR) are processed.
