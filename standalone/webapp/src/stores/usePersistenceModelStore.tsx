@@ -7,12 +7,13 @@ import {
   playgroundModelId,
 } from "@/constants/playgroundDefaultDiagram"
 
-const PERSISTENCE_STORE_VERSION = 1
+const PERSISTENCE_STORE_VERSION = 2
 
 type PersistentModelEntity = {
   id: string
   model: UMLModel
   lastModifiedAt: string
+  favorite: boolean
 }
 
 type PersistenceModelStore = {
@@ -21,12 +22,13 @@ type PersistenceModelStore = {
   thumbnailRevisions: Record<string, number>
   thumbnailLastModifiedAt: Record<string, string>
   currentModelId: string | null
-  setCurrentModelId: (id: string) => void
+  setCurrentModelId: (id: string | null) => void
   createModel: (model: UMLModel) => void
   createModelByTitleAndType: (title: string, type: UMLDiagramType) => string
   updateModel: (model: UMLModel) => void
   duplicateModel: (id: string) => string
   deleteModel: (id: string) => void
+  toggleFavorite: (id: string) => void
   setThumbnail: (id: string, svgString: string, lastModifiedAt?: string) => void
   getThumbnail: (id: string) => string | null
   getCurrentModel: () => PersistentModelEntity | null
@@ -53,6 +55,24 @@ const populateNewModel = () => ({
   version: "4.0.0" as const,
 })
 
+const normalizePersistedModels = (
+  models: PersistedPersistenceModelStore["models"] | undefined
+): Record<string, PersistentModelEntity> => {
+  if (!models) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(models).map(([id, entity]) => [
+      id,
+      {
+        ...entity,
+        favorite: Boolean(entity.favorite),
+      },
+    ])
+  )
+}
+
 export const usePersistenceModelStore = create<PersistenceModelStore>()(
   devtools(
     persist(
@@ -62,6 +82,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             id: playgroundModelId,
             model: PlaygroundDefaultModel,
             lastModifiedAt: new Date().toISOString(),
+            favorite: false,
           },
         },
         thumbnails: {},
@@ -84,6 +105,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             id: model.id,
             model,
             lastModifiedAt: now,
+            favorite: false,
           }
 
           set(
@@ -104,6 +126,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
             id: model.id,
             model,
             lastModifiedAt: now,
+            favorite: false,
           }
 
           set(
@@ -128,6 +151,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
                     id: model.id,
                     model,
                     lastModifiedAt,
+                    favorite: state.models[model.id]?.favorite ?? false,
                   },
                 },
               }
@@ -179,6 +203,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
                   id: duplicatedId,
                   model: duplicatedModel,
                   lastModifiedAt,
+                  favorite: sourceEntity.favorite,
                 },
               },
               thumbnails: state.thumbnails[id]
@@ -228,6 +253,29 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
           )
         },
 
+        toggleFavorite: (id) => {
+          set(
+            (state) => {
+              const targetModel = state.models[id]
+              if (!targetModel) {
+                return state
+              }
+
+              return {
+                models: {
+                  ...state.models,
+                  [id]: {
+                    ...targetModel,
+                    favorite: !targetModel.favorite,
+                  },
+                },
+              }
+            },
+            false,
+            "toggleFavorite"
+          )
+        },
+
         setThumbnail: (id, svgString, lastModifiedAt) =>
           set(
             (state) => ({
@@ -270,6 +318,7 @@ export const usePersistenceModelStore = create<PersistenceModelStore>()(
           const state = persistedState as PersistedPersistenceModelStore
           return {
             ...state,
+            models: normalizePersistedModels(state.models),
             thumbnails: {},
             thumbnailRevisions: {},
             thumbnailLastModifiedAt: {},

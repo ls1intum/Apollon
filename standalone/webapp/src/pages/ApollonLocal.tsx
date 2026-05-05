@@ -21,12 +21,16 @@ export const ApollonLocal: React.FC = () => {
   const diagram = usePersistenceModelStore((store) =>
     diagramId ? store.models[diagramId] : null
   )
+  const setCurrentModelId = usePersistenceModelStore(
+    (store) => store.setCurrentModelId
+  )
   const updateModel = usePersistenceModelStore((store) => store.updateModel)
   const setThumbnail = usePersistenceModelStore((store) => store.setThumbnail)
 
   useEffect(() => {
     if (!containerRef.current || !diagram) return
     isThumbnailExportCanceledRef.current = false
+    setCurrentModelId(diagram.id)
 
     const instance = new ApollonEditor(containerRef.current, {
       model: diagram.model,
@@ -74,9 +78,10 @@ export const ApollonLocal: React.FC = () => {
 
       log.debug("Cleaning up Apollon instance")
       instance.destroy()
+      setCurrentModelId(null)
       setEditor(undefined)
     }
-  }, [diagram?.id, setEditor, setThumbnail, updateModel])
+  }, [diagram?.id, setCurrentModelId, setEditor, setThumbnail, updateModel])
 
   if (!diagramId || !diagram) {
     return <ErrorPage message="Diagram not found." buttonLabel="Back to Home" />

@@ -58,6 +58,9 @@ export const HomeDiagramSections = ({
           Start Here
         </div>
         <h2 className="text-xl font-semibold">1. Create New Diagram</h2>
+        <p className="text-sm text-[var(--home-text-secondary)]">
+          Choose a diagram type to begin from a clean workspace.
+        </p>
         <DiagramTypeGrid />
       </section>
 
@@ -73,6 +76,9 @@ export const HomeDiagramSections = ({
           Continue Momentum
         </div>
         <h2 className="text-xl font-semibold">3. Continue Recent Work</h2>
+        <p className="text-sm text-[var(--home-text-secondary)]">
+          Reopen, filter, and manage diagrams you touched recently.
+        </p>
         <Suspense fallback={<LoadingPanel />}>
           <DiagramGallery />
         </Suspense>

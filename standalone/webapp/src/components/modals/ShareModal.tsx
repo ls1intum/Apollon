@@ -8,21 +8,42 @@ import { useNavigate } from "react-router"
 import { DiagramView } from "@/types"
 import { DiagramAPIManager } from "@/services/DiagramAPIManager"
 import { log } from "@/logger"
+import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 
-export const ShareModal = () => {
+type ShareModalProps = {
+  modelId?: string
+}
+
+const resolveModelId = (props: unknown): string | undefined => {
+  if (!props || typeof props !== "object") {
+    return undefined
+  }
+
+  const candidate = (props as ShareModalProps).modelId
+  return typeof candidate === "string" ? candidate : undefined
+}
+
+export const ShareModal = (props: unknown) => {
+  const modelId = resolveModelId(props)
   const { editor } = useEditorContext()
   const { closeModal } = useModalContext()
   const navigate = useNavigate()
+  const persistedModel = usePersistenceModelStore((state) =>
+    modelId ? state.models[modelId]?.model : null
+  )
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
-    if (!editor) {
-      toast.error("Editor instance is not available.")
+    const modelToShare = editor?.model ?? persistedModel
+
+    if (!modelToShare) {
+      toast.error("Diagram data is not available for sharing.")
       return
     }
 
     try {
-      const model = editor.model
-      const { id: diagramID } = await DiagramAPIManager.createDiagram(model)
+      const { id: diagramID } = await DiagramAPIManager.createDiagram(modelToShare)
+      addSharedDiagramEntry(diagramID)
 
       const newurl = `${window.location.origin}/shared/${diagramID}?view=${viewType}`
       copyToClipboard(newurl)

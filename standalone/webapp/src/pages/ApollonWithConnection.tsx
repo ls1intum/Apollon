@@ -7,6 +7,7 @@ import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
 import { DiagramAPIManager } from "@/services/DiagramAPIManager"
 import { log } from "@/logger"
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 
 export const ApollonWithConnection: React.FC = () => {
   const { id: diagramId } = useParams()
@@ -36,6 +37,7 @@ export const ApollonWithConnection: React.FC = () => {
         log.debug("Initializing Apollon editor with view type:", viewType)
 
         const diagram = await DiagramAPIManager.fetchDiagramData(diagramId)
+        addSharedDiagramEntry(diagramId)
         log.debug("Fetched diagram data:", diagram)
 
         const editorOptions: ApollonOptions = {

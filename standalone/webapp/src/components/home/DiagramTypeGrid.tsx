@@ -708,16 +708,16 @@ export const DiagramTypeGrid = () => {
                   key={tile.type}
                   type="button"
                   onClick={() => handleCreateDiagram(tile)}
-                  className="group flex cursor-pointer items-start gap-3 rounded-md border border-[var(--home-border-color)] bg-[var(--home-bg-primary)] p-4 text-left transition-colors duration-200 hover:border-[var(--home-accent-color)] hover:bg-[var(--home-accent-color)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2"
+                  className="group flex cursor-pointer items-start gap-3 rounded-md border border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] p-4 text-left transition-colors duration-200 hover:border-[var(--home-accent-color)] hover:bg-[var(--home-accent-soft)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2"
                 >
-                  <div className="shrink-0 text-[var(--home-accent-color)] transition-colors duration-200 group-hover:text-white">
+                  <div className="shrink-0 text-[var(--home-accent-color)] transition-colors duration-200">
                     {tile.icon}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-[var(--home-text-primary)] transition-colors duration-200 group-hover:text-white">
+                    <p className="font-semibold text-[var(--home-text-primary)] transition-colors duration-200">
                       {tile.title}
                     </p>
-                    <p className="mt-1 text-sm text-[var(--home-text-secondary)] transition-colors duration-200 group-hover:text-white/90">
+                    <p className="mt-1 text-sm text-[var(--home-text-secondary)] transition-colors duration-200">
                       {tile.description}
                     </p>
                   </div>

@@ -9,6 +9,15 @@
   --home-text-secondary: #44586c;
   --home-accent-color: #1e5a96;
   --home-accent-soft: #e3ebf4;
+  --home-hover-overlay-bg: #1e5a96;
+  --home-hover-overlay-text: #ffffff;
+  --home-chip-bg: #f2f4f7;
+  --home-chip-text: #44586c;
+  --home-chip-active-bg: #e3ebf4;
+  --home-chip-active-text: #1e5a96;
+  --home-favorite-star: #bf8b1c;
+  --home-favorite-bg: #fff4d8;
+  --home-favorite-border: #e6c780;
 }
 
 html {
@@ -100,6 +109,13 @@ body,
     var(--home-accent-color) 72%,
     var(--home-bg-secondary)
   );
+}
+
+/* Reusable scroll-root utility:
+   keep vertical scrolling while preventing accidental horizontal overflow. */
+.app-scroll-y {
+  overflow-y: auto;
+  overflow-x: clip;
 }
 
 .home-diagram-card {

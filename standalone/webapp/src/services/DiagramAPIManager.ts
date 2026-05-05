@@ -1,6 +1,11 @@
 import { UMLModel } from "@tumaet/apollon"
 import { serverURL } from "@/constants"
 
+export type StoredDiagram = UMLModel & {
+  createdAt: string
+  updatedAt: string
+}
+
 export class DiagramAPIManager {
   static async fetchDiagramData(diagramId: string): Promise<UMLModel> {
     const response = await fetch(`${serverURL}/api/${diagramId}`, {
@@ -11,6 +16,22 @@ export class DiagramAPIManager {
     })
     if (!response.ok) {
       throw new Error("Failed to fetch diagram data")
+    }
+    return response.json()
+  }
+
+  static async fetchStoredDiagram(diagramId: string): Promise<StoredDiagram | null> {
+    const response = await fetch(`${serverURL}/api/${diagramId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+    if (response.status === 404) {
+      return null
+    }
+    if (!response.ok) {
+      throw new Error("Failed to fetch shared diagram data")
     }
     return response.json()
   }
