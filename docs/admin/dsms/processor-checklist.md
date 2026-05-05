@@ -1,6 +1,6 @@
 # Apollon — Art. 28 Processor Checklist
 
-Documents every external entity that might qualify as a processor (Art. 28 GDPR) and the status of the required contract (Auftragsverarbeitungsvertrag, AVV).
+Documents whether any external recipient is a processor under Art. 28 GDPR and the status of the required contract (Auftragsverarbeitungsvertrag, AVV).
 
 ## Summary
 

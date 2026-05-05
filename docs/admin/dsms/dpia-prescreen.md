@@ -32,7 +32,7 @@ The Konferenz der unabhängigen Datenschutzaufsichtsbehörden des Bundes und der
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | Free-text diagram labels contain personal data of third parties | Low–medium | Low (no stable identifier links labels to data subjects) | Privacy statement explicitly informs users of the data-minimisation expectation; the service does not actively request third-party data; Art. 11 GDPR applies to erasure; 120-day TTL bounds exposure. |
-| Server-log IP addresses retained too long | Very low | Low | Per-request access logs are not produced (nginx `access_log off;`, nginx `error_log /dev/stderr crit;`, Traefik `--accesslog=false`, Express logger silent in production). Remaining operational events contain no personal data by design. |
+| Server-log IP addresses retained too long | Very low | Low | Per-request access logs are not produced at any layer; remaining operational events contain no personal data by design (see TOMs in `record-of-processing.md`). |
 | Redis compromise leaking diagram content | Low | Low | Redis is not exposed to the internet; traffic only flows between containers on the internal Docker bridge. No secret material is stored. 120-day TTL bounds the exposure window. |
 | WebSocket relay leaking messages | Very low | Low | The relay is in-memory only; no persistence beyond Redis. Only participants holding the diagram link can join a session. |
 

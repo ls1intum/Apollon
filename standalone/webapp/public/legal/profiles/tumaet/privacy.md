@@ -6,7 +6,7 @@ Privacy Statement for Apollon in accordance with Art. 13 GDPR.
 
 Apollon is a free UML modelling editor hosted by TUM. **No accounts, no logins, no cookies, no tracking, no ads, no third parties.** Diagrams you choose to share live on TUM servers and are deleted automatically 120 days after your last edit. If you choose to collaborate live, you pick a display name that your collaborators see while you are connected; it is discarded when you close the tab. By design, the service keeps no per-request access logs: your IP address and browser identifier are not persistently recorded. Only operational events about the service itself (certificate renewals, critical errors) are captured, and they contain no personal data.
 
-Diagram labels are free text. Do not type personal data about identifiable third parties into them. The server does not inspect label contents. **If you do enter such data, you become a controller for it under Art. 4(7) GDPR**, alongside TUM, which remains controller for storing and transporting your diagram.
+Diagram labels are free text. Do not type personal data about identifiable third parties into them. The server does not inspect label contents. **If you do enter such data, you become a separate controller for it under Art. 4(7) GDPR.** TUM remains controller only for storing and transporting your diagram and does not inspect its contents.
 
 ## 1. What Apollon is and how data flows
 
@@ -29,8 +29,6 @@ Apollon has **no user accounts, no login, no cookies, and no analytics**. You ar
 *Legal basis — server-side processing (database, WebSocket, operational events): Art. 6(1)(e) GDPR, read with Art. 4(1) Bavarian Data Protection Act (BayDSG) and Art. 2 Bavarian Higher Education Innovation Act (BayHIG). TUM processes this data to perform its statutory teaching and research tasks, which require operating the IT services that support them.*
 
 *Legal basis — browser-side storage (theme, draft diagrams, optional collaboration name; see §3): § 25(2) no. 2 of the German Telecommunications Digital Services Data Protection Act (TDDDG). Each entry is strictly necessary for a service you have explicitly requested, so no consent is required.*
-
-Apollon does not run per-request access logging. The remaining log stream concerns the service, not its users, and is never used for tracking, profiling, or correlating individuals.
 
 **No special categories of data.** Apollon does not process special categories of data under Art. 9 GDPR (health, biometric, genetic, political, religious, trade-union, or sexual-orientation data). It also does not process criminal-conviction data (Art. 10 GDPR).
 
@@ -123,4 +121,4 @@ Email: [beauftragter@datenschutz.tum.de](mailto:beauftragter@datenschutz.tum.de)
 
 ## 11. Changes to this statement
 
-TUM updates this statement when the way personal data is processed changes. The "Last updated" date at the top reflects the most recent revision.
+TUM updates this statement when the way personal data is processed changes.

@@ -18,7 +18,7 @@ Prof. Dr. Stephan Krusche, Head of AET
 Research Group for Applied Education Technologies
 TUM School of Computation, Information and Technology
 Department of Computer Science
-Boltzmannstraße 3, 85748 Garching b. München
+Boltzmannstraße 3, 85748 Garching bei München, Germany
 
 Operational technical contact: ls1.admin@in.tum.de
 ```
@@ -55,7 +55,7 @@ IP addresses are transmitted automatically with each HTTP request but are not pe
 ## Recipients (Art. 30(1)(d))
 
 ```
-None. Apollon has no external processors and transfers no personal data to external entities. Within the service, users who hold a diagram's share link can view and edit that diagram, and users who enter the live-collaboration dialog see one another's display name, cursor position, and current selection in real time. These are users of the same TUM-operated Apollon, not external recipients.
+None. Apollon has no external processors and transfers no personal data to external entities. Within the service, users who hold a diagram's share link can view and edit that diagram, and users who enter the live-collaboration dialog see one another's display name, cursor position, and current selection in real time. These are users of the same TUM/AET-operated Apollon, not external recipients.
 ```
 
 ## Third-country transfers (Art. 30(1)(e))
@@ -114,10 +114,10 @@ Confidentiality (Art. 32(1)(b))
 - Access to a shared diagram is gated by a UUIDv4 share link (~122 bits of entropy).
 - Host access: SSH-only with key-based authentication; password auth disabled.
 - Redis is bound to the internal Docker network; no external port.
-- Containers run with no-new-privileges; the application server additionally drops all Linux capabilities and runs with a read-only root filesystem and a small tmpfs.
+- The application stack containers (webapp, server, db) run with no-new-privileges; webapp and server additionally drop all Linux capabilities, and the server runs with a read-only root filesystem and a small tmpfs.
 
 Integrity (Art. 32(1)(b))
-- Container images are cosign-signed and pinned to source-commit SHA at deploy time.
+- Container images are pinned to the source-commit SHA at deploy time.
 - All application code and Docker compose configuration is version-controlled; every change requires pull-request review before reaching production.
 
 Availability and resilience (Art. 32(1)(b))
@@ -135,7 +135,7 @@ Testing and evaluation (Art. 32(1)(d))
 
 ## Legal basis (Art. 6 GDPR + national norms)
 
-Art. 6(1)(e) GDPR. Art. 6(1) Unterabsatz 2 GDPR excludes lit. (f) for processing carried out by public authorities in performance of their tasks; lit. (b) is not the appropriate basis because operating Apollon is the performance of a public task, not a contract (Recital 45 GDPR).
+Art. 6(1)(e) GDPR. The second subparagraph of Art. 6(1) GDPR excludes lit. (f) for processing carried out by public authorities in performance of their tasks; lit. (b) is not the appropriate basis because operating Apollon is the performance of a public task, not a contract (Recital 45 GDPR).
 
 ```
 Art. 4(1) of the Bavarian Data Protection Act (BayDSG) — the Bavarian implementation of Art. 6(1)(e) GDPR for public bodies, authorising processing necessary to carry out a task assigned to the body — read with Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG), which defines TUM's statutory tasks (research, teaching, and the transfer of knowledge).

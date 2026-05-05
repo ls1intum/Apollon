@@ -1,6 +1,6 @@
 # Apollon — Data-Protection Documentation
 
-The data-protection documentation for the TUM-AET-operated Apollon deployment at <https://apollon.aet.cit.tum.de>. The directory carries the Art. 30 GDPR record of processing, the Art. 35 DPIA threshold analysis, and the Art. 28 processor checklist. The directory is named `dsms` after the TUM data-protection portal where this content is filed (<https://dsms.datenschutz.tum.de/>); the portal has its own field-level prompts and is not redocumented here.
+The data-protection documentation for the TUM-AET-operated Apollon deployment at <https://apollon.aet.cit.tum.de>: the Art. 30 GDPR record of processing, the Art. 35 DPIA threshold analysis, and the Art. 28 processor checklist. The directory is named after the TUM data-protection portal (<https://dsms.datenschutz.tum.de/>) where this content is filed.
 
 A fork running its own Apollon deployment must amend the package for its own controller, contact, and infrastructure. At minimum, edit the controller block in the privacy notice (§10), the contact emails throughout, the controller and storage sections of `record-of-processing.md`, and the rows of `processor-checklist.md` if its hosting differs from AET.
 
