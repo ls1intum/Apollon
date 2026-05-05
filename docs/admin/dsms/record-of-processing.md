@@ -86,7 +86,7 @@ No off-host backups of personal data exist. No personal data leaves the EU.
 **Reasoning**
 
 ```
-Diagram data is retained for 120 days from the last edit to support editing across teaching iterations. After 120 days of inactivity, deletion is performed automatically by the Redis engine. Operational logs are kept free of personal data by data minimisation at source (Art. 5(1)(c) + Art. 25 GDPR); a time-based retention period under Art. 5(1)(e) GDPR is therefore not required.
+Diagram data is retained for 120 days from the last edit to support editing across teaching iterations. After 120 days of inactivity, deletion is performed automatically by the Redis engine. Operational events about the service are kept free of personal data by data minimisation at source (Art. 5(1)(c) + Art. 25 GDPR); a time-based retention period under Art. 5(1)(e) GDPR is therefore not required.
 ```
 
 **Deletion responsibility**
@@ -142,7 +142,7 @@ Paste-ready content for the DSMS "Other legal basis" textarea:
 
 ```
 - Provision of the editor; storage and relay of diagrams the user has chosen to share; live collaboration (display name, cursor, selection): Art. 6(1)(e) GDPR in conjunction with Art. 4(1) of the Bavarian Data Protection Act (BayDSG) and Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG) — performance of the university's statutory teaching and research tasks, including operation of the IT services required to carry them out.
-- Operational logs (service-level events with no personal data by design): Art. 6(1)(e) GDPR in conjunction with Art. 4(1) BayDSG and Art. 2 BayHIG — operation and IT security of university services as part of fulfilling those tasks.
+- Operational events about the service (no personal data by design): Art. 6(1)(e) GDPR in conjunction with Art. 4(1) BayDSG and Art. 2 BayHIG — operation and IT security of university services as part of fulfilling those tasks.
 - Browser-side storage on the user's own device (theme-storage, persistenceModelStore, apollon-collab-name): § 25(2) no. 2 TDDDG — each entry is strictly necessary for a service the user has expressly requested.
 
 Single legal basis for all user groups (TUM members and external participants): Art. 6(1)(e) GDPR. Lit. (f) is excluded for public authorities by the second subparagraph of Art. 6(1) GDPR; lit. (b) does not apply because the service is offered free of charge as part of TUM's public mission, not under a contract. Recital 45 GDPR requires the public-interest basis to be supplied by Member-State law (here: Art. 4(1) BayDSG and Art. 2 BayHIG).
