@@ -4,21 +4,21 @@ Privacy Statement for Apollon in accordance with Art. 13 GDPR.
 
 ## In plain language
 
-Apollon is a free UML modelling editor hosted by TUM. **No accounts, no logins, no cookies, no tracking, no ads, no third parties.** Diagrams you choose to share live on TUM servers and are deleted automatically 120 days after your last edit. If you choose to collaborate live, you pick a display name that your collaborators see while you are connected; it is discarded when you close the tab. By design, the service keeps no per-request access logs: your IP address and browser identifier are not persistently recorded. Only operational events about the service itself (certificate renewals, critical errors) are captured, and they contain no personal data.
+Apollon is a free UML modelling editor hosted by TUM. **No accounts, no cookies, no tracking, no third parties.** Diagrams you choose to share live on TUM servers and are deleted automatically 120 days after your last edit. If you choose to collaborate live, you pick a display name that your collaborators see while you are connected; it is discarded when you close the tab. By design, the service keeps no per-request access logs: your IP address and browser identifier are not persistently recorded. Only operational events about the service itself (certificate renewals, critical errors) are captured, and they contain no personal data.
 
-Diagram labels are free text. Do not type personal data about identifiable third parties into them. The server does not inspect label contents. **If you do enter such data, you become a separate controller for it under Art. 4(7) GDPR.** TUM remains controller only for storing and transporting your diagram and does not inspect its contents.
+Diagram labels are free text. Do not type personal data about identifiable third parties into them. The server does not inspect label contents. **If you do enter such data, you may yourself become a controller for that data within the meaning of Art. 4(7) GDPR.** TUM remains controller only for storing and transporting your diagram.
 
 ## 1. What Apollon is and how data flows
 
-Apollon is a browser-based UML modelling editor. You open it in your browser, draw diagrams, and, if you choose, share a diagram via a link. Shared diagrams are stored on TUM infrastructure in a database hosted in Germany and are removed automatically **120 days** after the last write. Real-time collaborative edits are relayed over a WebSocket connection while the diagram is open; the server holds those messages in memory only and writes nothing beyond the database record.
+Apollon is a browser-based UML modelling editor. You open it in your browser, draw diagrams, and optionally share them via a link. Shared diagrams are stored on TUM infrastructure in a database hosted in Germany and are removed automatically **120 days** after the last write. Real-time collaborative edits are relayed over a WebSocket connection while the diagram is open; the server holds those messages in memory only and writes nothing beyond the database record.
 
 If you open the *Collaborate* dialog and enter a display name, the server holds a small per-diagram record in memory. The record contains each connected collaborator's display name, cursor position, and current selection. The server uses it to forward live updates to the other participants. Your entry is removed the moment your connection closes. The whole record is destroyed when the last collaborator disconnects. Nothing in it is written to disk.
 
-Apollon has **no user accounts, no login, no cookies, and no analytics**. You are not asked to identify yourself. By design, per-request access logs (client IP, user-agent, URL) are not recorded in the reverse proxy or the application server. Your IP address is visible to TUM's servers while a request is being processed (the response has to reach you), but it is not persistently stored.
+Apollon has **no user accounts, no login, no cookies, and no analytics**. You are not asked to identify yourself. By design, per-request access logs (client IP, user-agent, URL) are not recorded in the reverse proxy or the application server. Your IP address is visible to TUM's servers while a request is being processed but is not persistently stored.
 
 ## 2. What personal data is processed
 
-**Diagram content.** The UML data you author, including any free text you type into labels. Stored in a TUM-operated Redis database in Germany and deleted automatically 120 days after the last write, so that you and anyone with the share link can keep editing and viewing your diagram.
+**Diagram content.** The UML data you author, including any free text you type into labels. Stored in a TUM-operated Redis database in Germany and deleted automatically 120 days after the last write.
 
 **WebSocket session data.** While a diagram session is open, the server keeps a pointer to your WebSocket connection (so it can route messages back to you) and the message bodies in transit. Both are dropped from memory when the connection closes; neither is written to disk or extracted to a log line.
 

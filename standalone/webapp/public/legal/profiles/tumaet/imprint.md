@@ -1,4 +1,4 @@
-Information in accordance with § 5 DDG (Digitale-Dienste-Gesetz) and § 18 MStV (Medienstaatsvertrag).
+Information in accordance with § 5 DDG (Digitale-Dienste-Gesetz).
 
 ## Service Provider
 

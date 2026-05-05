@@ -33,7 +33,7 @@ Apollon is a UML modelling editor that runs in a web browser. The Research Group
 
 ## Data subjects (Art. 30(1)(c))
 
-Apollon is unauthenticated; visitors come from every category and there is no per-individual identification beyond the chosen display name during live collaboration.
+Apollon is unauthenticated. Display name during live collaboration is the only per-individual identifier.
 
 - Students (TUM)
 - Employees (TUM)
@@ -50,7 +50,7 @@ The only structured category processed is **Name(s)** — the user-chosen live-c
 - Live-collaboration cursor + selection: alongside the display name, the user's cursor position in the editor and the ID of the currently selected element are forwarded in real time to other participants in the same diagram session, while the user is connected.
 ```
 
-IP addresses are transmitted automatically with each HTTP request but are not persistently stored, so they are not listed as a data category.
+IP addresses are transmitted automatically with each HTTP request but are not persistently stored.
 
 ## Recipients (Art. 30(1)(d))
 
@@ -67,7 +67,7 @@ None. All processing on TUM/AET infrastructure in Germany.
 **Where stored**
 
 ```
-On AET-operated VMs on TUM premises (Boltzmannstraße 3, 85748 Garching, Germany).
+On AET-operated VMs on TUM premises (Boltzmannstraße 3, 85748 Garching bei München, Germany).
 
 - User-shared diagrams persist in a Redis instance with native time-based eviction.
 - Live-collaboration data (display name, cursor, selection) is held only in the WebSocket relay's working memory while a participant is connected; never persisted.
@@ -80,12 +80,13 @@ No off-host backups of personal data exist. No personal data leaves the EU.
 ```
 - Diagram content (Redis): 120 days from the last write, enforced by a native database TTL.
 - Live-collaboration data (display name, cursor, selection): held only while the user is connected; dropped from server memory on disconnect.
+- Operational events about the service (no personal data by design): size-bounded ring buffer, ~250 MB per container.
 ```
 
 **Reasoning**
 
 ```
-Diagram data is retained for 120 days from the last edit so that users and holders of the share link can keep editing the diagram across teaching iterations. After 120 days of inactivity, deletion is performed automatically by the Redis engine. Operational logs are kept free of personal data by data minimisation at source (Art. 5(1)(c) + Art. 25 GDPR); a time-based retention period under Art. 5(1)(e) GDPR is therefore not required.
+Diagram data is retained for 120 days from the last edit to support editing across teaching iterations. After 120 days of inactivity, deletion is performed automatically by the Redis engine. Operational logs are kept free of personal data by data minimisation at source (Art. 5(1)(c) + Art. 25 GDPR); a time-based retention period under Art. 5(1)(e) GDPR is therefore not required.
 ```
 
 **Deletion responsibility**
@@ -130,20 +131,20 @@ Recovery (Art. 32(1)(c))
 
 Testing and evaluation (Art. 32(1)(d))
 - Dependency vulnerability scanning runs on CI.
-- TOMs are reviewed ad hoc on material changes (new processor, significant new feature). No periodic-review cadence is currently committed.
+- TOMs are reviewed ad hoc on material changes (new processor, significant new feature). No periodic review cadence.
 ```
 
 ## Legal basis (Art. 6 GDPR + national norms)
 
-Art. 6(1)(e) GDPR. The second subparagraph of Art. 6(1) GDPR excludes lit. (f) for processing carried out by public authorities in performance of their tasks; lit. (b) is not the appropriate basis because operating Apollon is the performance of a public task, not a contract (Recital 45 GDPR).
+Art. 6(1)(e) GDPR. Lit. (f) is excluded for public authorities by the second subparagraph of Art. 6(1) GDPR. Lit. (b) does not apply because Apollon is offered free of charge as part of TUM's public teaching and research mission, not under a contract. Recital 45 GDPR confirms that processing in performance of a public-interest task must have a basis in Member State law, supplied here by Art. 4(1) BayDSG read with Art. 2 BayHIG.
 
 ```
 Art. 4(1) of the Bavarian Data Protection Act (BayDSG) — the Bavarian implementation of Art. 6(1)(e) GDPR for public bodies, authorising processing necessary to carry out a task assigned to the body — read with Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG), which defines TUM's statutory tasks (research, teaching, and the transfer of knowledge).
 ```
 
-No special categories (Art. 9.2 GDPR) are processed.
+No special categories of personal data (Art. 9(1) GDPR) and no criminal-conviction data (Art. 10 GDPR) are processed.
 
-## Source of data (Art. 14)
+## Source of data
 
 Directly from the data subject. Apollon receives no data from third parties or from TUM identity systems.
 
