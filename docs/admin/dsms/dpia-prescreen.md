@@ -25,7 +25,7 @@ Documents whether a full Data Protection Impact Assessment (Datenschutz-Folgenab
 
 ## 3. Check against the DSK Muss-Liste
 
-The DSK publishes a Muss-Liste of processing types requiring a DPIA, but no Positivliste. Apollon's processing profile matches no entry on the Muss-Liste. The DPIA exclusion rests on §1 and §2; the absent whitelist is not a positive finding.
+The DSK publishes a Muss-Liste of processing types requiring a DPIA, but no Positivliste. Apollon's processing profile matches no entry on the Muss-Liste. The DPIA exclusion rests on sections 1 and 2 above; the absent whitelist is not a positive finding.
 
 ## 4. Residual risk analysis
 

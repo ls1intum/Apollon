@@ -12,7 +12,7 @@ Web: [www.tum.de](https://www.tum.de)
 
 ## Legal Form and Representation
 
-TUM is a public university under Bavarian state law, organised as a public corporation (Körperschaft des öffentlichen Rechts) and a state institution (staatliche Einrichtung) pursuant to Art. 4 Abs. 1 BayHIG. It is legally represented by its President, Prof. Dr. Thomas F. Hofmann.
+TUM is a public university under Bavarian state law, organised as a public corporation (Körperschaft des öffentlichen Rechts) and a state institution (staatliche Einrichtung) pursuant to Art. 4(1) BayHIG. It is legally represented by its President, Prof. Dr. Thomas F. Hofmann.
 
 ## Supervisory Authority
 

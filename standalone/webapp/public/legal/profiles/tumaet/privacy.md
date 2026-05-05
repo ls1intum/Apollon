@@ -26,7 +26,7 @@ Apollon has **no user accounts, no login, no cookies, and no analytics**. You ar
 
 **Operational events about the service itself.** Certificate renewals, critical errors from the reverse proxy or database engine, and unhandled-exception stack traces from the application server. Captured on TUM-operated servers in Germany. These events concern the service, not end users, and contain no personal data by design.
 
-*Legal basis — server-side processing (database, WebSocket, operational events): Art. 6(1)(e) GDPR, read with Art. 4(1) Bavarian Data Protection Act (BayDSG) and Art. 2 Bavarian Higher Education Innovation Act (BayHIG). TUM processes this data to perform its statutory teaching and research tasks, which require operating the IT services that support them.*
+*Legal basis — server-side processing (database, WebSocket, operational events): Art. 6(1)(e) GDPR, read with Art. 4(1) of the Bavarian Data Protection Act (BayDSG) and Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG). TUM processes this data to perform its statutory teaching and research tasks, which require operating the IT services that support them.*
 
 *Legal basis — browser-side storage (theme, draft diagrams, optional collaboration name; see §3): § 25(2) no. 2 of the German Telecommunications Digital Services Data Protection Act (TDDDG). Each entry is strictly necessary for a service you have explicitly requested, so no consent is required.*
 
