@@ -24,9 +24,11 @@ Apollon has **no user accounts, no login, no cookies, and no analytics**. You ar
 
 **Live-collaboration data.** Only if you have entered a display name in the *Collaborate* dialog: your display name, cursor position, and current selection. As described in §1, the server holds these in a per-diagram in-memory record while you are connected and forwards them to your collaborators in real time. Nothing is written to disk.
 
+**Request metadata (IP address and user-agent).** Transmitted automatically by your browser on every HTTP request and visible to TUM's servers only for the duration of the request, so the response can be routed back to your client. Not persistently stored, never used for tracking, profiling, or correlating individuals.
+
 **Operational events about the service itself.** Certificate renewals, critical errors from the reverse proxy or database engine, and unhandled-exception stack traces from the application server. Captured on TUM-operated servers in Germany. These events concern the service, not end users, and contain no personal data by design.
 
-*Legal basis — server-side processing (database, WebSocket, operational events): Art. 6(1)(e) GDPR, read with Art. 4(1) of the Bavarian Data Protection Act (BayDSG) and Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG). TUM processes this data to perform its statutory teaching and research tasks, which require operating the IT services that support them.*
+*Legal basis — server-side processing (database, WebSocket, operational events, request metadata): Art. 6(1)(e) GDPR, read with Art. 4(1) of the Bavarian Data Protection Act (BayDSG) and Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG). TUM processes this data to perform its statutory teaching and research tasks, which require operating the IT services that support them.*
 
 *Legal basis — browser-side storage (theme, draft diagrams, optional collaboration name; see §3): § 25(2) no. 2 of the German Telecommunications Digital Services Data Protection Act (TDDDG). Each entry is strictly necessary for a service you have explicitly requested, so no consent is required.*
 
@@ -60,6 +62,7 @@ Your data is processed by TUM and TUM's operational units only. Apollon does not
 |---|---|---|
 | Shared diagrams | 120 days after the last write (native database TTL) | TUM database (Germany) |
 | WebSocket session and live-collaboration data | While you are connected; dropped on disconnect | Server memory only |
+| Request metadata (IP address, user-agent) | Visible to the server only for the duration of an HTTP request; not persistently stored | TUM server (transient) |
 | Operational events about the service (no personal data by design) | Size-bounded ring buffer (~250 MB per container) | TUM-operated server |
 | Theme preference and locally drafted diagrams | Until you delete them or clear browser storage | Your own device |
 | Optional collaboration display name | Until you close the browser tab | Your own device (and server memory while connected) |
