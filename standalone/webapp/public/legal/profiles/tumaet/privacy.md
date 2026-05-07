@@ -94,8 +94,8 @@ TUM responds to requests without undue delay, in any case within one month of re
 
 You can lodge a complaint with a supervisory authority, in particular the authority competent for TUM:
 
-Bayerischer Landesbeauftragter für den Datenschutz (BayLfD)
-Wagmüllerstraße 18, 80538 Munich, Germany
+Bayerischer Landesbeauftragter für den Datenschutz (BayLfD)\
+Wagmüllerstraße 18, 80538 Munich, Germany\
 Website: [datenschutz-bayern.de](https://www.datenschutz-bayern.de)
 
 ## 8. Automated decision-making
@@ -110,16 +110,20 @@ Use of Apollon is voluntary. You are under no statutory or contractual obligatio
 
 **Controller** under Art. 4(7) GDPR:
 
-Technical University of Munich (Technische Universität München)
-Arcisstraße 21, 80333 Munich, Germany
+Technical University of Munich (Technische Universität München)\
+Arcisstraße 21, 80333 Munich, Germany\
 Represented by its President, Prof. Dr. Thomas F. Hofmann.
 
-Operational responsibility for Apollon lies with the Research Group for Applied Education Technologies (AET), TUM School of Computation, Information and Technology, Department of Computer Science, Boltzmannstraße 3, 85748 Garching bei München, Germany — [ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de).
+Operational responsibility lies with the Research Group for Applied Education Technologies (AET), led by Prof. Dr. Stephan Krusche:
+
+AET, TUM School of Computation, Information and Technology — Department of Computer Science\
+Boltzmannstraße 3, 85748 Garching bei München, Germany\
+Contact: [ls1.admin@in.tum.de](mailto:ls1.admin@in.tum.de)
 
 **Data Protection Officer:**
 
-Technical University of Munich — Office of the Data Protection Officer
-Arcisstraße 21, 80333 Munich, Germany (attn. Data Protection Officer)
+Technical University of Munich — Office of the Data Protection Officer\
+Arcisstraße 21, 80333 Munich, Germany (attn. Data Protection Officer)\
 Email: [beauftragter@datenschutz.tum.de](mailto:beauftragter@datenschutz.tum.de)
 
 ## 11. Changes to this statement
