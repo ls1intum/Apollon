@@ -23,7 +23,7 @@ Boltzmannstraße 3, 85748 Garching bei München, Germany
 Operational technical contact: ls1.admin@in.tum.de
 ```
 
-TUM Org identifier: `CIT-I1`.
+TUM Org identifier: `TUS1322`.
 
 ## Purpose and description (Art. 30(1)(b))
 
@@ -33,7 +33,7 @@ Apollon is a UML modelling editor that runs in a web browser. The Research Group
 
 ## Data subjects (Art. 30(1)(c))
 
-Apollon is unauthenticated. Display name during live collaboration is the only per-individual identifier.
+Apollon is unauthenticated. The live-collaboration display name and the transient IP address transmitted with each HTTP request are the only per-individual identifiers.
 
 - Students (TUM)
 - Employees (TUM)
@@ -43,14 +43,13 @@ Apollon is unauthenticated. Display name during live collaboration is the only p
 
 ## Categories of personal data
 
-The only structured category processed is **Name(s)** — the user-chosen live-collaboration display name. No contact data, identifiers, or special categories (Art. 9 / Art. 10).
+Structured categories processed: **Name(s)** (the user-chosen live-collaboration display name) and **IP address** (transmitted automatically with each HTTP request; visible to the server only for the duration of the request; not persistently stored). No contact data, identifiers, or special categories (Art. 9 / Art. 10).
 
 ```
 - Diagram content (free text): the UML diagram a user actively shares is stored on TUM servers. Labels are free text and may contain personal data the user types; the platform does not require, validate, or inspect their content.
 - Live-collaboration cursor + selection: alongside the display name, the user's cursor position in the editor and the ID of the currently selected element are forwarded in real time to other participants in the same diagram session, while the user is connected.
+- User-agent string: transmitted automatically by the browser on every HTTP request; visible to the server only for the duration of the request; not persistently stored.
 ```
-
-IP addresses are transmitted automatically with each HTTP request but are not persistently stored.
 
 ## Recipients (Art. 30(1)(d))
 
@@ -71,6 +70,7 @@ On AET-operated VMs on TUM premises (Boltzmannstraße 3, 85748 Garching bei Mün
 
 - User-shared diagrams persist in a Redis instance with native time-based eviction.
 - Live-collaboration data (display name, cursor, selection) is held only in the WebSocket relay's working memory while a participant is connected; never persisted.
+- IP address and user-agent are visible to the reverse proxy only for the duration of an HTTP request; never persisted.
 
 No off-host backups of personal data exist. No personal data leaves the EU.
 ```
@@ -80,6 +80,7 @@ No off-host backups of personal data exist. No personal data leaves the EU.
 ```
 - Diagram content (Redis): 120 days from the last write, enforced by a native database TTL.
 - Live-collaboration data (display name, cursor, selection): held only while the user is connected; dropped from server memory on disconnect.
+- IP address and user-agent: visible to the server only for the duration of an HTTP request; not persistently stored.
 - Operational events about the service (no personal data by design): size-bounded ring buffer, ~250 MB per container.
 ```
 
