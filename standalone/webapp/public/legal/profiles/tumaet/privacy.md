@@ -4,7 +4,7 @@ Privacy Statement for Apollon in accordance with Art. 13 GDPR.
 
 ## In plain language
 
-Apollon is a free UML modelling editor hosted by TUM. **No accounts, no cookies, no tracking, no third parties.** Diagrams you choose to share live on TUM servers and are deleted automatically 120 days after your last edit. If you choose to collaborate live, you pick a display name that your collaborators see while you are connected; it is discarded when you close the tab. By design, the service keeps no per-request access logs: your IP address and browser identifier are not persistently recorded. Only operational events about the service itself (certificate renewals, critical errors) are captured, and they contain no personal data.
+Apollon is a free UML modelling editor hosted by TUM. **No accounts, no cookies, no tracking, no third parties.** Diagrams you choose to share live on TUM servers and are deleted automatically 120 days after your last edit. If you choose to collaborate live, you pick a display name that your collaborators see while you are connected; it is discarded when you close the tab. By design, the service keeps no per-request access logs: your IP address and user-agent are not persistently recorded. Only operational events about the service itself (certificate renewals, critical errors) are captured, and they contain no personal data.
 
 Diagram labels are free text. Do not type personal data about identifiable third parties into them. The server does not inspect label contents. **If you do enter such data, you may yourself become a controller for that data within the meaning of Art. 4(7) GDPR.** TUM remains controller only for storing and transporting your diagram.
 
