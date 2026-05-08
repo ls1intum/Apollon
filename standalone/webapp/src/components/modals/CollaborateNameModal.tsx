@@ -53,9 +53,32 @@ export const CollaborateNameModal = ({
           input: {
             color: "var(--apollon-primary-contrast)",
           },
+          "& .MuiOutlinedInput-root": {
+            "& fieldset": {
+              borderColor: "var(--apollon-secondary)",
+            },
+            "&:hover fieldset": {
+              borderColor: "var(--apollon-primary-contrast)",
+            },
+            "&.Mui-focused fieldset": {
+              borderColor: "var(--apollon-primary)",
+            },
+          },
+          "& .MuiInputBase-input::placeholder": {
+            color: "var(--apollon-secondary)",
+            opacity: 1,
+          },
         }}
       />
-      <Button variant="contained" onClick={handleConfirm} disabled={!isValid}>
+      <Button
+        variant="contained"
+        onClick={handleConfirm}
+        disabled={!isValid}
+        sx={{
+          bgcolor: "var(--apollon-primary)",
+          "&:hover": { bgcolor: "var(--apollon-primary)" },
+        }}
+      >
         Start Collaborating
       </Button>
     </Box>

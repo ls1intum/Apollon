@@ -1,5 +1,4 @@
 import { useEditorContext } from "@/contexts"
-import { useThemeStore } from "@/stores/useThemeStore"
 import { CollaborationState } from "@tumaet/apollon"
 import { useEffect, useRef, type RefObject } from "react"
 
@@ -7,11 +6,6 @@ type CollaboratorSelectionHighlightsProps = {
   containerRef: RefObject<HTMLDivElement>
   isActive: boolean
 }
-
-const HIGHLIGHT_COLORS = {
-  light: "#00a6ff",
-  dark: "#34f5ff",
-} as const
 
 const tryHighlightElement = (
   container: HTMLElement,
@@ -76,10 +70,7 @@ export const CollaboratorSelectionHighlights = ({
   isActive,
 }: CollaboratorSelectionHighlightsProps) => {
   const { editor } = useEditorContext()
-  const currentTheme = useThemeStore((state) => state.currentTheme)
   const highlightedIdsRef = useRef<Set<string>>(new Set())
-  const highlightColor =
-    currentTheme === "dark" ? HIGHLIGHT_COLORS.dark : HIGHLIGHT_COLORS.light
 
   useEffect(() => {
     if (!editor || !isActive || !containerRef.current) {
@@ -93,25 +84,24 @@ export const CollaboratorSelectionHighlights = ({
     const container = containerRef.current
     const subscriptionId = editor.subscribeToAwarenessChanges((states) => {
       const localClientId = editor.getLocalAwarenessClientId()
-      const nextHighlightedIds = new Set<string>()
+      const nextHighlights = new Map<string, string>()
 
       for (const [clientId, state] of states.entries()) {
-        if (clientId === localClientId) {
-          continue
-        }
+        if (clientId === localClientId) continue
 
         const typedState = state as CollaborationState
         const selectedElementId = typedState?.selectedElementId
-        if (selectedElementId) {
-          nextHighlightedIds.add(selectedElementId)
+        const userColor = typedState?.user?.color
+        if (selectedElementId && userColor) {
+          nextHighlights.set(selectedElementId, userColor)
         }
       }
 
       clearHighlights(container, highlightedIdsRef.current)
 
       const actuallyHighlighted = new Set<string>()
-      for (const elementId of nextHighlightedIds) {
-        if (tryHighlightElement(container, elementId, highlightColor)) {
+      for (const [elementId, color] of nextHighlights.entries()) {
+        if (tryHighlightElement(container, elementId, color)) {
           actuallyHighlighted.add(elementId)
         }
       }
@@ -124,7 +114,7 @@ export const CollaboratorSelectionHighlights = ({
       clearHighlights(container, highlightedIdsRef.current)
       highlightedIdsRef.current = new Set()
     }
-  }, [containerRef, editor, isActive, highlightColor])
+  }, [containerRef, editor, isActive])
 
   return null
 }

@@ -9,6 +9,33 @@ const COLLAB_COLORS = [
   "#1098ad",
 ]
 
+const ADJECTIVES = [
+  "Swift",
+  "Bold",
+  "Clever",
+  "Bright",
+  "Calm",
+  "Eager",
+  "Kind",
+  "Noble",
+]
+const ANIMALS = [
+  "Falcon",
+  "Otter",
+  "Panda",
+  "Lynx",
+  "Dolphin",
+  "Owl",
+  "Fox",
+  "Crane",
+]
+
+export const randomCollabName = (): string => {
+  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
+  const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)]
+  return `${adj} ${animal}`
+}
+
 export const collabColorFromName = (name: string): string => {
   let hash = 0
   for (let i = 0; i < name.length; i += 1) {

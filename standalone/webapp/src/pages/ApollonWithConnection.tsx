@@ -7,7 +7,7 @@ import { DiagramView } from "@/types"
 import { WebSocketManager } from "@/services/WebSocketManager"
 import { DiagramAPIManager } from "@/services/DiagramAPIManager"
 import { log } from "@/logger"
-import { collabColorFromName } from "@/utils/collaboration"
+import { collabColorFromName, randomCollabName } from "@/utils/collaboration"
 import { CollaboratorCursors } from "@/components/CollaboratorCursors"
 import { CollaboratorSelectionHighlights } from "@/components/CollaboratorSelectionHighlights"
 
@@ -58,6 +58,7 @@ export const ApollonWithConnection: React.FC = () => {
           } else if (!hasPromptedRef.current) {
             hasPromptedRef.current = true
             openModal("COLLABORATE_NAME", {
+              initialName: randomCollabName(),
               onConfirm: (name: string) => {
                 sessionStorage.setItem("apollon-collab-name", name)
                 setCollaborationUser({

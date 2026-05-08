@@ -8,6 +8,7 @@ import { useNavigate } from "react-router"
 import { DiagramView } from "@/types"
 import { DiagramAPIManager } from "@/services/DiagramAPIManager"
 import { log } from "@/logger"
+import { randomCollabName } from "@/utils/collaboration"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
@@ -46,7 +47,8 @@ export const ShareModal = () => {
   }
 
   const handleCollaborate = () => {
-    const storedName = sessionStorage.getItem("apollon-collab-name") || ""
+    const storedName =
+      sessionStorage.getItem("apollon-collab-name") || randomCollabName()
     openModal("COLLABORATE_NAME", {
       initialName: storedName,
       onConfirm: (name: string) => {

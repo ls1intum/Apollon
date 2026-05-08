@@ -21,8 +21,7 @@ export const CollaboratorCursors = ({
 }: CollaboratorCursorsProps) => {
   const { editor } = useEditorContext()
   const [collaborators, setCollaborators] = useState<CollaboratorCursor[]>([])
-  const [renderTick, setRenderTick] = useState(0)
-  void renderTick
+  const [, reproject] = useState(0)
 
   useEffect(() => {
     if (!editor || !isActive) {
@@ -64,22 +63,12 @@ export const CollaboratorCursors = ({
   }, [editor, isActive])
 
   useEffect(() => {
-    if (!editor || !isActive) {
-      return
-    }
-
-    let rafId = 0
-    const tick = () => {
-      setRenderTick((value) => (value + 1) % 100000)
-      rafId = window.requestAnimationFrame(tick)
-    }
-
-    rafId = window.requestAnimationFrame(tick)
-
-    return () => {
-      window.cancelAnimationFrame(rafId)
-    }
-  }, [editor, isActive])
+    if (!editor || !isActive || collaborators.length === 0) return
+    const id = setInterval(() => {
+      reproject((v) => (v + 1) % 100_000)
+    }, 100)
+    return () => clearInterval(id)
+  }, [editor, isActive, collaborators.length])
 
   if (!isActive || !containerRef.current || !editor) {
     return null
