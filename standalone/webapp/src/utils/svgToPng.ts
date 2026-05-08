@@ -5,11 +5,13 @@
  * Chrome — bigger diagrams used to silently produce 0-byte files (issue #667).
  * resvg renders directly into its own pixel buffer in WebAssembly memory and
  * emits a PNG byte-stream, so the canvas cap never applies. The 4 GB wasm32
- * address space is the hard ceiling; we cap at 32 MP so peak working set stays
- * well within reach on every browser (Safari/iOS is the strictest, ~16 MP for
- * `<canvas>`; we double that here because resvg doesn't use `<canvas>`).
+ * address space is the hard ceiling; we cap at 75 MP so peak working set stays
+ * well within reach (resvg holds ~3-4× the output buffer in working set; 75 MP
+ * × 4 bytes RGBA × 4 ≈ 1.2 GB peak — plenty of headroom). At Apollon's default
+ * 1.5× export scale this comfortably accommodates ~400-class diagrams without
+ * any quality clamp.
  *
- * The Worker also frees the main thread while a 30-MP raster runs.
+ * The Worker also frees the main thread while the raster runs.
  */
 import { RasterTimeoutError, RasterTooLargeError } from "./exportErrors"
 import type {
@@ -17,8 +19,8 @@ import type {
   SvgToPngWorkerResponse,
 } from "@/workers/svgToPng.worker"
 
-/** 32 MP — comfortably below the wasm32 4 GB ceiling (~4× working set). */
-const DEFAULT_MAX_AREA_PX = 32_000_000
+/** 75 MP — comfortably below the wasm32 4 GB ceiling (~4× working set). */
+const DEFAULT_MAX_AREA_PX = 75_000_000
 /** Per-side cap (resvg renders to one buffer; per-side rarely binds first). */
 const DEFAULT_MAX_DIMENSION_PX = 16_384
 /** Generous because real diagrams take longer than 15 s on slow hardware. */
@@ -31,7 +33,7 @@ export type SvgToPngOptions = {
   scale?: number
   /** CSS color (e.g. "#ffffff") or null for transparent. */
   background?: string | null
-  /** Override the default 32 MP area budget. */
+  /** Override the default 75 MP area budget. */
   maxAreaPx?: number
   /** Override the default 16,384 px per-side cap. */
   maxDimensionPx?: number

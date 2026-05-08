@@ -1,16 +1,18 @@
 /**
- * Pure render functions used by the server-side conversion worker.
- * Extracted from the worker thread so they can be unit-tested directly
- * without spawning a `worker_threads` process.
+ * Pure render function used by the server-side conversion worker. Extracted
+ * from the worker thread so it can be unit-tested directly without spawning
+ * a `worker_threads` process.
  *
- * Output mirrors the client (`useExportAsPNG`/`useExportAsPDF`) byte-for-byte
- * modulo timestamp and PDF random-id fields — the Artemis LMS uses this
- * server path to produce a verified-environment render that matches what
- * the student saw on screen.
+ * Output mirrors the client (`useExportAsPDF`) byte-for-byte modulo PDF
+ * random-id fields — Artemis uses this server path to produce a verified
+ * render that matches what the student saw on screen.
+ *
+ * PNG is rendered client-side only (resvg-wasm in a Web Worker); the server
+ * intentionally exposes only PDF because exam-integrity submissions are
+ * archived as PDF.
  */
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { Resvg } from "@resvg/resvg-js"
 import { jsPDF } from "jspdf"
 import { svg2pdf } from "svg2pdf.js"
 import type { UMLModel } from "@tumaet/apollon"
@@ -26,32 +28,11 @@ const INTER_BOLD = path.join(FONTS_DIR, "Inter-Bold.ttf")
 const INTER_ITALIC = path.join(FONTS_DIR, "Inter-Italic.ttf")
 const INTER_BOLD_ITALIC = path.join(FONTS_DIR, "Inter-BoldItalic.ttf")
 
-const REQUIRED_FONTS = [
-  INTER_REGULAR,
-  INTER_BOLD,
-  INTER_ITALIC,
-  INTER_BOLD_ITALIC,
-] as const
-
 /**
- * Resolved once on first render and reused across the worker's lifetime.
- * resvg-js + jsPDF memory-map these per call internally, but the existence
- * check would otherwise hit the FS every render.
+ * Loaded once on first PDF render and reused across the worker's lifetime.
+ * Reading the four TTFs synchronously inside `addFileToVFS` would otherwise
+ * happen per-render.
  */
-let cachedRasterFontFiles: string[] | null = null
-function rasterFontFiles(): string[] {
-  if (cachedRasterFontFiles) return cachedRasterFontFiles
-  for (const file of REQUIRED_FONTS) {
-    if (!fs.existsSync(file)) {
-      throw new Error(
-        `Bundled font missing: ${file}. Build step did not copy fonts.`
-      )
-    }
-  }
-  cachedRasterFontFiles = REQUIRED_FONTS as unknown as string[]
-  return cachedRasterFontFiles
-}
-
 let cachedPdfFontBase64: {
   regular: string
   bold: string
@@ -60,6 +41,18 @@ let cachedPdfFontBase64: {
 } | null = null
 function pdfFontBase64() {
   if (cachedPdfFontBase64) return cachedPdfFontBase64
+  for (const file of [
+    INTER_REGULAR,
+    INTER_BOLD,
+    INTER_ITALIC,
+    INTER_BOLD_ITALIC,
+  ]) {
+    if (!fs.existsSync(file)) {
+      throw new Error(
+        `Bundled font missing: ${file}. Build step did not copy fonts.`
+      )
+    }
+  }
   cachedPdfFontBase64 = {
     regular: fs.readFileSync(INTER_REGULAR).toString("base64"),
     bold: fs.readFileSync(INTER_BOLD).toString("base64"),
@@ -96,22 +89,6 @@ function registerInterFontsServer(pdf: jsPDF): void {
   pdf.addFont("Inter-BoldItalic.ttf", "Inter", "italic", "600")
   pdf.addFont("Inter-BoldItalic.ttf", "Inter", "italic", "700")
   pdf.addFont("Inter-BoldItalic.ttf", "Inter", "italic", "bold")
-}
-
-export async function renderPng(model: UMLModel): Promise<Uint8Array> {
-  const { svg } = await convertModelToSvg(model)
-
-  const resvg = new Resvg(svg, {
-    background: "rgba(0,0,0,0)",
-    font: {
-      loadSystemFonts: false,
-      fontFiles: rasterFontFiles(),
-      defaultFontFamily: "Inter",
-    },
-  })
-  const rendered = resvg.render()
-  const png = rendered.asPng()
-  return new Uint8Array(png.buffer, png.byteOffset, png.byteLength)
 }
 
 export async function renderPdf(model: UMLModel): Promise<Uint8Array> {

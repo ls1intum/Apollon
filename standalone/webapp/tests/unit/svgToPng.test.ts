@@ -12,7 +12,7 @@
  *   - Worker takes too long → RasterTimeoutError.
  *   - Worker reports an error message → propagated as a typed Error.
  *   - Scale is clamped before allocation when the diagram is huge.
- *   - Up to ≈32 MP at 1× still renders (the 'really large' requirement).
+ *   - Up to ≈75 MP at 1× still renders (the 'really large' requirement).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
@@ -92,12 +92,12 @@ afterEach(() => {
 
 describe("computeAppliedScale", () => {
   it("returns the requested scale when no cap is hit", () => {
-    expect(computeAppliedScale(100, 100, 1.5, 32_000_000, 16_384)).toBe(1.5)
+    expect(computeAppliedScale(100, 100, 1.5, 75_000_000, 16_384)).toBe(1.5)
   })
 
   it("clamps scale down so width * scale * height * scale ≤ maxArea", () => {
-    // 6000 * 6000 = 36 MP at scale 1; allow at most 32 MP → applied < 1.
-    const s = computeAppliedScale(6000, 6000, 2, 32_000_000, 16_384)
+    // 9000 * 9000 = 81 MP at scale 1; allow at most 75 MP → applied < 1.
+    const s = computeAppliedScale(9000, 9000, 2, 75_000_000, 16_384)
     expect(s).toBeLessThan(1)
     expect(s).toBeGreaterThan(0.8)
   })
@@ -144,10 +144,10 @@ describe("svgToPng", () => {
     expect(lastRequest?.scale).toBe(result.appliedScale)
   })
 
-  it("renders a 5000×5000 diagram at scale 1 without clamping (32 MP budget)", async () => {
+  it("renders an 8000×8000 diagram at scale 1 without clamping (75 MP budget)", async () => {
     const result = await svgToPng(
       SVG,
-      { width: 5000, height: 5000 },
+      { width: 8000, height: 8000 },
       { scale: 1 }
     )
     expect(result.clamped).toBe(false)

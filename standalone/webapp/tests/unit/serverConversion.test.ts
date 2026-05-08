@@ -1,12 +1,15 @@
 /**
- * Cross-package integration test: drives the server-side conversion
- * renderers (`standalone/server`) against a real Apollon fixture and
- * verifies that the produced bytes are well-formed PNG / PDF — i.e. the
- * Artemis exam-integrity rendering path is wired correctly.
+ * Cross-package integration test: drives the server-side PDF renderer
+ * (`standalone/server`) against a real Apollon fixture and verifies that
+ * the produced bytes are a well-formed PDF — the Artemis exam-integrity
+ * rendering path.
  *
  * Lives in the webapp's vitest suite (rather than the server's, which has
  * no test runner today) because vitest is already configured here and
  * Node module resolution finds the server's source via a relative import.
+ *
+ * PNG is intentionally not exposed server-side; the client renders PNG via
+ * resvg-wasm in a Web Worker.
  */
 import * as fs from "node:fs"
 import * as path from "node:path"
@@ -31,10 +34,7 @@ beforeAll(() => {
   }
 })
 
-import {
-  renderPng,
-  renderPdf,
-} from "../../../server/src/services/conversion-renderer"
+import { renderPdf } from "../../../server/src/services/conversion-renderer"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURE_PATH = path.join(
@@ -45,20 +45,11 @@ const FIXTURE_PATH = path.join(
 )
 const fixture = JSON.parse(fs.readFileSync(FIXTURE_PATH, "utf-8"))
 
-const PNG_MAGIC = new Uint8Array([
-  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-])
 const PDF_MAGIC = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]) // "%PDF-"
 
 describe("server-side conversion-renderer (Artemis exam integrity)", () => {
   // Server-side render boots JSDOM + Apollon library; first invocation
   // can take several seconds on slow CI.
-  it("renders a real class diagram to a non-empty PNG with a valid header", async () => {
-    const png = await renderPng(fixture)
-    expect(Array.from(png.subarray(0, 8))).toEqual(Array.from(PNG_MAGIC))
-    expect(png.length).toBeGreaterThan(10_000)
-  }, 60_000)
-
   it("renders a real class diagram to a structurally complete PDF", async () => {
     const pdf = await renderPdf(fixture)
     expect(Array.from(pdf.subarray(0, 5))).toEqual(Array.from(PDF_MAGIC))
@@ -71,14 +62,14 @@ describe("server-side conversion-renderer (Artemis exam integrity)", () => {
     expect(tail).toMatch(/%%EOF\s*$/)
   }, 60_000)
 
-  it("renderPng is deterministic across repeat invocations (no font-cache leak)", async () => {
+  it("renderPdf is deterministic on byte length across repeat invocations", async () => {
     // Two renders of the same model must produce identical byte lengths.
-    // A regression where the cached `fontFiles()` array is mutated, or
-    // resvg-js's wasm memory leaks glyph state, would shift the second
-    // render's compressed size — exactly the silent class of bug exam
-    // graders can't spot by eye.
-    const a = await renderPng(fixture)
-    const b = await renderPng(fixture)
+    // A regression where the cached font base64 is mutated, or jsPDF's
+    // font subset state leaks across calls, would shift the second
+    // render's compressed size — the silent class of bug exam graders
+    // can't spot by eye.
+    const a = await renderPdf(fixture)
+    const b = await renderPdf(fixture)
     expect(b.length).toBe(a.length)
   }, 60_000)
 })

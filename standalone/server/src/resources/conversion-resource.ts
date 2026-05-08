@@ -1,23 +1,22 @@
 /**
- * HTTP resource that converts an Apollon UMLModel to PNG or PDF on the
- * server. The standalone webapp does its own client-side render; this path
- * exists for the Artemis LMS exam-integrity flow, which needs a verified
- * render of a student's submission produced in a controlled environment.
+ * HTTP resource that converts an Apollon UMLModel to a PDF on the server.
+ * The standalone webapp does its own client-side render; this path exists
+ * for the Artemis LMS exam-integrity flow, which needs a verified PDF
+ * produced in a controlled environment.
  *
- * Architecture: a single Node worker thread handles both formats so that
+ * Architecture: a single Node worker thread renders PDFs serially so that
  * the JSDOM bootstrap and Apollon-library load are amortised. Requests are
  * queued (default depth 20) and timed out (default 30 s); the worker is
- * given a strict heap limit and is auto-restarted on crash.
+ * given a strict heap limit, auto-restarted on crash, and routinely
+ * recycled after N renders to bound JSDOM memory growth.
  */
 import { Request, Response } from "express"
 import { Worker } from "node:worker_threads"
 import path from "node:path"
 import type { UMLModel } from "@tumaet/apollon"
-import type { ConversionFormat } from "../workers/conversion-worker-thread"
 
 type QueueEntry = {
   id: number
-  format: ConversionFormat
   model: UMLModel
   resolve: (bytes: Buffer) => void
   reject: (error: Error) => void
@@ -26,7 +25,6 @@ type QueueEntry = {
 type WorkerSuccess = {
   id: number
   ok: true
-  format: ConversionFormat
   bytes: Uint8Array
 }
 
@@ -37,11 +35,6 @@ type WorkerFailure = {
 }
 
 type WorkerMessage = WorkerSuccess | WorkerFailure
-
-const FORMAT_MIME: Record<ConversionFormat, string> = {
-  png: "image/png",
-  pdf: "application/pdf",
-}
 
 export class ConversionResource {
   private readonly conversionTimeoutMs = Number(
@@ -193,15 +186,11 @@ export class ConversionResource {
 
     this.worker.postMessage({
       id: nextEntry.id,
-      format: nextEntry.format,
       model: nextEntry.model,
     })
   }
 
-  private render = async (
-    format: ConversionFormat,
-    model: UMLModel
-  ): Promise<Buffer> => {
+  private renderPdf = async (model: UMLModel): Promise<Buffer> => {
     if (this.queue.length >= this.maxQueueLength) {
       throw new Error("Conversion queue is full")
     }
@@ -209,7 +198,6 @@ export class ConversionResource {
     return new Promise<Buffer>((resolve, reject) => {
       this.queue.push({
         id: this.nextId++,
-        format,
         model,
         resolve,
         reject,
@@ -218,26 +206,20 @@ export class ConversionResource {
     })
   }
 
-  private convert = async (
-    format: ConversionFormat,
-    req: Request,
-    res: Response
-  ) => {
-    let model: UMLModel | undefined
-
+  convert = async (req: Request, res: Response) => {
     if (!req.body) {
       res.status(400).send({ error: "Model must be defined!" })
       return
     }
 
     try {
-      model = req.body.model ? req.body.model : req.body
+      let model: UMLModel = req.body.model ? req.body.model : req.body
       if (typeof model === "string") {
         model = JSON.parse(model)
       }
 
-      const bytes = await this.render(format, model as UMLModel)
-      res.type(FORMAT_MIME[format])
+      const bytes = await this.renderPdf(model)
+      res.type("application/pdf")
       res.status(200).send(bytes)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -248,9 +230,6 @@ export class ConversionResource {
       throw error
     }
   }
-
-  convertPdf = (req: Request, res: Response) => this.convert("pdf", req, res)
-  convertPng = (req: Request, res: Response) => this.convert("png", req, res)
 
   status = (_req: Request, res: Response) => {
     res.sendStatus(200)

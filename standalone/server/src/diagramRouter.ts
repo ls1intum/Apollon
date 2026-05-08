@@ -6,8 +6,7 @@ import { log } from "./logger"
 const router = Router()
 
 type LazyConverter = {
-  convertPdf: (req: Request, res: Response) => Promise<void> | void
-  convertPng: (req: Request, res: Response) => Promise<void> | void
+  convert: (req: Request, res: Response) => Promise<void> | void
 }
 
 let conversionResourcePromise: Promise<LazyConverter> | null = null
@@ -40,16 +39,7 @@ router.get("/converter/status", (_req, res) => {
 router.post("/converter/pdf", async (req, res, next) => {
   try {
     const converter = await getConversionResource()
-    await converter.convertPdf(req, res)
-  } catch (error) {
-    next(error)
-  }
-})
-
-router.post("/converter/png", async (req, res, next) => {
-  try {
-    const converter = await getConversionResource()
-    await converter.convertPng(req, res)
+    await converter.convert(req, res)
   } catch (error) {
     next(error)
   }
