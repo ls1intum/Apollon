@@ -293,19 +293,19 @@ export class YjsSyncClass {
     }
 
     const handleYjsUpdate = (
-      _arg0: unknown,
-      _arg1: unknown,
-      _arg2: Y.Doc,
+      update: Uint8Array,
+      _origin: unknown,
+      _doc: Y.Doc,
       transaction: Y.Transaction
     ) => {
-      // Send updates for store operations and undo/redo operations
+      // Broadcast the incremental update for local edits and undo/redo.
+      // Late-joining peers receive full state via the YjsSYNC handshake.
       if (
         this.sendBroadcastMessage &&
         (transaction.origin === "store" ||
           this.isUndoRedoTransaction(transaction))
       ) {
-        const syncMessage = Y.encodeStateAsUpdate(this.ydoc)
-        this.sendFramedMessage(MessageType.YjsUpdate, syncMessage)
+        this.sendFramedMessage(MessageType.YjsUpdate, update)
       }
 
       // Update store state for undo/redo operations
