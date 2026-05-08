@@ -226,6 +226,7 @@ export const ApollonWithConnection: React.FC = () => {
               searchParams.get("view") === DiagramView.COLLABORATE &&
               !!collaborationUser
             }
+            localUser={collaborationUser}
           />
           <CollaboratorCursors
             containerRef={containerRef}

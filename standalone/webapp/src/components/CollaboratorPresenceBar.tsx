@@ -1,5 +1,6 @@
 import { useEditorContext } from "@/contexts"
 import { CollaborationState } from "@tumaet/apollon"
+import Tooltip from "@mui/material/Tooltip"
 import { useEffect, useState } from "react"
 
 type Collaborator = {
@@ -10,10 +11,12 @@ type Collaborator = {
 
 type CollaboratorPresenceBarProps = {
   isActive: boolean
+  localUser: { name: string; color: string } | null
 }
 
 export const CollaboratorPresenceBar = ({
   isActive,
+  localUser,
 }: CollaboratorPresenceBarProps) => {
   const { editor } = useEditorContext()
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
@@ -44,7 +47,9 @@ export const CollaboratorPresenceBar = ({
     }
   }, [editor, isActive])
 
-  if (!isActive || collaborators.length === 0) return null
+  if (!isActive || !localUser) return null
+
+  const totalCount = collaborators.length + 1
 
   return (
     <div
@@ -54,43 +59,71 @@ export const CollaboratorPresenceBar = ({
         right: 12,
         display: "flex",
         alignItems: "center",
-        gap: 6,
+        gap: 8,
         zIndex: 10,
         pointerEvents: "auto",
+        backgroundColor: "var(--apollon-background)",
+        borderRadius: 20,
+        padding: "6px 12px",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
       }}
     >
       <span
         style={{
           fontSize: 12,
           color: "var(--apollon-secondary)",
-          marginRight: 2,
+          whiteSpace: "nowrap",
         }}
       >
-        {collaborators.length} online
+        {totalCount} online
       </span>
-      {collaborators.map((c) => (
-        <div
-          key={c.clientId}
-          title={c.name}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            backgroundColor: c.color,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#fff",
-            fontSize: 13,
-            fontWeight: 600,
-            border: "2px solid var(--apollon-background)",
-            cursor: "default",
-            flexShrink: 0,
-          }}
-        >
-          {c.name.charAt(0).toUpperCase()}
-        </div>
-      ))}
+      <div style={{ display: "flex", gap: 4 }}>
+        <Tooltip title={`${localUser.name} (You)`} arrow>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              backgroundColor: localUser.color,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+              border: "2px solid var(--apollon-background)",
+              outline: "2px solid var(--apollon-secondary)",
+              cursor: "default",
+              flexShrink: 0,
+            }}
+          >
+            {localUser.name.charAt(0).toUpperCase()}
+          </div>
+        </Tooltip>
+        {collaborators.map((c) => (
+          <Tooltip key={c.clientId} title={c.name} arrow>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                backgroundColor: c.color,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 600,
+                border: "2px solid var(--apollon-background)",
+                cursor: "default",
+                flexShrink: 0,
+              }}
+            >
+              {c.name.charAt(0).toUpperCase()}
+            </div>
+          </Tooltip>
+        ))}
+      </div>
     </div>
   )
 }
