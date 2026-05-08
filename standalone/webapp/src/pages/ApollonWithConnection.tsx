@@ -297,21 +297,9 @@ export const ApollonWithConnection: React.FC = () => {
         })
 
         void fetchVersions(diagramId)
-
-        if (previewFromUrl) {
-          try {
-            await useVersionStore
-              .getState()
-              .enterPreview(diagramId, previewFromUrl)
-            if (cancelled) return
-            const previewModel = useVersionStore.getState().preview?.body
-            if (previewModel) {
-              instance.model = previewModel
-            }
-          } catch {
-            if (!cancelled) toast.error("This version is no longer available.")
-          }
-        }
+        // Preview from `?version=` is handled by the dedicated URL ↔
+        // preview-state sync effect below; this effect just initialises
+        // the editor and connection.
       } catch {
         toast.error("Failed to initialize diagram")
         navigate("/")
@@ -342,11 +330,23 @@ export const ApollonWithConnection: React.FC = () => {
     }
   }, [diagramId, viewType, collaborationUser])
 
+  // Keep the URL `?version=` parameter in sync with the preview state both
+  // ways: on permalink open / browser back-forward / external link change,
+  // enter or exit preview accordingly. Click-row entries don't write to
+  // the URL; they go straight through `enterPreview` and don't trigger
+  // this sync. Initial-mount permalink open is also handled here so the
+  // editor-init effect doesn't have to track URL params.
   useEffect(() => {
-    if (!previewFromUrl && preview !== null) {
+    if (!diagramId || !editor) return
+    if (previewFromUrl && preview?.versionId !== previewFromUrl) {
+      void useVersionStore
+        .getState()
+        .enterPreview(diagramId, previewFromUrl)
+        .catch(() => toast.error("This version is no longer available."))
+    } else if (!previewFromUrl && preview !== null) {
       exitPreview()
     }
-  }, [previewFromUrl])
+  }, [previewFromUrl, preview?.versionId, diagramId, editor, exitPreview])
 
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
 

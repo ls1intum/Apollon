@@ -41,8 +41,14 @@ interface Peer {
   close: () => Promise<void>
 }
 
-async function connectPeer(port: number, diagramId: string): Promise<Peer> {
-  const { ydoc, sync } = createHeadlessSync()
+async function connectPeer(
+  port: number,
+  diagramId: string,
+  /** Reuse a pre-existing Y.Doc — the reconnect-with-offline-edits test
+   *  needs the second peer to carry the first peer's offline mutations. */
+  seedDoc?: Y.Doc
+): Promise<Peer> {
+  const { ydoc, sync } = createHeadlessSync(seedDoc)
   const ws = new WebSocket(
     `ws://127.0.0.1:${port}?diagramId=${encodeURIComponent(diagramId)}`
   )
@@ -231,12 +237,9 @@ describe("Yjs collaboration — wire protocol", () => {
       b.ydoc.getMap("nodes").set("offline-2", { id: "offline-2" })
     })
 
-    // A second peer C reconnects via the same library path.
-    const bReconnected = await connectPeerWithSeedDoc(
-      port,
-      "doc-reconnect",
-      b.ydoc
-    )
+    // A second peer C reconnects via the same library path, carrying B's
+    // offline-edited Y.Doc into the new socket.
+    const bReconnected = await connectPeer(port, "doc-reconnect", b.ydoc)
     await bReconnected.ready
     await waitFor(() => a.ydoc.getMap("nodes").size === 2)
 
@@ -413,67 +416,3 @@ describe("Yjs collaboration — wire protocol", () => {
     await Promise.all([a.close(), b.close()])
   })
 })
-
-/**
- * Same as `connectPeer` but uses a pre-existing `Y.Doc` (the offline-edit
- * carrier in the reconnect test) instead of a fresh one.
- */
-async function connectPeerWithSeedDoc(
-  port: number,
-  diagramId: string,
-  seed: Y.Doc
-): Promise<Peer> {
-  const { ydoc, sync } = createHeadlessSync(seed)
-  const ws = new WebSocket(
-    `ws://127.0.0.1:${port}?diagramId=${encodeURIComponent(diagramId)}`
-  )
-
-  sync.setSendBroadcastMessage((data) => {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ diagramData: data }))
-    }
-  })
-
-  ws.on("message", (raw) => {
-    const text =
-      typeof raw === "string"
-        ? raw
-        : raw instanceof Buffer
-          ? raw.toString("utf-8")
-          : ""
-    try {
-      const parsed = JSON.parse(text) as { diagramData?: string }
-      if (typeof parsed.diagramData === "string") {
-        sync.handleReceivedData(parsed.diagramData)
-      }
-    } catch {
-      /* noop */
-    }
-  })
-
-  const ready = new Promise<void>((resolve) => {
-    ws.once("open", () => {
-      ws.send(JSON.stringify({ diagramData: encodeFrame(MessageType.YjsSYNC) }))
-      ws.send(
-        JSON.stringify({
-          diagramData: encodeFrame(MessageType.AwarenessSync),
-        })
-      )
-      sync.broadcastFullState()
-      resolve()
-    })
-  })
-
-  return {
-    ws,
-    ydoc,
-    sync,
-    ready,
-    close: () =>
-      new Promise<void>((resolve) => {
-        if (ws.readyState === WebSocket.CLOSED) return resolve()
-        ws.once("close", () => resolve())
-        ws.close()
-      }),
-  }
-}
