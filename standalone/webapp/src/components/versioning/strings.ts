@@ -12,6 +12,9 @@
 /** Mirrors `MAX_DESCRIPTION_LENGTH` in the server config; client trims to avoid a round-trip 400. */
 export const MAX_DESCRIPTION_LENGTH = 240
 
+/** Mirrors `MAX_NAME_LENGTH` in the server config; same rationale. */
+export const MAX_NAME_LENGTH = 80
+
 export const versioningStrings = {
   drawerTitle: "Version history",
   navMenuItem: "Version history",

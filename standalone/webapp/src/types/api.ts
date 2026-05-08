@@ -78,6 +78,4 @@ export type ControlEvent =
     }
   | { type: "DIAGRAM_DELETED" }
 
-export type Envelope =
-  | { kind: "control"; control: ControlEvent }
-  | { kind: "opaque"; payload: string }
+export type Envelope = { kind: "control"; control: ControlEvent }

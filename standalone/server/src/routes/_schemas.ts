@@ -28,6 +28,7 @@ export const DiagramBody = z.object({
   // because the library owns that contract and forward-compatibility there is
   // a library-versioning concern, not a server-validation concern.
   assessments: z.record(z.string(), z.unknown()).default({}),
+  interactive: z.unknown().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 })

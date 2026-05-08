@@ -249,20 +249,12 @@ export const useVersionStore = create<VersionStore>()(
               const reconciled = currentList
                 .map((v) => (v.id === tempId ? (summary as PendingVersion) : v))
                 .filter((v) => !evictedSet.has(v.id))
-              const prevTotal = s.totals[diagramId]
               return {
                 versions: { ...s.versions, [diagramId]: reconciled },
                 totals: {
                   ...s.totals,
-                  // Prefer the authoritative server total when the POST 201
-                  // response includes it; fall back to client derivation for
-                  // older server versions that don't send total yet.
                   [diagramId]:
-                    typeof serverTotal === "number"
-                      ? serverTotal
-                      : typeof prevTotal === "number"
-                        ? prevTotal + 1 - (evictedVersionIds?.length ?? 0)
-                        : reconciled.filter((v) => !v.pending).length,
+                    serverTotal ?? reconciled.filter((v) => !v.pending).length,
                 },
               }
             })

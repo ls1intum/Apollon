@@ -9,7 +9,8 @@ const ConfigSchema = z.object({
   WS_PORT: intEnv(4444),
   CORS_ORIGIN: z.string().optional(),
   REDIS_URL: z.string().default("redis://localhost:6379"),
-  OWNER_SECRET: z.string().min(16).default("development-only-replace-in-prod"),
+  // 32 bytes ≈ 256 bits — the minimum modern guidance for HMAC-SHA256 keys.
+  OWNER_SECRET: z.string().min(32).default("development-only-replace-in-prod"),
   MAX_VERSIONS_PER_DIAGRAM: intEnv(50),
   MAX_SNAPSHOT_BYTES: intEnv(5 * 1024 * 1024),
   MAX_DESCRIPTION_LENGTH: intEnv(240),

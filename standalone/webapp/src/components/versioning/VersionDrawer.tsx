@@ -29,7 +29,11 @@ import {
   NAVBAR_BACKGROUND_COLOR,
   MAX_VERSIONS_PER_DIAGRAM as MAX_VERSIONS,
 } from "@/constants"
-import { MAX_DESCRIPTION_LENGTH, versioningStrings as t } from "./strings"
+import {
+  MAX_DESCRIPTION_LENGTH,
+  MAX_NAME_LENGTH,
+  versioningStrings as t,
+} from "./strings"
 import { relativeTime } from "./relativeTime"
 import { CurrentVersionRow } from "./CurrentVersionRow"
 import { VersionListItem } from "./VersionListItem"
@@ -104,14 +108,10 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   // autosave versions" toggle). Default ON so users see their full history
   // out of the box; flipping it off gives a clean milestone-only view.
   const [showAutosaves, setShowAutosaves] = useState(true)
-  const filteredVersions = useMemo(
-    () => (showAutosaves ? versions : versions.filter(isNamedVersion)),
-    [versions, showAutosaves]
-  )
-  const groupedVersions = useMemo(
-    () => groupUnnamedRuns(filteredVersions),
-    [filteredVersions]
-  )
+  const filteredVersions = showAutosaves
+    ? versions
+    : versions.filter(isNamedVersion)
+  const groupedVersions = groupUnnamedRuns(filteredVersions)
 
   const latestVersion = versions[0]
   const sectionSubtitle = latestVersion
@@ -127,10 +127,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   // the replacer in `structuralFingerprint` — only user-meaningful changes
   // flip the state.
   // ---------------------------------------------------------------------------
-  const latestSavedVersion = useMemo(
-    () => versions.find((v) => !v.pending && !v.failed),
-    [versions]
-  )
+  const latestSavedVersion = versions.find((v) => !v.pending && !v.failed)
   const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(true)
 
@@ -212,14 +209,13 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
     setSubmitting(true)
     const description = draft.trim()
     // Name is now an internal label only — the UI surfaces the description.
-    // Default to a timestamped snapshot when no description is provided so
-    // restored snackbars and copy-link tooltips stay readable.
-    // Name is the first line of the description (capped at 80 chars) and
-    // is used internally for snackbar labels and eviction labelling.
-    // When there is no description the name is left empty — kind:'user'
-    // already protects the version from eviction, and the version list
-    // row already shows #N · time-ago as its primary identifier.
-    const name = description ? description.split("\n")[0]!.slice(0, 80) : ""
+    // Name is the first line of the description, used as a short label in
+    // restored-from snackbars and the kebab "Restored from …" copy. Empty
+    // when the user wrote no description — `#N · time-ago` is already the
+    // version's visible identifier.
+    const name = description
+      ? description.split("\n")[0]!.slice(0, MAX_NAME_LENGTH)
+      : ""
     try {
       const summary = await createVersion(diagramId, editor.model, {
         name,

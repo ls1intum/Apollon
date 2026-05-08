@@ -24,10 +24,6 @@ export const Errors = {
       "If-Match revision does not match current headRev",
       { currentHeadRev }
     ),
-  schemaUnsupported: (msg: string) =>
-    new ApiError(422, "SCHEMA_UNSUPPORTED", msg),
-  redisUnavailable: () =>
-    new ApiError(503, "REDIS_UNAVAILABLE", "Redis is unavailable"),
   internal: (msg = "Internal server error") =>
     new ApiError(500, "INTERNAL", msg),
 }

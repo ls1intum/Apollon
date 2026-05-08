@@ -2,6 +2,7 @@ import type {
   ApollonNode,
   ApollonEdge,
   Assessment,
+  InteractiveElements,
   UMLDiagramType,
 } from "@tumaet/apollon"
 
@@ -14,6 +15,8 @@ export interface Diagram {
   nodes: ApollonNode[]
   edges: ApollonEdge[]
   assessments: Record<string, Assessment>
+  /** Per-element/edge interactivity flags — preserved on round-trip. */
+  interactive?: InteractiveElements
   createdAt: string
   updatedAt: string
 }
@@ -82,6 +85,4 @@ export type ControlEvent =
     }
   | { type: "DIAGRAM_DELETED" }
 
-export type Envelope =
-  | { kind: "control"; control: ControlEvent }
-  | { kind: "opaque"; payload: string }
+export type Envelope = { kind: "control"; control: ControlEvent }

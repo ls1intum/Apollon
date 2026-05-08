@@ -124,7 +124,11 @@ export const ApollonWithConnection: React.FC = () => {
 
         const diagram = await DiagramApiClient.fetchDiagram(diagramId)
         if (cancelled) return
-        log.debug("Fetched diagram data:", diagram)
+        log.debug("Fetched diagram", {
+          diagramId,
+          nodeCount: diagram.nodes?.length ?? 0,
+          edgeCount: diagram.edges?.length ?? 0,
+        })
 
         const editorOptions: ApollonOptions = {
           model: diagram,
@@ -272,11 +276,13 @@ export const ApollonWithConnection: React.FC = () => {
             })
             .catch(async (err) => {
               if (err instanceof ApiError && err.code === "REVISION_MISMATCH") {
+                // Catch the server's hint and rebase to it; if the meta is
+                // absent, KEEP the prior rev rather than clearing it —
+                // clearing would let the very next tick PUT without an
+                // If-Match guard and could clobber a concurrent writer.
                 const meta = err.meta as { currentHeadRev?: number } | undefined
                 if (typeof meta?.currentHeadRev === "number") {
                   lastObservedHeadRev.current = meta.currentHeadRev
-                } else {
-                  lastObservedHeadRev.current = undefined
                 }
               } else {
                 log.error("Autosave failed", err)
@@ -416,12 +422,12 @@ export const ApollonWithConnection: React.FC = () => {
     }
   }, [preview, editor, diagramId, baseReadonly])
 
-  const handleVersionSaved = useCallback((headRev?: number) => {
+  const handleVersionSaved = (headRev?: number) => {
     if (typeof headRev === "number") {
       lastObservedHeadRev.current = headRev
     }
     diagramIsUpdated.current = false
-  }, [])
+  }
 
   const handleExitPreview = useCallback(() => {
     if (!diagramId) return

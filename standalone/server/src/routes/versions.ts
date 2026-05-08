@@ -145,7 +145,7 @@ async function restoreVersion(
     input.diagramId,
     input.fromVersionId
   )
-  if (!restored) throw new RedisAppError("NO_VERSION_BODY")
+  if (!restored) throw Errors.notFound("version body missing")
 
   const autoVid = ulid()
   const nowMs = Date.now()
