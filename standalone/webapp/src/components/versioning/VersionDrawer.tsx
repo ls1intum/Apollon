@@ -261,12 +261,8 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
           editor.model
         )
         onVersionSaved?.(headRev)
-      } catch (err) {
-        if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
-          toast.error(t.failureSchemaUnsupported)
-        } else {
-          toast.error(t.restoreFailed)
-        }
+      } catch {
+        toast.error(t.restoreFailed)
       }
     },
     [editor, restoreVersion, diagramId, onVersionSaved]

@@ -422,12 +422,15 @@ export const ApollonWithConnection: React.FC = () => {
     }
   }, [preview, editor, diagramId, baseReadonly])
 
-  const handleVersionSaved = (headRev?: number) => {
+  // Memoised because `handleRestoreFromPreview`'s useCallback lists it
+  // as a dep — without stable identity the restore handler gets a fresh
+  // closure every render and the banner's `onRestore` prop churns.
+  const handleVersionSaved = useCallback((headRev?: number) => {
     if (typeof headRev === "number") {
       lastObservedHeadRev.current = headRev
     }
     diagramIsUpdated.current = false
-  }
+  }, [])
 
   const handleExitPreview = useCallback(() => {
     if (!diagramId) return
@@ -456,13 +459,9 @@ export const ApollonWithConnection: React.FC = () => {
           next.delete("version")
           setSearchParams(next, { replace: true })
         }
-      } catch (err) {
+      } catch {
         restoredDuringPreviewRef.current = false
-        if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
-          toast.error(t.failureSchemaUnsupported)
-        } else {
-          toast.error(t.restoreFailed)
-        }
+        toast.error(t.restoreFailed)
       }
     },
     [

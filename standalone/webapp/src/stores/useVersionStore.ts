@@ -418,7 +418,7 @@ export const useVersionStore = create<VersionStore>()(
                   restoredVersion?.name?.trim() ||
                   (restoredVersion?.seq !== undefined
                     ? `#${restoredVersion.seq}`
-                    : ""),
+                    : versionId.slice(0, 8)),
                 expiresAt: Date.now() + UNDO_WINDOW_MS,
               },
             })

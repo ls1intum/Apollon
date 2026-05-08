@@ -40,7 +40,6 @@ export type ApiErrorCode =
   | "REVISION_MISMATCH"
   | "BODY_TOO_LARGE"
   | "NO_HEAD"
-  | "SCHEMA_UNSUPPORTED"
   | "REDIS_UNAVAILABLE"
   | "INTERNAL"
 

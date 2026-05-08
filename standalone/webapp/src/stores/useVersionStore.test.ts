@@ -1,6 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { ControlEvent, VersionSummary } from "@/types"
+import { VersionApiClient } from "@/services/DiagramApiClient"
+import type { UMLModel } from "@tumaet/apollon"
 import { useVersionStore, selectVersions } from "./useVersionStore"
+
+const fakeModel: UMLModel = {
+  version: "4.0.0",
+  id: "d1",
+  title: "",
+  type: "ClassDiagram",
+  nodes: [],
+  edges: [],
+  assessments: {},
+}
 
 function summary(
   id: string,
@@ -448,5 +460,80 @@ describe("useVersionStore.applyControlEvent — VERSION_RESTORED", () => {
       kind: "user",
     }
     expect(withoutActor.actor).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Optimistic UI rollback fidelity. Every action that mutates local state
+// before the server confirms must restore the prior state on failure —
+// otherwise a flaky network leaves the UI in a state that doesn't match
+// what the server believes.
+// ---------------------------------------------------------------------------
+
+describe("optimistic rollback on action failure", () => {
+  it("createVersion: failed POST flips the optimistic row to failed:true (preserves tempId)", async () => {
+    const spy = vi
+      .spyOn(VersionApiClient, "create")
+      .mockRejectedValueOnce(new Error("network"))
+
+    await expect(
+      useVersionStore.getState().createVersion("d1", fakeModel, {})
+    ).rejects.toThrow(/network/)
+
+    const list = useVersionStore.getState().versions.d1 ?? []
+    expect(list).toHaveLength(1)
+    const row = list[0]!
+    expect(row.failed).toBe(true)
+    expect(row.pending).toBeUndefined()
+    expect(row.id).toMatch(/^pending-/)
+    spy.mockRestore()
+  })
+
+  it("editVersionInfo: failed PATCH restores the prior name + description", async () => {
+    useVersionStore.setState((s) => ({
+      versions: {
+        ...s.versions,
+        d1: [
+          summary("v1", { name: "before", description: "before-desc" }),
+          summary("v2"),
+        ],
+      },
+    }))
+    const spy = vi
+      .spyOn(VersionApiClient, "editInfo")
+      .mockRejectedValueOnce(new Error("forbidden"))
+
+    await expect(
+      useVersionStore.getState().editVersionInfo("d1", "v1", {
+        name: "after",
+        description: "after-desc",
+      })
+    ).rejects.toThrow(/forbidden/)
+
+    const restored = useVersionStore
+      .getState()
+      .versions.d1!.find((v) => v.id === "v1")!
+    expect(restored.name).toBe("before")
+    expect(restored.description).toBe("before-desc")
+    spy.mockRestore()
+  })
+
+  it("deleteVersion: failed DELETE reinserts the row at its original index", async () => {
+    const original = [summary("a"), summary("b"), summary("c")]
+    useVersionStore.setState((s) => ({
+      versions: { ...s.versions, d1: original },
+      totals: { ...s.totals, d1: 3 },
+    }))
+    const spy = vi
+      .spyOn(VersionApiClient, "delete")
+      .mockRejectedValueOnce(new Error("conflict"))
+
+    await expect(
+      useVersionStore.getState().deleteVersion("d1", "b")
+    ).rejects.toThrow(/conflict/)
+
+    const ids = useVersionStore.getState().versions.d1!.map((v) => v.id)
+    expect(ids).toEqual(["a", "b", "c"])
+    spy.mockRestore()
   })
 })
