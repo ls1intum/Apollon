@@ -330,12 +330,13 @@ export const ApollonWithConnection: React.FC = () => {
     }
   }, [diagramId, viewType, collaborationUser])
 
-  // Keep the URL `?version=` parameter in sync with the preview state both
-  // ways: on permalink open / browser back-forward / external link change,
-  // enter or exit preview accordingly. Click-row entries don't write to
-  // the URL; they go straight through `enterPreview` and don't trigger
-  // this sync. Initial-mount permalink open is also handled here so the
-  // editor-init effect doesn't have to track URL params.
+  // Sync the URL `?version=` param INTO preview state — permalink open,
+  // history nav, external link change. We do NOT mirror the other way:
+  // click-row entries from the drawer go through `enterPreview` directly
+  // and don't write to the URL. So an empty URL alone is not a signal to
+  // exit; we only exit when the URL TRANSITIONS from has-version to
+  // no-version (browser back / external removal of `?version=`).
+  const prevPreviewFromUrl = useRef<string | null>(null)
   useEffect(() => {
     if (!diagramId || !editor) return
     if (previewFromUrl && preview?.versionId !== previewFromUrl) {
@@ -343,9 +344,14 @@ export const ApollonWithConnection: React.FC = () => {
         .getState()
         .enterPreview(diagramId, previewFromUrl)
         .catch(() => toast.error("This version is no longer available."))
-    } else if (!previewFromUrl && preview !== null) {
+    } else if (
+      !previewFromUrl &&
+      prevPreviewFromUrl.current !== null &&
+      preview !== null
+    ) {
       exitPreview()
     }
+    prevPreviewFromUrl.current = previewFromUrl ?? null
   }, [previewFromUrl, preview?.versionId, diagramId, editor, exitPreview])
 
   const baseReadonly = viewType === DiagramView.SEE_FEEDBACK
