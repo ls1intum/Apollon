@@ -183,10 +183,9 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
       setHasChanges(true)
       return
     }
-    // Yjs fires `subscribeToModelChange` on every keystroke. Computing the
-    // structural fingerprint involves a JSON.stringify of all nodes/edges,
-    // which scales O(N) — hot path for 500+ node diagrams. Debounce so the
-    // diff lights up the Save button on edit pause, not on every character.
+    // Debounced — `structuralFingerprint` JSON.stringify's all nodes/edges
+    // and `subscribeToModelChange` fires on every keystroke (O(N) per char
+    // on large diagrams).
     let timer: ReturnType<typeof setTimeout> | null = null
     const recompute = () => {
       setHasChanges(structuralFingerprint(editor.model) !== savedFingerprint)

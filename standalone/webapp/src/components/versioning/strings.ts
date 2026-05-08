@@ -9,11 +9,7 @@
  * translation drift starts.
  */
 
-/**
- * Mirrors `MAX_DESCRIPTION_LENGTH` in `server/src/config.ts`. Server is
- * the source of truth (rejects > 240 with HTTP 400); the client trims so
- * the user gets immediate feedback rather than a round-trip 400.
- */
+/** Mirrors `MAX_DESCRIPTION_LENGTH` in the server config; client trims to avoid a round-trip 400. */
 export const MAX_DESCRIPTION_LENGTH = 240
 
 export const versioningStrings = {

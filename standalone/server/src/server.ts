@@ -9,11 +9,10 @@ import { startRelayServer } from "./ws"
 async function main() {
   const config = loadConfig()
 
-  // Connect Redis and load the apollon Lua library BEFORE accepting
-  // traffic. If either fails we exit non-zero — serving HTTP with a
-  // half-initialised backend means every FCALL races against the load
-  // and clients see "Function not found" errors. Fail closed: the
-  // process supervisor (k8s, docker, systemd) will restart us.
+  // Connect Redis and load the apollon Lua library before accepting
+  // traffic. Failure here exits non-zero so the supervisor restarts us;
+  // a half-initialised server would race FCALLs against the load and
+  // surface "Function not found" to clients.
   const redis = createRedisClient(config.REDIS_URL)
   await redis.connect()
   logger.info({ event: "redis.connected" }, "redis connected")

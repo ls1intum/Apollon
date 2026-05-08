@@ -164,9 +164,7 @@ export class WebSocketManager {
       this.reconnectTimeout = null
     }
     if (this.websocket?.readyState === WebSocket.OPEN) {
-      // 1001 "Going Away" — the page is unloading / component unmounting.
-      // 1000 "Normal Closure" is reserved for intentional end-of-session
-      // closes; navigation/unmount is the "going away" semantic.
+      // 1001 "Going Away" — page unload / component unmount.
       this.websocket.close(1001)
     }
     this.websocket = null

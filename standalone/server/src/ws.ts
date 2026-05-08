@@ -36,6 +36,8 @@ interface RelayServer {
 interface StartOptions {
   port: number
   host?: string
+  /** Override the per-room socket cap; integration tests use a smaller value. */
+  maxSocketsPerRoom?: number
 }
 
 // Cap on a single WS frame the relay will accept and forward. Yjs updates
@@ -45,24 +47,23 @@ const MAX_PAYLOAD_BYTES = 1_048_576 // 1 MiB
 
 const HEARTBEAT_INTERVAL_MS = 30_000
 
-// Per-room socket cap. A single URL bearer (or an attacker who has the
-// link) cannot pin unlimited memory on the relay by opening sockets to
-// the same diagram. 100 is comfortably above any realistic team size.
-const MAX_SOCKETS_PER_ROOM = 100
+// Per-room socket cap to bound URL-bearer abuse — 100 sits well above
+// any realistic team size for a single diagram.
+const DEFAULT_MAX_SOCKETS_PER_ROOM = 100
 
 interface ExtendedWebSocketWithAlive extends ExtendedWebSocket {
   isAlive?: boolean
 }
 
 export function startRelayServer(opts: StartOptions): RelayServer {
+  const maxSocketsPerRoom =
+    opts.maxSocketsPerRoom ?? DEFAULT_MAX_SOCKETS_PER_ROOM
   const wss = new WebSocketServer({
     port: opts.port,
     host: opts.host,
     maxPayload: MAX_PAYLOAD_BYTES,
-    // permessage-deflate is disabled to avoid CRIME-style compression
-    // side-channel risks (OWASP WebSocket Security cheat sheet) and the
-    // memory amplification of zlib contexts per-socket. Diagram updates
-    // are small JSON-wrapped Yjs binary; compression yields little.
+    // Disabled per OWASP WebSocket guidance (CRIME-style compression
+    // side-channels); Yjs binary payloads compress poorly anyway.
     perMessageDeflate: false,
   })
   const rooms: Map<string, Set<ExtendedWebSocket>> = new Map()
@@ -180,7 +181,7 @@ export function startRelayServer(opts: StartOptions): RelayServer {
         room = new Set()
         rooms.set(diagramId, room)
       }
-      if (room.size >= MAX_SOCKETS_PER_ROOM) {
+      if (room.size >= maxSocketsPerRoom) {
         logger.warn(
           { diagramId, size: room.size },
           "ws room over capacity, rejecting connection"

@@ -23,9 +23,15 @@ interface Harness {
 
 let harness: Harness | undefined
 
-async function startHarness(): Promise<Harness> {
+async function startHarness(
+  options: { maxSocketsPerRoom?: number } = {}
+): Promise<Harness> {
   const port = await getFreePort()
-  const relay = startRelayServer({ port, host: "127.0.0.1" })
+  const relay = startRelayServer({
+    port,
+    host: "127.0.0.1",
+    maxSocketsPerRoom: options.maxSocketsPerRoom,
+  })
   return { port, relay }
 }
 
@@ -114,14 +120,12 @@ describe("WebSocket relay", () => {
     b.close()
   })
 
-  it("rejects the 101st socket per room with code 1013 (try again later)", async () => {
-    // The relay caps concurrent sockets per room at 100 to bound URL-bearer
-    // abuse. Opening exactly the cap should succeed; the cap+1th must be
-    // rejected so a single client can't pin unlimited memory.
-    harness = await startHarness()
+  it("rejects the (cap+1)th socket per room with code 1013 (try again later)", async () => {
+    const cap = 4
+    harness = await startHarness({ maxSocketsPerRoom: cap })
     const accepted: WebSocket[] = []
     try {
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < cap; i++) {
         accepted.push(await connect(harness.port, "cap-room"))
       }
       const overflow = new WebSocket(
@@ -132,9 +136,6 @@ describe("WebSocket relay", () => {
       })
       expect(code).toBe(1013)
     } finally {
-      // Close every accepted socket and wait for the OS-level shutdown
-      // before the harness's relay.close() runs, so subsequent tests
-      // start with a clean fd budget and an empty room map.
       await Promise.all(
         accepted.map(
           (ws) =>
@@ -146,7 +147,7 @@ describe("WebSocket relay", () => {
         )
       )
     }
-  }, 15_000)
+  })
 
   it("scopes broadcasts per-diagram", async () => {
     harness = await startHarness()

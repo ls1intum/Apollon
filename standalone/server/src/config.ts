@@ -32,9 +32,8 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>
 
 const DEFAULT_OWNER_SECRET = "development-only-replace-in-prod"
-// Catch common typo variants ("development-only-replace-in-production",
-// "development-only", capitalisation, …) so a copy-pasted `.env.example`
-// can't slip past the production fail-closed guard.
+// Prefix-match catches typo'd / case-shifted variants so a copy-pasted
+// `.env.example` can't slip past the production guard.
 const DEFAULT_OWNER_SECRET_PREFIX = "development-only-replace"
 
 export function isDefaultOwnerSecret(secret: string): boolean {
@@ -52,8 +51,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       .join("; ")
     throw new Error(`Invalid environment configuration: ${issues}`)
   }
-  // Production must not boot with the well-known default HMAC key —
-  // anyone could mint owner cookies for any diagram.
+  // Fail-closed: a default HMAC key in production lets anyone mint
+  // owner cookies for any diagram.
   if (
     env.NODE_ENV === "production" &&
     isDefaultOwnerSecret(result.data.OWNER_SECRET)

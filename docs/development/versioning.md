@@ -119,7 +119,7 @@ don't stack them), cached forever in a module-level `Map` keyed by
 needs to invalidate.
 
 This explicitly is *not* a server endpoint. Booting JSDOM + the full
-library bundle on the backend for a 64×40 thumbnail is the wrong
+library bundle on the server for a 64×40 thumbnail is the wrong
 tradeoff: it adds cold-start latency, doesn't scale with diagram count,
 and doesn't work in the no-server deployment. The PDF export path
 (`POST /converter/pdf` → `pdf-conversion-worker-thread`) still uses

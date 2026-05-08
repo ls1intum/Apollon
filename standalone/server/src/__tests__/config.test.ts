@@ -13,9 +13,6 @@ describe("loadConfig", () => {
     })
 
     it("refuses typo variants of the default sentinel in production", () => {
-      // The prefix-match guard catches operators copying the older
-      // .env.example string verbatim, swapping case, or forgetting to
-      // shorten "production" → "prod".
       expect(() =>
         loadConfig({
           NODE_ENV: "production",
@@ -39,8 +36,6 @@ describe("loadConfig", () => {
     })
 
     it("permits the default sentinel outside production", () => {
-      // Local dev / staging / test all use the default; the rest of the
-      // app's URL-bearer model is not stronger anyway.
       const dev = loadConfig({
         NODE_ENV: "development",
         OWNER_SECRET: "development-only-replace-in-prod",
