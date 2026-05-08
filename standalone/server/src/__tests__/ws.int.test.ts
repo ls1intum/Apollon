@@ -114,6 +114,40 @@ describe("WebSocket relay", () => {
     b.close()
   })
 
+  it("rejects the 101st socket per room with code 1013 (try again later)", async () => {
+    // The relay caps concurrent sockets per room at 100 to bound URL-bearer
+    // abuse. Opening exactly the cap should succeed; the cap+1th must be
+    // rejected so a single client can't pin unlimited memory.
+    harness = await startHarness()
+    const accepted: WebSocket[] = []
+    try {
+      for (let i = 0; i < 100; i++) {
+        accepted.push(await connect(harness.port, "cap-room"))
+      }
+      const overflow = new WebSocket(
+        `ws://127.0.0.1:${harness.port}?diagramId=cap-room`
+      )
+      const code = await new Promise<number>((resolve) => {
+        overflow.on("close", (c) => resolve(c))
+      })
+      expect(code).toBe(1013)
+    } finally {
+      // Close every accepted socket and wait for the OS-level shutdown
+      // before the harness's relay.close() runs, so subsequent tests
+      // start with a clean fd budget and an empty room map.
+      await Promise.all(
+        accepted.map(
+          (ws) =>
+            new Promise<void>((resolve) => {
+              if (ws.readyState === WebSocket.CLOSED) return resolve()
+              ws.once("close", () => resolve())
+              ws.close()
+            })
+        )
+      )
+    }
+  }, 15_000)
+
   it("scopes broadcasts per-diagram", async () => {
     harness = await startHarness()
     const a1 = await connect(harness.port, "d1")

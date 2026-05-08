@@ -32,9 +32,16 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>
 
 const DEFAULT_OWNER_SECRET = "development-only-replace-in-prod"
+// Catch common typo variants ("development-only-replace-in-production",
+// "development-only", capitalisation, …) so a copy-pasted `.env.example`
+// can't slip past the production fail-closed guard.
+const DEFAULT_OWNER_SECRET_PREFIX = "development-only-replace"
 
 export function isDefaultOwnerSecret(secret: string): boolean {
-  return secret === DEFAULT_OWNER_SECRET
+  return (
+    secret === DEFAULT_OWNER_SECRET ||
+    secret.toLowerCase().startsWith(DEFAULT_OWNER_SECRET_PREFIX)
+  )
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {

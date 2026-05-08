@@ -35,6 +35,13 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
       <Box
         component="button"
         type="button"
+        // Match the listbox `aria-activedescendant` id pattern so keyboard
+        // nav (which makes the group's first version `activeRowId`) lands
+        // on a real DOM node — when collapsed, the inner ListItems aren't
+        // mounted yet, so without this the aria reference dangles.
+        id={`version-row-${group.first.id}`}
+        role="option"
+        aria-selected={group.first.id === activeRowId}
         onClick={() => setExpanded((v) => !v)}
         sx={{
           width: "100%",
