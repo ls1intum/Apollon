@@ -14,11 +14,13 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import { useExportAsPPTX } from "@/hooks"
 import { log } from "@/logger"
 import {
-  BackgroundOption,
   DEFAULT_PPTX_PERSISTED_SETTINGS,
   DiagramFitOption,
   FontFaceOption,
   loadPptxSettings,
+  MAX_PPTX_SCALE_PERCENT,
+  MIN_PPTX_SCALE_PERCENT,
+  normalizePptxScalePercent,
   savePptxSettings,
   SlideSizeOption,
 } from "@/lib/pptxExportSettings"
@@ -36,15 +38,72 @@ const FONT_OPTIONS: ReadonlyArray<{
   { value: "Helvetica", label: "Helvetica" },
 ]
 
+const TEXT_PRIMARY = "var(--apollon-primary-contrast)"
+const TEXT_SECONDARY = "var(--apollon-secondary)"
+const INPUT_BORDER = "var(--apollon-switch-box-border-color)"
+const INPUT_BORDER_HOVER = "var(--apollon-primary-contrast)"
+const ACCENT = "var(--apollon-primary)"
+
 const stripPptxExtension = (name: string) => name.replace(/\.pptx$/i, "")
 
 const FIT_HELPER_TEXT: Record<DiagramFitOption, string> = {
   shrink: "Keeps the source size when it fits; only shrinks larger diagrams.",
-  fill: "Scales the diagram up or down to fill the slide canvas (preserves aspect ratio).",
-  actual: "Centres the diagram at its source size; may overflow the slide.",
+  fill: "Scales the diagram up or down to fill the slide while preserving its proportions.",
+  actual: "Centers the diagram at its source size; it may overflow the slide.",
 }
 
-const inputColorSx = { input: { color: "var(--apollon-primary-contrast)" } }
+const inputSx = {
+  "& .MuiInputBase-input": { color: TEXT_PRIMARY },
+  "& .MuiInputBase-root, &.MuiInputBase-root": { color: TEXT_PRIMARY },
+  "& .MuiOutlinedInput-notchedOutline": { borderColor: INPUT_BORDER },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: INPUT_BORDER_HOVER,
+  },
+  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: ACCENT,
+  },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: ACCENT,
+  },
+  "& .MuiInputLabel-root": { color: TEXT_SECONDARY },
+  "& .MuiInputLabel-root.Mui-focused": { color: ACCENT },
+  "& .MuiSelect-icon": { color: TEXT_SECONDARY },
+} as const
+
+const radioSx = {
+  color: TEXT_SECONDARY,
+  "&.Mui-checked": { color: ACCENT },
+} as const
+
+const radioLabelSx = {
+  alignItems: "flex-start",
+  color: TEXT_PRIMARY,
+  my: 0.25,
+  "& .MuiRadio-root": { pt: 0.25 },
+  "& .MuiFormControlLabel-label": { color: TEXT_PRIMARY },
+} as const
+
+const selectMenuProps = {
+  PaperProps: {
+    sx: {
+      bgcolor: "var(--apollon-background)",
+      color: TEXT_PRIMARY,
+      "& .MuiMenuItem-root": { color: TEXT_PRIMARY },
+      "& .MuiMenuItem-root.Mui-selected": {
+        bgcolor: "var(--apollon-background-variant)",
+      },
+      "& .MuiMenuItem-root.Mui-selected:hover, & .MuiMenuItem-root:hover": {
+        bgcolor: "var(--apollon-background-variant)",
+      },
+    },
+  },
+} as const
+
+const helperSx = {
+  color: TEXT_SECONDARY,
+  display: "block",
+  mt: 0.5,
+} as const
 
 export const PPTXExportModal = () => {
   const { editor } = useEditorContext()
@@ -55,9 +114,9 @@ export const PPTXExportModal = () => {
   // announce each field by its label. `useId` is stable across renders.
   const idFileName = useId()
   const idSlideSize = useId()
+  const idScale = useId()
   const idDiagramFit = useId()
   const idFont = useId()
-  const idBackground = useId()
 
   const defaultFileName = stripPptxExtension(editor?.model.title || "diagram")
 
@@ -65,13 +124,11 @@ export const PPTXExportModal = () => {
   const [initial] = useState(loadPptxSettings)
   const [fileName, setFileName] = useState(defaultFileName)
   const [slideSize, setSlideSize] = useState<SlideSizeOption>(initial.slideSize)
+  const [scalePercent, setScalePercent] = useState(String(initial.scalePercent))
   const [diagramFit, setDiagramFit] = useState<DiagramFitOption>(
     initial.diagramFit
   )
   const [fontFace, setFontFace] = useState<FontFaceOption>(initial.fontFace)
-  const [background, setBackground] = useState<BackgroundOption>(
-    initial.background
-  )
   const [submitting, setSubmitting] = useState(false)
   const fileNameRef = useRef<HTMLInputElement>(null)
 
@@ -81,13 +138,18 @@ export const PPTXExportModal = () => {
   }, [])
 
   const trimmedFileName = fileName.trim()
-  const canSubmit = trimmedFileName.length > 0 && !submitting
+  const parsedScalePercent = Number.parseFloat(scalePercent)
+  const isScaleValid =
+    Number.isFinite(parsedScalePercent) &&
+    parsedScalePercent >= MIN_PPTX_SCALE_PERCENT &&
+    parsedScalePercent <= MAX_PPTX_SCALE_PERCENT
+  const canSubmit = trimmedFileName.length > 0 && isScaleValid && !submitting
 
   const resetToDefaults = () => {
     setSlideSize(DEFAULT_PPTX_PERSISTED_SETTINGS.slideSize)
+    setScalePercent(String(DEFAULT_PPTX_PERSISTED_SETTINGS.scalePercent))
     setDiagramFit(DEFAULT_PPTX_PERSISTED_SETTINGS.diagramFit)
     setFontFace(DEFAULT_PPTX_PERSISTED_SETTINGS.fontFace)
-    setBackground(DEFAULT_PPTX_PERSISTED_SETTINGS.background)
     setFileName(defaultFileName)
   }
 
@@ -96,13 +158,20 @@ export const PPTXExportModal = () => {
     if (!canSubmit) return
     setSubmitting(true)
     try {
-      savePptxSettings({ slideSize, diagramFit, fontFace, background })
+      const normalizedScalePercent =
+        normalizePptxScalePercent(parsedScalePercent)
+      savePptxSettings({
+        slideSize,
+        scalePercent: normalizedScalePercent,
+        diagramFit,
+        fontFace,
+      })
       await exportPptx({
         fileName: trimmedFileName,
         slideSize,
+        scalePercent: normalizedScalePercent,
         diagramFit,
         fontFace,
-        background,
       })
       closeModal()
     } catch (err) {
@@ -113,13 +182,34 @@ export const PPTXExportModal = () => {
     }
   }
 
+  const radioOptionLabel = (title: string, description?: string) => (
+    <div className="flex flex-col gap-0">
+      <Typography sx={{ color: TEXT_PRIMARY, lineHeight: 1.35 }}>
+        {title}
+      </Typography>
+      {description && (
+        <Typography
+          variant="caption"
+          sx={{ color: TEXT_SECONDARY, display: "block", lineHeight: 1.25 }}
+        >
+          {description}
+        </Typography>
+      )}
+    </div>
+  )
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <Typography variant="body2" sx={{ color: TEXT_SECONDARY }}>
+        Create an editable PowerPoint (.pptx) file for PowerPoint, Keynote, and
+        other compatible presentation apps.
+      </Typography>
+
       <div className="flex flex-col gap-1">
         <label
           htmlFor={idFileName}
           className="form-label text-sm"
-          style={{ color: "var(--apollon-primary-contrast)" }}
+          style={{ color: TEXT_PRIMARY }}
         >
           File name
         </label>
@@ -131,14 +221,11 @@ export const PPTXExportModal = () => {
           value={fileName}
           onChange={(e) => setFileName(e.target.value)}
           variant="outlined"
-          sx={inputColorSx}
+          sx={inputSx}
           slotProps={{
             input: {
               endAdornment: (
-                <Typography
-                  className="text-gray-500"
-                  sx={{ pr: 1, color: "inherit" }}
-                >
+                <Typography sx={{ pr: 1, color: TEXT_SECONDARY }}>
                   .pptx
                 </Typography>
               ),
@@ -163,43 +250,82 @@ export const PPTXExportModal = () => {
         >
           <FormControlLabel
             value="fit"
-            control={<Radio />}
-            label={
-              <div className="flex flex-col">
-                <Typography>Fit to content</Typography>
-                <Typography variant="caption" className="text-gray-500">
-                  Slide canvas matches the diagram bounds. Best for standalone
-                  files.
-                </Typography>
-              </div>
-            }
+            sx={radioLabelSx}
+            control={<Radio sx={radioSx} />}
+            label={radioOptionLabel(
+              "Fit to content",
+              "Use the diagram bounds as the slide size."
+            )}
           />
           <FormControlLabel
             value="widescreen"
-            control={<Radio />}
-            label={
-              <div className="flex flex-col">
-                <Typography>Widescreen 16:9 (13.33″ × 7.5″)</Typography>
-                <Typography variant="caption" className="text-gray-500">
-                  Diagram centred on a 16:9 canvas. Drops cleanly into modern
-                  decks.
-                </Typography>
-              </div>
-            }
+            sx={radioLabelSx}
+            control={<Radio sx={radioSx} />}
+            label={radioOptionLabel(
+              "Widescreen 16:9 (13.33″ × 7.5″)",
+              "Use the standard format for most modern presentations."
+            )}
           />
           <FormControlLabel
             value="standard"
-            control={<Radio />}
-            label={
-              <div className="flex flex-col">
-                <Typography>Standard 4:3 (10″ × 7.5″)</Typography>
-                <Typography variant="caption" className="text-gray-500">
-                  Older deck format.
-                </Typography>
-              </div>
-            }
+            sx={radioLabelSx}
+            control={<Radio sx={radioSx} />}
+            label={radioOptionLabel(
+              "Standard 4:3 (10″ × 7.5″)",
+              "Use this for older 4:3 presentations."
+            )}
           />
         </RadioGroup>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor={idScale}
+          className="form-label text-sm"
+          style={{ color: TEXT_PRIMARY }}
+        >
+          Scale
+        </label>
+        <TextField
+          id={idScale}
+          value={scalePercent}
+          onChange={(e) => setScalePercent(e.target.value)}
+          type="number"
+          size="small"
+          required
+          error={!isScaleValid}
+          helperText={
+            isScaleValid
+              ? "100% keeps the current diagram size. Increase it to make the diagram larger."
+              : `Enter a value from ${MIN_PPTX_SCALE_PERCENT}% to ${MAX_PPTX_SCALE_PERCENT}%.`
+          }
+          sx={{
+            ...inputSx,
+            "& .MuiFormHelperText-root": {
+              color: isScaleValid
+                ? TEXT_SECONDARY
+                : "var(--apollon-alert-danger-color)",
+            },
+          }}
+          slotProps={{
+            htmlInput: {
+              min: MIN_PPTX_SCALE_PERCENT,
+              max: MAX_PPTX_SCALE_PERCENT,
+              step: 5,
+            },
+            input: {
+              endAdornment: (
+                <Typography sx={{ color: TEXT_SECONDARY, pr: 1 }}>%</Typography>
+              ),
+            },
+          }}
+        />
+        {slideSize !== "fit" && diagramFit === "fill" && (
+          <Typography variant="caption" sx={helperSx}>
+            Fill slide always uses the selected slide size, so scale does not
+            change the final size on the slide.
+          </Typography>
+        )}
       </div>
 
       {slideSize !== "fit" && (
@@ -220,21 +346,24 @@ export const PPTXExportModal = () => {
           >
             <FormControlLabel
               value="shrink"
-              control={<Radio />}
+              sx={radioLabelSx}
+              control={<Radio sx={radioSx} />}
               label="Shrink to fit"
             />
             <FormControlLabel
               value="fill"
-              control={<Radio />}
+              sx={radioLabelSx}
+              control={<Radio sx={radioSx} />}
               label="Fill slide"
             />
             <FormControlLabel
               value="actual"
-              control={<Radio />}
+              sx={radioLabelSx}
+              control={<Radio sx={radioSx} />}
               label="Actual size"
             />
           </RadioGroup>
-          <Typography variant="caption" className="text-gray-500">
+          <Typography variant="caption" sx={helperSx}>
             {FIT_HELPER_TEXT[diagramFit]}
           </Typography>
         </div>
@@ -244,7 +373,7 @@ export const PPTXExportModal = () => {
         <span
           id={idFont}
           className="form-label text-sm"
-          style={{ color: "var(--apollon-primary-contrast)" }}
+          style={{ color: TEXT_PRIMARY }}
         >
           Font
         </span>
@@ -253,7 +382,8 @@ export const PPTXExportModal = () => {
           onChange={(e) => setFontFace(e.target.value as FontFaceOption)}
           size="small"
           inputProps={{ "aria-labelledby": idFont, "aria-label": "Font" }}
-          sx={{ color: "var(--apollon-primary-contrast)" }}
+          sx={inputSx}
+          MenuProps={selectMenuProps}
         >
           {FONT_OPTIONS.map((opt) => (
             <MenuItem key={opt.value} value={opt.value}>
@@ -261,34 +391,10 @@ export const PPTXExportModal = () => {
             </MenuItem>
           ))}
         </Select>
-        <Typography variant="caption" className="text-gray-500">
-          PowerPoint stores a single font name without fallbacks; pick one
-          installed wherever the file will be opened.
+        <Typography variant="caption" sx={helperSx}>
+          The exported file stores one font name. Choose a font that is
+          installed where the file will be opened.
         </Typography>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <Typography
-          id={idBackground}
-          variant="body2"
-          component="span"
-          className="form-label"
-        >
-          Background
-        </Typography>
-        <RadioGroup
-          row
-          aria-labelledby={idBackground}
-          value={background}
-          onChange={(e) => setBackground(e.target.value as BackgroundOption)}
-        >
-          <FormControlLabel value="white" control={<Radio />} label="White" />
-          <FormControlLabel
-            value="transparent"
-            control={<Radio />}
-            label="Transparent"
-          />
-        </RadioGroup>
       </div>
 
       <div className="flex items-center justify-between pt-1">
@@ -296,7 +402,7 @@ export const PPTXExportModal = () => {
           type="button"
           onClick={resetToDefaults}
           className="text-sm hover:underline"
-          style={{ color: "var(--apollon-primary)" }}
+          style={{ color: ACCENT }}
         >
           Reset to defaults
         </button>

@@ -1,5 +1,6 @@
 import { useEditorContext } from "@/contexts"
 import {
+  normalizePptxScalePercent,
   PptxExportSettings,
   SLIDE_DIMENSIONS_IN,
 } from "@/lib/pptxExportSettings"
@@ -26,9 +27,9 @@ export const useExportAsPPTX = () => {
     const apollonSVG = await editor.exportAsSVG({ svgMode: "compat" })
 
     const slideSize = settings.slideSize ?? "fit"
+    const scale = normalizePptxScalePercent(settings.scalePercent) / 100
     const diagramFit = settings.diagramFit ?? "shrink"
     const fontFace = settings.fontFace ?? "auto"
-    const background = settings.background ?? "white"
     const fileName =
       (settings.fileName?.trim() || editor.model.title || "diagram") + ".pptx"
 
@@ -37,7 +38,8 @@ export const useExportAsPPTX = () => {
     const viewport = computeSlideViewport(
       apollonSVG.clip,
       slideCanvas,
-      diagramFit
+      diagramFit,
+      scale
     )
 
     const PptxGenJS = (await import("pptxgenjs")).default
@@ -57,7 +59,7 @@ export const useExportAsPPTX = () => {
 
     const slide = pres.addSlide()
     renderSvgToSlide(apollonSVG.svg, apollonSVG.clip, pres, slide, {
-      background: background === "white" ? "FFFFFF" : null,
+      background: "FFFFFF",
       fontFace: fontFace === "auto" ? undefined : fontFace,
       viewport,
     })

@@ -292,6 +292,8 @@ const parseNumOrInherit = (raw: string | null, parent: number): number => {
   return Number.isFinite(n) ? n : parent
 }
 
+const WHITE_HEX = "FFFFFF"
+
 function inheritPaint(
   el: Element,
   style: Record<string, string>,
@@ -485,6 +487,7 @@ function emitRect(
   const w = getNum(el, "width", style, 0)
   const h = getNum(el, "height", style, 0)
   if (w <= 0 || h <= 0) return
+  if (isRedundantWhiteBackgroundRect(paint)) return
   const rx = getNum(el, "rx", style, 0)
   const ry = getNum(el, "ry", style, rx)
 
@@ -519,6 +522,15 @@ function emitRect(
     isRound ? ctx.pres.ShapeType.roundRect : ctx.pres.ShapeType.rect,
     props
   )
+}
+
+function isRedundantWhiteBackgroundRect(paint: PaintStyle): boolean {
+  const hasVisibleStroke =
+    !!paint.stroke && paint.opacity * paint.strokeOpacity > 0
+  const hasWhiteFill =
+    paint.fill === WHITE_HEX && paint.opacity * paint.fillOpacity > 0
+
+  return hasWhiteFill && !hasVisibleStroke
 }
 
 function emitEllipse(
@@ -1123,9 +1135,9 @@ export type SvgToPptxOptions = {
 
 /**
  * Compute the viewport (slide-canvas size + SVG→slide transform) for a given
- * clip, slide-canvas, and fit mode. The diagram is centred in the canvas.
- * When `slideCanvasInches` is omitted, the canvas matches the diagram exactly
- * (1:1 fit-to-content) and `fit` is ignored.
+ * clip, slide-canvas, fit mode, and source scale. The diagram is centred in
+ * the canvas. When `slideCanvasInches` is omitted, the canvas matches the
+ * scaled diagram exactly and `fit` is ignored.
  *
  * The slide canvas is clamped to a 1″ minimum because PowerPoint refuses to
  * open files with sub-1″ slides on some renderer paths (observed on Office
@@ -1134,34 +1146,38 @@ export type SvgToPptxOptions = {
 export function computeSlideViewport(
   clip: { width: number; height: number },
   slideCanvasInches?: { width: number; height: number },
-  fit: DiagramFitOption = "shrink"
+  fit: DiagramFitOption = "shrink",
+  sourceScale = 1
 ): SlideViewport {
   const clipWidthIn = clip.width / PX_PER_INCH
   const clipHeightIn = clip.height / PX_PER_INCH
+  const normalizedSourceScale = Math.max(sourceScale, 0.0001)
   if (!slideCanvasInches) {
     return {
-      slideWidth: Math.max(clipWidthIn, 1),
-      slideHeight: Math.max(clipHeightIn, 1),
-      scale: 1,
+      slideWidth: Math.max(clipWidthIn * normalizedSourceScale, 1),
+      slideHeight: Math.max(clipHeightIn * normalizedSourceScale, 1),
+      scale: normalizedSourceScale,
       offsetX: 0,
       offsetY: 0,
     }
   }
+  const desiredWidth = clipWidthIn * normalizedSourceScale
+  const desiredHeight = clipHeightIn * normalizedSourceScale
   const fitFactor = Math.min(
-    slideCanvasInches.width / Math.max(clipWidthIn, 0.0001),
-    slideCanvasInches.height / Math.max(clipHeightIn, 0.0001)
+    slideCanvasInches.width / Math.max(desiredWidth, 0.0001),
+    slideCanvasInches.height / Math.max(desiredHeight, 0.0001)
   )
   let scale: number
   switch (fit) {
     case "fill":
-      scale = fitFactor
+      scale = normalizedSourceScale * fitFactor
       break
     case "actual":
-      scale = 1
+      scale = normalizedSourceScale
       break
     case "shrink":
     default:
-      scale = Math.min(1, fitFactor)
+      scale = normalizedSourceScale * Math.min(1, fitFactor)
       break
   }
   const drawnWidth = clipWidthIn * scale

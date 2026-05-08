@@ -1,6 +1,6 @@
 /**
  * Settings surfaced by the PPTX export dialog. Each option is one PowerPoint
- * tweaks the user can't trivially redo post-export and that has more than one
+ * tweak the user can't trivially redo post-export and that has more than one
  * sensible default.
  *
  * Persisted to localStorage so the dialog re-opens with the user's last
@@ -39,13 +39,11 @@ export type FontFaceOption =
   | "Helvetica"
   | "Aptos"
 
-export type BackgroundOption = "white" | "transparent"
-
 export type PptxPersistedSettings = {
   slideSize: SlideSizeOption
+  scalePercent: number
   diagramFit: DiagramFitOption
   fontFace: FontFaceOption
-  background: BackgroundOption
 }
 
 export type PptxExportSettings = PptxPersistedSettings & {
@@ -55,9 +53,9 @@ export type PptxExportSettings = PptxPersistedSettings & {
 
 export const DEFAULT_PPTX_PERSISTED_SETTINGS: PptxPersistedSettings = {
   slideSize: "fit",
+  scalePercent: 100,
   diagramFit: "shrink",
   fontFace: "auto",
-  background: "white",
 }
 
 const SLIDE_SIZE_VALUES: ReadonlyArray<SlideSizeOption> = [
@@ -79,10 +77,6 @@ const FONT_FACE_VALUES: ReadonlyArray<FontFaceOption> = [
   "Helvetica",
   "Aptos",
 ]
-const BACKGROUND_VALUES: ReadonlyArray<BackgroundOption> = [
-  "white",
-  "transparent",
-]
 
 const pickValid = <T extends string>(
   values: ReadonlyArray<T>,
@@ -95,6 +89,24 @@ const pickValid = <T extends string>(
     : fallback
 
 const STORAGE_KEY = "apollon.pptxExportSettings.v1"
+export const MIN_PPTX_SCALE_PERCENT = 10
+export const MAX_PPTX_SCALE_PERCENT = 400
+
+export function normalizePptxScalePercent(scalePercent: unknown): number {
+  const parsed =
+    typeof scalePercent === "number"
+      ? scalePercent
+      : Number.parseFloat(String(scalePercent))
+
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_PPTX_PERSISTED_SETTINGS.scalePercent
+  }
+
+  return Math.min(
+    MAX_PPTX_SCALE_PERCENT,
+    Math.max(MIN_PPTX_SCALE_PERCENT, parsed)
+  )
+}
 
 export function loadPptxSettings(): PptxPersistedSettings {
   if (typeof localStorage === "undefined") {
@@ -110,6 +122,7 @@ export function loadPptxSettings(): PptxPersistedSettings {
         parsed.slideSize,
         DEFAULT_PPTX_PERSISTED_SETTINGS.slideSize
       ),
+      scalePercent: normalizePptxScalePercent(parsed.scalePercent),
       diagramFit: pickValid(
         DIAGRAM_FIT_VALUES,
         parsed.diagramFit,
@@ -119,11 +132,6 @@ export function loadPptxSettings(): PptxPersistedSettings {
         FONT_FACE_VALUES,
         parsed.fontFace,
         DEFAULT_PPTX_PERSISTED_SETTINGS.fontFace
-      ),
-      background: pickValid(
-        BACKGROUND_VALUES,
-        parsed.background,
-        DEFAULT_PPTX_PERSISTED_SETTINGS.background
       ),
     }
   } catch (err) {
