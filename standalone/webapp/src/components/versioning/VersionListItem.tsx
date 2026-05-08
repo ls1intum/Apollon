@@ -23,7 +23,7 @@ import { toast } from "react-toastify"
 import { log } from "@/logger"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
 import { VersionApiClient } from "@/services/DiagramApiClient"
-import { versioningStrings as t } from "./strings"
+import { MAX_DESCRIPTION_LENGTH, versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 import {
   ROW_HOVER_BG,
@@ -45,8 +45,6 @@ interface Props {
   onRestore: (versionId: string) => void
   onDelete: (versionId: string) => void
 }
-
-const MAX_DESCRIPTION_LENGTH = 240
 
 const VersionListItemInner: FC<Props> = ({
   diagramId,

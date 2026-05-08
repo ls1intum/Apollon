@@ -61,7 +61,20 @@ export async function saveHead(
   multi.hIncrBy(meta, "headRev", 1)
   multi.expire(meta, ttl)
   const replies = (await multi.exec()) as unknown[]
+  // node-redis returns command-level errors as values in the reply array
+  // rather than throwing. Surface any per-step failure rather than letting
+  // a torn write (HEAD set, headRev unbumped, …) silently propagate.
+  for (let i = 0; i < replies.length; i++) {
+    if (replies[i] instanceof Error) {
+      throw replies[i] as Error
+    }
+  }
   const headRev = Number(replies[3] ?? 0)
+  if (!Number.isFinite(headRev)) {
+    throw new Error(
+      `saveHead: hIncrBy returned non-numeric reply: ${String(replies[3])}`
+    )
+  }
   return { headRev, updatedAt }
 }
 

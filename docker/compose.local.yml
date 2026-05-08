@@ -30,7 +30,7 @@ services:
       - apollon-local
 
   db:
-    image: redis/redis-stack-server:7.4.0-v0
+    image: redis/redis-stack-server:7.4.0-v8
     ports:
       - "6379:6379"
     volumes:

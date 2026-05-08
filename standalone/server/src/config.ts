@@ -31,6 +31,12 @@ const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>
 
+const DEFAULT_OWNER_SECRET = "development-only-replace-in-prod"
+
+export function isDefaultOwnerSecret(secret: string): boolean {
+  return secret === DEFAULT_OWNER_SECRET
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const result = ConfigSchema.safeParse(env)
   if (!result.success) {
@@ -38,6 +44,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
       .join("; ")
     throw new Error(`Invalid environment configuration: ${issues}`)
+  }
+  // Production must not boot with the well-known default HMAC key —
+  // anyone could mint owner cookies for any diagram.
+  if (
+    env.NODE_ENV === "production" &&
+    isDefaultOwnerSecret(result.data.OWNER_SECRET)
+  ) {
+    throw new Error(
+      "OWNER_SECRET is set to the development default. " +
+        "Set OWNER_SECRET to a unique, high-entropy value (≥32 chars) before booting in production."
+    )
   }
   return result.data
 }

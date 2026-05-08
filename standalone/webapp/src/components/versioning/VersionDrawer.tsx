@@ -29,7 +29,7 @@ import {
   NAVBAR_BACKGROUND_COLOR,
   MAX_VERSIONS_PER_DIAGRAM as MAX_VERSIONS,
 } from "@/constants"
-import { versioningStrings as t } from "./strings"
+import { MAX_DESCRIPTION_LENGTH, versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 import { CurrentVersionRow } from "./CurrentVersionRow"
 import { VersionListItem } from "./VersionListItem"
@@ -41,7 +41,6 @@ import {
   groupUnnamedRuns,
 } from "./utils"
 
-const MAX_DESCRIPTION_LENGTH = 240
 /** Sidebar width on desktop. Narrow enough to keep the canvas usable. */
 const SIDEBAR_WIDTH = 320
 /** Slide-in animation duration matched to MUI's standard transition. */
@@ -184,12 +183,22 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
       setHasChanges(true)
       return
     }
+    // Yjs fires `subscribeToModelChange` on every keystroke. Computing the
+    // structural fingerprint involves a JSON.stringify of all nodes/edges,
+    // which scales O(N) — hot path for 500+ node diagrams. Debounce so the
+    // diff lights up the Save button on edit pause, not on every character.
+    let timer: ReturnType<typeof setTimeout> | null = null
     const recompute = () => {
       setHasChanges(structuralFingerprint(editor.model) !== savedFingerprint)
     }
+    const scheduleRecompute = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(recompute, 200)
+    }
     recompute()
-    const subId = editor.subscribeToModelChange(recompute)
+    const subId = editor.subscribeToModelChange(scheduleRecompute)
     return () => {
+      if (timer) clearTimeout(timer)
       editor.unsubscribe(subId)
     }
   }, [editor, savedFingerprint])

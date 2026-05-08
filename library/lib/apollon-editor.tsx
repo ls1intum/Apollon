@@ -508,6 +508,13 @@ export class ApollonEditor {
    */
   public setReadonly(readonly: boolean): void {
     this.metadataStore.getState().setReadonly(readonly)
+    if (readonly) {
+      // Clear transient UI state so a stale selection ring or open popover
+      // doesn't survive the lock — both are interactive affordances on
+      // elements the user can no longer act on.
+      this.diagramStore.getState().setSelectedElementsId([])
+      this.popoverStore.getState().setPopOverElementId(null)
+    }
   }
 
   public toggleInteractiveElementsMode(forceEnabled?: boolean): void {

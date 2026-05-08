@@ -6,7 +6,7 @@ export async function setup() {
   // Pinned image — bump deliberately so a Redis Stack release can't silently
   // break CI. The image bundles RedisJSON ≥ 2.8 (verified at boot via
   // bootLoadFunction's MODULE LIST guard).
-  container = await new GenericContainer("redis/redis-stack-server:7.4.0-v0")
+  container = await new GenericContainer("redis/redis-stack-server:7.4.0-v8")
     .withExposedPorts(6379)
     .withCommand([
       "redis-stack-server",

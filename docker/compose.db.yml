@@ -3,7 +3,7 @@ services:
     # Stack image is required: the server's RedisJSON gate refuses to boot
     # without the ReJSON module. `redis:7-alpine` ships without it and would
     # silently break versioning on a fresh deploy.
-    image: redis/redis-stack-server:7.4.0-v0
+    image: redis/redis-stack-server:7.4.0-v8
     restart: unless-stopped
     expose:
       - "6379"

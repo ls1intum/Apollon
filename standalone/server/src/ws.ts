@@ -45,6 +45,11 @@ const MAX_PAYLOAD_BYTES = 1_048_576 // 1 MiB
 
 const HEARTBEAT_INTERVAL_MS = 30_000
 
+// Per-room socket cap. A single URL bearer (or an attacker who has the
+// link) cannot pin unlimited memory on the relay by opening sockets to
+// the same diagram. 100 is comfortably above any realistic team size.
+const MAX_SOCKETS_PER_ROOM = 100
+
 interface ExtendedWebSocketWithAlive extends ExtendedWebSocket {
   isAlive?: boolean
 }
@@ -54,6 +59,11 @@ export function startRelayServer(opts: StartOptions): RelayServer {
     port: opts.port,
     host: opts.host,
     maxPayload: MAX_PAYLOAD_BYTES,
+    // permessage-deflate is disabled to avoid CRIME-style compression
+    // side-channel risks (OWASP WebSocket Security cheat sheet) and the
+    // memory amplification of zlib contexts per-socket. Diagram updates
+    // are small JSON-wrapped Yjs binary; compression yields little.
+    perMessageDeflate: false,
   })
   const rooms: Map<string, Set<ExtendedWebSocket>> = new Map()
   const roomAwarenessStates: Map<string, RoomAwarenessState> = new Map()
@@ -169,6 +179,14 @@ export function startRelayServer(opts: StartOptions): RelayServer {
       if (!room) {
         room = new Set()
         rooms.set(diagramId, room)
+      }
+      if (room.size >= MAX_SOCKETS_PER_ROOM) {
+        logger.warn(
+          { diagramId, size: room.size },
+          "ws room over capacity, rejecting connection"
+        )
+        ws.close(1013, "Try again later")
+        return
       }
       room.add(ws)
       ws.diagramId = diagramId
