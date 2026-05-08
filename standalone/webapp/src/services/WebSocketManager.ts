@@ -1,7 +1,7 @@
-import { ApollonEditor } from "@tumaet/apollon"
-import { serverWSSUrl } from "@/constants"
-import { WebSocketMessage } from "@/types"
+import { backendWSSUrl } from "@/constants"
 import { log } from "@/logger"
+import { WebSocketMessage } from "@/types"
+import { ApollonEditor } from "@tumaet/apollon"
 
 type ReconnectionStep = {
   interval: number
@@ -18,6 +18,7 @@ export class WebSocketManager {
   ]
   private reconnectStartTime = 0
   private isTryingToReconnect = false
+  private isCleaningUp = false
 
   constructor(
     private diagramId: string,
@@ -30,7 +31,7 @@ export class WebSocketManager {
   }
 
   private createWebSocket() {
-    const url = `${serverWSSUrl}?diagramId=${this.diagramId}`
+    const url = `${backendWSSUrl}?diagramId=${this.diagramId}`
     this.websocket = new WebSocket(url)
 
     this.websocket.onopen = () => {
@@ -41,6 +42,11 @@ export class WebSocketManager {
         diagramData: ApollonEditor.generateInitialSyncMessage(),
       }
       this.websocket?.send(JSON.stringify(initialMessage))
+
+      const awarenessMessage = {
+        diagramData: ApollonEditor.generateInitialAwarenessSyncMessage(),
+      }
+      this.websocket?.send(JSON.stringify(awarenessMessage))
 
       this.instance.sendBroadcastMessage((diagramData) => {
         if (this.websocket?.readyState === WebSocket.OPEN) {
@@ -55,11 +61,13 @@ export class WebSocketManager {
     }
 
     this.websocket.onerror = (e) => {
+      if (this.isCleaningUp) return
       this.onError(e)
       this.startReconnectionStrategy()
     }
 
     this.websocket.onclose = () => {
+      if (this.isCleaningUp) return
       this.startReconnectionStrategy()
     }
   }
@@ -97,6 +105,7 @@ export class WebSocketManager {
   }
 
   public cleanup() {
+    this.isCleaningUp = true
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout)
     }

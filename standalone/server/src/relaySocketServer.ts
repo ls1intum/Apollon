@@ -2,6 +2,23 @@ import WebSocket, { WebSocketServer } from "ws"
 import { IncomingMessage } from "http"
 import { URL } from "url"
 import { log } from "./logger"
+import {
+  applyAwarenessUpdate,
+  Awareness,
+  encodeAwarenessUpdate,
+  removeAwarenessStates,
+} from "y-protocols/awareness"
+import * as Y from "yjs"
+import * as decoding from "lib0/decoding"
+
+enum MessageType {
+  AwarenessUpdate = 3,
+}
+
+type RoomAwarenessState = {
+  doc: Y.Doc
+  awareness: Awareness
+}
 
 interface ExtendedWebSocket extends WebSocket {
   diagramId?: string
@@ -17,6 +34,99 @@ export const startSocketServer = (): void => {
   })
 
   const diagrams: Map<string, Set<ExtendedWebSocket>> = new Map()
+  const roomAwarenessStates: Map<string, RoomAwarenessState> = new Map()
+  const awarenessClientIdsBySocket: WeakMap<
+    ExtendedWebSocket,
+    Set<number>
+  > = new WeakMap()
+
+  const getOrCreateAwarenessState = (diagramId: string): RoomAwarenessState => {
+    const existing = roomAwarenessStates.get(diagramId)
+    if (existing) {
+      return existing
+    }
+
+    const doc = new Y.Doc()
+    const awareness = new Awareness(doc)
+    const state = { doc, awareness }
+    roomAwarenessStates.set(diagramId, state)
+    return state
+  }
+
+  const decodeAwarenessUpdateClients = (
+    update: Uint8Array
+  ): { present: number[]; removed: number[] } => {
+    const present: number[] = []
+    const removed: number[] = []
+
+    try {
+      const decoder = decoding.createDecoder(update)
+      const len = decoding.readVarUint(decoder)
+
+      for (let i = 0; i < len; i++) {
+        const clientId = decoding.readVarUint(decoder)
+        decoding.readVarUint(decoder) // clock
+        const state = JSON.parse(decoding.readVarString(decoder))
+
+        if (state === null) {
+          removed.push(clientId)
+        } else {
+          present.push(clientId)
+        }
+      }
+    } catch {
+      return { present: [], removed: [] }
+    }
+
+    return { present, removed }
+  }
+
+  const broadcastAwarenessRemoval = (
+    diagramId: string,
+    disconnectedSocket: ExtendedWebSocket,
+    removedClientIds: number[]
+  ) => {
+    if (removedClientIds.length === 0) {
+      return
+    }
+
+    const roomAwarenessState = roomAwarenessStates.get(diagramId)
+    if (!roomAwarenessState) {
+      return
+    }
+
+    removeAwarenessStates(
+      roomAwarenessState.awareness,
+      removedClientIds,
+      disconnectedSocket
+    )
+
+    const awarenessUpdate = encodeAwarenessUpdate(
+      roomAwarenessState.awareness,
+      removedClientIds
+    )
+    const framedUpdate = new Uint8Array(1 + awarenessUpdate.length)
+    framedUpdate[0] = MessageType.AwarenessUpdate
+    framedUpdate.set(awarenessUpdate, 1)
+
+    const messageString = JSON.stringify({
+      diagramData: Buffer.from(framedUpdate).toString("base64"),
+    })
+
+    const clients = diagrams.get(diagramId)
+    if (!clients) {
+      return
+    }
+
+    clients.forEach((client) => {
+      if (
+        client !== disconnectedSocket &&
+        client.readyState === WebSocket.OPEN
+      ) {
+        client.send(messageString)
+      }
+    })
+  }
 
   wss.on("error", (error: NodeJS.ErrnoException) => {
     log.error("WebSocket server error:", error)
@@ -42,6 +152,8 @@ export const startSocketServer = (): void => {
     }
     diagrams.get(diagramId)!.add(ws)
     ws.diagramId = diagramId
+    awarenessClientIdsBySocket.set(ws, new Set())
+    getOrCreateAwarenessState(diagramId)
 
     ws.on("message", (message: WebSocket.RawData) => {
       const clients = diagrams.get(ws.diagramId!)
@@ -57,6 +169,44 @@ export const startSocketServer = (): void => {
             ? message.toString("utf-8")
             : ""
 
+      try {
+        const parsedMessage = JSON.parse(messageString) as {
+          diagramData?: string
+        }
+
+        if (typeof parsedMessage.diagramData === "string") {
+          const roomAwarenessState = roomAwarenessStates.get(ws.diagramId!)
+          if (roomAwarenessState) {
+            const decoded = Buffer.from(parsedMessage.diagramData, "base64")
+            if (
+              decoded.length > 0 &&
+              decoded[0] === MessageType.AwarenessUpdate
+            ) {
+              const awarenessUpdate = new Uint8Array(decoded.subarray(1))
+              applyAwarenessUpdate(
+                roomAwarenessState.awareness,
+                awarenessUpdate,
+                ws
+              )
+
+              const { present, removed } =
+                decodeAwarenessUpdateClients(awarenessUpdate)
+              const socketAwarenessIds = awarenessClientIdsBySocket.get(ws)
+              if (socketAwarenessIds) {
+                for (const id of present) {
+                  socketAwarenessIds.add(id)
+                }
+                for (const id of removed) {
+                  socketAwarenessIds.delete(id)
+                }
+              }
+            }
+          }
+        }
+      } catch {
+        // Best effort parsing to track awareness IDs; relay still works.
+      }
+
       let count = 0
       clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -70,9 +220,27 @@ export const startSocketServer = (): void => {
 
     ws.on("close", () => {
       const clients = diagrams.get(ws.diagramId!)
+      const socketAwarenessIds = awarenessClientIdsBySocket.get(ws)
       if (clients) {
         clients.delete(ws)
-        if (clients.size === 0) diagrams.delete(ws.diagramId!)
+
+        if (socketAwarenessIds && socketAwarenessIds.size > 0) {
+          broadcastAwarenessRemoval(
+            ws.diagramId!,
+            ws,
+            Array.from(socketAwarenessIds)
+          )
+        }
+
+        if (clients.size === 0) {
+          diagrams.delete(ws.diagramId!)
+          const roomAwarenessState = roomAwarenessStates.get(ws.diagramId!)
+          if (roomAwarenessState) {
+            roomAwarenessState.awareness.destroy()
+            roomAwarenessState.doc.destroy()
+            roomAwarenessStates.delete(ws.diagramId!)
+          }
+        }
       }
     })
 

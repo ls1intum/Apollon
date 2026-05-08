@@ -2,6 +2,7 @@ export type ModalName =
   | "NEW_DIAGRAM"
   | "NEW_DIAGRAM_FROM_TEMPLATE"
   | "SHARE"
+  | "COLLABORATE_NAME"
   | "LOAD_DIAGRAM"
   | "EXPORT_PPTX"
   | "HowToUseModal"

@@ -1,5 +1,3 @@
-import * as Y from "yjs"
-import { StoreApi } from "zustand"
 import { DiagramStore } from "@/store/diagramStore"
 import { MetadataStore } from "@/store/metadataStore"
 import {
@@ -8,12 +6,26 @@ import {
   getEdgesMap,
   getNodesMap,
 } from "@/sync/ydoc"
+import {
+  Assessment,
+  CollaborationState,
+  CollaborationUser,
+  CollaboratorInfo,
+} from "@/typings"
 import { Edge, Node } from "@xyflow/react"
-import { Assessment } from "@/typings"
+import {
+  applyAwarenessUpdate,
+  Awareness,
+  encodeAwarenessUpdate,
+} from "y-protocols/awareness"
+import * as Y from "yjs"
+import { StoreApi } from "zustand"
 
 export enum MessageType {
   YjsSYNC = 0,
   YjsUpdate = 1,
+  AwarenessSync = 2,
+  AwarenessUpdate = 3,
 }
 
 export type SendBroadcastMessage = (base64data: string) => void
@@ -24,6 +36,7 @@ export class YjsSyncClass {
   private readonly ydoc: Y.Doc
   private readonly diagramStore: StoreApi<DiagramStore>
   private readonly metadataStore: StoreApi<MetadataStore>
+  private readonly awareness: Awareness
 
   constructor(
     ydoc: Y.Doc,
@@ -33,6 +46,7 @@ export class YjsSyncClass {
     this.ydoc = ydoc
     this.diagramStore = diagramStore
     this.metadataStore = metadataStore
+    this.awareness = new Awareness(this.ydoc)
     this.stopYjsObserver = this.startYjsObserver()
   }
 
@@ -42,6 +56,164 @@ export class YjsSyncClass {
 
   public setSendBroadcastMessage = (sendFn: SendBroadcastMessage) => {
     this.sendBroadcastMessage = sendFn
+
+    const localState = this.awareness.getLocalState()
+    if (localState) {
+      const awarenessUpdate = encodeAwarenessUpdate(this.awareness, [
+        this.awareness.clientID,
+      ])
+      this.sendFramedMessage(MessageType.AwarenessUpdate, awarenessUpdate)
+    }
+  }
+
+  public setLocalAwarenessUser = (user: CollaborationUser) => {
+    this.awareness.setLocalStateField("user", user)
+  }
+
+  public setLocalAwarenessCursor = (
+    cursor: { x: number; y: number } | null
+  ) => {
+    this.awareness.setLocalStateField("cursor", cursor)
+  }
+
+  public setLocalAwarenessSelectedElement = (
+    selectedElementId: string | null
+  ) => {
+    this.awareness.setLocalStateField("selectedElementId", selectedElementId)
+  }
+
+  public setLocalAwarenessState = (state: Partial<CollaborationState>) => {
+    const current = this.awareness.getLocalState()
+    this.awareness.setLocalState({ ...current, ...state })
+  }
+
+  public subscribeToAwarenessChanges = (
+    callback: (states: Map<number, CollaborationState>) => void
+  ) => {
+    const handler = () => callback(this.getTypedStates())
+    this.awareness.on("change", handler)
+    return () => {
+      this.awareness.off("change", handler)
+    }
+  }
+
+  public getCollaborators = (): CollaboratorInfo[] => {
+    const states = this.getTypedStates()
+    const localClientId = this.awareness.clientID
+    const byUserId = new Map<string, CollaboratorInfo>()
+
+    for (const [clientId, state] of states.entries()) {
+      const user = state.user
+      if (!user) continue
+
+      const userId = user.id ?? `__client_${clientId}`
+      const existing = byUserId.get(userId)
+
+      if (existing) {
+        existing.clientIds.push(clientId)
+        if (clientId === localClientId) existing.isLocal = true
+      } else {
+        byUserId.set(userId, {
+          id: userId,
+          name: user.name,
+          color: user.color,
+          imageUrl: user.imageUrl,
+          clientIds: [clientId],
+          isLocal: clientId === localClientId,
+        })
+      }
+    }
+
+    return Array.from(byUserId.values())
+  }
+
+  public subscribeToCollaboratorChanges = (
+    callback: (collaborators: CollaboratorInfo[]) => void
+  ) => {
+    let previousSignature = ""
+
+    const handler = ({
+      added,
+      removed,
+    }: {
+      added: number[]
+      updated: number[]
+      removed: number[]
+    }) => {
+      const currentSignature = this.computeParticipantSignature()
+      if (
+        added.length === 0 &&
+        removed.length === 0 &&
+        currentSignature === previousSignature
+      ) {
+        return
+      }
+      previousSignature = currentSignature
+      callback(this.getCollaborators())
+    }
+
+    this.awareness.on("change", handler)
+    return () => {
+      this.awareness.off("change", handler)
+    }
+  }
+
+  public getLocalAwarenessClientId = () => this.awareness.clientID
+
+  private static narrowState(raw: unknown): CollaborationState | null {
+    if (raw == null || typeof raw !== "object") return null
+    const obj = raw as Record<string, unknown>
+    const user = obj.user
+    if (
+      user != null &&
+      (typeof user !== "object" ||
+        typeof (user as Record<string, unknown>).name !== "string" ||
+        typeof (user as Record<string, unknown>).color !== "string")
+    ) {
+      return null
+    }
+    return raw as CollaborationState
+  }
+
+  private getTypedStates(): Map<number, CollaborationState> {
+    const raw = this.awareness.getStates()
+    const typed = new Map<number, CollaborationState>()
+    for (const [clientId, state] of raw.entries()) {
+      const narrowed = YjsSyncClass.narrowState(state)
+      if (narrowed) typed.set(clientId, narrowed)
+    }
+    return typed
+  }
+
+  private computeParticipantSignature = (): string => {
+    const states = this.getTypedStates()
+    const parts: string[] = []
+    for (const [clientId, state] of states.entries()) {
+      const user = state.user
+      if (user) {
+        parts.push(
+          `${clientId}:${user.id ?? ""}:${user.name}:${user.color}:${user.imageUrl ?? ""}`
+        )
+      }
+    }
+    parts.sort()
+    return parts.join("|")
+  }
+
+  private sendFramedMessage = (
+    messageType: MessageType,
+    payload: Uint8Array
+  ) => {
+    if (!this.sendBroadcastMessage) {
+      return
+    }
+
+    const fullMessage = new Uint8Array(1 + payload.length)
+    fullMessage[0] = messageType
+    fullMessage.set(payload, 1)
+
+    const base64Message = YjsSyncClass.uint8ToBase64(fullMessage)
+    this.sendBroadcastMessage(base64Message)
   }
 
   private applyUpdate = (update: Uint8Array, transactionOrigin: string) => {
@@ -57,15 +229,15 @@ export class YjsSyncClass {
       const update = decodedData.slice(1)
       this.applyUpdate(update, "remote")
     } else if (messageType === MessageType.YjsSYNC) {
-      if (this.sendBroadcastMessage) {
-        const syncMessage = Y.encodeStateAsUpdate(this.ydoc)
-        const fullMessage = new Uint8Array(1 + syncMessage.length)
-        fullMessage[0] = MessageType.YjsUpdate
-        fullMessage.set(syncMessage, 1)
-
-        const base64Message = YjsSyncClass.uint8ToBase64(fullMessage)
-        this.sendBroadcastMessage(base64Message)
-      }
+      const syncMessage = Y.encodeStateAsUpdate(this.ydoc)
+      this.sendFramedMessage(MessageType.YjsUpdate, syncMessage)
+    } else if (messageType === MessageType.AwarenessUpdate) {
+      const awarenessUpdate = decodedData.slice(1)
+      applyAwarenessUpdate(this.awareness, awarenessUpdate, "remote")
+    } else if (messageType === MessageType.AwarenessSync) {
+      const clientIds = Array.from(this.awareness.getStates().keys())
+      const awarenessUpdate = encodeAwarenessUpdate(this.awareness, clientIds)
+      this.sendFramedMessage(MessageType.AwarenessUpdate, awarenessUpdate)
     }
   }
 
@@ -121,23 +293,19 @@ export class YjsSyncClass {
     }
 
     const handleYjsUpdate = (
-      _arg0: unknown,
-      _arg1: unknown,
-      _arg2: Y.Doc,
+      update: Uint8Array,
+      _origin: unknown,
+      _doc: Y.Doc,
       transaction: Y.Transaction
     ) => {
-      // Send updates for store operations and undo/redo operations
+      // Broadcast the incremental update for local edits and undo/redo.
+      // Late-joining peers receive full state via the YjsSYNC handshake.
       if (
         this.sendBroadcastMessage &&
         (transaction.origin === "store" ||
           this.isUndoRedoTransaction(transaction))
       ) {
-        const syncMessage = Y.encodeStateAsUpdate(this.ydoc)
-        const fullMessage = new Uint8Array(1 + syncMessage.length)
-        fullMessage[0] = MessageType.YjsUpdate
-        fullMessage.set(syncMessage, 1)
-        const base64Message = YjsSyncClass.uint8ToBase64(fullMessage)
-        this.sendBroadcastMessage(base64Message)
+        this.sendFramedMessage(MessageType.YjsUpdate, update)
       }
 
       // Update store state for undo/redo operations
@@ -149,11 +317,41 @@ export class YjsSyncClass {
       }
     }
 
+    const handleAwarenessUpdate = (
+      {
+        added,
+        updated,
+        removed,
+      }: {
+        added: number[]
+        updated: number[]
+        removed: number[]
+      },
+      origin: unknown
+    ) => {
+      // Prevent rebroadcast loops for remote updates.
+      if (origin === "remote") {
+        return
+      }
+
+      const changedClients = [...added, ...updated, ...removed]
+      if (changedClients.length === 0) {
+        return
+      }
+
+      const awarenessUpdate = encodeAwarenessUpdate(
+        this.awareness,
+        changedClients
+      )
+      this.sendFramedMessage(MessageType.AwarenessUpdate, awarenessUpdate)
+    }
+
     getNodesMap(this.ydoc).observe(nodesChangeObserver)
     getEdgesMap(this.ydoc).observe(edgesObserver)
     getAssessments(this.ydoc).observe(assessmentObserver)
     getDiagramMetadata(this.ydoc).observe(metadataObserver)
     this.ydoc.on("update", handleYjsUpdate)
+    this.awareness.on("update", handleAwarenessUpdate)
 
     return () => {
       getNodesMap(this.ydoc).unobserve(nodesChangeObserver)
@@ -161,6 +359,7 @@ export class YjsSyncClass {
       getAssessments(this.ydoc).unobserve(assessmentObserver)
       getDiagramMetadata(this.ydoc).unobserve(metadataObserver)
       this.ydoc.off("update", handleYjsUpdate)
+      this.awareness.off("update", handleAwarenessUpdate)
     }
   }
 
