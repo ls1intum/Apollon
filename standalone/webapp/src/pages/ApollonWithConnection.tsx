@@ -9,6 +9,7 @@ import { DiagramAPIManager } from "@/services/DiagramAPIManager"
 import { log } from "@/logger"
 import { collabColorFromName, randomCollabName } from "@/utils/collaboration"
 import { CollaboratorCursors } from "@/components/CollaboratorCursors"
+import { CollaboratorPresenceBar } from "@/components/CollaboratorPresenceBar"
 import { CollaboratorSelectionHighlights } from "@/components/CollaboratorSelectionHighlights"
 
 export const ApollonWithConnection: React.FC = () => {
@@ -220,6 +221,12 @@ export const ApollonWithConnection: React.FC = () => {
       <div className={isLoading ? "invisible" : "h-full "}>
         <div className="h-full" style={{ position: "relative" }}>
           <div className="h-full" ref={containerRef} />
+          <CollaboratorPresenceBar
+            isActive={
+              searchParams.get("view") === DiagramView.COLLABORATE &&
+              !!collaborationUser
+            }
+          />
           <CollaboratorCursors
             containerRef={containerRef}
             isActive={
