@@ -15,6 +15,10 @@ interface Props {
 export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const { closeModal } = useModalContext()
   const deleteVersion = useVersionStore((s) => s.deleteVersion)
+  const exitPreview = useVersionStore((s) => s.exitPreview)
+  const previewingThis = useVersionStore(
+    (s) => s.preview?.versionId === versionId
+  )
   const target = useVersionStore((s) =>
     selectVersions(s, diagramId).find((v) => v.id === versionId)
   )
@@ -23,6 +27,7 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
   const onConfirm = async () => {
     setWorking(true)
     try {
+      if (previewingThis) exitPreview()
       await deleteVersion(diagramId, versionId)
       closeModal()
     } catch (err) {
@@ -33,11 +38,15 @@ export const DeleteVersionModal = ({ diagramId, versionId }: Props) => {
     }
   }
 
+  const label = target
+    ? target.description?.trim() || target.name?.trim() || t.unnamed
+    : null
+
   return (
     <Stack spacing={2}>
       <Typography>
-        {target
-          ? `'${target.name || t.unnamed}' will be permanently removed. This cannot be undone.`
+        {label
+          ? `'${label}' will be permanently removed. This cannot be undone.`
           : t.deleteFallbackBody}
       </Typography>
       <Stack direction="row" spacing={1} justifyContent="flex-end">

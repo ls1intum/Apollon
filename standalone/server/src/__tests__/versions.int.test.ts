@@ -767,6 +767,145 @@ describe("restore atomicity", () => {
   })
 })
 
+describe("actor attribution on control events", () => {
+  it("VERSION_CREATED carries the actor when provided", async () => {
+    const id = await newDiagram()
+    await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({
+        name: "v1",
+        actor: "Alice",
+        body: { ...baseDiagram, id },
+      })
+
+    const call = publishControl.mock.calls.find(
+      (c) => (c[1] as ControlEvent).type === "VERSION_CREATED"
+    )
+    expect(call).toBeDefined()
+    expect((call![1] as ControlEvent).actor).toBe("Alice")
+  })
+
+  it("VERSION_CREATED omits actor field when not provided", async () => {
+    const id = await newDiagram()
+    await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({ name: "v1", body: { ...baseDiagram, id } })
+
+    const call = publishControl.mock.calls.find(
+      (c) => (c[1] as ControlEvent).type === "VERSION_CREATED"
+    )
+    expect(call).toBeDefined()
+    expect((call![1] as ControlEvent).actor).toBeUndefined()
+  })
+
+  it("VERSION_RESTORED carries the actor when provided", async () => {
+    const id = await newDiagram()
+    const v1 = await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({ name: "v1", body: { ...baseDiagram, id, title: "v1" } })
+    publishControl.mockClear()
+
+    await request(app)
+      .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
+      .send({ actor: "Bob" })
+
+    const call = publishControl.mock.calls.find(
+      (c) => (c[1] as ControlEvent).type === "VERSION_RESTORED"
+    )
+    expect(call).toBeDefined()
+    expect((call![1] as ControlEvent).actor).toBe("Bob")
+  })
+
+  it("actor field is capped at 100 chars — longer values are rejected", async () => {
+    const id = await newDiagram()
+    const longActor = "X".repeat(101)
+    const res = await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({ name: "v1", actor: longActor, body: { ...baseDiagram, id } })
+    expect(res.status).toBe(422)
+  })
+})
+
+describe("restoring the latest version (no-op scenario)", () => {
+  it("still creates an auto-snapshot even when restoring HEAD content", async () => {
+    const id = await newDiagram()
+    // Create a single version, then immediately restore it — this is the
+    // scenario the client-side isLatest guard prevents. The server doesn't
+    // block it (it's a valid operation), but it creates a redundant
+    // auto-snapshot containing identical content. This test documents that
+    // the client guard is a UX optimization, not a server constraint.
+    const v1 = await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({ name: "v1", body: { ...baseDiagram, id, title: "Same" } })
+
+    const restore = await request(app)
+      .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
+      .send({ currentBody: { ...baseDiagram, id, title: "Same" } })
+    expect(restore.status).toBe(200)
+    expect(restore.body.autoSnapshotVersionId).toBeDefined()
+
+    // HEAD is unchanged.
+    const head = await request(app).get(`/api/diagrams/${id}`)
+    expect(head.body.title).toBe("Same")
+
+    // The auto-snapshot body is identical to the original — this is the
+    // redundancy the client guards against.
+    const autoBody = await request(app).get(
+      `/api/diagrams/${id}/versions/${restore.body.autoSnapshotVersionId}`
+    )
+    expect(autoBody.body.title).toBe("Same")
+  })
+})
+
+describe("restore preserves user's canvas via currentBody", () => {
+  it("auto-snapshot captures currentBody, not stale Redis HEAD", async () => {
+    const id = await newDiagram()
+    const v1 = await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({ name: "v1", body: { ...baseDiagram, id, title: "First" } })
+
+    // The user has unsaved changes ("Unsaved Work") that haven't been PUT
+    // to HEAD yet. They restore v1 from preview. The auto-snapshot must
+    // contain "Unsaved Work" — NOT whatever Redis HEAD has.
+    const restore = await request(app)
+      .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
+      .send({
+        currentBody: { ...baseDiagram, id, title: "Unsaved Work" },
+      })
+    expect(restore.status).toBe(200)
+
+    const autoBody = await request(app).get(
+      `/api/diagrams/${id}/versions/${restore.body.autoSnapshotVersionId}`
+    )
+    expect(autoBody.body.title).toBe("Unsaved Work")
+  })
+
+  it("auto-snapshot uses Redis HEAD when currentBody is omitted", async () => {
+    const id = await newDiagram()
+    const v1 = await request(app)
+      .post(`/api/diagrams/${id}/versions`)
+      .send({ name: "v1", body: { ...baseDiagram, id, title: "First" } })
+
+    // Edit HEAD to something different from v1.
+    await request(app)
+      .put(`/api/diagrams/${id}`)
+      .send({ ...baseDiagram, id, title: "Edited HEAD" })
+
+    // Restore v1 without currentBody — server falls back to Redis HEAD.
+    const restore = await request(app)
+      .post(`/api/diagrams/${id}/versions/${v1.body.id}/restore`)
+      .send({})
+    expect(restore.status).toBe(200)
+
+    const autoBody = await request(app).get(
+      `/api/diagrams/${id}/versions/${restore.body.autoSnapshotVersionId}`
+    )
+    // The auto-snapshot must contain what was in Redis HEAD before the
+    // restore overwrote it — NOT the version body being restored.
+    expect(autoBody.body.title).toBe("Edited HEAD")
+  })
+})
+
 describe("REDIS_UNAVAILABLE mapping", () => {
   it("translates a node-redis ClientClosedError to 503 REDIS_UNAVAILABLE", async () => {
     // Build an isolated app with a redis client that's already closed so any

@@ -23,6 +23,7 @@ interface PreviewState {
 interface UndoRestoreState {
   diagramId: DiagramId
   autoSnapshotVersionId: VersionId
+  restoredFromVersionId: VersionId
   restoredVersionName: string
   expiresAt: number
 }
@@ -38,6 +39,13 @@ interface State {
   preview: PreviewState | null
   /** When set, surfaces an "undo restore" snackbar in the UI. */
   undoRestore: UndoRestoreState | null
+  /**
+   * Set before the restore API call so the control-event handler can
+   * detect self-triggered VERSION_RESTORED events. The WebSocket event
+   * typically arrives before the HTTP response, so checking `undoRestore`
+   * alone would miss the window.
+   */
+  pendingRestoreFromId: VersionId | null
   /** Per-diagram loading flag — scoped so concurrent diagram fetches don't clobber. */
   loading: Record<DiagramId, boolean>
   error: Record<DiagramId, ApiErrorCode | null>
@@ -116,6 +124,7 @@ export const useVersionStore = create<VersionStore>()(
         totals: {},
         preview: null,
         undoRestore: null,
+        pendingRestoreFromId: null,
         loading: {},
         error: {},
 
@@ -217,7 +226,12 @@ export const useVersionStore = create<VersionStore>()(
             },
           }))
           try {
-            const result = await VersionApiClient.create(diagramId, body, opts)
+            const actor =
+              sessionStorage.getItem("apollon-collab-name") || undefined
+            const result = await VersionApiClient.create(diagramId, body, {
+              ...opts,
+              actor,
+            })
             const {
               evictedVersionIds,
               evictedKinds,
@@ -344,9 +358,9 @@ export const useVersionStore = create<VersionStore>()(
         },
 
         deleteVersion: async (diagramId, versionId) => {
-          const prev = get().versions[diagramId]?.find(
-            (v) => v.id === versionId
-          )
+          const list = get().versions[diagramId] ?? []
+          const idx = list.findIndex((v) => v.id === versionId)
+          const prev = idx >= 0 ? list[idx] : undefined
           set((s) => ({
             versions: {
               ...s.versions,
@@ -359,12 +373,14 @@ export const useVersionStore = create<VersionStore>()(
             await VersionApiClient.delete(diagramId, versionId)
           } catch (err) {
             if (prev) {
-              set((s) => ({
-                versions: {
-                  ...s.versions,
-                  [diagramId]: [prev, ...(s.versions[diagramId] ?? [])],
-                },
-              }))
+              set((s) => {
+                const current = s.versions[diagramId] ?? []
+                const restored = [...current]
+                restored.splice(Math.min(idx, restored.length), 0, prev)
+                return {
+                  versions: { ...s.versions, [diagramId]: restored },
+                }
+              })
             }
             throw err
           }
@@ -389,25 +405,37 @@ export const useVersionStore = create<VersionStore>()(
           const restoredVersion = get().versions[diagramId]?.find(
             (v) => v.id === versionId
           )
-          const { autoSnapshotVersionId, headRev } =
-            await VersionApiClient.restore(diagramId, versionId, {
-              currentBody,
+          set({ pendingRestoreFromId: versionId })
+          try {
+            const actor =
+              sessionStorage.getItem("apollon-collab-name") || undefined
+            const { autoSnapshotVersionId, headRev } =
+              await VersionApiClient.restore(diagramId, versionId, {
+                currentBody,
+                actor,
+              })
+            set({
+              preview: null,
+              pendingRestoreFromId: null,
+              undoRestore: {
+                diagramId,
+                autoSnapshotVersionId,
+                restoredFromVersionId: versionId,
+                restoredVersionName:
+                  restoredVersion?.description?.trim() ||
+                  restoredVersion?.name?.trim() ||
+                  (restoredVersion?.seq !== undefined
+                    ? `#${restoredVersion.seq}`
+                    : ""),
+                expiresAt: Date.now() + UNDO_WINDOW_MS,
+              },
             })
-          set({
-            preview: null,
-            undoRestore: {
-              diagramId,
-              autoSnapshotVersionId,
-              restoredVersionName:
-                restoredVersion?.description?.trim() ||
-                restoredVersion?.name?.trim() ||
-                "",
-              expiresAt: Date.now() + UNDO_WINDOW_MS,
-            },
-          })
-          // Refresh to pick up the new auto-snapshot row.
-          void get().fetchVersions(diagramId)
-          return { autoSnapshotVersionId, headRev }
+            void get().fetchVersions(diagramId)
+            return { autoSnapshotVersionId, headRev }
+          } catch (err) {
+            set({ pendingRestoreFromId: null })
+            throw err
+          }
         },
 
         triggerUndoRestore: async (diagramId, currentBody) => {
@@ -430,13 +458,21 @@ export const useVersionStore = create<VersionStore>()(
           // undo's own pre-restore auto-snapshot captures whatever they're
           // looking at right now (e.g. small edits made after the original
           // restore). Without this, those edits would be silently discarded.
-          await VersionApiClient.restore(
-            diagramId,
-            undo.autoSnapshotVersionId,
-            { currentBody }
-          )
-          set({ undoRestore: null })
-          void get().fetchVersions(diagramId)
+          set({ pendingRestoreFromId: undo.autoSnapshotVersionId })
+          try {
+            const actor =
+              sessionStorage.getItem("apollon-collab-name") || undefined
+            await VersionApiClient.restore(
+              diagramId,
+              undo.autoSnapshotVersionId,
+              { currentBody, actor }
+            )
+            set({ undoRestore: null, pendingRestoreFromId: null })
+            void get().fetchVersions(diagramId)
+          } catch (err) {
+            set({ pendingRestoreFromId: null })
+            throw err
+          }
         },
 
         dismissUndoRestore: () => set({ undoRestore: null }),

@@ -59,6 +59,7 @@ export type ControlEvent =
       createdAt: string
       name: string
       kind: VersionKind
+      actor?: string
     }
   | {
       type: "VERSION_RESTORED"
@@ -66,6 +67,7 @@ export type ControlEvent =
       updatedAt: string
       autoSnapshotVersionId: string
       restoredFromVersionId: string
+      actor?: string
     }
   | { type: "VERSION_DELETED"; versionId: string }
   | {

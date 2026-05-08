@@ -38,8 +38,8 @@ export const versioningStrings = {
   restoredSnack: (name: string) =>
     `Restored '${name}'. Your previous canvas was saved.`,
   undoRestore: "Undo restore",
-  collaboratorRestoredTitle: (name: string) =>
-    `Someone restored '${name}'. Your view was updated.`,
+  collaboratorRestoredTitle: (actor: string) =>
+    `${actor} restored an earlier version. Your view was updated.`,
   failureToCreate: "Couldn't save version. Try again.",
   failureToEdit: "Couldn't update description. Try again.",
   failureRedis:
@@ -48,7 +48,6 @@ export const versioningStrings = {
     "This diagram is too large to version (over 5 MB). Try splitting it into smaller diagrams.",
   failureSchemaUnsupported:
     "This snapshot was created by an older version of the editor and can't be restored automatically.",
-  syncedFromCollaborator: "Synced from collaborator",
   unnamed: "Untitled snapshot",
   justNow: "just now",
   minutesAgo: (n: number) => `${n}m ago`,

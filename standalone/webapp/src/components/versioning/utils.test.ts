@@ -5,6 +5,7 @@ import {
   isNamedVersion,
   groupUnnamedRuns,
 } from "./utils"
+import { versioningStrings as t } from "./strings"
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -306,5 +307,53 @@ describe("groupUnnamedRuns", () => {
       expect(result[0]!.versions.map((v) => v.id)).toEqual(["z", "y", "x", "w"])
       expect(result[0]!.first.id).toBe("z")
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Notification string formatting (guards against empty-name regressions)
+// ---------------------------------------------------------------------------
+
+describe("notification string formatting", () => {
+  describe("restoredSnack", () => {
+    it("renders version name in quotes", () => {
+      expect(t.restoredSnack("My checkpoint")).toBe(
+        "Restored 'My checkpoint'. Your previous canvas was saved."
+      )
+    })
+
+    it("renders fallback name when no version name", () => {
+      expect(t.restoredSnack("the previous version")).toBe(
+        "Restored 'the previous version'. Your previous canvas was saved."
+      )
+    })
+
+    it("renders seq-based fallback", () => {
+      expect(t.restoredSnack("#3")).toBe(
+        "Restored '#3'. Your previous canvas was saved."
+      )
+    })
+
+    it("renders empty quotes when passed empty string (the bug we fixed)", () => {
+      // This is the broken path that handleRestoreFromPreview used to trigger.
+      // Now that call site is removed, but verify the string itself is consistent.
+      expect(t.restoredSnack("")).toBe(
+        "Restored ''. Your previous canvas was saved."
+      )
+    })
+  })
+
+  describe("collaboratorRestoredTitle", () => {
+    it("renders actor name when available", () => {
+      expect(t.collaboratorRestoredTitle("Alice")).toBe(
+        "Alice restored an earlier version. Your view was updated."
+      )
+    })
+
+    it("renders fallback when actor is unknown", () => {
+      expect(t.collaboratorRestoredTitle("A collaborator")).toBe(
+        "A collaborator restored an earlier version. Your view was updated."
+      )
+    })
   })
 })

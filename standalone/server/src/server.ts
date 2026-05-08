@@ -9,6 +9,13 @@ import { startRelayServer } from "./ws"
 async function main() {
   const config = loadConfig()
 
+  if (config.OWNER_SECRET === "development-only-replace-in-prod") {
+    logger.warn(
+      { event: "config.insecure" },
+      "OWNER_SECRET is the default value — set a strong secret before deploying to production"
+    )
+  }
+
   // Connect Redis and load the apollon Lua library BEFORE accepting
   // traffic. If either fails we exit non-zero — serving HTTP with a
   // half-initialised backend means every FCALL races against the load

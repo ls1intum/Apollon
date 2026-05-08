@@ -13,7 +13,9 @@ interface AutoGroupRowProps {
   onRestore: (id: string) => void
   onDelete: (id: string) => void
   activeRowId: string | null
+  previewingVersionId: string | null
   versionNumberById: Map<string, number>
+  latestSavedId?: string
 }
 
 const AutoGroupRow: FC<AutoGroupRowProps> = ({
@@ -23,7 +25,9 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
   onRestore,
   onDelete,
   activeRowId,
+  previewingVersionId,
   versionNumberById,
+  latestSavedId,
 }) => {
   const [expanded, setExpanded] = useState(false)
   return (
@@ -63,7 +67,8 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
             diagramId={diagramId}
             version={v}
             versionNumber={versionNumberById.get(v.id)}
-            isPreviewing={v.id === activeRowId}
+            isPreviewing={previewingVersionId === v.id || v.id === activeRowId}
+            isLatest={v.id === latestSavedId}
             onPreview={onPreview}
             onRestore={onRestore}
             onDelete={onDelete}

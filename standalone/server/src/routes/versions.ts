@@ -251,6 +251,7 @@ export function mountVersionRoutes(
         body: z.object({
           name: z.string().max(config.MAX_NAME_LENGTH).optional(),
           description: z.string().max(config.MAX_DESCRIPTION_LENGTH).optional(),
+          actor: z.string().max(100).optional(),
           body: DiagramBody,
         }),
       },
@@ -302,6 +303,7 @@ export function mountVersionRoutes(
             createdAt: summary.createdAt,
             name: summary.name,
             kind: summary.kind,
+            ...(body.actor ? { actor: body.actor } : {}),
           })
 
           logger.info(
@@ -371,7 +373,10 @@ export function mountVersionRoutes(
     validate(
       {
         params: DiagramIdAndVersionIdParams,
-        body: z.object({ currentBody: DiagramBody.optional() }),
+        body: z.object({
+          currentBody: DiagramBody.optional(),
+          actor: z.string().max(100).optional(),
+        }),
       },
       async (req, res, _next, { params, body }) => {
         try {
@@ -425,6 +430,7 @@ export function mountVersionRoutes(
             updatedAt: result.updatedAt,
             autoSnapshotVersionId: result.autoSnapshotVersionId,
             restoredFromVersionId: params.versionId,
+            ...(body.actor ? { actor: body.actor } : {}),
           })
 
           logger.info(

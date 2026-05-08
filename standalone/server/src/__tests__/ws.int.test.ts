@@ -53,6 +53,29 @@ afterEach(async () => {
 })
 
 describe("WebSocket relay", () => {
+  it("rejects connections with invalid diagramId characters", async () => {
+    harness = await startHarness()
+    const ws = new WebSocket(
+      `ws://127.0.0.1:${harness.port}?diagramId=${encodeURIComponent("../etc/passwd")}`
+    )
+    const code = await new Promise<number>((resolve) => {
+      ws.on("close", (c) => resolve(c))
+    })
+    expect(code).toBe(1008)
+  })
+
+  it("rejects connections with overly long diagramId", async () => {
+    harness = await startHarness()
+    const longId = "a".repeat(65)
+    const ws = new WebSocket(
+      `ws://127.0.0.1:${harness.port}?diagramId=${longId}`
+    )
+    const code = await new Promise<number>((resolve) => {
+      ws.on("close", (c) => resolve(c))
+    })
+    expect(code).toBe(1008)
+  })
+
   it("forwards opaque messages to peers in the same diagram room (sender excluded)", async () => {
     harness = await startHarness()
     const a = await connect(harness.port, "d1")

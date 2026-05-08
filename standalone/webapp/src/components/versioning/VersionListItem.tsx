@@ -39,6 +39,8 @@ interface Props {
   /** Display rank among saved versions (newest = highest). Undefined for pending. */
   versionNumber?: number
   isPreviewing: boolean
+  /** When true, "Restore" is hidden — the version IS the current state. */
+  isLatest?: boolean
   onPreview: (versionId: string) => void
   onRestore: (versionId: string) => void
   onDelete: (versionId: string) => void
@@ -51,6 +53,7 @@ const VersionListItemInner: FC<Props> = ({
   version,
   versionNumber,
   isPreviewing,
+  isLatest,
   onPreview,
   onRestore,
   onDelete,
@@ -336,14 +339,16 @@ const VersionListItemInner: FC<Props> = ({
         {/* "Preview" is intentionally absent: clicking the row already
             previews. The kebab is reserved for actions that aren't
             obvious from the row itself. */}
-        <MenuItem
-          onClick={() => {
-            closeMenu()
-            onRestore(version.id)
-          }}
-        >
-          {t.restoreThis}
-        </MenuItem>
+        {!isLatest && (
+          <MenuItem
+            onClick={() => {
+              closeMenu()
+              onRestore(version.id)
+            }}
+          >
+            {t.restoreThis}
+          </MenuItem>
+        )}
         <MenuItem onClick={copyLink}>{t.copyLink}</MenuItem>
         {/* Adding a description on an empty-meta row promotes it visually
             (no longer eligible for collapse) and protects it from the

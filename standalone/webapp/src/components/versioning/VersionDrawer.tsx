@@ -524,7 +524,9 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   onRestore={handleRestore}
                   onDelete={handleDelete}
                   activeRowId={activeRowId}
+                  previewingVersionId={previewState?.versionId ?? null}
                   versionNumberById={versionNumberById}
+                  latestSavedId={latestSavedVersion?.id}
                 />
               ) : (
                 <VersionListItem
@@ -532,7 +534,11 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   diagramId={diagramId}
                   version={entry.version}
                   versionNumber={versionNumberById.get(entry.version.id)}
-                  isPreviewing={entry.version.id === activeRowId}
+                  isPreviewing={
+                    previewState?.versionId === entry.version.id ||
+                    entry.version.id === activeRowId
+                  }
+                  isLatest={entry.version.id === latestSavedVersion?.id}
                   onPreview={handlePreview}
                   onRestore={handleRestore}
                   onDelete={handleDelete}

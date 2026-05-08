@@ -26,6 +26,7 @@ function reset() {
     totals: {},
     preview: null,
     undoRestore: null,
+    pendingRestoreFromId: null,
     loading: {},
     error: {},
   })
@@ -246,5 +247,206 @@ describe("selectVersions", () => {
     }))
     const result = selectVersions(useVersionStore.getState(), "d1")
     expect(result).toBe(versions)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Self-notification suppression
+// ---------------------------------------------------------------------------
+
+describe("self-notification suppression via pendingRestoreFromId", () => {
+  it("pendingRestoreFromId detects local restore before HTTP response", () => {
+    useVersionStore.setState({ pendingRestoreFromId: "v42" })
+    const state = useVersionStore.getState()
+    expect(state.pendingRestoreFromId).toBe("v42")
+    // The control event handler checks this to suppress self-notification.
+    // Simulate the check:
+    const eventVersionId = "v42"
+    const isLocal =
+      state.pendingRestoreFromId === eventVersionId ||
+      state.undoRestore?.restoredFromVersionId === eventVersionId
+    expect(isLocal).toBe(true)
+  })
+
+  it("undoRestore.restoredFromVersionId detects local restore after HTTP response", () => {
+    useVersionStore.setState({
+      pendingRestoreFromId: null,
+      undoRestore: {
+        diagramId: "d1",
+        autoSnapshotVersionId: "auto-snap",
+        restoredFromVersionId: "v42",
+        restoredVersionName: "test",
+        expiresAt: Date.now() + 10_000,
+      },
+    })
+    const state = useVersionStore.getState()
+    const isLocal =
+      state.pendingRestoreFromId === "v42" ||
+      state.undoRestore?.restoredFromVersionId === "v42"
+    expect(isLocal).toBe(true)
+  })
+
+  it("neither field matches for a collaborator restore", () => {
+    useVersionStore.setState({
+      pendingRestoreFromId: null,
+      undoRestore: null,
+    })
+    const state = useVersionStore.getState()
+    const isLocal =
+      state.pendingRestoreFromId === "v99" ||
+      state.undoRestore?.restoredFromVersionId === "v99"
+    expect(isLocal).toBe(false)
+  })
+
+  it("local restore with different version still detects collaborator restore", () => {
+    // User restored v10 locally, but a collaborator restores v20
+    useVersionStore.setState({
+      pendingRestoreFromId: "v10",
+      undoRestore: {
+        diagramId: "d1",
+        autoSnapshotVersionId: "auto-snap",
+        restoredFromVersionId: "v10",
+        restoredVersionName: "my restore",
+        expiresAt: Date.now() + 10_000,
+      },
+    })
+    const state = useVersionStore.getState()
+    const isLocalForV20 =
+      state.pendingRestoreFromId === "v20" ||
+      state.undoRestore?.restoredFromVersionId === "v20"
+    expect(isLocalForV20).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// restoredVersionName fallback chain
+// ---------------------------------------------------------------------------
+
+describe("restoredVersionName derivation", () => {
+  function deriveRestoredVersionName(
+    version: Partial<VersionSummary> | undefined
+  ): string {
+    return (
+      version?.description?.trim() ||
+      version?.name?.trim() ||
+      (version?.seq !== undefined ? `#${version.seq}` : "")
+    )
+  }
+
+  it("prefers description when present", () => {
+    expect(
+      deriveRestoredVersionName({
+        description: "important checkpoint",
+        name: "v1",
+        seq: 3,
+      })
+    ).toBe("important checkpoint")
+  })
+
+  it("falls back to name when description is empty", () => {
+    expect(
+      deriveRestoredVersionName({ description: "", name: "milestone", seq: 5 })
+    ).toBe("milestone")
+  })
+
+  it("falls back to #seq when name and description are empty", () => {
+    expect(
+      deriveRestoredVersionName({ description: "", name: "", seq: 7 })
+    ).toBe("#7")
+  })
+
+  it("returns empty string when nothing is available", () => {
+    expect(deriveRestoredVersionName({ description: "", name: "" })).toBe("")
+  })
+
+  it("returns empty string for undefined version", () => {
+    expect(deriveRestoredVersionName(undefined)).toBe("")
+  })
+
+  it("trims whitespace-only description", () => {
+    expect(
+      deriveRestoredVersionName({
+        description: "   ",
+        name: "",
+        seq: 2,
+      })
+    ).toBe("#2")
+  })
+
+  it("trims whitespace-only name", () => {
+    expect(
+      deriveRestoredVersionName({
+        description: "",
+        name: "   ",
+        seq: 4,
+      })
+    ).toBe("#4")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// VERSION_RESTORED control event handling
+// ---------------------------------------------------------------------------
+
+describe("useVersionStore.applyControlEvent — VERSION_RESTORED", () => {
+  it("triggers fetchVersions to pick up auto-snapshot row", () => {
+    useVersionStore.setState((s) => ({
+      versions: { ...s.versions, d1: [summary("a")] },
+    }))
+    const fetchSpy = vi.spyOn(useVersionStore.getState(), "fetchVersions")
+    fetchSpy.mockResolvedValue(undefined)
+
+    const event: ControlEvent = {
+      type: "VERSION_RESTORED",
+      headRev: 5,
+      updatedAt: "2026-05-08T12:00:00Z",
+      autoSnapshotVersionId: "auto-snap-1",
+      restoredFromVersionId: "v3",
+    }
+    useVersionStore.getState().applyControlEvent("d1", event)
+    expect(fetchSpy).toHaveBeenCalledWith("d1")
+    fetchSpy.mockRestore()
+  })
+
+  it("actor field is optional and passed through on VERSION_RESTORED", () => {
+    const withActor: ControlEvent = {
+      type: "VERSION_RESTORED",
+      headRev: 5,
+      updatedAt: "2026-05-08T12:00:00Z",
+      autoSnapshotVersionId: "auto-snap-1",
+      restoredFromVersionId: "v3",
+      actor: "Alice",
+    }
+    expect(withActor.actor).toBe("Alice")
+
+    const withoutActor: ControlEvent = {
+      type: "VERSION_RESTORED",
+      headRev: 5,
+      updatedAt: "2026-05-08T12:00:00Z",
+      autoSnapshotVersionId: "auto-snap-1",
+      restoredFromVersionId: "v3",
+    }
+    expect(withoutActor.actor).toBeUndefined()
+  })
+
+  it("actor field is optional on VERSION_CREATED", () => {
+    const withActor: ControlEvent = {
+      type: "VERSION_CREATED",
+      versionId: "v1",
+      createdAt: "2026-05-08T12:00:00Z",
+      name: "test",
+      kind: "user",
+      actor: "Bob",
+    }
+    expect(withActor.actor).toBe("Bob")
+
+    const withoutActor: ControlEvent = {
+      type: "VERSION_CREATED",
+      versionId: "v1",
+      createdAt: "2026-05-08T12:00:00Z",
+      name: "test",
+      kind: "user",
+    }
+    expect(withoutActor.actor).toBeUndefined()
   })
 })

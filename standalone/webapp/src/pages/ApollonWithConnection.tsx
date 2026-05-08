@@ -45,13 +45,13 @@ export const ApollonWithConnection: React.FC = () => {
   const diagramIsUpdated = useRef(false)
   const lastObservedHeadRev = useRef<number | undefined>(undefined)
   const editorRef = useRef<ApollonEditor | null>(null)
+  const previewBeforeModelRef = useRef<UMLModel | null>(null)
+  const restoredDuringPreviewRef = useRef(false)
   const hasPromptedRef = useRef(false)
   const [collaborationUser, setCollaborationUser] = useState<{
     name: string
     color: string
   } | null>(null)
-  const lastSyncToastAt = useRef(0)
-
   const viewType = searchParams.get("view")
   const previewFromUrl = searchParams.get("version")
   const isCollaborationActive =
@@ -161,20 +161,28 @@ export const ApollonWithConnection: React.FC = () => {
           wsManagerRef.current.onControl((event) => {
             applyControlEvent(diagramId, event)
             if (event.type === "VERSION_RESTORED") {
-              DiagramApiClient.fetchDiagram(diagramId)
-                .then((next) => {
-                  if (instance) instance.model = next
-                })
-                .catch(() =>
-                  toast.error(
-                    "A collaborator restored a version but we couldn't refresh.",
-                    { toastId: "version-restored-refetch-failed" }
+              const state = useVersionStore.getState()
+              const isLocalRestore =
+                state.pendingRestoreFromId === event.restoredFromVersionId ||
+                state.undoRestore?.restoredFromVersionId ===
+                  event.restoredFromVersionId
+              if (!isLocalRestore) {
+                const actor = event.actor || "A collaborator"
+                DiagramApiClient.fetchDiagram(diagramId)
+                  .then((next) => {
+                    if (instance) instance.model = next
+                  })
+                  .catch(() =>
+                    toast.error(
+                      `${actor} restored a version but we couldn't refresh.`,
+                      { toastId: "version-restored-refetch-failed" }
+                    )
                   )
-                )
-              toast.info(t.collaboratorRestoredTitle("an earlier version"), {
-                toastId: "version-restored-by-collaborator",
-                autoClose: 4000,
-              })
+                toast.info(t.collaboratorRestoredTitle(actor), {
+                  toastId: "version-restored-by-collaborator",
+                  autoClose: 4000,
+                })
+              }
             }
           })
         }
@@ -256,14 +264,6 @@ export const ApollonWithConnection: React.FC = () => {
                 } else {
                   lastObservedHeadRev.current = undefined
                 }
-                const now = Date.now()
-                if (now - lastSyncToastAt.current > 60_000) {
-                  lastSyncToastAt.current = now
-                  toast.info(t.syncedFromCollaborator, {
-                    toastId: "version-sync-from-collaborator",
-                    autoClose: 2000,
-                  })
-                }
               } else {
                 log.error("Autosave failed", err)
                 toast.error("Failed to sync changes")
@@ -333,6 +333,7 @@ export const ApollonWithConnection: React.FC = () => {
   useEffect(() => {
     if (!editor) return
     if (preview) {
+      previewBeforeModelRef.current = editor.model
       wsManagerRef.current?.setPreviewMode(true)
       try {
         editor.model = importDiagram(preview.body) as UMLModel
@@ -350,19 +351,44 @@ export const ApollonWithConnection: React.FC = () => {
     } else {
       editor.setReadonly(baseReadonly)
       if (!diagramId) return
-      DiagramApiClient.fetchDiagram(diagramId)
-        .then((head) => {
-          editor.model = importDiagram(head) as UMLModel
-          editor.fitView()
-        })
-        .catch((err) => {
-          log.error("Failed to reload diagram after exiting preview", err)
-          toast.error(t.failureSchemaUnsupported)
-        })
-        .finally(() => {
-          wsManagerRef.current?.setPreviewMode(false)
-          wsManagerRef.current?.requestResync()
-        })
+
+      if (restoredDuringPreviewRef.current) {
+        restoredDuringPreviewRef.current = false
+        previewBeforeModelRef.current = null
+        DiagramApiClient.fetchDiagram(diagramId)
+          .then((head) => {
+            editor.model = importDiagram(head) as UMLModel
+            editor.fitView()
+          })
+          .catch((err) => {
+            log.error("Failed to reload diagram after restore", err)
+            toast.error(t.failureSchemaUnsupported)
+          })
+          .finally(() => {
+            wsManagerRef.current?.setPreviewMode(false)
+            wsManagerRef.current?.requestResync()
+          })
+      } else if (previewBeforeModelRef.current) {
+        editor.model = previewBeforeModelRef.current
+        previewBeforeModelRef.current = null
+        editor.fitView()
+        wsManagerRef.current?.setPreviewMode(false)
+        wsManagerRef.current?.requestResync()
+      } else {
+        DiagramApiClient.fetchDiagram(diagramId)
+          .then((head) => {
+            editor.model = importDiagram(head) as UMLModel
+            editor.fitView()
+          })
+          .catch((err) => {
+            log.error("Failed to reload diagram after exiting preview", err)
+            toast.error(t.failureSchemaUnsupported)
+          })
+          .finally(() => {
+            wsManagerRef.current?.setPreviewMode(false)
+            wsManagerRef.current?.requestResync()
+          })
+      }
     }
   }, [preview, editor, diagramId, baseReadonly])
 
@@ -386,6 +412,8 @@ export const ApollonWithConnection: React.FC = () => {
   const handleRestoreFromPreview = useCallback(
     async (versionId: string) => {
       if (!diagramId || !editor) return
+      restoredDuringPreviewRef.current = true
+      previewBeforeModelRef.current = null
       try {
         const { headRev } = await restoreVersion(
           diagramId,
@@ -393,17 +421,17 @@ export const ApollonWithConnection: React.FC = () => {
           editor.model
         )
         handleVersionSaved(headRev)
-        toast.success(t.restoredSnack(""))
         if (searchParams.has("version")) {
           const next = new URLSearchParams(searchParams)
           next.delete("version")
           setSearchParams(next, { replace: true })
         }
       } catch (err) {
+        restoredDuringPreviewRef.current = false
         if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
           toast.error(t.failureSchemaUnsupported)
         } else {
-          toast.error("Restore failed.")
+          toast.error(t.restoreFailed)
         }
       }
     },
@@ -419,12 +447,6 @@ export const ApollonWithConnection: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {isLoading && (
-        <div className="flex grow justify-center items-center">
-          Preparing the diagram for collaboration...
-        </div>
-      )}
-
       <Box
         sx={{
           display: "flex",
@@ -442,6 +464,20 @@ export const ApollonWithConnection: React.FC = () => {
             position: "relative",
           }}
         >
+          {isLoading && (
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 1,
+              }}
+            >
+              Loading diagram…
+            </Box>
+          )}
           <Box
             className={isLoading ? "invisible" : ""}
             ref={containerRef}
@@ -450,11 +486,11 @@ export const ApollonWithConnection: React.FC = () => {
           <CollaboratorPresenceBar isActive={isCollaborationActive} />
           <CollaboratorCursors
             containerRef={containerRef}
-            isActive={isCollaborationActive}
+            isActive={isCollaborationActive && !preview}
           />
           <CollaboratorSelectionHighlights
             containerRef={containerRef}
-            isActive={isCollaborationActive}
+            isActive={isCollaborationActive && !preview}
           />
           {!isLoading && preview && diagramId && (
             <Box

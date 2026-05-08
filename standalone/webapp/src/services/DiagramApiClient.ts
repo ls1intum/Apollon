@@ -151,7 +151,7 @@ export const VersionApiClient = {
   async create(
     diagramId: string,
     body: UMLModel,
-    opts: { name?: string; description?: string } = {}
+    opts: { name?: string; description?: string; actor?: string } = {}
   ): Promise<
     VersionSummary & {
       evictedVersionIds?: string[]
@@ -171,7 +171,12 @@ export const VersionApiClient = {
       }
     >(`/api/diagrams/${diagramId}/versions`, {
       method: "POST",
-      body: { name: opts.name, description: opts.description, body },
+      body: {
+        name: opts.name,
+        description: opts.description,
+        actor: opts.actor,
+        body,
+      },
     })
     return data
   },
@@ -186,11 +191,14 @@ export const VersionApiClient = {
   async restore(
     diagramId: string,
     versionId: string,
-    opts: { currentBody?: UMLModel } = {}
+    opts: { currentBody?: UMLModel; actor?: string } = {}
   ): Promise<RestoreVersionResponse> {
     const { data } = await request<RestoreVersionResponse>(
       `/api/diagrams/${diagramId}/versions/${versionId}/restore`,
-      { method: "POST", body: { currentBody: opts.currentBody } }
+      {
+        method: "POST",
+        body: { currentBody: opts.currentBody, actor: opts.actor },
+      }
     )
     return data
   },

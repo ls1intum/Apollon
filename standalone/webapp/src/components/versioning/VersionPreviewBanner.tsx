@@ -1,5 +1,5 @@
 import { Alert, Box, Button } from "@mui/material"
-import { type FC } from "react"
+import { useState, type FC } from "react"
 import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
@@ -19,7 +19,7 @@ const STACKED_WIDTH_PX = 480
 interface Props {
   diagramId: string
   onExit: () => void
-  onRestore: (versionId: string) => void
+  onRestore: (versionId: string) => void | Promise<void>
   /**
    * Measured width of the banner's container (typically the canvas
    * column). When `undefined` the banner falls back to its desktop
@@ -50,8 +50,11 @@ export const VersionPreviewBanner: FC<Props> = ({
 
   const preview = useVersionStore((s) => s.preview)
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
+  const [restoring, setRestoring] = useState(false)
   if (!preview) return null
 
+  const latestSavedId = versions.find((v) => !v.pending && !v.failed)?.id
+  const isLatest = preview.versionId === latestSavedId
   const summary = versions.find((v) => v.id === preview.versionId)
   // Description is the user-facing label everywhere else; fall back to
   // `name` (carries pre-restore copy like "Before restoring 'X'") then to
@@ -131,28 +134,34 @@ export const VersionPreviewBanner: FC<Props> = ({
           >
             {t.exitPreview}
           </Button>
-          <Button
-            variant="contained"
-            disableElevation
-            onClick={() => onRestore(preview.versionId)}
-            size={isSmall ? "small" : "medium"}
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              px: isSmall ? 1.5 : 2,
-              minWidth: 0,
-              whiteSpace: "nowrap",
-              // White button on the warning-yellow alert: clear primary
-              // affordance without introducing a new accent color. Text
-              // uses the warning palette's darker shade for accessible
-              // contrast on white.
-              bgcolor: "common.white",
-              color: "warning.dark",
-              "&:hover": { bgcolor: "grey.100" },
-            }}
-          >
-            {t.restoreThis}
-          </Button>
+          {!isLatest && (
+            <Button
+              variant="contained"
+              disableElevation
+              disabled={restoring}
+              onClick={async () => {
+                setRestoring(true)
+                try {
+                  await onRestore(preview.versionId)
+                } finally {
+                  setRestoring(false)
+                }
+              }}
+              size={isSmall ? "small" : "medium"}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                px: isSmall ? 1.5 : 2,
+                minWidth: 0,
+                whiteSpace: "nowrap",
+                bgcolor: "common.white",
+                color: "warning.dark",
+                "&:hover": { bgcolor: "grey.100" },
+              }}
+            >
+              {t.restoreThis}
+            </Button>
+          )}
         </Box>
       }
     >
