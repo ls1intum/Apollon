@@ -125,16 +125,19 @@ export function startRelayServer(opts: StartOptions): RelayServer {
     const roomState = roomAwarenessStates.get(diagramId)
     if (!roomState) return
 
-    removeAwarenessStates(
-      roomState.awareness,
-      removedClientIds,
-      disconnectedSocket
+    // Filter to only IDs the awareness layer actually knows about. A client
+    // can be tracked-per-socket without ever appearing in the room
+    // awareness (e.g. it sent only an empty AwarenessSync response, or its
+    // entry was already cleared by a prior removal). Passing unknown IDs
+    // to `encodeAwarenessUpdate` crashes on `meta.get(id).clock`.
+    const known = removedClientIds.filter((id) =>
+      roomState.awareness.meta.has(id)
     )
+    if (known.length === 0) return
 
-    const awarenessUpdate = encodeAwarenessUpdate(
-      roomState.awareness,
-      removedClientIds
-    )
+    removeAwarenessStates(roomState.awareness, known, disconnectedSocket)
+
+    const awarenessUpdate = encodeAwarenessUpdate(roomState.awareness, known)
     // Frame the update: prepend the awareness message type byte, then
     // wrap in the same { diagramData: base64 } JSON envelope the client
     // expects.

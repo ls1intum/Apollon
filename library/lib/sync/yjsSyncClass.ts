@@ -54,6 +54,20 @@ export class YjsSyncClass {
     this.stopYjsObserver()
   }
 
+  /**
+   * Push the entire local Yjs document as a single `YjsUpdate`. Callers should
+   * invoke this after a (re)connect so peers absorb any edits made while we
+   * were disconnected — those updates fire while `readyState !== OPEN`, are
+   * silently dropped by the send callback, and never replayed otherwise.
+   * Yjs CRDTs converge on merge, so peers that already have these ops just
+   * no-op.
+   */
+  public broadcastFullState = () => {
+    if (!this.sendBroadcastMessage) return
+    const state = Y.encodeStateAsUpdate(this.ydoc)
+    this.sendFramedMessage(MessageType.YjsUpdate, state)
+  }
+
   public setSendBroadcastMessage = (sendFn: SendBroadcastMessage) => {
     this.sendBroadcastMessage = sendFn
 

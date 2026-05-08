@@ -472,6 +472,15 @@ export class ApollonEditor {
     this.syncManager.handleReceivedData(base64Data)
   }
 
+  /**
+   * Push the entire local Yjs document to peers. Hosts should call this on
+   * every (re)connect so any edits made while the transport was closed are
+   * absorbed by the room. See `YjsSyncClass.broadcastFullState`.
+   */
+  public broadcastFullState() {
+    this.syncManager.broadcastFullState()
+  }
+
   public setLocalAwarenessUser(user: Apollon.CollaborationUser) {
     this.syncManager.setLocalAwarenessUser(user)
   }

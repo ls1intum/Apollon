@@ -81,6 +81,13 @@ export class WebSocketManager {
         diagramData: ApollonEditor.generateInitialAwarenessSyncMessage(),
       }
       this.websocket?.send(JSON.stringify(awarenessMessage))
+
+      // YjsSYNC asks peers for state but doesn't push our own. Any edits made
+      // while the WS was closed (initial pre-open, or any transient drop)
+      // were silently discarded by the send callback and would be lost
+      // forever otherwise. CRDT merge means peers that already have these
+      // ops no-op, so the cost is bounded to one push per reconnect.
+      this.instance.broadcastFullState()
     }
 
     this.websocket.onmessage = (event) => {
