@@ -161,18 +161,28 @@ export const useVersionStore = create<VersionStore>()(
         loadMoreVersions: async (diagramId) => {
           const cursor = get().nextCursor[diagramId]
           if (!cursor) return
-          const { versions, nextCursor, total } = await VersionApiClient.list(
-            diagramId,
-            { limit: 25, before: cursor }
-          )
-          set((s) => ({
-            versions: {
-              ...s.versions,
-              [diagramId]: [...(s.versions[diagramId] ?? []), ...versions],
-            },
-            nextCursor: { ...s.nextCursor, [diagramId]: nextCursor },
-            totals: { ...s.totals, [diagramId]: total },
-          }))
+          set({ loading: true, error: null })
+          try {
+            const { versions, nextCursor, total } = await VersionApiClient.list(
+              diagramId,
+              { limit: 25, before: cursor }
+            )
+            set((s) => ({
+              versions: {
+                ...s.versions,
+                [diagramId]: [...(s.versions[diagramId] ?? []), ...versions],
+              },
+              nextCursor: { ...s.nextCursor, [diagramId]: nextCursor },
+              totals: { ...s.totals, [diagramId]: total },
+              loading: false,
+            }))
+          } catch (err) {
+            set({
+              loading: false,
+              error: err instanceof ApiError ? err.code : "INTERNAL",
+            })
+            toast.error("Failed to load more versions.")
+          }
         },
 
         createVersion: async (diagramId, body, opts) => {
@@ -197,7 +207,12 @@ export const useVersionStore = create<VersionStore>()(
           }))
           try {
             const result = await VersionApiClient.create(diagramId, body, opts)
-            const { evictedVersionIds, evictedKinds, ...summary } = result
+            const {
+              evictedVersionIds,
+              evictedKinds,
+              total: serverTotal,
+              ...summary
+            } = result
             set((s) => {
               const currentList = s.versions[diagramId] ?? []
               // Strip both the optimistic placeholder and any rows the
@@ -213,14 +228,15 @@ export const useVersionStore = create<VersionStore>()(
                 versions: { ...s.versions, [diagramId]: reconciled },
                 totals: {
                   ...s.totals,
-                  // Server returns `total = ZCARD` on list; we don't have a
-                  // fresh value from POST, so derive: prev + 1 - evicted.
-                  // Caps at MAX naturally because eviction count makes the
-                  // delta zero once we're saturated.
+                  // Prefer the authoritative server total when the POST 201
+                  // response includes it; fall back to client derivation for
+                  // older server versions that don't send total yet.
                   [diagramId]:
-                    typeof prevTotal === "number"
-                      ? prevTotal + 1 - (evictedVersionIds?.length ?? 0)
-                      : reconciled.filter((v) => !v.pending).length,
+                    typeof serverTotal === "number"
+                      ? serverTotal
+                      : typeof prevTotal === "number"
+                        ? prevTotal + 1 - (evictedVersionIds?.length ?? 0)
+                        : reconciled.filter((v) => !v.pending).length,
                 },
               }
             })
@@ -301,6 +317,13 @@ export const useVersionStore = create<VersionStore>()(
         enterPreview: async (diagramId, versionId) => {
           const body = await VersionApiClient.getBody(diagramId, versionId)
           set({ preview: { versionId, body } })
+          // On deep-link the version list may be empty (fetchVersions and
+          // enterPreview both start concurrently in the init effect but
+          // enterPreview can resolve first). Trigger a list fetch so the
+          // preview banner can show the version's metadata (label, timestamp).
+          if (!get().versions[diagramId]?.length) {
+            void get().fetchVersions(diagramId)
+          }
         },
 
         exitPreview: () => set({ preview: null }),
@@ -327,6 +350,19 @@ export const useVersionStore = create<VersionStore>()(
         triggerUndoRestore: async (diagramId, currentBody) => {
           const undo = get().undoRestore
           if (!undo || undo.diagramId !== diagramId) return
+          // Refuse to trigger if the undo window has expired. The snackbar
+          // should auto-dismiss before this point, but guard defensively so
+          // a stale snackbar re-render can't restore to a 10+ second old snapshot.
+          if (Date.now() > undo.expiresAt) {
+            set({ undoRestore: null })
+            return
+          }
+          // Exit any active preview before restoring — restoring while
+          // previewing would leave the store in an inconsistent state where
+          // preview !== null but the canvas shows the restored HEAD.
+          if (get().preview !== null) {
+            get().exitPreview()
+          }
           // Restore the auto-snapshot, passing the user's current canvas so the
           // undo's own pre-restore auto-snapshot captures whatever they're
           // looking at right now (e.g. small edits made after the original

@@ -156,12 +156,15 @@ export const VersionApiClient = {
     VersionSummary & {
       evictedVersionIds?: string[]
       evictedKinds?: ("unnamed" | "named")[]
+      /** Authoritative post-commit total from the server (ZCARD). */
+      total?: number
     }
   > {
     const { data } = await request<
       VersionSummary & {
         evictedVersionIds?: string[]
         evictedKinds?: ("unnamed" | "named")[]
+        total?: number
       }
     >(`/api/diagrams/${diagramId}/versions`, {
       method: "POST",

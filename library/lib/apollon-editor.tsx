@@ -322,7 +322,9 @@ export class ApollonEditor {
     ])
 
     if (!reactFlowInstance) {
+      svgRoot.unmount()
       document.body.removeChild(container)
+      ydoc.destroy()
       throw new Error("React Flow instance not initialized")
     }
 

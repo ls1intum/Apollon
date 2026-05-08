@@ -11,7 +11,13 @@ import {
 } from "@mui/material"
 import MoreVertIcon from "@mui/icons-material/MoreVert"
 import { VersionThumbnail } from "./VersionThumbnail"
-import { useState, type FC, type KeyboardEvent, type MouseEvent } from "react"
+import {
+  useState,
+  useRef,
+  type FC,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react"
 import { toast } from "react-toastify"
 import { log } from "@/logger"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
@@ -51,6 +57,12 @@ export const VersionListItem: FC<Props> = ({
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(version.description ?? "")
+  // Guards against Escape → onBlur double-submit. In React 18 automatic
+  // batching, state updates inside event handlers are batched; onBlur fires
+  // synchronously before the batch applies, so `draft` still holds the
+  // user's typed value when cancelEdit's setDraft hasn't flushed yet. The
+  // ref bypasses the stale-closure problem entirely.
+  const cancellingRef = useRef(false)
   const editVersionInfo = useVersionStore((s) => s.editVersionInfo)
 
   const openMenu = (e: MouseEvent<HTMLButtonElement>) => {
@@ -65,6 +77,12 @@ export const VersionListItem: FC<Props> = ({
   }
 
   const submitEdit = async () => {
+    // Cancelled via Escape — onBlur fired after cancelEdit's state batch;
+    // skip the submit so we don't overwrite the description with draft.
+    if (cancellingRef.current) {
+      cancellingRef.current = false
+      return
+    }
     setEditing(false)
     const next = draft.trim()
     if (next === (version.description ?? "").trim()) return
@@ -82,6 +100,7 @@ export const VersionListItem: FC<Props> = ({
   }
 
   const cancelEdit = () => {
+    cancellingRef.current = true
     setDraft(version.description ?? "")
     setEditing(false)
   }
@@ -235,6 +254,7 @@ export const VersionListItem: FC<Props> = ({
           size="small"
           onClick={openMenu}
           aria-label="Version actions"
+          aria-haspopup="menu"
           disabled={Boolean(version.pending)}
           sx={{ color: TEXT_PRIMARY }}
         >

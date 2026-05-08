@@ -79,9 +79,10 @@ export const ROW_SELECTED_BG = "rgba(255, 255, 255, 0.10)"
  *     flags, set by config not by the user editing
  *
  * Mirrors `structuralFingerprint` in `services/autoVersion.ts` on the
- * server — both use this exact key set, pinned by an integration test.
- * Drift here means the server fires spurious auto-versions on UI churn
- * the client correctly ignored. False positives are cheap; false
+ * server — both hash the same six fields (title, type, version, nodes,
+ * edges, assessments) with the same VOLATILE_KEYS replacer, pinned by an
+ * integration test. Drift here means the server fires spurious auto-versions
+ * on UI churn the client correctly ignored. False positives are cheap; false
  * negatives cost the user a recovery point.
  */
 const VOLATILE_KEYS = new Set([
@@ -102,6 +103,7 @@ function structuralFingerprint(model: {
   assessments?: unknown
   title?: unknown
   type?: unknown
+  version?: unknown
 }): string {
   return JSON.stringify(
     {
@@ -110,6 +112,7 @@ function structuralFingerprint(model: {
       assessments: model.assessments,
       title: model.title,
       type: model.type,
+      version: model.version,
     },
     (key, value) => (VOLATILE_KEYS.has(key) ? undefined : value)
   )
@@ -262,12 +265,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
   const handleRestore = async (versionId: string) => {
     if (!editor) return
     try {
-      const { autoSnapshotVersionId } = await restoreVersion(
-        diagramId,
-        versionId,
-        editor.model
-      )
-      void autoSnapshotVersionId
+      await restoreVersion(diagramId, versionId, editor.model)
     } catch (err) {
       if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
         toast.error(t.failureSchemaUnsupported)

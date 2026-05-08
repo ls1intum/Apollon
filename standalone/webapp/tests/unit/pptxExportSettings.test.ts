@@ -20,13 +20,13 @@ describe("pptxExportSettings", () => {
       slideSize: "widescreen",
       diagramFit: "fill",
       fontFace: "Aptos",
-      background: "transparent",
+      scalePercent: 75,
     })
     expect(loadPptxSettings()).toEqual({
       slideSize: "widescreen",
       diagramFit: "fill",
       fontFace: "Aptos",
-      background: "transparent",
+      scalePercent: 75,
     })
   })
 

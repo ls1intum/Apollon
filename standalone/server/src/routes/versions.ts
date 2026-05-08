@@ -291,6 +291,11 @@ export function mountVersionRoutes(
           if (!summary)
             throw Errors.internal("version meta missing after commit")
 
+          // Post-commit authoritative count so the client doesn't need to
+          // derive it (prev + 1 - evicted), which can drift on concurrent
+          // saves from multiple collaborators.
+          const total = await redis.zCard(k.versionsIndex(params.diagramId))
+
           relay?.publishControl(params.diagramId, {
             type: "VERSION_CREATED",
             versionId: vid,
@@ -323,6 +328,7 @@ export function mountVersionRoutes(
             ...summary,
             evictedVersionIds: result.evictedIds,
             evictedKinds: result.evictedKinds,
+            total,
           })
         } catch (err) {
           if (err instanceof RedisAppError && err.code === "NO_HEAD") {
@@ -471,6 +477,12 @@ export function mountVersionRoutes(
         if (body.name !== undefined) updates.name = body.name
         if (body.description !== undefined)
           updates.description = body.description
+        // When the user gives a name to an auto-snapshot (kind !== "user"),
+        // promote it so it is treated as a named milestone: shown without
+        // collapse, protected from eviction priority, labelled in the UI.
+        if (body.name?.trim() && existing.kind !== "user") {
+          updates.kind = "user"
+        }
         if (Object.keys(updates).length === 0) {
           res.status(200).json(existing)
           return
