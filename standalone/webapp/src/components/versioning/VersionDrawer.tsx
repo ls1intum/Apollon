@@ -17,6 +17,7 @@ import HistoryToggleOffIcon from "@mui/icons-material/HistoryToggleOff"
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FC,
   type KeyboardEvent,
@@ -28,7 +29,7 @@ import {
   useVersionStore,
   type PendingVersion,
 } from "@/stores/useVersionStore"
-import { ApiError } from "@/services/DiagramApiClient"
+import { ApiError, VersionApiClient } from "@/services/DiagramApiClient"
 import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
@@ -120,6 +121,7 @@ function structuralFingerprint(model: {
 
 interface Props {
   diagramId: string
+  onVersionSaved?: (headRev?: number) => void
 }
 
 /**
@@ -130,7 +132,7 @@ interface Props {
  *  - `VersionDrawer` (mobile <sm): rendered inside an MUI bottom-sheet
  *    Drawer because there isn't room for two columns on small viewports.
  */
-const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
+const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
   const total = useVersionStore((s) => s.totals[diagramId])
   const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
@@ -149,6 +151,12 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
   const [draft, setDraft] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [activeRowId, setActiveRowId] = useState<string | null>(null)
+  /**
+   * Tracks the id of the last version saved locally (via handleCreate) so
+   * the fingerprint baseline can be taken from `editor.model` (fast path)
+   * instead of fetching the version body from the server.
+   */
+  const lastLocalSaveIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     void fetchVersions(diagramId)
@@ -188,11 +196,18 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
   const [savedFingerprint, setSavedFingerprint] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(true)
 
-  // Re-baseline the fingerprint on every new latest-saved version. By the
-  // time the version list reflects the new row, the editor model already
-  // matches the snapshot (locally we passed editor.model as the body; for
-  // collaborator/server events Yjs has converged). Capturing the
-  // fingerprint *now* is the right reference for "no changes since save".
+  // Re-baseline the fingerprint on every new latest-saved version.
+  //
+  // Two cases:
+  //  1. Local save (handleCreate just ran): `lastLocalSaveIdRef.current`
+  //     matches the new version id. At this point `editor.model` IS the
+  //     saved state, so we can fingerprint it synchronously — no fetch
+  //     needed and no async race.
+  //  2. Collaborator/server-fired version, or initial mount: we do NOT
+  //     know what the editor model was at save time, so we fetch the
+  //     actual version body from the server and fingerprint that. This is
+  //     the only way to get a correct baseline on page load (the editor
+  //     may already have unsaved changes) or after a collaborator saves.
   useEffect(() => {
     if (!editor) return
     if (!latestSavedVersion) {
@@ -200,8 +215,28 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
       setHasChanges(true)
       return
     }
-    setSavedFingerprint(structuralFingerprint(editor.model))
-    setHasChanges(false)
+    if (lastLocalSaveIdRef.current === latestSavedVersion.id) {
+      // Fast path: we just saved this version locally — editor model is authoritative.
+      setSavedFingerprint(structuralFingerprint(editor.model))
+      setHasChanges(false)
+      return
+    }
+    // Slow path: fetch the actual version body so the baseline is the
+    // server's canonical snapshot, not the potentially-dirty editor state.
+    VersionApiClient.getBody(
+      latestSavedVersion.diagramId,
+      latestSavedVersion.id
+    )
+      .then((body) => {
+        setSavedFingerprint(structuralFingerprint(body))
+      })
+      .catch(() => {
+        // Fallback: if the fetch fails, assume unsaved changes exist rather
+        // than hiding the Save button. False-positive is safe; false-negative
+        // (hiding real changes) is not.
+        setSavedFingerprint(null)
+        setHasChanges(true)
+      })
   }, [editor, latestSavedVersion?.id])
 
   useEffect(() => {
@@ -236,10 +271,15 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
       ? description.split("\n")[0]!.slice(0, 80)
       : `Snapshot — ${new Date().toLocaleString()}`
     try {
-      await createVersion(diagramId, editor.model, {
+      const summary = await createVersion(diagramId, editor.model, {
         name,
         description: description || undefined,
       })
+      // Record the id before React re-renders so the baseline effect
+      // (latestSavedVersion?.id dep) sees it synchronously and takes the
+      // fast path (editor.model fingerprint) instead of fetching the body.
+      lastLocalSaveIdRef.current = summary.id
+      onVersionSaved?.(summary.headRev)
       setDraft("")
     } catch (err) {
       if (err instanceof ApiError) {
@@ -265,7 +305,12 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
   const handleRestore = async (versionId: string) => {
     if (!editor) return
     try {
-      await restoreVersion(diagramId, versionId, editor.model)
+      const { headRev } = await restoreVersion(
+        diagramId,
+        versionId,
+        editor.model
+      )
+      onVersionSaved?.(headRev)
     } catch (err) {
       if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
         toast.error(t.failureSchemaUnsupported)
@@ -567,7 +612,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId }) => {
  * to avoid running its `fetchVersions` effect for diagrams the user never
  * opens, and to release the SVG-thumbnail observer.
  */
-export const VersionSidebar: FC<Props> = ({ diagramId }) => {
+export const VersionSidebar: FC<Props> = ({ diagramId, onVersionSaved }) => {
   // Below the navbar's mobile threshold the bottom-sheet
   // `<VersionDrawer>` takes over; render nothing here so the sidebar
   // doesn't eat 320px of width on phones or in the awkward
@@ -602,7 +647,12 @@ export const VersionSidebar: FC<Props> = ({ diagramId }) => {
       aria-hidden={!open}
     >
       <Box sx={{ width: SIDEBAR_WIDTH, height: "100%" }}>
-        {mounted && <VersionSidebarBody diagramId={diagramId} />}
+        {mounted && (
+          <VersionSidebarBody
+            diagramId={diagramId}
+            onVersionSaved={onVersionSaved}
+          />
+        )}
       </Box>
     </Box>
   )
@@ -612,7 +662,7 @@ export const VersionSidebar: FC<Props> = ({ diagramId }) => {
  * Mobile fallback. On `<sm` viewports there isn't room for a 400-pixel
  * column, so we keep the bottom-sheet pattern for the small-screen case.
  */
-export const VersionDrawer: FC<Props> = ({ diagramId }) => {
+export const VersionDrawer: FC<Props> = ({ diagramId, onVersionSaved }) => {
   const isSmall = useMediaQuery(MOBILE_QUERY)
   const open = useVersionStore((s) => Boolean(s.drawerOpenByDiagram[diagramId]))
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
@@ -627,7 +677,10 @@ export const VersionDrawer: FC<Props> = ({ diagramId }) => {
         sx: { height: "80vh", width: "100%" },
       }}
     >
-      <VersionSidebarBody diagramId={diagramId} />
+      <VersionSidebarBody
+        diagramId={diagramId}
+        onVersionSaved={onVersionSaved}
+      />
     </Drawer>
   )
 }

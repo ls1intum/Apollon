@@ -267,7 +267,7 @@ export function mountVersionRoutes(
             updatedAt: new Date().toISOString(),
           } as Diagram
 
-          await saveHead(redis, config, flushed)
+          const { headRev } = await saveHead(redis, config, flushed)
 
           const vid = ulid()
           const nowMs = Date.now()
@@ -329,6 +329,7 @@ export function mountVersionRoutes(
             evictedVersionIds: result.evictedIds,
             evictedKinds: result.evictedKinds,
             total,
+            headRev,
           })
         } catch (err) {
           if (err instanceof RedisAppError && err.code === "NO_HEAD") {

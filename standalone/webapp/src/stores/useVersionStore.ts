@@ -59,7 +59,7 @@ interface Actions {
     diagramId: DiagramId,
     body: UMLModel,
     opts: { name?: string; description?: string }
-  ) => Promise<VersionSummary>
+  ) => Promise<VersionSummary & { headRev?: number }>
   editVersionInfo: (
     diagramId: DiagramId,
     versionId: VersionId,
@@ -74,7 +74,7 @@ interface Actions {
     diagramId: DiagramId,
     versionId: VersionId,
     currentBody: UMLModel
-  ) => Promise<{ autoSnapshotVersionId: VersionId }>
+  ) => Promise<{ autoSnapshotVersionId: VersionId; headRev: number }>
   triggerUndoRestore: (
     diagramId: DiagramId,
     currentBody: UMLModel
@@ -211,6 +211,7 @@ export const useVersionStore = create<VersionStore>()(
               evictedVersionIds,
               evictedKinds,
               total: serverTotal,
+              headRev: serverHeadRev,
               ...summary
             } = result
             set((s) => {
@@ -268,7 +269,7 @@ export const useVersionStore = create<VersionStore>()(
                 )
               }
             }
-            return summary
+            return { ...summary, headRev: serverHeadRev }
           } catch (err) {
             set((s) => ({
               versions: {
@@ -329,11 +330,10 @@ export const useVersionStore = create<VersionStore>()(
         exitPreview: () => set({ preview: null }),
 
         restoreVersion: async (diagramId, versionId, currentBody) => {
-          const { autoSnapshotVersionId } = await VersionApiClient.restore(
-            diagramId,
-            versionId,
-            { currentBody }
-          )
+          const { autoSnapshotVersionId, headRev } =
+            await VersionApiClient.restore(diagramId, versionId, {
+              currentBody,
+            })
           set({
             preview: null,
             undoRestore: {
@@ -344,7 +344,7 @@ export const useVersionStore = create<VersionStore>()(
           })
           // Refresh to pick up the new auto-snapshot row.
           void get().fetchVersions(diagramId)
-          return { autoSnapshotVersionId }
+          return { autoSnapshotVersionId, headRev }
         },
 
         triggerUndoRestore: async (diagramId, currentBody) => {

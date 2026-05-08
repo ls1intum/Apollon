@@ -44,7 +44,6 @@ export const versioningStrings = {
     "This diagram is too large to version (over 5 MB). Try splitting it into smaller diagrams.",
   failureSchemaUnsupported:
     "This snapshot was created by an older version of the editor and can't be restored automatically.",
-  syncedFromCollaborator: "Synced changes from another collaborator.",
   unnamed: "Untitled snapshot",
   justNow: "just now",
   minutesAgo: (n: number) => `${n}m ago`,
