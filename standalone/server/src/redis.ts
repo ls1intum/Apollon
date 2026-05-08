@@ -84,18 +84,20 @@ export function gunzipJson<T>(s: string): T {
 
 export const COMMIT_VERSION_SOURCE = `#!lua name=apollon
 
--- Eviction priority: prefer rows where BOTH name and description are empty —
--- those are raw, unnamed autosaves (= recovery infrastructure). User-saved
--- versions (and autosaves the user later named via "Name this version") are
--- protected milestones; we only fall back to evicting them if every unnamed
--- autosave has already been pruned. Matches Figma's mental model: autosaves
--- are background safety, named versions are the user's deliberate timeline.
+-- Eviction priority:
+--   1. First evicted: raw unnamed autosaves — kind='auto', name='', desc=''.
+--      These are background recovery infrastructure; the user never asked for
+--      them explicitly.
+--   2. Protected: any version the user explicitly saved (kind='user') OR that
+--      has a non-empty name / description. A user-initiated save is a
+--      deliberate milestone regardless of whether a description was written.
+--   3. Last resort: if the cap is hit entirely by protected rows, evict the
+--      oldest protected ones too.
 --
 -- Returns parallel arrays: { evictedIds[], evictedKinds[] } where each kind
--- is 'unnamed' (empty meta — disposable) or 'named' (the user cared, but we
--- evicted anyway because the cap was hit by named rows alone). The client
--- uses this to show a truthful toast ("removed an autosave" vs the much
--- stronger "removed a named version") instead of always claiming autosave.
+-- is 'unnamed' (disposable autosave) or 'named' (user cared, evicted only
+-- because cap was exhausted by protected rows). The client uses this to show
+-- a truthful toast instead of always claiming "autosave removed".
 local function evict_with_priority(versionsKey, headKey, count, maxV)
   local need = count - maxV
   if need <= 0 then return { {}, {} } end
@@ -105,13 +107,14 @@ local function evict_with_priority(versionsKey, headKey, count, maxV)
   local evictedKinds = {}
   local protectedQueue = {}
 
-  -- First pass: drop unnamed autosaves oldest-first up to need.
+  -- First pass: drop unnamed auto-snapshots oldest-first up to need.
   for _, vid in ipairs(all) do
     local metaKey = headKey .. ':version:' .. vid .. ':meta'
-    local meta = redis.call('HMGET', metaKey, 'name', 'description')
+    local meta = redis.call('HMGET', metaKey, 'name', 'description', 'kind')
     local name = meta[1] or ''
     local desc = meta[2] or ''
-    if name == '' and desc == '' then
+    local kind = meta[3] or 'auto'
+    if name == '' and desc == '' and kind ~= 'user' then
       if #evictedIds < need then
         redis.call('DEL', headKey .. ':version:' .. vid)
         redis.call('DEL', metaKey)

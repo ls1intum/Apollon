@@ -133,11 +133,9 @@ export const VersionListItem: FC<Props> = ({
   const named = isNamedVersion(version)
   const ago = relativeTime(version.createdAt)
   const description = version.description?.trim()
-  // Pre-restore rows arrive with `name = "Before restoring 'X'"` and an
-  // empty description. Fall through to `name` so the row still shows that
-  // self-explanatory label without dragging a separate "title" field into
-  // the UI. User-saved rows always have description, so this fallback is
-  // a no-op for them.
+  // Used for the accessible aria-label only. Pre-restore auto-snapshots
+  // have a system-generated name but no description; user saves without
+  // a description have neither — their #N identity is already in the label.
   const label = description || version.name?.trim() || ""
   const clickable = !version.pending && !editing
 

@@ -403,9 +403,11 @@ export function mountVersionRoutes(
 
           // Pre-restore snapshot gets a self-explanatory name so it survives
           // eviction priority (unnamed autos go first; this one is named).
-          const autoName = fromMeta.name
-            ? `Before restoring '${fromMeta.name}'`
-            : `Before restoring snapshot ${params.versionId.slice(0, 8)}`
+          const autoName = fromMeta.name?.trim()
+            ? `Before restoring '${fromMeta.name.trim()}'`
+            : fromMeta.seq !== undefined
+              ? `Before restoring #${fromMeta.seq}`
+              : `Before restoring snapshot ${params.versionId.slice(0, 8)}`
 
           const result = await restoreVersion(redis, {
             diagramId: params.diagramId,

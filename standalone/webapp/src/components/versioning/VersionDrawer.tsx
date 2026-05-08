@@ -267,17 +267,12 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
     // Name is now an internal label only — the UI surfaces the description.
     // Default to a timestamped snapshot when no description is provided so
     // restored snackbars and copy-link tooltips stay readable.
-    const name = description
-      ? description.split("\n")[0]!.slice(0, 80)
-      : (() => {
-          const d = new Date()
-          const dd = String(d.getDate()).padStart(2, "0")
-          const mm = String(d.getMonth() + 1).padStart(2, "0")
-          const yyyy = d.getFullYear()
-          const hh = String(d.getHours()).padStart(2, "0")
-          const min = String(d.getMinutes()).padStart(2, "0")
-          return `${dd}.${mm}.${yyyy}, ${hh}:${min}`
-        })()
+    // Name is the first line of the description (capped at 80 chars) and
+    // is used internally for snackbar labels and eviction labelling.
+    // When there is no description the name is left empty — kind:'user'
+    // already protects the version from eviction, and the version list
+    // row already shows #N · time-ago as its primary identifier.
+    const name = description ? description.split("\n")[0]!.slice(0, 80) : ""
     try {
       const summary = await createVersion(diagramId, editor.model, {
         name,
