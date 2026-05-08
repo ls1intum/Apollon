@@ -64,7 +64,7 @@ export const CollaboratorPresenceBar = ({
     }
   }, [editor, isActive])
 
-  if (!isActive || !localUser) return null
+  if (!isActive || !localUser || collaborators.length === 0) return null
 
   const all = [
     {
