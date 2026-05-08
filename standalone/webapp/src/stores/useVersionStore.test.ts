@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { ControlEvent, VersionSummary } from "@/types"
-import { useVersionStore } from "./useVersionStore"
+import { useVersionStore, selectVersions } from "./useVersionStore"
 
 function summary(
   id: string,
@@ -109,5 +109,142 @@ describe("useVersionStore.drawer", () => {
     expect(useVersionStore.getState().drawerOpenByDiagram["d2"]).toBeUndefined()
     useVersionStore.getState().closeDrawer("d1")
     expect(useVersionStore.getState().drawerOpenByDiagram["d1"]).toBe(false)
+  })
+})
+
+describe("useVersionStore.applyControlEvent — VERSION_CREATED insertion path", () => {
+  it("triggers fetchVersions when the version is NOT already in the list", () => {
+    useVersionStore.setState((s) => ({
+      versions: { ...s.versions, d1: [summary("existing")] },
+    }))
+
+    // Spy on fetchVersions to verify it's called (the actual fetch would
+    // hit the network; we just confirm the code path is entered).
+    const fetchSpy = vi.spyOn(useVersionStore.getState(), "fetchVersions")
+    fetchSpy.mockResolvedValue(undefined)
+
+    const event: ControlEvent = {
+      type: "VERSION_CREATED",
+      versionId: "brand-new",
+      createdAt: "2026-04-30T10:00:00Z",
+      name: "remote-save",
+      kind: "auto",
+    }
+    useVersionStore.getState().applyControlEvent("d1", event)
+
+    expect(fetchSpy).toHaveBeenCalledWith("d1")
+    // The existing list is untouched until fetchVersions resolves
+    expect(useVersionStore.getState().versions.d1).toHaveLength(1)
+    expect(useVersionStore.getState().versions.d1![0]!.id).toBe("existing")
+
+    fetchSpy.mockRestore()
+  })
+
+  it("does NOT trigger fetchVersions when the version already exists (dedup)", () => {
+    useVersionStore.setState((s) => ({
+      versions: { ...s.versions, d1: [summary("a")] },
+    }))
+
+    const fetchSpy = vi.spyOn(useVersionStore.getState(), "fetchVersions")
+    fetchSpy.mockResolvedValue(undefined)
+
+    const event: ControlEvent = {
+      type: "VERSION_CREATED",
+      versionId: "a",
+      createdAt: "2026-04-29T12:00:00Z",
+      name: "a",
+      kind: "user",
+    }
+    useVersionStore.getState().applyControlEvent("d1", event)
+
+    expect(fetchSpy).not.toHaveBeenCalled()
+
+    fetchSpy.mockRestore()
+  })
+
+  it("handles VERSION_CREATED when the diagram has no versions yet (empty list)", () => {
+    // No versions set for d1 — the `get().versions[diagramId] ?? []` path
+    useVersionStore.setState((s) => ({
+      versions: { ...s.versions },
+    }))
+
+    const fetchSpy = vi.spyOn(useVersionStore.getState(), "fetchVersions")
+    fetchSpy.mockResolvedValue(undefined)
+
+    const event: ControlEvent = {
+      type: "VERSION_CREATED",
+      versionId: "first-ever",
+      createdAt: "2026-04-30T10:00:00Z",
+      name: "",
+      kind: "auto",
+    }
+    useVersionStore.getState().applyControlEvent("d1", event)
+
+    expect(fetchSpy).toHaveBeenCalledWith("d1")
+
+    fetchSpy.mockRestore()
+  })
+})
+
+describe("useVersionStore.applyControlEvent — VERSION_DELETED edge cases", () => {
+  it("VERSION_DELETED on a non-existent id is a safe no-op", () => {
+    useVersionStore.setState((s) => ({
+      versions: { ...s.versions, d1: [summary("a"), summary("b")] },
+    }))
+    const event: ControlEvent = {
+      type: "VERSION_DELETED",
+      versionId: "does-not-exist",
+    }
+    useVersionStore.getState().applyControlEvent("d1", event)
+    expect(useVersionStore.getState().versions.d1).toHaveLength(2)
+  })
+
+  it("VERSION_DELETED on a diagram with no local versions does not crash", () => {
+    // d1 has no entry in versions at all
+    const event: ControlEvent = {
+      type: "VERSION_DELETED",
+      versionId: "ghost",
+    }
+    // Should not throw
+    useVersionStore.getState().applyControlEvent("d1", event)
+    expect(useVersionStore.getState().versions.d1).toEqual([])
+  })
+})
+
+describe("useVersionStore.applyControlEvent — VERSION_RENAMED edge cases", () => {
+  it("VERSION_RENAMED for a non-existent id leaves the list unchanged", () => {
+    useVersionStore.setState((s) => ({
+      versions: { ...s.versions, d1: [summary("a", { name: "original" })] },
+    }))
+    const event: ControlEvent = {
+      type: "VERSION_RENAMED",
+      versionId: "missing",
+      name: "new-name",
+      description: "new-desc",
+    }
+    useVersionStore.getState().applyControlEvent("d1", event)
+    const v = useVersionStore.getState().versions.d1![0]!
+    expect(v.name).toBe("original")
+  })
+})
+
+describe("selectVersions", () => {
+  it("returns a referentially stable empty array for unknown diagrams", () => {
+    const state = useVersionStore.getState()
+    const a = selectVersions(state, "nonexistent-1")
+    const b = selectVersions(state, "nonexistent-2")
+    // Both should be the exact same frozen object reference — this prevents
+    // useSyncExternalStore from re-rendering on every selector call.
+    expect(a).toBe(b)
+    expect(Object.isFrozen(a)).toBe(true)
+  })
+
+  it("returns the actual version list for a known diagram", () => {
+    const versions = [summary("v1")]
+    useVersionStore.setState((s) => ({
+      versions: { ...s.versions, d1: versions },
+    }))
+    const result = selectVersions(useVersionStore.getState(), "d1")
+    expect(result).toBe(versions)
   })
 })
