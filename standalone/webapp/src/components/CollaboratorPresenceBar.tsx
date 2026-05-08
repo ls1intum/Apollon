@@ -1,17 +1,10 @@
 import { useEditorContext } from "@/contexts"
-import { CollaborationState } from "@tumaet/apollon"
+import { CollaboratorInfo } from "@tumaet/apollon"
 import Tooltip from "@mui/material/Tooltip"
 import { useEffect, useState } from "react"
 
-type Collaborator = {
-  clientId: number
-  name: string
-  color: string
-}
-
 type CollaboratorPresenceBarProps = {
   isActive: boolean
-  localUser: { name: string; color: string } | null
 }
 
 const AVATAR_SIZE = 26
@@ -33,10 +26,9 @@ const avatarBase: React.CSSProperties = {
 
 export const CollaboratorPresenceBar = ({
   isActive,
-  localUser,
 }: CollaboratorPresenceBarProps) => {
   const { editor } = useEditorContext()
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([])
+  const [collaborators, setCollaborators] = useState<CollaboratorInfo[]>([])
 
   useEffect(() => {
     if (!editor || !isActive) {
@@ -44,37 +36,19 @@ export const CollaboratorPresenceBar = ({
       return
     }
 
-    const subscriptionId = editor.subscribeToAwarenessChanges((states) => {
-      const localClientId = editor.getLocalAwarenessClientId()
-      const next: Collaborator[] = []
-
-      for (const [clientId, state] of states.entries()) {
-        if (clientId === localClientId) continue
-        const typedState = state as CollaborationState
-        const user = typedState?.user
-        if (!user) continue
-        next.push({ clientId, name: user.name, color: user.color })
+    const subscriptionId = editor.subscribeToCollaboratorChanges(
+      (collaborators) => {
+        setCollaborators(collaborators)
       }
-
-      setCollaborators(next)
-    })
+    )
 
     return () => {
       editor.unsubscribe(subscriptionId)
     }
   }, [editor, isActive])
 
-  if (!isActive || !localUser || collaborators.length === 0) return null
-
-  const all = [
-    {
-      clientId: -1,
-      name: localUser.name,
-      color: localUser.color,
-      isLocal: true,
-    },
-    ...collaborators.map((c) => ({ ...c, isLocal: false })),
-  ]
+  const remoteCount = collaborators.filter((c) => !c.isLocal).length
+  if (!isActive || remoteCount === 0) return null
 
   return (
     <div
@@ -88,9 +62,9 @@ export const CollaboratorPresenceBar = ({
         pointerEvents: "auto",
       }}
     >
-      {all.map((c, i) => (
+      {collaborators.map((c, i) => (
         <Tooltip
-          key={c.clientId}
+          key={c.id}
           title={c.isLocal ? `${c.name} (You)` : c.name}
           arrow
           slotProps={{
@@ -105,7 +79,7 @@ export const CollaboratorPresenceBar = ({
               backgroundColor: c.color,
               border: "2px solid var(--apollon-background)",
               marginLeft: i === 0 ? 0 : OVERLAP,
-              zIndex: all.length - i,
+              zIndex: collaborators.length - i,
             }}
           >
             {c.name.charAt(0).toUpperCase()}

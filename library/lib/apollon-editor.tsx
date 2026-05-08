@@ -405,9 +405,18 @@ export class ApollonEditor {
     callback: (states: Map<number, Apollon.CollaborationState>) => void
   ) {
     const subscriberId = this.getNewSubscriptionId()
-    const unsubscribeCallback = this.syncManager.subscribeToAwarenessChanges(
-      callback as (states: Map<number, unknown>) => void
-    )
+    const unsubscribeCallback =
+      this.syncManager.subscribeToAwarenessChanges(callback)
+    this.subscribers[subscriberId] = unsubscribeCallback
+    return subscriberId
+  }
+
+  public subscribeToCollaboratorChanges(
+    callback: (collaborators: Apollon.CollaboratorInfo[]) => void
+  ) {
+    const subscriberId = this.getNewSubscriptionId()
+    const unsubscribeCallback =
+      this.syncManager.subscribeToCollaboratorChanges(callback)
     this.subscribers[subscriberId] = unsubscribeCallback
     return subscriberId
   }
@@ -421,6 +430,10 @@ export class ApollonEditor {
   }
 
   public sendBroadcastMessage(sendFn: SendBroadcastMessage) {
+    this.syncManager.setSendBroadcastMessage(sendFn)
+  }
+
+  public onBroadcast(sendFn: SendBroadcastMessage) {
     this.syncManager.setSendBroadcastMessage(sendFn)
   }
 
@@ -440,8 +453,16 @@ export class ApollonEditor {
     this.syncManager.setLocalAwarenessSelectedElement(selectedElementId)
   }
 
+  public setLocalAwarenessState(state: Partial<Apollon.CollaborationState>) {
+    this.syncManager.setLocalAwarenessState(state)
+  }
+
   public getLocalAwarenessClientId(): number {
     return this.syncManager.getLocalAwarenessClientId()
+  }
+
+  public getCollaborators(): Apollon.CollaboratorInfo[] {
+    return this.syncManager.getCollaborators()
   }
 
   public updateDiagramTitle(name: string) {

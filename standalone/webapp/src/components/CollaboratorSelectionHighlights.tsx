@@ -1,5 +1,4 @@
 import { useEditorContext } from "@/contexts"
-import { CollaborationState } from "@tumaet/apollon"
 import { useEffect, useRef, type RefObject } from "react"
 
 type CollaboratorSelectionHighlightsProps = {
@@ -89,9 +88,8 @@ export const CollaboratorSelectionHighlights = ({
       for (const [clientId, state] of states.entries()) {
         if (clientId === localClientId) continue
 
-        const typedState = state as CollaborationState
-        const selectedElementId = typedState?.selectedElementId
-        const userColor = typedState?.user?.color
+        const selectedElementId = state?.selectedElementId
+        const userColor = state?.user?.color
         if (selectedElementId && userColor) {
           nextHighlights.set(selectedElementId, userColor)
         }

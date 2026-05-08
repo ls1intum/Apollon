@@ -99,8 +99,10 @@ export const ApollonWithConnection: React.FC = () => {
         setIsLoading(false)
 
         if (isCollaborationView && collaborationUser) {
-          instance.setLocalAwarenessUser(collaborationUser)
-          instance.setLocalAwarenessSelectedElement(null)
+          instance.setLocalAwarenessState({
+            user: collaborationUser,
+            selectedElementId: null,
+          })
         }
 
         if (
@@ -226,7 +228,6 @@ export const ApollonWithConnection: React.FC = () => {
               searchParams.get("view") === DiagramView.COLLABORATE &&
               !!collaborationUser
             }
-            localUser={collaborationUser}
           />
           <CollaboratorCursors
             containerRef={containerRef}

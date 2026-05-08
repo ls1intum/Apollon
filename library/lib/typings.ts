@@ -18,6 +18,8 @@ export type UMLModelElementType = DiagramNodeType | DiagramEdgeType
 export type CollaborationUser = {
   name: string
   color: string
+  id?: string
+  imageUrl?: string
 }
 
 export type CollaborationCursor = {
@@ -29,6 +31,15 @@ export type CollaborationState = {
   user?: CollaborationUser
   cursor?: CollaborationCursor | null
   selectedElementId?: string | null
+}
+
+export type CollaboratorInfo = {
+  id: string
+  name: string
+  color: string
+  imageUrl?: string
+  clientIds: number[]
+  isLocal: boolean
 }
 
 export enum Locale {

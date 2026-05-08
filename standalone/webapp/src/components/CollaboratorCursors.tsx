@@ -1,5 +1,4 @@
 import { useEditorContext } from "@/contexts"
-import { CollaborationState } from "@tumaet/apollon"
 import { useEffect, useState, type RefObject } from "react"
 
 type CollaboratorCursor = {
@@ -36,9 +35,8 @@ export const CollaboratorCursors = ({
           return []
         }
 
-        const typedState = state as CollaborationState
-        const cursor = typedState?.cursor
-        const user = typedState?.user
+        const cursor = state?.cursor
+        const user = state?.user
         if (!cursor || !user) {
           return []
         }

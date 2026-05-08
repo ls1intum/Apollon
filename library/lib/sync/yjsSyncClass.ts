@@ -6,7 +6,7 @@ import {
   getEdgesMap,
   getNodesMap,
 } from "@/sync/ydoc"
-import { Assessment } from "@/typings"
+import { Assessment, CollaborationState, CollaboratorInfo } from "@/typings"
 import { Edge, Node } from "@xyflow/react"
 import {
   applyAwarenessUpdate,
@@ -77,10 +77,78 @@ export class YjsSyncClass {
     this.awareness.setLocalStateField("selectedElementId", selectedElementId)
   }
 
+  public setLocalAwarenessState = (state: Partial<CollaborationState>) => {
+    const current = this.awareness.getLocalState()
+    this.awareness.setLocalState({ ...current, ...state })
+  }
+
   public subscribeToAwarenessChanges = (
-    callback: (states: Map<number, unknown>) => void
+    callback: (states: Map<number, CollaborationState>) => void
   ) => {
-    const handler = () => callback(this.awareness.getStates())
+    const handler = () =>
+      callback(this.awareness.getStates() as Map<number, CollaborationState>)
+    this.awareness.on("change", handler)
+    return () => {
+      this.awareness.off("change", handler)
+    }
+  }
+
+  public getCollaborators = (): CollaboratorInfo[] => {
+    const states = this.awareness.getStates()
+    const localClientId = this.awareness.clientID
+    const byUserId = new Map<string, CollaboratorInfo>()
+
+    for (const [clientId, state] of states.entries()) {
+      const typedState = state as CollaborationState
+      const user = typedState?.user
+      if (!user) continue
+
+      const userId = user.id ?? `__client_${clientId}`
+      const existing = byUserId.get(userId)
+
+      if (existing) {
+        existing.clientIds.push(clientId)
+        if (clientId === localClientId) existing.isLocal = true
+      } else {
+        byUserId.set(userId, {
+          id: userId,
+          name: user.name,
+          color: user.color,
+          imageUrl: user.imageUrl,
+          clientIds: [clientId],
+          isLocal: clientId === localClientId,
+        })
+      }
+    }
+
+    return Array.from(byUserId.values())
+  }
+
+  public subscribeToCollaboratorChanges = (
+    callback: (collaborators: CollaboratorInfo[]) => void
+  ) => {
+    let previousSignature = ""
+
+    const handler = ({
+      added,
+      removed,
+    }: {
+      added: number[]
+      updated: number[]
+      removed: number[]
+    }) => {
+      const currentSignature = this.computeParticipantSignature()
+      if (
+        added.length === 0 &&
+        removed.length === 0 &&
+        currentSignature === previousSignature
+      ) {
+        return
+      }
+      previousSignature = currentSignature
+      callback(this.getCollaborators())
+    }
+
     this.awareness.on("change", handler)
     return () => {
       this.awareness.off("change", handler)
@@ -88,6 +156,21 @@ export class YjsSyncClass {
   }
 
   public getLocalAwarenessClientId = () => this.awareness.clientID
+
+  private computeParticipantSignature = (): string => {
+    const states = this.awareness.getStates()
+    const parts: string[] = []
+    for (const [clientId, state] of states.entries()) {
+      const user = (state as CollaborationState)?.user
+      if (user) {
+        parts.push(
+          `${clientId}:${user.id ?? ""}:${user.name}:${user.color}:${user.imageUrl ?? ""}`
+        )
+      }
+    }
+    parts.sort()
+    return parts.join("|")
+  }
 
   private sendFramedMessage = (
     messageType: MessageType,
