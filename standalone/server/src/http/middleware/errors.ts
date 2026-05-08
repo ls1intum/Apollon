@@ -36,7 +36,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     } else {
       logger.warn(
         { requestId, code: err.code, status: err.status, message: err.message },
-        "api.client_error"
+        "api.clientError"
       )
     }
     res.status(err.status).json(body)

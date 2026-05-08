@@ -16,6 +16,8 @@ interface AutoGroupRowProps {
   previewingVersionId: string | null
   versionNumberById: Map<string, number>
   latestSavedId?: string
+  /** True if the canvas has unsaved changes vs the latest saved version. */
+  hasUnsavedChanges: boolean
 }
 
 const AutoGroupRow: FC<AutoGroupRowProps> = ({
@@ -28,6 +30,7 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
   previewingVersionId,
   versionNumberById,
   latestSavedId,
+  hasUnsavedChanges,
 }) => {
   const [expanded, setExpanded] = useState(false)
   return (
@@ -74,7 +77,7 @@ const AutoGroupRow: FC<AutoGroupRowProps> = ({
             version={v}
             versionNumber={versionNumberById.get(v.id)}
             isPreviewing={previewingVersionId === v.id || v.id === activeRowId}
-            isLatest={v.id === latestSavedId}
+            canRestore={v.id !== latestSavedId || hasUnsavedChanges}
             onPreview={onPreview}
             onRestore={onRestore}
             onDelete={onDelete}

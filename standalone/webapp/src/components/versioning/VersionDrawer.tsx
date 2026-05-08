@@ -535,6 +535,7 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   previewingVersionId={previewState?.versionId ?? null}
                   versionNumberById={versionNumberById}
                   latestSavedId={latestSavedVersion?.id}
+                  hasUnsavedChanges={hasChanges}
                 />
               ) : (
                 <VersionListItem
@@ -546,7 +547,13 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                     previewState?.versionId === entry.version.id ||
                     entry.version.id === activeRowId
                   }
-                  isLatest={entry.version.id === latestSavedVersion?.id}
+                  // Restore is meaningful unless this row IS the latest
+                  // saved version AND the canvas already matches it. With
+                  // unsaved changes, restoring even the latest version is
+                  // a real action ("discard my work").
+                  canRestore={
+                    entry.version.id !== latestSavedVersion?.id || hasChanges
+                  }
                   onPreview={handlePreview}
                   onRestore={handleRestore}
                   onDelete={handleDelete}

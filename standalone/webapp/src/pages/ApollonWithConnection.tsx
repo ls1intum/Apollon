@@ -21,6 +21,7 @@ import {
   VersionSidebar,
 } from "@/components/versioning"
 import { versioningStrings as t } from "@/components/versioning/strings"
+import { structuralFingerprint } from "@/components/versioning/utils"
 import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
@@ -48,6 +49,12 @@ export const ApollonWithConnection: React.FC = () => {
   const previewBeforeModelRef = useRef<UMLModel | null>(null)
   const restoredDuringPreviewRef = useRef(false)
   const hasPromptedRef = useRef(false)
+  // True when the current preview's body differs from the canvas the user
+  // had before entering preview. Computed once on preview entry and held
+  // through the preview so the banner can show/hide "Restore" without
+  // re-fingerprinting on every render. False = restoring would be a no-op
+  // (e.g. the latest saved version with no unsaved local changes).
+  const [canRestoreFromPreview, setCanRestoreFromPreview] = useState(false)
   const [collaborationUser, setCollaborationUser] = useState<{
     name: string
     color: string
@@ -340,7 +347,17 @@ export const ApollonWithConnection: React.FC = () => {
   useEffect(() => {
     if (!editor) return
     if (preview) {
-      previewBeforeModelRef.current = editor.model
+      const before = editor.model
+      previewBeforeModelRef.current = before
+      // Decide whether Restore is meaningful for THIS preview. If the
+      // pre-preview canvas already matches the version body (e.g. the
+      // user clicked the latest saved version with no unsaved local
+      // changes), restoring is a no-op and the banner hides the action.
+      // If the canvas differs (unsaved edits, or a different version),
+      // restoring is "replace canvas with this snapshot" — show it.
+      setCanRestoreFromPreview(
+        structuralFingerprint(before) !== structuralFingerprint(preview.body)
+      )
       wsManagerRef.current?.setPreviewMode(true)
       try {
         editor.model = importDiagram(preview.body) as UMLModel
@@ -517,6 +534,7 @@ export const ApollonWithConnection: React.FC = () => {
               <VersionPreviewBanner
                 containerWidth={canvasColumnWidth}
                 diagramId={diagramId}
+                canRestore={canRestoreFromPreview}
                 onExit={handleExitPreview}
                 onRestore={handleRestoreFromPreview}
               />

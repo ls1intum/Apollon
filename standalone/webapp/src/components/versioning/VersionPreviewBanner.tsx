@@ -21,6 +21,14 @@ interface Props {
   onExit: () => void
   onRestore: (versionId: string) => void | Promise<void>
   /**
+   * False when restoring this version would not change the canvas — e.g.
+   * the user clicked the latest saved version with no unsaved local
+   * edits. The Restore button is hidden in that case so the only
+   * affordance is "Exit". When the user has unsaved changes, this is
+   * true even on the latest version (Restore = "discard unsaved work").
+   */
+  canRestore: boolean
+  /**
    * Measured width of the banner's container (typically the canvas
    * column). When `undefined` the banner falls back to its desktop
    * layout — first paint may be off for a frame, then settles.
@@ -38,6 +46,7 @@ export const VersionPreviewBanner: FC<Props> = ({
   diagramId,
   onExit,
   onRestore,
+  canRestore,
   containerWidth,
 }) => {
   // Container-relative compactness. Falls back to "not compact" until
@@ -53,8 +62,6 @@ export const VersionPreviewBanner: FC<Props> = ({
   const [restoring, setRestoring] = useState(false)
   if (!preview) return null
 
-  const latestSavedId = versions.find((v) => !v.pending && !v.failed)?.id
-  const isLatest = preview.versionId === latestSavedId
   const summary = versions.find((v) => v.id === preview.versionId)
   // Description is the user-facing label everywhere else; fall back to
   // `name` (carries pre-restore copy like "Before restoring 'X'") then to
@@ -134,7 +141,7 @@ export const VersionPreviewBanner: FC<Props> = ({
           >
             {t.exitPreview}
           </Button>
-          {!isLatest && (
+          {canRestore && (
             <Button
               variant="contained"
               disableElevation
