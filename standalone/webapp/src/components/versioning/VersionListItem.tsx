@@ -210,29 +210,48 @@ export const VersionListItem: FC<Props> = ({
             placeholder={t.createPlaceholder}
             inputProps={{ "aria-label": "Edit description" }}
             sx={{
-              fontSize: "0.875rem",
+              fontSize: "0.8125rem",
               color: TEXT_PRIMARY,
               p: 0,
               mb: 0.25,
               "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
             }}
           />
-        ) : (
-          label && (
-            <Typography
-              variant="body2"
-              sx={{
-                color: TEXT_PRIMARY,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                lineHeight: 1.35,
-                mb: 0.25,
-              }}
-            >
-              {label}
-            </Typography>
-          )
-        )}
+        ) : description ? (
+          // User-authored description — rendered slightly smaller and muted
+          // so the #N · time-ago line reads as the primary identifier.
+          <Typography
+            sx={{
+              fontSize: "0.8125rem",
+              color: TEXT_MUTED,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              lineHeight: 1.35,
+              mb: 0.25,
+            }}
+          >
+            {description}
+          </Typography>
+        ) : version.name?.trim() ? (
+          // System-generated name (pre-restore label, timestamp fallback).
+          // Styled as italic caption so users don't mistake it for a
+          // user-added description — the kebab's "Add description" then
+          // makes sense because no user-authored text is visible.
+          <Typography
+            variant="caption"
+            sx={{
+              color: TEXT_MUTED,
+              fontStyle: "italic",
+              display: "block",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              lineHeight: 1.35,
+              mb: 0.25,
+            }}
+          >
+            {version.name.trim()}
+          </Typography>
+        ) : null}
         <Typography
           variant="caption"
           sx={{ color: TEXT_MUTED, display: "block" }}
