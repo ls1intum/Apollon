@@ -23,6 +23,7 @@ export const versioningStrings = {
   lastVersion: (ago: string) => `Last saved ${ago}`,
   noVersionYet: "No version saved yet",
   copyLink: "Copy link to this version",
+  noDescription: "No description",
   editDescription: "Edit description",
   addDescription: "Add description",
   copied: "Link copied. Anyone with access can open this version.",

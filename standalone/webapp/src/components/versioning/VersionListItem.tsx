@@ -230,11 +230,26 @@ export const VersionListItem: FC<Props> = ({
           >
             {description}
           </Typography>
+        ) : version.kind === "user" ? (
+          // User explicitly saved this version but added no description.
+          // Show a placeholder so it doesn't look identical to a raw autosave.
+          <Typography
+            variant="caption"
+            sx={{
+              color: TEXT_MUTED,
+              fontStyle: "italic",
+              display: "block",
+              lineHeight: 1.35,
+              mb: 0.25,
+            }}
+          >
+            {t.noDescription}
+          </Typography>
         ) : version.name?.trim() ? (
-          // System-generated name (pre-restore label, timestamp fallback).
-          // Styled as italic caption so users don't mistake it for a
-          // user-added description — the kebab's "Add description" then
-          // makes sense because no user-authored text is visible.
+          // System-generated name (pre-restore label). Styled as italic
+          // caption so users don't mistake it for a user-added description —
+          // the kebab's "Add description" makes sense because no user-authored
+          // text is visible.
           <Typography
             variant="caption"
             sx={{

@@ -707,9 +707,16 @@ type GroupedEntry =
       versions: PendingVersion[]
     }
 
-/** True when the version has user-authored metadata (name or description). */
+/**
+ * True when the version should be treated as a user-intentional milestone:
+ * either the user explicitly saved it (kind='user') or an auto-snapshot was
+ * later given a name / description. Used to:
+ *   - filter the "Hide autosaves" toggle (user-saves always visible)
+ *   - drive thumbnail style (full-color vs muted auto style)
+ *   - show the Restore action in the kebab menu
+ */
 export function isNamedVersion(v: PendingVersion): boolean {
-  return Boolean(v.name?.trim() || v.description?.trim())
+  return v.kind === "user" || Boolean(v.name?.trim() || v.description?.trim())
 }
 
 function groupUnnamedRuns(versions: readonly PendingVersion[]): GroupedEntry[] {
