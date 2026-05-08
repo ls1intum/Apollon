@@ -5,15 +5,17 @@ import { log } from "./logger"
 
 const router = Router()
 
-let conversionResourcePromise: Promise<{
-  convert: (req: Request, res: Response) => Promise<void>
-}> | null = null
+type LazyConverter = {
+  convertPdf: (req: Request, res: Response) => Promise<void> | void
+  convertPng: (req: Request, res: Response) => Promise<void> | void
+}
 
-async function getConversionResource() {
+let conversionResourcePromise: Promise<LazyConverter> | null = null
+
+async function getConversionResource(): Promise<LazyConverter> {
   conversionResourcePromise ??= import("./resources/conversion-resource").then(
     ({ ConversionResource }) => new ConversionResource()
   )
-
   return conversionResourcePromise
 }
 
@@ -37,8 +39,17 @@ router.get("/converter/status", (_req, res) => {
 
 router.post("/converter/pdf", async (req, res, next) => {
   try {
-    const conversionResource = await getConversionResource()
-    await conversionResource.convert(req, res)
+    const converter = await getConversionResource()
+    await converter.convertPdf(req, res)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post("/converter/png", async (req, res, next) => {
+  try {
+    const converter = await getConversionResource()
+    await converter.convertPng(req, res)
   } catch (error) {
     next(error)
   }
