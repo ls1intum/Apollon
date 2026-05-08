@@ -24,6 +24,7 @@ export const versioningStrings = {
   noVersionYet: "No version saved yet",
   copyLink: "Copy link to this version",
   noDescription: "No description",
+  autoSaved: "Checkpoint",
   editDescription: "Edit description",
   addDescription: "Add description",
   copied: "Link copied. Anyone with access can open this version.",

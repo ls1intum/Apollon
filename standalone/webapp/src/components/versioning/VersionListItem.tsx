@@ -264,7 +264,24 @@ export const VersionListItem: FC<Props> = ({
           >
             {version.name.trim()}
           </Typography>
-        ) : null}
+        ) : (
+          // Raw periodic auto-save — no user-authored content at all.
+          // 'Auto-saved' tells the user this is a system checkpoint, not
+          // a deliberate save, matching the same italic/muted register as
+          // the pre-restore label above.
+          <Typography
+            variant="caption"
+            sx={{
+              color: TEXT_MUTED,
+              fontStyle: "italic",
+              display: "block",
+              lineHeight: 1.35,
+              mb: 0.25,
+            }}
+          >
+            {t.autoSaved}
+          </Typography>
+        )}
         <Typography
           variant="caption"
           sx={{ color: TEXT_MUTED, display: "block" }}
