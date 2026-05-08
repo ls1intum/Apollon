@@ -1,7 +1,7 @@
 import { Box, Skeleton } from "@mui/material"
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded"
-import { useEffect, useMemo, useRef, useState, type FC } from "react"
+import { useEffect, useRef, useState, type FC } from "react"
 import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
 import { VersionApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
@@ -48,7 +48,10 @@ interface Props {
 }
 
 function svgToDataUrl(svgText: string): string {
-  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgText)))}`
+  const bytes = new TextEncoder().encode(svgText)
+  let binary = ""
+  for (const b of bytes) binary += String.fromCharCode(b)
+  return `data:image/svg+xml;base64,${btoa(binary)}`
 }
 
 export const VersionThumbnail: FC<Props> = ({
@@ -103,13 +106,11 @@ export const VersionThumbnail: FC<Props> = ({
       cancelled = true
       observer.disconnect()
     }
-  }, [diagramId, versionId, cacheKey, src, errored])
+  }, [diagramId, versionId, src, errored])
 
   const KindIcon = isAuto ? HistoryRoundedIcon : BookmarkRoundedIcon
   const w = compact ? 64 : 160
   const h = compact ? 40 : 100
-
-  const imgSrc = useMemo(() => src, [src])
 
   return (
     <Box
@@ -131,16 +132,16 @@ export const VersionThumbnail: FC<Props> = ({
       }}
       aria-hidden
     >
-      {imgSrc ? (
+      {src ? (
         <img
-          src={imgSrc}
+          src={src}
           alt=""
           style={{
             width: "100%",
             height: "100%",
             objectFit: "contain",
             display: "block",
-            padding: 2,
+            padding: "2px",
             boxSizing: "border-box",
           }}
         />

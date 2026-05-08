@@ -11,10 +11,9 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material"
-import ExpandLessIcon from "@mui/icons-material/ExpandLess"
-import ChevronRightIcon from "@mui/icons-material/ChevronRight"
 import HistoryToggleOffIcon from "@mui/icons-material/HistoryToggleOff"
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -24,19 +23,23 @@ import {
 } from "react"
 import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
-import {
-  selectVersions,
-  useVersionStore,
-  type PendingVersion,
-} from "@/stores/useVersionStore"
+import { selectVersions, useVersionStore } from "@/stores/useVersionStore"
 import { ApiError, VersionApiClient } from "@/services/DiagramApiClient"
-import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
+import {
+  NAVBAR_BACKGROUND_COLOR,
+  MAX_VERSIONS_PER_DIAGRAM as MAX_VERSIONS,
+} from "@/constants"
 import { versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 import { CurrentVersionRow } from "./CurrentVersionRow"
 import { VersionListItem } from "./VersionListItem"
-
-import { MAX_VERSIONS_PER_DIAGRAM as MAX_VERSIONS } from "@/constants"
+import AutoGroupRow from "./AutoGroupRow"
+import { TEXT_PRIMARY, TEXT_MUTED } from "./theme"
+import {
+  structuralFingerprint,
+  isNamedVersion,
+  groupUnnamedRuns,
+} from "./utils"
 
 const MAX_DESCRIPTION_LENGTH = 240
 /** Sidebar width on desktop. Narrow enough to keep the canvas usable. */
@@ -55,70 +58,6 @@ const SIDEBAR_ANIMATION_MS = 220
  */
 const MOBILE_QUERY = "(max-width: 767.95px)"
 
-// Sidebar lives on the navbar's dark plate, independent of the document
-// theme — these are the on-dark text shades and rgba state tints used
-// throughout. Kept local to this file because they're specific to that
-// always-dark surface.
-export const TEXT_PRIMARY = "rgba(255, 255, 255, 0.92)"
-export const TEXT_MUTED = "rgba(255, 255, 255, 0.55)"
-export const ROW_HOVER_BG = "rgba(255, 255, 255, 0.06)"
-export const ROW_SELECTED_BG = "rgba(255, 255, 255, 0.10)"
-
-/**
- * Structural fingerprint for dirty detection. We deliberately do NOT use
- * the editor's Yjs state vector here, even though that would be O(1):
- * React-Flow writes auto-derived layout noise (`measured`, transient
- * `position` round-trips, etc.) to the same Y.Maps as user-authored
- * content, so the SV bumps on every click as the renderer remeasures
- * the focused node. SV says "anything observed changed"; the question we
- * actually want to answer is "did anything _user-meaningful_ change."
- *
- * The replacer drops:
- *   - `selected`, `dragging`, `resizing`, `hidden` — UI/transient flags
- *   - `measured` — React-Flow's measurement output, fluctuates on focus
- *   - `selectable`, `draggable`, `connectable`, `deletable` — capability
- *     flags, set by config not by the user editing
- *
- * Mirrors `structuralFingerprint` in `services/autoVersion.ts` on the
- * server — both hash the same six fields (title, type, version, nodes,
- * edges, assessments) with the same VOLATILE_KEYS replacer, pinned by an
- * integration test. Drift here means the server fires spurious auto-versions
- * on UI churn the client correctly ignored. False positives are cheap; false
- * negatives cost the user a recovery point.
- */
-const VOLATILE_KEYS = new Set([
-  "selected",
-  "dragging",
-  "resizing",
-  "hidden",
-  "measured",
-  "selectable",
-  "draggable",
-  "connectable",
-  "deletable",
-])
-
-function structuralFingerprint(model: {
-  nodes: unknown
-  edges: unknown
-  assessments?: unknown
-  title?: unknown
-  type?: unknown
-  version?: unknown
-}): string {
-  return JSON.stringify(
-    {
-      nodes: model.nodes,
-      edges: model.edges,
-      assessments: model.assessments,
-      title: model.title,
-      type: model.type,
-      version: model.version,
-    },
-    (key, value) => (VOLATILE_KEYS.has(key) ? undefined : value)
-  )
-}
-
 interface Props {
   diagramId: string
   onVersionSaved?: (headRev?: number) => void
@@ -136,8 +75,8 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
   const versions = useVersionStore((s) => selectVersions(s, diagramId))
   const total = useVersionStore((s) => s.totals[diagramId])
   const nextCursor = useVersionStore((s) => s.nextCursor[diagramId])
-  const loading = useVersionStore((s) => s.loading)
-  const errorCode = useVersionStore((s) => s.error)
+  const loading = useVersionStore((s) => s.loading[diagramId] ?? false)
+  const errorCode = useVersionStore((s) => s.error[diagramId] ?? null)
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
   const loadMoreVersions = useVersionStore((s) => s.loadMoreVersions)
   const createVersion = useVersionStore((s) => s.createVersion)
@@ -296,36 +235,45 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
     }
   }
 
-  const handlePreview = async (versionId: string) => {
-    if (!editor) return
-    try {
-      await enterPreview(diagramId, versionId)
-    } catch {
-      toast.error(t.previewFailed)
-    }
-  }
-
-  const handleRestore = async (versionId: string) => {
-    if (!editor) return
-    try {
-      const { headRev } = await restoreVersion(
-        diagramId,
-        versionId,
-        editor.model
-      )
-      onVersionSaved?.(headRev)
-    } catch (err) {
-      if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
-        toast.error(t.failureSchemaUnsupported)
-      } else {
-        toast.error(t.restoreFailed)
+  const handlePreview = useCallback(
+    async (versionId: string) => {
+      if (!editor) return
+      try {
+        await enterPreview(diagramId, versionId)
+      } catch {
+        toast.error(t.previewFailed)
       }
-    }
-  }
+    },
+    [editor, enterPreview, diagramId]
+  )
 
-  const handleDelete = (versionId: string) => {
-    openModal("DELETE_VERSION", { diagramId, versionId })
-  }
+  const handleRestore = useCallback(
+    async (versionId: string) => {
+      if (!editor) return
+      try {
+        const { headRev } = await restoreVersion(
+          diagramId,
+          versionId,
+          editor.model
+        )
+        onVersionSaved?.(headRev)
+      } catch (err) {
+        if (err instanceof ApiError && err.code === "SCHEMA_UNSUPPORTED") {
+          toast.error(t.failureSchemaUnsupported)
+        } else {
+          toast.error(t.restoreFailed)
+        }
+      }
+    },
+    [editor, restoreVersion, diagramId, onVersionSaved]
+  )
+
+  const handleDelete = useCallback(
+    (versionId: string) => {
+      openModal("DELETE_VERSION", { diagramId, versionId })
+    },
+    [openModal, diagramId]
+  )
 
   const totalDisplay = total ?? versions.filter((v) => !v.pending).length
 
@@ -537,18 +485,25 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
           <List
             role="listbox"
             aria-label={t.drawerTitle}
+            aria-activedescendant={
+              activeRowId ? `version-row-${activeRowId}` : undefined
+            }
             tabIndex={0}
             onKeyDown={(e) => {
-              const flat = versions.filter((v) => !v.pending)
-              if (flat.length === 0) return
-              const idx = flat.findIndex((v) => v.id === activeRowId)
+              const navigable = groupedVersions
+                .map((g) => (g.kind === "single" ? g.version : g.first))
+                .filter((v) => !v.pending)
+              if (navigable.length === 0) return
+              const idx = navigable.findIndex((v) => v.id === activeRowId)
               if (e.key === "ArrowDown") {
                 e.preventDefault()
-                const next = flat[Math.min(idx + 1, flat.length - 1)] ?? flat[0]
+                const next =
+                  navigable[Math.min(idx + 1, navigable.length - 1)] ??
+                  navigable[0]
                 if (next) setActiveRowId(next.id)
               } else if (e.key === "ArrowUp") {
                 e.preventDefault()
-                const next = flat[Math.max(idx - 1, 0)] ?? flat[0]
+                const next = navigable[Math.max(idx - 1, 0)] ?? navigable[0]
                 if (next) setActiveRowId(next.id)
               } else if (e.key === "Enter" && activeRowId) {
                 e.preventDefault()
@@ -569,7 +524,6 @@ const VersionSidebarBody: FC<Props> = ({ diagramId, onVersionSaved }) => {
                   onRestore={handleRestore}
                   onDelete={handleDelete}
                   activeRowId={activeRowId}
-                  setActiveRowId={setActiveRowId}
                   versionNumberById={versionNumberById}
                 />
               ) : (
@@ -685,128 +639,5 @@ export const VersionDrawer: FC<Props> = ({ diagramId, onVersionSaved }) => {
         onVersionSaved={onVersionSaved}
       />
     </Drawer>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Sidebar grouping — collapse consecutive *unnamed* rows under an expander.
-//
-// The display split tracks `name`/`description`, not `kind`. A version with
-// either field non-empty is a milestone (always rendered as a full row); an
-// empty-meta row is an autosave (eligible for collapse). Naming an autosave
-// (via "Name this version") promotes it visually without changing its kind.
-// This matches Figma: autosaves and named versions live in the same list,
-// autosaves between named ones collapse so the timeline stays scannable.
-// ---------------------------------------------------------------------------
-
-type GroupedEntry =
-  | { kind: "single"; version: PendingVersion }
-  | {
-      kind: "auto-group"
-      first: PendingVersion
-      versions: PendingVersion[]
-    }
-
-/**
- * True when the version should be treated as a user-intentional milestone:
- * either the user explicitly saved it (kind='user') or an auto-snapshot was
- * later given a name / description. Used to:
- *   - filter the "Hide autosaves" toggle (user-saves always visible)
- *   - drive thumbnail style (full-color vs muted auto style)
- *   - show the Restore action in the kebab menu
- */
-export function isNamedVersion(v: PendingVersion): boolean {
-  return v.kind === "user" || Boolean(v.name?.trim() || v.description?.trim())
-}
-
-function groupUnnamedRuns(versions: readonly PendingVersion[]): GroupedEntry[] {
-  const out: GroupedEntry[] = []
-  let i = 0
-  while (i < versions.length) {
-    const v = versions[i]!
-    if (isNamedVersion(v)) {
-      out.push({ kind: "single", version: v })
-      i++
-      continue
-    }
-    const run: PendingVersion[] = []
-    while (i < versions.length && !isNamedVersion(versions[i]!)) {
-      run.push(versions[i]!)
-      i++
-    }
-    if (run.length === 1) {
-      out.push({ kind: "single", version: run[0]! })
-    } else {
-      out.push({ kind: "auto-group", first: run[0]!, versions: run })
-    }
-  }
-  return out
-}
-
-interface AutoGroupRowProps {
-  group: Extract<GroupedEntry, { kind: "auto-group" }>
-  diagramId: string
-  onPreview: (id: string) => void
-  onRestore: (id: string) => void
-  onDelete: (id: string) => void
-  activeRowId: string | null
-  setActiveRowId: (id: string | null) => void
-  versionNumberById: Map<string, number>
-}
-
-const AutoGroupRow: FC<AutoGroupRowProps> = ({
-  group,
-  diagramId,
-  onPreview,
-  onRestore,
-  onDelete,
-  activeRowId,
-  versionNumberById,
-}) => {
-  const [expanded, setExpanded] = useState(false)
-  return (
-    <Box>
-      <Box
-        component="button"
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        sx={{
-          width: "100%",
-          textAlign: "left",
-          background: "transparent",
-          border: 0,
-          p: 1.5,
-          color: TEXT_MUTED,
-          cursor: "pointer",
-          fontSize: "0.85rem",
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          "&:hover": { background: ROW_HOVER_BG },
-        }}
-        aria-expanded={expanded}
-        aria-label={`${group.versions.length} auto-saved versions`}
-      >
-        {expanded ? (
-          <ExpandLessIcon fontSize="small" aria-hidden />
-        ) : (
-          <ChevronRightIcon fontSize="small" aria-hidden />
-        )}
-        {group.versions.length} auto-saved versions
-      </Box>
-      {expanded &&
-        group.versions.map((v) => (
-          <VersionListItem
-            key={v.id}
-            diagramId={diagramId}
-            version={v}
-            versionNumber={versionNumberById.get(v.id)}
-            isPreviewing={v.id === activeRowId}
-            onPreview={onPreview}
-            onRestore={onRestore}
-            onDelete={onDelete}
-          />
-        ))}
-    </Box>
   )
 }

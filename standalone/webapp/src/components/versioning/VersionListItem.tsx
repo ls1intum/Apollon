@@ -12,6 +12,7 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert"
 import { VersionThumbnail } from "./VersionThumbnail"
 import {
+  memo,
   useState,
   useRef,
   type FC,
@@ -29,8 +30,8 @@ import {
   ROW_SELECTED_BG,
   TEXT_MUTED,
   TEXT_PRIMARY,
-  isNamedVersion,
-} from "./VersionDrawer"
+} from "./theme"
+import { isNamedVersion } from "./utils"
 
 interface Props {
   diagramId: string
@@ -45,7 +46,7 @@ interface Props {
 
 const MAX_DESCRIPTION_LENGTH = 240
 
-export const VersionListItem: FC<Props> = ({
+const VersionListItemInner: FC<Props> = ({
   diagramId,
   version,
   versionNumber,
@@ -94,7 +95,7 @@ export const VersionListItem: FC<Props> = ({
       await editVersionInfo(diagramId, version.id, { description: next })
     } catch (err) {
       log.error("Edit description failed", err)
-      toast.error(t.failureToCreate)
+      toast.error(t.failureToEdit)
       setDraft(version.description ?? "")
     }
   }
@@ -126,7 +127,7 @@ export const VersionListItem: FC<Props> = ({
       toast.success(t.copied)
     } catch (err) {
       log.error("Copy link failed", err)
-      toast.error("Failed to copy link.")
+      toast.error(t.copyFailed)
     }
   }
 
@@ -148,6 +149,7 @@ export const VersionListItem: FC<Props> = ({
 
   return (
     <ListItem
+      id={`version-row-${version.id}`}
       role="option"
       aria-selected={isPreviewing}
       aria-label={`Version ${
@@ -377,3 +379,5 @@ export const VersionListItem: FC<Props> = ({
     </ListItem>
   )
 }
+
+export const VersionListItem = memo(VersionListItemInner)

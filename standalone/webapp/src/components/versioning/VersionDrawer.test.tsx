@@ -40,8 +40,8 @@ afterEach(() => {
     nextCursor: {},
     preview: null,
     undoRestore: null,
-    loading: false,
-    error: null,
+    loading: {},
+    error: {},
   })
   localStorage.clear()
 })

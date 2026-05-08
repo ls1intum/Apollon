@@ -23,6 +23,7 @@ interface PreviewState {
 interface UndoRestoreState {
   diagramId: DiagramId
   autoSnapshotVersionId: VersionId
+  restoredVersionName: string
   expiresAt: number
 }
 
@@ -37,15 +38,15 @@ interface State {
   preview: PreviewState | null
   /** When set, surfaces an "undo restore" snackbar in the UI. */
   undoRestore: UndoRestoreState | null
-  loading: boolean
-  error: ApiErrorCode | null
+  /** Per-diagram loading flag — scoped so concurrent diagram fetches don't clobber. */
+  loading: Record<DiagramId, boolean>
+  error: Record<DiagramId, ApiErrorCode | null>
 }
 
 interface Actions {
   // ---- Drawer -----------------------------------------------------------
   openDrawer: (diagramId: DiagramId) => void
   closeDrawer: (diagramId: DiagramId) => void
-  isDrawerOpen: (diagramId: DiagramId) => boolean
 
   // ---- Versions ---------------------------------------------------------
   fetchVersions: (diagramId: DiagramId) => Promise<void>
@@ -115,8 +116,8 @@ export const useVersionStore = create<VersionStore>()(
         totals: {},
         preview: null,
         undoRestore: null,
-        loading: false,
-        error: null,
+        loading: {},
+        error: {},
 
         // ---- Drawer ----------------------------------------------------------
         openDrawer: (diagramId) =>
@@ -133,12 +134,12 @@ export const useVersionStore = create<VersionStore>()(
               [diagramId]: false,
             },
           })),
-        isDrawerOpen: (diagramId) =>
-          Boolean(get().drawerOpenByDiagram[diagramId]),
-
         // ---- Versions --------------------------------------------------------
         fetchVersions: async (diagramId) => {
-          set({ loading: true, error: null })
+          set((s) => ({
+            loading: { ...s.loading, [diagramId]: true },
+            error: { ...s.error, [diagramId]: null },
+          }))
           try {
             const { versions, nextCursor, total } = await VersionApiClient.list(
               diagramId,
@@ -148,20 +149,27 @@ export const useVersionStore = create<VersionStore>()(
               versions: { ...s.versions, [diagramId]: versions },
               nextCursor: { ...s.nextCursor, [diagramId]: nextCursor },
               totals: { ...s.totals, [diagramId]: total },
-              loading: false,
+              loading: { ...s.loading, [diagramId]: false },
             }))
           } catch (err) {
-            set({
-              loading: false,
-              error: err instanceof ApiError ? err.code : "INTERNAL",
-            })
+            set((s) => ({
+              loading: { ...s.loading, [diagramId]: false },
+              error: {
+                ...s.error,
+                [diagramId]: err instanceof ApiError ? err.code : "INTERNAL",
+              },
+            }))
           }
         },
 
         loadMoreVersions: async (diagramId) => {
           const cursor = get().nextCursor[diagramId]
           if (!cursor) return
-          set({ loading: true, error: null })
+          if (get().loading[diagramId]) return
+          set((s) => ({
+            loading: { ...s.loading, [diagramId]: true },
+            error: { ...s.error, [diagramId]: null },
+          }))
           try {
             const { versions, nextCursor, total } = await VersionApiClient.list(
               diagramId,
@@ -174,13 +182,16 @@ export const useVersionStore = create<VersionStore>()(
               },
               nextCursor: { ...s.nextCursor, [diagramId]: nextCursor },
               totals: { ...s.totals, [diagramId]: total },
-              loading: false,
+              loading: { ...s.loading, [diagramId]: false },
             }))
           } catch (err) {
-            set({
-              loading: false,
-              error: err instanceof ApiError ? err.code : "INTERNAL",
-            })
+            set((s) => ({
+              loading: { ...s.loading, [diagramId]: false },
+              error: {
+                ...s.error,
+                [diagramId]: err instanceof ApiError ? err.code : "INTERNAL",
+              },
+            }))
             toast.error("Failed to load more versions.")
           }
         },
@@ -280,30 +291,62 @@ export const useVersionStore = create<VersionStore>()(
                     : v
                 ),
               },
-              error: err instanceof ApiError ? err.code : "INTERNAL",
+              error: {
+                ...s.error,
+                [diagramId]: err instanceof ApiError ? err.code : "INTERNAL",
+              },
             }))
             throw err
           }
         },
 
         editVersionInfo: async (diagramId, versionId, patch) => {
-          const updated = await VersionApiClient.editInfo(
-            diagramId,
-            versionId,
-            patch
+          const prev = get().versions[diagramId]?.find(
+            (v) => v.id === versionId
           )
-          set((s) => ({
-            versions: {
-              ...s.versions,
-              [diagramId]: (s.versions[diagramId] ?? []).map((v) =>
-                v.id === versionId ? updated : v
-              ),
-            },
-          }))
+          if (prev) {
+            set((s) => ({
+              versions: {
+                ...s.versions,
+                [diagramId]: (s.versions[diagramId] ?? []).map((v) =>
+                  v.id === versionId ? { ...v, ...patch } : v
+                ),
+              },
+            }))
+          }
+          try {
+            const updated = await VersionApiClient.editInfo(
+              diagramId,
+              versionId,
+              patch
+            )
+            set((s) => ({
+              versions: {
+                ...s.versions,
+                [diagramId]: (s.versions[diagramId] ?? []).map((v) =>
+                  v.id === versionId ? updated : v
+                ),
+              },
+            }))
+          } catch (err) {
+            if (prev) {
+              set((s) => ({
+                versions: {
+                  ...s.versions,
+                  [diagramId]: (s.versions[diagramId] ?? []).map((v) =>
+                    v.id === versionId ? prev : v
+                  ),
+                },
+              }))
+            }
+            throw err
+          }
         },
 
         deleteVersion: async (diagramId, versionId) => {
-          await VersionApiClient.delete(diagramId, versionId)
+          const prev = get().versions[diagramId]?.find(
+            (v) => v.id === versionId
+          )
           set((s) => ({
             versions: {
               ...s.versions,
@@ -312,6 +355,19 @@ export const useVersionStore = create<VersionStore>()(
               ),
             },
           }))
+          try {
+            await VersionApiClient.delete(diagramId, versionId)
+          } catch (err) {
+            if (prev) {
+              set((s) => ({
+                versions: {
+                  ...s.versions,
+                  [diagramId]: [prev, ...(s.versions[diagramId] ?? [])],
+                },
+              }))
+            }
+            throw err
+          }
         },
 
         // ---- Preview / Restore ----------------------------------------------
@@ -330,6 +386,9 @@ export const useVersionStore = create<VersionStore>()(
         exitPreview: () => set({ preview: null }),
 
         restoreVersion: async (diagramId, versionId, currentBody) => {
+          const restoredVersion = get().versions[diagramId]?.find(
+            (v) => v.id === versionId
+          )
           const { autoSnapshotVersionId, headRev } =
             await VersionApiClient.restore(diagramId, versionId, {
               currentBody,
@@ -339,6 +398,10 @@ export const useVersionStore = create<VersionStore>()(
             undoRestore: {
               diagramId,
               autoSnapshotVersionId,
+              restoredVersionName:
+                restoredVersion?.description?.trim() ||
+                restoredVersion?.name?.trim() ||
+                "",
               expiresAt: Date.now() + UNDO_WINDOW_MS,
             },
           })

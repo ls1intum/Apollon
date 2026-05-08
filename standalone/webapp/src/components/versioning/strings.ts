@@ -11,7 +11,7 @@
 export const versioningStrings = {
   drawerTitle: "Version history",
   navMenuItem: "Version history",
-  fabTooltip: "Version history (⌥⇧H)",
+  fabTooltip: `Version history (${/mac/i.test(navigator.userAgent) ? "⌥⇧H" : "Alt+Shift+H"})`,
   loadOlder: "Load older versions",
   previewFailed: "Failed to load preview.",
   restoreFailed: "Restore failed.",
@@ -28,6 +28,7 @@ export const versioningStrings = {
   editDescription: "Edit description",
   addDescription: "Add description",
   copied: "Link copied. Anyone with access can open this version.",
+  copyFailed: "Failed to copy link.",
   delete: "Delete",
   cancel: "Cancel",
   deleteFailed: "Failed to delete version.",
@@ -40,6 +41,7 @@ export const versioningStrings = {
   collaboratorRestoredTitle: (name: string) =>
     `Someone restored '${name}'. Your view was updated.`,
   failureToCreate: "Couldn't save version. Try again.",
+  failureToEdit: "Couldn't update description. Try again.",
   failureRedis:
     "Version history is temporarily unavailable. Your edits are still being saved.",
   failureBodyTooLarge:

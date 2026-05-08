@@ -256,7 +256,6 @@ export const ApollonWithConnection: React.FC = () => {
                 } else {
                   lastObservedHeadRev.current = undefined
                 }
-<<<<<<< HEAD
                 const now = Date.now()
                 if (now - lastSyncToastAt.current > 60_000) {
                   lastSyncToastAt.current = now
@@ -265,8 +264,6 @@ export const ApollonWithConnection: React.FC = () => {
                     autoClose: 2000,
                   })
                 }
-=======
->>>>>>> 58d6bb34 (fix(versioning): thread headRev; fix hasChanges baseline; drop spurious REVISION_MISMATCH toast)
               } else {
                 log.error("Autosave failed", err)
                 toast.error("Failed to sync changes")
@@ -369,15 +366,6 @@ export const ApollonWithConnection: React.FC = () => {
     }
   }, [preview, editor, diagramId, baseReadonly])
 
-<<<<<<< HEAD
-=======
-  // ---------------------------------------------------------------------------
-  // Version-saved callback. Called by VersionSidebar/VersionDrawer after a
-  // manual save or restore so we can advance lastObservedHeadRev to the new
-  // HEAD (preventing a spurious REVISION_MISMATCH toast on the next autosave
-  // tick) and clear the dirty flag (the version already captured the canvas).
-  // ---------------------------------------------------------------------------
->>>>>>> 58d6bb34 (fix(versioning): thread headRev; fix hasChanges baseline; drop spurious REVISION_MISMATCH toast)
   const handleVersionSaved = useCallback((headRev?: number) => {
     if (typeof headRev === "number") {
       lastObservedHeadRev.current = headRev
@@ -385,12 +373,6 @@ export const ApollonWithConnection: React.FC = () => {
     diagramIsUpdated.current = false
   }, [])
 
-<<<<<<< HEAD
-=======
-  // ---------------------------------------------------------------------------
-  // Preview banner handlers.
-  // ---------------------------------------------------------------------------
->>>>>>> 58d6bb34 (fix(versioning): thread headRev; fix hasChanges baseline; drop spurious REVISION_MISMATCH toast)
   const handleExitPreview = useCallback(() => {
     if (!diagramId) return
     exitPreview()

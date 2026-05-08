@@ -23,10 +23,11 @@ function reset() {
     drawerOpenByDiagram: {},
     versions: {},
     nextCursor: {},
+    totals: {},
     preview: null,
     undoRestore: null,
-    loading: false,
-    error: null,
+    loading: {},
+    error: {},
   })
 }
 
@@ -104,9 +105,9 @@ describe("useVersionStore.preview", () => {
 describe("useVersionStore.drawer", () => {
   it("openDrawer/closeDrawer scope to the diagramId", () => {
     useVersionStore.getState().openDrawer("d1")
-    expect(useVersionStore.getState().isDrawerOpen("d1")).toBe(true)
-    expect(useVersionStore.getState().isDrawerOpen("d2")).toBe(false)
+    expect(useVersionStore.getState().drawerOpenByDiagram["d1"]).toBe(true)
+    expect(useVersionStore.getState().drawerOpenByDiagram["d2"]).toBeUndefined()
     useVersionStore.getState().closeDrawer("d1")
-    expect(useVersionStore.getState().isDrawerOpen("d1")).toBe(false)
+    expect(useVersionStore.getState().drawerOpenByDiagram["d1"]).toBe(false)
   })
 })

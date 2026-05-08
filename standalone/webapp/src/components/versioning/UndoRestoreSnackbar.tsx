@@ -66,7 +66,9 @@ export const UndoRestoreSnackbar: FC = () => {
         }}
         role="alert"
       >
-        <Box sx={{ flex: 1 }}>{t.restoredSnack("the previous version")}</Box>
+        <Box sx={{ flex: 1 }}>
+          {t.restoredSnack(undo.restoredVersionName || "the previous version")}
+        </Box>
         <Button
           size="small"
           onClick={onUndo}

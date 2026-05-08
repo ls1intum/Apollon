@@ -8,7 +8,8 @@
  * client and server bundles the count display will lie — keep them in
  * sync at deploy time.
  */
-export const MAX_VERSIONS_PER_DIAGRAM = Number(
-  (import.meta as unknown as { env?: Record<string, string> }).env
-    ?.VITE_MAX_VERSIONS_PER_DIAGRAM ?? 50
-)
+const raw = (import.meta as unknown as { env?: Record<string, string> }).env
+  ?.VITE_MAX_VERSIONS_PER_DIAGRAM
+const parsed = raw ? Number(raw) : NaN
+export const MAX_VERSIONS_PER_DIAGRAM =
+  Number.isFinite(parsed) && parsed > 0 ? parsed : 50

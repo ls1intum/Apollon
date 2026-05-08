@@ -11,7 +11,7 @@ import {
   ROW_SELECTED_BG,
   TEXT_MUTED,
   TEXT_PRIMARY,
-} from "./VersionDrawer"
+} from "./theme"
 
 interface Props {
   /**
