@@ -44,6 +44,7 @@ export const CollaborateNameModal = ({
         autoFocus
         fullWidth
         id="collaboration-name"
+        label="Display name"
         value={name}
         onChange={(event) => setName(event.target.value)}
         onKeyDown={handleKeyDown}
@@ -52,6 +53,10 @@ export const CollaborateNameModal = ({
         sx={{
           input: {
             color: "var(--apollon-primary-contrast)",
+          },
+          "& .MuiInputLabel-root": {
+            color: "var(--apollon-secondary)",
+            "&.Mui-focused": { color: "var(--apollon-primary)" },
           },
           "& .MuiOutlinedInput-root": {
             "& fieldset": {

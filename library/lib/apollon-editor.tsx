@@ -394,9 +394,14 @@ export class ApollonEditor {
     callback: (selectedElementIds: string[]) => void
   ) {
     const subscriberId = this.getNewSubscriptionId()
-    const unsubscribeCallback = this.diagramStore.subscribe((state) =>
-      callback(state.selectedElementIds)
-    )
+    let prev = this.diagramStore.getState().selectedElementIds
+    const unsubscribeCallback = this.diagramStore.subscribe((state) => {
+      const next = state.selectedElementIds
+      if (next !== prev) {
+        prev = next
+        callback(next)
+      }
+    })
     this.subscribers[subscriberId] = unsubscribeCallback
     return subscriberId
   }
@@ -430,10 +435,6 @@ export class ApollonEditor {
   }
 
   public sendBroadcastMessage(sendFn: SendBroadcastMessage) {
-    this.syncManager.setSendBroadcastMessage(sendFn)
-  }
-
-  public onBroadcast(sendFn: SendBroadcastMessage) {
     this.syncManager.setSendBroadcastMessage(sendFn)
   }
 
@@ -542,14 +543,12 @@ export class ApollonEditor {
   }
 
   static generateInitialSyncMessage(): string {
-    const syncMessage = new Uint8Array(new Uint8Array([MessageType.YjsSYNC]))
-    return YjsSyncClass.uint8ToBase64(syncMessage)
+    return YjsSyncClass.uint8ToBase64(new Uint8Array([MessageType.YjsSYNC]))
   }
 
   static generateInitialAwarenessSyncMessage(): string {
-    const syncMessage = new Uint8Array(
+    return YjsSyncClass.uint8ToBase64(
       new Uint8Array([MessageType.AwarenessSync])
     )
-    return YjsSyncClass.uint8ToBase64(syncMessage)
   }
 }

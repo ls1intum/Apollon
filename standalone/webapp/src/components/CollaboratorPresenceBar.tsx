@@ -74,6 +74,7 @@ export const CollaboratorPresenceBar = ({
           }}
         >
           <div
+            aria-label={c.isLocal ? `${c.name} (You)` : c.name}
             style={{
               ...avatarBase,
               backgroundColor: c.color,

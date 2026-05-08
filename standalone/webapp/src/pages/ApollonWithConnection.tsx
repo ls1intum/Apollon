@@ -29,10 +29,14 @@ export const ApollonWithConnection: React.FC = () => {
     color: string
   } | null>(null)
 
+  const isCollaborationActive =
+    searchParams.get("view") === DiagramView.COLLABORATE && !!collaborationUser
+
   useEffect(() => {
     let instance: ApollonEditor | null = null
     let cleanupCursorTracking: (() => void) | null = null
     let selectionSubscriptionId: number | null = null
+    let modelChangeSubscriptionId: number | null = null
 
     const initialize = async () => {
       if (!containerRef.current || !diagramId) return
@@ -120,7 +124,7 @@ export const ApollonWithConnection: React.FC = () => {
 
         if (isCollaborationView && collaborationUser) {
           const element = containerRef.current
-          const rafRef = { current: 0 as number | 0 }
+          const rafRef = { current: 0 as number }
           const pendingRef = {
             current: null as { x: number; y: number } | null,
           }
@@ -186,7 +190,7 @@ export const ApollonWithConnection: React.FC = () => {
           }
         }, 5000)
 
-        instance.subscribeToModelChange(() => {
+        modelChangeSubscriptionId = instance.subscribeToModelChange(() => {
           diagramIsUpdated.current = true
         })
       } catch {
@@ -204,9 +208,14 @@ export const ApollonWithConnection: React.FC = () => {
         clearInterval(syncIntervalRef.current)
       }
       cleanupCursorTracking?.()
-      if (selectionSubscriptionId !== null && instance) {
-        instance.setLocalAwarenessSelectedElement(null)
-        instance.unsubscribe(selectionSubscriptionId)
+      if (instance) {
+        if (selectionSubscriptionId !== null) {
+          instance.setLocalAwarenessSelectedElement(null)
+          instance.unsubscribe(selectionSubscriptionId)
+        }
+        if (modelChangeSubscriptionId !== null) {
+          instance.unsubscribe(modelChangeSubscriptionId)
+        }
       }
       instance?.destroy()
     }
@@ -223,25 +232,14 @@ export const ApollonWithConnection: React.FC = () => {
       <div className={isLoading ? "invisible" : "h-full "}>
         <div className="h-full" style={{ position: "relative" }}>
           <div className="h-full" ref={containerRef} />
-          <CollaboratorPresenceBar
-            isActive={
-              searchParams.get("view") === DiagramView.COLLABORATE &&
-              !!collaborationUser
-            }
-          />
+          <CollaboratorPresenceBar isActive={isCollaborationActive} />
           <CollaboratorCursors
             containerRef={containerRef}
-            isActive={
-              searchParams.get("view") === DiagramView.COLLABORATE &&
-              !!collaborationUser
-            }
+            isActive={isCollaborationActive}
           />
           <CollaboratorSelectionHighlights
             containerRef={containerRef}
-            isActive={
-              searchParams.get("view") === DiagramView.COLLABORATE &&
-              !!collaborationUser
-            }
+            isActive={isCollaborationActive}
           />
         </div>
       </div>

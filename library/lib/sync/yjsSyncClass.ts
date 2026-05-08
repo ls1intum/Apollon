@@ -6,7 +6,12 @@ import {
   getEdgesMap,
   getNodesMap,
 } from "@/sync/ydoc"
-import { Assessment, CollaborationState, CollaboratorInfo } from "@/typings"
+import {
+  Assessment,
+  CollaborationState,
+  CollaborationUser,
+  CollaboratorInfo,
+} from "@/typings"
 import { Edge, Node } from "@xyflow/react"
 import {
   applyAwarenessUpdate,
@@ -61,7 +66,7 @@ export class YjsSyncClass {
     }
   }
 
-  public setLocalAwarenessUser = (user: { name: string; color: string }) => {
+  public setLocalAwarenessUser = (user: CollaborationUser) => {
     this.awareness.setLocalStateField("user", user)
   }
 
@@ -85,8 +90,7 @@ export class YjsSyncClass {
   public subscribeToAwarenessChanges = (
     callback: (states: Map<number, CollaborationState>) => void
   ) => {
-    const handler = () =>
-      callback(this.awareness.getStates() as Map<number, CollaborationState>)
+    const handler = () => callback(this.getTypedStates())
     this.awareness.on("change", handler)
     return () => {
       this.awareness.off("change", handler)
@@ -94,13 +98,12 @@ export class YjsSyncClass {
   }
 
   public getCollaborators = (): CollaboratorInfo[] => {
-    const states = this.awareness.getStates()
+    const states = this.getTypedStates()
     const localClientId = this.awareness.clientID
     const byUserId = new Map<string, CollaboratorInfo>()
 
     for (const [clientId, state] of states.entries()) {
-      const typedState = state as CollaborationState
-      const user = typedState?.user
+      const user = state.user
       if (!user) continue
 
       const userId = user.id ?? `__client_${clientId}`
@@ -157,11 +160,36 @@ export class YjsSyncClass {
 
   public getLocalAwarenessClientId = () => this.awareness.clientID
 
+  private static narrowState(raw: unknown): CollaborationState | null {
+    if (raw == null || typeof raw !== "object") return null
+    const obj = raw as Record<string, unknown>
+    const user = obj.user
+    if (
+      user != null &&
+      (typeof user !== "object" ||
+        typeof (user as Record<string, unknown>).name !== "string" ||
+        typeof (user as Record<string, unknown>).color !== "string")
+    ) {
+      return null
+    }
+    return raw as CollaborationState
+  }
+
+  private getTypedStates(): Map<number, CollaborationState> {
+    const raw = this.awareness.getStates()
+    const typed = new Map<number, CollaborationState>()
+    for (const [clientId, state] of raw.entries()) {
+      const narrowed = YjsSyncClass.narrowState(state)
+      if (narrowed) typed.set(clientId, narrowed)
+    }
+    return typed
+  }
+
   private computeParticipantSignature = (): string => {
-    const states = this.awareness.getStates()
+    const states = this.getTypedStates()
     const parts: string[] = []
     for (const [clientId, state] of states.entries()) {
-      const user = (state as CollaborationState)?.user
+      const user = state.user
       if (user) {
         parts.push(
           `${clientId}:${user.id ?? ""}:${user.name}:${user.color}:${user.imageUrl ?? ""}`

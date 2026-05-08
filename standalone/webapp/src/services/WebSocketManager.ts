@@ -18,6 +18,7 @@ export class WebSocketManager {
   ]
   private reconnectStartTime = 0
   private isTryingToReconnect = false
+  private isCleaningUp = false
 
   constructor(
     private diagramId: string,
@@ -60,11 +61,13 @@ export class WebSocketManager {
     }
 
     this.websocket.onerror = (e) => {
+      if (this.isCleaningUp) return
       this.onError(e)
       this.startReconnectionStrategy()
     }
 
     this.websocket.onclose = () => {
+      if (this.isCleaningUp) return
       this.startReconnectionStrategy()
     }
   }
@@ -102,6 +105,7 @@ export class WebSocketManager {
   }
 
   public cleanup() {
+    this.isCleaningUp = true
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout)
     }
