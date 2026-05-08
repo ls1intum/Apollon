@@ -1,196 +1,203 @@
+/**
+ * Server-side SVG export pipeline for the Apollon library running under
+ * JSDOM. Used by the conversion-renderer (PNG via resvg-js, PDF via
+ * svg2pdf+jsPDF) and ultimately by the Artemis exam-integrity flow.
+ *
+ * Performance shape: every shim and module load runs **once** at module
+ * import time, not per-render. This means the worker thread that imports
+ * us pays the boot cost when it's spawned (in parallel with whatever else
+ * the main process is doing) and every subsequent message processes in
+ * tens of milliseconds rather than seconds.
+ */
 import "global-jsdom/register"
-import path from "node:path"
 import type { UMLModel, SVG } from "@tumaet/apollon"
 
-// Mock ResizeObserver for JSDOM
-if (typeof global.ResizeObserver === "undefined") {
+// ---------------------------------------------------------------------------
+// One-time JSDOM polyfills (module load).
+// ---------------------------------------------------------------------------
+
+if (typeof globalThis.ResizeObserver === "undefined") {
   class MockResizeObserver {
     observe() {}
     unobserve() {}
     disconnect() {}
   }
-  ;(global as any).ResizeObserver = MockResizeObserver
+  ;(globalThis as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver =
+    MockResizeObserver as unknown as typeof ResizeObserver
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-const loadApollonModuleOnce = () => {
-  try {
-    return require("@tumaet/apollon")
-  } catch {
-    const fallbackCandidates = [
-      path.resolve(process.cwd(), "library/dist/index.js"),
-      path.resolve(process.cwd(), "../library/dist/index.js"),
-      path.resolve(process.cwd(), "../../library/dist/index.js"),
-    ]
-
-    for (const fallbackPath of fallbackCandidates) {
-      try {
-        return require(fallbackPath)
-      } catch {
-        // try next fallback
-      }
+if (typeof window !== "undefined") {
+  if (typeof window.requestAnimationFrame !== "function") {
+    window.requestAnimationFrame = ((cb: FrameRequestCallback) =>
+      setTimeout(
+        () => cb(Date.now()),
+        16
+      ) as unknown as number) as typeof window.requestAnimationFrame
+  }
+  if (typeof window.cancelAnimationFrame !== "function") {
+    window.cancelAnimationFrame = ((id: number) =>
+      clearTimeout(
+        id as unknown as NodeJS.Timeout
+      )) as typeof window.cancelAnimationFrame
+  }
+  // jsdom doesn't implement getBBox. Apollon's bounds calculation calls it
+  // for every <text>/<tspan> when computing the export viewBox; returning a
+  // constant 10×10 makes the library *under-size* the diagram so wider
+  // stereotype labels (e.g. «Enumeration») get clipped at the page edge in
+  // the resulting PDF/PNG.
+  //
+  // We approximate text metrics from font-size + character count using the
+  // average Inter-bold glyph width (~0.6 em). Exact metrics would require
+  // shaping; this is close enough to keep every label on-page across all
+  // 13 Apollon diagram types we ship.
+  const INTER_AVG_GLYPH_EM = 0.6
+  ;(
+    window.SVGElement.prototype as unknown as {
+      getBBox: (this: SVGElement) => DOMRect
     }
-
-    throw new Error("Failed to load @tumaet/apollon module")
+  ).getBBox = function (this: SVGElement): DOMRect {
+    const tag = this.tagName?.toLowerCase()
+    if (tag === "text" || tag === "tspan") {
+      const text = this.textContent ?? ""
+      const fontSizeAttr = this.getAttribute("font-size") ?? "16"
+      const fontSize = Number.parseFloat(fontSizeAttr) || 16
+      // Bold weights are slightly wider, but svg2pdf's downstream measurer
+      // adds its own padding so we don't double-correct.
+      const width = text.length * fontSize * INTER_AVG_GLYPH_EM
+      const height = fontSize * 1.2
+      return { x: 0, y: 0, width, height } as DOMRect
+    }
+    return { x: 0, y: 0, width: 10, height: 10 } as DOMRect
   }
 }
 
-const loadApollonModule = async (retries = 20, delayMs = 300) => {
-  let lastError: unknown
+// ---------------------------------------------------------------------------
+// Eager Apollon library load. Top-level `require` so the cost is paid at
+// worker spawn, not on the first user request.
+// ---------------------------------------------------------------------------
 
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      return loadApollonModuleOnce()
-    } catch (error) {
-      lastError = error
-      await sleep(delayMs)
-    }
-  }
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { ApollonEditor, importDiagram } =
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require("@tumaet/apollon") as typeof import("@tumaet/apollon")
 
-  throw new Error(
-    `Failed to load @tumaet/apollon after ${retries} attempts: ${String(lastError)}`
-  )
+// ---------------------------------------------------------------------------
+// Server-render normalisation.
+//
+// Without a browser, React Flow can't measure node geometry; we inject
+// sensible defaults so the SVG export doesn't NaN. Pure: no allocation per
+// node beyond what the result holds.
+// ---------------------------------------------------------------------------
+
+const EDGE_ENDPOINT_INSET_PX = -3
+const DEFAULT_NODE_WIDTH = 100
+const DEFAULT_NODE_HEIGHT = 50
+
+function calculateAdjustedQuarter(value: number): number {
+  return Math.floor(value / 4 / 10) * 10
 }
 
-export class ConversionService {
-  private readonly EDGE_ENDPOINT_INSET_PX = -3
+function createDefaultHandles(width: number, height: number) {
+  const adjustedWidth = calculateAdjustedQuarter(width)
+  const adjustedHeight = calculateAdjustedQuarter(height)
+  const inset = EDGE_ENDPOINT_INSET_PX
 
-  private calculateAdjustedQuarter = (value: number): number => {
-    const quarter = value / 4
-    return Math.floor(quarter / 10) * 10
+  const baseHandles = [
+    { id: "top-left", position: "top", x: adjustedWidth, y: inset },
+    { id: "top", position: "top", x: width / 2, y: inset },
+    { id: "top-right", position: "top", x: width - adjustedWidth, y: inset },
+    { id: "right-top", position: "right", x: width - inset, y: adjustedHeight },
+    { id: "right", position: "right", x: width - inset, y: height / 2 },
+    {
+      id: "right-bottom",
+      position: "right",
+      x: width - inset,
+      y: height - adjustedHeight,
+    },
+    {
+      id: "bottom-right",
+      position: "bottom",
+      x: width - adjustedWidth,
+      y: height - inset,
+    },
+    { id: "bottom", position: "bottom", x: width / 2, y: height - inset },
+    {
+      id: "bottom-left",
+      position: "bottom",
+      x: adjustedWidth,
+      y: height - inset,
+    },
+    {
+      id: "left-bottom",
+      position: "left",
+      x: inset,
+      y: height - adjustedHeight,
+    },
+    { id: "left", position: "left", x: inset, y: height / 2 },
+    { id: "left-top", position: "left", x: inset, y: adjustedHeight },
+  ]
+
+  return baseHandles.flatMap((handle) => [
+    { ...handle, type: "source", width: 1, height: 1 },
+    { ...handle, type: "target", width: 1, height: 1 },
+  ])
+}
+
+function normalizeModelForServerRender(model: UMLModel): UMLModel {
+  if (!model || !model.nodes) {
+    throw new Error("Invalid model: missing nodes property")
   }
-
-  private createDefaultHandles = (width: number, height: number) => {
-    const adjustedWidth = this.calculateAdjustedQuarter(width)
-    const adjustedHeight = this.calculateAdjustedQuarter(height)
-    const inset = this.EDGE_ENDPOINT_INSET_PX
-
-    const baseHandles = [
-      { id: "top-left", position: "top", x: adjustedWidth, y: inset },
-      { id: "top", position: "top", x: width / 2, y: inset },
-      { id: "top-right", position: "top", x: width - adjustedWidth, y: inset },
-
-      {
-        id: "right-top",
-        position: "right",
-        x: width - inset,
-        y: adjustedHeight,
-      },
-      { id: "right", position: "right", x: width - inset, y: height / 2 },
-      {
-        id: "right-bottom",
-        position: "right",
-        x: width - inset,
-        y: height - adjustedHeight,
-      },
-
-      {
-        id: "bottom-right",
-        position: "bottom",
-        x: width - adjustedWidth,
-        y: height - inset,
-      },
-      { id: "bottom", position: "bottom", x: width / 2, y: height - inset },
-      {
-        id: "bottom-left",
-        position: "bottom",
-        x: adjustedWidth,
-        y: height - inset,
-      },
-
-      {
-        id: "left-bottom",
-        position: "left",
-        x: inset,
-        y: height - adjustedHeight,
-      },
-      { id: "left", position: "left", x: inset, y: height / 2 },
-      { id: "left-top", position: "left", x: inset, y: adjustedHeight },
-    ]
-
-    return baseHandles.flatMap((handle) => [
-      { ...handle, type: "source", width: 1, height: 1 },
-      { ...handle, type: "target", width: 1, height: 1 },
-    ])
-  }
-
-  /**
-   * Ensures model has render-ready defaults for server-side React Flow export.
-   * Server-side rendering cannot measure dimensions/handle geometry, so defaults are injected.
-   */
-  private normalizeModelForServerRender = (model: UMLModel): UMLModel => {
-    if (!model || !model.nodes) {
-      throw new Error("Invalid model: missing nodes property")
-    }
-
-    return {
-      ...model,
-      nodes: model.nodes.map((node) => ({
+  return {
+    ...model,
+    nodes: model.nodes.map((node) => {
+      const width = node.width ?? DEFAULT_NODE_WIDTH
+      const height = node.height ?? DEFAULT_NODE_HEIGHT
+      return {
         ...node,
-        width: node.width ?? 100,
-        height: node.height ?? 50,
+        width,
+        height,
         measured: {
-          width: node.measured?.width ?? node.width ?? 100,
-          height: node.measured?.height ?? node.height ?? 50,
+          width: node.measured?.width ?? width,
+          height: node.measured?.height ?? height,
         },
         handles:
-          (node as any).handles ??
-          this.createDefaultHandles(node.width ?? 100, node.height ?? 50),
-      })),
-      edges: (model.edges ?? []).map((edge, index) => ({
-        ...edge,
-        id:
-          edge.id ??
-          `${edge.source ?? "source"}-${edge.target ?? "target"}-${index}`,
-        sourceHandle: edge.sourceHandle ?? "right",
-        targetHandle: edge.targetHandle ?? "left",
-        data: {
-          ...(edge.data ?? {}),
-          points: edge.data?.points ?? [],
-        },
-      })),
-    }
+          (node as { handles?: unknown }).handles ??
+          createDefaultHandles(width, height),
+      }
+    }),
+    edges: (model.edges ?? []).map((edge, index) => ({
+      ...edge,
+      id:
+        edge.id ??
+        `${edge.source ?? "source"}-${edge.target ?? "target"}-${index}`,
+      sourceHandle: edge.sourceHandle ?? "right",
+      targetHandle: edge.targetHandle ?? "left",
+      data: {
+        ...(edge.data ?? {}),
+        points: edge.data?.points ?? [],
+      },
+    })),
   }
+}
 
-  convertToSvg = async (model: UMLModel): Promise<SVG> => {
-    if (typeof window.requestAnimationFrame !== "function") {
-      ;(window as any).requestAnimationFrame = (cb: FrameRequestCallback) =>
-        setTimeout(() => cb(Date.now()), 16)
-    }
-    if (typeof window.cancelAnimationFrame !== "function") {
-      ;(window as any).cancelAnimationFrame = (id: number) => clearTimeout(id)
-    }
+// ---------------------------------------------------------------------------
+// Public API.
+// ---------------------------------------------------------------------------
 
-    // JSDOM does not implement getBBox; mock it to allow SVG export.
-    // @ts-ignore - JSDOM does not implement getBBox.
-    window.SVGElement.prototype.getBBox = () => ({
-      x: 0,
-      y: 0,
-      width: 10,
-      height: 10,
-    })
+export async function convertModelToSvg(model: UMLModel): Promise<SVG> {
+  const normalized = normalizeModelForServerRender(importDiagram(model))
+  const svgExport = (await ApollonEditor.exportModelAsSvg(normalized, {
+    svgMode: "compat",
+  })) as SVG
 
-    const { ApollonEditor, importDiagram } = await loadApollonModule()
-
-    const normalizedModel = this.normalizeModelForServerRender(
-      importDiagram(model)
-    )
-    const svgExport = (await ApollonEditor.exportModelAsSvg(normalizedModel, {
-      svgMode: "compat",
-    })) as SVG
-
-    // exportModelAsSvg returns { svg: string, clip: { x, y, width, height } }
-    if (
-      svgExport &&
-      typeof svgExport.svg === "string" &&
-      svgExport.clip &&
-      typeof svgExport.clip.width === "number" &&
-      typeof svgExport.clip.height === "number"
-    ) {
-      return svgExport
-    }
-
+  if (
+    !svgExport ||
+    typeof svgExport.svg !== "string" ||
+    !svgExport.clip ||
+    typeof svgExport.clip.width !== "number" ||
+    typeof svgExport.clip.height !== "number"
+  ) {
     throw new Error("Failed to extract SVG: invalid export format")
   }
+  return svgExport
 }
