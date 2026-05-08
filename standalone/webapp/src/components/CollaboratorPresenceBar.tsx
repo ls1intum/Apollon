@@ -93,6 +93,11 @@ export const CollaboratorPresenceBar = ({
           key={c.clientId}
           title={c.isLocal ? `${c.name} (You)` : c.name}
           arrow
+          slotProps={{
+            popper: {
+              modifiers: [{ name: "offset", options: { offset: [0, -4] } }],
+            },
+          }}
         >
           <div
             style={{
