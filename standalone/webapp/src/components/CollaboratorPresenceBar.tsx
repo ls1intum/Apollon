@@ -14,6 +14,23 @@ type CollaboratorPresenceBarProps = {
   localUser: { name: string; color: string } | null
 }
 
+const AVATAR_SIZE = 26
+const OVERLAP = -6
+
+const avatarBase: React.CSSProperties = {
+  width: AVATAR_SIZE,
+  height: AVATAR_SIZE,
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#fff",
+  fontSize: 11,
+  fontWeight: 600,
+  cursor: "default",
+  flexShrink: 0,
+}
+
 export const CollaboratorPresenceBar = ({
   isActive,
   localUser,
@@ -49,81 +66,47 @@ export const CollaboratorPresenceBar = ({
 
   if (!isActive || !localUser) return null
 
-  const totalCount = collaborators.length + 1
+  const all = [
+    {
+      clientId: -1,
+      name: localUser.name,
+      color: localUser.color,
+      isLocal: true,
+    },
+    ...collaborators.map((c) => ({ ...c, isLocal: false })),
+  ]
 
   return (
     <div
       style={{
         position: "absolute",
-        top: 12,
-        right: 12,
+        top: 10,
+        right: 10,
         display: "flex",
         alignItems: "center",
-        gap: 8,
         zIndex: 10,
         pointerEvents: "auto",
-        backgroundColor: "var(--apollon-background)",
-        borderRadius: 20,
-        padding: "6px 12px",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
       }}
     >
-      <span
-        style={{
-          fontSize: 12,
-          color: "var(--apollon-secondary)",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {totalCount} online
-      </span>
-      <div style={{ display: "flex", gap: 4 }}>
-        <Tooltip title={`${localUser.name} (You)`} arrow>
+      {all.map((c, i) => (
+        <Tooltip
+          key={c.clientId}
+          title={c.isLocal ? `${c.name} (You)` : c.name}
+          arrow
+        >
           <div
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              backgroundColor: localUser.color,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontSize: 13,
-              fontWeight: 600,
+              ...avatarBase,
+              backgroundColor: c.color,
               border: "2px solid var(--apollon-background)",
-              outline: "2px solid var(--apollon-secondary)",
-              cursor: "default",
-              flexShrink: 0,
+              marginLeft: i === 0 ? 0 : OVERLAP,
+              zIndex: all.length - i,
             }}
           >
-            {localUser.name.charAt(0).toUpperCase()}
+            {c.name.charAt(0).toUpperCase()}
           </div>
         </Tooltip>
-        {collaborators.map((c) => (
-          <Tooltip key={c.clientId} title={c.name} arrow>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                backgroundColor: c.color,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: 600,
-                border: "2px solid var(--apollon-background)",
-                cursor: "default",
-                flexShrink: 0,
-              }}
-            >
-              {c.name.charAt(0).toUpperCase()}
-            </div>
-          </Tooltip>
-        ))}
-      </div>
+      ))}
     </div>
   )
 }
