@@ -249,8 +249,15 @@ export const ApollonWithConnection: React.FC = () => {
           const previewing = useVersionStore.getState().preview !== null
           if (previewing) return
           if (!diagramIsUpdated.current || !diagramId || !instance) return
+          // In collab, every connected peer autosaves the same Yjs-converged
+          // model. If-Match would race them artificially — Yjs guarantees
+          // content convergence, so HEAD revision contention isn't a real
+          // conflict here. Single-editor views keep the optimistic check.
+          const ifMatch = isCollaborationView
+            ? undefined
+            : lastObservedHeadRev.current
           DiagramApiClient.sendDiagramUpdate(diagramId, instance.model, {
-            ifMatch: lastObservedHeadRev.current,
+            ifMatch,
           })
             .then((res) => {
               lastObservedHeadRev.current = res.headRev

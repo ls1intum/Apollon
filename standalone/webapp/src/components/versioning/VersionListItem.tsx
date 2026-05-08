@@ -12,6 +12,7 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert"
 import { VersionThumbnail } from "./VersionThumbnail"
 import {
+  Fragment,
   memo,
   useState,
   useRef,
@@ -149,170 +150,172 @@ const VersionListItemInner: FC<Props> = ({
   }
 
   return (
-    <ListItem
-      id={`version-row-${version.id}`}
-      role="option"
-      aria-selected={isPreviewing}
-      aria-label={`Version ${
-        versionNumber ? `#${versionNumber}` : "(saving)"
-      }, created ${ago}${label ? ` — ${label}` : ""}`}
-      onClick={handleRowClick}
-      sx={{
-        opacity: version.pending ? 0.7 : 1,
-        bgcolor: isPreviewing ? ROW_SELECTED_BG : "transparent",
-        borderLeft: version.failed
-          ? "3px solid var(--apollon-alert-danger-color)"
-          : "3px solid transparent",
-        color: TEXT_PRIMARY,
-        gap: 1.5,
-        py: 1,
-        alignItems: "flex-start",
-        cursor: clickable ? "pointer" : "default",
-        "&:hover": clickable ? { bgcolor: ROW_HOVER_BG } : undefined,
-      }}
-    >
-      {version.pending ? (
-        <Box
-          sx={{
-            width: 64,
-            height: 40,
-            flexShrink: 0,
-            bgcolor: ROW_HOVER_BG,
-            borderRadius: 1,
-            mt: 0.25,
-          }}
-          aria-hidden
-        />
-      ) : (
-        <Box sx={{ mt: 0.25 }}>
-          <VersionThumbnail
-            diagramId={diagramId}
-            versionId={version.id}
-            isAuto={!named}
-            compact
+    <Fragment>
+      <ListItem
+        id={`version-row-${version.id}`}
+        role="option"
+        aria-selected={isPreviewing}
+        aria-label={`Version ${
+          versionNumber ? `#${versionNumber}` : "(saving)"
+        }, created ${ago}${label ? ` — ${label}` : ""}`}
+        onClick={handleRowClick}
+        sx={{
+          opacity: version.pending ? 0.7 : 1,
+          bgcolor: isPreviewing ? ROW_SELECTED_BG : "transparent",
+          borderLeft: version.failed
+            ? "3px solid var(--apollon-alert-danger-color)"
+            : "3px solid transparent",
+          color: TEXT_PRIMARY,
+          gap: 1.5,
+          py: 1,
+          alignItems: "flex-start",
+          cursor: clickable ? "pointer" : "default",
+          "&:hover": clickable ? { bgcolor: ROW_HOVER_BG } : undefined,
+        }}
+      >
+        {version.pending ? (
+          <Box
+            sx={{
+              width: 64,
+              height: 40,
+              flexShrink: 0,
+              bgcolor: ROW_HOVER_BG,
+              borderRadius: 1,
+              mt: 0.25,
+            }}
+            aria-hidden
           />
-        </Box>
-      )}
-
-      <Box sx={{ flex: 1, minWidth: 0, pr: 4 }}>
-        {editing ? (
-          <InputBase
-            autoFocus
-            multiline
-            maxRows={6}
-            fullWidth
-            value={draft}
-            onChange={(e) =>
-              setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
-            }
-            onClick={(e) => e.stopPropagation()}
-            onBlur={() => void submitEdit()}
-            onKeyDown={onEditKeyDown}
-            placeholder={t.createPlaceholder}
-            inputProps={{ "aria-label": "Edit description" }}
-            sx={{
-              fontSize: "0.8125rem",
-              color: TEXT_PRIMARY,
-              p: 0,
-              mb: 0.25,
-              "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
-            }}
-          />
-        ) : description ? (
-          // User-authored description — rendered slightly smaller and muted
-          // so the #N · time-ago line reads as the primary identifier.
-          <Typography
-            sx={{
-              fontSize: "0.8125rem",
-              color: TEXT_MUTED,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              lineHeight: 1.35,
-              mb: 0.25,
-            }}
-          >
-            {description}
-          </Typography>
-        ) : version.kind === "user" ? (
-          // User explicitly saved this version but added no description.
-          // Show a placeholder so it doesn't look identical to a raw autosave.
-          <Typography
-            variant="caption"
-            sx={{
-              color: TEXT_MUTED,
-              fontStyle: "italic",
-              display: "block",
-              lineHeight: 1.35,
-              mb: 0.25,
-            }}
-          >
-            {t.noDescription}
-          </Typography>
-        ) : version.name?.trim() ? (
-          // System-generated name (pre-restore label). Styled as italic
-          // caption so users don't mistake it for a user-added description —
-          // the kebab's "Add description" makes sense because no user-authored
-          // text is visible.
-          <Typography
-            variant="caption"
-            sx={{
-              color: TEXT_MUTED,
-              fontStyle: "italic",
-              display: "block",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              lineHeight: 1.35,
-              mb: 0.25,
-            }}
-          >
-            {version.name.trim()}
-          </Typography>
         ) : (
-          // Raw periodic auto-save — no user-authored content at all.
-          // 'Auto-saved' tells the user this is a system checkpoint, not
-          // a deliberate save, matching the same italic/muted register as
-          // the pre-restore label above.
+          <Box sx={{ mt: 0.25 }}>
+            <VersionThumbnail
+              diagramId={diagramId}
+              versionId={version.id}
+              isAuto={!named}
+              compact
+            />
+          </Box>
+        )}
+
+        <Box sx={{ flex: 1, minWidth: 0, pr: 4 }}>
+          {editing ? (
+            <InputBase
+              autoFocus
+              multiline
+              maxRows={6}
+              fullWidth
+              value={draft}
+              onChange={(e) =>
+                setDraft(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))
+              }
+              onClick={(e) => e.stopPropagation()}
+              onBlur={() => void submitEdit()}
+              onKeyDown={onEditKeyDown}
+              placeholder={t.createPlaceholder}
+              inputProps={{ "aria-label": "Edit description" }}
+              sx={{
+                fontSize: "0.8125rem",
+                color: TEXT_PRIMARY,
+                p: 0,
+                mb: 0.25,
+                "& textarea::placeholder": { color: TEXT_MUTED, opacity: 1 },
+              }}
+            />
+          ) : description ? (
+            // User-authored description — rendered slightly smaller and muted
+            // so the #N · time-ago line reads as the primary identifier.
+            <Typography
+              sx={{
+                fontSize: "0.8125rem",
+                color: TEXT_MUTED,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                lineHeight: 1.35,
+                mb: 0.25,
+              }}
+            >
+              {description}
+            </Typography>
+          ) : version.kind === "user" ? (
+            // User explicitly saved this version but added no description.
+            // Show a placeholder so it doesn't look identical to a raw autosave.
+            <Typography
+              variant="caption"
+              sx={{
+                color: TEXT_MUTED,
+                fontStyle: "italic",
+                display: "block",
+                lineHeight: 1.35,
+                mb: 0.25,
+              }}
+            >
+              {t.noDescription}
+            </Typography>
+          ) : version.name?.trim() ? (
+            // System-generated name (pre-restore label). Styled as italic
+            // caption so users don't mistake it for a user-added description —
+            // the kebab's "Add description" makes sense because no user-authored
+            // text is visible.
+            <Typography
+              variant="caption"
+              sx={{
+                color: TEXT_MUTED,
+                fontStyle: "italic",
+                display: "block",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                lineHeight: 1.35,
+                mb: 0.25,
+              }}
+            >
+              {version.name.trim()}
+            </Typography>
+          ) : (
+            // Raw periodic auto-save — no user-authored content at all.
+            // 'Auto-saved' tells the user this is a system checkpoint, not
+            // a deliberate save, matching the same italic/muted register as
+            // the pre-restore label above.
+            <Typography
+              variant="caption"
+              sx={{
+                color: TEXT_MUTED,
+                fontStyle: "italic",
+                display: "block",
+                lineHeight: 1.35,
+                mb: 0.25,
+              }}
+            >
+              {t.autoSaved}
+            </Typography>
+          )}
           <Typography
             variant="caption"
-            sx={{
-              color: TEXT_MUTED,
-              fontStyle: "italic",
-              display: "block",
-              lineHeight: 1.35,
-              mb: 0.25,
-            }}
+            sx={{ color: TEXT_MUTED, display: "block" }}
           >
-            {t.autoSaved}
+            {versionNumber !== undefined && (
+              <Box component="span" sx={{ fontWeight: 600 }}>
+                #{versionNumber}
+              </Box>
+            )}
+            {versionNumber !== undefined && " · "}
+            {ago}
+            {version.pending && ` · ${t.saving}`}
+            {version.failed && ` · failed`}
           </Typography>
-        )}
-        <Typography
-          variant="caption"
-          sx={{ color: TEXT_MUTED, display: "block" }}
-        >
-          {versionNumber !== undefined && (
-            <Box component="span" sx={{ fontWeight: 600 }}>
-              #{versionNumber}
-            </Box>
-          )}
-          {versionNumber !== undefined && " · "}
-          {ago}
-          {version.pending && ` · ${t.saving}`}
-          {version.failed && ` · failed`}
-        </Typography>
-      </Box>
+        </Box>
 
-      <ListItemSecondaryAction sx={{ top: 12, transform: "none" }}>
-        <IconButton
-          size="small"
-          onClick={openMenu}
-          aria-label="Version actions"
-          aria-haspopup="menu"
-          disabled={Boolean(version.pending)}
-          sx={{ color: TEXT_PRIMARY }}
-        >
-          <MoreVertIcon fontSize="small" />
-        </IconButton>
-      </ListItemSecondaryAction>
+        <ListItemSecondaryAction sx={{ top: 12, transform: "none" }}>
+          <IconButton
+            size="small"
+            onClick={openMenu}
+            aria-label="Version actions"
+            aria-haspopup="menu"
+            disabled={Boolean(version.pending)}
+            sx={{ color: TEXT_PRIMARY }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        </ListItemSecondaryAction>
+      </ListItem>
 
       <Menu
         anchorEl={menuAnchor}
@@ -379,7 +382,7 @@ const VersionListItemInner: FC<Props> = ({
           </MenuItem>,
         ]}
       </Menu>
-    </ListItem>
+    </Fragment>
   )
 }
 
