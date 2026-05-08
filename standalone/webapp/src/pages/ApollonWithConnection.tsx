@@ -46,7 +46,6 @@ export const ApollonWithConnection: React.FC = () => {
   const diagramIsUpdated = useRef(false)
   const lastObservedHeadRev = useRef<number | undefined>(undefined)
   const editorRef = useRef<ApollonEditor | null>(null)
-  const previewBeforeModelRef = useRef<UMLModel | null>(null)
   const restoredDuringPreviewRef = useRef(false)
   const hasPromptedRef = useRef(false)
   // True when the current preview's body differs from the canvas the user
@@ -359,24 +358,26 @@ export const ApollonWithConnection: React.FC = () => {
   useEffect(() => {
     if (!editor) return
     if (preview) {
+      // Capture the canvas state BEFORE flipping the editor into preview
+      // mode, so we can decide whether Restore is meaningful (i.e. would
+      // restoring this version actually change the canvas?).
       const before = editor.model
-      previewBeforeModelRef.current = before
-      // Decide whether Restore is meaningful for THIS preview. If the
-      // pre-preview canvas already matches the version body (e.g. the
-      // user clicked the latest saved version with no unsaved local
-      // changes), restoring is a no-op and the banner hides the action.
-      // If the canvas differs (unsaved edits, or a different version),
-      // restoring is "replace canvas with this snapshot" — show it.
       setCanRestoreFromPreview(
         structuralFingerprint(before) !== structuralFingerprint(preview.body)
       )
-      wsManagerRef.current?.setPreviewMode(true)
+      // Library-level preview mode: store mutators stop writing to the
+      // Yjs doc (the collaborative source of truth). The next
+      // `editor.model =` assignment overlays the preview body purely in
+      // the local Zustand cache. Peer edits keep flowing into Yjs in the
+      // background; on exit, Zustand re-syncs from Yjs and the canvas
+      // catches up to whatever collaborators committed during preview.
+      editor.setPreviewMode(true)
       try {
         editor.model = importDiagram(preview.body) as UMLModel
         editor.setReadonly(true)
         editor.fitView()
       } catch (err) {
-        wsManagerRef.current?.setPreviewMode(false)
+        editor.setPreviewMode(false)
         log.error("Failed to apply previewed snapshot", err)
         const isSchemaError =
           err instanceof Error && /schema|version|import/i.test(err.message)
@@ -389,8 +390,13 @@ export const ApollonWithConnection: React.FC = () => {
       if (!diagramId) return
 
       if (restoredDuringPreviewRef.current) {
+        // After a restore, the server's HEAD is now the new canonical
+        // state. Flip preview off (Zustand resyncs from Yjs to a stale
+        // intermediate), then fetch HEAD and apply — that final
+        // `editor.model = head` runs with previewActive=false so writes
+        // hit Yjs and broadcast to peers.
         restoredDuringPreviewRef.current = false
-        previewBeforeModelRef.current = null
+        editor.setPreviewMode(false)
         DiagramApiClient.fetchDiagram(diagramId)
           .then((head) => {
             editor.model = importDiagram(head) as UMLModel
@@ -400,30 +406,13 @@ export const ApollonWithConnection: React.FC = () => {
             log.error("Failed to reload diagram after restore", err)
             toast.error(t.failureSchemaUnsupported)
           })
-          .finally(() => {
-            wsManagerRef.current?.setPreviewMode(false)
-            wsManagerRef.current?.requestResync()
-          })
-      } else if (previewBeforeModelRef.current) {
-        editor.model = previewBeforeModelRef.current
-        previewBeforeModelRef.current = null
-        editor.fitView()
-        wsManagerRef.current?.setPreviewMode(false)
-        wsManagerRef.current?.requestResync()
       } else {
-        DiagramApiClient.fetchDiagram(diagramId)
-          .then((head) => {
-            editor.model = importDiagram(head) as UMLModel
-            editor.fitView()
-          })
-          .catch((err) => {
-            log.error("Failed to reload diagram after exiting preview", err)
-            toast.error(t.failureSchemaUnsupported)
-          })
-          .finally(() => {
-            wsManagerRef.current?.setPreviewMode(false)
-            wsManagerRef.current?.requestResync()
-          })
+        // Plain preview exit: turn off preview mode. The library
+        // resyncs Zustand from Yjs which has been receiving peer edits
+        // throughout, so the canvas catches up automatically — no
+        // model snapshot, no resync round-trip, no Yjs mutation.
+        editor.setPreviewMode(false)
+        editor.fitView()
       }
     }
   }, [preview, editor, diagramId, baseReadonly])
@@ -452,7 +441,6 @@ export const ApollonWithConnection: React.FC = () => {
     async (versionId: string) => {
       if (!diagramId || !editor) return
       restoredDuringPreviewRef.current = true
-      previewBeforeModelRef.current = null
       try {
         const { headRev } = await restoreVersion(
           diagramId,

@@ -37,6 +37,19 @@ type InitialDiagramState = {
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
+  /**
+   * When true, the Yjs doc is the canonical state but the canvas reflects
+   * an ephemeral overlay (e.g. a version preview). In this mode:
+   *   - store mutators (`setNodesAndEdges`, `setAssessments`, …) update
+   *     ONLY local Zustand state and SKIP the `ydoc.transact("store",…)`
+   *     write — so peer-bound broadcasts and the local Yjs doc's history
+   *     are unaffected by what the user is "previewing".
+   *   - Yjs observers SKIP the `update*FromYjs` Zustand sync — incoming
+   *     peer edits land in Yjs but don't disturb the overlay.
+   * On flip-off we re-sync Zustand from Yjs so the canvas catches up to
+   * everything peers committed during the preview.
+   */
+  previewActive: boolean
 }
 
 const initialDiagramState: InitialDiagramState = {
@@ -51,6 +64,7 @@ const initialDiagramState: InitialDiagramState = {
   canUndo: false,
   canRedo: false,
   undoManager: null,
+  previewActive: false,
 }
 
 export type DiagramStore = {
@@ -65,6 +79,7 @@ export type DiagramStore = {
   canUndo: boolean
   canRedo: boolean
   undoManager: Y.UndoManager | null
+  previewActive: boolean
   setDiagramId: (diagramId: string) => void
   setNodes: (payload: Node[] | ((nodes: Node[]) => Node[])) => void
   setEdges: (payload: Edge[] | ((edges: Edge[]) => Edge[])) => void
@@ -95,6 +110,13 @@ export type DiagramStore = {
   getInteractiveForSerialization: () => InteractiveElements | undefined
   setInteractive: (interactive: InteractiveElements | undefined) => void
   isElementInteractive: (elementId: string) => boolean
+  /**
+   * Toggle the preview overlay. When entering, the Yjs doc is left
+   * untouched by store mutators and observers. When exiting, the local
+   * Zustand state is rebuilt from the (peer-augmented) Yjs maps so the
+   * canvas catches up to everything that arrived during preview.
+   */
+  setPreviewActive: (active: boolean) => void
 }
 
 export const createDiagramStore = (
@@ -329,12 +351,19 @@ export const createDiagramStore = (
         },
 
         setNodesAndEdges: (nodes, edges) => {
-          ydoc.transact(() => {
-            getNodesMap(ydoc).clear()
-            getEdgesMap(ydoc).clear()
-            nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
-            edges.forEach((edge) => getEdgesMap(ydoc).set(edge.id, edge))
-          }, "store")
+          // In preview mode, the canvas is showing a temporary overlay —
+          // do NOT touch Yjs. Mutating Yjs here would clear+re-insert
+          // every key and the resulting delete-set entries propagate to
+          // peers on the next full-state sync, silently wiping their
+          // concurrent edits.
+          if (!get().previewActive) {
+            ydoc.transact(() => {
+              getNodesMap(ydoc).clear()
+              getEdgesMap(ydoc).clear()
+              nodes.forEach((node) => getNodesMap(ydoc).set(node.id, node))
+              edges.forEach((edge) => getEdgesMap(ydoc).set(edge.id, edge))
+            }, "store")
+          }
           const prunedInteractive = pruneInteractiveElements(
             {
               elements: get().interactiveElements,
@@ -672,13 +701,15 @@ export const createDiagramStore = (
           const assessments =
             typeof payload === "function" ? payload(get().assessments) : payload
 
-          ydoc.transact(() => {
-            const yMap = getAssessments(ydoc)
-            yMap.clear()
-            Object.entries(assessments).forEach(([id, assessment]) => {
-              yMap.set(id, assessment)
-            })
-          }, "store")
+          if (!get().previewActive) {
+            ydoc.transact(() => {
+              const yMap = getAssessments(ydoc)
+              yMap.clear()
+              Object.entries(assessments).forEach(([id, assessment]) => {
+                yMap.set(id, assessment)
+              })
+            }, "store")
+          }
 
           set({ assessments }, undefined, "setAssessments")
         },
@@ -696,6 +727,20 @@ export const createDiagramStore = (
 
         getAssessment: (id) => {
           return get().assessments[id]
+        },
+
+        setPreviewActive: (active) => {
+          const wasActive = get().previewActive
+          if (active === wasActive) return
+          set({ previewActive: active }, undefined, "setPreviewActive")
+          // On flip-off, the Zustand caches are stale (peers may have
+          // edited Yjs while we were showing the preview overlay) — pull
+          // every observed surface from Yjs so the canvas catches up.
+          if (!active) {
+            get().updateNodesFromYjs()
+            get().updateEdgesFromYjs()
+            get().updateAssessmentFromYjs()
+          }
         },
 
         addOrUpdateAssessment: (assessment) => {

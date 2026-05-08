@@ -23,7 +23,6 @@ export class WebSocketManager {
   private reconnectStartTime = 0
   private cleanedUp = false
   private controlListeners = new Set<ControlListener>()
-  private previewMode = false
 
   constructor(
     private diagramId: string,
@@ -31,7 +30,6 @@ export class WebSocketManager {
     private onError: (e: Event) => void
   ) {
     this.instance.sendBroadcastMessage((diagramData) => {
-      if (this.previewMode) return
       if (this.websocket?.readyState === WebSocket.OPEN) {
         this.websocket.send(JSON.stringify({ diagramData }))
       }
@@ -51,10 +49,6 @@ export class WebSocketManager {
     if (this.websocket?.readyState !== WebSocket.OPEN) return
     const envelope: Envelope = { kind: "control", control: event }
     this.websocket.send(JSON.stringify(envelope))
-  }
-
-  public setPreviewMode(on: boolean): void {
-    this.previewMode = on
   }
 
   public requestResync(): void {
@@ -103,7 +97,6 @@ export class WebSocketManager {
           // Fall through to opaque path on parse failure.
         }
       }
-      if (this.previewMode) return
       try {
         const msg = JSON.parse(raw) as WebSocketMessage
         if (msg && typeof msg === "object" && "diagramData" in msg) {

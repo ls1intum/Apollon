@@ -256,15 +256,21 @@ export class YjsSyncClass {
   }
 
   private startYjsObserver = () => {
+    // While the canvas shows a preview overlay, peer edits keep flowing
+    // into Yjs but we hold the local Zustand caches stable so the
+    // overlay doesn't flicker. The store's `setPreviewActive(false)`
+    // call resyncs Zustand from Yjs at exit time.
+    const previewSuppressed = () =>
+      this.diagramStore.getState().previewActive === true
+
     const nodesChangeObserver = (
       _event: Y.YMapEvent<Node>,
       transaction: Y.Transaction
     ) => {
-      // Don't update from Yjs if the transaction originated from the store
-      // or if it's an undo/redo operation
       if (
         transaction.origin !== "store" &&
-        !this.isUndoRedoTransaction(transaction)
+        !this.isUndoRedoTransaction(transaction) &&
+        !previewSuppressed()
       ) {
         this.diagramStore.getState().updateNodesFromYjs()
       }
@@ -276,7 +282,8 @@ export class YjsSyncClass {
     ) => {
       if (
         transaction.origin !== "store" &&
-        !this.isUndoRedoTransaction(transaction)
+        !this.isUndoRedoTransaction(transaction) &&
+        !previewSuppressed()
       ) {
         this.diagramStore.getState().updateEdgesFromYjs()
       }
@@ -288,7 +295,8 @@ export class YjsSyncClass {
     ) => {
       if (
         transaction.origin !== "store" &&
-        !this.isUndoRedoTransaction(transaction)
+        !this.isUndoRedoTransaction(transaction) &&
+        !previewSuppressed()
       ) {
         this.metadataStore.getState().updateMetaDataFromYjs()
       }
@@ -300,7 +308,8 @@ export class YjsSyncClass {
     ) => {
       if (
         transaction.origin !== "store" &&
-        !this.isUndoRedoTransaction(transaction)
+        !this.isUndoRedoTransaction(transaction) &&
+        !previewSuppressed()
       ) {
         this.diagramStore.getState().updateAssessmentFromYjs()
       }

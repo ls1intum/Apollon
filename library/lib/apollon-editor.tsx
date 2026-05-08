@@ -525,6 +525,26 @@ export class ApollonEditor {
     }
   }
 
+  /**
+   * Toggle preview-overlay mode. When `true`, subsequent `model = …`
+   * assignments and other store mutators update the local Zustand caches
+   * (so the canvas displays the overlay) WITHOUT writing to the Yjs
+   * doc — leaving the collaborative document untouched. Yjs observers
+   * also stop propagating peer-driven updates to Zustand, so the overlay
+   * doesn't flicker as collaborators edit the live diagram.
+   *
+   * On flip-off the local Zustand state is rebuilt from the (now
+   * peer-augmented) Yjs maps so the canvas catches up to everything
+   * collaborators committed during the preview.
+   *
+   * Hosts should call `setPreviewMode(true)` before applying a preview
+   * model and `setPreviewMode(false)` on exit. The Yjs doc never needs
+   * to be "restored" from a snapshot because it was never disturbed.
+   */
+  public setPreviewMode(active: boolean): void {
+    this.diagramStore.getState().setPreviewActive(active)
+  }
+
   public toggleInteractiveElementsMode(forceEnabled?: boolean): void {
     const currentView = this.metadataStore.getState().view
     const shouldEnable =
@@ -568,13 +588,24 @@ export class ApollonEditor {
 
   set model(model: Apollon.UMLModel) {
     const { nodes, edges, assessments, interactive } = model
+    const previewActive = this.diagramStore.getState().previewActive
 
     this.diagramStore.getState().setNodesAndEdges(nodes, edges)
     this.diagramStore.getState().setAssessments(assessments)
     this.diagramStore.getState().setInteractive(interactive)
-    this.metadataStore
-      .getState()
-      .updateMetaData(model.title, parseDiagramType(model.type))
+    if (previewActive) {
+      // Mirror the preview gating in `setNodesAndEdges`/`setAssessments`:
+      // metadata writes also bypass the Yjs `transact("store")` so the
+      // doc's history (and any consequent peer broadcast) stays clean.
+      this.metadataStore.setState({
+        diagramTitle: model.title,
+        diagramType: parseDiagramType(model.type),
+      })
+    } else {
+      this.metadataStore
+        .getState()
+        .updateMetaData(model.title, parseDiagramType(model.type))
+    }
   }
 
   public getSelectedElements(): string[] {

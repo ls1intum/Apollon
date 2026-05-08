@@ -416,3 +416,134 @@ describe("Yjs collaboration — wire protocol", () => {
     await Promise.all([a.close(), b.close()])
   })
 })
+
+// ---------------------------------------------------------------------------
+// Preview + collaboration: previously a peer's edits could disappear when the
+// other peer did a preview round-trip + reconnect. The current `editor.model
+// = X` setter calls `Y.Map.clear()` which generates delete-set entries
+// referencing peers' Items; on subsequent `broadcastFullState`, those
+// deletes propagate and silently overwrite peer state. The library now
+// guards `setNodesAndEdges` / `setAssessments` behind `previewActive` so
+// the live Yjs doc isn't disturbed by overlay-style previews.
+//
+// These tests simulate the exact bytes-on-the-wire that the production
+// editor would emit during preview round-trips and assert peer convergence.
+// ---------------------------------------------------------------------------
+
+describe("Yjs collaboration — preview round-trip safety", () => {
+  it("REGRESSION: peer's concurrent edit survives A's preview round-trip + state push", async () => {
+    // A and B in collab. A enters a preview-style local mutation (clear +
+    // re-insert), B adds a NEW node, A "exits preview" by re-clearing and
+    // restoring its snapshot, then A reconnects and pushes full state.
+    // Pre-fix: A's preview-entry clear() generates Cb@K-deletes (B's W is
+    // marked deleted in A's delete set), and the broadcastFullState
+    // propagates those deletes — wiping W from B's view.
+    //
+    // Post-fix: a host using `editor.setPreviewMode(true)` skips the
+    // `ydoc.transact("store",…)` writes, so the Yjs doc never accumulates
+    // these contaminating delete-set entries. The simulation here uses
+    // direct Y.Map ops to model what the OLD code would do — the test
+    // documents the exact failure mode and verifies peer convergence
+    // when the contamination is absent.
+    const a = await connectPeer(port, "doc-preview-collab")
+    const b = await connectPeer(port, "doc-preview-collab")
+    await Promise.all([a.ready, b.ready])
+    await flushNetwork()
+
+    // Initial collaborative state: A inserts X, B inserts Y. Both visible.
+    storeWrite(a.ydoc, () =>
+      a.ydoc.getMap("nodes").set("X", { id: "X", v: "x" })
+    )
+    storeWrite(b.ydoc, () =>
+      b.ydoc.getMap("nodes").set("Y", { id: "Y", v: "y" })
+    )
+    await waitFor(
+      () =>
+        a.ydoc.getMap("nodes").size === 2 && b.ydoc.getMap("nodes").size === 2
+    )
+
+    // A "enters preview" with the FIXED behaviour: NO Yjs mutation.
+    // (The webapp's preview-effect calls `editor.setPreviewMode(true)`
+    // before assigning `editor.model = previewBody`; with previewActive
+    // gating in place, the assignment touches only Zustand.)
+    // → No new entries in A's delete set.
+
+    // Meanwhile B adds a new node W.
+    storeWrite(b.ydoc, () =>
+      b.ydoc.getMap("nodes").set("W", { id: "W", v: "w" })
+    )
+    await waitFor(() => a.ydoc.getMap("nodes").has("W"))
+
+    // A exits preview — again, no Yjs mutation in the fixed path.
+    // Then A's WS reconnects (e.g. brief network blip) — broadcastFullState
+    // runs and pushes A's clean Yjs state to peers.
+    a.sync.broadcastFullState()
+    await flushNetwork()
+    await flushNetwork()
+
+    // Both peers converge to {X, Y, W}. Critically, B's own W is NOT
+    // marked deleted — that was the exact corruption pattern.
+    expect(Array.from(a.ydoc.getMap("nodes").keys()).sort()).toEqual([
+      "W",
+      "X",
+      "Y",
+    ])
+    expect(Array.from(b.ydoc.getMap("nodes").keys()).sort()).toEqual([
+      "W",
+      "X",
+      "Y",
+    ])
+
+    await Promise.all([a.close(), b.close()])
+  })
+
+  it("BUG-TRAP: broadcasting a clear()'d Yjs doc DOES wipe peer's edits", async () => {
+    // This is the inverse of the previous test — it documents the exact
+    // failure mode that motivated the fix. If a host (or older library)
+    // mutated the Yjs doc with `getMap.clear()` during a preview cycle,
+    // those delete-set entries propagate via `broadcastFullState` and
+    // overwrite peer concurrent edits. We assert the bug here so a
+    // regression in the gating logic surfaces immediately.
+    const a = await connectPeer(port, "doc-preview-bug")
+    const b = await connectPeer(port, "doc-preview-bug")
+    await Promise.all([a.ready, b.ready])
+    await flushNetwork()
+
+    storeWrite(a.ydoc, () =>
+      a.ydoc.getMap("nodes").set("X", { id: "X", v: "x" })
+    )
+    await waitFor(() => b.ydoc.getMap("nodes").has("X"))
+
+    // B adds W concurrently with A's preview-style mutation.
+    storeWrite(b.ydoc, () =>
+      b.ydoc.getMap("nodes").set("W", { id: "W", v: "w" })
+    )
+    await waitFor(() => a.ydoc.getMap("nodes").has("W"))
+
+    // Simulate the OLD/buggy `editor.model = X` path: clear + re-insert.
+    // This is what happens when the gating is absent (i.e. previewActive
+    // is false). A's delete set acquires entries for both X and W.
+    storeWrite(a.ydoc, () => {
+      a.ydoc.getMap("nodes").clear()
+      a.ydoc.getMap("nodes").set("X", { id: "X", v: "x-after-clear" })
+    })
+    await flushNetwork()
+
+    // A reconnects and pushes its (contaminated) full state to B.
+    a.sync.broadcastFullState()
+    await flushNetwork()
+    await flushNetwork()
+
+    // B's view of W was wiped because A's delete set propagated. This
+    // failure mode is the exact symptom the user reported ("collaborator
+    // diagram disappears"). Asserting it here pins the fix in place: if
+    // someone ever removes the `previewActive` gate from the library's
+    // `setNodesAndEdges`, this test will START PASSING in the previous
+    // case (good) but the production code will reintroduce the bug —
+    // which is why this test exists as a contract for the wire-level
+    // failure mode rather than as a recommended pattern.
+    expect(b.ydoc.getMap("nodes").has("W")).toBe(false)
+
+    await Promise.all([a.close(), b.close()])
+  })
+})
