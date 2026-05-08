@@ -6,6 +6,7 @@ import {
   ShareModal,
   AboutModal,
   HowToUseModal,
+  PPTXExportModal,
 } from "@/components/modals"
 import { useModalContext } from "@/contexts"
 import { ModalName, ModalProps } from "@/types"
@@ -26,6 +27,7 @@ const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<unknown>> = {
   NEW_DIAGRAM_FROM_TEMPLATE: NewDiagramFromTemplateModal,
   SHARE: ShareModal,
   LOAD_DIAGRAM: LoadDiagramModal,
+  EXPORT_PPTX: PPTXExportModal,
   HowToUseModal: HowToUseModal,
   AboutModal: AboutModal,
   // Add other modals here
@@ -36,6 +38,7 @@ const MODAL_TITLES: Record<ModalName, string> = {
   NEW_DIAGRAM_FROM_TEMPLATE: "Create new Diagram from Template",
   SHARE: "Share",
   LOAD_DIAGRAM: "Load Diagram",
+  EXPORT_PPTX: "Export as PPTX",
   HowToUseModal: "How to use this editor?",
   AboutModal: "Information about Apollon",
   // Add other modals here

@@ -23,6 +23,7 @@ coverage/
 *.swp
 *.swo
 *.bak
+.ai/
 
 # Environment variables
 .env

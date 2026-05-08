@@ -170,6 +170,14 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         >
           As PDF
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            openModal("EXPORT_PPTX")
+            closeMainMenu()
+          }}
+        >
+          As PPTX (Presentation)
+        </MenuItem>
       </Menu>
     </>
   )
