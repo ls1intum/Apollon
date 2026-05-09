@@ -6,7 +6,7 @@ import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useNavigate } from "react-router"
 import { DiagramView } from "@/types"
-import { DiagramAPIManager } from "@/services/DiagramAPIManager"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 import { randomCollabName } from "@/utils/collaboration"
 
@@ -23,7 +23,7 @@ export const ShareModal = () => {
 
     try {
       const model = editor.model
-      const { id: diagramID } = await DiagramAPIManager.createDiagram(model)
+      const { id: diagramID } = await DiagramApiClient.createDiagram(model)
 
       const newurl = `${window.location.origin}/${diagramID}?view=${viewType}`
       copyToClipboard(newurl)

@@ -54,6 +54,20 @@ export class YjsSyncClass {
     this.stopYjsObserver()
   }
 
+  /**
+   * Push the entire local Yjs document as a single `YjsUpdate`. Callers should
+   * invoke this after a (re)connect so peers absorb any edits made while we
+   * were disconnected — those updates fire while `readyState !== OPEN`, are
+   * silently dropped by the send callback, and never replayed otherwise.
+   * Yjs CRDTs converge on merge, so peers that already have these ops just
+   * no-op.
+   */
+  public broadcastFullState = () => {
+    if (!this.sendBroadcastMessage) return
+    const state = Y.encodeStateAsUpdate(this.ydoc)
+    this.sendFramedMessage(MessageType.YjsUpdate, state)
+  }
+
   public setSendBroadcastMessage = (sendFn: SendBroadcastMessage) => {
     this.sendBroadcastMessage = sendFn
 
@@ -242,15 +256,21 @@ export class YjsSyncClass {
   }
 
   private startYjsObserver = () => {
+    // While the canvas shows a preview overlay, peer edits keep flowing
+    // into Yjs but we hold the local Zustand caches stable so the
+    // overlay doesn't flicker. The store's `setPreviewMode(false)` call
+    // resyncs Zustand from Yjs at exit time.
+    const previewSuppressed = () =>
+      this.diagramStore.getState().previewMode === true
+
     const nodesChangeObserver = (
       _event: Y.YMapEvent<Node>,
       transaction: Y.Transaction
     ) => {
-      // Don't update from Yjs if the transaction originated from the store
-      // or if it's an undo/redo operation
       if (
         transaction.origin !== "store" &&
-        !this.isUndoRedoTransaction(transaction)
+        !this.isUndoRedoTransaction(transaction) &&
+        !previewSuppressed()
       ) {
         this.diagramStore.getState().updateNodesFromYjs()
       }
@@ -262,7 +282,8 @@ export class YjsSyncClass {
     ) => {
       if (
         transaction.origin !== "store" &&
-        !this.isUndoRedoTransaction(transaction)
+        !this.isUndoRedoTransaction(transaction) &&
+        !previewSuppressed()
       ) {
         this.diagramStore.getState().updateEdgesFromYjs()
       }
@@ -274,7 +295,8 @@ export class YjsSyncClass {
     ) => {
       if (
         transaction.origin !== "store" &&
-        !this.isUndoRedoTransaction(transaction)
+        !this.isUndoRedoTransaction(transaction) &&
+        !previewSuppressed()
       ) {
         this.metadataStore.getState().updateMetaDataFromYjs()
       }
@@ -286,7 +308,8 @@ export class YjsSyncClass {
     ) => {
       if (
         transaction.origin !== "store" &&
-        !this.isUndoRedoTransaction(transaction)
+        !this.isUndoRedoTransaction(transaction) &&
+        !previewSuppressed()
       ) {
         this.diagramStore.getState().updateAssessmentFromYjs()
       }

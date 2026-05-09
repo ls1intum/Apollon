@@ -65,9 +65,7 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         aria-haspopup="true"
         aria-expanded={isMenuOpen ? "true" : undefined}
         onClick={openMainMenu}
-        sx={{
-          textTransform: "none",
-        }}
+        sx={{ textTransform: "none" }}
       >
         <Typography color={color ?? secondary} component="span">
           File
@@ -99,6 +97,12 @@ export const NavbarFile: FC<Props> = ({ color, handleCloseNavMenu }) => {
         >
           Load Diagram
         </MenuItem>
+        {/* Version history lives in its own dedicated nav button
+            (`<VersionHistoryButton>`), not here — it had been duplicated
+            in the File menu for discoverability, but the standalone
+            button is more visible and hosting it twice meant the menu
+            entry felt like it "did nothing" from the user's POV
+            (clicking either toggles the same drawer). One source. */}
         <JsonFileImportButton close={closeMainMenu} />
         <MenuItem
           onClick={openSubMenu}

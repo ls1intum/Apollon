@@ -56,7 +56,10 @@ export class ApollonEditor {
 
     this.ydoc = new Y.Doc()
     this.diagramStore = createDiagramStore(this.ydoc)
-    this.metadataStore = createMetadataStore(this.ydoc)
+    this.metadataStore = createMetadataStore(
+      this.ydoc,
+      () => this.diagramStore.getState().previewMode
+    )
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
     this.alignmentGuidesStore = createAlignmentGuidesStore()
@@ -192,6 +195,34 @@ export class ApollonEditor {
     return this.reactFlowInstance.flowToScreenPosition(position)
   }
 
+  public fitView(options?: { padding?: number; duration?: number }): void {
+    const padding = options?.padding ?? 0.15
+    const duration = options?.duration ?? 200
+    const maxAttempts = 10
+    let attempts = 0
+
+    const attempt = () => {
+      attempts++
+      const rf = this.reactFlowInstance
+      if (!rf) return
+      const rfNodes = rf.getNodes()
+      const expected = this.diagramStore.getState().nodes.length
+      const allMeasured =
+        rfNodes.length >= expected &&
+        rfNodes.every(
+          (n) =>
+            (n.measured?.width ?? n.width ?? 0) > 0 &&
+            (n.measured?.height ?? n.height ?? 0) > 0
+        )
+      if (allMeasured || attempts >= maxAttempts) {
+        rf.fitView({ padding, duration, maxZoom: 1.0 })
+        return
+      }
+      requestAnimationFrame(attempt)
+    }
+    requestAnimationFrame(attempt)
+  }
+
   set diagramType(type: UMLDiagramType) {
     this.metadataStore.getState().updateDiagramType(type)
     this.diagramStore.getState().setNodesAndEdges([], [])
@@ -242,7 +273,10 @@ export class ApollonEditor {
 
     const ydoc = new Y.Doc()
     const diagramStore = createDiagramStore(ydoc)
-    const metadataStore = createMetadataStore(ydoc)
+    const metadataStore = createMetadataStore(
+      ydoc,
+      () => diagramStore.getState().previewMode
+    )
     const popoverStore = createPopoverStore()
     const assessmentSelectionStore = createAssessmentSelectionStore()
     const alignmentGuidesStore = createAlignmentGuidesStore()
@@ -294,7 +328,9 @@ export class ApollonEditor {
     ])
 
     if (!reactFlowInstance) {
+      svgRoot.unmount()
       document.body.removeChild(container)
+      ydoc.destroy()
       throw new Error("React Flow instance not initialized")
     }
 
@@ -442,6 +478,15 @@ export class ApollonEditor {
     this.syncManager.handleReceivedData(base64Data)
   }
 
+  /**
+   * Push the entire local Yjs document to peers. Hosts should call this on
+   * every (re)connect so any edits made while the transport was closed are
+   * absorbed by the room. See `YjsSyncClass.broadcastFullState`.
+   */
+  public broadcastFullState() {
+    this.syncManager.broadcastFullState()
+  }
+
   public setLocalAwarenessUser(user: Apollon.CollaborationUser) {
     this.syncManager.setLocalAwarenessUser(user)
   }
@@ -468,6 +513,49 @@ export class ApollonEditor {
 
   public updateDiagramTitle(name: string) {
     this.metadataStore.getState().updateDiagramTitle(name)
+  }
+
+  /**
+   * Toggles the editor's read-only state at runtime. Used by hosting apps
+   * to lock the canvas while previewing an immutable snapshot (e.g. the
+   * version-history preview), without tearing down and re-mounting the
+   * editor instance.
+   */
+  public setReadonly(readonly: boolean): void {
+    this.metadataStore.getState().setReadonly(readonly)
+    if (readonly) {
+      // Selection ring + popover are interactive affordances; drop them
+      // so they don't survive the lock as inert UI on uneditable elements.
+      this.diagramStore.getState().setSelectedElementsId([])
+      this.popoverStore.getState().setPopOverElementId(null)
+    }
+  }
+
+  /**
+   * Toggle preview-overlay mode. When `true`, subsequent `model = …`
+   * assignments and other store mutators update the local Zustand caches
+   * (so the canvas displays the overlay) WITHOUT writing to the Yjs
+   * doc — leaving the collaborative document untouched. Yjs observers
+   * also stop propagating peer-driven updates to Zustand, so the overlay
+   * doesn't flicker as collaborators edit the live diagram.
+   *
+   * On flip-off the local Zustand state is rebuilt from the (now
+   * peer-augmented) Yjs maps so the canvas catches up to everything
+   * collaborators committed during the preview.
+   *
+   * Hosts should call `setPreviewMode(true)` before applying a preview
+   * model and `setPreviewMode(false)` on exit. The Yjs doc never needs
+   * to be "restored" from a snapshot because it was never disturbed.
+   */
+  public setPreviewMode(active: boolean): void {
+    this.diagramStore.getState().setPreviewMode(active)
+    // The diagram store handles nodes/edges/assessments resync on
+    // flip-off; metadata lives in a separate store, so resync the
+    // diagram title/type from Yjs here so a peer rename during preview
+    // is visible the moment the user exits.
+    if (!active) {
+      this.metadataStore.getState().updateMetaDataFromYjs()
+    }
   }
 
   public toggleInteractiveElementsMode(forceEnabled?: boolean): void {
@@ -513,7 +601,9 @@ export class ApollonEditor {
 
   set model(model: Apollon.UMLModel) {
     const { nodes, edges, assessments, interactive } = model
-
+    // Every store action below routes its Yjs writes through the
+    // shared `transactStore` helper that no-ops in preview mode, so
+    // the assignment is safe whether or not preview is active.
     this.diagramStore.getState().setNodesAndEdges(nodes, edges)
     this.diagramStore.getState().setAssessments(assessments)
     this.diagramStore.getState().setInteractive(interactive)

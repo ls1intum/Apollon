@@ -7,6 +7,7 @@ export type ModalName =
   | "EXPORT_PPTX"
   | "HowToUseModal"
   | "AboutModal"
+  | "DELETE_VERSION"
 
 export interface ModalProps {
   [key: string]: unknown
