@@ -51,14 +51,6 @@ export class WebSocketManager {
     this.websocket.send(JSON.stringify(envelope))
   }
 
-  public requestResync(): void {
-    if (this.websocket?.readyState !== WebSocket.OPEN) return
-    const initialMessage = {
-      diagramData: ApollonEditor.generateInitialSyncMessage(),
-    }
-    this.websocket.send(JSON.stringify(initialMessage))
-  }
-
   private createWebSocket() {
     if (this.cleanedUp) return
     const url = `${serverWSSUrl}?diagramId=${encodeURIComponent(this.diagramId)}`

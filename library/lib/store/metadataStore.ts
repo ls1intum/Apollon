@@ -54,32 +54,45 @@ const initialMetadataState: InitialMetadataState = {
 }
 
 export const createMetadataStore = (
-  ydoc: Y.Doc
-): UseBoundStore<StoreApi<MetadataStore>> =>
-  create<MetadataStore>()(
+  ydoc: Y.Doc,
+  /**
+   * Cross-store getter for the diagram store's `previewMode` flag. When
+   * true, every `ydoc.transact("store", …)` write here no-ops — the
+   * canvas is showing an ephemeral preview overlay and Yjs must stay
+   * pristine. The diagram store factory owns the source of truth; this
+   * factory accepts a getter so the two stores can share the gate
+   * without a circular import.
+   */
+  isPreviewMode: () => boolean = () => false
+): UseBoundStore<StoreApi<MetadataStore>> => {
+  const transactStore = (fn: () => void) => {
+    if (isPreviewMode()) return
+    ydoc.transact(fn, "store")
+  }
+  return create<MetadataStore>()(
     devtools(
       subscribeWithSelector((set) => ({
         ...initialMetadataState,
 
         updateDiagramTitle: (diagramTitle) => {
-          ydoc.transact(() => {
+          transactStore(() => {
             getDiagramMetadata(ydoc).set("diagramTitle", diagramTitle)
-          }, "store")
+          })
           set({ diagramTitle }, undefined, "updateDiagramTitle")
         },
 
         updateDiagramType: (type) => {
-          ydoc.transact(() => {
+          transactStore(() => {
             getDiagramMetadata(ydoc).set("diagramType", type)
-          }, "store")
+          })
           set({ diagramType: type }, undefined, "updateDiagramType")
         },
 
         updateMetaData: (diagramTitle, diagramType) => {
-          ydoc.transact(() => {
+          transactStore(() => {
             getDiagramMetadata(ydoc).set("diagramTitle", diagramTitle)
             getDiagramMetadata(ydoc).set("diagramType", diagramType)
-          }, "store")
+          })
           set(
             {
               diagramTitle,
@@ -139,3 +152,4 @@ export const createMetadataStore = (
       { name: "MetadataStore", enabled: true }
     )
   )
+}

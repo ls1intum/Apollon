@@ -258,10 +258,10 @@ export class YjsSyncClass {
   private startYjsObserver = () => {
     // While the canvas shows a preview overlay, peer edits keep flowing
     // into Yjs but we hold the local Zustand caches stable so the
-    // overlay doesn't flicker. The store's `setPreviewActive(false)`
-    // call resyncs Zustand from Yjs at exit time.
+    // overlay doesn't flicker. The store's `setPreviewMode(false)` call
+    // resyncs Zustand from Yjs at exit time.
     const previewSuppressed = () =>
-      this.diagramStore.getState().previewActive === true
+      this.diagramStore.getState().previewMode === true
 
     const nodesChangeObserver = (
       _event: Y.YMapEvent<Node>,

@@ -56,7 +56,10 @@ export class ApollonEditor {
 
     this.ydoc = new Y.Doc()
     this.diagramStore = createDiagramStore(this.ydoc)
-    this.metadataStore = createMetadataStore(this.ydoc)
+    this.metadataStore = createMetadataStore(
+      this.ydoc,
+      () => this.diagramStore.getState().previewMode
+    )
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
     this.alignmentGuidesStore = createAlignmentGuidesStore()
@@ -270,7 +273,10 @@ export class ApollonEditor {
 
     const ydoc = new Y.Doc()
     const diagramStore = createDiagramStore(ydoc)
-    const metadataStore = createMetadataStore(ydoc)
+    const metadataStore = createMetadataStore(
+      ydoc,
+      () => diagramStore.getState().previewMode
+    )
     const popoverStore = createPopoverStore()
     const assessmentSelectionStore = createAssessmentSelectionStore()
     const alignmentGuidesStore = createAlignmentGuidesStore()
@@ -542,7 +548,14 @@ export class ApollonEditor {
    * to be "restored" from a snapshot because it was never disturbed.
    */
   public setPreviewMode(active: boolean): void {
-    this.diagramStore.getState().setPreviewActive(active)
+    this.diagramStore.getState().setPreviewMode(active)
+    // The diagram store handles nodes/edges/assessments resync on
+    // flip-off; metadata lives in a separate store, so resync the
+    // diagram title/type from Yjs here so a peer rename during preview
+    // is visible the moment the user exits.
+    if (!active) {
+      this.metadataStore.getState().updateMetaDataFromYjs()
+    }
   }
 
   public toggleInteractiveElementsMode(forceEnabled?: boolean): void {
@@ -588,24 +601,15 @@ export class ApollonEditor {
 
   set model(model: Apollon.UMLModel) {
     const { nodes, edges, assessments, interactive } = model
-    const previewActive = this.diagramStore.getState().previewActive
-
+    // Every store action below routes its Yjs writes through the
+    // shared `transactStore` helper that no-ops in preview mode, so
+    // the assignment is safe whether or not preview is active.
     this.diagramStore.getState().setNodesAndEdges(nodes, edges)
     this.diagramStore.getState().setAssessments(assessments)
     this.diagramStore.getState().setInteractive(interactive)
-    if (previewActive) {
-      // Mirror the preview gating in `setNodesAndEdges`/`setAssessments`:
-      // metadata writes also bypass the Yjs `transact("store")` so the
-      // doc's history (and any consequent peer broadcast) stays clean.
-      this.metadataStore.setState({
-        diagramTitle: model.title,
-        diagramType: parseDiagramType(model.type),
-      })
-    } else {
-      this.metadataStore
-        .getState()
-        .updateMetaData(model.title, parseDiagramType(model.type))
-    }
+    this.metadataStore
+      .getState()
+      .updateMetaData(model.title, parseDiagramType(model.type))
   }
 
   public getSelectedElements(): string[] {

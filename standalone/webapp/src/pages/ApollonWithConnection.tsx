@@ -47,6 +47,13 @@ export const ApollonWithConnection: React.FC = () => {
   const lastObservedHeadRev = useRef<number | undefined>(undefined)
   const editorRef = useRef<ApollonEditor | null>(null)
   const restoredDuringPreviewRef = useRef(false)
+  /**
+   * Fingerprint of the canvas at the FIRST preview entry of the current
+   * preview session. Held until the user exits preview, so clicking
+   * V1 → V2 → V3 always compares each against the user's pre-preview
+   * canvas — not against whichever overlay is currently shown.
+   */
+  const prePreviewFingerprintRef = useRef<string | null>(null)
   const hasPromptedRef = useRef(false)
   // True when the current preview's body differs from the canvas the user
   // had before entering preview. Computed once on preview entry and held
@@ -358,12 +365,14 @@ export const ApollonWithConnection: React.FC = () => {
   useEffect(() => {
     if (!editor) return
     if (preview) {
-      // Capture the canvas state BEFORE flipping the editor into preview
-      // mode, so we can decide whether Restore is meaningful (i.e. would
-      // restoring this version actually change the canvas?).
-      const before = editor.model
+      // First preview entry of this session — capture the user's
+      // pre-preview canvas fingerprint so V1→V2→V3 hops keep comparing
+      // each candidate against the same baseline.
+      if (prePreviewFingerprintRef.current === null) {
+        prePreviewFingerprintRef.current = structuralFingerprint(editor.model)
+      }
       setCanRestoreFromPreview(
-        structuralFingerprint(before) !== structuralFingerprint(preview.body)
+        prePreviewFingerprintRef.current !== structuralFingerprint(preview.body)
       )
       // Library-level preview mode: store mutators stop writing to the
       // Yjs doc (the collaborative source of truth). The next
@@ -378,6 +387,7 @@ export const ApollonWithConnection: React.FC = () => {
         editor.fitView()
       } catch (err) {
         editor.setPreviewMode(false)
+        prePreviewFingerprintRef.current = null
         log.error("Failed to apply previewed snapshot", err)
         const isSchemaError =
           err instanceof Error && /schema|version|import/i.test(err.message)
@@ -387,6 +397,7 @@ export const ApollonWithConnection: React.FC = () => {
       }
     } else {
       editor.setReadonly(baseReadonly)
+      prePreviewFingerprintRef.current = null
       if (!diagramId) return
 
       if (restoredDuringPreviewRef.current) {
