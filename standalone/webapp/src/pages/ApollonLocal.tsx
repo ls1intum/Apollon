@@ -74,8 +74,11 @@ export const ApollonLocal: FC = () => {
   const preview = useVersionStore((s) => s.preview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
+  // selectVersions returns a frozen empty-array singleton when the key
+  // is absent — never construct a fresh `[]` here, or `useSyncExternalStore`
+  // will warn "getSnapshot should be cached" and the regression test fails.
   const versions = useVersionStore((s) =>
-    currentModelId ? selectVersions(s, currentModelId) : []
+    selectVersions(s, currentModelId ?? "")
   )
 
   useVersionShortcut(currentModelId ?? undefined)

@@ -41,13 +41,13 @@ const LOCAL_FIXTURE = {
 
 test.describe("Local version history (#670)", () => {
   test.beforeEach(async ({ page }) => {
-    // Wipe the version-history IDB between tests so saves start cold.
-    await page.addInitScript(async () => {
-      try {
-        await indexedDB.deleteDatabase("apollon-versions")
-      } catch {
-        // best-effort
-      }
+    // Wipe the version-history IDB once per test, on first navigation
+    // only. `addInitScript` runs on every page load (incl. reload), so
+    // gate via sessionStorage to avoid erasing saved rows mid-test.
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem("__e2e_idb_wiped__")) return
+      sessionStorage.setItem("__e2e_idb_wiped__", "1")
+      indexedDB.deleteDatabase("apollon-versions")
     })
   })
 
@@ -86,7 +86,9 @@ test.describe("Local version history (#670)", () => {
       name: /Describe this version/i,
     })
     await composer.fill("v1: initial")
-    await page.getByRole("button", { name: /Save version/i }).click()
+    await page
+      .getByRole("button", { name: "Save version", exact: true })
+      .click()
 
     // Row appears with the description.
     await expect(page.getByText("v1: initial").first()).toBeVisible()
@@ -105,7 +107,10 @@ test.describe("Local version history (#670)", () => {
     await waitForCanvasReady(page, false)
 
     await page.getByRole("button", { name: /Version history/i }).click()
-    const saveBtn = page.getByRole("button", { name: /Save version/i })
+    const saveBtn = page.getByRole("button", {
+      name: "Save version",
+      exact: true,
+    })
     await expect(saveBtn).toBeDisabled()
   })
 
@@ -118,7 +123,9 @@ test.describe("Local version history (#670)", () => {
     await page
       .getByRole("textbox", { name: /Describe this version/i })
       .fill("v1")
-    await page.getByRole("button", { name: /Save version/i }).click()
+    await page
+      .getByRole("button", { name: "Save version", exact: true })
+      .click()
     await expect(page.getByText("v1").first()).toBeVisible()
 
     // Open the row's kebab menu.
