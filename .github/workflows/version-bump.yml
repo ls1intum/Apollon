@@ -59,6 +59,49 @@ jobs:
             exit 1
           fi
 
+      - name: Align local versions with what's already published
+        env:
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          # If a long-lived branch was rebased before a release-bump
+          # commit landed on main, the merge can regress the local
+          # version below what's already published. Bumping from a
+          # stale local would then collide with an existing npm/Docker
+          # tag. Roll the local up to max(local, published) before the
+          # bump so the result is always strictly greater than what
+          # consumers can already pull.
+          align_to_max() {
+            pkg="$1"
+            published="$2"
+            local=$(jq -r '.version' "$pkg/package.json")
+            if [ -z "$published" ]; then
+              echo "$pkg: no published version found, keeping local=$local"
+              return
+            fi
+            higher=$(printf '%s\n%s\n' "$local" "$published" | sort -V | tail -n1)
+            if [ "$higher" != "$local" ]; then
+              echo "::warning::$pkg local=$local but registry has $published — aligning to $higher before bump"
+              jq --arg v "$higher" '.version = $v' "$pkg/package.json" > "$pkg/package.json.tmp"
+              mv "$pkg/package.json.tmp" "$pkg/package.json"
+            else
+              echo "$pkg: local=$local ≥ published=$published ✓"
+            fi
+          }
+
+          if [ "$SCOPE" = "library" ]; then
+            LIB_PUBLISHED=$(npm view @tumaet/apollon version 2>/dev/null || echo "")
+            align_to_max library "$LIB_PUBLISHED"
+          fi
+
+          # Standalone tracks GHCR tags, not npm. The release-standalone
+          # workflow tags Docker images `vX.Y.Z`; pull the highest one
+          # we've seen and align local against it.
+          STANDALONE_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+          if [ -n "$STANDALONE_TAG" ]; then
+            align_to_max standalone/webapp "${STANDALONE_TAG#v}"
+            align_to_max standalone/server "${STANDALONE_TAG#v}"
+          fi
+
       - name: Bump version
         id: bump
         env:
