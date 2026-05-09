@@ -79,7 +79,6 @@ if (typeof window !== "undefined") {
 // worker spawn, not on the first user request.
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { ApollonEditor, importDiagram } =
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require("@tumaet/apollon") as typeof import("@tumaet/apollon")

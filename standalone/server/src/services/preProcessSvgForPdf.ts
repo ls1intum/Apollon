@@ -136,7 +136,11 @@ function inlineNestedSvgs(root: Element): void {
         .filter((n) => Number.isFinite(n))
       const minX = parts[0]
       const minY = parts[1]
-      if (minX !== undefined && minY !== undefined && (minX !== 0 || minY !== 0)) {
+      if (
+        minX !== undefined &&
+        minY !== undefined &&
+        (minX !== 0 || minY !== 0)
+      ) {
         g.setAttribute("transform", `translate(${-minX}, ${-minY})`)
       }
     }

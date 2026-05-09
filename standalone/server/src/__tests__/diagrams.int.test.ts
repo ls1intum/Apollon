@@ -117,6 +117,33 @@ describe("body parser limit", () => {
   })
 })
 
+describe("LibrarySchemaVersion validation", () => {
+  it("accepts canonical 4.<minor>.<patch>", async () => {
+    const res = await request(app)
+      .post("/api/diagrams")
+      .send({ ...baseDiagram, version: "4.7.2" })
+    expect(res.status).toBe(201)
+  })
+
+  it("accepts SemVer pre-release / build-metadata suffixes", async () => {
+    for (const v of ["4.0.0-rc1", "4.1.0+ci.42", "4.0.0-alpha.1+sha.abc"]) {
+      const res = await request(app)
+        .post("/api/diagrams")
+        .send({ ...baseDiagram, version: v })
+      expect(res.status).toBe(201)
+    }
+  })
+
+  it("rejects non-4.x versions and malformed strings with 422", async () => {
+    for (const v of ["3.0.0", "5.0.0", "banana", "4.0", "4.0.0.0", ""]) {
+      const res = await request(app)
+        .post("/api/diagrams")
+        .send({ ...baseDiagram, version: v })
+      expect(res.status).toBe(422)
+    }
+  })
+})
+
 describe("GET /health", () => {
   it("returns 200 ok when Redis is up", async () => {
     const res = await request(app).get("/health")

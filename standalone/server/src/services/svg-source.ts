@@ -19,9 +19,7 @@ import type { UMLModel } from "@tumaet/apollon"
 import type { ConversionResource } from "../resources/conversion-resource"
 import type { SvgSource } from "./embed-preview"
 
-export function createWorkerSvgSource(
-  resource: ConversionResource
-): SvgSource {
+export function createWorkerSvgSource(resource: ConversionResource): SvgSource {
   return { render: (model: UMLModel) => resource.renderSvg(model) }
 }
 
