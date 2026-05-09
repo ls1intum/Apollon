@@ -9,6 +9,7 @@ import MenuIcon from "@mui/icons-material/Menu"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
 import { VersionHistoryButton } from "./VersionHistoryButton"
+import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import Button from "@mui/material/Button/Button"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
@@ -118,6 +119,10 @@ export default function MobileNavbar() {
                 >
                   <Typography color="black">Share</Typography>
                 </Button>
+                <SaveLocalCopyButton
+                  color="black"
+                  onAfter={handleCloseNavMenu}
+                />
                 <VersionHistoryButton color="black" />
                 <NavbarHelp color="black" />
 

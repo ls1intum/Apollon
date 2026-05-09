@@ -3,7 +3,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
 import { useVersionStore } from "@/stores/useVersionStore"
 import { secondary } from "@/constants"
 import { versioningStrings as t } from "@/components/versioning/strings"
-import { useDiagramIdFromPath } from "@/hooks/useDiagramIdFromPath"
+import { useActiveDiagramId } from "@/hooks/useActiveDiagramId"
 
 interface Props {
   /**
@@ -19,12 +19,12 @@ interface Props {
 /**
  * Discoverable navbar entry point for the version-history sidebar.
  *
- * Renders only when the URL points at a connected diagram. On `/` the
- * sidebar is hidden because there's no diagramId to attach versions to —
- * the user must Share first.
+ * Falls back to the local persistence store's `currentModelId` so the
+ * button is visible in standalone mode too — `useActiveDiagramId` handles
+ * the URL-vs-local fall-through.
  */
 export const VersionHistoryButton = ({ color = secondary }: Props) => {
-  const diagramId = useDiagramIdFromPath()
+  const diagramId = useActiveDiagramId()
   const openDrawer = useVersionStore((s) => s.openDrawer)
   const closeDrawer = useVersionStore((s) => s.closeDrawer)
   const isOpen = useVersionStore((s) =>

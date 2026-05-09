@@ -8,6 +8,7 @@ import { TextField } from "@mui/material"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
 import { VersionHistoryButton } from "./VersionHistoryButton"
+import { SaveLocalCopyButton } from "./SaveLocalCopyButton"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { NAVBAR_BACKGROUND_COLOR, secondary } from "@/constants"
 import TumLogo from "assets/images/tum-logo.png"
@@ -86,6 +87,7 @@ export const DesktopNavbar = () => {
           >
             <Typography color={secondary}>Share</Typography>
           </Button>
+          <SaveLocalCopyButton />
           <NavbarHelp />
           <TextField
             sx={{ input: { color: "white", padding: 1 }, marginLeft: 1 }}
