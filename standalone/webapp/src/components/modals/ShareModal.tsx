@@ -6,10 +6,11 @@ import { toast } from "react-toastify"
 import { useEditorContext, useModalContext } from "@/contexts"
 import { useNavigate } from "react-router"
 import { DiagramView } from "@/types"
-import { DiagramAPIManager } from "@/services/DiagramAPIManager"
+import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
+import { randomCollabName } from "@/utils/collaboration"
 
 type ShareModalProps = {
   modelId?: string
@@ -27,7 +28,7 @@ const resolveModelId = (props: unknown): string | undefined => {
 export const ShareModal = (props: unknown) => {
   const modelId = resolveModelId(props)
   const { editor } = useEditorContext()
-  const { closeModal } = useModalContext()
+  const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
   const persistedModel = usePersistenceModelStore((state) =>
     modelId ? state.models[modelId]?.model : null
@@ -42,7 +43,7 @@ export const ShareModal = (props: unknown) => {
     }
 
     try {
-      const { id: diagramID } = await DiagramAPIManager.createDiagram(modelToShare)
+      const { id: diagramID } = await DiagramApiClient.createDiagram(modelToShare)
       addSharedDiagramEntry(diagramID)
 
       const newurl = `${window.location.origin}/shared/${diagramID}?view=${viewType}`
@@ -64,6 +65,18 @@ export const ShareModal = (props: unknown) => {
 
   const copyToClipboard = (link: string) => {
     navigator.clipboard.writeText(link)
+  }
+
+  const handleCollaborate = () => {
+    const storedName =
+      sessionStorage.getItem("apollon-collab-name") || randomCollabName()
+    openModal("COLLABORATE_NAME", {
+      initialName: storedName,
+      onConfirm: (name: string) => {
+        sessionStorage.setItem("apollon-collab-name", name)
+        handleShareButtonPress(DiagramView.COLLABORATE)
+      },
+    })
   }
 
   return (
@@ -89,11 +102,7 @@ export const ShareModal = (props: unknown) => {
           </APButton>
         </div>
         <div>
-          <APButton
-            variant="outline"
-            fullWidth
-            onClick={() => handleShareButtonPress(DiagramView.COLLABORATE)}
-          >
+          <APButton variant="outline" fullWidth onClick={handleCollaborate}>
             Collaborate
           </APButton>
         </div>

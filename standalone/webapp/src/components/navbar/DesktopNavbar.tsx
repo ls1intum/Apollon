@@ -1,11 +1,13 @@
 import AppBar from "@mui/material/AppBar"
 import Box from "@mui/material/Box"
+import Stack from "@mui/material/Stack"
 import Toolbar from "@mui/material/Toolbar"
 import Typography from "@mui/material/Typography"
 import Button from "@mui/material/Button"
 import { TextField } from "@mui/material"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
+import { VersionHistoryButton } from "./VersionHistoryButton"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { NAVBAR_BACKGROUND_COLOR, secondary } from "@/constants"
 import TumLogo from "assets/images/tum-logo.png"
@@ -118,7 +120,12 @@ export const DesktopNavbar = () => {
           />
         </Box>
       </Toolbar>
-      <ThemeSwitcherMenu />
+      {/* Right cluster: version history sits immediately to the left of the
+          theme toggle so it's the rightmost product affordance. */}
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <VersionHistoryButton />
+        <ThemeSwitcherMenu />
+      </Stack>
     </AppBar>
   )
 }

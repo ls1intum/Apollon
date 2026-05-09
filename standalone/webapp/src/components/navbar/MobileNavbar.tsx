@@ -8,6 +8,7 @@ import Menu from "@mui/material/Menu"
 import MenuIcon from "@mui/icons-material/Menu"
 import { NavbarFile } from "./NavbarFile"
 import { NavbarHelp } from "./NavbarHelp"
+import { VersionHistoryButton } from "./VersionHistoryButton"
 import Button from "@mui/material/Button/Button"
 import { BrandAndVersion } from "./BrandAndVersion"
 import { NAVBAR_BACKGROUND_COLOR } from "@/constants"
@@ -122,6 +123,7 @@ export default function MobileNavbar() {
                 >
                   <Typography color="black">Share</Typography>
                 </Button>
+                <VersionHistoryButton color="black" />
                 <NavbarHelp color="black" />
 
                 {/* Diagram Name Input Field */}

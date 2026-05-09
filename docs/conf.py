@@ -26,7 +26,8 @@ extensions = [
 ]
 
 myst_enable_extensions = [
-    "attrs_inline"
+    "attrs_inline",
+    "colon_fence",
 ]
 
 # Enable mermaid code blocks in markdown

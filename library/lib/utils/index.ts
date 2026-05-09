@@ -20,8 +20,8 @@ export * from "./requiredInterfaceUtils"
 // reach for get re-exported through the public barrel. Internal machinery
 // (the prepared-text cache, `toCanvasFont`, `clearPrepareCache`, type
 // aliases, the `layoutTextInShape` kernel) stays module-private so we can
-// evolve the measurement backend without it counting as a breaking API
-// change.
+// evolve the measurement implementation without it counting as a
+// breaking API change.
 export {
   wrapTextInRect,
   layoutTextInEllipse,

@@ -2,17 +2,19 @@ import { UMLModel } from "@tumaet/apollon"
 import { serverURL } from "@/constants"
 
 export type StoredDiagram = UMLModel & {
+  id: string
   createdAt: string
   updatedAt: string
 }
 
 export class DiagramAPIManager {
   static async fetchDiagramData(diagramId: string): Promise<UMLModel> {
-    const response = await fetch(`${serverURL}/api/${diagramId}`, {
+    const response = await fetch(`${serverURL}/api/diagrams/${diagramId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     })
     if (!response.ok) {
       throw new Error("Failed to fetch diagram data")
@@ -21,11 +23,12 @@ export class DiagramAPIManager {
   }
 
   static async fetchStoredDiagram(diagramId: string): Promise<StoredDiagram | null> {
-    const response = await fetch(`${serverURL}/api/${diagramId}`, {
+    const response = await fetch(`${serverURL}/api/diagrams/${diagramId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     })
     if (response.status === 404) {
       return null
@@ -37,12 +40,13 @@ export class DiagramAPIManager {
   }
 
   static async sendDiagramUpdate(diagramId: string, data: UMLModel) {
-    const response = await fetch(`${serverURL}/api/${diagramId}`, {
+    const response = await fetch(`${serverURL}/api/diagrams/${diagramId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
+      credentials: "include",
     })
     if (!response.ok) {
       throw new Error("Failed to update diagram")
@@ -50,12 +54,13 @@ export class DiagramAPIManager {
   }
 
   static async createDiagram(data: UMLModel): Promise<{ id: string }> {
-    const response = await fetch(`${serverURL}/api/`, {
+    const response = await fetch(`${serverURL}/api/diagrams`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
+      credentials: "include",
     })
 
     if (!response.ok) {

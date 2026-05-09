@@ -1,6 +1,6 @@
 {
   "name": "@tumaet/apollon",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "description": "An embeddable UML modeling editor for React. 13 diagram types, SVG/PNG/PDF/JSON export, optional real-time collaboration via Yjs.",
   "keywords": [
     "apollon",
@@ -73,6 +73,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "uuid": "11.0.3",
+    "y-protocols": "1.0.6",
     "yjs": "13.6.20",
     "zustand": "5.0.3"
   },

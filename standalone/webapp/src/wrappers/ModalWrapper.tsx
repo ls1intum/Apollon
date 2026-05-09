@@ -4,9 +4,12 @@ import {
   NewDiagramFromTemplateModal,
   LoadDiagramModal,
   ShareModal,
+  CollaborateNameModal,
   AboutModal,
   HowToUseModal,
+  PPTXExportModal,
 } from "@/components/modals"
+import { DeleteVersionModal } from "@/components/versioning"
 import { useModalContext } from "@/contexts"
 import { ModalName, ModalProps } from "@/types"
 import { Modal, Paper, Box, Button, Divider } from "@mui/material"
@@ -21,24 +24,28 @@ interface ModalWrapperProps {
 }
 
 // Define a mapping from modal names to modal components
-const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<unknown>> = {
+const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
   NEW_DIAGRAM: NewDiagramModal,
   NEW_DIAGRAM_FROM_TEMPLATE: NewDiagramFromTemplateModal,
   SHARE: ShareModal,
+  COLLABORATE_NAME: CollaborateNameModal,
   LOAD_DIAGRAM: LoadDiagramModal,
+  EXPORT_PPTX: PPTXExportModal,
   HowToUseModal: HowToUseModal,
   AboutModal: AboutModal,
-  // Add other modals here
+  DELETE_VERSION: DeleteVersionModal as React.ComponentType<unknown>,
 }
 
 const MODAL_TITLES: Record<ModalName, string> = {
   NEW_DIAGRAM: "Create new Diagram",
   NEW_DIAGRAM_FROM_TEMPLATE: "Create new Diagram from Template",
   SHARE: "Share",
+  COLLABORATE_NAME: "Join Collaboration",
   LOAD_DIAGRAM: "Load Diagram",
+  EXPORT_PPTX: "Export as PPTX",
   HowToUseModal: "How to use this editor?",
   AboutModal: "Information about Apollon",
-  // Add other modals here
+  DELETE_VERSION: "Delete version",
 }
 
 const style = {

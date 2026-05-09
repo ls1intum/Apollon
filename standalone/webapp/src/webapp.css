@@ -146,4 +146,13 @@ body,
   color: var(--apollon-primary-contrast) !important;
 }
 
+.MuiMenu-list .MuiMenuItem-root:hover,
+.MuiMenu-list .MuiMenuItem-root.Mui-selected {
+  background-color: var(--apollon-background-variant) !important;
+}
+
+.MuiMenu-list .MuiMenuItem-root.Mui-selected:hover {
+  background-color: var(--apollon-gray) !important;
+}
+
 
