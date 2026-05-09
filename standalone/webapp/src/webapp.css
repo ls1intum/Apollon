@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+:root {
+  --home-bg-primary: #fcfdff;
+  --home-bg-secondary: #f2f4f7;
+  --home-bg-card: #ffffff;
+  --home-border-color: #b9c5d1;
+  --home-text-primary: #17212b;
+  --home-text-secondary: #44586c;
+  --home-accent-color: #1e5a96;
+  --home-accent-soft: #e3ebf4;
+  --home-hover-overlay-bg: #1e5a96;
+  --home-hover-overlay-text: #ffffff;
+  --home-chip-bg: #f2f4f7;
+  --home-chip-text: #44586c;
+  --home-chip-active-bg: #e3ebf4;
+  --home-chip-active-text: #1e5a96;
+  --home-favorite-star: #bf8b1c;
+  --home-favorite-bg: #fff4d8;
+  --home-favorite-border: #e6c780;
+}
+
 html {
   height: 100%;
   overflow: hidden;
@@ -34,15 +54,87 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  background-color: var(--apollon-background);
+  color: var(--apollon-primary-contrast);
 }
 
 #root {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  /* background-color: var(--apollon-background); */
   height: 100%;
+}
 
+html,
+body,
+#root {
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+.home-page-scrollbar {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color:
+    color-mix(in srgb, var(--home-accent-color) 58%, var(--home-bg-secondary))
+    color-mix(in srgb, var(--home-bg-secondary) 78%, transparent);
+}
+
+.home-page-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.home-page-scrollbar::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--home-bg-secondary) 78%,
+    var(--home-bg-primary)
+  );
+}
+
+.home-page-scrollbar::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--home-accent-color) 58%,
+    var(--home-bg-secondary)
+  );
+  background-clip: content-box;
+}
+
+.home-page-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(
+    in srgb,
+    var(--home-accent-color) 72%,
+    var(--home-bg-secondary)
+  );
+}
+
+/* Reusable scroll-root utility:
+   keep vertical scrolling while preventing accidental horizontal overflow. */
+.app-scroll-y {
+  overflow-y: auto;
+  overflow-x: clip;
+}
+
+.home-diagram-card {
+  contain: layout paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 256px;
+}
+
+.home-diagram-card:hover .home-diagram-card-meta-normal,
+.home-diagram-card:hover .home-diagram-card-meta-compact,
+.home-diagram-card:focus-visible .home-diagram-card-meta-normal,
+.home-diagram-card:focus-visible .home-diagram-card-meta-compact {
+  will-change: transform, opacity;
+}
+
+@supports not (content-visibility: auto) {
+  .home-diagram-card {
+    contain: layout paint;
+  }
 }
 
 .apollon-editor {
@@ -62,3 +154,5 @@ body {
 .MuiMenu-list .MuiMenuItem-root.Mui-selected:hover {
   background-color: var(--apollon-gray) !important;
 }
+
+

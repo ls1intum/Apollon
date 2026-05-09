@@ -1,5 +1,5 @@
 import { useModalContext } from "@/contexts/ModalContext"
-import { useNavigate } from "react-router"
+import { useNavigate, useParams } from "react-router"
 import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined"
 import { formatUpadtedDate } from "@/utils/date"
@@ -8,15 +8,10 @@ import { useThemeStore } from "@/stores/useThemeStore"
 export const LoadDiagramModal = () => {
   const { closeModal } = useModalContext()
   const navigate = useNavigate()
+  const { id: currentDiagramId } = useParams()
   const currentTheme = useThemeStore((state) => state.currentTheme)
   const models = usePersistenceModelStore((state) => state.models)
-  const setCurrentModelId = usePersistenceModelStore(
-    (state) => state.setCurrentModelId
-  )
   const deleteModel = usePersistenceModelStore((state) => state.deleteModel)
-  const currentModelId = usePersistenceModelStore(
-    (state) => state.currentModelId
-  )
 
   const modelsList = Object.entries(models).map(
     ([id, persitanceModelEntity]) => ({
@@ -28,18 +23,17 @@ export const LoadDiagramModal = () => {
   )
 
   const handleLoadingDiagram = (id: string) => {
-    setCurrentModelId(id)
-    navigate("/")
+    navigate(`/local/${id}`)
     closeModal()
   }
 
   const handleDeleteDiagram = (id: string) => {
-    if (id === currentModelId) return
+    if (id === currentDiagramId) return
     deleteModel(id)
   }
 
   const currentModelIndex = modelsList.findIndex(
-    (model) => model.id === currentModelId
+    (model) => model.id === currentDiagramId
   )
   const isCurrentModelOnTop = currentModelIndex === 0
   const isCurrentModelOnBottom = currentModelIndex === modelsList.length - 1
@@ -47,7 +41,7 @@ export const LoadDiagramModal = () => {
   return (
     <div className="flex flex-col border border-gray-300 rounded-lg  ">
       {modelsList.map((model, index) => {
-        const isSelected = model.id === currentModelId
+        const isSelected = model.id === currentDiagramId
         return (
           <div
             key={model.id}

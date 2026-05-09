@@ -237,6 +237,6 @@ export const VersionApiClient = {
     const params = new URLSearchParams()
     params.set("view", current.get("view") ?? "collaborate")
     params.set("version", versionId)
-    return `${window.location.origin}/${diagramId}?${params.toString()}`
+    return `${window.location.origin}/shared/${diagramId}?${params.toString()}`
   },
 }

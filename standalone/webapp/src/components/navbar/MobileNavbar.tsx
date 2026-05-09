@@ -29,16 +29,21 @@ export default function MobileNavbar() {
   const unsubscribe = useRef<number>()
 
   useEffect(() => {
-    if (editor && !unsubscribe.current) {
-      unsubscribe.current = editor.subscribeToDiagramNameChange(
-        (diagramTitle) => {
-          setDiagramTitle(diagramTitle)
-        }
-      )
+    if (!editor) {
+      unsubscribe.current = undefined
+      return
     }
-    // Update diagram title when editor is available
-    if (editor) {
-      setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
+
+    unsubscribe.current = editor.subscribeToDiagramNameChange((title) => {
+      setDiagramTitle(title)
+    })
+    setDiagramTitle(editor.getDiagramMetadata().diagramTitle || "")
+
+    return () => {
+      if (unsubscribe.current !== undefined) {
+        editor.unsubscribe(unsubscribe.current)
+        unsubscribe.current = undefined
+      }
     }
   }, [editor])
 
@@ -72,7 +77,7 @@ export default function MobileNavbar() {
           {/* Mobile Menu Button */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {/* Logo */}
-            <img alt="Logo" src={TumLogo} width="60" height="30" />
+            <img alt="TU Munich logo" src={TumLogo} width="60" height="30" />
 
             <IconButton
               size="large"
@@ -143,9 +148,21 @@ export default function MobileNavbar() {
           </Box>
 
           {/* Mobile Title and Version */}
-          <div onClick={goHome}>
+          <button
+            type="button"
+            onClick={goHome}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              margin: 0,
+              color: "inherit",
+              font: "inherit",
+              cursor: "pointer",
+            }}
+          >
             <BrandAndVersion />
-          </div>
+          </button>
 
           <ThemeSwitcherMenu />
         </Box>

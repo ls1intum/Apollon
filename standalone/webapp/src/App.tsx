@@ -1,63 +1,116 @@
-import { BrowserRouter, Route, Routes } from "react-router"
+import { lazy, Suspense } from "react"
+import { BrowserRouter, Route, Routes, useLocation } from "react-router"
 import { AppProviders } from "./AppProviders"
-import { Navbar } from "./components"
-import {
-  ApollonLocal,
-  ApollonPlayground,
-  ApollonWithConnection,
-  ErrorPage,
-  ImprintPage,
-  PrivacyPage,
-} from "@/pages"
-import { SafeArea } from "capacitor-plugin-safe-area"
-import { ToastContainer } from "react-toastify"
-import { useShallow } from "zustand/shallow"
-import { useThemeStore } from "./stores/useThemeStore"
+import { DeferredToastContainer } from "./components/DeferredToastContainer"
+import { ErrorPage } from "@/pages/ErrorPage"
+import { log } from "@/logger"
 
-// To set the safe area insets as for mobile devices
-SafeArea.getSafeAreaInsets().then(
-  ({ insets: { top, bottom, left, right } }) => {
-    document.documentElement.style.setProperty(
-      "--safe-area-inset-top",
-      `${top}px`
-    )
-    document.documentElement.style.setProperty(
-      "--safe-area-inset-bottom",
-      `${bottom}px`
-    )
-    document.documentElement.style.setProperty(
-      "--safe-area-inset-left",
-      `${left}px`
-    )
-    document.documentElement.style.setProperty(
-      "--safe-area-inset-right",
-      `${right}px`
-    )
-  }
+const HomePage = lazy(() =>
+  import("@/pages/HomePage").then((module) => ({ default: module.HomePage }))
+)
+const ApollonLocal = lazy(() =>
+  import("@/pages/ApollonLocal").then((module) => ({
+    default: module.ApollonLocal,
+  }))
+)
+const ApollonPlayground = lazy(() =>
+  import("@/pages/ApollonPlayground").then((module) => ({
+    default: module.ApollonPlayground,
+  }))
+)
+const ApollonWithConnection = lazy(() =>
+  import("@/pages/ApollonWithConnection").then((module) => ({
+    default: module.ApollonWithConnection,
+  }))
+)
+const ImprintPage = lazy(() =>
+  import("@/pages/ImprintPage").then((module) => ({
+    default: module.ImprintPage,
+  }))
+)
+const PrivacyPage = lazy(() =>
+  import("@/pages/PrivacyPage").then((module) => ({
+    default: module.PrivacyPage,
+  }))
+)
+const Navbar = lazy(() =>
+  import("@/components/navbar/Navbar").then((module) => ({
+    default: module.Navbar,
+  }))
 )
 
+const PageFallback = () => (
+  <div
+    style={{
+      flex: 1,
+      background: "var(--home-bg-primary)",
+    }}
+  />
+)
+
+const AppLayout = () => {
+  const location = useLocation()
+  const isHomeRoute = location.pathname === "/"
+
+  return (
+    <>
+      {!isHomeRoute && (
+        <Suspense fallback={<div style={{ height: 56 }} />}>
+          <Navbar />
+        </Suspense>
+      )}
+      <div data-testid="editor-area" style={{ flex: 1, overflow: "hidden" }}>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/local/:id" element={<ApollonLocal />} />
+            <Route path="/playground" element={<ApollonPlayground />} />
+            <Route path="/imprint" element={<ImprintPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/shared/:id" element={<ApollonWithConnection />} />
+            <Route path="*" element={<ErrorPage />} />
+          </Routes>
+        </Suspense>
+      </div>
+    </>
+  )
+}
+
+// To set the safe area insets as for mobile devices
+void import("capacitor-plugin-safe-area")
+  .then(({ SafeArea }) => {
+    void SafeArea.getSafeAreaInsets().then(
+      ({ insets: { top, bottom, left, right } }) => {
+        document.documentElement.style.setProperty(
+          "--safe-area-inset-top",
+          `${top}px`
+        )
+        document.documentElement.style.setProperty(
+          "--safe-area-inset-bottom",
+          `${bottom}px`
+        )
+        document.documentElement.style.setProperty(
+          "--safe-area-inset-left",
+          `${left}px`
+        )
+        document.documentElement.style.setProperty(
+          "--safe-area-inset-right",
+          `${right}px`
+        )
+      }
+    )
+  })
+  .catch((error) => {
+    log.error("Failed to initialize safe-area insets", error as Error)
+  })
+
 function App() {
-  const currentTheme = useThemeStore(useShallow((state) => state.currentTheme))
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <BrowserRouter>
         <AppProviders>
-          <Navbar />
-          <div
-            data-testid="editor-area"
-            style={{ flex: 1, overflow: "hidden" }}
-          >
-            <Routes>
-              <Route path="/" element={<ApollonLocal />} />
-              <Route path="/playground" element={<ApollonPlayground />} />
-              <Route path="/imprint" element={<ImprintPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/:diagramId" element={<ApollonWithConnection />} />
-              <Route path="*" element={<ErrorPage />} />
-            </Routes>
-          </div>
-
-          <ToastContainer theme={currentTheme === "dark" ? "dark" : "light"} />
+          <AppLayout />
+          <DeferredToastContainer />
         </AppProviders>
       </BrowserRouter>
     </div>

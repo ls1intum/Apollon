@@ -40,13 +40,18 @@ export const NewDiagramFromTemplateModal = () => {
       if (!jsonData) {
         throw new Error("Selected template data not found")
       }
-      const timeStapToCreate = new Date().getTime()
+      const nextId =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const clonedModel =
+        typeof structuredClone === "function"
+          ? structuredClone(jsonData)
+          : JSON.parse(JSON.stringify(jsonData))
+      clonedModel.id = nextId
 
-      createModel(jsonData)
-      navigate("..", {
-        relative: "route",
-        state: { timeStapToCreate },
-      })
+      createModel(clonedModel)
+      navigate(`/local/${nextId}`)
 
       closeModal()
     } catch (err: unknown) {

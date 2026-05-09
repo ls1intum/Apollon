@@ -8,26 +8,48 @@ import { useNavigate } from "react-router"
 import { DiagramView } from "@/types"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
+import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 import { randomCollabName } from "@/utils/collaboration"
 
-export const ShareModal = () => {
+type ShareModalProps = {
+  modelId?: string
+}
+
+const resolveModelId = (props: unknown): string | undefined => {
+  if (!props || typeof props !== "object") {
+    return undefined
+  }
+
+  const candidate = (props as ShareModalProps).modelId
+  return typeof candidate === "string" ? candidate : undefined
+}
+
+export const ShareModal = (props: unknown) => {
+  const modelId = resolveModelId(props)
   const { editor } = useEditorContext()
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
+  const persistedModel = usePersistenceModelStore((state) =>
+    modelId ? state.models[modelId]?.model : null
+  )
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
-    if (!editor) {
-      toast.error("Editor instance is not available.")
+    const modelToShare = editor?.model ?? persistedModel
+
+    if (!modelToShare) {
+      toast.error("Diagram data is not available for sharing.")
       return
     }
 
     try {
-      const model = editor.model
-      const { id: diagramID } = await DiagramApiClient.createDiagram(model)
+      const { id: diagramID } =
+        await DiagramApiClient.createDiagram(modelToShare)
+      addSharedDiagramEntry(diagramID)
 
-      const newurl = `${window.location.origin}/${diagramID}?view=${viewType}`
+      const newurl = `${window.location.origin}/shared/${diagramID}?view=${viewType}`
       copyToClipboard(newurl)
-      navigate(`/${diagramID}?view=${viewType}`)
+      navigate(`/shared/${diagramID}?view=${viewType}`)
 
       toast.success(
         `The link has been copied to your clipboard and can be shared to collaborate, simply by pasting the link. You can re-access the link by going to share menu.`,

@@ -30,9 +30,10 @@ import { collabColorFromName, randomCollabName } from "@/utils/collaboration"
 import { CollaboratorCursors } from "@/components/CollaboratorCursors"
 import { CollaboratorPresenceBar } from "@/components/CollaboratorPresenceBar"
 import { CollaboratorSelectionHighlights } from "@/components/CollaboratorSelectionHighlights"
+import { addSharedDiagramEntry } from "@/utils/sharedDiagramStorage"
 
 export const ApollonWithConnection: React.FC = () => {
-  const { diagramId } = useParams()
+  const { id: diagramId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const { setEditor, editor } = useEditorContext()
@@ -130,6 +131,7 @@ export const ApollonWithConnection: React.FC = () => {
 
         const diagram = await DiagramApiClient.fetchDiagram(diagramId)
         if (cancelled) return
+        addSharedDiagramEntry(diagramId)
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,

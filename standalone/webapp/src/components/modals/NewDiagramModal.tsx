@@ -58,8 +58,8 @@ export const NewDiagramModal = () => {
   )
 
   const handleCreateDiagram = () => {
-    createModelByTitleAndType(newDiagramTitle, selectedDiagramType)
-    navigate("/")
+    const id = createModelByTitleAndType(newDiagramTitle, selectedDiagramType)
+    navigate(`/local/${id}`)
     closeModal()
   }
 
