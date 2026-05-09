@@ -9,6 +9,7 @@ import { DiagramView } from "@/types"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 import { randomCollabName } from "@/utils/collaboration"
+import { EmbedHints } from "./EmbedHints"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
@@ -124,6 +125,8 @@ export const ShareModal = () => {
           </APButton>
         </div>
       </fieldset>
+
+      <EmbedHints title={editor?.model?.title ?? "Apollon diagram"} />
     </div>
   )
 }

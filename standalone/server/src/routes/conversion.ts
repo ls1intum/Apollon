@@ -1,11 +1,18 @@
 import { Router } from "express"
-import { ConversionResource } from "../resources/conversion-resource"
+import type { ConversionResource } from "../resources/conversion-resource"
 
-export function mountConversionRoutes(): Router {
+interface Deps {
+  /**
+   * Lazy provider for the `ConversionResource`. Returning the same
+   * instance on every call gives the conversion + embed routes a
+   * single shared worker pool; lazy construction keeps tests that
+   * never hit `/api/converter/pdf` from spawning a worker thread.
+   */
+  getResource: () => ConversionResource
+}
+
+export function mountConversionRoutes({ getResource }: Deps): Router {
   const router = Router()
-  // Constructed lazily on first request so dev tooling (tsx watch) doesn't
-  // spin up a worker thread for unrelated requests.
-  let resource: ConversionResource | null = null
 
   router.get("/converter/status", (_req, res) => {
     res.sendStatus(200)
@@ -13,8 +20,7 @@ export function mountConversionRoutes(): Router {
 
   router.post("/converter/pdf", async (req, res, next) => {
     try {
-      resource ??= new ConversionResource()
-      await resource.convert(req, res)
+      await getResource().convert(req, res)
     } catch (err) {
       next(err)
     }
