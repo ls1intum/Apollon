@@ -1,22 +1,27 @@
 /**
- * Pure render function used by the server-side conversion worker. Extracted
- * from the worker thread so it can be unit-tested directly without spawning
- * a `worker_threads` process.
+ * Pure render functions used by the server-side conversion worker.
+ * Extracted from the worker thread so they can be unit-tested directly
+ * without spawning a `worker_threads` process.
  *
- * Output mirrors the client (`useExportAsPDF`) byte-for-byte modulo PDF
- * random-id fields — Artemis uses this server path to produce a verified
- * render that matches what the student saw on screen.
+ *   - `renderPdf`  → Artemis exam-integrity flow (`/api/converter/pdf`).
+ *   - `renderSvgSafe` → embed surface (`/api/diagrams/:id/preview.svg`,
+ *     `/embed/:id`). Returns DOMPurify-sanitized SVG.
  *
- * PNG is rendered client-side only (resvg-wasm in a Web Worker); the server
- * intentionally exposes only PDF because exam-integrity submissions are
- * archived as PDF.
+ * Output of `renderPdf` mirrors the client (`useExportAsPDF`) byte-for-
+ * byte modulo PDF random-id fields. Output of `renderSvgSafe` mirrors
+ * what the editor would have produced in the browser, modulo
+ * defence-in-depth sanitization.
+ *
+ * PNG is rendered client-side only (resvg-wasm in a Web Worker); the
+ * server intentionally exposes only PDF + SVG because exam-integrity
+ * submissions are archived as PDF and embeds inline as SVG.
  */
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { jsPDF } from "jspdf"
 import { svg2pdf } from "svg2pdf.js"
-import type { UMLModel } from "@tumaet/apollon"
-import { convertModelToSvg } from "./conversion-service"
+import type { UMLModel, SVG } from "@tumaet/apollon"
+import { convertModelToSvg, sanitizeSvg } from "./conversion-service"
 import { preProcessSvgForPdf } from "./preProcessSvgForPdf"
 
 /** svg2pdf.js MediaBox ceiling — matches the client `useExportAsPDF.ts`. */
@@ -139,4 +144,21 @@ export async function renderPdf(model: UMLModel): Promise<Uint8Array> {
 
   const buffer = pdf.output("arraybuffer") as ArrayBuffer
   return new Uint8Array(buffer)
+}
+
+/**
+ * Renders the diagram model and returns a DOMPurify-sanitised SVG string
+ * + clip box. Used by the embed routes — the SVG is inlined into a
+ * `<svg>` in the embed HTML page where script execution would be live,
+ * so sanitisation runs on every render.
+ *
+ * `preProcessSvgForPdf` is deliberately NOT applied here. Its transforms
+ * (collapsing CSS font-stacks, splitting tspans, replacing nested
+ * `<svg>` with `<g>`) are svg2pdf.js workarounds; browsers handle the
+ * library output natively and applying the transform would degrade
+ * rendering (e.g. kill the Inter → system-ui fallback chain).
+ */
+export async function renderSvgSafe(model: UMLModel): Promise<SVG> {
+  const { svg, clip } = await convertModelToSvg(model)
+  return { svg: sanitizeSvg(svg), clip }
 }

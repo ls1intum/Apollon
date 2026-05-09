@@ -34,6 +34,12 @@ export const k = {
    * is eligible to fire a new auto-version.
    */
   autoVersionMarker: (id: string) => `diagram:{${id}}:auto-version-marker`,
+  /**
+   * Cached embed-preview SVG keyed by `(diagramId, updatedAt)`. Short TTL
+   * — Camo and CDN caches absorb the load downstream; this in-server
+   * cache exists for direct fetches and renderers behind Camo.
+   */
+  diagramPreviewSvg: (id: string) => `diagram:{${id}}:preview-svg`,
 }
 
 // ---------------------------------------------------------------------------

@@ -11,6 +11,7 @@ import { mountDiagramRoutes } from "../routes/diagrams"
 import { mountVersionRoutes } from "../routes/versions"
 import { mountConversionRoutes } from "../routes/conversion"
 import { mountHealthRoutes } from "../routes/health"
+import { mountEmbedRoutes, mountEmbedApiRoutes } from "../routes/embed"
 import type { ControlEvent } from "../types"
 
 export interface RelayHook {
@@ -58,8 +59,14 @@ export function buildApp(deps: AppDeps): Express {
     "/api",
     mountDiagramRoutes({ config, redis }, relay),
     mountVersionRoutes({ config, redis }, relay),
-    mountConversionRoutes()
+    mountConversionRoutes(),
+    mountEmbedApiRoutes({ config, redis })
   )
+  // /embed/:diagramId — server-rendered HTML page suitable for iframing
+  // from third-party hosts (GitLab snippets, Notion, Confluence, …).
+  // Mounted at the root, NOT under /api, because the URL is part of the
+  // public surface that ends up in `<iframe src=>` attributes.
+  app.use("/embed", mountEmbedRoutes({ config, redis }))
 
   app.use(errorHandler)
   return app

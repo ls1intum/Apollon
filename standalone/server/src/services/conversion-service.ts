@@ -1,7 +1,8 @@
 /**
  * Server-side SVG export pipeline for the Apollon library running under
- * JSDOM. Used by the conversion-renderer (PNG via resvg-js, PDF via
- * svg2pdf+jsPDF) and ultimately by the Artemis exam-integrity flow.
+ * JSDOM. Used by the conversion-renderer (PDF via svg2pdf+jsPDF, embed
+ * SVG via the inline route) and ultimately by the Artemis exam-integrity
+ * flow.
  *
  * Performance shape: every shim and module load runs **once** at module
  * import time, not per-render. This means the worker thread that imports
@@ -10,7 +11,9 @@
  * tens of milliseconds rather than seconds.
  */
 import "global-jsdom/register"
+import createDOMPurify, { type WindowLike } from "dompurify"
 import type { UMLModel, SVG } from "@tumaet/apollon"
+import { logger } from "../logger"
 
 // ---------------------------------------------------------------------------
 // One-time JSDOM polyfills (module load).
@@ -200,4 +203,46 @@ export async function convertModelToSvg(model: UMLModel): Promise<SVG> {
     throw new Error("Failed to extract SVG: invalid export format")
   }
   return svgExport
+}
+
+/**
+ * DOMPurify-based sanitization of an SVG string. Called by the embed
+ * routes (`renderSvgSafe` → inline `<svg>` in the embed HTML page where
+ * script execution would be live).
+ *
+ * The PDF path bypasses this — pdfMake/svg2pdf don't execute scripts,
+ * and the ~5–30 ms DOMPurify cost would land per render for no security
+ * gain.
+ *
+ * The library currently produces SVG via React's render-to-string, which
+ * HTML-escapes user input — so in steady state DOMPurify finds nothing
+ * to strip. The contract is defence-in-depth: if `exportModelAsSvg` ever
+ * leaks `<script>`, `<foreignObject>` with embedded HTML, `on*=` event
+ * handlers, or `javascript:` URIs, the audited svg + svgFilters profile
+ * removes them. `purify.removed.length > 0` fires a warn that should
+ * alert in production.
+ *
+ * `PARSER_MEDIA_TYPE: "image/svg+xml"` forces the SVG parser so siblings
+ * of SVG-only elements survive (default HTML parsing can swallow them).
+ */
+export function sanitizeSvg(svg: string): string {
+  const purify = createDOMPurify(window as unknown as WindowLike)
+  const cleaned = purify.sanitize(svg, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    PARSER_MEDIA_TYPE: "image/svg+xml",
+  })
+  if (purify.removed.length > 0) {
+    logger.warn(
+      {
+        event: "embed.sanitize.stripped",
+        removed: purify.removed.length,
+        tagNames: purify.removed.slice(0, 5).map((entry) => {
+          const node = (entry as { element?: Element }).element
+          return node?.nodeName ?? "unknown"
+        }),
+      },
+      "embed SVG sanitizer stripped suspicious content"
+    )
+  }
+  return typeof cleaned === "string" ? cleaned : String(cleaned)
 }
