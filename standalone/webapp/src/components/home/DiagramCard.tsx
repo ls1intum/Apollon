@@ -84,17 +84,19 @@ type DiagramActionsMenuProps = {
 export const DiagramActionsMenu = ({
   diagram,
   containerClassName = "relative",
-  triggerClassName =
-    "cursor-pointer rounded-md border border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] p-1.5 text-[var(--home-text-primary)] shadow-sm transition-colors duration-200 hover:border-[var(--home-accent-color)] hover:bg-[var(--home-accent-color)] hover:text-white focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2",
-  menuClassName =
-    "absolute right-0 z-40 mt-2 w-52 rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-1 shadow-lg transition-colors duration-200",
+  triggerClassName = "cursor-pointer rounded-md border border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] p-1.5 text-[var(--home-text-primary)] shadow-sm transition-colors duration-200 hover:border-[var(--home-accent-color)] hover:bg-[var(--home-accent-color)] hover:text-white focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2",
+  menuClassName = "absolute right-0 z-40 mt-2 w-52 rounded-lg border border-[var(--home-border-color)] bg-[var(--home-bg-card)] p-1 shadow-lg transition-colors duration-200",
   stopPropagation = false,
 }: DiagramActionsMenuProps) => {
   const navigate = useNavigate()
   const { openModal } = useModalContext()
   const deleteModel = usePersistenceModelStore((state) => state.deleteModel)
-  const duplicateModel = usePersistenceModelStore((state) => state.duplicateModel)
-  const currentModelId = usePersistenceModelStore((state) => state.currentModelId)
+  const duplicateModel = usePersistenceModelStore(
+    (state) => state.duplicateModel
+  )
+  const currentModelId = usePersistenceModelStore(
+    (state) => state.currentModelId
+  )
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
@@ -197,7 +199,12 @@ export const DiagramActionsMenu = ({
           })
         }}
       >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
           <circle cx="12" cy="5" r="1.7" fill="currentColor" />
           <circle cx="12" cy="12" r="1.7" fill="currentColor" />
           <circle cx="12" cy="19" r="1.7" fill="currentColor" />
@@ -307,7 +314,9 @@ const DiagramCardComponent = ({
   onToggleFavorite,
 }: DiagramCardProps) => {
   const navigate = useNavigate()
-  const toggleFavorite = usePersistenceModelStore((state) => state.toggleFavorite)
+  const toggleFavorite = usePersistenceModelStore(
+    (state) => state.toggleFavorite
+  )
   const thumbnailSvg = usePersistenceModelStore(
     (state) => state.thumbnails[diagram.id] ?? null
   )
@@ -326,11 +335,14 @@ const DiagramCardComponent = ({
     () => (thumbnailSvg ? toSvgDataUrl(thumbnailSvg) : null),
     [thumbnailSvg]
   )
-  const shouldRenderThumbnail = !showPlaceholderIcon && Boolean(thumbnailDataUrl)
+  const shouldRenderThumbnail =
+    !showPlaceholderIcon && Boolean(thumbnailDataUrl)
 
   useEffect(() => {
     const updateRelativeDate = () => {
-      setRelativeDate(formatRelativeLastModified(diagram.lastModifiedAt, Date.now()))
+      setRelativeDate(
+        formatRelativeLastModified(diagram.lastModifiedAt, Date.now())
+      )
     }
 
     updateRelativeDate()
@@ -365,7 +377,9 @@ const DiagramCardComponent = ({
       {canToggleFavorite && (
         <button
           type="button"
-          aria-label={diagram.favorite ? "Remove from favorites" : "Add to favorites"}
+          aria-label={
+            diagram.favorite ? "Remove from favorites" : "Add to favorites"
+          }
           className={`absolute left-2 top-2 z-30 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border shadow-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2 ${
             diagram.favorite
               ? "border-[var(--home-favorite-border)] bg-[var(--home-favorite-bg)] text-[var(--home-favorite-star)]"
@@ -416,7 +430,6 @@ const DiagramCardComponent = ({
               )}
             </div>
           )}
-
         </div>
 
         <div className="relative h-[96px] shrink-0 overflow-hidden transition-[height] duration-[360ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:h-[56px]">

@@ -22,7 +22,9 @@ export class DiagramAPIManager {
     return response.json()
   }
 
-  static async fetchStoredDiagram(diagramId: string): Promise<StoredDiagram | null> {
+  static async fetchStoredDiagram(
+    diagramId: string
+  ): Promise<StoredDiagram | null> {
     const response = await fetch(`${serverURL}/api/diagrams/${diagramId}`, {
       method: "GET",
       headers: {

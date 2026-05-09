@@ -327,7 +327,8 @@ export const HomePage = () => {
             {hasDiagrams ? (
               <>
                 <h1 className="max-w-3xl text-2xl font-semibold leading-tight md:text-3xl">
-                  Welcome back. Pick up your diagrams and keep building momentum.
+                  Welcome back. Pick up your diagrams and keep building
+                  momentum.
                 </h1>
                 <p className="max-w-2xl text-sm text-[var(--home-text-secondary)] md:text-base">
                   Create a diagram to start fresh, import a diagram JSON from
@@ -518,7 +519,9 @@ export const HomePage = () => {
                   </span>
                   Accelerate Setup
                 </div>
-                <h2 className="text-xl font-semibold">2. Start from Template</h2>
+                <h2 className="text-xl font-semibold">
+                  2. Start from Template
+                </h2>
                 <p className="text-sm text-[var(--home-text-secondary)]">
                   Pick a proven pattern and start editing immediately.
                 </p>
@@ -529,7 +532,9 @@ export const HomePage = () => {
                       <button
                         key={template.id}
                         type="button"
-                        onClick={() => void handleCreateFromTemplate(template.id)}
+                        onClick={() =>
+                          void handleCreateFromTemplate(template.id)
+                        }
                         className="group flex cursor-pointer flex-col items-start gap-2 rounded-md border border-[var(--home-border-color)] bg-[var(--home-bg-secondary)] p-4 text-left transition-colors duration-200 hover:border-[var(--home-accent-color)] hover:bg-[var(--home-accent-soft)] focus-visible:outline-2 focus-visible:outline-[var(--home-accent-color)] focus-visible:outline-offset-2"
                       >
                         <div className="flex w-full items-center justify-between gap-2">
@@ -546,7 +551,8 @@ export const HomePage = () => {
                           {template.id}
                         </p>
                         <p className="text-sm text-[var(--home-text-secondary)] transition-colors duration-200">
-                          Create diagram from the {template.id} pattern template.
+                          Create diagram from the {template.id} pattern
+                          template.
                         </p>
                       </button>
                     ))}
@@ -564,7 +570,9 @@ export const HomePage = () => {
               <span className="text-[var(--home-accent-color)]">
                 <RecentIcon />
               </span>
-              <span className="text-[var(--home-text-primary)]">Recent Diagrams</span>
+              <span className="text-[var(--home-text-primary)]">
+                Recent Diagrams
+              </span>
             </div>
             <Suspense
               fallback={

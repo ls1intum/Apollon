@@ -67,7 +67,10 @@ const formatDate = (value: string) => {
   })
 }
 
-const getDiagramSortValue = (diagram: GalleryDiagram, sortBy: DiagramSortBy) => {
+const getDiagramSortValue = (
+  diagram: GalleryDiagram,
+  sortBy: DiagramSortBy
+) => {
   if (sortBy === "dateCreated") {
     return toDateMs(diagram.createdAt) ?? Number.NEGATIVE_INFINITY
   }
@@ -144,17 +147,61 @@ const EmptyStateIllustration = () => (
 
 const GridViewIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="4" y="4" width="6" height="6" rx="1.4" stroke="currentColor" strokeWidth="1.7" />
-    <rect x="14" y="4" width="6" height="6" rx="1.4" stroke="currentColor" strokeWidth="1.7" />
-    <rect x="4" y="14" width="6" height="6" rx="1.4" stroke="currentColor" strokeWidth="1.7" />
-    <rect x="14" y="14" width="6" height="6" rx="1.4" stroke="currentColor" strokeWidth="1.7" />
+    <rect
+      x="4"
+      y="4"
+      width="6"
+      height="6"
+      rx="1.4"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    />
+    <rect
+      x="14"
+      y="4"
+      width="6"
+      height="6"
+      rx="1.4"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    />
+    <rect
+      x="4"
+      y="14"
+      width="6"
+      height="6"
+      rx="1.4"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    />
+    <rect
+      x="14"
+      y="14"
+      width="6"
+      height="6"
+      rx="1.4"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    />
   </svg>
 )
 
 const TableViewIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="3.5" y="4" width="17" height="16" rx="2" stroke="currentColor" strokeWidth="1.7" />
-    <path d="M3.5 9.5H20.5M3.5 15H20.5M10 4V20" stroke="currentColor" strokeWidth="1.7" />
+    <rect
+      x="3.5"
+      y="4"
+      width="17"
+      height="16"
+      rx="2"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    />
+    <path
+      d="M3.5 9.5H20.5M3.5 15H20.5M10 4V20"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    />
   </svg>
 )
 
@@ -167,7 +214,9 @@ export const DiagramGallery = ({
 }: DiagramGalleryProps) => {
   const navigate = useNavigate()
   const models = usePersistenceModelStore((state) => state.models)
-  const toggleFavorite = usePersistenceModelStore((state) => state.toggleFavorite)
+  const toggleFavorite = usePersistenceModelStore(
+    (state) => state.toggleFavorite
+  )
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm)
   const [selectedDiagramType, setSelectedDiagramType] =
     useState<DiagramTypeFilter>("all")
@@ -244,7 +293,9 @@ export const DiagramGallery = ({
               title: storedDiagram.title,
               type: storedDiagram.type,
               lastModifiedAt:
-                storedDiagram.updatedAt || storedDiagram.createdAt || entry.sharedAt,
+                storedDiagram.updatedAt ||
+                storedDiagram.createdAt ||
+                entry.sharedAt,
               favorite: entry.favorite ?? false,
               source: "shared",
               model: storedDiagram,
@@ -285,10 +336,11 @@ export const DiagramGallery = ({
   const allDiagrams = diagramSource === "local" ? localDiagrams : sharedDiagrams
   const diagramTypeOptions = useMemo(
     () =>
-      Array.from(
-        new Set(allDiagrams.map((diagram) => diagram.type))
-      ).sort((firstType, secondType) =>
-        getDiagramTypeLabel(firstType).localeCompare(getDiagramTypeLabel(secondType))
+      Array.from(new Set(allDiagrams.map((diagram) => diagram.type))).sort(
+        (firstType, secondType) =>
+          getDiagramTypeLabel(firstType).localeCompare(
+            getDiagramTypeLabel(secondType)
+          )
       ),
     [allDiagrams]
   )
@@ -323,7 +375,14 @@ export const DiagramGallery = ({
       })
 
     return sortedDiagrams
-  }, [allDiagrams, searchTerm, selectedDiagramType, showFavoritesOnly, sortBy, sortOrder])
+  }, [
+    allDiagrams,
+    searchTerm,
+    selectedDiagramType,
+    showFavoritesOnly,
+    sortBy,
+    sortOrder,
+  ])
 
   const deferredFilteredDiagrams = useDeferredValue(filteredDiagrams)
   const isPending = deferredFilteredDiagrams !== filteredDiagrams
@@ -376,7 +435,15 @@ export const DiagramGallery = ({
     }
     setIsLoadingMore(false)
     setIsObserverActive(true)
-  }, [diagramSource, searchTerm, selectedDiagramType, showFavoritesOnly, sortBy, sortOrder, viewMode])
+  }, [
+    diagramSource,
+    searchTerm,
+    selectedDiagramType,
+    showFavoritesOnly,
+    sortBy,
+    sortOrder,
+    viewMode,
+  ])
 
   useEffect(() => {
     if (!isTypeMenuOpen && !isSortMenuOpen) {
@@ -418,8 +485,8 @@ export const DiagramGallery = ({
     sortBy === "alphabetical"
       ? "Alphabetical"
       : sortBy === "dateCreated"
-      ? "Date created"
-      : "Last viewed"
+        ? "Date created"
+        : "Last viewed"
   const sortOrderLabel =
     sortOrder === "oldest" ? "Oldest first" : "Newest first"
   const selectedDiagramTypeLabel =
@@ -613,7 +680,10 @@ export const DiagramGallery = ({
             <label className="sr-only" htmlFor="diagram-type-filter-button">
               Filter by diagram type
             </label>
-            <div ref={typeMenuContainerRef} className="relative w-full sm:w-auto">
+            <div
+              ref={typeMenuContainerRef}
+              className="relative w-full sm:w-auto"
+            >
               <button
                 id="diagram-type-filter-button"
                 type="button"
@@ -696,7 +766,10 @@ export const DiagramGallery = ({
               )}
             </div>
 
-            <div ref={sortMenuContainerRef} className="relative w-full sm:w-auto">
+            <div
+              ref={sortMenuContainerRef}
+              className="relative w-full sm:w-auto"
+            >
               <button
                 type="button"
                 onClick={() => setIsSortMenuOpen((current) => !current)}
@@ -801,8 +874,16 @@ export const DiagramGallery = ({
               sizeClassName={controlHeightClass}
               itemClassName="w-8 px-0"
               options={[
-                { value: "grid", icon: <GridViewIcon />, ariaLabel: "Grid view" },
-                { value: "table", icon: <TableViewIcon />, ariaLabel: "Table view" },
+                {
+                  value: "grid",
+                  icon: <GridViewIcon />,
+                  ariaLabel: "Grid view",
+                },
+                {
+                  value: "table",
+                  icon: <TableViewIcon />,
+                  ariaLabel: "Table view",
+                },
               ]}
               value={viewMode}
               onChange={(nextViewMode) => setViewMode(nextViewMode)}
@@ -851,7 +932,9 @@ export const DiagramGallery = ({
                         key={diagram.id}
                         diagram={diagram}
                         showPlaceholderIcon={isDiagramEmpty(diagram)}
-                        isThumbnailLoading={Boolean(loadingThumbnailIds[diagram.id])}
+                        isThumbnailLoading={Boolean(
+                          loadingThumbnailIds[diagram.id]
+                        )}
                         onToggleFavorite={handleToggleDiagramFavorite}
                       />
                     ))}
@@ -862,38 +945,42 @@ export const DiagramGallery = ({
                   >
                     <div className="overflow-x-auto">
                       <table className="min-w-full border-separate border-spacing-0 text-left">
-                      <thead className="bg-[var(--home-bg-secondary)]">
-                        <tr>
-                          <th className="w-10 px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
-                            <span className="sr-only">Favorite</span>
-                          </th>
-                          <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
-                            Name
-                          </th>
-                          <th className="hidden px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)] md:table-cell">
-                            Type
-                          </th>
-                          <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
-                            Last viewed
-                          </th>
-                          <th className="hidden px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)] lg:table-cell">
-                            Source
-                          </th>
-                          <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
+                        <thead className="bg-[var(--home-bg-secondary)]">
+                          <tr>
+                            <th className="w-10 px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+                              <span className="sr-only">Favorite</span>
+                            </th>
+                            <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+                              Name
+                            </th>
+                            <th className="hidden px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)] md:table-cell">
+                              Type
+                            </th>
+                            <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+                              Last viewed
+                            </th>
+                            <th className="hidden px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)] lg:table-cell">
+                              Source
+                            </th>
+                            <th className="px-3 py-2 align-middle text-xs font-semibold uppercase tracking-wide text-[var(--home-text-secondary)]">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
                         <tbody>
                           {visibleDiagrams.map((diagram) => {
-                            const title = diagram.title.trim() || "Untitled Diagram"
+                            const title =
+                              diagram.title.trim() || "Untitled Diagram"
                             return (
                               <tr
                                 key={diagram.id}
                                 className="cursor-pointer border-t border-[var(--home-border-color)] transition-colors duration-200 hover:bg-[var(--home-accent-soft)]"
                                 onClick={() => handleOpenDiagram(diagram)}
                                 onKeyDown={(event) => {
-                                  if (event.key === "Enter" || event.key === " ") {
+                                  if (
+                                    event.key === "Enter" ||
+                                    event.key === " "
+                                  ) {
                                     event.preventDefault()
                                     handleOpenDiagram(diagram)
                                   }
@@ -917,12 +1004,18 @@ export const DiagramGallery = ({
                                       event.stopPropagation()
                                       handleToggleDiagramFavorite(diagram)
                                     }}
-                                    onKeyDown={(event) => event.stopPropagation()}
+                                    onKeyDown={(event) =>
+                                      event.stopPropagation()
+                                    }
                                   >
                                     <svg
                                       className="h-3.5 w-3.5"
                                       viewBox="0 0 24 24"
-                                      fill={diagram.favorite ? "currentColor" : "none"}
+                                      fill={
+                                        diagram.favorite
+                                          ? "currentColor"
+                                          : "none"
+                                      }
                                       aria-hidden="true"
                                     >
                                       <path
@@ -944,7 +1037,9 @@ export const DiagramGallery = ({
                                   {formatDate(diagram.lastViewedAt)}
                                 </td>
                                 <td className="hidden px-3 py-2 align-middle text-xs text-[var(--home-text-secondary)] lg:table-cell">
-                                  {diagram.source === "local" ? "Local" : "Shared"}
+                                  {diagram.source === "local"
+                                    ? "Local"
+                                    : "Shared"}
                                 </td>
                                 <td className="px-3 py-2 align-middle">
                                   <DiagramActionsMenu
@@ -970,7 +1065,11 @@ export const DiagramGallery = ({
             )}
 
             {filteredDiagrams.length > 0 && (
-              <div ref={sentinelRef} aria-hidden="true" className="h-0.5 w-full" />
+              <div
+                ref={sentinelRef}
+                aria-hidden="true"
+                className="h-0.5 w-full"
+              />
             )}
 
             {isLoadingMore && (

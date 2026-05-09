@@ -43,7 +43,8 @@ export const ShareModal = (props: unknown) => {
     }
 
     try {
-      const { id: diagramID } = await DiagramApiClient.createDiagram(modelToShare)
+      const { id: diagramID } =
+        await DiagramApiClient.createDiagram(modelToShare)
       addSharedDiagramEntry(diagramID)
 
       const newurl = `${window.location.origin}/shared/${diagramID}?view=${viewType}`
