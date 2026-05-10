@@ -71,6 +71,7 @@ export const ApollonWithConnection: React.FC = () => {
     userId: string
     clientId: number
   } | null>(null)
+  const [followedByCount, setFollowedByCount] = useState(0)
   const lastFollowViewportRef = useRef<CollaborationViewport | null>(null)
   const viewType = searchParams.get("view")
   const previewFromUrl = searchParams.get("version")
@@ -90,15 +91,26 @@ export const ApollonWithConnection: React.FC = () => {
         return
       }
 
-      setFollowTarget((current) => {
-        if (current?.clientId === targetClientId) {
-          return null
-        }
-        return { userId: collaborator.id, clientId: targetClientId }
-      })
+      const isAlreadyFollowing = followTarget?.clientId === targetClientId
+      if (isAlreadyFollowing) {
+        setFollowTarget(null)
+        editor.setLocalAwarenessState({ followingClientId: null })
+        lastFollowViewportRef.current = null
+        return
+      }
+
+      setFollowTarget({ userId: collaborator.id, clientId: targetClientId })
+      editor.setLocalAwarenessState({ followingClientId: targetClientId })
       lastFollowViewportRef.current = null
+      toast.info(`You are now following ${collaborator.name}`, {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: true,
+        pauseOnHover: false,
+        style: { marginTop: "40vh" },
+      })
     },
-    [editor]
+    [editor, followTarget]
   )
 
   const preview = useVersionStore((s) => s.preview)
@@ -469,6 +481,7 @@ export const ApollonWithConnection: React.FC = () => {
       const targetState = states.get(followTarget.clientId)
       if (!targetState) {
         setFollowTarget(null)
+        editor.setLocalAwarenessState({ followingClientId: null })
         return
       }
 
@@ -496,6 +509,29 @@ export const ApollonWithConnection: React.FC = () => {
       editor.unsubscribe(subscriptionId)
     }
   }, [editor, followTarget, isCollaborationActive])
+
+  useEffect(() => {
+    if (!editor || !isCollaborationActive) {
+      setFollowedByCount(0)
+      return
+    }
+
+    const subscriptionId = editor.subscribeToAwarenessChanges((states) => {
+      const localClientId = editor.getLocalAwarenessClientId()
+      let count = 0
+      for (const [clientId, state] of states.entries()) {
+        if (clientId === localClientId) continue
+        if (state.followingClientId === localClientId) {
+          count += 1
+        }
+      }
+      setFollowedByCount(count)
+    })
+
+    return () => {
+      editor.unsubscribe(subscriptionId)
+    }
+  }, [editor, isCollaborationActive])
 
   // Memoised because `handleRestoreFromPreview`'s useCallback lists it
   // as a dep — without stable identity the restore handler gets a fresh
@@ -590,6 +626,7 @@ export const ApollonWithConnection: React.FC = () => {
             isActive={isCollaborationActive}
             onFollowToggle={handleFollowToggle}
             followedCollaboratorId={followTarget?.userId ?? null}
+            followedByCount={followedByCount}
           />
           <CollaboratorCursors
             containerRef={containerRef}

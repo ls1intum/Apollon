@@ -7,6 +7,7 @@ type CollaboratorPresenceBarProps = {
   isActive: boolean
   onFollowToggle?: (collaborator: CollaboratorInfo) => void
   followedCollaboratorId?: string | null
+  followedByCount?: number
 }
 
 const AVATAR_SIZE = 26
@@ -30,6 +31,7 @@ export const CollaboratorPresenceBar = ({
   isActive,
   onFollowToggle,
   followedCollaboratorId = null,
+  followedByCount = 0,
 }: CollaboratorPresenceBarProps) => {
   const { editor } = useEditorContext()
   const [collaborators, setCollaborators] = useState<CollaboratorInfo[]>([])
@@ -68,8 +70,13 @@ export const CollaboratorPresenceBar = ({
     >
       {collaborators.map((c, i) => {
         const isFollowing = followedCollaboratorId === c.id
+        const isBeingFollowed = c.isLocal && followedByCount > 0
+        const followCountLabel =
+          followedByCount > 9 ? "9+" : `${followedByCount}`
         const label = c.isLocal
-          ? `${c.name} (You)`
+          ? isBeingFollowed
+            ? `${c.name} (You, Followed by ${followedByCount})`
+            : `${c.name} (You)`
           : isFollowing
             ? `${c.name} (Following)`
             : c.name
@@ -129,6 +136,30 @@ export const CollaboratorPresenceBar = ({
                   }}
                 >
                   F
+                </span>
+              )}
+              {isBeingFollowed && (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    bottom: -4,
+                    left: -4,
+                    minWidth: 14,
+                    height: 14,
+                    padding: "0 2px",
+                    borderRadius: 10,
+                    backgroundColor: "#ffffff",
+                    color: "#111111",
+                    fontSize: 8,
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: `2px solid ${c.color}`,
+                  }}
+                >
+                  {followCountLabel}
                 </span>
               )}
             </div>

@@ -37,6 +37,7 @@ export type CollaborationState = {
   user?: CollaborationUser
   cursor?: CollaborationCursor | null
   viewport?: CollaborationViewport | null
+  followingClientId?: number | null
   selectedElementId?: string | null
 }
 
