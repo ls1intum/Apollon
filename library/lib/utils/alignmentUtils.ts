@@ -1,5 +1,6 @@
 import { Node } from "@xyflow/react"
 import { AlignmentGuide } from "@/store/alignmentGuidesStore"
+import { getPositionOnCanvas, isParentNodeType } from "@/utils/nodeUtils"
 
 const ALIGNMENT_THRESHOLD = 10 // pixels within which guides appear
 
@@ -15,9 +16,12 @@ export type AlignmentInfo = {
 /**
  * Get the bounds of a node (considering its position and dimensions)
  */
-export const getNodeBounds = (node: Node) => {
-  const x = node.position.x
-  const y = node.position.y
+export const getNodeBounds = (node: Node, allNodes?: Node[]) => {
+  const position = allNodes
+    ? getPositionOnCanvas(node, allNodes)
+    : node.position
+  const x = position.x
+  const y = position.y
   const width = node.measured?.width || 100
   const height = node.measured?.height || 100
 
@@ -31,6 +35,75 @@ export const getNodeBounds = (node: Node) => {
   }
 }
 
+const isContainedByParent = (node: Node, allNodes: Node[]) => {
+  const nodeBounds = getNodeBounds(node, allNodes)
+  return allNodes.some((candidate) => {
+    if (candidate.id === node.id || !isParentNodeType(candidate.type)) {
+      return false
+    }
+
+    const parentBounds = getNodeBounds(candidate, allNodes)
+    return (
+      nodeBounds.left >= parentBounds.left &&
+      nodeBounds.right <= parentBounds.right &&
+      nodeBounds.top >= parentBounds.top &&
+      nodeBounds.bottom <= parentBounds.bottom
+    )
+  })
+}
+
+const getContainingParentId = (node: Node, allNodes: Node[]) => {
+  if (node.parentId) {
+    return node.parentId
+  }
+
+  const nodeBounds = getNodeBounds(node, allNodes)
+  let bestParent: Node | undefined
+  let bestArea = Infinity
+
+  for (const candidate of allNodes) {
+    if (candidate.id === node.id || !isParentNodeType(candidate.type)) {
+      continue
+    }
+
+    const parentBounds = getNodeBounds(candidate, allNodes)
+    const contains =
+      nodeBounds.left >= parentBounds.left &&
+      nodeBounds.right <= parentBounds.right &&
+      nodeBounds.top >= parentBounds.top &&
+      nodeBounds.bottom <= parentBounds.bottom
+
+    if (!contains) {
+      continue
+    }
+
+    const area =
+      (parentBounds.right - parentBounds.left) *
+      (parentBounds.bottom - parentBounds.top)
+    if (area < bestArea) {
+      bestArea = area
+      bestParent = candidate
+    }
+  }
+
+  return bestParent?.id
+}
+
+const shouldUseAsGuideTarget = (
+  draggedNode: Node,
+  node: Node,
+  allNodes: Node[]
+) => {
+  const draggedParentId = getContainingParentId(draggedNode, allNodes)
+  const nodeParentId = getContainingParentId(node, allNodes)
+
+  if (!draggedParentId) {
+    return !nodeParentId && !isContainedByParent(node, allNodes)
+  }
+
+  return node.id === draggedParentId || nodeParentId === draggedParentId
+}
+
 /**
  * Calculate alignment guides based on dragged node and other nodes
  */
@@ -39,14 +112,21 @@ export const calculateAlignmentGuides = (
   allNodes: Node[],
   threshold: number = ALIGNMENT_THRESHOLD
 ): AlignmentGuide[] => {
-  const draggedBounds = getNodeBounds(draggedNode)
+  const nodesWithDrag = allNodes.map((node) =>
+    node.id === draggedNode.id ? draggedNode : node
+  )
+  const draggedBounds = getNodeBounds(draggedNode, nodesWithDrag)
   const guides: AlignmentGuide[] = []
   const alignedPositions = new Set<number>()
 
-  const otherNodes = allNodes.filter((n) => n.id !== draggedNode.id)
+  const otherNodes = nodesWithDrag.filter(
+    (node) =>
+      node.id !== draggedNode.id &&
+      shouldUseAsGuideTarget(draggedNode, node, nodesWithDrag)
+  )
 
   for (const node of otherNodes) {
-    const nodeBounds = getNodeBounds(node)
+    const nodeBounds = getNodeBounds(node, nodesWithDrag)
 
     // Vertical alignment (left, center, right edges)
     const verticalAlignments = [
@@ -139,48 +219,52 @@ export const calculateAlignmentGuides = (
 export const snapNodeToGuides = (
   draggedNode: Node,
   guides: AlignmentGuide[],
-  threshold: number = ALIGNMENT_THRESHOLD
+  threshold: number = ALIGNMENT_THRESHOLD,
+  allNodes?: Node[]
 ): { x?: number; y?: number } => {
-  const draggedBounds = getNodeBounds(draggedNode)
+  const draggedBounds = getNodeBounds(draggedNode, allNodes)
+  const draggedPosition = allNodes
+    ? getPositionOnCanvas(draggedNode, allNodes)
+    : draggedNode.position
   const snappedPosition: { x?: number; y?: number } = {}
 
   for (const guide of guides) {
     if (guide.type === "vertical") {
       // Snap left edge
       if (Math.abs(draggedBounds.left - guide.position) < threshold) {
-        snappedPosition.x = guide.position - draggedNode.position.x
+        snappedPosition.x = guide.position - draggedPosition.x
       }
       // Snap center
       if (Math.abs(draggedBounds.centerX - guide.position) < threshold) {
         snappedPosition.x =
           guide.position -
-          draggedNode.position.x -
+          draggedPosition.x -
           (draggedNode.measured?.width || 100) / 2
       }
       // Snap right edge
       if (Math.abs(draggedBounds.right - guide.position) < threshold) {
         snappedPosition.x =
           guide.position -
-          draggedNode.position.x -
+          draggedPosition.x -
           (draggedNode.measured?.width || 100)
       }
     } else if (guide.type === "horizontal") {
       // Snap top edge
       if (Math.abs(draggedBounds.top - guide.position) < threshold) {
-        snappedPosition.y = guide.position - draggedNode.position.y
+        snappedPosition.y = guide.position - draggedPosition.y
       }
       // Snap center
       if (Math.abs(draggedBounds.centerY - guide.position) < threshold) {
         snappedPosition.y =
           guide.position -
-          draggedNode.position.y -
+          draggedPosition.y -
           (draggedNode.measured?.height || 100) / 2
       }
       // Snap bottom edge
       if (Math.abs(draggedBounds.bottom - guide.position) < threshold) {
         snappedPosition.y =
           guide.position -
-          draggedNode.position.y -
+          draggedPosition.y -
           (draggedNode.measured?.height || 100)
       }
     }
