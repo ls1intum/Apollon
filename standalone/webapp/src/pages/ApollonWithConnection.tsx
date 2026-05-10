@@ -113,6 +113,14 @@ export const ApollonWithConnection: React.FC = () => {
     [editor, followTarget]
   )
 
+  const stopFollowing = useCallback(() => {
+    if (!editor) return
+    if (!followTarget) return
+    setFollowTarget(null)
+    editor.setLocalAwarenessState({ followingClientId: null })
+    lastFollowViewportRef.current = null
+  }, [editor, followTarget])
+
   const preview = useVersionStore((s) => s.preview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
   const restoreVersion = useVersionStore((s) => s.restoreVersion)
@@ -509,6 +517,29 @@ export const ApollonWithConnection: React.FC = () => {
       editor.unsubscribe(subscriptionId)
     }
   }, [editor, followTarget, isCollaborationActive])
+
+  useEffect(() => {
+    if (!isCollaborationActive || !followTarget || !containerRef.current) {
+      return
+    }
+
+    const container = containerRef.current
+    const handleUserIntent = () => {
+      stopFollowing()
+    }
+
+    container.addEventListener("wheel", handleUserIntent, { passive: true })
+    container.addEventListener("pointerdown", handleUserIntent)
+    container.addEventListener("touchstart", handleUserIntent, {
+      passive: true,
+    })
+
+    return () => {
+      container.removeEventListener("wheel", handleUserIntent)
+      container.removeEventListener("pointerdown", handleUserIntent)
+      container.removeEventListener("touchstart", handleUserIntent)
+    }
+  }, [followTarget, isCollaborationActive, stopFollowing])
 
   useEffect(() => {
     if (!editor || !isCollaborationActive) {
