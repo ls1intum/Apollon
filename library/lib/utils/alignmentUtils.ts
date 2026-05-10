@@ -1,7 +1,15 @@
 import { Node } from "@xyflow/react"
 import { AlignmentGuide } from "@/store/alignmentGuidesStore"
 
-const ALIGNMENT_THRESHOLD = 10 // pixels within which guides appear
+// Half the grid step: guides appear once a node sits within this many pixels
+// of an alignment line.
+//
+// Hard-coded to avoid a known circular import:
+//   constants.ts → @/nodes → nodes/.../Class.tsx → @/utils (barrel) → alignmentUtils.ts → @/constants
+// Reading CANVAS.SNAP_TO_GRID_PX at module init can resolve to undefined when
+// alignmentUtils.ts evaluates before constants.ts finishes. Keep this in sync
+// with CANVAS.SNAP_TO_GRID_PX / 2 in constants.ts (currently 10 / 2 = 5).
+const ALIGNMENT_THRESHOLD = 5
 
 export type AlignmentInfo = {
   horizontalGuides: number[] // x positions for vertical alignment lines

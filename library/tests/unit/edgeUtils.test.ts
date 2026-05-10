@@ -9,6 +9,7 @@ import {
   calculateStraightPath,
   calculateTextPlacement,
   findClosestHandle,
+  getHandleAnchor,
   getConnectionLineType,
   getDefaultEdgeType,
   getEdgeMarkerStyles,
@@ -437,9 +438,26 @@ describe("getEdgeMarkerStyles", () => {
 
 // ---------------------------------------------------------------------------
 // findClosestHandle
-// ---------------------------------------------------------------------------
 describe("findClosestHandle", () => {
   const rect = { x: 0, y: 0, width: 300, height: 200 }
+  const canonicalHandleIds = new Set([
+    "top",
+    "bottom",
+    "left",
+    "right",
+    "top-left",
+    "top-mid-left",
+    "top-mid-right",
+    "top-right",
+    "right-mid-top",
+    "right-mid-bottom",
+    "bottom-right",
+    "bottom-mid-right",
+    "bottom-mid-left",
+    "bottom-left",
+    "left-mid-bottom",
+    "left-mid-top",
+  ])
 
   describe("with useFourHandles=true", () => {
     it("returns top when point is directly above center", () => {
@@ -488,90 +506,89 @@ describe("findClosestHandle", () => {
     })
   })
 
-  describe("with useFourHandles=false (12 handles)", () => {
-    it("returns top-left when point is near left-third of top edge", () => {
-      // top-left handle is at (100, 0) for rect 300 wide
-      const result = findClosestHandle({
-        point: { x: 100, y: -5 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("top-left")
+  describe("with useFourHandles=false (canonical 16 handles)", () => {
+    const canonicalCandidates: Array<{
+      id: string
+      point: { x: number; y: number }
+    }> = [
+      { id: "top", point: { x: 150, y: 40 } },
+      { id: "bottom", point: { x: 150, y: 160 } },
+      { id: "left", point: { x: 60, y: 100 } },
+      { id: "right", point: { x: 240, y: 100 } },
+      { id: "top-left", point: { x: 60, y: 40 } },
+      { id: "top-mid-left", point: { x: 110, y: 40 } },
+      { id: "top-mid-right", point: { x: 200, y: 40 } },
+      { id: "top-right", point: { x: 240, y: 40 } },
+      { id: "right-mid-top", point: { x: 240, y: 70 } },
+      { id: "right-mid-bottom", point: { x: 240, y: 130 } },
+      { id: "bottom-right", point: { x: 240, y: 160 } },
+      { id: "bottom-mid-right", point: { x: 200, y: 160 } },
+      { id: "bottom-mid-left", point: { x: 110, y: 160 } },
+      { id: "bottom-left", point: { x: 60, y: 160 } },
+      { id: "left-mid-bottom", point: { x: 60, y: 130 } },
+      { id: "left-mid-top", point: { x: 60, y: 70 } },
+    ]
+
+    it.each(canonicalCandidates)(
+      "returns $id at its anchor point",
+      ({ id, point }) => {
+        const result = findClosestHandle({
+          point,
+          rect,
+          useFourHandles: false,
+        })
+        expect(result).toBe(id)
+      }
+    )
+
+    it("does not emit alias corner IDs at alias positions", () => {
+      const aliasPositions = [
+        { x: 60, y: 40 },
+        { x: 240, y: 40 },
+        { x: 60, y: 160 },
+        { x: 240, y: 160 },
+      ]
+      const aliasIds = new Set([
+        "left-top",
+        "right-top",
+        "left-bottom",
+        "right-bottom",
+      ])
+
+      for (const point of aliasPositions) {
+        const result = findClosestHandle({ point, rect, useFourHandles: false })
+        expect(canonicalHandleIds.has(result)).toBe(true)
+        expect(aliasIds.has(result)).toBe(false)
+      }
     })
 
-    it("returns top-right when point is near right-third of top edge", () => {
-      // top-right handle at (200, 0)
+    it("uses deterministic canonical-order tie-break for equal distances", () => {
+      // Midpoint between top (150,40) and top-mid-left (110,40).
+      // "top" is declared first in canonical order and wins ties.
       const result = findClosestHandle({
-        point: { x: 200, y: -5 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("top-right")
-    })
-
-    it("returns bottom-left when point is near left-third of bottom edge", () => {
-      const result = findClosestHandle({
-        point: { x: 100, y: 205 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("bottom-left")
-    })
-
-    it("returns bottom-right when point is near right-third of bottom edge", () => {
-      const result = findClosestHandle({
-        point: { x: 200, y: 205 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("bottom-right")
-    })
-
-    it("returns left-top when point is near top-third of left edge", () => {
-      // left-top handle at (0, 200/3 ≈ 66.67)
-      const result = findClosestHandle({
-        point: { x: -5, y: 66.67 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("left-top")
-    })
-
-    it("returns left-bottom when point is near bottom-third of left edge", () => {
-      // left-bottom handle at (0, 2/3*200 ≈ 133.33)
-      const result = findClosestHandle({
-        point: { x: -5, y: 133.33 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("left-bottom")
-    })
-
-    it("returns right-top when point is near top-third of right edge", () => {
-      const result = findClosestHandle({
-        point: { x: 305, y: 66.67 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("right-top")
-    })
-
-    it("returns right-bottom when point is near bottom-third of right edge", () => {
-      const result = findClosestHandle({
-        point: { x: 305, y: 133.33 },
-        rect,
-        useFourHandles: false,
-      })
-      expect(result).toBe("right-bottom")
-    })
-
-    it("still returns basic handles when point is nearest", () => {
-      const result = findClosestHandle({
-        point: { x: 150, y: -20 },
+        point: { x: 130, y: 40 },
         rect,
         useFourHandles: false,
       })
       expect(result).toBe("top")
+    })
+
+    it("returns the same ID repeatedly at an exact tie point", () => {
+      const tiePoint = { x: 130, y: 40 }
+      const first = findClosestHandle({
+        point: tiePoint,
+        rect,
+        useFourHandles: false,
+      })
+
+      for (let i = 0; i < 25; i++) {
+        const result = findClosestHandle({
+          point: tiePoint,
+          rect,
+          useFourHandles: false,
+        })
+        expect(result).toBe(first)
+      }
     })
   })
 
@@ -580,7 +597,60 @@ describe("findClosestHandle", () => {
       point: { x: 100, y: -5 },
       rect,
     })
-    expect(result).toBe("top-left")
+    expect(result).toBe("top-mid-left")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getHandleAnchor
+// ---------------------------------------------------------------------------
+describe("getHandleAnchor", () => {
+  const rect = { x: 0, y: 0, width: 300, height: 200 }
+
+  it("resolves canonical handle IDs", () => {
+    const anchor = getHandleAnchor(rect, "top-mid-left")
+    expect(anchor).not.toBeNull()
+    expect(anchor).toEqual({ x: 110, y: 40, side: Position.Top })
+  })
+
+  it("resolves alias left-top to the canonical top side", () => {
+    const alias = getHandleAnchor(rect, "left-top")
+    const canonical = getHandleAnchor(rect, "top-left")
+    expect(alias).not.toBeNull()
+    expect(canonical).not.toBeNull()
+    expect(alias?.side).toBe(Position.Top)
+    expect(alias).toEqual(canonical)
+  })
+
+  it("resolves alias right-top to the canonical top side", () => {
+    const alias = getHandleAnchor(rect, "right-top")
+    const canonical = getHandleAnchor(rect, "top-right")
+    expect(alias).not.toBeNull()
+    expect(canonical).not.toBeNull()
+    expect(alias?.side).toBe(Position.Top)
+    expect(alias).toEqual(canonical)
+  })
+
+  it("resolves alias left-bottom to the canonical bottom side", () => {
+    const alias = getHandleAnchor(rect, "left-bottom")
+    const canonical = getHandleAnchor(rect, "bottom-left")
+    expect(alias).not.toBeNull()
+    expect(canonical).not.toBeNull()
+    expect(alias?.side).toBe(Position.Bottom)
+    expect(alias).toEqual(canonical)
+  })
+
+  it("resolves alias right-bottom to the canonical bottom side", () => {
+    const alias = getHandleAnchor(rect, "right-bottom")
+    const canonical = getHandleAnchor(rect, "bottom-right")
+    expect(alias).not.toBeNull()
+    expect(canonical).not.toBeNull()
+    expect(alias?.side).toBe(Position.Bottom)
+    expect(alias).toEqual(canonical)
+  })
+
+  it("returns null for unknown handle IDs", () => {
+    expect(getHandleAnchor(rect, "does-not-exist")).toBeNull()
   })
 })
 

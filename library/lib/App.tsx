@@ -54,16 +54,23 @@ function App({ onReactFlowInit }: AppProps) {
       }))
     )
 
-  const { mode, diagramType, readonly, scrollLock, scrollEnabled } =
-    useMetadataStore(
-      useShallow((state) => ({
-        mode: state.mode,
-        diagramType: state.diagramType,
-        readonly: state.readonly,
-        scrollLock: state.scrollLock,
-        scrollEnabled: state.scrollEnabled,
-      }))
-    )
+  const {
+    mode,
+    diagramType,
+    readonly,
+    scrollLock,
+    scrollEnabled,
+    connectionGuidanceActive,
+  } = useMetadataStore(
+    useShallow((state) => ({
+      mode: state.mode,
+      diagramType: state.diagramType,
+      readonly: state.readonly,
+      scrollLock: state.scrollLock,
+      scrollEnabled: state.scrollEnabled,
+      connectionGuidanceActive: state.connectionGuidanceActive,
+    }))
+  )
 
   const isDiagramModifiable = useDiagramModifiable()
 
@@ -87,7 +94,9 @@ function App({ onReactFlowInit }: AppProps) {
 
   return (
     <div
-      className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""}`}
+      className={`apollon-editor ${readonly ? "apollon-editor--readonly" : ""} ${
+        connectionGuidanceActive ? "apollon-editor--connection-guidance" : ""
+      }`}
       style={{
         display: "flex",
         height: "100%",

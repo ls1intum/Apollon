@@ -1,7 +1,10 @@
 import { AssessmentSelectableWrapper } from "@/components/wrapper/AssessmentSelectableWrapper"
 import { FeedbackDropzone } from "@/components/wrapper/FeedbackDropzone"
 import { useDiagramModifiable } from "@/hooks/useDiagramModifiable"
+import { useMetadataStore } from "@/store/context"
+import { getNormalizedHandleOffsetPercent } from "@/utils"
 import { Handle, Position, useReactFlow } from "@xyflow/react"
+import { useShallow } from "zustand/shallow"
 
 // Define enum for handle IDs
 export enum HandleId {
@@ -63,8 +66,26 @@ export function DefaultNodeWrapper({
   className,
 }: Props) {
   const { getNode } = useReactFlow()
-  const nodeType = getNode(elementId)?.type
+  const node = getNode(elementId)
+  const nodeType = node?.type
+  const nodeWidth = node?.width ?? 0
+  const nodeHeight = node?.height ?? 0
   const isDiagramModifiable = useDiagramModifiable()
+  const {
+    connectionGuidanceActive,
+    connectionGuidanceSourceNodeId,
+    connectionGuidanceSourceHandleId,
+    connectionGuidanceTargetNodeId,
+    connectionGuidanceTargetHandleId,
+  } = useMetadataStore(
+    useShallow((state) => ({
+      connectionGuidanceActive: state.connectionGuidanceActive,
+      connectionGuidanceSourceNodeId: state.connectionGuidanceSourceNodeId,
+      connectionGuidanceSourceHandleId: state.connectionGuidanceSourceHandleId,
+      connectionGuidanceTargetNodeId: state.connectionGuidanceTargetNodeId,
+      connectionGuidanceTargetHandleId: state.connectionGuidanceTargetHandleId,
+    }))
+  )
 
   const baseHandleStyle = {
     width: 8,
@@ -80,118 +101,130 @@ export function DefaultNodeWrapper({
 
   // Keep all handle ids available for compatibility with existing edges,
   // but only 3 handles per side are visible.
+  const leftStart = getNormalizedHandleOffsetPercent(nodeWidth, 0.2)
+  const leftMidStart = getNormalizedHandleOffsetPercent(nodeWidth, 0.35)
+  const leftMiddle = getNormalizedHandleOffsetPercent(nodeWidth, 0.5)
+  const leftMidEnd = getNormalizedHandleOffsetPercent(nodeWidth, 0.65)
+  const leftEnd = getNormalizedHandleOffsetPercent(nodeWidth, 0.8)
+
+  const topStart = getNormalizedHandleOffsetPercent(nodeHeight, 0.2)
+  const topMidStart = getNormalizedHandleOffsetPercent(nodeHeight, 0.35)
+  const topMiddle = getNormalizedHandleOffsetPercent(nodeHeight, 0.5)
+  const topMidEnd = getNormalizedHandleOffsetPercent(nodeHeight, 0.65)
+  const topEnd = getNormalizedHandleOffsetPercent(nodeHeight, 0.8)
+
   const handles = [
     {
       id: HandleId.TopLeft,
       position: Position.Top,
       className: "apollon-arc-handle apollon-arc-handle--top",
-      style: { ...baseHandleStyle, left: "20%" },
+      style: { ...baseHandleStyle, left: leftStart },
     },
     {
       id: HandleId.TopMidLeft,
       position: Position.Top,
-      style: { ...baseHandleStyle, left: "35%" },
+      style: { ...baseHandleStyle, left: leftMidStart },
     },
     {
       id: HandleId.Top,
       position: Position.Top,
       className: "apollon-arc-handle apollon-arc-handle--top",
-      style: { ...baseHandleStyle },
+      style: { ...baseHandleStyle, left: leftMiddle },
     },
     {
       id: HandleId.TopMidRight,
       position: Position.Top,
-      style: { ...baseHandleStyle, left: "65%" },
+      style: { ...baseHandleStyle, left: leftMidEnd },
     },
     {
       id: HandleId.TopRight,
       position: Position.Top,
       className: "apollon-arc-handle apollon-arc-handle--top",
-      style: { ...baseHandleStyle, left: "80%" },
+      style: { ...baseHandleStyle, left: leftEnd },
     },
     {
       id: HandleId.RightTop,
       position: Position.Right,
       className: "apollon-arc-handle apollon-arc-handle--right",
-      style: { ...baseHandleStyle, top: "20%" },
+      style: { ...baseHandleStyle, top: topStart },
     },
     {
       id: HandleId.RightMidTop,
       position: Position.Right,
-      style: { ...baseHandleStyle, top: "35%" },
+      style: { ...baseHandleStyle, top: topMidStart },
     },
     {
       id: HandleId.Right,
       position: Position.Right,
       className: "apollon-arc-handle apollon-arc-handle--right",
-      style: { ...baseHandleStyle },
+      style: { ...baseHandleStyle, top: topMiddle },
     },
     {
       id: HandleId.RightMidBottom,
       position: Position.Right,
-      style: { ...baseHandleStyle, top: "65%" },
+      style: { ...baseHandleStyle, top: topMidEnd },
     },
     {
       id: HandleId.RightBottom,
       position: Position.Right,
       className: "apollon-arc-handle apollon-arc-handle--right",
-      style: { ...baseHandleStyle, top: "80%" },
+      style: { ...baseHandleStyle, top: topEnd },
     },
     {
       id: HandleId.BottomRight,
       position: Position.Bottom,
       className: "apollon-arc-handle apollon-arc-handle--bottom",
-      style: { ...baseHandleStyle, left: "80%" },
+      style: { ...baseHandleStyle, left: leftEnd },
     },
     {
       id: HandleId.BottomMidRight,
       position: Position.Bottom,
-      style: { ...baseHandleStyle, left: "65%" },
+      style: { ...baseHandleStyle, left: leftMidEnd },
     },
     {
       id: HandleId.Bottom,
       position: Position.Bottom,
       className: "apollon-arc-handle apollon-arc-handle--bottom",
-      style: { ...baseHandleStyle },
+      style: { ...baseHandleStyle, left: leftMiddle },
     },
     {
       id: HandleId.BottomMidLeft,
       position: Position.Bottom,
-      style: { ...baseHandleStyle, left: "35%" },
+      style: { ...baseHandleStyle, left: leftMidStart },
     },
     {
       id: HandleId.BottomLeft,
       position: Position.Bottom,
       className: "apollon-arc-handle apollon-arc-handle--bottom",
-      style: { ...baseHandleStyle, left: "20%" },
+      style: { ...baseHandleStyle, left: leftStart },
     },
     {
       id: HandleId.LeftBottom,
       position: Position.Left,
       className: "apollon-arc-handle apollon-arc-handle--left",
-      style: { ...baseHandleStyle, top: "80%" },
+      style: { ...baseHandleStyle, top: topEnd },
     },
     {
       id: HandleId.LeftMidBottom,
       position: Position.Left,
-      style: { ...baseHandleStyle, top: "65%" },
+      style: { ...baseHandleStyle, top: topMidEnd },
     },
     {
       id: HandleId.Left,
       position: Position.Left,
       className: "apollon-arc-handle apollon-arc-handle--left",
-      style: { ...baseHandleStyle },
+      style: { ...baseHandleStyle, top: topMiddle },
     },
     {
       id: HandleId.LeftMidTop,
       position: Position.Left,
-      style: { ...baseHandleStyle, top: "35%" },
+      style: { ...baseHandleStyle, top: topMidStart },
     },
     {
       id: HandleId.LeftTop,
       position: Position.Left,
       className: "apollon-arc-handle apollon-arc-handle--left",
-      style: { ...baseHandleStyle, top: "20%" },
+      style: { ...baseHandleStyle, top: topStart },
     },
   ]
 
@@ -226,12 +259,30 @@ export function DefaultNodeWrapper({
               }
 
               const isPrimaryHandle = visibleHandleIds.has(handle.id)
+              const isGuidanceTargetHandle =
+                connectionGuidanceActive &&
+                elementId === connectionGuidanceTargetNodeId &&
+                handle.id === connectionGuidanceTargetHandleId
+              const isGuidanceSourceHandle =
+                connectionGuidanceActive &&
+                elementId === connectionGuidanceSourceNodeId &&
+                handle.id === connectionGuidanceSourceHandleId
 
               return (
                 <Handle
                   key={handle.id}
                   id={handle.id}
-                  className={handle.className}
+                  className={[
+                    handle.className,
+                    isGuidanceTargetHandle
+                      ? "apollon-connection-guidance-target-active"
+                      : "",
+                    isGuidanceSourceHandle
+                      ? "apollon-connection-guidance-source"
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   type="source"
                   position={handle.position}
                   style={

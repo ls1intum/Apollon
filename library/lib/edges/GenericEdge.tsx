@@ -8,6 +8,8 @@ import { PopoverManager } from "@/components/popovers/PopoverManager"
 import AssessmentIcon from "@/components/svgs/AssessmentIcon"
 import { DiagramEdgeType } from "."
 import { Assessment } from "@/typings"
+import { useMetadataStore } from "@/store/context"
+import { useShallow } from "zustand/shallow"
 
 export interface BaseEdgeProps extends ExtendedEdgeProps {
   diagramType?: "class" | "usecase" | "activity" | "component" | "deployment"
@@ -44,6 +46,12 @@ export const useEdgeReconnection = (
   const reconnectingEndRef = useRef<"source" | "target" | null>(null)
   const onReconnect = useReconnect()
   const { getEdges } = useReactFlow()
+  const { startConnectionGuidance, stopConnectionGuidance } = useMetadataStore(
+    useShallow((state) => ({
+      startConnectionGuidance: state.startConnectionGuidance,
+      stopConnectionGuidance: state.stopConnectionGuidance,
+    }))
+  )
 
   const startReconnection = (
     e: React.PointerEvent,
@@ -55,6 +63,10 @@ export const useEdgeReconnection = (
 
     isReconnectingRef.current = true
     reconnectingEndRef.current = endType
+    startConnectionGuidance(
+      endType === "source" ? source : target,
+      endType === "source" ? (sourceHandleId ?? null) : (targetHandleId ?? null)
+    )
 
     reconnectOffsetRef.current = {
       x: e.clientX - currentPoint.x,
@@ -79,6 +91,7 @@ export const useEdgeReconnection = (
     if (!node || shouldClearPoints) {
       reconnectingEndRef.current = null
       onCustomPointsClear?.()
+      stopConnectionGuidance()
       return
     }
 
@@ -103,6 +116,7 @@ export const useEdgeReconnection = (
 
     onCustomPointsClear?.()
     reconnectingEndRef.current = null
+    stopConnectionGuidance()
   }
 
   return {

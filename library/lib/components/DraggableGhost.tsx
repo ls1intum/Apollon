@@ -40,6 +40,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
   children,
   dropElementConfig,
 }) => {
+  const nodeSnapStepPx = CANVAS.SNAP_TO_GRID_PX
   const diagramId = useDiagramStore(useShallow((state) => state.diagramId))
   // Hooks from react-flow and zustand store for node management
   const { screenToFlowPosition, getIntersectingNodes } = useReactFlow()
@@ -142,12 +143,12 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       // Snap position to grid
       position.x -=
         Math.floor(
-          clickOffset.x / DROPS.SIDEBAR_PREVIEW_SCALE / CANVAS.SNAP_TO_GRID_PX
-        ) * CANVAS.SNAP_TO_GRID_PX
+          clickOffset.x / DROPS.SIDEBAR_PREVIEW_SCALE / nodeSnapStepPx
+        ) * nodeSnapStepPx
       position.y -=
         Math.floor(
-          clickOffset.y / DROPS.SIDEBAR_PREVIEW_SCALE / CANVAS.SNAP_TO_GRID_PX
-        ) * CANVAS.SNAP_TO_GRID_PX
+          clickOffset.y / DROPS.SIDEBAR_PREVIEW_SCALE / nodeSnapStepPx
+        ) * nodeSnapStepPx
 
       if (parentId) {
         const parentPositionOnCanvas = getPositionOnCanvas(parentNode, nodes)
@@ -187,6 +188,7 @@ export const DraggableGhost: React.FC<DraggableGhostProps> = ({
       clickOffset.x,
       clickOffset.y,
       dropElementConfig,
+      nodeSnapStepPx,
     ]
   )
 

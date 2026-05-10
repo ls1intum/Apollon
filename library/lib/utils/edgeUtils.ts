@@ -345,63 +345,226 @@ interface FindClosestHandleParams {
   useFourHandles?: boolean
 }
 
+type RectHandlePoint = {
+  label: string
+  position: XYPosition
+  side: Position
+}
+
+// Match the canvas grid step. Handle offsets snap to this so the X (or Y)
+// distance between any two handles on equally-sized nodes is always a
+// multiple of the grid step — which means a user dragging a node on the grid
+// can always close the misalignment exactly. With a smaller step (e.g. half
+// the grid), some handle pairs end up an odd-grid-half off and never line up.
+//
+// Hard-coded to avoid a known circular import:
+//   constants.ts → @/nodes → nodes/.../Class.tsx → @/utils (barrel) → edgeUtils.ts → @/constants
+// Reading CANVAS.SNAP_TO_GRID_PX at module init can resolve to undefined when
+// edgeUtils.ts evaluates before constants.ts finishes. Keep this in sync
+// with CANVAS.SNAP_TO_GRID_PX in constants.ts (currently 10).
+const HANDLE_SNAP_STEP_PX = 10
+const HANDLE_RATIO_START = 0.2
+const HANDLE_RATIO_MID_START = 0.35
+const HANDLE_RATIO_MIDDLE = 0.5
+const HANDLE_RATIO_MID_END = 0.65
+const HANDLE_RATIO_END = 0.8
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value))
+
+export function getNormalizedHandleOffset(
+  axisLength: number,
+  ratio: number
+): number {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) return 0
+
+  // Keep exact boundaries exact when callers explicitly ask for them.
+  if (ratio <= 0) return 0
+  if (ratio >= 1) return axisLength
+
+  const raw = axisLength * ratio
+  const snapped = Math.round(raw / HANDLE_SNAP_STEP_PX) * HANDLE_SNAP_STEP_PX
+  return clamp(snapped, 0, axisLength)
+}
+
+export function getNormalizedHandleOffsetPercent(
+  axisLength: number,
+  ratio: number
+): string {
+  if (!Number.isFinite(axisLength) || axisLength <= 0) {
+    return `${ratio * 100}%`
+  }
+
+  const normalizedOffset = getNormalizedHandleOffset(axisLength, ratio)
+  return `${(normalizedOffset / axisLength) * 100}%`
+}
+
+function getCanonicalHandlePoints(
+  rect: Rect,
+  useFourHandles: boolean
+): RectHandlePoint[] {
+  const xStart =
+    rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_START)
+  const xMidStart =
+    rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_MID_START)
+  const xMiddle =
+    rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_MIDDLE)
+  const xMidEnd =
+    rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_MID_END)
+  const xEnd = rect.x + getNormalizedHandleOffset(rect.width, HANDLE_RATIO_END)
+
+  const yStart =
+    rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_START)
+  const yMidStart =
+    rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_MID_START)
+  const yMiddle =
+    rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_MIDDLE)
+  const yMidEnd =
+    rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_MID_END)
+  const yEnd = rect.y + getNormalizedHandleOffset(rect.height, HANDLE_RATIO_END)
+
+  const points: RectHandlePoint[] = [
+    { label: "top", position: { x: xMiddle, y: yStart }, side: Position.Top },
+    {
+      label: "bottom",
+      position: { x: xMiddle, y: yEnd },
+      side: Position.Bottom,
+    },
+    { label: "left", position: { x: xStart, y: yMiddle }, side: Position.Left },
+    {
+      label: "right",
+      position: { x: xEnd, y: yMiddle },
+      side: Position.Right,
+    },
+  ]
+
+  if (!useFourHandles) {
+    points.push(
+      {
+        label: "top-left",
+        position: { x: xStart, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-mid-left",
+        position: { x: xMidStart, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-mid-right",
+        position: { x: xMidEnd, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "top-right",
+        position: { x: xEnd, y: yStart },
+        side: Position.Top,
+      },
+      {
+        label: "right-mid-top",
+        position: { x: xEnd, y: yMidStart },
+        side: Position.Right,
+      },
+      {
+        label: "right-mid-bottom",
+        position: { x: xEnd, y: yMidEnd },
+        side: Position.Right,
+      },
+      {
+        label: "bottom-right",
+        position: { x: xEnd, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-mid-right",
+        position: { x: xMidEnd, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-mid-left",
+        position: { x: xMidStart, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "bottom-left",
+        position: { x: xStart, y: yEnd },
+        side: Position.Bottom,
+      },
+      {
+        label: "left-mid-bottom",
+        position: { x: xStart, y: yMidEnd },
+        side: Position.Left,
+      },
+      {
+        label: "left-mid-top",
+        position: { x: xStart, y: yMidStart },
+        side: Position.Left,
+      }
+    )
+  }
+
+  return points
+}
+
+function getHandleAnchorMap(rect: Rect): Map<string, RectHandlePoint> {
+  const canonicalPoints = getCanonicalHandlePoints(rect, false)
+  const pointMap = new Map<string, RectHandlePoint>()
+
+  for (const point of canonicalPoints) {
+    pointMap.set(point.label, point)
+  }
+
+  // Backward compatibility for persisted alias IDs:
+  // - left-top resolves to the same anchor/side as top-left (Top)
+  // - right-top resolves to the same anchor/side as top-right (Top)
+  // - left-bottom resolves to the same anchor/side as bottom-left (Bottom)
+  // - right-bottom resolves to the same anchor/side as bottom-right (Bottom)
+  const aliasToCanonical: Record<string, string> = {
+    "left-top": "top-left",
+    "right-top": "top-right",
+    "left-bottom": "bottom-left",
+    "right-bottom": "bottom-right",
+  }
+
+  for (const [alias, canonical] of Object.entries(aliasToCanonical)) {
+    const canonicalPoint = pointMap.get(canonical)
+    if (canonicalPoint) {
+      pointMap.set(alias, {
+        label: alias,
+        position: canonicalPoint.position,
+        side: canonicalPoint.side,
+      })
+    }
+  }
+
+  return pointMap
+}
+
+/**
+ * Resolves a stored handle ID (e.g. "right", "top-mid-left") to its anchor
+ * point and the side it lives on, given a node rect. Returns null if the ID
+ * is unknown. Pure: same inputs always produce same outputs.
+ */
+export function getHandleAnchor(
+  rect: Rect,
+  handleId: string
+): { x: number; y: number; side: Position } | null {
+  const handleAnchorMap = getHandleAnchorMap(rect)
+  const match = handleAnchorMap.get(handleId)
+  if (!match) return null
+
+  return { x: match.position.x, y: match.position.y, side: match.side }
+}
+
 export function findClosestHandle({
   point,
   rect,
   useFourHandles = false,
 }: FindClosestHandleParams): string {
-  // Start with basic 4 handles (top, bottom, left, right)
-  const points: { label: string; position: XYPosition }[] = [
-    { label: "top", position: { x: rect.x + rect.width / 2, y: rect.y } },
-    {
-      label: "bottom",
-      position: { x: rect.x + rect.width / 2, y: rect.y + rect.height },
-    },
-    { label: "left", position: { x: rect.x, y: rect.y + rect.height / 2 } },
-    {
-      label: "right",
-      position: { x: rect.x + rect.width, y: rect.y + rect.height / 2 },
-    },
-  ]
+  const points = getCanonicalHandlePoints(rect, useFourHandles)
 
-  // If not a 4-handle node, append additional handles
-  if (!useFourHandles) {
-    points.push(
-      {
-        label: "top-left",
-        position: { x: rect.x + rect.width / 3, y: rect.y },
-      },
-      {
-        label: "top-right",
-        position: { x: rect.x + (2 / 3) * rect.width, y: rect.y },
-      },
-      {
-        label: "bottom-left",
-        position: { x: rect.x + rect.width / 3, y: rect.y + rect.height },
-      },
-      {
-        label: "bottom-right",
-        position: { x: rect.x + (2 / 3) * rect.width, y: rect.y + rect.height },
-      },
-      {
-        label: "left-top",
-        position: { x: rect.x, y: rect.y + rect.height / 3 },
-      },
-      {
-        label: "left-bottom",
-        position: { x: rect.x, y: rect.y + (2 / 3) * rect.height },
-      },
-      {
-        label: "right-top",
-        position: { x: rect.x + rect.width, y: rect.y + rect.height / 3 },
-      },
-      {
-        label: "right-bottom",
-        position: { x: rect.x + rect.width, y: rect.y + (2 / 3) * rect.height },
-      }
-    )
-  }
-
+  // Tie-break is deterministic: when two candidates have equal distance,
+  // the first candidate in the canonical declaration order above wins.
   let closest = points[0]
   let minDist = distance(point, points[0].position)
 

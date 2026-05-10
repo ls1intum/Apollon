@@ -13,6 +13,8 @@ import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { useEdgeReconnection, BaseEdgeProps } from "../edges/GenericEdge"
 import { useHandleFinder } from "./useHandleFinder"
+import { useMetadataStore } from "@/store/context"
+import { useShallow } from "zustand/shallow"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -55,6 +57,11 @@ export const useStraightPathEdge = ({
     targetHandleId
   )
   const handleFinder = useHandleFinder()
+  const { setConnectionGuidanceTarget } = useMetadataStore(
+    useShallow((state) => ({
+      setConnectionGuidanceTarget: state.setConnectionGuidanceTarget,
+    }))
+  )
 
   const { isReconnectingRef, startReconnection, completeReconnection } =
     hasReconnectionSupport
@@ -69,15 +76,21 @@ export const useStraightPathEdge = ({
             (() => {}) as typeof reconnection.completeReconnection,
         }
 
-  const { findBestHandle } = hasReconnectionSupport
-    ? handleFinder
-    : {
-        findBestHandle: (() => ({
-          handle: null,
-          node: null,
-          shouldClearPoints: false,
-        })) as typeof handleFinder.findBestHandle,
-      }
+  const { findBestHandle, findBestHandleAtClientPosition } =
+    hasReconnectionSupport
+      ? handleFinder
+      : {
+          findBestHandle: (() => ({
+            handle: null,
+            node: null,
+            shouldClearPoints: false,
+          })) as typeof handleFinder.findBestHandle,
+          findBestHandleAtClientPosition: (() => ({
+            handle: null,
+            node: null,
+            shouldClearPoints: false,
+          })) as typeof handleFinder.findBestHandleAtClientPosition,
+        }
 
   const { markerEnd, markerStart, strokeDashArray, markerPadding } =
     getEdgeMarkerStyles(type)
@@ -270,6 +283,17 @@ export const useStraightPathEdge = ({
           x: moveEvent.clientX,
           y: moveEvent.clientY,
         })
+        const {
+          handle: previewHandle,
+          node: previewNode,
+          shouldClearPoints: shouldClearGuidanceTarget,
+        } = findBestHandleAtClientPosition(moveEvent.clientX, moveEvent.clientY)
+
+        if (shouldClearGuidanceTarget || !previewNode || !previewHandle) {
+          setConnectionGuidanceTarget(null, null)
+        } else {
+          setConnectionGuidanceTarget(previewNode.id, previewHandle)
+        }
 
         let newSourceX = sourceX
         let newSourceY = sourceY
@@ -311,6 +335,7 @@ export const useStraightPathEdge = ({
 
       const handleEndpointPointerUp = (upEvent: PointerEvent) => {
         setTempReconnectPath(null)
+        setConnectionGuidanceTarget(null, null)
 
         document.removeEventListener("pointermove", handleEndpointPointerMove, {
           capture: true,
@@ -340,6 +365,17 @@ export const useStraightPathEdge = ({
       isReconnectingRef,
       completeReconnection,
       findBestHandle,
+      findBestHandleAtClientPosition,
+      setConnectionGuidanceTarget,
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      sourcePosition,
+      targetPosition,
+      type,
+      padding,
+      screenToFlowPosition,
     ]
   )
 

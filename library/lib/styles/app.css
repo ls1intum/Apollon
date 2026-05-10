@@ -129,6 +129,48 @@
   cursor: crosshair;
 }
 
+.apollon-editor--connection-guidance
+  .react-flow__handle.apollon-arc-handle::before {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* During connection guidance, lift only the source and target nodes (and their
+   handle circles) above edges. Other nodes keep their normal z-index so the
+   guidance UX doesn't reorder unrelated parts of the canvas. */
+.apollon-editor--connection-guidance
+  .react-flow__node:has(.apollon-connection-guidance-source),
+.apollon-editor--connection-guidance
+  .react-flow__node:has(.apollon-connection-guidance-target-active) {
+  z-index: 10001 !important;
+}
+
+.apollon-editor--connection-guidance .react-flow__handle.connectionindicator {
+  opacity: 1 !important;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 999px;
+  border: 2px solid var(--apollon-primary, #3e8acc);
+  background-color: var(--apollon-background, #ffffff);
+  box-sizing: border-box;
+}
+
+.apollon-editor--connection-guidance
+  .react-flow__handle.connectionindicator.connectingfrom,
+.apollon-editor--connection-guidance
+  .react-flow__handle.apollon-connection-guidance-source {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border-color: transparent !important;
+  background-color: transparent !important;
+}
+
+.apollon-editor--connection-guidance .react-flow__handle.connectionindicator.valid,
+.apollon-editor--connection-guidance
+  .react-flow__handle.apollon-connection-guidance-target-active {
+  background-color: var(--apollon-primary, #3e8acc) !important;
+}
+
 .edge-circle {
   opacity: 0;
   background-color: var(--apollon-primary, #3e8acc);

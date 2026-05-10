@@ -16,12 +16,26 @@ export type MetadataStore = {
   debug: boolean
   scrollLock: boolean
   scrollEnabled: boolean
+  connectionGuidanceActive: boolean
+  connectionGuidanceSourceNodeId: string | null
+  connectionGuidanceSourceHandleId: string | null
+  connectionGuidanceTargetNodeId: string | null
+  connectionGuidanceTargetHandleId: string | null
   setMode: (mode: ApollonMode) => void
   setView: (view: ApollonView) => void
   setAvailableViews: (availableViews: ApollonView[]) => void
   setReadonly: (readonly: boolean) => void
   setScrollLock: (scrollLock: boolean) => void
   setScrollEnabled: (scrollEnabled: boolean) => void
+  startConnectionGuidance: (
+    sourceNodeId: string | null,
+    sourceHandleId: string | null
+  ) => void
+  setConnectionGuidanceTarget: (
+    targetNodeId: string | null,
+    targetHandleId: string | null
+  ) => void
+  stopConnectionGuidance: () => void
   updateDiagramTitle: (diagramTitle: string) => void
   updateDiagramType: (diagramType: UMLDiagramType) => void
   updateMetaData: (diagramTitle: string, diagramType: UMLDiagramType) => void
@@ -40,6 +54,11 @@ type InitialMetadataState = {
   debug: boolean
   scrollLock: boolean
   scrollEnabled: boolean
+  connectionGuidanceActive: boolean
+  connectionGuidanceSourceNodeId: string | null
+  connectionGuidanceSourceHandleId: string | null
+  connectionGuidanceTargetNodeId: string | null
+  connectionGuidanceTargetHandleId: string | null
 }
 const initialMetadataState: InitialMetadataState = {
   diagramTitle: "Untitled Diagram",
@@ -51,6 +70,11 @@ const initialMetadataState: InitialMetadataState = {
   debug: false,
   scrollLock: false,
   scrollEnabled: false,
+  connectionGuidanceActive: false,
+  connectionGuidanceSourceNodeId: null,
+  connectionGuidanceSourceHandleId: null,
+  connectionGuidanceTargetNodeId: null,
+  connectionGuidanceTargetHandleId: null,
 }
 
 export const createMetadataStore = (
@@ -139,6 +163,45 @@ export const createMetadataStore = (
 
         setScrollEnabled: (scrollEnabled: boolean) => {
           set({ scrollEnabled }, undefined, "setScrollEnabled")
+        },
+
+        startConnectionGuidance: (sourceNodeId, sourceHandleId) => {
+          set(
+            {
+              connectionGuidanceActive: true,
+              connectionGuidanceSourceNodeId: sourceNodeId,
+              connectionGuidanceSourceHandleId: sourceHandleId,
+              connectionGuidanceTargetNodeId: null,
+              connectionGuidanceTargetHandleId: null,
+            },
+            undefined,
+            "startConnectionGuidance"
+          )
+        },
+
+        setConnectionGuidanceTarget: (targetNodeId, targetHandleId) => {
+          set(
+            {
+              connectionGuidanceTargetNodeId: targetNodeId,
+              connectionGuidanceTargetHandleId: targetHandleId,
+            },
+            undefined,
+            "setConnectionGuidanceTarget"
+          )
+        },
+
+        stopConnectionGuidance: () => {
+          set(
+            {
+              connectionGuidanceActive: false,
+              connectionGuidanceSourceNodeId: null,
+              connectionGuidanceSourceHandleId: null,
+              connectionGuidanceTargetNodeId: null,
+              connectionGuidanceTargetHandleId: null,
+            },
+            undefined,
+            "stopConnectionGuidance"
+          )
         },
 
         setDebug: (debug) => {

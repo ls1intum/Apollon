@@ -13,7 +13,7 @@ import {
   pointsToSvgPath,
   tryFindStraightPath,
 } from "../edges/Connection"
-import { useDiagramStore } from "@/store/context"
+import { useDiagramStore, useMetadataStore } from "@/store/context"
 import { useShallow } from "zustand/shallow"
 import {
   getEdgeMarkerStyles,
@@ -102,7 +102,12 @@ export const useStepPathEdge = ({
     completeReconnection,
   } = useEdgeReconnection(id, source, target, sourceHandleId, targetHandleId)
 
-  const { findBestHandle } = useHandleFinder()
+  const { findBestHandle, findBestHandleAtClientPosition } = useHandleFinder()
+  const { setConnectionGuidanceTarget } = useMetadataStore(
+    useShallow((state) => ({
+      setConnectionGuidanceTarget: state.setConnectionGuidanceTarget,
+    }))
+  )
   const { setEdges } = useDiagramStore(
     useShallow((state) => ({
       setEdges: state.setEdges,
@@ -209,10 +214,14 @@ export const useStepPathEdge = ({
     targetNode,
     sourcePosition,
     targetPosition,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
+    roundedSourceX,
+    roundedSourceY,
+    roundedTargetX,
+    roundedTargetY,
+    adjustedSourceCoordinates.sourceX,
+    adjustedSourceCoordinates.sourceY,
+    adjustedTargetCoordinates.targetX,
+    adjustedTargetCoordinates.targetY,
     padding,
   ])
 
@@ -540,6 +549,17 @@ export const useStepPathEdge = ({
           x: moveEvent.clientX,
           y: moveEvent.clientY,
         })
+        const {
+          handle: previewHandle,
+          node: previewNode,
+          shouldClearPoints: shouldClearGuidanceTarget,
+        } = findBestHandleAtClientPosition(moveEvent.clientX, moveEvent.clientY)
+
+        if (shouldClearGuidanceTarget || !previewNode || !previewHandle) {
+          setConnectionGuidanceTarget(null, null)
+        } else {
+          setConnectionGuidanceTarget(previewNode.id, previewHandle)
+        }
 
         let newSourceX = sourceX
         let newSourceY = sourceY
@@ -652,6 +672,7 @@ export const useStepPathEdge = ({
 
       const handleEndpointPointerUp = (upEvent: PointerEvent) => {
         setTempReconnectPoints(null)
+        setConnectionGuidanceTarget(null, null)
         document.removeEventListener("pointermove", handleEndpointPointerMove, {
           capture: true,
         })
@@ -696,6 +717,8 @@ export const useStepPathEdge = ({
       sourceNode,
       targetNode,
       findBestHandle,
+      findBestHandleAtClientPosition,
+      setConnectionGuidanceTarget,
     ]
   )
 
