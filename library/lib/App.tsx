@@ -90,9 +90,11 @@ function App({ onReactFlowInit, onViewportChange }: AppProps) {
   )
 
   const viewportRafRef = useRef(0)
-  const pendingViewportRef = useRef<
-    { x: number; y: number; zoom: number } | null
-  >(null)
+  const pendingViewportRef = useRef<{
+    x: number
+    y: number
+    zoom: number
+  } | null>(null)
 
   const flushViewport = useCallback(() => {
     if (pendingViewportRef.current && onViewportChange) {

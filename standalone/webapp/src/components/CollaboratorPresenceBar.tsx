@@ -66,45 +66,75 @@ export const CollaboratorPresenceBar = ({
         pointerEvents: "auto",
       }}
     >
-      {collaborators.map((c, i) => (
-        <Tooltip
-          key={c.id}
-          title={c.isLocal ? `${c.name} (You)` : c.name}
-          arrow
-          slotProps={{
-            popper: {
-              modifiers: [{ name: "offset", options: { offset: [0, -4] } }],
-            },
-          }}
-        >
-          <div
-            aria-label={c.isLocal ? `${c.name} (You)` : c.name}
-            role={c.isLocal ? undefined : "button"}
-            aria-pressed={
-              c.isLocal ? undefined : followedCollaboratorId === c.id
-            }
-            onClick={() => {
-              if (!c.isLocal) {
-                onFollowToggle?.(c)
-              }
-            }}
-            style={{
-              ...avatarBase,
-              backgroundColor: c.color,
-              border: "2px solid var(--apollon-background)",
-              marginLeft: i === 0 ? 0 : OVERLAP,
-              zIndex: collaborators.length - i,
-              boxShadow:
-                followedCollaboratorId === c.id
-                  ? `0 0 0 2px ${c.color}, 0 0 0 5px rgba(0, 0, 0, 0.12)`
-                  : undefined,
-              cursor: c.isLocal ? "default" : "pointer",
+      {collaborators.map((c, i) => {
+        const isFollowing = followedCollaboratorId === c.id
+        const label = c.isLocal
+          ? `${c.name} (You)`
+          : isFollowing
+            ? `${c.name} (Following)`
+            : c.name
+
+        return (
+          <Tooltip
+            key={c.id}
+            title={label}
+            arrow
+            slotProps={{
+              popper: {
+                modifiers: [{ name: "offset", options: { offset: [0, -4] } }],
+              },
             }}
           >
-            {c.name.charAt(0).toUpperCase()}
-          </div>
-        </Tooltip>
-      ))}
+            <div
+              aria-label={label}
+              role={c.isLocal ? undefined : "button"}
+              aria-pressed={c.isLocal ? undefined : isFollowing}
+              onClick={() => {
+                if (!c.isLocal) {
+                  onFollowToggle?.(c)
+                }
+              }}
+              style={{
+                ...avatarBase,
+                backgroundColor: c.color,
+                border: "2px solid var(--apollon-background)",
+                marginLeft: i === 0 ? 0 : OVERLAP,
+                zIndex: collaborators.length - i,
+                boxShadow: isFollowing
+                  ? `0 0 0 2px ${c.color}, 0 0 0 5px rgba(0, 0, 0, 0.12)`
+                  : undefined,
+                cursor: c.isLocal ? "default" : "pointer",
+                position: "relative",
+              }}
+            >
+              {c.name.charAt(0).toUpperCase()}
+              {isFollowing && !c.isLocal && (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    bottom: -4,
+                    right: -4,
+                    width: 14,
+                    height: 14,
+                    borderRadius: "50%",
+                    backgroundColor: "#111111",
+                    color: "#ffffff",
+                    fontSize: 8,
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid var(--apollon-background)",
+                  }}
+                >
+                  F
+                </span>
+              )}
+            </div>
+          </Tooltip>
+        )
+      })}
     </div>
   )
 }
