@@ -265,9 +265,9 @@ export class ApollonEditor {
     container.style.width = "4000px"
     container.style.height = "4000px"
     container.style.zIndex = "-1000"
-    container.style.top = "-2000px"
+    container.style.top = "0"
     container.style.position = "absolute"
-    container.style.left = "-2000px"
+    container.style.left = "-99px"
     container.style.visibility = "hidden"
 
     document.body.appendChild(container)
