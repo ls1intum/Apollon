@@ -77,6 +77,8 @@ export class WebSocketManager {
     }
 
     this.websocket.onmessage = (event) => {
+      // Drop frames queued before close() but delivered after cleanup.
+      if (this.cleanedUp) return
       const raw = String(event.data)
       if (raw.startsWith(ENVELOPE_PREFIX)) {
         try {
@@ -150,16 +152,20 @@ export class WebSocketManager {
   }
 
   public cleanup() {
+    if (this.cleanedUp) return
     this.cleanedUp = true
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout)
       this.reconnectTimeout = null
     }
-    if (this.websocket?.readyState === WebSocket.OPEN) {
-      // 1001 "Going Away" — page unload / component unmount.
+    if (this.websocket) {
+      this.websocket.onopen = null
+      this.websocket.onmessage = null
+      this.websocket.onerror = null
+      this.websocket.onclose = null
+      // 1001 = "Going Away"; close() is a no-op on already-closed sockets.
       this.websocket.close(1001)
     }
     this.websocket = null
-    this.controlListeners.clear()
   }
 }

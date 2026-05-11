@@ -85,14 +85,25 @@ export const ApollonWithConnection: React.FC = () => {
   })
 
   useEffect(() => {
+    // The component instance survives diagramId / viewType / user
+    // changes (same `/:diagramId` route), so state and refs must be
+    // reset explicitly per lifecycle.
+    setIsLoading(true)
+    diagramIsUpdated.current = false
+    lastObservedHeadRev.current = undefined
+    prePreviewFingerprintRef.current = null
+    restoredDuringPreviewRef.current = false
+    hasPromptedRef.current = false
+
+    const abort = new AbortController()
     let instance: ApollonEditor | null = null
-    let cancelled = false
     let cleanupCursorTracking: (() => void) | null = null
     let selectionSubscriptionId: number | null = null
     let modelChangeSubscriptionId: number | null = null
 
     const initialize = async () => {
-      if (!containerRef.current || !diagramId) return
+      const container = containerRef.current
+      if (!container || !diagramId) return
 
       try {
         const validViews = Object.values(DiagramView)
@@ -128,8 +139,10 @@ export const ApollonWithConnection: React.FC = () => {
           return
         }
 
-        const diagram = await DiagramApiClient.fetchDiagram(diagramId)
-        if (cancelled) return
+        const diagram = await DiagramApiClient.fetchDiagram(diagramId, {
+          signal: abort.signal,
+        })
+        if (abort.signal.aborted) return
         log.debug("Fetched diagram", {
           diagramId,
           nodeCount: diagram.nodes?.length ?? 0,
@@ -152,7 +165,7 @@ export const ApollonWithConnection: React.FC = () => {
           editorOptions.readonly = false
         }
 
-        instance = new ApollonEditor(containerRef.current!, editorOptions)
+        instance = new ApollonEditor(container, editorOptions)
         editorRef.current = instance
         setEditor(instance)
         setIsLoading(false)
@@ -185,16 +198,23 @@ export const ApollonWithConnection: React.FC = () => {
                   event.restoredFromVersionId
               if (!isLocalRestore) {
                 const actor = event.actor || "A collaborator"
-                DiagramApiClient.fetchDiagram(diagramId)
+                DiagramApiClient.fetchDiagram(diagramId, {
+                  signal: abort.signal,
+                })
                   .then((next) => {
                     if (instance) instance.model = next
                   })
-                  .catch(() =>
+                  .catch((err) => {
+                    if (
+                      err instanceof DOMException &&
+                      err.name === "AbortError"
+                    )
+                      return
                     toast.error(
                       `${actor} restored a version but we couldn't refresh.`,
                       { toastId: "version-restored-refetch-failed" }
                     )
-                  )
+                  })
                 toast.info(t.collaboratorRestoredTitle(actor), {
                   toastId: "version-restored-by-collaborator",
                   autoClose: 4000,
@@ -205,7 +225,6 @@ export const ApollonWithConnection: React.FC = () => {
         }
 
         if (isCollaborationView && collaborationUser) {
-          const element = containerRef.current
           const rafRef = { current: 0 as number }
           const pendingRef = {
             current: null as { x: number; y: number } | null,
@@ -220,7 +239,6 @@ export const ApollonWithConnection: React.FC = () => {
           }
 
           const handlePointerMove = (event: PointerEvent) => {
-            if (!element) return
             const flowPosition = instance?.screenToFlowPosition({
               x: event.clientX,
               y: event.clientY,
@@ -241,12 +259,12 @@ export const ApollonWithConnection: React.FC = () => {
             instance?.setLocalAwarenessCursor(null)
           }
 
-          element?.addEventListener("pointermove", handlePointerMove)
-          element?.addEventListener("pointerleave", handlePointerLeave)
+          container.addEventListener("pointermove", handlePointerMove)
+          container.addEventListener("pointerleave", handlePointerLeave)
 
           cleanupCursorTracking = () => {
-            element?.removeEventListener("pointermove", handlePointerMove)
-            element?.removeEventListener("pointerleave", handlePointerLeave)
+            container.removeEventListener("pointermove", handlePointerMove)
+            container.removeEventListener("pointerleave", handlePointerLeave)
             if (rafRef.current) {
               window.cancelAnimationFrame(rafRef.current)
               rafRef.current = 0
@@ -306,7 +324,9 @@ export const ApollonWithConnection: React.FC = () => {
         // Preview from `?version=` is handled by the dedicated URL ↔
         // preview-state sync effect below; this effect just initialises
         // the editor and connection.
-      } catch {
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return
+        log.error("Failed to initialize diagram", err)
         toast.error("Failed to initialize diagram")
         navigate("/")
       }
@@ -315,7 +335,7 @@ export const ApollonWithConnection: React.FC = () => {
     initialize()
 
     return () => {
-      cancelled = true
+      abort.abort()
       setEditor(undefined)
       wsManagerRef.current?.cleanup()
       if (syncIntervalRef.current) {
@@ -332,7 +352,6 @@ export const ApollonWithConnection: React.FC = () => {
         }
       }
       instance?.destroy()
-      editorRef.current = null
     }
   }, [diagramId, viewType, collaborationUser])
 
@@ -364,6 +383,7 @@ export const ApollonWithConnection: React.FC = () => {
 
   useEffect(() => {
     if (!editor) return
+    const abort = new AbortController()
     if (preview) {
       // First preview entry of this session — capture the user's
       // pre-preview canvas fingerprint so V1→V2→V3 hops keep comparing
@@ -408,12 +428,13 @@ export const ApollonWithConnection: React.FC = () => {
         // hit Yjs and broadcast to peers.
         restoredDuringPreviewRef.current = false
         editor.setPreviewMode(false)
-        DiagramApiClient.fetchDiagram(diagramId)
+        DiagramApiClient.fetchDiagram(diagramId, { signal: abort.signal })
           .then((head) => {
             editor.model = importDiagram(head) as UMLModel
             editor.fitView()
           })
           .catch((err) => {
+            if (err instanceof DOMException && err.name === "AbortError") return
             log.error("Failed to reload diagram after restore", err)
             toast.error(t.failureSchemaUnsupported)
           })
@@ -426,6 +447,7 @@ export const ApollonWithConnection: React.FC = () => {
         editor.fitView()
       }
     }
+    return () => abort.abort()
   }, [preview, editor, diagramId, baseReadonly])
 
   // Memoised because `handleRestoreFromPreview`'s useCallback lists it
