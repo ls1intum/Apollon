@@ -3,12 +3,14 @@ import {
   ReactFlowInstance,
   ConnectionMode,
   ReactFlow,
+  type Edge,
 } from "@xyflow/react"
-import { useCallback } from "react"
+import { type MouseEvent as ReactMouseEvent, useCallback } from "react"
 import {
   CustomBackground,
   CustomControls,
   CustomMiniMap,
+  ReconnectConnectionLine,
   Sidebar,
   AssessmentSelectionDebug,
   ScrollOverlay,
@@ -33,12 +35,27 @@ import { useDiagramModifiable } from "./hooks/useDiagramModifiable"
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
 import { usePaneClicked } from "./hooks/usePaneClicked"
 import { ApollonMode } from "./typings"
-import { getConnectionLineType } from "./utils/edgeUtils"
+import {
+  getConnectionLineType,
+  resolveReconnectPreviewBasePoints,
+} from "./utils/edgeUtils"
+import { IPoint } from "./edges/Connection"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
 }
 const proOptions = { hideAttribution: true }
+const isPointArray = (value: unknown): value is IPoint[] =>
+  Array.isArray(value) &&
+  value.every(
+    (point) =>
+      typeof point === "object" &&
+      point !== null &&
+      "x" in point &&
+      "y" in point &&
+      typeof point.x === "number" &&
+      typeof point.y === "number"
+  )
 
 function App({ onReactFlowInit }: AppProps) {
   useKeyboardShortcuts()
@@ -61,6 +78,8 @@ function App({ onReactFlowInit }: AppProps) {
     scrollLock,
     scrollEnabled,
     connectionGuidanceActive,
+    startReconnectPreview,
+    stopReconnectPreview,
   } = useMetadataStore(
     useShallow((state) => ({
       mode: state.mode,
@@ -69,6 +88,8 @@ function App({ onReactFlowInit }: AppProps) {
       scrollLock: state.scrollLock,
       scrollEnabled: state.scrollEnabled,
       connectionGuidanceActive: state.connectionGuidanceActive,
+      startReconnectPreview: state.startReconnectPreview,
+      stopReconnectPreview: state.stopReconnectPreview,
     }))
   )
 
@@ -91,6 +112,25 @@ function App({ onReactFlowInit }: AppProps) {
     },
     [onReactFlowInit]
   )
+
+  const handleReconnectStart = useCallback(
+    (_event: ReactMouseEvent, edge: Edge, handleType: "source" | "target") => {
+      const storedPoints = isPointArray(edge.data?.points)
+        ? edge.data.points
+        : undefined
+
+      startReconnectPreview(
+        edge.id,
+        handleType,
+        resolveReconnectPreviewBasePoints(storedPoints, undefined, [])
+      )
+    },
+    [startReconnectPreview]
+  )
+
+  const handleReconnectEnd = useCallback(() => {
+    stopReconnectPreview()
+  }, [stopReconnectPreview])
 
   return (
     <div
@@ -125,7 +165,10 @@ function App({ onReactFlowInit }: AppProps) {
         onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
         onReconnect={onReconnect}
+        onReconnectStart={handleReconnectStart}
+        onReconnectEnd={handleReconnectEnd}
         connectionLineType={connectionLineType}
+        connectionLineComponent={ReconnectConnectionLine}
         connectionMode={ConnectionMode.Loose}
         onInit={(instance) => {
           instance.fitView({ maxZoom: 1.0, minZoom: 1.0 })

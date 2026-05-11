@@ -5,6 +5,7 @@ import * as Y from "yjs"
 import { getDiagramMetadata } from "@/sync/ydoc"
 import { UMLDiagramType } from "@/types"
 import { ApollonMode, ApollonView } from "@/typings"
+import { IPoint } from "@/edges/Connection"
 
 export type MetadataStore = {
   diagramTitle: string
@@ -21,6 +22,9 @@ export type MetadataStore = {
   connectionGuidanceSourceHandleId: string | null
   connectionGuidanceTargetNodeId: string | null
   connectionGuidanceTargetHandleId: string | null
+  reconnectPreviewEdgeId: string | null
+  reconnectPreviewHandleType: "source" | "target" | null
+  reconnectPreviewBasePoints: IPoint[]
   setMode: (mode: ApollonMode) => void
   setView: (view: ApollonView) => void
   setAvailableViews: (availableViews: ApollonView[]) => void
@@ -36,6 +40,12 @@ export type MetadataStore = {
     targetHandleId: string | null
   ) => void
   stopConnectionGuidance: () => void
+  startReconnectPreview: (
+    edgeId: string,
+    handleType: "source" | "target",
+    basePoints: IPoint[]
+  ) => void
+  stopReconnectPreview: () => void
   updateDiagramTitle: (diagramTitle: string) => void
   updateDiagramType: (diagramType: UMLDiagramType) => void
   updateMetaData: (diagramTitle: string, diagramType: UMLDiagramType) => void
@@ -59,6 +69,9 @@ type InitialMetadataState = {
   connectionGuidanceSourceHandleId: string | null
   connectionGuidanceTargetNodeId: string | null
   connectionGuidanceTargetHandleId: string | null
+  reconnectPreviewEdgeId: string | null
+  reconnectPreviewHandleType: "source" | "target" | null
+  reconnectPreviewBasePoints: IPoint[]
 }
 const initialMetadataState: InitialMetadataState = {
   diagramTitle: "Untitled Diagram",
@@ -75,6 +88,9 @@ const initialMetadataState: InitialMetadataState = {
   connectionGuidanceSourceHandleId: null,
   connectionGuidanceTargetNodeId: null,
   connectionGuidanceTargetHandleId: null,
+  reconnectPreviewEdgeId: null,
+  reconnectPreviewHandleType: null,
+  reconnectPreviewBasePoints: [],
 }
 
 export const createMetadataStore = (
@@ -201,6 +217,32 @@ export const createMetadataStore = (
             },
             undefined,
             "stopConnectionGuidance"
+          )
+        },
+
+        startReconnectPreview: (edgeId, handleType, basePoints) => {
+          set(
+            {
+              reconnectPreviewEdgeId: edgeId,
+              reconnectPreviewHandleType: handleType,
+              reconnectPreviewBasePoints: basePoints.map((point) => ({
+                ...point,
+              })),
+            },
+            undefined,
+            "startReconnectPreview"
+          )
+        },
+
+        stopReconnectPreview: () => {
+          set(
+            {
+              reconnectPreviewEdgeId: null,
+              reconnectPreviewHandleType: null,
+              reconnectPreviewBasePoints: [],
+            },
+            undefined,
+            "stopReconnectPreview"
           )
         },
 

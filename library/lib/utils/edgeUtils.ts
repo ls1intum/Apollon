@@ -1,7 +1,13 @@
 import { EDGES, INTERFACE } from "@/constants"
 import { IPoint } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
-import { Position, Rect, XYPosition, ConnectionLineType } from "@xyflow/react"
+import {
+  Position,
+  Rect,
+  XYPosition,
+  ConnectionLineType,
+  getSmoothStepPath,
+} from "@xyflow/react"
 
 /**
  * Adjusts the target coordinates based on the position and marker padding.
@@ -870,6 +876,284 @@ export function removeDuplicatePoints(points: IPoint[]): IPoint[] {
     }
   }
   return filtered
+}
+
+export function resolveReconnectPreviewBasePoints(
+  storedPoints: IPoint[] | undefined,
+  localPoints: IPoint[] | undefined,
+  fallbackPoints: IPoint[]
+): IPoint[] {
+  const previewBasePoints =
+    storedPoints && storedPoints.length > 0
+      ? storedPoints
+      : localPoints && localPoints.length > 0
+        ? localPoints
+        : fallbackPoints
+
+  return previewBasePoints.map((point) => ({ ...point }))
+}
+
+type SegmentAxis = "horizontal" | "vertical"
+
+const getSegmentAxisForPosition = (position: Position): SegmentAxis => {
+  switch (position) {
+    case Position.Left:
+    case Position.Right:
+      return "horizontal"
+    case Position.Top:
+    case Position.Bottom:
+      return "vertical"
+    default:
+      return "vertical"
+  }
+}
+
+const getAlternatingAxis = (
+  firstAxis: SegmentAxis,
+  segmentIndex: number
+): SegmentAxis =>
+  segmentIndex % 2 === 0
+    ? firstAxis
+    : firstAxis === "horizontal"
+      ? "vertical"
+      : "horizontal"
+
+const canConnectWithSingleSegment = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  axis: SegmentAxis
+): boolean =>
+  axis === "horizontal"
+    ? sourcePoint.y === targetPoint.y
+    : sourcePoint.x === targetPoint.x
+
+function getMinimumOrthogonalSegmentCount(
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourceAxis: SegmentAxis,
+  targetAxis: SegmentAxis
+): number {
+  if (sourceAxis !== targetAxis) return 2
+  return canConnectWithSingleSegment(sourcePoint, targetPoint, sourceAxis)
+    ? 1
+    : 3
+}
+
+const getLaneValue = (
+  points: IPoint[],
+  index: number,
+  axis: SegmentAxis,
+  fallbackPoint: IPoint
+): number => {
+  const point = points[Math.min(index, points.length - 1)] ?? fallbackPoint
+  return axis === "horizontal" ? point.x : point.y
+}
+
+const buildOrthogonalPathFromLanes = (
+  laneValues: number[],
+  segmentCount: number,
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourceAxis: SegmentAxis,
+  targetAxis: SegmentAxis
+): IPoint[] => {
+  const result: IPoint[] = [{ ...sourcePoint }]
+
+  for (let i = 1; i < segmentCount; i++) {
+    const previousPoint = result[result.length - 1]
+    const axis = getAlternatingAxis(sourceAxis, i - 1)
+
+    result.push(
+      axis === "horizontal"
+        ? { x: laneValues[i], y: previousPoint.y }
+        : { x: previousPoint.x, y: laneValues[i] }
+    )
+  }
+
+  // For segmentCount === 1 the "penultimate" point is the source itself.
+  // We still align it to the target axis before appending targetPoint; any
+  // degenerate duplicate is collapsed by removeDuplicatePoints below.
+  const penultimatePoint = result[result.length - 1]
+  if (penultimatePoint) {
+    if (targetAxis === "horizontal") {
+      penultimatePoint.y = targetPoint.y
+    } else {
+      penultimatePoint.x = targetPoint.x
+    }
+  }
+
+  result.push({ ...targetPoint })
+  return removeDuplicatePoints(result)
+}
+
+const isSourceLaneCompatible = (
+  position: Position,
+  sourcePoint: IPoint,
+  laneValue: number
+): boolean => {
+  switch (position) {
+    case Position.Left:
+      // Strict inequality avoids zero-length first segments that would
+      // collapse user geometry when a lane equals the endpoint coordinate.
+      return laneValue < sourcePoint.x
+    case Position.Right:
+      return laneValue > sourcePoint.x
+    case Position.Top:
+      return laneValue < sourcePoint.y
+    case Position.Bottom:
+      return laneValue > sourcePoint.y
+    default:
+      return false
+  }
+}
+
+const isTargetApproachCompatible = (
+  position: Position,
+  penultimatePoint: IPoint,
+  targetPoint: IPoint
+): boolean => {
+  switch (position) {
+    case Position.Left:
+      // Strict inequality keeps a real approach segment into the target side.
+      return penultimatePoint.x < targetPoint.x
+    case Position.Right:
+      return penultimatePoint.x > targetPoint.x
+    case Position.Top:
+      return penultimatePoint.y < targetPoint.y
+    case Position.Bottom:
+      return penultimatePoint.y > targetPoint.y
+    default:
+      return false
+  }
+}
+
+const getSafeOrthogonalPathPoints = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] => {
+  const [safePath] = getSmoothStepPath({
+    sourceX: sourcePoint.x,
+    sourceY: sourcePoint.y,
+    sourcePosition,
+    targetX: targetPoint.x,
+    targetY: targetPoint.y,
+    targetPosition,
+    borderRadius: EDGES.STEP_BORDER_RADIUS,
+    offset: 30,
+  })
+
+  return removeDuplicatePoints(parseSvgPath(simplifySvgPath(safePath)))
+}
+
+/**
+ * Reanchors a stored step-edge path to new endpoints without losing the
+ * user-edited bend coordinates. The first and last segment are forced to
+ * leave/enter according to the handle sides, so moving nodes or reconnecting
+ * to another handle cannot turn a step edge into a diagonal line.
+ */
+export function preserveOrthogonalEdgePoints(
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] {
+  const sourceAxis = getSegmentAxisForPosition(sourcePosition)
+  const targetAxis = getSegmentAxisForPosition(targetPosition)
+  const safePoints = getSafeOrthogonalPathPoints(
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition
+  )
+  const originalSegmentCount = Math.max(points.length - 1, 1)
+  const safeSegmentCount = Math.max(safePoints.length - 1, 1)
+  const minimumSegmentCount = getMinimumOrthogonalSegmentCount(
+    sourcePoint,
+    targetPoint,
+    sourceAxis,
+    targetAxis
+  )
+
+  let segmentCount = Math.max(
+    originalSegmentCount,
+    safeSegmentCount,
+    minimumSegmentCount
+  )
+  while (getAlternatingAxis(sourceAxis, segmentCount - 1) !== targetAxis) {
+    segmentCount += 1
+  }
+
+  const laneValues: number[] = [Number.NaN]
+  for (let i = 1; i < segmentCount; i++) {
+    const axis = getAlternatingAxis(sourceAxis, i - 1)
+    laneValues[i] = getLaneValue(points, i, axis, targetPoint)
+  }
+
+  const safeLaneValues: number[] = [Number.NaN]
+  for (let i = 1; i < segmentCount; i++) {
+    const axis = getAlternatingAxis(sourceAxis, i - 1)
+    safeLaneValues[i] = getLaneValue(safePoints, i, axis, targetPoint)
+  }
+
+  if (!isSourceLaneCompatible(sourcePosition, sourcePoint, laneValues[1])) {
+    laneValues[1] = safeLaneValues[1]
+  }
+
+  let result = buildOrthogonalPathFromLanes(
+    laneValues,
+    segmentCount,
+    sourcePoint,
+    targetPoint,
+    sourceAxis,
+    targetAxis
+  )
+
+  const targetLaneIndex = (() => {
+    for (let i = segmentCount - 1; i >= 1; i--) {
+      if (getAlternatingAxis(sourceAxis, i - 1) === targetAxis) {
+        return i
+      }
+    }
+    return 1
+  })()
+
+  if (
+    !isTargetApproachCompatible(
+      targetPosition,
+      result[result.length - 2],
+      targetPoint
+    )
+  ) {
+    laneValues[targetLaneIndex] = safeLaneValues[targetLaneIndex]
+    result = buildOrthogonalPathFromLanes(
+      laneValues,
+      segmentCount,
+      sourcePoint,
+      targetPoint,
+      sourceAxis,
+      targetAxis
+    )
+  }
+
+  if (
+    !isSourceLaneCompatible(
+      sourcePosition,
+      sourcePoint,
+      getLaneValue(result, 1, getAlternatingAxis(sourceAxis, 0), targetPoint)
+    ) ||
+    !isTargetApproachCompatible(
+      targetPosition,
+      result[result.length - 2],
+      targetPoint
+    )
+  ) {
+    return safePoints
+  }
+
+  return result
 }
 
 export function getMarkerSegmentPath(

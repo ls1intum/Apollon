@@ -15,12 +15,22 @@ import {
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
   parseSvgPath,
+  preserveOrthogonalEdgePoints,
+  resolveReconnectPreviewBasePoints,
   removeDuplicatePoints,
   simplifyPoints,
   simplifySvgPath,
 } from "@/utils/edgeUtils"
 import { ConnectionLineType, Position } from "@xyflow/react"
 import { describe, expect, it } from "vitest"
+
+const expectOrthogonalSegments = (points: { x: number; y: number }[]) => {
+  for (let i = 1; i < points.length; i++) {
+    expect(
+      points[i - 1].x === points[i].x || points[i - 1].y === points[i].y
+    ).toBe(true)
+  }
+}
 
 // ---------------------------------------------------------------------------
 // adjustTargetCoordinates
@@ -1043,6 +1053,226 @@ describe("removeDuplicatePoints", () => {
       { x: 30, y: 40 },
     ]
     expect(removeDuplicatePoints(points)).toEqual(points)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// preserveOrthogonalEdgePoints
+// ---------------------------------------------------------------------------
+describe("preserveOrthogonalEdgePoints", () => {
+  it("keeps a manually moved bend when the target handle moves lower on the same side", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 100, y: 50 },
+      { x: 300, y: 260 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 100, y: 50 },
+      { x: 150, y: 50 },
+      { x: 150, y: 260 },
+      { x: 300, y: 260 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("keeps the bend when the source endpoint moves", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 120, y: 90 },
+      { x: 300, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 120, y: 90 },
+      { x: 150, y: 90 },
+      { x: 150, y: 200 },
+      { x: 300, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("adds a segment when reconnecting to a side with a different entering direction", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 100, y: 50 },
+      { x: 350, y: 100 },
+      Position.Right,
+      Position.Top
+    )
+
+    expect(result).toEqual([
+      { x: 100, y: 50 },
+      { x: 350, y: 50 },
+      { x: 350, y: 100 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("turns a stale two-point path into an orthogonal route when endpoints no longer align", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 300, y: 50 },
+      ],
+      { x: 100, y: 50 },
+      { x: 300, y: 120 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 100, y: 50 },
+      { x: 200, y: 50 },
+      { x: 200, y: 120 },
+      { x: 300, y: 120 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("reroutes the first lane when reconnecting from the opposite source side", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 50, y: 50 },
+      { x: 300, y: 200 },
+      Position.Left,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 50, y: 50 },
+      { x: 20, y: 50 },
+      { x: 20, y: 200 },
+      { x: 300, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("reroutes the last approach when reconnecting into the opposite target side", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 100, y: 50 },
+        { x: 150, y: 50 },
+        { x: 150, y: 200 },
+        { x: 300, y: 200 },
+      ],
+      { x: 100, y: 50 },
+      { x: 350, y: 200 },
+      Position.Right,
+      Position.Right
+    )
+
+    expect(result).toEqual([
+      { x: 100, y: 50 },
+      { x: 380, y: 50 },
+      { x: 380, y: 200 },
+      { x: 350, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("is idempotent when fed its own output", () => {
+    const sourcePoint = { x: 100, y: 50 }
+    const targetPoint = { x: 350, y: 200 }
+    const sourcePosition = Position.Right
+    const targetPosition = Position.Left
+    const seedPoints = [
+      { x: 100, y: 50 },
+      { x: 150, y: 50 },
+      { x: 150, y: 200 },
+      { x: 300, y: 200 },
+    ]
+
+    const once = preserveOrthogonalEdgePoints(
+      seedPoints,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    )
+    const twice = preserveOrthogonalEdgePoints(
+      once,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    )
+
+    expect(twice).toEqual(once)
+    expectOrthogonalSegments(twice)
+  })
+})
+
+describe("resolveReconnectPreviewBasePoints", () => {
+  it("prefers stored manual points when available", () => {
+    const result = resolveReconnectPreviewBasePoints(
+      [
+        { x: 10, y: 20 },
+        { x: 30, y: 40 },
+      ],
+      [{ x: 50, y: 60 }],
+      [{ x: 70, y: 80 }]
+    )
+
+    expect(result).toEqual([
+      { x: 10, y: 20 },
+      { x: 30, y: 40 },
+    ])
+  })
+
+  it("falls back to local custom points before computed points", () => {
+    const result = resolveReconnectPreviewBasePoints(
+      undefined,
+      [
+        { x: 15, y: 25 },
+        { x: 35, y: 45 },
+      ],
+      [{ x: 55, y: 65 }]
+    )
+
+    expect(result).toEqual([
+      { x: 15, y: 25 },
+      { x: 35, y: 45 },
+    ])
+  })
+
+  it("returns a cloned fallback path when no manual points exist", () => {
+    const fallbackPoints = [
+      { x: 5, y: 10 },
+      { x: 15, y: 20 },
+    ]
+    const result = resolveReconnectPreviewBasePoints(
+      undefined,
+      undefined,
+      fallbackPoints
+    )
+
+    expect(result).toEqual(fallbackPoints)
+    expect(result).not.toBe(fallbackPoints)
   })
 })
 

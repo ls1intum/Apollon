@@ -1,5 +1,10 @@
 import { useCallback, useMemo, useEffect, useRef, useState } from "react"
-import { getSmoothStepPath, useReactFlow } from "@xyflow/react"
+import {
+  getSmoothStepPath,
+  Position,
+  type Node,
+  useReactFlow,
+} from "@xyflow/react"
 import { log } from "../logger"
 import { EDGES } from "@/constants"
 import {
@@ -7,7 +12,6 @@ import {
   adjustTargetCoordinates,
   getPositionOnCanvas,
 } from "@/utils"
-import { Position } from "@xyflow/react"
 import {
   IPoint,
   pointsToSvgPath,
@@ -22,6 +26,9 @@ import {
   parseSvgPath,
   calculateInnerMidpoints,
   getMarkerSegmentPath,
+  getHandleAnchor,
+  preserveOrthogonalEdgePoints,
+  resolveReconnectPreviewBasePoints,
 } from "@/utils/edgeUtils"
 import { useEdgeState, useEdgeReconnection } from "../edges/GenericEdge"
 import { useDiagramModifiable } from "./useDiagramModifiable"
@@ -54,6 +61,10 @@ export interface StepPathEdgeData {
   targetPoint: IPoint
 }
 
+const arePointsEqual = (a: IPoint[] = [], b: IPoint[] = []): boolean =>
+  a.length === b.length &&
+  a.every((point, index) => point.x === b[index].x && point.y === b[index].y)
+
 export const useStepPathEdge = ({
   id,
   type,
@@ -77,6 +88,7 @@ export const useStepPathEdge = ({
   const pathRef = useRef<SVGPathElement | null>(null)
   const finalPointsRef = useRef<IPoint[]>([])
   const dragPointsRef = useRef<IPoint[]>([])
+  const reconnectPreviewBasePointsRef = useRef<IPoint[]>([])
 
   const isDiagramModifiable = useDiagramModifiable()
   const { getNode, getNodes, screenToFlowPosition } = useReactFlow()
@@ -232,141 +244,33 @@ export const useStepPathEdge = ({
     return result
   }, [basePath])
 
-  const prevNodePositionsRef = useRef<{
-    source: { x: number; y: number; parentId?: string }
-    target: { x: number; y: number; parentId?: string }
-  }>({
-    source: {
-      x: sourceNode.position.x,
-      y: sourceNode.position.y,
-      parentId: sourceNode.parentId,
-    },
-    target: {
-      x: targetNode.position.x,
-      y: targetNode.position.y,
-      parentId: targetNode.parentId,
-    },
-  })
-
-  // Reset custom points when nodes move
-  useEffect(() => {
-    const currentSourcePos = {
-      x: sourceNode.position.x,
-      y: sourceNode.position.y,
-      parentId: sourceNode.parentId,
-    }
-    const currentTargetPos = {
-      x: targetNode.position.x,
-      y: targetNode.position.y,
-      parentId: targetNode.parentId,
-    }
-    const prevSourcePos = prevNodePositionsRef.current.source
-    const prevTargetPos = prevNodePositionsRef.current.target
-
-    const sourceChanged =
-      currentSourcePos.x !== prevSourcePos.x ||
-      currentSourcePos.y !== prevSourcePos.y ||
-      currentSourcePos.parentId !== prevSourcePos.parentId
-
-    const targetChanged =
-      currentTargetPos.x !== prevTargetPos.x ||
-      currentTargetPos.y !== prevTargetPos.y ||
-      currentTargetPos.parentId !== prevTargetPos.parentId
-
-    if (sourceChanged || targetChanged) {
-      prevNodePositionsRef.current = {
-        source: currentSourcePos,
-        target: currentTargetPos,
-      }
-
-      if (customPoints.length > 0) {
-        if (sourceChanged && targetChanged) {
-          const deltaX = currentSourcePos.x - prevSourcePos.x
-          const deltaY = currentSourcePos.y - prevSourcePos.y
-          const newPoints = customPoints.map((point) =>
-            screenToFlowPosition({
-              x: point.x + deltaX,
-              y: point.y + deltaY,
-            })
-          )
-
-          setCustomPoints(newPoints)
-          setEdges((edges) =>
-            edges.map((edge) =>
-              edge.id === id
-                ? {
-                    ...edge,
-                    data: { ...edge.data, points: newPoints },
-                  }
-                : edge
-            )
-          )
-        } else {
-          setCustomPoints([])
-          setEdges((edges) =>
-            edges.map((edge) =>
-              edge.id === id
-                ? {
-                    ...edge,
-                    data: { ...edge.data, points: undefined },
-                  }
-                : edge
-            )
-          )
-        }
-      }
-    }
-  }, [
-    sourceNode.position.x,
-    sourceNode.position.y,
-    sourceNode.parentId,
-    targetNode.position.x,
-    targetNode.position.y,
-    targetNode.parentId,
-    customPoints,
-    id,
-    setEdges,
-    setCustomPoints,
-  ])
+  const hasManualPoints =
+    (data?.points && data.points.length > 0) || customPoints.length > 0
 
   const activePoints = useMemo(() => {
     let points: IPoint[]
     if (tempReconnectPoints) {
-      points = tempReconnectPoints
+      return tempReconnectPoints
     } else if (data?.points && data.points.length > 0) {
       points = data.points
     } else {
       points = customPoints.length ? customPoints : computedPoints
     }
 
-    // Always ensure first and last points use adjusted coordinates
-    // This handles stale stored points when nodes have moved
-    if (points.length >= 2) {
-      const adjustedFirst = {
-        x: adjustedSourceCoordinates.sourceX,
-        y: adjustedSourceCoordinates.sourceY,
-      }
-      const adjustedLast = {
-        x: adjustedTargetCoordinates.targetX,
-        y: adjustedTargetCoordinates.targetY,
-      }
-      // Only update if significantly different (more than 1px) to avoid unnecessary re-renders
-      const firstDiff =
-        Math.abs(points[0].x - adjustedFirst.x) > 1 ||
-        Math.abs(points[0].y - adjustedFirst.y) > 1
-      const lastDiff =
-        Math.abs(points[points.length - 1].x - adjustedLast.x) > 1 ||
-        Math.abs(points[points.length - 1].y - adjustedLast.y) > 1
-
-      if (firstDiff || lastDiff) {
-        points = [...points]
-        if (firstDiff) {
-          points[0] = adjustedFirst
-        }
-        if (lastDiff) {
-          points[points.length - 1] = adjustedLast
-        }
-      }
+    if (hasManualPoints && points.length >= 2) {
+      return preserveOrthogonalEdgePoints(
+        points,
+        {
+          x: adjustedSourceCoordinates.sourceX,
+          y: adjustedSourceCoordinates.sourceY,
+        },
+        {
+          x: adjustedTargetCoordinates.targetX,
+          y: adjustedTargetCoordinates.targetY,
+        },
+        sourcePosition,
+        targetPosition
+      )
     }
 
     return points
@@ -375,10 +279,43 @@ export const useStepPathEdge = ({
     computedPoints,
     tempReconnectPoints,
     data?.points,
+    hasManualPoints,
     adjustedSourceCoordinates.sourceX,
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
+    sourcePosition,
+    targetPosition,
+  ])
+
+  useEffect(() => {
+    if (!hasManualPoints || tempReconnectPoints) return
+
+    const storedPoints =
+      data?.points && data.points.length > 0 ? data.points : customPoints
+
+    if (arePointsEqual(storedPoints, activePoints)) return
+
+    setCustomPoints(activePoints)
+    setEdges((edges) =>
+      edges.map((edge) =>
+        edge.id === id
+          ? {
+              ...edge,
+              data: { ...edge.data, points: activePoints },
+            }
+          : edge
+      )
+    )
+  }, [
+    activePoints,
+    customPoints,
+    data?.points,
+    hasManualPoints,
+    id,
+    setCustomPoints,
+    setEdges,
+    tempReconnectPoints,
   ])
 
   const currentPath = useMemo(() => {
@@ -540,7 +477,46 @@ export const useStepPathEdge = ({
           ? activePoints[0]
           : activePoints[activePoints.length - 1]
 
+      reconnectPreviewBasePointsRef.current = resolveReconnectPreviewBasePoints(
+        data?.points,
+        customPoints,
+        activePoints
+      )
       startReconnection(e, endType, endpoint)
+
+      const resolvePreviewHandle = (
+        node: Node | null,
+        handle: string | null
+      ): {
+        point: IPoint
+        position: Position
+        nodePosition: IPoint
+        node: Node
+      } | null => {
+        if (!node || !handle || node.width == null || node.height == null) {
+          return null
+        }
+
+        const nodePosition = getPositionOnCanvas(node, getNodes())
+        const anchor = getHandleAnchor(
+          {
+            x: nodePosition.x,
+            y: nodePosition.y,
+            width: node.width,
+            height: node.height,
+          },
+          handle
+        )
+
+        if (!anchor) return null
+
+        return {
+          point: { x: anchor.x, y: anchor.y },
+          position: anchor.side,
+          nodePosition,
+          node,
+        }
+      }
 
       const handleEndpointPointerMove = (moveEvent: PointerEvent) => {
         if (!isReconnectingRef.current) return
@@ -561,43 +537,78 @@ export const useStepPathEdge = ({
           setConnectionGuidanceTarget(previewNode.id, previewHandle)
         }
 
+        const previewEndpoint = resolvePreviewHandle(previewNode, previewHandle)
         let newSourceX = sourceX
         let newSourceY = sourceY
         let newTargetX = targetX
         let newTargetY = targetY
+        let previewSourcePosition = sourcePosition
+        let previewTargetPosition = targetPosition
+        let previewSourceAbsolute = sourceAbsolutePosition
+        let previewTargetAbsolute = targetAbsolutePosition
+        let previewSourceNode = sourceNode
+        let previewTargetNode = targetNode
 
         if (reconnectingEndRef.current === "source") {
-          newSourceX = newEndpoint.x
-          newSourceY = newEndpoint.y
+          newSourceX = previewEndpoint?.point.x ?? newEndpoint.x
+          newSourceY = previewEndpoint?.point.y ?? newEndpoint.y
+          previewSourcePosition = previewEndpoint?.position ?? sourcePosition
+          previewSourceAbsolute = previewEndpoint?.nodePosition ?? newEndpoint
+          previewSourceNode = previewEndpoint?.node ?? sourceNode
         } else {
-          newTargetX = newEndpoint.x
-          newTargetY = newEndpoint.y
+          newTargetX = previewEndpoint?.point.x ?? newEndpoint.x
+          newTargetY = previewEndpoint?.point.y ?? newEndpoint.y
+          previewTargetPosition = previewEndpoint?.position ?? targetPosition
+          previewTargetAbsolute = previewEndpoint?.nodePosition ?? newEndpoint
+          previewTargetNode = previewEndpoint?.node ?? targetNode
         }
         const isActivityDiagram = type.startsWith("Activity")
 
         let newPoints: IPoint[] = []
+        const adjustedTargetCoordinates = adjustTargetCoordinates(
+          newTargetX,
+          newTargetY,
+          previewTargetPosition,
+          padding
+        )
+        const adjustedSourceCoordinates = adjustSourceCoordinates(
+          newSourceX,
+          newSourceY,
+          previewSourcePosition,
+          EDGES.SOURCE_CONNECTION_POINT_PADDING
+        )
 
-        if (isActivityDiagram) {
-          const adjustedTargetCoordinates = adjustTargetCoordinates(
-            newTargetX,
-            newTargetY,
-            targetPosition,
-            padding
-          )
-          const adjustedSourceCoordinates = adjustSourceCoordinates(
-            newSourceX,
-            newSourceY,
-            sourcePosition,
-            EDGES.SOURCE_CONNECTION_POINT_PADDING
-          )
+        const previewBasePoints =
+          reconnectPreviewBasePointsRef.current.length > 0
+            ? reconnectPreviewBasePointsRef.current
+            : resolveReconnectPreviewBasePoints(
+                data?.points,
+                customPoints,
+                activePoints
+              )
 
+        if (hasManualPoints && previewBasePoints.length >= 2) {
+          newPoints = preserveOrthogonalEdgePoints(
+            previewBasePoints,
+            {
+              x: adjustedSourceCoordinates.sourceX,
+              y: adjustedSourceCoordinates.sourceY,
+            },
+            {
+              x: adjustedTargetCoordinates.targetX,
+              y: adjustedTargetCoordinates.targetY,
+            },
+            previewSourcePosition,
+            previewTargetPosition
+          )
+        } else if (isActivityDiagram || !enableStraightPath) {
           const [edgePath] = getSmoothStepPath({
             sourceX: adjustedSourceCoordinates.sourceX,
             sourceY: adjustedSourceCoordinates.sourceY,
-            sourcePosition,
+            sourcePosition: previewSourcePosition,
             targetX: adjustedTargetCoordinates.targetX,
             targetY: adjustedTargetCoordinates.targetY,
-            targetPosition,
+            targetPosition: previewTargetPosition,
             borderRadius: EDGES.STEP_BORDER_RADIUS,
             offset: 30,
           })
@@ -605,27 +616,24 @@ export const useStepPathEdge = ({
           const simplifiedPath = simplifySvgPath(edgePath)
           newPoints = removeDuplicatePoints(parseSvgPath(simplifiedPath))
         } else {
-          const newSourceAbsolute =
-            reconnectingEndRef.current === "source"
-              ? newEndpoint
-              : sourceAbsolutePosition
-          const newTargetAbsolute =
-            reconnectingEndRef.current === "target"
-              ? newEndpoint
-              : targetAbsolutePosition
-
           const straightPathPoints = tryFindStraightPath(
             {
-              position: { x: newSourceAbsolute.x, y: newSourceAbsolute.y },
-              width: sourceNode.width ?? 100,
-              height: sourceNode.height ?? 160,
-              direction: sourcePosition,
+              position: {
+                x: previewSourceAbsolute.x,
+                y: previewSourceAbsolute.y,
+              },
+              width: previewSourceNode.width ?? 100,
+              height: previewSourceNode.height ?? 160,
+              direction: previewSourcePosition,
             },
             {
-              position: { x: newTargetAbsolute.x, y: newTargetAbsolute.y },
-              width: targetNode.width ?? 100,
-              height: targetNode.height ?? 160,
-              direction: targetPosition,
+              position: {
+                x: previewTargetAbsolute.x,
+                y: previewTargetAbsolute.y,
+              },
+              width: previewTargetNode.width ?? 100,
+              height: previewTargetNode.height ?? 160,
+              direction: previewTargetPosition,
             },
             padding,
             {
@@ -639,26 +647,13 @@ export const useStepPathEdge = ({
           if (straightPathPoints !== null) {
             newPoints = straightPathPoints
           } else {
-            const adjustedTargetCoordinates = adjustTargetCoordinates(
-              newTargetX,
-              newTargetY,
-              targetPosition,
-              padding
-            )
-            const adjustedSourceCoordinates = adjustSourceCoordinates(
-              newSourceX,
-              newSourceY,
-              sourcePosition,
-              EDGES.SOURCE_CONNECTION_POINT_PADDING
-            )
-
             const [edgePath] = getSmoothStepPath({
               sourceX: adjustedSourceCoordinates.sourceX,
               sourceY: adjustedSourceCoordinates.sourceY,
-              sourcePosition,
+              sourcePosition: previewSourcePosition,
               targetX: adjustedTargetCoordinates.targetX,
               targetY: adjustedTargetCoordinates.targetY,
-              targetPosition,
+              targetPosition: previewTargetPosition,
               borderRadius: EDGES.STEP_BORDER_RADIUS,
               offset: 30,
             })
@@ -671,6 +666,7 @@ export const useStepPathEdge = ({
       }
 
       const handleEndpointPointerUp = (upEvent: PointerEvent) => {
+        reconnectPreviewBasePointsRef.current = []
         setTempReconnectPoints(null)
         setConnectionGuidanceTarget(null, null)
         document.removeEventListener("pointermove", handleEndpointPointerMove, {
@@ -680,9 +676,7 @@ export const useStepPathEdge = ({
           capture: true,
         })
 
-        completeReconnection(upEvent, findBestHandle, () => {
-          setCustomPoints([])
-        })
+        completeReconnection(upEvent, findBestHandle)
       }
 
       document.addEventListener("pointermove", handleEndpointPointerMove, {
@@ -703,7 +697,11 @@ export const useStepPathEdge = ({
       reconnectingEndRef,
       setTempReconnectPoints,
       completeReconnection,
-      setCustomPoints,
+      getNodes,
+      hasManualPoints,
+      customPoints,
+      data?.points,
+      enableStraightPath,
       sourceX,
       sourceY,
       targetX,

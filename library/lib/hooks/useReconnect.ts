@@ -12,17 +12,14 @@ export const useReconnect = () => {
         target: newConnection.target,
         sourceHandle: newConnection.sourceHandle || oldEdge.sourceHandle,
         targetHandle: newConnection.targetHandle || oldEdge.targetHandle,
-        data: {
-          ...oldEdge.data,
-          points: [],
-        },
+        data: oldEdge.data,
       }
 
       setEdges((edges) =>
         edges.map((edge) => (edge.id === oldEdge.id ? updatedEdge : edge))
       )
     },
-    []
+    [setEdges]
   )
   return onReconnect
 }
