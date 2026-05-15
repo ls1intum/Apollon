@@ -40,7 +40,7 @@
     "test:e2e": "npm run test:e2e --workspace=@tumaet/webapp",
     "prepare": "husky || true",
     "capacitor:add:android": "npx cap add android",
-    "capacitor:add:ios": "npx cap add ios",
+    "capacitor:add:ios": "npx cap add ios --packagemanager CocoaPods",
     "capacitor:sync": "npx cap sync",
     "capacitor:open:android": "npx cap open android",
     "capacitor:open:ios": "npx cap open ios",
@@ -66,6 +66,7 @@
     "tar": ">=7.5.11"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.3.0",
     "@commitlint/cli": "19.6.0",
     "@commitlint/config-conventional": "19.6.0",
     "@emotion/react": "11.11.1",
