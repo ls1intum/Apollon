@@ -9,6 +9,7 @@ import { DiagramView } from "@/types"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 import { randomCollabName } from "@/utils/collaboration"
+import { isPlatform } from "@ionic/react"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
@@ -23,19 +24,52 @@ export const ShareModal = () => {
 
     try {
       const model = editor.model
-      const { id: diagramID } = await DiagramApiClient.createDiagram(model)
 
-      const newurl = `${window.location.origin}/${diagramID}?view=${viewType}`
-      copyToClipboard(newurl)
-      navigate(`/${diagramID}?view=${viewType}`)
+      const isCapacitorApp =
+        isPlatform("ios") || isPlatform("android") || isPlatform("capacitor")
 
-      toast.success(
-        `The link has been copied to your clipboard and can be shared to collaborate, simply by pasting the link. You can re-access the link by going to share menu.`,
-        {
-          autoClose: 10000,
+      if (isCapacitorApp) {
+        const response = await fetch("https://apollon.aet.cit.tum.de/api/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(model),
+        })
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`)
         }
-      )
-      closeModal()
+
+        const responseData = (await response.json()) as { id: string }
+        const { id: diagramID } = responseData
+
+        const newurl = `https://apollon.aet.cit.tum.de/${diagramID}?view=${viewType}`
+        copyToClipboard(newurl)
+        navigate(`/${diagramID}?view=${viewType}`)
+
+        toast.success(
+          `${newurl}The link has been copied to your clipboard and can be shared to collaborate, simply by pasting the link. You can re-access the link by going to share menu.`,
+          {
+            autoClose: 10000,
+          }
+        )
+        closeModal()
+      } else {
+        const { id: diagramID } = await DiagramApiClient.createDiagram(model)
+
+        const newurl = `${window.location.origin}/${diagramID}?view=${viewType}`
+        copyToClipboard(newurl)
+        navigate(`/${diagramID}?view=${viewType}`)
+
+        toast.success(
+          `The link has been copied to your clipboard and can be shared to collaborate, simply by pasting the link. You can re-access the link by going to share menu.`,
+          {
+            autoClose: 10000,
+          }
+        )
+        closeModal()
+      }
     } catch (err) {
       log.error("Error creating diagram:", err as Error)
       toast.error("Could not create diagram.")
