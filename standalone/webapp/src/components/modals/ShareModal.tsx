@@ -9,6 +9,8 @@ import { DiagramView } from "@/types"
 import { DiagramApiClient } from "@/services/DiagramApiClient"
 import { log } from "@/logger"
 import { randomCollabName } from "@/utils/collaboration"
+import { usePersistenceModelStore } from "@/stores/usePersistenceModelStore"
+import { versioningStrings as t } from "@/components/versioning/strings"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
@@ -35,6 +37,11 @@ export const ShareModal = () => {
           autoClose: 10000,
         }
       )
+      // Dual-existence notice — local versions for this model stay
+      // attached to the original local UUID, not the new server id.
+      if (usePersistenceModelStore.getState().currentModelId) {
+        toast.info(t.shareKeepsLocal, { autoClose: 10000 })
+      }
       closeModal()
     } catch (err) {
       log.error("Error creating diagram:", err as Error)

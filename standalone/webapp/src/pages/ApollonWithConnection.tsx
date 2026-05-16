@@ -1,6 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useEditorContext, useModalContext } from "@/contexts"
 import {
+  setVersionRepository,
+  RemoteVersionRepository,
+} from "@/services/versionRepository"
+import { ensureVersionStoreBootstrapped } from "@/stores/versionStoreBootstrap"
+import {
   ApollonEditor,
   ApollonMode,
   importDiagram,
@@ -21,7 +26,7 @@ import {
   VersionSidebar,
 } from "@/components/versioning"
 import { versioningStrings as t } from "@/components/versioning/strings"
-import { structuralFingerprint } from "@/components/versioning/utils"
+import { structuralFingerprint } from "@/lib/version/predicates"
 import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
@@ -77,6 +82,16 @@ export const ApollonWithConnection: React.FC = () => {
   const fetchVersions = useVersionStore((s) => s.fetchVersions)
 
   useVersionShortcut(diagramId)
+
+  // Idempotent — pages own the active repo holder. Bootstrap also wires
+  // the cross-tab BroadcastChannel + visibility refetch + cascade-delete
+  // subscription that local mode relies on; safe to install in collab too
+  // (the persistence-store subscription has no effect when no local
+  // diagram is being deleted).
+  useEffect(() => {
+    setVersionRepository(RemoteVersionRepository)
+    ensureVersionStoreBootstrapped()
+  }, [])
 
   useFlushOnUnload({
     diagramId,

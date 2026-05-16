@@ -13,3 +13,16 @@ const raw = (import.meta as unknown as { env?: Record<string, string> }).env
 const parsed = raw ? Number(raw) : NaN
 export const MAX_VERSIONS_PER_DIAGRAM =
   Number.isFinite(parsed) && parsed > 0 ? parsed : 50
+
+/**
+ * Maximum saved versions per LOCAL diagram (IndexedDB-backed). Smaller
+ * than the server cap because solo students rarely keep dozens of named
+ * milestones, and the same "X / N" display that drives the eviction toast
+ * needs a stable number per mode. Eviction priority mirrors the server:
+ * unnamed/auto rows are swept before named milestones.
+ */
+const rawLocal = (import.meta as unknown as { env?: Record<string, string> })
+  .env?.VITE_MAX_LOCAL_VERSIONS_PER_DIAGRAM
+const parsedLocal = rawLocal ? Number(rawLocal) : NaN
+export const MAX_LOCAL_VERSIONS_PER_DIAGRAM =
+  Number.isFinite(parsedLocal) && parsedLocal > 0 ? parsedLocal : 30

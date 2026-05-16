@@ -3,7 +3,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded"
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded"
 import { useEffect, useRef, useState, type FC } from "react"
 import { ApollonEditor, importDiagram, type UMLModel } from "@tumaet/apollon"
-import { VersionApiClient } from "@/services/DiagramApiClient"
+import { getVersionRepository } from "@/services/versionRepository"
 import { log } from "@/logger"
 
 /**
@@ -75,7 +75,8 @@ export const VersionThumbnail: FC<Props> = ({
         const first = entries[0]
         if (!first?.isIntersecting) return
         observer.disconnect()
-        VersionApiClient.getBody(diagramId, versionId)
+        getVersionRepository()
+          .getBody(diagramId, versionId)
           .then((body) => {
             if (cancelled) return null
             // `Diagram` (server wire form) is `UMLModel & {...}`; route

@@ -9,7 +9,11 @@ import {
   HowToUseModal,
   PPTXExportModal,
 } from "@/components/modals"
-import { DeleteVersionModal } from "@/components/versioning"
+import {
+  ConfirmRestoreModal,
+  DeleteVersionModal,
+} from "@/components/versioning"
+import { versioningStrings as v } from "@/components/versioning/strings"
 import { useModalContext } from "@/contexts"
 import { ModalName, ModalProps } from "@/types"
 import { Modal, Paper, Box, Button, Divider } from "@mui/material"
@@ -34,6 +38,7 @@ const MODAL_COMPONENTS: Record<ModalName, React.ComponentType<ModalProps>> = {
   HowToUseModal: HowToUseModal,
   AboutModal: AboutModal,
   DELETE_VERSION: DeleteVersionModal as React.ComponentType<unknown>,
+  CONFIRM_RESTORE: ConfirmRestoreModal as React.ComponentType<unknown>,
 }
 
 const MODAL_TITLES: Record<ModalName, string> = {
@@ -46,6 +51,7 @@ const MODAL_TITLES: Record<ModalName, string> = {
   HowToUseModal: "How to use this editor?",
   AboutModal: "Information about Apollon",
   DELETE_VERSION: "Delete version",
+  CONFIRM_RESTORE: v.confirmRestoreTitle,
 }
 
 const style = {

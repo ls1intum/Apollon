@@ -2,7 +2,8 @@ import { create } from "zustand"
 import { devtools, persist, createJSONStorage } from "zustand/middleware"
 import { toast } from "react-toastify"
 import type { UMLModel } from "@tumaet/apollon"
-import { ApiError, VersionApiClient } from "@/services/DiagramApiClient"
+import { ApiError } from "@/services/DiagramApiClient"
+import { getVersionRepository } from "@/services/versionRepository"
 import { MAX_VERSIONS_PER_DIAGRAM } from "@/constants"
 import { log } from "@/logger"
 import type { ApiErrorCode, ControlEvent, VersionSummary } from "@/types"
@@ -83,7 +84,7 @@ interface Actions {
     diagramId: DiagramId,
     versionId: VersionId,
     currentBody: UMLModel
-  ) => Promise<{ autoSnapshotVersionId: VersionId; headRev: number }>
+  ) => Promise<{ autoSnapshotVersionId: VersionId; headRev?: number }>
   triggerUndoRestore: (
     diagramId: DiagramId,
     currentBody: UMLModel
@@ -150,10 +151,8 @@ export const useVersionStore = create<VersionStore>()(
             error: { ...s.error, [diagramId]: null },
           }))
           try {
-            const { versions, nextCursor, total } = await VersionApiClient.list(
-              diagramId,
-              { limit: 25 }
-            )
+            const { versions, nextCursor, total } =
+              await getVersionRepository().list(diagramId, { limit: 25 })
             set((s) => ({
               versions: { ...s.versions, [diagramId]: versions },
               nextCursor: { ...s.nextCursor, [diagramId]: nextCursor },
@@ -180,10 +179,11 @@ export const useVersionStore = create<VersionStore>()(
             error: { ...s.error, [diagramId]: null },
           }))
           try {
-            const { versions, nextCursor, total } = await VersionApiClient.list(
-              diagramId,
-              { limit: 25, before: cursor }
-            )
+            const { versions, nextCursor, total } =
+              await getVersionRepository().list(diagramId, {
+                limit: 25,
+                before: cursor,
+              })
             set((s) => ({
               versions: {
                 ...s.versions,
@@ -228,15 +228,20 @@ export const useVersionStore = create<VersionStore>()(
           try {
             const actor =
               sessionStorage.getItem("apollon-collab-name") || undefined
-            const result = await VersionApiClient.create(diagramId, body, {
-              ...opts,
-              actor,
-            })
+            const result = await getVersionRepository().create(
+              diagramId,
+              body,
+              {
+                ...opts,
+                actor,
+              }
+            )
             const {
               evictedVersionIds,
               evictedKinds,
               total: serverTotal,
               headRev: serverHeadRev,
+              cap: backendCap,
               ...summary
             } = result
             set((s) => {
@@ -269,11 +274,15 @@ export const useVersionStore = create<VersionStore>()(
               const namedCount = (evictedKinds ?? []).filter(
                 (k) => k === "named"
               ).length
+              // Backends may differ on cap (server 50, local 30) — echo the
+              // value the backend actually enforced, falling through to the
+              // server default for legacy responses without `cap`.
+              const cap = backendCap ?? MAX_VERSIONS_PER_DIAGRAM
               if (namedCount > 0) {
                 toast.warning(
                   namedCount === 1
-                    ? `Saved. Your oldest named version was removed — the ${MAX_VERSIONS_PER_DIAGRAM}-version cap is full.`
-                    : `Saved. ${namedCount} oldest named versions were removed — the ${MAX_VERSIONS_PER_DIAGRAM}-version cap is full.`,
+                    ? `Saved. Your oldest named version was removed — the ${cap}-version cap is full.`
+                    : `Saved. ${namedCount} oldest named versions were removed — the ${cap}-version cap is full.`,
                   { autoClose: 8000 }
                 )
               } else {
@@ -321,7 +330,7 @@ export const useVersionStore = create<VersionStore>()(
             }))
           }
           try {
-            const updated = await VersionApiClient.editInfo(
+            const updated = await getVersionRepository().editInfo(
               diagramId,
               versionId,
               patch
@@ -362,7 +371,7 @@ export const useVersionStore = create<VersionStore>()(
             },
           }))
           try {
-            await VersionApiClient.delete(diagramId, versionId)
+            await getVersionRepository().delete(diagramId, versionId)
           } catch (err) {
             if (prev) {
               set((s) => {
@@ -380,7 +389,10 @@ export const useVersionStore = create<VersionStore>()(
 
         // ---- Preview / Restore ----------------------------------------------
         enterPreview: async (diagramId, versionId) => {
-          const body = await VersionApiClient.getBody(diagramId, versionId)
+          const body = await getVersionRepository().getBody(
+            diagramId,
+            versionId
+          )
           set({ preview: { versionId, body } })
           // On deep-link the version list may be empty (fetchVersions and
           // enterPreview both start concurrently in the init effect but
@@ -402,7 +414,7 @@ export const useVersionStore = create<VersionStore>()(
             const actor =
               sessionStorage.getItem("apollon-collab-name") || undefined
             const { autoSnapshotVersionId, headRev } =
-              await VersionApiClient.restore(diagramId, versionId, {
+              await getVersionRepository().restore(diagramId, versionId, {
                 currentBody,
                 actor,
               })
@@ -454,7 +466,7 @@ export const useVersionStore = create<VersionStore>()(
           try {
             const actor =
               sessionStorage.getItem("apollon-collab-name") || undefined
-            await VersionApiClient.restore(
+            await getVersionRepository().restore(
               diagramId,
               undo.autoSnapshotVersionId,
               { currentBody, actor }

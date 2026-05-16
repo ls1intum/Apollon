@@ -23,7 +23,7 @@ import {
 import { toast } from "react-toastify"
 import { log } from "@/logger"
 import { useVersionStore, type PendingVersion } from "@/stores/useVersionStore"
-import { VersionApiClient } from "@/services/DiagramApiClient"
+import { getVersionRepository } from "@/services/versionRepository"
 import { MAX_DESCRIPTION_LENGTH, versioningStrings as t } from "./strings"
 import { relativeTime } from "./relativeTime"
 import {
@@ -32,7 +32,7 @@ import {
   TEXT_MUTED,
   TEXT_PRIMARY,
 } from "./theme"
-import { isNamedVersion } from "./utils"
+import { isNamedVersion } from "@/lib/version/predicates"
 
 interface Props {
   diagramId: string
@@ -61,6 +61,10 @@ const VersionListItemInner: FC<Props> = ({
   onRestore,
   onDelete,
 }) => {
+  // Single source of truth for permalink visibility: the active
+  // repository decides via its `permalink()` return value. Local mode
+  // returns null; remote returns a URL. No prop, no drift.
+  const permalinkUrl = getVersionRepository().permalink(diagramId, version.id)
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(version.description ?? "")
@@ -126,10 +130,9 @@ const VersionListItemInner: FC<Props> = ({
 
   const copyLink = async () => {
     closeMenu()
+    if (!permalinkUrl) return
     try {
-      await navigator.clipboard.writeText(
-        VersionApiClient.permalink(diagramId, version.id)
-      )
+      await navigator.clipboard.writeText(permalinkUrl)
       toast.success(t.copied)
     } catch (err) {
       log.error("Copy link failed", err)
@@ -354,7 +357,7 @@ const VersionListItemInner: FC<Props> = ({
             {t.restoreThis}
           </MenuItem>
         )}
-        <MenuItem onClick={copyLink}>{t.copyLink}</MenuItem>
+        {permalinkUrl && <MenuItem onClick={copyLink}>{t.copyLink}</MenuItem>}
         {/* Adding a description on an empty-meta row promotes it visually
             (no longer eligible for collapse) and protects it from the
             eviction-priority sweep. Pure metadata — no protocol event.
