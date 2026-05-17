@@ -12,6 +12,7 @@ import { ReachabilityGraphEdge } from "./edgeTypes/ReachabilityGraphArc"
 import { CommunicationDiagramEdge } from "./edgeTypes/CommunicationDiagramEdge"
 import { BPMNDiagramEdge } from "./edgeTypes/BPMNDiagramEdge"
 import { PetriNetEdge } from "./edgeTypes/PetriNetEdge"
+import { OrthogonalEdge } from "./OrthogonalEdge"
 
 export const diagramEdgeTypes = {
   ClassAggregation: ClassDiagramEdge,
@@ -60,6 +61,10 @@ export const diagramEdgeTypes = {
   BPMNMessageFlow: BPMNDiagramEdge,
   BPMNAssociationFlow: BPMNDiagramEdge,
   BPMNDataAssociationFlow: BPMNDiagramEdge,
+
+  // Obstacle-avoiding orthogonal edge backed by the A* router. Opt-in:
+  // set `edge.type = "OrthogonalRouted"` to use the new routing engine.
+  OrthogonalRouted: OrthogonalEdge,
 } satisfies EdgeTypes
 
 export const edgeConfig = {
@@ -151,6 +156,10 @@ export const edgeConfig = {
   SfcDiagramEdge: {
     allowMidpointDragging: true,
   },
+
+  // OrthogonalEdge runs its own segment-drag interactions via useEdgeInteractions,
+  // so the legacy useStepPathEdge midpoint-dragging path is not used.
+  OrthogonalRouted: { allowMidpointDragging: false },
 } as const
 
 export type DiagramEdgeType = keyof typeof diagramEdgeTypes

@@ -137,6 +137,7 @@ type EdgePopoverType =
   | "SfcDiagramEdge"
   | "ReachabilityGraphArc"
   | "PetriNetArc"
+  | "OrthogonalRouted"
 
 type PopoverType = NodePopoverType | EdgePopoverType
 
@@ -207,6 +208,7 @@ const editPopovers: {
   ReachabilityGraphMarking: React.FC<PopoverProps>
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
+  OrthogonalRouted: React.FC<PopoverProps>
 } = {
   class: ClassEditPopover,
   objectName: ObjectEditPopover,
@@ -274,6 +276,7 @@ const editPopovers: {
   ReachabilityGraphMarking: ReachabilityGraphMarkingEditPopover,
   Sfc: DefaultNodeEditPopover,
   SfcActionTable: SfcActionTableEditPopover,
+  OrthogonalRouted: EdgeEditPopover,
 }
 
 const giveFeedbackPopovers: {
@@ -343,6 +346,7 @@ const giveFeedbackPopovers: {
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
   SfcDiagramEdge: React.FC<PopoverProps>
+  OrthogonalRouted: React.FC<PopoverProps>
 } = {
   class: ClassGiveFeedbackPopover,
   objectName: ObjectGiveFeedbackPopover,
@@ -410,6 +414,7 @@ const giveFeedbackPopovers: {
   Sfc: DefaultNodeGiveFeedbackPopover,
   SfcActionTable: DefaultNodeGiveFeedbackPopover,
   SfcDiagramEdge: EdgeGiveFeedbackPopover,
+  OrthogonalRouted: EdgeGiveFeedbackPopover,
 }
 
 const seeFeedbackPopovers: {
@@ -479,6 +484,7 @@ const seeFeedbackPopovers: {
   Sfc: React.FC<PopoverProps>
   SfcActionTable: React.FC<PopoverProps>
   SfcDiagramEdge: React.FC<PopoverProps>
+  OrthogonalRouted: React.FC<PopoverProps>
 } = {
   class: ClassSeeFeedbackPopover,
   objectName: ObjectSeeFeedbackPopover,
@@ -546,6 +552,7 @@ const seeFeedbackPopovers: {
   Sfc: DefaultNodeSeeFeedbackPopover,
   SfcActionTable: DefaultNodeSeeFeedbackPopover,
   SfcDiagramEdge: EdgeSeeFeedbackPopover,
+  OrthogonalRouted: EdgeSeeFeedbackPopover,
 }
 
 interface PopoverManagerProps {
