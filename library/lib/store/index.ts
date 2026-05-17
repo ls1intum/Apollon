@@ -3,6 +3,7 @@ export { createMetadataStore } from "./metadataStore"
 export { createPopoverStore } from "./popoverStore"
 export { createAssessmentSelectionStore } from "./assessmentSelectionStore"
 export { createAlignmentGuidesStore } from "./alignmentGuidesStore"
+export * from "./routingStore"
 export {
   DiagramStoreContext,
   MetadataStoreContext,
