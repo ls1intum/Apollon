@@ -1027,6 +1027,42 @@ const isTargetApproachCompatible = (
   }
 }
 
+const getStubExitCoord = (
+  position: Position,
+  point: IPoint,
+  stubLength: number
+): number => {
+  switch (position) {
+    case Position.Right:
+      return point.x + stubLength
+    case Position.Left:
+      return point.x - stubLength
+    case Position.Bottom:
+      return point.y + stubLength
+    case Position.Top:
+    default:
+      return point.y - stubLength
+  }
+}
+
+const getStubExitPoint = (
+  position: Position,
+  point: IPoint,
+  stubLength: number
+): IPoint => {
+  switch (position) {
+    case Position.Right:
+      return { x: point.x + stubLength, y: point.y }
+    case Position.Left:
+      return { x: point.x - stubLength, y: point.y }
+    case Position.Bottom:
+      return { x: point.x, y: point.y + stubLength }
+    case Position.Top:
+    default:
+      return { x: point.x, y: point.y - stubLength }
+  }
+}
+
 const getSafeOrthogonalPathPoints = (
   sourcePoint: IPoint,
   targetPoint: IPoint,
@@ -1047,12 +1083,455 @@ const getSafeOrthogonalPathPoints = (
   return removeDuplicatePoints(parseSvgPath(simplifySvgPath(safePath)))
 }
 
+const getStubCollisionFallbackPoints = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] => {
+  const sharedLaneSnapTolerance = Math.abs(
+    EDGES.SOURCE_CONNECTION_POINT_PADDING - EDGES.MARKER_PADDING
+  )
+  const sourceStub = getStubExitPoint(
+    sourcePosition,
+    sourcePoint,
+    EDGES.STUB_LENGTH
+  )
+  const targetStub = getStubExitPoint(
+    targetPosition,
+    targetPoint,
+    EDGES.STUB_LENGTH
+  )
+  const sourceAxis = getSegmentAxisForPosition(sourcePosition)
+
+  if (sourceAxis === "horizontal") {
+    const stubLaneDelta = Math.abs(sourceStub.x - targetStub.x)
+    if (
+      sourcePoint.y !== targetPoint.y &&
+      stubLaneDelta > 0 &&
+      stubLaneDelta <= sharedLaneSnapTolerance
+    ) {
+      const sharedX = Math.round((sourceStub.x + targetStub.x) / 2)
+      return removeDuplicatePoints([
+        sourcePoint,
+        { x: sharedX, y: sourcePoint.y },
+        { x: sharedX, y: targetPoint.y },
+        targetPoint,
+      ])
+    }
+
+    const bridgeY =
+      sourcePoint.y !== targetPoint.y
+        ? Math.round((sourcePoint.y + targetPoint.y) / 2)
+        : sourcePoint.y <= targetPoint.y
+          ? Math.min(sourcePoint.y, targetPoint.y) - EDGES.STUB_LENGTH
+          : Math.max(sourcePoint.y, targetPoint.y) + EDGES.STUB_LENGTH
+    return removeDuplicatePoints([
+      sourcePoint,
+      sourceStub,
+      { x: sourceStub.x, y: bridgeY },
+      { x: targetStub.x, y: bridgeY },
+      targetStub,
+      targetPoint,
+    ])
+  }
+
+  const stubLaneDelta = Math.abs(sourceStub.y - targetStub.y)
+  if (
+    sourcePoint.x !== targetPoint.x &&
+    stubLaneDelta > 0 &&
+    stubLaneDelta <= sharedLaneSnapTolerance
+  ) {
+    const sharedY = Math.round((sourceStub.y + targetStub.y) / 2)
+    return removeDuplicatePoints([
+      sourcePoint,
+      { x: sourcePoint.x, y: sharedY },
+      { x: targetPoint.x, y: sharedY },
+      targetPoint,
+    ])
+  }
+
+  const bridgeX =
+    sourcePoint.x !== targetPoint.x
+      ? Math.round((sourcePoint.x + targetPoint.x) / 2)
+      : sourcePoint.x <= targetPoint.x
+        ? Math.min(sourcePoint.x, targetPoint.x) - EDGES.STUB_LENGTH
+        : Math.max(sourcePoint.x, targetPoint.x) + EDGES.STUB_LENGTH
+  return removeDuplicatePoints([
+    sourcePoint,
+    sourceStub,
+    { x: bridgeX, y: sourceStub.y },
+    { x: bridgeX, y: targetStub.y },
+    targetStub,
+    targetPoint,
+  ])
+}
+
+const hasCollapsingSegments = (result: IPoint[]): boolean => {
+  for (let i = 1; i < result.length - 2; i++) {
+    const prev = result[i - 1]
+    const curr = result[i]
+    const next = result[i + 1]
+    const horizBack =
+      prev.y === curr.y &&
+      curr.y === next.y &&
+      (curr.x - prev.x) * (next.x - curr.x) < 0
+    const vertBack =
+      prev.x === curr.x &&
+      curr.x === next.x &&
+      (curr.y - prev.y) * (next.y - curr.y) < 0
+    if (horizBack || vertBack) return true
+  }
+  return false
+}
+
 /**
- * Reanchors a stored step-edge path to new endpoints without losing the
- * user-edited bend coordinates. The first and last segment are forced to
- * leave/enter according to the handle sides, so moving nodes or reconnecting
- * to another handle cannot turn a step edge into a diagonal line.
+ * Returns true when source and target stubs point toward each other and would
+ * overlap or leave no room between them. This catches the "narrow U" case —
+ * where the two arms of a U-shape almost touch — before the geometry has
+ * actually inverted (which hasCollapsingSegments catches too late).
+ *
+ * Only applies to facing-stub configurations where both stubs exit into the
+ * same space and can collide. Diverging pairs are handled by later validation.
  */
+export const stubsWouldOverlap = (
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position,
+  stubLength: number
+): boolean => {
+  if (sourcePosition === Position.Right && targetPosition === Position.Left) {
+    return (
+      sourcePoint.x < targetPoint.x &&
+      sourcePoint.x + stubLength >= targetPoint.x - stubLength
+    )
+  }
+  if (sourcePosition === Position.Left && targetPosition === Position.Right) {
+    return (
+      sourcePoint.x > targetPoint.x &&
+      sourcePoint.x - stubLength <= targetPoint.x + stubLength
+    )
+  }
+  if (sourcePosition === Position.Bottom && targetPosition === Position.Top) {
+    return (
+      sourcePoint.y < targetPoint.y &&
+      sourcePoint.y + stubLength >= targetPoint.y - stubLength
+    )
+  }
+  if (sourcePosition === Position.Top && targetPosition === Position.Bottom) {
+    return (
+      sourcePoint.y > targetPoint.y &&
+      sourcePoint.y - stubLength <= targetPoint.y + stubLength
+    )
+  }
+  return false
+}
+
+const hasDiagonalSegment = (points: IPoint[]): boolean =>
+  points.some((point, index) => {
+    if (index === 0) return false
+    const previous = points[index - 1]
+    return previous.x !== point.x && previous.y !== point.y
+  })
+
+const getSourceStubLength = (
+  points: IPoint[],
+  sourcePoint: IPoint,
+  sourcePosition: Position
+): number => {
+  const first = points[1]
+  if (!first) return 0
+
+  switch (sourcePosition) {
+    case Position.Right:
+      return first.y === sourcePoint.y ? first.x - sourcePoint.x : -Infinity
+    case Position.Left:
+      return first.y === sourcePoint.y ? sourcePoint.x - first.x : -Infinity
+    case Position.Bottom:
+      return first.x === sourcePoint.x ? first.y - sourcePoint.y : -Infinity
+    case Position.Top:
+    default:
+      return first.x === sourcePoint.x ? sourcePoint.y - first.y : -Infinity
+  }
+}
+
+const getTargetStubLength = (
+  points: IPoint[],
+  targetPoint: IPoint,
+  targetPosition: Position
+): number => {
+  const penultimate = points[points.length - 2]
+  if (!penultimate) return 0
+
+  switch (targetPosition) {
+    case Position.Left:
+      return penultimate.y === targetPoint.y
+        ? targetPoint.x - penultimate.x
+        : -Infinity
+    case Position.Right:
+      return penultimate.y === targetPoint.y
+        ? penultimate.x - targetPoint.x
+        : -Infinity
+    case Position.Top:
+      return penultimate.x === targetPoint.x
+        ? targetPoint.y - penultimate.y
+        : -Infinity
+    case Position.Bottom:
+    default:
+      return penultimate.x === targetPoint.x
+        ? penultimate.y - targetPoint.y
+        : -Infinity
+  }
+}
+
+const hasReducedTerminalStub = (
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): boolean =>
+  getSourceStubLength(points, sourcePoint, sourcePosition) <
+    EDGES.STUB_LENGTH ||
+  getTargetStubLength(points, targetPoint, targetPosition) < EDGES.STUB_LENGTH
+
+const hasArmCollapse = (points: IPoint[], proximityPx: number): boolean => {
+  if (points.length < 4) return false
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const aStart = points[i]
+    const aEnd = points[i + 1]
+    const aIsH = aStart.y === aEnd.y
+    const aIsV = aStart.x === aEnd.x
+    if (!aIsH && !aIsV) continue
+
+    for (let j = i + 2; j < points.length - 1; j++) {
+      const bStart = points[j]
+      const bEnd = points[j + 1]
+      const bIsH = bStart.y === bEnd.y
+      const bIsV = bStart.x === bEnd.x
+
+      if (aIsH && bIsH && Math.abs(aStart.y - bStart.y) <= proximityPx) {
+        const aMinX = Math.min(aStart.x, aEnd.x)
+        const aMaxX = Math.max(aStart.x, aEnd.x)
+        const bMinX = Math.min(bStart.x, bEnd.x)
+        const bMaxX = Math.max(bStart.x, bEnd.x)
+        if (Math.max(aMinX, bMinX) < Math.min(aMaxX, bMaxX)) return true
+      }
+
+      if (aIsV && bIsV && Math.abs(aStart.x - bStart.x) <= proximityPx) {
+        const aMinY = Math.min(aStart.y, aEnd.y)
+        const aMaxY = Math.max(aStart.y, aEnd.y)
+        const bMinY = Math.min(bStart.y, bEnd.y)
+        const bMaxY = Math.max(bStart.y, bEnd.y)
+        if (Math.max(aMinY, bMinY) < Math.min(aMaxY, bMaxY)) return true
+      }
+    }
+  }
+
+  return false
+}
+
+const collapseTinyOrthogonalDoglegs = (
+  points: IPoint[],
+  proximityPx: number
+): IPoint[] => {
+  if (points.length < 5) return points
+
+  let collapsed = points.map((point) => ({ ...point }))
+  let changed = true
+
+  while (changed) {
+    changed = false
+
+    for (let i = 1; i <= collapsed.length - 4; i++) {
+      const a = collapsed[i]
+      const b = collapsed[i + 1]
+      const c = collapsed[i + 2]
+      const d = collapsed[i + 3]
+
+      const firstVertical = a.x === b.x
+      const firstHorizontal = a.y === b.y
+      const secondVertical = c.x === d.x
+      const secondHorizontal = c.y === d.y
+
+      if (firstVertical && secondVertical && b.y === c.y) {
+        const connectorLength = Math.abs(c.x - b.x)
+        const sameDirection = (b.y - a.y) * (d.y - c.y) > 0
+        if (
+          connectorLength > 0 &&
+          connectorLength <= proximityPx &&
+          sameDirection
+        ) {
+          const lane = i + 3 === collapsed.length - 2 ? c.x : a.x
+          collapsed[i] = { ...a, x: lane }
+          collapsed[i + 1] = { ...b, x: lane }
+          collapsed[i + 2] = { ...c, x: lane }
+          collapsed[i + 3] = { ...d, x: lane }
+          collapsed = removeDuplicatePoints(simplifyPoints(collapsed))
+          changed = true
+          break
+        }
+      }
+
+      if (firstHorizontal && secondHorizontal && b.x === c.x) {
+        const connectorLength = Math.abs(c.y - b.y)
+        const sameDirection = (b.x - a.x) * (d.x - c.x) > 0
+        if (
+          connectorLength > 0 &&
+          connectorLength <= proximityPx &&
+          sameDirection
+        ) {
+          const lane = i + 3 === collapsed.length - 2 ? c.y : a.y
+          collapsed[i] = { ...a, y: lane }
+          collapsed[i + 1] = { ...b, y: lane }
+          collapsed[i + 2] = { ...c, y: lane }
+          collapsed[i + 3] = { ...d, y: lane }
+          collapsed = removeDuplicatePoints(simplifyPoints(collapsed))
+          changed = true
+          break
+        }
+      }
+    }
+  }
+
+  return collapsed
+}
+
+const sanitizeReleasedPoints = (
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint
+): IPoint[] => {
+  if (points.length < 2) return []
+
+  const rounded = points.map((point) => ({
+    x: Math.round(point.x),
+    y: Math.round(point.y),
+  }))
+  rounded[0] = { ...sourcePoint }
+  rounded[rounded.length - 1] = { ...targetPoint }
+
+  return removeDuplicatePoints(simplifyPoints(removeDuplicatePoints(rounded)))
+}
+
+export function isInvalidOrthogonalEdgeRelease(
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): boolean {
+  const sanitized = sanitizeReleasedPoints(points, sourcePoint, targetPoint)
+
+  return (
+    sanitized.length < 2 ||
+    hasDiagonalSegment(sanitized) ||
+    hasReducedTerminalStub(
+      sanitized,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    ) ||
+    hasArmCollapse(sanitized, 10) ||
+    stubsWouldOverlap(
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition,
+      EDGES.STUB_LENGTH
+    )
+  )
+}
+
+export function normalizeOrthogonalEdgePoints(
+  points: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] {
+  const hasStubCollision = stubsWouldOverlap(
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition,
+    EDGES.STUB_LENGTH
+  )
+  const fallback = hasStubCollision
+    ? getStubCollisionFallbackPoints(
+        sourcePoint,
+        targetPoint,
+        sourcePosition,
+        targetPosition
+      )
+    : getSafeOrthogonalPathPoints(
+        sourcePoint,
+        targetPoint,
+        sourcePosition,
+        targetPosition
+      )
+
+  const sanitized = sanitizeReleasedPoints(points, sourcePoint, targetPoint)
+  if (
+    sanitized.length < 2 ||
+    hasDiagonalSegment(sanitized) ||
+    hasReducedTerminalStub(
+      sanitized,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    ) ||
+    hasArmCollapse(sanitized, 10) ||
+    hasStubCollision
+  ) {
+    return fallback
+  }
+
+  const normalized = preserveOrthogonalEdgePoints(
+    sanitized,
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition
+  )
+
+  const canonical = sanitizeReleasedPoints(normalized, sourcePoint, targetPoint)
+
+  return canonical.length >= 2 && !hasDiagonalSegment(canonical)
+    ? canonical
+    : fallback
+}
+
+export function resolveOrthogonalEdgeReleasePoints(
+  releasedPoints: IPoint[],
+  lastValidPoints: IPoint[],
+  sourcePoint: IPoint,
+  targetPoint: IPoint,
+  sourcePosition: Position,
+  targetPosition: Position
+): IPoint[] {
+  const pointsToNormalize = isInvalidOrthogonalEdgeRelease(
+    releasedPoints,
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition
+  )
+    ? lastValidPoints
+    : releasedPoints
+
+  return normalizeOrthogonalEdgePoints(
+    pointsToNormalize,
+    sourcePoint,
+    targetPoint,
+    sourcePosition,
+    targetPosition
+  )
+}
 export function preserveOrthogonalEdgePoints(
   points: IPoint[],
   sourcePoint: IPoint,
@@ -1068,6 +1547,24 @@ export function preserveOrthogonalEdgePoints(
     sourcePosition,
     targetPosition
   )
+
+  if (
+    stubsWouldOverlap(
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition,
+      EDGES.STUB_LENGTH
+    )
+  ) {
+    return getStubCollisionFallbackPoints(
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    )
+  }
+
   const originalSegmentCount = Math.max(points.length - 1, 1)
   const safeSegmentCount = Math.max(safePoints.length - 1, 1)
   const minimumSegmentCount = getMinimumOrthogonalSegmentCount(
@@ -1076,6 +1573,10 @@ export function preserveOrthogonalEdgePoints(
     sourceAxis,
     targetAxis
   )
+
+  if (originalSegmentCount < minimumSegmentCount) {
+    return safePoints
+  }
 
   let segmentCount = Math.max(
     originalSegmentCount,
@@ -1098,8 +1599,58 @@ export function preserveOrthogonalEdgePoints(
     safeLaneValues[i] = getLaneValue(safePoints, i, axis, targetPoint)
   }
 
+  const srcAxisCoord0 = sourceAxis === "horizontal" ? points[0].x : points[0].y
+  const srcAxisCoord1 =
+    points.length > 1
+      ? sourceAxis === "horizontal"
+        ? points[1].x
+        : points[1].y
+      : srcAxisCoord0
+  const srcStubOffset = Math.abs(srcAxisCoord1 - srcAxisCoord0)
+  if (Math.abs(srcStubOffset - EDGES.STUB_LENGTH) <= 1) {
+    laneValues[1] = getStubExitCoord(
+      sourcePosition,
+      sourcePoint,
+      EDGES.STUB_LENGTH
+    )
+  }
+
   if (!isSourceLaneCompatible(sourcePosition, sourcePoint, laneValues[1])) {
     laneValues[1] = safeLaneValues[1]
+  }
+
+  const targetLaneIndex = (() => {
+    for (let i = segmentCount - 1; i >= 1; i--) {
+      if (getAlternatingAxis(sourceAxis, i - 1) === targetAxis) return i
+    }
+    return 1
+  })()
+
+  const lastIdx = points.length - 1
+  const tgtAxisCoordLast =
+    targetAxis === "horizontal" ? points[lastIdx].x : points[lastIdx].y
+  const tgtAxisCoordAtLane =
+    targetLaneIndex < points.length
+      ? targetAxis === "horizontal"
+        ? points[targetLaneIndex].x
+        : points[targetLaneIndex].y
+      : tgtAxisCoordLast
+  const tgtStubOffset = Math.abs(tgtAxisCoordLast - tgtAxisCoordAtLane)
+  if (Math.abs(tgtStubOffset - EDGES.STUB_LENGTH) <= 1) {
+    laneValues[targetLaneIndex] = getStubExitCoord(
+      targetPosition,
+      targetPoint,
+      EDGES.STUB_LENGTH
+    )
+  }
+
+  if (segmentCount >= 3 && points.length >= 3) {
+    const perpCoord1 = sourceAxis === "horizontal" ? points[1].y : points[1].x
+    const perpCoord2 = sourceAxis === "horizontal" ? points[2].y : points[2].x
+    if (Math.abs(perpCoord1 - perpCoord2) <= 1) {
+      laneValues[2] =
+        sourceAxis === "horizontal" ? sourcePoint.y : sourcePoint.x
+    }
   }
 
   let result = buildOrthogonalPathFromLanes(
@@ -1111,15 +1662,6 @@ export function preserveOrthogonalEdgePoints(
     targetAxis
   )
 
-  const targetLaneIndex = (() => {
-    for (let i = segmentCount - 1; i >= 1; i--) {
-      if (getAlternatingAxis(sourceAxis, i - 1) === targetAxis) {
-        return i
-      }
-    }
-    return 1
-  })()
-
   if (
     !isTargetApproachCompatible(
       targetPosition,
@@ -1127,16 +1669,54 @@ export function preserveOrthogonalEdgePoints(
       targetPoint
     )
   ) {
-    laneValues[targetLaneIndex] = safeLaneValues[targetLaneIndex]
-    result = buildOrthogonalPathFromLanes(
-      laneValues,
-      segmentCount,
-      sourcePoint,
-      targetPoint,
-      sourceAxis,
-      targetAxis
-    )
+    if (sourceAxis === targetAxis && points.length >= 6) {
+      const stubExitCoord = getStubExitCoord(
+        targetPosition,
+        targetPoint,
+        EDGES.STUB_LENGTH
+      )
+      const stubExitPoint =
+        targetAxis === "horizontal"
+          ? { x: stubExitCoord, y: targetPoint.y }
+          : { x: targetPoint.x, y: stubExitCoord }
+      const withStub = removeDuplicatePoints([
+        ...result.slice(0, -1),
+        stubExitPoint,
+        targetPoint,
+      ])
+      if (
+        isTargetApproachCompatible(
+          targetPosition,
+          withStub[withStub.length - 2],
+          targetPoint
+        )
+      ) {
+        result = withStub
+      } else {
+        laneValues[targetLaneIndex] = safeLaneValues[targetLaneIndex]
+        result = buildOrthogonalPathFromLanes(
+          laneValues,
+          segmentCount,
+          sourcePoint,
+          targetPoint,
+          sourceAxis,
+          targetAxis
+        )
+      }
+    } else {
+      laneValues[targetLaneIndex] = safeLaneValues[targetLaneIndex]
+      result = buildOrthogonalPathFromLanes(
+        laneValues,
+        segmentCount,
+        sourcePoint,
+        targetPoint,
+        sourceAxis,
+        targetAxis
+      )
+    }
   }
+
+  result = collapseTinyOrthogonalDoglegs(result, 10)
 
   if (
     !isSourceLaneCompatible(
@@ -1148,7 +1728,16 @@ export function preserveOrthogonalEdgePoints(
       targetPosition,
       result[result.length - 2],
       targetPoint
-    )
+    ) ||
+    hasCollapsingSegments(result) ||
+    hasReducedTerminalStub(
+      result,
+      sourcePoint,
+      targetPoint,
+      sourcePosition,
+      targetPosition
+    ) ||
+    hasArmCollapse(result, 10)
   ) {
     return safePoints
   }

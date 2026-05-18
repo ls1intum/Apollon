@@ -14,12 +14,16 @@ import {
   getDefaultEdgeType,
   getEdgeMarkerStyles,
   getMarkerSegmentPath,
+  isInvalidOrthogonalEdgeRelease,
+  normalizeOrthogonalEdgePoints,
   parseSvgPath,
   preserveOrthogonalEdgePoints,
+  resolveOrthogonalEdgeReleasePoints,
   resolveReconnectPreviewBasePoints,
   removeDuplicatePoints,
   simplifyPoints,
   simplifySvgPath,
+  stubsWouldOverlap,
 } from "@/utils/edgeUtils"
 import { ConnectionLineType, Position } from "@xyflow/react"
 import { describe, expect, it } from "vitest"
@@ -1195,6 +1199,60 @@ describe("preserveOrthogonalEdgePoints", () => {
     expectOrthogonalSegments(result)
   })
 
+  it("preserves a horizontal U-shape (Right→Left bent down) when the target moves left", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 30, y: 200 },
+        { x: 30, y: 250 },
+        { x: 370, y: 250 },
+        { x: 370, y: 200 },
+        { x: 400, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 200, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 250 },
+      { x: 170, y: 250 },
+      { x: 170, y: 200 },
+      { x: 200, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("preserves a vertical U-shape (Left→Right bent left) when the source moves down", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 200, y: 100 },
+        { x: 170, y: 100 },
+        { x: 90, y: 100 },
+        { x: 90, y: 300 },
+        { x: 230, y: 300 },
+        { x: 200, y: 300 },
+      ],
+      { x: 200, y: 150 },
+      { x: 200, y: 300 },
+      Position.Left,
+      Position.Right
+    )
+
+    expect(result).toEqual([
+      { x: 200, y: 150 },
+      { x: 170, y: 150 },
+      { x: 90, y: 150 },
+      { x: 90, y: 300 },
+      { x: 230, y: 300 },
+      { x: 200, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
   it("is idempotent when fed its own output", () => {
     const sourcePoint = { x: 100, y: 50 }
     const targetPoint = { x: 350, y: 200 }
@@ -1224,6 +1282,377 @@ describe("preserveOrthogonalEdgePoints", () => {
 
     expect(twice).toEqual(once)
     expectOrthogonalSegments(twice)
+  })
+
+  it("falls back deterministically when horizontal U-shape stubs collide", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 30, y: 200 },
+        { x: 30, y: 250 },
+        { x: 370, y: 250 },
+        { x: 370, y: 200 },
+        { x: 400, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 50, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+    expect(result.length).toBeGreaterThanOrEqual(2)
+    expect(result[0]).toEqual({ x: 0, y: 200 })
+    expect(result[result.length - 1]).toEqual({ x: 50, y: 200 })
+    expectOrthogonalSegments(result)
+  })
+
+  it("routes around stub collisions without shortening 30px stubs", () => {
+    const result = normalizeOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 30, y: 200 },
+        { x: 30, y: 250 },
+        { x: 20, y: 250 },
+        { x: 20, y: 200 },
+        { x: 50, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 50, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 170 },
+      { x: 20, y: 170 },
+      { x: 20, y: 200 },
+      { x: 50, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("prefers a Z-shape fallback for horizontal stub collisions when endpoints are vertically separated", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 150 },
+        { x: 130, y: 150 },
+        { x: 130, y: 300 },
+        { x: 160, y: 300 },
+      ],
+      { x: 0, y: 0 },
+      { x: 50, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 150 },
+      { x: 20, y: 150 },
+      { x: 20, y: 300 },
+      { x: 50, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("snaps micro horizontal stub-lane offsets to one shared spine instead of leaving a jog", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 150 },
+        { x: 124, y: 150 },
+        { x: 124, y: 300 },
+        { x: 154, y: 300 },
+      ],
+      { x: 0, y: 0 },
+      { x: 54, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 27, y: 0 },
+      { x: 27, y: 300 },
+      { x: 54, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("prefers a Z-shape fallback for vertical stub collisions when endpoints are horizontally separated", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 300, y: 0 },
+        { x: 300, y: 30 },
+        { x: 150, y: 30 },
+        { x: 150, y: 130 },
+        { x: 0, y: 130 },
+        { x: 0, y: 160 },
+      ],
+      { x: 300, y: 0 },
+      { x: 0, y: 50 },
+      Position.Bottom,
+      Position.Top
+    )
+
+    expect(result).toEqual([
+      { x: 300, y: 0 },
+      { x: 300, y: 30 },
+      { x: 150, y: 30 },
+      { x: 150, y: 20 },
+      { x: 0, y: 20 },
+      { x: 0, y: 50 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("snaps micro vertical stub-lane offsets to one shared spine instead of leaving a jog", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 300, y: 0 },
+        { x: 300, y: 30 },
+        { x: 150, y: 30 },
+        { x: 150, y: 124 },
+        { x: 0, y: 124 },
+        { x: 0, y: 154 },
+      ],
+      { x: 300, y: 0 },
+      { x: 0, y: 54 },
+      Position.Bottom,
+      Position.Top
+    )
+
+    expect(result).toEqual([
+      { x: 300, y: 0 },
+      { x: 300, y: 27 },
+      { x: 0, y: 27 },
+      { x: 0, y: 54 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("collapses a target-side tiny vertical stair-step when preserving node movement", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 100 },
+        { x: 220, y: 100 },
+        { x: 220, y: 200 },
+        { x: 230, y: 200 },
+        { x: 230, y: 300 },
+        { x: 260, y: 300 },
+      ],
+      { x: 0, y: 0 },
+      { x: 260, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 100 },
+      { x: 230, y: 100 },
+      { x: 230, y: 300 },
+      { x: 260, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("collapses a source-side tiny vertical stair-step without moving the source stub", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 100 },
+        { x: 40, y: 100 },
+        { x: 40, y: 200 },
+        { x: 200, y: 200 },
+        { x: 200, y: 300 },
+        { x: 230, y: 300 },
+      ],
+      { x: 0, y: 0 },
+      { x: 230, y: 300 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 200 },
+      { x: 200, y: 200 },
+      { x: 200, y: 300 },
+      { x: 230, y: 300 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("collapses near-overlapping parallel arms only in release normalization", () => {
+    const result = normalizeOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 360, y: 200 },
+        { x: 360, y: 250 },
+        { x: 370, y: 250 },
+        { x: 370, y: 200 },
+        { x: 400, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 400, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual([
+      { x: 0, y: 200 },
+      { x: 400, y: 200 },
+    ])
+    expectOrthogonalSegments(result)
+  })
+
+  it("rejects release when the target stub would shrink below 30px", () => {
+    const releasedPoints = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 150 },
+      { x: 190, y: 150 },
+      { x: 190, y: 200 },
+      { x: 200, y: 200 },
+    ]
+
+    expect(
+      isInvalidOrthogonalEdgeRelease(
+        releasedPoints,
+        { x: 0, y: 200 },
+        { x: 200, y: 200 },
+        Position.Right,
+        Position.Left
+      )
+    ).toBe(true)
+  })
+
+  it("reverts release to the last valid points when a terminal stub is reduced", () => {
+    const lastValidPoints = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 150 },
+      { x: 170, y: 150 },
+      { x: 170, y: 200 },
+      { x: 200, y: 200 },
+    ]
+    const releasedPoints = [
+      { x: 0, y: 200 },
+      { x: 30, y: 200 },
+      { x: 30, y: 150 },
+      { x: 190, y: 150 },
+      { x: 190, y: 200 },
+      { x: 200, y: 200 },
+    ]
+
+    const result = resolveOrthogonalEdgeReleasePoints(
+      releasedPoints,
+      lastValidPoints,
+      { x: 0, y: 200 },
+      { x: 200, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result).toEqual(lastValidPoints)
+    expectOrthogonalSegments(result)
+  })
+
+  it("detects mirrored horizontal and vertical stub collisions", () => {
+    expect(
+      stubsWouldOverlap(
+        { x: 100, y: 0 },
+        { x: 50, y: 0 },
+        Position.Left,
+        Position.Right,
+        30
+      )
+    ).toBe(true)
+    expect(
+      stubsWouldOverlap(
+        { x: 0, y: 100 },
+        { x: 0, y: 50 },
+        Position.Top,
+        Position.Bottom,
+        30
+      )
+    ).toBe(true)
+    expect(
+      stubsWouldOverlap(
+        { x: 100, y: 0 },
+        { x: 0, y: 0 },
+        Position.Left,
+        Position.Right,
+        30
+      )
+    ).toBe(false)
+  })
+
+  it("normalizes no-op drag release input without persisting an empty path", () => {
+    const result = normalizeOrthogonalEdgePoints(
+      [],
+      { x: 0, y: 0 },
+      { x: 200, y: 80 },
+      Position.Right,
+      Position.Left
+    )
+
+    expect(result.length).toBeGreaterThanOrEqual(2)
+    expect(result[0]).toEqual({ x: 0, y: 0 })
+    expect(result[result.length - 1]).toEqual({ x: 200, y: 80 })
+    expectOrthogonalSegments(result)
+  })
+
+  it("rejects diagonal release input and normalizes idempotently", () => {
+    const sourcePoint = { x: 0, y: 0 }
+    const targetPoint = { x: 200, y: 80 }
+    const once = normalizeOrthogonalEdgePoints(
+      [sourcePoint, targetPoint],
+      sourcePoint,
+      targetPoint,
+      Position.Right,
+      Position.Left
+    )
+    const twice = normalizeOrthogonalEdgePoints(
+      once,
+      sourcePoint,
+      targetPoint,
+      Position.Right,
+      Position.Left
+    )
+
+    expect(twice).toEqual(once)
+    expectOrthogonalSegments(once)
+  })
+
+  it("preserves a bent vertical segment when bending the U-shape stub", () => {
+    const result = preserveOrthogonalEdgePoints(
+      [
+        { x: 0, y: 200 },
+        { x: 60, y: 200 },
+        { x: 60, y: 280 },
+        { x: 370, y: 280 },
+        { x: 370, y: 200 },
+        { x: 400, y: 200 },
+      ],
+      { x: 0, y: 200 },
+      { x: 400, y: 200 },
+      Position.Right,
+      Position.Left
+    )
+    expect(result[1]).toEqual({ x: 60, y: 200 })
+    expectOrthogonalSegments(result)
   })
 })
 

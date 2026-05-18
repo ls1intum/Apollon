@@ -159,6 +159,10 @@ export const EDGES = Object.freeze({
   STEP_BORDER_RADIUS: 0,
   /** Width of the invisible stroke used for edge selection/highlighting */
   EDGE_HIGHLIGHT_STROKE_WIDTH: 15,
+  /** Stub length locked to node, matches getSmoothStepPath offset */
+  STUB_LENGTH: 30,
+  /** Minimum effective segment length to show a bend handle */
+  BEND_MIN_LENGTH: 100,
 } as const)
 
 /* -------------------------------------------------------------------------- */

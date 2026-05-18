@@ -84,7 +84,9 @@ export const DeploymentDiagramEdge = ({
     edgeData,
     currentPath,
     overlayPath,
-    midpoints,
+    bendHandles,
+    isBendDragging,
+    draggingHandleSegmentIndex,
     hasInitialCalculation,
     isReconnectingRef,
     markerEnd,
@@ -155,7 +157,7 @@ export const DeploymentDiagramEdge = ({
             strokeWidth={EDGES.EDGE_HIGHLIGHT_STROKE_WIDTH}
             pointerEvents="stroke"
             style={{
-              opacity: isReconnectingRef.current ? 0 : 0.4,
+              opacity: isReconnectingRef.current || isBendDragging ? 0 : 0.4,
             }}
           />
 
@@ -173,20 +175,30 @@ export const DeploymentDiagramEdge = ({
           {isDiagramModifiable &&
             !isReconnectingRef.current &&
             allowMidpointDragging &&
-            midpoints.map((point, midPointIndex) => (
-              <circle
-                className="edge-circle"
-                pointerEvents="all"
-                key={`${id}-midpoint-${midPointIndex}`}
-                cx={point.x}
-                cy={point.y}
-                r={10}
-                fill="lightgray"
-                stroke="none"
-                style={{ cursor: "grab", zIndex: 9999 }}
-                onPointerDown={(e) => handlePointerDown(e, midPointIndex)}
-              />
-            ))}
+            bendHandles
+              .filter(
+                (handle) =>
+                  !isBendDragging ||
+                  handle.segmentIndex === draggingHandleSegmentIndex
+              )
+              .map((handle) => (
+                <circle
+                  className="edge-circle"
+                  pointerEvents="all"
+                  key={`${id}-bend-${handle.segmentIndex}`}
+                  cx={handle.position.x}
+                  cy={handle.position.y}
+                  r={10}
+                  fill="lightgray"
+                  stroke="none"
+                  style={{
+                    cursor:
+                      handle.orientation === "H" ? "ns-resize" : "ew-resize",
+                    zIndex: 9999,
+                  }}
+                  onPointerDown={(e) => handlePointerDown(e, handle)}
+                />
+              ))}
         </g>
 
         <EdgeMiddleLabels
