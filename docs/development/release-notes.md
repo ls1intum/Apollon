@@ -1,6 +1,6 @@
 # Release-notes style guide
 
-Apollon ships three independent release lines (`@tumaet/apollon` on npm, the standalone webapp + server on `ghcr.io`, the VS Code extension on Marketplace and Open VSX), all driven by [Changesets](https://github.com/changesets/changesets). This guide is the contract for what each PR author writes so good release notes happen automatically.
+Apollon ships three independent release lines (`@tumaet/apollon` on npm, the standalone webapp + server on `ghcr.io`, the VS Code extension on the Marketplace — Open VSX is wired in but only fires when an `OVSX_PAT` is configured), all driven by [Changesets](https://github.com/changesets/changesets). This guide is the contract for what each PR author writes so good release notes happen automatically.
 
 ## What you write per PR
 

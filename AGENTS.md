@@ -8,7 +8,7 @@ npm workspace monorepo with three release lines:
 
 - **`library/`** — `@tumaet/apollon`, published to npm.
 - **`standalone/webapp/`** + **`standalone/server/`** — `@tumaet/webapp` and `@tumaet/server` (both private; Docker images on `ghcr.io/ls1intum/apollon`). Released in lockstep via `fixed` in [`.changeset/config.json`](.changeset/config.json).
-- **`vscode-extension/`** — `apollon-vscode`, published to VS Marketplace and Open VSX.
+- **`vscode-extension/`** — `apollon-vscode`, published to VS Marketplace (and Open VSX once an `OVSX_PAT` is configured — the publish step skips gracefully when it isn't).
 
 A library minor auto-patches webapp + server through `updateInternalDependencies: patch` — see [`docs/development/release-notes.md`](docs/development/release-notes.md#per-package-conventions) for the full release-line conventions.
 
