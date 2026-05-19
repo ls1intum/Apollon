@@ -13,7 +13,6 @@ coverage/
 # Temporary files and cache
 .tmp/
 .cache/
-.parcel-cache/
 .idea/
 .DS_Store
 *.swp

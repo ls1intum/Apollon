@@ -8,7 +8,7 @@
  * Idempotent — running it twice is a no-op. Refuses to leave any
  * STRING-typed `diagram:*` HEAD keys behind.
  *
- * Run via: npm run migrate:string-to-json --workspace=@tumaet/server
+ * Run via: pnpm --filter @tumaet/server run migrate:string-to-json
  */
 import "../loadEnvironment"
 import { loadConfig } from "../config"

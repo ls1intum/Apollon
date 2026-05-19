@@ -3,6 +3,7 @@
   "description": "Dashboard-only mode — PRs created only when approved from the dashboard",
   "extends": [
     "config:best-practices",
+    "docker:pinDigests",
     ":semanticCommitTypeAll(chore)",
     ":dependencyDashboardApproval"
   ],
@@ -20,7 +21,13 @@
   "dependencyDashboardTitle": "Dependency Dashboard",
 
   "rebaseWhen": "conflicted",
-  "postUpdateOptions": ["npmDedupe"],
+  "postUpdateOptions": ["pnpmDedupe"],
+
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 7am on monday"],
+    "labels": ["dependencies", "lockfile-maintenance"]
+  },
 
   "packageRules": [
     {
@@ -47,6 +54,11 @@
       "matchManagers": ["dockerfile", "docker-compose"],
       "groupName": "Docker images",
       "labels": ["dependencies", "infrastructure"]
+    },
+    {
+      "description": "@types/pdfmake — pinned to 0.2.x because 0.3.x removed the .vfs property used by standalone/server/src/workers/pdf-conversion-worker-thread.ts. Re-evaluate when migrating the worker to the 0.3 API.",
+      "matchPackageNames": ["@types/pdfmake"],
+      "enabled": false
     }
   ],
 
