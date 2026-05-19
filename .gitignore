@@ -1,13 +1,8 @@
 # Node.js dependencies
 node_modules/
-pnpm-lock.yaml
 
 # Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 *.log
 
 # Build artifacts
@@ -18,6 +13,7 @@ coverage/
 # Temporary files and cache
 .tmp/
 .cache/
+.parcel-cache/
 .idea/
 .DS_Store
 *.swp
@@ -35,26 +31,18 @@ coverage/
 
 # OS-specific files
 Thumbs.db
-.DS_Store
 
-# Typescript
+# TypeScript
 *.tsbuildinfo
 
-# Testing-related
-coverage/
+# Testing artifacts
 jest-cache/
 jest-output/
 **/test-results/
 **/playwright-report/
 **/blob-report/
 
-# Monorepo specific
-standalone/*/node_modules/
-library/*/node_modules/
-standalone/*/dist/
-library/*/dist/
-
-# Lint and Prettier files
+# Lint and Prettier caches
 eslintcache
 .prettiercache
 

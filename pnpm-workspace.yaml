@@ -1,0 +1,40 @@
+packages:
+  - "library"
+  - "standalone/*"
+  - "vscode-extension"
+  - "vscode-extension/menu"
+  - "vscode-extension/editor"
+
+linkWorkspacePackages: deep
+preferWorkspacePackages: true
+saveWorkspaceProtocol: rolling
+dedupePeerDependents: true
+# Inject workspace deps as real packages, not symlinks, so `pnpm deploy`
+# produces a self-contained server runtime image.
+injectWorkspacePackages: true
+
+# Pin pnpm 11 defaults explicitly so a future major can't shift them silently.
+minimumReleaseAge: 1440
+blockExoticSubdeps: true
+
+overrides:
+  "@eslint/plugin-kit": ">=0.3.4" # GHSA-7q7g-4xm8-89cq
+  "@xmldom/xmldom": ">=0.8.12" # GHSA-9pgh-qqpf-7wqj
+  "brace-expansion": ">=2.0.3" # GHSA-v6h2-p8h4-qcjw
+  "esbuild": "0.27.4" # evanw/esbuild#4436
+  "flatted": ">=3.4.2" # GHSA-rwm2-mxc8-7m93
+  "handlebars": ">=4.7.9" # GHSA-q42p-pg8m-cqh6
+  "lodash": ">=4.18.0" # GHSA-jf85-cpcp-j695
+  "minimatch": ">=5.0.0" # GHSA-f8q6-p94x-37v3
+  "picomatch": ">=4.0.4" # GHSA-9pwm-9w4j-c7q4
+  "tar": ">=7.5.11" # GHSA-f5x3-32g6-xq36
+
+# pnpm 10+ blocks lifecycle scripts by default. Each entry below is a
+# native-binding or signing tool that legitimately needs them.
+allowBuilds:
+  "@vscode/vsce-sign": true
+  "core-js": false # jspdf transitive; "thank-you" postinstall, no native build
+  "cpu-features": true
+  "esbuild": true
+  "sharp": true
+  "ssh2": true
