@@ -54,29 +54,16 @@
     "@capacitor/cli": "8.3.0",
     "@commitlint/cli": "19.6.0",
     "@commitlint/config-conventional": "19.6.0",
-    "@emotion/react": "11.11.1",
-    "@emotion/styled": "11.11.0",
-    "@resvg/resvg-js": "2.6.2",
     "@types/node": "24.12.4",
     "concurrently": "9.1.0",
     "husky": "9.1.7",
     "lint-staged": "15.5.2",
-    "prettier": "3.4.2",
-    "vite": "6.4.2",
-    "yaml": "2.8.3"
+    "prettier": "3.4.2"
   },
   "lint-staged": {
-    "*.{js,jsx,mjs,cjs,ts,tsx,json,md,yml,yaml}": "prettier --ignore-unknown --write"
-  },
-  "dependencies": {
-    "@capacitor/android": "8.3.0",
-    "@capacitor/core": "8.3.0",
-    "@capacitor/file-transfer": "2.0.4",
-    "@capacitor/filesystem": "8.1.2",
-    "@capacitor/ios": "8.3.0",
-    "@capacitor/share": "8.0.1",
-    "@capacitor/splash-screen": "8.0.1",
-    "@capacitor/status-bar": "8.0.2",
-    "capacitor-plugin-safe-area": "4.0.0"
+    "*.{js,jsx,mjs,cjs,ts,tsx}": [
+      "prettier --ignore-unknown --write"
+    ],
+    "*.{json,md,yml,yaml}": "prettier --ignore-unknown --write"
   }
 }

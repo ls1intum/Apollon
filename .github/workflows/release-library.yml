@@ -86,8 +86,13 @@ jobs:
       - name: Pack
         id: pack
         working-directory: library
+        # `pnpm pack --json` writes the tarball path to stdout as structured
+        # output; previous `pnpm pack | tail -n 1` broke when pnpm logged
+        # warnings on stdout (pnpm/pnpm#10200).
         run: |
-          TARBALL=$(pnpm pack | tail -n 1)
+          set -euo pipefail
+          TARBALL=$(pnpm pack --json | jq -r '.filename // .[0].filename')
+          test -f "$TARBALL"
           echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
 
       - name: Publish to npm with OIDC trusted publishing
