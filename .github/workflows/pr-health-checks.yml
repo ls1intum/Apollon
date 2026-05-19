@@ -186,6 +186,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Install Node 24
+        shell: bash
         run: |
           set -euo pipefail
           curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
