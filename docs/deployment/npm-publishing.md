@@ -5,7 +5,7 @@ Three independently versioned artifacts, each with its own release workflow:
 | Artifact | Version source | Tag | Workflow |
 | -------- | -------------- | --- | -------- |
 | `@tumaet/apollon` (npm) | `library/package.json` | `@tumaet/apollon@X.Y.Z` | `release-library.yml` |
-| Standalone Docker images | `standalone/{webapp,server}/package.json` | `vX.Y.Z` | `release-standalone.yml` |
+| Standalone Docker images | `standalone/{app,server}/package.json` | `vX.Y.Z` | `release-standalone.yml` |
 | `tumaet.apollon-vscode` (VS Marketplace + Open VSX) | `vscode-extension/package.json` | `apollon-vscode@X.Y.Z` | `release-vscode-extension.yml` |
 
 Standalone starts at `4.2.18` (the library version at the time of the release-pipeline switchover). Future `vX.Y.Z` tags advance from there and do not collide with legacy tags.
@@ -15,8 +15,8 @@ All three workflows trigger automatically when their version changes on `main`. 
 ## Cut a release
 
 1. Actions → **Version Bump** → pick `scope` and bump type. Merge the PR that opens.
-   - **`library`** bumps `library/package.json` **and** `standalone/{webapp,server}/package.json` by the same bump type, so a library change ships to npm **and** as a new Docker release from the same PR merge.
-   - **`standalone`** bumps only `standalone/{webapp,server}/package.json`; the library is untouched.
+   - **`library`** bumps `library/package.json` **and** `standalone/{app,server}/package.json` by the same bump type, so a library change ships to npm **and** as a new Docker release from the same PR merge.
+   - **`standalone`** bumps only `standalone/{app,server}/package.json`; the library is untouched.
    - **`vscode-extension`** bumps only `vscode-extension/package.json`; library and standalone are untouched.
 2. On merge:
    - `release-library.yml` fires when `library/package.json` changes: builds with pnpm, packs the tarball with `pnpm pack`, publishes with `npm publish` for OIDC trusted publishing + provenance (pnpm does not yet support OIDC trusted publishing natively — tracked in [pnpm#9812](https://github.com/pnpm/pnpm/issues/9812)). Tags `@tumaet/apollon@X.Y.Z` → GitHub Release. Skipped if the version is already on npm.

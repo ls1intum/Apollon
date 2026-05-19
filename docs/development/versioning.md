@@ -206,7 +206,7 @@ There is no real auth. URL bearers have full read/write/delete access. A
 soft HMAC-signed cookie (`apollon_owner_<id>`) is issued on first
 `POST /diagrams` and the first `POST .../versions` per diagram.
 Destructive routes set the `X-Owner-Match: true|false` response header.
-The webapp uses this only to add a confirm-twice friction prompt for
+The app uses this only to add a confirm-twice friction prompt for
 non-creators — "Heads up — this diagram was originally created in a
 different browser. Continue?" Friction, not security.
 

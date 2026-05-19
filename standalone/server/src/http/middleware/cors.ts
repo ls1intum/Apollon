@@ -2,7 +2,7 @@ import cors from "cors"
 import type { Config } from "../../config.js"
 
 export function configureCors(config: Config) {
-  // Behind the production reverse proxy the webapp and API share an origin,
+  // Behind the production reverse proxy the app and API share an origin,
   // so CORS is a no-op for production traffic. For dev (vite on a different
   // port) CORS_ORIGIN is set explicitly. We never reflect arbitrary origins
   // — combined with `credentials: true` that's the OWASP "credentials with

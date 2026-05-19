@@ -13,7 +13,7 @@ Apollon/
 │   │   ├── src/
 │   │   ├── Dockerfile
 │   │   └── package.json
-│   └── webapp/               # @tumaet/webapp — the browser-hosted app
+│   └── app/               # @tumaet/app — the browser-hosted app
 │       ├── src/
 │       ├── tests/            # Playwright e2e + visual regression
 │       ├── Dockerfile
@@ -38,7 +38,7 @@ Apollon/
 | Workspace                 | Name                | Published as                                           |
 | ------------------------- | ------------------- | ------------------------------------------------------ |
 | `library/`                | `@tumaet/apollon`   | [npm](https://www.npmjs.com/package/@tumaet/apollon)   |
-| `standalone/webapp/`      | `@tumaet/webapp`    | `ghcr.io/ls1intum/apollon/webapp`                      |
+| `standalone/app/`      | `@tumaet/app`    | `ghcr.io/ls1intum/apollon/app`                      |
 | `standalone/server/`      | `@tumaet/server`    | `ghcr.io/ls1intum/apollon/server`                      |
 | `vscode-extension/`       | `apollon-vscode`    | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |
 | `vscode-extension/menu/`  | `apollon-vscode-menu`   | bundled into the extension VSIX                |

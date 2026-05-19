@@ -7,7 +7,7 @@ export default {
       [
         "library",
         "server",
-        "webapp",
+        "app",
         "vscode",
         "vscode-extension",
         "deps",

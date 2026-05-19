@@ -431,7 +431,7 @@ describe("auto-versioning on the HEAD PUT path", () => {
 
   it("skips on selection-only churn — volatile React-Flow keys do not flip the fingerprint", async () => {
     // Pin the contract that the server's `structuralFingerprint` strips
-    // the same volatile-key set the webapp drops in `VersionDrawer.tsx`.
+    // the same volatile-key set the app drops in `VersionDrawer.tsx`.
     // Without this gate, a single node click would write `selected: true`
     // through Yjs to HEAD and the next 30-min window would commit a
     // spurious auto-version even though the user did nothing

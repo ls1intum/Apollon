@@ -80,7 +80,7 @@
     },
     {
       "name": "yjs sync chunk",
-      "path": "dist/yjsSyncClass-*.js",
+      "path": "dist/yjsSync-*.js",
       "limit": "210 kB"
     }
   ],

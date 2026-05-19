@@ -112,7 +112,7 @@ jobs:
           if [ "$SCOPE" = "standalone" ] || [ "$SCOPE" = "library" ]; then
             STANDALONE_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n1)
             if [ -n "$STANDALONE_TAG" ]; then
-              align_to_max standalone/webapp "${STANDALONE_TAG#v}"
+              align_to_max standalone/app "${STANDALONE_TAG#v}"
               align_to_max standalone/server "${STANDALONE_TAG#v}"
             fi
           fi
@@ -153,14 +153,14 @@ jobs:
             library)
               bump_pkg library
               LIB_VERSION=$(node -p "require('./library/package.json').version")
-              bump_pkg standalone/webapp
+              bump_pkg standalone/app
               bump_pkg standalone/server
-              STANDALONE_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+              STANDALONE_VERSION=$(node -p "require('./standalone/app/package.json').version")
               ;;
             standalone)
-              bump_pkg standalone/webapp
+              bump_pkg standalone/app
               bump_pkg standalone/server
-              STANDALONE_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+              STANDALONE_VERSION=$(node -p "require('./standalone/app/package.json').version")
               ;;
             vscode-extension)
               bump_pkg vscode-extension
@@ -190,12 +190,12 @@ jobs:
             library)
               BRANCH="chore/library-v${LIB_VERSION}"
               COMMIT_TITLE="chore: release @tumaet/apollon@${LIB_VERSION} + standalone v${STANDALONE_VERSION}"
-              FILES=(library/package.json standalone/webapp/package.json standalone/server/package.json pnpm-lock.yaml)
+              FILES=(library/package.json standalone/app/package.json standalone/server/package.json pnpm-lock.yaml)
               ;;
             standalone)
               BRANCH="chore/standalone-v${STANDALONE_VERSION}"
               COMMIT_TITLE="chore: release standalone v${STANDALONE_VERSION}"
-              FILES=(standalone/webapp/package.json standalone/server/package.json pnpm-lock.yaml)
+              FILES=(standalone/app/package.json standalone/server/package.json pnpm-lock.yaml)
               ;;
             vscode-extension)
               BRANCH="chore/vscode-v${VSCODE_VERSION}"

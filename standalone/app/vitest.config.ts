@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react"
 import { resolve } from "path"
 
 /**
- * Vitest config for webapp unit tests. Mirrors the `vite.config.ts` aliases
+ * Vitest config for app unit tests. Mirrors the `vite.config.ts` aliases
  * so Modal/Page imports that use the `assets/...` path (HowToUseModal etc.)
  * resolve correctly when components are mounted in jsdom.
  */

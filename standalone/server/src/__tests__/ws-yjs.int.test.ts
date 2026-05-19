@@ -9,13 +9,13 @@ import * as Y from "yjs"
 import {
   createHeadlessSync,
   MessageType,
-  type YjsSyncClass,
+  type YjsSync,
 } from "@tumaet/apollon/internals"
 import { startRelayServer } from "../ws.js"
 
 // ---------------------------------------------------------------------------
 // Helpers — set up real WebSocket peers driven by the library's actual
-// `YjsSyncClass`. The relay-side wire format is exercised end-to-end so
+// `YjsSync`. The relay-side wire format is exercised end-to-end so
 // regressions in framing, handshake order, or broadcast filtering surface
 // here rather than in production.
 // ---------------------------------------------------------------------------
@@ -35,7 +35,7 @@ function getFreePort(): Promise<number> {
 interface Peer {
   ws: WebSocket
   ydoc: Y.Doc
-  sync: YjsSyncClass
+  sync: YjsSync
   /** Resolves when the WebSocket has sent the SYNC ping + state push. */
   ready: Promise<void>
   close: () => Promise<void>
@@ -463,7 +463,7 @@ describe("Yjs collaboration — preview round-trip safety", () => {
     )
 
     // A "enters preview" with the FIXED behaviour: NO Yjs mutation.
-    // (The webapp's preview-effect calls `editor.setPreviewMode(true)`
+    // (The app's preview-effect calls `editor.setPreviewMode(true)`
     // before assigning `editor.model = previewBody`; with previewActive
     // gating in place, the assignment touches only Zustand.)
     // → No new entries in A's delete set.

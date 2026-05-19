@@ -10,7 +10,7 @@ on:
       deploy-app:
         type: boolean
         default: true
-        description: (Re-)deploy server + webapp
+        description: (Re-)deploy server + app
       deploy-db:
         type: boolean
         default: false
@@ -28,7 +28,7 @@ on:
       deploy-app:
         type: boolean
         default: true
-        description: (Re-)deploy server + webapp
+        description: (Re-)deploy server + app
       deploy-db:
         type: boolean
         default: false

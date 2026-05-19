@@ -113,4 +113,4 @@ For GDPR right-to-erasure on a single diagram:
 redis-cli --scan --pattern 'diagram:{<id>}*' | xargs -r redis-cli DEL
 ```
 
-The webapp's `DELETE /api/diagrams/:id` does this automatically.
+The app's `DELETE /api/diagrams/:id` does this automatically.

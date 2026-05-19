@@ -18,7 +18,7 @@ See [Releases](npm-publishing.md) for the release-cut procedure.
 | ---- | ------- | --------- |
 | `docker/compose.proxy.yml` | Traefik reverse proxy + maintenance page | deployed once; stays up during app deploys |
 | `docker/compose.db.yml` | Redis | deployed once; stays up during app deploys |
-| `docker/compose.app.yml` | Server + webapp | deployed by CI on every merge + release |
+| `docker/compose.app.yml` | Server + app | deployed by CI on every merge + release |
 
 ## Required environment variables
 
@@ -47,4 +47,4 @@ docker compose -f ./docker/compose.local.db.yml up -d
 docker compose -f ./docker/compose.local.yml up --build
 ```
 
-The webapp is served at `http://localhost:8080`.
+The app is served at `http://localhost:8080`.

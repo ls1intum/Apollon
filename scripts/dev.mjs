@@ -5,7 +5,7 @@ import path from "node:path"
 import process from "node:process"
 
 const DEFAULT_PORTS = {
-  webapp: 5173,
+  app: 5173,
   server: 8000,
   websocket: 4444,
   redis: 6379,
@@ -16,7 +16,7 @@ const SHUTDOWN_GRACE_MS = 4_000
 const PREFIX_COLORS = {
   lib: "\u001B[33m",
   server: "\u001B[34m",
-  webapp: "\u001B[35m",
+  app: "\u001B[35m",
 }
 const PREFIX_RESET = "\u001B[39m"
 
@@ -38,7 +38,7 @@ function readPort(name, fallback) {
 
 function getPreferredPorts() {
   return {
-    webapp: readPort("APOLLON_WEBAPP_PORT", DEFAULT_PORTS.webapp),
+    app: readPort("APOLLON_APP_PORT", DEFAULT_PORTS.app),
     server: readPort("APOLLON_SERVER_PORT", DEFAULT_PORTS.server),
     websocket: readPort("APOLLON_WS_PORT", DEFAULT_PORTS.websocket),
     redis: readPort("APOLLON_REDIS_PORT", DEFAULT_PORTS.redis),
@@ -446,7 +446,7 @@ async function main() {
   reservedPorts.add(websocketPort)
 
   const webappPort = await findAvailablePort(
-    preferredPorts.webapp,
+    preferredPorts.app,
     "127.0.0.1",
     reservedPorts
   )
@@ -455,14 +455,14 @@ async function main() {
   const redis = await resolveRedisEndpoint(preferredPorts.redis, reservedPorts)
 
   console.log("[dev] Selected development ports:")
-  console.log(`[dev]   webapp:    http://localhost:${webappPort}`)
+  console.log(`[dev]   app:    http://localhost:${webappPort}`)
   console.log(`[dev]   server:    http://127.0.0.1:${serverPort}`)
   console.log(`[dev]   websocket: ws://127.0.0.1:${websocketPort}`)
   console.log(`[dev]   redis:     ${redis.url} (${redis.source})`)
 
   const sharedEnv = {
     ...process.env,
-    APOLLON_WEBAPP_PORT: String(webappPort),
+    APOLLON_APP_PORT: String(webappPort),
     APOLLON_SERVER_PORT: String(serverPort),
     APOLLON_WS_PORT: String(websocketPort),
   }
@@ -502,10 +502,10 @@ async function main() {
       },
     }),
     spawnManagedProcess({
-      name: "webapp",
-      command: commandBinary("standalone/webapp", "vite"),
+      name: "app",
+      command: commandBinary("standalone/app", "vite"),
       args: [],
-      cwd: path.join(repoRoot, "standalone/webapp"),
+      cwd: path.join(repoRoot, "standalone/app"),
       env: coloredEnv,
     }),
   ]

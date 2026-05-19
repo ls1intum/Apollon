@@ -113,24 +113,24 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/webapp/package.json') }}
+          key: playwright-${{ runner.os }}-v1.59.1-${{ hashFiles('standalone/app/package.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @tumaet/webapp exec playwright install chromium
+        run: pnpm --filter @tumaet/app exec playwright install chromium
 
       - name: Install Playwright system deps
-        run: pnpm --filter @tumaet/webapp exec playwright install-deps chromium
+        run: pnpm --filter @tumaet/app exec playwright install-deps chromium
 
       - name: Run E2E tests
-        run: pnpm --filter @tumaet/webapp exec playwright test tests/e2e/
+        run: pnpm --filter @tumaet/app exec playwright test tests/e2e/
 
       - name: Upload Playwright report
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: playwright-report-e2e
-          path: standalone/webapp/playwright-report/
+          path: standalone/app/playwright-report/
           retention-days: 14
 
       - name: Upload Playwright test results
@@ -138,7 +138,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: playwright-test-results-e2e
-          path: standalone/webapp/test-results/
+          path: standalone/app/test-results/
           retention-days: 14
 
   # Library has `engines.node: ">=22"` for its published consumers — back the
@@ -229,7 +229,7 @@ jobs:
       - name: Override library devDeps to React 19 via pnpm.overrides
         # Run only inside the library workspace; the rest of the
         # monorepo stays on React 18.3 (matches Artemis / standalone
-        # webapp consumers). MUI v6 peer-supports React 19 since 6.0.
+        # app consumers). MUI v6 peer-supports React 19 since 6.0.
         run: |
           pnpm --filter @tumaet/apollon add -D \
             react@19 \
@@ -278,14 +278,14 @@ jobs:
         run: pnpm run build:lib
 
       - name: Run visual regression tests
-        run: pnpm --filter @tumaet/webapp exec playwright test tests/visual/
+        run: pnpm --filter @tumaet/app exec playwright test tests/visual/
 
       - name: Upload Playwright report
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: playwright-report-visual
-          path: standalone/webapp/playwright-report/
+          path: standalone/app/playwright-report/
           retention-days: 14
 
       - name: Upload Playwright test results
@@ -293,7 +293,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: playwright-test-results-visual
-          path: standalone/webapp/test-results/
+          path: standalone/app/test-results/
           retention-days: 14
 
   # Gate job — set this as the required status check in branch protection.

@@ -30,7 +30,7 @@ export enum MessageType {
 
 export type SendBroadcastMessage = (base64data: string) => void
 
-export class YjsSyncClass {
+export class YjsSync {
   private readonly stopYjsObserver: () => void
   private sendBroadcastMessage: SendBroadcastMessage | null = null
   private readonly ydoc: Y.Doc
@@ -193,7 +193,7 @@ export class YjsSyncClass {
     const raw = this.awareness.getStates()
     const typed = new Map<number, CollaborationState>()
     for (const [clientId, state] of raw.entries()) {
-      const narrowed = YjsSyncClass.narrowState(state)
+      const narrowed = YjsSync.narrowState(state)
       if (narrowed) typed.set(clientId, narrowed)
     }
     return typed
@@ -226,7 +226,7 @@ export class YjsSyncClass {
     fullMessage[0] = messageType
     fullMessage.set(payload, 1)
 
-    const base64Message = YjsSyncClass.uint8ToBase64(fullMessage)
+    const base64Message = YjsSync.uint8ToBase64(fullMessage)
     this.sendBroadcastMessage(base64Message)
   }
 
