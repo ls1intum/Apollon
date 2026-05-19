@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import "global-jsdom/register"
-import path from "node:path"
 import type { UMLModel, SVG } from "@tumaet/apollon"
 
-// Mock ResizeObserver for JSDOM
 if (typeof global.ResizeObserver === "undefined") {
   class MockResizeObserver {
     observe() {}
@@ -13,46 +11,10 @@ if (typeof global.ResizeObserver === "undefined") {
   ;(global as any).ResizeObserver = MockResizeObserver
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-const loadApollonModuleOnce = () => {
-  try {
-    return require("@tumaet/apollon")
-  } catch {
-    const fallbackCandidates = [
-      path.resolve(process.cwd(), "library/dist/index.js"),
-      path.resolve(process.cwd(), "../library/dist/index.js"),
-      path.resolve(process.cwd(), "../../library/dist/index.js"),
-    ]
-
-    for (const fallbackPath of fallbackCandidates) {
-      try {
-        return require(fallbackPath)
-      } catch {
-        // try next fallback
-      }
-    }
-
-    throw new Error("Failed to load @tumaet/apollon module")
-  }
-}
-
-const loadApollonModule = async (retries = 20, delayMs = 300) => {
-  let lastError: unknown
-
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      return loadApollonModuleOnce()
-    } catch (error) {
-      lastError = error
-      await sleep(delayMs)
-    }
-  }
-
-  throw new Error(
-    `Failed to load @tumaet/apollon after ${retries} attempts: ${String(lastError)}`
-  )
-}
+// Load the ESM-only library lazily so its module-evaluation side effects
+// (jsdom-touching React tree) only fire when a conversion is requested,
+// not at server boot.
+const loadApollonModule = () => import("@tumaet/apollon")
 
 export class ConversionService {
   private readonly EDGE_ENDPOINT_INSET_PX = -3

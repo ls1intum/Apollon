@@ -2,10 +2,10 @@
 
 ## Required infrastructure
 
-- **Redis Stack** (`redis/redis-stack-server:7.4.0-v0` is the pinned
-  test image; production `compose.db.yml` uses the same tag) — provides
-  RedisJSON ≥ 2.0, required for HEAD storage. Plain `redis:7-alpine` /
-  `redis:8-alpine` do not bundle the JSON module.
+- **Redis Stack** (`redis/redis-stack-server:7.4.0-v8` is the pinned
+  image across local, test, and production) — provides RedisJSON ≥ 2.0,
+  required for HEAD storage. Plain `redis:7-alpine` / `redis:8-alpine`
+  do not bundle the JSON module.
 - **Node.js ≥ 24**, **pnpm ≥ 11**.
 
 The server checks `MODULE LIST` at startup and asserts ReJSON is loaded;
