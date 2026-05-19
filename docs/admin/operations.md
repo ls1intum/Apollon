@@ -6,7 +6,7 @@
   test image; production `compose.db.yml` uses the same tag) — provides
   RedisJSON ≥ 2.0, required for HEAD storage. Plain `redis:7-alpine` /
   `redis:8-alpine` do not bundle the JSON module.
-- **Node.js ≥ 22.14**, **npm ≥ 11.1**.
+- **Node.js ≥ 24**, **pnpm ≥ 11**.
 
 The server checks `MODULE LIST` at startup and asserts ReJSON is loaded;
 on missing module the boot fails closed (process exits non-zero) rather
@@ -71,7 +71,7 @@ Pre-existing `diagram:{<id>}` keys stored as plain JSON STRINGs (legacy
 format) are upgraded by:
 
 ```bash
-npm run migrate:string-to-json --workspace=@tumaet/server
+pnpm --filter @tumaet/server run migrate:string-to-json
 ```
 
 The script:

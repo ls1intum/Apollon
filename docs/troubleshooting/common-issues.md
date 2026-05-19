@@ -10,16 +10,33 @@ Picks up the version pinned in `.nvmrc`.
 
 ## Build fails after a dependency change
 
-```sh
-rm -rf node_modules package-lock.json
-npm install
-```
+Escalate in this order — only go further if the previous step doesn't fix it:
 
-Run from the monorepo root so npm workspaces resolve correctly.
+1. **Reinstall from the existing lockfile** (safe — preserves the version graph everyone else uses):
+
+   ```sh
+   pnpm install --frozen-lockfile
+   ```
+
+2. **Wipe `node_modules` and reinstall** (still safe, lockfile preserved):
+
+   ```sh
+   rm -rf node_modules **/node_modules
+   pnpm install --frozen-lockfile
+   ```
+
+3. **Last resort — regenerate the lockfile** (changes dependencies; commit the result for review):
+
+   ```sh
+   rm -rf node_modules **/node_modules pnpm-lock.yaml
+   pnpm install
+   ```
+
+Run all of the above from the monorepo root so pnpm workspaces resolve correctly.
 
 ## Docker ports in use
 
-`npm run dev` resolves port collisions automatically. For direct `docker compose` commands, stop whatever is holding the port and retry:
+`pnpm dev` resolves port collisions automatically. For direct `docker compose` commands, stop whatever is holding the port and retry:
 
 ```sh
 docker compose -f ./docker/compose.local.yml down
@@ -31,6 +48,6 @@ docker compose -f ./docker/compose.local.yml up --build
 Install Xcode (iOS) or Android Studio (Android), then re-sync:
 
 ```sh
-npm run build
-npm run capacitor:sync
+pnpm build
+pnpm capacitor:sync
 ```

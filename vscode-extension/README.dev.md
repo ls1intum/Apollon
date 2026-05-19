@@ -4,30 +4,34 @@ Build, run, and release notes for the [Apollon VS Code extension](./README.md). 
 
 ## Layout
 
-The extension is three workspaces:
+The extension is three pnpm workspaces:
 
-- [`editor/`](./editor) — webview that hosts the `@tumaet/apollon` editor.
-- [`menu/`](./menu) — webview that renders the diagram-picker menu.
-- [`src/`](./src) — the extension's Node entry point that wires the webviews into VS Code.
+- [`editor/`](./editor) — `apollon-vscode-editor`, webview that hosts the `@tumaet/apollon` editor (Parcel).
+- [`menu/`](./menu) — `apollon-vscode-menu`, webview that renders the diagram-picker menu (Parcel).
+- [`src/`](./src) — `apollon-vscode`, the extension's Node entry point that wires the webviews into VS Code (webpack).
 
 ## Install dependencies
 
+From the monorepo root:
+
 ```sh
-npm run install:all
+pnpm install
 ```
+
+pnpm installs all workspaces in one pass — no per-webview install step.
 
 ## Run locally
 
 In one terminal, start the menu webview:
 
 ```sh
-npm run start:menu
+pnpm --filter apollon-vscode-menu start
 ```
 
 In another, start the editor webview:
 
 ```sh
-npm run start:editor
+pnpm --filter apollon-vscode-editor start
 ```
 
 Then press <kbd>F5</kbd> in VS Code (or <kbd>Cmd/Ctrl+Shift+P</kbd> → **Debug: Start Debugging**) to launch the extension in a new Extension Development Host window. Keep both dev servers running — the Host loads the webviews from them.

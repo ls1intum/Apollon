@@ -4,7 +4,7 @@ Ensure you have the following installed:
 
 ## Node.js
 
-The required Node.js version is pinned in `.nvmrc`.
+The required Node.js version is pinned in `.nvmrc` (Node 24 LTS).
 
 Use [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm) to install/manage Node versions:
 
@@ -26,14 +26,20 @@ nvm install
 nvm use
 ```
 
-## npm
+## pnpm
 
-Apollon uses npm workspaces, which require npm 7 or newer.
+Apollon uses [pnpm workspaces](https://pnpm.io/workspaces). The exact pnpm version is pinned in `package.json` via the `packageManager` field.
 
-npm comes with Node.js. Verify your npm version:
+Install pnpm globally:
 
 ```bash
-npm -v
+npm install -g pnpm@11
+```
+
+Verify your pnpm version:
+
+```bash
+pnpm -v
 ```
 
 ## Docker
@@ -41,13 +47,3 @@ npm -v
 Docker is required to run Redis locally for development.
 
 Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) for your platform.
-
-## Verifying Versions
-
-After setup, verify that you have the correct versions installed:
-
-- **Node.js:**
-  ```bash
-  node -v
-  ```
-  This should match the version specified in the `.nvmrc` file.

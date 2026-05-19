@@ -26,11 +26,11 @@ See the [library README](./library/README.md) for the API.
 git clone git@github.com:ls1intum/Apollon.git
 cd Apollon
 nvm install && nvm use
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-`npm run dev` starts three processes together:
+`pnpm dev` starts three processes together:
 
 - Library build watch (auto-rebuilds on changes).
 - Server (`tsx watch`) on a printed local HTTP port with a matching WebSocket relay port.
@@ -56,9 +56,9 @@ Override ports via `APOLLON_WEBAPP_PORT`, `APOLLON_SERVER_PORT`, `APOLLON_WS_POR
 
 ## Requirements
 
-- **Node.js** — version pinned in [`.nvmrc`](./.nvmrc).
-- **npm 7+** — for workspace support.
-- **Docker** — only when `npm run dev` needs to start a local Redis.
+- **Node.js** — version pinned in [`.nvmrc`](./.nvmrc) (Node 24 LTS).
+- **pnpm 11+** — the package manager. The exact version is pinned in `package.json` (`packageManager` field). Install with `npm install -g pnpm@11`.
+- **Docker** — only when `pnpm dev` needs to start a local Redis.
 
 ## Documentation
 

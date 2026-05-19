@@ -15,9 +15,9 @@ Contributions are welcome. The steps below are the short version; the root [READ
 3. Verify locally:
 
    ```sh
-   npm run lint
-   npm run test
-   npm run build
+   pnpm lint
+   pnpm test
+   pnpm build
    ```
 
 4. Commit with a [conventional commits](https://www.conventionalcommits.org/) prefix (`commitlint.config.mjs` enforces this):

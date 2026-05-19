@@ -1,10 +1,10 @@
 # Project structure
 
-Apollon is an npm-workspaces monorepo. Top-level layout:
+Apollon is a pnpm-workspaces monorepo. Top-level layout:
 
 ```
 Apollon/
-├── library/                  # @tumaet/apollon — npm library
+├── library/                  # @tumaet/apollon — published to npm
 │   ├── lib/                  # TypeScript source
 │   ├── tests/
 │   └── package.json
@@ -18,14 +18,18 @@ Apollon/
 │       ├── tests/            # Playwright e2e + visual regression
 │       ├── Dockerfile
 │       └── package.json
-├── vscode-extension/         # apollon-vscode — VS Code extension (webviews in editor/ and menu/)
+├── vscode-extension/         # apollon-vscode — VS Code extension
+│   ├── editor/               # apollon-vscode-editor — diagram webview (Parcel)
+│   └── menu/                 # apollon-vscode-menu — diagram-picker webview (Parcel)
 ├── docker/                   # Compose files for local + production
 ├── docs/                     # Documentation sources (this directory)
 ├── scripts/                  # dev.mjs and other monorepo helpers
 ├── .github/workflows/        # CI, release, and deploy workflows
 ├── .nvmrc                    # Node.js version (consumed by nvm)
 ├── commitlint.config.mjs     # Conventional-commits enforcement
-├── package.json              # Root workspace manifest
+├── pnpm-workspace.yaml       # pnpm workspace definition + settings + overrides
+├── .npmrc                    # pnpm/registry settings
+├── package.json              # Root workspace manifest (packageManager field pins pnpm version)
 └── README.md
 ```
 
@@ -37,3 +41,5 @@ Apollon/
 | `standalone/webapp/`      | `@tumaet/webapp`    | `ghcr.io/ls1intum/apollon/webapp`                      |
 | `standalone/server/`      | `@tumaet/server`    | `ghcr.io/ls1intum/apollon/server`                      |
 | `vscode-extension/`       | `apollon-vscode`    | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |
+| `vscode-extension/menu/`  | `apollon-vscode-menu`   | bundled into the extension VSIX                |
+| `vscode-extension/editor/`| `apollon-vscode-editor` | bundled into the extension VSIX                |

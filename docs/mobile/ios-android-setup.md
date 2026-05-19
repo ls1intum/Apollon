@@ -11,13 +11,13 @@ Make sure you have completed the [initial setup](../getting-started/setup.md) fi
 1. **Install the latest packages**
 
    ```bash
-   npm i
+   pnpm install
    ```
 
 2. **Build the application**
 
    ```bash
-   npm run build
+   pnpm build
    ```
 
 3. **For the first time, generate ios and android folder:**
@@ -25,25 +25,25 @@ Make sure you have completed the [initial setup](../getting-started/setup.md) fi
    For iOS:
 
    ```bash
-   npm run capacitor:add:ios
+   pnpm capacitor:add:ios
    ```
 
    For Android:
 
    ```bash
-   npm run capacitor:add:android
+   pnpm capacitor:add:android
    ```
 
 4. **Generate assets:**
 
    ```bash
-   npm run capacitor:assets:generate:ios
+   pnpm capacitor:assets:generate:ios
    ```
 
 5. **Sync the files**
 
    ```bash
-   npm run capacitor:sync
+   pnpm capacitor:sync
    ```
 
 6. **Open the App**
@@ -51,11 +51,11 @@ Make sure you have completed the [initial setup](../getting-started/setup.md) fi
    For iOS:
 
    ```bash
-   npm run capacitor:open:ios
+   pnpm capacitor:open:ios
    ```
 
    For Android:
 
    ```bash
-   npm run capacitor:open:android
+   pnpm capacitor:open:android
    ```
