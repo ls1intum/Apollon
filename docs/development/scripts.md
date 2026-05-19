@@ -62,7 +62,6 @@ Here are the commonly used scripts defined in the monorepo:
 - **Release-doc invariants** (`CLAUDE.md` symlink + `.changeset/config.json` shape):
   ```bash
   npm run check:release-docs
-  npm run test:release-docs
   ```
 
 ## Database

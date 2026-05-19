@@ -1,6 +1,6 @@
-# Apollon Agent Handbook
+# Apollon agent conventions
 
-Conventions for AI coding agents in [Apollon](https://github.com/ls1intum/Apollon), the TUM UML diagram editor. `CLAUDE.md` is a symlink to this file.
+Conventions for AI coding agents in [Apollon](https://github.com/ls1intum/Apollon), the TUM UML diagram editor. Follows the [agents.md](https://agents.md) convention; `CLAUDE.md` is a symlink to this file.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ Conventions for AI coding agents in [Apollon](https://github.com/ls1intum/Apollo
 - **`docker/`** — compose files for local Redis (`compose.local.db.yml`) and prod (`compose.{app,db,proxy}.yml`).
 - **`docs/`** — `getting-started/`, `development/`, `deployment/`, `admin/`, `mobile/`. Deep tour in [`docs/development/project-structure.md`](docs/development/project-structure.md).
 
-`standalone/webapp` and `standalone/server` are paired in `.changeset/config.json#fixed` and release together. A library minor auto-patches them through `updateInternalDependencies: patch`.
+`standalone/webapp` and `standalone/server` are paired in `.changeset/config.json#fixed` and release together. Any library bump auto-patches them through `updateInternalDependencies: patch`.
 
 ## Toolchain
 
@@ -33,7 +33,7 @@ Conventions for AI coding agents in [Apollon](https://github.com/ls1intum/Apollo
 | E2E tests (webapp)   | `npm run test:e2e` _(Playwright against a built webapp)_              |
 | Add a changeset      | `npm run changeset`                                                   |
 
-Before opening a PR: `npm run format:check && npm run lint && npm test` must pass.
+Before opening a PR: `npm run format:check && npm run lint && npm test && npm run check:release-docs` must pass.
 
 ## Code conventions
 
@@ -54,7 +54,7 @@ Before opening a PR: `npm run format:check && npm run lint && npm test` must pas
 - The library is consumed by both the standalone webapp and external embedders. Don't couple library APIs to standalone-only runtime assumptions; gate behind options if you must.
 - The server requires `OWNER_SECRET` ≥ 32 chars (`openssl rand -hex 32`) in production. Local dev accepts a placeholder.
 - `library/dist/` and `standalone/webapp/dist/` are build outputs — don't commit them.
-- Workspace deps: `@tumaet/apollon` is consumed by `standalone/{webapp,server}` and `vscode-extension/` as a workspace link (`"*"`), not a published-version pin.
+- Workspace deps: `@tumaet/apollon` is consumed by `standalone/{webapp,server}` and the root `vscode-extension/` as a workspace link (`"*"`). The nested `vscode-extension/editor/` sub-package builds outside the root workspace and pins a published version (currently `4.2.16`).
 
 ## Do not
 

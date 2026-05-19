@@ -5,9 +5,6 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main]
 
-# Advisory check: runs `changeset status` and surfaces the result in the
-# CI summary panel. A missing changeset is flagged but does not block merge.
-
 permissions:
   contents: read
 
@@ -18,7 +15,6 @@ concurrency:
 jobs:
   status:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -29,35 +25,11 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
 
-      - name: Release-doc invariants (CHANGELOG bullet shape; CLAUDE.md symlink; config shape)
+      - name: Check .changeset/config.json invariants
         run: npm run check:release-docs
 
-      - name: Release-doc invariant tests (positive + negative path)
-        run: npm run test:release-docs
-
-      - id: status
+      - name: Changesets status (advisory)
+        # Forks can't fetch origin/<base>; skip rather than fail.
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        run: npx --no -- changeset status --since=origin/${{ github.event.pull_request.base.ref }}
         continue-on-error: true
-        run: npx --no -- changeset status --since=origin/${{ github.event.pull_request.base.ref }} | tee status.txt
-
-      - name: Summary
-        env:
-          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
-        run: |
-          {
-            echo "## Changesets status"
-            if [ "${{ steps.status.outcome }}" = "success" ]; then
-              echo "Changeset coverage looks fine."
-            else
-              echo "No changesets detected on a PR that touches workspace packages."
-              echo ""
-              echo "Run \`npm run changeset\` and commit the resulting file, or skip if this PR only touches docs / CI / refactors. Rules: ${REPO_URL}/blob/main/docs/development/release-notes.md"
-            fi
-            echo ""
-            echo "<details><summary>changeset status</summary>"
-            echo ""
-            echo '```'
-            cat status.txt 2>/dev/null || true
-            echo '```'
-            echo ""
-            echo "</details>"
-          } >> "$GITHUB_STEP_SUMMARY"

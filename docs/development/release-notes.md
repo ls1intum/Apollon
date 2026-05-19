@@ -1,6 +1,6 @@
 # Release-notes style guide
 
-Three release lines drive [Changesets](https://github.com/changesets/changesets): `@tumaet/apollon` on npm, `@tumaet/webapp` + `@tumaet/server` as paired `ghcr.io` Docker images, and `apollon-vscode` on the VS Marketplace.
+[Changesets](https://github.com/changesets/changesets) drives the changelog for two release lines today: `@tumaet/apollon` on npm and `@tumaet/webapp` + `@tumaet/server` as paired `ghcr.io` Docker images. `apollon-vscode` ships on the VS Marketplace via a separate release flow.
 
 ## What you write per PR
 
@@ -28,7 +28,6 @@ For **breaking changes**, mark the changeset `major` and link a migration runboo
 | --- | --- | --- |
 | `@tumaet/apollon` | embedders | name the API; describe the contract |
 | `@tumaet/webapp` + `@tumaet/server` (paired) | end users + operators | what the user can do; for operators, link the runbook |
-| `apollon-vscode` | extension users | what the user can do |
 
 ## Picking the bump type
 
@@ -63,3 +62,5 @@ A change that spans webapp and library lands as two changesets in the same PR â€
 ## CHANGELOG.md and the GitHub Release body
 
 `CHANGELOG.md` is the per-version bullet log Changesets writes; humans don't edit it by hand. The **GitHub Release body** carries the human-curated lede + `### Highlights` (screenshots, video) for the release.
+
+You write only the changeset body (the markdown after the frontmatter). At `changeset version` time, `@changesets/changelog-github` prepends `- [#PR](url) [`<sha>`](url) Thanks [@user](url)! - ` automatically. The backfilled v4.4.0 / v4.4.1 entries omit the commit-SHA link (the commits predate Changesets); new releases will include it.

@@ -57,7 +57,7 @@ Override ports via `APOLLON_WEBAPP_PORT`, `APOLLON_SERVER_PORT`, `APOLLON_WS_POR
 ## Requirements
 
 - **Node.js** — version pinned in [`.nvmrc`](./.nvmrc).
-- **npm 7+** — for workspace support.
+- **npm** `>=11.1.0` (see [`package.json`](./package.json) `engines`).
 - **Docker** — only when `npm run dev` needs to start a local Redis.
 
 ## Documentation

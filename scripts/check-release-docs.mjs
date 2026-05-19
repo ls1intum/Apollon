@@ -1,19 +1,12 @@
 #!/usr/bin/env node
-// Two invariants Changesets and the convention cannot self-enforce:
-//   1. CLAUDE.md is a symlink to AGENTS.md. Windows checkouts materialise
-//      symlinks as regular files containing the target path; that would
-//      silently fork the agent contract into two files.
-//   2. `.changeset/config.json` keeps three fields Changesets does not
-//      default: `fixed` pairs `@tumaet/webapp` with `@tumaet/server`,
-//      `updateInternalDependencies` is `"patch"`, and the GitHub changelog
-//      renderer is selected. Dropping any of these silently breaks
-//      the standalone webapp/server pairing or the per-PR + author links.
-//
-// Used by `npm run check:release-docs`; exported as `runChecks(root)` so the
-// test alongside this file can run it against fixtures.
+// Guards fields in .changeset/config.json that Changesets cannot infer from
+// schema alone, plus the CLAUDE.md → AGENTS.md symlink (Windows checkouts
+// can clobber symlinks to regular files; git tracks mode 120000 so the
+// breakage is visible on Linux CI).
 
 import { readFileSync, lstatSync, readlinkSync } from "node:fs"
 import { resolve } from "node:path"
+import { isDeepStrictEqual } from "node:util"
 
 export function runChecks(root) {
   const errors = []
@@ -23,15 +16,15 @@ export function runChecks(root) {
 }
 
 function checkSymlink(root, errors) {
+  const path = resolve(root, "CLAUDE.md")
   try {
-    const stat = lstatSync(resolve(root, "CLAUDE.md"))
-    if (!stat.isSymbolicLink()) {
+    if (!lstatSync(path).isSymbolicLink()) {
       errors.push(
         "CLAUDE.md is a regular file; expected a symlink to AGENTS.md."
       )
       return
     }
-    const target = readlinkSync(resolve(root, "CLAUDE.md"))
+    const target = readlinkSync(path)
     if (target !== "AGENTS.md") {
       errors.push(
         `CLAUDE.md symlink points at '${target}', expected AGENTS.md.`
@@ -52,10 +45,10 @@ function checkChangesetConfig(root, errors) {
     errors.push(`.changeset/config.json: ${e.message}`)
     return
   }
-  const fixed = JSON.stringify(cfg.fixed ?? [])
-  if (fixed !== '[["@tumaet/webapp","@tumaet/server"]]') {
+  const expectedFixed = [["@tumaet/webapp", "@tumaet/server"]]
+  if (!isDeepStrictEqual(cfg.fixed, expectedFixed)) {
     errors.push(
-      `.changeset/config.json: \`fixed\` must pair @tumaet/webapp with @tumaet/server; got ${fixed}.`
+      `.changeset/config.json: \`fixed\` must be ${JSON.stringify(expectedFixed)}; got ${JSON.stringify(cfg.fixed)}.`
     )
   }
   if (cfg.updateInternalDependencies !== "patch") {
@@ -63,22 +56,14 @@ function checkChangesetConfig(root, errors) {
       `.changeset/config.json: \`updateInternalDependencies\` must be "patch"; got ${JSON.stringify(cfg.updateInternalDependencies)}.`
     )
   }
-  const renderer = Array.isArray(cfg.changelog)
-    ? cfg.changelog[0]
-    : cfg.changelog
-  if (renderer !== "@changesets/changelog-github") {
+  if (cfg.changelog?.[0] !== "@changesets/changelog-github") {
     errors.push(
-      `.changeset/config.json: \`changelog\` must use @changesets/changelog-github; got ${JSON.stringify(renderer)}.`
+      `.changeset/config.json: \`changelog\` must use @changesets/changelog-github; got ${JSON.stringify(cfg.changelog)}.`
     )
   }
-  // `@tumaet/webapp` and `@tumaet/server` are `private: true`. The standalone
-  // Docker release pipeline depends on Changesets versioning them, which only
-  // happens when `privatePackages.version` is true. The Changesets default
-  // historically varies across major versions; setting it explicitly defends
-  // against a silent breakage on future Changesets upgrades.
   if (cfg.privatePackages?.version !== true) {
     errors.push(
-      `.changeset/config.json: \`privatePackages.version\` must be true so @tumaet/webapp and @tumaet/server (private) still get versioned; got ${JSON.stringify(cfg.privatePackages?.version)}.`
+      `.changeset/config.json: \`privatePackages.version\` must be true so @tumaet/webapp and @tumaet/server get versioned; got ${JSON.stringify(cfg.privatePackages?.version)}.`
     )
   }
 }
