@@ -73,7 +73,7 @@ Docs are migrating to [Docusaurus](https://docusaurus.io/); in the meantime brow
 
 ## Contributing
 
-Open an issue or a pull request at <https://github.com/ls1intum/Apollon>. Guidelines live in [`docs/contributing.md`](./docs/contributing.md).
+Open an issue or a pull request at <https://github.com/ls1intum/Apollon>. Guidelines live in [`CONTRIBUTING.md`](./CONTRIBUTING.md); AI coding agents follow [`AGENTS.md`](./AGENTS.md).
 
 ## License
 

@@ -1,9 +1,15 @@
 <!--
-PR title must be a Conventional Commit subject (feat:, fix(scope):, …).
-The repo is squash-merge only; your title + this body become the commit.
+PR title must be a Conventional Commit subject:
+
+    <type>(<scope>)?: <subject>
+
+where type is one of: feat | fix | chore | docs | refactor | test | build | ci | perf | style | revert.
+
+The repo is squash-merge only — your title + this body become the commit.
 If your PR changes a published or operator-visible workspace, run
 `npm run changeset` and commit the resulting `.changeset/*.md`.
-See AGENTS.md and docs/development/release-notes.md.
+
+See CONTRIBUTING.md and docs/development/release-notes.md for the rules.
 -->
 
 ### Summary

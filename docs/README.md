@@ -15,7 +15,7 @@ Every page is a plain Markdown file; GitHub renders them directly:
 - [`deployment/`](./deployment) — GitHub Actions and Docker Compose.
 - [`admin/`](./admin) — operator guide for legal pages (imprint & privacy) and the TUM DSMS submission package.
 - [`troubleshooting/`](./troubleshooting) — common issues.
-- [`contributing.md`](./contributing.md) — contribution guidelines.
+- [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — contribution guidelines (at the repo root).
 
 ## Build locally (Sphinx)
 

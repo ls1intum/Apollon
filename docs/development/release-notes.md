@@ -1,6 +1,6 @@
 # Release-notes style guide
 
-Apollon ships three independent release lines (`@tumaet/apollon` on npm, the standalone webapp + server on `ghcr.io`, the VS Code extension on the Marketplace — Open VSX is wired in but only fires when an `OVSX_PAT` is configured), all driven by [Changesets](https://github.com/changesets/changesets). This guide is the contract for what each PR author writes so good release notes happen automatically.
+Three release lines drive [Changesets](https://github.com/changesets/changesets): `@tumaet/apollon` on npm, `@tumaet/webapp` + `@tumaet/server` as `ghcr.io` Docker images released in lockstep, and `apollon-vscode` on the VS Marketplace. This is the style guide for the per-PR changeset summary.
 
 ## What you write per PR
 
@@ -8,11 +8,9 @@ Apollon ships three independent release lines (`@tumaet/apollon` on npm, the sta
 npm run changeset
 ```
 
-The CLI asks which packages bump, the bump type, and a summary. **The summary is the changelog entry, verbatim.** Edit `.changeset/<name>.md` after the CLI exits — the prompt is too short for good prose — and commit it with your PR.
+The CLI asks which packages bump, the bump type, and a summary. **The summary is the changelog entry, verbatim.** Edit `.changeset/<name>.md` after the CLI exits and commit it with your PR. Skip on docs-only, CI-only, or pure-refactor PRs.
 
-If your PR is docs-only, CI-only, or otherwise doesn't change a published or operator-visible workspace, skip the step.
-
-## Two rules for the summary
+## Writing the summary
 
 **Write for the user, not the engineer.** Lead with what the user can now do (or, for fixes, the symptom they would have seen). Implementation language — internal types, hook names, file paths — stays in the PR description.
 
@@ -20,9 +18,9 @@ If your PR is docs-only, CI-only, or otherwise doesn't change a published or ope
 | --- | --- |
 | `feat: add useExportAsPPTX hook with lazy-loaded pptxgenjs` | `Export diagrams as animatable PowerPoint slides.` |
 | `Reset isLoading=true on effect re-entry and thread AbortController.signal` | `Sharing a diagram twice no longer leaves a blank canvas behind.` |
-| `Refactor preview-mode lifecycle` | `editor.setPreviewMode(boolean) decouples the canvas from the Yjs doc.` *(library track names the symbol — that's the user surface there)* |
+| `Refactor preview-mode lifecycle` | `editor.setPreviewMode(boolean) decouples the canvas from the Yjs doc.` |
 
-**Breaking changes call out the migration.** Mark the changeset `major` and link a runbook (typically [`docs/admin/operations.md`](../admin/operations.md)) in the summary. Don't bury the migration steps in the PR body.
+For **breaking changes**, mark the changeset `major` and link a migration runbook (typically [`docs/admin/operations.md`](../admin/operations.md)).
 
 ## Per-package conventions
 
@@ -32,13 +30,11 @@ If your PR is docs-only, CI-only, or otherwise doesn't change a published or ope
 | `@tumaet/webapp` + `@tumaet/server` (lockstep) | end users + operators | what the user can do; for operators, link the runbook |
 | `apollon-vscode` | extension users | what the user can do |
 
-The webapp and server are `fixed` in [`.changeset/config.json`](../../.changeset/config.json) — a changeset on one bumps both. A library minor auto-patches webapp + server via `updateInternalDependencies: patch`.
-
 ## Picking the bump type
 
 - **patch** — bug fixes, internal-only changes that consumers can opt into without code changes.
 - **minor** — new functionality that is backwards-compatible (new options, new exports, new optional behaviour).
-- **major** — anything that breaks an existing caller, deployment, or storage layout. A `major` changeset must link a migration runbook (typically [`docs/admin/operations.md`](../admin/operations.md)).
+- **major** — breaks an existing caller, deployment, or storage layout. Must link a migration runbook.
 
 ## Worked examples
 
@@ -66,19 +62,8 @@ A change that spans webapp and library lands as two changesets in the same PR �
 
 ## What `CHANGELOG.md` files look like
 
-`CHANGELOG.md` is the per-version bullet log Changesets writes; the **GitHub Release body** is where a maintainer adds a one-paragraph lede and any `### Highlights` with screenshots before the release tag is cut. Editing the Release body is the only human-curation step per release.
+`CHANGELOG.md` is the per-version bullet log Changesets writes; the **GitHub Release body** carries the human-curated lede + `### Highlights` (screenshots, video) for the release. CI enforces the bullet shape — every bullet must begin with `[#NNN](pr-url)`, `` [`shortsha`](commit-url) ``, or the `Released in lockstep` sentinel. See [`scripts/check-release-docs.mjs`](../../scripts/check-release-docs.mjs).
 
-CI enforces this shape — every bullet must begin with `[#NNN](pr-url)`, `` [`shortsha`](commit-url) ``, or the `Released in lockstep` sentinel. See [`scripts/check-release-docs.mjs`](../../scripts/check-release-docs.mjs), wired into [`.github/workflows/verify-changesets.yml`](../../.github/workflows/verify-changesets.yml).
+## Today vs. the cutover
 
-## See also
-
-- [`AGENTS.md`](../../AGENTS.md) — the contract for agent contributors
-- [`docs/contributing.md`](../contributing.md) — the contribution flow
-
-## References
-
-- [Changesets `@changesets/cli@2.27.11`](https://github.com/changesets/changesets/tree/%40changesets/cli%402.27.11) — the release-pipeline tool we adopted.
-- [Changesets config schema `@changesets/config@3.1.4`](https://unpkg.com/@changesets/config@3.1.4/schema.json) — pinned in [`.changeset/config.json`](../../.changeset/config.json).
-- [`@changesets/changelog-github@0.5.1`](https://github.com/changesets/changesets/blob/main/packages/changelog-github/README.md) — the renderer that emits per-PR bullets with commit + author links.
-- [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) — informs the spirit of the per-package bullet log. We do not follow the literal section names (`Added` / `Changed` / `Removed`); Changesets emits `Major / Minor / Patch Changes` instead, grouped by bump type.
-- [vercel/ai's release pipeline](https://github.com/vercel/ai/tree/main/.changeset) — the working reference for a multi-package Changesets monorepo with lockstep version groups.
+This guide and the convention are live now. The pipeline cutover that opens an automated **Version Packages** PR (via `changesets/action`) is a follow-up; until then, changesets accumulate and the existing `Version bump` workflow drives releases manually. The per-PR contract above is the same in both worlds.
