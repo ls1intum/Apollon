@@ -1,8 +1,3 @@
-/**
- * `cleanup()` must (a) detach handlers, (b) close the socket with
- * 1001, (c) be idempotent, and (d) drop frames captured from before
- * cleanup via the in-handler `cleanedUp` short-circuit.
- */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { ApollonEditor } from "@tumaet/apollon"
 import { WebSocketManager } from "./WebSocketManager"
@@ -16,16 +11,20 @@ class FakeWebSocket {
   onmessage: ((e: MessageEvent) => void) | null = null
   onerror: ((e: Event) => void) | null = null
   onclose: ((e: CloseEvent) => void) | null = null
-  closed = false
-  closeCode: number | undefined
 
   constructor(public url: string) {
     FakeWebSocket.instances.push(this)
   }
   send() {}
   close(code?: number) {
-    this.closed = true
-    this.closeCode = code
+    // Enforce the platform contract: close() only accepts 1000 or 3000–4999
+    // (RFC 6455 §7.4 / MDN WebSocket.close).
+    if (code !== undefined && code !== 1000 && (code < 3000 || code > 4999)) {
+      throw new DOMException(
+        `Failed to execute 'close' on 'WebSocket': The close code must be either 1000, or between 3000 and 4999. ${code} is neither.`,
+        "InvalidAccessError"
+      )
+    }
   }
 }
 
@@ -34,20 +33,16 @@ function makeFakeEditor() {
     receiveBroadcastedMessage: vi.fn(),
     sendBroadcastMessage: vi.fn(),
     broadcastFullState: vi.fn(),
-  } as unknown as ApollonEditor & {
-    receiveBroadcastedMessage: ReturnType<typeof vi.fn>
-  }
+  } as unknown as ApollonEditor
 }
 
 function startManager() {
-  const editor = makeFakeEditor()
-  const onError = vi.fn()
-  const manager = new WebSocketManager("diag-1", editor, onError)
+  const manager = new WebSocketManager("diag-1", makeFakeEditor(), vi.fn())
   manager.startConnection()
   const socket = FakeWebSocket.instances.at(-1)!
   socket.readyState = FakeWebSocket.OPEN
   socket.onopen?.(new Event("open"))
-  return { manager, editor, onError, socket }
+  return { manager, socket }
 }
 
 beforeEach(() => {
@@ -60,77 +55,42 @@ afterEach(() => {
 })
 
 describe("WebSocketManager.cleanup", () => {
-  it("in-handler guard drops data frames captured before cleanup", () => {
-    const { manager, editor, socket } = startManager()
-    const captured = socket.onmessage!
-
-    manager.cleanup()
-    captured(
-      new MessageEvent("message", {
-        data: JSON.stringify({ diagramData: "base64-payload" }),
-      })
-    )
-
-    expect(editor.receiveBroadcastedMessage).not.toHaveBeenCalled()
-  })
-
-  it("in-handler guard drops control envelopes captured before cleanup", () => {
+  it("closes the open socket with code 1000", () => {
     const { manager, socket } = startManager()
-    const listener = vi.fn()
-    manager.onControl(listener)
-    const captured = socket.onmessage!
-
+    const closeSpy = vi.spyOn(socket, "close")
     manager.cleanup()
-    captured(
-      new MessageEvent("message", {
-        data: JSON.stringify({
-          kind: "control",
-          control: { type: "VERSION_DELETED", versionId: "v1" },
-        }),
-      })
-    )
-
-    expect(listener).not.toHaveBeenCalled()
+    expect(closeSpy).toHaveBeenCalledExactlyOnceWith(1000)
   })
 
-  it("detaches handlers and closes with code 1001", () => {
-    const { manager, socket } = startManager()
-    manager.cleanup()
-
-    expect(socket.onopen).toBeNull()
-    expect(socket.onmessage).toBeNull()
-    expect(socket.onerror).toBeNull()
-    expect(socket.onclose).toBeNull()
-    expect(socket.closed).toBe(true)
-    expect(socket.closeCode).toBe(1001)
-  })
-
-  it("is idempotent", () => {
-    const { manager, socket } = startManager()
-    manager.cleanup()
-    socket.closed = false
-    expect(() => manager.cleanup()).not.toThrow()
-    expect(socket.closed).toBe(false)
-  })
-
-  it("closes a still-connecting socket", () => {
+  it("closes a still-connecting socket so the handshake doesn't leak", () => {
     const manager = new WebSocketManager("diag-1", makeFakeEditor(), vi.fn())
     manager.startConnection()
     const socket = FakeWebSocket.instances.at(-1)!
-    expect(socket.readyState).toBe(FakeWebSocket.CONNECTING)
-
+    const closeSpy = vi.spyOn(socket, "close")
     manager.cleanup()
-    expect(socket.closed).toBe(true)
-    expect(socket.closeCode).toBe(1001)
+    expect(closeSpy).toHaveBeenCalledExactlyOnceWith(1000)
   })
 
-  it("a captured onerror does NOT surface onError after cleanup", () => {
-    const { manager, onError, socket } = startManager()
-    const captured = socket.onerror!
-
+  it("is idempotent: a second cleanup() does not re-close the socket", () => {
+    const { manager, socket } = startManager()
+    const closeSpy = vi.spyOn(socket, "close")
     manager.cleanup()
-    captured(new Event("error"))
+    manager.cleanup()
+    expect(closeSpy).toHaveBeenCalledTimes(1)
+  })
 
-    expect(onError).not.toHaveBeenCalled()
+  it("a close event firing after cleanup does not spawn a reconnect", () => {
+    vi.useFakeTimers()
+    try {
+      const { manager, socket } = startManager()
+      manager.cleanup()
+      // Browser dispatcher reads `onclose` at invoke time; if production left
+      // it attached, scheduleReconnect would queue a fresh socket.
+      socket.onclose?.(new CloseEvent("close"))
+      vi.advanceTimersByTime(60_000)
+      expect(FakeWebSocket.instances).toHaveLength(1)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

@@ -21,7 +21,6 @@ export class WebSocketManager {
     { interval: 30000, duration: 5 * 60000 },
   ]
   private reconnectStartTime = 0
-  private cleanedUp = false
   private controlListeners = new Set<ControlListener>()
 
   constructor(
@@ -52,7 +51,6 @@ export class WebSocketManager {
   }
 
   private createWebSocket() {
-    if (this.cleanedUp) return
     const url = `${serverWSSUrl}?diagramId=${encodeURIComponent(this.diagramId)}`
     this.websocket = new WebSocket(url)
 
@@ -77,8 +75,6 @@ export class WebSocketManager {
     }
 
     this.websocket.onmessage = (event) => {
-      // Drop frames queued before close() but delivered after cleanup.
-      if (this.cleanedUp) return
       const raw = String(event.data)
       if (raw.startsWith(ENVELOPE_PREFIX)) {
         try {
@@ -102,13 +98,11 @@ export class WebSocketManager {
     }
 
     this.websocket.onerror = (e) => {
-      if (this.cleanedUp) return
       this.onError(e)
       this.scheduleReconnect()
     }
 
     this.websocket.onclose = () => {
-      if (this.cleanedUp) return
       this.scheduleReconnect()
     }
   }
@@ -124,7 +118,6 @@ export class WebSocketManager {
   }
 
   private scheduleReconnect() {
-    if (this.cleanedUp) return
     if (this.reconnectStartTime === 0) {
       this.reconnectStartTime = Date.now()
     }
@@ -152,8 +145,6 @@ export class WebSocketManager {
   }
 
   public cleanup() {
-    if (this.cleanedUp) return
-    this.cleanedUp = true
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout)
       this.reconnectTimeout = null
@@ -163,8 +154,9 @@ export class WebSocketManager {
       this.websocket.onmessage = null
       this.websocket.onerror = null
       this.websocket.onclose = null
-      // 1001 = "Going Away"; close() is a no-op on already-closed sockets.
-      this.websocket.close(1001)
+      // 1001 ("Going Away") is UA-reserved; 1000 is the only JS-legal
+      // generic close code (RFC 6455 §7.4 / MDN WebSocket.close).
+      this.websocket.close(1000)
     }
     this.websocket = null
   }

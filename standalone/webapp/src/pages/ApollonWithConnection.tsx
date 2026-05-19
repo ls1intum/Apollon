@@ -91,7 +91,6 @@ export const ApollonWithConnection: React.FC = () => {
     setIsLoading(true)
     diagramIsUpdated.current = false
     lastObservedHeadRev.current = undefined
-    prePreviewFingerprintRef.current = null
     restoredDuringPreviewRef.current = false
     hasPromptedRef.current = false
 
@@ -352,6 +351,7 @@ export const ApollonWithConnection: React.FC = () => {
         }
       }
       instance?.destroy()
+      editorRef.current = null
     }
   }, [diagramId, viewType, collaborationUser])
 

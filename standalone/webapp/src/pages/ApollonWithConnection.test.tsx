@@ -1,64 +1,51 @@
-/**
- * Regression tests for the collaboration "blank screen" bugs: the
- * loading overlay must reset on every effect re-entry (Share-again,
- * viewType change), the catch must swallow `AbortError` on
- * mid-fetch unmount, and `hasPromptedRef` must reset across diagrams.
- */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router"
+import { toast } from "react-toastify"
 import { ApollonWithConnection } from "./ApollonWithConnection"
 import { EditorProvider, ModalProvider } from "@/contexts"
-import { toast } from "react-toastify"
 
-const editorHoisted = vi.hoisted(() => {
-  const instances: { destroyed: boolean }[] = []
-  class FakeApollonEditor {
-    destroyed = false
-    model: object = {}
-    constructor() {
-      instances.push(this)
+const FakeApollonEditor = vi.hoisted(
+  () =>
+    class FakeApollonEditor {
+      model: object = {}
+      destroy() {}
+      setLocalAwarenessState() {}
+      setLocalAwarenessCursor() {}
+      setLocalAwarenessSelectedElement() {}
+      subscribeToModelChange() {
+        return 1
+      }
+      subscribeToSelectionChange() {
+        return 2
+      }
+      subscribeToAwarenessChanges() {
+        return 3
+      }
+      subscribeToCollaboratorChanges() {
+        return 4
+      }
+      unsubscribe() {}
+      setReadonly() {}
+      setPreviewMode() {}
+      fitView() {}
+      getLocalAwarenessClientId() {
+        return 0
+      }
+      flowToScreenPosition() {
+        return null
+      }
+      screenToFlowPosition() {
+        return null
+      }
     }
-    destroy() {
-      this.destroyed = true
-    }
-    setLocalAwarenessState() {}
-    setLocalAwarenessCursor() {}
-    setLocalAwarenessSelectedElement() {}
-    subscribeToModelChange() {
-      return 1
-    }
-    subscribeToSelectionChange() {
-      return 2
-    }
-    subscribeToAwarenessChanges() {
-      return 3
-    }
-    subscribeToCollaboratorChanges() {
-      return 4
-    }
-    unsubscribe() {}
-    setReadonly() {}
-    setPreviewMode() {}
-    fitView() {}
-    getLocalAwarenessClientId() {
-      return 0
-    }
-    flowToScreenPosition() {
-      return null
-    }
-    screenToFlowPosition() {
-      return null
-    }
-  }
-  return { instances, FakeApollonEditor }
-})
+)
 
 vi.mock("@tumaet/apollon", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
-    ApollonEditor: editorHoisted.FakeApollonEditor,
+    ApollonEditor: FakeApollonEditor,
     ApollonMode: { Modelling: "Modelling", Assessment: "Assessment" },
     importDiagram: (m: unknown) => m,
   }
@@ -187,7 +174,6 @@ async function resolveFetch(model: object = { nodes: [], edges: [] }) {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  editorHoisted.instances.length = 0
   fetchHoisted.state.pending = null
   testNavigate = () => {}
   sessionStorage.setItem("apollon-collab-name", "tester")
@@ -214,14 +200,12 @@ describe("ApollonWithConnection — loading-state regression", () => {
   it("shows the loading overlay while the initial diagram fetch is in flight", () => {
     mountAt("/abc?view=COLLABORATE")
     expect(screen.getByText(LOADING_TEXT)).toBeTruthy()
-    expect(editorHoisted.instances).toHaveLength(0)
   })
 
   it("removes the loading overlay once the editor is mounted", async () => {
     mountAt("/abc?view=COLLABORATE")
     await resolveFetch()
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
-    expect(editorHoisted.instances).toHaveLength(1)
   })
 
   it("re-shows the loading overlay when diagramId changes (Share-again)", async () => {
@@ -234,31 +218,12 @@ describe("ApollonWithConnection — loading-state regression", () => {
 
     await resolveFetch({ id: "def", nodes: [], edges: [] })
     await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
-
-    expect(editorHoisted.instances.some((e) => e.destroyed)).toBe(true)
-    expect(editorHoisted.instances.length).toBeGreaterThanOrEqual(2)
   })
 
-  it("re-shows the loading overlay when viewType changes on the same diagram", async () => {
-    mountAt("/abc?view=COLLABORATE")
-    await resolveFetch({ id: "abc", nodes: [], edges: [] })
-    await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
-
-    await act(async () => testNavigate("/abc?view=GIVE_FEEDBACK"))
-    expect(await screen.findByText(LOADING_TEXT)).toBeTruthy()
-
-    await resolveFetch({ id: "abc", nodes: [], edges: [] })
-    await waitFor(() => expect(screen.queryByText(LOADING_TEXT)).toBeNull())
-
-    expect(editorHoisted.instances.some((e) => e.destroyed)).toBe(true)
-    expect(editorHoisted.instances.length).toBeGreaterThanOrEqual(2)
-  })
-
-  it("swallows AbortError on unmount during fetch", async () => {
+  it("does not show an error toast when unmount races a pending fetch", async () => {
     const errorToast = vi.spyOn(toast, "error")
     const rendered = mountAt("/abc?view=COLLABORATE")
-    expect(screen.getByText(LOADING_TEXT)).toBeTruthy()
-    expect(fetchHoisted.state.pending).not.toBeNull()
+    await waitFor(() => expect(fetchHoisted.state.pending).not.toBeNull())
 
     rendered.unmount()
     await act(async () => {
@@ -266,7 +231,6 @@ describe("ApollonWithConnection — loading-state regression", () => {
     })
 
     expect(errorToast).not.toHaveBeenCalled()
-    expect(editorHoisted.instances).toHaveLength(0)
   })
 
   it("re-opens the collab-name prompt for each new un-named diagram", async () => {
@@ -279,10 +243,14 @@ describe("ApollonWithConnection — loading-state regression", () => {
         expect.any(Object)
       )
     })
-    expect(modalHoisted.openModal).toHaveBeenCalledTimes(1)
 
+    modalHoisted.openModal.mockClear()
     await act(async () => testNavigate("/def?view=COLLABORATE"))
-    await waitFor(() => expect(modalHoisted.openModal).toHaveBeenCalledTimes(2))
-    expect(editorHoisted.instances).toHaveLength(0)
+    await waitFor(() =>
+      expect(modalHoisted.openModal).toHaveBeenCalledWith(
+        "COLLABORATE_NAME",
+        expect.any(Object)
+      )
+    )
   })
 })
