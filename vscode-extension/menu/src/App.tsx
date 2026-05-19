@@ -1,44 +1,36 @@
-import {
-  VSCodeButton,
-  VSCodeTextField,
-  VSCodeDropdown,
-  VSCodeOption,
-  VSCodeDivider,
-  VSCodeProgressRing,
-} from "@vscode/webview-ui-toolkit/react"
-import { vscode } from "./index"
 import { useState } from "react"
-import useStore from "./store"
 import { UMLDiagramType } from "@tumaet/apollon"
+import useStore from "./store"
+import { vscode } from "./index"
+
+const diagramTypes: UMLDiagramType[] = [
+  "ClassDiagram",
+  "ObjectDiagram",
+  "ComponentDiagram",
+  "DeploymentDiagram",
+  "Flowchart",
+  "SyntaxTree",
+  "ActivityDiagram",
+  "UseCaseDiagram",
+  "CommunicationDiagram",
+  "PetriNet",
+  "ReachabilityGraph",
+  "BPMN",
+]
+
+const INVALID_NAME_RE = /[\x00-\x1f\x80-\x9f<>:"/\\|?*]/
 
 function App() {
   const existingDiagrams = useStore((state) => state.diagrams)
-  const [newDiagramName, setNewDiagramName] = useState<string>("")
+  const [newDiagramName, setNewDiagramName] = useState("")
   const [newDiagramType, setNewDiagramType] =
     useState<UMLDiagramType>("ClassDiagram")
   const [existingDiagramPath, setExistingDiagramPath] = useState<
     string | undefined
   >(undefined)
 
-  const diagramTypes = [
-    "ClassDiagram",
-    "ObjectDiagram",
-    "ComponentDiagram",
-    "DeploymentDiagram",
-    "Flowchart",
-    "SyntaxTree",
-    "ActivityDiagram",
-    "UseCaseDiagram",
-    "CommunicationDiagram",
-    "PetriNet",
-    "ReachabilityGraph",
-    "BPMN",
-  ] as UMLDiagramType[]
-
-  const isValidDiagramName = (name: string) => {
-    const invalidCharacters = /[\x00-\x1f\x80-\x9f<>:"/\\|?*\u0000]/
-    return name.length > 0 && !invalidCharacters.test(name)
-  }
+  const isValidDiagramName = (name: string) =>
+    name.length > 0 && !INVALID_NAME_RE.test(name)
 
   const createDiagram = () => {
     vscode.postMessage({
@@ -51,43 +43,50 @@ function App() {
   const loadDiagram = () => {
     vscode.postMessage({
       type: "loadDiagram",
-      path: existingDiagramPath ? existingDiagramPath : existingDiagrams![0],
+      path: existingDiagramPath ?? existingDiagrams![0],
     })
   }
 
   return (
-    <div className="flex flex-col mx-5">
+    <div className="flex flex-col mx-5 gap-2">
       <label htmlFor="new-diagram-name">New diagram name</label>
-      <VSCodeTextField
+      <input
         id="new-diagram-name"
-        onInput={(e) => {
-          setNewDiagramName((e.target as HTMLInputElement).value)
-        }}
+        type="text"
+        className="vscode-input"
+        value={newDiagramName}
+        onChange={(e) => setNewDiagramName(e.currentTarget.value)}
       />
-      <VSCodeDropdown
+      <select
         id="new-diagram-type"
-        className="mt-3"
-        onInput={(e) => {
-          setNewDiagramType(
-            (e.target as HTMLInputElement).value as UMLDiagramType
-          )
-        }}
+        className="vscode-select mt-3"
+        value={newDiagramType}
+        onChange={(e) =>
+          setNewDiagramType(e.currentTarget.value as UMLDiagramType)
+        }
       >
-        {diagramTypes.map((type, index) => (
-          <VSCodeOption key={index}>{type}</VSCodeOption>
+        {diagramTypes.map((type) => (
+          <option key={type} value={type}>
+            {type}
+          </option>
         ))}
-      </VSCodeDropdown>
-      <VSCodeButton
-        className="my-3"
+      </select>
+      <button
+        type="button"
+        className="vscode-button my-3"
         disabled={!isValidDiagramName(newDiagramName)}
         onClick={createDiagram}
       >
         Create new diagram
-      </VSCodeButton>
+      </button>
 
       {!existingDiagrams && (
-        <div className="flex flex-col items-center justify-center">
-          <VSCodeProgressRing />
+        <div className="flex flex-col items-center justify-center gap-2">
+          <span
+            className="inline-block h-5 w-5 rounded-full border-2 border-current border-r-transparent animate-spin"
+            role="status"
+            aria-label="Fetching diagrams"
+          />
           <p>Fetching diagrams</p>
         </div>
       )}
@@ -97,26 +96,28 @@ function App() {
       {existingDiagrams && existingDiagrams.length > 0 && (
         <div className="dropdown-container">
           <label htmlFor="existing-diagrams">Existing diagrams</label>
-          <VSCodeDropdown
+          <select
             id="existing-diagrams"
-            className="w-full"
-            onInput={(e) => {
-              setExistingDiagramPath((e.target as HTMLInputElement).value)
-            }}
+            className="vscode-select w-full"
+            value={existingDiagramPath ?? existingDiagrams[0]}
+            onChange={(e) => setExistingDiagramPath(e.currentTarget.value)}
           >
-            {existingDiagrams.map((diagram, index) => (
-              <VSCodeOption key={index}>{diagram}</VSCodeOption>
+            {existingDiagrams.map((diagram) => (
+              <option key={diagram} value={diagram}>
+                {diagram}
+              </option>
             ))}
-          </VSCodeDropdown>
+          </select>
         </div>
       )}
-      <VSCodeButton
-        className="my-3"
-        disabled={!existingDiagrams || existingDiagrams.length == 0}
+      <button
+        type="button"
+        className="vscode-button my-3"
+        disabled={!existingDiagrams || existingDiagrams.length === 0}
         onClick={loadDiagram}
       >
         Load diagram
-      </VSCodeButton>
+      </button>
     </div>
   )
 }

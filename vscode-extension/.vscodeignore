@@ -4,8 +4,7 @@ src/**
 .vscode-test-web/**
 **/.vscode-test.*
 dist/test/**
-webpack.config.js
-esbuild.js
+vite.config.ts
 .github/**
 .gitignore
 .yarnrc

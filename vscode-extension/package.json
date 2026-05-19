@@ -54,9 +54,9 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run build:all",
-    "compile": "webpack --mode development",
-    "watch": "webpack --mode development --watch",
-    "build": "webpack --mode production",
+    "compile": "vite build",
+    "watch": "vite build --watch",
+    "build": "NODE_ENV=production vite build",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
@@ -71,21 +71,17 @@
     "@eslint/js": "9.17.0",
     "@types/mocha": "10.0.10",
     "@types/node": "24.12.4",
-    "@types/styled-components": "5.1.36",
     "@types/vscode": "1.110.0",
     "@vscode/test-cli": "0.0.6",
     "@vscode/test-electron": "2.5.2",
     "eslint": "9.17.0",
     "globals": "15.13.0",
-    "ts-loader": "9.5.7",
     "typescript": "5.7.2",
     "typescript-eslint": "8.18.1",
-    "webpack": "5.105.4",
-    "webpack-cli": "5.1.4"
+    "vite": "6.4.2"
   },
   "dependencies": {
     "@tumaet/apollon": "workspace:*",
-    "styled-components": "6.4.0",
     "uuid": "11.0.3"
   },
   "bugs": {

@@ -10,11 +10,8 @@
   "dependencies": {
     "@types/vscode-webview": "1.57.5",
     "@vscode/codicons": "0.0.35",
-    "@vscode/webview-ui-toolkit": "1.4.0",
-    "fast-glob": "3.3.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "styled-components": "6.4.0",
     "uuid": "11.0.3",
     "zustand": "5.0.12"
   },
@@ -28,18 +25,6 @@
     "tailwindcss": "4.0.17",
     "typescript": "5.7.2",
     "vite": "6.4.2"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
   },
   "engines": {
     "node": ">=24.15.0"

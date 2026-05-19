@@ -17,13 +17,8 @@ export default defineConfig({
       input: "src/index.tsx",
       output: {
         entryFileNames: "index.js",
-        chunkFileNames: "[name].js",
-        assetFileNames: (info) => {
-          if (info.name && info.name.endsWith(".css")) {
-            return "index.css"
-          }
-          return "assets/[name][extname]"
-        },
+        assetFileNames: (info) =>
+          info.name?.endsWith(".css") ? "index.css" : "assets/[name][extname]",
         inlineDynamicImports: true,
       },
     },
