@@ -10,6 +10,7 @@ on:
         options:
           - library
           - standalone
+          - vscode-extension
       bump:
         type: choice
         description: Version bump type
@@ -34,26 +35,37 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
 
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: 22.14.0
-
-      - name: Set correct npm version
-        run: npm install -g npm@11.1.0
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
 
       - name: Require changes in the scoped path since the last scoped tag
         env:
           SCOPE: ${{ inputs.scope }}
         run: |
+          set -euo pipefail
           git fetch --tags --quiet
-          if [ "$SCOPE" = "library" ]; then
-            LAST=$(git tag --list '@tumaet/apollon@*' --sort=-v:refname | head -n1)
-            PATH_PATTERN=library/
-          else
-            LAST=$(git tag --list 'v*' --sort=-v:refname | head -n1)
-            PATH_PATTERN=standalone/
-          fi
+          case "$SCOPE" in
+            library)
+              LAST=$(git tag --list '@tumaet/apollon@*' --sort=-v:refname | head -n1)
+              PATH_PATTERN=library/
+              ;;
+            standalone)
+              LAST=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+              PATH_PATTERN=standalone/
+              ;;
+            vscode-extension)
+              LAST=$(git tag --list 'apollon-vscode@*' --sort=-v:refname | head -n1)
+              PATH_PATTERN=vscode-extension/
+              ;;
+          esac
           if [ -n "$LAST" ] && git diff --quiet "$LAST"..HEAD -- "$PATH_PATTERN"; then
             echo "::error::No changes under $PATH_PATTERN since $LAST. Refusing to cut an empty $SCOPE release."
             exit 1
@@ -63,6 +75,7 @@ jobs:
         env:
           SCOPE: ${{ inputs.scope }}
         run: |
+          set -euo pipefail
           # If a long-lived branch was rebased before a release-bump
           # commit landed on main, the merge can regress the local
           # version below what's already published. Bumping from a
@@ -96,44 +109,71 @@ jobs:
           # Standalone tracks GHCR tags, not npm. The release-standalone
           # workflow tags Docker images `vX.Y.Z`; pull the highest one
           # we've seen and align local against it.
-          STANDALONE_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n1)
-          if [ -n "$STANDALONE_TAG" ]; then
-            align_to_max standalone/webapp "${STANDALONE_TAG#v}"
-            align_to_max standalone/server "${STANDALONE_TAG#v}"
+          if [ "$SCOPE" = "standalone" ] || [ "$SCOPE" = "library" ]; then
+            STANDALONE_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+            if [ -n "$STANDALONE_TAG" ]; then
+              align_to_max standalone/webapp "${STANDALONE_TAG#v}"
+              align_to_max standalone/server "${STANDALONE_TAG#v}"
+            fi
           fi
 
-      - name: Bump version
+      - name: Bump versions
         id: bump
         env:
           SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
         run: |
-          # scope=library  → bump library and standalone by $BUMP (standalone
-          #                  mirrors library, since a library minor ships a
-          #                  new feature to users of the standalone too).
-          # scope=standalone → bump standalone by $BUMP; library untouched.
-          if [ "$SCOPE" = "library" ]; then
-            (cd library && npm version "$BUMP" --no-git-tag-version)
-            LIB_VERSION=$(node -p "require('./library/package.json').version")
-          else
-            LIB_VERSION=""
-          fi
+          set -euo pipefail
+          bump_pkg() {
+            local pkg="$1"
+            BUMP="$BUMP" PKG="$pkg" node -e '
+              const fs = require("fs");
+              const pkgPath = process.env.PKG + "/package.json";
+              const data = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+              const [maj, min, pat] = data.version.split(".").map(Number);
+              let next;
+              switch (process.env.BUMP) {
+                case "patch": next = [maj, min, pat + 1].join("."); break;
+                case "minor": next = [maj, min + 1, 0].join("."); break;
+                case "major": next = [maj + 1, 0, 0].join("."); break;
+                default: throw new Error("invalid bump: " + process.env.BUMP);
+              }
+              data.version = next;
+              fs.writeFileSync(pkgPath, JSON.stringify(data, null, 2) + "\n");
+              console.log(pkgPath + ": " + next);
+            '
+          }
 
-          (cd standalone/webapp && npm version "$BUMP" --no-git-tag-version)
-          STANDALONE_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
-          STANDALONE_VERSION="$STANDALONE_VERSION" node -e '
-            const fs = require("fs");
-            const v = process.env.STANDALONE_VERSION;
-            const pkg = JSON.parse(fs.readFileSync("standalone/server/package.json", "utf8"));
-            pkg.version = v;
-            fs.writeFileSync("standalone/server/package.json", JSON.stringify(pkg, null, 2) + "\n");
-          '
+          # scope=library mirrors the bump to standalone too — a library
+          # release ships new code to standalone consumers via Docker.
+          LIB_VERSION=""
+          STANDALONE_VERSION=""
+          VSCODE_VERSION=""
+          case "$SCOPE" in
+            library)
+              bump_pkg library
+              LIB_VERSION=$(node -p "require('./library/package.json').version")
+              bump_pkg standalone/webapp
+              bump_pkg standalone/server
+              STANDALONE_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+              ;;
+            standalone)
+              bump_pkg standalone/webapp
+              bump_pkg standalone/server
+              STANDALONE_VERSION=$(node -p "require('./standalone/webapp/package.json').version")
+              ;;
+            vscode-extension)
+              bump_pkg vscode-extension
+              VSCODE_VERSION=$(node -p "require('./vscode-extension/package.json').version")
+              ;;
+          esac
 
           echo "library_version=${LIB_VERSION}" >> "$GITHUB_OUTPUT"
           echo "standalone_version=${STANDALONE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "vscode_version=${VSCODE_VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Regenerate package-lock.json
-        run: npm install --package-lock-only --ignore-scripts
+      - name: Regenerate pnpm-lock.yaml
+        run: pnpm install --lockfile-only --ignore-scripts
 
       - name: Commit bump
         id: commit
@@ -141,16 +181,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LIB_VERSION: ${{ steps.bump.outputs.library_version }}
           STANDALONE_VERSION: ${{ steps.bump.outputs.standalone_version }}
+          VSCODE_VERSION: ${{ steps.bump.outputs.vscode_version }}
           SCOPE: ${{ inputs.scope }}
           BUMP: ${{ inputs.bump }}
         run: |
-          if [ "$SCOPE" = "library" ]; then
-            BRANCH="chore/library-v${LIB_VERSION}"
-            COMMIT_TITLE="chore: release @tumaet/apollon@${LIB_VERSION} + standalone v${STANDALONE_VERSION}"
-          else
-            BRANCH="chore/standalone-v${STANDALONE_VERSION}"
-            COMMIT_TITLE="chore: release standalone v${STANDALONE_VERSION}"
-          fi
+          set -euo pipefail
+          case "$SCOPE" in
+            library)
+              BRANCH="chore/library-v${LIB_VERSION}"
+              COMMIT_TITLE="chore: release @tumaet/apollon@${LIB_VERSION} + standalone v${STANDALONE_VERSION}"
+              FILES=(library/package.json standalone/webapp/package.json standalone/server/package.json pnpm-lock.yaml)
+              ;;
+            standalone)
+              BRANCH="chore/standalone-v${STANDALONE_VERSION}"
+              COMMIT_TITLE="chore: release standalone v${STANDALONE_VERSION}"
+              FILES=(standalone/webapp/package.json standalone/server/package.json pnpm-lock.yaml)
+              ;;
+            vscode-extension)
+              BRANCH="chore/vscode-v${VSCODE_VERSION}"
+              COMMIT_TITLE="chore: release apollon-vscode@${VSCODE_VERSION}"
+              FILES=(vscode-extension/package.json pnpm-lock.yaml)
+              ;;
+          esac
           echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
           echo "title=${COMMIT_TITLE}" >> "$GITHUB_OUTPUT"
 
@@ -164,18 +216,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
-          if [ "$SCOPE" = "library" ]; then
-            git add library/package.json standalone/webapp/package.json standalone/server/package.json package-lock.json
-          else
-            git add standalone/webapp/package.json standalone/server/package.json package-lock.json
-          fi
+          git add "${FILES[@]}"
 
-          cat > /tmp/commit-msg.txt <<COMMIT_MSG
-          ${COMMIT_TITLE}
-
-          Scope: ${SCOPE} ${BUMP}
-          COMMIT_MSG
-          git commit -F /tmp/commit-msg.txt
+          git commit -m "${COMMIT_TITLE}" -m "Scope: ${SCOPE} ${BUMP}"
 
           git push --force-with-lease origin "$BRANCH"
 
@@ -186,28 +229,25 @@ jobs:
           BUMP: ${{ inputs.bump }}
           LIB_VERSION: ${{ steps.bump.outputs.library_version }}
           STANDALONE_VERSION: ${{ steps.bump.outputs.standalone_version }}
+          VSCODE_VERSION: ${{ steps.bump.outputs.vscode_version }}
           BRANCH: ${{ steps.commit.outputs.branch }}
           TITLE: ${{ steps.commit.outputs.title }}
         run: |
-          if [ "$SCOPE" = "library" ]; then
-            cat > /tmp/pr-body.md <<PR_BODY
-          **Scope:** \`library\` (\`${BUMP}\`)
-
-          Merging this PR publishes **both** artifacts automatically:
-
-          - \`@tumaet/apollon@${LIB_VERSION}\` to npm (via \`Release Library\`)
-          - \`v${STANDALONE_VERSION}\` — Docker images tagged \`${STANDALONE_VERSION}\` (via \`Release Standalone\`, mirrored so the new library code ships as a Docker release)
-          PR_BODY
-          else
-            cat > /tmp/pr-body.md <<PR_BODY
-          **Scope:** \`standalone\` (\`${BUMP}\`)
-
-          Merging this PR cuts \`v${STANDALONE_VERSION}\` automatically — \`Release Standalone\` retags Docker images as \`${STANDALONE_VERSION}\` and creates the GitHub Release. The library is untouched.
-          PR_BODY
-          fi
+          set -euo pipefail
+          case "$SCOPE" in
+            library)
+              BODY=$'**Scope:** `library` (`'"${BUMP}"$'`)\n\nMerging this PR publishes **both** artifacts automatically:\n\n- `@tumaet/apollon@'"${LIB_VERSION}"$'` to npm (via `Release Library`)\n- `v'"${STANDALONE_VERSION}"$'` — Docker images tagged `'"${STANDALONE_VERSION}"$'` (via `Release Standalone`, mirrored so the new library code ships as a Docker release)'
+              ;;
+            standalone)
+              BODY=$'**Scope:** `standalone` (`'"${BUMP}"$'`)\n\nMerging this PR cuts `v'"${STANDALONE_VERSION}"$'` automatically — `Release Standalone` retags Docker images as `'"${STANDALONE_VERSION}"$'` and creates the GitHub Release. The library is untouched.'
+              ;;
+            vscode-extension)
+              BODY=$'**Scope:** `vscode-extension` (`'"${BUMP}"$'`)\n\nMerging this PR publishes `tumaet.apollon-vscode@'"${VSCODE_VERSION}"$'` to the VS Marketplace and Open VSX automatically (via `Release VS Code Extension`). Tag prefix: `apollon-vscode@*`.'
+              ;;
+          esac
 
           gh pr create \
             --base main \
             --head "$BRANCH" \
             --title "$TITLE" \
-            --body-file /tmp/pr-body.md
+            --body "$BODY"

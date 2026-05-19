@@ -43,7 +43,10 @@ jobs:
               - 'docker/**'
               - 'nginx.conf'
               - 'package.json'
-              - 'package-lock.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - '.nvmrc'
               - 'tsconfig*.json'
               - '.github/workflows/build-and-push.yml'
 
@@ -68,7 +71,7 @@ jobs:
             dockerfile: ./standalone/server/Dockerfile
             image: ghcr.io/ls1intum/apollon/server
             context: .
-    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@main
+    uses: ls1intum/.github/.github/workflows/build-and-push-docker-image.yml@c8ede985ff7999c28d7538cb32ae52bfb83f51b9 # main
     with:
       image-name: ${{ matrix.image }}
       docker-file: ${{ matrix.dockerfile }}
