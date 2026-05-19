@@ -4,5 +4,6 @@
   "access": "restricted",
   "baseBranch": "main",
   "fixed": [],
-  "updateInternalDependencies": "minor"
+  "updateInternalDependencies": "minor",
+  "privatePackages": { "version": false, "tag": false }
 }

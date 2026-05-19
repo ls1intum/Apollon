@@ -29,6 +29,8 @@ nvm use && npm install
 npm run dev        # library watch + server + webapp, with Redis on Docker
 ```
 
+**Windows contributors**: run `git config --global core.symlinks true` before cloning (or enable Developer Mode), otherwise `CLAUDE.md` will materialise as a regular text file containing the string `AGENTS.md` instead of pointing to it. The release-doc lint catches this on push.
+
 ### Branch and commit
 
 1. Fork the repo (external contributors) or create a branch off `main` (maintainers): `git checkout -b feature/<short-name>`.

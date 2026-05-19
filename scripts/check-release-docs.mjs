@@ -71,6 +71,16 @@ function checkChangesetConfig(root, errors) {
       `.changeset/config.json: \`changelog\` must use @changesets/changelog-github; got ${JSON.stringify(renderer)}.`
     )
   }
+  // `@tumaet/webapp` and `@tumaet/server` are `private: true`. The standalone
+  // Docker release pipeline depends on Changesets versioning them, which only
+  // happens when `privatePackages.version` is true. The Changesets default
+  // historically varies across major versions; setting it explicitly defends
+  // against a silent breakage on future Changesets upgrades.
+  if (cfg.privatePackages?.version !== true) {
+    errors.push(
+      `.changeset/config.json: \`privatePackages.version\` must be true so @tumaet/webapp and @tumaet/server (private) still get versioned; got ${JSON.stringify(cfg.privatePackages?.version)}.`
+    )
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

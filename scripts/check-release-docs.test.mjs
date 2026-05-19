@@ -17,5 +17,6 @@ describe("check-release-docs", () => {
     assert.match(errors, /`fixed` must pair/)
     assert.match(errors, /`updateInternalDependencies` must be "patch"/)
     assert.match(errors, /`changelog` must use @changesets\/changelog-github/)
+    assert.match(errors, /`privatePackages.version` must be true/)
   })
 })
