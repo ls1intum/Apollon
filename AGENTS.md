@@ -15,7 +15,7 @@ A library minor auto-patches webapp + server through `updateInternalDependencies
 ## Commits and PRs
 
 - Squash-merge only — your PR title becomes the merge commit subject, your PR body becomes its body.
-- PR title must be a Conventional Commit subject (`feat:`, `fix(scope):`, …). Enforced by `commitlint` via `.husky/commit-msg`.
+- PR title must be a Conventional Commit subject (`feat:`, `fix(scope):`, …). Enforced by `commitlint` via `.husky/commit-msg` locally and [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml) in CI.
 - Every PR that changes a published or operator-visible workspace needs a Changesets entry (`npm run changeset`). Docs-only / CI-only / refactor PRs don't. CI runs [`verify-changesets`](.github/workflows/verify-changesets.yml) and surfaces missing entries in the check summary.
 
 ## What goes where
