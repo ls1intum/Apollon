@@ -3,52 +3,49 @@ import react from "@vitejs/plugin-react"
 import dts from "vite-plugin-dts"
 import { resolve } from "path"
 
-// Two passes from one config: default emits the standalone bundle (peers
-// inlined); LIB_PEERS=true emits dist/react/ with peers externalized.
-// Only the first pass runs vite-plugin-dts — both subpaths share one .d.ts.
-const isPeerBuild = process.env.LIB_PEERS === "true"
-
+// Single-pass library build. Peers (React + MUI + emotion + xyflow) are
+// always externalized — consumers install them. Two entries: the public
+// surface (`.`) and a `/internals` subpath that exposes the Yjs wire
+// protocol for host integration tests. The internals subpath is NOT
+// covered by semver.
 export default defineConfig({
-  plugins: [react(), ...(isPeerBuild ? [] : [dts({ include: ["lib"] })])],
+  // rollupTypes: bundle all .d.ts into a single dist/index.d.ts so consumers
+  // on NodeNext don't trip on internal relative imports without `.js` suffix.
+  plugins: [react(), dts({ include: ["lib"], rollupTypes: true })],
   build: {
     copyPublicDir: false,
-    outDir: isPeerBuild ? "dist/react" : "dist",
-    emptyOutDir: !isPeerBuild,
+    emptyOutDir: true,
     cssCodeSplit: false,
     lib: {
-      name: "apollon-library",
-      entry: resolve(__dirname, "lib/index.tsx"),
+      entry: {
+        index: resolve(__dirname, "lib/index.tsx"),
+        internals: resolve(__dirname, "lib/internals.ts"),
+      },
       formats: ["es"],
       cssFileName: "style",
     },
     rollupOptions: {
-      external: isPeerBuild
-        ? [
-            "react",
-            "react-dom",
-            "react/jsx-runtime",
-            "react/jsx-dev-runtime",
-            "react-dom/client",
-            "@emotion/react",
-            "@emotion/styled",
-            /^@mui\/material(\/.*)?$/,
-            "@xyflow/react",
-          ]
-        : [],
+      external: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "react-dom/client",
+        "@emotion/react",
+        "@emotion/styled",
+        /^@mui\/material(\/.*)?$/,
+        "@xyflow/react",
+      ],
       output: {
         assetFileNames: "assets/[name][extname]",
-        entryFileNames: "index.js",
+        entryFileNames: "[name].js",
       },
     },
     minify: true,
-    commonjsOptions: {
-      include: [/node_modules/],
-    },
+    commonjsOptions: { include: [/node_modules/] },
   },
   resolve: {
-    alias: {
-      "@": resolve(__dirname, "lib"),
-    },
+    alias: { "@": resolve(__dirname, "lib") },
   },
-  esbuild: { drop: ["console", "debugger"] },
+  esbuild: { drop: ["debugger"] },
 })

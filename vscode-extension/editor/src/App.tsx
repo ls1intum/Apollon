@@ -1,10 +1,5 @@
 import { useState } from "react"
-import { ApollonEditor } from "@tumaet/apollon/react"
-import {
-  VSCodeButton,
-  VSCodeDropdown,
-  VSCodeOption,
-} from "@vscode/webview-ui-toolkit/react"
+import { ApollonEditor } from "@tumaet/apollon"
 import { ApollonEditorProvider } from "./ApollonEditor/ApollonEditorContext"
 import { ApollonEditorComponent } from "./ApollonEditor/ApollonEditorComponent"
 import { vscode } from "./index"
@@ -20,9 +15,7 @@ function App() {
   }
 
   const exportDiagram = async () => {
-    const diagramSVG = await editor!.exportAsSVG({
-      svgMode: "compat",
-    })
+    const diagramSVG = await editor!.exportAsSVG({ svgMode: "compat" })
     let exportContent
 
     switch (exportType) {
@@ -46,23 +39,21 @@ function App() {
 
   return (
     <>
-      <div className="app-bar">
-        <VSCodeButton className="m-3" onClick={exportDiagram}>
+      <div className="app-bar items-center gap-2 px-3">
+        <button type="button" className="vscode-button" onClick={exportDiagram}>
           Export
-        </VSCodeButton>
-        <VSCodeDropdown
+        </button>
+        <select
           id="export-type"
-          className="m-3"
-          style={{ height: "24px" }}
-          onInput={(e) => {
-            setExportType(
-              (e.target as HTMLInputElement).value.toLowerCase() as ExportType
-            )
-          }}
+          className="vscode-select"
+          value={exportType}
+          onChange={(e) =>
+            setExportType(e.currentTarget.value.toLowerCase() as ExportType)
+          }
         >
-          <VSCodeOption>SVG</VSCodeOption>
-          <VSCodeOption>PNG</VSCodeOption>
-        </VSCodeDropdown>
+          <option value="svg">SVG</option>
+          <option value="png">PNG</option>
+        </select>
       </div>
       <ApollonEditorProvider value={{ editor, setEditor: handleSetEditor }}>
         <ApollonEditorComponent />

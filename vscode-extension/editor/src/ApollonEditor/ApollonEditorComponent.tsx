@@ -1,19 +1,9 @@
-import { ApollonEditor, UMLModel } from "@tumaet/apollon/react"
+import { ApollonEditor, UMLModel } from "@tumaet/apollon"
 import React, { useEffect, useRef, useContext } from "react"
-import styled from "styled-components"
 import { vscode } from "../index"
 
 import { ApollonEditorContext } from "./ApollonEditorContext"
 import useStore from "../store"
-
-const ApollonContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background-color: var(--apollon-background);
-  height: calc(100vh - 3rem);
-  width: 100%;
-`
 
 export const ApollonEditorComponent: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -42,10 +32,7 @@ export const ApollonEditorComponent: React.FC = () => {
 
         editorRef.current.subscribeToModelChange((model: UMLModel) => {
           useStore.setState({ model: model })
-          vscode.postMessage({
-            type: "saveDiagram",
-            model: model,
-          })
+          vscode.postMessage({ type: "saveDiagram", model: model })
         })
 
         setEditor!(editorRef.current)
@@ -56,5 +43,10 @@ export const ApollonEditorComponent: React.FC = () => {
     initializeEditor()
   }, [createNewEditor])
 
-  return <ApollonContainer ref={containerRef} />
+  return (
+    <div
+      ref={containerRef}
+      className="flex flex-col overflow-hidden w-full h-[calc(100vh-3rem)] bg-[var(--apollon-background)]"
+    />
+  )
 }

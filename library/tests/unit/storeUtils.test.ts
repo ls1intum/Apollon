@@ -81,26 +81,14 @@ describe("deepEqual", () => {
     expect(deepEqual({} as unknown, [] as unknown)).toBe(false)
   })
 
-  // undefined - JSON.stringify(undefined) === undefined, so they match
   it("returns true for two undefined values", () => {
     expect(deepEqual(undefined, undefined)).toBe(true)
   })
 
-  // Key ordering note: JSON.stringify preserves insertion order
   it("returns true for objects with same keys in same insertion order", () => {
     const a = { x: 1, y: 2 }
     const b = { x: 1, y: 2 }
     expect(deepEqual(a, b)).toBe(true)
-  })
-
-  it("returns false for objects with same keys in different order (JSON.stringify limitation)", () => {
-    const a = { x: 1, y: 2 }
-    const b = { y: 2, x: 1 }
-    // JSON.stringify preserves insertion order, so this may be true or false
-    // depending on engine. In V8, { x:1, y:2 } and { y:2, x:1 } produce different strings.
-    // We test the actual behavior.
-    const result = deepEqual(a, b)
-    expect(typeof result).toBe("boolean")
   })
 
   it("handles complex nested structures", () => {

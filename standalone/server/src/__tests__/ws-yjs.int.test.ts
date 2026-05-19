@@ -10,8 +10,8 @@ import {
   createHeadlessSync,
   MessageType,
   type YjsSyncClass,
-} from "@tumaet/apollon"
-import { startRelayServer } from "../ws"
+} from "@tumaet/apollon/internals"
+import { startRelayServer } from "../ws.js"
 
 // ---------------------------------------------------------------------------
 // Helpers — set up real WebSocket peers driven by the library's actual

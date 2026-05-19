@@ -174,18 +174,16 @@ jobs:
         run: pnpm --filter @tumaet/apollon run test
 
       - name: Verify ESM exports-map resolution
-        # The library is ESM-only. The standalone/server consumes it lazily
-        # via `await import("@tumaet/apollon")` from CJS code. We use
-        # `import.meta.resolve` (sync, no side effects) to validate every
-        # subpath in the exports map — actually evaluating the module would
-        # require jsdom (the server does this; raw Node cannot).
+        # The library is ESM-only. `import.meta.resolve` (sync, no side
+        # effects) validates every subpath in the exports map — actually
+        # evaluating the module would require jsdom.
         working-directory: standalone/server
         run: |
           node --input-type=module -e '
             const root = import.meta.resolve("@tumaet/apollon");
-            const react = import.meta.resolve("@tumaet/apollon/react");
+            const internals = import.meta.resolve("@tumaet/apollon/internals");
             const css = import.meta.resolve("@tumaet/apollon/style.css");
-            console.log({ root, react, css });
+            console.log({ root, internals, css });
           '
 
   # Baseline regeneration: see docs/development/visual-tests.md.
