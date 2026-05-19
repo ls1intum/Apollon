@@ -1,6 +1,6 @@
 # Apollon Agent Handbook
 
-Entry point for AI coding agents working in [Apollon](https://github.com/ls1intum/Apollon), the TUM UML diagram editor. `CLAUDE.md` is a symlink to this file.
+Conventions for AI coding agents in [Apollon](https://github.com/ls1intum/Apollon), the TUM UML diagram editor. `CLAUDE.md` is a symlink to this file.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ Entry point for AI coding agents working in [Apollon](https://github.com/ls1intu
 - **`docker/`** — compose files for local Redis (`compose.local.db.yml`) and prod (`compose.{app,db,proxy}.yml`).
 - **`docs/`** — `getting-started/`, `development/`, `deployment/`, `admin/`, `mobile/`. Deep tour in [`docs/development/project-structure.md`](docs/development/project-structure.md).
 
-`standalone/webapp` + `standalone/server` are released in lockstep via `fixed` in [`.changeset/config.json`](.changeset/config.json). A library minor auto-patches them through `updateInternalDependencies: patch`.
+`standalone/webapp` and `standalone/server` are paired in `.changeset/config.json#fixed` and release together. A library minor auto-patches them through `updateInternalDependencies: patch`.
 
 ## Toolchain
 
@@ -47,7 +47,7 @@ Before opening a PR: `npm run format:check && npm run lint && npm test` must pas
 
 - **Squash-merge only.** PR title becomes the merge commit subject; PR body becomes its body.
 - **PR title** is a Conventional Commit subject. Enforced locally by `.husky/commit-msg` and in CI by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml).
-- **Changesets** are being adopted. Run `npm run changeset` on any PR that changes a published or operator-visible workspace; the file you produce is the changelog entry, **verbatim**. Skip on docs-only / CI-only / refactor PRs. The pipeline cutover to `changesets/action` is in a follow-up PR; until then changesets accumulate and the existing `Version bump` workflow drives releases. Full rules: [`docs/development/release-notes.md`](docs/development/release-notes.md).
+- **Changesets** drive the changelog. Run `npm run changeset` on any PR that changes a published or operator-visible workspace; skip on docs-only / CI-only / refactor PRs. Writing rules in [`docs/development/release-notes.md`](docs/development/release-notes.md).
 
 ## Gotchas
 
@@ -58,8 +58,8 @@ Before opening a PR: `npm run format:check && npm run lint && npm test` must pas
 
 ## Do not
 
-- Edit `library/dist/` or `.changeset/*.md` files written by `changeset version` (Changesets owns them).
-- Add co-authored-by / agent-attribution trailers inside a changeset body. The changeset body lands in `CHANGELOG.md` verbatim and feeds the user-facing release notes.
+- Edit `library/dist/` or `.changeset/*.md` files written by `changeset version` — Changesets owns them.
+- Add co-authored-by / agent-attribution trailers inside a changeset body. The body lands in `CHANGELOG.md` as written.
 
 ## Deeper docs
 

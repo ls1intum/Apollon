@@ -1,6 +1,6 @@
 # Release-notes style guide
 
-Three release lines drive [Changesets](https://github.com/changesets/changesets): `@tumaet/apollon` on npm, `@tumaet/webapp` + `@tumaet/server` as `ghcr.io` Docker images released in lockstep, and `apollon-vscode` on the VS Marketplace. This is the style guide for the per-PR changeset summary.
+Three release lines drive [Changesets](https://github.com/changesets/changesets): `@tumaet/apollon` on npm, `@tumaet/webapp` + `@tumaet/server` as paired `ghcr.io` Docker images, and `apollon-vscode` on the VS Marketplace.
 
 ## What you write per PR
 
@@ -27,7 +27,7 @@ For **breaking changes**, mark the changeset `major` and link a migration runboo
 | Package | Audience | Voice |
 | --- | --- | --- |
 | `@tumaet/apollon` | embedders | name the API; describe the contract |
-| `@tumaet/webapp` + `@tumaet/server` (lockstep) | end users + operators | what the user can do; for operators, link the runbook |
+| `@tumaet/webapp` + `@tumaet/server` (paired) | end users + operators | what the user can do; for operators, link the runbook |
 | `apollon-vscode` | extension users | what the user can do |
 
 ## Picking the bump type
@@ -60,10 +60,6 @@ Adds `setPreviewMode`, `setReadonly`, `fitView`, and `broadcastFullState` to the
 
 A change that spans webapp and library lands as two changesets in the same PR — one per audience, each in its track's voice.
 
-## What `CHANGELOG.md` files look like
+## CHANGELOG.md and the GitHub Release body
 
-`CHANGELOG.md` is the per-version bullet log Changesets writes; the **GitHub Release body** carries the human-curated lede + `### Highlights` (screenshots, video) for the release. CI enforces the bullet shape — every bullet must begin with `[#NNN](pr-url)`, `` [`shortsha`](commit-url) ``, or the `Released in lockstep` sentinel. See [`scripts/check-release-docs.mjs`](../../scripts/check-release-docs.mjs).
-
-## Today vs. the cutover
-
-This guide and the convention are live now. The pipeline cutover that opens an automated **Version Packages** PR (via `changesets/action`) is a follow-up; until then, changesets accumulate and the existing `Version bump` workflow drives releases manually. The per-PR contract above is the same in both worlds.
+`CHANGELOG.md` is the per-version bullet log Changesets writes; humans don't edit it by hand. The **GitHub Release body** carries the human-curated lede + `### Highlights` (screenshots, video) for the release.

@@ -11,17 +11,11 @@ describe("check-release-docs", () => {
     assert.deepEqual(runChecks(repoRoot), [])
   })
 
-  it("flags every regression on the bad fixture", () => {
-    const errors = runChecks(badFixture)
-    const joined = errors.join("\n")
-    // No CLAUDE.md present at all -> first check trips with an ENOENT.
-    assert.match(joined, /CLAUDE\.md:/)
-    // Wrong `fixed`, `updateInternalDependencies`, `access`, and renderer.
-    assert.match(joined, /`fixed` must lock/)
-    assert.match(joined, /`updateInternalDependencies` must be "patch"/)
-    assert.match(joined, /`access` must be "public"/)
-    assert.match(joined, /`changelog` must use @changesets\/changelog-github/)
-    // Hand-written bullet without a PR link.
-    assert.match(joined, /library\/CHANGELOG\.md:7 bullet does not start with/)
+  it("flags every config regression on the bad fixture", () => {
+    const errors = runChecks(badFixture).join("\n")
+    assert.match(errors, /CLAUDE\.md/)
+    assert.match(errors, /`fixed` must pair/)
+    assert.match(errors, /`updateInternalDependencies` must be "patch"/)
+    assert.match(errors, /`changelog` must use @changesets\/changelog-github/)
   })
 })
