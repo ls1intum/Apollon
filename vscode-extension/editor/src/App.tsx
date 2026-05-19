@@ -19,12 +19,13 @@ function App() {
     let exportContent
 
     switch (exportType) {
-      case "png":
+      case "png": {
         const arrayBuffer = await (
           await convertRenderedSVGToPNG(diagramSVG, true)
         ).arrayBuffer()
         exportContent = Array.from(new Uint8Array(arrayBuffer))
         break
+      }
       case "svg":
         exportContent = diagramSVG.svg
         break

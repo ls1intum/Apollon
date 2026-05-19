@@ -1,7 +1,6 @@
 # Ignore source & config
 src/**
 .vscode/**
-**/.vscode-test.*
 vite.config.ts
 .github/**
 .gitignore

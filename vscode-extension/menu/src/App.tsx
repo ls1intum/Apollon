@@ -18,6 +18,8 @@ const diagramTypes: UMLDiagramType[] = [
   "BPMN",
 ]
 
+// Reject filesystem-illegal characters in user-supplied diagram names.
+// eslint-disable-next-line no-control-regex
 const INVALID_NAME_RE = /[\x00-\x1f\x80-\x9f<>:"/\\|?*]/
 
 function App() {

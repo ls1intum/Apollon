@@ -187,6 +187,16 @@ jobs:
             console.log({ root, react, internals, css });
           '
 
+      - name: Lint published package shape (publint)
+        working-directory: library
+        run: pnpm dlx publint
+
+      - name: Validate type resolution (arethetypeswrong)
+        working-directory: library
+        # ESM-only library, all exports flagged as such; CJS profile
+        # would force-flag dual-package issues that don't apply.
+        run: pnpm dlx -p @arethetypeswrong/cli attw --pack . --profile esm-only
+
   # Baseline regeneration: see docs/development/visual-tests.md.
   visual-regression-tests:
     needs: [detect-changes]

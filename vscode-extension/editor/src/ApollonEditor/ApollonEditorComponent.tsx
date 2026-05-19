@@ -17,7 +17,9 @@ export const ApollonEditorComponent: React.FC = () => {
 
   useEffect(() => {
     const initializeEditor = async () => {
-      if (!containerRef.current) return
+      if (!containerRef.current) {
+        return
+      }
 
       if (createNewEditor) {
         if (editorRef.current) {
@@ -41,6 +43,11 @@ export const ApollonEditorComponent: React.FC = () => {
     }
 
     initializeEditor()
+    // `createNewEditor` is the only flag that should re-mount the editor;
+    // the other store values (model / options) are read at construction
+    // time and applied imperatively. Deliberately not in the dep array to
+    // avoid teardown loops on every model change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createNewEditor])
 
   return (

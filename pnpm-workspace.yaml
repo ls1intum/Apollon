@@ -13,6 +13,34 @@ injectWorkspacePackages: true
 minimumReleaseAge: 1440 # 1 day
 blockExoticSubdeps: true
 
+# Shared version pins across 2+ workspaces. Each workspace package.json
+# references the entry via `"<pkg>": "catalog:"` instead of a duplicate
+# version string, so Renovate bumps a dep in one place instead of N.
+catalog:
+  "@emotion/react": "11.11.1"
+  "@emotion/styled": "11.11.0"
+  "@eslint/js": "9.17.0"
+  "@mui/material": "6.4.2"
+  "@tailwindcss/vite": "4.0.17"
+  "@types/node": "24.12.4"
+  "@types/react": "18.3.28"
+  "@types/react-dom": "18.3.7"
+  "@vitejs/plugin-react": "4.3.4"
+  "@vitest/coverage-v8": "4.1.2"
+  "@xyflow/react": "12.3.6"
+  eslint: "9.17.0"
+  eslint-plugin-react-hooks: "5.1.0"
+  globals: "15.13.0"
+  jsdom: "28.1.0"
+  react: "18.3.1"
+  react-dom: "18.3.1"
+  tailwindcss: "4.0.17"
+  typescript: "5.7.2"
+  typescript-eslint: "8.18.1"
+  vite: "6.4.2"
+  vitest: "4.1.2"
+  zustand: "5.0.12"
+
 overrides:
   "@eslint/plugin-kit": ">=0.3.4" # GHSA-7q7g-4xm8-89cq
   "@xmldom/xmldom": ">=0.8.12" # GHSA-9pgh-qqpf-7wqj
