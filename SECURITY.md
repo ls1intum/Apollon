@@ -12,7 +12,7 @@ Only the latest minor of each major is supported with security fixes.
 
 | Package                                             | Supported        |
 | --------------------------------------------------- | ---------------- |
-| `@tumaet/apollon` (npm)                             | `5.x`            |
+| `@tumaet/apollon` (npm)                             | `4.x`            |
 | Standalone Docker images (server + webapp)          | latest `vX.Y.Z`  |
 | `tumaet.apollon-vscode` (VS Marketplace / Open VSX) | latest published |
 
