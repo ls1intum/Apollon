@@ -4,7 +4,7 @@
 :width: 200px
 ```
 
-Apollon is an open-source UML modeling editor for the web. It publishes the embeddable [`@tumaet/apollon`](https://www.npmjs.com/package/@tumaet/apollon) React library and ships a standalone web app + server built on top of it.
+Apollon is an open-source UML modeling editor for the web. It publishes the embeddable [`@tumaet/apollon`](https://www.npmjs.com/package/@tumaet/apollon) library (framework-agnostic, with an opt-in React subpath) and ships a standalone web app + server built on top of it.
 
 ## What you can draw
 

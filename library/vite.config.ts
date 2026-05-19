@@ -3,18 +3,38 @@ import react from "@vitejs/plugin-react"
 import dts from "vite-plugin-dts"
 import { resolve } from "path"
 
+// Two passes from one config: default emits the standalone bundle (peers
+// inlined); LIB_PEERS=true emits dist/react/ with peers externalized.
+// Only the first pass runs vite-plugin-dts — both subpaths share one .d.ts.
+const isPeerBuild = process.env.LIB_PEERS === "true"
+
 export default defineConfig({
-  plugins: [react(), dts({ include: ["lib"] })],
+  plugins: [react(), ...(isPeerBuild ? [] : [dts({ include: ["lib"] })])],
   build: {
     copyPublicDir: false,
+    outDir: isPeerBuild ? "dist/react" : "dist",
+    emptyOutDir: !isPeerBuild,
+    cssCodeSplit: false,
     lib: {
       name: "apollon-library",
       entry: resolve(__dirname, "lib/index.tsx"),
       formats: ["es"],
       cssFileName: "style",
     },
-    // Do not externalize React: bundle everything so consumers don't need React installed
     rollupOptions: {
+      external: isPeerBuild
+        ? [
+            "react",
+            "react-dom",
+            "react/jsx-runtime",
+            "react/jsx-dev-runtime",
+            "react-dom/client",
+            "@emotion/react",
+            "@emotion/styled",
+            /^@mui\/material(\/.*)?$/,
+            "@xyflow/react",
+          ]
+        : [],
       output: {
         assetFileNames: "assets/[name][extname]",
         entryFileNames: "index.js",
@@ -23,14 +43,12 @@ export default defineConfig({
     minify: true,
     commonjsOptions: {
       include: [/node_modules/],
-      // No exclusions: allow bundling of all deps
     },
   },
   resolve: {
     alias: {
       "@": resolve(__dirname, "lib"),
     },
-    dedupe: ["react", "react-dom", "@emotion/react", "@emotion/styled"],
   },
   esbuild: { drop: ["console", "debugger"] },
 })
