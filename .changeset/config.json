@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "ls1intum/Apollon" }],
+  "access": "public",
+  "baseBranch": "main",
+  "fixed": [["@tumaet/webapp", "@tumaet/server"]],
+  "updateInternalDependencies": "patch",
+  "privatePackages": { "tag": false }
+}
