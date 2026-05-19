@@ -1,9 +1,9 @@
 import { ulid } from "ulid"
-import { fcall, gunzipJson, gzipJson, k, type Redis } from "../redis"
-import type { Config } from "../config"
-import type { Diagram } from "../types"
-import type { RelayHook } from "../http/app"
-import { logger } from "../logger"
+import { fcall, gunzipJson, gzipJson, k, type Redis } from "../redis.js"
+import type { Config } from "../config.js"
+import type { Diagram } from "../types.js"
+import type { RelayHook } from "../http/app.js"
+import { logger } from "../logger.js"
 
 /**
  * Wall-clock auto-versioning hook for the HEAD PUT path.

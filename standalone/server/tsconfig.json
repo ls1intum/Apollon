@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "allowJs": true,
     "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "rootDir": "./",
     "resolveJsonModule": true,
-    "strictPropertyInitialization": false,
     "noUncheckedIndexedAccess": true
   },
   "include": ["src/**/*.ts"],

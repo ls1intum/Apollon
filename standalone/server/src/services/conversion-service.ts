@@ -1,20 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
-import "global-jsdom/register"
-import type { UMLModel, SVG } from "@tumaet/apollon"
-
-if (typeof global.ResizeObserver === "undefined") {
-  class MockResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  ;(global as any).ResizeObserver = MockResizeObserver
-}
-
-// Load the ESM-only library lazily so its module-evaluation side effects
-// (jsdom-touching React tree) only fire when a conversion is requested,
-// not at server boot.
-const loadApollonModule = () => import("@tumaet/apollon")
+import {
+  ApollonEditor,
+  importDiagram,
+  type UMLModel,
+  type SVG,
+} from "@tumaet/apollon"
 
 export class ConversionService {
   private readonly EDGE_ENDPOINT_INSET_PX = -3
@@ -78,29 +67,29 @@ export class ConversionService {
     ])
   }
 
-  /**
-   * Ensures model has render-ready defaults for server-side React Flow export.
-   * Server-side rendering cannot measure dimensions/handle geometry, so defaults are injected.
-   */
+  // SSR cannot measure dimensions/handle geometry, so inject defaults the
+  // React Flow renderer can pass straight through.
   private normalizeModelForServerRender = (model: UMLModel): UMLModel => {
-    if (!model || !model.nodes) {
-      throw new Error("Invalid model: missing nodes property")
+    type NodeWithHandles = UMLModel["nodes"][number] & {
+      handles?: unknown
     }
-
     return {
       ...model,
-      nodes: model.nodes.map((node) => ({
-        ...node,
-        width: node.width ?? 100,
-        height: node.height ?? 50,
-        measured: {
-          width: node.measured?.width ?? node.width ?? 100,
-          height: node.measured?.height ?? node.height ?? 50,
-        },
-        handles:
-          (node as any).handles ??
-          this.createDefaultHandles(node.width ?? 100, node.height ?? 50),
-      })),
+      nodes: model.nodes.map((node) => {
+        const n = node as NodeWithHandles
+        return {
+          ...node,
+          width: node.width ?? 100,
+          height: node.height ?? 50,
+          measured: {
+            width: node.measured?.width ?? node.width ?? 100,
+            height: node.measured?.height ?? node.height ?? 50,
+          },
+          handles:
+            n.handles ??
+            this.createDefaultHandles(node.width ?? 100, node.height ?? 50),
+        }
+      }),
       edges: (model.edges ?? []).map((edge, index) => ({
         ...edge,
         id:
@@ -117,47 +106,6 @@ export class ConversionService {
   }
 
   convertToSvg = async (model: UMLModel): Promise<SVG> => {
-    if (typeof window.requestAnimationFrame !== "function") {
-      ;(window as any).requestAnimationFrame = (cb: FrameRequestCallback) =>
-        setTimeout(() => cb(Date.now()), 16)
-    }
-    if (typeof window.cancelAnimationFrame !== "function") {
-      ;(window as any).cancelAnimationFrame = (id: number) => clearTimeout(id)
-    }
-
-    // JSDOM does not implement SVGGraphicsElement.getBBox; provide a
-    // realistic implementation that derives the element's geometry from
-    // its `viewBox`, `width`, or `height` attributes. The library's
-    // `getNodeBoundsFromDOM` (in @tumaet/apollon's exportUtils) calls
-    // `getBBox()` first and uses the result to compute the diagram's
-    // clip / viewBox for the exported SVG. A constant `(0,0,10,10)` mock
-    // collapsed every node's measured size to a tiny rect at origin, so
-    // the resulting viewBox framed empty space adjacent to the diagram —
-    // thumbnails ended up off-centre or showing nothing. Reading the
-    // viewBox attribute (which the library already sets on every shape's
-    // SVG) gives the right answer for every node it has rendered.
-    // @ts-ignore - JSDOM lacks getBBox.
-    window.SVGElement.prototype.getBBox = function () {
-      const el = this as unknown as Element
-      const vb = el.getAttribute?.("viewBox")
-      if (vb) {
-        const [x, y, w, h] = vb.split(/[\s,]+/).map(Number)
-        if ([x, y, w, h].every((n) => Number.isFinite(n))) {
-          return { x, y, width: w, height: h }
-        }
-      }
-      const w = parseFloat(el.getAttribute?.("width") ?? "")
-      const h = parseFloat(el.getAttribute?.("height") ?? "")
-      return {
-        x: 0,
-        y: 0,
-        width: Number.isFinite(w) ? w : 0,
-        height: Number.isFinite(h) ? h : 0,
-      }
-    }
-
-    const { ApollonEditor, importDiagram } = await loadApollonModule()
-
     const normalizedModel = this.normalizeModelForServerRender(
       importDiagram(model)
     )
@@ -165,17 +113,13 @@ export class ConversionService {
       svgMode: "compat",
     })) as SVG
 
-    // exportModelAsSvg returns { svg: string, clip: { x, y, width, height } }
     if (
-      svgExport &&
-      typeof svgExport.svg === "string" &&
-      svgExport.clip &&
-      typeof svgExport.clip.width === "number" &&
-      typeof svgExport.clip.height === "number"
+      typeof svgExport?.svg === "string" &&
+      typeof svgExport.clip?.width === "number" &&
+      typeof svgExport.clip?.height === "number"
     ) {
       return svgExport
     }
-
     throw new Error("Failed to extract SVG: invalid export format")
   }
 }

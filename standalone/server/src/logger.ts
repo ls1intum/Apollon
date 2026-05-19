@@ -1,4 +1,4 @@
-import pino, { type Logger } from "pino"
+import { pino, stdTimeFunctions, type Logger } from "pino"
 
 const level =
   process.env.LOG_LEVEL ??
@@ -7,7 +7,7 @@ const level =
 export const logger: Logger = pino({
   level,
   base: undefined,
-  timestamp: pino.stdTimeFunctions.isoTime,
+  timestamp: stdTimeFunctions.isoTime,
   redact: {
     paths: [
       "req.headers.cookie",

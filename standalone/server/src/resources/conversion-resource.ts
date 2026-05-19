@@ -1,4 +1,4 @@
-import { Request, Response } from "express"
+import type { Request, Response } from "express"
 import { Worker } from "node:worker_threads"
 import path from "node:path"
 import type { UMLModel } from "@tumaet/apollon"
@@ -56,7 +56,7 @@ export class ConversionResource {
 
   private createWorker() {
     const workerPath = path.resolve(
-      __dirname,
+      import.meta.dirname,
       "../workers/pdf-conversion-worker-thread.js"
     )
 

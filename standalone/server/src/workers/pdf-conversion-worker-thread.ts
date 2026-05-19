@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// Side-effect import: installs jsdom + browser-API shims before any code
+// that touches `window`, `document`, or the apollon library.
+import "./jsdom-shims.js"
 import { parentPort } from "node:worker_threads"
-import pdfMake from "pdfmake/build/pdfmake"
-import pdfFonts from "pdfmake/build/vfs_fonts"
+import pdfMake from "pdfmake/build/pdfmake.js"
+import pdfFonts from "pdfmake/build/vfs_fonts.js"
 import type { UMLModel } from "@tumaet/apollon"
-import { ConversionService } from "../services/conversion-service"
+import { ConversionService } from "../services/conversion-service.js"
 
 type WorkerRequest = {
   id: number

@@ -1,6 +1,6 @@
 // Per-worker setup. Shared Redis client + lifecycle hooks.
 import { afterAll, afterEach, beforeAll } from "vitest"
-import { bootLoadFunction, createRedisClient, type Redis } from "../redis"
+import { bootLoadFunction, createRedisClient, type Redis } from "../redis.js"
 
 let _redis: Redis | undefined
 

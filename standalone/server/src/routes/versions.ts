@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { z } from "zod"
 import { ulid } from "ulid"
-import type { Config } from "../config"
+import type { Config } from "../config.js"
 import {
   fcall,
   gunzipJson,
@@ -9,20 +9,20 @@ import {
   k,
   RedisAppError,
   type Redis,
-} from "../redis"
-import type { Diagram, VersionKind, VersionSummary } from "../types"
-import type { RelayHook } from "../http/app"
-import { Errors } from "../http/errors"
-import { validate } from "../http/middleware/validate"
-import { setOwnerCookie } from "../http/middleware/owner"
-import { logger } from "../logger"
-import { readDiagram, saveHead } from "./diagrams"
+} from "../redis.js"
+import type { Diagram, VersionKind, VersionSummary } from "../types.js"
+import type { RelayHook } from "../http/app.js"
+import { Errors } from "../http/errors.js"
+import { validate } from "../http/middleware/validate.js"
+import { setOwnerCookie } from "../http/middleware/owner.js"
+import { logger } from "../logger.js"
+import { readDiagram, saveHead } from "./diagrams.js"
 import {
   DiagramBody,
   DiagramIdAndVersionIdParams,
   DiagramIdParams,
   PaginationQuery,
-} from "./_schemas"
+} from "./_schemas.js"
 
 interface Deps {
   config: Config
