@@ -96,4 +96,19 @@ describe("deepEqual", () => {
     const b = { nodes: [{ id: "1", pos: { x: 0, y: 0 } }], edges: [] }
     expect(deepEqual(a, b)).toBe(true)
   })
+
+  it("treats key insertion order as semantically irrelevant", () => {
+    expect(deepEqual({ x: 1, y: 2 }, { y: 2, x: 1 })).toBe(true)
+  })
+
+  it("treats explicit undefined as equal to missing property", () => {
+    expect(deepEqual({ a: 1, b: undefined }, { a: 1 })).toBe(true)
+    expect(deepEqual({ a: 1 }, { a: 1, b: undefined })).toBe(true)
+  })
+
+  it("returns false for primitive vs object", () => {
+    expect(deepEqual({}, null)).toBe(false)
+    expect(deepEqual(null, {})).toBe(false)
+    expect(deepEqual([1], 1)).toBe(false)
+  })
 })

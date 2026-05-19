@@ -4,6 +4,7 @@
   "extends": [
     "config:best-practices",
     "docker:pinDigests",
+    "helpers:pinGitHubActionDigests",
     ":semanticCommitTypeAll(chore)",
     ":dependencyDashboardApproval"
   ],

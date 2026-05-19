@@ -191,11 +191,14 @@ jobs:
   release:
     name: Tag + GitHub Release
     needs: [check, build, publish]
+    # Backfill case: marketplace already has this version (publish skipped)
+    # but the GitHub Release tag is missing. We still need to cut the
+    # Release. Accept publish.result in {success, skipped}.
     if: |
       !cancelled() && !inputs.dry_run &&
       needs.check.outputs.release == 'true' &&
       needs.build.result == 'success' &&
-      needs.publish.result == 'success'
+      (needs.publish.result == 'success' || needs.publish.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

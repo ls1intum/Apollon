@@ -1,17 +1,14 @@
 # Ignore source & config
 src/**
 .vscode/**
-.vscode-test-web/**
 **/.vscode-test.*
-dist/test/**
 vite.config.ts
 .github/**
 .gitignore
-.yarnrc
-vsc-extension-quickstart.md
 **/tsconfig.json
-**/.eslintrc.json
+**/eslint.config.mjs
 **/*.ts
+**/*.tsbuildinfo
 
 # Ignore node_modules
 node_modules/**
@@ -23,6 +20,3 @@ menu/**
 # Ignore editor except dist
 editor/**
 !editor/dist/**
-
-# Ignore anything outside extension root
-../**

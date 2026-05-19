@@ -49,7 +49,7 @@ async function readVersionMeta(
     createdAt: new Date(Number(meta.createdAt ?? 0)).toISOString(),
     kind: ((meta.kind as VersionKind | undefined) ?? "user") as VersionKind,
     librarySchemaVersion: meta.librarySchemaVersion ?? "",
-    seq: Number.isFinite(parsedSeq) ? parsedSeq : undefined,
+    ...(Number.isFinite(parsedSeq) ? { seq: parsedSeq } : {}),
   }
 }
 

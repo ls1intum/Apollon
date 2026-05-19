@@ -29,7 +29,7 @@ import { logger } from "../logger.js"
 interface AutoVersionDeps {
   config: Config
   redis: Redis
-  relay?: RelayHook
+  relay: RelayHook | undefined
 }
 
 /**

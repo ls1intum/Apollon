@@ -5,11 +5,8 @@ import "@tumaet/apollon/style.css"
 import App from "./App"
 import useStore from "./store"
 import { UMLDiagramType, UMLModel } from "@tumaet/apollon"
-import { setTheme } from "./theme-switcher/theme-switcher"
 
 export const vscode = acquireVsCodeApi()
-
-setTheme("light")
 
 const root = createRoot(document.getElementById("editor-root") as HTMLElement)
 

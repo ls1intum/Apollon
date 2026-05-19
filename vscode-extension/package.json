@@ -71,7 +71,7 @@
     "@eslint/js": "9.17.0",
     "@types/mocha": "10.0.10",
     "@types/node": "24.12.4",
-    "@types/vscode": "1.110.0",
+    "@types/vscode": "~1.86.0",
     "@vscode/test-cli": "0.0.6",
     "@vscode/test-electron": "2.5.2",
     "eslint": "9.17.0",
@@ -81,8 +81,7 @@
     "vite": "6.4.2"
   },
   "dependencies": {
-    "@tumaet/apollon": "workspace:*",
-    "uuid": "11.0.3"
+    "@tumaet/apollon": "workspace:*"
   },
   "bugs": {
     "url": "https://github.com/ls1intum/Apollon/issues"

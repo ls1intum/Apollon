@@ -42,7 +42,6 @@ export default defineConfig({
       },
     },
     minify: true,
-    commonjsOptions: { include: [/node_modules/] },
   },
   resolve: {
     alias: { "@": resolve(__dirname, "lib") },
