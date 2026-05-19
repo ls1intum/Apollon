@@ -14,7 +14,7 @@ docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
     && npm install -g pnpm@11.1.3 \
     && pnpm install --frozen-lockfile \
     && pnpm run build:lib \
-    && cd standalone/app \
+    && cd standalone/webapp \
     && pnpm exec playwright test tests/visual/ --update-snapshots"
 ```
 
@@ -23,7 +23,7 @@ docker run --rm -v "$(pwd)":/work -w /work --ipc=host \
 SVG export baselines do not depend on the rendering engine — they can be regenerated on any OS:
 
 ```sh
-cd standalone/app
+cd standalone/webapp
 pnpm exec playwright test tests/visual/svg-export --update-snapshots
 ```
 

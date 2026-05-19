@@ -1,4 +1,4 @@
-// Runtime environment for the app.
+// Runtime environment for the webapp.
 //
 // Most values come from Vite's compile-time `import.meta.env` (VITE_* vars
 // baked into the bundle). `LEGAL_PROFILE`, however, must be a RUNTIME knob

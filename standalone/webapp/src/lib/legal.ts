@@ -11,7 +11,7 @@ export interface ResolvedLegalContent {
   profile: string
 }
 
-// Profile names land in a URL path on the app origin, so only the character
+// Profile names land in a URL path on the webapp origin, so only the character
 // class that matches on-disk profile directories is accepted. Anything else
 // (whitespace, "..", "/", uppercase) falls through to the disclaimer exactly
 // like an unset profile — the resolver never constructs an unexpected URL.

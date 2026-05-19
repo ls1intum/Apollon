@@ -4,8 +4,8 @@
 // `importDiagram` API.
 
 // Yjs wire-protocol primitives.
-export { YjsSync, MessageType } from "./sync/yjsSync"
-export type { SendBroadcastMessage } from "./sync/yjsSync"
+export { YjsSyncClass, MessageType } from "./sync/yjsSyncClass"
+export type { SendBroadcastMessage } from "./sync/yjsSyncClass"
 export { createHeadlessSync } from "./sync/headless"
 
 // Version-migration internals. `importDiagram` (root export) is the public

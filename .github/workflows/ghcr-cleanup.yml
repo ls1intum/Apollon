@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         package:
-          - apollon/app
+          - apollon/webapp
           - apollon/server
     steps:
       - name: Delete stale sha-tagged versions

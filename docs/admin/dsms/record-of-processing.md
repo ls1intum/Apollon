@@ -135,7 +135,7 @@ Confidentiality (Art. 32(1)(b))
 - Access to a shared diagram is gated by a UUIDv4 share link (~122 bits of entropy).
 - Host access: SSH-only with key-based authentication; password auth disabled.
 - Redis is bound to the internal Docker network; no external port.
-- The application stack containers (app, server, db) run with no-new-privileges; app and server additionally drop all Linux capabilities, and the server runs with a read-only root filesystem and a small tmpfs.
+- The application stack containers (webapp, server, db) run with no-new-privileges; webapp and server additionally drop all Linux capabilities, and the server runs with a read-only root filesystem and a small tmpfs.
 
 Integrity (Art. 32(1)(b))
 - Container images are pinned to the source-commit SHA at deploy time.

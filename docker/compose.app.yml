@@ -1,6 +1,6 @@
 services:
-  app:
-    image: "ghcr.io/ls1intum/apollon/app:${IMAGE_TAG:-latest}"
+  webapp:
+    image: "ghcr.io/ls1intum/apollon/webapp:${IMAGE_TAG:-latest}"
     restart: unless-stopped
     expose:
       - "8080"
@@ -19,20 +19,20 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apollon-network"
-      - "traefik.http.routers.http-app.entryPoints=http"
-      - "traefik.http.routers.http-app.middlewares=redirect-to-https"
-      - "traefik.http.routers.http-app.rule=Host(`${APP_HOSTNAME:?APP_HOSTNAME must be set}`)"
-      - "traefik.http.routers.http-app.service=http-app"
-      - "traefik.http.routers.http-app.priority=2"
-      - "traefik.http.routers.https-app.entryPoints=https"
-      - "traefik.http.routers.https-app.middlewares=secure-headers"
-      - "traefik.http.routers.https-app.rule=Host(`${APP_HOSTNAME}`)"
-      - "traefik.http.routers.https-app.service=https-app"
-      - "traefik.http.routers.https-app.tls=true"
-      - "traefik.http.routers.https-app.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.https-app.priority=3"
-      - "traefik.http.services.http-app.loadbalancer.server.port=8080"
-      - "traefik.http.services.https-app.loadbalancer.server.port=8080"
+      - "traefik.http.routers.http-webapp.entryPoints=http"
+      - "traefik.http.routers.http-webapp.middlewares=redirect-to-https"
+      - "traefik.http.routers.http-webapp.rule=Host(`${APP_HOSTNAME:?APP_HOSTNAME must be set}`)"
+      - "traefik.http.routers.http-webapp.service=http-webapp"
+      - "traefik.http.routers.http-webapp.priority=2"
+      - "traefik.http.routers.https-webapp.entryPoints=https"
+      - "traefik.http.routers.https-webapp.middlewares=secure-headers"
+      - "traefik.http.routers.https-webapp.rule=Host(`${APP_HOSTNAME}`)"
+      - "traefik.http.routers.https-webapp.service=https-webapp"
+      - "traefik.http.routers.https-webapp.tls=true"
+      - "traefik.http.routers.https-webapp.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.https-webapp.priority=3"
+      - "traefik.http.services.http-webapp.loadbalancer.server.port=8080"
+      - "traefik.http.services.https-webapp.loadbalancer.server.port=8080"
     healthcheck:
       test:
         [

@@ -59,7 +59,7 @@ export async function drainAutoVersionInflight(): Promise<void> {
 
 /**
  * A coarse "anything user-meaningful changed" check for the auto-version
- * trigger. Mirrors the app's `structuralFingerprint`
+ * trigger. Mirrors the webapp's `structuralFingerprint`
  * (VersionDrawer.tsx → VOLATILE_KEYS) so the server gate doesn't fire on
  * pure UI churn that the client correctly considered idle. The replacer
  * strips React-Flow's transient/layout/capability fields, which Yjs

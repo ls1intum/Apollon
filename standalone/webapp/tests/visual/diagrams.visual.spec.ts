@@ -135,7 +135,7 @@ test.describe("Visual regression - diagram fixtures", () => {
 // ---------------------------------------------------------------------------
 // 2. Template diagrams – GoF design pattern templates loaded via fixture injection
 // ---------------------------------------------------------------------------
-// The template JSON files live in the app's assets directory. We load them
+// The template JSON files live in the webapp's assets directory. We load them
 // via fixture injection (the same approach as the 13 diagram fixtures above)
 // so the tests are deterministic and don't depend on Vite serving dynamic
 // imports at runtime.

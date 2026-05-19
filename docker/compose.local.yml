@@ -1,8 +1,8 @@
 services:
-  app:
+  webapp:
     build:
       context: ..
-      dockerfile: ./standalone/app/Dockerfile
+      dockerfile: ./standalone/webapp/Dockerfile
     ports:
       - "8080:8080"
     depends_on:

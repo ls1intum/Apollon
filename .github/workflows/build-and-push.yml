@@ -63,9 +63,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: App
-            dockerfile: ./standalone/app/Dockerfile
-            image: ghcr.io/ls1intum/apollon/app
+          - name: Webapp
+            dockerfile: ./standalone/webapp/Dockerfile
+            image: ghcr.io/ls1intum/apollon/webapp
             context: .
           - name: Server
             dockerfile: ./standalone/server/Dockerfile

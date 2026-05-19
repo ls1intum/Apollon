@@ -1,4 +1,4 @@
-# @tumaet/app
+# @tumaet/webapp
 
 The browser-hosted web app for [Apollon](../../README.md). Wraps the [`@tumaet/apollon`](../../library) library with routing, diagram persistence, sharing, and assessment UI.
 
@@ -13,10 +13,10 @@ React, TypeScript, Vite, MUI, Tailwind, Playwright (visual + e2e).
 Common commands (run from the repo root so workspace resolution picks up the library build):
 
 ```sh
-pnpm dev                    # Full stack: library watch + server + app
-pnpm dev:app             # App only (expects library dist/ and server already running)
+pnpm dev                    # Full stack: library watch + server + webapp
+pnpm dev:webapp             # Webapp only (expects library dist/ and server already running)
 pnpm test:e2e               # Playwright e2e suite
-pnpm build:app           # Production bundle into dist/
+pnpm build:webapp           # Production bundle into dist/
 ```
 
 See the root [README](../../README.md) and the [docs](../../docs) for end-to-end setup, environment variables, and deployment.

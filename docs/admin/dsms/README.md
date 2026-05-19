@@ -12,7 +12,7 @@ A fork running its own Apollon deployment must amend the package for its own con
 | [`dpia-prescreen.md`](./dpia-prescreen.md) | DPIA threshold check (Art. 35 GDPR) — concludes DPIA not required |
 | [`processor-checklist.md`](./processor-checklist.md) | Art. 28 GDPR processor checklist — confirms no external processors |
 
-The live imprint and privacy pages are at <https://apollon.aet.cit.tum.de/imprint> and <https://apollon.aet.cit.tum.de/privacy>; their markdown source is in [`standalone/app/public/legal/profiles/tumaet/`](../../../standalone/app/public/legal/profiles/tumaet/).
+The live imprint and privacy pages are at <https://apollon.aet.cit.tum.de/imprint> and <https://apollon.aet.cit.tum.de/privacy>; their markdown source is in [`standalone/webapp/public/legal/profiles/tumaet/`](../../../standalone/webapp/public/legal/profiles/tumaet/).
 
 ## Contacts
 

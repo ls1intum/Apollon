@@ -21,7 +21,7 @@ on:
     paths:
       - "library/package.json"
       - "standalone/server/package.json"
-      - "standalone/app/package.json"
+      - "standalone/webapp/package.json"
       - "vscode-extension/package.json"
 
 permissions:
@@ -47,7 +47,7 @@ jobs:
         run: |
           set -euo pipefail
           fail=0
-          for pkg in library standalone/server standalone/app vscode-extension; do
+          for pkg in library standalone/server standalone/webapp vscode-extension; do
             # Some PRs touch a workspace by accident; we only care if
             # `package.json` actually exists on both sides.
             if ! git cat-file -e "$BASE_SHA:$pkg/package.json" 2>/dev/null; then

@@ -12,7 +12,7 @@ WORKDIR /app
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc ./
 COPY library/package.json ./library/
-COPY standalone/app/package.json ./standalone/app/
+COPY standalone/webapp/package.json ./standalone/webapp/
 COPY standalone/server/package.json ./standalone/server/
 COPY vscode-extension/package.json ./vscode-extension/
 COPY vscode-extension/menu/package.json ./vscode-extension/menu/
@@ -22,21 +22,21 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
 COPY library ./library
-COPY standalone/app ./standalone/app
+COPY standalone/webapp ./standalone/webapp
 COPY tsconfig*.json ./
 
-# The app's `tsc -b` resolves `@tumaet/apollon` via the workspace link
+# The webapp's `tsc -b` resolves `@tumaet/apollon` via the workspace link
 # in node_modules (injected by pnpm), which requires the library's compiled
 # .d.ts in dist/. Build the library first.
 RUN pnpm --filter @tumaet/apollon run build \
- && pnpm --filter @tumaet/app run build
+ && pnpm --filter @tumaet/webapp run build
 
 FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10 AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/ls1intum/Apollon" \
       org.opencontainers.image.url="https://github.com/ls1intum/Apollon" \
       org.opencontainers.image.documentation="https://github.com/ls1intum/Apollon#readme" \
-      org.opencontainers.image.title="Apollon App" \
+      org.opencontainers.image.title="Apollon Webapp" \
       org.opencontainers.image.description="Browser-hosted web app for the Apollon UML modeling editor." \
       org.opencontainers.image.vendor="TUM Applied Education Technologies" \
       org.opencontainers.image.licenses="MIT"
@@ -44,8 +44,8 @@ LABEL org.opencontainers.image.source="https://github.com/ls1intum/Apollon" \
 RUN rm /etc/nginx/conf.d/default.conf
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/standalone/app/dist /usr/share/nginx/html
-COPY standalone/app/docker/entrypoint.sh /docker-entrypoint.d/40-apollon-env.sh
+COPY --from=builder /app/standalone/webapp/dist /usr/share/nginx/html
+COPY standalone/webapp/docker/entrypoint.sh /docker-entrypoint.d/40-apollon-env.sh
 
 RUN chmod +x /docker-entrypoint.d/40-apollon-env.sh && \
     chown -R nginx:nginx /usr/share/nginx/html && \

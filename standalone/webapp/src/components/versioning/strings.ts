@@ -1,6 +1,6 @@
 /**
  * Drawer-local strings for the versioning UI. English-only in the first
- * release; punted to the wider app i18n when that lands. Toast copy
+ * release; punted to the wider webapp i18n when that lands. Toast copy
  * emitted from stores/pages (eviction warnings, REDIS_UNAVAILABLE,
  * collaborator-restore notice) stays inline at its emission site by
  * convention — the table here covers the drawer's static UI only. Keep

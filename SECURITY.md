@@ -13,7 +13,7 @@ Only the latest minor of each major is supported with security fixes.
 | Package                                             | Supported        |
 | --------------------------------------------------- | ---------------- |
 | `@tumaet/apollon` (npm)                             | `4.x`            |
-| Standalone Docker images (server + app)          | latest `vX.Y.Z`  |
+| Standalone Docker images (server + webapp)          | latest `vX.Y.Z`  |
 | `tumaet.apollon-vscode` (VS Marketplace / Open VSX) | latest published |
 
 Older majors are end-of-life and will not receive backports.
@@ -23,7 +23,7 @@ Older majors are end-of-life and will not receive backports.
 In scope:
 
 - `@tumaet/apollon` library code and its public API.
-- The standalone server (`standalone/server`) and app (`standalone/app`).
+- The standalone server (`standalone/server`) and webapp (`standalone/webapp`).
 - The VS Code extension (`vscode-extension`).
 
 Out of scope:

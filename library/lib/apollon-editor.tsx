@@ -29,7 +29,11 @@ import {
   AssessmentSelectionStoreContext,
   AlignmentGuidesStoreContext,
 } from "./store/context"
-import { MessageType, SendBroadcastMessage, YjsSync } from "./sync/yjsSync"
+import {
+  MessageType,
+  SendBroadcastMessage,
+  YjsSyncClass,
+} from "./sync/yjsSyncClass"
 import * as Y from "yjs"
 import { StoreApi } from "zustand"
 import * as Apollon from "./typings"
@@ -37,7 +41,7 @@ import * as Apollon from "./typings"
 export class ApollonEditor {
   private root: ReactDOM.Root
   private reactFlowInstance: ReactFlowInstance | null = null
-  private readonly syncManager: YjsSync
+  private readonly syncManager: YjsSyncClass
   private readonly ydoc: Y.Doc
   private readonly diagramStore: StoreApi<DiagramStore>
   private readonly metadataStore: StoreApi<MetadataStore>
@@ -59,7 +63,7 @@ export class ApollonEditor {
     this.popoverStore = createPopoverStore()
     this.assessmentSelectionStore = createAssessmentSelectionStore()
     this.alignmentGuidesStore = createAlignmentGuidesStore()
-    this.syncManager = new YjsSync(
+    this.syncManager = new YjsSyncClass(
       this.ydoc,
       this.diagramStore,
       this.metadataStore
@@ -478,7 +482,7 @@ export class ApollonEditor {
   /**
    * Push the entire local Yjs document to peers. Hosts should call this on
    * every (re)connect so any edits made while the transport was closed are
-   * absorbed by the room. See `YjsSync.broadcastFullState`.
+   * absorbed by the room. See `YjsSyncClass.broadcastFullState`.
    */
   public broadcastFullState() {
     this.syncManager.broadcastFullState()
@@ -630,10 +634,12 @@ export class ApollonEditor {
   }
 
   static generateInitialSyncMessage(): string {
-    return YjsSync.uint8ToBase64(new Uint8Array([MessageType.YjsSYNC]))
+    return YjsSyncClass.uint8ToBase64(new Uint8Array([MessageType.YjsSYNC]))
   }
 
   static generateInitialAwarenessSyncMessage(): string {
-    return YjsSync.uint8ToBase64(new Uint8Array([MessageType.AwarenessSync]))
+    return YjsSyncClass.uint8ToBase64(
+      new Uint8Array([MessageType.AwarenessSync])
+    )
   }
 }

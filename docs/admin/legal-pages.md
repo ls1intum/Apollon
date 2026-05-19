@@ -6,7 +6,7 @@ Apollon ships routes at `/imprint` and `/privacy`. Their content comes from Mark
 
 ## Resolution cascade
 
-For each page (`imprint`, `privacy`) the app tries, in order:
+For each page (`imprint`, `privacy`) the webapp tries, in order:
 
 | # | Path | Layer | When to use |
 |---|---|---|---|
@@ -20,7 +20,7 @@ The first layer that responds with a non-empty, non-HTML body wins. Each page re
 
 ### Mode A — canonical TUM deployment
 
-Set `LEGAL_PROFILE=tumaet` in your environment. The bundled profile at `app/public/legal/profiles/tumaet/` is used as-is. Do **not** use this value if you are not TUM — the content identifies TUM as the operator.
+Set `LEGAL_PROFILE=tumaet` in your environment. The bundled profile at `webapp/public/legal/profiles/tumaet/` is used as-is. Do **not** use this value if you are not TUM — the content identifies TUM as the operator.
 
 ### Mode B — your own operator identity (fork)
 
@@ -35,7 +35,7 @@ Mount them into the container at `/usr/share/nginx/html/legal-overrides`. Compos
 
 ```yaml
 services:
-  app:
+  webapp:
     volumes:
       - ./legal-overrides:/usr/share/nginx/html/legal-overrides:ro
 ```
@@ -59,7 +59,7 @@ Edits to override files take effect immediately (nginx serves them with `Cache-C
 
 ### Mode C — disclaimer fallback
 
-Leave `LEGAL_PROFILE` unset and mount nothing. The app shows a red banner plus a placeholder page explaining the operator is unknown. **Not legal for production.** Intended only for local development against a clean checkout.
+Leave `LEGAL_PROFILE` unset and mount nothing. The webapp shows a red banner plus a placeholder page explaining the operator is unknown. **Not legal for production.** Intended only for local development against a clean checkout.
 
 ## Authoring guidelines
 

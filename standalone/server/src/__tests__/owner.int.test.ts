@@ -29,7 +29,7 @@ beforeEach(async () => {
 /**
  * Soft owner cookie: friction language only. Issued on POST /diagrams,
  * exposed via the `x-owner-match` response header on subsequent requests.
- * Never gates a request — the app uses the header to decide whether
+ * Never gates a request — the webapp uses the header to decide whether
  * to show a confirm-twice prompt.
  */
 describe("soft owner cookie", () => {
@@ -87,7 +87,7 @@ describe("soft owner cookie", () => {
       .send({ name: "v1", body: { ...baseDiagram, id } })
 
     // No cookie supplied — server still allows the destructive op (the
-    // app is responsible for the confirm-twice prompt based on
+    // webapp is responsible for the confirm-twice prompt based on
     // x-owner-match=false).
     const del = await request(app).delete(
       `/api/diagrams/${id}/versions/${v1.body.id}`

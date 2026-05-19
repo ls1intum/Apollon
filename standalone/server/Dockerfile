@@ -15,7 +15,7 @@ FROM base AS builder
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc ./
 COPY library/package.json ./library/
 COPY standalone/server/package.json ./standalone/server/
-COPY standalone/app/package.json ./standalone/app/
+COPY standalone/webapp/package.json ./standalone/webapp/
 COPY vscode-extension/package.json ./vscode-extension/
 COPY vscode-extension/menu/package.json ./vscode-extension/menu/
 COPY vscode-extension/editor/package.json ./vscode-extension/editor/
@@ -31,7 +31,7 @@ RUN pnpm --filter @tumaet/apollon run build
 RUN pnpm --filter @tumaet/server run build
 
 FROM base AS deploy
-# Only the trees `pnpm deploy --filter=@tumaet/server` walks — skip app / vscode.
+# Only the trees `pnpm deploy --filter=@tumaet/server` walks — skip webapp / vscode.
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/.npmrc ./
 COPY --from=builder /app/library ./library
 COPY --from=builder /app/standalone/server ./standalone/server
