@@ -199,6 +199,55 @@ jobs:
         # dlx resolves the binary from the package name implicitly.
         run: pnpm dlx @arethetypeswrong/cli@0.18.1 attw --pack . --profile esm-only
 
+      - name: Enforce bundle-size budget
+        working-directory: library
+        # Budgets in library/package.json#size-limit. Fails on regression
+        # of >10% (size-limit default) per artifact.
+        run: pnpm run size
+
+  # The library declares `react: ^18.3 || ^19` as a peer. Back the upper
+  # bound with a build + test against React 19 so the range claim is
+  # actually verified.
+  library-react19-compat:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.should-skip != 'true' && needs.detect-changes.outputs.library == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ac6db6d3c1f721f886538a378a2d73e85697340a # v6.0.8
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Override library devDeps to React 19 via pnpm.overrides
+        # Run only inside the library workspace; the rest of the
+        # monorepo stays on React 18.3 (matches Artemis / standalone
+        # webapp consumers). MUI v6 peer-supports React 19 since 6.0.
+        run: |
+          pnpm --filter @tumaet/apollon add -D \
+            react@19 \
+            react-dom@19 \
+            @types/react@19 \
+            @types/react-dom@19 \
+            @testing-library/react@16 \
+            --save-exact --ignore-scripts
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false --config.engine-strict=false
+
+      - name: Build library against React 19
+        run: pnpm --filter @tumaet/apollon run build
+
+      - name: Run library unit tests against React 19
+        run: pnpm --filter @tumaet/apollon run test
+
   # Baseline regeneration: see docs/development/visual-tests.md.
   visual-regression-tests:
     needs: [detect-changes]
@@ -258,6 +307,7 @@ jobs:
         detect-changes,
         lint-and-format-check,
         library-node22-compat,
+        library-react19-compat,
         e2e-tests,
         visual-regression-tests,
       ]

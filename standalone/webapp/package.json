@@ -18,7 +18,14 @@
     "test:e2e": "playwright test tests/e2e/",
     "test:e2e:ui": "playwright test tests/e2e/ --ui",
     "test:visual": "playwright test tests/visual/",
-    "test:visual:update": "playwright test tests/visual/ --update-snapshots"
+    "test:visual:update": "playwright test tests/visual/ --update-snapshots",
+    "capacitor:add:android": "cap add android",
+    "capacitor:add:ios": "cap add ios --packagemanager CocoaPods",
+    "capacitor:sync": "cap sync",
+    "capacitor:open:android": "cap open android",
+    "capacitor:open:ios": "cap open ios",
+    "capacitor:assets:generate:ios": "capacitor-assets generate --ios",
+    "capacitor:assets:generate:android": "capacitor-assets generate --android"
   },
   "dependencies": {
     "@capacitor/android": "8.3.0",
@@ -51,6 +58,8 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.3.0",
     "@eslint/js": "catalog:",
     "@playwright/test": "1.59.1",
     "@resvg/resvg-js": "2.6.2",

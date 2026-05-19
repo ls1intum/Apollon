@@ -12,7 +12,9 @@ export * from "./diagramTypeUtils"
 export * from "./storeUtils"
 export * from "./deepPartial"
 export * from "./bpmnConstraints"
-export * from "./versionConverter"
+// Only `importDiagram` is public; the V2/V3 convert helpers and format
+// detectors live in `@tumaet/apollon/internals` (internal/unstable).
+export { importDiagram } from "./versionConverter"
 export * from "./alignmentUtils"
 export * from "./requiredInterfaceUtils"
 // Deliberately narrow: only the helpers that node SVGs genuinely need to

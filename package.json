@@ -37,13 +37,13 @@
     "test": "pnpm --filter @tumaet/apollon run test",
     "test:e2e": "pnpm --filter @tumaet/webapp run test:e2e",
     "prepare": "husky || true",
-    "capacitor:add:android": "cap add android",
-    "capacitor:add:ios": "cap add ios --packagemanager CocoaPods",
-    "capacitor:sync": "cap sync",
-    "capacitor:open:android": "cap open android",
-    "capacitor:open:ios": "cap open ios",
-    "capacitor:assets:generate:ios": "capacitor-assets generate --ios",
-    "capacitor:assets:generate:android": "capacitor-assets generate --android",
+    "capacitor:add:android": "pnpm --filter @tumaet/webapp run capacitor:add:android",
+    "capacitor:add:ios": "pnpm --filter @tumaet/webapp run capacitor:add:ios",
+    "capacitor:sync": "pnpm --filter @tumaet/webapp run capacitor:sync",
+    "capacitor:open:android": "pnpm --filter @tumaet/webapp run capacitor:open:android",
+    "capacitor:open:ios": "pnpm --filter @tumaet/webapp run capacitor:open:ios",
+    "capacitor:assets:generate:ios": "pnpm --filter @tumaet/webapp run capacitor:assets:generate:ios",
+    "capacitor:assets:generate:android": "pnpm --filter @tumaet/webapp run capacitor:assets:generate:android",
     "package:vscode": "pnpm --filter apollon-vscode run package:vsix"
   },
   "license": "MIT",
@@ -52,11 +52,9 @@
     "pnpm": ">=11.1.0"
   },
   "devDependencies": {
-    "@capacitor/assets": "3.0.5",
-    "@capacitor/cli": "8.3.0",
     "@commitlint/cli": "19.6.0",
     "@commitlint/config-conventional": "19.6.0",
-    "@types/node": "24.12.4",
+    "@types/node": "catalog:",
     "concurrently": "9.1.0",
     "husky": "9.1.7",
     "lint-staged": "15.5.2",
@@ -64,7 +62,8 @@
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx}": [
-      "prettier --ignore-unknown --write"
+      "prettier --ignore-unknown --write",
+      "eslint --fix --no-warn-ignored"
     ],
     "*.{json,md,yml,yaml}": "prettier --ignore-unknown --write"
   }

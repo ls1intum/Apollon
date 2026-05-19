@@ -16,15 +16,13 @@ export default [
   {
     settings: { react: { version: "detect" } },
     plugins: { "react-hooks": reactHooks },
-    // react-hooks: surfaced as warnings, not errors, in this turn cycle.
-    // The rules-of-hooks violations in lib/nodes/sfcDiagram/* are
-    // pre-existing latent crashes (hooks after an early return) and
-    // exhaustive-deps drift in ~15 hooks — fixing both is a behavioral
-    // change that doesn't belong in the foundational pnpm/Node migration.
-    // Tracked for a follow-up PR.
+    // rules-of-hooks at error (the pre-existing violations in
+    // lib/nodes/sfcDiagram/* were latent crashes — hooks called after an
+    // early return — and are now fixed). exhaustive-deps stays at warn
+    // because ~15 hooks have legitimate deliberate-stale-closure patterns
+    // (e.g. imperative editor lifecycle keyed on a single boolean).
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-hooks/rules-of-hooks": "warn",
       "react-hooks/exhaustive-deps": "warn",
       "react/prop-types": "off",
       "no-console": "error",
