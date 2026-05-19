@@ -1,11 +1,12 @@
 {
   "name": "apollon-vscode",
   "displayName": "Apollon",
-  "description": "",
+  "description": "Embeddable UML modeling editor for VS Code. Create, edit, and export UML diagrams (class, component, activity, BPMN, and more) directly inside your editor.",
   "publisher": "tumaet",
   "version": "1.0.0",
   "engines": {
-    "vscode": "^1.86.0"
+    "vscode": "^1.86.0",
+    "node": ">=24.15.0"
   },
   "categories": [
     "Other"
@@ -52,47 +53,47 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build:all",
+    "vscode:prepublish": "pnpm run build:all",
     "compile": "webpack --mode development",
     "watch": "webpack --mode development --watch",
     "build": "webpack --mode production",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "pretest": "pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "lint:fix": "eslint --fix src",
     "test": "vscode-test",
-    "package": "vsce package",
-    "start:menu": "cd menu && npm run start",
-    "start:editor": "cd editor && npm run start",
-    "build:webviews": "cd menu && npm run build && cd ../editor && npm run build",
-    "install:webviews": "cd menu && npm install && cd ../editor && npm install",
-    "install:all": "npm install && npm run install:webviews",
-    "build:all": "npm run build && npm run build:webviews"
+    "package:vsix": "vsce package --no-dependencies",
+    "start:menu": "pnpm --filter apollon-vscode-menu run start",
+    "start:editor": "pnpm --filter apollon-vscode-editor run start",
+    "build:webviews": "pnpm --filter apollon-vscode-menu run build && pnpm --filter apollon-vscode-editor run build",
+    "build:all": "pnpm run build && pnpm run build:webviews"
   },
   "devDependencies": {
+    "@eslint/js": "9.17.0",
     "@types/mocha": "10.0.10",
-    "@types/node": "18.19.130",
+    "@types/node": "24.12.4",
     "@types/styled-components": "5.1.36",
     "@types/vscode": "1.110.0",
-    "@typescript-eslint/eslint-plugin": "7.18.0",
-    "@typescript-eslint/parser": "7.18.0",
     "@vscode/test-cli": "0.0.6",
     "@vscode/test-electron": "2.5.2",
-    "eslint": "8.57.1",
+    "eslint": "9.17.0",
+    "globals": "15.13.0",
     "ts-loader": "9.5.7",
     "typescript": "5.7.2",
+    "typescript-eslint": "8.18.1",
     "webpack": "5.105.4",
     "webpack-cli": "5.1.4"
   },
   "dependencies": {
-    "@tumaet/apollon": "*",
-    "@vscode/vsce": "3.7.1",
-    "styled-components": "6.1.8",
+    "@tumaet/apollon": "workspace:*",
+    "styled-components": "6.4.0",
     "uuid": "11.0.3"
   },
   "bugs": {
-    "url": "https://github.com/ls1intum/apollon-vscode/issues"
+    "url": "https://github.com/ls1intum/Apollon/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ls1intum/apollon-vscode.git"
+    "url": "git+https://github.com/ls1intum/Apollon.git",
+    "directory": "vscode-extension"
   }
 }

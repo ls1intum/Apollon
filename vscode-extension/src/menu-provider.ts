@@ -1,5 +1,6 @@
 import * as vscode from "vscode"
 import * as fs from "fs"
+import { randomBytes } from "node:crypto"
 import { createDefaultDiagram, UMLDiagramType, UMLModel } from "./types"
 import path from "path"
 
@@ -292,44 +293,45 @@ export default class MenuProvider implements vscode.WebviewViewProvider {
   }
 
   private _getHtmlForMenu(webview: vscode.Webview) {
-    const scriptSrc = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "menu", "dist", "index.js")
-    )
-    const cssSrc = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "menu", "dist", "index.css")
-    )
-
-    return `<!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <link rel="stylesheet" href="${cssSrc}" />
-            </head>
-            <body>
-              <noscript>You need to enable JavaScript to run this app.</noscript>
-              <div id="menu-root"></div>
-              <script src="${scriptSrc}"></script>
-            </body>
-          </html>
-          `
+    return this._renderWebviewHtml(webview, "menu", "menu-root")
   }
 
   private _getHtmlForEditor(webview: vscode.Webview) {
+    return this._renderWebviewHtml(webview, "editor", "editor-root")
+  }
+
+  private _renderWebviewHtml(
+    webview: vscode.Webview,
+    bundleDir: "menu" | "editor",
+    rootId: string
+  ): string {
     const scriptSrc = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "editor", "dist", "index.js")
+      vscode.Uri.joinPath(this._extensionUri, bundleDir, "dist", "index.js")
     )
     const cssSrc = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "editor", "dist", "index.css")
+      vscode.Uri.joinPath(this._extensionUri, bundleDir, "dist", "index.css")
     )
+    const nonce = randomBytes(16).toString("base64")
+    // style-src 'unsafe-inline' required by @vscode/webview-ui-toolkit and
+    // styled-components, which inject runtime <style> tags.
+    const csp = [
+      `default-src 'none'`,
+      `img-src ${webview.cspSource} https: data:`,
+      `script-src 'nonce-${nonce}'`,
+      `style-src ${webview.cspSource} 'unsafe-inline'`,
+      `font-src ${webview.cspSource}`,
+    ].join("; ")
 
     return `<!DOCTYPE html>
           <html lang="en">
             <head>
+              <meta http-equiv="Content-Security-Policy" content="${csp}" />
               <link rel="stylesheet" href="${cssSrc}" />
             </head>
             <body>
               <noscript>You need to enable JavaScript to run this app.</noscript>
-              <div id="editor-root"></div>
-              <script src="${scriptSrc}"></script>
+              <div id="${rootId}"></div>
+              <script type="module" nonce="${nonce}" src="${scriptSrc}"></script>
             </body>
           </html>
           `

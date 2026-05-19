@@ -1,4 +1,4 @@
-import { ApollonEditor, UMLModel } from "@tumaet/apollon"
+import { ApollonEditor, UMLModel } from "@tumaet/apollon/react"
 import React, { useEffect, useRef, useContext } from "react"
 import styled from "styled-components"
 import { vscode } from "../index"
