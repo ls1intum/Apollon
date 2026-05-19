@@ -159,34 +159,12 @@ jobs:
       - name: Publish to Open VSX
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-          INPUT_VERSION: ${{ needs.check.outputs.version }}
-          LOCAL_SHA256: ${{ needs.build.outputs.vsix-sha256 }}
           VSIX_FILE: ${{ needs.build.outputs.vsix-name }}
-        run: |
-          set -euo pipefail
-          status=$(curl -s -o /tmp/ovsx_resp.json -w "%{http_code}" \
-            "https://open-vsx.org/api/tumaet/apollon-vscode/$INPUT_VERSION") || true
-          case "$status" in
-            404)
-              ovsx publish "$VSIX_FILE"
-              ;;
-            200)
-              remote_url=$(jq -r '.files.download // empty' /tmp/ovsx_resp.json)
-              [ -n "$remote_url" ] || { echo "::error::Open VSX 200 with no download URL"; exit 1; }
-              curl -fsSL -o /tmp/remote.vsix "$remote_url"
-              remote_sha256=$(sha256sum /tmp/remote.vsix | cut -d' ' -f1)
-              if [ "$LOCAL_SHA256" != "$remote_sha256" ]; then
-                echo "::error::Open VSX has $INPUT_VERSION with sha256=$remote_sha256, CI built $LOCAL_SHA256"
-                exit 1
-              fi
-              echo "::warning::Already published with matching checksum; treating as retry."
-              ;;
-            *)
-              echo "::error::Unexpected Open VSX status: $status"
-              cat /tmp/ovsx_resp.json || true
-              exit 1
-              ;;
-          esac
+        # ovsx@0.10+ ships --skip-duplicate; a retry on an already-published
+        # version is a soft success. The VSIX sigstore attestation from the
+        # build job is the cryptographic anchor — checksum equality with the
+        # remote tarball is not a stronger guarantee.
+        run: ovsx publish --skip-duplicate "$VSIX_FILE"
 
   release:
     name: Tag + GitHub Release

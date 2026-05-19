@@ -1,5 +1,5 @@
 // Load environment first so config picks up .env values.
-import "./loadEnvironment.js"
+import "dotenv/config"
 import { loadConfig } from "./config.js"
 import { logger } from "./logger.js"
 import { buildApp } from "./http/app.js"

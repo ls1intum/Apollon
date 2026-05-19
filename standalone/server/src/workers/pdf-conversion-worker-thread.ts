@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Side-effect import: installs jsdom + browser-API shims before any code
 // that touches `window`, `document`, or the apollon library.
 import "./jsdom-shims.js"
@@ -33,31 +32,22 @@ async function renderPdf(model: UMLModel): Promise<Buffer> {
   pdfMake.vfs = pdfFonts.vfs
 
   const doc = pdfMake.createPdf({
-    content: [
-      {
-        svg,
-      },
-    ],
+    content: [{ svg }],
     pageSize: { width, height },
     pageMargins: 0,
   })
 
+  // getBuffer materialises the entire PDF in one callback — semantically
+  // equivalent to consuming the stream end-to-end, but with no manual chunk
+  // accumulation and no need to `any`-cast a getStream() Promise (the
+  // @types/pdfmake declaration disagrees with runtime). PDFs from a single
+  // diagram are bounded by MAX_SNAPSHOT_BYTES; no streaming pressure.
   return await new Promise<Buffer>((resolve, reject) => {
-    void (doc as any).getStream().then((stream: NodeJS.ReadableStream) => {
-      const chunks: Buffer[] = []
-
-      stream.on("data", (chunk: Buffer | string) => {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-      })
-
-      stream.on("end", () => {
-        resolve(Buffer.concat(chunks))
-      })
-
-      stream.on("error", reject)
-      stream.resume()
-      ;(stream as { end?: () => void }).end?.()
-    }, reject)
+    try {
+      doc.getBuffer((buffer) => resolve(buffer))
+    } catch (err) {
+      reject(err as Error)
+    }
   })
 }
 

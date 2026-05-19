@@ -1,6 +1,7 @@
 // Per-worker setup. Shared Redis client + lifecycle hooks.
 import { afterAll, afterEach, beforeAll } from "vitest"
 import { bootLoadFunction, createRedisClient, type Redis } from "../redis.js"
+import { drainAutoVersionInflight } from "../services/autoVersion.js"
 
 let _redis: Redis | undefined
 
@@ -18,6 +19,13 @@ beforeAll(async () => {
 })
 
 afterEach(async () => {
+  // Drain `tryAutoVersion` fire-and-forget work from the HEAD PUT path
+  // BEFORE flushDb. Without this, an in-flight auto-version can still be
+  // issuing commands against the shared node-redis client when the next
+  // test starts, interleaving leftover work into the next test's command
+  // queue — symptom: flaky "404 NOT_FOUND" on a diagram the test just
+  // created.
+  await drainAutoVersionInflight()
   // Clean state between tests; preserves the loaded Lua function.
   const r = await getRedis()
   await r.flushDb()

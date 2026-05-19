@@ -32,6 +32,31 @@ interface AutoVersionDeps {
   relay: RelayHook | undefined
 }
 
+// ---------------------------------------------------------------------------
+// In-flight tracker. The HEAD PUT path fires `tryAutoVersion` without
+// awaiting it (the user is waiting on the HEAD response, not on bookkeeping).
+// That fire-and-forget races test teardown: integration tests call
+// `flushDb()` in `afterEach`, but a pending `tryAutoVersion` on the shared
+// Redis client can still be mid-flight when the next test starts —
+// node-redis serialises commands per client, so the leftover work
+// interleaves into the next test's command queue. Symptom: nondeterministic
+// "404 NOT_FOUND" on a diagram the test just created.
+//
+// `drainAutoVersionInflight()` lets tests await every outstanding promise
+// before flushing. Production code never calls it — the registry is a Set
+// of promises that self-prune via `.finally(() => delete)`, so the overhead
+// of one Set op per PUT is negligible.
+// ---------------------------------------------------------------------------
+
+const inflight = new Set<Promise<void>>()
+
+/** Test helper. Resolves once every started `tryAutoVersion` has settled. */
+export async function drainAutoVersionInflight(): Promise<void> {
+  while (inflight.size > 0) {
+    await Promise.allSettled([...inflight])
+  }
+}
+
 /**
  * A coarse "anything user-meaningful changed" check for the auto-version
  * trigger. Mirrors the webapp's `structuralFingerprint`
@@ -73,7 +98,22 @@ function structuralFingerprint(d: Diagram): string {
   )
 }
 
-export async function tryAutoVersion(
+export function tryAutoVersion(
+  deps: AutoVersionDeps,
+  diagramId: string,
+  head: Diagram
+): Promise<void> {
+  const p = runAutoVersion(deps, diagramId, head)
+  inflight.add(p)
+  // `.finally(...)` returns a new promise; if `p` rejects, that derived
+  // promise rejects too. Attach a noop catch on the derived chain so the
+  // tracker's bookkeeping never surfaces as an unhandled rejection — the
+  // caller is responsible for handling errors on the returned `p`.
+  p.finally(() => inflight.delete(p)).catch(() => undefined)
+  return p
+}
+
+async function runAutoVersion(
   { config, redis, relay }: AutoVersionDeps,
   diagramId: string,
   head: Diagram

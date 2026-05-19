@@ -11,8 +11,8 @@ The package ships two builds with identical APIs:
 
 | Subpath                       | React / MUI / emotion / xyflow | Bundle  | Use when                                                                                                         |
 | ----------------------------- | ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | bundled                        | ~2.4 MB | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React installed.       |
-| `@tumaet/apollon/react`       | externalized (peer deps)       | ~875 KB | Your host is React 18.3+ or 19+ and you want the editor to share React with your app instead of bundling a copy. |
+| `@tumaet/apollon` _(default)_ | bundled                        | ~2.2 MB | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React installed.       |
+| `@tumaet/apollon/react`       | externalized (peer deps)       | ~860 KB | Your host is React 18.3+ or 19+ and you want the editor to share React with your app instead of bundling a copy. |
 
 ### Standalone build (any framework, no peer deps)
 

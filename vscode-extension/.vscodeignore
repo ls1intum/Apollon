@@ -1,21 +1,38 @@
-# Ignore source & config
+# Source & per-workspace configs (excluded from the published VSIX).
 src/**
 .vscode/**
 vite.config.ts
 .github/**
 .gitignore
+.gitattributes
+.editorconfig
 **/tsconfig.json
 **/eslint.config.mjs
 **/*.ts
 **/*.tsbuildinfo
 
-# Ignore node_modules
+# Dev-only docs & repo metadata (the Marketplace listing uses README.md).
+README.dev.md
+renovate.json
+SECURITY.md
+
+# Shared webview build inputs — bundled into menu/dist + editor/dist by Vite,
+# not needed at runtime.
+webview-vite.config.ts
+vscode-controls.css
+
+# Sourcemaps stay out of the published VSIX — keep VSIX small + symbols
+# private. Local `pnpm run watch` still emits them next to dist/extension.js
+# for the Extension Development Host. .vsix consumers don't need them.
+**/*.js.map
+
+# node_modules — `vsce package --no-dependencies` already skips them, but
+# belt-and-suspenders in case the flag is dropped.
 node_modules/**
 
-# Ignore menu except dist
+# Webview workspaces: ship dist/ only.
 menu/**
 !menu/dist/**
 
-# Ignore editor except dist
 editor/**
 !editor/dist/**
