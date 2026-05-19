@@ -1,5 +1,7 @@
 # Releases
 
+This file documents the pipeline. The per-PR contract — when to add a [Changeset](https://github.com/changesets/changesets) and what to write in its summary — lives in [`development/release-notes.md`](../development/release-notes.md). Authors run `npm run changeset` on every user-visible PR; the accumulated changesets feed the next release.
+
 Two independently versioned artifacts, each with its own release workflow:
 
 | Artifact | Version source | Tag | Workflow |

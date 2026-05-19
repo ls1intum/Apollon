@@ -30,6 +30,7 @@ getting-started/setup
 
 development/project-structure
 development/scripts
+development/release-notes
 ```
 
 ```{toctree}
@@ -77,10 +78,6 @@ troubleshooting/common-issues
 document/how-to-update-document
 ```
 
-```{toctree}
-:caption: Contributing
-:includehidden:
-:maxdepth: 2
+## Contributing
 
-contributing
-```
+Contribution guidelines live in [`CONTRIBUTING.md`](https://github.com/ls1intum/Apollon/blob/main/CONTRIBUTING.md) at the repo root; AI coding agents follow [`AGENTS.md`](https://github.com/ls1intum/Apollon/blob/main/AGENTS.md).
