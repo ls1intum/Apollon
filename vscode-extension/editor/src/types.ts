@@ -1,4 +1,9 @@
-import { ApollonMode, Locale, UMLDiagramType, UMLModel } from "@tumaet/apollon"
+import {
+  ApollonMode,
+  Locale,
+  UMLDiagramType,
+  UMLModel,
+} from "@tumaet/apollon/react"
 import { uuid } from "./utils/uuid"
 
 export type Diagram = {

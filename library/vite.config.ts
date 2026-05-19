@@ -3,39 +3,56 @@ import react from "@vitejs/plugin-react"
 import dts from "vite-plugin-dts"
 import { resolve } from "path"
 
-// Single-pass library build. Peers (React + MUI + emotion + xyflow) are
-// always externalized — consumers install them. Two entries: the public
-// surface (`.`) and a `/internals` subpath that exposes the Yjs wire
-// protocol for host integration tests. The internals subpath is NOT
-// covered by semver.
+// Two passes from one config:
+//   - default (LIB_PEERS unset) emits dist/{index,internals}.js with
+//     React + MUI + emotion + xyflow inlined. This is the standalone
+//     bundle Angular / Vue / Svelte / vanilla JS hosts (Artemis is the
+//     primary consumer) get when they import `@tumaet/apollon`.
+//   - LIB_PEERS=true emits dist/react/index.js with those packages
+//     externalized — React hosts opt in via `@tumaet/apollon/react`
+//     to dedupe against their own React copy.
+// Only the standalone pass runs vite-plugin-dts; both subpaths share
+// the rolled-up dist/index.d.ts.
+//
+// The `/internals` subpath ships only from the standalone build; its
+// consumers (host integration tests) never need the externalized
+// shape and never use React/MUI directly.
+const isPeerBuild = process.env.LIB_PEERS === "true"
+
 export default defineConfig({
-  // rollupTypes: bundle all .d.ts into a single dist/index.d.ts so consumers
-  // on NodeNext don't trip on internal relative imports without `.js` suffix.
-  plugins: [react(), dts({ include: ["lib"], rollupTypes: true })],
+  plugins: [
+    react(),
+    ...(isPeerBuild ? [] : [dts({ include: ["lib"], rollupTypes: true })]),
+  ],
   build: {
     copyPublicDir: false,
-    emptyOutDir: true,
+    outDir: isPeerBuild ? "dist/react" : "dist",
+    emptyOutDir: !isPeerBuild,
     cssCodeSplit: false,
     lib: {
-      entry: {
-        index: resolve(__dirname, "lib/index.tsx"),
-        internals: resolve(__dirname, "lib/internals.ts"),
-      },
+      entry: isPeerBuild
+        ? { index: resolve(__dirname, "lib/index.tsx") }
+        : {
+            index: resolve(__dirname, "lib/index.tsx"),
+            internals: resolve(__dirname, "lib/internals.ts"),
+          },
       formats: ["es"],
       cssFileName: "style",
     },
     rollupOptions: {
-      external: [
-        "react",
-        "react-dom",
-        "react/jsx-runtime",
-        "react/jsx-dev-runtime",
-        "react-dom/client",
-        "@emotion/react",
-        "@emotion/styled",
-        /^@mui\/material(\/.*)?$/,
-        "@xyflow/react",
-      ],
+      external: isPeerBuild
+        ? [
+            "react",
+            "react-dom",
+            "react/jsx-runtime",
+            "react/jsx-dev-runtime",
+            "react-dom/client",
+            "@emotion/react",
+            "@emotion/styled",
+            /^@mui\/material(\/.*)?$/,
+            "@xyflow/react",
+          ]
+        : [],
       output: {
         assetFileNames: "assets/[name][extname]",
         entryFileNames: "[name].js",

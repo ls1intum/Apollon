@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ApollonEditor } from "@tumaet/apollon"
+import { ApollonEditor } from "@tumaet/apollon/react"
 import { ApollonEditorProvider } from "./ApollonEditor/ApollonEditorContext"
 import { ApollonEditorComponent } from "./ApollonEditor/ApollonEditorComponent"
 import { vscode } from "./index"

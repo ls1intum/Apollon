@@ -3,9 +3,31 @@
 [![npm version](https://img.shields.io/npm/v/@tumaet/apollon)](https://www.npmjs.com/package/@tumaet/apollon)
 [![npm license](https://img.shields.io/npm/l/@tumaet/apollon)](https://github.com/ls1intum/Apollon/blob/main/LICENSE)
 
-Embeddable UML modeling editor. Renders a React tree into a DOM node you control. The public API is imperative (`new ApollonEditor(container, options)`), so your host code does not have to use React — but the library does, and you install React as a peer.
+Embeddable UML modeling editor. Mounts into any DOM node. The public API is imperative (`new ApollonEditor(container, options)`), so the editor renders its own React tree inside the container you give it — your host code does **not** need to use React. 13 diagram types, SVG/PNG/PDF/JSON export, optional real-time collaboration via Yjs.
 
 ## Install
+
+The package ships two builds with identical APIs:
+
+| Subpath                       | React / MUI / emotion / xyflow | Bundle  | Use when                                                                                                         |
+| ----------------------------- | ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `@tumaet/apollon` _(default)_ | bundled                        | ~2.4 MB | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React installed.       |
+| `@tumaet/apollon/react`       | externalized (peer deps)       | ~875 KB | Your host is React 18.3+ or 19+ and you want the editor to share React with your app instead of bundling a copy. |
+
+### Standalone build (any framework, no peer deps)
+
+```sh
+npm install @tumaet/apollon
+```
+
+```ts
+import { ApollonEditor } from "@tumaet/apollon"
+import "@tumaet/apollon/style.css"
+```
+
+No further installs needed — React, MUI, emotion, and xyflow are bundled inside the library.
+
+### Peer-dependency build (React hosts)
 
 ```sh
 npm install @tumaet/apollon \
@@ -13,7 +35,14 @@ npm install @tumaet/apollon \
   @emotion/react @emotion/styled @mui/material @xyflow/react
 ```
 
-Peer ranges: `react ^18.3 || ^19`, `react-dom ^18.3 || ^19`, `@mui/material ^6.4`, `@emotion/react ^11.11`, `@emotion/styled ^11.11`, `@xyflow/react ^12.3`.
+```ts
+import { ApollonEditor } from "@tumaet/apollon/react"
+import "@tumaet/apollon/style.css"
+```
+
+Peer ranges: `react ^18.3 || ^19`, `react-dom ^18.3 || ^19`, `@mui/material ^6.4`, `@emotion/react ^11.11`, `@emotion/styled ^11.11`, `@xyflow/react ^12.3`. Picking this build keeps the final bundle from shipping a second copy of React.
+
+Peers are declared with `peerDependenciesMeta.optional` so `npm install @tumaet/apollon` never warns about missing peers when you only use the standalone subpath.
 
 ## Usage
 
@@ -48,9 +77,118 @@ editor.unsubscribe(subscriptionId)
 editor.destroy()
 ```
 
-Client-only. In SSR frameworks (Next.js, Remix, SvelteKit, Nuxt), construct from a client-side effect. Always `editor.destroy()` before unmounting the container.
+The editor is client-only. In SSR frameworks (Next.js, Remix, SvelteKit, Nuxt), construct from a client-side effect — never during render. Always call `editor.destroy()` before re-mounting on the same container.
 
-Requires TypeScript 5.0+ with `moduleResolution: "bundler" | "node16" | "nodenext"`.
+Type definitions ship with the package (`dist/index.d.ts`) and are identical for both subpaths. Requires TypeScript 5.0+ with `moduleResolution: "bundler" | "node16" | "nodenext"`.
+
+## Embedding examples
+
+### Angular
+
+```ts
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+} from "@angular/core"
+import {
+  ApollonEditor,
+  ApollonMode,
+  Locale,
+  UMLDiagramType,
+} from "@tumaet/apollon"
+import "@tumaet/apollon/style.css"
+
+@Component({
+  selector: "app-diagram-editor",
+  standalone: true,
+  template: `<div #container style="width: 100%; height: 100%"></div>`,
+})
+export class DiagramEditorComponent implements AfterViewInit, OnDestroy {
+  @ViewChild("container", { static: true })
+  containerRef!: ElementRef<HTMLDivElement>
+
+  private editor?: ApollonEditor
+
+  ngAfterViewInit(): void {
+    this.editor = new ApollonEditor(this.containerRef.nativeElement, {
+      type: UMLDiagramType.ClassDiagram,
+      mode: ApollonMode.Modelling,
+      locale: Locale.en,
+    })
+  }
+
+  ngOnDestroy(): void {
+    this.editor?.destroy()
+  }
+}
+```
+
+### React
+
+```tsx
+"use client"
+import { useEffect, useRef } from "react"
+import {
+  ApollonEditor,
+  ApollonMode,
+  Locale,
+  UMLDiagramType,
+} from "@tumaet/apollon/react"
+import "@tumaet/apollon/style.css"
+
+export function DiagramEditor() {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const editorRef = useRef<ApollonEditor | null>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    editorRef.current = new ApollonEditor(containerRef.current, {
+      type: UMLDiagramType.ClassDiagram,
+      mode: ApollonMode.Modelling,
+      locale: Locale.en,
+    })
+
+    return () => {
+      editorRef.current?.destroy()
+      editorRef.current = null
+    }
+  }, [])
+
+  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+}
+```
+
+### Vanilla JS / CDN
+
+```html
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/@tumaet/apollon/dist/assets/style.css"
+/>
+<div id="apollon" style="width: 100%; height: 600px"></div>
+<script type="module">
+  import {
+    ApollonEditor,
+    ApollonMode,
+    Locale,
+    UMLDiagramType,
+  } from "https://unpkg.com/@tumaet/apollon"
+
+  const editor = new ApollonEditor(document.getElementById("apollon"), {
+    type: UMLDiagramType.ClassDiagram,
+    mode: ApollonMode.Modelling,
+    locale: Locale.en,
+  })
+</script>
+```
+
+## Supported diagrams
+
+Class, Object, Activity, Use Case, Communication, Component, Deployment, Petri Net, Reachability Graph, Syntax Tree, Flowchart, BPMN, SFC. See `UMLDiagramType` in `dist/index.d.ts` for the exact enum.
 
 ## Real-time collaboration
 
@@ -61,19 +199,19 @@ editor.sendBroadcastMessage((base64) => transport.send(base64))
 transport.onMessage((base64) => editor.receiveBroadcastedMessage(base64))
 ```
 
-Any Yjs-compatible transport works (WebSocket, WebRTC, `y-websocket`, etc.).
+Use any Yjs-compatible transport (WebSocket, WebRTC, `y-websocket`, etc.).
 
 ## Export
 
-- `editor.exportAsSVG(options)` → `{ svg, clip }`
-- `editor.model` returns the `UMLModel` as JSON
-- PNG / PDF use the same pipeline via `ExportOptions` (`svgMode: "web" | "compat"`); see `dist/index.d.ts`
+- `editor.exportAsSVG(options)` resolves to `{ svg, clip }`.
+- PNG and PDF use the same pipeline via `ExportOptions` (`svgMode: "web" | "compat"`); see `dist/index.d.ts`.
+- `editor.model` returns the `UMLModel` as JSON.
 
 ## Related
 
-- Source: <https://github.com/ls1intum/Apollon>
-- Standalone editor, server, and VS Code extension live in the same monorepo
-- Developed alongside [Artemis](https://artemis.tum.de/)
+- Source and issue tracker: <https://github.com/ls1intum/Apollon>
+- Standalone web editor, server, and VS Code extension live in the same monorepo.
+- Developed alongside [Artemis](https://artemis.tum.de/), TUM's interactive learning platform.
 
 ## License
 

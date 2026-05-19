@@ -1,4 +1,4 @@
-import { ApollonEditor } from "@tumaet/apollon"
+import { ApollonEditor } from "@tumaet/apollon/react"
 import { createContext } from "react"
 
 export type ApollonEditorContextType = {
