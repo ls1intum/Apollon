@@ -6,7 +6,6 @@ import type {
   Diagram,
   VersionSummary,
 } from "@/types"
-import { isPlatform } from "@ionic/react"
 
 export class ApiError extends Error {
   constructor(
@@ -25,11 +24,9 @@ interface RequestOpts {
   body?: unknown
   headers?: Record<string, string>
   signal?: AbortSignal
+  /** When true, sends/receives credentials (cookies). Default: true. */
   credentials?: RequestCredentials
 }
-
-const isCapacitorApp =
-  isPlatform("ios") || isPlatform("android") || isPlatform("capacitor")
 
 async function request<T>(
   path: string,
@@ -52,7 +49,7 @@ async function request<T>(
         : opts.body instanceof FormData
           ? opts.body
           : JSON.stringify(opts.body),
-    credentials: opts.credentials ?? (isCapacitorApp ? "omit" : "include"),
+    credentials: opts.credentials ?? "include",
     signal: opts.signal,
   })
 
@@ -78,12 +75,20 @@ async function request<T>(
   return { data: parsed as T, res }
 }
 
+// ---------------------------------------------------------------------------
+// Diagram CRUD
+// ---------------------------------------------------------------------------
+
 export const DiagramApiClient = {
   async fetchDiagram(diagramId: string): Promise<Diagram> {
     const { data } = await request<Diagram>(`/api/diagrams/${diagramId}`)
     return data
   },
 
+  /**
+   * Autosave PUT. Returns the new headRev so clients can carry it as
+   * `If-Match` on the next save (advisory race detection).
+   */
   async sendDiagramUpdate(
     diagramId: string,
     model: UMLModel,
@@ -111,6 +116,23 @@ export const DiagramApiClient = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Version history
+// ---------------------------------------------------------------------------
+
+export interface ListVersionsResponse {
+  versions: VersionSummary[]
+  nextCursor?: string
+  /** Total number of versions in the index (across all pages). */
+  total: number
+}
+
+export interface RestoreVersionResponse {
+  headRev: number
+  updatedAt: string
+  autoSnapshotVersionId: string
+}
+
 export const VersionApiClient = {
   async list(
     diagramId: string,
@@ -134,7 +156,9 @@ export const VersionApiClient = {
     VersionSummary & {
       evictedVersionIds?: string[]
       evictedKinds?: ("unnamed" | "named")[]
+      /** Authoritative post-commit total from the server (ZCARD). */
       total?: number
+      /** New HEAD revision after the snapshot was committed. */
       headRev?: number
     }
   > {
@@ -197,6 +221,17 @@ export const VersionApiClient = {
     })
   },
 
+  /**
+   * Convenience permalink to a specific version, opened in preview mode.
+   *
+   * Preserves the current `view` query parameter — `ApollonWithConnection`
+   * rejects URLs that omit it ("Invalid view type") because the editor's
+   * mode (collaborate / give-feedback / see-feedback) is configured up
+   * front from that param. Without preserving it, a copied link would
+   * 404 on click. Falls back to `collaborate` if the current page has no
+   * `view` (e.g. local mode), since shared links overwhelmingly target
+   * collaborative diagrams.
+   */
   permalink(diagramId: string, versionId: string): string {
     const current = new URLSearchParams(window.location.search)
     const params = new URLSearchParams()
@@ -204,16 +239,4 @@ export const VersionApiClient = {
     params.set("version", versionId)
     return `${window.location.origin}/${diagramId}?${params.toString()}`
   },
-}
-
-export interface ListVersionsResponse {
-  versions: VersionSummary[]
-  nextCursor?: string
-  total: number
-}
-
-export interface RestoreVersionResponse {
-  headRev: number
-  updatedAt: string
-  autoSnapshotVersionId: string
 }
