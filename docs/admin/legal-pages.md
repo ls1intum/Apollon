@@ -14,11 +14,11 @@ Apollon ships routes at `/imprint` and `/privacy`. Their content comes from Mark
 
 For each page (`imprint`, `privacy`) the webapp tries, in order:
 
-| # | Path | Layer | When to use |
-|---|---|---|---|
-| 1 | `/legal-overrides/<page>.md` | Operator bind-mount (runtime-editable) | Forks, staging edits, anything you want to change without rebuilding the image |
-| 2 | `/legal/profiles/<LEGAL_PROFILE>/<page>.md` | Bundled profile (baked into the image) | Canonical deployments — e.g., `tumaet` for TUM |
-| 3 | `/legal/_disclaimer/<page>.md` | Safety fallback (shipped with the code) | Not valid for production; shows a red "not configured" banner |
+| #   | Path                                        | Layer                                   | When to use                                                                    |
+| --- | ------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------ |
+| 1   | `/legal-overrides/<page>.md`                | Operator bind-mount (runtime-editable)  | Forks, staging edits, anything you want to change without rebuilding the image |
+| 2   | `/legal/profiles/<LEGAL_PROFILE>/<page>.md` | Bundled profile (baked into the image)  | Canonical deployments — e.g., `tumaet` for TUM                                 |
+| 3   | `/legal/_disclaimer/<page>.md`              | Safety fallback (shipped with the code) | Not valid for production; shows a red "not configured" banner                  |
 
 The first layer that responds with a non-empty, non-HTML body wins. Each page renders independently; `imprint` and `privacy` can come from different layers.
 
@@ -54,7 +54,7 @@ Kubernetes:
 volumes:
   - name: legal-overrides
     configMap:
-      name: apollon-legal-overrides   # keys: imprint.md, privacy.md
+      name: apollon-legal-overrides # keys: imprint.md, privacy.md
 volumeMounts:
   - name: legal-overrides
     mountPath: /usr/share/nginx/html/legal-overrides

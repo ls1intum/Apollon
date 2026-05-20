@@ -10,10 +10,10 @@ The data-protection documentation for the TUM-AET-operated Apollon deployment at
 
 A fork running its own Apollon deployment must amend the package for its own controller, contact, and infrastructure. At minimum, edit the controller block in the privacy notice (§10), the contact emails throughout, the controller and storage sections of `record-of-processing`, and the first row of `processor-checklist` if its hosting differs from AET.
 
-| Record | What it documents |
-|---|---|
+| Record                                       | What it documents                                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [Record of processing](record-of-processing) | The Art. 30 GDPR record (Verzeichnis von Verarbeitungstätigkeiten) for the standalone deployment |
-| [DPIA pre-screen](dpia-prescreen) | DPIA threshold check (Art. 35 GDPR). Concludes a DPIA is not required for the documented setup |
-| [Processor checklist](processor-checklist) | Art. 28 GDPR processor checklist. Confirms no external processors |
+| [DPIA pre-screen](dpia-prescreen)            | DPIA threshold check (Art. 35 GDPR). Concludes a DPIA is not required for the documented setup   |
+| [Processor checklist](processor-checklist)   | Art. 28 GDPR processor checklist. Confirms no external processors                                |
 
 Embedded Apollon (the npm library inside a third-party host) is **out of scope** for these records — the host operator owns the DSMS for their own deployment.

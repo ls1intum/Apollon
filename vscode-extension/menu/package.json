@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@tumaet/apollon": "workspace:*",
-    "@types/vscode-webview": "1.57.5",
+    "@types/vscode-webview": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "zustand": "catalog:"

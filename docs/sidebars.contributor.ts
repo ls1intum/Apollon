@@ -17,10 +17,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Release Pipeline",
-      items: [
-        "deployment/github-actions",
-        "deployment/npm-publishing",
-      ],
+      items: ["deployment/github-actions", "deployment/npm-publishing"],
     },
   ],
 }

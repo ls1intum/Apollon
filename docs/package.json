@@ -26,7 +26,7 @@
     "@mui/material": "catalog:",
     "@tumaet/apollon": "workspace:*",
     "@xyflow/react": "catalog:",
-    "clsx": "2.1.1",
+    "clsx": "catalog:",
     "prism-react-renderer": "2.4.1",
     "react": "catalog:",
     "react-dom": "catalog:"

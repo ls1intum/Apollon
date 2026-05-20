@@ -20,25 +20,26 @@ than serving traffic with broken versioning.
 
 ## Environment variables
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `HOST` | `localhost` | Express bind host |
-| `PORT` | `8000` | Express HTTP port |
-| `WS_PORT` | `4444` | WebSocket relay port |
-| `CORS_ORIGIN` | unset | Allowed origin (omit to allow all) |
-| `REDIS_URL` | `redis://localhost:6379` | Redis connection |
-| `OWNER_SECRET` | dev placeholder | HMAC secret for soft owner cookie |
-| `MAX_VERSIONS_PER_DIAGRAM` | `50` | FIFO cap on version history |
-| `MAX_SNAPSHOT_BYTES` | `5242880` | Body parser hard limit (5 MiB) |
-| `MAX_DESCRIPTION_LENGTH` | `240` | Version description char limit |
-| `MAX_NAME_LENGTH` | `80` | Version name char limit |
-| `DIAGRAM_TTL_SECONDS` | `10368000` | HEAD TTL (120 d) |
-| `VERSION_TTL_SECONDS` | `10454400` | Version body+meta TTL (121 d) |
-| `AUTO_VERSION_INTERVAL_SECONDS` | `1800` | Marker TTL = auto-version cadence (30 min) |
+| Variable                        | Default                  | Purpose                                    |
+| ------------------------------- | ------------------------ | ------------------------------------------ |
+| `HOST`                          | `localhost`              | Express bind host                          |
+| `PORT`                          | `8000`                   | Express HTTP port                          |
+| `WS_PORT`                       | `4444`                   | WebSocket relay port                       |
+| `CORS_ORIGIN`                   | unset                    | Allowed origin (omit to allow all)         |
+| `REDIS_URL`                     | `redis://localhost:6379` | Redis connection                           |
+| `OWNER_SECRET`                  | dev placeholder          | HMAC secret for soft owner cookie          |
+| `MAX_VERSIONS_PER_DIAGRAM`      | `50`                     | FIFO cap on version history                |
+| `MAX_SNAPSHOT_BYTES`            | `5242880`                | Body parser hard limit (5 MiB)             |
+| `MAX_DESCRIPTION_LENGTH`        | `240`                    | Version description char limit             |
+| `MAX_NAME_LENGTH`               | `80`                     | Version name char limit                    |
+| `DIAGRAM_TTL_SECONDS`           | `10368000`               | HEAD TTL (120 d)                           |
+| `VERSION_TTL_SECONDS`           | `10454400`               | Version body+meta TTL (121 d)              |
+| `AUTO_VERSION_INTERVAL_SECONDS` | `1800`                   | Marker TTL = auto-version cadence (30 min) |
 
 ## Durability
 
 Redis is configured with:
+
 - `appendonly yes` — AOF on
 - `appendfsync everysec` — at most ~1s of writes can be lost on a hard
   crash. Applies uniformly to autosave PUTs and snapshot/restore commits;
@@ -51,6 +52,7 @@ provide any guarantee, and we deliberately don't claim a guarantee that
 isn't real.
 
 Recommended additional ops:
+
 - RDB BGSAVE every 6 hours
 - Off-site backup of the `dbdata` volume nightly
 
@@ -81,6 +83,7 @@ pnpm --filter @tumaet/server run migrate:string-to-json
 ```
 
 The script:
+
 - Scans `diagram:*`
 - Skips any key that's already RedisJSON-typed
 - Reads STRING bodies, JSON.SETs them back, preserves TTL

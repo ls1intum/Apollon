@@ -84,6 +84,7 @@ existing diagrams. Users will see the confirm-twice friction prompt on
 destructive operations until they re-create the diagram.
 
 Steps:
+
 1. Generate a new secret: `openssl rand -hex 32`
 2. Update the deployment env (`OWNER_SECRET=<new>`) and restart the server.
 3. Communicate the rotation to active users — destructive ops will now

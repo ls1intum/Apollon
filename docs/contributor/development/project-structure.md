@@ -41,11 +41,11 @@ Apollon/
 
 ## Workspaces
 
-| Workspace                 | Name                | Published as                                           |
-| ------------------------- | ------------------- | ------------------------------------------------------ |
-| `library/`                | `@tumaet/apollon`   | [npm](https://www.npmjs.com/package/@tumaet/apollon)   |
-| `standalone/webapp/`      | `@tumaet/webapp`    | `ghcr.io/ls1intum/apollon/webapp`                      |
-| `standalone/server/`      | `@tumaet/server`    | `ghcr.io/ls1intum/apollon/server`                      |
-| `vscode-extension/`       | `apollon-vscode`    | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |
-| `vscode-extension/menu/`  | `apollon-vscode-menu`   | bundled into the extension VSIX                |
-| `vscode-extension/editor/`| `apollon-vscode-editor` | bundled into the extension VSIX                |
+| Workspace                  | Name                    | Published as                                                                                     |
+| -------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `library/`                 | `@tumaet/apollon`       | [npm](https://www.npmjs.com/package/@tumaet/apollon)                                             |
+| `standalone/webapp/`       | `@tumaet/webapp`        | `ghcr.io/ls1intum/apollon/webapp`                                                                |
+| `standalone/server/`       | `@tumaet/server`        | `ghcr.io/ls1intum/apollon/server`                                                                |
+| `vscode-extension/`        | `apollon-vscode`        | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode) |
+| `vscode-extension/menu/`   | `apollon-vscode-menu`   | bundled into the extension VSIX                                                                  |
+| `vscode-extension/editor/` | `apollon-vscode-editor` | bundled into the extension VSIX                                                                  |

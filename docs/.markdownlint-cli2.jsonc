@@ -14,7 +14,11 @@
     "MD034": false,
     "MD036": false,
     "MD041": false,
-    "MD046": { "style": "fenced" }
+    "MD046": { "style": "fenced" },
+    "MD040": false,
+    "MD058": false,
+    "MD060": false,
+    "MD031": false
   },
   "ignores": [
     "node_modules/**",

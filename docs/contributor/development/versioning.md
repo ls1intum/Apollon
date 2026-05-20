@@ -40,8 +40,8 @@ anything.
 Versions live in the same right-rail sidebar regardless of `kind`. The
 visual split is `name`/`description` emptiness:
 
-- **Named row** (`name` *or* `description` non-empty) — full-fat row
-  with thumbnail and meta. *Always* a milestone, never collapsed.
+- **Named row** (`name` _or_ `description` non-empty) — full-fat row
+  with thumbnail and meta. _Always_ a milestone, never collapsed.
 - **Unnamed row** (both empty) — eligible for collapse. Contiguous
   unnamed rows fold under an "N auto-saved versions" expander between
   named milestones, exactly the way Figma does it.
@@ -61,7 +61,7 @@ purely client-side; the server still keeps the rows.
 ### Eviction priority
 
 The 50-version FIFO cap is **single-bucket** but eviction picks victims
-by *name-emptiness* before age:
+by _name-emptiness_ before age:
 
 ```text
 need = ZCARD(versionsIndex) - MAX_VERSIONS
@@ -124,7 +124,7 @@ don't stack them), cached forever in a module-level `Map` keyed by
 `[diagramId, versionId]`. Snapshots are immutable so the cache never
 needs to invalidate.
 
-This explicitly is *not* a server endpoint. Booting JSDOM + the full
+This explicitly is _not_ a server endpoint. Booting JSDOM + the full
 library bundle on the server for a 64×40 thumbnail is the wrong
 tradeoff: it adds cold-start latency, doesn't scale with diagram count,
 and doesn't work in the no-server deployment. The PDF export path
@@ -137,14 +137,14 @@ high-quality export use case, not a per-row preview.
 Per diagram, **at most 50 versions** with the eviction priority above.
 Bodies are gzipped before storage.
 
-| Key | Type | TTL |
-|---|---|---|
-| `diagram:{<id>}` | RedisJSON | 120 d sliding |
-| `diagram:{<id>}:meta` | HASH | sliding parity |
-| `diagram:{<id>}:versions` | ZSET (score=ms, member=ULID) | 121 d on touch |
-| `diagram:{<id>}:version:{<vid>}` | gzipped STRING | 121 d at creation |
-| `diagram:{<id>}:version:{<vid>}:meta` | HASH | 121 d at creation |
-| `diagram:{<id>}:auto-version-marker` | STRING (1) | 1800 s (interval) |
+| Key                                   | Type                         | TTL               |
+| ------------------------------------- | ---------------------------- | ----------------- |
+| `diagram:{<id>}`                      | RedisJSON                    | 120 d sliding     |
+| `diagram:{<id>}:meta`                 | HASH                         | sliding parity    |
+| `diagram:{<id>}:versions`             | ZSET (score=ms, member=ULID) | 121 d on touch    |
+| `diagram:{<id>}:version:{<vid>}`      | gzipped STRING               | 121 d at creation |
+| `diagram:{<id>}:version:{<vid>}:meta` | HASH                         | 121 d at creation |
+| `diagram:{<id>}:auto-version-marker`  | STRING (1)                   | 1800 s (interval) |
 
 The Lua function library `apollon` is loaded at boot via
 `FUNCTION LOAD REPLACE` and exposes:
@@ -158,20 +158,20 @@ The Lua function library `apollon` is loaded at boot via
 
 ### Configuration
 
-| Env | Default | Meaning |
-|---|---|---|
-| `MAX_VERSIONS_PER_DIAGRAM` | 50 | Single-bucket cap. |
+| Env                             | Default       | Meaning                   |
+| ------------------------------- | ------------- | ------------------------- |
+| `MAX_VERSIONS_PER_DIAGRAM`      | 50            | Single-bucket cap.        |
 | `AUTO_VERSION_INTERVAL_SECONDS` | 1800 (30 min) | Marker TTL = trigger gap. |
-| `MAX_NAME_LENGTH` | 80 | Server-side validation. |
-| `MAX_DESCRIPTION_LENGTH` | 240 | Server-side validation. |
-| `VERSION_TTL_SECONDS` | 121 d | Snapshot retention. |
-| `DIAGRAM_TTL_SECONDS` | 120 d | HEAD retention. |
+| `MAX_NAME_LENGTH`               | 80            | Server-side validation.   |
+| `MAX_DESCRIPTION_LENGTH`        | 240           | Server-side validation.   |
+| `VERSION_TTL_SECONDS`           | 121 d         | Snapshot retention.       |
+| `DIAGRAM_TTL_SECONDS`           | 120 d         | HEAD retention.           |
 
 ## Consistency contract
 
 1. **HEAD writes are last-write-wins.** Autosave PUT sends an
    `If-Match: <lastObservedHeadRev>` advisory header. On `409
-   REVISION_MISMATCH`, the client refetches HEAD, re-applies its
+REVISION_MISMATCH`, the client refetches HEAD, re-applies its
    in-memory model on top, and retries — local model wins. Surfaced
    briefly to the user as "Synced changes from another collaborator."
 
@@ -182,7 +182,7 @@ The Lua function library `apollon` is loaded at boot via
    lifecycle: marker acquire → fingerprint compare → commit + relay.
 
 3. **Snapshots capture the user's canvas, not Redis HEAD.** `POST
-   /versions` accepts the `body` inline; the server flushes-then-snapshots
+/versions` accepts the `body` inline; the server flushes-then-snapshots
    atomically.
 
 4. **Restore captures the restoring user's canvas as `kind="auto"` with
@@ -221,8 +221,8 @@ different browser. Continue?" Friction, not security.
 ```ts
 import { ApollonEditor } from "@tumaet/apollon"
 
-editor.setReadonly(true)   // toggle canvas read-only at runtime
-editor.fitView()           // safe to call right after a model swap
+editor.setReadonly(true) // toggle canvas read-only at runtime
+editor.fitView() // safe to call right after a model swap
 ```
 
 Local-mode versioning (no-server deployment) is not in scope for this

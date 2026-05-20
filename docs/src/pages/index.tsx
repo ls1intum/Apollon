@@ -49,8 +49,7 @@ function LiveDemo() {
             // transitive imports) out of the SSR bundle. BrowserOnly only
             // calls this on the client, so the `require` never runs in Node.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const ApollonEmbed =
-              require("../components/ApollonEmbed").default
+            const ApollonEmbed = require("../components/ApollonEmbed").default
             return <ApollonEmbed />
           }}
         </BrowserOnly>
@@ -76,9 +75,9 @@ function Features() {
             <h3>Embeddable library</h3>
             <p>
               <code>@tumaet/apollon</code> on npm. Framework-agnostic by default
-              — Angular hosts get the editor with <strong>zero peer deps</strong>{" "}
-              to install. A <code>/react</code> subpath dedupes React when your
-              host already has it.
+              — Angular hosts get the editor with{" "}
+              <strong>zero peer deps</strong> to install. A <code>/react</code>{" "}
+              subpath dedupes React when your host already has it.
             </p>
           </div>
           <div className="col col--4">

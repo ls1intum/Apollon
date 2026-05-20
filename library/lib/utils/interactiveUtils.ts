@@ -96,4 +96,3 @@ export function toggleInteractiveRecord(
 
   return nextRecord
 }
-

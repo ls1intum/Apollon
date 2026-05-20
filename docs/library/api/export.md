@@ -15,9 +15,9 @@ const { svg, clip } = await editor.exportAsSVG({ svgMode: "web" })
 - `svg: string` — serialised SVG markup
 - `clip: { x, y, width, height }` — viewport of the rendered diagram
 
-| `svgMode` | Use when |
-|---|---|
-| `"web"` | Rendering in a browser; assumes the DOM stylesheet is loaded |
+| `svgMode`  | Use when                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| `"web"`    | Rendering in a browser; assumes the DOM stylesheet is loaded                                                       |
 | `"compat"` | Inlining into PDF/PPT/other static formats — emits fully self-contained SVG with inlined fonts and computed styles |
 
 ## Headless SVG export (no mounted editor)
@@ -25,10 +25,9 @@ const { svg, clip } = await editor.exportAsSVG({ svgMode: "web" })
 ```ts
 import { ApollonEditor, importDiagram } from "@tumaet/apollon"
 
-const svgExport = await ApollonEditor.exportModelAsSvg(
-  importDiagram(model),
-  { svgMode: "compat" }
-)
+const svgExport = await ApollonEditor.exportModelAsSvg(importDiagram(model), {
+  svgMode: "compat",
+})
 ```
 
 This is the same pipeline the standalone server uses to produce server-side PDF / preview thumbnails.

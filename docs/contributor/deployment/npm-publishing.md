@@ -8,11 +8,11 @@ description: How the three independently versioned Apollon artifacts ship — np
 
 Three independently versioned artifacts, each with its own release workflow:
 
-| Artifact | Version source | Tag | Workflow |
-| -------- | -------------- | --- | -------- |
-| `@tumaet/apollon` (npm) | `library/package.json` | `@tumaet/apollon@X.Y.Z` | `release-library.yml` |
-| Standalone Docker images | `standalone/{webapp,server}/package.json` | `vX.Y.Z` | `release-standalone.yml` |
-| `tumaet.apollon-vscode` (VS Marketplace + Open VSX) | `vscode-extension/package.json` | `apollon-vscode@X.Y.Z` | `release-vscode-extension.yml` |
+| Artifact                                            | Version source                            | Tag                     | Workflow                       |
+| --------------------------------------------------- | ----------------------------------------- | ----------------------- | ------------------------------ |
+| `@tumaet/apollon` (npm)                             | `library/package.json`                    | `@tumaet/apollon@X.Y.Z` | `release-library.yml`          |
+| Standalone Docker images                            | `standalone/{webapp,server}/package.json` | `vX.Y.Z`                | `release-standalone.yml`       |
+| `tumaet.apollon-vscode` (VS Marketplace + Open VSX) | `vscode-extension/package.json`           | `apollon-vscode@X.Y.Z`  | `release-vscode-extension.yml` |
 
 Standalone starts at `4.2.18` (the library version at the time of the release-pipeline switchover). Future `vX.Y.Z` tags advance from there and do not collide with legacy tags.
 
@@ -42,10 +42,12 @@ cosign verify \
 ## One-time setup
 
 ### npm (library)
+
 - npm trusted publisher on npmjs.com: `ls1intum/Apollon` → `.github/workflows/release-library.yml` → environment `npm-publish` (no `NPM_TOKEN` needed).
 - GitHub Environment `npm-publish` with deployment branch rule `refs/heads/main`.
 
 ### VS Marketplace + Open VSX (vscode-extension)
+
 - **Azure DevOps PAT**: create at `https://dev.azure.com/<your-org>/_usersSettings/tokens` with scope `Marketplace → Manage`, organization "All accessible organizations". Max lifetime is 1 year — calendar a rotation reminder.
 - **Open VSX PAT**: create at `https://open-vsx.org/user-settings/tokens`. The namespace `tumaet` must exist on Open VSX first — if it doesn't, run `ovsx create-namespace tumaet -p <PAT>` once locally (or have any namespace member do it). Verify at `https://open-vsx.org/namespace/tumaet`.
 - **GitHub Environment `vscode-marketplace`**:

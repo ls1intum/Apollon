@@ -24,18 +24,18 @@ const editor = new ApollonEditor(container, {
 
 ## Lifecycle
 
-| Method | Purpose |
-|---|---|
-| `new ApollonEditor(container, options)` | Mount the editor's React tree into `container` |
-| `editor.destroy()` | Unmount cleanly. Always call before tearing down the host container. |
+| Method                                  | Purpose                                                              |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| `new ApollonEditor(container, options)` | Mount the editor's React tree into `container`                       |
+| `editor.destroy()`                      | Unmount cleanly. Always call before tearing down the host container. |
 
 ## State
 
-| Member | Type | Purpose |
-|---|---|---|
-| `editor.model` | `UMLModel` (getter / setter) | Read or replace the current diagram model |
-| `editor.subscribeToModelChange(cb)` | `(model: UMLModel) => void` → `number` (subscription id) | Observe model mutations |
-| `editor.unsubscribe(subscriptionId)` | — | Drop a subscription |
+| Member                               | Type                                                     | Purpose                                   |
+| ------------------------------------ | -------------------------------------------------------- | ----------------------------------------- |
+| `editor.model`                       | `UMLModel` (getter / setter)                             | Read or replace the current diagram model |
+| `editor.subscribeToModelChange(cb)`  | `(model: UMLModel) => void` → `number` (subscription id) | Observe model mutations                   |
+| `editor.unsubscribe(subscriptionId)` | —                                                        | Drop a subscription                       |
 
 ## Diagram types
 
