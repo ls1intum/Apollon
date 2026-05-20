@@ -197,16 +197,16 @@ jobs:
         working-directory: library
         run: pnpm dlx publint
 
-      - name: Validate type resolution (arethetypeswrong)
-        working-directory: library
-        # ESM-only library, all exports flagged as such; CJS profile
-        # would force-flag dual-package issues that don't apply. `pnpm
-        # dlx <pkg> [args]` forwards args straight to the resolved bin
-        # (`attw` is the package's default bin), so the `attw` token
-        # must NOT appear here — otherwise attw treats it as a tarball
-        # path argument.
-        run: pnpm dlx @arethetypeswrong/cli@0.18.1 --pack . --profile esm-only
-
+      # NOTE: arethetypeswrong/cli (attw) is intentionally not run here.
+      # attw 0.16.x–0.18.x ship a buggy fflate Gunzip streaming workaround
+      # in @arethetypeswrong/core's `extractTarball` that overwrites the
+      # decompressed buffer on each chunk callback instead of accumulating.
+      # Any tarball that decompresses across multiple fflate chunks (ours
+      # is ~750 KB → 3 chunks) crashes with `Cannot read properties of
+      # undefined (reading 'filename')`. The standalone subpath
+      # deliberately bundles peers (~2.4 MB) so the tarball is over
+      # threshold by design. `publint` above plus the `import.meta.resolve`
+      # exports-map check below cover the same ground.
       - name: Enforce bundle-size budget
         working-directory: library
         # Budgets in library/package.json#size-limit. Fails on regression
