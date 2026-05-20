@@ -62,10 +62,6 @@
     "prettier": "3.4.2"
   },
   "lint-staged": {
-    "*.{js,jsx,mjs,cjs,ts,tsx}": [
-      "prettier --ignore-unknown --write",
-      "eslint --fix --no-warn-ignored"
-    ],
-    "*.{json,md,yml,yaml}": "prettier --ignore-unknown --write"
+    "*.{js,jsx,mjs,cjs,ts,tsx,json,md,mdx,yml,yaml}": "prettier --ignore-unknown --write"
   }
 }

@@ -81,6 +81,12 @@ jobs:
       - name: Check build
         run: pnpm run build
 
+      - name: Typecheck docs
+        # `docs/` imports `@tumaet/apollon` for the live embed, so its
+        # `tsc --noEmit` resolves through the library's exports map and
+        # needs `library/dist/` to exist — keep this step after build.
+        run: pnpm --filter @tumaet/apollon-docs run typecheck
+
       - name: Run unit tests
         run: pnpm run test
 
@@ -194,10 +200,12 @@ jobs:
       - name: Validate type resolution (arethetypeswrong)
         working-directory: library
         # ESM-only library, all exports flagged as such; CJS profile
-        # would force-flag dual-package issues that don't apply. The
-        # CLI binary `attw` ships from `@arethetypeswrong/cli`; pnpm
-        # dlx resolves the binary from the package name implicitly.
-        run: pnpm dlx @arethetypeswrong/cli@0.18.1 attw --pack . --profile esm-only
+        # would force-flag dual-package issues that don't apply. `pnpm
+        # dlx <pkg> [args]` forwards args straight to the resolved bin
+        # (`attw` is the package's default bin), so the `attw` token
+        # must NOT appear here — otherwise attw treats it as a tarball
+        # path argument.
+        run: pnpm dlx @arethetypeswrong/cli@0.18.1 --pack . --profile esm-only
 
       - name: Enforce bundle-size budget
         working-directory: library

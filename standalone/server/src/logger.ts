@@ -6,7 +6,6 @@ const level =
 
 export const logger: Logger = pino({
   level,
-  base: null,
   timestamp: stdTimeFunctions.isoTime,
   redact: {
     paths: [

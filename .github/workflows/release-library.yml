@@ -88,10 +88,12 @@ jobs:
         working-directory: library
         # `pnpm pack --json` writes the tarball path to stdout as structured
         # output; previous `pnpm pack | tail -n 1` broke when pnpm logged
-        # warnings on stdout (pnpm/pnpm#10200).
+        # warnings on stdout (pnpm/pnpm#10200). The type-guarded jq filter
+        # tolerates either object or array output — pnpm has flip-flopped
+        # between the two shapes across releases.
         run: |
           set -euo pipefail
-          TARBALL=$(pnpm pack --json | jq -r '.filename // .[0].filename')
+          TARBALL=$(pnpm pack --json | jq -r 'if type=="array" then .[0].filename else .filename end')
           test -f "$TARBALL"
           echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
 
