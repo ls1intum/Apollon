@@ -1,4 +1,12 @@
+---
+id: common-issues
+title: Troubleshooting
+description: Recovery steps for the common Apollon contributor / self-host problems.
+---
+
 # Troubleshooting
+
+> Aimed at contributors and self-hosters. The hosted webapp has no setup you can break.
 
 ## Wrong Node.js version
 

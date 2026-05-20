@@ -1,4 +1,10 @@
-# Apollon — Art. 28 Processor Checklist
+---
+id: processor-checklist
+title: Processor checklist
+description: Art. 28 GDPR check — confirms no external processors for the TUM-AET Apollon deployment.
+---
+
+# Apollon — Art. 28 processor checklist
 
 Documents whether any external recipient is a processor under Art. 28 GDPR and the status of the required contract (Auftragsverarbeitungsvertrag, AVV).
 

@@ -1,3 +1,9 @@
+---
+id: legal-pages
+title: Legal pages
+description: How Apollon resolves imprint and privacy pages — overrides, bundled profiles, fallback.
+---
+
 # Legal pages (Imprint & Privacy)
 
 Apollon ships routes at `/imprint` and `/privacy`. Their content comes from Markdown files resolved at runtime through a three-layer cascade — the operator chooses which layer wins.

@@ -27,7 +27,8 @@
 }
 
 /* Live Apollon embed on the homepage gets a contained frame so its own
-   styles don't leak into Docusaurus chrome. */
+   styles don't leak into Docusaurus chrome. `contain: layout style` keeps
+   the editor's emotion-injected rules from escaping into the parent layout. */
 .apollon-embed-frame {
   width: 100%;
   height: clamp(420px, 60vh, 720px);
@@ -36,4 +37,11 @@
   overflow: hidden;
   box-shadow: var(--ifm-global-shadow-lw);
   background: var(--ifm-background-surface-color);
+  contain: layout style;
+}
+
+@media (max-width: 768px) {
+  .apollon-embed-frame {
+    height: clamp(320px, 50vh, 480px);
+  }
 }

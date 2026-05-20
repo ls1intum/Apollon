@@ -1,49 +1,19 @@
+---
+id: requirements
+title: Requirements
+description: What you need to use Apollon — a modern browser. Nothing else.
+---
+
 # Requirements
 
-Ensure you have the following installed:
+Apollon is a web application. **Any current browser is enough.**
 
-## Node.js
+| Browser | Minimum |
+| --- | --- |
+| Chrome / Edge | last 2 versions |
+| Firefox | last 2 versions |
+| Safari | 16+ |
 
-The required Node.js version is pinned in `.nvmrc` (Node 24 LTS).
+Diagrams persist in your browser's `localStorage` (or on the standalone server if you're connected). Real-time collaboration uses WebSockets — corporate proxies that strip `Upgrade` headers will downgrade to local-only editing.
 
-Use [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm) to install/manage Node versions:
-
-```bash
-brew install nvm
-```
-
-Then, load `nvm` into your shell:
-
-```bash
-export NVM_DIR="$HOME/.nvm"
-[ -s "/usr/local/opt/nvm/nvm.sh" ] && \. "/usr/local/opt/nvm/nvm.sh"
-```
-
-Once `nvm` is set up:
-
-```bash
-nvm install
-nvm use
-```
-
-## pnpm
-
-Apollon uses [pnpm workspaces](https://pnpm.io/workspaces). The exact pnpm version is pinned in `package.json` via the `packageManager` field.
-
-Install pnpm globally:
-
-```bash
-npm install -g pnpm@11
-```
-
-Verify your pnpm version:
-
-```bash
-pnpm -v
-```
-
-## Docker
-
-Docker is required to run Redis locally for development.
-
-Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) for your platform.
+For mobile, see [iOS and Android](../mobile/ios-android-setup) (contributor build — there is no app-store distribution).

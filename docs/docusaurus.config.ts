@@ -160,7 +160,9 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: "img/apollon-social-card.png",
+    // TODO: replace with a real 1200x630 social card. Until then Docusaurus
+    // falls back to no og:image rather than a broken link.
+    image: "img/logo.png",
     colorMode: {
       respectPrefersColorScheme: true,
       disableSwitch: false,

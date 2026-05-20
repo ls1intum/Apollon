@@ -1,10 +1,16 @@
-# iOS and Android Setup
+---
+id: ios-android-setup
+title: iOS and Android
+description: Build the Apollon webapp as a Capacitor native shell for iOS and Android.
+---
 
-This guide covers setting up the mobile applications for iOS and Android using Capacitor.
+# iOS and Android
+
+This guide covers building the Apollon webapp as a Capacitor native shell for iOS and Android. It is aimed at contributors; end users get the standalone web app at `https://apollon.ase.cit.tum.de`.
 
 ## Prerequisites
 
-Make sure you have completed the [initial setup](../getting-started/setup) first.
+Complete the [contributor setup](/contributor/) first.
 
 ## Setup Instructions
 

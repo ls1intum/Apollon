@@ -1,3 +1,9 @@
+---
+id: project-structure
+title: Project structure
+description: Top-level layout of the Apollon pnpm-workspaces monorepo.
+---
+
 # Project structure
 
 Apollon is a pnpm-workspaces monorepo. Top-level layout:

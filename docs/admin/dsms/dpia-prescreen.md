@@ -1,4 +1,10 @@
-# Apollon — DPIA Pre-Screen (Art. 35 GDPR)
+---
+id: dpia-prescreen
+title: DPIA pre-screen
+description: Documents whether a full Data Protection Impact Assessment (Art. 35 GDPR) is required for the TUM-AET Apollon deployment.
+---
+
+# Apollon — DPIA pre-screen (Art. 35 GDPR)
 
 Documents whether a full Data Protection Impact Assessment (Datenschutz-Folgenabschätzung) is required. The pre-screen uses the BayLfD "Muss-/Soll-Liste" for Bavarian public bodies and the DSK lists.
 

@@ -1,3 +1,9 @@
+---
+id: operations
+title: Operations
+description: Required infrastructure, environment variables, durability posture, observability.
+---
+
 # Operations
 
 ## Required infrastructure

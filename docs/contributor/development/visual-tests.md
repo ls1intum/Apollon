@@ -1,3 +1,9 @@
+---
+id: visual-tests
+title: Visual regression tests
+description: Regenerating Playwright snapshots inside the pinned Docker image.
+---
+
 # Visual regression tests
 
 Apollon's visual regression tests run as part of `pr-health-checks.yml` on every PR. They use Playwright with the `mcr.microsoft.com/playwright:v1.59.1-noble` Docker image so snapshots are pinned to one Linux rendering stack regardless of contributor OS.

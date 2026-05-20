@@ -1,6 +1,12 @@
-# Scripts Overview
+---
+id: scripts
+title: Scripts
+description: pnpm scripts every contributor uses — install, dev, build, lint.
+---
 
-Here are the commonly used scripts defined in the monorepo:
+# Scripts
+
+Commonly used scripts defined in the monorepo:
 
 ## Installation and Dependencies
 

@@ -1,3 +1,9 @@
+---
+id: github-actions
+title: Deployments
+description: Automatic deployments on merge to main; one-click production promotion.
+---
+
 # Deployments
 
 Deployments are fully automatic on merge to `main`; production promotion is one manual click.

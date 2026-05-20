@@ -1,7 +1,14 @@
+---
+id: runbook
+title: Runbook
+description: On-call reference for the most likely production issues.
+---
+
 # Apollon Standalone runbook
 
-On-call reference for the most likely production issues. Pair with
-`docs/development/versioning.md` for architecture context.
+On-call reference for the most likely production issues. Pair with the
+[Version history](/contributor/development/versioning) contributor doc
+for architecture context.
 
 ## Health & quick triage
 

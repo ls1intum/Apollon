@@ -10,7 +10,7 @@
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "typecheck": "tsc --noEmit",
-    "lint:md": "markdownlint-cli2 '{user,library,contributor,admin,src}/**/*.{md,mdx}' 'README.md'",
+    "lint:md": "markdownlint-cli2 '{user,library,contributor,admin,src}/**/*.{md,mdx}'",
     "lint": "pnpm run typecheck && pnpm run lint:md"
   },
   "dependencies": {

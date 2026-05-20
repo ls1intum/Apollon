@@ -20,7 +20,7 @@ function Hero() {
             className="button button--secondary button--lg"
             to="/user/getting-started/setup"
           >
-            Run the standalone
+            Try the standalone
           </Link>
         </div>
       </div>
@@ -39,11 +39,18 @@ function LiveDemo() {
         </p>
         <BrowserOnly
           fallback={
-            <div className="apollon-embed-frame">Loading Apollon&hellip;</div>
+            <div className="apollon-embed-frame" aria-busy="true">
+              Loading Apollon&hellip;
+            </div>
           }
         >
           {() => {
-            const ApollonEmbed = require("../components/ApollonEmbed").default
+            // Lazy-require keeps the editor (and its emotion/MUI/xyflow
+            // transitive imports) out of the SSR bundle. BrowserOnly only
+            // calls this on the client, so the `require` never runs in Node.
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const ApollonEmbed =
+              require("../components/ApollonEmbed").default
             return <ApollonEmbed />
           }}
         </BrowserOnly>

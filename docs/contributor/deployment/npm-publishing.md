@@ -1,3 +1,9 @@
+---
+id: npm-publishing
+title: Releases
+description: How the three independently versioned Apollon artifacts ship — npm, Docker, VS Marketplace.
+---
+
 # Releases
 
 Three independently versioned artifacts, each with its own release workflow:

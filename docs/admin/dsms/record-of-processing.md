@@ -1,4 +1,10 @@
-# Apollon — Record of Processing Activities (Art. 30 GDPR)
+---
+id: record-of-processing
+title: Record of processing
+description: Art. 30 GDPR record of processing for the TUM-AET Apollon deployment.
+---
+
+# Apollon — Record of processing activities (Art. 30 GDPR)
 
 The Art. 30 GDPR record of processing for the TUM-AET-operated Apollon deployment at <https://apollon.aet.cit.tum.de>. Each section corresponds to an Art. 30 element. Operators filing this record in TUM DSMS will find the same content under the portal's own field prompts.
 
@@ -13,7 +19,7 @@ The Art. 30 GDPR record of processing for the TUM-AET-operated Apollon deploymen
 
 Responsible department: TUM School of Computation, Information and Technology.
 
-:::{tip} Paste-ready — DSMS "Contact info of the person in charge"
+:::tip Paste-ready — DSMS "Contact info of the person in charge"
 ```
 Prof. Dr. Stephan Krusche, Head of AET
 Research Group for Applied Education Technologies
@@ -29,7 +35,7 @@ TUM Org identifier: `TUS1322`.
 
 ## Purpose and description (Art. 30(1)(b))
 
-:::{tip} Paste-ready — DSMS "Description and Purpose of Processing Activity"
+:::tip Paste-ready — DSMS "Description and Purpose of Processing Activity"
 ```
 Apollon is a UML modelling editor that runs in a web browser. The Research Group for Applied Education Technologies (AET, Prof. Krusche) at the Technical University of Munich operates a public instance at apollon.aet.cit.tum.de for software-engineering teaching, student project work, and public use. The purpose of the processing is to let users draw UML diagrams and share them with collaborators. Personal data is collected only when a user actively shares a diagram (the diagram content is sent to and stored on TUM servers) or opens the live-collaboration dialog and enters a display name (the name and the user's cursor position and current selection are then visible to other participants in the same diagram session). Data subjects are TUM students and staff, external collaborators, and members of the public.
 ```
@@ -49,7 +55,7 @@ Apollon is unauthenticated. The live-collaboration display name and the transien
 
 Structured categories processed: **Name(s)** (the user-chosen live-collaboration display name) and **IP address** (transmitted automatically with each HTTP request; visible to the server only for the duration of the request; not persistently stored). No contact data, identifiers, or special categories (Art. 9 / Art. 10).
 
-:::{tip} Paste-ready — DSMS "Other data categories"
+:::tip Paste-ready — DSMS "Other data categories"
 ```
 - Diagram content (free text): the UML diagram a user actively shares is stored on TUM servers. Labels are free text and may contain personal data the user types; the platform does not require, validate, or inspect their content.
 - Live-collaboration cursor + selection: alongside the display name, the user's cursor position in the editor and the ID of the currently selected element are forwarded in real time to other participants in the same diagram session, while the user is connected.
@@ -59,7 +65,7 @@ Structured categories processed: **Name(s)** (the user-chosen live-collaboration
 
 ## Recipients (Art. 30(1)(d))
 
-:::{tip} Paste-ready — DSMS "Recipient Categories"
+:::tip Paste-ready — DSMS "Recipient Categories"
 ```
 None. Apollon has no external processors and transfers no personal data to external entities. Within the service, users who hold a diagram's share link can view and edit that diagram, and users who enter the live-collaboration dialog see one another's display name, cursor position, and current selection in real time. These are users of the same TUM/AET-operated Apollon, not external recipients.
 ```
@@ -73,7 +79,7 @@ None. All processing on TUM/AET infrastructure in Germany.
 
 **Where stored**
 
-:::{tip} Paste-ready — DSMS "Where is this data located and how is it stored?"
+:::tip Paste-ready — DSMS "Where is this data located and how is it stored?"
 ```
 On AET-operated VMs on TUM premises (Boltzmannstraße 3, 85748 Garching bei München, Germany).
 
@@ -87,7 +93,7 @@ No off-host backups of personal data exist. No personal data leaves the EU.
 
 **Retention**
 
-:::{tip} Paste-ready — DSMS "Custom Erasure Time"
+:::tip Paste-ready — DSMS "Custom Erasure Time"
 ```
 - Diagram content (Redis): 120 days from the last write, enforced by a native database TTL.
 - Live-collaboration data (display name, cursor, selection): held only while the user is connected; dropped from server memory on disconnect.
@@ -98,7 +104,7 @@ No off-host backups of personal data exist. No personal data leaves the EU.
 
 **Reasoning**
 
-:::{tip} Paste-ready — DSMS "Reasoning for the erasure time"
+:::tip Paste-ready — DSMS "Reasoning for the erasure time"
 ```
 Diagram data is retained for 120 days from the last edit to support editing across teaching iterations. After 120 days of inactivity, deletion is performed automatically by the Redis engine. Operational events about the service are kept free of personal data by data minimisation at source (Art. 5(1)(c) + Art. 25 GDPR); a time-based retention period under Art. 5(1)(e) GDPR is therefore not required.
 ```
@@ -106,7 +112,7 @@ Diagram data is retained for 120 days from the last edit to support editing acro
 
 **Deletion responsibility**
 
-:::{tip} Paste-ready — DSMS "Who is responsible for the deletion?"
+:::tip Paste-ready — DSMS "Who is responsible for the deletion?"
 ```
 Day-to-day technical deletion: AET operations (ls1.admin@in.tum.de). Subject-rights deletion requests: Prof. Dr. Stephan Krusche as responsible PI, with technical execution by AET maintainers against the diagram ID provided by the data subject.
 ```
@@ -114,7 +120,7 @@ Day-to-day technical deletion: AET operations (ls1.admin@in.tum.de). Subject-rig
 
 **Deletion guarantee**
 
-:::{tip} Paste-ready — DSMS "How is deletion guaranteed?"
+:::tip Paste-ready — DSMS "How is deletion guaranteed?"
 ```
 - Diagram content: automatic via the database TTL once the 120-day window expires; no operator action required.
 - Live-collaboration data: cleared from server memory automatically when the user disconnects.
@@ -124,7 +130,7 @@ Day-to-day technical deletion: AET operations (ls1.admin@in.tum.de). Subject-rig
 
 ## Technical and organisational measures (Art. 30(1)(g) + Art. 32)
 
-:::{tip} Paste-ready — DSMS "Specific Technical and Organisational Measures"
+:::tip Paste-ready — DSMS "Specific Technical and Organisational Measures"
 ```
 Pseudonymisation and encryption (Art. 32(1)(a))
 - Diagrams are stored under a cryptographically random diagram ID with no link to an identifying user.
@@ -159,7 +165,7 @@ Testing and evaluation (Art. 32(1)(d))
 
 Selected basis: **Art. 6(1)(e) GDPR** (public-interest task), in conjunction with Art. 4(1) BayDSG and Art. 2 BayHIG.
 
-:::{tip} Paste-ready — DSMS "Other legal basis"
+:::tip Paste-ready — DSMS "Other legal basis"
 ```
 - Provision of the editor; storage and relay of diagrams the user has chosen to share; live collaboration (display name, cursor, selection): Art. 6(1)(e) GDPR in conjunction with Art. 4(1) of the Bavarian Data Protection Act (BayDSG) and Art. 2 of the Bavarian Higher Education Innovation Act (BayHIG) — performance of the university's statutory teaching and research tasks, including operation of the IT services required to carry them out.
 - Operational events about the service (no personal data by design): Art. 6(1)(e) GDPR in conjunction with Art. 4(1) BayDSG and Art. 2 BayHIG — operation and IT security of university services as part of fulfilling those tasks.
