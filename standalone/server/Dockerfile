@@ -2,10 +2,10 @@
 
 ARG NODE_IMAGE=node:24.15.0-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e
 
-# hadolint ignore=DL3006
 # DL3006 wants `FROM image:tag`, but the ARG default above is fully
 # digest-pinned (stronger than tag pinning). The ARG indirection lets CI
 # override the base image for vulnerability scans without editing the file.
+# hadolint ignore=DL3006
 FROM ${NODE_IMAGE} AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
