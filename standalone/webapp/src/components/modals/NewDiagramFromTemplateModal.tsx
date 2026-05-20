@@ -43,12 +43,11 @@ export const NewDiagramFromTemplateModal = () => {
       const timeStapToCreate = new Date().getTime()
 
       createModel(jsonData)
+      closeModal()
       navigate("..", {
         relative: "route",
         state: { timeStapToCreate },
       })
-
-      closeModal()
     } catch (err: unknown) {
       log.error("Error creating diagram from template:", err as Error)
 

@@ -80,8 +80,13 @@ async function request<T>(
 // ---------------------------------------------------------------------------
 
 export const DiagramApiClient = {
-  async fetchDiagram(diagramId: string): Promise<Diagram> {
-    const { data } = await request<Diagram>(`/api/diagrams/${diagramId}`)
+  async fetchDiagram(
+    diagramId: string,
+    opts: { signal?: AbortSignal } = {}
+  ): Promise<Diagram> {
+    const { data } = await request<Diagram>(`/api/diagrams/${diagramId}`, {
+      signal: opts.signal,
+    })
     return data
   },
 

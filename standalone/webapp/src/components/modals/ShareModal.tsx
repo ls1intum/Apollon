@@ -35,6 +35,7 @@ export const ShareModal = () => {
 
       await copyToClipboard(newurl)
       navigate(`/${diagramID}?view=${viewType}`)
+      closeModal()
 
       toast.success(
         `The link has been copied to your clipboard and can be shared to collaborate, simply by pasting the link. You can re-access the link by going to share menu.`,
@@ -42,7 +43,6 @@ export const ShareModal = () => {
           autoClose: 10000,
         }
       )
-      closeModal()
     } catch (err) {
       log.error("Error creating diagram:", err as Error)
       toast.error("Could not create diagram.")
