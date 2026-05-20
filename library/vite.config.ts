@@ -17,6 +17,13 @@ import { resolve } from "path"
 // The `/internals` subpath ships only from the standalone build; its
 // consumers (host integration tests) never need the externalized
 // shape and never use React/MUI directly.
+//
+// CSS: both passes emit identical bytes because both transform the same
+// CSS imports. We publish only the standalone copy (`./style.css` exports
+// to `dist/assets/style.css`); the peer-build copy at `dist/react/assets/`
+// is duplicate output and gets removed by the package.json `build` script
+// (`rm -rf dist/react/assets`). Vite has no per-pass "skip CSS emit" knob,
+// so post-build cleanup is the simplest honest path.
 const isPeerBuild = process.env.LIB_PEERS === "true"
 
 export default defineConfig({

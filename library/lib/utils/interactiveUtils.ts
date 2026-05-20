@@ -97,15 +97,3 @@ export function toggleInteractiveRecord(
   return nextRecord
 }
 
-export function hasInteractiveSelections(
-  interactive: InteractiveElements | undefined
-): boolean {
-  if (!interactive) {
-    return false
-  }
-
-  return (
-    Object.values(interactive.elements ?? {}).some(Boolean) ||
-    Object.values(interactive.relationships ?? {}).some(Boolean)
-  )
-}

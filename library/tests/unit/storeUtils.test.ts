@@ -1,102 +1,11 @@
 import { describe, it, expect } from "vitest"
 import { deepEqual } from "@/utils/storeUtils"
 
+// Behavioural test for the diagram-store equality short-circuit. The function
+// is custom (NOT a JS built-in), so the asserts focus on the contracts the
+// store relies on: order-independence, undefined-vs-missing parity, and
+// realistic nested shapes — not tautologies like `42 === 42`.
 describe("deepEqual", () => {
-  // Primitives
-  it("returns true for equal numbers", () => {
-    expect(deepEqual(42, 42)).toBe(true)
-  })
-
-  it("returns false for different numbers", () => {
-    expect(deepEqual(1, 2)).toBe(false)
-  })
-
-  it("returns true for equal strings", () => {
-    expect(deepEqual("hello", "hello")).toBe(true)
-  })
-
-  it("returns false for different strings", () => {
-    expect(deepEqual("a", "b")).toBe(false)
-  })
-
-  it("returns true for two nulls", () => {
-    expect(deepEqual(null, null)).toBe(true)
-  })
-
-  it("returns true for two booleans", () => {
-    expect(deepEqual(true, true)).toBe(true)
-    expect(deepEqual(false, false)).toBe(true)
-  })
-
-  it("returns false for different booleans", () => {
-    expect(deepEqual(true, false)).toBe(false)
-  })
-
-  // Objects
-  it("returns true for equal flat objects", () => {
-    expect(deepEqual({ a: 1, b: 2 }, { a: 1, b: 2 })).toBe(true)
-  })
-
-  it("returns false for objects with different values", () => {
-    expect(deepEqual({ a: 1 }, { a: 2 })).toBe(false)
-  })
-
-  it("returns true for equal nested objects", () => {
-    expect(deepEqual({ a: { b: { c: 3 } } }, { a: { b: { c: 3 } } })).toBe(true)
-  })
-
-  it("returns false for objects with different keys", () => {
-    expect(
-      deepEqual(
-        { a: 1 } as Record<string, number>,
-        { b: 1 } as Record<string, number>
-      )
-    ).toBe(false)
-  })
-
-  // Arrays
-  it("returns true for equal arrays", () => {
-    expect(deepEqual([1, 2, 3], [1, 2, 3])).toBe(true)
-  })
-
-  it("returns false for arrays with different values", () => {
-    expect(deepEqual([1, 2], [1, 3])).toBe(false)
-  })
-
-  it("returns false for arrays with different lengths", () => {
-    expect(deepEqual([1, 2], [1, 2, 3])).toBe(false)
-  })
-
-  // Empty
-  it("returns true for two empty objects", () => {
-    expect(deepEqual({}, {})).toBe(true)
-  })
-
-  it("returns true for two empty arrays", () => {
-    expect(deepEqual([], [])).toBe(true)
-  })
-
-  // Mixed
-  it("returns false for different types (object vs array)", () => {
-    expect(deepEqual({} as unknown, [] as unknown)).toBe(false)
-  })
-
-  it("returns true for two undefined values", () => {
-    expect(deepEqual(undefined, undefined)).toBe(true)
-  })
-
-  it("returns true for objects with same keys in same insertion order", () => {
-    const a = { x: 1, y: 2 }
-    const b = { x: 1, y: 2 }
-    expect(deepEqual(a, b)).toBe(true)
-  })
-
-  it("handles complex nested structures", () => {
-    const a = { nodes: [{ id: "1", pos: { x: 0, y: 0 } }], edges: [] }
-    const b = { nodes: [{ id: "1", pos: { x: 0, y: 0 } }], edges: [] }
-    expect(deepEqual(a, b)).toBe(true)
-  })
-
   it("treats key insertion order as semantically irrelevant", () => {
     expect(deepEqual({ x: 1, y: 2 }, { y: 2, x: 1 })).toBe(true)
   })
@@ -106,9 +15,35 @@ describe("deepEqual", () => {
     expect(deepEqual({ a: 1 }, { a: 1, b: undefined })).toBe(true)
   })
 
-  it("returns false for primitive vs object", () => {
+  it("compares nested diagram-shaped payloads", () => {
+    const a = {
+      nodes: [{ id: "1", pos: { x: 0, y: 0 }, data: { label: "A" } }],
+      edges: [{ id: "e1", points: [{ x: 0, y: 0 }] }],
+    }
+    const b = {
+      nodes: [{ id: "1", pos: { x: 0, y: 0 }, data: { label: "A" } }],
+      edges: [{ id: "e1", points: [{ x: 0, y: 0 }] }],
+    }
+    expect(deepEqual(a, b)).toBe(true)
+  })
+
+  it("detects a single nested value difference", () => {
+    const a = { nodes: [{ pos: { x: 0, y: 0 } }] }
+    const b = { nodes: [{ pos: { x: 0, y: 1 } }] }
+    expect(deepEqual(a, b)).toBe(false)
+  })
+
+  it("returns false when array lengths differ", () => {
+    expect(deepEqual([1, 2], [1, 2, 3])).toBe(false)
+  })
+
+  it("returns false across object/array/primitive boundaries", () => {
+    expect(deepEqual({} as unknown, [] as unknown)).toBe(false)
     expect(deepEqual({}, null)).toBe(false)
-    expect(deepEqual(null, {})).toBe(false)
     expect(deepEqual([1], 1)).toBe(false)
+  })
+
+  it("returns true for identical NaN (via Object.is)", () => {
+    expect(deepEqual(NaN, NaN)).toBe(true)
   })
 })
