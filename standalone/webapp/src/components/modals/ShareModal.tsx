@@ -11,11 +11,13 @@ import { Tooltip } from "@mui/material"
 import { useNavigate } from "react-router"
 import { toast } from "react-toastify"
 import { APButton } from "../APButton"
+import { serverURL } from "@/constants"
 
 export const ShareModal = () => {
   const { editor } = useEditorContext()
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
+  const isCapacitorApp = isPlatform("ios") || isPlatform("android")
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
     if (!editor) {
@@ -27,7 +29,9 @@ export const ShareModal = () => {
       const model = editor.model
       const { id: diagramID } = await DiagramApiClient.createDiagram(model)
 
-      const newurl = `${window.location.origin}/${diagramID}?view=${viewType}`
+      const newurl = isCapacitorApp
+        ? `${serverURL}/${diagramID}?view=${viewType}&mobile=true`
+        : `${window.location.origin}/${diagramID}?view=${viewType}`
 
       await copyToClipboard(newurl)
       navigate(`/${diagramID}?view=${viewType}`)
