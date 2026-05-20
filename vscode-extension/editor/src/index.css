@@ -23,7 +23,7 @@ body.vscode-light {
   --apollon-alert-warning-background: #fff3cd;
   --apollon-alert-warning-border: #ffeeba;
   --apollon-background: white;
-  --apollon-background-inverse: #000000;
+  --apollon-background-inverse: #000;
   --apollon-background-variant: #f8f9fa;
   --apollon-gray: #e9ecef;
   --apollon-grid: rgba(36, 39, 36, 0.1);
@@ -32,7 +32,7 @@ body.vscode-light {
   --apollon-alert-danger-background: #f8d7da;
   --apollon-alert-danger-border: #f5c6cb;
   --apollon-switch-box-border-color: #dee2e6;
-  --apollon-list-group-color: #ffffff;
+  --apollon-list-group-color: #fff;
   --apollon-btn-outline-secondary-color: #6c757d;
   --apollon-modal-bottom-border: #e9ecef;
 }
@@ -42,11 +42,11 @@ body.vscode-high-contrast {
   --apollon-primary: #3e8acc;
   --apollon-primary-contrast: white;
   --apollon-secondary: #888;
-  --apollon-alert-warning-yellow: #ffffff;
+  --apollon-alert-warning-yellow: #fff;
   --apollon-alert-warning-background: #f39c12;
-  --apollon-alert-warning-border: #000000;
+  --apollon-alert-warning-border: #000;
   --apollon-background: #181a18;
-  --apollon-background-inverse: #ffffff;
+  --apollon-background-inverse: #fff;
   --apollon-background-variant: #303530;
   --apollon-gray: #242724;
   --apollon-grid: #303530;
