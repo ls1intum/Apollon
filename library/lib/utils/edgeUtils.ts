@@ -1,5 +1,5 @@
 import { EDGES, INTERFACE } from "@/constants"
-import { IPoint } from "@/edges/Connection"
+import { IPoint, pointsToSvgPath } from "@/edges/Connection"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
 import { Position, Rect, XYPosition, ConnectionLineType } from "@xyflow/react"
 
@@ -455,6 +455,299 @@ export function getEllipseHandlePosition(
     x: centerX + radiusX * Math.cos(angle),
     y: centerY + radiusY * Math.sin(angle),
   }
+}
+
+const HANDLE_OFFSET_RATIO: Record<string, number> = {
+  "top-left": 0.2,
+  "top-mid-left": 0.35,
+  top: 0.5,
+  "top-mid-right": 0.65,
+  "top-right": 0.8,
+  "right-top": 0.2,
+  "right-mid-top": 0.35,
+  right: 0.5,
+  "right-mid-bottom": 0.65,
+  "right-bottom": 0.8,
+  "bottom-right": 0.8,
+  "bottom-mid-right": 0.65,
+  bottom: 0.5,
+  "bottom-mid-left": 0.35,
+  "bottom-left": 0.2,
+  "left-bottom": 0.8,
+  "left-mid-bottom": 0.65,
+  left: 0.5,
+  "left-mid-top": 0.35,
+  "left-top": 0.2,
+}
+
+export function getHandleSideFromId(handleId?: string | null): Position {
+  if (!handleId) return Position.Right
+
+  if (handleId.startsWith("top")) return Position.Top
+  if (handleId.startsWith("bottom")) return Position.Bottom
+  if (handleId.startsWith("left")) return Position.Left
+  if (handleId.startsWith("right")) return Position.Right
+
+  return Position.Right
+}
+
+const getHandleOffsetRatio = (handleId?: string | null): number => {
+  if (!handleId) return 0.5
+  return HANDLE_OFFSET_RATIO[handleId] ?? 0.5
+}
+
+export function getHandlePositionOnNode({
+  nodeType,
+  nodePosition,
+  width,
+  height,
+  handleId,
+}: {
+  nodeType?: string
+  nodePosition: XYPosition
+  width: number
+  height: number
+  handleId?: string | null
+}): IPoint {
+  if (nodeType === "useCase") {
+    const ellipsePositiveEdgeInset = 0.5
+    const centerX = width / 2 - ellipsePositiveEdgeInset / 2
+    const centerY = height / 2 - ellipsePositiveEdgeInset / 2
+    const radiusX = width / 2 - ellipsePositiveEdgeInset / 2
+    const radiusY = height / 2 - ellipsePositiveEdgeInset / 2
+
+    const pos = getEllipseHandlePosition(
+      centerX,
+      centerY,
+      radiusX,
+      radiusY,
+      handleId ?? "right"
+    )
+
+    return {
+      x: nodePosition.x + pos.x,
+      y: nodePosition.y + pos.y,
+    }
+  }
+
+  const ratio = getHandleOffsetRatio(handleId)
+  const side = getHandleSideFromId(handleId)
+
+  switch (side) {
+    case Position.Top:
+      return { x: nodePosition.x + width * ratio, y: nodePosition.y }
+    case Position.Bottom:
+      return { x: nodePosition.x + width * ratio, y: nodePosition.y + height }
+    case Position.Left:
+      return { x: nodePosition.x, y: nodePosition.y + height * ratio }
+    case Position.Right:
+    default:
+      return {
+        x: nodePosition.x + width,
+        y: nodePosition.y + height * ratio,
+      }
+  }
+}
+
+const STRAIGHT_EDGE_TYPES = new Set([
+  "UseCaseAssociation",
+  "UseCaseInclude",
+  "UseCaseExtend",
+  "UseCaseGeneralization",
+  "SyntaxTreeLink",
+  "PetriNetArc",
+])
+
+export const isStraightEdgeType = (edgeType?: string | null): boolean =>
+  STRAIGHT_EDGE_TYPES.has(edgeType ?? "")
+
+export type AxisAlignedSegment = {
+  index: number
+  start: IPoint
+  end: IPoint
+  orientation: "horizontal" | "vertical"
+  fixed: number
+  min: number
+  max: number
+}
+
+export function getAxisAlignedSegments(
+  points: IPoint[],
+  tolerance: number = 1
+): AxisAlignedSegment[] {
+  const segments: AxisAlignedSegment[] = []
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const start = points[i]
+    const end = points[i + 1]
+    const isVertical = Math.abs(start.x - end.x) <= tolerance
+    const isHorizontal = Math.abs(start.y - end.y) <= tolerance
+
+    if (!isVertical && !isHorizontal) continue
+
+    if (isVertical) {
+      const min = Math.min(start.y, end.y)
+      const max = Math.max(start.y, end.y)
+      segments.push({
+        index: i,
+        start,
+        end,
+        orientation: "vertical",
+        fixed: start.x,
+        min,
+        max,
+      })
+    } else {
+      const min = Math.min(start.x, end.x)
+      const max = Math.max(start.x, end.x)
+      segments.push({
+        index: i,
+        start,
+        end,
+        orientation: "horizontal",
+        fixed: start.y,
+        min,
+        max,
+      })
+    }
+  }
+
+  return segments
+}
+
+export type LineJumpHit = {
+  segmentIndex: number
+  point: IPoint
+  orientation: "horizontal" | "vertical"
+}
+
+export function findLineJumpIntersection(
+  baseSegments: AxisAlignedSegment[],
+  otherSegments: AxisAlignedSegment[],
+  jumpWidth: number,
+  preferredOrientation: "horizontal" | "vertical" = "horizontal",
+  tolerance: number = 1
+): LineJumpHit | null {
+  const margin = jumpWidth / 2 + 2
+
+  for (const base of baseSegments) {
+    if (base.orientation !== preferredOrientation) continue
+
+    for (const other of otherSegments) {
+      if (base.orientation === other.orientation) continue
+
+      if (
+        base.orientation === "horizontal" &&
+        other.orientation === "vertical"
+      ) {
+        const x = other.fixed
+        const y = base.fixed
+        if (
+          x < base.min + margin ||
+          x > base.max - margin ||
+          y < other.min - tolerance ||
+          y > other.max + tolerance
+        ) {
+          continue
+        }
+
+        return {
+          segmentIndex: base.index,
+          point: { x, y },
+          orientation: base.orientation,
+        }
+      }
+
+      if (
+        base.orientation === "vertical" &&
+        other.orientation === "horizontal"
+      ) {
+        const x = base.fixed
+        const y = other.fixed
+        if (
+          y < base.min + margin ||
+          y > base.max - margin ||
+          x < other.min - tolerance ||
+          x > other.max + tolerance
+        ) {
+          continue
+        }
+
+        return {
+          segmentIndex: base.index,
+          point: { x, y },
+          orientation: base.orientation,
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+export function buildPathWithLineJumpAtPoint(
+  points: IPoint[],
+  segmentIndex: number,
+  jumpCenter: IPoint,
+  jumpHeight: number,
+  jumpWidth: number = EDGES.EDGE_LINE_JUMP_WIDTH
+): string {
+  if (points.length === 0) return ""
+  if (segmentIndex < 0 || segmentIndex >= points.length - 1) {
+    return pointsToSvgPath(points)
+  }
+
+  const start = points[segmentIndex]
+  const end = points[segmentIndex + 1]
+  const isHorizontal = Math.abs(start.y - end.y) < 1
+  const segmentLength = isHorizontal
+    ? Math.abs(end.x - start.x)
+    : Math.abs(end.y - start.y)
+
+  if (segmentLength < jumpWidth * 1.2) {
+    return pointsToSvgPath(points)
+  }
+
+  const round = (num: number) => Math.round(num)
+  const halfJump = Math.min(jumpWidth / 2, segmentLength / 2 - 2)
+  if (halfJump <= 1) {
+    return pointsToSvgPath(points)
+  }
+
+  const jumpStart = isHorizontal
+    ? { x: jumpCenter.x - halfJump, y: start.y }
+    : { x: start.x, y: jumpCenter.y - halfJump }
+  const jumpEnd = isHorizontal
+    ? { x: jumpCenter.x + halfJump, y: start.y }
+    : { x: start.x, y: jumpCenter.y + halfJump }
+  const control = isHorizontal
+    ? { x: jumpCenter.x, y: start.y - Math.abs(jumpHeight) }
+    : { x: start.x + Math.abs(jumpHeight), y: jumpCenter.y }
+
+  const pathParts = [`M ${round(points[0].x)},${round(points[0].y)}`]
+
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const segmentEnd = points[i + 1]
+
+    if (i === segmentIndex) {
+      pathParts.push(
+        `L ${round(jumpStart.x)},${round(jumpStart.y)}`,
+        `Q ${round(control.x)},${round(control.y)} ${round(
+          jumpEnd.x
+        )},${round(jumpEnd.y)}`
+      )
+
+      if (
+        Math.abs(jumpEnd.x - segmentEnd.x) > 0.5 ||
+        Math.abs(jumpEnd.y - segmentEnd.y) > 0.5
+      ) {
+        pathParts.push(`L ${round(segmentEnd.x)},${round(segmentEnd.y)}`)
+      }
+    } else {
+      pathParts.push(`L ${round(segmentEnd.x)},${round(segmentEnd.y)}`)
+    }
+  }
+
+  return pathParts.join(" ")
 }
 
 export function calculateOverlayPath(

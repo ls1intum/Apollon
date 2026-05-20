@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
-import { useReactFlow } from "@xyflow/react"
+import { getSmoothStepPath, useReactFlow } from "@xyflow/react"
 import { log } from "../logger"
 import {
   calculateOverlayPath,
   calculateStraightPath,
   getEdgeMarkerStyles,
+  getAxisAlignedSegments,
+  findLineJumpIntersection,
+  getHandlePositionOnNode,
+  getHandleSideFromId,
+  buildPathWithLineJumpAtPoint,
+  isStraightEdgeType,
+  simplifySvgPath,
+  removeDuplicatePoints,
+  parseSvgPath,
   adjustSourceCoordinates,
   adjustTargetCoordinates,
 } from "@/utils/edgeUtils"
@@ -13,6 +22,8 @@ import { useDiagramModifiable } from "./useDiagramModifiable"
 import { IPoint } from "../edges/Connection"
 import { useEdgeReconnection, BaseEdgeProps } from "../edges/GenericEdge"
 import { useHandleFinder } from "./useHandleFinder"
+import { useDiagramStore } from "@/store/context"
+import { getPositionOnCanvas } from "@/utils"
 
 export interface StraightPathEdgeData {
   pathMiddlePosition: IPoint
@@ -38,7 +49,8 @@ export const useStraightPathEdge = ({
 }: Omit<BaseEdgeProps, "data"> & { enableReconnection?: boolean }) => {
   const pathRef = useRef<SVGPathElement | null>(null)
   const isDiagramModifiable = useDiagramModifiable()
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, getNode, getNodes } = useReactFlow()
+  const edges = useDiagramStore((state) => state.edges)
   const [tempReconnectPath, setTempReconnectPath] = useState<string | null>(
     null
   )
@@ -105,6 +117,150 @@ export const useStraightPathEdge = ({
     EDGES.SOURCE_CONNECTION_POINT_PADDING
   )
 
+  const allNodes = getNodes()
+
+  const sourcePoint = {
+    x: adjustedSourceCoordinates.sourceX,
+    y: adjustedSourceCoordinates.sourceY,
+  }
+  const targetPoint = {
+    x: adjustedTargetCoordinates.targetX,
+    y: adjustedTargetCoordinates.targetY,
+  }
+
+  const getEdgePointsForJump = useCallback(
+    (edge: {
+      id: string
+      source: string
+      target: string
+      type?: string | null
+      sourceHandle?: string | null
+      targetHandle?: string | null
+      data?: { points?: IPoint[] }
+    }) => {
+      if (edge.data?.points && edge.data.points.length > 1) {
+        return edge.data.points
+      }
+
+      const sourceNode = getNode(edge.source)
+      const targetNode = getNode(edge.target)
+
+      if (
+        !sourceNode ||
+        !targetNode ||
+        sourceNode.width == null ||
+        sourceNode.height == null ||
+        targetNode.width == null ||
+        targetNode.height == null
+      ) {
+        return null
+      }
+
+      const sourcePositionOnCanvas = getPositionOnCanvas(sourceNode, allNodes)
+      const targetPositionOnCanvas = getPositionOnCanvas(targetNode, allNodes)
+
+      const sourceHandle = edge.sourceHandle ?? "right"
+      const targetHandle = edge.targetHandle ?? "left"
+
+      const sourceHandlePoint = getHandlePositionOnNode({
+        nodeType: sourceNode.type,
+        nodePosition: sourcePositionOnCanvas,
+        width: sourceNode.width,
+        height: sourceNode.height,
+        handleId: sourceHandle,
+      })
+      const targetHandlePoint = getHandlePositionOnNode({
+        nodeType: targetNode.type,
+        nodePosition: targetPositionOnCanvas,
+        width: targetNode.width,
+        height: targetNode.height,
+        handleId: targetHandle,
+      })
+
+      if (isStraightEdgeType(edge.type)) {
+        return [sourceHandlePoint, targetHandlePoint]
+      }
+
+      const sourceHandleSide = getHandleSideFromId(sourceHandle)
+      const targetHandleSide = getHandleSideFromId(targetHandle)
+      const { markerPadding } = getEdgeMarkerStyles(edge.type ?? type)
+      const padding = markerPadding ?? EDGES.MARKER_PADDING
+
+      const adjustedTarget = adjustTargetCoordinates(
+        Math.round(targetHandlePoint.x),
+        Math.round(targetHandlePoint.y),
+        targetHandleSide,
+        padding
+      )
+      const adjustedSource = adjustSourceCoordinates(
+        Math.round(sourceHandlePoint.x),
+        Math.round(sourceHandlePoint.y),
+        sourceHandleSide,
+        EDGES.SOURCE_CONNECTION_POINT_PADDING
+      )
+
+      const [edgePath] = getSmoothStepPath({
+        sourceX: adjustedSource.sourceX,
+        sourceY: adjustedSource.sourceY,
+        sourcePosition: sourceHandleSide,
+        targetX: adjustedTarget.targetX,
+        targetY: adjustedTarget.targetY,
+        targetPosition: targetHandleSide,
+        borderRadius: EDGES.STEP_BORDER_RADIUS,
+        offset: 30,
+      })
+
+      const simplifiedPath = simplifySvgPath(edgePath)
+      return removeDuplicatePoints(parseSvgPath(simplifiedPath))
+    },
+    [allNodes, getNode, type]
+  )
+
+  const lineJump = useMemo(() => {
+    if (
+      !id ||
+      tempReconnectPath ||
+      type === "UseCaseInclude" ||
+      type === "UseCaseExtend"
+    ) {
+      return null
+    }
+
+    const currentIndex = edges.findIndex((edge) => edge.id === id)
+    if (currentIndex <= 0) return null
+
+    const baseSegments = getAxisAlignedSegments([sourcePoint, targetPoint])
+    if (baseSegments.length === 0) return null
+
+    for (let i = 0; i < currentIndex; i += 1) {
+      const otherEdge = edges[i]
+      const otherPoints = getEdgePointsForJump(otherEdge)
+      if (!otherPoints || otherPoints.length < 2) continue
+
+      const otherSegments = getAxisAlignedSegments(otherPoints)
+      const hit = findLineJumpIntersection(
+        baseSegments,
+        otherSegments,
+        EDGES.EDGE_LINE_JUMP_WIDTH,
+        "horizontal"
+      )
+
+      if (hit) {
+        return hit
+      }
+    }
+
+    return null
+  }, [
+    edges,
+    getEdgePointsForJump,
+    id,
+    sourcePoint,
+    targetPoint,
+    tempReconnectPath,
+    type,
+  ])
+
   const [pathMiddlePosition, setPathMiddlePosition] = useState<IPoint>(() => ({
     x:
       (adjustedSourceCoordinates.sourceX + adjustedTargetCoordinates.targetX) /
@@ -126,6 +282,16 @@ export const useStraightPathEdge = ({
   )
 
   const currentPath = useMemo(() => {
+    if (lineJump) {
+      return buildPathWithLineJumpAtPoint(
+        [sourcePoint, targetPoint],
+        lineJump.segmentIndex,
+        lineJump.point,
+        EDGES.EDGE_LINE_JUMP_HEIGHT,
+        EDGES.EDGE_LINE_JUMP_WIDTH
+      )
+    }
+
     return calculateStraightPath(
       adjustedSourceCoordinates.sourceX,
       adjustedSourceCoordinates.sourceY,
@@ -138,11 +304,18 @@ export const useStraightPathEdge = ({
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
+    lineJump,
+    sourcePoint,
+    targetPoint,
     type,
     targetPosition,
   ])
 
   const overlayPath = useMemo(() => {
+    if (lineJump) {
+      return currentPath
+    }
+
     return calculateOverlayPath(
       adjustedSourceCoordinates.sourceX,
       adjustedSourceCoordinates.sourceY,
@@ -155,6 +328,8 @@ export const useStraightPathEdge = ({
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
+    currentPath,
+    lineJump,
     type,
     targetPosition,
   ])
@@ -240,15 +415,6 @@ export const useStraightPathEdge = ({
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
   ])
-
-  const sourcePoint = {
-    x: adjustedSourceCoordinates.sourceX,
-    y: adjustedSourceCoordinates.sourceY,
-  }
-  const targetPoint = {
-    x: adjustedTargetCoordinates.targetX,
-    y: adjustedTargetCoordinates.targetY,
-  }
 
   const handleEndpointPointerDown = useCallback(
     (e: React.PointerEvent, endType: "source" | "target") => {

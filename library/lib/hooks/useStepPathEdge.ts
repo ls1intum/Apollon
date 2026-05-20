@@ -22,6 +22,12 @@ import {
   parseSvgPath,
   calculateInnerMidpoints,
   getMarkerSegmentPath,
+  getAxisAlignedSegments,
+  findLineJumpIntersection,
+  getHandlePositionOnNode,
+  getHandleSideFromId,
+  buildPathWithLineJumpAtPoint,
+  isStraightEdgeType,
 } from "@/utils/edgeUtils"
 import { useEdgeState, useEdgeReconnection } from "../edges/GenericEdge"
 import { useDiagramModifiable } from "./useDiagramModifiable"
@@ -103,9 +109,10 @@ export const useStepPathEdge = ({
   } = useEdgeReconnection(id, source, target, sourceHandleId, targetHandleId)
 
   const { findBestHandle } = useHandleFinder()
-  const { setEdges } = useDiagramStore(
+  const { setEdges, edges } = useDiagramStore(
     useShallow((state) => ({
       setEdges: state.setEdges,
+      edges: state.edges,
     }))
   )
 
@@ -372,9 +379,152 @@ export const useStepPathEdge = ({
     adjustedTargetCoordinates.targetY,
   ])
 
+  const getEdgePointsForJump = useCallback(
+    (edge: {
+      id: string
+      source: string
+      target: string
+      type?: string | null
+      sourceHandle?: string | null
+      targetHandle?: string | null
+      data?: { points?: IPoint[] }
+    }) => {
+      if (edge.data?.points && edge.data.points.length > 1) {
+        return edge.data.points
+      }
+
+      const sourceNode = getNode(edge.source)
+      const targetNode = getNode(edge.target)
+
+      if (
+        !sourceNode ||
+        !targetNode ||
+        sourceNode.width == null ||
+        sourceNode.height == null ||
+        targetNode.width == null ||
+        targetNode.height == null
+      ) {
+        return null
+      }
+
+      const sourcePositionOnCanvas = getPositionOnCanvas(sourceNode, allNodes)
+      const targetPositionOnCanvas = getPositionOnCanvas(targetNode, allNodes)
+
+      const sourceHandle = edge.sourceHandle ?? "right"
+      const targetHandle = edge.targetHandle ?? "left"
+
+      const sourcePoint = getHandlePositionOnNode({
+        nodeType: sourceNode.type,
+        nodePosition: sourcePositionOnCanvas,
+        width: sourceNode.width,
+        height: sourceNode.height,
+        handleId: sourceHandle,
+      })
+      const targetPoint = getHandlePositionOnNode({
+        nodeType: targetNode.type,
+        nodePosition: targetPositionOnCanvas,
+        width: targetNode.width,
+        height: targetNode.height,
+        handleId: targetHandle,
+      })
+
+      if (isStraightEdgeType(edge.type)) {
+        return [sourcePoint, targetPoint]
+      }
+
+      const sourceHandleSide = getHandleSideFromId(sourceHandle)
+      const targetHandleSide = getHandleSideFromId(targetHandle)
+      const { markerPadding } = getEdgeMarkerStyles(edge.type ?? type)
+      const padding = markerPadding ?? EDGES.MARKER_PADDING
+
+      const adjustedTarget = adjustTargetCoordinates(
+        Math.round(targetPoint.x),
+        Math.round(targetPoint.y),
+        targetHandleSide,
+        padding
+      )
+      const adjustedSource = adjustSourceCoordinates(
+        Math.round(sourcePoint.x),
+        Math.round(sourcePoint.y),
+        sourceHandleSide,
+        EDGES.SOURCE_CONNECTION_POINT_PADDING
+      )
+
+      const [edgePath] = getSmoothStepPath({
+        sourceX: adjustedSource.sourceX,
+        sourceY: adjustedSource.sourceY,
+        sourcePosition: sourceHandleSide,
+        targetX: adjustedTarget.targetX,
+        targetY: adjustedTarget.targetY,
+        targetPosition: targetHandleSide,
+        borderRadius: EDGES.STEP_BORDER_RADIUS,
+        offset: 30,
+      })
+
+      const simplifiedPath = simplifySvgPath(edgePath)
+      return removeDuplicatePoints(parseSvgPath(simplifiedPath))
+    },
+    [allNodes, getNode, type]
+  )
+
+  const lineJump = useMemo(() => {
+    if (
+      customPoints.length > 0 ||
+      (data?.points?.length ?? 0) > 0 ||
+      tempReconnectPoints ||
+      !id
+    ) {
+      return null
+    }
+
+    const currentIndex = edges.findIndex((edge) => edge.id === id)
+    if (currentIndex <= 0) return null
+
+    const baseSegments = getAxisAlignedSegments(activePoints)
+    if (baseSegments.length === 0) return null
+
+    for (let i = 0; i < currentIndex; i += 1) {
+      const otherEdge = edges[i]
+      const otherPoints = getEdgePointsForJump(otherEdge)
+      if (!otherPoints || otherPoints.length < 2) continue
+
+      const otherSegments = getAxisAlignedSegments(otherPoints)
+      const hit = findLineJumpIntersection(
+        baseSegments,
+        otherSegments,
+        EDGES.EDGE_LINE_JUMP_WIDTH,
+        "horizontal"
+      )
+
+      if (hit) {
+        return hit
+      }
+    }
+
+    return null
+  }, [
+    activePoints,
+    customPoints.length,
+    data?.points?.length,
+    edges,
+    getEdgePointsForJump,
+    id,
+    tempReconnectPoints,
+  ])
+
   const currentPath = useMemo(() => {
+    if (lineJump) {
+      return buildPathWithLineJumpAtPoint(
+        activePoints,
+        lineJump.segmentIndex,
+        lineJump.point,
+        EDGES.EDGE_LINE_JUMP_HEIGHT,
+        EDGES.EDGE_LINE_JUMP_WIDTH
+      )
+    }
+
     return pointsToSvgPath(activePoints)
-  }, [activePoints])
+  }, [activePoints, lineJump])
 
   const markerSegmentPath = useMemo(
     () => getMarkerSegmentPath(activePoints, offset, targetPosition),
