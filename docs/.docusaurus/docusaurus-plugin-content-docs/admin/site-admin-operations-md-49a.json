@@ -1,0 +1,22 @@
+{
+  "id": "operations",
+  "title": "Operations",
+  "description": "Required infrastructure",
+  "source": "@site/admin/operations.md",
+  "sourceDirName": ".",
+  "slug": "/operations",
+  "permalink": "/admin/operations",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/admin/operations.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Felix T.J. Dietrich",
+  "lastUpdatedAt": 1779205955000,
+  "frontMatter": {},
+  "sidebar": "adminSidebar",
+  "next": {
+    "title": "Runbook",
+    "permalink": "/admin/runbook"
+  }
+}

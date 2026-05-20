@@ -1,0 +1,30 @@
+{
+  "id": "embedding/vanilla",
+  "title": "Vanilla JS / CDN",
+  "description": "Drop Apollon into a plain HTML page with one script tag.",
+  "source": "@site/library/embedding/vanilla.md",
+  "sourceDirName": "embedding",
+  "slug": "/embedding/vanilla",
+  "permalink": "/library/embedding/vanilla",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/library/embedding/vanilla.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "vanilla",
+    "title": "Vanilla JS / CDN",
+    "description": "Drop Apollon into a plain HTML page with one script tag."
+  },
+  "sidebar": "librarySidebar",
+  "previous": {
+    "title": "React",
+    "permalink": "/library/embedding/react"
+  },
+  "next": {
+    "title": "API",
+    "permalink": "/library/api"
+  }
+}

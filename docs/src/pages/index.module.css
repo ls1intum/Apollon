@@ -1,0 +1,30 @@
+.hero {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.demo {
+  padding: 3rem 0 1rem;
+}
+
+.demo p {
+  max-width: 56ch;
+}
+
+.features {
+  padding: 3rem 0;
+}
+
+.features h3 {
+  margin-top: 0;
+}

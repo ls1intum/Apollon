@@ -1,0 +1,46 @@
+{
+  "name": "@tumaet/apollon-docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "docusaurus": "docusaurus",
+    "start": "docusaurus start --no-open",
+    "build": "docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "clear": "docusaurus clear",
+    "serve": "docusaurus serve",
+    "typecheck": "tsc --noEmit",
+    "lint:md": "markdownlint-cli2 '{user,library,contributor,admin,src}/**/*.{md,mdx}' 'README.md'",
+    "lint": "pnpm run typecheck && pnpm run lint:md"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.10.1",
+    "@docusaurus/faster": "3.10.1",
+    "@docusaurus/preset-classic": "3.10.1",
+    "@docusaurus/theme-mermaid": "3.10.1",
+    "@easyops-cn/docusaurus-search-local": "0.55.1",
+    "@emotion/react": "catalog:",
+    "@emotion/styled": "catalog:",
+    "@mdx-js/react": "3.1.1",
+    "@mermaid-js/layout-elk": "0.2.1",
+    "@mui/material": "catalog:",
+    "@tumaet/apollon": "workspace:*",
+    "@xyflow/react": "catalog:",
+    "clsx": "2.1.1",
+    "prism-react-renderer": "2.4.1",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.10.1",
+    "@docusaurus/tsconfig": "3.10.1",
+    "@docusaurus/types": "3.10.1",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "markdownlint-cli2": "0.22.1",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.15.0"
+  }
+}

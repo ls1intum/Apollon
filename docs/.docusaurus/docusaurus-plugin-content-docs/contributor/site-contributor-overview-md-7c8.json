@@ -1,0 +1,27 @@
+{
+  "id": "overview",
+  "title": "Overview",
+  "description": "Working in the Apollon monorepo — pnpm + Node 24 + Vite.",
+  "source": "@site/contributor/overview.md",
+  "sourceDirName": ".",
+  "slug": "/",
+  "permalink": "/contributor/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/contributor/overview.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "overview",
+    "title": "Overview",
+    "description": "Working in the Apollon monorepo — pnpm + Node 24 + Vite.",
+    "slug": "/"
+  },
+  "sidebar": "contributorSidebar",
+  "next": {
+    "title": "Project structure",
+    "permalink": "/contributor/development/project-structure"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "dsms/record-of-processing",
+  "title": "Apollon — Record of Processing Activities (Art. 30 GDPR)",
+  "description": "The Art. 30 GDPR record of processing for the TUM-AET-operated Apollon deployment at . Each section corresponds to an Art. 30 element. Operators filing this record in TUM DSMS will find the same content under the portal's own field prompts.",
+  "source": "@site/admin/dsms/record-of-processing.md",
+  "sourceDirName": "dsms",
+  "slug": "/dsms/record-of-processing",
+  "permalink": "/admin/dsms/record-of-processing",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/admin/dsms/record-of-processing.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "FelixTJDietrich",
+  "lastUpdatedAt": 1779229366000,
+  "frontMatter": {},
+  "sidebar": "adminSidebar",
+  "previous": {
+    "title": "DSMS Overview",
+    "permalink": "/admin/dsms/overview"
+  },
+  "next": {
+    "title": "Apollon — DPIA Pre-Screen (Art. 35 GDPR)",
+    "permalink": "/admin/dsms/dpia-prescreen"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "deployment/github-actions",
+  "title": "Deployments",
+  "description": "Deployments are fully automatic on merge to main; production promotion is one manual click.",
+  "source": "@site/contributor/deployment/github-actions.md",
+  "sourceDirName": "deployment",
+  "slug": "/deployment/github-actions",
+  "permalink": "/contributor/deployment/github-actions",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/contributor/deployment/github-actions.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {},
+  "sidebar": "contributorSidebar",
+  "previous": {
+    "title": "Visual regression tests",
+    "permalink": "/contributor/development/visual-tests"
+  },
+  "next": {
+    "title": "Releases",
+    "permalink": "/contributor/deployment/npm-publishing"
+  }
+}

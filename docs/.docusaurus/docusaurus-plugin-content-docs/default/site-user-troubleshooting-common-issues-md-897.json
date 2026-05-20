@@ -1,0 +1,22 @@
+{
+  "id": "troubleshooting/common-issues",
+  "title": "Troubleshooting",
+  "description": "Wrong Node.js version",
+  "source": "@site/user/troubleshooting/common-issues.md",
+  "sourceDirName": "troubleshooting",
+  "slug": "/troubleshooting/common-issues",
+  "permalink": "/user/troubleshooting/common-issues",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/user/troubleshooting/common-issues.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {},
+  "sidebar": "userSidebar",
+  "previous": {
+    "title": "iOS and Android Setup",
+    "permalink": "/user/mobile/ios-android-setup"
+  }
+}

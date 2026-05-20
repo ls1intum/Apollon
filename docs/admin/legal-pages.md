@@ -101,4 +101,4 @@ Open `https://YOUR_HOST/imprint` and `https://YOUR_HOST/privacy` in a browser. C
 
 ## Related
 
-- Data-protection documentation (Art. 30 record, DPIA pre-screen, processor checklist) — [docs/admin/dsms/](./dsms/README.md)
+- Data-protection documentation (Art. 30 record, DPIA pre-screen, processor checklist) — [docs/admin/dsms/](./dsms/overview)

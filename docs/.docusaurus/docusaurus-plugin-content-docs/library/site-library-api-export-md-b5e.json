@@ -1,0 +1,26 @@
+{
+  "id": "api/export",
+  "title": "Export",
+  "description": "SVG, PNG, PDF, and JSON export from a mounted editor or a headless model.",
+  "source": "@site/library/api/export.md",
+  "sourceDirName": "api",
+  "slug": "/api/export",
+  "permalink": "/library/api/export",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/library/api/export.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "export",
+    "title": "Export",
+    "description": "SVG, PNG, PDF, and JSON export from a mounted editor or a headless model."
+  },
+  "sidebar": "librarySidebar",
+  "previous": {
+    "title": "Real-time collaboration",
+    "permalink": "/library/api/collaboration"
+  }
+}

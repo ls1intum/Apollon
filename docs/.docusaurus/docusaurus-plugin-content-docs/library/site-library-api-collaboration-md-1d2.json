@@ -1,0 +1,30 @@
+{
+  "id": "api/collaboration",
+  "title": "Real-time collaboration",
+  "description": "Yjs-based multi-user editing — transport-agnostic, opt-in.",
+  "source": "@site/library/api/collaboration.md",
+  "sourceDirName": "api",
+  "slug": "/api/collaboration",
+  "permalink": "/library/api/collaboration",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/library/api/collaboration.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "collaboration",
+    "title": "Real-time collaboration",
+    "description": "Yjs-based multi-user editing — transport-agnostic, opt-in."
+  },
+  "sidebar": "librarySidebar",
+  "previous": {
+    "title": "API",
+    "permalink": "/library/api"
+  },
+  "next": {
+    "title": "Export",
+    "permalink": "/library/api/export"
+  }
+}

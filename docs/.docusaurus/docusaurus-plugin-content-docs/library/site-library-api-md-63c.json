@@ -1,0 +1,30 @@
+{
+  "id": "api",
+  "title": "API",
+  "description": "The `ApollonEditor` surface — constructor options, lifecycle, and subscriptions.",
+  "source": "@site/library/api.md",
+  "sourceDirName": ".",
+  "slug": "/api",
+  "permalink": "/library/api",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/library/api.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "api",
+    "title": "API",
+    "description": "The `ApollonEditor` surface — constructor options, lifecycle, and subscriptions."
+  },
+  "sidebar": "librarySidebar",
+  "previous": {
+    "title": "Vanilla JS / CDN",
+    "permalink": "/library/embedding/vanilla"
+  },
+  "next": {
+    "title": "Real-time collaboration",
+    "permalink": "/library/api/collaboration"
+  }
+}

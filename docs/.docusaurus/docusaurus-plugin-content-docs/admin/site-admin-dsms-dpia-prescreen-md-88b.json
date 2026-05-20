@@ -1,0 +1,26 @@
+{
+  "id": "dsms/dpia-prescreen",
+  "title": "Apollon — DPIA Pre-Screen (Art. 35 GDPR)",
+  "description": "Documents whether a full Data Protection Impact Assessment (Datenschutz-Folgenabschätzung) is required. The pre-screen uses the BayLfD \"Muss-/Soll-Liste\" for Bavarian public bodies and the DSK lists.",
+  "source": "@site/admin/dsms/dpia-prescreen.md",
+  "sourceDirName": "dsms",
+  "slug": "/dsms/dpia-prescreen",
+  "permalink": "/admin/dsms/dpia-prescreen",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/admin/dsms/dpia-prescreen.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Felix T.J. Dietrich",
+  "lastUpdatedAt": 1777990293000,
+  "frontMatter": {},
+  "sidebar": "adminSidebar",
+  "previous": {
+    "title": "Apollon — Record of Processing Activities (Art. 30 GDPR)",
+    "permalink": "/admin/dsms/record-of-processing"
+  },
+  "next": {
+    "title": "Apollon — Art. 28 Processor Checklist",
+    "permalink": "/admin/dsms/processor-checklist"
+  }
+}

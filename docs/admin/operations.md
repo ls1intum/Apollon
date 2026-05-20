@@ -110,5 +110,5 @@ requires it.
 
 ## See also
 
-- [Version history (developer doc)](../development/versioning.md)
-- [Runbook](runbook.md)
+- [Version history (developer doc)](/contributor/development/versioning)
+- [Runbook](runbook)

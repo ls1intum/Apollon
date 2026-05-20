@@ -1,0 +1,26 @@
+{
+  "id": "development/versioning",
+  "title": "Version history",
+  "description": "Apollon Standalone gives every diagram a Figma-shaped version history:",
+  "source": "@site/contributor/development/versioning.md",
+  "sourceDirName": "development",
+  "slug": "/development/versioning",
+  "permalink": "/contributor/development/versioning",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/contributor/development/versioning.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {},
+  "sidebar": "contributorSidebar",
+  "previous": {
+    "title": "Scripts Overview",
+    "permalink": "/contributor/development/scripts"
+  },
+  "next": {
+    "title": "Visual regression tests",
+    "permalink": "/contributor/development/visual-tests"
+  }
+}

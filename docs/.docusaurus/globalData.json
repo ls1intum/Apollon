@@ -1,0 +1,230 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/user",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/user",
+          "mainDocId": "getting-started/requirements",
+          "docs": [
+            {
+              "id": "getting-started/requirements",
+              "path": "/user/getting-started/requirements",
+              "sidebar": "userSidebar"
+            },
+            {
+              "id": "getting-started/setup",
+              "path": "/user/getting-started/setup",
+              "sidebar": "userSidebar"
+            },
+            {
+              "id": "mobile/ios-android-setup",
+              "path": "/user/mobile/ios-android-setup",
+              "sidebar": "userSidebar"
+            },
+            {
+              "id": "troubleshooting/common-issues",
+              "path": "/user/troubleshooting/common-issues",
+              "sidebar": "userSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "userSidebar": {
+              "link": {
+                "path": "/user/getting-started/requirements",
+                "label": "getting-started/requirements"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    },
+    "library": {
+      "path": "/library",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/library",
+          "mainDocId": "overview",
+          "docs": [
+            {
+              "id": "api",
+              "path": "/library/api",
+              "sidebar": "librarySidebar"
+            },
+            {
+              "id": "api/collaboration",
+              "path": "/library/api/collaboration",
+              "sidebar": "librarySidebar"
+            },
+            {
+              "id": "api/export",
+              "path": "/library/api/export",
+              "sidebar": "librarySidebar"
+            },
+            {
+              "id": "embedding/angular",
+              "path": "/library/embedding/angular",
+              "sidebar": "librarySidebar"
+            },
+            {
+              "id": "embedding/install",
+              "path": "/library/embedding/install",
+              "sidebar": "librarySidebar"
+            },
+            {
+              "id": "embedding/react",
+              "path": "/library/embedding/react",
+              "sidebar": "librarySidebar"
+            },
+            {
+              "id": "embedding/vanilla",
+              "path": "/library/embedding/vanilla",
+              "sidebar": "librarySidebar"
+            },
+            {
+              "id": "overview",
+              "path": "/library/",
+              "sidebar": "librarySidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "librarySidebar": {
+              "link": {
+                "path": "/library/",
+                "label": "Overview"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    },
+    "contributor": {
+      "path": "/contributor",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/contributor",
+          "mainDocId": "overview",
+          "docs": [
+            {
+              "id": "deployment/github-actions",
+              "path": "/contributor/deployment/github-actions",
+              "sidebar": "contributorSidebar"
+            },
+            {
+              "id": "deployment/npm-publishing",
+              "path": "/contributor/deployment/npm-publishing",
+              "sidebar": "contributorSidebar"
+            },
+            {
+              "id": "development/project-structure",
+              "path": "/contributor/development/project-structure",
+              "sidebar": "contributorSidebar"
+            },
+            {
+              "id": "development/scripts",
+              "path": "/contributor/development/scripts",
+              "sidebar": "contributorSidebar"
+            },
+            {
+              "id": "development/versioning",
+              "path": "/contributor/development/versioning",
+              "sidebar": "contributorSidebar"
+            },
+            {
+              "id": "development/visual-tests",
+              "path": "/contributor/development/visual-tests",
+              "sidebar": "contributorSidebar"
+            },
+            {
+              "id": "overview",
+              "path": "/contributor/",
+              "sidebar": "contributorSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "contributorSidebar": {
+              "link": {
+                "path": "/contributor/",
+                "label": "Overview"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    },
+    "admin": {
+      "path": "/admin",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/admin",
+          "mainDocId": "operations",
+          "docs": [
+            {
+              "id": "dsms/dpia-prescreen",
+              "path": "/admin/dsms/dpia-prescreen",
+              "sidebar": "adminSidebar"
+            },
+            {
+              "id": "dsms/overview",
+              "path": "/admin/dsms/overview",
+              "sidebar": "adminSidebar"
+            },
+            {
+              "id": "dsms/processor-checklist",
+              "path": "/admin/dsms/processor-checklist",
+              "sidebar": "adminSidebar"
+            },
+            {
+              "id": "dsms/record-of-processing",
+              "path": "/admin/dsms/record-of-processing",
+              "sidebar": "adminSidebar"
+            },
+            {
+              "id": "legal-pages",
+              "path": "/admin/legal-pages",
+              "sidebar": "adminSidebar"
+            },
+            {
+              "id": "operations",
+              "path": "/admin/operations",
+              "sidebar": "adminSidebar"
+            },
+            {
+              "id": "runbook",
+              "path": "/admin/runbook",
+              "sidebar": "adminSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "adminSidebar": {
+              "link": {
+                "path": "/admin/operations",
+                "label": "Operations"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

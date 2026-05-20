@@ -1,0 +1,26 @@
+{
+  "id": "development/project-structure",
+  "title": "Project structure",
+  "description": "Apollon is a pnpm-workspaces monorepo. Top-level layout:",
+  "source": "@site/contributor/development/project-structure.md",
+  "sourceDirName": "development",
+  "slug": "/development/project-structure",
+  "permalink": "/contributor/development/project-structure",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/contributor/development/project-structure.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {},
+  "sidebar": "contributorSidebar",
+  "previous": {
+    "title": "Overview",
+    "permalink": "/contributor/"
+  },
+  "next": {
+    "title": "Scripts Overview",
+    "permalink": "/contributor/development/scripts"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "legal-pages",
+  "title": "Legal pages (Imprint & Privacy)",
+  "description": "Apollon ships routes at /imprint and /privacy. Their content comes from Markdown files resolved at runtime through a three-layer cascade — the operator chooses which layer wins.",
+  "source": "@site/admin/legal-pages.md",
+  "sourceDirName": ".",
+  "slug": "/legal-pages",
+  "permalink": "/admin/legal-pages",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/ls1intum/Apollon/tree/main/docs/admin/legal-pages.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "FelixTJDietrich",
+  "lastUpdatedAt": 1779229366000,
+  "frontMatter": {},
+  "sidebar": "adminSidebar",
+  "previous": {
+    "title": "Runbook",
+    "permalink": "/admin/runbook"
+  },
+  "next": {
+    "title": "DSMS Overview",
+    "permalink": "/admin/dsms/overview"
+  }
+}

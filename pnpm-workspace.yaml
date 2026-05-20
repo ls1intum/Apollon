@@ -4,6 +4,7 @@ packages:
   - "vscode-extension"
   - "vscode-extension/menu"
   - "vscode-extension/editor"
+  - "docs"
 
 # Inject workspace deps as real packages, not symlinks, so `pnpm deploy`
 # produces a self-contained server runtime image.
@@ -55,6 +56,7 @@ overrides:
 
 # pnpm 10+ blocks lifecycle scripts by default.
 allowBuilds:
+  "@swc/core": true # docusaurus-faster (Rspack + SWC build path)
   "@vscode/vsce-sign": true
   "core-js": false # jspdf transitive; "thank-you" postinstall, no native build
   "cpu-features": true
