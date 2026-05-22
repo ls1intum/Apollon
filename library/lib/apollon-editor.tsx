@@ -148,6 +148,7 @@ export class ApollonEditor {
               >
                 <AppWithProvider
                   onReactFlowInit={this.setReactFlowInstance.bind(this)}
+                  onViewportChange={this.setLocalAwarenessViewport.bind(this)}
                 />
               </AlignmentGuidesStoreContext.Provider>
             </AssessmentSelectionStoreContext.Provider>
@@ -177,6 +178,16 @@ export class ApollonEditor {
       return null
     }
     return this.reactFlowInstance.getViewport()
+  }
+
+  public setViewport(
+    viewport: Apollon.CollaborationViewport,
+    options?: { duration?: number }
+  ) {
+    if (!this.reactFlowInstance) {
+      return
+    }
+    this.reactFlowInstance.setViewport(viewport, options)
   }
 
   public screenToFlowPosition(position: { x: number; y: number }) {
@@ -494,6 +505,12 @@ export class ApollonEditor {
 
   public setLocalAwarenessCursor(cursor: Apollon.CollaborationCursor | null) {
     this.syncManager.setLocalAwarenessCursor(cursor)
+  }
+
+  public setLocalAwarenessViewport(
+    viewport: Apollon.CollaborationViewport | null
+  ) {
+    this.syncManager.setLocalAwarenessViewport(viewport)
   }
 
   public setLocalAwarenessSelectedElement(selectedElementId: string | null) {

@@ -10,6 +10,7 @@ import {
   Assessment,
   CollaborationState,
   CollaborationUser,
+  CollaborationViewport,
   CollaboratorInfo,
 } from "@/typings"
 import { Edge, Node } from "@xyflow/react"
@@ -88,6 +89,12 @@ export class YjsSyncClass {
     cursor: { x: number; y: number } | null
   ) => {
     this.awareness.setLocalStateField("cursor", cursor)
+  }
+
+  public setLocalAwarenessViewport = (
+    viewport: CollaborationViewport | null
+  ) => {
+    this.awareness.setLocalStateField("viewport", viewport)
   }
 
   public setLocalAwarenessSelectedElement = (

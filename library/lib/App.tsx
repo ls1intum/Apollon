@@ -4,7 +4,7 @@ import {
   ConnectionMode,
   ReactFlow,
 } from "@xyflow/react"
-import { useCallback } from "react"
+import { useCallback, useRef } from "react"
 import {
   CustomBackground,
   CustomControls,
@@ -37,10 +37,11 @@ import { getConnectionLineType } from "./utils/edgeUtils"
 
 interface AppProps {
   onReactFlowInit: (instance: ReactFlowInstance) => void
+  onViewportChange?: (viewport: { x: number; y: number; zoom: number }) => void
 }
 const proOptions = { hideAttribution: true }
 
-function App({ onReactFlowInit }: AppProps) {
+function App({ onReactFlowInit, onViewportChange }: AppProps) {
   useKeyboardShortcuts()
 
   const { nodes, onNodesChange, edges, onEdgesChange, diagramId } =
@@ -81,8 +82,37 @@ function App({ onReactFlowInit }: AppProps) {
   const handleReactFlowInit = useCallback(
     (instance: ReactFlowInstance) => {
       onReactFlowInit(instance)
+      if (onViewportChange) {
+        onViewportChange(instance.getViewport())
+      }
     },
-    [onReactFlowInit]
+    [onReactFlowInit, onViewportChange]
+  )
+
+  const viewportRafRef = useRef(0)
+  const pendingViewportRef = useRef<{
+    x: number
+    y: number
+    zoom: number
+  } | null>(null)
+
+  const flushViewport = useCallback(() => {
+    if (pendingViewportRef.current && onViewportChange) {
+      onViewportChange(pendingViewportRef.current)
+      pendingViewportRef.current = null
+    }
+    viewportRafRef.current = 0
+  }, [onViewportChange])
+
+  const handleViewportMove = useCallback(
+    (_event: unknown, viewport: { x: number; y: number; zoom: number }) => {
+      if (!onViewportChange) return
+      pendingViewportRef.current = viewport
+      if (!viewportRafRef.current) {
+        viewportRafRef.current = window.requestAnimationFrame(flushViewport)
+      }
+    },
+    [flushViewport, onViewportChange]
   )
 
   return (
@@ -130,6 +160,7 @@ function App({ onReactFlowInit }: AppProps) {
         onEdgeDoubleClick={onEdgeDoubleClick}
         onBeforeDelete={onBeforeDelete}
         onPaneClick={onPaneClicked}
+        onMove={handleViewportMove}
         proOptions={proOptions}
         edgesReconnectable={isDiagramModifiable}
         nodesConnectable={isDiagramModifiable}

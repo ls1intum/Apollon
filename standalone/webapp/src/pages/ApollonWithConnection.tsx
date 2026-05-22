@@ -5,6 +5,8 @@ import {
   ApollonMode,
   importDiagram,
   type ApollonOptions,
+  type CollaboratorInfo,
+  type CollaborationViewport,
   type UMLModel,
 } from "@tumaet/apollon"
 import { useNavigate, useParams, useSearchParams } from "react-router"
@@ -65,10 +67,59 @@ export const ApollonWithConnection: React.FC = () => {
     name: string
     color: string
   } | null>(null)
+  const [followTarget, setFollowTarget] = useState<{
+    userId: string
+    clientId: number
+  } | null>(null)
+  const [followedByCount, setFollowedByCount] = useState(0)
+  const lastFollowViewportRef = useRef<CollaborationViewport | null>(null)
   const viewType = searchParams.get("view")
   const previewFromUrl = searchParams.get("version")
   const isCollaborationActive =
     viewType === DiagramView.COLLABORATE && !!collaborationUser
+
+  const handleFollowToggle = useCallback(
+    (collaborator: CollaboratorInfo) => {
+      if (!editor) return
+      if (collaborator.isLocal) return
+
+      const localClientId = editor.getLocalAwarenessClientId()
+      const targetClientId = collaborator.clientIds.find(
+        (id) => id !== localClientId
+      )
+      if (typeof targetClientId !== "number") {
+        return
+      }
+
+      const isAlreadyFollowing = followTarget?.clientId === targetClientId
+      if (isAlreadyFollowing) {
+        setFollowTarget(null)
+        editor.setLocalAwarenessState({ followingClientId: null })
+        lastFollowViewportRef.current = null
+        return
+      }
+
+      setFollowTarget({ userId: collaborator.id, clientId: targetClientId })
+      editor.setLocalAwarenessState({ followingClientId: targetClientId })
+      lastFollowViewportRef.current = null
+      toast.info(`You are now following ${collaborator.name}`, {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: true,
+        pauseOnHover: false,
+        style: { marginTop: "40vh" },
+      })
+    },
+    [editor, followTarget]
+  )
+
+  const stopFollowing = useCallback(() => {
+    if (!editor) return
+    if (!followTarget) return
+    setFollowTarget(null)
+    editor.setLocalAwarenessState({ followingClientId: null })
+    lastFollowViewportRef.current = null
+  }, [editor, followTarget])
 
   const preview = useVersionStore((s) => s.preview)
   const exitPreview = useVersionStore((s) => s.exitPreview)
@@ -450,6 +501,91 @@ export const ApollonWithConnection: React.FC = () => {
     return () => abort.abort()
   }, [preview, editor, diagramId, baseReadonly])
 
+  useEffect(() => {
+    if (!editor || !isCollaborationActive || !followTarget) {
+      lastFollowViewportRef.current = null
+      return
+    }
+
+    const subscriptionId = editor.subscribeToAwarenessChanges((states) => {
+      const targetState = states.get(followTarget.clientId)
+      if (!targetState) {
+        setFollowTarget(null)
+        editor.setLocalAwarenessState({ followingClientId: null })
+        return
+      }
+
+      const viewport = targetState.viewport
+      if (!viewport) {
+        return
+      }
+
+      const last = lastFollowViewportRef.current
+      const epsilon = 0.1
+      if (
+        last &&
+        Math.abs(last.x - viewport.x) < epsilon &&
+        Math.abs(last.y - viewport.y) < epsilon &&
+        Math.abs(last.zoom - viewport.zoom) < epsilon
+      ) {
+        return
+      }
+
+      lastFollowViewportRef.current = viewport
+      editor.setViewport(viewport, { duration: 120 })
+    })
+
+    return () => {
+      editor.unsubscribe(subscriptionId)
+    }
+  }, [editor, followTarget, isCollaborationActive])
+
+  useEffect(() => {
+    if (!isCollaborationActive || !followTarget || !containerRef.current) {
+      return
+    }
+
+    const container = containerRef.current
+    const handleUserIntent = () => {
+      stopFollowing()
+    }
+
+    container.addEventListener("wheel", handleUserIntent, { passive: true })
+    container.addEventListener("pointerdown", handleUserIntent)
+    container.addEventListener("touchstart", handleUserIntent, {
+      passive: true,
+    })
+
+    return () => {
+      container.removeEventListener("wheel", handleUserIntent)
+      container.removeEventListener("pointerdown", handleUserIntent)
+      container.removeEventListener("touchstart", handleUserIntent)
+    }
+  }, [followTarget, isCollaborationActive, stopFollowing])
+
+  useEffect(() => {
+    if (!editor || !isCollaborationActive) {
+      setFollowedByCount(0)
+      return
+    }
+
+    const subscriptionId = editor.subscribeToAwarenessChanges((states) => {
+      const localClientId = editor.getLocalAwarenessClientId()
+      let count = 0
+      for (const [clientId, state] of states.entries()) {
+        if (clientId === localClientId) continue
+        if (state.followingClientId === localClientId) {
+          count += 1
+        }
+      }
+      setFollowedByCount(count)
+    })
+
+    return () => {
+      editor.unsubscribe(subscriptionId)
+    }
+  }, [editor, isCollaborationActive])
+
   // Memoised because `handleRestoreFromPreview`'s useCallback lists it
   // as a dep — without stable identity the restore handler gets a fresh
   // closure every render and the banner's `onRestore` prop churns.
@@ -539,7 +675,12 @@ export const ApollonWithConnection: React.FC = () => {
             ref={containerRef}
             sx={{ width: "100%", height: "100%" }}
           />
-          <CollaboratorPresenceBar isActive={isCollaborationActive} />
+          <CollaboratorPresenceBar
+            isActive={isCollaborationActive}
+            onFollowToggle={handleFollowToggle}
+            followedCollaboratorId={followTarget?.userId ?? null}
+            followedByCount={followedByCount}
+          />
           <CollaboratorCursors
             containerRef={containerRef}
             isActive={isCollaborationActive && !preview}
