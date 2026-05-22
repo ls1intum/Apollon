@@ -3,16 +3,21 @@ import type { UMLDiagramType } from "@/types/DiagramType"
 import {
   adjustSourceCoordinates,
   adjustTargetCoordinates,
+  buildPathWithLineJumps,
   calculateDynamicEdgeLabels,
   calculateInnerMidpoints,
   calculateOverlayPath,
   calculateStraightPath,
   calculateTextPlacement,
+  findLineJumpIntersections,
   findClosestHandle,
+  getAxisAlignedSegments,
   getConnectionLineType,
   getDefaultEdgeType,
   getEdgeMarkerStyles,
+  getHandlePositionOnNode,
   getMarkerSegmentPath,
+  isStraightEdgeType,
   parseSvgPath,
   removeDuplicatePoints,
   simplifyPoints,
@@ -1022,6 +1027,268 @@ describe("getMarkerSegmentPath", () => {
     const points = [{ x: 100, y: 50 }]
     const result = getMarkerSegmentPath(points, 0, "left")
     expect(result).toBe("M 100 50 L 100 50")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// isStraightEdgeType
+// ---------------------------------------------------------------------------
+describe("isStraightEdgeType", () => {
+  it("returns true for straight edge types", () => {
+    expect(isStraightEdgeType("UseCaseAssociation")).toBe(true)
+    expect(isStraightEdgeType("PetriNetArc")).toBe(true)
+  })
+
+  it("returns false for non-straight edge types", () => {
+    expect(isStraightEdgeType("ClassDependency")).toBe(false)
+    expect(isStraightEdgeType(undefined)).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getHandlePositionOnNode
+// ---------------------------------------------------------------------------
+describe("getHandlePositionOnNode", () => {
+  it("returns right-middle when handleId is undefined", () => {
+    const result = getHandlePositionOnNode({
+      nodePosition: { x: 10, y: 20 },
+      width: 100,
+      height: 50,
+      handleId: undefined,
+    })
+
+    expect(result).toEqual({ x: 110, y: 45 })
+  })
+
+  it("uses offset ratio for named handles", () => {
+    const topLeft = getHandlePositionOnNode({
+      nodePosition: { x: 0, y: 0 },
+      width: 200,
+      height: 100,
+      handleId: "top-left",
+    })
+
+    const leftBottom = getHandlePositionOnNode({
+      nodePosition: { x: 5, y: 10 },
+      width: 100,
+      height: 50,
+      handleId: "left-bottom",
+    })
+
+    expect(topLeft).toEqual({ x: 40, y: 0 })
+    expect(leftBottom).toEqual({ x: 5, y: 50 })
+  })
+
+  it("computes use-case handle positions on the ellipse", () => {
+    const result = getHandlePositionOnNode({
+      nodeType: "useCase",
+      nodePosition: { x: 10, y: 20 },
+      width: 100,
+      height: 60,
+      handleId: "right",
+    })
+
+    expect(result.x).toBeCloseTo(109.5, 5)
+    expect(result.y).toBeCloseTo(49.75, 5)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getAxisAlignedSegments
+// ---------------------------------------------------------------------------
+describe("getAxisAlignedSegments", () => {
+  it("returns horizontal and vertical segments with correct metadata", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 50 },
+      { x: 80, y: 80 },
+    ]
+
+    const result = getAxisAlignedSegments(points)
+    expect(result).toHaveLength(2)
+    expect(result[0]).toEqual({
+      index: 0,
+      start: { x: 0, y: 0 },
+      end: { x: 100, y: 0 },
+      orientation: "horizontal",
+      fixed: 0,
+      min: 0,
+      max: 100,
+    })
+    expect(result[1]).toEqual({
+      index: 1,
+      start: { x: 100, y: 0 },
+      end: { x: 100, y: 50 },
+      orientation: "vertical",
+      fixed: 100,
+      min: 0,
+      max: 50,
+    })
+  })
+
+  it("uses tolerance to classify nearly aligned points", () => {
+    const points = [
+      { x: 10, y: 10 },
+      { x: 10.5, y: 70 },
+    ]
+
+    const result = getAxisAlignedSegments(points, 1)
+    expect(result).toHaveLength(1)
+    expect(result[0].orientation).toBe("vertical")
+    expect(result[0].fixed).toBe(10)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// findLineJumpIntersections
+// ---------------------------------------------------------------------------
+describe("findLineJumpIntersections", () => {
+  it("returns intersection hits within margin boundaries", () => {
+    const base = getAxisAlignedSegments([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ])
+    const other = getAxisAlignedSegments([
+      { x: 12, y: -20 },
+      { x: 12, y: 20 },
+    ])
+
+    const hits = findLineJumpIntersections(base, other, 20, "horizontal")
+    expect(hits).toEqual([
+      {
+        segmentIndex: 0,
+        point: { x: 12, y: 0 },
+        orientation: "horizontal",
+      },
+    ])
+  })
+
+  it("skips hits too close to the segment ends", () => {
+    const base = getAxisAlignedSegments([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ])
+    const other = getAxisAlignedSegments([
+      { x: 10, y: -20 },
+      { x: 10, y: 20 },
+    ])
+
+    const hits = findLineJumpIntersections(base, other, 20, "horizontal")
+    expect(hits).toEqual([])
+  })
+
+  it("handles vertical base segments when orientation allows", () => {
+    const base = getAxisAlignedSegments([
+      { x: 0, y: 0 },
+      { x: 0, y: 100 },
+    ])
+    const other = getAxisAlignedSegments([
+      { x: -10, y: 50 },
+      { x: 10, y: 50 },
+    ])
+
+    const hits = findLineJumpIntersections(base, other, 20, "any")
+    expect(hits).toEqual([
+      {
+        segmentIndex: 0,
+        point: { x: 0, y: 50 },
+        orientation: "vertical",
+      },
+    ])
+  })
+
+  it("respects preferred orientation filtering", () => {
+    const base = getAxisAlignedSegments([
+      { x: 0, y: 0 },
+      { x: 0, y: 100 },
+    ])
+    const other = getAxisAlignedSegments([
+      { x: -10, y: 50 },
+      { x: 10, y: 50 },
+    ])
+
+    const hits = findLineJumpIntersections(base, other, 20, "horizontal")
+    expect(hits).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// buildPathWithLineJumps
+// ---------------------------------------------------------------------------
+describe("buildPathWithLineJumps", () => {
+  it("builds a path with ordered jump segments on a horizontal line", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ]
+    const path = buildPathWithLineJumps(
+      points,
+      [
+        {
+          segmentIndex: 0,
+          point: { x: 30, y: 0 },
+          orientation: "horizontal",
+        },
+        {
+          segmentIndex: 0,
+          point: { x: 70, y: 0 },
+          orientation: "horizontal",
+        },
+      ],
+      10,
+      20
+    )
+
+    expect(path).toBe("M 0,0 L 20,0 Q 30,-10 40,0 L 60,0 Q 70,-10 80,0 L 100,0")
+  })
+
+  it("skips jumps that are too close together", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ]
+    const path = buildPathWithLineJumps(
+      points,
+      [
+        {
+          segmentIndex: 0,
+          point: { x: 30, y: 0 },
+          orientation: "horizontal",
+        },
+        {
+          segmentIndex: 0,
+          point: { x: 35, y: 0 },
+          orientation: "horizontal",
+        },
+      ],
+      10,
+      20
+    )
+
+    expect(path).toContain("Q 30,-10 40,0")
+    expect(path).not.toContain("35")
+  })
+
+  it("builds vertical jump paths with rightward control points", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 0, y: 100 },
+    ]
+    const path = buildPathWithLineJumps(
+      points,
+      [
+        {
+          segmentIndex: 0,
+          point: { x: 0, y: 50 },
+          orientation: "vertical",
+        },
+      ],
+      10,
+      20
+    )
+
+    expect(path).toBe("M 0,0 L 0,40 Q 10,50 0,60 L 0,100")
   })
 })
 

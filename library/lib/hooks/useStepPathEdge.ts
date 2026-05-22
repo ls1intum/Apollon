@@ -383,6 +383,19 @@ export const useStepPathEdge = ({
     [edges, nodes]
   )
 
+  const activePointsKey = useMemo(
+    () =>
+      activePoints
+        .map((point) => `${point.x.toFixed(3)},${point.y.toFixed(3)}`)
+        .join("|"),
+    [activePoints]
+  )
+
+  const baseSegments = useMemo(
+    () => getAxisAlignedSegments(activePoints),
+    [activePointsKey]
+  )
+
   const lineJumps = useMemo(() => {
     if (tempReconnectPoints || !id) {
       return [] as ReturnType<typeof findLineJumpIntersections>
@@ -392,7 +405,6 @@ export const useStepPathEdge = ({
     if (currentIndex <= 0)
       return [] as ReturnType<typeof findLineJumpIntersections>
 
-    const baseSegments = getAxisAlignedSegments(activePoints)
     if (baseSegments.length === 0)
       return [] as ReturnType<typeof findLineJumpIntersections>
 
@@ -418,7 +430,8 @@ export const useStepPathEdge = ({
 
     return hits
   }, [
-    activePoints,
+    activePointsKey,
+    baseSegments,
     customPoints.length,
     data?.points?.length,
     edges,

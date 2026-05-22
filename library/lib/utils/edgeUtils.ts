@@ -572,10 +572,52 @@ export const isStraightEdgeType = (edgeType?: string | null): boolean =>
 
 type EdgeGeometryMap = Map<string, IPoint[]>
 
+type EdgeGeometryCacheEntry = {
+  key: string
+  points: IPoint[]
+}
+
+const edgeGeometryCacheById = new Map<string, EdgeGeometryCacheEntry>()
+
 const edgeGeometryCache = new WeakMap<
   ReadonlyArray<Edge>,
   WeakMap<ReadonlyArray<Node>, EdgeGeometryMap>
 >()
+
+const formatCoord = (value: number): number => Math.round(value * 1000) / 1000
+
+const buildPointKey = (point: IPoint): string =>
+  `${formatCoord(point.x)},${formatCoord(point.y)}`
+
+const buildStoredPointsKey = (points: IPoint[]): string =>
+  `points:${points.map(buildPointKey).join("|")}`
+
+const buildComputedEdgeKey = (
+  edge: Edge,
+  sourcePosition: XYPosition,
+  targetPosition: XYPosition,
+  sourceWidth: number,
+  sourceHeight: number,
+  targetWidth: number,
+  targetHeight: number
+): string => {
+  return [
+    "computed",
+    edge.type ?? "",
+    edge.source,
+    edge.target,
+    edge.sourceHandle ?? "",
+    edge.targetHandle ?? "",
+    formatCoord(sourcePosition.x),
+    formatCoord(sourcePosition.y),
+    formatCoord(sourceWidth),
+    formatCoord(sourceHeight),
+    formatCoord(targetPosition.x),
+    formatCoord(targetPosition.y),
+    formatCoord(targetWidth),
+    formatCoord(targetHeight),
+  ].join("|")
+}
 
 export const getEdgeGeometryMap = (
   edges: ReadonlyArray<Edge>,
@@ -592,7 +634,17 @@ export const getEdgeGeometryMap = (
     const storedPoints = (edge.data as { points?: IPoint[] } | undefined)
       ?.points
     if (storedPoints && storedPoints.length > 1) {
-      geometryMap.set(edge.id, storedPoints)
+      const storedKey = buildStoredPointsKey(storedPoints)
+      const cached = edgeGeometryCacheById.get(edge.id)
+      if (cached && cached.key === storedKey) {
+        geometryMap.set(edge.id, cached.points)
+      } else {
+        edgeGeometryCacheById.set(edge.id, {
+          key: storedKey,
+          points: storedPoints,
+        })
+        geometryMap.set(edge.id, storedPoints)
+      }
       continue
     }
 
@@ -611,6 +663,21 @@ export const getEdgeGeometryMap = (
     const mutableNodes = nodes as Node[]
     const sourcePositionOnCanvas = getPositionOnCanvas(sourceNode, mutableNodes)
     const targetPositionOnCanvas = getPositionOnCanvas(targetNode, mutableNodes)
+
+    const cacheKey = buildComputedEdgeKey(
+      edge,
+      sourcePositionOnCanvas,
+      targetPositionOnCanvas,
+      sourceWidth,
+      sourceHeight,
+      targetWidth,
+      targetHeight
+    )
+    const cached = edgeGeometryCacheById.get(edge.id)
+    if (cached && cached.key === cacheKey) {
+      geometryMap.set(edge.id, cached.points)
+      continue
+    }
 
     const sourceHandle = edge.sourceHandle ?? "right"
     const targetHandle = edge.targetHandle ?? "left"
@@ -631,7 +698,9 @@ export const getEdgeGeometryMap = (
     })
 
     if (isStraightEdgeType(edge.type)) {
-      geometryMap.set(edge.id, [sourcePoint, targetPoint])
+      const points = [sourcePoint, targetPoint]
+      edgeGeometryCacheById.set(edge.id, { key: cacheKey, points })
+      geometryMap.set(edge.id, points)
       continue
     }
 
@@ -667,7 +736,15 @@ export const getEdgeGeometryMap = (
     const simplifiedPath = simplifySvgPath(edgePath)
     const points = removeDuplicatePoints(parseSvgPath(simplifiedPath))
     if (points.length > 1) {
+      edgeGeometryCacheById.set(edge.id, { key: cacheKey, points })
       geometryMap.set(edge.id, points)
+    }
+  }
+
+  const edgeIds = new Set(edges.map((edge) => edge.id))
+  for (const cachedId of edgeGeometryCacheById.keys()) {
+    if (!edgeIds.has(cachedId)) {
+      edgeGeometryCacheById.delete(cachedId)
     }
   }
 
@@ -807,90 +884,6 @@ export function findLineJumpIntersections(
   }
 
   return hits
-}
-
-export function findLineJumpIntersection(
-  baseSegments: AxisAlignedSegment[],
-  otherSegments: AxisAlignedSegment[],
-  jumpWidth: number,
-  preferredOrientation: "horizontal" | "vertical" | "any" = "horizontal",
-  tolerance: number = 1
-): LineJumpHit | null {
-  const hits = findLineJumpIntersections(
-    baseSegments,
-    otherSegments,
-    jumpWidth,
-    preferredOrientation,
-    tolerance
-  )
-
-  return hits.length > 0 ? hits[0] : null
-}
-
-export function buildPathWithLineJumpAtPoint(
-  points: IPoint[],
-  segmentIndex: number,
-  jumpCenter: IPoint,
-  jumpHeight: number,
-  jumpWidth: number = EDGES.EDGE_LINE_JUMP_WIDTH
-): string {
-  if (points.length === 0) return ""
-  if (segmentIndex < 0 || segmentIndex >= points.length - 1) {
-    return pointsToSvgPath(points)
-  }
-
-  const start = points[segmentIndex]
-  const end = points[segmentIndex + 1]
-  const isHorizontal = Math.abs(start.y - end.y) < 1
-  const segmentLength = isHorizontal
-    ? Math.abs(end.x - start.x)
-    : Math.abs(end.y - start.y)
-
-  if (segmentLength < jumpWidth * 1.2) {
-    return pointsToSvgPath(points)
-  }
-
-  const round = (num: number) => Math.round(num)
-  const halfJump = Math.min(jumpWidth / 2, segmentLength / 2 - 2)
-  if (halfJump <= 1) {
-    return pointsToSvgPath(points)
-  }
-
-  const jumpStart = isHorizontal
-    ? { x: jumpCenter.x - halfJump, y: start.y }
-    : { x: start.x, y: jumpCenter.y - halfJump }
-  const jumpEnd = isHorizontal
-    ? { x: jumpCenter.x + halfJump, y: start.y }
-    : { x: start.x, y: jumpCenter.y + halfJump }
-  const control = isHorizontal
-    ? { x: jumpCenter.x, y: start.y - Math.abs(jumpHeight) }
-    : { x: start.x + Math.abs(jumpHeight), y: jumpCenter.y }
-
-  const pathParts = [`M ${round(points[0].x)},${round(points[0].y)}`]
-
-  for (let i = 0; i < points.length - 1; i += 1) {
-    const segmentEnd = points[i + 1]
-
-    if (i === segmentIndex) {
-      pathParts.push(
-        `L ${round(jumpStart.x)},${round(jumpStart.y)}`,
-        `Q ${round(control.x)},${round(control.y)} ${round(
-          jumpEnd.x
-        )},${round(jumpEnd.y)}`
-      )
-
-      if (
-        Math.abs(jumpEnd.x - segmentEnd.x) > 0.5 ||
-        Math.abs(jumpEnd.y - segmentEnd.y) > 0.5
-      ) {
-        pathParts.push(`L ${round(segmentEnd.x)},${round(segmentEnd.y)}`)
-      }
-    } else {
-      pathParts.push(`L ${round(segmentEnd.x)},${round(segmentEnd.y)}`)
-    }
-  }
-
-  return pathParts.join(" ")
 }
 
 export function buildPathWithLineJumps(
