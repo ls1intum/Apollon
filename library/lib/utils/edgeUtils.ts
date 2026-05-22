@@ -815,11 +815,14 @@ export function buildPathWithLineJumps(
 
     const coordKey = (jump: LineJumpHit) =>
       isHorizontal ? jump.point.x : jump.point.y
-    const sortedJumps = [...segmentJumps].sort(
-      (a, b) => coordKey(a) - coordKey(b)
+    const direction = isHorizontal
+      ? Math.sign(end.x - start.x) || 1
+      : Math.sign(end.y - start.y) || 1
+    const sortedJumps = [...segmentJumps].sort((a, b) =>
+      direction >= 0 ? coordKey(a) - coordKey(b) : coordKey(b) - coordKey(a)
     )
     const margin = jumpWidth / 2 + 2
-    let lastCoord = -Infinity
+    let lastCoord = direction >= 0 ? -Infinity : Infinity
 
     for (const jump of sortedJumps) {
       const coord = coordKey(jump)
@@ -833,19 +836,24 @@ export function buildPathWithLineJumps(
       if (coord < min + margin || coord > max - margin) {
         continue
       }
-      if (coord - lastCoord < jumpWidth) {
+      if (
+        (direction >= 0 && coord - lastCoord < jumpWidth) ||
+        (direction < 0 && lastCoord - coord < jumpWidth)
+      ) {
         continue
       }
 
       const halfJump = Math.min(jumpWidth / 2, segmentLength / 2 - 2)
       if (halfJump <= 1) continue
 
+      const startCoord = direction >= 0 ? -halfJump : halfJump
+      const endCoord = direction >= 0 ? halfJump : -halfJump
       const jumpStart = isHorizontal
-        ? { x: coord - halfJump, y: start.y }
-        : { x: start.x, y: coord - halfJump }
+        ? { x: coord + startCoord, y: start.y }
+        : { x: start.x, y: coord + startCoord }
       const jumpEnd = isHorizontal
-        ? { x: coord + halfJump, y: start.y }
-        : { x: start.x, y: coord + halfJump }
+        ? { x: coord + endCoord, y: start.y }
+        : { x: start.x, y: coord + endCoord }
       const control = isHorizontal
         ? { x: coord, y: start.y - Math.abs(jumpHeight) }
         : { x: start.x + Math.abs(jumpHeight), y: coord }
