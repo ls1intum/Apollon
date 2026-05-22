@@ -17,7 +17,7 @@ export const ShareModal = () => {
   const { editor } = useEditorContext()
   const { closeModal, openModal } = useModalContext()
   const navigate = useNavigate()
-  const isCapacitorApp = isPlatform("ios") || isPlatform("android")
+  const isCapacitorApp = isPlatform("capacitor")
 
   const handleShareButtonPress = async (viewType: DiagramView) => {
     if (!editor) {
@@ -30,7 +30,7 @@ export const ShareModal = () => {
       const { id: diagramID } = await DiagramApiClient.createDiagram(model)
 
       const newurl = isCapacitorApp
-        ? `${serverURL}/${diagramID}?view=${viewType}&mobile=true`
+        ? `${serverURL}/${diagramID}?view=${viewType}`
         : `${window.location.origin}/${diagramID}?view=${viewType}`
 
       await copyToClipboard(newurl)
@@ -50,7 +50,7 @@ export const ShareModal = () => {
   }
 
   const copyToClipboard = async (link: string) => {
-    if (isPlatform("ios") || isPlatform("capacitor")) {
+    if (isPlatform("capacitor")) {
       await Clipboard.write({ string: link })
     } else {
       await navigator.clipboard.writeText(link)
