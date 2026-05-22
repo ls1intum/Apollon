@@ -620,17 +620,23 @@ export type LineJumpHit = {
   orientation: "horizontal" | "vertical"
 }
 
-export function findLineJumpIntersection(
+export function findLineJumpIntersections(
   baseSegments: AxisAlignedSegment[],
   otherSegments: AxisAlignedSegment[],
   jumpWidth: number,
-  preferredOrientation: "horizontal" | "vertical" = "horizontal",
+  preferredOrientation: "horizontal" | "vertical" | "any" = "horizontal",
   tolerance: number = 1
-): LineJumpHit | null {
+): LineJumpHit[] {
   const margin = jumpWidth / 2 + 2
+  const hits: LineJumpHit[] = []
 
   for (const base of baseSegments) {
-    if (base.orientation !== preferredOrientation) continue
+    if (
+      preferredOrientation !== "any" &&
+      base.orientation !== preferredOrientation
+    ) {
+      continue
+    }
 
     for (const other of otherSegments) {
       if (base.orientation === other.orientation) continue
@@ -650,11 +656,11 @@ export function findLineJumpIntersection(
           continue
         }
 
-        return {
+        hits.push({
           segmentIndex: base.index,
           point: { x, y },
           orientation: base.orientation,
-        }
+        })
       }
 
       if (
@@ -672,16 +678,34 @@ export function findLineJumpIntersection(
           continue
         }
 
-        return {
+        hits.push({
           segmentIndex: base.index,
           point: { x, y },
           orientation: base.orientation,
-        }
+        })
       }
     }
   }
 
-  return null
+  return hits
+}
+
+export function findLineJumpIntersection(
+  baseSegments: AxisAlignedSegment[],
+  otherSegments: AxisAlignedSegment[],
+  jumpWidth: number,
+  preferredOrientation: "horizontal" | "vertical" | "any" = "horizontal",
+  tolerance: number = 1
+): LineJumpHit | null {
+  const hits = findLineJumpIntersections(
+    baseSegments,
+    otherSegments,
+    jumpWidth,
+    preferredOrientation,
+    tolerance
+  )
+
+  return hits.length > 0 ? hits[0] : null
 }
 
 export function buildPathWithLineJumpAtPoint(
@@ -745,6 +769,98 @@ export function buildPathWithLineJumpAtPoint(
     } else {
       pathParts.push(`L ${round(segmentEnd.x)},${round(segmentEnd.y)}`)
     }
+  }
+
+  return pathParts.join(" ")
+}
+
+export function buildPathWithLineJumps(
+  points: IPoint[],
+  jumps: LineJumpHit[],
+  jumpHeight: number,
+  jumpWidth: number = EDGES.EDGE_LINE_JUMP_WIDTH
+): string {
+  if (points.length === 0) return ""
+  if (jumps.length === 0) return pointsToSvgPath(points)
+
+  const round = (num: number) => Math.round(num)
+  const jumpsBySegment = new Map<number, LineJumpHit[]>()
+
+  for (const jump of jumps) {
+    const list = jumpsBySegment.get(jump.segmentIndex) ?? []
+    list.push(jump)
+    jumpsBySegment.set(jump.segmentIndex, list)
+  }
+
+  const pathParts = [`M ${round(points[0].x)},${round(points[0].y)}`]
+
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const start = points[i]
+    const end = points[i + 1]
+    const isHorizontal = Math.abs(start.y - end.y) < 1
+    const segmentLength = isHorizontal
+      ? Math.abs(end.x - start.x)
+      : Math.abs(end.y - start.y)
+
+    const segmentJumps = jumpsBySegment.get(i)
+    if (!segmentJumps || segmentJumps.length === 0) {
+      pathParts.push(`L ${round(end.x)},${round(end.y)}`)
+      continue
+    }
+
+    if (segmentLength < jumpWidth * 1.2) {
+      pathParts.push(`L ${round(end.x)},${round(end.y)}`)
+      continue
+    }
+
+    const coordKey = (jump: LineJumpHit) =>
+      isHorizontal ? jump.point.x : jump.point.y
+    const sortedJumps = [...segmentJumps].sort(
+      (a, b) => coordKey(a) - coordKey(b)
+    )
+    const margin = jumpWidth / 2 + 2
+    let lastCoord = -Infinity
+
+    for (const jump of sortedJumps) {
+      const coord = coordKey(jump)
+      const min = isHorizontal
+        ? Math.min(start.x, end.x)
+        : Math.min(start.y, end.y)
+      const max = isHorizontal
+        ? Math.max(start.x, end.x)
+        : Math.max(start.y, end.y)
+
+      if (coord < min + margin || coord > max - margin) {
+        continue
+      }
+      if (coord - lastCoord < jumpWidth) {
+        continue
+      }
+
+      const halfJump = Math.min(jumpWidth / 2, segmentLength / 2 - 2)
+      if (halfJump <= 1) continue
+
+      const jumpStart = isHorizontal
+        ? { x: coord - halfJump, y: start.y }
+        : { x: start.x, y: coord - halfJump }
+      const jumpEnd = isHorizontal
+        ? { x: coord + halfJump, y: start.y }
+        : { x: start.x, y: coord + halfJump }
+      const control = isHorizontal
+        ? { x: coord, y: start.y - Math.abs(jumpHeight) }
+        : { x: start.x + Math.abs(jumpHeight), y: coord }
+
+      pathParts.push(
+        `L ${round(jumpStart.x)},${round(jumpStart.y)}`,
+        `Q ${round(control.x)},${round(control.y)} ${round(
+          jumpEnd.x
+        )},${round(jumpEnd.y)}`
+      )
+
+      lastCoord = coord
+    }
+
+    pathParts.push(`L ${round(end.x)},${round(end.y)}`)
   }
 
   return pathParts.join(" ")

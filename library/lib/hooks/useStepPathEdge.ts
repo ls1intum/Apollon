@@ -23,10 +23,10 @@ import {
   calculateInnerMidpoints,
   getMarkerSegmentPath,
   getAxisAlignedSegments,
-  findLineJumpIntersection,
+  findLineJumpIntersections,
   getHandlePositionOnNode,
   getHandleSideFromId,
-  buildPathWithLineJumpAtPoint,
+  buildPathWithLineJumps,
   isStraightEdgeType,
 } from "@/utils/edgeUtils"
 import { useEdgeState, useEdgeReconnection } from "../edges/GenericEdge"
@@ -467,21 +467,20 @@ export const useStepPathEdge = ({
     [allNodes, getNode, type]
   )
 
-  const lineJump = useMemo(() => {
-    if (
-      customPoints.length > 0 ||
-      (data?.points?.length ?? 0) > 0 ||
-      tempReconnectPoints ||
-      !id
-    ) {
-      return null
+  const lineJumps = useMemo(() => {
+    if (tempReconnectPoints || !id) {
+      return [] as ReturnType<typeof findLineJumpIntersections>
     }
 
     const currentIndex = edges.findIndex((edge) => edge.id === id)
-    if (currentIndex <= 0) return null
+    if (currentIndex <= 0)
+      return [] as ReturnType<typeof findLineJumpIntersections>
 
     const baseSegments = getAxisAlignedSegments(activePoints)
-    if (baseSegments.length === 0) return null
+    if (baseSegments.length === 0)
+      return [] as ReturnType<typeof findLineJumpIntersections>
+
+    const hits: ReturnType<typeof findLineJumpIntersections> = []
 
     for (let i = 0; i < currentIndex; i += 1) {
       const otherEdge = edges[i]
@@ -489,19 +488,19 @@ export const useStepPathEdge = ({
       if (!otherPoints || otherPoints.length < 2) continue
 
       const otherSegments = getAxisAlignedSegments(otherPoints)
-      const hit = findLineJumpIntersection(
+      const edgeHits = findLineJumpIntersections(
         baseSegments,
         otherSegments,
         EDGES.EDGE_LINE_JUMP_WIDTH,
-        "horizontal"
+        "any"
       )
 
-      if (hit) {
-        return hit
+      if (edgeHits.length > 0) {
+        hits.push(...edgeHits)
       }
     }
 
-    return null
+    return hits
   }, [
     activePoints,
     customPoints.length,
@@ -513,18 +512,27 @@ export const useStepPathEdge = ({
   ])
 
   const currentPath = useMemo(() => {
-    if (lineJump) {
-      return buildPathWithLineJumpAtPoint(
+    if (lineJumps.length > 0) {
+      const seen = new Set<string>()
+      const uniqueJumps = lineJumps.filter((jump) => {
+        const key = `${jump.segmentIndex}:${Math.round(
+          jump.point.x
+        )}:${Math.round(jump.point.y)}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+
+      return buildPathWithLineJumps(
         activePoints,
-        lineJump.segmentIndex,
-        lineJump.point,
+        uniqueJumps,
         EDGES.EDGE_LINE_JUMP_HEIGHT,
         EDGES.EDGE_LINE_JUMP_WIDTH
       )
     }
 
     return pointsToSvgPath(activePoints)
-  }, [activePoints, lineJump])
+  }, [activePoints, lineJumps])
 
   const markerSegmentPath = useMemo(
     () => getMarkerSegmentPath(activePoints, offset, targetPosition),

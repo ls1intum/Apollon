@@ -6,10 +6,10 @@ import {
   calculateStraightPath,
   getEdgeMarkerStyles,
   getAxisAlignedSegments,
-  findLineJumpIntersection,
+  findLineJumpIntersections,
   getHandlePositionOnNode,
   getHandleSideFromId,
-  buildPathWithLineJumpAtPoint,
+  buildPathWithLineJumps,
   isStraightEdgeType,
   simplifySvgPath,
   removeDuplicatePoints,
@@ -216,21 +216,25 @@ export const useStraightPathEdge = ({
     [allNodes, getNode, type]
   )
 
-  const lineJump = useMemo(() => {
+  const lineJumps = useMemo(() => {
     if (
       !id ||
       tempReconnectPath ||
       type === "UseCaseInclude" ||
       type === "UseCaseExtend"
     ) {
-      return null
+      return [] as ReturnType<typeof findLineJumpIntersections>
     }
 
     const currentIndex = edges.findIndex((edge) => edge.id === id)
-    if (currentIndex <= 0) return null
+    if (currentIndex <= 0)
+      return [] as ReturnType<typeof findLineJumpIntersections>
 
     const baseSegments = getAxisAlignedSegments([sourcePoint, targetPoint])
-    if (baseSegments.length === 0) return null
+    if (baseSegments.length === 0)
+      return [] as ReturnType<typeof findLineJumpIntersections>
+
+    const hits: ReturnType<typeof findLineJumpIntersections> = []
 
     for (let i = 0; i < currentIndex; i += 1) {
       const otherEdge = edges[i]
@@ -238,19 +242,19 @@ export const useStraightPathEdge = ({
       if (!otherPoints || otherPoints.length < 2) continue
 
       const otherSegments = getAxisAlignedSegments(otherPoints)
-      const hit = findLineJumpIntersection(
+      const edgeHits = findLineJumpIntersections(
         baseSegments,
         otherSegments,
         EDGES.EDGE_LINE_JUMP_WIDTH,
-        "horizontal"
+        "any"
       )
 
-      if (hit) {
-        return hit
+      if (edgeHits.length > 0) {
+        hits.push(...edgeHits)
       }
     }
 
-    return null
+    return hits
   }, [
     edges,
     getEdgePointsForJump,
@@ -282,11 +286,20 @@ export const useStraightPathEdge = ({
   )
 
   const currentPath = useMemo(() => {
-    if (lineJump) {
-      return buildPathWithLineJumpAtPoint(
+    if (lineJumps.length > 0) {
+      const seen = new Set<string>()
+      const uniqueJumps = lineJumps.filter((jump) => {
+        const key = `${jump.segmentIndex}:${Math.round(
+          jump.point.x
+        )}:${Math.round(jump.point.y)}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+
+      return buildPathWithLineJumps(
         [sourcePoint, targetPoint],
-        lineJump.segmentIndex,
-        lineJump.point,
+        uniqueJumps,
         EDGES.EDGE_LINE_JUMP_HEIGHT,
         EDGES.EDGE_LINE_JUMP_WIDTH
       )
@@ -304,7 +317,7 @@ export const useStraightPathEdge = ({
     adjustedSourceCoordinates.sourceY,
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
-    lineJump,
+    lineJumps,
     sourcePoint,
     targetPoint,
     type,
@@ -312,7 +325,7 @@ export const useStraightPathEdge = ({
   ])
 
   const overlayPath = useMemo(() => {
-    if (lineJump) {
+    if (lineJumps.length > 0) {
       return currentPath
     }
 
@@ -329,7 +342,7 @@ export const useStraightPathEdge = ({
     adjustedTargetCoordinates.targetX,
     adjustedTargetCoordinates.targetY,
     currentPath,
-    lineJump,
+    lineJumps,
     type,
     targetPosition,
   ])
