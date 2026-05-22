@@ -42,6 +42,14 @@ export type CollaboratorInfo = {
   isLocal: boolean
 }
 
+export type ApollonCollaborationOptions = {
+  enabled?: boolean
+  user?: CollaborationUser
+  showPresence?: boolean
+  showCursors?: boolean
+  showSelectionHighlights?: boolean
+}
+
 export enum Locale {
   en = "en",
   de = "de",
@@ -121,6 +129,7 @@ export type ApollonOptions = {
   scale?: number
   debug?: boolean
   collaborationEnabled?: boolean
+  collaboration?: ApollonCollaborationOptions
   scrollLock?: boolean
 }
 

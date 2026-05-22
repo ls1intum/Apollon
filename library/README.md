@@ -29,7 +29,7 @@ const editor = new ApollonEditor(container, {
   mode: ApollonMode.Modelling,
   locale: Locale.en,
   // model, theme, readonly, enablePopups, colorEnabled, scale,
-  // collaborationEnabled, scrollLock — see `ApollonOptions`
+  // collaborationEnabled, collaboration, scrollLock — see `ApollonOptions`
 })
 
 // Read / write the model
@@ -64,6 +64,18 @@ Collaboration is opt-in and transport-agnostic. Enable `collaborationEnabled` in
 ```ts
 editor.sendBroadcastMessage((base64) => transport.send(base64))
 transport.onMessage((base64) => editor.receiveBroadcastedMessage(base64))
+```
+
+To let the library render participant presence, live cursors, and remote node/edge selection highlights, pass the optional `collaboration` UI config:
+
+```ts
+const editor = new ApollonEditor(container, {
+  collaborationEnabled: true,
+  collaboration: {
+    enabled: true,
+    user: { name: "Ada", color: "#1c7ed6" },
+  },
+})
 ```
 
 Use any Yjs-compatible transport (WebSocket, WebRTC, `y-websocket`, etc.).

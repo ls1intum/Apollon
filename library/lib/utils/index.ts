@@ -16,6 +16,7 @@ export * from "./versionConverter"
 export * from "./labelUtils"
 export * from "./alignmentUtils"
 export * from "./requiredInterfaceUtils"
+export * from "./collaboration"
 // Deliberately narrow: only the helpers that node SVGs genuinely need to
 // reach for get re-exported through the public barrel. Internal machinery
 // (the prepared-text cache, `toCanvasFont`, `clearPrepareCache`, type

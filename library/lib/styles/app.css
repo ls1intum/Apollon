@@ -12,6 +12,52 @@
   background-color: var(--apollon-background, #ffffff);
   color: var(--apollon-primary-contrast, #000000);
 }
+
+.apollon-collaboration-presence-bar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  z-index: 10002;
+  pointer-events: auto;
+}
+
+.apollon-collaboration-cursors {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10003;
+}
+
+.apollon-collaboration-cursor {
+  position: absolute;
+  transform: translate(8px, 8px);
+}
+
+.apollon-collaboration-cursor-label {
+  margin-top: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 6px;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.react-flow__node.apollon-collaboration-highlighted {
+  box-shadow:
+    0 0 0 4px var(--apollon-collaboration-highlight-color),
+    0 0 16px 3px var(--apollon-collaboration-highlight-color) !important;
+  border-color: var(--apollon-collaboration-highlight-color) !important;
+}
+
+.react-flow__edge.apollon-collaboration-highlighted path {
+  stroke: var(--apollon-collaboration-highlight-color) !important;
+  stroke-width: 4.5px !important;
+  filter: drop-shadow(
+    0 0 4px var(--apollon-collaboration-highlight-color)
+  );
+}
 .react-flow__controls-button {
   background: none;
   border-bottom: none;
