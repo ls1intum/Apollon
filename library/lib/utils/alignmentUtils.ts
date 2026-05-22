@@ -35,10 +35,18 @@ export const getNodeBounds = (node: Node, allNodes?: Node[]) => {
   }
 }
 
-const isContainedByParent = (node: Node, allNodes: Node[]) => {
+const isContainedByParent = (
+  node: Node,
+  allNodes: Node[],
+  excludeParentId?: string
+) => {
   const nodeBounds = getNodeBounds(node, allNodes)
   return allNodes.some((candidate) => {
-    if (candidate.id === node.id || !isParentNodeType(candidate.type)) {
+    if (
+      candidate.id === node.id ||
+      candidate.id === excludeParentId ||
+      !isParentNodeType(candidate.type)
+    ) {
       return false
     }
 
@@ -52,7 +60,11 @@ const isContainedByParent = (node: Node, allNodes: Node[]) => {
   })
 }
 
-const getContainingParentId = (node: Node, allNodes: Node[]) => {
+const getContainingParentId = (
+  node: Node,
+  allNodes: Node[],
+  excludeParentId?: string
+) => {
   if (node.parentId) {
     return node.parentId
   }
@@ -62,7 +74,11 @@ const getContainingParentId = (node: Node, allNodes: Node[]) => {
   let bestArea = Infinity
 
   for (const candidate of allNodes) {
-    if (candidate.id === node.id || !isParentNodeType(candidate.type)) {
+    if (
+      candidate.id === node.id ||
+      candidate.id === excludeParentId ||
+      !isParentNodeType(candidate.type)
+    ) {
       continue
     }
 
@@ -92,13 +108,18 @@ const getContainingParentId = (node: Node, allNodes: Node[]) => {
 const shouldUseAsGuideTarget = (
   draggedNode: Node,
   node: Node,
-  allNodes: Node[]
+  allNodes: Node[],
+  draggedParentId: string | undefined,
+  containedByParent?: Set<string>
 ) => {
-  const draggedParentId = getContainingParentId(draggedNode, allNodes)
-  const nodeParentId = getContainingParentId(node, allNodes)
+  const nodeParentId = getContainingParentId(node, allNodes, draggedNode.id)
 
   if (!draggedParentId) {
-    return !nodeParentId && !isContainedByParent(node, allNodes)
+    const isContained = containedByParent
+      ? containedByParent.has(node.id)
+      : isContainedByParent(node, allNodes, draggedNode.id)
+
+    return !nodeParentId && !isContained
   }
 
   return node.id === draggedParentId || nodeParentId === draggedParentId
@@ -115,6 +136,22 @@ export const calculateAlignmentGuides = (
   const nodesWithDrag = allNodes.map((node) =>
     node.id === draggedNode.id ? draggedNode : node
   )
+  const draggedParentId = getContainingParentId(
+    draggedNode,
+    nodesWithDrag,
+    draggedNode.id
+  )
+  const containedByParent = !draggedParentId
+    ? new Set(
+        nodesWithDrag
+          .filter(
+            (node) =>
+              node.id !== draggedNode.id &&
+              isContainedByParent(node, nodesWithDrag, draggedNode.id)
+          )
+          .map((node) => node.id)
+      )
+    : undefined
   const draggedBounds = getNodeBounds(draggedNode, nodesWithDrag)
   const guides: AlignmentGuide[] = []
   const alignedPositions = new Set<number>()
@@ -122,7 +159,13 @@ export const calculateAlignmentGuides = (
   const otherNodes = nodesWithDrag.filter(
     (node) =>
       node.id !== draggedNode.id &&
-      shouldUseAsGuideTarget(draggedNode, node, nodesWithDrag)
+      shouldUseAsGuideTarget(
+        draggedNode,
+        node,
+        nodesWithDrag,
+        draggedParentId,
+        containedByParent
+      )
   )
 
   for (const node of otherNodes) {

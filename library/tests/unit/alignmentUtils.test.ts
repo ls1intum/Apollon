@@ -15,14 +15,18 @@ function makeNode(
   x: number,
   y: number,
   width?: number,
-  height?: number
+  height?: number,
+  overrides: Partial<Node> = {}
 ): Node {
+  const measured =
+    width !== undefined ? { width, height: height ?? width } : undefined
   return {
     id,
     position: { x, y },
     data: {},
-    measured:
-      width !== undefined ? { width, height: height ?? width } : undefined,
+    measured,
+    ...overrides,
+    measured: overrides.measured ?? measured,
   } as Node
 }
 
@@ -141,6 +145,62 @@ describe("calculateAlignmentGuides", () => {
     const guides = calculateAlignmentGuides(dragged, [dragged, other])
     const verticals = guides.filter((g) => g.type === "vertical")
     expect(verticals.some((g) => g.position === 100)).toBe(true)
+  })
+
+  it("targets siblings and parent when dragging a child", () => {
+    const parent = makeNode("p", 0, 0, 400, 300, { type: "package" })
+    const dragged = makeNode("c1", 0, 50, 100, 80, {
+      parentId: "p",
+      type: "class",
+    })
+    const sibling = makeNode("c2", 200, 50, 100, 80, {
+      parentId: "p",
+      type: "class",
+    })
+
+    const guides = calculateAlignmentGuides(dragged, [parent, dragged, sibling])
+    expect(guides.some((g) => g.type === "vertical" && g.position === 0)).toBe(
+      true
+    )
+    expect(
+      guides.some((g) => g.type === "horizontal" && g.position === 50)
+    ).toBe(true)
+  })
+
+  it("ignores contained nodes when dragging a top-level node", () => {
+    const pkg = makeNode("p", 200, 0, 200, 200, { type: "package" })
+    const contained = makeNode("c", 220, 30, 80, 60, { type: "class" })
+    const dragged = makeNode("d", 220, 30, 100, 50, { type: "class" })
+
+    const guides = calculateAlignmentGuides(dragged, [dragged, pkg, contained])
+    expect(
+      guides.some((g) => g.type === "horizontal" && g.position === 30)
+    ).toBe(false)
+    expect(
+      guides.some((g) => g.type === "vertical" && g.position === 220)
+    ).toBe(false)
+  })
+
+  it("only targets top-level nodes when dragging a package", () => {
+    const dragged = makeNode("p1", 300, 40, 200, 200, { type: "package" })
+    const otherPackage = makeNode("p2", 300, 0, 200, 200, { type: "package" })
+    const contained = makeNode("c", 320, 40, 80, 60, { type: "class" })
+
+    const guides = calculateAlignmentGuides(dragged, [
+      dragged,
+      otherPackage,
+      contained,
+    ])
+
+    expect(
+      guides.some((g) => g.type === "vertical" && g.position === 300)
+    ).toBe(true)
+    expect(
+      guides.some((g) => g.type === "vertical" && g.position === 320)
+    ).toBe(false)
+    expect(
+      guides.some((g) => g.type === "horizontal" && g.position === 40)
+    ).toBe(false)
   })
 })
 
