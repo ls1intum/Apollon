@@ -49,6 +49,21 @@ Here are the commonly used scripts defined in the monorepo:
   npm run format:check
   ```
 
+## Tests
+
+- **Unit tests** (library Vitest suite):
+  ```bash
+  npm test
+  ```
+- **End-to-end tests** (webapp Playwright suite, runs against a built webapp):
+  ```bash
+  npm run test:e2e
+  ```
+- **Release-doc invariants** (`CLAUDE.md` symlink + `.changeset/config.json` shape):
+  ```bash
+  npm run check:release-docs
+  ```
+
 ## Database
 
 - **Start local Redis:**
@@ -60,3 +75,9 @@ Here are the commonly used scripts defined in the monorepo:
 ## Releases
 
 Releases run entirely on GitHub Actions — there are no local publish scripts. Cut a release by dispatching the **Version Bump** workflow and merging the PR it opens. See [Releases](../deployment/npm-publishing.md) for the end-to-end flow.
+
+- **Add a changeset** to any PR that changes a published or operator-visible workspace:
+  ```bash
+  npm run changeset
+  ```
+  Writing rules: [release-notes.md](release-notes.md).

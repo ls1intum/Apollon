@@ -28,7 +28,7 @@ nvm use
 
 ## npm
 
-Apollon uses npm workspaces, which require npm 7 or newer.
+The required npm version is in `package.json#engines.npm` (currently `>=11.1.0`).
 
 npm comes with Node.js. Verify your npm version:
 

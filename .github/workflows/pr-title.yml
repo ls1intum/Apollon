@@ -1,0 +1,63 @@
+name: PR title
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate title
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.draft }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+
+      - id: commitlint
+        continue-on-error: true
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set +e
+          printf '%s' "$PR_TITLE" | npx --no -- commitlint 2>&1 | tee /tmp/commitlint.txt
+          exit_code=${PIPESTATUS[1]}
+          {
+            echo 'output<<__EOF__'
+            cat /tmp/commitlint.txt
+            echo '__EOF__'
+          } >> "$GITHUB_OUTPUT"
+          exit "$exit_code"
+
+      - uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2.9.4
+        if: steps.commitlint.outcome == 'failure'
+        with:
+          header: pr-title-lint-error
+          message: |
+            ## ❌ PR title fails commitlint
+
+            ```
+            ${{ steps.commitlint.outputs.output }}
+            ```
+
+            PR titles must be a [Conventional Commit](https://www.conventionalcommits.org/) subject — `<type>(<scope>)?: <subject>` where `type` is one of `feat | fix | chore | docs | refactor | test | build | ci | perf | style | revert`. See [`CONTRIBUTING.md`](https://github.com/ls1intum/Apollon/blob/main/CONTRIBUTING.md).
+
+      - uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2.9.4
+        if: steps.commitlint.outcome == 'success'
+        with:
+          header: pr-title-lint-error
+          delete: true
+
+      - if: steps.commitlint.outcome == 'failure'
+        run: exit 1

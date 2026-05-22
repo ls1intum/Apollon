@@ -57,7 +57,7 @@ Override ports via `APOLLON_WEBAPP_PORT`, `APOLLON_SERVER_PORT`, `APOLLON_WS_POR
 ## Requirements
 
 - **Node.js** — version pinned in [`.nvmrc`](./.nvmrc).
-- **npm 7+** — for workspace support.
+- **npm** `>=11.1.0` (see [`package.json`](./package.json) `engines`).
 - **Docker** — only when `npm run dev` needs to start a local Redis.
 
 ## Documentation
@@ -73,7 +73,7 @@ Docs are migrating to [Docusaurus](https://docusaurus.io/); in the meantime brow
 
 ## Contributing
 
-Open an issue or a pull request at <https://github.com/ls1intum/Apollon>. Guidelines live in [`docs/contributing.md`](./docs/contributing.md).
+Open an issue or a pull request at <https://github.com/ls1intum/Apollon>. Guidelines live in [`CONTRIBUTING.md`](./CONTRIBUTING.md); AI coding agents follow [`AGENTS.md`](./AGENTS.md).
 
 ## License
 
