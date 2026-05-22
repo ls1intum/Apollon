@@ -35,31 +35,6 @@ export const getNodeBounds = (node: Node, allNodes?: Node[]) => {
   }
 }
 
-const isContainedByParent = (
-  node: Node,
-  allNodes: Node[],
-  excludeParentId?: string
-) => {
-  const nodeBounds = getNodeBounds(node, allNodes)
-  return allNodes.some((candidate) => {
-    if (
-      candidate.id === node.id ||
-      candidate.id === excludeParentId ||
-      !isParentNodeType(candidate.type)
-    ) {
-      return false
-    }
-
-    const parentBounds = getNodeBounds(candidate, allNodes)
-    return (
-      nodeBounds.left >= parentBounds.left &&
-      nodeBounds.right <= parentBounds.right &&
-      nodeBounds.top >= parentBounds.top &&
-      nodeBounds.bottom <= parentBounds.bottom
-    )
-  })
-}
-
 const getContainingParentId = (
   node: Node,
   allNodes: Node[],
@@ -109,20 +84,27 @@ const shouldUseAsGuideTarget = (
   draggedNode: Node,
   node: Node,
   allNodes: Node[],
-  draggedParentId: string | undefined,
-  containedByParent?: Set<string>
+  draggedParentId: string | undefined
 ) => {
   const nodeParentId = getContainingParentId(node, allNodes, draggedNode.id)
 
   if (!draggedParentId) {
-    const isContained = containedByParent
-      ? containedByParent.has(node.id)
-      : isContainedByParent(node, allNodes, draggedNode.id)
-
-    return !nodeParentId && !isContained
+    // Dragged node is top-level: align with everything except nodes that
+    // are children of a parent the dragged node has no relation to...
+    // actually align with all nodes including parent frames
+    return true
   }
 
-  return node.id === draggedParentId || nodeParentId === draggedParentId
+  // Dragged node is a child: skip the parent container it belongs to
+  // (no point snapping to your own frame), but allow all other nodes
+  if (node.id === draggedParentId) {
+    return false
+  }
+
+  const isSibling = nodeParentId === draggedParentId
+  const isTopLevel = !nodeParentId
+
+  return isSibling || isTopLevel
 }
 
 /**
@@ -137,17 +119,6 @@ export const calculateAlignmentGuides = (
     node.id === draggedNode.id ? draggedNode : node
   )
   const draggedParentId = draggedNode.parentId
-  const containedByParent = !draggedParentId
-    ? new Set(
-        nodesWithDrag
-          .filter(
-            (node) =>
-              node.id !== draggedNode.id &&
-              isContainedByParent(node, nodesWithDrag, draggedNode.id)
-          )
-          .map((node) => node.id)
-      )
-    : undefined
   const draggedBounds = getNodeBounds(draggedNode, nodesWithDrag)
   const guides: AlignmentGuide[] = []
   const alignedPositions = new Set<number>()
@@ -155,13 +126,7 @@ export const calculateAlignmentGuides = (
   const otherNodes = nodesWithDrag.filter(
     (node) =>
       node.id !== draggedNode.id &&
-      shouldUseAsGuideTarget(
-        draggedNode,
-        node,
-        nodesWithDrag,
-        draggedParentId,
-        containedByParent
-      )
+      shouldUseAsGuideTarget(draggedNode, node, nodesWithDrag, draggedParentId)
   )
 
   for (const node of otherNodes) {
