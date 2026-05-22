@@ -76,7 +76,7 @@ const getElementTargets = (container: HTMLElement, elementId: string) => {
     container.querySelector<HTMLElement>(
       `.react-flow__edge[data-id="${escapedId}"]`
     ),
-  ].filter((element): element is HTMLElement => Boolean(element))
+  ].filter((element): element is HTMLElement => element !== null)
 }
 
 const clearHighlights = (container: HTMLElement, elementIds: Set<string>) => {
@@ -423,7 +423,7 @@ export function CollaborationLayer({
   awareness,
 }: CollaborationLayerProps) {
   const previewMode = useDiagramStore((state) => state.previewMode)
-  const active = options.enabled && Boolean(options.user)
+  const active = options.enabled && options.user !== undefined
   const remoteVisualsActive = active && !previewMode
 
   return (

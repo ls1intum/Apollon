@@ -3,7 +3,9 @@ import { useEditorContext, useModalContext } from "@/contexts"
 import {
   ApollonEditor,
   ApollonMode,
+  collabColorFromName,
   importDiagram,
+  randomCollabName,
   type ApollonOptions,
   type UMLModel,
 } from "@tumaet/apollon"
@@ -26,20 +28,6 @@ import { useElementWidth } from "@/hooks/useElementWidth"
 import { useFlushOnUnload } from "@/hooks/useFlushOnUnload"
 import { useVersionShortcut } from "@/hooks/useVersionShortcut"
 import { log } from "@/logger"
-import { collabColorFromName, randomCollabName } from "@/utils/collaboration"
-
-type ApollonOptionsWithCollaboration = ApollonOptions & {
-  collaboration?: {
-    enabled?: boolean
-    user?: {
-      name: string
-      color: string
-    }
-    showPresence?: boolean
-    showCursors?: boolean
-    showSelectionHighlights?: boolean
-  }
-}
 
 export const ApollonWithConnection: React.FC = () => {
   const { diagramId } = useParams()
@@ -154,7 +142,7 @@ export const ApollonWithConnection: React.FC = () => {
           edgeCount: diagram.edges?.length ?? 0,
         })
 
-        const editorOptions: ApollonOptionsWithCollaboration = {
+        const editorOptions: ApollonOptions = {
           model: diagram,
           collaborationEnabled: true,
           collaboration:
