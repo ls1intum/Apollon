@@ -1,7 +1,16 @@
 import { EDGES, INTERFACE } from "@/constants"
 import { IPoint, pointsToSvgPath } from "@/edges/Connection"
+import { getPositionOnCanvas } from "@/utils/nodeUtils"
 import { DiagramEdgeType, UMLDiagramType } from "@/typings"
-import { Position, Rect, XYPosition, ConnectionLineType } from "@xyflow/react"
+import {
+  Position,
+  Rect,
+  XYPosition,
+  ConnectionLineType,
+  Edge,
+  Node,
+  getSmoothStepPath,
+} from "@xyflow/react"
 
 /**
  * Adjusts the target coordinates based on the position and marker padding.
@@ -560,6 +569,116 @@ const STRAIGHT_EDGE_TYPES = new Set([
 
 export const isStraightEdgeType = (edgeType?: string | null): boolean =>
   STRAIGHT_EDGE_TYPES.has(edgeType ?? "")
+
+type EdgeGeometryMap = Map<string, IPoint[]>
+
+const edgeGeometryCache = new WeakMap<
+  ReadonlyArray<Edge>,
+  WeakMap<ReadonlyArray<Node>, EdgeGeometryMap>
+>()
+
+export const getEdgeGeometryMap = (
+  edges: ReadonlyArray<Edge>,
+  nodes: ReadonlyArray<Node>
+): EdgeGeometryMap => {
+  const cachedByEdges = edgeGeometryCache.get(edges)
+  const cached = cachedByEdges?.get(nodes)
+  if (cached) return cached
+
+  const geometryMap: EdgeGeometryMap = new Map()
+  const nodesById = new Map(nodes.map((node) => [node.id, node]))
+
+  for (const edge of edges) {
+    const storedPoints = (edge.data as { points?: IPoint[] } | undefined)
+      ?.points
+    if (storedPoints && storedPoints.length > 1) {
+      geometryMap.set(edge.id, storedPoints)
+      continue
+    }
+
+    const sourceNode = nodesById.get(edge.source)
+    const targetNode = nodesById.get(edge.target)
+
+    if (!sourceNode || !targetNode) {
+      continue
+    }
+
+    const sourceWidth = sourceNode.width ?? sourceNode.measured?.width ?? 100
+    const sourceHeight = sourceNode.height ?? sourceNode.measured?.height ?? 100
+    const targetWidth = targetNode.width ?? targetNode.measured?.width ?? 100
+    const targetHeight = targetNode.height ?? targetNode.measured?.height ?? 100
+
+    const mutableNodes = nodes as Node[]
+    const sourcePositionOnCanvas = getPositionOnCanvas(sourceNode, mutableNodes)
+    const targetPositionOnCanvas = getPositionOnCanvas(targetNode, mutableNodes)
+
+    const sourceHandle = edge.sourceHandle ?? "right"
+    const targetHandle = edge.targetHandle ?? "left"
+
+    const sourcePoint = getHandlePositionOnNode({
+      nodeType: sourceNode.type,
+      nodePosition: sourcePositionOnCanvas,
+      width: sourceWidth,
+      height: sourceHeight,
+      handleId: sourceHandle,
+    })
+    const targetPoint = getHandlePositionOnNode({
+      nodeType: targetNode.type,
+      nodePosition: targetPositionOnCanvas,
+      width: targetWidth,
+      height: targetHeight,
+      handleId: targetHandle,
+    })
+
+    if (isStraightEdgeType(edge.type)) {
+      geometryMap.set(edge.id, [sourcePoint, targetPoint])
+      continue
+    }
+
+    const sourceHandleSide = getHandleSideFromId(sourceHandle)
+    const targetHandleSide = getHandleSideFromId(targetHandle)
+    const { markerPadding } = getEdgeMarkerStyles(edge.type ?? "")
+    const padding = markerPadding ?? EDGES.MARKER_PADDING
+
+    const adjustedTarget = adjustTargetCoordinates(
+      Math.round(targetPoint.x),
+      Math.round(targetPoint.y),
+      targetHandleSide,
+      padding
+    )
+    const adjustedSource = adjustSourceCoordinates(
+      Math.round(sourcePoint.x),
+      Math.round(sourcePoint.y),
+      sourceHandleSide,
+      EDGES.SOURCE_CONNECTION_POINT_PADDING
+    )
+
+    const [edgePath] = getSmoothStepPath({
+      sourceX: adjustedSource.sourceX,
+      sourceY: adjustedSource.sourceY,
+      sourcePosition: sourceHandleSide,
+      targetX: adjustedTarget.targetX,
+      targetY: adjustedTarget.targetY,
+      targetPosition: targetHandleSide,
+      borderRadius: EDGES.STEP_BORDER_RADIUS,
+      offset: 30,
+    })
+
+    const simplifiedPath = simplifySvgPath(edgePath)
+    const points = removeDuplicatePoints(parseSvgPath(simplifiedPath))
+    if (points.length > 1) {
+      geometryMap.set(edge.id, points)
+    }
+  }
+
+  const nextByEdges = cachedByEdges ?? new WeakMap()
+  nextByEdges.set(nodes, geometryMap)
+  if (!cachedByEdges) {
+    edgeGeometryCache.set(edges, nextByEdges)
+  }
+
+  return geometryMap
+}
 
 export type AxisAlignedSegment = {
   index: number

@@ -24,10 +24,8 @@ import {
   getMarkerSegmentPath,
   getAxisAlignedSegments,
   findLineJumpIntersections,
-  getHandlePositionOnNode,
-  getHandleSideFromId,
   buildPathWithLineJumps,
-  isStraightEdgeType,
+  getEdgeGeometryMap,
 } from "@/utils/edgeUtils"
 import { useEdgeState, useEdgeReconnection } from "../edges/GenericEdge"
 import { useDiagramModifiable } from "./useDiagramModifiable"
@@ -109,10 +107,11 @@ export const useStepPathEdge = ({
   } = useEdgeReconnection(id, source, target, sourceHandleId, targetHandleId)
 
   const { findBestHandle } = useHandleFinder()
-  const { setEdges, edges } = useDiagramStore(
+  const { setEdges, edges, nodes } = useDiagramStore(
     useShallow((state) => ({
       setEdges: state.setEdges,
       edges: state.edges,
+      nodes: state.nodes,
     }))
   )
 
@@ -379,92 +378,9 @@ export const useStepPathEdge = ({
     adjustedTargetCoordinates.targetY,
   ])
 
-  const getEdgePointsForJump = useCallback(
-    (edge: {
-      id: string
-      source: string
-      target: string
-      type?: string | null
-      sourceHandle?: string | null
-      targetHandle?: string | null
-      data?: { points?: IPoint[] }
-    }) => {
-      if (edge.data?.points && edge.data.points.length > 1) {
-        return edge.data.points
-      }
-
-      const sourceNode = getNode(edge.source)
-      const targetNode = getNode(edge.target)
-
-      if (
-        !sourceNode ||
-        !targetNode ||
-        sourceNode.width == null ||
-        sourceNode.height == null ||
-        targetNode.width == null ||
-        targetNode.height == null
-      ) {
-        return null
-      }
-
-      const sourcePositionOnCanvas = getPositionOnCanvas(sourceNode, allNodes)
-      const targetPositionOnCanvas = getPositionOnCanvas(targetNode, allNodes)
-
-      const sourceHandle = edge.sourceHandle ?? "right"
-      const targetHandle = edge.targetHandle ?? "left"
-
-      const sourcePoint = getHandlePositionOnNode({
-        nodeType: sourceNode.type,
-        nodePosition: sourcePositionOnCanvas,
-        width: sourceNode.width,
-        height: sourceNode.height,
-        handleId: sourceHandle,
-      })
-      const targetPoint = getHandlePositionOnNode({
-        nodeType: targetNode.type,
-        nodePosition: targetPositionOnCanvas,
-        width: targetNode.width,
-        height: targetNode.height,
-        handleId: targetHandle,
-      })
-
-      if (isStraightEdgeType(edge.type)) {
-        return [sourcePoint, targetPoint]
-      }
-
-      const sourceHandleSide = getHandleSideFromId(sourceHandle)
-      const targetHandleSide = getHandleSideFromId(targetHandle)
-      const { markerPadding } = getEdgeMarkerStyles(edge.type ?? type)
-      const padding = markerPadding ?? EDGES.MARKER_PADDING
-
-      const adjustedTarget = adjustTargetCoordinates(
-        Math.round(targetPoint.x),
-        Math.round(targetPoint.y),
-        targetHandleSide,
-        padding
-      )
-      const adjustedSource = adjustSourceCoordinates(
-        Math.round(sourcePoint.x),
-        Math.round(sourcePoint.y),
-        sourceHandleSide,
-        EDGES.SOURCE_CONNECTION_POINT_PADDING
-      )
-
-      const [edgePath] = getSmoothStepPath({
-        sourceX: adjustedSource.sourceX,
-        sourceY: adjustedSource.sourceY,
-        sourcePosition: sourceHandleSide,
-        targetX: adjustedTarget.targetX,
-        targetY: adjustedTarget.targetY,
-        targetPosition: targetHandleSide,
-        borderRadius: EDGES.STEP_BORDER_RADIUS,
-        offset: 30,
-      })
-
-      const simplifiedPath = simplifySvgPath(edgePath)
-      return removeDuplicatePoints(parseSvgPath(simplifiedPath))
-    },
-    [allNodes, getNode, type]
+  const edgeGeometryMap = useMemo(
+    () => getEdgeGeometryMap(edges, nodes),
+    [edges, nodes]
   )
 
   const lineJumps = useMemo(() => {
@@ -484,7 +400,7 @@ export const useStepPathEdge = ({
 
     for (let i = 0; i < currentIndex; i += 1) {
       const otherEdge = edges[i]
-      const otherPoints = getEdgePointsForJump(otherEdge)
+      const otherPoints = edgeGeometryMap.get(otherEdge.id)
       if (!otherPoints || otherPoints.length < 2) continue
 
       const otherSegments = getAxisAlignedSegments(otherPoints)
@@ -506,7 +422,7 @@ export const useStepPathEdge = ({
     customPoints.length,
     data?.points?.length,
     edges,
-    getEdgePointsForJump,
+    edgeGeometryMap,
     id,
     tempReconnectPoints,
   ])
