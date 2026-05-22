@@ -136,11 +136,7 @@ export const calculateAlignmentGuides = (
   const nodesWithDrag = allNodes.map((node) =>
     node.id === draggedNode.id ? draggedNode : node
   )
-  const draggedParentId = getContainingParentId(
-    draggedNode,
-    nodesWithDrag,
-    draggedNode.id
-  )
+  const draggedParentId = draggedNode.parentId
   const containedByParent = !draggedParentId
     ? new Set(
         nodesWithDrag
