@@ -153,8 +153,8 @@ export function getBendHandlePosition(
 
 export function getBendableSegments(
   points: IPoint[],
-  sourcePosition: Position,
-  targetPosition: Position,
+  _sourcePosition: Position,
+  _targetPosition: Position,
   stubLength: number,
   minLength: number,
   zoom = 1
