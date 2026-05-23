@@ -29,10 +29,8 @@ CDN. No build step, no bundler.
 </script>
 ```
 
-That is the read+write loop you'll actually write: render a saved diagram on
-load, persist edits as the user makes them. Refresh the page and the diagram
-is still there. Defaults — class diagram, modelling mode, English — fill in
-for everything the minimal example doesn't pass.
+Refresh the page and the diagram is still there. Defaults — class diagram,
+modelling mode, English — fill in for everything the example doesn't pass.
 
 ## Why esm.sh
 

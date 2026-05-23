@@ -32,12 +32,10 @@ export function Diagram({ initialModel }: { initialModel?: UMLModel }) {
 }
 ```
 
-That is the read+write loop you'll actually write: render a saved diagram,
-persist edits as the user makes them. The component owns the editor's
-lifecycle — constructs it on mount, destroys it on unmount; the `onMount`
-return is the React-19-style cleanup that runs before destroy. The diagram
-type defaults to `ClassDiagram` when no `defaultModel` is supplied; pass
-`defaultType` to start with another.
+The component owns the editor's lifecycle — constructs on mount, destroys on
+unmount. The `onMount` return is the React-19-style cleanup that runs before
+destroy. The diagram type defaults to `ClassDiagram` when no `defaultModel` is
+supplied; pass `defaultType` for a different one.
 
 ## Import from `/react`
 
@@ -125,17 +123,16 @@ Touch construction-time wiring (Yjs init, stores, undo manager). Changes to
 these props after mount are silently ignored; re-key the component to apply
 them to a new editor instance.
 
-| Prop                   | Type             | Effect                                                                                  |
-| ---------------------- | ---------------- | --------------------------------------------------------------------------------------- |
-| `defaultModel`         | `UMLModel`       | Initial diagram. Use `importDiagram` first if the JSON may be v2/v3.                    |
-| `defaultType`          | `UMLDiagramType` | Initial diagram type when no `defaultModel` is supplied.                                |
-| `defaultMode`          | `ApollonMode`    | Initial mode — `Modelling`, `Assessment`, or `Exporting`.                               |
-| `defaultView`          | `ApollonView`    | Initial view.                                                                           |
-| `availableViews`       | `ApollonView[]`  | Views the user may switch between at runtime.                                           |
-| `enablePopups`         | `boolean`        | Whether inline edit/property popovers are enabled.                                      |
-| `collaborationEnabled` | `boolean`        | Opt into Yjs real-time sync; wire the transport from `onMount`.                         |
-| `locale`               | `Locale`         | Accepted for forward compatibility; the editor currently renders in English regardless. |
-| `debug`                | `boolean`        | Debug overlays/logging.                                                                 |
+| Prop                   | Type             | Effect                                                               |
+| ---------------------- | ---------------- | -------------------------------------------------------------------- |
+| `defaultModel`         | `UMLModel`       | Initial diagram. Use `importDiagram` first if the JSON may be v2/v3. |
+| `defaultType`          | `UMLDiagramType` | Initial diagram type when no `defaultModel` is supplied.             |
+| `defaultMode`          | `ApollonMode`    | Initial mode — `Modelling`, `Assessment`, or `Exporting`.            |
+| `defaultView`          | `ApollonView`    | Initial view.                                                        |
+| `availableViews`       | `ApollonView[]`  | Views the user may switch between at runtime.                        |
+| `enablePopups`         | `boolean`        | Whether inline edit/property popovers are enabled.                   |
+| `collaborationEnabled` | `boolean`        | Opt into Yjs real-time sync; wire the transport from `onMount`.      |
+| `debug`                | `boolean`        | Debug overlays/logging.                                              |
 
 ### Reactive options (applied via setters when the prop changes)
 
@@ -153,12 +150,11 @@ it means "leave the live value alone".
 
 ### Lifecycle
 
-| Prop              | Type                               | Purpose                                                                                                  |
-| ----------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `onMount`         | `(editor) => void \| (() => void)` | Fires once with the instance after mount. The optional returned function runs as cleanup before destroy. |
-| `onBeforeDestroy` | `(editor) => void`                 | Fires once with the instance right before destroy — last chance to read state.                           |
+| Prop      | Type                               | Purpose                                                                                |
+| --------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
+| `onMount` | `(editor) => void \| (() => void)` | Fires once after mount. The optional returned function runs as cleanup before destroy. |
 
-`onMount` and `onBeforeDestroy` are identity-stable-free: only the latest closure runs.
+`onMount` does not need to be referentially stable — the component always invokes the latest closure.
 
 ## Hooks
 

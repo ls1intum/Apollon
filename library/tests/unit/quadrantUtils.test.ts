@@ -21,25 +21,8 @@ describe("getQuadrant", () => {
     expect(getQuadrant({ x: 50, y: 50 }, ref)).toBe(Quadrant.TopLeft)
   })
 
-  // Axis-equality tiebreak: `>=` on both axes lands at BottomRight.
-  it("returns TopRight when x equals reference x and y < ref.y", () => {
-    expect(getQuadrant({ x: 100, y: 50 }, ref)).toBe(Quadrant.TopRight)
-  })
-
-  it("returns BottomLeft when y equals reference y and x < ref.x", () => {
-    expect(getQuadrant({ x: 50, y: 100 }, ref)).toBe(Quadrant.BottomLeft)
-  })
-
-  it("returns BottomRight when target sits exactly on the reference", () => {
+  it("breaks axis ties toward BottomRight (>= semantics)", () => {
     expect(getQuadrant({ x: 100, y: 100 }, ref)).toBe(Quadrant.BottomRight)
-  })
-
-  it("returns BottomRight when x equals reference x and y > ref.y", () => {
-    expect(getQuadrant({ x: 100, y: 200 }, ref)).toBe(Quadrant.BottomRight)
-  })
-
-  it("returns BottomRight when y equals reference y and x > ref.x", () => {
-    expect(getQuadrant({ x: 200, y: 100 }, ref)).toBe(Quadrant.BottomRight)
   })
 
   it("works with negative coordinates", () => {

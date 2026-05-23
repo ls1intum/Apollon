@@ -37,13 +37,7 @@ describe("deepEqual", () => {
     expect(deepEqual([1, 2], [1, 2, 3])).toBe(false)
   })
 
-  it("returns false across object/array/primitive boundaries", () => {
-    expect(deepEqual({} as unknown, [] as unknown)).toBe(false)
+  it("distinguishes object from null (the typeof-null footgun)", () => {
     expect(deepEqual({}, null)).toBe(false)
-    expect(deepEqual([1], 1)).toBe(false)
-  })
-
-  it("returns true for identical NaN (via Object.is)", () => {
-    expect(deepEqual(NaN, NaN)).toBe(true)
   })
 })

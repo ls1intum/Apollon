@@ -1,7 +1,7 @@
 ---
 id: quickstart
 title: Quickstart
-description: The smallest working Apollon embed — install, mount, render — in five minutes.
+description: The smallest working Apollon embed — install, mount, render.
 ---
 
 # Quickstart

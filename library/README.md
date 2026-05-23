@@ -129,7 +129,7 @@ export class DiagramEditorComponent implements AfterViewInit, OnDestroy {
 ### React
 
 Use the `<Apollon>` component from the `@tumaet/apollon/react` subpath. Render
-a saved diagram and persist edits — the loop you'll actually write:
+a saved diagram and persist edits as the user makes them:
 
 ```tsx
 import { Apollon } from "@tumaet/apollon/react"

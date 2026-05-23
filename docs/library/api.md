@@ -11,25 +11,15 @@ into the DOM node you hand it and exposes an imperative API — your host code
 never touches React.
 
 ```ts
-import {
-  ApollonEditor,
-  ApollonMode,
-  Locale,
-  UMLDiagramType,
-} from "@tumaet/apollon"
+import { ApollonEditor, UMLDiagramType } from "@tumaet/apollon"
 import "@tumaet/apollon/style.css"
 
 const editor = new ApollonEditor(container, {
   type: UMLDiagramType.ClassDiagram,
-  mode: ApollonMode.Modelling,
-  locale: Locale.en,
 })
 ```
 
-The type definitions in `dist/index.d.ts` are the authoritative surface. This
-page documents everything a hosting application normally needs; it omits
-internal helpers and the React node/edge components also exported from the
-package.
+For internals (node/edge components, etc.), read `dist/index.d.ts`.
 
 React hosts do not construct `ApollonEditor` directly — they render the
 [`<Apollon>` component](#apollon-react-component) instead. The imperative class
@@ -68,7 +58,6 @@ afterwards. Re-key the component to apply them to a new editor.
 | `availableViews`       | `ApollonView[]`  | Views the user may switch between at runtime.                   |
 | `enablePopups`         | `boolean`        | Enable inline edit/property popovers.                           |
 | `collaborationEnabled` | `boolean`        | Opt into Yjs real-time sync; wire the transport from `onMount`. |
-| `locale`               | `Locale`         | Accepted for forward compatibility; editor renders in English.  |
 | `debug`                | `boolean`        | Debug overlays/logging.                                         |
 
 **Reactive options** — applied via the matching setter when the prop
@@ -86,11 +75,10 @@ typed-enum / object props it means "leave the live value alone".
 
 **Lifecycle.**
 
-| Prop              | Type                               | Purpose                                                                                |
-| ----------------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
-| `onMount`         | `(editor) => void \| (() => void)` | Fires once after mount. The optional returned function runs as cleanup before destroy. |
-| `onBeforeDestroy` | `(editor) => void`                 | Fires once right before destroy — last chance to read state.                           |
-| `ref`             | `Ref<ApollonEditor \| null>`       | Receives the editor after mount; nulled on unmount.                                    |
+| Prop      | Type                               | Purpose                                                                                |
+| --------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
+| `onMount` | `(editor) => void \| (() => void)` | Fires once after mount. The optional returned function runs as cleanup before destroy. |
+| `ref`     | `Ref<ApollonEditor \| null>`       | Receives the editor after mount; nulled on unmount.                                    |
 
 ### Hooks
 

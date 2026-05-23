@@ -67,14 +67,12 @@ export class ApollonEditor {
     const diagramId =
       options?.model?.id || Math.random().toString(36).substring(2, 15)
 
-    // Initialize React root
     this.root = ReactDOM.createRoot(element, {
       identifierPrefix: `apollon-${diagramId}`,
     })
 
     this.diagramStore.getState().setDiagramId(diagramId)
 
-    // Initialize metadata and diagram type
     const diagramName = options?.model?.title || "Untitled Diagram"
     const diagramType =
       options?.type || options?.model?.type || UMLDiagramType.ClassDiagram
@@ -226,7 +224,6 @@ export class ApollonEditor {
 
   public destroy() {
     try {
-      // Clean up all active subscriptions before destroying
       Object.keys(this.subscribers).forEach((subscriberId) => {
         const unsubscribeCallback = this.subscribers[parseInt(subscriberId)]
         unsubscribeCallback?.()
@@ -237,18 +234,12 @@ export class ApollonEditor {
       this.root.unmount()
       this.ydoc.destroy()
       this.reactFlowInstance = null
-      // Zustand stores are automatically garbage-collected when references are gone
     } catch {
       // ignore
     }
   }
 
-  /**
-   * Renders a model to an SVG. The diagram is briefly mounted into a hidden,
-   * off-screen container and removed once rendered.
-   * @param model the Apollon model to export as an SVG
-   * @param options options to change the export behavior (add margin, exclude element ...)
-   */
+  /** Renders a model to SVG via a hidden, off-screen mount. */
   static async exportModelAsSvg(
     model: Apollon.UMLModel,
     options?: Apollon.ExportOptions
@@ -291,7 +282,6 @@ export class ApollonEditor {
     diagramStore.getState().setNodesAndEdges(model.nodes, model.edges)
     diagramStore.getState().setAssessments(model.assessments)
 
-    // Render the component
     svgRoot.render(
       <DiagramStoreContext.Provider value={diagramStore}>
         <MetadataStoreContext.Provider value={metadataStore}>
@@ -310,8 +300,7 @@ export class ApollonEditor {
       </DiagramStoreContext.Provider>
     )
 
-    // Wait for React Flow to initialize
-    // Create a timeout promise that resolves to undefined after 3 seconds
+    // Race ReactFlow init against a 3 s timeout so a hung mount can't deadlock export.
     const timeoutPromise = new Promise<null>((resolve) => {
       setTimeout(() => resolve(null), 3000)
     })
@@ -361,7 +350,6 @@ export class ApollonEditor {
 
     const svgString = getSVG(container, clip, options)
 
-    // Clean up
     svgRoot.unmount()
     document.body.removeChild(container)
     ydoc.destroy()

@@ -25,7 +25,7 @@ Apollon ships as a real npm library that any framework can embed. The public API
 
 ## What's next
 
-- **[Quickstart](/library/quickstart)** — the smallest working embed in five minutes
+- **[Quickstart](/library/quickstart)** — the smallest working embed
 - **[Install](/library/embedding/install)** — package + peer deps for your framework
 - **[Embedding examples](/library/embedding/angular)** — Angular, React, vanilla JS
 - **[API reference](/library/api)** — the complete `ApollonEditor` surface

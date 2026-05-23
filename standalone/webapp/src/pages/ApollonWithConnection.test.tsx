@@ -41,7 +41,7 @@ const FakeApollonEditor = vi.hoisted(
     }
 )
 
-vi.mock("@tumaet/apollon", async (importOriginal) => {
+vi.mock("@tumaet/apollon/react", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,

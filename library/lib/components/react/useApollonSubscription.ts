@@ -3,25 +3,15 @@ import type { ApollonEditor } from "@/apollon-editor"
 import { useApollonEditor } from "./context"
 
 /**
- * Subscribe to a value derived from the {@link ApollonEditor} instance.
+ * Subscribe to a value derived from the {@link ApollonEditor}.
  *
- * Implemented with {@link useSyncExternalStore} so concurrent renders never
- * see a torn value across multiple consumers, and the subscribe-window gap
- * (the classic "an event fires between reading the initial value and
- * attaching the subscriber, losing the update") is closed by React.
+ * Backed by {@link useSyncExternalStore} so concurrent renders never tear and
+ * no event is lost between the initial read and subscriber attach. `subscribe`
+ * and `getSnapshot` need not be referentially stable — the latest closures are
+ * captured in a commit-time effect. `getSnapshot` MUST return a referentially
+ * stable value when nothing changed; don't allocate inside it.
  *
- * The editor's subscribe primitives return a numeric subscriber id and
- * unregister via `editor.unsubscribe(id)`; this hook adapts that to the
- * `() => void` unsubscribe contract `useSyncExternalStore` expects.
- *
- * Returns `undefined` while no editor is mounted; otherwise the current
- * value. Identity-stability is NOT required of `subscribe` or `initial`:
- * the latest closures are captured in a commit-time effect.
- *
- * The function `initial(editor)` must return a referentially-stable value
- * when the underlying data has not changed — fresh objects on every call
- * will loop React. (Editor getters that snapshot store state already
- * satisfy this; just don't `.map()`/`.filter()` inside the hook.)
+ * Returns `undefined` while no editor is mounted (including during SSR).
  *
  * @example
  * ```tsx
@@ -33,18 +23,15 @@ import { useApollonEditor } from "./context"
  */
 export function useApollonSubscription<T>(
   subscribe: (editor: ApollonEditor, cb: (value: T) => void) => number,
-  initial: (editor: ApollonEditor) => T
+  getSnapshot: (editor: ApollonEditor) => T
 ): T | undefined {
   const editor = useApollonEditor()
 
-  // Capture the latest closures in a commit-time effect so concurrent
-  // re-renders can't write stale values into refs during render. The
-  // `useSyncExternalStore` adapters below read these refs.
   const subscribeRef = useRef(subscribe)
-  const initialRef = useRef(initial)
+  const getSnapshotRef = useRef(getSnapshot)
   useEffect(() => {
     subscribeRef.current = subscribe
-    initialRef.current = initial
+    getSnapshotRef.current = getSnapshot
   })
 
   const sub = useCallback(
@@ -58,13 +45,12 @@ export function useApollonSubscription<T>(
     [editor]
   )
 
-  const getSnapshot = useCallback(
-    () => (editor ? initialRef.current(editor) : undefined),
+  const read = useCallback(
+    () => (editor ? getSnapshotRef.current(editor) : undefined),
     [editor]
   )
 
-  // `useSyncExternalStore` requires a third arg for SSR; returning the
-  // client snapshot keeps the contract — the editor is client-only, so
-  // this only fires on the server with `editor == null` anyway.
-  return useSyncExternalStore(sub, getSnapshot, getSnapshot)
+  // SSR snapshot === client snapshot; editor is client-only and `read` returns
+  // `undefined` whenever the editor is unset.
+  return useSyncExternalStore(sub, read, read)
 }

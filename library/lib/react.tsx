@@ -1,11 +1,8 @@
-// Entry for the `@tumaet/apollon/react` subpath.
-//
-// Re-exports everything the standalone `@tumaet/apollon` entry exposes, plus
-// the `<Apollon>` React component. The component lives ONLY here: it renders
-// on the host's React, and only this peer-dependency build externalizes
-// React. Exporting it from the bundled entry would hand callers a component
-// wired to a second, private React copy — an "invalid hook call" by
-// construction. Non-React hosts use the `ApollonEditor` class instead.
+"use client"
+// Entry for the `@tumaet/apollon/react` subpath. Re-exports the full standalone
+// surface plus the React-only bindings. The `<Apollon>` component lives here
+// because only this build externalizes React — exporting it from the bundled
+// entry would wire callers to a second, private React copy ("invalid hook call").
 export * from "./index"
 export { Apollon, type ApollonProps } from "./components/react/Apollon"
 export {
