@@ -1,5 +1,6 @@
 import { IPoint } from "@/edges/types"
-import { SegmentOrientation } from "@/edges/Segment"
+
+type SegmentOrientation = "H" | "V"
 
 /**
  * Calculates the new array of waypoints when a specific orthogonal segment is dragged.
