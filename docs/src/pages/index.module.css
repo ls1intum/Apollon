@@ -99,6 +99,28 @@
   justify-content: center;
 }
 
+/* Pin the snippet panel to the live editor's height so switching tabs
+   (React / Angular / Vanilla — different line counts) never makes the row
+   reflow and shove the editor around. Long snippets scroll internally. */
+.demoTabs > [role="tabpanel"] {
+  height: clamp(420px, 60vh, 720px);
+  display: flex;
+  flex-direction: column;
+}
+
+.demoTabs > [role="tabpanel"] > div {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.demoTabs > [role="tabpanel"] pre {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
 /* Window-frame treatment so the embed reads as a running app, not an image.
    The editor renders light-only, so the whole window — chrome included — is
    pinned to fixed light values in both color modes: a consistent light
@@ -226,5 +248,9 @@ a.card:hover {
 @media (max-width: 996px) {
   .demoCol {
     margin-bottom: 1.5rem;
+  }
+
+  .demoTabs > [role="tabpanel"] {
+    height: clamp(320px, 50vh, 480px);
   }
 }
