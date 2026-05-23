@@ -41,7 +41,9 @@ import "@tumaet/apollon/style.css"
 | `@emotion/styled` | `^11.11.0` |
 | `@xyflow/react`   | `^12.3.0`  |
 
-The `/react` subpath keeps your final bundle from shipping a second copy of React.
+The `/react` subpath keeps your final bundle from shipping a second copy of
+React. It is also the entry that exports the `<Apollon>` React component — the
+recommended way to embed in React. See [React](/library/embedding/react).
 
 ## Type definitions
 

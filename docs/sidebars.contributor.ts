@@ -6,19 +6,22 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Development",
-      collapsible: false,
+      collapsed: false,
       items: [
         "development/project-structure",
         "development/scripts",
-        "development/versioning",
+        "development/diagram-version-history",
         "development/visual-tests",
+        "development/mobile-builds",
       ],
     },
     {
       type: "category",
-      label: "Release Pipeline",
+      label: "Release pipeline",
+      collapsed: false,
       items: ["deployment/github-actions", "deployment/npm-publishing"],
     },
+    { type: "doc", id: "troubleshooting", label: "Troubleshooting" },
   ],
 }
 

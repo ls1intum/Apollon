@@ -3,22 +3,28 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs"
 const sidebars: SidebarsConfig = {
   librarySidebar: [
     { type: "doc", id: "overview", label: "Overview" },
+    { type: "doc", id: "quickstart", label: "Quickstart" },
     {
       type: "category",
       label: "Embedding",
-      collapsible: false,
+      collapsed: false,
       items: [
         "embedding/install",
-        "embedding/angular",
         "embedding/react",
+        "embedding/angular",
         "embedding/vanilla",
       ],
     },
     {
       type: "category",
-      label: "API",
-      items: ["api", "api/collaboration", "api/export"],
+      label: "API reference",
+      collapsed: false,
+      // The category landing page is api.md itself, so the sidebar never
+      // shows the confusing "API > API" leaf.
+      link: { type: "doc", id: "api" },
+      items: ["api/collaboration", "api/export"],
     },
+    { type: "doc", id: "troubleshooting", label: "Troubleshooting" },
   ],
 }
 

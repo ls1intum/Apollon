@@ -5,7 +5,6 @@ import {
   parseDiagramType,
   mapFromReactFlowNodeToApollonNode,
   mapFromReactFlowEdgeToApollonEdge,
-  DeepPartial,
   filterRenderedElements,
   getSVG,
   getRenderedDiagramBounds,
@@ -245,17 +244,15 @@ export class ApollonEditor {
   }
 
   /**
-   * renders a model as a svg and returns it. Therefore the svg is temporarily added to the dom and removed after it has been rendered.
-   * @param model the apollon model to export as a svg
+   * Renders a model to an SVG. The diagram is briefly mounted into a hidden,
+   * off-screen container and removed once rendered.
+   * @param model the Apollon model to export as an SVG
    * @param options options to change the export behavior (add margin, exclude element ...)
-   * @param theme the theme which should be applied on the svg
    */
   static async exportModelAsSvg(
     model: Apollon.UMLModel,
-    options?: Apollon.ExportOptions,
-    theme?: DeepPartial<Apollon.Styles>
+    options?: Apollon.ExportOptions
   ): Promise<Apollon.SVG> {
-    void theme
     const container = document.createElement("div")
     container.style.display = "flex"
     container.style.width = "4000px"

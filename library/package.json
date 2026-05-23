@@ -46,8 +46,8 @@
       "import": "./dist/index.js"
     },
     "./react": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/react/index.js"
+      "types": "./dist/react/react.d.ts",
+      "import": "./dist/react/react.js"
     },
     "./internals": {
       "types": "./dist/internals.d.ts",
@@ -75,7 +75,7 @@
     },
     {
       "name": "/react entry (peers external)",
-      "path": "dist/react/index.js",
+      "path": "dist/react/react.js",
       "limit": "50 kB"
     },
     {

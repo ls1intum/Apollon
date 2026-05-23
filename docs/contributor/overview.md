@@ -24,9 +24,11 @@ pnpm dev
 ## What's where
 
 - **[Project structure](/contributor/development/project-structure)** — workspace layout
-- **[Scripts](/contributor/development/scripts)** — every `pnpm` command and what it does
-- **[Versioning](/contributor/development/versioning)** — library / standalone / VS Code release semantics
+- **[Scripts](/contributor/development/scripts)** — the `pnpm` commands and what they do
+- **[Diagram version history](/contributor/development/diagram-version-history)** — how named versions, autosaves, and eviction work in Apollon Standalone
 - **[Visual tests](/contributor/development/visual-tests)** — Playwright snapshot regeneration inside the pinned Docker image
+- **[Mobile builds](/contributor/development/mobile-builds)** — building the iOS / Android apps with Capacitor
+- **[Troubleshooting](/contributor/troubleshooting)** — common local-setup and self-host issues
 - **[Release pipeline → GitHub Actions](/contributor/deployment/github-actions)** — required-status-checks setup
 - **[Release pipeline → npm publishing](/contributor/deployment/npm-publishing)** — `version-bump.yml` + per-artifact release workflows
 
@@ -35,11 +37,11 @@ pnpm dev
 ```sh
 pnpm run lint        # eslint across all workspaces
 pnpm run format:check
-pnpm run build       # library → server → webapp → vscode (in order)
-pnpm test            # 774 library unit tests
+pnpm run build       # library first, then server + webapp concurrently
+pnpm test            # library unit tests
 ```
 
-The pre-push hook also runs `pnpm run lint`. CI runs the full matrix plus visual regression, Docker builds, and the library `publint` + `arethetypeswrong` + bundle-size budgets.
+The pre-push hook also runs `pnpm run lint`. CI runs the full matrix plus visual regression, Docker builds, and the library `publint` + bundle-size budgets.
 
 ## Commit messages
 

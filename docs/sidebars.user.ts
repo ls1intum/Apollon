@@ -2,21 +2,12 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs"
 
 const sidebars: SidebarsConfig = {
   userSidebar: [
+    { type: "doc", id: "overview", label: "Overview" },
     {
       type: "category",
-      label: "Getting Started",
-      collapsible: false,
+      label: "Getting started",
+      collapsed: false,
       items: ["getting-started/requirements", "getting-started/setup"],
-    },
-    {
-      type: "category",
-      label: "Mobile (iOS / Android)",
-      items: ["mobile/ios-android-setup"],
-    },
-    {
-      type: "category",
-      label: "Troubleshooting",
-      items: ["troubleshooting/common-issues"],
     },
   ],
 }

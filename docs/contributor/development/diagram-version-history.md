@@ -1,10 +1,10 @@
 ---
-id: versioning
-title: Version history
+id: diagram-version-history
+title: Diagram version history
 description: How named versions, autosaves, and eviction priority work in Apollon Standalone.
 ---
 
-# Version history
+# Diagram version history
 
 Apollon Standalone gives every diagram a Figma-shaped version history:
 **named versions** the user creates as deliberate milestones, plus

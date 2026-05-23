@@ -1,41 +1,29 @@
-import { useEffect, useRef } from "react"
 import {
-  ApollonEditor,
+  Apollon,
   ApollonMode,
   Locale,
   UMLDiagramType,
-} from "@tumaet/apollon"
+} from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 
 /**
  * Live Apollon editor mounted inside the docs site.
  *
- * Wrap in `<BrowserOnly>` at the call site — `ApollonEditor` touches
- * `window` during construction, which would crash Docusaurus's SSR
- * pre-render pass.
+ * Uses the `<Apollon>` React component from the `@tumaet/apollon/react`
+ * subpath — the editor shares the docs site's own React copy instead of
+ * bundling a second one. The `.apollon-embed-frame` class supplies the
+ * frame's size and light background (see src/css/custom.css).
+ *
+ * Wrap in `<BrowserOnly>` at the call site: the editor touches `window`,
+ * which would crash Docusaurus's SSR pre-render pass.
  */
-export default function ApollonEmbed({
-  diagramType = UMLDiagramType.ClassDiagram,
-}: {
-  diagramType?: UMLDiagramType
-}) {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const editorRef = useRef<ApollonEditor | null>(null)
-
-  useEffect(() => {
-    if (!containerRef.current) return
-
-    editorRef.current = new ApollonEditor(containerRef.current, {
-      type: diagramType,
-      mode: ApollonMode.Modelling,
-      locale: Locale.en,
-    })
-
-    return () => {
-      editorRef.current?.destroy()
-      editorRef.current = null
-    }
-  }, [diagramType])
-
-  return <div ref={containerRef} className="apollon-embed-frame" />
+export default function ApollonEmbed() {
+  return (
+    <Apollon
+      type={UMLDiagramType.ClassDiagram}
+      mode={ApollonMode.Modelling}
+      locale={Locale.en}
+      className="apollon-embed-frame"
+    />
+  )
 }

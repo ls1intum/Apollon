@@ -10,8 +10,8 @@
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "typecheck": "tsc --noEmit",
-    "lint:md": "markdownlint-cli2 '{user,library,contributor,admin,src}/**/*.{md,mdx}'",
-    "lint": "pnpm run lint:md"
+    "lint:md": "markdownlint-cli2 '{user,library,contributor,src}/**/*.{md,mdx}'",
+    "lint": "pnpm run lint:md && pnpm run typecheck"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.1",

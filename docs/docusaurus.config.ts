@@ -5,13 +5,15 @@ import type * as Preset from "@docusaurus/preset-classic"
 
 // Runs in Node — no browser APIs / JSX here.
 //
-// Four doc plugins keep the surfaces honest:
+// Three doc plugins keep the surfaces honest:
+//   - library     — @tumaet/apollon API reference + embedding guides.
+//                   Listed FIRST: Apollon is a published library before it
+//                   is anything else, and the navigation should say so.
 //   - user        — how to use the standalone app + VS Code extension
-//   - library     — @tumaet/apollon API reference + embedding guides
-//                   (this is what makes Apollon different from a typical
-//                    web product: it's a published library FIRST)
 //   - contributor — monorepo dev workflow, scripts, versioning, tests
-//   - admin       — operations, runbook, legal pages, DSMS records
+//
+// Operations / runbook / legal / DSMS records are NOT on this public site —
+// they live in the repo's top-level ops/ directory (internal, un-indexed).
 //
 // Apollon itself is embedded live on the homepage via <BrowserOnly>;
 // see src/components/ApollonEmbed.
@@ -47,14 +49,6 @@ const config: Config = {
   trailingSlash: false,
 
   i18n: { defaultLocale: "en", locales: ["en"] },
-
-  customFields: {
-    productUrl: "https://apollon.ase.cit.tum.de",
-    repoUrl: "https://github.com/ls1intum/Apollon",
-    npmUrl: "https://www.npmjs.com/package/@tumaet/apollon",
-    marketplaceUrl:
-      "https://marketplace.visualstudio.com/items?itemName=tumaet.apollon-vscode",
-  },
 
   markdown: {
     // `.md` parses as CommonMark (the legacy `<email@host>` /
@@ -126,30 +120,17 @@ const config: Config = {
       },
     ],
     [
-      "@docusaurus/plugin-content-docs",
-      {
-        id: "admin",
-        path: "./admin",
-        routeBasePath: "admin",
-        sidebarPath: "./sidebars.admin.ts",
-        editUrl: "https://github.com/ls1intum/Apollon/tree/main/docs/",
-        showLastUpdateAuthor: true,
-        showLastUpdateTime: true,
-      },
-    ],
-    [
       "@easyops-cn/docusaurus-search-local",
       {
         hashed: true,
         language: ["en"],
         indexBlog: false,
-        docsRouteBasePath: ["user", "library", "contributor", "admin"],
-        docsDir: ["user", "library", "contributor", "admin"],
+        docsRouteBasePath: ["user", "library", "contributor"],
+        docsDir: ["user", "library", "contributor"],
         searchContextByPaths: [
           { label: { en: "User Guide" }, path: "user" },
           { label: { en: "Library Reference" }, path: "library" },
           { label: { en: "Contributor Guide" }, path: "contributor" },
-          { label: { en: "Admin Guide" }, path: "admin" },
         ],
         hideSearchBarWithNoSearchContext: true,
         useAllContextsWithNoSearchContext: false,
@@ -160,8 +141,8 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // TODO: replace with a real 1200x630 social card. Until then Docusaurus
-    // falls back to no og:image rather than a broken link.
+    // Link-unfurl preview image. The logo works; a dedicated 1200×630 card
+    // would render better in social embeds.
     image: "img/logo.png",
     colorMode: {
       respectPrefersColorScheme: true,
@@ -188,13 +169,6 @@ const config: Config = {
       items: [
         {
           type: "docSidebar",
-          sidebarId: "userSidebar",
-          docsPluginId: "default",
-          position: "left",
-          label: "User",
-        },
-        {
-          type: "docSidebar",
           sidebarId: "librarySidebar",
           docsPluginId: "library",
           position: "left",
@@ -202,17 +176,17 @@ const config: Config = {
         },
         {
           type: "docSidebar",
+          sidebarId: "userSidebar",
+          docsPluginId: "default",
+          position: "left",
+          label: "User Guide",
+        },
+        {
+          type: "docSidebar",
           sidebarId: "contributorSidebar",
           docsPluginId: "contributor",
           position: "left",
           label: "Contributor",
-        },
-        {
-          type: "docSidebar",
-          sidebarId: "adminSidebar",
-          docsPluginId: "admin",
-          position: "left",
-          label: "Admin",
         },
         {
           href: "https://apollon.ase.cit.tum.de",
@@ -237,7 +211,7 @@ const config: Config = {
         {
           title: "Product",
           items: [
-            { label: "User Guide", to: "/user/getting-started/setup" },
+            { label: "User Guide", to: "/user/" },
             {
               label: "Try Apollon",
               href: "https://apollon.ase.cit.tum.de",
@@ -291,7 +265,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `© ${new Date().getFullYear()} Technical University of Munich · Built with ❤️ by the Apollon team at Applied Education Technologies (AET)`,
+      copyright: `© ${new Date().getFullYear()} Technical University of Munich · Apollon team at Applied Education Technologies (AET)`,
     },
     docs: {
       sidebar: { hideable: true, autoCollapseCategories: true },

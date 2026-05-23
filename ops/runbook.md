@@ -7,7 +7,7 @@ description: On-call reference for the most likely production issues.
 # Apollon Standalone runbook
 
 On-call reference for the most likely production issues. Pair with the
-[Version history](/contributor/development/versioning) contributor doc
+[Version history](https://ls1intum.github.io/Apollon/contributor/development/diagram-version-history) contributor doc
 for architecture context.
 
 ## Health & quick triage

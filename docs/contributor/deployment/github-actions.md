@@ -30,21 +30,21 @@ See [Releases](npm-publishing) for the release-cut procedure.
 
 Set per GitHub Environment. Values are deployment-specific; names are fixed.
 
-| Var                  | Purpose                                                                                                                            | Example                       |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `APP_HOSTNAME`       | Single public hostname the reverse proxy serves and that Let's Encrypt issues a certificate for.                                   | `apollon.aet.cit.tum.de`      |
-| `ACME_EMAIL`         | Registration email for Let's Encrypt.                                                                                              | `admin@tum.de`                |
-| `VM_HOST`            | SSH target the deploy workflow connects to. May differ from `APP_HOSTNAME`.                                                        | `apollon-prod.aet.cit.tum.de` |
-| `VM_USERNAME`        | SSH user on the VM.                                                                                                                | `github_deployment`           |
-| `VM_SSH_PRIVATE_KEY` | SSH key (secret).                                                                                                                  | —                             |
-| `OWNER_SECRET`       | HMAC secret for the soft-ownership cookie. Required (`compose.app.yml` fails closed if unset). Rotate per `docs/admin/runbook.md`. | random 32-byte hex            |
+| Var                  | Purpose                                                                                                                     | Example                       |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `APP_HOSTNAME`       | Single public hostname the reverse proxy serves and that Let's Encrypt issues a certificate for.                            | `apollon.aet.cit.tum.de`      |
+| `ACME_EMAIL`         | Registration email for Let's Encrypt.                                                                                       | `admin@tum.de`                |
+| `VM_HOST`            | SSH target the deploy workflow connects to. May differ from `APP_HOSTNAME`.                                                 | `apollon-prod.aet.cit.tum.de` |
+| `VM_USERNAME`        | SSH user on the VM.                                                                                                         | `github_deployment`           |
+| `VM_SSH_PRIVATE_KEY` | SSH key (secret).                                                                                                           | —                             |
+| `OWNER_SECRET`       | HMAC secret for the soft-ownership cookie. Required (`compose.app.yml` fails closed if unset). Rotate per `ops/runbook.md`. | random 32-byte hex            |
 
 ### Optional environment variables
 
 | Var                         | Purpose                                                                                                                                                                                                                                                                                                                                                 | Example                                                                                                        |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `APP_HOSTNAME_ALIASES_RULE` | Traefik matcher listing additional hostnames that should permanently 301-redirect to `APP_HOSTNAME`. Each listed hostname also receives its own Let's Encrypt certificate so HTTPS bookmarks redirect cleanly. Combine multiple hosts with `\|\|` — Traefik v3's `Host()` matcher takes a single argument. Leave unset on environments without aliases. | ``Host(`apollon-prod.aet.cit.tum.de`) \|\| Host(`apollon.ase.cit.tum.de`) \|\| Host(`apollon.ase.in.tum.de`)`` |
-| `LEGAL_PROFILE`             | Selects a bundled legal-pages profile (e.g., `tumaet`). Leave unset for a generic deployment showing the red disclaimer banner. See `docs/admin/legal-pages.md`.                                                                                                                                                                                        | `tumaet`                                                                                                       |
+| `LEGAL_PROFILE`             | Selects a bundled legal-pages profile (e.g., `tumaet`). Leave unset for a generic deployment showing the red disclaimer banner. See `ops/legal-pages.md`.                                                                                                                                                                                               | `tumaet`                                                                                                       |
 
 ## Run locally in Docker
 

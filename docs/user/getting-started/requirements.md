@@ -16,4 +16,5 @@ Apollon is a web application. **Any current browser is enough.**
 
 Diagrams persist in your browser's `localStorage` (or on the standalone server if you're connected). Real-time collaboration uses WebSockets — corporate proxies that strip `Upgrade` headers will downgrade to local-only editing.
 
-For mobile, see [iOS and Android](../mobile/ios-android-setup) (contributor build — there is no app-store distribution).
+On phones and tablets, open the same URL in the mobile browser — there is no
+app-store download.

@@ -1,8 +1,65 @@
-.hero {
-  padding: 4rem 0;
+/* Homepage layout. The brand color is used as an accent only — never as a
+   full-bleed hero wash — so the live editor stays the visual centre. */
+
+:root {
+  /* One radius for every card and the demo window. */
+  --demo-radius: 12px;
+}
+
+/* --- shared section rhythm --------------------------------------------- */
+.section {
+  padding-block: clamp(3.5rem, 6vw, 6rem);
+}
+
+.tinted {
+  background: var(--ifm-background-surface-color);
+  border-block: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.sectionTitle {
+  font-size: clamp(1.6rem, 2vw + 1rem, 2.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
   text-align: center;
-  position: relative;
-  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.sectionLead {
+  text-align: center;
+  max-width: 60ch;
+  margin: 0 auto 2.5rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* --- hero -------------------------------------------------------------- */
+.hero {
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+  text-align: center;
+}
+
+.heroTitle {
+  font-size: clamp(2.25rem, 4vw + 1rem, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  max-width: 20ch;
+  margin: 0 auto 1.25rem;
+}
+
+.accent {
+  color: var(--ifm-color-primary);
+}
+
+.heroSubtitle {
+  font-size: clamp(1.05rem, 1vw + 0.9rem, 1.3rem);
+  line-height: 1.55;
+  font-weight: 400;
+  max-width: 56ch;
+  margin: 0 auto 2rem;
+  color: var(--ifm-color-emphasis-700);
 }
 
 .buttons {
@@ -13,18 +70,153 @@
   flex-wrap: wrap;
 }
 
-.demo {
-  padding: 3rem 0 1rem;
+.install {
+  max-width: 22rem;
+  margin: 1.75rem auto 0;
+  text-align: left;
 }
 
-.demo p {
-  max-width: 56ch;
+/* --- live demo --------------------------------------------------------- */
+.demoRow {
+  align-items: stretch;
 }
 
-.features {
-  padding: 3rem 0;
+.demoCol {
+  display: flex;
+  flex-direction: column;
+  /* The code block is shorter than the editor; centre it so the row
+     doesn't read as lopsided. */
+  justify-content: center;
 }
 
-.features h3 {
-  margin-top: 0;
+/* Window-frame treatment so the embed reads as a running app, not an image.
+   The editor renders light-only, so the whole window — chrome included — is
+   pinned to fixed light values in both color modes: a consistent light
+   "app screenshot", never a dark frame around a light canvas. */
+.demoWindow {
+  border: 1px solid #e4e4e7;
+  border-radius: var(--demo-radius);
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 12px 32px -10px rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+}
+
+.demoBar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.85rem;
+  background: #f4f4f5;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.demoDot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #d4d4d8;
+}
+
+.demoBarLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.6rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+  color: #52525b;
+}
+
+/* Fixed colors, like the rest of the pinned-light demo window — not theme
+   variables, which would shift the chip between color modes. */
+.liveChip {
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  background: #3e8acc;
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+}
+
+.demoCaption {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+/* --- cards ------------------------------------------------------------- */
+/* A real responsive grid — 1 column on phones, 2 on tablets, 3 on desktop —
+   instead of Docusaurus's row/col, which only knows "stack below 996px". */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.5rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--demo-radius);
+  background: var(--ifm-background-color);
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+/* Linked cards lift on hover; static feature cards do not. */
+a.card:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.cardStatic {
+  border-top: 3px solid var(--ifm-color-primary);
+}
+
+.cardKicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ifm-color-primary);
+  margin-bottom: 0.4rem;
+}
+
+.cardTitle {
+  font-size: 1.15rem;
+  font-weight: 650;
+  margin: 0 0 0.5rem;
+}
+
+.cardBody {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 1rem;
+}
+
+/* Push the link to the bottom so cards in a row align. */
+.cardLink {
+  margin-top: auto;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+}
+
+/* --- responsive -------------------------------------------------------- */
+@media (max-width: 996px) {
+  .demoCol {
+    margin-bottom: 1.5rem;
+  }
 }

@@ -119,5 +119,5 @@ requires it.
 
 ## See also
 
-- [Version history (developer doc)](/contributor/development/versioning)
-- [Runbook](runbook)
+- [Version history (developer doc)](https://ls1intum.github.io/Apollon/contributor/development/diagram-version-history)
+- [Runbook](runbook.md)

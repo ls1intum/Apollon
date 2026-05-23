@@ -1,6 +1,5 @@
-// Public surface. Anything not re-exported here is either (a) reachable via
-// `./internals` (unstable) or (b) intentionally private. Avoid `export *`
-// from utility barrels — those leak helpers we don't want to support.
+// Public surface. Anything not re-exported here is either reachable via
+// `./internals` (unstable) or intentionally private.
 export * from "./typings"
 export { ApollonEditor } from "./apollon-editor"
 export {
@@ -13,6 +12,8 @@ export {
 // `importDiagram` is the only public version-migration entry. V2/V3 converters
 // and format detectors live behind `@tumaet/apollon/internals`.
 export { importDiagram } from "./utils/versionConverter"
-export * from "./utils"
+// NOTE: the `./utils` barrel is intentionally NOT re-exported — it holds
+// ~90 internal layout/geometry/store helpers that are not part of the
+// supported surface. Public helpers are cherry-picked by name above.
 export { log, setLogLevel, setLogger } from "./logger"
 export type { LogLevel } from "./logger"

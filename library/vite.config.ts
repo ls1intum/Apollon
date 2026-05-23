@@ -5,14 +5,18 @@ import { resolve } from "path"
 
 // Two passes from one config:
 //   - default (LIB_PEERS unset) emits dist/{index,internals}.js with
-//     React + MUI + emotion + xyflow inlined. This is the standalone
-//     bundle Angular / Vue / Svelte / vanilla JS hosts (Artemis is the
-//     primary consumer) get when they import `@tumaet/apollon`.
-//   - LIB_PEERS=true emits dist/react/index.js with those packages
-//     externalized — React hosts opt in via `@tumaet/apollon/react`
-//     to dedupe against their own React copy.
-// Only the standalone pass runs vite-plugin-dts; both subpaths share
-// the rolled-up dist/index.d.ts.
+//     React + MUI + emotion + xyflow inlined — the standalone bundle
+//     Angular / Vue / Svelte / vanilla hosts get from `@tumaet/apollon`.
+//   - LIB_PEERS=true emits dist/react/react.js with those packages
+//     externalized. React hosts opt into `@tumaet/apollon/react` to
+//     dedupe against their own React, and that subpath is the ONLY one
+//     exposing the `<Apollon>` component (lib/react.tsx) — a component
+//     rendered on a second, bundled React copy is an invalid hook call.
+//
+// Declarations: the standalone pass rolls lib/index.tsx + lib/internals.ts
+// into single dist/{index,internals}.d.ts files; the peer pass emits a
+// per-file tree under dist/react/ (rollupTypes bundles every entry into
+// one file, so it cannot produce a separate rolled file per subpath).
 //
 // The `/internals` subpath ships only from the standalone build; its
 // consumers (host integration tests) never need the externalized
@@ -27,10 +31,7 @@ import { resolve } from "path"
 const isPeerBuild = process.env.LIB_PEERS === "true"
 
 export default defineConfig({
-  plugins: [
-    react(),
-    ...(isPeerBuild ? [] : [dts({ include: ["lib"], rollupTypes: true })]),
-  ],
+  plugins: [react(), dts({ include: ["lib"], rollupTypes: !isPeerBuild })],
   build: {
     copyPublicDir: false,
     outDir: isPeerBuild ? "dist/react" : "dist",
@@ -38,7 +39,7 @@ export default defineConfig({
     cssCodeSplit: false,
     lib: {
       entry: isPeerBuild
-        ? { index: resolve(__dirname, "lib/index.tsx") }
+        ? { react: resolve(__dirname, "lib/react.tsx") }
         : {
             index: resolve(__dirname, "lib/index.tsx"),
             internals: resolve(__dirname, "lib/internals.ts"),

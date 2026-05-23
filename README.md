@@ -10,7 +10,7 @@ This monorepo contains every piece of the Apollon platform:
 - **[`library/`](./library)** — the embeddable `@tumaet/apollon` React component ([npm](https://www.npmjs.com/package/@tumaet/apollon)).
 - **[`standalone/`](./standalone)** — standalone web app (server + webapp) built on the library.
 - **[`vscode-extension/`](./vscode-extension)** — the Apollon VS Code extension.
-- **[`docs/`](./docs)** — documentation sources (migrating to Docusaurus).
+- **[`docs/`](./docs)** — Docusaurus documentation site, published at <https://ls1intum.github.io/Apollon/>.
 
 ## Use the library
 
@@ -44,6 +44,8 @@ The launcher handles the boring parts:
 
 Override ports via `APOLLON_WEBAPP_PORT`, `APOLLON_SERVER_PORT`, `APOLLON_WS_PORT`, or `APOLLON_REDIS_PORT`.
 
+To preview the documentation site instead, run `pnpm dev:docs` from the repo root — it builds the library and starts the Docusaurus dev server.
+
 ## Tech stack
 
 | Component     | Technology                                                           |
@@ -62,18 +64,17 @@ Override ports via `APOLLON_WEBAPP_PORT`, `APOLLON_SERVER_PORT`, `APOLLON_WS_POR
 
 ## Documentation
 
-Docs are migrating to [Docusaurus](https://docusaurus.io/); in the meantime browse the Markdown sources in [`docs/`](./docs):
+The docs are a [Docusaurus](https://docusaurus.io/) site published at <https://ls1intum.github.io/Apollon/>. Sources live in [`docs/`](./docs); preview locally with `pnpm dev:docs`.
 
-- [Getting started](./docs/getting-started/requirements.md)
-- [Project structure & development](./docs/development/project-structure.md)
-- [Mobile (iOS / Android via Capacitor)](./docs/mobile/ios-android-setup.md)
-- [Deployment (GitHub Actions, Docker)](./docs/deployment/github-actions.md)
-- [Administration — legal pages & TUM DSMS](./docs/admin/legal-pages.md)
-- [Troubleshooting](./docs/troubleshooting/common-issues.md)
+- [Library](https://ls1intum.github.io/Apollon/library/) — embedding the `@tumaet/apollon` React component.
+- [User Guide](https://ls1intum.github.io/Apollon/user/) — getting started, requirements, and self-hosting.
+- [Contributor](https://ls1intum.github.io/Apollon/contributor/) — project structure, scripts, deployment, and troubleshooting.
+
+Operations, legal-pages, and TUM DSMS material lives in [`ops/`](./ops) in this repo.
 
 ## Contributing
 
-Open an issue or a pull request at <https://github.com/ls1intum/Apollon>. Guidelines live in [`docs/contributing.md`](./docs/contributing.md).
+Open an issue or a pull request at <https://github.com/ls1intum/Apollon>. Guidelines live in [`CONTRIBUTING.md`](./CONTRIBUTING.md); see also the [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
 
 ## License
 

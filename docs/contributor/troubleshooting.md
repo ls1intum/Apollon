@@ -1,5 +1,5 @@
 ---
-id: common-issues
+id: troubleshooting
 title: Troubleshooting
 description: Recovery steps for the common Apollon contributor / self-host problems.
 ---

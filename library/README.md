@@ -9,10 +9,10 @@ Embeddable UML modeling editor. Mounts into any DOM node. The public API is impe
 
 The package ships two builds with identical APIs:
 
-| Subpath                       | React / MUI / emotion / xyflow | Bundle  | Use when                                                                                                         |
-| ----------------------------- | ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `@tumaet/apollon` _(default)_ | bundled                        | ~2.2 MB | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React installed.       |
-| `@tumaet/apollon/react`       | externalized (peer deps)       | ~860 KB | Your host is React 18.3+ or 19+ and you want the editor to share React with your app instead of bundling a copy. |
+| Subpath                       | React / MUI / emotion / xyflow | Bundle  | Use when                                                                                                   |
+| ----------------------------- | ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `@tumaet/apollon` _(default)_ | bundled                        | ~2.2 MB | Your host is Angular, Vue, Svelte, vanilla JS, or any framework that doesn't already have React installed. |
+| `@tumaet/apollon/react`       | externalized (peer deps)       | ~860 KB | Your host is React 18.3+ and you want the editor to share React with your app instead of bundling a copy.  |
 
 ### Standalone build (any framework, no peer deps)
 
@@ -40,7 +40,7 @@ import { ApollonEditor } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 ```
 
-Peer ranges: `react ^18.3 || ^19`, `react-dom ^18.3 || ^19`, `@mui/material ^6.4`, `@emotion/react ^11.11`, `@emotion/styled ^11.11`, `@xyflow/react ^12.3`. Picking this build keeps the final bundle from shipping a second copy of React.
+Peer ranges: `react ^18.3`, `react-dom ^18.3`, `@mui/material ^6.4`, `@emotion/react ^11.11`, `@emotion/styled ^11.11`, `@xyflow/react ^12.3`. Picking this build keeps the final bundle from shipping a second copy of React.
 
 Peers are declared with `peerDependenciesMeta.optional` so `npm install @tumaet/apollon` never warns about missing peers when you only use the standalone subpath.
 
@@ -128,39 +128,20 @@ export class DiagramEditorComponent implements AfterViewInit, OnDestroy {
 
 ### React
 
+Use the `<Apollon>` component from the `@tumaet/apollon/react` subpath. It owns
+the editor's lifecycle — constructs on mount, destroys on unmount.
+
 ```tsx
-"use client"
-import { useEffect, useRef } from "react"
-import {
-  ApollonEditor,
-  ApollonMode,
-  Locale,
-  UMLDiagramType,
-} from "@tumaet/apollon/react"
+import { Apollon, UMLDiagramType } from "@tumaet/apollon/react"
 import "@tumaet/apollon/style.css"
 
 export function DiagramEditor() {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const editorRef = useRef<ApollonEditor | null>(null)
-
-  useEffect(() => {
-    if (!containerRef.current) return
-
-    editorRef.current = new ApollonEditor(containerRef.current, {
-      type: UMLDiagramType.ClassDiagram,
-      mode: ApollonMode.Modelling,
-      locale: Locale.en,
-    })
-
-    return () => {
-      editorRef.current?.destroy()
-      editorRef.current = null
-    }
-  }, [])
-
-  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+  return <Apollon type={UMLDiagramType.ClassDiagram} style={{ height: 540 }} />
 }
 ```
+
+For imperative control, construct `ApollonEditor` yourself instead — see the
+[React embedding guide](https://ls1intum.github.io/Apollon/library/embedding/react).
 
 ### Vanilla JS / CDN
 

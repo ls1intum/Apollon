@@ -1,6 +1,6 @@
 ---
-id: ios-android-setup
-title: iOS and Android
+id: mobile-builds
+title: Mobile builds (iOS / Android)
 description: Build the Apollon webapp as a Capacitor native shell for iOS and Android.
 ---
 

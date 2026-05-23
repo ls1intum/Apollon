@@ -51,6 +51,9 @@ export class DiagramEditorComponent implements AfterViewInit, OnDestroy {
 
 The editor mounts its own React tree inside the `<div>` you give it. Your Angular code only sees the imperative API.
 
+The `<div>` must have an explicit height, or the editor renders blank — see
+[Troubleshooting](/library/troubleshooting).
+
 ## SSR / Universal
 
-The editor is client-only — it touches `window` at construction. Inside Angular Universal, guard with `isPlatformBrowser(this.platformId)` and construct only after hydration.
+The editor is client-only — it touches `window` at construction. Inside Angular Universal, guard with `isPlatformBrowser(this.platformId)` and construct only after hydration. See [Troubleshooting](/library/troubleshooting) for details.

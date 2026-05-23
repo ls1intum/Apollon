@@ -80,6 +80,8 @@ export const CSS_VARIABLE_FALLBACKS: Readonly<Record<string, string>> =
     "--apollon-alert-warning-background": "#fff3cd",
     "--apollon-alert-warning-border": "#ffeeba",
     "--apollon-interactive-selection": "#f39c12",
+    "--apollon-guide-vertical": "#d63031",
+    "--apollon-guide-horizontal": "#0984e3",
     "--apollon-background": "#ffffff",
     "--apollon-background-inverse": "#000000",
     "--apollon-background-variant": "#f8f9fa",
